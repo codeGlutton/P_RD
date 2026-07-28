@@ -656,8 +656,12 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 
 	const int32 HiddenLeft = Start;
 	const int32 HiddenRight = FMath::Max(Total - (Start + SlotRoom), 0);
+	// 글자는 버튼의 자식이 아니라 옆에 있는 형제다. 버튼만 접으면 수가
+	// 허공에 남는다.
 	SetShown(mTurnPageLeft, HiddenLeft > 0);
+	SetShown(mTurnPageLeftText, HiddenLeft > 0);
 	SetShown(mTurnPageRight, HiddenRight > 0);
+	SetShown(mTurnPageRightText, HiddenRight > 0);
 	SetTextIfPresent(mTurnPageLeftText, FText::AsNumber(HiddenLeft));
 	SetTextIfPresent(mTurnPageRightText, FText::AsNumber(HiddenRight));
 

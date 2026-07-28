@@ -264,7 +264,11 @@ def apply_tuning(place, detail):
     except ImportError:
         PLATE_SIZE = {}
     for plate, size in PLATE_SIZE.items():
-        if plate in place:
+        if plate not in place:
+            continue
+        if len(size) == 4:
+            place[plate] = list(size)
+        else:
             place[plate] = [place[plate][0], place[plate][1], size[0], size[1]]
 
     moved = 0

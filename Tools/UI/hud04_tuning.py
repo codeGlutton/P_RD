@@ -12,8 +12,10 @@
 #: 판을 그대로 두고 그림만 비율을 지켜 앉히면, 굽는 쪽은 맞는데 구역 쪽은
 #: 판 전체에 늘여 보여 준다 -- 눈으로 맞춘 자리와 나온 자리가 갈린다.
 #: 판을 그림에 맞추면 그럴 일이 없다.
+#: 값이 둘이면 크기만, 넷이면 (x, y, w, h) 로 자리까지 갈아 끼운다.
 PLATE_SIZE = {
-    "top_right_parchment": (392, 121),   # 메뉴 막대 1670 x 516
+    "top_right_parchment": (392, 121),              # 메뉴 막대 1670 x 516
+    "top_center_turn_order": (426, 12, 819, 158),   # 여섯 칸 + 양끝 넘김칸
 }
 
 #: 판 이름 -> 요소 -> (x, y, w, h). 시안을 잰 값을 이것으로 덮는다.
@@ -124,12 +126,15 @@ TUNING = {
         "status_text": (118, 86, 72, 24),
     },
     "top_center_turn_order": {
-        "selected_outline": (65, 32, 96, 96),
-        "turn_portrait_01": (70, 37, 85, 85),
-        "turn_portrait_02": (193, 37, 85, 85),
-        "turn_portrait_03": (315, 37, 85, 85),
-        "turn_portrait_04": (438, 37, 85, 85),
-        "turn_portrait_05": (560, 37, 85, 85),
+        "end_left": (24, 52, 50, 55),
+        "end_right": (745, 52, 50, 55),
+        "selected_outline": (92, 32, 95, 95),
+        "turn_portrait_01": (97, 37, 85, 85),
+        "turn_portrait_02": (205, 37, 85, 85),
+        "turn_portrait_03": (313, 37, 85, 85),
+        "turn_portrait_04": (421, 37, 85, 85),
+        "turn_portrait_05": (529, 37, 85, 85),
+        "turn_portrait_06": (637, 37, 85, 85),
     },
     "top_left_parchment": {
         "round_label": (38, 37, 233, 76),

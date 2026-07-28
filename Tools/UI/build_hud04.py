@@ -17,6 +17,7 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
 
     RoundText / ObjectiveText
     TurnToken_i / TurnPortrait_i / TurnCurrent_i
+    TurnPageLeft / TurnPageLeftText / TurnPageRight / TurnPageRightText
     CommandCard_i / CommandButton_i / CommandIcon_i / CommandName_i
     CommandCost_i / CommandDamage_i / CommandCooldown_i
     CommandSelected_i / CommandDisabled_i
@@ -179,6 +180,12 @@ AP_PIPS = 10
 
 #: 메뉴 넷의 누를 자리. 왼쪽부터 지도 · 스킬 · 가방 · 설정.
 MENU_ZONES = ("menu_map", "menu_skill", "menu_bag", "menu_settings")
+
+#: 턴 순서 초상 칸 수. 판 그림에 그려진 칸과 같아야 한다.
+TURN_SLOTS = 6
+
+#: 양끝 넘김칸. 그쪽에 가려진 수를 적는다. (구역, 위젯 이름)
+TURN_PAGES = (("end_left", "TurnPageLeft"), ("end_right", "TurnPageRight"))
 
 #: AP 숫자판의 가로/세로 비. 그림이 1689 x 584 라 그 비를 지킨다.
 AP_NUMBER_RATIO = 1689.0 / 584.0
@@ -375,7 +382,7 @@ def top_row(blueprint, root):
     turn, turn_origin, _ = group(blueprint, root, "TurnPanel",
                                  "top_center_turn_order")
     plate(blueprint, turn, turn_origin, "top_center_turn_order", "TurnPlate")
-    for index in range(5):
+    for index in range(TURN_SLOTS):
         element = "turn_portrait_%02d" % (index + 1)
         rect = spot("top_center_turn_order", element)
         if rect is None:
@@ -386,12 +393,32 @@ def top_row(blueprint, root):
         kit.add(blueprint, "CanvasPanel", token, turn)
         kit.place(blueprint, token, x, y, w, h, "tl", None, Z_CONTENT)
         token_origin = (rect[0], rect[1])
-        piece(blueprint, token, token_origin, "TurnPortrait_%d" % index,
-              "top_center_turn_order", element)
+        # 뗀 그림이 없어도 칸은 만든다. 판에 액자가 이미 그려져 있어서
+        # 밑그림이 없는 칸이 생기는데, 위젯까지 없으면 런타임이 얼굴을 넣을
+        # 자리가 없다 -- 여섯째 칸이 그랬다.
+        if piece(blueprint, token, token_origin, "TurnPortrait_%d" % index,
+                 "top_center_turn_order", element) is False:
+            kit.image(blueprint, "TurnPortrait_%d" % index, token,
+                      0, 0, w, h, None, z_order=Z_CONTENT)
         # 두르는 자리는 따로 잰 것이 있으면 그것을, 없으면 초상 자리를 쓴다.
         outline(blueprint, token, token_origin, "TurnCurrent_%d" % index,
                 DETAIL["top_center_turn_order"].get("selected_outline")
                 or DETAIL["top_center_turn_order"][element])
+
+    # 양끝 넘김칸. 여섯 칸에 안 들어가는 수를 적고, 누르면 창이 그쪽으로
+    # 옮겨 간다. 대부분의 판에서는 비어 있다 -- 런타임이 접어 둔다.
+    for element, page_name in TURN_PAGES:
+        rect = local(spot("top_center_turn_order", element), turn_origin)
+        if rect is None:
+            continue
+        px, py, pw, ph = rect
+        kit.label(blueprint, page_name + "Text", turn, px, py, pw, ph,
+                  "", 16, TEXT_PALE, "center", None, bold=True)
+        kit.place(blueprint, page_name + "Text", px, py, pw, ph, "tl", None,
+                  Z_TEXT)
+        kit.fold(blueprint, page_name + "Text")
+        kit.ghost_button(blueprint, page_name, turn, px, py, pw, ph)
+        kit.fold(blueprint, page_name)
 
     # 목표 글자가 있던 자리다. 그 칸을 메뉴 넷으로 쓰기로 했다.
     #
