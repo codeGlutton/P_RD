@@ -564,9 +564,10 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			const bool bShowCooldown = bOnCooldown || Skill.mCooldownTurns > 0;
 			SetShown(Widgets.Cooldown, bShowCooldown);
 			SetShown(Widgets.CooldownIcon, bShowCooldown);
-			Widgets.Cooldown->SetText(bOnCooldown
-				? FText::FromString(FString::Printf(TEXT("%d턴"), Skill.mRemainingCooldown))
-				: FText::FromString(FString::Printf(TEXT("쿨 %d턴"), Skill.mCooldownTurns)));
+			// 숫자만 적는다. 옆에 모래시계가 붙어 있어서 "쿨"도 "턴"도
+			// 같은 말을 두 번 하는 것이 된다.
+			Widgets.Cooldown->SetText(FText::AsNumber(
+				bOnCooldown ? Skill.mRemainingCooldown : Skill.mCooldownTurns));
 		}
 
 		if (Widgets.Damage != nullptr)
