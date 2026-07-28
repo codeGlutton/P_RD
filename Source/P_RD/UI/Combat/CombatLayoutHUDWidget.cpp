@@ -222,6 +222,25 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
+	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
+	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
+	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
+	mTurnAPText = Find<UTextBlock>(WidgetTree, TEXT("TurnAPText"));
+	mTurnAPPips.Reset();
+	mTurnAPPipsUsed.Reset();
+	for (int32 Pip = 0; ; ++Pip)
+	{
+		UWidget* Found = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("TurnAPPip_%d"), Pip));
+		if (Found == nullptr)
+		{
+			break;
+		}
+		mTurnAPPips.Add(Found);
+		mTurnAPPipsUsed.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("TurnAPPipUsed_%d"), Pip)));
+	}
+
 	mTurnPageLeft = Find<UButton>(WidgetTree, TEXT("TurnPageLeft"));
 	mTurnPageRight = Find<UButton>(WidgetTree, TEXT("TurnPageRight"));
 	mTurnPageLeftText = Find<UTextBlock>(WidgetTree, TEXT("TurnPageLeftText"));
@@ -340,6 +359,13 @@ void UCombatLayoutHUDWidget::WireCommands()
 		mEndTurnButton->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleEndTurnClicked);
 		BindPressFeedback(mEndTurnButton, mEndTurnButton);
+	}
+
+	if (mConfirmButton != nullptr)
+	{
+		mConfirmButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleConfirmClicked);
+		BindPressFeedback(mConfirmButton, mConfirmPanel);
 	}
 
 	if (mTurnPageLeft != nullptr)
@@ -463,6 +489,7 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	{
 		RefreshParty();
 		RefreshEnemy();
+		RefreshTurnActionPoints();
 	}
 	if (bAll || Domain == ECombatUIDomain::Turn)
 	{
@@ -485,6 +512,8 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		// 조준에 들었거나 조준이 끝났을 수 있다. 카드가 비켜 있을지 여기서
 		// 다시 정한다 -- 조준 단계는 Turn 으로 실려 온다.
 		RefreshCommandVisibility();
+		RefreshActionButtons();
+		RefreshTurnActionPoints();
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
@@ -1079,6 +1108,61 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 {
 	return mUIModel != nullptr
 		&& mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None;
+}
+
+/**
+ * @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다.
+ *
+ * @details
+ * 확정은 **공격 범위가 뜬 그때만** 뜬다. 늘 떠 있으면 무엇을 확정하는
+ * 단추인지 읽히지 않는다.
+ *
+ * 턴 종료는 그 사이 "취소" 가 된다. 무르는 길이 판 밖을 누르는 것뿐이면
+ * 판이 화면을 거의 다 덮고 있어 무를 자리가 없다 -- 늘 같은 자리에 있는
+ * 단추가 그 길이 된다.
+ */
+void UCombatLayoutHUDWidget::RefreshActionButtons()
+{
+	const ECombatBuildPhaseUI Phase = mUIModel != nullptr
+		? mUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
+
+	SetShown(mConfirmPanel, Phase == ECombatBuildPhaseUI::Preview);
+	SetTextIfPresent(mEndTurnLabel, Phase == ECombatBuildPhaseUI::None
+		? LOCTEXT("EndTurn", "턴 종료") : LOCTEXT("CancelAim", "취소"));
+}
+
+/** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
+void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
+{
+	const FUnitUI* TurnUnit = FindTurnUnit();
+	const int32 Left = TurnUnit != nullptr
+		? FMath::Max(FMath::RoundToInt(TurnUnit->mMovementPoint), 0) : 0;
+	const int32 Total = TurnUnit != nullptr
+		? FMath::Max(FMath::RoundToInt(TurnUnit->mMaxMovementPoint), Left) : 0;
+
+	SetTextIfPresent(mTurnAPText, FText::FromString(
+		FString::Printf(TEXT("%d/%d"), Left, Total)));
+
+	const int32 Room = mTurnAPPips.Num();
+	const bool bTooMany = Total > Room;
+	for (int32 Pip = 0; Pip < Room; ++Pip)
+	{
+		const bool bHasPip = !bTooMany && Pip < Total;
+		SetShown(mTurnAPPips[Pip], bHasPip && Pip < Left);
+		if (mTurnAPPipsUsed.IsValidIndex(Pip))
+		{
+			SetShown(mTurnAPPipsUsed[Pip], bHasPip && Pip >= Left);
+		}
+	}
+}
+
+/** @brief 확정 단추를 눌렀다. 겨냥한 칸을 그대로 확정한다. */
+void UCombatLayoutHUDWidget::HandleConfirmClicked()
+{
+	if (mUIModel != nullptr)
+	{
+		mUIModel->RequestConfirm();
+	}
 }
 
 void UCombatLayoutHUDWidget::RefreshCommandVisibility()

@@ -275,6 +275,11 @@ def apply_tuning(place, detail):
     except ImportError:
         PLATE_SIZE = {}
     for plate, size in PLATE_SIZE.items():
+        if plate not in place and len(size) == 4:
+            # 시안에 없던 판이다. 넷을 다 적었으면 새로 세운다 -- 그림만 있고
+            # 시안에 없는 것을 넣으려면 여기 말고는 세울 자리가 없다.
+            place[plate] = list(size)
+            continue
         if plate not in place:
             continue
         if len(size) == 4:
@@ -340,6 +345,16 @@ for group in ((CARDS, CARD_TEMPLATE, CARD_FALLBACK),
     added = fill_missing(place, detail, *group)
     if added:
         print("빈 자리를 메웠다(%d): %s" % (len(added), ", ".join(added)))
+
+# 시안에 없던 판은 갈아 끼운 그림이 곧 제 그림이다. 그것마저 없으면 진짜로
+# 그릴 것이 없는 것이라 여기서 멈춘다.
+try:
+    from hud04_plate_art import PLATE_ART
+except ImportError:
+    PLATE_ART = {}
+for plate in set(place) - set(textures):
+    if plate in PLATE_ART:
+        textures[plate] = PLATE_ART[plate]
 
 missing = set(place) - set(textures)
 if missing:

@@ -467,6 +467,12 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
 		PushEquipmentDetailUIData(IntPayload);
 		break;
+	case ECombatInputType::Confirm:
+		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
+		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
+		// 판정을 UI 가 흉내 내면 규칙이 두 곳에 생긴다.
+		ConfirmTargetTile();
+		break;
 	case ECombatInputType::Cancel:
 		// 고른 스킬이 있으면 그것부터 무른다. 같은 스킬을 다시 고르는 것이
 		// 곧 취소이고, 그래야 판에 칠해 둔 사거리도 같이 지워진다.
@@ -506,6 +512,38 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 	{
 		ResolveWorldTouchEvent(ScreenPosition);
 	}
+}
+
+/**
+ * @brief 겨냥해 둔 칸을 그대로 다시 누른다.
+ *
+ * @details
+ * 판에서 두 번째 탭이 확정이다. 화면 아래 단추로도 되게 하려면 그 탭을
+ * 대신 놓아 주면 된다 -- 확정 판정을 UI 나 여기서 흉내 내면 규칙이 두 곳에
+ * 생긴다. 칸을 화면 좌표로 되돌려 같은 길로 흘려보낸다.
+ */
+void ACombatGameMode::ConfirmTargetTile()
+{
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetTarget().mIsValid == false)
+	{
+		return;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	if (TileMap == nullptr || Controller == nullptr)
+	{
+		return;
+	}
+
+	FVector2D ScreenPosition = FVector2D::ZeroVector;
+	const FVector World = TileMap->TileToWorldLocation(mCombatUIModel->GetTarget().mTile);
+	if (Controller->ProjectWorldLocationToScreen(World, OUT ScreenPosition) == false)
+	{
+		return;
+	}
+	ResolveWorldTouchEvent(ScreenPosition);
 }
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)

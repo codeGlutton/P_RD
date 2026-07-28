@@ -292,6 +292,26 @@ private:
 	/** @brief 메뉴 넷. 왼쪽부터 지도 · 스킬 · 가방 · 설정. */
 	UPROPERTY() TArray<TObjectPtr<UButton>> mMenuButtons;
 
+	/** @brief 확정 단추 묶음. 공격 범위가 뜬 그때만 편다. */
+	UPROPERTY() TObjectPtr<UWidget> mConfirmPanel;
+	UPROPERTY() TObjectPtr<UButton> mConfirmButton;
+
+	/** @brief 턴 종료 글자. 무르는 중에는 "취소" 로 바뀐다. */
+	UPROPERTY() TObjectPtr<UTextBlock> mEndTurnLabel;
+
+	/** @brief 가운데 AP 막대. 지금 차례인 유닛 것을 그린다. */
+	UPROPERTY() TObjectPtr<UTextBlock> mTurnAPText;
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPips;
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
+
+	UFUNCTION() void HandleConfirmClicked();
+
+	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
+	void RefreshActionButtons();
+
+	/** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
+	void RefreshTurnActionPoints();
+
 private:
 	/** @brief 파티 카드 한 장이 쓰는 위젯 묶음. 없는 것은 null. */
 	struct FPartySlotWidgets

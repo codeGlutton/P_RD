@@ -90,6 +90,9 @@ protected:
 	 */
 	bool ResolveWorldTouchEvent(FVector2D ScreenPosition);
 
+	/** @brief 겨냥해 둔 칸을 그대로 다시 누른다. 확정 단추가 부른다. */
+	void ConfirmTargetTile();
+
 	/**
 	 * @brief 긴 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.

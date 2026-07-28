@@ -23,7 +23,8 @@ enum class ECombatInputType : uint8
 	EndTurn,          // payload 없음
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
 	LongPressEquip,   // payload = SlotIndex (장비 상세)
-	InspectUnit       // payload = UnitId (그 유닛의 스킬을 본다)
+	InspectUnit,      // payload = UnitId (그 유닛의 스킬을 본다)
+	Confirm           // payload 없음(겨냥한 칸을 그대로 확정)
 };
 
 class UTexture2D;
@@ -113,6 +114,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestMove();
 	/** @brief 턴 종료 버튼 의도. 실제 턴 시스템 호출과 실패 처리는 게임플레이가 맡는다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
+	/**
+	 * @brief 겨냥해 둔 칸을 확정한다.
+	 *
+	 * 판에서 그 칸을 다시 누르는 것과 같은 뜻이다. 화면 아래 단추로도 할 수
+	 * 있어야 해서 따로 둔다 -- 좁은 화면에서 칸을 두 번 정확히 짚는 것은
+	 * 손가락으로 하기 어렵다.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Request") void RequestConfirm();
+
 	/** @brief 현재 스킬/타겟 선택 취소 의도. UI 강조 해제는 OnActionResolved로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
 

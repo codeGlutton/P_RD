@@ -43,6 +43,12 @@ void UCombatUIModel::RequestCancel()
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
 }
 
+/** @brief 겨냥해 둔 칸을 확정한다. */
+void UCombatUIModel::RequestConfirm()
+{
+	OnCombatCommand.Broadcast(ECombatInputType::Confirm, INDEX_NONE);
+}
+
 /** @brief 장비 슬롯 상세 요청을 SlotIndex payload로 전달한다. */
 void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 {

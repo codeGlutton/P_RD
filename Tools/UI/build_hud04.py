@@ -27,7 +27,8 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     MenuButton_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
     EnemyDefense / EnemyForecast
-    EndTurnButton / EndTurnLabel
+    EndTurnButton / EndTurnLabel / ConfirmButton / ConfirmLabel
+    TurnAPText / TurnAPPip_j / TurnAPPipUsed_j
 
 ## 묶음
 
@@ -195,6 +196,12 @@ AP_PIP_SIZE = (778, 938)
 
 #: 아군 칸 위에 서는 상태 홈 수. 구역이 있는 만큼만 그린다.
 STATUS_SLOTS = 5
+
+#: 가운데 AP 막대의 판 이름.
+AP_BAR = "bottom_center_ap_bar"
+
+#: 확정 단추와 턴 종료 사이 틈.
+CONFIRM_GAP = 8
 
 
 def at(rect):
@@ -604,10 +611,18 @@ def party(blueprint, root):
              spot(plate_name, "status_text"), status, 14, TEXT_PALE,
              align="left")
 
+        # HP 막대는 그림 틀 안에 든다. 막대만 두면 카드 안에서 홀로 떠
+        # 보이고, 글자를 밖에 두면 좁은 세로 카드에서 놓을 자리가 없다.
         bar = local(spot(plate_name, "hp_bar"), origin)
         if bar:
             bx, by, bw, bh = bar
-            kit.bar(blueprint, "PartyHPBar_%d" % index, card, bx, by, bw, bh,
+            kit.image(blueprint, "PartyHPPlate_%d" % index, card,
+                      bx, by, bw, bh, None, z_order=Z_PLATE + 1,
+                      texture="{}/KK_HUD04_hp_bar_plate".format(ART),
+                      tint=kit.WHITE)
+            inset = bh * 0.18
+            kit.bar(blueprint, "PartyHPBar_%d" % index, card,
+                    bx + inset, by + inset, bw - inset * 2, bh - inset * 2,
                     unreal.LinearColor(0.44, 0.74, 0.24, 1.0))
 
         # AP 줄은 숫자판 하나와 낱개 열이다.
@@ -668,6 +683,48 @@ def party(blueprint, root):
                          size[0], size[1])
 
 
+def ap_bar(blueprint, root):
+    """지금 차례인 유닛의 행동력을 크게 보여 주는 막대.
+
+    카드 안 숫자는 셋을 견주는 값이고, 이 막대는 **지금 쓸 수 있는 것**이다.
+    같은 값을 두 번 그리는 것처럼 보이지만 보는 목적이 다르다 -- 카드는
+    누구를 움직일지, 막대는 무엇을 할 수 있을지를 답한다.
+    """
+    if AP_BAR not in PLACE:
+        return
+    name, origin, _ = group(blueprint, root, "TurnAPPanel", AP_BAR)
+    plate(blueprint, name, origin, AP_BAR, "TurnAPPlate")
+
+    number = local(spot(AP_BAR, "ap_number"), origin)
+    if number:
+        nx, ny, nw, nh = fit_rect(number, AP_NUMBER_SIZE, "contain")
+        kit.image(blueprint, "TurnAPNumberPlate", name, nx, ny, nw, nh, None,
+                  z_order=Z_CONTENT,
+                  texture="{}/KK_HUD04_ap_number_plate".format(ART),
+                  tint=kit.WHITE)
+        words = local(spot(AP_BAR, "ap_number_txt"), origin) or (nx, ny, nw, nh)
+        kit.label(blueprint, "TurnAPText", name, words[0], words[1], words[2],
+                  words[3], "10/10", 20, TEXT_PALE, "center", None, bold=True)
+        kit.place(blueprint, "TurnAPText", words[0], words[1], words[2],
+                  words[3], "tl", None, Z_TEXT)
+        kit.align_in(blueprint, "TurnAPText", words[0], words[1], words[2],
+                     words[3], "center", "middle")
+
+    for pip in range(AP_PIPS):
+        cell = local(spot(AP_BAR, "ap_pip_%02d" % (pip + 1)), origin)
+        if cell is None:
+            continue
+        for suffix, art in (("", "KK_HUD04_ap_pip"),
+                            ("Used", "KK_HUD04_ap_pip_spent")):
+            pip_name = "TurnAPPip%s_%d" % (suffix, pip)
+            px, py, pw, ph = fit_rect(cell, AP_PIP_SIZE, "contain")
+            kit.image(blueprint, pip_name, name, px, py, pw, ph, None,
+                      z_order=Z_CONTENT,
+                      texture="{}/{}".format(ART, art), tint=kit.WHITE)
+            if suffix:
+                kit.fold(blueprint, pip_name)
+
+
 def end_turn(blueprint, root):
     name, origin, size = group(blueprint, root, "EndTurnPanel",
                                "bottom_right_button")
@@ -677,6 +734,30 @@ def end_turn(blueprint, root):
          bold=True)
     kit.ghost_button(blueprint, "EndTurnButton", name, 0, 0, size[0], size[1])
 
+    # 확정 단추는 턴 종료 바로 위에 같은 크기로 선다.
+    #
+    # 평소에는 접혀 있다. 스킬을 고르고 칸을 짚어 공격 범위가 뜬 그때만
+    # 펴진다 -- 늘 떠 있으면 무엇을 확정하는 단추인지 읽히지 않는다.
+    px, py, pw, ph = at(PLACE["bottom_right_button"])
+    py -= ph + CONFIRM_GAP
+    kit.add(blueprint, "CanvasPanel", "ConfirmPanel", root)
+    kit.place(blueprint, "ConfirmPanel", px, py, pw, ph, "tl", None, Z_PLATE)
+    kit.image(blueprint, "ConfirmPlate", "ConfirmPanel", 0, 0, pw, ph, None,
+              z_order=Z_PLATE,
+              texture="{}/KK_HUD04_confirm_button".format(ART), tint=kit.WHITE)
+    label = local(spot("bottom_right_button", "button_label"),
+                  at(PLACE["bottom_right_button"])[:2])
+    if label:
+        kit.label(blueprint, "ConfirmLabel", "ConfirmPanel", label[0], label[1],
+                  label[2], label[3], "확정", 24, TEXT_PALE, "center", None,
+                  bold=True)
+        kit.place(blueprint, "ConfirmLabel", label[0], label[1], label[2],
+                  label[3], "tl", None, Z_TEXT)
+        kit.align_in(blueprint, "ConfirmLabel", label[0], label[1], label[2],
+                     label[3], "center", "middle")
+    kit.ghost_button(blueprint, "ConfirmButton", "ConfirmPanel", 0, 0, pw, ph)
+    kit.fold(blueprint, "ConfirmPanel")
+
 
 kit.reset_ledger()
 bp = kit.create_asset(ASSET)
@@ -685,6 +766,7 @@ top_row(bp, "RootCanvas")
 enemy_panel(bp, "RootCanvas")
 commands(bp, "RootCanvas")
 party(bp, "RootCanvas")
+ap_bar(bp, "RootCanvas")
 end_turn(bp, "RootCanvas")
 # 저장 전에 컴파일한다.
 #
