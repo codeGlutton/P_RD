@@ -282,8 +282,13 @@ let alignPick = {};
 // 기본이고, 여기서 정하면 그것이 이긴다.
 let zPick = {};
 try {
-  artPick = JSON.parse(localStorage.getItem(KEEP + ".art") || "{}") || {};
-} catch (err) { artPick = {}; }
+  // 파일이 실어 준 것이 밑바탕이고, 내가 올린 것이 그 위에 얹힌다.
+  //
+  // 전에는 올린 것만 알았다. 코드에서 걸어 둔 그림은 게임에는 나오는데
+  // 여기서는 빈 칸이라, 무엇이 들어갈 자리인지 보고 맞출 수가 없었다.
+  artPick = Object.assign({}, ZONEART || {},
+    JSON.parse(localStorage.getItem(KEEP + ".art") || "{}") || {});
+} catch (err) { artPick = Object.assign({}, ZONEART || {}); }
 try {
   alignPick = JSON.parse(localStorage.getItem(KEEP + ".align") || "{}") || {};
 } catch (err) { alignPick = {}; }

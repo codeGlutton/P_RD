@@ -21,7 +21,11 @@ hud04_slots.DETAIL 은 **화면 기준**으로 적혀 있다. 아군 왼쪽 칸�
 
     python list_hud04_art.py
 """
+import base64
 import io
+from io import BytesIO
+
+from PIL import Image
 import json
 import os
 import shutil
@@ -97,6 +101,40 @@ GROUPS = (
 )
 
 
+def zone_art_data():
+    """구역에 걸어 둔 그림을 쪽이 읽을 수 있게 data URL 로 싼다.
+
+    쪽은 지금까지 **올린 것만** 알았다. 코드에서 걸어 둔 그림은 게임에는
+    나오는데 쪽에서는 빈 칸이라, 무엇이 들어갈 자리인지 보고 맞출 수가
+    없었다 -- AP 보석 열 칸이 특히 그랬다.
+
+    @return "판|구역" -> {png, fit}
+    """
+    try:
+        from hud04_zone_art import ZONE_ART
+    except ImportError:
+        return {}
+    out = {}
+    for plate, rows in ZONE_ART.items():
+        for element, entry in rows.items():
+            path = os.path.join(ART, "%s.png" % entry["texture"])
+            if not os.path.exists(path):
+                continue
+            # 미리보기라 줄여서 싣는다. 원본 그대로 싣더니 쪽이 60MB 가
+            # 됐다 -- 같은 보석이 열 칸에 열 번 들어간다.
+            with Image.open(path) as image:
+                image = image.convert("RGBA")
+                image.thumbnail((192, 192))
+                buffer = BytesIO()
+                image.save(buffer, "PNG")
+            out["%s|%s" % (plate, element)] = {
+                "png": "data:image/png;base64,"
+                       + base64.b64encode(buffer.getvalue()).decode(),
+                "fit": entry.get("fit") or "contain",
+            }
+    return out
+
+
 def local(plate):
     """화면 기준 자리를 판 안 자리로. 판 왼쪽 위를 뺀다."""
     ox, oy = PLACE[plate][0], PLACE[plate][1]
@@ -153,7 +191,7 @@ def main():
             .replace("/*FAMILY*/null", json.dumps(FAMILY, ensure_ascii=False))
             # 구역에 얹는 그림은 쪽에서 손으로 넣는다. 기본은 없음이다 --
             # 자동으로 얹어 두면 무엇이 진짜 들어갈 그림인지 알 수 없다.
-            .replace("/*ZONEART*/null", "null")
+            .replace("/*ZONEART*/null", json.dumps(zone_art_data()))
             # 저장 칸을 시안1 쪽과 갈라 둔다. 같이 쓰면 판 이름이 안 맞는
             # 표가 얹혀 구역이 아예 안 뜬다.
             .replace('/*KEEPKEY*/"rd.slots.01"', '"rd.hud04"')

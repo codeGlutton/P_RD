@@ -266,8 +266,12 @@ def apply_tuning(place, detail):
         return 0
 
     # 판 크기부터 갈아 끼운다. 구역은 판 안 자리라 판이 먼저 정해져야 한다.
+    #
+    # 이 값은 hud04_tuning.py 가 아니라 따로 둔다. 그 파일은 apply_zones.py 가
+    # 통째로 다시 쓰므로, 손으로 적어 두면 구역을 한 번 내려받아 넣는 순간
+    # 사라진다 -- 턴 순서 판이 그렇게 되돌아가 있었다.
     try:
-        from hud04_tuning import PLATE_SIZE
+        from hud04_plate_size import PLATE_SIZE
     except ImportError:
         PLATE_SIZE = {}
     for plate, size in PLATE_SIZE.items():
