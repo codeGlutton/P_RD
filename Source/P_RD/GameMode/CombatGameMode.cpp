@@ -332,7 +332,14 @@ void ACombatGameMode::InitializeRoom()
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel(), SpawnPointTransform, CurStage.mRoomClearTileTransform);
+	// 파티 전원을 넘긴다. 앞장선 한 명만 넘기면 나머지 둘은 방에 들어와 있는데
+	// 판 위에는 없다.
+	TArray<UUnitModel*> PartyUnits;
+	for (UPlayerUnitModel* PartyUnit : GetPartyUnitModels())
+	{
+		PartyUnits.Add(PartyUnit);
+	}
+	CombatModel->InitCombat(StaticRoomData, PartyUnits, SpawnPointTransform, CurStage.mRoomClearTileTransform);
 }
 
 void ACombatGameMode::BeginRoom()

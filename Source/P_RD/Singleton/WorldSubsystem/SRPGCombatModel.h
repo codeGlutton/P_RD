@@ -84,7 +84,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<UUnitModel*>& PartyUnits, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform);
 	void BeginCombat();
 	void EndCombat();
 
@@ -154,7 +154,8 @@ public:
 
 protected:
 	void SpawnTileMap(const FTransform& RoomStartTransform);
-	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
+	void RegisterPlayerUnits(const TArray<UUnitModel*>& PartyUnits, const FTileTransform& BaseTransform, const TArray<FTileTransform>& PlacedTransforms);
+	bool FindFreeTileNear(const FTileIndex& BaseIndex, const UBoardActorModel* Unit, const TSet<FTileIndex>& Taken, OUT FTileIndex& OutIndex) const;
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
@@ -180,7 +181,14 @@ public:
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
 	UTileMapModel* GetTileMap() const;
 
+	/** @brief 앞장선 한 명. 카메라와 턴 문맥처럼 하나만 필요한 자리에서 쓴다. */
 	UUnitModel* GetPlayerUnit() const;
+
+	/** @brief 전투에 들어온 아군 전원. @return 등록된 차례대로 */
+	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;
+
+	/** @brief 아직 살아 있는 아군 하나. 전원 사망이면 nullptr. */
+	UUnitModel* FindLivingPlayerUnit() const;
 	const TArray<TObjectPtr<UUnitModel>>& GetUnits() const;
 	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
 
@@ -322,6 +330,10 @@ protected:
 	// @brief 등록된 Player 유닛
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
 	TObjectPtr<UUnitModel> mPlayerUnit;
+
+	/** @brief 전투에 들어온 아군 전원. 첫 칸이 곧 mPlayerUnit 이다. */
+	UPROPERTY()
+	TArray<TObjectPtr<UUnitModel>> mPlayerUnits;
 	// @brief 모든 타격 가능 장애물
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargets"))
 	TArray<TScriptInterface<IBoardCombatTarget>> mCombatTargetObstacles;
