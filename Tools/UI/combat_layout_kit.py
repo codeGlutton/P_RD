@@ -593,6 +593,46 @@ def label(blueprint, name, parent, x, y, w, h, text, size=14,
     return block
 
 
+#: 글자를 칸 안 어디에 붙일지. (가로, 세로) -> 칸 안 비율.
+ALIGN_SPOT = {
+    "left": 0.0, "center": 0.5, "right": 1.0,
+    "top": 0.0, "middle": 0.5, "bottom": 1.0,
+}
+
+
+def align_in(blueprint, name, x, y, w, h, halign="center", valign="middle",
+             parent_size=None):
+    """글자를 그 칸 안에서 가로·세로로 붙인다.
+
+    ## 왜 따로 필요한가
+
+    캔버스 칸은 자리와 크기만 정한다. 글자는 그 칸의 **왼쪽 위**에서 시작하고,
+    justification 은 가로만 옮긴다 -- 세로는 손댈 데가 없어 칸이 클수록
+    글자가 위로 떠 보인다.
+
+    그래서 칸을 자동 크기로 바꾸고, 글자 자신의 어느 점을 칸의 어느 점에
+    맞출지로 붙인다. 자동 크기라 글자가 길어도 안 잘리고 옆으로 넘친다 --
+    잘리는 것보다는 넘치는 편이 낫다. 잘리면 무엇이 잘렸는지 안 보인다.
+    """
+    ax, ay = ANCHORS["tl"]
+    pw, ph = parent_size if parent_size else (CANVAS_W, CANVAS_H)
+    hx = ALIGN_SPOT[halign]
+    vy = ALIGN_SPOT[valign]
+
+    widget = helper.umg_find_widget(blueprint, name)
+    slot = widget.get_editor_property("slot")
+    slot.set_editor_property("auto_size", True)
+
+    # 붙일 점은 칸(slot)이 아니라 그 안의 배치 자료(layout_data)에 있다.
+    layout = slot.get_editor_property("layout_data")
+    layout.set_editor_property("alignment", unreal.Vector2D(hx, vy))
+    offsets = layout.get_editor_property("offsets")
+    offsets.set_editor_property("left", x + w * hx - ax * pw)
+    offsets.set_editor_property("top", y + h * vy - ay * ph)
+    layout.set_editor_property("offsets", offsets)
+    slot.set_editor_property("layout_data", layout)
+
+
 def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     """A progress bar dressed with the KayKit rail pieces.
 

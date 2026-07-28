@@ -73,6 +73,24 @@
      정하는데, 그러면 남 밑에 깔린 구역은 손잡이를 위 구역이 가로채서
      크기를 못 바꾼다. */
   .zone.sel { z-index: 3; }
+  /* 그림은 구역을 꽉 채우되 비율을 지킨다. 늘려 버리면 "이 크기가 맞나" 를
+     볼 수가 없다 -- 그걸 보려고 얹는 것이다. */
+  .pngBtn, .pngOff {
+    background: #262c37; color: #dfe3ea; border: 1px solid #39404e;
+    border-radius: 4px; padding: 1px 7px; font: inherit; font-size: 12px;
+    cursor: pointer; max-width: 170px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .pngOff { margin-left: 4px; padding: 1px 5px; color: #d97a7a; }
+  select {
+    background: #171b22; color: #dfe3ea; border: 1px solid #2a303b;
+    border-radius: 4px; padding: 1px 3px; font: inherit; font-size: 12px;
+    max-width: 190px;
+  }
+  .zone > .pic {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: contain; pointer-events: none;
+  }
   .zone > .h { z-index: 4; }
   .zone.live { cursor: move; }
   .zone.sel {
@@ -164,6 +182,7 @@
       <button id="zones" class="on">구역 표시</button>
       <button id="copy">코드 복사</button>
       <button id="save" class="warm">파일로 저장</button>
+      <button id="art" class="on">구역 그림</button>
       <button id="back">되돌리기</button>
       <button id="fwd">다시</button>
       <button id="tie" class="on">묶어 고치기</button>
@@ -177,7 +196,7 @@
       <div>
         <dl id="facts"></dl>
         <table><thead><tr>
-          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th><th></th>
+          <th>구역</th><th>x</th><th>y</th><th>w</th><th>h</th><th>그림</th><th>맞춤</th><th>글자 가로</th><th>글자 세로</th>
         </tr></thead><tbody id="list"></tbody></table>
       </div>
       <div style="flex:1 1 400px">
@@ -197,6 +216,21 @@ const BASE = {"action_bottom": {"action_name": [67, 27, 49, 30], "action_icon": 
 // 한 벌로 맞춰 둔 판 묶음. 이름 뒤 숫자로는 짝을 못 찾는 것들이다 --
 // action_top 과 action_left_upper 는 같은 카드인데 이름이 안 닮았다.
 const FAMILY = [["action_top", "action_left_upper", "action_right_upper", "action_left_lower", "action_right_lower", "action_bottom"]];
+// 구역마다 얹어 볼 그림. { 판: { 요소: "png/..." } }
+const ZONEART = null;
+//: 그림을 어떻게 앉힐지.
+//:
+//: 늘어나는 것(막대·리본)과 안 늘어나는 것(아이콘·보석)이 섞여 있어 한 가지로는
+//: 못 본다. 막대를 비율 지켜 넣으면 짧아 보이고, 아이콘을 늘리면 뭉개진다.
+const HALIGNS = [["center", "가운데"], ["left", "왼쪽"], ["right", "오른쪽"]];
+const VALIGNS = [["middle", "가운데"], ["top", "위"], ["bottom", "아래"]];
+
+const FITS = [
+  ["contain", "맞추기"],
+  ["fill", "채우기"],
+  ["cover", "덮기"],
+  ["none", "가운데"],
+];
 
 // 쪽마다 저장 칸이 달라야 한다. 시안1과 시안4가 같은 칸을 쓰면 한쪽에서
 // 고친 값이 다른 쪽에 얹혀 판 이름이 안 맞는 표가 들어온다.
@@ -207,6 +241,24 @@ let whole = true, selRole = null;
 // 묶인 판을 같이 고칠지. 켜 두는 것이 기본이다 -- 묶어 둔 판은 같아야
 // 맞는 것이라, 따로 고치는 쪽이 예외다.
 let tied = true;
+// 구역 안에 실제 그림을 얹을지. 켜 두는 것이 기본이다 -- 네모만 보고
+// 자리를 맞추는 것은 눈이 아니라 머리로 하는 일이 된다.
+let showArt = true;
+// 손으로 고른 그림. "판|요소" -> { png, fit }
+//
+// 불러오는 것을 선언 **아래**에 둔다. let 은 선언보다 위에서 손대면 오류가 나고,
+// 그 오류가 최상단에서 나면 아래 코드가 통째로 안 돌아 화면이 빈다.
+let artPick = {};
+// 글자를 칸 안 어디에 붙일지. "판|요소" -> [가로, 세로]
+// 기본은 가운데다. 칸은 시안에서 잰 상자이고 글자는 런타임이 넣는 것이라
+// 길이를 모른다 -- 가운데가 어느 길이에서도 덜 어긋난다.
+let alignPick = {};
+try {
+  artPick = JSON.parse(localStorage.getItem(KEEP + ".art") || "{}") || {};
+} catch (err) { artPick = {}; }
+try {
+  alignPick = JSON.parse(localStorage.getItem(KEEP + ".align") || "{}") || {};
+} catch (err) { alignPick = {}; }
 let nudgeKey = null, nudgeTimer = 0;
 
 const $ = (id) => document.getElementById(id);
@@ -273,6 +325,36 @@ function tieUp(role) {
   const mates = familyOf(role).filter((k) => k !== role && TABLE[k]);
   for (const mate of mates) TABLE[mate] = structuredClone(TABLE[role]);
   return mates.length;
+}
+
+// 손으로 고른 그림은 자리표와 따로 둔다. 코드로 내보낼 것은 자리뿐이고,
+// 그림 고른 것은 눈으로 맞추려고 쓰는 것이라 섞으면 내보낸 값이 더러워진다.
+function alignOf(role, key) {
+  return alignPick[role + "|" + key] || ["center", "middle"];
+}
+
+function keepAlign() {
+  try {
+    localStorage.setItem(KEEP + ".align", JSON.stringify(alignPick));
+  } catch (err) {}
+}
+
+function keepArt() {
+  // 그림을 내용째로 들고 있어 저장 칸이 넘칠 수 있다. 넘치면 조용히 넘어가지
+  // 말고 알린다 -- 창을 닫으면 사라진다는 것을 알아야 한다.
+  try {
+    localStorage.setItem(KEEP + ".art", JSON.stringify(artPick));
+  } catch (err) {
+    flash("그림이 커서 저장은 못 했습니다. 창을 닫으면 사라집니다");
+  }
+}
+
+// 이 구역에 무엇을 어떻게 얹나. 손으로 고른 것이 먼저다.
+function artOf(role, key) {
+  // 기본은 없음이다. 넣은 것만 뜬다 -- 자동으로 얹어 두면 무엇이 진짜 들어갈
+  // 그림인지 알 수 없고, 지우는 손이 한 번 더 든다.
+  const mine = artPick[role + "|" + key];
+  return mine && mine.png ? mine : null;
 }
 
 function keep() {
@@ -461,7 +543,14 @@ function zonesOf(shell, table, role, ox, oy) {
           .map((side) => `<div class="h ${side}" data-side="${side}"></div>`)
           .join("")
       : "";
-    el.innerHTML = `<span class="tag">${item.label}</span>` + grips;
+    // 그 자리에 들어갈 그림을 구역 크기에 맞춰 깐다. 늘어나는 것(막대·리본)은
+    // 채워서, 안 늘어나는 것(아이콘·보석)은 비율을 지켜 넣는다.
+    const got = showArt ? artOf(role, item.key) : null;
+    const art = got
+      ? `<img class="pic" src="${got.png}" alt=""` +
+        ` style="object-fit:${got.fit}">`
+      : "";
+    el.innerHTML = art + `<span class="tag">${item.label}</span>` + grips;
     if (item.live) {
       el.onmousedown = (e) =>
         grab(e, role, item.key, e.target.dataset.side || "");
@@ -628,8 +717,33 @@ function list() {
     // 여기서 넣는다.
     const cells = v.map((n, i) =>
       `<td><input data-k="${key}" data-i="${i}" value="${n}"></td>`).join("");
+    // 그림과 맞춤을 구역 옆에서 바로 고른다. 어느 그림이 그 자리에 맞는지는
+    // 얹어 보고야 아는 것이라, 고르는 자리가 멀면 몇 번을 왕복하게 된다.
+    const got = artOf(selRole, key);
+    const fit = got ? got.fit : "contain";
+    // 그림은 파일에서 바로 집는다. 목록에서 고르게 두면 프로젝트에 있는
+    // 조각만 넣을 수 있어, 아직 안 넣은 그림을 얹어 볼 수가 없다.
+    const label = got ? (got.name || "그림") : "＋ 그림";
+    const clear = got
+      ? `<button class="pngOff" data-k="${key}" title="지우기">✕</button>`
+      : "";
+    const fits = FITS.map(([v, label2]) =>
+      `<option value="${v}"${v === fit ? " selected" : ""}>${label2}</option>`)
+      .join("");
     rows.push(`<tr class="${key === sel ? "sel" : ""}" data-k="${key}">` +
-      `<td class="key">${key}</td>${cells}</tr>`);
+      `<td class="key">${key}</td>${cells}` +
+      `<td><button class="pngBtn" data-k="${key}">${label}</button>${clear}` +
+      `<input type="file" class="pngFile" accept="image/*" hidden ` +
+      `data-k="${key}"></td>` +
+      `<td><select class="fitPick" data-k="${key}">${fits}</select></td>` +
+      `<td><select class="hPick" data-k="${key}">` +
+      HALIGNS.map(([v, t]) =>
+        `<option value="${v}"${v === alignOf(selRole, key)[0] ?
+          " selected" : ""}>${t}</option>`).join("") + `</select></td>` +
+      `<td><select class="vPick" data-k="${key}">` +
+      VALIGNS.map(([v, t]) =>
+        `<option value="${v}"${v === alignOf(selRole, key)[1] ?
+          " selected" : ""}>${t}</option>`).join("") + `</select></td></tr>`);
   }
   // 어느 칸에 손이 가 있었는지 적어 둔다. 표를 통째로 다시 만들면 치던
   // 칸이 사라져 초점이 날아가고, 그러면 숫자를 칠 수가 없다.
@@ -655,7 +769,62 @@ function list() {
       copyName(tr.dataset.k);
     };
   }
-  for (const input of body.querySelectorAll("input")) {
+  for (const button of body.querySelectorAll(".pngBtn")) {
+    button.onclick = () => {
+      sel = button.dataset.k;
+      body.querySelector(
+        `.pngFile[data-k="${button.dataset.k}"]`).click();
+    };
+  }
+  for (const file of body.querySelectorAll(".pngFile")) {
+    file.onchange = () => {
+      const chosen = file.files && file.files[0];
+      if (!chosen) return;
+      // 파일을 자료 URL 로 읽어 그 자리에 박는다. file:// 에서는 고른 파일을
+      // 경로로 다시 읽을 수 없어(브라우저가 막는다) 내용을 들고 있어야 한다.
+      const reader = new FileReader();
+      reader.onload = () => {
+        const at = selRole + "|" + file.dataset.k;
+        const was = artOf(selRole, file.dataset.k);
+        artPick[at] = { png: reader.result, name: chosen.name,
+                        fit: was ? was.fit : "contain" };
+        keepArt();
+        paint();
+        flash(chosen.name + " 얹었습니다");
+      };
+      reader.readAsDataURL(chosen);
+    };
+  }
+  for (const off of body.querySelectorAll(".pngOff")) {
+    off.onclick = () => {
+      delete artPick[selRole + "|" + off.dataset.k];
+      keepArt();
+      paint();
+    };
+  }
+  for (const pick of body.querySelectorAll(".hPick, .vPick")) {
+    pick.onchange = () => {
+      const at = selRole + "|" + pick.dataset.k;
+      const now = alignOf(selRole, pick.dataset.k).slice();
+      now[pick.classList.contains("hPick") ? 0 : 1] = pick.value;
+      alignPick[at] = now;
+      keepAlign();
+      code();
+    };
+  }
+  for (const pick of body.querySelectorAll(".fitPick")) {
+    pick.onchange = () => {
+      const at = selRole + "|" + pick.dataset.k;
+      const got = artOf(selRole, pick.dataset.k);
+      artPick[at] = { png: got ? got.png : "", fit: pick.value };
+      keepArt();
+      paint();
+    };
+  }
+  // 숫자칸만 집는다. 그냥 "input" 으로 집으면 그림 고르는 파일칸까지 걸려서,
+  // 파일을 고르는 순간 이 손잡이가 값을 숫자로 읽다 실패하고 표만 다시 그린다
+  // -- 앞서 붙인 파일 손잡이를 덮어써서 그림이 아예 안 들어갔다.
+  for (const input of body.querySelectorAll("input[data-i]")) {
     input.onfocus = () => {
       // 표는 그대로 두고 판 위 구역만 다시 그린다. 여기서 표까지 다시
       // 만들면 방금 누른 칸이 지워져 숫자를 못 친다 -- 실제로 그랬다.
@@ -692,7 +861,21 @@ function pyText() {
   return lines.join("\n");
 }
 
-function code() { $("out").textContent = pyText(); }
+function code() { $("out").textContent = pyText() + alignText(); }
+
+// 가운데가 아닌 것만 적는다. 기본이 가운데라 전부 적으면 표만 길어지고
+// 무엇이 예외인지 안 보인다.
+function alignText() {
+  const odd = Object.entries(alignPick)
+    .filter(([, v]) => v[0] !== "center" || v[1] !== "middle");
+  if (!odd.length) return "";
+  const lines = ["", "TEXT_ALIGN = {"];
+  for (const [at, v] of odd) {
+    lines.push(`    "${at.split("|")[1]}": ("${v[0]}", "${v[1]}"),`);
+  }
+  lines.push("}");
+  return lines.join(String.fromCharCode(10));
+}
 
 function copyName(text) {
   // file:// 도 크롬에서는 안전한 자리로 쳐 주므로 클립보드 API가 돈다.
@@ -807,6 +990,13 @@ $("spread").onclick = () => {
 
 // 단추로도 되돌린다. 자판이 한글이면 Ctrl+Z 가 안 잡히는 판이 있어,
 // 손잡이가 하나뿐이면 그날 작업이 통째로 막힌다.
+$("art").onclick = () => {
+  showArt = !showArt;
+  $("art").classList.toggle("on", showArt);
+  paint();
+  flash(showArt ? "구역 그림 켬" : "구역 그림 끔");
+};
+
 $("back").onclick = () => {
   flash(step(past, future) ? "되돌렸습니다" : "더 없습니다");
 };

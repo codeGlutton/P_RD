@@ -126,6 +126,9 @@ def main():
             .replace("/*DATA*/null", json.dumps(rows, ensure_ascii=False))
             .replace("/*TABLE*/null", json.dumps(table, ensure_ascii=False))
             .replace("/*FAMILY*/null", json.dumps(FAMILY, ensure_ascii=False))
+            # 구역에 얹는 그림은 쪽에서 손으로 넣는다. 기본은 없음이다 --
+            # 자동으로 얹어 두면 무엇이 진짜 들어갈 그림인지 알 수 없다.
+            .replace("/*ZONEART*/null", "null")
             # 저장 칸을 시안1 쪽과 갈라 둔다. 같이 쓰면 판 이름이 안 맞는
             # 표가 얹혀 구역이 아예 안 뜬다.
             .replace('/*KEEPKEY*/"rd.slots.01"', '"rd.hud04"')
@@ -138,6 +141,7 @@ def main():
         print("%-12s %2d장  <- %s" % (group["title"], len(group["items"]),
                                       group["users"]))
     print("\n구역 %d개" % sum(len(v) for v in table.values()))
+
     if missing:
         print("그림 못 찾음:", ", ".join(missing))
     print("적었다:", os.path.join(OUT, "구역.html"))

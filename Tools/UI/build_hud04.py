@@ -169,17 +169,33 @@ def piece(blueprint, parent, origin, widget_name, plate_name, element,
     return True
 
 
+#: 글자를 칸 안 어디에 붙이나. 요소 이름 -> (가로, 세로).
+#:
+#: 적어 두지 않은 것은 **가로세로 모두 가운데**다. 칸은 시안에서 잰 상자이고
+#: 글자는 런타임이 넣는 것이라 길이를 모른다 -- 가운데가 어느 길이에서도
+#: 덜 어긋난다.
+#:
+#: 여기 적는 것은 예외뿐이다. 왼쪽부터 채워야 읽히는 줄 같은 것.
+TEXT_ALIGN = {
+}
+
+
 def text(blueprint, name, parent, origin, rect, value, points, colour,
-         align="center", bold=False):
+         align=None, bold=False):
     placed = local(rect, origin)
     if placed is None:
         return
     x, y, w, h = placed
-    kit.label(blueprint, name, parent, x, y, w, h, value, points, colour, align,
-              None, bold=bold)
+    halign, valign = TEXT_ALIGN.get(name.rsplit("_", 1)[0],
+                                    TEXT_ALIGN.get(name, ("center", "middle")))
+    kit.label(blueprint, name, parent, x, y, w, h, value, points, colour,
+              align or halign, None, bold=bold)
     # 글자를 아이콘 위층으로 올린다. kit.label 은 내용 층에 놓는데, 같은 층이면
     # 만든 차례가 위아래를 정해서 아이콘이 큰 칸에서는 글자가 묻힌다.
     kit.place(blueprint, name, x, y, w, h, "tl", None, Z_TEXT)
+    # 층을 정한 **뒤에** 붙인다. kit.place 가 칸 크기를 다시 정하므로 먼저
+    # 붙이면 그 값이 덮인다.
+    kit.align_in(blueprint, name, x, y, w, h, align or halign, valign)
 
 
 def outline(blueprint, parent, origin, widget_name, rect):
@@ -303,7 +319,7 @@ def commands(blueprint, root):
         # 판 밖까지 사각형으로 덮여 시안과 모양이 달라진다.
         kit.image(blueprint, "CommandDisabled_%d" % index, card, 0, 0,
                   size[0], size[1], None, z_order=Z_MARK,
-                  texture="{}/{}".format(ART, TEXTURE[plate_name]),
+                  texture="{}/{}".format(ART, CARD_PLATE),
                   tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.62))
         kit.fold(blueprint, "CommandDisabled_%d" % index)
 
