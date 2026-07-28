@@ -32,16 +32,16 @@ TEXTURE = {
 
 #: 판을 화면 어디에 놓나. (x, y, w, h)
 PLACE = {
-    "action_bottom": (741, 666, 197, 217),
-    "action_left_lower": (497, 542, 196, 213),
-    "action_left_upper": (497, 303, 196, 218),
-    "action_right_lower": (971, 542, 196, 213),
-    "action_right_upper": (971, 303, 196, 218),
+    "action_bottom": (741, 666, 197, 212),
+    "action_left_lower": (497, 542, 197, 212),
+    "action_left_upper": (497, 303, 197, 212),
+    "action_right_lower": (971, 542, 197, 212),
+    "action_right_upper": (971, 303, 197, 212),
     "action_top": (741, 178, 197, 212),
     "bottom_right_button": (1318, 770, 345, 158),
     "bottom_status_center": (232, 761, 225, 174),
     "bottom_status_left": (10, 761, 225, 174),
-    "bottom_status_right": (454, 760, 222, 175),
+    "bottom_status_right": (454, 760, 225, 174),
     "top_center_turn_order": (483, 12, 713, 158),
     "top_left_parchment": (15, 12, 309, 151),
     "top_right_parchment": (1271, 12, 392, 151),

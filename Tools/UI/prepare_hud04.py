@@ -134,7 +134,7 @@ CARD_FALLBACK = ("action_right_upper", "action_right_lower", "action_bottom",
 #: 아군 칸 셋. 카드와 같은 까닭으로 한 벌로 맞춘다 -- 시안이 기사 줄에만
 #: 상태이상을 그려 두어 셋의 요소 수부터 다르다.
 PARTY = ("bottom_status_left", "bottom_status_center", "bottom_status_right")
-PARTY_TEMPLATE = "bottom_status_right"
+PARTY_TEMPLATE = "bottom_status_left"
 
 #: 본에 없는 것을 데려올 곳. 시안이 기사 줄(왼쪽)에만 상태이상과 차례 표시를
 #: 그려 두어, 아군 3을 본으로 삼으면 그 둘이 없다.
@@ -256,6 +256,38 @@ def apply_tuning(place, detail):
 tuned = apply_tuning(place, detail)
 if tuned:
     print("손으로 맞춘 자리 %d개를 덮었다" % tuned)
+
+def same_size(place, plates, template):
+    """묶인 판의 **크기**를 본에 맞춘다. 자리는 그대로 둔다.
+
+    안쪽 구역만 맞추면 모자란다. 판 크기가 197x212, 196x218, 196x213 으로
+    제각각이라, 같은 판 안 자리라도 화면에서는 카드마다 가장자리까지의 거리가
+    달라진다 -- 비용 배지가 어느 카드에서는 테두리에 붙고 어느 카드에서는
+    떠 보인다.
+
+    자리(x, y)는 안 건드린다. 그것은 시안이 정한 배치이고, 여기서 맞추려는
+    것은 "카드 한 장이 어떻게 생겼나" 다.
+    """
+    if template not in place:
+        return 0
+    _, _, width, height = place[template]
+    moved = 0
+    for plate in plates:
+        if plate == template:
+            continue
+        x, y, w, h = place[plate]
+        if (w, h) == (width, height):
+            continue
+        place[plate] = (x, y, width, height)
+        moved += 1
+    return moved
+
+
+for group in ((CARDS, CARD_TEMPLATE), (PARTY, PARTY_TEMPLATE)):
+    changed = same_size(place, group[0], group[1])
+    if changed:
+        print("판 %d장의 크기를 %s 에 맞췄다 (%dx%d)"
+              % (changed, group[1], place[group[1]][2], place[group[1]][3]))
 
 # 빈 자리 메우기가 마지막이다. 맞춘 값을 얹은 뒤에 해야, 쪽에서 새로 만든
 # 구역이 있는 판은 그대로 두고 없는 판에만 들어간다.
