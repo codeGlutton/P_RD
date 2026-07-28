@@ -1,0 +1,17 @@
+지금 물린 표 14개
+   CT_KnightPlayerUnitAttribute
+   CT_PlayerLevelAttribute
+   CT_TestEnemyUnitAttribute
+   CT_SkeletonMinionMeleeUnitAttribute
+   CT_SkeletonMinionRangedUnitAttribute
+   CT_SkeletonGolemUnitAttribute
+   CT_EagleUnitAttribute
+   CT_GolemUnitAttribute
+   CT_LeshyUnitAttribute
+   CT_MushroomUnitAttribute
+   CT_SlimeUnitAttribute
+   CT_SpiderUnitAttribute
+   CT_WerewolfUnitAttribute
+   CT_PartyAttribute
+
+CT_StartingCrewAttribute 를 물렸다 -> 15개

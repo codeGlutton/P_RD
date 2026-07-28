@@ -34,10 +34,10 @@ PartyCard_0 자리=(11.5, 873.9, 258.4, 199.8) 판=KK_HUD04_bottom_status_left (
 PartyCard_1 자리=(266.4, 873.9, 258.4, 199.8) 판=KK_HUD04_bottom_status_left (0.0, 0.0, 258.4, 199.8)
     PartyPortrait    KK_HUD04_bottom_status_center__party_portrait (37.9, 36.7, 74.6, 91.9)
     PartyHPIcon      KK_HUD04_zone_hp_icon              (118.3, 65.5, 27.6, 27.6)
-    PartySelected    KK_HUD04_selected_outline          (0.0, 0.0, 249.2, 190.6)
+    PartySelected    없음
     PartyHPText      (브러시 없음)                           (149.3, 79.2, 73.5, 27.6)
 PartyCard_2 자리=(521.3, 872.7, 258.4, 199.8) 판=KK_HUD04_bottom_status_left (0.0, 0.0, 258.4, 199.8)
     PartyPortrait    KK_HUD04_bottom_status_right__party_portrait (37.9, 36.7, 74.6, 91.9)
     PartyHPIcon      KK_HUD04_zone_hp_icon              (118.3, 65.5, 27.6, 27.6)
-    PartySelected    KK_HUD04_selected_outline          (0.0, 0.0, 249.2, 190.6)
+    PartySelected    없음
     PartyHPText      (브러시 없음)                           (149.3, 79.2, 73.5, 27.6)

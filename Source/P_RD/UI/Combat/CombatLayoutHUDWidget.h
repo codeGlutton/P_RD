@@ -22,6 +22,8 @@
 
 #include "CombatLayoutHUDWidget.generated.h"
 
+struct FPresentationBarrier;
+
 class UButton;
 class UMockCombatDriver;
 class UImage;
@@ -47,6 +49,10 @@ public:
 	 * 열고 나서 표시 상태를 확정한다.
 	 */
 	virtual void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
+
+	/** @brief 도메인 갱신 말고 행동 표현 알림도 같이 듣는다. */
+	virtual void BindUIModel(UCombatUIModel* InUIModel) override;
+	virtual void UnbindUIModel() override;
 
 	/** @brief 판 탭 알림까지 같이 구독한다. */
 	/** @brief 이 배치안이 화면에 표시할 파티 인원. 기획상 최대 3명. */
@@ -118,6 +124,26 @@ private:
 	/** @brief 지금 조준 중인가. 조준 중에는 카드가 비켜 있다. */
 	bool IsAiming() const;
 
+	/** @brief 지금 차례가 아군인가. 적 차례에는 카드를 안 보여 준다. */
+	bool IsPlayerTurn() const;
+
+	/** @brief 지금 차례인 유닛. 없으면 nullptr. */
+	const FUnitUI* FindTurnUnit() const;
+
+	/**
+	 * @brief 행동이 노는 동안 카드를 접어 둔다.
+	 *
+	 * @details
+	 * 걸어가는 중에 카드가 도로 떠서, 아직 안 끝난 것을 끝난 것처럼 보였다.
+	 * 행동은 표현이 다 끝난 뒤에야 끝났다고 알려 온다 -- 이동은 마지막 칸에
+	 * 도착한 뒤에 MarkActionCompleted 를 부른다. 그래서 이 두 알림 사이를
+	 * 접어 두면 애니메이션이 끝날 때까지 카드가 안 뜬다.
+	 *
+	 * 배리어는 **붙잡지 않는다.** 붙잡으면 게임플레이가 화면을 기다린다.
+	 */
+	void HandleActionPresentationBegin(TSharedPtr<FPresentationBarrier> Barrier);
+	void HandleActionPresentationEnd(TSharedPtr<FPresentationBarrier> Barrier);
+
 	/**
 	 * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
 	 *
@@ -171,6 +197,13 @@ private:
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
 
+	/** @brief 행동 표현이 도는 중인가. 도는 동안 카드를 접는다. */
+	bool mIsActionPlaying = false;
+
+	/** @brief 붙인 행동 알림 구독. 뗄 때 쓴다. */
+	FDelegateHandle mActionBeginHandle;
+	FDelegateHandle mActionEndHandle;
+
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
 
@@ -188,7 +221,6 @@ private:
 		 * 고리와 유령 보석이 뜬다. 실제로 그렇게 보였다.
 		 */
 		TObjectPtr<UWidget> Content;
-		TObjectPtr<UWidget> Selected;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
 		TObjectPtr<UProgressBar> HPBar;

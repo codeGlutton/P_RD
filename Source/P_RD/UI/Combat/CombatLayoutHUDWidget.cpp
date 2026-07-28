@@ -140,7 +140,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		const FString Suffix = FString::Printf(TEXT("_%d"), Index);
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("PartyCard") + Suffix);
 		Widgets.Content = Find<UWidget>(WidgetTree, TEXT("PartyContent") + Suffix);
-		Widgets.Selected = Find<UWidget>(WidgetTree, TEXT("PartySelected") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("PartyPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("PartyName") + Suffix);
 		Widgets.HPBar = Find<UProgressBar>(WidgetTree, TEXT("PartyHPBar") + Suffix);
@@ -366,7 +365,6 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		const FPartySlotWidgets& Widgets = mPartySlots[SlotIndex];
 		SetShown(Widgets.Root, true);
 		SetShown(Widgets.Content, true);
-		SetShown(Widgets.Selected, Unit.mUnitId == CurrentUnitId);
 
 		// 빈 칸 처리가 접어 둔 것들을 다시 켠다.
 		//
@@ -454,7 +452,6 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 {
 	SetShown(Widgets.Root, true);
 	SetShown(Widgets.Content, false);
-	SetShown(Widgets.Selected, false);
 
 	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
 	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
@@ -593,19 +590,25 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 
 void UCombatLayoutHUDWidget::RefreshEnemy()
 {
-	// 겨냥한 유닛을 먼저 본다. 없으면 살아 있는 첫 적으로 떨어진다 -- 전투가
-	// 막 시작돼 아무 데도 안 눌렀을 때가 그렇다.
+	// 안내판은 두 경우에만 뜬다. **짚은 적**이 있거나, **적 차례**거나.
+	//
+	// 전에는 아무것도 안 짚었으면 살아 있는 첫 적으로 떨어졌다. 그래서 내
+	// 차례 내내 엉뚱한 적의 안내판이 떠 있었다 -- 누가 움직일 차례인지
+	// 화면이 거짓말을 한 셈이다. 떨어질 곳을 없앴다.
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FCombatTargetUI& Target = mUIModel->GetTarget();
 	const int32 TargetId = Target.mIsValid ? Target.mUnitId : INDEX_NONE;
 	const FUnitUI* Shown = TargetId != INDEX_NONE
 		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
-			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
+			{ return Unit.mUnitId == TargetId && !Unit.mIsPlayer && Unit.mHP > 0.f; })
 		: nullptr;
 	if (Shown == nullptr)
 	{
-		Shown = Units.FindByPredicate(
-			[](const FUnitUI& Unit) { return !Unit.mIsPlayer && Unit.mHP > 0.f; });
+		const FUnitUI* TurnUnit = FindTurnUnit();
+		if (TurnUnit != nullptr && !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
+		{
+			Shown = TurnUnit;
+		}
 	}
 
 	SetShown(mEnemyPanel, Shown != nullptr);
@@ -711,6 +714,65 @@ void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
 	RefreshCommandVisibility();
 }
 
+const FUnitUI* UCombatLayoutHUDWidget::FindTurnUnit() const
+{
+	if (mUIModel == nullptr)
+	{
+		return nullptr;
+	}
+	const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
+	if (TurnUnitId == INDEX_NONE)
+	{
+		return nullptr;
+	}
+	return mUIModel->GetUnitUIs().FindByPredicate(
+		[TurnUnitId](const FUnitUI& Unit) { return Unit.mUnitId == TurnUnitId; });
+}
+
+bool UCombatLayoutHUDWidget::IsPlayerTurn() const
+{
+	const FUnitUI* TurnUnit = FindTurnUnit();
+	// 차례를 아직 모를 때는 접지 않는다. 전투가 막 시작돼 첫 갱신이 오기
+	// 전이 그런데, 여기서 접으면 첫 차례에 카드가 안 뜬다.
+	return TurnUnit == nullptr || TurnUnit->mIsPlayer;
+}
+
+void UCombatLayoutHUDWidget::HandleActionPresentationBegin(TSharedPtr<FPresentationBarrier> Barrier)
+{
+	mIsActionPlaying = true;
+	RefreshCommandVisibility();
+}
+
+void UCombatLayoutHUDWidget::HandleActionPresentationEnd(TSharedPtr<FPresentationBarrier> Barrier)
+{
+	mIsActionPlaying = false;
+	RefreshCommandVisibility();
+}
+
+void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
+{
+	Super::BindUIModel(InUIModel);
+	if (mUIModel != nullptr)
+	{
+		mActionBeginHandle = mUIModel->OnBeginAnyTurnAction.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandleActionPresentationBegin);
+		mActionEndHandle = mUIModel->OnEndAnyTurnAction.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandleActionPresentationEnd);
+	}
+}
+
+void UCombatLayoutHUDWidget::UnbindUIModel()
+{
+	if (mUIModel != nullptr)
+	{
+		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
+		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
+	}
+	mActionBeginHandle.Reset();
+	mActionEndHandle.Reset();
+	Super::UnbindUIModel();
+}
+
 bool UCombatLayoutHUDWidget::IsAiming() const
 {
 	return mUIModel != nullptr
@@ -719,7 +781,11 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 
 void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 {
-	const bool bVisible = mCommandsShown == true && IsAiming() == false;
+	// 넷이 다 참이어야 보인다. 하나라도 아니면 접는다.
+	const bool bVisible = mCommandsShown == true
+		&& IsAiming() == false
+		&& IsPlayerTurn() == true
+		&& mIsActionPlaying == false;
 	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
 	{
 		SetShown(Widgets.Root, bVisible);

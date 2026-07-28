@@ -310,6 +310,13 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		// 방금 쓴 스킬에 쿨타임이 걸렸다. 다시 안 내리면 카드가 옛 숫자를 그대로
+		// 들고 있어, 쓴 스킬이 아직 쓸 수 있는 것처럼 보인다.
+		//
+		// 행동력도 줄었으므로 유닛도 같이 내린다 -- 속성 델리게이트가 잡아
+		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
+		PushSkillUIData();
+		PushUnitUIData();
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
