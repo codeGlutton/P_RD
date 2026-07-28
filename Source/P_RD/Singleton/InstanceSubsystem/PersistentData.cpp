@@ -534,7 +534,10 @@ const FRunLog& URunPersistData::GetRunLog() const
 /** @brief 런이 활성 상태인지(유효한 스테이지가 존재하는지) 여부를 반환한다. @return 스테이지 유효 시 true */
 bool URunPersistData::IsActive() const
 {
-	return mStage.IsValid();
+	// 파티가 비어 있으면 이어갈 수 없다. 저장 구조가 한 명에서 셋으로 바뀌기
+	// 전에 만든 세이브가 그렇다 -- 스테이지는 멀쩡히 읽히는데 데리고 갈
+	// 사람이 없어서, 방에 들어가는 순간 세울 유닛이 없다.
+	return mStage.IsValid() && mParty.IsEmpty() == false;
 }
 
 /**
