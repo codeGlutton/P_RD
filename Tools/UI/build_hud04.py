@@ -311,10 +311,10 @@ def commands(blueprint, root):
         text(blueprint, "CommandCost_%d" % index, card, origin,
              badge, cost, 19, TEXT_DARK, bold=True)
 
-        # 골라진 표시와 못 쓰는 표시. 여섯 장 다 있어야 런타임이 어느 칸이든
-        # 켤 수 있다 -- 시안이 한 칸에만 그려 준 것이라도 그렇다.
-        outline(blueprint, card, origin, "CommandSelected_%d" % index,
-                PLACE[plate_name])
+        # 골라진 표시는 안 만든다. 스킬을 고르는 순간 조준에 들고, 조준 중에는
+        # 카드가 통째로 비킨다 -- 금테가 켜지자마자 카드와 같이 사라져서
+        # 한 프레임 반짝이는 것이 전부였다.
+        #
         # 가림막은 판 그림을 한 장 더 깔고 어둡게 물들인다. 검은 네모를 덮으면
         # 판 밖까지 사각형으로 덮여 시안과 모양이 달라진다.
         kit.image(blueprint, "CommandDisabled_%d" % index, card, 0, 0,

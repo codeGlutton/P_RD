@@ -216,7 +216,6 @@ private:
 		TObjectPtr<UWidget> CooldownIcon;
 		TObjectPtr<UTextBlock> Damage;
 		TObjectPtr<UWidget> Disabled;
-		TObjectPtr<UWidget> Selected;
 	};
 
 	/** @brief 턴 순서 토큰 한 개. */

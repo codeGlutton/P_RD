@@ -31,7 +31,14 @@ from hud04_slots import DETAIL, PLACE, TEXTURE
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(HERE, "KayKitUIKit", "HUD04")
-OUT = os.path.join(HERE, "_HUD04구역")
+# 폴더와 파일 이름은 영문으로 둔다.
+#
+# 한글로 두었더니 UnrealBuildTool 이 죽었다. git status 는 한글 경로를 따옴표로
+# 감싸고 이스케이프해서 내놓는데(êµ¬...), UBT 의 적응형 빌드가 그
+# 줄을 그대로 경로로 쓰다 "invalid directory separators" 로 터진다.
+#
+# 빌드가 안 되는 이유를 이 폴더에서 찾기까지 한참 걸렸다.
+OUT = os.path.join(HERE, "_hud04_zones")
 
 #: 판 이름 -> 사람이 읽는 이름. 쪽 목록에 뜬다.
 LABEL = {
@@ -135,7 +142,8 @@ def main():
             .replace("시안1 배치안이 쓰는 그림 · 구역 조정",
                      "시안4 전투 HUD · 구역 조정")
             .replace('\'    "01": {\'', '\'DETAIL = {\''))
-    io.open(os.path.join(OUT, "구역.html"), "w", encoding="utf-8").write(page)
+    io.open(os.path.join(OUT, "zones.html"), "w",
+            encoding="utf-8").write(page)
 
     for group in rows:
         print("%-12s %2d장  <- %s" % (group["title"], len(group["items"]),
@@ -144,7 +152,7 @@ def main():
 
     if missing:
         print("그림 못 찾음:", ", ".join(missing))
-    print("적었다:", os.path.join(OUT, "구역.html"))
+    print("적었다:", os.path.join(OUT, "zones.html"))
 
 
 main()

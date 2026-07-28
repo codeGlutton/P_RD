@@ -177,7 +177,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.CooldownIcon = Find<UWidget>(WidgetTree, TEXT("CommandCooldownIcon") + Suffix);
 		Widgets.Damage = Find<UTextBlock>(WidgetTree, TEXT("CommandDamage") + Suffix);
 		Widgets.Disabled = Find<UWidget>(WidgetTree, TEXT("CommandDisabled") + Suffix);
-		Widgets.Selected = Find<UWidget>(WidgetTree, TEXT("CommandSelected") + Suffix);
 	}
 
 	mTurnSlots.SetNum(TurnSlotCount);
@@ -555,7 +554,6 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 void UCombatLayoutHUDWidget::RefreshCommands()
 {
 	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
-	const int32 SelectedSkill = mUIModel->GetSelectedSkillIndex();
 
 	for (int32 SlotIndex = 0; SlotIndex < mCommandSlots.Num(); ++SlotIndex)
 	{
@@ -571,7 +569,6 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.CooldownIcon, false);
 			SetShown(Widgets.Damage, false);
 			SetShown(Widgets.Disabled, false);
-			SetShown(Widgets.Selected, false);
 			continue;
 		}
 
@@ -623,7 +620,6 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		}
 
 		SetShown(Widgets.Disabled, !Skill.mIsUsable);
-		SetShown(Widgets.Selected, SkillIndex == SelectedSkill);
 		if (Widgets.Button != nullptr)
 		{
 			Widgets.Button->SetIsEnabled(Skill.mIsUsable);

@@ -74,7 +74,6 @@ struct FMercenaryCardWidgets
 	/** @brief 특성 한 줄. 왜 이 사람을 데려가는지. 설명 문구를 그대로 건다. */
 	UPROPERTY() TObjectPtr<UTextBlock> mTrait = nullptr;
 	/** @brief 검토 중 금색 테두리. 판에 없어 낱장으로 얹는다. */
-	UPROPERTY() TObjectPtr<UWidget> mSelected = nullptr;
 };
 
 /**

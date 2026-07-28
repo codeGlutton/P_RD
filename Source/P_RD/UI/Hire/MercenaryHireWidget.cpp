@@ -88,7 +88,6 @@ void UMercenaryHireWidget::CacheWidgets()
 		Card.mBadge = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireBadge") + Tail);
 		Card.mSeal = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("HireSeal") + Tail);
 		Card.mTrait = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireTrait") + Tail);
-		Card.mSelected = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("HireSelected") + Tail);
 
 		Card.mSkills.Reset();
 		for (int32 Line = 0; Line < 2; ++Line)
@@ -266,7 +265,6 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	}
 
 	const EMercenaryCardState State = StateOf(CardIndex);
-	MercenaryHireDetail::SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
 	MercenaryHireDetail::SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
 	MercenaryHireDetail::SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
 	// 자리가 찼다고 흐리지 않는다. 눌리는 것을 흐리게 두면 못 누르는 줄 안다.

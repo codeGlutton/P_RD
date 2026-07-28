@@ -176,6 +176,10 @@ def unify_cards(place, detail):
     if "selected_outline" in template:
         template["cooldown_overlay"] = list(template["selected_outline"])
 
+    # 카드에는 골라진 표시를 안 그린다. 자리만 남겨 두면 쪽에서 옮길 수 있는
+    # 죽은 구역이 되어, 맞춰 놓아도 아무 데도 안 쓰인다.
+    template.pop("selected_outline", None)
+
     # 태세 글은 피해 글과 같은 칸이다. 한 카드가 둘을 같이 쓰는 일은 없다.
     if "damage_text" in template:
         template["stance_text"] = list(template["damage_text"])
