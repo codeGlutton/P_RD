@@ -162,6 +162,23 @@ private:
 	 */
 	void HandleBoardPressed(const FVector2D& ScreenPosition);
 
+	/**
+	 * @brief 이 자리가 HUD 위인가.
+	 *
+	 * @details
+	 * 판과 글자는 SelfHitTestInvisible 이라 눌림이 그대로 뿌리까지 내려온다.
+	 * 그래서 적 안내판이나 라운드 판을 눌러도 "판을 눌렀다" 로 셌고, 카드가
+	 * 열렸다. 눌린 자리가 어느 묶음 안인지 재서 가린다.
+	 *
+	 * 버튼은 여기 안 온다 -- 버튼이 먼저 가져간다.
+	 * @param ScreenPosition 눌린 화면 자리
+	 * @return HUD 위면 참
+	 */
+	bool IsOverChrome(const FVector2D& ScreenPosition) const;
+
+	/** @brief 눌림을 삼킬 묶음들. 판·안내판·아군 칸 같은 것. */
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mChromeWidgets;
+
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 

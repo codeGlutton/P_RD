@@ -647,6 +647,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
+		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
+		PushSkillUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -775,8 +777,14 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+		// 둘이 같은 칸을 읽고 있었다. UPlayerUnitAttributeSet 은
+		// UCombatTargetAttributeSet 을 물려받으므로 GetMovementAttribute() 가
+		// **같은 속성**을 가리킨다 -- 그래서 10/10 을 다 쓰면 0/0 이 됐다.
+		//
+		// 한 턴에 받는 총량은 따로 있다. RechargeMovement 다. 턴이 시작될 때
+		// 그 수만큼 Movement 를 채운다(UUnitModel::OnBeginTurn).
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -947,9 +955,18 @@ void ACombatGameMode::PushSkillUIData() const
 			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
 			// 그쪽 값을 받아 이 줄을 지운다.
 			SkillUIData.mCriticalDamage = FMath::RoundToInt(SkillUIData.mDamageMax * 1.5f);
-			// 겨냥한 자리와 남은 행동력으로 쓸 수 있는지 가린다. 화면은 이
-			// 판정을 안 한다 -- 사거리를 두 곳에서 세면 어긋나는 날이 온다.
+			// 쓸 수 있는지는 세 가지를 다 본다. 하나라도 아니면 카드를 끈다.
+			//
+			//   쿨타임이 도는 중        IsCooldown
+			//   행동력이 모자람          HasRequiredMovement
+			//   겨냥한 자리가 사거리 밖   IsSkillUsableOnTarget
+			//
+			// 앞의 둘을 안 보고 있었다. 쿨타임이 도는 스킬도, AP 가 0 인
+			// 유닛의 스킬도 멀쩡히 켜져 있었다. 화면은 이 판정을 안 한다 --
+			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
 			SkillUIData.mIsUsable = bIsOwnTurn
+				&& SkillComponentModel->IsCooldown(i) == false
+				&& SkillComponentModel->HasRequiredMovement(i) == true
 				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);

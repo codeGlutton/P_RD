@@ -204,6 +204,22 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
+
+	// 눌림을 삼킬 묶음들. 카드는 안 넣는다 -- 카드는 제 버튼이 가져간다.
+	//
+	// 묶음(Canvas) 을 잡는다. 그 안의 판과 글자는 SelfHitTestInvisible 이라
+	// 눌림이 그대로 뿌리까지 내려오는데, 묶음의 자리를 재면 그 안 아무 데나
+	// 눌러도 걸린다.
+	mChromeWidgets.Reset();
+	for (const TCHAR* Name : { TEXT("RoundPanel"), TEXT("TurnPanel"),
+		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("EndTurnPanel"),
+		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2") })
+	{
+		if (UWidget* Found = Find<UWidget>(WidgetTree, Name))
+		{
+			mChromeWidgets.Add(Found);
+		}
+	}
 }
 
 /**
@@ -935,9 +951,32 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	return FReply::Handled();
 }
 
+bool UCombatLayoutHUDWidget::IsOverChrome(const FVector2D& ScreenPosition) const
+{
+	for (const UWidget* Chrome : mChromeWidgets)
+	{
+		if (Chrome == nullptr || Chrome->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			continue;
+		}
+		if (Chrome->GetCachedGeometry().IsUnderLocation(ScreenPosition) == true)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 {
 	if (mUIModel == nullptr)
+	{
+		return;
+	}
+
+	// HUD 를 누른 것은 판을 누른 것이 아니다. 조준 중이어도 마찬가지다 --
+	// 안내판을 누르려다 엉뚱한 칸에 스킬을 쏘면 무를 길이 없다.
+	if (IsOverChrome(ScreenPosition) == true)
 	{
 		return;
 	}
