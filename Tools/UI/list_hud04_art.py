@@ -175,7 +175,16 @@ def main():
                               "path": name or plate, "note": note,
                               "png": None, "role": plate})
                 continue
-            shutil.copyfile(src, os.path.join(OUT, "png", name + ".png"))
+            # 판 크기에 맞춰 줄여서 깐다.
+            #
+            # 그냥 복사하면 그림이 원본 크기로 깔린다. 시안에서 오려 낸 판은
+            # 그림 크기와 판 크기가 같아 그래도 됐는데, 갈아 끼운 판은 다르다 --
+            # 영웅 칸은 그림이 1354 인데 판은 292 라, 구역이 왼쪽 위 구석에
+            # 오글오글 몰려 보였다.
+            with Image.open(src) as image:
+                image = image.convert("RGBA").resize((int(w), int(h)),
+                                                     Image.LANCZOS)
+                image.save(os.path.join(OUT, "png", name + ".png"))
             items.append({"name": LABEL.get(plate, plate), "path": name,
                           "note": note, "png": "png/%s.png" % name,
                           "role": plate})
