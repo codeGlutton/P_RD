@@ -181,31 +181,39 @@ void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
 		return;
 	}
 
-	// 두 단계로 나눈다. 한 번에 정해지면 잘못 누른 것을 되돌리기 번거롭다.
-	if (mReviewing == CardIndex || mChosen.Contains(CardIndex))
-	{
-		ToggleChoice(CardIndex);
-	}
-	else
-	{
-		mReviewing = CardIndex;
-	}
+	// 한 번 누르면 정해진다. 두 단계로 나눠 뒀었는데, 되돌리는 값이 눌러서
+	// 빼는 것 하나뿐이라 검토 단계가 손만 한 번 더 들게 했다.
+	//
+	// 마지막으로 누른 후보는 상세칸이 계속 보여 준다. 골랐든 뺐든 방금 본
+	// 사람이 상세칸에 남아 있어야 견주면서 고를 수 있다.
+	mReviewing = CardIndex;
+	ToggleChoice(CardIndex);
 	Refresh();
 }
 
+/**
+ * @brief 고르거나 뺀다. 자리가 찼으면 마지막에 고른 자리를 내준다.
+ *
+ * @details
+ * 자리가 찼을 때 아무 일도 안 일어나게 두면, 넷째를 넣으려면 먼저 하나를
+ * 빼야 한다는 것을 눌러 보고 알아내야 한다 -- 눌렀는데 화면이 안 움직이면
+ * 잠긴 것인지 못 누른 것인지 구별이 안 된다.
+ *
+ * 내주는 자리를 **마지막에 고른 것**으로 한 이유: 처음 고른 사람일수록 마음이
+ * 굳은 쪽이다. 뒤로 갈수록 견주다 고른 자리이므로 그쪽을 내주는 편이 덜 아깝다.
+ * @param CardIndex 누른 이력서
+ */
 void UMercenaryHireWidget::ToggleChoice(const int32 CardIndex)
 {
 	if (mChosen.Remove(CardIndex) > 0)
 	{
-		mReviewing = CardIndex;
 		return;
 	}
 	if (mChosen.Num() >= mPartySize)
 	{
-		return;
+		mChosen.Pop();
 	}
 	mChosen.Add(CardIndex);
-	mReviewing = INDEX_NONE;
 }
 
 void UMercenaryHireWidget::Refresh()
@@ -261,8 +269,8 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	MercenaryHireDetail::SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
 	MercenaryHireDetail::SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
 	MercenaryHireDetail::SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
-	MercenaryHireDetail::SetDimmed(Card.mRoot,
-		State == EMercenaryCardState::Full || !Option.mSelectable);
+	// 자리가 찼다고 흐리지 않는다. 눌리는 것을 흐리게 두면 못 누르는 줄 안다.
+	MercenaryHireDetail::SetDimmed(Card.mRoot, !Option.mSelectable);
 
 	if (!Option.mSelectable)
 	{
@@ -278,7 +286,7 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateReviewing", "검토 중"));
 		break;
 	case EMercenaryCardState::Full:
-		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateFull", "자리 참"));
+		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateFull", "바꾸려면 누르기"));
 		break;
 	default:
 		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateOpen", "모집 중"));
@@ -323,11 +331,6 @@ void UMercenaryHireWidget::RefreshBottomBar()
 	if (bReady)
 	{
 		MercenaryHireDetail::SetTextIfPresent(mNoticeText, LOCTEXT("NoticeGo", "출발 준비가 됐습니다."));
-	}
-	else if (mReviewing != INDEX_NONE)
-	{
-		MercenaryHireDetail::SetTextIfPresent(mNoticeText,
-			LOCTEXT("NoticeConfirm", "한 번 더 누르면 정해집니다."));
 	}
 	else
 	{

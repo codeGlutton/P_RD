@@ -40,9 +40,9 @@ UENUM(BlueprintType)
 enum class EMercenaryCardState : uint8
 {
 	Open = 0,		/** 고를 수 있다 */
-	Reviewing,		/** 검토 중. 한 번 더 누르면 정해진다 */
+	Reviewing,		/** 지금 상세를 보는 중. 마지막으로 누른 후보다 */
 	Chosen,			/** 정해짐 */
-	Full			/** 자리가 다 찼다 */
+	Full			/** 자리가 찼다. 눌러도 되고, 그러면 마지막 자리를 뺏는다 */
 };
 
 /**

@@ -59,10 +59,9 @@ namespace
 		return Board;
 	}
 
-	/** @brief 두 번 눌러 하나를 정한다. 한 번은 검토, 두 번째가 확정이다. */
+	/** @brief 하나를 정한다. 한 번이면 된다. */
 	void Choose(UMercenaryHireWidget& Board, const int32 CardIndex)
 	{
-		Board.ClickCard(CardIndex);
 		Board.ClickCard(CardIndex);
 	}
 }
@@ -75,16 +74,9 @@ bool FMercenaryHireChooseTest::RunTest(const FString& Parameters)
 {
 	UMercenaryHireWidget* Board = MakeBoard();
 
-	// 한 번 누르면 검토일 뿐 아직 안 정해진다.
+	// 한 번 누르면 정해진다.
 	Board->ClickCard(2);
-	TestEqual(TEXT("한 번 누르면 검토 중"), Board->StateOf(2),
-		EMercenaryCardState::Reviewing);
-	TestEqual(TEXT("아직 아무도 안 정해짐"),
-		Board->GetChosenIndices().Num(), 0);
-
-	// 같은 것을 다시 누르면 정해진다.
-	Board->ClickCard(2);
-	TestEqual(TEXT("두 번 누르면 정해짐"), Board->StateOf(2),
+	TestEqual(TEXT("한 번 누르면 정해짐"), Board->StateOf(2),
 		EMercenaryCardState::Chosen);
 	TestEqual(TEXT("한 명 정해짐"), Board->GetChosenIndices().Num(), 1);
 
@@ -110,11 +102,23 @@ bool FMercenaryHirePartyLimitTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("누른 차례가 파티 칸 순서"),
 		Board->GetChosenIndices()[1], 3);
 
-	// 네 번째는 안 들어간다. 자리가 찼다.
+	// 자리가 찼는데 새 후보를 누르면 마지막 자리를 내준다.
+	TestEqual(TEXT("고르기 전 마지막 자리는 5"),
+		Board->GetChosenIndices()[2], 5);
 	Choose(*Board, 1);
-	TestEqual(TEXT("셋에서 멈춘다"), Board->GetChosenIndices().Num(), 3);
-	TestEqual(TEXT("남은 이력서는 자리 참"), Board->StateOf(4),
-		EMercenaryCardState::Full);
+	TestEqual(TEXT("여전히 셋"), Board->GetChosenIndices().Num(), 3);
+	TestEqual(TEXT("마지막 자리가 새 후보로"),
+		Board->GetChosenIndices()[2], 1);
+	TestFalse(TEXT("내준 후보는 빠져 있다"),
+		Board->GetChosenIndices().Contains(5));
+	TestEqual(TEXT("먼저 고른 둘은 그대로"),
+		Board->GetChosenIndices()[0], 0);
+
+	// 내준 자리는 다시 고를 수 있다. 이번엔 방금 들어온 1 이 밀려난다.
+	Choose(*Board, 5);
+	TestEqual(TEXT("바뀐 뒤에도 셋"), Board->GetChosenIndices().Num(), 3);
+	TestTrue(TEXT("다시 고른 후보가 들어와 있다"),
+		Board->GetChosenIndices().Contains(5));
 	return true;
 }
 
