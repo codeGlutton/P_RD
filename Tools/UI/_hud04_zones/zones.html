@@ -154,6 +154,9 @@
   button:hover { background: #2c323f; }
   button.on { background: #3d5a8a; border-color: #6a8fd0; color: #fff; }
   button.warm { border-color: #6b5200; color: #ffd24a; }
+  .sep {
+    width: 1px; align-self: stretch; background: #2a303b; margin: 0 3px;
+  }
   #said { color: #8ce99a; font-size: 12.5px; align-self: center; }
   #dirty { color: #ffd24a; font-size: 12.5px; align-self: center; }
 </style>
@@ -175,20 +178,27 @@
   <div id="main">
     <div id="canvas"><span style="color:#5a6270">왼쪽에서 고르세요</span></div>
     <div class="bar">
+      <!-- 내보내기가 맨 앞이다. 단추가 열대여섯 개라 뒤에 두면 줄이 넘어가
+           화면 밖으로 밀리고, 그러면 맞춰 놓고도 꺼낼 수가 없다. -->
+      <button id="save" class="warm">⬇ 파일로 저장</button>
+      <button id="copy">코드 복사</button>
+      <span class="sep"></span>
+      <button id="midX">가로 가운데</button>
+      <button id="midY">세로 가운데</button>
+      <button id="back">되돌리기</button>
+      <button id="fwd">다시</button>
+      <span class="sep"></span>
+      <button id="tie" class="on">묶어 고치기</button>
+      <button id="spread">같은 판 전체에 적용</button>
+      <button id="one">이 구역만 원래대로</button>
+      <button id="undo">전부 원래 값으로</button>
+      <span class="sep"></span>
       <button id="zoom1">원래 크기</button>
       <button id="zoom2" class="on">×2</button>
       <button id="zoom4">×4</button>
       <span id="zoomLabel" style="color:#8b93a1;align-self:center">×2</span>
       <button id="zones" class="on">구역 표시</button>
-      <button id="copy">코드 복사</button>
-      <button id="save" class="warm">파일로 저장</button>
       <button id="art" class="on">구역 그림</button>
-      <button id="back">되돌리기</button>
-      <button id="fwd">다시</button>
-      <button id="tie" class="on">묶어 고치기</button>
-      <button id="spread">같은 판 전체에 적용</button>
-      <button id="one">이 구역만 원래대로</button>
-      <button id="undo">전부 원래 값으로</button>
       <span id="said"></span><span id="dirty"></span>
     </div>
 
@@ -212,10 +222,10 @@
 // 했더니 브라우저가 막았다 -- file:// 에서는 같은 폴더 파일도 fetch 가 안
 // 된다(그림 태그는 된다).
 const GROUPS = [{"title": "상단", "users": "라운드 · 턴 순서 · 목표", "items": [{"name": "라운드", "path": "KK_HUD04_top_left_parchment", "note": "top_left_parchment  309x151 @ 15,12", "png": "png/KK_HUD04_top_left_parchment.png", "role": "top_left_parchment"}, {"name": "턴 순서", "path": "KK_HUD04_top_center_turn_order", "note": "top_center_turn_order  713x158 @ 483,12", "png": "png/KK_HUD04_top_center_turn_order.png", "role": "top_center_turn_order"}, {"name": "목표 (→ 메뉴 아이콘)", "path": "KK_HUD04_top_right_parchment", "note": "top_right_parchment  392x151 @ 1271,12", "png": "png/KK_HUD04_top_right_parchment.png", "role": "top_right_parchment"}]}, {"title": "명령 카드 6", "users": "CommandCard_0~5", "items": [{"name": "디폴트_1", "path": "KK_HUD04_action_top", "note": "action_top  197x212 @ 741,178", "png": "png/KK_HUD04_action_top.png", "role": "action_top"}, {"name": "디폴트_2", "path": "KK_HUD04_action_left_upper", "note": "action_left_upper  196x218 @ 497,303", "png": "png/KK_HUD04_action_left_upper.png", "role": "action_left_upper"}, {"name": "디폴트_3", "path": "KK_HUD04_action_right_upper", "note": "action_right_upper  196x218 @ 971,303", "png": "png/KK_HUD04_action_right_upper.png", "role": "action_right_upper"}, {"name": "디폴트_4", "path": "KK_HUD04_action_left_lower", "note": "action_left_lower  196x213 @ 497,542", "png": "png/KK_HUD04_action_left_lower.png", "role": "action_left_lower"}, {"name": "디폴트_5", "path": "KK_HUD04_action_right_lower", "note": "action_right_lower  196x213 @ 971,542", "png": "png/KK_HUD04_action_right_lower.png", "role": "action_right_lower"}, {"name": "디폴트_6", "path": "KK_HUD04_action_bottom", "note": "action_bottom  197x217 @ 741,666", "png": "png/KK_HUD04_action_bottom.png", "role": "action_bottom"}]}, {"title": "아군 3", "users": "PartyCard_0~2", "items": [{"name": "아군 1", "path": "KK_HUD04_bottom_status_left", "note": "bottom_status_left  225x174 @ 10,761", "png": "png/KK_HUD04_bottom_status_left.png", "role": "bottom_status_left"}, {"name": "아군 2", "path": "KK_HUD04_bottom_status_center", "note": "bottom_status_center  225x174 @ 232,761", "png": "png/KK_HUD04_bottom_status_center.png", "role": "bottom_status_center"}, {"name": "아군 3", "path": "KK_HUD04_bottom_status_right", "note": "bottom_status_right  222x175 @ 454,760", "png": "png/KK_HUD04_bottom_status_right.png", "role": "bottom_status_right"}]}, {"title": "그 밖", "users": "적 정보 · 턴 종료", "items": [{"name": "적 정보", "path": "KK_HUD04_upper_right_enemy_panel", "note": "upper_right_enemy_panel  390x286 @ 1273,180", "png": "png/KK_HUD04_upper_right_enemy_panel.png", "role": "upper_right_enemy_panel"}, {"name": "턴 종료", "path": "KK_HUD04_bottom_right_button", "note": "bottom_right_button  345x158 @ 1318,770", "png": "png/KK_HUD04_bottom_right_button.png", "role": "bottom_right_button"}]}];
-const BASE = {"action_bottom": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_left_lower": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_left_upper": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_right_lower": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_right_upper": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_top": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "bottom_right_button": {"button_label": [99, 52, 140, 49]}, "bottom_status_center": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 69, 25], "hp_bar": [118, 77, 79, 14], "ap_gems": [88, 111, 108, 31]}, "bottom_status_left": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 64, 25], "hp_bar": [118, 77, 79, 14], "status_icon": [91, 82, 25, 27], "status_text": [118, 86, 72, 24], "ap_gems": [88, 111, 108, 31], "selected_outline": [0, 0, 217, 166]}, "bottom_status_right": {"party_portrait": [20, 25, 65, 80], "character_name": [90, 29, 61, 27], "hp_icon": [90, 53, 24, 24], "hp_value": [118, 53, 66, 25], "hp_bar": [117, 77, 79, 14], "ap_gems": [87, 111, 108, 31]}, "top_center_turn_order": {"turn_portrait_01": [31, 28, 76, 74], "turn_portrait_02": [161, 28, 76, 74], "turn_portrait_03": [291, 28, 76, 74], "turn_portrait_04": [421, 28, 76, 74], "turn_portrait_05": [551, 28, 76, 74], "selected_outline": [25, 22, 88, 86]}, "top_left_parchment": {"round_label": [72, 48, 158, 44]}, "top_right_parchment": {"objective_text": [50, 48, 286, 44]}, "upper_right_enemy_panel": {"enemy_portrait": [33, 37, 113, 160], "enemy_name": [157, 42, 69, 35], "hp_icon": [157, 81, 39, 38], "hp_value": [204, 86, 67, 30], "hp_bar": [204, 112, 138, 17], "defense_icon": [158, 132, 40, 42], "defense_text": [203, 137, 75, 31], "damage_icon": [157, 175, 43, 42], "damage_text": [203, 182, 140, 31]}};
+const BASE = {"action_bottom": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "action_left_lower": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "action_left_upper": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "action_right_lower": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "action_right_upper": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "action_top": {"action_name": [28, 27, 142, 27], "action_icon": [54, 56, 89, 89], "cost_badge": [134, 75, 49, 51], "cooldown_overlay": [9, 7, 180, 196], "cooldown_text": [28, 27, 142, 157], "damage_text": [28, 146, 142, 19], "stance_text": [28, 165, 142, 19]}, "bottom_right_button": {"button_label": [41, 41, 264, 74]}, "bottom_status_center": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 64, 25], "hp_bar": [118, 77, 79, 14], "status_icon": [91, 82, 25, 27], "status_text": [118, 86, 72, 24], "ap_gems": [88, 111, 108, 31], "selected_outline": [0, 0, 217, 166]}, "bottom_status_left": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 64, 25], "hp_bar": [118, 77, 79, 14], "status_icon": [91, 82, 25, 27], "status_text": [118, 86, 72, 24], "ap_gems": [88, 111, 108, 31], "selected_outline": [0, 0, 217, 166]}, "bottom_status_right": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 64, 25], "hp_bar": [118, 77, 79, 14], "status_icon": [91, 82, 25, 27], "status_text": [118, 86, 72, 24], "ap_gems": [88, 111, 108, 31], "selected_outline": [0, 0, 217, 166]}, "top_center_turn_order": {"turn_portrait_01": [70, 37, 85, 85], "turn_portrait_02": [193, 37, 85, 85], "turn_portrait_03": [315, 37, 85, 85], "turn_portrait_04": [438, 37, 85, 85], "turn_portrait_05": [560, 37, 85, 85], "selected_outline": [65, 32, 96, 96]}, "top_left_parchment": {"round_label": [38, 37, 233, 76]}, "top_right_parchment": {"objective_text": [38, 37, 317, 76]}, "upper_right_enemy_panel": {"enemy_portrait": [40, 40, 113, 160], "enemy_name": [157, 40, 193, 35], "hp_icon": [157, 80, 39, 38], "hp_value": [201, 81, 67, 30], "hp_bar": [201, 116, 138, 17], "defense_icon": [157, 138, 40, 42], "defense_text": [201, 138, 75, 31], "damage_icon": [157, 191, 43, 42], "damage_text": [203, 191, 140, 31]}};
 // 한 벌로 맞춰 둔 판 묶음. 이름 뒤 숫자로는 짝을 못 찾는 것들이다 --
 // action_top 과 action_left_upper 는 같은 카드인데 이름이 안 닮았다.
-const FAMILY = [["action_top", "action_left_upper", "action_right_upper", "action_left_lower", "action_right_lower", "action_bottom"]];
+const FAMILY = [["action_top", "action_left_upper", "action_right_upper", "action_left_lower", "action_right_lower", "action_bottom"], ["bottom_status_left", "bottom_status_center", "bottom_status_right"]];
 // 구역마다 얹어 볼 그림. { 판: { 요소: "png/..." } }
 const ZONEART = null;
 //: 그림을 어떻게 앉힐지.
@@ -664,6 +674,13 @@ window.addEventListener("keydown", (e) => {
 
   if (inField) return;
 
+  // C 는 가로, V 는 세로 가운데. 자판이 한글이어도 e.code 로 본다.
+  if (!hold && (e.code === "KeyC" || e.code === "KeyV")) {
+    e.preventDefault();
+    middle(e.code === "KeyC" ? "x" : "y");
+    return;
+  }
+
   const table = slots();
   if (e.key === "Escape") { sel = null; paint(); return; }
   if (e.key === "Tab" && table) {
@@ -990,6 +1007,38 @@ $("spread").onclick = () => {
 
 // 단추로도 되돌린다. 자판이 한글이면 Ctrl+Z 가 안 잡히는 판이 있어,
 // 손잡이가 하나뿐이면 그날 작업이 통째로 막힌다.
+// 판 크기. 띄워 놓은 그림의 원래 크기가 곧 판 크기다.
+function plateSize() {
+  const img = $("shell") && $("shell").querySelector("img");
+  return img ? [img.naturalWidth, img.naturalHeight] : null;
+}
+
+// 고른 구역을 판 한가운데로.
+//
+// 시안이 그린 자리를 그대로 재다 보니 글자와 아이콘이 죄다 왼쪽으로 밀려
+// 있었다 -- 시안은 비용 배지를 오른쪽 아래에 두느라 나머지를 왼쪽으로 밀어
+// 그렸고, 재는 쪽은 그려진 그대로 잰다. 손으로 (판폭 - 칸폭) / 2 를 치는 것은
+// 구역마다 되풀이라 여기에 둔다.
+function middle(axis) {
+  const table = slots();
+  const size = plateSize();
+  if (!sel || !table || !table[sel]) { flash("구역을 먼저 고르세요"); return; }
+  if (!size) { flash("판을 하나 골라 주세요"); return; }
+  mark();
+  const v = table[sel];
+  if (axis === "x") {
+    v[0] = Math.round((size[0] - v[2]) / 2);
+  } else {
+    v[1] = Math.round((size[1] - v[3]) / 2);
+  }
+  paint();
+  keep();
+  flash(sel + (axis === "x" ? " 가로" : " 세로") + " 가운데로");
+}
+
+$("midX").onclick = () => middle("x");
+$("midY").onclick = () => middle("y");
+
 $("art").onclick = () => {
   showArt = !showArt;
   $("art").classList.toggle("on", showArt);

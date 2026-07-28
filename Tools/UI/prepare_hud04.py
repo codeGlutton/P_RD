@@ -131,8 +131,14 @@ CARD_TEMPLATE = "action_top"
 CARD_FALLBACK = ("action_right_upper", "action_right_lower", "action_bottom",
                  "action_left_lower", "action_left_upper")
 
+#: 아군 칸 셋. 카드와 같은 까닭으로 한 벌로 맞춘다 -- 시안이 기사 줄에만
+#: 상태이상을 그려 두어 셋의 요소 수부터 다르다.
+PARTY = ("bottom_status_left", "bottom_status_center", "bottom_status_right")
+PARTY_TEMPLATE = "bottom_status_left"
+PARTY_FALLBACK = ("bottom_status_center", "bottom_status_right")
 
-def unify_cards(place, detail):
+
+def unify(place, detail, plates, template, fallbacks):
     """명령 카드 여섯의 판 안 자리를 한 벌로 맞춘다.
 
     ## 왜 다르게 나오나
@@ -164,42 +170,82 @@ def unify_cards(place, detail):
         return {element: [rect[0] - left, rect[1] - top, rect[2], rect[3]]
                 for element, rect in detail[plate].items()}
 
-    template = boxes(CARD_TEMPLATE)
+    base = boxes(template)
 
     # 본에 없는 것은 다른 판에서 데려온다. 본을 덮지는 않는다.
-    for spare in CARD_FALLBACK:
+    for spare in fallbacks:
         for element, rect in boxes(spare).items():
-            template.setdefault(element, rect)
+            base.setdefault(element, rect)
 
     # 가림막은 선택 테두리와 같은 자리를 덮는다. 덮는 것과 두르는 것이
     # 어긋나면 같은 카드가 상태에 따라 다른 크기로 보인다.
-    if "selected_outline" in template:
-        template["cooldown_overlay"] = list(template["selected_outline"])
+    # 가림막과 골라진 표시는 명령 카드만의 것이다.
+    #
+    # 가림막은 못 쓰는 카드를 덮고, 골라진 표시는 안 쓴다(고르는 순간 카드가
+    # 비켜서 안 보인다). 아군 칸에는 가림막이 없고, 골라진 표시는 "지금 차례"
+    # 라는 다른 뜻으로 늘 보인다.
+    if template == CARD_TEMPLATE:
+        if "cooldown_overlay" not in base and "selected_outline" in base:
+            base["cooldown_overlay"] = list(base["selected_outline"])
+        base.pop("selected_outline", None)
+    else:
+        base.pop("cooldown_overlay", None)
 
-    # 카드에는 골라진 표시를 안 그린다. 자리만 남겨 두면 쪽에서 옮길 수 있는
-    # 죽은 구역이 되어, 맞춰 놓아도 아무 데도 안 쓰인다.
-    template.pop("selected_outline", None)
+    # 아래 두 줄은 명령 카드에만 뜻이 있다. 자리만 남겨 두면 쪽에서 옮길 수
+    # 있는 죽은 구역이 되어, 맞춰 놓아도 아무 데도 안 쓰인다.
+    # 태세 글은 피해 글과 같은 칸이다. 한 칸이 둘을 같이 쓰는 일은 없다.
+    if "damage_text" in base and "stance_text" not in base:
+        base["stance_text"] = list(base["damage_text"])
 
-    # 태세 글은 피해 글과 같은 칸이다. 한 카드가 둘을 같이 쓰는 일은 없다.
-    if "damage_text" in template:
-        template["stance_text"] = list(template["damage_text"])
+    for plate in plates:
+        left, top = place[plate][0], place[plate][1]
+        detail[plate] = {element: [rect[0] + left, rect[1] + top,
+                                   rect[2], rect[3]]
+                         for element, rect in base.items()}
+    return sorted(base)
 
-    borrowed = sorted(set(template) - set(detail[CARD_TEMPLATE])
-                      - {"cooldown_overlay", "stance_text"})
-    if borrowed:
-        print("본에 없어 데려온 것: %s" % ", ".join(borrowed))
+def apply_tuning(place, detail):
+    """손으로 맞춘 자리를 덮어씌운다.
 
-    for card in CARDS:
-        left, top = place[card][0], place[card][1]
-        detail[card] = {element: [rect[0] + left, rect[1] + top,
-                                  rect[2], rect[3]]
-                        for element, rect in template.items()}
-    return sorted(template)
+    시안을 잰 값은 시안이 그린 그대로다 -- 비용 배지를 오른쪽 아래에 두느라
+    글자와 아이콘이 죄다 왼쪽으로 밀려 있는 식이다. 그것을 눈으로 맞춘 결과가
+    hud04_tuning.py 에 있다.
+
+    잰 것과 정한 것을 갈라 둔다. 시안이 바뀌면 잰 값은 새로 나오고, 맞춘 값은
+    그 위에 그대로 다시 얹힌다.
+
+    적어 둔 값은 **판 안** 자리라 판 자리를 더해 화면 자리로 옮긴다. 미리
+    더해 두면 판이 움직였을 때 따라오지 못한다.
+    """
+    try:
+        from hud04_tuning import TUNING
+    except ImportError:
+        return 0
+
+    moved = 0
+    for plate, rows in TUNING.items():
+        if plate not in place:
+            continue
+        left, top = place[plate][0], place[plate][1]
+        for element, rect in rows.items():
+            detail.setdefault(plate, {})[element] = [
+                rect[0] + left, rect[1] + top, rect[2], rect[3]]
+            moved += 1
+    return moved
 
 
-unified = unify_cards(place, detail)
-print("명령 카드 %d장을 %s 기준으로 통일: %s"
-      % (len(CARDS), CARD_TEMPLATE, ", ".join(unified)))
+tuned = apply_tuning(place, detail)
+if tuned:
+    print("손으로 맞춘 자리 %d개를 덮었다" % tuned)
+
+# 통일이 **마지막**이다. 손으로 맞춘 값을 덮은 뒤에 해야 한 장만 맞춰도 나머지가
+# 그 값을 따라간다. 통일을 먼저 하면 뒤이어 얹히는 값이 판마다 달라 다시
+# 어긋난다 -- 실제로 아군 셋이 그렇게 어긋나 있었다.
+for group in ((CARDS, CARD_TEMPLATE, CARD_FALLBACK),
+              (PARTY, PARTY_TEMPLATE, PARTY_FALLBACK)):
+    made = unify(place, detail, *group)
+    print("%d장을 %s 기준으로 통일: %s"
+          % (len(group[0]), group[1], ", ".join(made)))
 
 missing = set(place) - set(textures)
 if missing:

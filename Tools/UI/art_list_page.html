@@ -154,6 +154,9 @@
   button:hover { background: #2c323f; }
   button.on { background: #3d5a8a; border-color: #6a8fd0; color: #fff; }
   button.warm { border-color: #6b5200; color: #ffd24a; }
+  .sep {
+    width: 1px; align-self: stretch; background: #2a303b; margin: 0 3px;
+  }
   #said { color: #8ce99a; font-size: 12.5px; align-self: center; }
   #dirty { color: #ffd24a; font-size: 12.5px; align-self: center; }
 </style>
@@ -175,20 +178,27 @@
   <div id="main">
     <div id="canvas"><span style="color:#5a6270">왼쪽에서 고르세요</span></div>
     <div class="bar">
+      <!-- 내보내기가 맨 앞이다. 단추가 열대여섯 개라 뒤에 두면 줄이 넘어가
+           화면 밖으로 밀리고, 그러면 맞춰 놓고도 꺼낼 수가 없다. -->
+      <button id="save" class="warm">⬇ 파일로 저장</button>
+      <button id="copy">코드 복사</button>
+      <span class="sep"></span>
+      <button id="midX">가로 가운데</button>
+      <button id="midY">세로 가운데</button>
+      <button id="back">되돌리기</button>
+      <button id="fwd">다시</button>
+      <span class="sep"></span>
+      <button id="tie" class="on">묶어 고치기</button>
+      <button id="spread">같은 판 전체에 적용</button>
+      <button id="one">이 구역만 원래대로</button>
+      <button id="undo">전부 원래 값으로</button>
+      <span class="sep"></span>
       <button id="zoom1">원래 크기</button>
       <button id="zoom2" class="on">×2</button>
       <button id="zoom4">×4</button>
       <span id="zoomLabel" style="color:#8b93a1;align-self:center">×2</span>
       <button id="zones" class="on">구역 표시</button>
-      <button id="copy">코드 복사</button>
-      <button id="save" class="warm">파일로 저장</button>
       <button id="art" class="on">구역 그림</button>
-      <button id="back">되돌리기</button>
-      <button id="fwd">다시</button>
-      <button id="tie" class="on">묶어 고치기</button>
-      <button id="spread">같은 판 전체에 적용</button>
-      <button id="one">이 구역만 원래대로</button>
-      <button id="undo">전부 원래 값으로</button>
       <span id="said"></span><span id="dirty"></span>
     </div>
 
@@ -664,6 +674,13 @@ window.addEventListener("keydown", (e) => {
 
   if (inField) return;
 
+  // C 는 가로, V 는 세로 가운데. 자판이 한글이어도 e.code 로 본다.
+  if (!hold && (e.code === "KeyC" || e.code === "KeyV")) {
+    e.preventDefault();
+    middle(e.code === "KeyC" ? "x" : "y");
+    return;
+  }
+
   const table = slots();
   if (e.key === "Escape") { sel = null; paint(); return; }
   if (e.key === "Tab" && table) {
@@ -990,6 +1007,38 @@ $("spread").onclick = () => {
 
 // 단추로도 되돌린다. 자판이 한글이면 Ctrl+Z 가 안 잡히는 판이 있어,
 // 손잡이가 하나뿐이면 그날 작업이 통째로 막힌다.
+// 판 크기. 띄워 놓은 그림의 원래 크기가 곧 판 크기다.
+function plateSize() {
+  const img = $("shell") && $("shell").querySelector("img");
+  return img ? [img.naturalWidth, img.naturalHeight] : null;
+}
+
+// 고른 구역을 판 한가운데로.
+//
+// 시안이 그린 자리를 그대로 재다 보니 글자와 아이콘이 죄다 왼쪽으로 밀려
+// 있었다 -- 시안은 비용 배지를 오른쪽 아래에 두느라 나머지를 왼쪽으로 밀어
+// 그렸고, 재는 쪽은 그려진 그대로 잰다. 손으로 (판폭 - 칸폭) / 2 를 치는 것은
+// 구역마다 되풀이라 여기에 둔다.
+function middle(axis) {
+  const table = slots();
+  const size = plateSize();
+  if (!sel || !table || !table[sel]) { flash("구역을 먼저 고르세요"); return; }
+  if (!size) { flash("판을 하나 골라 주세요"); return; }
+  mark();
+  const v = table[sel];
+  if (axis === "x") {
+    v[0] = Math.round((size[0] - v[2]) / 2);
+  } else {
+    v[1] = Math.round((size[1] - v[3]) / 2);
+  }
+  paint();
+  keep();
+  flash(sel + (axis === "x" ? " 가로" : " 세로") + " 가운데로");
+}
+
+$("midX").onclick = () => middle("x");
+$("midY").onclick = () => middle("y");
+
 $("art").onclick = () => {
   showArt = !showArt;
   $("art").classList.toggle("on", showArt);

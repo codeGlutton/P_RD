@@ -70,6 +70,9 @@ ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
 #: 명령 카드 여섯의 본. prepare_hud04.py 가 자리를 이 판으로 통일해 둔다.
 CARD_TEMPLATE = "action_top"
 
+#: 아군 칸 셋의 본. 카드와 같은 까닭으로 그림도 한 벌만 쓴다.
+PARTY_TEMPLATE = "bottom_status_left"
+
 #: 명령 카드 여섯이 함께 쓰는 판 그림.
 #:
 #: 시안은 카드마다 따로 그려 줬지만 자리만 다른 같은 카드다. 여섯 벌을 두면
@@ -332,12 +335,23 @@ def party(blueprint, root):
     for index, (plate_name, name, hp, status, lit) in enumerate(PARTY):
         card, origin, size = group(blueprint, root, "PartyCard_%d" % index,
                                    plate_name)
-        plate(blueprint, card, origin, plate_name, "PartyPlate_%d" % index)
+        # 셋이 같은 판 그림을 쓴다. 자리만 다른 같은 칸이다.
+        plate(blueprint, card, origin, plate_name, "PartyPlate_%d" % index,
+              TEXTURE[PARTY_TEMPLATE])
 
-        piece(blueprint, card, origin, "PartyPortrait_%d" % index, plate_name,
-              "party_portrait")
-        piece(blueprint, card, origin, "PartyHPIcon_%d" % index, plate_name,
-              "hp_icon")
+        for widget_name, element in (
+                ("PartyPortrait_%d" % index, "party_portrait"),
+                ("PartyHPIcon_%d" % index, "hp_icon")):
+            # 자리는 이 칸의 것을, 그림은 본 칸의 것을 쓴다. 초상은 런타임이
+            # 용병마다 갈아 끼우니 여기 있는 것은 밑그림이다.
+            art_name, _ = sprite(PARTY_TEMPLATE, element)
+            here = spot(plate_name, element)
+            if art_name and here:
+                ax, ay, aw, ah = local(here, origin)
+                kit.image(blueprint, widget_name, card, ax, ay, aw, ah, None,
+                          z_order=Z_CONTENT,
+                          texture="{}/{}".format(ART, art_name),
+                          tint=kit.WHITE)
         if not piece(blueprint, card, origin, "PartyStatusIcon_%d" % index,
                      plate_name, "status_icon"):
             # 상태 아이콘은 시안이 기사 줄에만 그려 뒀다. 셋 다 있어야 런타임이

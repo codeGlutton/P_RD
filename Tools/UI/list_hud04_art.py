@@ -65,10 +65,11 @@ LABEL = {
 #: prepare_hud04.py 가 이 여섯을 같은 값으로 통일해 둔다. 쪽에서 따로 고칠 수
 #: 있게 두면 통일이 조용히 깨진다 -- 여섯 장이 조금씩 다른 것이 눈으로는 안
 #: 보이고, 구운 뒤 카드마다 글자가 반 칸씩 어긋나서야 알게 된다.
-FAMILY = [[
-    "action_top", "action_left_upper", "action_right_upper",
-    "action_left_lower", "action_right_lower", "action_bottom",
-]]
+FAMILY = [
+    ["action_top", "action_left_upper", "action_right_upper",
+     "action_left_lower", "action_right_lower", "action_bottom"],
+    ["bottom_status_left", "bottom_status_center", "bottom_status_right"],
+]
 
 #: 목록에서 묶어 보여 줄 차례. 쓰임이 같은 것끼리 붙여야 견주기 쉽다.
 GROUPS = (
