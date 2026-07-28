@@ -35,6 +35,20 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief 열면서 화면 전체를 덮지 않게 한다.
+	 *
+	 * @details
+	 * URDUserWidget::ApplyOpenUI() 가 열 때마다 Visible 로 세운다. 그러면 이
+	 * 위젯이 화면 전체를 덮는 한 장이 되어, 버튼이 아닌 곳의 클릭까지 전부
+	 * 받아 버린다. 받은 클릭은 플레이어 컨트롤러까지 안 내려가고, 지도는 그
+	 * 클릭을 영영 못 본다.
+	 *
+	 * 열고 나서 다시 낮춘다. 이제 클릭을 받는 것은 카드와 아군 칸의 버튼뿐이다.
+	 */
+	virtual void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
+
+	/** @brief 판 탭 알림까지 같이 구독한다. */
 	/** @brief 이 배치안이 화면에 표시할 파티 인원. 기획상 최대 3명. */
 	static constexpr int32 PartySlotCount = 3;
 
@@ -64,19 +78,8 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnUIRefreshed(ECombatUIDomain Domain) override;
 
-	/**
-	 * @brief 카드 밖을 눌렀을 때 접는다.
-	 *
-	 * @details
-	 * 자식 버튼이 먼저 가져가므로, 여기까지 온 눌림은 버튼이 아닌 곳을 누른
-	 * 것이다. 그래서 아군 칸을 눌러 다시 펼 때는 이 자리가 안 불린다 --
-	 * 접기와 펴기가 같은 탭에서 부딪히지 않는다.
-	 *
-	 * 반드시 Unhandled 로 돌려준다. 여기서 먹으면 입력이 플레이어 컨트롤러까지
-	 * 안 내려가 지도가 안 움직인다.
-	 */
-	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
+	virtual void BindUIModel(UCombatUIModel* InUIModel) override;
+	virtual void UnbindUIModel() override;
 
 
 
@@ -111,7 +114,14 @@ private:
 	 * 신호를 쏘고, 게임플레이와 화면이 나란히 듣는다. HUD 가 입력을 먼저
 	 * 채가면 지도가 안 움직인다.
 	 */
-	void HandleBoardPressed();
+	/**
+	 * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
+	 *
+	 * 카메라가 끌었는지 톡 쳤는지 가려서 쏘는 신호다. 버튼을 누른 클릭은
+	 * Slate 가 먹어서 플레이어 컨트롤러까지 안 내려가므로, 이 알림도 안 온다 --
+	 * 아군 칸을 눌러 편 카드가 같은 클릭에 도로 접히지 않는 이유다.
+	 */
+	UFUNCTION() void HandleWorldTouched(FVector2D ScreenPosition, bool bLongPress);
 
 	UFUNCTION() void HandleCommandClicked_0();
 	UFUNCTION() void HandleCommandClicked_1();

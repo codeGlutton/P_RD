@@ -106,10 +106,6 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// 루트가 눌림을 받아야 카드 밖 탭을 안다. SelfHitTestInvisible 이면 그냥
-	// 통과한다. 자식 버튼은 여전히 먼저 가져가므로 아군 칸은 안 가린다.
-	SetVisibility(ESlateVisibility::Visible);
-
 	CacheAuthoredWidgets();
 	WireCommands();
 	StartPreviewIfUnbound();
@@ -768,26 +764,45 @@ void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
  * 한때 카메라가 쏘는 월드 탭 알림을 듣게 해 봤는데, 그 알림은 버튼을 눌러도
  * 똑같이 온다. 아군 칸을 눌러 편 카드가 그 자리에서 도로 접혔다.
  */
-FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
-	const FPointerEvent& InMouseEvent)
+/**
+ * @brief 열고 나서 화면 전체를 덮지 않게 낮춘다.
+ * @param Callback 열기 연출이 끝났을 때 부를 것
+ */
+void UCombatLayoutHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 {
-	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton)
+	Super::OpenUI(MoveTemp(Callback));
+
+	// 부모가 열면서 Visible 로 세운다. 그대로 두면 이 위젯이 화면 전체를 덮는
+	// 한 장이 되어 버튼 밖 클릭까지 전부 먹고, 지도는 그 클릭을 못 본다.
+	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+/**
+ * @brief 모델을 붙이면서 판 탭 알림도 같이 구독한다.
+ * @param InUIModel 붙일 모델
+ */
+void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
+{
+	Super::BindUIModel(InUIModel);
+	if (mUIModel != nullptr)
 	{
-		HandleBoardPressed();
+		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
 	}
-	// 안 먹었다고 돌려준다. 먹으면 입력이 플레이어 컨트롤러까지 안 내려가고,
-	// 카메라가 손가락을 직접 읽으므로 지도가 통째로 안 움직인다.
-	return FReply::Unhandled();
 }
 
-FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
-	const FPointerEvent& InTouchEvent)
+void UCombatLayoutHUDWidget::UnbindUIModel()
 {
-	HandleBoardPressed();
-	return FReply::Unhandled();
+	if (mUIModel != nullptr)
+	{
+		mUIModel->OnCombatWorldTouch.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
+	}
+	Super::UnbindUIModel();
 }
 
-void UCombatLayoutHUDWidget::HandleBoardPressed()
+void UCombatLayoutHUDWidget::HandleWorldTouched(FVector2D ScreenPosition,
+	bool bLongPress)
 {
 	if (mUIModel == nullptr)
 	{
