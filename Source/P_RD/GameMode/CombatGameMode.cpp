@@ -40,6 +40,7 @@
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
@@ -905,6 +906,40 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+
+			// 쿨타임. 총량은 데이터에셋 값을 그대로 쓴다 -- GetCooldownDuration은
+			// 걸려 있는 효과를 읽으므로 쿨이 안 돌 때는 값이 없다.
+			SkillUIData.mCooldownTurns = FMath::Max(
+				SkillComponentModel->GetStaticCooldownDuration(i), 0);
+			SkillUIData.mRemainingCooldown = (SkillComponentModel->IsCooldown(i) == true)
+				? FMath::Max(SkillComponentModel->GetRemainingCooldownTime(i), 0) : 0;
+
+			// 피해. 한 스킬이 여러 모션으로 나뉘어 때리므로 다 더한 것이 카드에
+			// 적을 수다. 자동 생성 설명도 같은 값을 쓴다.
+			//
+			// [합의필요] min/max 로 나누기로 정했는데(0728) 데이터에셋은 아직
+			// mDamage 한 값이다. 그래서 지금은 min == max 다. 모호재님이 나누면
+			// 여기 두 줄만 각각 읽으면 된다.
+			//
+			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
+			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
+			int32 SkillDamage = 0;
+			for (const FSkillMotionLayer& MotionLayer : StaticSkillData->mSkillMotionLayers)
+			{
+				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+				{
+					if (const FSkillEffectLayer_Attack* Attack = EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+					{
+						SkillDamage += Attack->mDamage;
+					}
+				}
+			}
+			SkillUIData.mDamageMin = SkillDamage;
+			SkillUIData.mDamageMax = SkillDamage;
+			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
+			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
+			// 그쪽 값을 받아 이 줄을 지운다.
+			SkillUIData.mCriticalDamage = FMath::RoundToInt(SkillUIData.mDamageMax * 1.5f);
 			// 겨냥한 자리와 남은 행동력으로 쓸 수 있는지 가린다. 화면은 이
 			// 판정을 안 한다 -- 사거리를 두 곳에서 세면 어긋나는 날이 온다.
 			SkillUIData.mIsUsable = bIsOwnTurn
