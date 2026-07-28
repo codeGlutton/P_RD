@@ -67,6 +67,18 @@ from hud04_sprites import SPRITE  # noqa: E402
 ASSET = "WBP_CombatHUD04"
 ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
 
+#: 명령 카드 여섯의 본. prepare_hud04.py 가 자리를 이 판으로 통일해 둔다.
+CARD_TEMPLATE = "action_top"
+
+#: 명령 카드 여섯이 함께 쓰는 판 그림.
+#:
+#: 시안은 카드마다 따로 그려 줬지만 자리만 다른 같은 카드다. 여섯 벌을 두면
+#: 몰딩이 조금씩 달라서 한 줄에 놓았을 때 눈에 걸린다.
+CARD_PLATE = "KK_HUD04_action_top"
+
+#: 비용 배지. 시안1 부터 쓰던 둥근 배지를 그대로 쓴다.
+COST_BADGE = "/Game/SVN/OutSideAsset/UI/KayKit/KK_Badge_Round"
+
 #: 시안 좌표 -> 설계 캔버스.
 K = kit.CHROME_SCALE
 
@@ -136,10 +148,13 @@ def group(blueprint, root, name, plate_name, z=Z_PLATE):
     return name, (x, y), (w, h)
 
 
-def plate(blueprint, parent, origin, plate_name, widget_name):
+def plate(blueprint, parent, origin, plate_name, widget_name,
+          texture_name=None):
+    """판 껍데기 한 장. 늘리지 않고 오려 낸 크기 그대로 놓는다."""
     x, y, w, h = local(at(PLACE[plate_name]), origin)
     kit.image(blueprint, widget_name, parent, x, y, w, h, None, z_order=Z_PLATE,
-              texture="{}/{}".format(ART, TEXTURE[plate_name]), tint=kit.WHITE)
+              texture="{}/{}".format(ART, texture_name or TEXTURE[plate_name]),
+              tint=kit.WHITE)
 
 
 def piece(blueprint, parent, origin, widget_name, plate_name, element,
@@ -243,10 +258,24 @@ def commands(blueprint, root):
     for index, (plate_name, name, damage, cooldown, cost) in enumerate(COMMANDS):
         card, origin, size = group(blueprint, root, "CommandCard_%d" % index,
                                    plate_name)
-        plate(blueprint, card, origin, plate_name, "CommandPlate_%d" % index)
+        # 여섯 장이 같은 판 그림을 쓴다. 시안은 카드마다 따로 그려 줬지만
+        # 자리만 다른 같은 카드라, 그림도 한 장이면 된다 -- 여섯 벌을 두면
+        # 몰딩이 조금씩 달라서 한 줄에 놓았을 때 눈에 걸린다.
+        plate(blueprint, card, origin, plate_name, "CommandPlate_%d" % index,
+              CARD_PLATE)
 
-        piece(blueprint, card, origin, "CommandIcon_%d" % index, plate_name,
-              "action_icon")
+        # 아이콘도 한 벌만 쓴다. 런타임이 스킬마다 다른 그림으로 갈아 끼우니
+        # 여기 있는 것은 자리를 잡아 두는 밑그림일 뿐이다. 카드마다 따로 두면
+        # 판을 한 장으로 줄인 뜻이 없다.
+        #
+        # 자리는 이 카드의 것을, 그림은 본 카드의 것을 쓴다.
+        icon_name, icon_rect = sprite(CARD_TEMPLATE, "action_icon")
+        here = spot(plate_name, "action_icon") or icon_rect
+        if icon_name and here:
+            ix, iy, iw, ih = local(here, origin)
+            kit.image(blueprint, "CommandIcon_%d" % index, card,
+                      ix, iy, iw, ih, None, z_order=Z_CONTENT,
+                      texture="{}/{}".format(ART, icon_name), tint=kit.WHITE)
         text(blueprint, "CommandName_%d" % index, card, origin,
              spot(plate_name, "action_name"), name, 18, TEXT_PALE, bold=True)
         text(blueprint, "CommandDamage_%d" % index, card, origin,
@@ -254,8 +283,17 @@ def commands(blueprint, root):
              damage, 15, TEXT_PALE)
         text(blueprint, "CommandCooldown_%d" % index, card, origin,
              spot(plate_name, "cooldown_text"), cooldown, 15, TEXT_DIM)
+        # 비용은 배지 그림 위에 숫자를 얹는다. 시안은 판에 배지를 그려
+        # 넣었는데, 판을 한 장으로 줄이면서 그 배지도 한 벌만 남았다.
+        # 숫자만 얹으면 판마다 배지가 있는 자리와 없는 자리가 갈린다.
+        badge = spot(plate_name, "cost_badge")
+        if badge:
+            bx, by, bw, bh = local(badge, origin)
+            kit.image(blueprint, "CommandCostBadge_%d" % index, card,
+                      bx, by, bw, bh, None, z_order=Z_CONTENT,
+                      texture=COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCost_%d" % index, card, origin,
-             spot(plate_name, "cost_badge"), cost, 19, TEXT_DARK, bold=True)
+             badge, cost, 19, TEXT_DARK, bold=True)
 
         # 골라진 표시와 못 쓰는 표시. 여섯 장 다 있어야 런타임이 어느 칸이든
         # 켤 수 있다 -- 시안이 한 칸에만 그려 준 것이라도 그렇다.
