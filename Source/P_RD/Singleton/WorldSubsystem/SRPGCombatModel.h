@@ -27,6 +27,7 @@ class USRPGAction;
 class UBoardActorModel;
 class IBoardCombatTarget;
 class UUnitModel;
+class UPlayerUnitModel;
 class UTileMapModel;
 
 class UStaticCombatRoomSpawnData;
@@ -84,7 +85,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform, const FTileTransform& RoomClearTileTransform);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const TArray<FTileTransform>& RoomClearTileTransforms);
 	void BeginCombat();
 	void EndCombat();
 
@@ -154,7 +155,7 @@ public:
 
 protected:
 	void SpawnTileMap(const FTransform& RoomStartTransform);
-	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
+	void RegisterPlayerUnit(int32 PlayerIndex, UUnitModel* PlayerUnit, const FTileTransform& Transform);
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
@@ -180,7 +181,8 @@ public:
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
 	UTileMapModel* GetTileMap() const;
 
-	UUnitModel* GetPlayerUnit() const;
+	UUnitModel* GetPlayerUnit(int32 PlayerIndex) const;
+	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;
 	const TArray<TObjectPtr<UUnitModel>>& GetUnits() const;
 	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
 
@@ -320,8 +322,8 @@ protected:
 
 protected:
 	// @brief 등록된 Player 유닛
-	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
-	TObjectPtr<UUnitModel> mPlayerUnit;
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnits"))
+	TArray<TObjectPtr<UUnitModel>> mPlayerUnits;
 	// @brief 모든 타격 가능 장애물
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargets"))
 	TArray<TScriptInterface<IBoardCombatTarget>> mCombatTargetObstacles;

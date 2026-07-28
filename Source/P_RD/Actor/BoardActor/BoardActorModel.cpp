@@ -6,6 +6,11 @@ void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnD
 	mStaticSpawnData = StaticSpawnData;
 }
 
+FPrimaryAssetId UBoardActorModel::GetStaticSpawnDataId() const
+{
+	return mStaticSpawnData->GetPrimaryAssetId();
+}
+
 FName UBoardActorModel::GetBoardActorKeyName() const
 {
 	if (mStaticSpawnData == nullptr)
