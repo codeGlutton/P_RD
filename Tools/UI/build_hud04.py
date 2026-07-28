@@ -481,8 +481,15 @@ def party(blueprint, root):
                       gw - step, gh, "tl", None, Z_TEXT)
             kit.fold(blueprint, "PartyAPText_%d" % index)
 
-        outline(blueprint, card, origin, "PartySelected_%d" % index,
-                PLACE[plate_name])
+        # 차례 표시는 그 구역이 있을 때만 그린다.
+        #
+        # 전에는 판 전체를 둘렀다. 그러면 구역 조정 쪽에서 selected_outline 을
+        # 지워도 테두리가 그대로 남는다 -- 지웠는데 왜 있냐는 말을 그래서 들었다.
+        # 지운 것은 안 그리는 것이 맞다.
+        turn_mark = DETAIL.get(plate_name, {}).get("selected_outline")
+        if turn_mark:
+            outline(blueprint, card, origin, "PartySelected_%d" % index,
+                    turn_mark)
         kit.ghost_button(blueprint, "PartyButton_%d" % index, card, 0, 0,
                          size[0], size[1])
 

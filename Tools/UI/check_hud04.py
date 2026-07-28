@@ -61,7 +61,7 @@ if bp is None:
 
 for group, plate_prefix, extra in (
         (CARDS, "CommandPlate", ("CommandIcon", "CommandCostBadge", "CommandCooldownBadge")),
-        (PARTY, "PartyPlate", ("PartyPortrait", "PartyHPIcon", "PartyName"))):
+        (PARTY, "PartyPlate", ("PartyPortrait", "PartyHPIcon", "PartySelected", "PartyHPText"))):
     say("")
     say("=== %s ===" % plate_prefix)
     for index, card in enumerate(group):
