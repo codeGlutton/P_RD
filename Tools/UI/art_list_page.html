@@ -234,6 +234,8 @@ const BASE = /*TABLE*/null;
 const FAMILY = /*FAMILY*/null;
 // 구역마다 얹어 볼 그림. { 판: { 요소: "png/..." } }
 const ZONEART = /*ZONEART*/null;
+//: 판 이름 -> [x, y, w, h]. 파일이 실어 준 지금 값이다.
+const PLACE = /*PLACE*/null;
 //: 그림을 어떻게 앉힐지.
 //:
 //: 늘어나는 것(막대·리본)과 안 늘어나는 것(아이콘·보석)이 섞여 있어 한 가지로는
@@ -272,6 +274,8 @@ let artPick = {};
 // 구역에 얹는 그림과 따로 둔다. 이쪽은 카드 껍데기 자체라, 갈면 그 판을 쓰는
 // 카드가 통째로 바뀐다.
 let platePick = {};
+//: 손으로 고친 판 자리. 파일 값 위에 얹힌다.
+let placePick = {};
 // 글자를 칸 안 어디에 붙일지. "판|요소" -> [가로, 세로]
 // 기본은 가운데다. 칸은 시안에서 잰 상자이고 글자는 런타임이 넣는 것이라
 // 길이를 모른다 -- 가운데가 어느 길이에서도 덜 어긋난다.
@@ -295,6 +299,9 @@ try {
 try {
   platePick = JSON.parse(localStorage.getItem(KEEP + ".plate") || "{}") || {};
 } catch (err) { platePick = {}; }
+try {
+  placePick = JSON.parse(localStorage.getItem(KEEP + ".place") || "{}") || {};
+} catch (err) { placePick = {}; }
 try {
   zPick = JSON.parse(localStorage.getItem(KEEP + ".z") || "{}") || {};
 } catch (err) { zPick = {}; }
@@ -864,6 +871,54 @@ window.addEventListener("keydown", (e) => {
   keep();
 });
 
+//: 이 판의 지금 자리. 고친 것이 있으면 그것, 없으면 파일 값.
+function placeOf(role) {
+  return (placePick[role] || (PLACE || {})[role] || [0, 0, 0, 0]).slice();
+}
+
+/**
+ * @brief 판 자리 칸 넷을 그리고 고친 값을 담아 둔다.
+ *
+ * 구역은 판 안 자리라 판이 커지면 그 안에서 비율이 어긋난다. 그래서 판을
+ * 여기서 고칠 수 있어야 한다 -- 지금까지는 파일을 손으로 열어 고치고 다시
+ * 구워야 보였다.
+ */
+function placeFields(role) {
+  const at = placeOf(role);
+  const names = [["x", "가로 자리"], ["y", "세로 자리"],
+                 ["w", "판 너비"], ["h", "판 높이"]];
+  return names.map(([key, title], i) =>
+    `<input class="placeIn" data-at="${i}" title="${title}" value="${at[i]}"` +
+    ` style="width:52px;margin-right:4px">`).join("");
+}
+
+function bindPlaceFields(role) {
+  document.querySelectorAll(".placeIn").forEach((box) => {
+    box.onchange = () => {
+      const at = placeOf(role);
+      const got = parseInt(box.value, 10);
+      if (Number.isNaN(got)) { box.value = at[box.dataset.at]; return; }
+      at[box.dataset.at] = got;
+      placePick[role] = at;
+      try {
+        localStorage.setItem(KEEP + ".place", JSON.stringify(placePick));
+      } catch (err) {}
+      flash("판 자리를 바꿨습니다. 내려받아 넣으면 반영됩니다");
+    };
+  });
+  const off = $("placeOff");
+  if (off) {
+    off.onclick = () => {
+      delete placePick[role];
+      try {
+        localStorage.setItem(KEEP + ".place", JSON.stringify(placePick));
+      } catch (err) {}
+      show();
+      flash("판 자리를 파일 값으로 되돌렸습니다");
+    };
+  }
+}
+
 function facts(img) {
   $("facts").innerHTML =
     `<dt>이름</dt><dd>${picked.name}</dd>` +
@@ -875,7 +930,13 @@ function facts(img) {
         ? platePick[picked.role].name : "＋ 갈아 끼우기"}</button>` +
       (platePick[picked.role]
         ? `<button id="plateOff" title="되돌리기">✕</button>` : "") +
-      `<input type="file" id="plateFile" accept="image/*" hidden></dd>`;
+      `<input type="file" id="plateFile" accept="image/*" hidden></dd>` +
+    `<dt>판 자리</dt><dd>${placeFields(picked.role)}` +
+      (placePick[picked.role]
+        ? `<button id="placeOff" title="파일 값으로">✕</button>` : "") +
+      `</dd>`;
+
+  bindPlaceFields(picked.role);
 
   $("plateBtn").onclick = () => $("plateFile").click();
   $("plateFile").onchange = () => {
@@ -1172,7 +1233,7 @@ $("save").onclick = () => {
   // 다시 못 읽고(브라우저가 막는다), 이름만 보내면 받는 쪽이 그 파일을 어디서
   // 찾을지 알 수 없다.
   const bundle = { zones: TABLE, art: artPick, align: alignPick,
-                   plate: platePick, z: zPick };
+                   plate: platePick, z: zPick, place: placePick };
   const blob = new Blob([JSON.stringify(bundle, null, 1)],
                         { type: "application/json" });
   const a = document.createElement("a");
@@ -1332,6 +1393,12 @@ $("loadFile").onchange = () => {
     if (got.art) { artPick = got.art; keepArt(); }
     if (got.align) { alignPick = got.align; keepAlign(); }
     if (got.plate) { platePick = got.plate; keepPlate(); }
+    if (got.place) {
+      placePick = got.place;
+      try {
+        localStorage.setItem(KEEP + ".place", JSON.stringify(placePick));
+      } catch (err) {}
+    }
     if (got.z) { zPick = got.z; keepZ(); }
     sel = null;
     paint();

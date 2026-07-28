@@ -216,6 +216,8 @@ def main():
             # 구역에 얹는 그림은 쪽에서 손으로 넣는다. 기본은 없음이다 --
             # 자동으로 얹어 두면 무엇이 진짜 들어갈 그림인지 알 수 없다.
             .replace("/*ZONEART*/null", json.dumps(zone_art_data()))
+            .replace("/*PLACE*/null", json.dumps(
+                {plate: [int(v) for v in rect[:4]] for plate, rect in PLACE.items()}))
             # 저장 칸을 시안1 쪽과 갈라 둔다. 같이 쓰면 판 이름이 안 맞는
             # 표가 얹혀 구역이 아예 안 뜬다.
             .replace('/*KEEPKEY*/"rd.slots.01"', '"rd.hud04"')
