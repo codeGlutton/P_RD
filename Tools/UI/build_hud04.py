@@ -162,10 +162,17 @@ def plate(blueprint, parent, origin, plate_name, widget_name,
 
 def piece(blueprint, parent, origin, widget_name, plate_name, element,
           z=Z_CONTENT):
-    """뗀 그림 한 장을 제자리에. 없으면 아무것도 안 만든다."""
-    name, rect = sprite(plate_name, element)
+    """뗀 그림 한 장을 제자리에. 없으면 아무것도 안 만든다.
+
+    자리는 **자리표(DETAIL)** 를 먼저 본다. 뗀 그림에도 자기가 잘려 나온
+    자리가 붙어 있지만, 그것은 시안을 자를 때의 자리라 손으로 맞춘 값을
+    모른다 -- 구역을 옮겨도 그림은 안 따라와서, 쪽에서는 맞았는데 게임에서는
+    그대로인 일이 생긴다. 실제로 턴 초상이 그랬다.
+    """
+    name, sprite_rect = sprite(plate_name, element)
     if name is None:
         return False
+    rect = spot(plate_name, element) or sprite_rect
     x, y, w, h = local(rect, origin)
     kit.image(blueprint, widget_name, parent, x, y, w, h, None, z_order=z,
               texture="{}/{}".format(ART, name), tint=kit.WHITE)
@@ -236,8 +243,10 @@ def top_row(blueprint, root):
         token_origin = (rect[0], rect[1])
         piece(blueprint, token, token_origin, "TurnPortrait_%d" % index,
               "top_center_turn_order", element)
+        # 두르는 자리는 따로 잰 것이 있으면 그것을, 없으면 초상 자리를 쓴다.
         outline(blueprint, token, token_origin, "TurnCurrent_%d" % index,
-                DETAIL["top_center_turn_order"][element])
+                DETAIL["top_center_turn_order"].get("selected_outline")
+                or DETAIL["top_center_turn_order"][element])
 
     obj, obj_origin, _ = group(blueprint, root, "ObjectivePanel",
                                "top_right_parchment")
