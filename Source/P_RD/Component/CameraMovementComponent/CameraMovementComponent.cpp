@@ -68,7 +68,7 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	{
 		// 도착 판정: 여기서만 임계값을 쓰되, 목적은 "재진입 허용 시점" 판단이지
 		// "저장할 위치가 정확한지" 판단이 아니므로 훨씬 안전함
-		if (FVector2D::Distance(mCurCameraLocation, mTargetLocation) < 1.f && abs(mCurZoom - mTargetZoom) < 1.f)
+		if (FVector2D::Distance(mCurrentLookAtCameraLocation, mTargetLookAtCameraLocation) < 1.f && abs(mCurZoom - mTargetZoom) < 1.f)
 		{
 			mCamerControlState = ECameraControlState::Normal;
 		}
@@ -151,7 +151,7 @@ void UCameraMovementComponent::InitializeCameraTargetLocation()
 
 	FVector2D CurLocation = FVector2D(CameraCenterRayCastHitResult.ImpactPoint);
 
-	mTargetLocation = CurLocation;
+	mTargetLookAtCameraLocation = CurLocation;
 	mInitCameraLocation = true;
 
 	mMoveClampingBoxCenter = CameraCenterRayCastHitResult.ImpactPoint;
@@ -213,15 +213,13 @@ void UCameraMovementComponent::ClampingCamera()
 	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
 	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
-	mCurCameraLocation += FVector2D(ActorLocation - CameraCenterRayCastHitResult.ImpactPoint);
+	mCurrentLookAtCameraLocation += FVector2D(ActorLocation - CameraCenterRayCastHitResult.ImpactPoint);
 
 	// 위치의 차를 이용하여 카메라의 위치를 옮깁니다.
 	GetOwner()->AddActorWorldOffset(ActorLocation - CameraCenterRayCastHitResult.ImpactPoint);
 
-	mTargetLocation.X = FMath::Clamp(mTargetLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	mTargetLocation.Y = FMath::Clamp(mTargetLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
-
-
+	mTargetLookAtCameraLocation.X = FMath::Clamp(mTargetLookAtCameraLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
+	mTargetLookAtCameraLocation.Y = FMath::Clamp(mTargetLookAtCameraLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
@@ -261,9 +259,11 @@ void UCameraMovementComponent::MoveSmooth(float DeltaTime)
 		return;
 	}
 
-	mCurCameraLocation = FVector2D(CameraCenterRayCastHitResult.ImpactPoint);
-	FVector DeltaLocation = FVector((mTargetLocation - mCurCameraLocation) * DeltaTime * 5, 0);
-	GetOwner()->AddActorWorldOffset(DeltaLocation);
+	mCurrentLookAtCameraLocation = FVector2D(CameraCenterRayCastHitResult.ImpactPoint);
+
+	FVector NextLocation = FMath::VInterpTo(FVector(mCurrentLookAtCameraLocation, 0.f), FVector(mTargetLookAtCameraLocation, 0.f), DeltaTime, mMoveSpeed);
+	FVector CurLocation = FVector(mCurrentLookAtCameraLocation, 0.f);
+	GetOwner()->AddActorWorldOffset(NextLocation - CurLocation);
 }
 
 void UCameraMovementComponent::ZoomSmooth(float DeltaTime)
@@ -434,7 +434,7 @@ void UCameraMovementComponent::DragMoveToViewportPosition_Instant(FVector2D PreV
 	CurPos.Z = 0;
 
 	// 목표 위치와 현재 카메라 위치를 같이 변경합니다.
-	mTargetLocation += FVector2D(PrePos - CurPos);
+	mTargetLookAtCameraLocation += FVector2D(PrePos - CurPos);
 	GetOwner()->AddActorWorldOffset(PrePos - CurPos);
 }
 
@@ -631,9 +631,6 @@ void UCameraMovementComponent::StartCameraShake(TSubclassOf<class UCameraShakeBa
 
 void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
 	mCurZoom = mCameraComponent->OrthoWidth;
@@ -642,9 +639,6 @@ void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 
 void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	mTargetZoom = TargetZoom;
@@ -652,9 +646,6 @@ void UCameraMovementComponent::ZoomCamera_Smooth(float TargetZoom)
 
 void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition_Smooth(float TargetZoom, FVector2D ViewPortPos)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	ZoomCamera_Smooth(TargetZoom);
@@ -663,9 +654,6 @@ void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToViewportPosition_Smooth
 
 void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(float TargetZoom, FVector WorldPosition)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	ZoomCamera_Smooth(TargetZoom);
@@ -677,9 +665,6 @@ void UCameraMovementComponent::ZoomCamera_SmoothAndMoveToWorldPosition_Smooth(fl
 
 void UCameraMovementComponent::MoveToViewportPosition_Instant(FVector2D ViewPortPos)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	//==============================
@@ -732,15 +717,12 @@ void UCameraMovementComponent::MoveToViewportPosition_Instant(FVector2D ViewPort
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	mTargetLocation = FVector2D(LocationPos);
+	mTargetLookAtCameraLocation = FVector2D(LocationPos);
 	GetOwner()->AddActorWorldOffset(LocationPos - CameraPos);
 }
 
 void UCameraMovementComponent::MoveToWorldPosition_Instant(FVector WorldPosition)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	// LocationPos를 카메라에 투영하고 다시 Raycast를 계산한다.
@@ -752,9 +734,6 @@ void UCameraMovementComponent::MoveToWorldPosition_Instant(FVector WorldPosition
 
 void UCameraMovementComponent::MoveToViewportPosition_Smooth(FVector2D ViewPortPos)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	//==============================
@@ -807,14 +786,11 @@ void UCameraMovementComponent::MoveToViewportPosition_Smooth(FVector2D ViewPortP
 	LocationPos.Z = 0;
 	CameraPos.Z = 0;
 
-	mTargetLocation = FVector2D(LocationPos);
+	mTargetLookAtCameraLocation = FVector2D(LocationPos);
 }
 
 void UCameraMovementComponent::MoveToWorldPosition_Smooth(FVector WorldPosition)
 {
-	//if (mCamerControlState != ECameraControlState::Normal)
-	//	return;
-
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
 
 	// WorldPosition를 카메라에 투영하고 다시 Raycast를 계산한다.
@@ -827,8 +803,8 @@ void UCameraMovementComponent::MoveToWorldPosition_Smooth(FVector WorldPosition)
 
 void UCameraMovementComponent::MoveToDeltaPosition_Instant(FVector DeltaPosition)
 {
-	mCurCameraLocation += FVector2D(DeltaPosition);
-	mTargetLocation = mCurCameraLocation;
+	mCurrentLookAtCameraLocation += FVector2D(DeltaPosition);
+	mTargetLookAtCameraLocation = mCurrentLookAtCameraLocation;
 
 	// 위치의 차를 이용하여 카메라의 위치를 옮깁니다.
 	GetOwner()->AddActorWorldOffset(DeltaPosition);

@@ -101,16 +101,16 @@ protected:
 	* 작을수록 화면이 더 많이 확대할 수 있다.
 	*/
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinZoom", AllowPrivateAccess = "true"))
-	float mMinOrthoWidth = 500.f;
+	float mMinOrthoWidth = 750.f;
 
-	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomExp", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomSpeed", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 5.f;
 
-	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "현재 줌", AllowPrivateAccess = "true"))
-	float mCurZoom;						// 현재 Zoom
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentZoom", AllowPrivateAccess = "true"))
+	float mCurZoom;
 
-	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "목표 줌", AllowPrivateAccess = "true"))
-	float mTargetZoom;						// 끝 Zoom
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetZoom", AllowPrivateAccess = "true"))
+	float mTargetZoom;
 
 
 protected:
@@ -138,20 +138,20 @@ protected:
 	* Smoooth 이동 시 속도
 	* 1 / MoveSmoothSpeed -> 0.5초
 	*/
-	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveDuration", AllowPrivateAccess = "true"))
-	float mMoveSpeed = 2.f; // 이동 속도 
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveSpeed", AllowPrivateAccess = "true"))
+	float mMoveSpeed = 5.f; // 이동 속도 
 
-	///*
-	//* @brief 가속도 강도
-	//*/
-	//UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothMoveExp", AllowPrivateAccess = "true"))
-	//float mMoveExp = 2.f;
+	/*
+	* @brief 현재 카메라가 바라보고 있는 시선 위치
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "LookAtCameraLocation", AllowPrivateAccess = "true"))
+	FVector2D mCurrentLookAtCameraLocation;
 
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "카메라 현재 위치", AllowPrivateAccess = "true"))
-	FVector2D mCurCameraLocation;				// 천천히 움직였을 때 목표 위치
-
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "카메라 최종 위치", AllowPrivateAccess = "true"))
-	FVector2D mTargetLocation;				// 천천히 움직였을 때 목표 위치
+	/*
+	* @brief 카메라가 최종적으로 바라볼 시선 위치
+	*/
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetLookAtCameraLocation", AllowPrivateAccess = "true"))
+	FVector2D mTargetLookAtCameraLocation;
 	
 
 protected:
