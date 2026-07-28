@@ -1,0 +1,1990 @@
+{
+ "스킬": {
+  "/Game/BP/DataAsset/Skill/Archer/DA_TestArcher_Spell_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.ARCHER: 1>",
+   "m_name": "사격",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Archer/DA_TestArcher_Spell_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.ARCHER: 1>",
+   "m_name": "난사",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Archer/DA_TestArcher_Spell_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.ARCHER: 1>",
+   "m_name": "관통 사격",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_Spell_NomalDefense_Spell_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Single) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 방어도를 3 획득합니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_2_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "방어",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D7310) {}>",
+     "m_auto_rotate_toward_target": false,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D731C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 1,
+     "m_team_attitude_filter": 1
+    }
+   ],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_Spell_NomalHeal_Spell_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 3 | 사거리: 1 (Single) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상의 체력을 5 회복시킵니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_meditation_heal_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "명상",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 3,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D7550) {}>",
+     "m_auto_rotate_toward_target": false,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D755C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 1,
+     "m_team_attitude_filter": 1
+    }
+   ],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_Spell_NomalMove_Spell_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Single) | 적용 범위: 1 (Single) | 쿨다운: 2턴]\n■ 1타 모션:\n- 이동력을 2 획득합니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_step_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "이동",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D8450) {}>",
+     "m_auto_rotate_toward_target": false,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D845C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 1,
+     "m_team_attitude_filter": 1
+    }
+   ],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_TestCommon_Attack_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_triple_strike_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_TestCommon_Spell_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Common/DA_TestCommon_Spell_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.COMMON: 4>",
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_Attack_SwordBlade_Attack_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 1,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Cross) | 적용 범위: 3 (Beam) | 쿨다운: 1턴]\n■ 1타 모션:\n- 대상에게 7의 데미지를 입힙니다.",
+   "m_effect_area": 3,
+   "m_effect_pattern": "<EffectPattern.BEAM: 4>",
+   "m_icon": "T_skill_sword_wave_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "검기 날리기",
+   "m_price": 200,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D8090) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D809C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_Attack_SwordMultipleSlash_Attack_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 2,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 2 | 사거리: 1 (Cross) | 적용 범위: 3 (Beam) | 쿨다운: 2턴]\n■ 1타 모션:\n- 대상에게 7의 데미지를 입힙니다.\n■ 2타 모션:\n- 대상에게 7의 데미지를 입힙니다.",
+   "m_effect_area": 3,
+   "m_effect_pattern": "<EffectPattern.BEAM: 4>",
+   "m_icon": "T_skill_multi_thrust_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": true,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "연속 찌르기",
+   "m_price": 200,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 2,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D8610) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D861C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    },
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE30BB40) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE30BB4C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_Attack_SwordNormalSlash_Attack_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 8의 데미지를 입힙니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_basic_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "베기",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D96D0) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D96DC) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_Attack_SwordNormalSmash_Attack_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 1,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 2 | 사거리: 1 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 1턴]\n■ 1타 모션:\n- 대상에게 8의 데미지를 입힙니다.\n- 취약 태그를 1 중첩 부여합니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_smash_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "강타",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 2,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D9590) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D959C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      },
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_Attack_SwordPowerSlash_Attack_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 2,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 2 | 사거리: 1 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 2턴]\n■ 1타 모션:\n- 대상에게 16의 데미지를 입힙니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_greatsword_slash_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": true,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "대검 베기",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 2,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D9750) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3D975C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Knight/DA_TestKnight_Spell_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Mage/DA_TestMage_Spell_Common": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MAGE: 2>",
+   "m_name": "화염구",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Mage/DA_TestMage_Spell_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MAGE: 2>",
+   "m_name": "유성",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Mage/DA_TestMage_Spell_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.SINGLE: 0>",
+   "m_aim_range": 0,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": null,
+   "m_description": "",
+   "m_effect_area": 0,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": null,
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MAGE: 2>",
+   "m_name": "빙결",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [],
+   "m_skill_type": "<SkillType.SPELL: 1>"
+  },
+  "/Game/BP/DataAsset/Skill/Monster/DA_Skeleton_Golem_Punch_Attack_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 2,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 2 | 사거리: 2 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 20의 데미지를 입힙니다.\n- 약화 태그를 1 중첩 부여합니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_triple_strike_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MONSTER: 5>",
+   "m_name": "해골 강펀치",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 2,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DAD50) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DAD5C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      },
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Monster/DA_Skeleton_Golem_Smash_Attack_Epic": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 0 | 사거리: 1 (Cross) | 적용 범위: 3 (Square) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 35의 데미지를 입힙니다.",
+   "m_effect_area": 3,
+   "m_effect_pattern": "<EffectPattern.SQUARE: 3>",
+   "m_icon": "T_skill_triple_strike_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MONSTER: 5>",
+   "m_name": "짓누르기",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_required_movement": 0,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DAB10) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DAB1C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Monster/DA_Skeleton_Melee_Kick_Attack_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 6의 데미지를 입힙니다.\n- 취약 태그를 2 중첩 부여합니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_smash_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MONSTER: 5>",
+   "m_name": "해골 발차기",
+   "m_price": 50,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB850) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB85C) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      },
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Monster/DA_Skeleton_Melee_Punch_Attack_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Cross) | 적용 범위: 1 (Single) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 10의 데미지를 입힙니다.",
+   "m_effect_area": 1,
+   "m_effect_pattern": "<EffectPattern.SINGLE: 0>",
+   "m_icon": "T_skill_triple_strike_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MONSTER: 5>",
+   "m_name": "해골 펀치",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB3D0) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB3DC) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  },
+  "/Game/BP/DataAsset/Skill/Monster/DA_Skeleton_Ranged_Shoot_Attack_Rare": {
+   "__class": "StaticSkillData",
+   "m_aim_pattern": "<AimPattern.CROSS: 1>",
+   "m_aim_range": 1,
+   "m_can_aim_board_actor": true,
+   "m_cooldown_duration": 0,
+   "m_cooldown_effect_class": "TacticalEffect_RoundCooldown",
+   "m_description": "[행동력: 1 | 사거리: 1 (Cross) | 적용 범위: 4 (Beam) | 쿨다운: 0턴]\n■ 1타 모션:\n- 대상에게 6의 데미지를 입힙니다.\n- 약화 태그를 2 중첩 부여합니다.",
+   "m_effect_area": 4,
+   "m_effect_pattern": "<EffectPattern.BEAM: 4>",
+   "m_icon": "T_skill_triple_strike_icon",
+   "m_is_indirect": false,
+   "m_is_penetration": false,
+   "m_job_type": "<PlayerJobType.MONSTER: 5>",
+   "m_name": "조준 사격",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_required_movement": 1,
+   "m_skill_motion_layers": [
+    {
+     "__struct": "SkillMotionLayer",
+     "m_apply_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB7D0) {}>",
+     "m_auto_rotate_toward_target": true,
+     "m_receive_motion_tag": "<Struct 'GameplayTag' (0x000001DFFE3DB7DC) {}>",
+     "m_skill_effect_layers": [
+      {
+       "__struct": "InstancedStruct"
+      },
+      {
+       "__struct": "InstancedStruct"
+      }
+     ],
+     "m_target_index_filter": 2,
+     "m_team_attitude_filter": 4
+    }
+   ],
+   "m_skill_type": "<SkillType.ATTACK: 0>"
+  }
+ },
+ "유닛": {
+  "/Game/BP/DataAsset/Unit/EnemyUnit/DA_TestEnemyUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "TestEnemy",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_model_class": "BP_TestEnemyUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Necromancer_ActionV3",
+   "m_skill_datas": [
+    "DA_Attack_SwordNormalSlash_Attack_Common"
+   ],
+   "m_view_class": "BP_TestEnemyUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_EagleUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Eagle",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_EagleUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Eagle_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Melee_Kick_Attack_Rare"
+   ],
+   "m_view_class": "BP_EagleUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_GolemUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Golem",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_GolemUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Golem_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Golem_Punch_Attack_Epic",
+    "DA_Skeleton_Golem_Smash_Attack_Epic"
+   ],
+   "m_view_class": "BP_GolemUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_LeshyUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Leshy",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_LeshyUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Leshy_ActionV3",
+   "m_skill_datas": [
+    "DA_Attack_SwordNormalSlash_Attack_Common"
+   ],
+   "m_view_class": "BP_LeshyUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_MushroomUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Mushroom",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_MushroomUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Mushroom_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Melee_Punch_Attack_Rare"
+   ],
+   "m_view_class": "BP_MushroomUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_SlimeUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Slime",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_SlimeUnitModel_C",
+   "m_move_tendency": "<MoveTendency.MOVE_CLOSE: 2>",
+   "m_portrait": "KK_Face_Enemy_Slime_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Melee_Punch_Attack_Rare"
+   ],
+   "m_view_class": "BP_SlimeUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_SpiderUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Spider",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_SpiderUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_Spider_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Ranged_Shoot_Attack_Rare"
+   ],
+   "m_view_class": "BP_SpiderUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_WerewolfUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Werewolf",
+   "m_equipment_datas": [],
+   "m_icon": null,
+   "m_model_class": "BP_WerewolfUnitModel_C",
+   "m_move_tendency": "<MoveTendency.MOVE_CLOSE: 2>",
+   "m_portrait": "KK_Face_Enemy_Werewolf_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Melee_Punch_Attack_Rare",
+    "DA_Skeleton_Golem_Punch_Attack_Epic",
+    "DA_Skeleton_Golem_Smash_Attack_Epic"
+   ],
+   "m_view_class": "BP_WerewolfUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_SkeletonGolem": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Skeleton Golem",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_model_class": "BP_SkeletonGolemUnitModel_C",
+   "m_move_tendency": "<MoveTendency.HOLD_RANGE: 1>",
+   "m_portrait": "KK_Face_Enemy_SkeletonGolem_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Golem_Smash_Attack_Epic",
+    "DA_Skeleton_Golem_Punch_Attack_Epic"
+   ],
+   "m_view_class": "BP_SkeletonGolemUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_SkeletonMinionMeleeUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Skeleton Minion Melee",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_model_class": "BP_SkeletonMinionMeleeUnitModel_C",
+   "m_move_tendency": "<MoveTendency.MOVE_CLOSE: 2>",
+   "m_portrait": "KK_Face_Enemy_SkeletonMinionMelee_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Melee_Punch_Attack_Rare",
+    "DA_Skeleton_Melee_Punch_Attack_Rare"
+   ],
+   "m_view_class": "BP_SkeletonMinionMeleeUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_SkeletonMinionRangedUnit": {
+   "__class": "StaticEnemyUnitSpawnData",
+   "m_description": "",
+   "m_display_name": "Skeleton Minion Ranged",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_model_class": "BP_SkeletonMinionRangedUnitModel_C",
+   "m_move_tendency": "<MoveTendency.MOVE_AWAY: 0>",
+   "m_portrait": "KK_Face_Enemy_SkeletonMinionRanged_ActionV3",
+   "m_skill_datas": [
+    "DA_Skeleton_Ranged_Shoot_Attack_Rare"
+   ],
+   "m_view_class": "BP_SkeletonMinionRangedUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_PlayerUnit_Barbarian": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "체력이 높고 크게 때린다",
+   "m_display_name": "야만전사",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_BarbarianLarge_HeadV2",
+   "m_skill_datas": [
+    "DA_Attack_SwordNormalSlash_Attack_Common",
+    "DA_Attack_SwordNormalSmash_Attack_Common",
+    "DA_Attack_SwordBlade_Attack_Rare",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_PlayerUnit_Cleric": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "아군을 회복시킨다",
+   "m_display_name": "성직자",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.MAGE: 2>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_Druid_HeadV2",
+   "m_skill_datas": [
+    "DA_TestMage_Spell_Common",
+    "DA_TestMage_Spell_Rare",
+    "DA_TestMage_Spell_Epic",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_PlayerUnit_Mage": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "한 번에 여럿을 친다",
+   "m_display_name": "마법사",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.MAGE: 2>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_Mage_HeadV2",
+   "m_skill_datas": [
+    "DA_TestMage_Spell_Common",
+    "DA_TestMage_Spell_Rare",
+    "DA_TestMage_Spell_Epic",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_PlayerUnit_Ranger": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "멀리서 때린다. 맞으면 약하다",
+   "m_display_name": "궁수",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.ARCHER: 1>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_Ranger_HeadV2",
+   "m_skill_datas": [
+    "DA_TestArcher_Spell_Common",
+    "DA_TestArcher_Spell_Rare",
+    "DA_TestArcher_Spell_Epic",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_PlayerUnit_Rogue": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "먼저 움직이고 뒤를 노린다",
+   "m_display_name": "도적",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.ARCHER: 1>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_RogueHooded_HeadV2",
+   "m_skill_datas": [
+    "DA_TestArcher_Spell_Common",
+    "DA_TestArcher_Spell_Rare",
+    "DA_TestArcher_Spell_Epic",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  },
+  "/Game/BP/DataAsset/Unit/PlayerUnit/DA_TestPlayerUnit": {
+   "__class": "StaticPlayerUnitSpawnData",
+   "m_description": "앞줄을 막고 아군 대신 맞는다",
+   "m_display_name": "기사",
+   "m_equipment_datas": [
+    "DA_TestEquipment_Common"
+   ],
+   "m_icon": null,
+   "m_job_type": "<PlayerJobType.KNIGHT: 0>",
+   "m_model_class": "BP_KnightPlayerUnitModel_C",
+   "m_portrait": "KK_Face_Knight_HeadV2",
+   "m_skill_datas": [
+    "DA_Attack_SwordNormalSlash_Attack_Common",
+    "DA_Attack_SwordNormalSmash_Attack_Common",
+    "DA_Attack_SwordBlade_Attack_Rare",
+    "DA_Spell_NomalMove_Spell_Common",
+    "DA_Spell_NomalDefense_Spell_Common"
+   ],
+   "m_view_class": "BP_KnightPlayerUnit_C"
+  }
+ },
+ "장비": {
+  "/Game/BP/DataAsset/Equipment/DA_TestEquipment_Common": {
+   "__class": "StaticEquipmentData",
+   "m_description": "",
+   "m_icon": "T_equip_weapon_common",
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.COMMON: 0>",
+   "m_stat_modifiers": [],
+   "m_static_passive_data": [
+    "DA_TestPassive"
+   ]
+  },
+  "/Game/BP/DataAsset/Equipment/DA_TestEquipment_Epic": {
+   "__class": "StaticEquipmentData",
+   "m_description": "",
+   "m_icon": null,
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.EPIC: 2>",
+   "m_stat_modifiers": [],
+   "m_static_passive_data": []
+  },
+  "/Game/BP/DataAsset/Equipment/DA_TestEquipment_Rare": {
+   "__class": "StaticEquipmentData",
+   "m_description": "",
+   "m_icon": null,
+   "m_name": "",
+   "m_price": 0,
+   "m_rarity_type": "<RarityType.RARE: 1>",
+   "m_stat_modifiers": [],
+   "m_static_passive_data": []
+  }
+ },
+ "패시브": {
+  "/Game/BP/DataAsset/Passive/DA_TestPassive": {
+   "__class": "StaticPassiveData",
+   "m_activate_timing_tag": "<Struct 'GameplayTag' (0x000001DF10601488) {}>",
+   "m_deactivate_timing_tag": "<Struct 'GameplayTag' (0x000001DF10601494) {}>",
+   "m_description": "",
+   "m_effect_class": "TacticalEffect_AttackFactor_AddBase",
+   "m_icon": null,
+   "m_magnitude": 5.0,
+   "m_passive_class": "TacticalPassive_AddStat",
+   "m_passive_trigger_condition": [],
+   "m_target_quantifier": "<PassiveTargetQuantifier.ANY: 0>",
+   "m_threshold": 0
+  }
+ },
+ "방": {
+  "/Game/BP/DataAsset/Room/BossMonster/DA_TestBoss_Stage1": {
+   "__class": "StaticBossMonsterRoomSpawnData",
+   "m_background_map": "L_Stage1_SummerScene",
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 0,
+     "m_spawn_data": "DA_LeshyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 6
+      }
+     },
+     "m_turn_priority": 0
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": "SQ_08_MelodyOfTheVillage",
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.RIGHT: 1>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 4,
+     "m_y": 2
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/BossMonster/DA_TestBoss_Stage2": {
+   "__class": "StaticBossMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE2: 2>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/BossMonster/DA_TestBoss_Stage3": {
+   "__class": "StaticBossMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE3: 3>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/EliteMonster/DA_TestElite_Stage1": {
+   "__class": "StaticEliteMonsterRoomSpawnData",
+   "m_background_map": "L_Stage1_SummerScene",
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_GolemUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 6
+      }
+     },
+     "m_turn_priority": 10
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 0
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 0
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 7
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 8
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 7
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 8
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 7
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 8
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 7
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 8
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 0
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 0
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 1
+      }
+     }
+    }
+   ],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.RIGHT: 1>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 4,
+     "m_y": 2
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/EliteMonster/DA_TestElite_Stage2": {
+   "__class": "StaticEliteMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE2: 2>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/EliteMonster/DA_TestElite_Stage3": {
+   "__class": "StaticEliteMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE3: 3>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Frontend/DA_TestFrontend": {
+   "__class": "StaticFrontendRoomSpawnData",
+   "m_background_map": "L_Intro",
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_FrontendGameMode_C",
+   "m_override_bgm": "SQ_Title",
+   "m_playable_units": [
+    "DA_TestPlayerUnit",
+    "DA_PlayerUnit_Barbarian",
+    "DA_PlayerUnit_Ranger",
+    "DA_PlayerUnit_Rogue",
+    "DA_PlayerUnit_Mage",
+    "DA_PlayerUnit_Cleric"
+   ],
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Monster/DA_TestMonster2_Stage1": {
+   "__class": "StaticMonsterRoomSpawnData",
+   "m_background_map": "L_Stage1_SummerScene",
+   "m_default_spawn_setting_name": "Square",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_SlimeUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.BACKWARD: 2>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 4
+      }
+     },
+     "m_turn_priority": 0
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_MushroomUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 7
+      }
+     },
+     "m_turn_priority": 10
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_SpiderUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 4
+      }
+     },
+     "m_turn_priority": 20
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 5
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 5,
+       "m_y": 5
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_LamppostObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 4
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_RockObstacle_00",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 3,
+       "m_y": 4
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 3
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 3
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 7
+      }
+     }
+    }
+   ],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.RIGHT: 1>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 4,
+     "m_y": 1
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_use_random_spawn_setting": false
+  },
+  "/Game/BP/DataAsset/Room/Monster/DA_TestMonster_Stage1": {
+   "__class": "StaticMonsterRoomSpawnData",
+   "m_background_map": "L_Stage1_SummerScene",
+   "m_default_spawn_setting_name": "Square",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_EagleUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 5,
+       "m_y": 6
+      }
+     },
+     "m_turn_priority": 10
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 1,
+     "m_spawn_data": "DA_EagleUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 3,
+       "m_y": 6
+      }
+     },
+     "m_turn_priority": 20
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 4,
+       "m_y": 4
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.RIGHT: 1>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 3,
+       "m_y": 3
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 3,
+       "m_y": 4
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 5
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 8,
+       "m_y": 6
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 6
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 5
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.BACKWARD: 2>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 2
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.BACKWARD: 2>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 2
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BoxObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.BACKWARD: 2>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 0,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_BarrelObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.LEFT: 3>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 7,
+       "m_y": 1
+      }
+     }
+    },
+    {
+     "__struct": "ObstaclePlacementData",
+     "m_spawn_data": "DA_StumpObstacle",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.RIGHT: 1>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 1,
+       "m_y": 8
+      }
+     }
+    }
+   ],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.RIGHT: 1>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 4,
+     "m_y": 2
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_use_random_spawn_setting": false
+  },
+  "/Game/BP/DataAsset/Room/Monster/DA_TestMonster_Stage2": {
+   "__class": "StaticMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 2,
+     "m_spawn_data": "DA_TestEnemyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 6,
+       "m_y": 3
+      }
+     },
+     "m_turn_priority": 10
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 2,
+     "m_spawn_data": "DA_TestEnemyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 6,
+       "m_y": 5
+      }
+     },
+     "m_turn_priority": 20
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE2: 2>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Monster/DA_TestMonster_Stage3": {
+   "__class": "StaticMonsterRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_enemy_unit_placement_datas": [
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 3,
+     "m_spawn_data": "DA_TestEnemyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 5,
+       "m_y": 3
+      }
+     },
+     "m_turn_priority": 10
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 3,
+     "m_spawn_data": "DA_TestEnemyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 6,
+       "m_y": 4
+      }
+     },
+     "m_turn_priority": 20
+    },
+    {
+     "__struct": "EnemyUnitPlacementData",
+     "m_difficulty": 3,
+     "m_spawn_data": "DA_TestEnemyUnit",
+     "m_transform": {
+      "__struct": "TileTransform",
+      "m_direction": "<TileActorDirection.FORWARD: 0>",
+      "m_index": {
+       "__struct": "TileIndex",
+       "m_x": 5,
+       "m_y": 5
+      }
+     },
+     "m_turn_priority": 30
+    }
+   ],
+   "m_game_mode_base": "BP_CombatGameMode_C",
+   "m_obstacle_placement_datas": [],
+   "m_override_bgm": null,
+   "m_party_transforms": [],
+   "m_player_transform": {
+    "__struct": "TileTransform",
+    "m_direction": "<TileActorDirection.FORWARD: 0>",
+    "m_index": {
+     "__struct": "TileIndex",
+     "m_x": 0,
+     "m_y": 0
+    }
+   },
+   "m_stage_level": "<StageLevelType.STAGE3: 3>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Shop/DA_TestShop_Stage1": {
+   "__class": "StaticShopRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_ShopGameMode_C",
+   "m_override_bgm": null,
+   "m_shop_owner_class": null,
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Shop/DA_TestShop_Stage2": {
+   "__class": "StaticShopRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_ShopGameMode_C",
+   "m_override_bgm": null,
+   "m_shop_owner_class": null,
+   "m_stage_level": "<StageLevelType.STAGE2: 2>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Shop/DA_TestShop_Stage3": {
+   "__class": "StaticShopRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_ShopGameMode_C",
+   "m_override_bgm": null,
+   "m_shop_owner_class": null,
+   "m_stage_level": "<StageLevelType.STAGE3: 3>",
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Treasure/DA_TestTreasure_Stage1": {
+   "__class": "StaticTreasureRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_TreasureGameMode_C",
+   "m_override_bgm": null,
+   "m_stage_level": "<StageLevelType.STAGE1: 1>",
+   "m_treasure_box_class": null,
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Treasure/DA_TestTreasure_Stage2": {
+   "__class": "StaticTreasureRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_TreasureGameMode_C",
+   "m_override_bgm": null,
+   "m_stage_level": "<StageLevelType.STAGE2: 2>",
+   "m_treasure_box_class": null,
+   "m_use_random_spawn_setting": true
+  },
+  "/Game/BP/DataAsset/Room/Treasure/DA_TestTreasure_Stage3": {
+   "__class": "StaticTreasureRoomSpawnData",
+   "m_background_map": null,
+   "m_default_spawn_setting_name": "None",
+   "m_game_mode_base": "BP_TreasureGameMode_C",
+   "m_override_bgm": null,
+   "m_stage_level": "<StageLevelType.STAGE3: 3>",
+   "m_treasure_box_class": null,
+   "m_use_random_spawn_setting": true
+  }
+ }
+}

@@ -140,7 +140,7 @@
   #dirty { color: #ffd24a; font-size: 12.5px; align-self: center; }
 </style>
 
-<h1>시안1 배치안이 쓰는 그림 · 구역 조정</h1>
+<h1>시안4 전투 HUD · 구역 조정</h1>
 <p class="hint">
   왼쪽에서 판을 고르면 그 위에 구역이 뜹니다. 끌어 옮기고 손잡이로 크기를
   바꿉니다 — <kbd>←↑↓→</kbd> 1px · <kbd>Shift</kbd> 10px ·
@@ -192,15 +192,15 @@
 // 자료는 list_layout_art.py 가 여기에 박아 넣는다. 따로 두고 fetch 로 읽게
 // 했더니 브라우저가 막았다 -- file:// 에서는 같은 폴더 파일도 fetch 가 안
 // 된다(그림 태그는 된다).
-const GROUPS = /*DATA*/null;
-const BASE = /*TABLE*/null;
+const GROUPS = [{"title": "상단", "users": "라운드 · 턴 순서 · 목표", "items": [{"name": "라운드", "path": "KK_HUD04_top_left_parchment", "note": "top_left_parchment  309x151 @ 15,12", "png": "png/KK_HUD04_top_left_parchment.png", "role": "top_left_parchment"}, {"name": "턴 순서", "path": "KK_HUD04_top_center_turn_order", "note": "top_center_turn_order  713x158 @ 483,12", "png": "png/KK_HUD04_top_center_turn_order.png", "role": "top_center_turn_order"}, {"name": "목표 (→ 메뉴 아이콘)", "path": "KK_HUD04_top_right_parchment", "note": "top_right_parchment  392x151 @ 1271,12", "png": "png/KK_HUD04_top_right_parchment.png", "role": "top_right_parchment"}]}, {"title": "명령 카드 6", "users": "CommandCard_0~5", "items": [{"name": "디폴트_1", "path": "KK_HUD04_action_top", "note": "action_top  197x212 @ 741,178", "png": "png/KK_HUD04_action_top.png", "role": "action_top"}, {"name": "디폴트_2", "path": "KK_HUD04_action_left_upper", "note": "action_left_upper  196x218 @ 497,303", "png": "png/KK_HUD04_action_left_upper.png", "role": "action_left_upper"}, {"name": "디폴트_3", "path": "KK_HUD04_action_right_upper", "note": "action_right_upper  196x218 @ 971,303", "png": "png/KK_HUD04_action_right_upper.png", "role": "action_right_upper"}, {"name": "디폴트_4", "path": "KK_HUD04_action_left_lower", "note": "action_left_lower  196x213 @ 497,542", "png": "png/KK_HUD04_action_left_lower.png", "role": "action_left_lower"}, {"name": "디폴트_5", "path": "KK_HUD04_action_right_lower", "note": "action_right_lower  196x213 @ 971,542", "png": "png/KK_HUD04_action_right_lower.png", "role": "action_right_lower"}, {"name": "디폴트_6", "path": "KK_HUD04_action_bottom", "note": "action_bottom  197x217 @ 741,666", "png": "png/KK_HUD04_action_bottom.png", "role": "action_bottom"}]}, {"title": "아군 3", "users": "PartyCard_0~2", "items": [{"name": "아군 1", "path": "KK_HUD04_bottom_status_left", "note": "bottom_status_left  225x174 @ 10,761", "png": "png/KK_HUD04_bottom_status_left.png", "role": "bottom_status_left"}, {"name": "아군 2", "path": "KK_HUD04_bottom_status_center", "note": "bottom_status_center  225x174 @ 232,761", "png": "png/KK_HUD04_bottom_status_center.png", "role": "bottom_status_center"}, {"name": "아군 3", "path": "KK_HUD04_bottom_status_right", "note": "bottom_status_right  222x175 @ 454,760", "png": "png/KK_HUD04_bottom_status_right.png", "role": "bottom_status_right"}]}, {"title": "그 밖", "users": "적 정보 · 턴 종료", "items": [{"name": "적 정보", "path": "KK_HUD04_upper_right_enemy_panel", "note": "upper_right_enemy_panel  390x286 @ 1273,180", "png": "png/KK_HUD04_upper_right_enemy_panel.png", "role": "upper_right_enemy_panel"}, {"name": "턴 종료", "path": "KK_HUD04_bottom_right_button", "note": "bottom_right_button  345x158 @ 1318,770", "png": "png/KK_HUD04_bottom_right_button.png", "role": "bottom_right_button"}]}];
+const BASE = {"action_bottom": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_left_lower": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_left_upper": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_right_lower": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_right_upper": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "action_top": {"action_name": [67, 27, 49, 30], "action_icon": [53, 59, 84, 91], "cost_badge": [132, 120, 50, 51], "damage_text": [35, 130, 92, 30], "cooldown_text": [53, 158, 63, 29], "selected_outline": [0, 0, 188, 210], "cooldown_overlay": [0, 0, 188, 210], "stance_text": [35, 130, 92, 30]}, "bottom_right_button": {"button_label": [99, 52, 140, 49]}, "bottom_status_center": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 69, 25], "hp_bar": [118, 77, 79, 14], "ap_gems": [88, 111, 108, 31]}, "bottom_status_left": {"party_portrait": [21, 25, 65, 80], "character_name": [91, 29, 46, 27], "hp_icon": [91, 53, 24, 24], "hp_value": [119, 53, 64, 25], "hp_bar": [118, 77, 79, 14], "status_icon": [91, 82, 25, 27], "status_text": [118, 86, 72, 24], "ap_gems": [88, 111, 108, 31], "selected_outline": [0, 0, 217, 166]}, "bottom_status_right": {"party_portrait": [20, 25, 65, 80], "character_name": [90, 29, 61, 27], "hp_icon": [90, 53, 24, 24], "hp_value": [118, 53, 66, 25], "hp_bar": [117, 77, 79, 14], "ap_gems": [87, 111, 108, 31]}, "top_center_turn_order": {"turn_portrait_01": [31, 28, 76, 74], "turn_portrait_02": [161, 28, 76, 74], "turn_portrait_03": [291, 28, 76, 74], "turn_portrait_04": [421, 28, 76, 74], "turn_portrait_05": [551, 28, 76, 74], "selected_outline": [25, 22, 88, 86]}, "top_left_parchment": {"round_label": [72, 48, 158, 44]}, "top_right_parchment": {"objective_text": [50, 48, 286, 44]}, "upper_right_enemy_panel": {"enemy_portrait": [33, 37, 113, 160], "enemy_name": [157, 42, 69, 35], "hp_icon": [157, 81, 39, 38], "hp_value": [204, 86, 67, 30], "hp_bar": [204, 112, 138, 17], "defense_icon": [158, 132, 40, 42], "defense_text": [203, 137, 75, 31], "damage_icon": [157, 175, 43, 42], "damage_text": [203, 182, 140, 31]}};
 // 한 벌로 맞춰 둔 판 묶음. 이름 뒤 숫자로는 짝을 못 찾는 것들이다 --
 // action_top 과 action_left_upper 는 같은 카드인데 이름이 안 닮았다.
-const FAMILY = /*FAMILY*/null;
+const FAMILY = [["action_top", "action_left_upper", "action_right_upper", "action_left_lower", "action_right_lower", "action_bottom"]];
 
 // 쪽마다 저장 칸이 달라야 한다. 시안1과 시안4가 같은 칸을 쓰면 한쪽에서
 // 고친 값이 다른 쪽에 얹혀 판 이름이 안 맞는 표가 들어온다.
-const KEEP = /*KEEPKEY*/"rd.slots.01";
+const KEEP = "rd.hud04";
 let TABLE = structuredClone(BASE || {});
 let picked = null, mode = 2, showZones = true, sel = null;
 let whole = true, selRole = null;
@@ -678,7 +678,7 @@ function list() {
 }
 
 function pyText() {
-  const lines = ['    "01": {'];
+  const lines = ['DETAIL = {'];
   for (const [role, keys] of Object.entries(TABLE)) {
     lines.push(`        "${role}": {`);
     for (const [key, v] of Object.entries(keys)) {
