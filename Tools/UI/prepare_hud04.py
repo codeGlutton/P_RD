@@ -134,8 +134,11 @@ CARD_FALLBACK = ("action_right_upper", "action_right_lower", "action_bottom",
 #: 아군 칸 셋. 카드와 같은 까닭으로 한 벌로 맞춘다 -- 시안이 기사 줄에만
 #: 상태이상을 그려 두어 셋의 요소 수부터 다르다.
 PARTY = ("bottom_status_left", "bottom_status_center", "bottom_status_right")
-PARTY_TEMPLATE = "bottom_status_left"
-PARTY_FALLBACK = ("bottom_status_center", "bottom_status_right")
+PARTY_TEMPLATE = "bottom_status_right"
+
+#: 본에 없는 것을 데려올 곳. 시안이 기사 줄(왼쪽)에만 상태이상과 차례 표시를
+#: 그려 두어, 아군 3을 본으로 삼으면 그 둘이 없다.
+PARTY_FALLBACK = ("bottom_status_left", "bottom_status_center")
 
 
 def unify(place, detail, plates, template, fallbacks):

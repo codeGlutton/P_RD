@@ -71,7 +71,7 @@ ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
 CARD_TEMPLATE = "action_top"
 
 #: 아군 칸 셋의 본. 카드와 같은 까닭으로 그림도 한 벌만 쓴다.
-PARTY_TEMPLATE = "bottom_status_left"
+PARTY_TEMPLATE = "bottom_status_right"
 
 #: 명령 카드 여섯이 함께 쓰는 판 그림.
 #:
