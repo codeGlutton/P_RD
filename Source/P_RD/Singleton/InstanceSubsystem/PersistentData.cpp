@@ -378,7 +378,7 @@ void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPl
 		});
 
 	// 아티팩트 추적
-	PartyArtifactComponentModel->OnChangePartyArtifactUI.AddLambda([this](const TArray<TObjectPtr<UStaticArtifactData>>& PartyArtifacts)
+	PartyArtifactComponentModel->OnChangeArtifact.AddLambda([this](const TArray<TObjectPtr<UStaticArtifactData>>& PartyArtifacts)
 		{
 			mArtifactIds.Empty(PartyArtifacts.Num());
 			for (const TObjectPtr<UStaticArtifactData>& PartyArtifact : PartyArtifacts)
