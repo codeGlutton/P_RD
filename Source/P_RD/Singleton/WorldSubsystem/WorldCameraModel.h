@@ -17,9 +17,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LogWorldCamera, Log, All)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRequestZoomInMainCamera, const FVector& /*Location*/, float /*ScreenSize*/);
 DECLARE_MULTICAST_DELEGATE(FOnRequestZoomOutMainCamera);
 
-/** @brief 그 자리를 화면 가운데로. 확대는 그대로. */
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRequestFocusMainCamera, const FVector& /*Location*/);
-
 /**
  * @brief  월드 공간 상의 카메라 제어 서브시스템 모델
  */
@@ -32,16 +29,7 @@ public:
 	void RequestZoomInMainCamera(const FVector& Location, float ScreenSize);
 	void RequestZoomOutMainCamera();
 
-	/**
-	 * @brief 그 자리를 화면 가운데로 가져와 달라.
-	 *
-	 * 확대는 안 바뀐다. 되돌리는 것은 RequestZoomOutMainCamera() 다 -- 둘이
-	 * 같은 통(강조 상태)을 쓰므로 원래 보던 자리와 확대율로 돌아간다.
-	 */
-	void RequestFocusMainCamera(const FVector& Location);
-
 public:
 	FOnRequestZoomInMainCamera OnRequestZoomInMainCamera;
 	FOnRequestZoomOutMainCamera OnRequestZoomOutMainCamera;
-	FOnRequestFocusMainCamera OnRequestFocusMainCamera;
 };

@@ -407,31 +407,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
 
-	/**
-	 * @brief 그 자리를 화면 가운데로 가져온다. 확대율은 그대로 둔다.
-	 *
-	 * @details
-	 * 강조(Emphasis)와 같은 통에 넣는다. 그래야 EndEmphasis() 로 원래 보던
-	 * 자리와 확대율로 돌아갈 수 있다 -- 되돌릴 곳을 따로 기억하는 장치를 하나
-	 * 더 만들 이유가 없다.
-	 *
-	 * 지금 화면은 **처음 옮길 때만** 기억한다. 겨냥을 옮길 때마다 다시
-	 * 기억하면, 취소했을 때 처음 보던 자리가 아니라 직전 자리로 돌아간다.
-	 *
-	 * 따라갈 액터는 지운다. 액터가 남아 있으면 FollowActor() 가 매 틱 그쪽으로
-	 * 끌어당겨서 겨냥한 칸에 안 머문다.
-	 * @param WorldPosition 가운데로 가져올 월드 좌표
-	 */
-	void FocusToWorldPosition(const FVector& WorldPosition);
-
-	/**
-	 * @brief 겨냥 전 화면으로 즉시 되돌린다.
-	 *
-	 * EndEmphasis() 는 부드럽게 돌아간다. 겨냥을 옮길 때마다 화면이 미끄러지면
-	 * 눈이 못 따라간다 -- 한 턴에 여러 번 일어나는 일이라 더 그렇다.
-	 */
-	void RestoreFocus();
-
 private:
 	/* 강조 기능 : private */
 
