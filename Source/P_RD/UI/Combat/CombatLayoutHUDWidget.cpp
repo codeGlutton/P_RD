@@ -772,42 +772,42 @@ void UCombatLayoutHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 {
 	Super::OpenUI(MoveTemp(Callback));
 
-	// 부모가 열면서 Visible 로 세운다. 그대로 두면 이 위젯이 화면 전체를 덮는
-	// 한 장이 되어 버튼 밖 클릭까지 전부 먹고, 지도는 그 클릭을 못 본다.
-	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	// 화면 전체가 눌림을 받아야 카드 밖 탭을 안다. 옛 전투 HUD 도 같은
+	// 방식이었다 -- 자식 버튼이 먼저 가져가고, 버튼 밖만 이 위젯이 받는다.
+	SetVisibility(ESlateVisibility::Visible);
 }
 
 /**
  * @brief 모델을 붙이면서 판 탭 알림도 같이 구독한다.
  * @param InUIModel 붙일 모델
  */
-void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
+FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
+	const FPointerEvent& InMouseEvent)
 {
-	Super::BindUIModel(InUIModel);
-	if (mUIModel != nullptr)
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
 	{
-		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
+	HandleBoardPressed(FVector2D(InMouseEvent.GetScreenSpacePosition()));
+	return FReply::Handled();
 }
 
-void UCombatLayoutHUDWidget::UnbindUIModel()
+FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
+	const FPointerEvent& InTouchEvent)
 {
-	if (mUIModel != nullptr)
-	{
-		mUIModel->OnCombatWorldTouch.RemoveDynamic(
-			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
-	}
-	Super::UnbindUIModel();
+	HandleBoardPressed(FVector2D(InTouchEvent.GetScreenSpacePosition()));
+	return FReply::Handled();
 }
 
-void UCombatLayoutHUDWidget::HandleWorldTouched(FVector2D ScreenPosition,
-	bool bLongPress)
+void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 {
 	if (mUIModel == nullptr)
 	{
 		return;
 	}
+
+	// 타일/유닛 판정은 게임플레이가 한다. 화면은 좌표만 넘긴다.
+	mUIModel->RequestWorldTouch(ScreenPosition, false);
 
 	// 조준 중이면 취소가 먼저다. 조준을 놔둔 채 카드만 접으면 다음 탭이 엉뚱한
 	// 곳에 스킬을 쏜다.

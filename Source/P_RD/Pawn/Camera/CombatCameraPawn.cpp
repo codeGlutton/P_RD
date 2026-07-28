@@ -2,10 +2,6 @@
 
 
 #include "Pawn/Camera/CombatCameraPawn.h"
-
-#include "Component/CameraMovementComponent/CameraMovementComponent.h"
-#include "GameMode/CombatGameMode.h"
-#include "UI/Combat/CombatUIModel.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
@@ -93,33 +89,13 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		{
 			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
 			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
-			if (i == 0)
-			{
-				mWasDragged = false;
-			}
-		}
-
-		// 첫 손가락만 본다. 둘째는 확대할 때만 쓰고 탭으로 치지 않는다.
-		if (i == 0)
-		{
-			if (mTouchStates[0].bIsCurrentlyPressed == true
-				&& mTapSlack < FVector2D::Distance(mTouchStates[0].StartTouchPos,
-					mTouchStates[0].CurTouchPos))
-			{
-				mWasDragged = true;
-			}
-			NotifyTapIfNotDragged(i, bPreTickTouch);
 		}
 	}
 
 
-	ApplyWheelZoom(PlayerController);
-	ApplyMouseDrag(PlayerController);
-
 	// Pinch 중
 	if (IsPinch())
 	{
-		ReleaseEmphasis();
 		if (OnPinching.IsBound())
 		{
 			OnPinching.Broadcast(mTouchStates);
@@ -128,112 +104,11 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 	// 드래그 중
 	else if (IsDrag())
 	{
-		ReleaseEmphasis();
 		if (OnDragging.IsBound())
 		{
 			OnDragging.Broadcast(mTouchStates);
 		}
 	}
-}
-
-/**
- * @brief 손으로 카메라를 움직이면 강조를 푼다.
- *
- * @details
- * 강조 중에는 FollowActor() 가 매 틱 강조 대상 쪽으로 카메라를 되돌린다.
- * 그래서 끌어도 손을 떼면 도로 튕겨 온다 -- 실제로 그렇게 보였다. 사람이
- * 직접 움직이기 시작하면 자동 추적은 그만두는 것이 맞다.
- */
-void ACombatCameraPawn::ReleaseEmphasis()
-{
-	if (IsValid(mCameraMovementComponent) == false)
-	{
-		return;
-	}
-	mCameraMovementComponent->EndEmphasis();
-}
-
-/**
- * @brief 마우스로 끌어 지도를 옮긴다. 안 끌고 떼면 톡 친 것으로 본다.
- *
- * @details
- * 터치 경로와 나란히 둔다. 손가락은 GetInputTouchState 로, 마우스는 여기서.
- * 둘을 한 경로로 합치려고 bUseMouseForTouch 를 켰다가 지도가 제멋대로
- * 움직였다 -- 그 설정은 게임 전체의 입력 경로를 바꾼다.
- * @param PlayerController 마우스를 읽을 컨트롤러
- */
-void ACombatCameraPawn::ApplyMouseDrag(APlayerController* PlayerController)
-{
-	if (PlayerController == nullptr || IsValid(mCameraMovementComponent) == false)
-	{
-		return;
-	}
-
-	FVector2D MousePos = FVector2D::ZeroVector;
-	const bool bHasMouse = PlayerController->GetMousePosition(MousePos.X, MousePos.Y);
-	const bool bDown = bHasMouse
-		&& PlayerController->IsInputKeyDown(EKeys::LeftMouseButton);
-
-	if (bDown == true && mWasMouseDown == false)
-	{
-		mMouseDownPos = MousePos;
-		mMousePrevPos = MousePos;
-		mWasMouseDragged = false;
-	}
-	else if (bDown == true)
-	{
-		if (mTapSlack < FVector2D::Distance(mMouseDownPos, MousePos))
-		{
-			mWasMouseDragged = true;
-		}
-		if (mWasMouseDragged == true && MousePos != mMousePrevPos)
-		{
-			ReleaseEmphasis();
-			mCameraMovementComponent->DragMoveToViewportPosition_Instant(
-				mMousePrevPos, MousePos);
-		}
-		mMousePrevPos = MousePos;
-	}
-	else if (mWasMouseDown == true)
-	{
-		// 뗐다. 안 끌었으면 톡 친 것이다. 누른 자리를 보낸다 -- 뗄 때 한두
-		// 픽셀 미끄러진 것까지 반영하면 가장자리에서 옆 칸이 잡힌다.
-		if (mWasMouseDragged == false)
-		{
-			NotifyWorldTap(mMouseDownPos);
-		}
-		mWasMouseDragged = false;
-	}
-
-	mWasMouseDown = bDown;
-}
-
-/**
- * @brief 마우스 휠로 확대/축소한다.
- *
- * PC 에는 손가락이 둘 없다. 핀치와 같은 길로 보내되 화면 가운데를 기준으로
- * 삼는다 -- 휠은 커서 자리를 안 알려 준다.
- * @param PlayerController 휠 값을 읽을 컨트롤러
- */
-void ACombatCameraPawn::ApplyWheelZoom(APlayerController* PlayerController)
-{
-	if (PlayerController == nullptr || IsValid(mCameraMovementComponent) == false)
-	{
-		return;
-	}
-
-	// 축 값을 읽지 않는다. GetInputAnalogKeyState 는 굴린 프레임에만 0이 아닌
-	// 값을 주는 것이 아니라 마지막 값을 들고 있어서, 한 번 굴리면 계속 확대된다.
-	// 굴린 그 순간만 참인 것을 쓴다.
-	const bool bUp = PlayerController->WasInputKeyJustPressed(EKeys::MouseScrollUp);
-	const bool bDown = PlayerController->WasInputKeyJustPressed(EKeys::MouseScrollDown);
-	if (bUp == false && bDown == false)
-	{
-		return;
-	}
-
-	ReleaseEmphasis();
-	mCameraMovementComponent->ZoomCamera_Instant(bUp ? -mWheelZoomStep : mWheelZoomStep);
 }
 
 // Called to bind functionality to input
@@ -261,41 +136,6 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 UTimeScaleComponent* ACombatCameraPawn::GetTimeScaleComponent()
 {
 	return mTimeScaleComponent.Get();
-}
-
-/**
- * @brief 손을 뗐고 끌지 않았으면 월드 탭을 알린다.
- * @param TouchIndex  몇 번째 손가락인가
- * @param bWasPressed 직전 틱에 눌려 있었나
- */
-void ACombatCameraPawn::NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed)
-{
-	const bool bReleased = bWasPressed == true
-		&& mTouchStates[TouchIndex].bIsCurrentlyPressed == false;
-	if (bReleased == false || mWasDragged == true)
-	{
-		return;
-	}
-
-	NotifyWorldTap(mTouchStates[TouchIndex].StartTouchPos);
-}
-
-/**
- * @brief 톡 친 자리를 게임플레이에 알린다.
- * @param ScreenPosition 톡 친 화면 좌표
- */
-void ACombatCameraPawn::NotifyWorldTap(const FVector2D& ScreenPosition)
-{
-	ACombatGameMode* CombatGameMode = GetWorld() != nullptr
-		? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
-	if (CombatGameMode == nullptr)
-	{
-		return;
-	}
-	if (UCombatUIModel* UIModel = CombatGameMode->GetCombatUIModel())
-	{
-		UIModel->RequestWorldTouch(ScreenPosition, false);
-	}
 }
 
 bool ACombatCameraPawn::IsDrag()

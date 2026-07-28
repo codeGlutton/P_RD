@@ -44,7 +44,7 @@ public:
 	 * 받아 버린다. 받은 클릭은 플레이어 컨트롤러까지 안 내려가고, 지도는 그
 	 * 클릭을 영영 못 본다.
 	 *
-	 * 열고 나서 다시 낮춘다. 이제 클릭을 받는 것은 카드와 아군 칸의 버튼뿐이다.
+	 * 열고 나서 표시 상태를 확정한다.
 	 */
 	virtual void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
 
@@ -77,9 +77,6 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnUIRefreshed(ECombatUIDomain Domain) override;
-
-	virtual void BindUIModel(UCombatUIModel* InUIModel) override;
-	virtual void UnbindUIModel() override;
 
 
 
@@ -115,13 +112,15 @@ private:
 	 * 채가면 지도가 안 움직인다.
 	 */
 	/**
-	 * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
+	 * @brief 카드 밖을 눌렀을 때. 좌표를 넘기고 카드를 접는다.
 	 *
-	 * 카메라가 끌었는지 톡 쳤는지 가려서 쏘는 신호다. 버튼을 누른 클릭은
-	 * Slate 가 먹어서 플레이어 컨트롤러까지 안 내려가므로, 이 알림도 안 온다 --
-	 * 아군 칸을 눌러 편 카드가 같은 클릭에 도로 접히지 않는 이유다.
+	 * 자식 버튼이 먼저 가져가므로 여기까지 온 눌림은 버튼이 아닌 곳이다.
+	 * 그래서 아군 칸을 눌러 다시 펼 때 같은 클릭이 도로 접지 않는다.
 	 */
-	UFUNCTION() void HandleWorldTouched(FVector2D ScreenPosition, bool bLongPress);
+	void HandleBoardPressed(const FVector2D& ScreenPosition);
+
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 
 	UFUNCTION() void HandleCommandClicked_0();
 	UFUNCTION() void HandleCommandClicked_1();
