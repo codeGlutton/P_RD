@@ -269,6 +269,9 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
+		// 무엇을 조종하는 중인지 알 수 없다.
+		mInspectedUnitId = INDEX_NONE;
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -436,6 +439,11 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::InspectUnit:
+		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
+		mInspectedUnitId = IntPayload;
+		PushSkillUIData();
 		break;
 	case ECombatInputType::LongPressEquip:
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
@@ -802,12 +810,49 @@ bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitMo
 	return Distance <= StaticSkillData.mAimRange;
 }
 
+/**
+ * @brief 파티에서 이 id 의 유닛을 찾는다.
+ *
+ * @details
+ * UI 는 액터도 모델도 모르고 FUnitUI.mUnitId 만 안다. 그 id 로 되짚는 자리가
+ * 여기다.
+ * @param UnitId 찾을 유닛. INDEX_NONE 이면 안 찾는다
+ * @return 없으면 nullptr
+ */
+UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
+{
+	if (UnitId == INDEX_NONE)
+	{
+		return nullptr;
+	}
+
+	for (UPlayerUnitModel* PartyUnitModel : GetPartyUnitModels())
+	{
+		if (PartyUnitModel != nullptr && PartyUnitModel->GetModelId() == UnitId)
+		{
+			return PartyUnitModel;
+		}
+	}
+	return nullptr;
+}
+
 void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	UPlayerUnitModel* TurnUnitModel = GetPlayerUnitModel();
+	checkf(TurnUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+
+	// 들여다보는 유닛이 있으면 그쪽 스킬을 보여 준다. 없으면 지금 차례인 유닛.
+	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = TurnUnitModel;
+	}
+
+	// 제 차례가 아닌 유닛의 카드는 전부 꺼서 보여 준다. 무엇을 들고 있는지
+	// 아는 것과 지금 쓸 수 있는 것은 다른 이야기라, 감추는 대신 끈다.
+	const bool bIsOwnTurn = PlayerUnitModel == TurnUnitModel;
 
 	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
@@ -834,8 +879,8 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
 			// 겨냥한 자리와 남은 행동력으로 쓸 수 있는지 가린다. 화면은 이
 			// 판정을 안 한다 -- 사거리를 두 곳에서 세면 어긋나는 날이 온다.
-			SkillUIData.mIsUsable =
-				IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
+			SkillUIData.mIsUsable = bIsOwnTurn
+				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);

@@ -33,6 +33,11 @@ void UCombatUIModel::RequestEndTurn()
 }
 
 /** @brief 현재 선택/빌드 취소 의도를 전달한다. */
+void UCombatUIModel::RequestInspectUnit(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::InspectUnit, UnitId);
+}
+
 void UCombatUIModel::RequestCancel()
 {
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);

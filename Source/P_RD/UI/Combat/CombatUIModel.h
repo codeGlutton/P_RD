@@ -22,7 +22,8 @@ enum class ECombatInputType : uint8
 	Move,             // payload 없음(채운 무브포인트 소모)
 	EndTurn,          // payload 없음
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip    // payload = SlotIndex (장비 상세)
+	LongPressEquip,   // payload = SlotIndex (장비 상세)
+	InspectUnit       // payload = UnitId (그 유닛의 스킬을 본다)
 };
 
 class UTexture2D;
@@ -114,6 +115,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
 	/** @brief 현재 스킬/타겟 선택 취소 의도. UI 강조 해제는 OnActionResolved로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
+
+	/**
+	 * @brief 이 유닛의 스킬을 보여 달라.
+	 *
+	 * @details
+	 * 하단 용병 칸을 누르면 그 용병이 무엇을 할 수 있는지 보고 싶다는 뜻이다.
+	 * 제 차례가 아니어도 보여 준다 -- 다만 그때는 카드가 전부 꺼진 채로 온다.
+	 * 무엇을 들고 있는지 아는 것과 지금 쓸 수 있는 것은 다른 이야기다.
+	 *
+	 * 차례가 넘어가면 저절로 풀린다. 화면이 따로 되돌릴 필요가 없다.
+	 * @param UnitId 볼 유닛. INDEX_NONE 이면 지금 차례인 유닛으로 되돌린다
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnit(int32 UnitId);
 	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */

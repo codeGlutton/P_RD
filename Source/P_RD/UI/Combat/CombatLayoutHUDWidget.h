@@ -150,6 +150,14 @@ private:
 	void HandlePartyClicked(int32 SlotIndex);
 
 	/**
+	 * @brief 하단 용병 칸 SlotIndex 에 서 있는 유닛의 id.
+	 *
+	 * 칸은 아군을 나온 차례대로 채운다 -- RefreshParty() 와 같은 순서로 세야
+	 * 눌린 칸과 유닛이 어긋나지 않는다.
+	 */
+	int32 PartyUnitIdAt(int32 SlotIndex) const;
+
+	/**
 	 * @brief 사용자가 카드를 펴 두었나. 턴이 시작되면 펴진다.
 	 *
 	 * 이것이 곧 보이는 여부는 아니다. 조준 중에는 펴 둔 채로도 안 보인다 --
@@ -186,8 +194,8 @@ private:
 		TObjectPtr<UProgressBar> HPBar;
 		TObjectPtr<UTextBlock> HPText;
 		TObjectPtr<UTextBlock> APText;
-	/** @brief AP 가 낱개 자리보다 많을 때만 켜는 아이콘. 옆에 "x N" 이 붙는다. */
-	UPROPERTY() TObjectPtr<UWidget> APIcon = nullptr;
+		/** @brief AP 가 낱개 자리보다 많을 때만 켜는 아이콘. 옆에 "x N" 이 붙는다. */
+		TObjectPtr<UWidget> APIcon = nullptr;
 		TArray<TObjectPtr<UWidget>> APPips;
 		TObjectPtr<UTextBlock> StatusText;
 		/** @brief 상태이상 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */

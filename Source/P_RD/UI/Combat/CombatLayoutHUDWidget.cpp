@@ -840,19 +840,50 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
  * 크며, 이미 금테두리로 "지금 차례" 를 말하고 있다.
  * @param SlotIndex 누른 칸
  */
+int32 UCombatLayoutHUDWidget::PartyUnitIdAt(const int32 SlotIndex) const
+{
+	if (mUIModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	int32 Seen = 0;
+	for (const FUnitUI& Unit : mUIModel->GetUnitUIs())
+	{
+		if (Unit.mIsPlayer == false)
+		{
+			continue;
+		}
+		if (Seen == SlotIndex)
+		{
+			return Unit.mUnitId;
+		}
+		++Seen;
+	}
+	return INDEX_NONE;
+}
+
 void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 {
-	// 조준 중이면 무르고 카드를 되돌린다. 여기서 그냥 뒤집으면 조준이 끝난
-	// 뒤에 카드가 접힌 채로 남는다 -- 조준 중에는 뒤집어도 화면이 안 바뀌어서
-	// 무엇이 뒤집혔는지 안 보인다.
-	if (IsAiming() == true)
+	if (mUIModel == nullptr)
 	{
-		mUIModel->RequestCancel();
-		SetCommandsShown(true);
 		return;
 	}
 
-	SetCommandsShown(!mCommandsShown);
+	// 조준 중이었으면 무른다. 남의 스킬을 보러 가면서 겨냥만 남겨 두면 그
+	// 사거리가 누구 것인지 알 수 없다.
+	if (IsAiming() == true)
+	{
+		mUIModel->RequestCancel();
+	}
+
+	// 그 용병의 스킬로 갈아 끼워 달라고 한다. 제 차례가 아니면 전부 꺼진 채로
+	// 온다 -- 끄는 판정은 게임플레이가 한다.
+	mUIModel->RequestInspectUnit(PartyUnitIdAt(SlotIndex));
+
+	// 접혀 있었으면 편다. 스킬을 보러 눌렀는데 안 펴지면 아무 일도 안 일어난
+	// 것처럼 보인다.
+	SetCommandsShown(true);
 }
 
 void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }

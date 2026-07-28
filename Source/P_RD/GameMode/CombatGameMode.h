@@ -122,6 +122,18 @@ protected:
 	bool IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
 		const UStaticSkillData& StaticSkillData) const;
 
+	/**
+	 * @brief 지금 카드에 스킬을 보여 줄 유닛. 없으면 지금 차례인 유닛.
+	 *
+	 * 하단 용병 칸을 눌러 남의 스킬을 들여다보는 동안에만 값이 들어 있다.
+	 * 차례가 넘어가면 지운다 -- 새 차례가 왔는데 옛 유닛 카드가 떠 있으면
+	 * 무엇을 조종하는 중인지 알 수 없다.
+	 */
+	int32 mInspectedUnitId = INDEX_NONE;
+
+	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
+	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
+
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
