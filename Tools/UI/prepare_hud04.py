@@ -141,7 +141,7 @@ PARTY_TEMPLATE = "bottom_status_right"
 PARTY_FALLBACK = ("bottom_status_left", "bottom_status_center")
 
 
-def unify(place, detail, plates, template, fallbacks):
+def fill_missing(place, detail, plates, template, fallbacks):
     """명령 카드 여섯의 판 안 자리를 한 벌로 맞춘다.
 
     ## 왜 다르게 나오나
@@ -165,8 +165,15 @@ def unify(place, detail, plates, template, fallbacks):
         cooldown_overlay  쿨타임 가림막. 카드를 통째로 덮는다
         stance_text       "방어 태세" 같은 글. 피해 자리와 같은 칸을 쓴다
 
-    이 함수가 **잰 값을 덮어쓴다.** 통일은 잰 결과가 아니라 정한 것이라
-    여기에 둔다 -- hud04_slots.py 를 손으로 고치면 다음에 만들 때 사라진다.
+    ## 덮지 않는다
+
+    전에는 본의 값으로 통째로 덮었다. 그런데 구역 조정 쪽에도 "묶어 고치기"
+    가 있어 같은 일을 두 곳에서 하게 됐고, 쪽에서 맞춘 값이 여기서 다시
+    덮이면서 열 때마다 조금씩 밀렸다.
+
+    맞추는 것은 쪽이 한다. 여기서는 **위젯이 사라지지 않게 빈 자리만 메운다**
+    -- 굽는 코드는 없는 자리를 건너뛰므로, 어느 판에 요소가 빠져 있으면 그
+    카드에서만 글자가 통째로 안 나온다.
     """
     def boxes(plate):
         left, top = place[plate][0], place[plate][1]
@@ -200,12 +207,16 @@ def unify(place, detail, plates, template, fallbacks):
     if "damage_text" in base and "stance_text" not in base:
         base["stance_text"] = list(base["damage_text"])
 
+    added = []
     for plate in plates:
         left, top = place[plate][0], place[plate][1]
-        detail[plate] = {element: [rect[0] + left, rect[1] + top,
-                                   rect[2], rect[3]]
-                         for element, rect in base.items()}
-    return sorted(base)
+        for element, rect in base.items():
+            if element in detail.get(plate, {}):
+                continue
+            detail.setdefault(plate, {})[element] = [
+                rect[0] + left, rect[1] + top, rect[2], rect[3]]
+            added.append("%s.%s" % (plate, element))
+    return added
 
 def apply_tuning(place, detail):
     """손으로 맞춘 자리를 덮어씌운다.
@@ -241,14 +252,13 @@ tuned = apply_tuning(place, detail)
 if tuned:
     print("손으로 맞춘 자리 %d개를 덮었다" % tuned)
 
-# 통일이 **마지막**이다. 손으로 맞춘 값을 덮은 뒤에 해야 한 장만 맞춰도 나머지가
-# 그 값을 따라간다. 통일을 먼저 하면 뒤이어 얹히는 값이 판마다 달라 다시
-# 어긋난다 -- 실제로 아군 셋이 그렇게 어긋나 있었다.
+# 빈 자리 메우기가 마지막이다. 맞춘 값을 얹은 뒤에 해야, 쪽에서 새로 만든
+# 구역이 있는 판은 그대로 두고 없는 판에만 들어간다.
 for group in ((CARDS, CARD_TEMPLATE, CARD_FALLBACK),
               (PARTY, PARTY_TEMPLATE, PARTY_FALLBACK)):
-    made = unify(place, detail, *group)
-    print("%d장을 %s 기준으로 통일: %s"
-          % (len(group[0]), group[1], ", ".join(made)))
+    added = fill_missing(place, detail, *group)
+    if added:
+        print("빈 자리를 메웠다(%d): %s" % (len(added), ", ".join(added)))
 
 missing = set(place) - set(textures)
 if missing:

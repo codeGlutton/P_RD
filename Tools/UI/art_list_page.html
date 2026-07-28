@@ -62,13 +62,7 @@
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0;
   }
-  #shell {
-    position: relative;
-    /* 판 둘레에 자리를 둔다. 구역을 판 밖으로 내보낼 수 있어야 하기 때문이다
-       -- 상태 아이콘처럼 위로 삐져나오게 두는 것이 있다. 자리가 없으면
-       음수 좌표가 캔버스 가장자리에서 잘려 안 보인다. */
-    margin: 140px 150px;
-  }
+  #shell { position: relative; }
   #shell img { display: block; image-rendering: pixelated; }
   .zone {
     position: absolute; border: 1.5px solid rgba(102, 224, 255, .95);
@@ -197,7 +191,7 @@
       <button id="back">되돌리기</button>
       <button id="fwd">다시</button>
       <span class="sep"></span>
-      <button id="tie" class="on">묶어 고치기</button>
+      <button id="tie">묶어 고치기</button>
       <button id="spread">같은 판 전체에 적용</button>
       <button id="one">이 구역만 원래대로</button>
       <button id="undo">전부 원래 값으로</button>
@@ -257,9 +251,11 @@ const KEEP = /*KEEPKEY*/"rd.slots.01";
 let TABLE = structuredClone(BASE || {});
 let picked = null, mode = 2, showZones = true, sel = null;
 let whole = true, selRole = null;
-// 묶인 판을 같이 고칠지. 켜 두는 것이 기본이다 -- 묶어 둔 판은 같아야
-// 맞는 것이라, 따로 고치는 쪽이 예외다.
-let tied = true;
+// 묶인 판을 같이 고칠지. **꺼 두는 것이 기본이다.**
+//
+// 켜 두었더니 굽는 쪽의 통일과 겹쳐, 같은 일을 두 곳에서 하다 열 때마다 값이
+// 조금씩 밀렸다. 묶는 것은 손이 필요할 때만 켜서 쓴다.
+let tied = false;
 // 구역 안에 실제 그림을 얹을지. 켜 두는 것이 기본이다 -- 네모만 보고
 // 자리를 맞추는 것은 눈이 아니라 머리로 하는 일이 된다.
 let showArt = true;
@@ -380,6 +376,9 @@ function artOf(role, key) {
 
 function keep() {
   tieUp(selRole);
+  // 끌기가 끝난 뒤에 다시 잰다. 끄는 도중에 여백을 바꾸면 판이 손 밑에서
+  // 튀어 어디를 잡고 있는지 알 수 없게 된다.
+  room();
   try { localStorage.setItem(KEEP, JSON.stringify(TABLE)); } catch (err) {}
   const same = JSON.stringify(TABLE) === JSON.stringify(BASE);
   // 되돌릴 것이 몇 개 쌓였는지 같이 보여 준다. 안 보이면 되돌리기가 안 되는
@@ -510,6 +509,38 @@ function fit(img) {
   const shell = $("shell");
   shell.style.width = img.style.width;
   shell.style.height = img.style.height;
+  room();
+}
+
+// 판 둘레에 얼마나 자리를 둘지 정한다.
+//
+// 구역은 판 밖으로 나갈 수 있다 -- 상태 아이콘을 카드 위로 삐져나오게 두는
+// 식이다. 자리가 없으면 음수 좌표가 캔버스 가장자리에서 잘려 손잡이를 못
+// 잡는다.
+//
+// 고정 값으로 두었더니 확대할 때 모자랐다. 좌표는 확대율만큼 커지는데 여백은
+// 그대로여서다. 그래서 **삐져나온 만큼**을 재어 확대율을 곱한다.
+function room() {
+  const shell = $("shell");
+  const img = shell && shell.querySelector("img");
+  if (!shell || !img) return;
+
+  let left = 0, top = 0, right = 0, bottom = 0;
+  for (const spot of spots()) {
+    const table = TABLE[spot[2]];
+    if (!table) continue;
+    for (const item of boxesOf(table)) {
+      const [x, y, w, h] = item.box;
+      left = Math.max(left, -(x + spot[0]));
+      top = Math.max(top, -(y + spot[1]));
+      right = Math.max(right, x + spot[0] + w - img.naturalWidth);
+      bottom = Math.max(bottom, y + spot[1] + h - img.naturalHeight);
+    }
+  }
+  // 손잡이가 구역 밖으로 7px 더 나온다. 넉넉히 24를 얹는다.
+  const pad = (v) => Math.round((Math.max(v, 0) + 24) * mode) + "px";
+  shell.style.margin =
+    pad(top) + " " + pad(right) + " " + pad(bottom) + " " + pad(left);
 }
 
 function slots() {

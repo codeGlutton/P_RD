@@ -64,8 +64,18 @@ import combat_layout_kit as kit  # noqa: E402
 from hud04_slots import DETAIL, PLACE, TEXTURE  # noqa: E402
 from hud04_sprites import SPRITE  # noqa: E402
 
+try:
+    from hud04_zone_art import ZONE_ART  # noqa: E402
+except ImportError:
+    ZONE_ART = {}
+
 ASSET = "WBP_CombatHUD04"
 ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
+
+def art_path(name):
+    """HUD04 폴더의 그림 이름을 엔진 경로로. 없으면 None."""
+    return "{}/{}".format(ART, name) if name else None
+
 
 #: 명령 카드 여섯의 본. prepare_hud04.py 가 자리를 이 판으로 통일해 둔다.
 CARD_TEMPLATE = "action_top"
@@ -138,6 +148,16 @@ def sprite(plate, element):
     return (name, at(SPRITE[name])) if name in SPRITE else (None, None)
 
 
+def zone_art(plate, element):
+    """구역 조정 쪽에서 얹은 그림 이름. 없으면 None.
+
+    쪽에서 고른 것이 시안에서 뗀 조각보다 앞선다 -- 시안 것은 처음 자리를 잡을
+    때 쓴 밑그림이고, 쪽에서 고른 것은 실제로 넣기로 정한 그림이다.
+    """
+    got = ZONE_ART.get(plate, {}).get(element)
+    return got["texture"] if got else None
+
+
 def local(rect, origin):
     """화면 기준 자리를 묶음 안 자리로. 묶음의 왼쪽 위를 뺀다."""
     if rect is None:
@@ -174,7 +194,10 @@ def piece(blueprint, parent, origin, widget_name, plate_name, element,
     모른다 -- 구역을 옮겨도 그림은 안 따라와서, 쪽에서는 맞았는데 게임에서는
     그대로인 일이 생긴다. 실제로 턴 초상이 그랬다.
     """
+    chosen = zone_art(plate_name, element)
     name, sprite_rect = sprite(plate_name, element)
+    if chosen:
+        name = chosen
     if name is None:
         return False
     rect = spot(plate_name, element) or sprite_rect
@@ -321,7 +344,8 @@ def commands(blueprint, root):
             cx, cy, cw, ch = local(cool_badge, origin)
             kit.image(blueprint, "CommandCooldownBadge_%d" % index, card,
                       cx, cy, cw, ch, None, z_order=Z_CONTENT,
-                      texture=COST_BADGE, tint=kit.WHITE)
+                      texture=art_path(zone_art(plate_name, "cooldown_badge"))
+                      or COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCooldown_%d" % index, card, origin,
              cool_badge or spot(plate_name, "cooldown_text"),
              cooldown, 19, TEXT_PALE, bold=True)
@@ -333,7 +357,8 @@ def commands(blueprint, root):
             bx, by, bw, bh = local(badge, origin)
             kit.image(blueprint, "CommandCostBadge_%d" % index, card,
                       bx, by, bw, bh, None, z_order=Z_CONTENT,
-                      texture=COST_BADGE, tint=kit.WHITE)
+                      texture=art_path(zone_art(plate_name, "cost_badge"))
+                      or COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCost_%d" % index, card, origin,
              badge, cost, 19, TEXT_PALE, bold=True)
 
