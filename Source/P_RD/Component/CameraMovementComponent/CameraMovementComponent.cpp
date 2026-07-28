@@ -670,6 +670,34 @@ void UCameraMovementComponent::StartEmphasisToActor(AActor* EmphasisActor)
 	mCamerControlState = ECameraControlState::Emphasis;
 }
 
+void UCameraMovementComponent::FocusToWorldPosition(const FVector& WorldPosition)
+{
+	if (!ensureMsgf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다")))
+	{
+		return;
+	}
+
+	// 처음 옮길 때만 지금 화면을 기억한다.
+	if (mCamerControlState != ECameraControlState::Emphasis)
+	{
+		FHitResult CameraRayHitResult;
+		if (GetCameraRayHitPoint(CameraRayHitResult))
+		{
+			mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
+				mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
+			mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
+				mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+		}
+		mCamerControlState = ECameraControlState::Emphasis;
+	}
+
+	// 따라갈 액터는 없다. 남아 있으면 FollowActor() 가 그쪽으로 끌어당긴다.
+	mEmphasisActor.Reset();
+
+	// 확대는 안 건드린다. 가운데로 놓는 것만 한다.
+	MoveToWorldPosition_Smooth(WorldPosition);
+}
+
 void UCameraMovementComponent::EndEmphasis()
 {
 	// 카메라의 강조 상태를 종료합니다.

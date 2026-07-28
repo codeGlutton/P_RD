@@ -115,6 +115,9 @@ protected:
 	/** @brief 톡 쳐서 고른 칸을 UI 에 내린다. 스킬 표시값도 같이 다시 내린다. */
 	void PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor);
 
+	/** @brief 겨냥을 풀고 화면을 겨냥하기 전으로 되돌린다. */
+	void ClearCombatTargetUIData();
+
 	/** @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나. 행동력과 사거리를 본다. */
 	bool IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
 		const UStaticSkillData& StaticSkillData) const;

@@ -21,6 +21,17 @@ void UWorldCameraSubsystem::BindModel(UObjectModel* Model)
 				}
 			}
 			});
+		mWorldCameraModel->OnRequestFocusMainCamera.AddWeakLambda(this, [this](const FVector& Location) {
+			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+			if (MainCameraPawn != nullptr)
+			{
+				UCameraMovementComponent* CameraMovementComponent = MainCameraPawn->GetCameraMovementComponent();
+				if (CameraMovementComponent != nullptr)
+				{
+					CameraMovementComponent->FocusToWorldPosition(Location);
+				}
+			}
+			});
 		mWorldCameraModel->OnRequestZoomOutMainCamera.AddWeakLambda(this, [this]() {
 			ACombatCameraPawn* MainCameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
 			if (MainCameraPawn != nullptr)

@@ -11,3 +11,8 @@ void UWorldCameraModel::RequestZoomOutMainCamera()
 {
 	OnRequestZoomOutMainCamera.Broadcast();
 }
+
+void UWorldCameraModel::RequestFocusMainCamera(const FVector& Location)
+{
+	OnRequestFocusMainCamera.Broadcast(Location);
+}

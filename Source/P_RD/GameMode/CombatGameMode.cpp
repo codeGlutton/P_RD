@@ -17,6 +17,7 @@
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 #include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
@@ -440,6 +441,10 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
 		PushEquipmentDetailUIData(IntPayload);
 		break;
+	case ECombatInputType::Cancel:
+		// 무르면 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
+		ClearCombatTargetUIData();
+		break;
 	}
 }
 
@@ -860,6 +865,15 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 		return;
 	}
 
+	// 겨냥한 칸을 다시 누르면 무른다. 길게 누르기를 붙이기 전까지는 이것이
+	// 취소 손잡이다 -- 무를 방법이 없으면 카메라가 그 칸에 붙은 채로 남는다.
+	const FCombatTargetUI& Current = mCombatUIModel->GetTarget();
+	if (Current.mIsValid == true && Current.mTile == Tile)
+	{
+		ClearCombatTargetUIData();
+		return;
+	}
+
 	FCombatTargetUI TargetUIData;
 	TargetUIData.mIsValid = true;
 	TargetUIData.mTile = Tile;
@@ -877,6 +891,36 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 
 	mCombatUIModel->SetTarget(TargetUIData);
 	PushSkillUIData();
+
+	// 겨냥한 칸을 화면 가운데로 가져온다. 가장자리 칸을 겨냥해도 그 둘레가
+	// 보여야 무엇을 할지 정할 수 있다. 되돌리는 것은 취소가 한다.
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+	if (TileMap != nullptr && WorldCameraModel != nullptr)
+	{
+		WorldCameraModel->RequestFocusMainCamera(TileMap->TileToWorldLocation(Tile));
+	}
+}
+
+/**
+ * @brief 겨냥을 푼다. 화면도 겨냥하기 전으로 되돌린다.
+ *
+ * 겨냥한 칸으로 카메라를 옮겼으므로, 무르면 보던 자리로 돌아와야 한다.
+ * 옮기기 전 위치와 확대율은 카메라가 기억하고 있다.
+ */
+void ACombatGameMode::ClearCombatTargetUIData()
+{
+	if (mCombatUIModel != nullptr)
+	{
+		mCombatUIModel->SetTarget(FCombatTargetUI());
+		PushSkillUIData();
+	}
+
+	if (UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this))
+	{
+		WorldCameraModel->RequestZoomOutMainCamera();
+	}
 }
 
 void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
