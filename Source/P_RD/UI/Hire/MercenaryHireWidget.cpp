@@ -51,7 +51,6 @@ namespace MercenaryHireDetail
 	}
 
 }
-using namespace MercenaryHireDetail;
 
 void UMercenaryHireWidget::NativeConstruct()
 {
@@ -75,26 +74,26 @@ void UMercenaryHireWidget::CacheWidgets()
 	// 이름으로 찾는다. WBP 를 파이썬이 구우므로 BindWidget 으로 묶으면 이름이
 	// 하나 어긋날 때 컴파일이 깨지고, 그러면 다시 굽는 것조차 못 한다.
 	mCards.Reset();
-	mCards.SetNum(CardCount);
-	for (int32 Index = 0; Index < CardCount; ++Index)
+	mCards.SetNum(MercenaryHireDetail::CardCount);
+	for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 	{
 		const FString Tail = FString::Printf(TEXT("_%d"), Index);
 		FMercenaryCardWidgets& Card = mCards[Index];
-		Card.mRoot = Find<UWidget>(WidgetTree, TEXT("HireCard") + Tail);
-		Card.mButton = Find<UButton>(WidgetTree, TEXT("HireButton") + Tail);
-		Card.mPortrait = Find<UImage>(WidgetTree, TEXT("HirePortrait") + Tail);
-		Card.mName = Find<UTextBlock>(WidgetTree, TEXT("HireName") + Tail);
-		Card.mRole = Find<UTextBlock>(WidgetTree, TEXT("HireRole") + Tail);
-		Card.mHP = Find<UTextBlock>(WidgetTree, TEXT("HireHP") + Tail);
-		Card.mBadge = Find<UTextBlock>(WidgetTree, TEXT("HireBadge") + Tail);
-		Card.mSeal = Find<UWidget>(WidgetTree, TEXT("HireSeal") + Tail);
-		Card.mTrait = Find<UTextBlock>(WidgetTree, TEXT("HireTrait") + Tail);
-		Card.mSelected = Find<UWidget>(WidgetTree, TEXT("HireSelected") + Tail);
+		Card.mRoot = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("HireCard") + Tail);
+		Card.mButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("HireButton") + Tail);
+		Card.mPortrait = MercenaryHireDetail::Find<UImage>(WidgetTree, TEXT("HirePortrait") + Tail);
+		Card.mName = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireName") + Tail);
+		Card.mRole = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireRole") + Tail);
+		Card.mHP = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireHP") + Tail);
+		Card.mBadge = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireBadge") + Tail);
+		Card.mSeal = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("HireSeal") + Tail);
+		Card.mTrait = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireTrait") + Tail);
+		Card.mSelected = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("HireSelected") + Tail);
 
 		Card.mSkills.Reset();
 		for (int32 Line = 0; Line < 2; ++Line)
 		{
-			Card.mSkills.Add(Find<UTextBlock>(WidgetTree,
+			Card.mSkills.Add(MercenaryHireDetail::Find<UTextBlock>(WidgetTree,
 				FString::Printf(TEXT("HireSkill_%d_%d"), Index, Line)));
 		}
 	}
@@ -104,18 +103,18 @@ void UMercenaryHireWidget::CacheWidgets()
 	for (int32 Index = 0; Index < mSlots.Num(); ++Index)
 	{
 		const FString Tail = FString::Printf(TEXT("_%d"), Index);
-		mSlots[Index].mRoot = Find<UWidget>(WidgetTree, TEXT("PartySlot") + Tail);
-		mSlots[Index].mFace = Find<UImage>(WidgetTree,
+		mSlots[Index].mRoot = MercenaryHireDetail::Find<UWidget>(WidgetTree, TEXT("PartySlot") + Tail);
+		mSlots[Index].mFace = MercenaryHireDetail::Find<UImage>(WidgetTree,
 			TEXT("PartySlotFace") + Tail);
-		mSlots[Index].mName = Find<UTextBlock>(WidgetTree,
+		mSlots[Index].mName = MercenaryHireDetail::Find<UTextBlock>(WidgetTree,
 			TEXT("PartySlotName") + Tail);
 	}
 
-	mPartyCountText = Find<UTextBlock>(WidgetTree, TEXT("PartyCountText"));
+	mPartyCountText = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("PartyCountText"));
 
-	mNoticeText = Find<UTextBlock>(WidgetTree, TEXT("NoticeText"));
-	mDepartButton = Find<UButton>(WidgetTree, TEXT("DepartButton"));
-	mDepartLabel = Find<UTextBlock>(WidgetTree, TEXT("DepartLabel"));
+	mNoticeText = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("NoticeText"));
+	mDepartButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("DepartButton"));
+	mDepartLabel = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("DepartLabel"));
 
 	// 슬롯별 핸들러를 따로 두는 이유: 동적 델리게이트는 페이로드를 못 받고
 	// 함수 포인터가 아니라 이름으로 묶여서, 하나로 넘기면 조용히 실패한다.
@@ -124,7 +123,7 @@ void UMercenaryHireWidget::CacheWidgets()
 		void (UMercenaryHireWidget::*Function)();
 		const TCHAR* Name;
 	};
-	static const FCardHandler Handlers[CardCount] = {
+	static const FCardHandler Handlers[MercenaryHireDetail::CardCount] = {
 		{ &UMercenaryHireWidget::HandleCardClicked_0, TEXT("HandleCardClicked_0") },
 		{ &UMercenaryHireWidget::HandleCardClicked_1, TEXT("HandleCardClicked_1") },
 		{ &UMercenaryHireWidget::HandleCardClicked_2, TEXT("HandleCardClicked_2") },
@@ -132,7 +131,7 @@ void UMercenaryHireWidget::CacheWidgets()
 		{ &UMercenaryHireWidget::HandleCardClicked_4, TEXT("HandleCardClicked_4") },
 		{ &UMercenaryHireWidget::HandleCardClicked_5, TEXT("HandleCardClicked_5") },
 	};
-	for (int32 Index = 0; Index < CardCount; ++Index)
+	for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 	{
 		if (UButton* Button = mCards[Index].mButton)
 		{
@@ -171,7 +170,7 @@ void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
 {
 	// 칸 수로 막는다. 위젯을 못 찾았다고 규칙까지 멈추면 안 된다 -- WBP 없이
 	// 규칙만 시험할 때 아무 일도 안 일어나서 시험이 통과해 버린다.
-	if (CardIndex < 0 || CardIndex >= CardCount)
+	if (CardIndex < 0 || CardIndex >= MercenaryHireDetail::CardCount)
 	{
 		return;
 	}
@@ -222,7 +221,7 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 {
 	const FMercenaryCardWidgets& Card = mCards[CardIndex];
 	const bool bHasData = mCrew.IsValidIndex(CardIndex);
-	SetShown(Card.mRoot, !mCrew.Num() || bHasData);
+	MercenaryHireDetail::SetShown(Card.mRoot, !mCrew.Num() || bHasData);
 	if (!bHasData)
 	{
 		// 데이터가 없으면 WBP 에 구워 둔 글자를 그대로 둔다. 지우면 에디터에서
@@ -231,22 +230,22 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	}
 
 	const FFrontendCharacterOption& Option = mCrew[CardIndex];
-	SetTextIfPresent(Card.mName, Option.mDisplayName);
+	MercenaryHireDetail::SetTextIfPresent(Card.mName, Option.mDisplayName);
 	// 역할 알약은 좁다. 긴 문구를 넣으면 넘친다.
-	SetTextIfPresent(Card.mRole, Option.mRoleShort);
-	SetTextIfPresent(Card.mHP, FText::FromString(
+	MercenaryHireDetail::SetTextIfPresent(Card.mRole, Option.mRoleShort);
+	MercenaryHireDetail::SetTextIfPresent(Card.mHP, FText::FromString(
 		FString::Printf(TEXT("HP %d"), Option.mMaxHP)));
 	// 특성 자리에는 설명 문구가 들어간다. 왜 데려가는지 한 줄로 말해 주는
 	// 값이 이미 있는데 같은 뜻의 칸을 하나 더 두면 둘이 어긋난다.
-	SetTextIfPresent(Card.mTrait, Option.mDescription);
+	MercenaryHireDetail::SetTextIfPresent(Card.mTrait, Option.mDescription);
 
 	for (int32 Line = 0; Line < Card.mSkills.Num(); ++Line)
 	{
 		const bool bHas = Option.mSkillNames.IsValidIndex(Line);
-		SetShown(Card.mSkills[Line], bHas);
+		MercenaryHireDetail::SetShown(Card.mSkills[Line], bHas);
 		if (bHas)
 		{
-			SetTextIfPresent(Card.mSkills[Line], Option.mSkillNames[Line]);
+			MercenaryHireDetail::SetTextIfPresent(Card.mSkills[Line], Option.mSkillNames[Line]);
 		}
 	}
 
@@ -259,16 +258,16 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	}
 
 	const EMercenaryCardState State = StateOf(CardIndex);
-	SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
-	SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
-	SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
-	SetDimmed(Card.mRoot,
+	MercenaryHireDetail::SetShown(Card.mSelected, State == EMercenaryCardState::Reviewing);
+	MercenaryHireDetail::SetShown(Card.mSeal, State == EMercenaryCardState::Chosen);
+	MercenaryHireDetail::SetShown(Card.mBadge, State != EMercenaryCardState::Chosen);
+	MercenaryHireDetail::SetDimmed(Card.mRoot,
 		State == EMercenaryCardState::Full || !Option.mSelectable);
 
 	if (!Option.mSelectable)
 	{
 		// 잠긴 사유는 게임 모드가 문구까지 만들어 준다. 없으면 그냥 잠김.
-		SetTextIfPresent(Card.mBadge, Option.mDisabledReason.IsEmpty()
+		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, Option.mDisabledReason.IsEmpty()
 			? LOCTEXT("StateLocked", "잠김") : Option.mDisabledReason);
 		return;
 	}
@@ -276,20 +275,20 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 	switch (State)
 	{
 	case EMercenaryCardState::Reviewing:
-		SetTextIfPresent(Card.mBadge, LOCTEXT("StateReviewing", "검토 중"));
+		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateReviewing", "검토 중"));
 		break;
 	case EMercenaryCardState::Full:
-		SetTextIfPresent(Card.mBadge, LOCTEXT("StateFull", "자리 참"));
+		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateFull", "자리 참"));
 		break;
 	default:
-		SetTextIfPresent(Card.mBadge, LOCTEXT("StateOpen", "모집 중"));
+		MercenaryHireDetail::SetTextIfPresent(Card.mBadge, LOCTEXT("StateOpen", "모집 중"));
 		break;
 	}
 }
 
 void UMercenaryHireWidget::RefreshBottomBar()
 {
-	SetTextIfPresent(mPartyCountText, FText::FromString(FString::Printf(
+	MercenaryHireDetail::SetTextIfPresent(mPartyCountText, FText::FromString(FString::Printf(
 		TEXT("파티\n%d/%d"), mChosen.Num(), mPartySize)));
 
 	for (int32 SlotIndex = 0; SlotIndex < mSlots.Num(); ++SlotIndex)
@@ -297,14 +296,14 @@ void UMercenaryHireWidget::RefreshBottomBar()
 		const bool bFilled = mChosen.IsValidIndex(SlotIndex)
 			&& mCrew.IsValidIndex(mChosen[SlotIndex]);
 		const FMercenarySlotWidgets& Widgets = mSlots[SlotIndex];
-		SetShown(Widgets.mFace, bFilled);
+		MercenaryHireDetail::SetShown(Widgets.mFace, bFilled);
 		if (!bFilled)
 		{
-			SetTextIfPresent(Widgets.mName, LOCTEXT("SlotEmpty", "빈 자리"));
+			MercenaryHireDetail::SetTextIfPresent(Widgets.mName, LOCTEXT("SlotEmpty", "빈 자리"));
 			continue;
 		}
 		const FFrontendCharacterOption& Option = mCrew[mChosen[SlotIndex]];
-		SetTextIfPresent(Widgets.mName, Option.mDisplayName);
+		MercenaryHireDetail::SetTextIfPresent(Widgets.mName, Option.mDisplayName);
 		if (Widgets.mFace != nullptr)
 		{
 			if (UTexture2D* Face = Option.mPortrait.LoadSynchronous())
@@ -319,20 +318,20 @@ void UMercenaryHireWidget::RefreshBottomBar()
 	{
 		mDepartButton->SetIsEnabled(bReady);
 	}
-	SetDimmed(mDepartLabel, !bReady);
+	MercenaryHireDetail::SetDimmed(mDepartLabel, !bReady);
 
 	if (bReady)
 	{
-		SetTextIfPresent(mNoticeText, LOCTEXT("NoticeGo", "출발 준비가 됐습니다."));
+		MercenaryHireDetail::SetTextIfPresent(mNoticeText, LOCTEXT("NoticeGo", "출발 준비가 됐습니다."));
 	}
 	else if (mReviewing != INDEX_NONE)
 	{
-		SetTextIfPresent(mNoticeText,
+		MercenaryHireDetail::SetTextIfPresent(mNoticeText,
 			LOCTEXT("NoticeConfirm", "한 번 더 누르면 정해집니다."));
 	}
 	else
 	{
-		SetTextIfPresent(mNoticeText, FText::FromString(FString::Printf(
+		MercenaryHireDetail::SetTextIfPresent(mNoticeText, FText::FromString(FString::Printf(
 			TEXT("용병 %d명을 더 고르세요."),
 			FMath::Max(0, mPartySize - mChosen.Num()))));
 	}

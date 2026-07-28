@@ -543,22 +543,46 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 }
 
 /**
- * @brief RunPersistData 기준으로 방 안에서 사용할 플레이어 유닛을 스폰/등록한다.
+ * @brief RunPersistData 기준으로 방 안에서 사용할 파티 전원을 스폰/등록한다.
  *
  * @details
  * 실제 스폰과 데이터 복원은 PlayerUnitRestorationSubsystem이 담당한다.
- * RoomGameModeBase는 복원된 유닛 포인터를 mPlayerUnit에 보관해 방 내부 시스템이 현재 플레이어 유닛을 조회할 수 있게 한다.
+ * RoomGameModeBase는 복원된 유닛들을 mPartyUnits에 보관해 방 내부 시스템이 파티를 조회할 수 있게 한다.
+ *
+ * mPlayerUnit(단수)은 앞장선 한 명을 가리킨다. 전투가 아직 한 명을 전제로
+ * 돌아가는 자리가 남아 있어 그대로 둔다 -- 파티를 저장하고 스폰하는 것과
+ * 전투가 셋을 다루는 것은 별개의 일이고, 뒤엣것은 전투 쪽 손이 필요하다.
  */
 void ARoomGameModeBase::RestorePlayerUnit()
 {
 	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
 	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	TArray<UPlayerUnitModel*> PartyUnits = PlayerUnitRestorationSubsystem->SpawnPartyUnits(GetWorld());
+	checkf(PartyUnits.IsEmpty() == false, TEXT("플레이어 유닛 스폰 오류"));
 
-	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
-	mPlayerUnit = PlayerUnit;
+	mPartyUnits.Reset();
+	for (UPlayerUnitModel* PartyUnit : PartyUnits)
+	{
+		PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PartyUnit);
+		mPartyUnits.Add(PartyUnit);
+	}
+	mPlayerUnit = PartyUnits[0];
+}
+
+/** @brief 방에 들어온 파티 전원. @return 저장본 차례대로의 유닛들 */
+TArray<UPlayerUnitModel*> ARoomGameModeBase::GetPartyUnitModels() const
+{
+	TArray<UPlayerUnitModel*> Units;
+	Units.Reserve(mPartyUnits.Num());
+	for (const TWeakObjectPtr<UPlayerUnitModel>& Unit : mPartyUnits)
+	{
+		if (Unit.IsValid() == true)
+		{
+			Units.Add(Unit.Get());
+		}
+	}
+	return Units;
 }
 
 /**

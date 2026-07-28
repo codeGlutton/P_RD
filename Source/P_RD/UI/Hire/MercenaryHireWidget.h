@@ -26,8 +26,8 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Blueprint/UserWidget.h"
 #include "Frontend/CharacterSelectTypes.h"
+#include "UI/RDUserWidget.h"
 #include "MercenaryHireWidget.generated.h"
 
 class UButton;
@@ -94,7 +94,7 @@ struct FMercenarySlotWidgets
  * @brief 용병 선택 화면.
  */
 UCLASS()
-class P_RD_API UMercenaryHireWidget : public UUserWidget
+class P_RD_API UMercenaryHireWidget : public URDUserWidget
 {
 	GENERATED_BODY()
 

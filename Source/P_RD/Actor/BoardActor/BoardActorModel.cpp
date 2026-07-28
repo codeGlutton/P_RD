@@ -16,6 +16,17 @@ FName UBoardActorModel::GetBoardActorKeyName() const
 	return mStaticSpawnData->GetKeyName();
 }
 
+/** @brief 이 액터가 나온 스폰 데이터의 식별자. @return PrimaryAssetId, 데이터가 없으면 빈 값 */
+FPrimaryAssetId UBoardActorModel::GetBoardActorAssetId() const
+{
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return FPrimaryAssetId();
+	}
+	return mStaticSpawnData->GetPrimaryAssetId();
+}
+
 const FText& UBoardActorModel::GetBoardActorDisplayName() const
 {
 	if (mStaticSpawnData == nullptr)

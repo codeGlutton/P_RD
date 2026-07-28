@@ -17,6 +17,7 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 #include "UI/CharacterSelectWidget.h"
+#include "UI/Hire/MercenaryHireWidget.h"
 
 #include "Setting/GamePlaySettings.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
@@ -48,6 +49,10 @@ namespace
 {
 	// [합의필요] 난이도 선택 UI가 들어오기 전까지 새 Run 생성은 프론트엔드 기본 난이도 1로 고정한다.
 	constexpr int32 DefaultDifficulty = 1;
+
+	// [합의필요] 데리고 갈 인원. 시안이 셋으로 그려져 있고 전투 배치도 셋을
+	// 전제한다. 바뀔 수 있으면 방 데이터나 밸런스 표로 옮긴다.
+	constexpr int32 DefaultPartySize = 3;
 
 	/** @brief UI 표시용 직업명(한글)을 GameMode에서 확정해 WBP가 enum 문자열을 직접 해석하지 않게 한다. */
 	FText GetPlayerJobName(EPlayerJobType JobType)
@@ -301,7 +306,7 @@ bool AFrontendGameMode::RequestCharacterSelectFromTitle()
 // UI는 선택된 PlayerUnitId와 Difficulty만 전달하고,
 // GameMode가 "선택값 검증 -> RunPersistData 생성 -> Stage1 첫 방 프리로드/전환" 순서를 고정한다.
 // 이렇게 해야 캐릭터 선택 WBP가 저장 데이터 생성이나 방 전환 시스템을 직접 호출하지 않는다.
-bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
+bool AFrontendGameMode::StartNewRun(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty)
 {
 	/*
 	 * 캐릭터 선택 화면에서 Confirm이 눌린 뒤의 실제 시작 지점이다.
@@ -314,7 +319,7 @@ bool AFrontendGameMode::StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 D
 		return false;
 	}
 
-	const bool IsRunDataCreated = CreateRunData(PlayerUnitId, Difficulty);
+	const bool IsRunDataCreated = CreateRunData(PartyUnitIds, Difficulty);
 	checkf(IsRunDataCreated == true, TEXT("런 데이터 생성 오류"));
 	if (IsRunDataCreated == false)
 	{
@@ -550,6 +555,44 @@ bool AFrontendGameMode::IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId)
 	return IsFound;
 }
 
+/**
+ * @brief 데려갈 파티가 성립하는지 검증한다.
+ *
+ * 화면이 이미 막고 있는 것을 여기서 또 본다. 화면은 여럿이고 -- 캐릭터 선택,
+ * 용병 게시판, 나중에 붙을 무엇 -- 런을 만드는 곳은 하나이기 때문이다.
+ * @param PartyUnitIds 검사할 파티
+ * @return 런을 만들어도 되면 true
+ */
+bool AFrontendGameMode::IsPartyValid(const TArray<FPrimaryAssetId>& PartyUnitIds) const
+{
+	if (PartyUnitIds.IsEmpty() == true)
+	{
+		UE_LOG(LogFrontendGameMode, Log, TEXT("빈 파티"));
+		return false;
+	}
+
+	TSet<FPrimaryAssetId> Seen;
+	for (const FPrimaryAssetId& PlayerUnitId : PartyUnitIds)
+	{
+		if (IsPlayerUnitIdValid(PlayerUnitId) == false)
+		{
+			UE_LOG(LogFrontendGameMode, Log, TEXT("후보에 없는 유닛이 파티에 있음"));
+			return false;
+		}
+		// 같은 사람을 두 번 데려갈 수 없다. 저장본이 유닛 식별자로 파티 칸을
+		// 찾으므로, 같은 것이 둘이면 뒤엣것은 영영 안 잡힌다.
+		bool WasAlreadyThere = false;
+		Seen.Add(PlayerUnitId, OUT &WasAlreadyThere);
+		if (WasAlreadyThere == true)
+		{
+			UE_LOG(LogFrontendGameMode, Log, TEXT("파티에 같은 유닛이 두 번 있음"));
+			return false;
+		}
+	}
+
+	return true;
+}
+
 /** @brief 선택된 난이도가 새 Run 생성에 사용할 수 있는 값인지 검증한다. */
 // 현재는 난이도 선택 기능이 아직 없어서 모든 값을 통과시킨다.
 // 추후 난이도 테이블이나 해금 조건이 들어오면 StartNewRun() 직전에 이 함수에서 검증한다.
@@ -560,32 +603,69 @@ bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 	return true;
 }
 
-/** @brief 독립 캐릭터 선택 월드 위젯을 열고 타이틀 HUD를 잠시 닫는다. */
-// 캐릭터 선택은 타이틀 HUD 내부 ScreenSwitcher 슬롯이 아니라 WorldWidgetSubsystem이 관리하는 별도 위젯이다.
-// 그래서 START 입력 시 타이틀 HUD를 닫고 CharacterSelect 월드 위젯을 OpenUI()로 열며,
-// Back 요청을 받으면 다시 타이틀 HUD를 OpenUI()로 복귀시킨다.
+/**
+ * @brief 용병 선택 게시판을 열고 타이틀 HUD를 잠시 닫는다.
+ *
+ * @details
+ * 예전에는 한 명만 고르는 캐릭터 선택 화면을 열었다. 런을 여섯 중 셋으로
+ * 시작하도록 기획이 바뀌면서 이 자리가 게시판으로 바뀌었다. 캐릭터 선택
+ * 위젯은 지우지 않고 두었다 -- 상점이나 도중 합류처럼 한 명만 고르는 자리가
+ * 다시 생길 수 있다.
+ *
+ * 게시판은 값을 모른다. 여기서 후보를 만들어 넘기고, 출발을 누르면 식별자만
+ * 돌려받아 런을 만든다.
+ */
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
-	/*
-	 * 캐릭터 선택 화면은 타이틀 HUD와 분리된 독립 월드 위젯이다.
-	 * 타이틀 HUD 안에 끼워 넣지 않아야 새 WBP_CharacterSelect_New의 전체 화면 레이아웃과 버튼 배선이 그대로 동작한다.
-	 */
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect);
-	checkf(CharacterSelectWidget != nullptr, TEXT("캐릭터 선택 위젯이 준비가 안됨"));
+	UMercenaryHireWidget* HireWidget = WorldWidgetSubsystem->GetWorldWidget<UMercenaryHireWidget>(EWorldWidgetType::MercenaryHire);
+	checkf(HireWidget != nullptr, TEXT("용병 선택 위젯이 준비가 안됨"));
 
-	CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &AFrontendGameMode::HandleCharacterSelectBackRequested);
+	TArray<FFrontendCharacterOption> Options;
+	if (GetCharacterOptions(OUT Options) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Warning, TEXT("고를 후보가 없음"));
+		return false;
+	}
+	HireWidget->SetCharacterOptions(Options, GetPartySize());
+
+	// 매번 새로 걸지 않는다. 이 화면은 서브시스템이 하나만 만들어 두고 계속
+	// 쓰므로, 열 때마다 걸면 출발 한 번에 런이 여러 번 만들어진다.
+	if (mWasHireDelegateBound == false)
+	{
+		HireWidget->mOnPartyConfirmed.AddUObject(this, &AFrontendGameMode::HandlePartyConfirmed);
+		mWasHireDelegateBound = true;
+	}
 
 	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
 	{
 		TitleMenuWidget->CloseUI();
 	}
 
-	CharacterSelectWidget->OpenCharacterSelect();
-	CharacterSelectWidget->OpenUI();
+	HireWidget->OpenUI();
 	return true;
+}
+
+/**
+ * @brief 게시판에서 출발을 눌렀을 때 새 런을 만든다.
+ * @param PartyUnitIds 고른 차례대로의 유닛 식별자
+ */
+void AFrontendGameMode::HandlePartyConfirmed(const TArray<FPrimaryAssetId>& PartyUnitIds)
+{
+	// [합의필요] 난이도 선택 UI가 들어오기 전까지 기본 난이도로 시작한다.
+	if (StartNewRun(PartyUnitIds, DefaultDifficulty) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Warning, TEXT("파티로 런을 시작하지 못함"));
+	}
+}
+
+/** @brief 데리고 갈 인원. 기획이 정하기 전까지 셋이다. */
+int32 AFrontendGameMode::GetPartySize() const
+{
+	// [합의필요] 인원이 바뀔 수 있으면 방 데이터나 밸런스 표로 옮긴다.
+	return DefaultPartySize;
 }
 
 /** @brief 독립 캐릭터 선택 위젯의 Back 요청을 타이틀 HUD 복귀로 처리한다. */
@@ -611,15 +691,15 @@ void AFrontendGameMode::HandleCharacterSelectBackRequested()
 // CreateRunData()는 WBP 상태를 읽거나 화면을 전환하지 않고,
 // 캐릭터/난이도 검증 후 GameProfileSubsystem->StartRun()을 호출하는 데 집중한다.
 // 현재는 슬롯/닉네임 UI가 아직 없어서 유저 데이터가 없으면 기본 유저를 임시 생성한 뒤 Run을 만든다.
-bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty)
+bool AFrontendGameMode::CreateRunData(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty)
 {
 	/*
 	 * RunPersistData 생성은 캐릭터/난이도 검증이 끝난 뒤 GameProfileSubsystem에 위임한다.
 	 * 이 함수가 UI DTO나 WBP 상태를 읽지 않는 이유는, 런 생성 규칙을 화면 구조와 분리하기 위해서다.
 	 */
-	if (IsPlayerUnitIdValid(PlayerUnitId) == false)
+	if (IsPartyValid(PartyUnitIds) == false)
 	{
-		UE_LOG(LogFrontendGameMode, Log, TEXT("플레이어 유닛 데이터를 찾을 수 없음"));
+		UE_LOG(LogFrontendGameMode, Log, TEXT("파티가 성립하지 않음"));
 		return false;
 	}
 	if (IsDifficultyValid(Difficulty) == false)
@@ -640,7 +720,7 @@ bool AFrontendGameMode::CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32
 		GameProfileSubsystem->MakeUser(NSLOCTEXT("FrontendGameMode", "DefaultUserName", "Player"));
 	}
 
-	GameProfileSubsystem->StartRun(PlayerUnitId, Difficulty);
+	GameProfileSubsystem->StartRun(PartyUnitIds, Difficulty);
 	return true;
 }
 

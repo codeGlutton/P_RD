@@ -79,7 +79,7 @@ public:
 	 * @return 런 생성과 첫 방 준비 요청에 성공하면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
-	bool StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	bool StartNewRun(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty);
 
 	/**
 	 * @brief 저장된 활성 Run의 현재 방으로 이어서 입장한다.
@@ -149,6 +149,25 @@ protected:
 	 * @return 유효성 여부
 	 */
 	bool IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const;
+
+	/** @brief 게시판에서 출발을 눌렀을 때 새 런을 만든다. */
+	void HandlePartyConfirmed(const TArray<FPrimaryAssetId>& PartyUnitIds);
+
+	/** @brief 데리고 갈 인원. @return 파티 인원 */
+	int32 GetPartySize() const;
+
+	/** @brief 게시판 출발 알림을 이미 걸었나. 두 번 걸면 런이 두 번 만들어진다. */
+	bool mWasHireDelegateBound = false;
+
+	/**
+	 * @brief 데려갈 파티가 성립하는지 검증한다.
+	 *
+	 * 비어 있지 않은지, 전부 실제 후보인지, 같은 사람이 두 번 들어오지
+	 * 않았는지를 본다. 화면이 이미 막고 있지만 화면은 여럿이고 여기는 하나다.
+	 * @param PartyUnitIds 검사할 파티
+	 * @return 런을 만들어도 되면 true
+	 */
+	bool IsPartyValid(const TArray<FPrimaryAssetId>& PartyUnitIds) const;
 	/**
 	 * @brief Difficulty가 지정 가능한 난이도가 맞는지 검증한다.
 	 * @param Difficulty 검사할 난이도
@@ -161,7 +180,7 @@ private:
 	void HandleCharacterSelectBackRequested();
 
 	bool OpenTitleCharacterSelect();
-	bool CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	bool CreateRunData(const TArray<FPrimaryAssetId>& PartyUnitIds, int32 Difficulty);
 
 private:
 	mutable TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>> mPlayerUnitDataCache;

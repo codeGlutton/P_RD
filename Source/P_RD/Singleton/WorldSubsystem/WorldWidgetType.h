@@ -77,6 +77,20 @@ enum class EWorldWidgetType : uint8
 	 */
 	CharacterSelect,
 
+	/**
+	 * @brief 타이틀 START 로 여는 용병 선택 게시판
+	 *
+	 * @details
+	 * 런을 시작할 때 여섯 중 셋을 고르는 화면이다. 한 명만 고르던 캐릭터
+	 * 선택을 대신한다 -- 그 위젯은 아직 [9] 에 남아 있지만 게임 모드가 더는
+	 * 열지 않는다.
+	 *
+	 * @note
+	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
+	 * 앞 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, MercenaryHire는 [10] 매핑을 쓴다.
+	 */
+	MercenaryHire,
+
 	Count UMETA(Hidden),
 };
 
