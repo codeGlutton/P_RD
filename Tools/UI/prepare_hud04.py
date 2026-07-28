@@ -45,7 +45,14 @@ def texture_name(stem):
 
 
 def collect_plates():
-    """투명 판을 아트 폴더로 옮기고 이름을 돌려준다."""
+    """투명 판을 아트 폴더로 옮기고 이름을 돌려준다.
+
+    **여기서 덮어쓴다.** 시안에서 오려 낸 판을 같은 이름으로 아트 폴더에
+    복사하므로, 갈아 끼운 판을 같은 이름으로 두면 다음 prepare 에 조용히
+    사라진다. 실제로 턴 순서 판이 그렇게 되돌아갔다.
+
+    갈아 끼울 때는 **다른 이름**으로 두고 hud04_plate_art.py 에 걸어라.
+    """
     os.makedirs(ART, exist_ok=True)
     names = {}
     for entry in sorted(os.listdir(PLATES)):

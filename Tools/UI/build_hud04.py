@@ -393,13 +393,19 @@ def top_row(blueprint, root):
         kit.add(blueprint, "CanvasPanel", token, turn)
         kit.place(blueprint, token, x, y, w, h, "tl", None, Z_CONTENT)
         token_origin = (rect[0], rect[1])
-        # 뗀 그림이 없어도 칸은 만든다. 판에 액자가 이미 그려져 있어서
-        # 밑그림이 없는 칸이 생기는데, 위젯까지 없으면 런타임이 얼굴을 넣을
-        # 자리가 없다 -- 여섯째 칸이 그랬다.
-        if piece(blueprint, token, token_origin, "TurnPortrait_%d" % index,
-                 "top_center_turn_order", element) is False:
-            kit.image(blueprint, "TurnPortrait_%d" % index, token,
-                      0, 0, w, h, None, z_order=Z_CONTENT)
+        # 초상은 밑그림 없이 빈 칸으로 굽는다.
+        #
+        # 시안에서 뗀 조각을 깔아 봤는데, 그 조각은 옛 판의 자리에서 잘린
+        # 것이라 얼굴 옆에 칸 사이 화살표까지 붙어 있다. 새 판의 액자에
+        # 넣으면 얼굴이 한쪽으로 밀리고 화살표가 옆 칸을 침범한다.
+        #
+        # 액자는 판 그림에 이미 있고 얼굴은 런타임이 넣는다. 밑그림이 할
+        # 일이 없다.
+        kit.image(blueprint, "TurnPortrait_%d" % index, token,
+                  0, 0, w, h, None, z_order=Z_CONTENT)
+        # 접어 둔다. 브러시가 없는 이미지는 **흰 네모**로 그려져서, 펴 둔 채로
+        # 구우면 액자마다 흰 판이 박힌다. 런타임이 얼굴을 넣을 때 편다.
+        kit.fold(blueprint, "TurnPortrait_%d" % index)
         # 두르는 자리는 따로 잰 것이 있으면 그것을, 없으면 초상 자리를 쓴다.
         outline(blueprint, token, token_origin, "TurnCurrent_%d" % index,
                 DETAIL["top_center_turn_order"].get("selected_outline")

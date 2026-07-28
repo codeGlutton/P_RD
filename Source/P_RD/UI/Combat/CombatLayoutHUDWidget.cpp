@@ -684,6 +684,9 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		SetShown(Widgets.Root, true);
 		SetShown(Widgets.Current, UnitId == Turn.mCurrentUnitId);
 		SetTextIfPresent(Widgets.Name, Unit->mName);
+		// 얼굴이 있을 때만 편다. 브러시가 없는 이미지는 흰 네모로 그려져서,
+		// 접힌 채로 구워 두고 여기서 편다.
+		SetShown(Widgets.Portrait, Unit->mPortrait != nullptr);
 		if (Widgets.Portrait != nullptr && Unit->mPortrait != nullptr)
 		{
 			Widgets.Portrait->SetBrushFromTexture(Unit->mPortrait, false);
