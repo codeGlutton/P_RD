@@ -209,6 +209,11 @@ def fill_missing(place, detail, plates, template, fallbacks):
 
     added = []
     for plate in plates:
+        # 안 그리기로 한 것은 지운다. 메우기만 하고 지우지 않으면, 시안이 한
+        # 장에만 그려 준 것이 그 판에만 남아 쪽에서 죽은 구역으로 보인다 --
+        # 맞춰 놓아도 아무 데도 안 쓰인다.
+        for gone in set(detail.get(plate, {})) - set(base):
+            detail[plate].pop(gone, None)
         left, top = place[plate][0], place[plate][1]
         for element, rect in base.items():
             if element in detail.get(plate, {}):
