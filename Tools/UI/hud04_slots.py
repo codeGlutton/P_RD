@@ -52,7 +52,7 @@ PLACE = {
 DETAIL = {
     "action_bottom": {
         "action_name": (769, 701, 142, 27),
-        "action_icon": (793, 731, 94, 94),
+        "action_icon": (791, 729, 97, 100),
         "stance_text": (786, 799, 92, 29),
         "cooldown_text": (769, 693, 142, 157),
         "cost_badge": (897, 723, 49, 51),
@@ -62,7 +62,7 @@ DETAIL = {
     },
     "action_left_lower": {
         "action_name": (525, 577, 142, 27),
-        "action_icon": (549, 607, 94, 94),
+        "action_icon": (547, 605, 97, 100),
         "damage_text": (525, 705, 142, 19),
         "cost_badge": (653, 599, 49, 51),
         "cooldown_badge": (653, 652, 49, 51),
@@ -72,7 +72,7 @@ DETAIL = {
     },
     "action_left_upper": {
         "action_name": (525, 338, 142, 27),
-        "action_icon": (549, 368, 94, 94),
+        "action_icon": (547, 366, 97, 100),
         "damage_text": (525, 466, 142, 19),
         "cost_badge": (653, 360, 49, 51),
         "cooldown_badge": (653, 413, 49, 51),
@@ -82,7 +82,7 @@ DETAIL = {
     },
     "action_right_lower": {
         "action_name": (999, 577, 142, 27),
-        "action_icon": (1023, 607, 94, 94),
+        "action_icon": (1021, 605, 97, 100),
         "damage_text": (999, 705, 142, 19),
         "cooldown_text": (999, 569, 142, 157),
         "cost_badge": (1127, 599, 49, 51),
@@ -92,7 +92,7 @@ DETAIL = {
     },
     "action_right_upper": {
         "action_name": (999, 338, 142, 27),
-        "action_icon": (1023, 368, 94, 94),
+        "action_icon": (1021, 366, 97, 100),
         "damage_text": (999, 466, 142, 19),
         "cooldown_text": (999, 330, 142, 157),
         "cost_badge": (1127, 360, 49, 51),
@@ -103,7 +103,7 @@ DETAIL = {
     },
     "action_top": {
         "action_name": (769, 213, 142, 27),
-        "action_icon": (793, 243, 94, 94),
+        "action_icon": (791, 241, 97, 100),
         "cost_badge": (897, 235, 49, 51),
         "cooldown_badge": (897, 288, 49, 51),
         "cooldown_overlay": (750, 185, 180, 196),
@@ -121,13 +121,13 @@ DETAIL = {
         "hp_value": (362, 818, 64, 24),
         "hp_bar": (335, 846, 91, 14),
         "ap_gems": (265, 877, 160, 27),
+        "selected_outline": (232, 761, 217, 166),
         "status_icon": (242, 740, 25, 27),
         "status_icon_1": (270, 740, 25, 27),
         "status_icon_2": (298, 740, 25, 27),
         "status_icon_3": (326, 740, 25, 27),
         "status_icon_4": (354, 740, 25, 27),
         "status_text": (350, 847, 72, 24),
-        "selected_outline": (232, 761, 217, 166),
     },
     "bottom_status_left": {
         "party_portrait": (43, 793, 65, 80),
@@ -151,13 +151,13 @@ DETAIL = {
         "hp_value": (584, 817, 64, 24),
         "hp_bar": (557, 845, 91, 14),
         "ap_gems": (487, 876, 160, 27),
+        "selected_outline": (454, 760, 217, 166),
         "status_icon": (464, 739, 25, 27),
         "status_icon_1": (492, 739, 25, 27),
         "status_icon_2": (520, 739, 25, 27),
         "status_icon_3": (548, 739, 25, 27),
         "status_icon_4": (576, 739, 25, 27),
         "status_text": (572, 846, 72, 24),
-        "selected_outline": (454, 760, 217, 166),
     },
     "top_center_turn_order": {
         "turn_portrait_01": (553, 49, 85, 85),

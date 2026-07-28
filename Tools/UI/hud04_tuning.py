@@ -10,7 +10,7 @@
 #: 판 이름 -> 요소 -> (x, y, w, h). 시안을 잰 값을 이것으로 덮는다.
 TUNING = {
     "action_bottom": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
@@ -20,7 +20,7 @@ TUNING = {
         "stance_text": (45, 133, 92, 29),
     },
     "action_left_lower": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
@@ -30,7 +30,7 @@ TUNING = {
         "stance_text": (45, 133, 92, 29),
     },
     "action_left_upper": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
@@ -40,7 +40,7 @@ TUNING = {
         "stance_text": (45, 133, 92, 29),
     },
     "action_right_lower": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
@@ -50,17 +50,18 @@ TUNING = {
         "stance_text": (45, 133, 92, 29),
     },
     "action_right_upper": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
         "cooldown_text": (28, 27, 142, 157),
         "cost_badge": (156, 57, 49, 51),
         "damage_text": (28, 163, 142, 19),
+        "selected_outline": (0, 0, 188, 210),
         "stance_text": (45, 133, 92, 29),
     },
     "action_top": {
-        "action_icon": (52, 65, 94, 94),
+        "action_icon": (50, 63, 97, 100),
         "action_name": (28, 35, 142, 27),
         "cooldown_badge": (156, 110, 49, 51),
         "cooldown_overlay": (9, 7, 180, 196),
@@ -79,11 +80,13 @@ TUNING = {
         "hp_icon": (103, 57, 24, 24),
         "hp_value": (130, 57, 64, 24),
         "party_portrait": (33, 32, 65, 80),
+        "selected_outline": (0, 0, 217, 166),
         "status_icon": (10, -21, 25, 27),
         "status_icon_1": (38, -21, 25, 27),
         "status_icon_2": (66, -21, 25, 27),
         "status_icon_3": (94, -21, 25, 27),
         "status_icon_4": (122, -21, 25, 27),
+        "status_text": (118, 86, 72, 24),
     },
     "bottom_status_left": {
         "ap_gems": (33, 116, 160, 27),
@@ -105,11 +108,13 @@ TUNING = {
         "hp_icon": (103, 57, 24, 24),
         "hp_value": (130, 57, 64, 24),
         "party_portrait": (33, 32, 65, 80),
+        "selected_outline": (0, 0, 217, 166),
         "status_icon": (10, -21, 25, 27),
         "status_icon_1": (38, -21, 25, 27),
         "status_icon_2": (66, -21, 25, 27),
         "status_icon_3": (94, -21, 25, 27),
         "status_icon_4": (122, -21, 25, 27),
+        "status_text": (118, 86, 72, 24),
     },
     "top_center_turn_order": {
         "selected_outline": (65, 32, 96, 96),
