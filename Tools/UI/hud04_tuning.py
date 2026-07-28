@@ -137,11 +137,10 @@ TUNING = {
         "round_label": (38, 37, 233, 76),
     },
     "top_right_parchment": {
-        "menu_bag": (849, 83, 346, 351),
-        "menu_map": (107, 85, 348, 349),
-        "menu_settings": (1219, 85, 347, 351),
-        "menu_skill": (480, 86, 344, 348),
-        "objective_text": (38, 37, 317, 76),
+        "menu_bag": (199, 19, 81, 82),
+        "menu_map": (25, 20, 82, 82),
+        "menu_settings": (286, 20, 81, 82),
+        "menu_skill": (113, 20, 81, 82),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (157, 191, 43, 42),

@@ -178,11 +178,10 @@ DETAIL = {
         "round_label": (53, 49, 233, 76),
     },
     "top_right_parchment": {
-        "menu_bag": (2120, 95, 346, 351),
-        "menu_map": (1378, 97, 348, 349),
-        "menu_settings": (2490, 97, 347, 351),
-        "menu_skill": (1751, 98, 344, 348),
-        "objective_text": (1309, 49, 317, 76),
+        "menu_bag": (1470, 31, 81, 82),
+        "menu_map": (1296, 32, 82, 82),
+        "menu_settings": (1557, 32, 81, 82),
+        "menu_skill": (1384, 32, 81, 82),
     },
     "upper_right_enemy_panel": {
         "damage_icon": (1430, 371, 43, 42),
