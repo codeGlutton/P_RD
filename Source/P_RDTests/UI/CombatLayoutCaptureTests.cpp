@@ -2,9 +2,10 @@
  * @file   CombatLayoutCaptureTests.cpp
  * @brief  전투 HUD 배치안 WBP를 PNG로 뽑아 눈으로 비교할 수 있게 한다.
  * @details
- * 배치안은 열 개를 만들어 놓고 고르는 것이라, 열 장을 나란히 놓고 봐야
- * 판단이 된다. 에디터에서 하나씩 열어 보면 창 크기와 확대율이 매번 달라
- * 비교가 안 되므로, 같은 해상도로 오프스크린 렌더해 파일로 남긴다.
+ * 처음에는 배치안 스무 갈래를 나란히 놓고 고르려고 만들었다. 고르고 난
+ * 지금은 **구운 WBP 가 뜻대로 나왔나 보는 눈**으로 쓴다. 에디터에서 열어
+ * 보면 창 크기와 확대율이 매번 달라 비교가 안 되므로, 같은 해상도로
+ * 오프스크린 렌더해 파일로 남긴다.
  *
  * 렌더 결과가 단색이면 실패로 처리한다. 위젯 수명이나 표시 상태가 깨지면
  * 빈 화면이 나오는데, 그것도 "성공한 캡처"처럼 보이기 때문이다.
@@ -40,33 +41,16 @@
 
 namespace CombatLayoutCapture
 {
-	/** @brief 잡아 볼 배치안 목록. WBP가 생기는 대로 여기에 줄을 늘린다. */
+	/**
+	 * @brief 찍을 배치. 시안4로 정해져서 하나뿐이다.
+	 *
+	 * @details
+	 * 스무 갈래를 만들어 놓고 고르던 때에는 여기에 스무 줄이 있었다. 고르고
+	 * 나서 열아홉을 지웠는데, **찍는 기계는 남겼다** -- 구운 WBP 가 뜻대로
+	 * 나왔는지 눈으로 볼 길이 이것뿐이다. 코드를 읽고 "맞다" 고 말하는 것과
+	 * 나온 그림이 그런 것은 다른 이야기다.
+	 */
 	const TCHAR* LayoutClassPaths[] = {
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_01_ClassicCRPG.WBP_CombatLayout_01_ClassicCRPG_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_02_LeftParty.WBP_CombatLayout_02_LeftParty_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_03_ActiveUnit.WBP_CombatLayout_03_ActiveUnit_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_04_Radial.WBP_CombatLayout_04_Radial_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_05_BottomBar.WBP_CombatLayout_05_BottomBar_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_06_Mirrored.WBP_CombatLayout_06_Mirrored_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_07_CardHand.WBP_CombatLayout_07_CardHand_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_08_Minimal.WBP_CombatLayout_08_Minimal_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_09_SplitBands.WBP_CombatLayout_09_SplitBands_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_10_Targeting.WBP_CombatLayout_10_Targeting_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_11_RightGrid.WBP_CombatLayout_11_RightGrid_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_12_TurnQueue.WBP_CombatLayout_12_TurnQueue_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_13_RightList.WBP_CombatLayout_13_RightList_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_14_FloatingBar.WBP_CombatLayout_14_FloatingBar_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_15_UnifiedDock.WBP_CombatLayout_15_UnifiedDock_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_16_FullFrame.WBP_CombatLayout_16_FullFrame_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_17_RightDock.WBP_CombatLayout_17_RightDock_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_18_RightFan.WBP_CombatLayout_18_RightFan_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_19_TopRail.WBP_CombatLayout_19_TopRail_C"),
-		TEXT("/Game/UI/CombatLayouts/WBP_CombatLayout_20_CommandMode.WBP_CombatLayout_20_CommandMode_C"),
-		// 용병 선택 화면. 전투 배치안은 아니지만 같은 방식으로 구워서 같은
-		// 방식으로 대조한다 -- 캡처 틀을 화면마다 새로 만들 이유가 없다.
-		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C"),
-		// 시안4 전투 HUD. 정해진 화면이라 다른 배치안과 같은 목록에 둔다 --
-		// 캡처 틀을 화면마다 새로 만들 이유가 없다.
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"),
 	};
 
@@ -518,8 +502,7 @@ bool FCombatLayoutElementCaptureTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	// 배치안 하나에 오백 장이 넘게 나온다. 기본은 1안만 찍고, 나머지는 필요할
-	// 때 이 배열을 늘려서 돌린다.
+	// 한 배치에 오백 장이 넘게 나온다.
 	FString Error;
 	if (!CaptureElements(*World, LayoutClassPaths[0], Error))
 	{
