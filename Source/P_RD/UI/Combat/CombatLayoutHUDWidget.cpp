@@ -322,8 +322,16 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	{
 		RefreshTurnOrder();
 		RefreshParty();
-		// 차례가 넘어오면 카드를 편다. 매 턴 손으로 여는 것은 손이 두 배로 든다.
-		SetCommandsShown(true);
+		// 차례가 **바뀌었을 때만** 편다. 갱신이 올 때마다 펴면 접자마자 다시
+		// 펴져서 접기가 안 먹는 것처럼 보인다 -- 실제로 그랬다. Turn 갱신은
+		// 차례가 그대로여도 여러 번 온다.
+		const int32 TurnUnitId = mUIModel != nullptr
+			? mUIModel->GetTurnUI().mCurrentUnitId : INDEX_NONE;
+		if (TurnUnitId != mLastTurnUnitId)
+		{
+			mLastTurnUnitId = TurnUnitId;
+			SetCommandsShown(true);
+		}
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
@@ -794,14 +802,17 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
 	HandleBoardTouched(FVector2D(InMouseEvent.GetScreenSpacePosition()), false);
-	return FReply::Handled();
+	// 안 먹었다고 돌려준다. 여기서 먹어 버리면 입력이 플레이어 컨트롤러까지
+	// 안 내려가고, 카메라가 매 틱 GetInputTouchState 로 손가락을 읽으므로
+	// 지도가 통째로 안 움직인다.
+	return FReply::Unhandled();
 }
 
 FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
 	HandleBoardTouched(FVector2D(InTouchEvent.GetScreenSpacePosition()), false);
-	return FReply::Handled();
+	return FReply::Unhandled();
 }
 
 /**

@@ -120,6 +120,9 @@ private:
 	/** @brief 직전에 찜해 둔 대상. 바뀌면 카드를 편다. */
 	int32 mLastTargetUnitId = INDEX_NONE;
 
+	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
+	int32 mLastTurnUnitId = INDEX_NONE;
+
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
 
