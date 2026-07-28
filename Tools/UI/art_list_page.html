@@ -196,7 +196,7 @@
       <button id="tie">묶어 고치기</button>
       <button id="spread">같은 판 전체에 적용</button>
       <button id="one">이 구역만 원래대로</button>
-      <button id="undo">전부 원래 값으로</button>
+      <button id="undo">파일 값으로 되돌리기</button>
       <span class="sep"></span>
       <button id="zoom1">원래 크기</button>
       <button id="zoom2" class="on">×2</button>
@@ -303,59 +303,43 @@ const $ = (id) => document.getElementById(id);
 //
 // 판 이름이 살아 있는지만 보고, 살아 있으면 그 판은 통째로 남은 것을 쓴다.
 // 판 이름이 바뀌는 일은 시안을 갈 때뿐이고 그때는 "전부 원래 값으로" 가 있다.
-// 파일 쪽 구역이 바뀌었는지 알아보는 표시. 판마다 어떤 이름이 있는지만 적는다
-// -- 값이 바뀐 것은 사람이 맞춘 것일 수 있지만, 이름이 생기고 없어진 것은
-// 파일 쪽에서 구조가 바뀐 것이다.
-function baseSign(table) {
-  return JSON.stringify(Object.keys(table).sort().map(
-    (role) => [role, Object.keys(table[role]).sort()]));
-}
-
-const SIGN = KEEP + ".sign";
-const nowSign = baseSign(BASE || {});
-let staleSign = false;
-try {
-  staleSign = localStorage.getItem(SIGN) !== null
-    && localStorage.getItem(SIGN) !== nowSign;
-} catch (err) { staleSign = false; }
-
-try {
-  const kept = JSON.parse(localStorage.getItem(KEEP) || "null");
-  if (kept) {
-    for (const role of Object.keys(TABLE)) {
-      const mine = kept[role];
-      if (!mine || typeof mine !== "object") continue;
-      if (!Object.values(mine).some(Array.isArray)) continue;
-      TABLE[role] = structuredClone(mine);
-    }
-  }
-} catch (err) { /* 저장이 막힌 환경이면 그냥 원래 값으로 간다 */ }
-
-// 파일이 바뀌었으면 알린다.
+// 표는 **파일에서만** 온다.
 //
-// 브라우저에 남은 사본이 이기게 해 두어서(그래야 만들고 지운 것이 남는다),
-// 내가 파일에서 고친 것은 쪽에 안 보인다. 그것을 모르면 "지웠는데 다시
-// 나온다" 로 보인다 -- 실제로 그렇게 한참을 돌았다.
+// 전에는 브라우저에 남은 사본이 이기게 해 두었다. 그러자 값이 두 군데에 있게
+// 되고 어느 쪽이 최신인지 알 길이 없어졌다 -- 파일에서 지운 구역이 쪽에서는
+// 그대로 보여서 "지웠는데 다시 나온다" 로 한참을 돌았다.
+//
+// 파일이 하나뿐인 진실이다. 쪽은 그것을 그리고, 고친 것은 내보내서 파일로
+// 되돌려 넣는다. 브라우저에 남기는 것은 **창을 잘못 닫았을 때를 위한 그물**일
+// 뿐이고, 쓸지 말지는 사람이 정한다.
+const SPARE = KEEP + ".spare";
+let spare = null;
+try {
+  const raw = localStorage.getItem(SPARE);
+  const got = raw ? JSON.parse(raw) : null;
+  // 지금 표와 다를 때만 꺼낼 거리가 된다.
+  if (got && JSON.stringify(got) !== JSON.stringify(TABLE)) spare = got;
+} catch (err) { spare = null; }
+
+// 창을 잘못 닫아 못 내보낸 것이 있으면 알린다.
 window.addEventListener("DOMContentLoaded", () => {
-  try { localStorage.setItem(SIGN, nowSign); } catch (err) { /* 조용히 */ }
-  if (!staleSign) return;
+  if (!spare) return;
   const bar = document.querySelector(".bar");
   if (!bar) return;
   const note = document.createElement("span");
   note.style.cssText =
     "color:#ffd24a;font-size:12.5px;align-self:center;margin-left:6px";
-  note.innerHTML = "· 파일 쪽 구역이 바뀌었습니다 " +
-    '<button id="takeFile">파일 값으로</button>';
+  note.innerHTML = "· 못 내보낸 값이 남아 있습니다 " +
+    '<button id="takeSpare">그것 쓰기</button>';
   bar.appendChild(note);
-  $("takeFile").onclick = () => {
-    if (!confirm("브라우저에 남은 값을 버리고 파일 값을 씁니다.")) return;
-    TABLE = structuredClone(BASE || {});
-    try { localStorage.removeItem(KEEP); } catch (err) { /* 조용히 */ }
-    sel = null;
+  $("takeSpare").onclick = () => {
+    mark();
+    for (const role of Object.keys(TABLE)) {
+      if (spare[role]) TABLE[role] = structuredClone(spare[role]);
+    }
     note.remove();
     paint();
-    keep();
-    flash("파일 값으로 맞췄습니다");
+    flash("남아 있던 값을 꺼냈습니다");
   };
 });
 
@@ -450,7 +434,8 @@ function keep() {
   // 끌기가 끝난 뒤에 다시 잰다. 끄는 도중에 여백을 바꾸면 판이 손 밑에서
   // 튀어 어디를 잡고 있는지 알 수 없게 된다.
   room();
-  try { localStorage.setItem(KEEP, JSON.stringify(TABLE)); } catch (err) {}
+  // 그물에만 적는다. 다음에 열 때 이것으로 표를 채우지는 않는다.
+  try { localStorage.setItem(SPARE, JSON.stringify(TABLE)); } catch (err) {}
   const same = JSON.stringify(TABLE) === JSON.stringify(BASE);
   // 되돌릴 것이 몇 개 쌓였는지 같이 보여 준다. 안 보이면 되돌리기가 안 되는
   // 것인지, 쌓인 것이 없는 것인지 구별할 수가 없다.
@@ -1322,9 +1307,9 @@ $("one").onclick = () => {
 };
 
 $("undo").onclick = () => {
-  if (!confirm("고친 값을 버리고 원래 값으로 되돌립니다.")) return;
+  if (!confirm("고친 값을 버리고 파일 값으로 되돌립니다.")) return;
   TABLE = structuredClone(BASE || {});
-  try { localStorage.removeItem(KEEP); } catch (err) {}
+  try { localStorage.removeItem(SPARE); } catch (err) {}
   sel = null;
   paint();
   keep();
