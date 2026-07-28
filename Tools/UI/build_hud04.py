@@ -21,7 +21,8 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     CommandCost_i / CommandDamage_i / CommandCooldown_i
     CommandSelected_i / CommandDisabled_i
     PartyCard_i / PartyPortrait_i / PartyName_i / PartyHPBar_i
-    PartyHPText_i / PartyStatus_i / PartyStatusIcon_i / PartyAPPip_i_j
+    PartyHPText_i / PartyStatus_i / PartyStatusIcon_i
+    PartyAPPip_i_j / PartyAPIcon_i / PartyAPText_i
     PartySelected_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
     EnemyDefense / EnemyForecast
@@ -79,8 +80,12 @@ PARTY = (
     ("bottom_status_right", "마법사", "75/100", "", 4),
 )
 
-#: 한 사람이 가진 AP 칸 수. 시안이 넷으로 그려져 있다.
-AP_PIPS = 4
+#: 화면에 낱개로 그릴 수 있는 AP 최대 개수.
+#:
+#: AP 에는 상한이 없다. 그런데 낱개 아이콘은 칸 너비가 정해져 있어 무한히 늘 수
+#: 없으므로, 여기까지는 낱개로 그리고 넘으면 런타임이 "아이콘 x N" 으로 바꾼다.
+#: 여덟은 런타임(UCombatLayoutHUDWidget)이 찾는 개수와 맞춘 값이다.
+AP_PIPS = 8
 
 
 def at(rect):
@@ -273,13 +278,31 @@ def party(blueprint, root):
         gems = spot(plate_name, "ap_gems")
         if gems:
             gx, gy, gw, gh = gems
+            # 낱개 아이콘을 왼쪽부터 채운다. 런타임이 남은 AP 만큼만 켠다.
+            # 시안은 네 개로 그려져 있지만 AP 에 상한이 없으므로 자리는 여덟까지
+            # 잡아 둔다 -- 없는 위젯은 런타임이 그냥 못 찾고 넘어간다.
             step = gw / float(AP_PIPS)
             for pip in range(AP_PIPS):
-                art = "KK_HUD04_ap_pip_lit" if pip < lit else "KK_HUD04_ap_pip_dim"
                 kit.image(blueprint, "PartyAPPip_%d_%d" % (index, pip), root,
                           gx + step * pip, gy, step * 0.86, gh, None,
                           z_order=Z_CONTENT,
-                          texture="{}/{}".format(ART, art), tint=kit.WHITE)
+                          texture="{}/KK_HUD04_ap_pip_lit".format(ART),
+                          tint=kit.WHITE)
+                if pip >= lit:
+                    kit.fold(blueprint, "PartyAPPip_%d_%d" % (index, pip))
+
+            # 여덟을 넘으면 낱개로는 못 보여준다. 그때만 이 글자가 켜진다.
+            kit.image(blueprint, "PartyAPIcon_%d" % index, root, gx, gy,
+                      step * 0.86, gh, None, z_order=Z_CONTENT,
+                      texture="{}/KK_HUD04_ap_pip_lit".format(ART),
+                      tint=kit.WHITE)
+            kit.fold(blueprint, "PartyAPIcon_%d" % index)
+            kit.label(blueprint, "PartyAPText_%d" % index, root,
+                      gx + step, gy, gw - step, gh, "", 15, TEXT_PALE, "left",
+                      None, bold=True)
+            kit.place(blueprint, "PartyAPText_%d" % index, gx + step, gy,
+                      gw - step, gh, "tl", None, Z_TEXT)
+            kit.fold(blueprint, "PartyAPText_%d" % index)
 
         outline(blueprint, root, "PartySelected_%d" % index, PLACE[plate_name])
         kit.ghost_button(blueprint, "PartyButton_%d" % index, root, x, y, w, h)

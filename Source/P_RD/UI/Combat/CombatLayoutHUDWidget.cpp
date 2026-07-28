@@ -145,6 +145,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.HPBar = Find<UProgressBar>(WidgetTree, TEXT("PartyHPBar") + Suffix);
 		Widgets.HPText = Find<UTextBlock>(WidgetTree, TEXT("PartyHPText") + Suffix);
 		Widgets.APText = Find<UTextBlock>(WidgetTree, TEXT("PartyAPText") + Suffix);
+		Widgets.APIcon = Find<UWidget>(WidgetTree, TEXT("PartyAPIcon") + Suffix);
 		Widgets.StatusText = Find<UTextBlock>(WidgetTree, TEXT("PartyStatus") + Suffix);
 		Widgets.StatusIcon = Find<UWidget>(WidgetTree, TEXT("PartyStatusIcon") + Suffix);
 		Widgets.APPips.Reset();
@@ -386,16 +387,24 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		}
 		SetTextIfPresent(Widgets.HPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP))));
-		const bool bDummyAP = bDummy && Unit.mMaxActionPoints <= 0;
+		// AP 에는 상한이 없다. 그래서 "3/4" 처럼 못 적는다 -- 분모가 없다.
+		const bool bDummyAP = bDummy && Unit.mActionPoints <= 0;
 		const int32 ShownAP = bDummyAP ? 3 : Unit.mActionPoints;
-		const int32 ShownMaxAP = bDummyAP ? 4 : Unit.mMaxActionPoints;
-		SetTextIfPresent(Widgets.APText, FText::FromString(FString::Printf(
-			TEXT("%d/%d"), ShownAP, ShownMaxAP)));
 
-		// 칸(pip) 방식으로 그리는 배치안을 위해. 숫자만 쓰는 안은 pip이 없어 그냥 넘어간다.
-		for (int32 Pip = 0; Pip < Widgets.APPips.Num(); ++Pip)
+		// 남은 만큼 낱개로 켠다. 자리보다 많으면 낱개로는 못 보여주므로
+		// 아이콘 하나에 "x N" 을 붙인다. 자리를 무한히 잡아 둘 수는 없다.
+		const int32 PipRoom = Widgets.APPips.Num();
+		const bool bOverflow = PipRoom > 0 && ShownAP > PipRoom;
+		for (int32 Pip = 0; Pip < PipRoom; ++Pip)
 		{
-			SetShown(Widgets.APPips[Pip], Pip < ShownAP);
+			SetShown(Widgets.APPips[Pip], !bOverflow && Pip < ShownAP);
+		}
+		SetShown(Widgets.APIcon, bOverflow);
+		SetShown(Widgets.APText, bOverflow);
+		if (bOverflow)
+		{
+			SetTextIfPresent(Widgets.APText, FText::FromString(
+				FString::Printf(TEXT("x %d"), ShownAP)));
 		}
 
 		if (Widgets.StatusText != nullptr)
@@ -441,6 +450,8 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
 	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
 	SetTextIfPresent(Widgets.APText, FText::GetEmpty());
+	SetShown(Widgets.APText, false);
+	SetShown(Widgets.APIcon, false);
 	SetShown(Widgets.StatusText, false);
 	SetShown(Widgets.Portrait, false);
 

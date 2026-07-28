@@ -111,6 +111,8 @@ private:
 		TObjectPtr<UProgressBar> HPBar;
 		TObjectPtr<UTextBlock> HPText;
 		TObjectPtr<UTextBlock> APText;
+	/** @brief AP 가 낱개 자리보다 많을 때만 켜는 아이콘. 옆에 "x N" 이 붙는다. */
+	UPROPERTY() TObjectPtr<UWidget> APIcon = nullptr;
 		TArray<TObjectPtr<UWidget>> APPips;
 		TObjectPtr<UTextBlock> StatusText;
 		/** @brief 상태이상 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
