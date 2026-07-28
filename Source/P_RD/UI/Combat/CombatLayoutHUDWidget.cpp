@@ -105,6 +105,12 @@ namespace
 void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	// 루트가 탭을 받아야 판(타일맵) 터치가 여기로 온다. SelfHitTestInvisible 이면
+	// 탭이 그냥 통과해 버려서 카드를 접을 수도, 좌표를 게임플레이에 넘길 수도
+	// 없다. 카드와 아군 칸 같은 자식 버튼은 여전히 먼저 가져간다.
+	SetVisibility(ESlateVisibility::Visible);
+
 	CacheAuthoredWidgets();
 	WireCommands();
 	StartPreviewIfUnbound();
@@ -271,6 +277,26 @@ void UCombatLayoutHUDWidget::WireCommands()
 				this, Handlers[Index].Function, Handlers[Index].Name);
 		}
 	}
+	struct FPartyHandler
+	{
+		void (UCombatLayoutHUDWidget::*Function)();
+		const TCHAR* Name;
+	};
+	static const FPartyHandler PartyHandlers[PartySlotCount] = {
+		{ &UCombatLayoutHUDWidget::HandlePartyClicked_0, TEXT("HandlePartyClicked_0") },
+		{ &UCombatLayoutHUDWidget::HandlePartyClicked_1, TEXT("HandlePartyClicked_1") },
+		{ &UCombatLayoutHUDWidget::HandlePartyClicked_2, TEXT("HandlePartyClicked_2") },
+	};
+	for (int32 Index = 0; Index < mPartySlots.Num(); ++Index)
+	{
+		if (UButton* Button = Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("PartyButton_%d"), Index)))
+		{
+			Button->OnClicked.__Internal_AddUniqueDynamic(
+				this, PartyHandlers[Index].Function, PartyHandlers[Index].Name);
+		}
+	}
+
 	if (mEndTurnButton != nullptr)
 	{
 		mEndTurnButton->OnClicked.AddUniqueDynamic(
@@ -296,6 +322,23 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	{
 		RefreshTurnOrder();
 		RefreshParty();
+		// 차례가 넘어오면 카드를 편다. 매 턴 손으로 여는 것은 손이 두 배로 든다.
+		SetCommandsShown(true);
+	}
+	if (bAll || Domain == ECombatUIDomain::Unit)
+	{
+		// 판 위의 무언가를 눌러 찜이 바뀌었다는 뜻이다. "얘한테 뭘 할지 보여줘"
+		// 라는 신호라 카드를 편다.
+		const int32 TargetId = mUIModel != nullptr
+			? mUIModel->GetSelectedTargetUnitId() : INDEX_NONE;
+		if (TargetId != mLastTargetUnitId)
+		{
+			mLastTargetUnitId = TargetId;
+			if (TargetId != INDEX_NONE)
+			{
+				SetCommandsShown(true);
+			}
+		}
 	}
 	if (bAll || Domain == ECombatUIDomain::Skill)
 	{
@@ -588,11 +631,19 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 
 void UCombatLayoutHUDWidget::RefreshEnemy()
 {
-	// 지금은 살아 있는 적 중 첫 번째를 보여준다. 대상 선택이 붙으면
-	// UIModel의 선택 상태를 읽도록 바꾼다.
+	// 찜해 둔 적을 먼저 본다. 없으면 살아 있는 첫 적으로 떨어진다 -- 전투가
+	// 막 시작돼 아무도 안 눌렀을 때가 그렇다.
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
-	const FUnitUI* Target = Units.FindByPredicate(
-		[](const FUnitUI& Unit) { return !Unit.mIsPlayer && Unit.mHP > 0.f; });
+	const int32 TargetId = mUIModel->GetSelectedTargetUnitId();
+	const FUnitUI* Target = TargetId != INDEX_NONE
+		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
+			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
+		: nullptr;
+	if (Target == nullptr)
+	{
+		Target = Units.FindByPredicate(
+			[](const FUnitUI& Unit) { return !Unit.mIsPlayer && Unit.mHP > 0.f; });
+	}
 
 	SetShown(mEnemyPanel, Target != nullptr);
 	if (Target == nullptr)
@@ -679,6 +730,95 @@ void UCombatLayoutHUDWidget::HandleCommandClicked_2() { RequestCommand(2); }
 void UCombatLayoutHUDWidget::HandleCommandClicked_3() { RequestCommand(3); }
 void UCombatLayoutHUDWidget::HandleCommandClicked_4() { RequestCommand(4); }
 void UCombatLayoutHUDWidget::HandleCommandClicked_5() { RequestCommand(5); }
+
+/**
+ * @brief 명령 카드를 펴거나 접는다.
+ *
+ * @details
+ * 카드 여섯 장이 판 한가운데를 덮는다. 어디로 갈지 보면서 골라야 하는데 그
+ * 판이 가려지므로 접을 수 있어야 한다.
+ *
+ * 화면 상태이지 게임 상태가 아니다. UIModel 로 안 보낸다 -- 게임플레이가
+ * "카드가 보이는지"를 알기 시작하면 그 다음엔 "어느 카드가 위인지"도 알게 된다.
+ * @param bShown 펼지 접을지
+ */
+void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
+{
+	mCommandsShown = bShown;
+	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
+	{
+		SetShown(Widgets.Root, bShown);
+	}
+}
+
+/**
+ * @brief 판을 눌렀을 때 한 단계 뒤로 간다.
+ *
+ * @details
+ * 좌표를 게임플레이에 넘기는 것이 먼저다. 무엇을 눌렀는지는 게임플레이만 안다 --
+ * 유닛이면 게임플레이가 찜을 갈아 끼우고, 그러면 위에서 카드가 다시 펴진다.
+ *
+ * 화면 쪽은 접기만 한다. 빈 땅을 눌렀을 때만 접히는 것처럼 보이는 이유는,
+ * 유닛을 눌렀으면 곧바로 찜이 바뀌어 다시 펴지기 때문이다. 규칙이 하나라서
+ * "지금 빈 곳을 누르면 뭐가 되지" 를 매번 생각할 필요가 없다.
+ * @param ScreenPosition 누른 화면 좌표
+ * @param bLongPress     길게 눌렀나
+ */
+void UCombatLayoutHUDWidget::HandleBoardTouched(const FVector2D& ScreenPosition,
+	const bool bLongPress)
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+
+	mUIModel->RequestWorldTouch(ScreenPosition, bLongPress);
+
+	// 조준 중이면 취소가 먼저다. 조준을 놔둔 채 카드만 접으면 다음 탭이 엉뚱한
+	// 곳에 스킬을 쏜다.
+	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	{
+		mUIModel->RequestCancel();
+		SetCommandsShown(true);
+		return;
+	}
+
+	SetCommandsShown(false);
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
+	const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+	HandleBoardTouched(FVector2D(InMouseEvent.GetScreenSpacePosition()), false);
+	return FReply::Handled();
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
+	const FPointerEvent& InTouchEvent)
+{
+	HandleBoardTouched(FVector2D(InTouchEvent.GetScreenSpacePosition()), false);
+	return FReply::Handled();
+}
+
+/**
+ * @brief 아군 칸을 눌렀다. 카드를 펴거나 접는다.
+ *
+ * 판 위의 유닛은 매 턴 다른 자리에 있고 작다. 아군 칸은 늘 같은 자리에 있고
+ * 크며, 이미 금테두리로 "지금 차례" 를 말하고 있다.
+ * @param SlotIndex 누른 칸
+ */
+void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
+{
+	SetCommandsShown(!mCommandsShown);
+}
+
+void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
+void UCombatLayoutHUDWidget::HandlePartyClicked_1() { HandlePartyClicked(1); }
+void UCombatLayoutHUDWidget::HandlePartyClicked_2() { HandlePartyClicked(2); }
 
 void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 {

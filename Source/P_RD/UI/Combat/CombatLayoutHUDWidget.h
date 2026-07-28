@@ -64,6 +64,16 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnUIRefreshed(ECombatUIDomain Domain) override;
 
+	/**
+	 * @brief 카드 밖(= 판)을 눌렀을 때.
+	 *
+	 * 자식 버튼이 먼저 가져가므로 여기까지 온 탭은 판을 누른 것이다. 좌표는
+	 * 게임플레이에 넘기고, 화면은 한 단계 뒤로 간다 -- 조준 중이면 취소, 카드가
+	 * 펴져 있으면 접기.
+	 */
+	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
+
 private:
 	/** @brief WBP에서 이름으로 위젯을 찾아 캐시한다. 없는 것은 null로 둔다. */
 	void CacheAuthoredWidgets();
@@ -80,6 +90,17 @@ private:
 	void RefreshEnemy();
 	void RefreshMeta();
 
+	/**
+	 * @brief 명령 카드를 펴거나 접는다.
+	 *
+	 * 게임 상태가 아니라 화면 상태다. UIModel 로 안 보낸다 -- 게임플레이는
+	 * 카드가 보이는지 알 필요가 없다.
+	 */
+	void SetCommandsShown(bool bShown);
+
+	/** @brief 판을 누른 것으로 보고 한 단계 뒤로 간다. */
+	void HandleBoardTouched(const FVector2D& ScreenPosition, bool bLongPress);
+
 	UFUNCTION() void HandleCommandClicked_0();
 	UFUNCTION() void HandleCommandClicked_1();
 	UFUNCTION() void HandleCommandClicked_2();
@@ -87,6 +108,17 @@ private:
 	UFUNCTION() void HandleCommandClicked_4();
 	UFUNCTION() void HandleCommandClicked_5();
 	UFUNCTION() void HandleEndTurnClicked();
+
+	UFUNCTION() void HandlePartyClicked_0();
+	UFUNCTION() void HandlePartyClicked_1();
+	UFUNCTION() void HandlePartyClicked_2();
+	void HandlePartyClicked(int32 SlotIndex);
+
+	/** @brief 명령 카드가 지금 펴져 있나. 턴이 시작되면 펴진다. */
+	bool mCommandsShown = true;
+
+	/** @brief 직전에 찜해 둔 대상. 바뀌면 카드를 편다. */
+	int32 mLastTargetUnitId = INDEX_NONE;
 
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
