@@ -205,6 +205,11 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
+	mTurnPageLeft = Find<UButton>(WidgetTree, TEXT("TurnPageLeft"));
+	mTurnPageRight = Find<UButton>(WidgetTree, TEXT("TurnPageRight"));
+	mTurnPageLeftText = Find<UTextBlock>(WidgetTree, TEXT("TurnPageLeftText"));
+	mTurnPageRightText = Find<UTextBlock>(WidgetTree, TEXT("TurnPageRightText"));
+
 	// 눌림을 삼킬 묶음들. 카드는 안 넣는다 -- 카드는 제 버튼이 가져간다.
 	//
 	// 묶음(Canvas) 을 잡는다. 그 안의 판과 글자는 SelfHitTestInvisible 이라
@@ -320,6 +325,19 @@ void UCombatLayoutHUDWidget::WireCommands()
 		BindPressFeedback(mEndTurnButton, mEndTurnButton);
 	}
 
+	if (mTurnPageLeft != nullptr)
+	{
+		mTurnPageLeft->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleTurnPageLeftClicked);
+		BindPressFeedback(mTurnPageLeft, mTurnPageLeft);
+	}
+	if (mTurnPageRight != nullptr)
+	{
+		mTurnPageRight->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleTurnPageRightClicked);
+		BindPressFeedback(mTurnPageRight, mTurnPageRight);
+	}
+
 	// 상단 메뉴 넷. 무엇을 열지는 아직 안 정해서 누르는 느낌만 걸어 둔다 --
 	// 전투 중에 지도와 가방을 여는 것이 맞는지가 기획 결정이라 UI 혼자
 	// 정하지 않는다.
@@ -380,6 +398,31 @@ void UCombatLayoutHUDWidget::HandleAnyPressed()
 	}
 }
 
+/**
+ * @brief 왼쪽 넘김칸을 눌렀다. 창을 맨 앞으로 되돌린다.
+ *
+ * @details
+ * 한 칸씩 밀지 않는다. 여섯 칸 창에서 볼 것이 그렇게 많지 않은데 한 칸씩
+ * 밀면 여덟 번을 눌러야 하는 판이 생긴다.
+ */
+void UCombatLayoutHUDWidget::HandleTurnPageLeftClicked()
+{
+	mTurnWindowStart = 0;
+	RefreshTurnOrder();
+}
+
+/** @brief 오른쪽 넘김칸을 눌렀다. 창을 맨 뒤로 옮긴다. */
+void UCombatLayoutHUDWidget::HandleTurnPageRightClicked()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	mTurnWindowStart = FMath::Max(
+		mUIModel->GetTurnUI().mTurnOrderUnitIds.Num() - mTurnSlots.Num(), 0);
+	RefreshTurnOrder();
+}
+
 /** @brief 놓았다. 줄여 둔 것을 되돌린다. */
 void UCombatLayoutHUDWidget::HandleAnyReleased()
 {
@@ -417,6 +460,9 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		{
 			mLastTurnUnitId = TurnUnitId;
 			SetCommandsShown(true);
+			// 줄 자체가 한 칸 밀렸다. 옮겨 둔 창을 그대로 두면 다음 턴에
+			// 엉뚱한 곳을 보고 있다.
+			mTurnWindowStart = 0;
 		}
 
 		// 조준에 들었거나 조준이 끝났을 수 있다. 카드가 비켜 있을지 여기서
@@ -586,6 +632,14 @@ void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 	}
 }
 
+/**
+ * @brief 턴 순서 줄을 그린다. 칸보다 도는 유닛이 많으면 양끝에 남은 수를 적는다.
+ *
+ * @details
+ * 칸은 여섯인데 한 판에 일곱이 돌 수 있다. 잘라 버리면 일곱째가 있는지조차
+ * 모른다 -- 지금까지 그랬다. 창을 두고 양끝에 **그쪽에 가려진 수**를 적는다.
+ * 화살표가 아니라 수라, 누르지 않고도 몇이 도는지 읽힌다.
+ */
 void UCombatLayoutHUDWidget::RefreshTurnOrder()
 {
 	const FTurnUI& Turn = mUIModel->GetTurnUI();
@@ -594,15 +648,28 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	SetTextIfPresent(mRoundText, FText::FromString(
 		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
 
-	for (int32 Index = 0; Index < mTurnSlots.Num(); ++Index)
+	const int32 SlotRoom = mTurnSlots.Num();
+	const int32 Total = Turn.mTurnOrderUnitIds.Num();
+	const int32 Start = FMath::Clamp(mTurnWindowStart, 0,
+		FMath::Max(Total - SlotRoom, 0));
+	mTurnWindowStart = Start;
+
+	const int32 HiddenLeft = Start;
+	const int32 HiddenRight = FMath::Max(Total - (Start + SlotRoom), 0);
+	SetShown(mTurnPageLeft, HiddenLeft > 0);
+	SetShown(mTurnPageRight, HiddenRight > 0);
+	SetTextIfPresent(mTurnPageLeftText, FText::AsNumber(HiddenLeft));
+	SetTextIfPresent(mTurnPageRightText, FText::AsNumber(HiddenRight));
+
+	for (int32 Index = 0; Index < SlotRoom; ++Index)
 	{
 		const FTurnSlotWidgets& Widgets = mTurnSlots[Index];
-		if (!Turn.mTurnOrderUnitIds.IsValidIndex(Index))
+		if (!Turn.mTurnOrderUnitIds.IsValidIndex(Start + Index))
 		{
 			SetShown(Widgets.Root, false);
 			continue;
 		}
-		const int32 UnitId = Turn.mTurnOrderUnitIds[Index];
+		const int32 UnitId = Turn.mTurnOrderUnitIds[Start + Index];
 		const FUnitUI* Unit = Units.FindByPredicate(
 			[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 		if (Unit == nullptr)

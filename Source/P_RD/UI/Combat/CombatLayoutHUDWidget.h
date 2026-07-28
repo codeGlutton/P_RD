@@ -217,6 +217,25 @@ private:
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
 
+	/**
+	 * @brief 턴 순서 줄에서 지금 보고 있는 창의 시작 자리.
+	 *
+	 * @details
+	 * 칸이 여섯인데 도는 유닛이 더 많을 수 있다. 양끝 넘김칸을 눌러 창을
+	 * 옮긴다. **차례가 바뀌면 0으로 되돌린다** -- 줄 자체가 한 칸 밀리므로,
+	 * 옮겨 둔 창을 그대로 두면 다음 턴에 엉뚱한 곳을 보고 있다.
+	 */
+	int32 mTurnWindowStart = 0;
+
+	/** @brief 양끝 넘김칸. 그쪽에 가려진 수를 적는다. 없으면 빈칸. */
+	UPROPERTY() TObjectPtr<UButton> mTurnPageLeft;
+	UPROPERTY() TObjectPtr<UButton> mTurnPageRight;
+	UPROPERTY() TObjectPtr<UTextBlock> mTurnPageLeftText;
+	UPROPERTY() TObjectPtr<UTextBlock> mTurnPageRightText;
+
+	UFUNCTION() void HandleTurnPageLeftClicked();
+	UFUNCTION() void HandleTurnPageRightClicked();
+
 	/** @brief 행동 표현이 도는 중인가. 도는 동안 카드를 접는다. */
 	bool mIsActionPlaying = false;
 
