@@ -1,0 +1,200 @@
+[
+  {
+    "file": "KK_Face_Enemy_Eagle_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      31,
+      242,
+      225
+    ],
+    "subject_size": [
+      228,
+      194
+    ],
+    "scale": 0.206522
+  },
+  {
+    "file": "KK_Face_Enemy_Golem_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      26,
+      14,
+      230,
+      242
+    ],
+    "subject_size": [
+      204,
+      228
+    ],
+    "scale": 0.196552
+  },
+  {
+    "file": "KK_Face_Enemy_Leshy_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      45,
+      242,
+      211
+    ],
+    "subject_size": [
+      228,
+      166
+    ],
+    "scale": 0.186275
+  },
+  {
+    "file": "KK_Face_Enemy_Mushroom_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      27,
+      242,
+      228
+    ],
+    "subject_size": [
+      228,
+      201
+    ],
+    "scale": 0.234327
+  },
+  {
+    "file": "KK_Face_Enemy_Necromancer_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      30,
+      242,
+      226
+    ],
+    "subject_size": [
+      228,
+      196
+    ],
+    "scale": 0.253615
+  },
+  {
+    "file": "KK_Face_Enemy_SkeletonGolem_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      41,
+      242,
+      215
+    ],
+    "subject_size": [
+      228,
+      174
+    ],
+    "scale": 0.192243
+  },
+  {
+    "file": "KK_Face_Enemy_SkeletonMinionMelee_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      41,
+      242,
+      214
+    ],
+    "subject_size": [
+      228,
+      173
+    ],
+    "scale": 0.231943
+  },
+  {
+    "file": "KK_Face_Enemy_SkeletonMinionRanged_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      24,
+      14,
+      231,
+      242
+    ],
+    "subject_size": [
+      207,
+      228
+    ],
+    "scale": 0.273709
+  },
+  {
+    "file": "KK_Face_Enemy_Slime_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      29,
+      14,
+      227,
+      242
+    ],
+    "subject_size": [
+      198,
+      228
+    ],
+    "scale": 0.221574
+  },
+  {
+    "file": "KK_Face_Enemy_Spider_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      50,
+      242,
+      205
+    ],
+    "subject_size": [
+      228,
+      155
+    ],
+    "scale": 0.166789
+  },
+  {
+    "file": "KK_Face_Enemy_Werewolf_ActionV3.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      14,
+      59,
+      242,
+      196
+    ],
+    "subject_size": [
+      228,
+      137
+    ],
+    "scale": 0.182546
+  }
+]

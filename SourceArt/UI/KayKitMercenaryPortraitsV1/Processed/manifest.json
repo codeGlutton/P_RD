@@ -1,0 +1,146 @@
+[
+  {
+    "file": "KK_Face_Barbarian_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      64,
+      50,
+      191,
+      204
+    ],
+    "alpha_radius": 85.677,
+    "source_radius": 514.314,
+    "scale": 0.165269
+  },
+  {
+    "file": "KK_Face_BarbarianLarge_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      55,
+      69,
+      200,
+      185
+    ],
+    "alpha_radius": 84.75,
+    "source_radius": 664.571,
+    "scale": 0.127902
+  },
+  {
+    "file": "KK_Face_Druid_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      71,
+      59,
+      184,
+      196
+    ],
+    "alpha_radius": 85.103,
+    "source_radius": 637.823,
+    "scale": 0.133266
+  },
+  {
+    "file": "KK_Face_Engineer_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      74,
+      56,
+      180,
+      200
+    ],
+    "alpha_radius": 85.103,
+    "source_radius": 582.343,
+    "scale": 0.145962
+  },
+  {
+    "file": "KK_Face_Knight_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      68,
+      48,
+      186,
+      208
+    ],
+    "alpha_radius": 85.572,
+    "source_radius": 548.916,
+    "scale": 0.154851
+  },
+  {
+    "file": "KK_Face_Mage_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      64,
+      50,
+      190,
+      204
+    ],
+    "alpha_radius": 83.43,
+    "source_radius": 577.876,
+    "scale": 0.14709
+  },
+  {
+    "file": "KK_Face_Ranger_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      69,
+      50,
+      185,
+      204
+    ],
+    "alpha_radius": 84.879,
+    "source_radius": 575.842,
+    "scale": 0.14761
+  },
+  {
+    "file": "KK_Face_Rogue_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      74,
+      47,
+      181,
+      209
+    ],
+    "alpha_radius": 84.75,
+    "source_radius": 559.589,
+    "scale": 0.151897
+  },
+  {
+    "file": "KK_Face_RogueHooded_ActualV1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      71,
+      51,
+      183,
+      204
+    ],
+    "alpha_radius": 85.209,
+    "source_radius": 649.491,
+    "scale": 0.130872
+  }
+]

@@ -1,0 +1,306 @@
+[
+  {
+    "file": "KK_Face_Barbarian_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      74,
+      60,
+      181,
+      195
+    ],
+    "alpha_radius": 84.726,
+    "source_radius": 744.71,
+    "scale": 0.114138
+  },
+  {
+    "file": "KK_Face_BarbarianLarge_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      73,
+      63,
+      194,
+      193
+    ],
+    "alpha_radius": 86.409,
+    "source_radius": 819.903,
+    "scale": 0.112107
+  },
+  {
+    "file": "KK_Face_Druid_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      72,
+      55,
+      182,
+      199
+    ],
+    "alpha_radius": 85.068,
+    "source_radius": 714.314,
+    "scale": 0.118995
+  },
+  {
+    "file": "KK_Face_Enemy_Eagle_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      63,
+      65,
+      192,
+      190
+    ],
+    "alpha_radius": 85.091,
+    "source_radius": 629.489,
+    "scale": 0.13503
+  },
+  {
+    "file": "KK_Face_Enemy_Golem_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      64,
+      61,
+      191,
+      195
+    ],
+    "alpha_radius": 85.98,
+    "source_radius": 758.694,
+    "scale": 0.113638
+  },
+  {
+    "file": "KK_Face_Enemy_Leshy_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      49,
+      53,
+      205,
+      203
+    ],
+    "alpha_radius": 85.747,
+    "source_radius": 630.868,
+    "scale": 0.134735
+  },
+  {
+    "file": "KK_Face_Enemy_Mushroom_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      48,
+      54,
+      208,
+      202
+    ],
+    "alpha_radius": 85.15,
+    "source_radius": 565.777,
+    "scale": 0.150236
+  },
+  {
+    "file": "KK_Face_Enemy_Necromancer_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      76,
+      55,
+      179,
+      200
+    ],
+    "alpha_radius": 84.75,
+    "source_radius": 708.831,
+    "scale": 0.121477
+  },
+  {
+    "file": "KK_Face_Enemy_SkeletonGolem_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      61,
+      55,
+      193,
+      201
+    ],
+    "alpha_radius": 84.217,
+    "source_radius": 654.108,
+    "scale": 0.129948
+  },
+  {
+    "file": "KK_Face_Enemy_SkeletonMinion_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      59,
+      44,
+      197,
+      213
+    ],
+    "alpha_radius": 84.926,
+    "source_radius": 523.776,
+    "scale": 0.162283
+  },
+  {
+    "file": "KK_Face_Enemy_Slime_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      52,
+      53,
+      203,
+      202
+    ],
+    "alpha_radius": 85.572,
+    "source_radius": 539.3,
+    "scale": 0.157612
+  },
+  {
+    "file": "KK_Face_Enemy_Spider_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      45,
+      80,
+      211,
+      176
+    ],
+    "alpha_radius": 86.351,
+    "source_radius": 597.509,
+    "scale": 0.145353
+  },
+  {
+    "file": "KK_Face_Enemy_Werewolf_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      80,
+      56,
+      175,
+      198
+    ],
+    "alpha_radius": 84.181,
+    "source_radius": 714.184,
+    "scale": 0.119017
+  },
+  {
+    "file": "KK_Face_Engineer_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      73,
+      56,
+      172,
+      199
+    ],
+    "alpha_radius": 85.009,
+    "source_radius": 719.364,
+    "scale": 0.11816
+  },
+  {
+    "file": "KK_Face_Knight_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      89,
+      65,
+      181,
+      195
+    ],
+    "alpha_radius": 84.726,
+    "source_radius": 880.366,
+    "scale": 0.108678
+  },
+  {
+    "file": "KK_Face_Mage_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      70,
+      58,
+      185,
+      197
+    ],
+    "alpha_radius": 85.7,
+    "source_radius": 743.002,
+    "scale": 0.116454
+  },
+  {
+    "file": "KK_Face_Ranger_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      74,
+      54,
+      181,
+      201
+    ],
+    "alpha_radius": 85.291,
+    "source_radius": 670.566,
+    "scale": 0.126759
+  },
+  {
+    "file": "KK_Face_Rogue_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      66,
+      61,
+      190,
+      193
+    ],
+    "alpha_radius": 84.193,
+    "source_radius": 718.713,
+    "scale": 0.118267
+  },
+  {
+    "file": "KK_Face_RogueHooded_DynamicV2.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alpha_bbox": [
+      73,
+      60,
+      182,
+      195
+    ],
+    "alpha_radius": 84.726,
+    "source_radius": 749.483,
+    "scale": 0.114839
+  }
+]

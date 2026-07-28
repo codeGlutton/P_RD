@@ -88,9 +88,14 @@ K = kit.CHROME_SCALE
 #: 층. 판과 내용과 표시를 확실히 갈라 둔다.
 Z_PLATE, Z_CONTENT, Z_TEXT, Z_MARK = 0, 10, 15, 40
 
-TEXT_DARK = unreal.LinearColor(0.16, 0.11, 0.07, 1.0)
-TEXT_PALE = unreal.LinearColor(0.98, 0.95, 0.88, 1.0)
-TEXT_DIM = unreal.LinearColor(0.62, 0.58, 0.52, 1.0)
+# 글자색을 미색 하나로 모았다.
+#
+# 검정 테두리를 두르기로 하면서 바탕이 밝든 어둡든 미색이 읽힌다. 전에는
+# 양피지 위에 진갈색, 어두운 판 위에 미색을 따로 썼는데, 판을 한 장으로 줄이고
+# 글자를 옮기다 보니 어느 글자가 어느 바탕에 얹히는지가 자꾸 바뀌었다.
+TEXT_PALE = unreal.LinearColor(0.973, 0.973, 0.953, 1.0)
+TEXT_DARK = TEXT_PALE
+TEXT_DIM = unreal.LinearColor(0.80, 0.78, 0.74, 1.0)
 
 #: 명령 여섯. 판 이름과 시안에 적힌 값. 차례는 시안 그림 차례다.
 COMMANDS = (
@@ -309,8 +314,17 @@ def commands(blueprint, root):
         text(blueprint, "CommandDamage_%d" % index, card, origin,
              spot(plate_name, "damage_text") or spot(plate_name, "stance_text"),
              damage, 15, TEXT_PALE)
+        # 쿨타임도 배지 위에 숫자를 얹는다. 비용 배지 아래에 같은 모양으로
+        # 놓아, 둘이 한 쌍으로 읽히게 한다.
+        cool_badge = spot(plate_name, "cooldown_badge")
+        if cool_badge:
+            cx, cy, cw, ch = local(cool_badge, origin)
+            kit.image(blueprint, "CommandCooldownBadge_%d" % index, card,
+                      cx, cy, cw, ch, None, z_order=Z_CONTENT,
+                      texture=COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCooldown_%d" % index, card, origin,
-             spot(plate_name, "cooldown_text"), cooldown, 15, TEXT_DIM)
+             cool_badge or spot(plate_name, "cooldown_text"),
+             cooldown, 19, TEXT_PALE, bold=True)
         # 비용은 배지 그림 위에 숫자를 얹는다. 시안은 판에 배지를 그려
         # 넣었는데, 판을 한 장으로 줄이면서 그 배지도 한 벌만 남았다.
         # 숫자만 얹으면 판마다 배지가 있는 자리와 없는 자리가 갈린다.
@@ -321,7 +335,7 @@ def commands(blueprint, root):
                       bx, by, bw, bh, None, z_order=Z_CONTENT,
                       texture=COST_BADGE, tint=kit.WHITE)
         text(blueprint, "CommandCost_%d" % index, card, origin,
-             badge, cost, 19, TEXT_DARK, bold=True)
+             badge, cost, 19, TEXT_PALE, bold=True)
 
         # 골라진 표시는 안 만든다. 스킬을 고르는 순간 조준에 들고, 조준 중에는
         # 카드가 통째로 비킨다 -- 금테가 켜지자마자 카드와 같이 사라져서

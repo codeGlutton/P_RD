@@ -569,12 +569,38 @@ def fold(blueprint, name):
     return widget
 
 
+#: HUD 글자 폰트. Oswald 를 기본으로 두고 한글은 그 안에서 LINE Seed 로
+#: 떨어진다 -- build_oswald_font.py 가 만든 합성 폰트다.
+HUD_FONT = "/Fonts/F_HUD_Oswald"
+
+#: 글자 테두리. 글자 크기의 이 비율만큼 두른다.
+#:
+#: 판이 나무와 가죽이라 바탕색이 자리마다 다르다. 테두리가 없으면 밝은 양피지
+#: 위의 미색 글자가 사라지고, 어두운 판 위의 진갈색 글자도 마찬가지다.
+OUTLINE_RATIO = 0.09
+OUTLINE_COLOR = unreal.LinearColor(0.0, 0.0, 0.0, 1.0)
+
+#: 그림자. 오른쪽 아래로 조금.
+SHADOW_OFFSET = (2.0, 3.0)
+SHADOW_COLOR = unreal.LinearColor(0.0, 0.0, 0.0, 0.55)
+
+
 def hud_font(size, bold=False):
     info = unreal.SlateFontInfo()
-    info.set_editor_property("font_object", art(KK + "/Fonts/F_HUD_LINESeedKR"))
+    info.set_editor_property("font_object", art(KK + HUD_FONT))
     info.set_editor_property("typeface_font_name",
                              unreal.Name("Bold" if bold else "Regular"))
     info.set_editor_property("size", int(size))
+
+    # 테두리는 폰트 정보 안에 있다. 글자마다 따로 두르는 것이 아니라 이 값이
+    # 폰트 캐시에 함께 구워진다.
+    outline = info.get_editor_property("outline_settings")
+    outline.set_editor_property("outline_size",
+                                max(1, int(round(size * OUTLINE_RATIO))))
+    outline.set_editor_property("outline_color", OUTLINE_COLOR)
+    # 테두리를 글자 바깥으로만 그린다. 안쪽까지 먹으면 작은 글자가 뭉갠다.
+    outline.set_editor_property("apply_outline_to_drop_shadows", False)
+    info.set_editor_property("outline_settings", outline)
     return info
 
 
@@ -584,6 +610,10 @@ def label(blueprint, name, parent, x, y, w, h, text, size=14,
     block.set_editor_property("text", unreal.Text(text))
     block.set_editor_property("font", hud_font(size, bold))
     block.set_editor_property("color_and_opacity", unreal.SlateColor(color))
+    # 그림자. 테두리만으로는 바탕과 붙어 보여서 한 겹 더 띄운다.
+    block.set_editor_property("shadow_offset",
+                              unreal.Vector2D(*SHADOW_OFFSET))
+    block.set_editor_property("shadow_color_and_opacity", SHADOW_COLOR)
     block.set_editor_property("justification", {
         "left": unreal.TextJustify.LEFT,
         "center": unreal.TextJustify.CENTER,
