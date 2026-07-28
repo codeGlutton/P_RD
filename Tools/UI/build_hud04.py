@@ -30,7 +30,8 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
 ## 층
 
     판     Z=0   맨 아래. 오려 낸 껍데기다
-    내용   Z=10  초상, 아이콘, 글자, 막대
+    내용   Z=10  초상, 아이콘, 막대
+    글자   Z=15  아이콘 위에 온다
     표시   Z=40  선택 테두리와 쿨타임 가림막
 
 판과 내용을 같은 층에 두었더니 아군 초상이 판 뒤로 숨었다. 같은 층이면 어느
@@ -55,7 +56,7 @@ ART = "/Game/SVN/OutSideAsset/UI/KayKit/HUD04"
 K = kit.CHROME_SCALE
 
 #: 층. 판과 내용과 표시를 확실히 갈라 둔다.
-Z_PLATE, Z_CONTENT, Z_MARK = 0, 10, 40
+Z_PLATE, Z_CONTENT, Z_TEXT, Z_MARK = 0, 10, 15, 40
 
 TEXT_DARK = unreal.LinearColor(0.16, 0.11, 0.07, 1.0)
 TEXT_PALE = unreal.LinearColor(0.98, 0.95, 0.88, 1.0)
@@ -122,6 +123,10 @@ def text(blueprint, name, root, rect, value, points, colour, align="center",
     x, y, w, h = rect
     kit.label(blueprint, name, root, x, y, w, h, value, points, colour, align,
               None, bold=bold)
+    # 글자를 아이콘 위층으로 올린다. kit.label 은 내용 층에 놓는데, 같은 층이면
+    # 만든 차례가 위아래를 정해서 아이콘이 큰 칸에서는 글자가 묻힌다 --
+    # 반격 태세의 "방어 태세" 줄이 그렇게 사라졌다.
+    kit.place(blueprint, name, x, y, w, h, "tl", None, Z_TEXT)
 
 
 def outline(blueprint, root, widget_name, rect):
@@ -188,7 +193,7 @@ def enemy_panel(blueprint, root):
     if hp:
         bx, by, bw, bh = hp
         kit.bar(blueprint, "EnemyHPBar", root, bx, by, bw, bh,
-                unreal.LinearColor(0.78, 0.18, 0.16, 1.0))
+                unreal.LinearColor(0.86, 0.24, 0.20, 1.0))
 
 
 def commands(blueprint, root):
@@ -214,10 +219,12 @@ def commands(blueprint, root):
         # 골라진 표시와 못 쓰는 표시. 여섯 장 다 있어야 런타임이 어느 칸이든
         # 켤 수 있다 -- 시안이 한 칸에만 그려 준 것이라도 그렇다.
         outline(blueprint, root, "CommandSelected_%d" % index, PLACE[plate_name])
-        dx, dy, dw, dh = x, y, w, h
-        kit.image(blueprint, "CommandDisabled_%d" % index, root, dx, dy, dw, dh,
+        # 가림막은 판 그림을 한 장 더 깔고 어둡게 물들인다. 검은 네모를 덮으면
+        # 판 밖까지 사각형으로 덮여 시안과 모양이 달라진다.
+        kit.image(blueprint, "CommandDisabled_%d" % index, root, x, y, w, h,
                   None, z_order=Z_MARK,
-                  tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.55))
+                  texture="{}/{}".format(ART, TEXTURE[plate_name]),
+                  tint=unreal.LinearColor(0.0, 0.0, 0.0, 0.62))
         kit.fold(blueprint, "CommandDisabled_%d" % index)
 
         kit.ghost_button(blueprint, "CommandButton_%d" % index, root, x, y, w, h)

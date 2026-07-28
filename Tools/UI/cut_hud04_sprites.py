@@ -57,8 +57,13 @@ def blank_by_stem():
     return found
 
 
-def cut(filled, blank, canvas_rect, filled_origin, blank_origin):
-    """한 자리를 떼어 낸다. 빈 판과 다른 픽셀만 남긴다."""
+def cut(filled, blank, canvas_rect, filled_origin, blank_origin, solid=False):
+    """한 자리를 떼어 낸다. 빈 판과 다른 픽셀만 남긴다.
+
+    solid 면 뺄셈을 안 하고 그 칸을 통째로 가져온다. 초상이 그렇다 -- 빈 판의
+    초상 자리는 파인 홈이고 그림이 그 홈을 꽉 채우므로, 다른 데만 남기면
+    홈 색과 우연히 닮은 곳이 뚫린다. 독수리 머리가 그렇게 뭉갰다.
+    """
     x, y, w, h = canvas_rect
 
     fx, fy = x - filled_origin[0], y - filled_origin[1]
@@ -73,8 +78,11 @@ def cut(filled, blank, canvas_rect, filled_origin, blank_origin):
     base_alpha = blank[by:by + h, bx:bx + w, 3].astype(float)
 
     # 빈 판이 비어 있던 자리는 그냥 다 살린다. 판 밖으로 삐져나온 그림이다.
-    changed = np.abs(patch - base).sum(axis=2) > REACH
-    changed |= base_alpha < 10
+    if solid:
+        changed = np.ones((h, w), dtype=bool)
+    else:
+        changed = np.abs(patch - base).sum(axis=2) > REACH
+        changed |= base_alpha < 10
 
     if changed.mean() < 0.02:
         return None
@@ -119,7 +127,8 @@ for asset in detail["assets"]:
         if element["type"] not in KINDS:
             continue
         piece = cut(filled, blank, element["canvas_bbox"],
-                    origins[stem], asset["crop_origin"])
+                    origins[stem], asset["crop_origin"],
+                    solid=element["type"] == "portrait")
         if piece is None:
             print("건너뜀(다른 데가 없음): %s.%s" % (stem, element["id"]))
             continue
