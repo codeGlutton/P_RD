@@ -78,6 +78,13 @@ public:
 	*/
 	TArray<FTouchState> mTouchStates;
 
+	/** @brief 이번에 손을 댄 뒤로 끌었나. 끌었으면 뗄 때 탭으로 안 친다. */
+	bool mWasDragged = false;
+
+	/** @brief 이 거리를 넘게 움직이면 끈 것으로 본다(화면 픽셀). */
+	UPROPERTY(Category = "Touch", EditAnywhere, meta = (DisplayName = "TapSlack"))
+	float mTapSlack = 12.f;
+
 	/*
 	* @brief Draggin 제스쳐 사용 시 호출할 카메라 행동 대리자
 	*/
@@ -132,6 +139,16 @@ private:
 	* @return true 시 드래그 중, false 시 드래그 아님
 	*/
 	bool IsDrag();
+
+	/**
+	 * @brief 끌지 않고 떼면 톡 친 것으로 보고 월드 탭을 알린다.
+	 *
+	 * @details
+	 * 월드 입력의 주인은 카메라다. HUD 가 눌린 순간 바로 좌표를 넘기면, 지도를
+	 * 밀려고 손을 댄 것까지 선택으로 처리된다. 끌었는지 아닌지는 손을 뗄 때
+	 * 알 수 있고, 그걸 아는 곳이 여기다.
+	 */
+	void NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed);
 
 	/*
 	* @brief Pinch 중인지 나타내는 함수

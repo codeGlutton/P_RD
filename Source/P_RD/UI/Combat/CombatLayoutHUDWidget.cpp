@@ -106,11 +106,6 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// 루트가 탭을 받아야 판(타일맵) 터치가 여기로 온다. SelfHitTestInvisible 이면
-	// 탭이 그냥 통과해 버려서 카드를 접을 수도, 좌표를 게임플레이에 넘길 수도
-	// 없다. 카드와 아군 칸 같은 자식 버튼은 여전히 먼저 가져간다.
-	SetVisibility(ESlateVisibility::Visible);
-
 	CacheAuthoredWidgets();
 	WireCommands();
 	StartPreviewIfUnbound();
@@ -760,27 +755,49 @@ void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
 }
 
 /**
- * @brief 판을 눌렀을 때 한 단계 뒤로 간다.
+ * @brief 모델을 붙이면서 판 탭 알림도 같이 구독한다.
+ * @param InUIModel 붙일 모델
+ */
+void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
+{
+	Super::BindUIModel(InUIModel);
+	if (mUIModel != nullptr)
+	{
+		mUIModel->OnCombatWorldTouch.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
+	}
+}
+
+void UCombatLayoutHUDWidget::UnbindUIModel()
+{
+	if (mUIModel != nullptr)
+	{
+		mUIModel->OnCombatWorldTouch.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleWorldTouched);
+	}
+	Super::UnbindUIModel();
+}
+
+/**
+ * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
  *
  * @details
- * 좌표를 게임플레이에 넘기는 것이 먼저다. 무엇을 눌렀는지는 게임플레이만 안다 --
- * 유닛이면 게임플레이가 찜을 갈아 끼우고, 그러면 위에서 카드가 다시 펴진다.
+ * 월드 입력은 카메라가 갖는다. 카메라가 끌었는지 톡 쳤는지 가려서 이 신호를
+ * 쏘고, 게임플레이와 화면이 나란히 듣는다.
  *
- * 화면 쪽은 접기만 한다. 빈 땅을 눌렀을 때만 접히는 것처럼 보이는 이유는,
- * 유닛을 눌렀으면 곧바로 찜이 바뀌어 다시 펴지기 때문이다. 규칙이 하나라서
- * "지금 빈 곳을 누르면 뭐가 되지" 를 매번 생각할 필요가 없다.
- * @param ScreenPosition 누른 화면 좌표
+ * 처음에는 HUD 가 눌린 순간 직접 받아 처리했다. 그러면 두 가지가 깨진다.
+ * 입력이 플레이어 컨트롤러까지 안 내려가 지도가 안 움직이고, 지도를 밀려고
+ * 손을 댄 것까지 선택으로 처리된다.
+ * @param ScreenPosition 톡 친 자리
  * @param bLongPress     길게 눌렀나
  */
-void UCombatLayoutHUDWidget::HandleBoardTouched(const FVector2D& ScreenPosition,
-	const bool bLongPress)
+void UCombatLayoutHUDWidget::HandleWorldTouched(FVector2D ScreenPosition,
+	bool bLongPress)
 {
 	if (mUIModel == nullptr)
 	{
 		return;
 	}
-
-	mUIModel->RequestWorldTouch(ScreenPosition, bLongPress);
 
 	// 조준 중이면 취소가 먼저다. 조준을 놔둔 채 카드만 접으면 다음 탭이 엉뚱한
 	// 곳에 스킬을 쏜다.
@@ -792,27 +809,6 @@ void UCombatLayoutHUDWidget::HandleBoardTouched(const FVector2D& ScreenPosition,
 	}
 
 	SetCommandsShown(false);
-}
-
-FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
-	const FPointerEvent& InMouseEvent)
-{
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
-	{
-		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
-	}
-	HandleBoardTouched(FVector2D(InMouseEvent.GetScreenSpacePosition()), false);
-	// 안 먹었다고 돌려준다. 여기서 먹어 버리면 입력이 플레이어 컨트롤러까지
-	// 안 내려가고, 카메라가 매 틱 GetInputTouchState 로 손가락을 읽으므로
-	// 지도가 통째로 안 움직인다.
-	return FReply::Unhandled();
-}
-
-FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
-	const FPointerEvent& InTouchEvent)
-{
-	HandleBoardTouched(FVector2D(InTouchEvent.GetScreenSpacePosition()), false);
-	return FReply::Unhandled();
 }
 
 /**

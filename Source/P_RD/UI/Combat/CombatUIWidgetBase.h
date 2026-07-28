@@ -21,7 +21,15 @@ public:
 	/** @brief 공용 뷰모델에 연결하고 갱신/큐 알림을 구독한다. */
 	// 패널 재사용 가능성을 위해 기존 구독을 먼저 끊고, 새 UIModel 연결 직후 All 갱신을 받는다.
 	UFUNCTION(BlueprintCallable, Category = "Combat|View")
-	void BindUIModel(UCombatUIModel* InUIModel);
+	virtual void BindUIModel(UCombatUIModel* InUIModel);
+
+	/**
+	 * @brief 구독을 끊는다.
+	 *
+	 * 파생 위젯이 자기 몫의 구독을 더 붙일 수 있으므로 protected 다. 붙인
+	 * 쪽이 떼야 하는데 private 이면 뗄 자리가 없다.
+	 */
+	virtual void UnbindUIModel();
 
 	/** @brief WBP가 자기 도메인 데이터를 읽을 때 사용하는 UIModel 접근자. */
 	UFUNCTION(BlueprintPure, Category = "Combat|View")
@@ -59,7 +67,7 @@ private:
 	UFUNCTION() void HandleQueueNodeResolved(FCombatQueueNode Node);
 
 	/** @brief 현재 UIModel 구독을 끊고 참조를 비운다. */
-	void UnbindUIModel();
+
 
 protected:
 	/** @brief 연결된 공용 전투 UIModel; 위젯은 소유하지 않고 구독/읽기만 한다. */

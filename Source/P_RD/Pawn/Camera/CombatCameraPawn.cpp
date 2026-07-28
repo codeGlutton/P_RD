@@ -2,6 +2,9 @@
 
 
 #include "Pawn/Camera/CombatCameraPawn.h"
+
+#include "GameMode/CombatGameMode.h"
+#include "UI/Combat/CombatUIModel.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
@@ -89,6 +92,22 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		{
 			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
 			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
+			if (i == 0)
+			{
+				mWasDragged = false;
+			}
+		}
+
+		// 첫 손가락만 본다. 둘째는 확대할 때만 쓰고 탭으로 치지 않는다.
+		if (i == 0)
+		{
+			if (mTouchStates[0].bIsCurrentlyPressed == true
+				&& mTapSlack < FVector2D::Distance(mTouchStates[0].StartTouchPos,
+					mTouchStates[0].CurTouchPos))
+			{
+				mWasDragged = true;
+			}
+			NotifyTapIfNotDragged(i, bPreTickTouch);
 		}
 	}
 
@@ -136,6 +155,34 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 UTimeScaleComponent* ACombatCameraPawn::GetTimeScaleComponent()
 {
 	return mTimeScaleComponent.Get();
+}
+
+/**
+ * @brief 손을 뗐고 끌지 않았으면 월드 탭을 알린다.
+ * @param TouchIndex  몇 번째 손가락인가
+ * @param bWasPressed 직전 틱에 눌려 있었나
+ */
+void ACombatCameraPawn::NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed)
+{
+	const bool bReleased = bWasPressed == true
+		&& mTouchStates[TouchIndex].bIsCurrentlyPressed == false;
+	if (bReleased == false || mWasDragged == true)
+	{
+		return;
+	}
+
+	ACombatGameMode* CombatGameMode = GetWorld() != nullptr
+		? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
+	if (CombatGameMode == nullptr)
+	{
+		return;
+	}
+	if (UCombatUIModel* UIModel = CombatGameMode->GetCombatUIModel())
+	{
+		// 뗀 자리가 아니라 댄 자리로 보낸다. 뗄 때 손가락이 한두 픽셀 미끄러진
+		// 것까지 반영하면 가장자리 타일에서 옆 칸이 잡힌다.
+		UIModel->RequestWorldTouch(mTouchStates[TouchIndex].StartTouchPos, false);
+	}
 }
 
 bool ACombatCameraPawn::IsDrag()
