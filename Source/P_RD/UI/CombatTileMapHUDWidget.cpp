@@ -76,7 +76,7 @@ UCombatTileMapHUDWidget::UCombatTileMapHUDWidget(const FObjectInitializer& Objec
 		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(TEXT("/Game/BP/UI/WBP_Reward"));
+	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(TEXT("/Game/UI/WBP_Reward"));
 	if (RewardWidgetClassFinder.Succeeded())
 	{
 		mRewardWidgetClass = RewardWidgetClassFinder.Class;
