@@ -81,6 +81,16 @@ public:
 	/** @brief 이번에 손을 댄 뒤로 끌었나. 끌었으면 뗄 때 탭으로 안 친다. */
 	bool mWasDragged = false;
 
+	/** @brief 마우스 왼쪽이 직전 틱에 눌려 있었나. */
+	bool mWasMouseDown = false;
+
+	/** @brief 마우스를 누른 자리와 직전 자리. 화면 좌표. */
+	FVector2D mMouseDownPos = FVector2D::ZeroVector;
+	FVector2D mMousePrevPos = FVector2D::ZeroVector;
+
+	/** @brief 마우스로 끌었나. 안 끌었으면 뗄 때 톡 친 것으로 본다. */
+	bool mWasMouseDragged = false;
+
 	/** @brief 이 거리를 넘게 움직이면 끈 것으로 본다(화면 픽셀). */
 	UPROPERTY(Category = "Touch", EditAnywhere, meta = (DisplayName = "TapSlack"))
 	float mTapSlack = 12.f;
@@ -159,6 +169,20 @@ private:
 
 	/** @brief 사람이 직접 움직이기 시작하면 자동 추적을 그만둔다. */
 	void ReleaseEmphasis();
+
+	/**
+	 * @brief 마우스로 끌어 지도를 옮긴다.
+	 *
+	 * @details
+	 * PC 에는 손가락이 없다. 마우스를 터치로 바꿔 주는 설정(bUseMouseForTouch)을
+	 * 켜 봤더니 화면이 제멋대로 움직였다 -- 그 설정은 게임 전체의 입력 경로를
+	 * 바꾸는 것이라 UI 까지 휩쓴다. 마우스는 마우스대로 따로 읽는다.
+	 * @param PlayerController 마우스를 읽을 컨트롤러
+	 */
+	void ApplyMouseDrag(APlayerController* PlayerController);
+
+	/** @brief 톡 친 자리를 게임플레이에 알린다. */
+	void NotifyWorldTap(const FVector2D& ScreenPosition);
 
 	/*
 	* @brief Pinch 중인지 나타내는 함수

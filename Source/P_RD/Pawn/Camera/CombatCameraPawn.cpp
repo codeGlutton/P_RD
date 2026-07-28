@@ -114,6 +114,7 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 
 
 	ApplyWheelZoom(PlayerController);
+	ApplyMouseDrag(PlayerController);
 
 	// Pinch 중
 	if (IsPinch())
@@ -153,6 +154,61 @@ void ACombatCameraPawn::ReleaseEmphasis()
 }
 
 /**
+ * @brief 마우스로 끌어 지도를 옮긴다. 안 끌고 떼면 톡 친 것으로 본다.
+ *
+ * @details
+ * 터치 경로와 나란히 둔다. 손가락은 GetInputTouchState 로, 마우스는 여기서.
+ * 둘을 한 경로로 합치려고 bUseMouseForTouch 를 켰다가 지도가 제멋대로
+ * 움직였다 -- 그 설정은 게임 전체의 입력 경로를 바꾼다.
+ * @param PlayerController 마우스를 읽을 컨트롤러
+ */
+void ACombatCameraPawn::ApplyMouseDrag(APlayerController* PlayerController)
+{
+	if (PlayerController == nullptr || IsValid(mCameraMovementComponent) == false)
+	{
+		return;
+	}
+
+	FVector2D MousePos = FVector2D::ZeroVector;
+	const bool bHasMouse = PlayerController->GetMousePosition(MousePos.X, MousePos.Y);
+	const bool bDown = bHasMouse
+		&& PlayerController->IsInputKeyDown(EKeys::LeftMouseButton);
+
+	if (bDown == true && mWasMouseDown == false)
+	{
+		mMouseDownPos = MousePos;
+		mMousePrevPos = MousePos;
+		mWasMouseDragged = false;
+	}
+	else if (bDown == true)
+	{
+		if (mTapSlack < FVector2D::Distance(mMouseDownPos, MousePos))
+		{
+			mWasMouseDragged = true;
+		}
+		if (mWasMouseDragged == true && MousePos != mMousePrevPos)
+		{
+			ReleaseEmphasis();
+			mCameraMovementComponent->DragMoveToViewportPosition_Instant(
+				mMousePrevPos, MousePos);
+		}
+		mMousePrevPos = MousePos;
+	}
+	else if (mWasMouseDown == true)
+	{
+		// 뗐다. 안 끌었으면 톡 친 것이다. 누른 자리를 보낸다 -- 뗄 때 한두
+		// 픽셀 미끄러진 것까지 반영하면 가장자리에서 옆 칸이 잡힌다.
+		if (mWasMouseDragged == false)
+		{
+			NotifyWorldTap(mMouseDownPos);
+		}
+		mWasMouseDragged = false;
+	}
+
+	mWasMouseDown = bDown;
+}
+
+/**
  * @brief 마우스 휠로 확대/축소한다.
  *
  * PC 에는 손가락이 둘 없다. 핀치와 같은 길로 보내되 화면 가운데를 기준으로
@@ -166,14 +222,18 @@ void ACombatCameraPawn::ApplyWheelZoom(APlayerController* PlayerController)
 		return;
 	}
 
-	const float Wheel = PlayerController->GetInputAnalogKeyState(EKeys::MouseWheelAxis);
-	if (FMath::IsNearlyZero(Wheel))
+	// 축 값을 읽지 않는다. GetInputAnalogKeyState 는 굴린 프레임에만 0이 아닌
+	// 값을 주는 것이 아니라 마지막 값을 들고 있어서, 한 번 굴리면 계속 확대된다.
+	// 굴린 그 순간만 참인 것을 쓴다.
+	const bool bUp = PlayerController->WasInputKeyJustPressed(EKeys::MouseScrollUp);
+	const bool bDown = PlayerController->WasInputKeyJustPressed(EKeys::MouseScrollDown);
+	if (bUp == false && bDown == false)
 	{
 		return;
 	}
 
 	ReleaseEmphasis();
-	mCameraMovementComponent->ZoomCamera_Instant(-Wheel * mWheelZoomStep);
+	mCameraMovementComponent->ZoomCamera_Instant(bUp ? -mWheelZoomStep : mWheelZoomStep);
 }
 
 // Called to bind functionality to input
@@ -217,6 +277,15 @@ void ACombatCameraPawn::NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed
 		return;
 	}
 
+	NotifyWorldTap(mTouchStates[TouchIndex].StartTouchPos);
+}
+
+/**
+ * @brief 톡 친 자리를 게임플레이에 알린다.
+ * @param ScreenPosition 톡 친 화면 좌표
+ */
+void ACombatCameraPawn::NotifyWorldTap(const FVector2D& ScreenPosition)
+{
 	ACombatGameMode* CombatGameMode = GetWorld() != nullptr
 		? GetWorld()->GetAuthGameMode<ACombatGameMode>() : nullptr;
 	if (CombatGameMode == nullptr)
@@ -225,9 +294,7 @@ void ACombatCameraPawn::NotifyTapIfNotDragged(int32 TouchIndex, bool bWasPressed
 	}
 	if (UCombatUIModel* UIModel = CombatGameMode->GetCombatUIModel())
 	{
-		// 뗀 자리가 아니라 댄 자리로 보낸다. 뗄 때 손가락이 한두 픽셀 미끄러진
-		// 것까지 반영하면 가장자리 타일에서 옆 칸이 잡힌다.
-		UIModel->RequestWorldTouch(mTouchStates[TouchIndex].StartTouchPos, false);
+		UIModel->RequestWorldTouch(ScreenPosition, false);
 	}
 }
 

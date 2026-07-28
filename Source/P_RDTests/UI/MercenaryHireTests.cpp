@@ -17,6 +17,13 @@
 #include "Misc/AutomationTest.h"
 
 #include "Frontend/CharacterSelectTypes.h"
+#include "Blueprint/WidgetBlueprintGeneratedClass.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
+#include "Components/PanelWidget.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -151,6 +158,151 @@ bool FMercenaryHireConfirmTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("셋을 넘긴다"), Sent.Num(), 3);
 	TestEqual(TEXT("고른 차례대로 온다"), Sent[2].PrimaryAssetName,
 		FName(TEXT("후보0")));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatHUDCardNestingTest,
+	"P_RD.UI.CombatHUD.CardNesting",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+/**
+ * @brief 카드 묶음이 제 부품을 실제로 품고 있나.
+ *
+ * @details
+ * 카드가 안 접힌다를 여러 번 되풀이했다. 그때마다 입력 쪽을 뒤졌는데 첫
+ * 원인은 위젯 구조였다 -- 묶음이 빈 껍데기여서 접어도 접을 것이 없었다.
+ * 화면은 멀쩡히 나오므로 캡처로는 절대 안 잡힌다.
+ *
+ * 이 시험이 통과하는데 게임에서 안 되면 원인은 위젯이 아니라 입력이 거기까지
+ * 안 온다는 뜻이다. 그 둘을 가르는 것이 이 시험의 일이다.
+ *
+ * 새 파일을 만들지 않고 여기 붙인 이유: P_RDTests 에 .cpp 를 하나 더하면
+ * 유니티 빌드 묶음이 바뀌면서, 여러 시험 파일이 익명 이름공간에 같은 이름으로
+ * 둔 도우미들이 한꺼번에 부딪힌다.
+ */
+bool FCombatHUDCardNestingTest::RunTest(const FString& Parameters)
+{
+	UClass* HUDClass = LoadClass<UCombatLayoutHUDWidget>(nullptr,
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"));
+	if (!TestNotNull(TEXT("HUD 클래스를 찾았다"), HUDClass))
+	{
+		return false;
+	}
+
+	// 위젯 나무는 WBP 가 만든 클래스가 원본으로 들고 있다. 인스턴스나 클래스
+	// 기본값에서 읽으면 아직 비어 있어 늘 널이다.
+	UWidgetBlueprintGeneratedClass* Generated =
+		Cast<UWidgetBlueprintGeneratedClass>(HUDClass);
+	UWidgetTree* Tree = Generated != nullptr
+		? Generated->GetWidgetTreeArchetype() : nullptr;
+	if (!TestNotNull(TEXT("위젯 나무"), Tree))
+	{
+		return false;
+	}
+
+	auto CountChildren = [Tree](const TCHAR* Name) -> int32
+	{
+		UPanelWidget* Panel = Cast<UPanelWidget>(Tree->FindWidget(FName(Name)));
+		return Panel != nullptr ? Panel->GetChildrenCount() : -1;
+	};
+
+	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::CommandSlotCount; ++Index)
+	{
+		const FString Name = FString::Printf(TEXT("CommandCard_%d"), Index);
+		// 판, 아이콘, 글자, 버튼이 이 안에 있어야 한다. 하나라도 밖에 있으면
+		// 접었을 때 그것만 남는다.
+		TestTrue(*FString::Printf(TEXT("%s 가 부품을 품는다"), *Name),
+			CountChildren(*Name) >= 4);
+	}
+
+	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::PartySlotCount; ++Index)
+	{
+		const FString Name = FString::Printf(TEXT("PartyCard_%d"), Index);
+		TestTrue(*FString::Printf(TEXT("%s 가 부품을 품는다"), *Name),
+			CountChildren(*Name) >= 4);
+
+		// 다시 펴는 손잡이. 카드 안에 있어야 접힌 카드가 안 눌린다.
+		const FString ButtonName = FString::Printf(TEXT("PartyButton_%d"), Index);
+		UWidget* Button = Tree->FindWidget(FName(*ButtonName));
+		if (TestNotNull(*ButtonName, Button))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 가 카드 안에 있다"), *ButtonName),
+				Button->GetParent(),
+				Cast<UPanelWidget>(Tree->FindWidget(FName(*Name))));
+		}
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatHUDCardToggleTest,
+	"P_RD.UI.CombatHUD.CardToggle",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+/**
+ * @brief 아군 칸 버튼이 실제로 묶여 카드를 접었다 폈다 하나.
+ *
+ * @details
+ * 묶는 것을 빠뜨려도 화면은 똑같이 나오고 누르면 아무 일이 없다. 눈으로는
+ * "입력이 안 온다" 와 구분이 안 된다. 이 시험이 통과하는데 게임에서 안 되면
+ * 원인은 배선이 아니라 입력이 버튼까지 안 온다는 뜻이다.
+ */
+bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = nullptr;
+	if (GEngine != nullptr)
+	{
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.World() != nullptr)
+			{
+				World = Context.World();
+				break;
+			}
+		}
+	}
+	if (World == nullptr)
+	{
+		AddInfo(TEXT("월드가 없어 건너뜀"));
+		return true;
+	}
+
+	UClass* HUDClass = LoadClass<UCombatLayoutHUDWidget>(nullptr,
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"));
+	if (!TestNotNull(TEXT("HUD 클래스"), HUDClass))
+	{
+		return false;
+	}
+
+	UCombatLayoutHUDWidget* HUD =
+		CreateWidget<UCombatLayoutHUDWidget>(World, HUDClass);
+	if (!TestNotNull(TEXT("HUD"), HUD))
+	{
+		return false;
+	}
+	// 위젯 캐시와 버튼 묶기는 NativeConstruct 에서 일어난다.
+	HUD->TakeWidget();
+
+	UButton* PartyButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("PartyButton_0")));
+	if (!TestNotNull(TEXT("아군 칸 버튼"), PartyButton))
+	{
+		return false;
+	}
+	TestTrue(TEXT("아군 칸 버튼에 무언가 묶여 있다"),
+		PartyButton->OnClicked.IsBound());
+
+	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
+	if (!TestNotNull(TEXT("명령 카드"), Card))
+	{
+		return false;
+	}
+
+	const ESlateVisibility Before = Card->GetVisibility();
+	PartyButton->OnClicked.Broadcast();
+	TestNotEqual(TEXT("한 번 누르면 상태가 바뀐다"), Card->GetVisibility(), Before);
+	PartyButton->OnClicked.Broadcast();
+	TestEqual(TEXT("두 번 누르면 되돌아온다"), Card->GetVisibility(), Before);
 	return true;
 }
 
