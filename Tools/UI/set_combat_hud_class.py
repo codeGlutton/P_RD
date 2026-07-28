@@ -1,15 +1,18 @@
-"""Point the combat game mode at a layout variant so it shows up in the game.
+# -*- coding: utf-8 -*-
+"""전투 게임모드가 쓸 HUD 를 정한다.
 
-Local only -- BP_CombatGameMode decides which HUD the real game uses, so this
-must not be committed until a layout is actually chosen. Revert with:
+배치안 스무 개를 하나씩 돌려보던 동안에는 이 설정을 커밋하면 안 됐다. 어느
+것을 쓸지 정해지지 않았는데 하나를 골라 두면 남이 받았을 때 이유 없이 그
+화면이 뜬다.
+
+이제 시안4 로 정해졌으므로 커밋한다. 다른 것을 잠깐 보고 싶으면 LAYOUT 만
+바꿔 돌리고, 되돌릴 때는:
     git checkout -- Content/BP/GameMode/BP_CombatGameMode.uasset
-
-The class name comes from the LAYOUT constant; edit it to try another one.
 """
 import unreal
 
 GAME_MODE = "/Game/BP/GameMode/BP_CombatGameMode"
-LAYOUT = "/Game/UI/CombatLayouts/WBP_CombatLayout_01_ClassicCRPG"
+LAYOUT = "/Game/UI/CombatLayouts/WBP_CombatHUD04"
 
 blueprint = unreal.EditorAssetLibrary.load_asset(GAME_MODE)
 if blueprint is None:
