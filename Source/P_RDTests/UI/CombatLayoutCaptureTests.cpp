@@ -65,6 +65,9 @@ namespace CombatLayoutCapture
 		// 용병 선택 화면. 전투 배치안은 아니지만 같은 방식으로 구워서 같은
 		// 방식으로 대조한다 -- 캡처 틀을 화면마다 새로 만들 이유가 없다.
 		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C"),
+		// 시안4 전투 HUD. 정해진 화면이라 다른 배치안과 같은 목록에 둔다 --
+		// 캡처 틀을 화면마다 새로 만들 이유가 없다.
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"),
 	};
 
 	/** @brief 폰 가로 화면 실물 크기. 배치안 평가는 이 한 장이면 충분하다. */
