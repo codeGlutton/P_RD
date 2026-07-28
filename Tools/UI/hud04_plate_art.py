@@ -6,9 +6,9 @@
 """
 
 PLATE_ART = {
-    "bottom_status_center": "KK_HUD04_hero_status_frame",
+    "bottom_status_center": "KK_HUD04_plate_bottom_status_center",
     "bottom_status_left": "KK_HUD04_plate_bottom_status_left",
-    "bottom_status_right": "KK_HUD04_hero_status_frame",
+    "bottom_status_right": "KK_HUD04_plate_bottom_status_right",
     "top_center_turn_order": "KK_HUD04_turn_order_v2",
     "top_right_parchment": "KK_HUD04_menu_bar",
 }

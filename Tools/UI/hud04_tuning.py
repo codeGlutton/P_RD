@@ -108,7 +108,7 @@ TUNING = {
         "hp_bar": (101, 124, 93, 16),
         "hp_icon": (101, 94, 26, 26),
         "hp_value": (131, 94, 63, 26),
-        "party_portrait": (32, 31, 66, 109),
+        "party_portrait": (35, 31, 58, 109),
         "status_icon": (51, -26, 36, 41),
         "status_icon_1": (95, -26, 36, 41),
         "status_icon_2": (139, -26, 36, 41),

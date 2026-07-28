@@ -577,12 +577,23 @@ def party(blueprint, root):
             piece(blueprint, card, origin,
                   "PartyStatusFrame_%d_%d" % (index, slot),
                   plate_name, "status_icon" + suffix)
-        icon_zone = spot(plate_name, "status_icon_img")
-        if icon_zone:
+        # 아이콘은 홈마다 하나씩. 런타임이 걸린 순서대로 앞에서부터 켠다.
+        #
+        # 밑그림을 깔아 둔다. 브러시가 없는 이미지는 흰 네모로 그려져서, 접힌
+        # 것을 런타임이 펴는 순간 하얀 판이 튀어나온다 -- 턴 초상에서 겪었다.
+        placeholder, _ = sprite("bottom_status_left", "status_icon")
+        for slot in range(STATUS_SLOTS):
+            suffix = "" if slot == 0 else "_%d" % slot
+            icon_zone = spot(plate_name, "status_icon_img" + suffix)
+            if icon_zone is None:
+                continue
             ix, iy, iw, ih = local(icon_zone, origin)
-            kit.image(blueprint, "PartyStatusIcon_%d" % index, card,
-                      ix, iy, iw, ih, None, z_order=Z_CONTENT)
-            kit.fold(blueprint, "PartyStatusIcon_%d" % index)
+            icon_name = "PartyStatusIcon_%d_%d" % (index, slot)
+            kit.image(blueprint, icon_name, card, ix, iy, iw, ih, None,
+                      z_order=Z_CONTENT,
+                      texture="{}/{}".format(ART, placeholder) if placeholder
+                      else None, tint=kit.WHITE)
+            kit.fold(blueprint, icon_name)
 
         text(blueprint, "PartyName_%d" % index, card, origin,
              spot(plate_name, "character_name"), name, 17, TEXT_PALE,
@@ -625,9 +636,15 @@ def party(blueprint, root):
             kit.label(blueprint, "PartyAPText_%d" % index, card,
                       words[0], words[1], words[2], words[3], "4/4", 13,
                       TEXT_PALE, "center", None, bold=True)
+            # 세로도 가운데로 붙인다. place() 는 칸의 왼쪽 위에 글자를 놓고
+            # justification 은 가로만 옮겨서, 칸이 높으면 글자가 위로 뜬다 --
+            # AP 숫자가 그렇게 떠 있었다.
             kit.place(blueprint, "PartyAPText_%d" % index,
                       words[0], words[1], words[2], words[3],
                       "tl", None, Z_TEXT)
+            kit.align_in(blueprint, "PartyAPText_%d" % index,
+                         words[0], words[1], words[2], words[3],
+                         "center", "middle")
 
         for pip in range(AP_PIPS):
             cell = local(spot(plate_name, "ap_pip_%02d" % (pip + 1)), origin)

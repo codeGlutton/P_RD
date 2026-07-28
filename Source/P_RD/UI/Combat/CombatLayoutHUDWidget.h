@@ -67,6 +67,9 @@ public:
 	/** @brief 누른 동안 줄어드는 정도. 더 줄이면 눌린 게 아니라 튄 것으로 보인다. */
 	static constexpr float PressedScale = 0.95f;
 
+	/** @brief 안 걸린 상태 홈의 흐림 정도. 더 흐리면 홈이 있는지도 안 보인다. */
+	static constexpr float EmptyStatusOpacity = 0.35f;
+
 public:
 	/**
 	 * @brief 게임플레이가 안 붙었을 때 가짜 전투 상태로 그린다.
@@ -249,6 +252,19 @@ private:
 	// 묶음은 아래 private 에 있다. 쓰는 자리가 먼저라 이름만 미리 알린다.
 	struct FPartySlotWidgets;
 
+	/**
+	 * @brief 아군 칸 하나에 상태이상을 그린다.
+	 *
+	 * @details
+	 * 홈은 늘 서 있고 그림만 갈린다. 걸린 것이 없으면 홈을 흐리게 둔다 --
+	 * 감추면 카드 위가 뻥 뚫려서 원래 그런 칸인지 사라진 것인지 모른다.
+	 */
+	void RefreshPartyStatus(const FPartySlotWidgets& Widgets,
+		const FUnitUI& Unit) const;
+
+	/** @brief 상태이상 태그에 맞는 그림. 없으면 nullptr. */
+	static UTexture2D* StatusIconFor(const FGameplayTag& StatusTag);
+
 	/** @brief 아군 칸 하나에 AP 를 그린다. 숫자판 + 낱개 열. */
 	void RefreshPartyActionPoints(const FPartySlotWidgets& Widgets,
 		const FUnitUI& Unit) const;
@@ -302,6 +318,10 @@ private:
 		/** @brief 이미 쓴 칸. 흐린 그림. 같은 자리에 겹쳐 있다. */
 		TArray<TObjectPtr<UWidget>> APPipsUsed;
 		TObjectPtr<UTextBlock> StatusText;
+		/** @brief 늘 서 있는 빈 홈. 상태가 없으면 흐리게 둔다. */
+		TArray<TObjectPtr<UWidget>> StatusFrames;
+		/** @brief 홈 안에 들어가는 그림. 걸린 순서대로 앞에서부터 켠다. */
+		TArray<TObjectPtr<UImage>> StatusIcons;
 		/** @brief 상태이상 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
 		TObjectPtr<UWidget> StatusIcon;
 	};

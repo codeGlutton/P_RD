@@ -148,6 +148,23 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.APPlate = Find<UWidget>(WidgetTree, TEXT("PartyAPPlate") + Suffix);
 		Widgets.StatusText = Find<UTextBlock>(WidgetTree, TEXT("PartyStatus") + Suffix);
 		Widgets.StatusIcon = Find<UWidget>(WidgetTree, TEXT("PartyStatusIcon") + Suffix);
+		// 홈과 그림은 굽는 쪽이 몇 개를 놓았는지 모른 채 센다. 개수를 여기
+		// 적어 두면 구역을 늘렸을 때 조용히 못 찾는다.
+		Widgets.StatusFrames.Reset();
+		Widgets.StatusIcons.Reset();
+		for (int32 SlotNo = 0; ; ++SlotNo)
+		{
+			UWidget* Frame = Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("PartyStatusFrame_%d_%d"), Index, SlotNo));
+			UImage* Icon = Find<UImage>(WidgetTree,
+				FString::Printf(TEXT("PartyStatusIcon_%d_%d"), Index, SlotNo));
+			if (Frame == nullptr && Icon == nullptr)
+			{
+				break;
+			}
+			Widgets.StatusFrames.Add(Frame);
+			Widgets.StatusIcons.Add(Icon);
+		}
 		// 낱개는 굽는 쪽이 몇 개를 놓았는지 모른 채 센다. 개수를 여기 적어
 		// 두면 굽는 쪽에서 늘렸을 때 조용히 못 찾는다.
 		Widgets.APPips.Reset();
@@ -530,6 +547,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		SetTextIfPresent(Widgets.HPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP))));
 		RefreshPartyActionPoints(Widgets, Unit);
+		RefreshPartyStatus(Widgets, Unit);
 
 		if (Widgets.StatusText != nullptr)
 		{
@@ -591,6 +609,18 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 	{
 		SetShown(Pip, false);
 	}
+	for (int32 SlotNo = 0; SlotNo < Widgets.StatusFrames.Num(); ++SlotNo)
+	{
+		if (UWidget* Frame = Widgets.StatusFrames[SlotNo])
+		{
+			SetShown(Frame, true);
+			Frame->SetRenderOpacity(EmptyStatusOpacity);
+		}
+		if (Widgets.StatusIcons.IsValidIndex(SlotNo))
+		{
+			SetShown(Widgets.StatusIcons[SlotNo], false);
+		}
+	}
 }
 
 /**
@@ -607,6 +637,90 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
  *
  * 쓴 칸은 흐린 그림이 같은 자리에 겹쳐 있다. 둘 중 하나만 켠다.
  */
+/**
+ * @brief 상태이상 태그에 맞는 그림.
+ *
+ * @details
+ * 옛 HUD 가 로그에 쓰던 그림을 그대로 쓴다. 같은 상태에 다른 그림을 두면
+ * 화면 두 곳이 같은 것을 다르게 말하게 된다.
+ *
+ * 전용 그림이 없는 태그는 nullptr 이다 -- 그때는 홈만 서고 그림은 안 뜬다.
+ * @param StatusTag 걸린 상태
+ * @return 그림, 없으면 nullptr
+ */
+UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
+{
+	struct FStatusArt
+	{
+		FGameplayTag Tag;
+		TObjectPtr<UTexture2D> Texture;
+	};
+
+	// 한 번만 읽는다. 카드 셋 x 홈 셋이 매 갱신마다 부르는 자리라 매번 읽으면
+	// 같은 그림을 아홉 번 찾는다.
+	static TArray<FStatusArt> Loaded;
+	if (Loaded.IsEmpty())
+	{
+		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
+		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility, TEXT("T_Status_Agility") },
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
+		};
+		for (const TPair<FGameplayTag, const TCHAR*>& Pair : Pairs)
+		{
+			const FString Path = FString::Printf(TEXT("%s%s.%s"), Root, Pair.Value, Pair.Value);
+			Loaded.Add({ Pair.Key, LoadObject<UTexture2D>(nullptr, *Path) });
+		}
+	}
+
+	for (const FStatusArt& Art : Loaded)
+	{
+		if (StatusTag.MatchesTag(Art.Tag))
+		{
+			return Art.Texture;
+		}
+	}
+	return nullptr;
+}
+
+/**
+ * @brief 아군 칸 하나에 상태이상을 그린다.
+ * @param Widgets 그 칸의 위젯 묶음
+ * @param Unit 그 칸에 선 유닛
+ */
+void UCombatLayoutHUDWidget::RefreshPartyStatus(
+	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
+{
+	const TArray<FStatusEffectUI>& Effects = Unit.mStatusEffects;
+	for (int32 SlotNo = 0; SlotNo < Widgets.StatusFrames.Num(); ++SlotNo)
+	{
+		const bool bFilled = Effects.IsValidIndex(SlotNo);
+
+		// 홈은 늘 서 있고, 빈 홈만 흐려진다. 감추면 카드 위가 뻥 뚫려서
+		// 원래 그런 칸인지 사라진 것인지 모른다.
+		if (UWidget* Frame = Widgets.StatusFrames[SlotNo])
+		{
+			SetShown(Frame, true);
+			Frame->SetRenderOpacity(bFilled ? 1.f : EmptyStatusOpacity);
+		}
+
+		UImage* Icon = Widgets.StatusIcons.IsValidIndex(SlotNo)
+			? Widgets.StatusIcons[SlotNo].Get() : nullptr;
+		if (Icon == nullptr)
+		{
+			continue;
+		}
+		UTexture2D* Art = bFilled ? StatusIconFor(Effects[SlotNo].mTag) : nullptr;
+		SetShown(Icon, Art != nullptr);
+		if (Art != nullptr)
+		{
+			Icon->SetBrushFromTexture(Art, false);
+		}
+	}
+}
+
 void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
 {
