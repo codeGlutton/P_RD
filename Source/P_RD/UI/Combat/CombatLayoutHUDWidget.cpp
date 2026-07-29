@@ -63,6 +63,55 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 
 namespace
 {
+	/**
+	 * @brief 초상을 칸에 맞춰 윗부분만 잘라 그린다.
+	 *
+	 * @details
+	 * 초상은 972x1619 로 길쭉한데 칸은 정사각에 가깝다. 그냥 넣으면 가로로
+	 * 눌려 얼굴이 찌그러진다.
+	 *
+	 * 여백을 두면 칸이 작아지고, 정사각본을 따로 만들면 자산이 배로 는다.
+	 * 그래서 **UV 로 윗부분만** 쓴다 -- 얼굴이 위쪽에 있어 잘라도 다 나온다.
+	 *
+	 * @param Image  그릴 곳
+	 * @param Texture 초상. 널이면 아무 일도 안 한다
+	 * @param Aspect 칸의 가로/세로 비. 1 이면 정사각
+	 */
+	void SetPortraitCropped(UImage* Image, UTexture2D* Texture, const float Aspect = 1.f)
+	{
+		if (Image == nullptr || Texture == nullptr)
+		{
+			return;
+		}
+		const float Width = static_cast<float>(Texture->GetSizeX());
+		const float Height = static_cast<float>(Texture->GetSizeY());
+		if (Width <= 0.f || Height <= 0.f || Aspect <= 0.f)
+		{
+			Image->SetBrushFromTexture(Texture, false);
+			return;
+		}
+
+		FSlateBrush Brush = Image->GetBrush();
+		Brush.SetResourceObject(Texture);
+		Brush.DrawAs = ESlateBrushDrawType::Image;
+
+		// 칸보다 세로로 길면 위에서 잘라 쓰고, 가로로 길면 가운데를 쓴다.
+		const float WantHeight = Width / Aspect;
+		if (WantHeight < Height)
+		{
+			Brush.SetUVRegion(FBox2f(FVector2f(0.f, 0.f),
+				FVector2f(1.f, WantHeight / Height)));
+		}
+		else
+		{
+			const float WantWidth = Height * Aspect;
+			const float Margin = (1.f - WantWidth / Width) * 0.5f;
+			Brush.SetUVRegion(FBox2f(FVector2f(Margin, 0.f),
+				FVector2f(1.f - Margin, 1.f)));
+		}
+		Image->SetBrush(Brush);
+	}
+
 	/** @brief 이름으로 위젯을 찾되 중첩 UserWidget 안까지 내려간다. */
 	UWidget* FindDeep(const UWidgetTree* Tree, const FName Name)
 	{
@@ -626,7 +675,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		// 여기서 안 피한다 -- 피하면 게임에서 영영 안 보인다.
 		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr)
 		{
-			Widgets.Portrait->SetBrushFromTexture(Unit.mPortrait, false);
+			SetPortraitCropped(Widgets.Portrait, Unit.mPortrait);
 		}
 		if (Widgets.HPBar != nullptr)
 		{
@@ -886,7 +935,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		SetShown(Widgets.Portrait, Unit->mPortrait != nullptr);
 		if (Widgets.Portrait != nullptr && Unit->mPortrait != nullptr)
 		{
-			Widgets.Portrait->SetBrushFromTexture(Unit->mPortrait, false);
+			SetPortraitCropped(Widgets.Portrait, Unit->mPortrait);
 		}
 	}
 }
@@ -1005,7 +1054,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	SetTextIfPresent(mEnemyName, Shown->mName);
 	if (mEnemyPortrait != nullptr && Shown->mPortrait != nullptr)
 	{
-		mEnemyPortrait->SetBrushFromTexture(Shown->mPortrait, false);
+		SetPortraitCropped(mEnemyPortrait, Shown->mPortrait);
 	}
 	if (mEnemyHPBar != nullptr)
 	{
@@ -1237,6 +1286,7 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	RefreshScreenScale();
 	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
 	UpdateUnitHpBars();
+	RefreshPendingAPGlow(DeltaTime);
 	UpdateFloatingCombatLogQueue(DeltaTime);
 	UpdateFloatingCombatLogs(DeltaTime);
 	if (mTurnChangeIntroPlaying)
@@ -1299,6 +1349,10 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 
 	SetTextIfPresent(mTurnAPText, FText::FromString(
 		FString::Printf(TEXT("%d/%d"), Left, Total)));
+	mShownAPLeft = Left;
+
+	// 고른 카드가 가져갈 몫. 남은 것보다 크면 남은 만큼만 빛낸다.
+	mPendingAPCost = FMath::Clamp(GetSelectedSkillCost(), 0, Left);
 
 	const int32 Room = mTurnAPPips.Num();
 	const bool bTooMany = Total > Room;
@@ -1310,6 +1364,57 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 		{
 			SetShown(mTurnAPPipsUsed[Pip], bHasPip && Pip >= Left);
 		}
+	}
+	RefreshPendingAPGlow(0.f);
+}
+
+/**
+ * @brief 지금 고른 카드가 가져갈 행동력.
+ * @return 고른 것이 없으면 0
+ */
+int32 UCombatLayoutHUDWidget::GetSelectedSkillCost() const
+{
+	if (mUIModel == nullptr)
+	{
+		return 0;
+	}
+	const int32 Index = mUIModel->GetSelectedSkillIndex();
+	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
+	return Skills.IsValidIndex(Index) ? Skills[Index].mActionPointCost : 0;
+}
+
+/**
+ * @brief 가져갈 몫만큼 칸을 숨쉬듯 빛낸다.
+ *
+ * @details
+ * 남은 칸의 **뒤에서부터** 빛낸다 -- 쓰면 뒤부터 없어지므로, 없어질 그 칸이
+ * 빛나야 "이만큼 나간다" 로 읽힌다.
+ *
+ * 밝기만 흔든다. 크기를 흔들면 그린 그림을 다시 샘플링해서 지글거린다 --
+ * 글자에서 이미 같은 일을 겪었다.
+ *
+ * @param DeltaTime 지난 시간. 0 이면 위상은 그대로 두고 다시 칠하기만 한다
+ */
+void UCombatLayoutHUDWidget::RefreshPendingAPGlow(const float DeltaTime)
+{
+	mAPGlowPhase = FMath::Fmod(mAPGlowPhase + DeltaTime * APGlowSpeed, TWO_PI);
+
+	// 0.55 ~ 1.0 사이를 오간다. 완전히 어두워지면 칸이 사라진 것처럼 보인다.
+	const float Wave = 0.5f * (1.f - FMath::Cos(mAPGlowPhase));
+	const float Glow = FMath::Lerp(0.55f, 1.0f, Wave);
+
+	const int32 Room = mTurnAPPips.Num();
+	const int32 Left = mShownAPLeft;
+	for (int32 Pip = 0; Pip < Room; ++Pip)
+	{
+		UWidget* PipWidget = mTurnAPPips[Pip];
+		if (PipWidget == nullptr)
+		{
+			continue;
+		}
+		const bool bWillSpend = mPendingAPCost > 0
+			&& Pip < Left && Pip >= Left - mPendingAPCost;
+		PipWidget->SetRenderOpacity(bWillSpend ? Glow : 1.f);
 	}
 }
 

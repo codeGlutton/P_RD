@@ -541,6 +541,25 @@ private:
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();
 
+	/* ── 쓸 행동력 미리 보이기 ────────────────────────────────────────────
+	 *
+	 * 카드를 고르면 그 몫만큼 칸이 숨쉬듯 빛난다. 쓰면 뒤부터 없어지므로
+	 * 뒤에서부터 빛낸다.
+	 *
+	 * **이동은 아직 한 칸 값만 안다.** 카드에 적힌 값(mActionPointCost)이
+	 * 계약에 있는 전부다 -- 몇 칸을 갈지에 따라 달라지는 값은 게임플레이만
+	 * 아는 것이라, 그 칸이 생기면 여기 대신 넣으면 된다.
+	 */
+	int32 GetSelectedSkillCost() const;
+	void RefreshPendingAPGlow(float DeltaTime);
+
+	/** @brief 한 번 숨쉬는 데 걸리는 빠르기(라디안/초). */
+	static constexpr float APGlowSpeed = 4.2f;
+
+	int32 mPendingAPCost = 0;
+	int32 mShownAPLeft = 0;
+	float mAPGlowPhase = 0.f;
+
 	/** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
 	void RefreshTurnActionPoints();
 
