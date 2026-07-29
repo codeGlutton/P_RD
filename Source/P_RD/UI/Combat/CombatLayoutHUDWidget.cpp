@@ -9,7 +9,6 @@
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/MockCombatDriver.h"
-#include "GameMode/CombatGameMode.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 
@@ -370,34 +369,24 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 }
 
 /**
- * @brief 실제 전투 뷰모델에 붙고, 없으면 미리보기 장면을 세운다.
+ * @brief 붙은 뷰모델이 없으면 미리보기 장면을 세운다.
  *
  * @details
- * 전투 중이면 ACombatGameMode가 들고 있는 공용 UCombatUIModel에 붙는다.
- * HUD를 만든 쪽은 위젯을 CreateWidget으로 만들고 OpenUI()만 부르므로, 모델을
- * 찾아 붙이는 건 위젯 몫이다 -- 옛 HUD도 같은 자리에서
- * 같은 일을 한다. 이걸 빼면 인게임에서 가짜 데이터가 그려진다.
+ * **여기서 게임모드를 찾지 않는다.** UI 는 게임 규칙도 게임모드도 직접
+ * 참조하지 않는다(#426). 실제 전투 모델은 게임모드가 HUD 를 열면서 직접
+ * 건네준다 -- ACombatGameMode::InitCombat 이 OpenUI() 옆에서 BindUIModel() 을
+ * 부른다.
  *
- * 전투 게임모드가 아니면(에디터 미리보기, 캡처 테스트) 가짜 장면을 세운다.
- * 그 UIModel과 드라이버는 위젯이 소유하고 화면과 수명을 같이 한다.
+ * 그래서 여기까지 왔다는 것은 붙여 줄 사람이 없다는 뜻이다. 편집기에서 WBP 를
+ * 열었거나 찍는 시험이 도는 자리다. 그때만 가짜 장면을 세운다.
+ *
+ * 그 UIModel 과 드라이버는 위젯이 소유하고 화면과 수명을 같이 한다.
  */
 void UCombatLayoutHUDWidget::StartPreviewIfUnbound()
 {
 	if (mUIModel != nullptr)
 	{
 		return;
-	}
-
-	if (const UWorld* World = GetWorld())
-	{
-		if (ACombatGameMode* GameMode = World->GetAuthGameMode<ACombatGameMode>())
-		{
-			if (UCombatUIModel* LiveModel = GameMode->GetCombatUIModel())
-			{
-				BindUIModel(LiveModel);
-				return;
-			}
-		}
 	}
 
 	if (!mUsePreviewData)

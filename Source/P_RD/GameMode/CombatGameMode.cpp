@@ -18,6 +18,7 @@
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIWidgetBase.h"
 #include "Singleton/WorldSubsystem/WorldCameraModel.h"
 #include "UI/Reward/RewardUIModel.h"
 
@@ -385,6 +386,14 @@ void ACombatGameMode::BeginRoom()
 	{
 		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
 		{
+			// 모델은 **여기서 건네준다.** UI 가 게임모드를 거꾸로 찾아오면
+			// UI 레이어에 게임모드 의존이 생긴다(#426 에서 걷어낸 그것).
+			// 붙이고 나서 연다 -- 열면서 첫 갱신이 도는데 그때 모델이 있어야
+			// 한 프레임 빈 화면이 안 스친다.
+			if (UCombatUIWidgetBase* CombatUIWidget = Cast<UCombatUIWidgetBase>(CombatHUD))
+			{
+				CombatUIWidget->BindUIModel(mCombatUIModel);
+			}
 			CombatHUD->OpenUI();
 		}
 	}
