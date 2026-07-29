@@ -137,6 +137,18 @@ protected:
 	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
 	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
 
+	/**
+	 * @brief 지금 차례인 아군.
+	 *
+	 * @details
+	 * 0번 유닛을 지금 차례로 치던 자리가 여럿 있었다. 파티가 한 명일 때는
+	 * 맞았지만 셋이 되면 틀린다 -- 야만전사 차례에 기사의 카드가 떴다.
+	 *
+	 * 차례는 전투 모델이 안다. 적 차례면 nullptr 이다.
+	 * @return 지금 차례인 아군, 적 차례거나 없으면 nullptr
+	 */
+	UPlayerUnitModel* GetTurnPlayerUnitModel() const;
+
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;
 	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;

@@ -321,22 +321,32 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
+	 *
+	 * 0번에게만 걸고 있었다. 그러면 야만전사가 스킬을 바꾸거나 모션을 끝내도
+	 * 화면이 모른다 -- 파티가 한 명일 때 짜 놓은 것이 셋이 되며 드러났다.
+	 */
 
-	/* 스킬 대리자 연결 */
+	for (UPlayerUnitModel* PartyUnitModel : GetPlayerUnitModels())
+	{
+		if (PartyUnitModel == nullptr)
+		{
+			continue;
+		}
+		USkillComponentModel* SkillComponentModel = PartyUnitModel->GetSkillComponentModel();
+		if (SkillComponentModel == nullptr)
+		{
+			continue;
+		}
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+		SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+			PushSkillUIData();
+			});
 
-	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
-		PushSkillUIData();
-		});
-
-	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
-		});
+		SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
+			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+			});
+	}
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
@@ -900,6 +910,23 @@ bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitMo
  * @param UnitId 찾을 유닛. INDEX_NONE 이면 안 찾는다
  * @return 없으면 nullptr
  */
+/**
+ * @brief 지금 차례인 아군.
+ * @return 적 차례거나 없으면 nullptr
+ */
+UPlayerUnitModel* ACombatGameMode::GetTurnPlayerUnitModel() const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const USRPGTurnContext* TurnContext = CombatModel != nullptr
+		? CombatModel->GetCurrentTurnContext() : nullptr;
+	UUnitModel* TurnUnit = TurnContext != nullptr ? TurnContext->GetOwner() : nullptr;
+	if (TurnUnit == nullptr || TurnUnit->IsPlayerUnitModel() == false)
+	{
+		return nullptr;
+	}
+	return FindPartyUnitModel(TurnUnit->GetModelId());
+}
+
 UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
 {
 	if (UnitId == INDEX_NONE)
@@ -921,9 +948,18 @@ void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	// TODO : 지금 차례인 유닛을 짚는 길이 필요하다. 저쪽도 0번으로 두고 있다.
-	UPlayerUnitModel* TurnUnitModel = GetPlayerUnitModel(0);
-	checkf(TurnUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	// 차례가 적에게 있으면 마지막으로 움직인 아군 것을 그대로 둔다. 카드는
+	// 적 차례에 어차피 접혀 있고, 여기서 비우면 차례가 돌아올 때 한 프레임
+	// 빈 카드가 스친다.
+	UPlayerUnitModel* TurnUnitModel = GetTurnPlayerUnitModel();
+	if (TurnUnitModel == nullptr)
+	{
+		TurnUnitModel = GetPlayerUnitModel(0);
+	}
+	if (TurnUnitModel == nullptr)
+	{
+		return;
+	}
 
 	// 들여다보는 유닛이 있으면 그쪽 스킬을 보여 준다. 없으면 지금 차례인 유닛.
 	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
