@@ -2,6 +2,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/ScaleBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -222,8 +223,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
-	mCommandLayer = Find<UWidget>(WidgetTree, TEXT("CommandLayer"));
-	mPartyLayer = Find<UWidget>(WidgetTree, TEXT("PartyLayer"));
+	mCommandLayer = Find<UScaleBox>(WidgetTree, TEXT("CommandLayerScale"));
+	mPartyLayer = Find<UScaleBox>(WidgetTree, TEXT("PartyLayerScale"));
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
@@ -1152,22 +1153,15 @@ void UCombatLayoutHUDWidget::RefreshScreenScale()
 	const float Ratio = Viewport.X / Viewport.Y;
 	const float Scale = FMath::Clamp(Wide / Ratio, 1.f, MaxScreenScale);
 
-	// 스킬 카드는 한가운데에서, 용병칸은 왼쪽 아래에서 자란다. 붙여 둔
-	// 모서리와 같은 곳에서 자라야 자리가 안 밀린다.
-	const TPair<UWidget*, FVector2D> Layers[] = {
-		{ mCommandLayer, FVector2D(0.5f, 0.5f) },
-		{ mPartyLayer, FVector2D(0.f, 1.f) },
-	};
-	for (const TPair<UWidget*, FVector2D>& Layer : Layers)
+	// 배치 배율로 준다. 렌더 변환으로 주면 글자가 지글거린다 -- 그쪽은 이미
+	// 그려 놓은 것을 늘리는 것이라 글리프 그림째로 늘어난다. 배치 배율은
+	// 안쪽을 그 크기로 다시 배치하고 글자도 다시 그린다.
+	for (UScaleBox* Layer : { mCommandLayer.Get(), mPartyLayer.Get() })
 	{
-		if (Layer.Key == nullptr)
+		if (Layer != nullptr)
 		{
-			continue;
+			Layer->SetUserSpecifiedScale(Scale);
 		}
-		Layer.Key->SetRenderTransformPivot(Layer.Value);
-		FWidgetTransform Transform;
-		Transform.Scale = FVector2D(Scale, Scale);
-		Layer.Key->SetRenderTransform(Transform);
 	}
 }
 

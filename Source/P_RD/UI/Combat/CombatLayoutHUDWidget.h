@@ -291,8 +291,8 @@ private:
 	UPROPERTY() TArray<TObjectPtr<UButton>> mMenuButtons;
 
 	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 용병칸 · AP 막대. */
-	UPROPERTY() TObjectPtr<UWidget> mCommandLayer;
-	UPROPERTY() TObjectPtr<UWidget> mPartyLayer;
+	UPROPERTY() TObjectPtr<class UScaleBox> mCommandLayer;
+	UPROPERTY() TObjectPtr<class UScaleBox> mPartyLayer;
 
 	/** @brief 직전에 잰 화면 크기. 바뀔 때만 다시 잰다. */
 	FVector2D mLastViewport = FVector2D::ZeroVector;

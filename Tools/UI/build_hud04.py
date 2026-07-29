@@ -27,7 +27,7 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     MenuButton_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
     EnemyDefense / EnemyForecast
-    CommandLayer / PartyLayer  (좁은 화면에서 겹째로 커진다)
+    CommandLayerScale / PartyLayerScale  (좁은 화면에서 겹째로 커진다)
     EndTurnButton / EndTurnLabel / ConfirmButton / ConfirmLabel
     TurnAPText / TurnAPPip_j / TurnAPPipUsed_j
 
@@ -515,13 +515,33 @@ def enemy_panel(blueprint, root):
 def layer(blueprint, root, name, anchor):
     """화면만 한 빈 겹. 그 안의 것이 함께 커지고 함께 붙는다.
 
+    ## 왜 두 겹인가
+
     카드를 하나씩 키우면 여섯이 제자리에서 부풀어 서로 겹친다. 겹째로 키워야
     사이 간격까지 같이 커진다 -- 좁은 화면에서 HUD 가 작아 보이는 것은 카드
     크기만이 아니라 그 사이가 벌어져 보이기 때문이다.
+
+    ## 왜 ScaleBox 인가
+
+    처음에는 캔버스 하나에 **렌더 변환**으로 배율을 줬다. 그러면 글자가
+    지글거린다 -- 렌더 변환은 이미 그려 놓은 것을 늘리는 것이라, 글자도
+    글리프 그림째로 늘어난다.
+
+    ScaleBox 는 **배치 배율**이다. 안쪽이 그 배율로 다시 배치되고 글자도 그
+    크기로 다시 그려진다. 늘린 글자가 아니라 큰 글자가 된다.
     """
-    kit.add(blueprint, "CanvasPanel", name, root)
-    kit.place(blueprint, name, 0, 0, kit.CANVAS_W, kit.CANVAS_H, anchor,
+    box = name + "Scale"
+    kit.add(blueprint, "ScaleBox", box, root)
+    widget = kit.helper.umg_find_widget(blueprint, box)
+    widget.set_editor_property("stretch", unreal.Stretch.USER_SPECIFIED)
+    widget.set_editor_property("user_specified_scale", 1.0)
+    kit.place(blueprint, box, 0, 0, kit.CANVAS_W, kit.CANVAS_H, anchor,
               None, Z_PLATE - 1)
+
+    kit.add(blueprint, "CanvasPanel", name, box)
+    slot = kit.helper.umg_find_widget(blueprint, name).get_editor_property("slot")
+    slot.set_editor_property("horizontal_alignment", unreal.HorizontalAlignment.H_ALIGN_FILL)
+    slot.set_editor_property("vertical_alignment", unreal.VerticalAlignment.V_ALIGN_FILL)
     return name
 
 
