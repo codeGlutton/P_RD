@@ -618,7 +618,12 @@ function rezoom() {
 //: 그림 크기를 그대로 쓰면 판 크기를 고쳐도 화면이 안 바뀐다 -- 값은 저장되는데
 //: 아무 일도 안 일어나 보여서 "안 먹는다" 로 읽힌다.
 function plateBox(img) {
-  const at = placePick[picked.role];
+  // 손으로 고친 값 -> 파일이 준 판 자리 -> 그림 크기 순으로 본다.
+  //
+  // 그림 크기를 앞에 두면 **올린 원본**이 그대로 자가 된다. 630 x 1453 짜리
+  // 용병창을 올렸더니 판이 96 인데도 그 크기로 떠서, 구역이 구석에 몰려
+  // 보였다 -- 게임은 판 크기로 그리므로 둘이 다른 자를 쓴 셈이다.
+  const at = placePick[picked.role] || (PLACE || {})[picked.role];
   if (at && at[2] > 0 && at[3] > 0) {
     return [at[2], at[3]];
   }
@@ -940,7 +945,10 @@ function facts(img) {
   $("facts").innerHTML =
     `<dt>이름</dt><dd>${picked.name}</dd>` +
     (picked.note ? `<dt>쓰이는 곳</dt><dd>${picked.note}</dd>` : "") +
-    `<dt>크기</dt><dd>${img.naturalWidth} × ${img.naturalHeight}</dd>` +
+    `<dt>판 크기</dt><dd>${plateBox(img)[0]} × ${plateBox(img)[1]}` +
+      (plateBox(img)[0] === img.naturalWidth
+        && plateBox(img)[1] === img.naturalHeight ? "" :
+        ` <small>(그림 ${img.naturalWidth} × ${img.naturalHeight})</small>`) + `</dd>` +
     `<dt>엔진 경로</dt><dd><code>${picked.path}</code></dd>` +
     `<dt>판 그림</dt><dd>` +
       `<button id="plateBtn">${platePick[picked.role]
