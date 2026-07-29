@@ -172,4 +172,12 @@ private:
 	int32 mReviewing = INDEX_NONE;
 
 	int32 mPartySize = 3;
+
+	/**
+	 * @brief 출발에 필요한 최소 인원.
+	 *
+	 * 용병 자료가 다 들어오면 mPartySize 와 같게 올린다. 지금은 셋을 채울
+	 * 자료가 없어 한 명으로 출발한다.
+	 */
+	int32 mMinPartySize = 1;
 };

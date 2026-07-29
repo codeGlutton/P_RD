@@ -160,9 +160,19 @@ EMercenaryCardState UMercenaryHireWidget::StateOf(const int32 CardIndex) const
 		: EMercenaryCardState::Open;
 }
 
+/**
+ * @brief 출발할 수 있는가.
+ *
+ * @details
+ * 한 명만 있어도 출발한다. 파티 칸은 셋이지만, 용병 자료가 아직 다 안 들어와
+ * 셋을 채울 수 없는 상태에서 **화면 전체가 막혀 버리기 때문**이다. 자료가
+ * 갖춰지면 mMinPartySize 를 mPartySize 와 같게 올리면 원래 규칙으로 돌아온다.
+ *
+ * 게임모드 쪽은 이미 한 명이면 통과시킨다(AFrontendGameMode::IsAnyPlayerUnitIdValid).
+ */
 bool UMercenaryHireWidget::IsReadyToDepart() const
 {
-	return mChosen.Num() == mPartySize;
+	return mChosen.Num() >= FMath::Min(mMinPartySize, mPartySize);
 }
 
 void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
@@ -334,7 +344,7 @@ void UMercenaryHireWidget::RefreshBottomBar()
 	{
 		MercenaryHireDetail::SetTextIfPresent(mNoticeText, FText::FromString(FString::Printf(
 			TEXT("용병 %d명을 더 고르세요."),
-			FMath::Max(0, mPartySize - mChosen.Num()))));
+			FMath::Max(0, FMath::Min(mMinPartySize, mPartySize) - mChosen.Num()))));
 	}
 }
 

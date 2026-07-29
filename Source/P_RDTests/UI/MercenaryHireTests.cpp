@@ -152,11 +152,16 @@ bool FMercenaryHireConfirmTest::RunTest(const FString& Parameters)
 	Board->mOnPartyConfirmed.AddLambda(
 		[&Sent](const TArray<FPrimaryAssetId>& Party) { Sent = Party; });
 
-	Choose(*Board, 1);
-	Choose(*Board, 2);
 	Board->ConfirmParty();
-	TestEqual(TEXT("덜 채우면 안 넘어간다"), Sent.Num(), 0);
+	TestEqual(TEXT("아무도 안 고르면 안 넘어간다"), Sent.Num(), 0);
 
+	// 용병 자료가 셋을 채울 만큼 안 들어와서, 한 명으로도 출발하게 열어 두었다.
+	// 자료가 갖춰지면 mMinPartySize 를 셋으로 올리고 이 시험도 같이 조인다.
+	Choose(*Board, 1);
+	Board->ConfirmParty();
+	TestEqual(TEXT("한 명이면 넘어간다"), Sent.Num(), 1);
+
+	Choose(*Board, 2);
 	Choose(*Board, 0);
 	Board->ConfirmParty();
 	TestEqual(TEXT("셋을 넘긴다"), Sent.Num(), 3);
