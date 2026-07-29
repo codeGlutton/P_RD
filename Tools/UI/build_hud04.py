@@ -564,8 +564,11 @@ def party(blueprint, root):
         # 탄다 -- 따로 그리고 있었더니 넣어 준 하트가 게임에 안 들어갔다.
         piece(blueprint, card, origin, "PartyPortrait_%d" % index, plate_name,
               "party_portrait")
-        piece(blueprint, card, origin, "PartyHPIcon_%d" % index, plate_name,
-              "hp_icon")
+        # 구역을 지웠으면 안 그린다. piece() 는 구역이 없으면 시안에서 잘려
+        # 나온 자리로 떨어지는데, 그것은 옛 판의 자리라 엉뚱한 곳에 뜬다.
+        if spot(plate_name, "hp_icon") is not None:
+            piece(blueprint, card, origin, "PartyHPIcon_%d" % index,
+                  plate_name, "hp_icon")
         # 상태 칸은 **홈과 아이콘이 따로**다.
         #
         # 홈(status_icon…)은 늘 켜 두는 빈 액자고, 아이콘(status_icon_img…)은
