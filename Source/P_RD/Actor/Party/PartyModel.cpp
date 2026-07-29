@@ -13,7 +13,7 @@ UPartyModel::UPartyModel()
 
 	mPartyAttributeSet = CreateDefaultSubobject<UPartyAttributeSet>(TEXT("PartyAttributeSet"));
 
-	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("ArtifactComponentModel"));
+	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeCompModel"));
 	mPartyArtifactCompModel = CreateDefaultSubobject<UPartyArtifactComponentModel>(TEXT("PartyArtifactCompModel"));
 }
 
