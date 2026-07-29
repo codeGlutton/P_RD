@@ -440,6 +440,18 @@ private:
 	 * 그 라운드 첫 턴이 진행된다. **못 틀면 즉시 놓는다** -- 안 그러면
 	 * 라운드가 영영 안 넘어간다.
 	 */
+	/**
+	 * @brief 라운드 시작 배너를 틀지.
+	 *
+	 * 껐다. 턴 템포를 끊는다는 판단이다 -- 배너가 도는 1초 남짓 동안 배리어를
+	 * 붙잡아 게임이 멈춰 서 있다.
+	 *
+	 * 끄더라도 배리어는 그대로 넘겨받아 즉시 놓는다. 안 놓으면 라운드가 안
+	 * 넘어간다. 다시 켜려면 이 값만 참으로 되돌리면 된다.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Layout")
+	bool mPlayRoundBanner = false;
+
 	bool PlayTurnChangeIntro();
 	void FinishTurnChangeIntro();
 	bool EnsureTurnChangeFrameTextures();

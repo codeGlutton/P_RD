@@ -1227,7 +1227,9 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			{
 				mRoundChangeBarrier.Reset();
 				mRoundChangeBarrier = MoveTemp(Barrier);
-				if (PlayTurnChangeIntro() == false)
+				// 배너를 안 틀 때도 **배리어는 반드시 놓는다.** 붙잡은 채로
+				// 두면 그 라운드 첫 턴이 영영 안 온다.
+				if (mPlayRoundBanner == false || PlayTurnChangeIntro() == false)
 				{
 					mRoundChangeBarrier.Reset();
 				}
