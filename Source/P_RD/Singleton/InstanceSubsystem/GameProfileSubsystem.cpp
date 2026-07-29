@@ -11,11 +11,11 @@ void UGameProfileSubsystem::MakeUser(const FText& Name) const
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 유저 데이터 생성"));
 }
 
-void UGameProfileSubsystem::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const
+void UGameProfileSubsystem::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty) const
 {
 	checkf(GetUserMutableData()->IsActive() == true, TEXT("유저 미존재 상태에서 새로운 런 생성 불가"));
 
-	GetRunMutableData()->StartRun(PlayerUnitId, Difficulty);
+	GetRunMutableData()->StartRun(PlayerUnitIds, Difficulty);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }
@@ -28,18 +28,18 @@ void UGameProfileSubsystem::EndRun() const
 	checkf(UserMutableData->IsActive() == true, TEXT("유저 미존재 상태에서 런 종료 불가"));
 	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 런 종료 불가"));
 
-	UserMutableData->UpdateLog(RunMutableData->GetPlayerUnitId(), RunMutableData->GetRunLog());
+	UserMutableData->UpdateLog(RunMutableData->GetRunLog());
 	RunMutableData->ClearRun();
 
 	UE_LOG(LogGameProfile, Log, TEXT("런 데이터 기록 후 삭제"));
 }
 
-void UGameProfileSubsystem::ClearCombatRoom(const FTileTransform& Transform) const
+void UGameProfileSubsystem::ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms) const
 {
 	URunPersistData* RunMutableData = GetRunMutableData();
 	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 전투 방 클리어 저장 불가"));
 
-	RunMutableData->ClearCurrentCombatRoom(Transform);
+	RunMutableData->ClearCurrentCombatRoom(Transforms);
 }
 
 void UGameProfileSubsystem::SetVolume(EGameVolumeType VolumeType, float Volume) const

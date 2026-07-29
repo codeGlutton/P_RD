@@ -14,6 +14,8 @@
 
 DEFINE_LOG_CATEGORY(LogTacticalFramework)
 
+TSharedPtr<FTacticalAttributeSetInitter> UTacticalFrameworkModel::GlobalAttributeSetInitter = nullptr;
+
 FScopeCurrentTacticalEffectBeingApplied::FScopeCurrentTacticalEffectBeingApplied(UWorld* World, const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
 {
 	mWorld = World;
@@ -61,8 +63,8 @@ UCurveTable* UTacticalFrameworkModel::GetGlobalInitCurveTable()
 
 FTacticalAttributeSetInitter* UTacticalFrameworkModel::GetAttributeSetInitter()
 {
-	check(mGlobalAttributeSetInitter.IsValid() == true);
-	return mGlobalAttributeSetInitter.Get();
+	check(GlobalAttributeSetInitter.IsValid() == true);
+	return GlobalAttributeSetInitter.Get();
 }
 
 void UTacticalFrameworkModel::ReloadAttributeDefaults()
@@ -85,7 +87,7 @@ void UTacticalFrameworkModel::ReloadAttributeDefaults()
 
 void UTacticalFrameworkModel::AllocAttributeSetInitter()
 {
-	mGlobalAttributeSetInitter = MakeShared<FTacticalAttributeSetInitterDiscreteLevels>();
+	GlobalAttributeSetInitter = MakeShared<FTacticalAttributeSetInitterDiscreteLevels>();
 }
 
 #if WITH_EDITOR

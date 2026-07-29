@@ -10,9 +10,9 @@ void FStage::SetCurrentRoom(int32 RowIndex, int32 ColumnIndex)
 	mRoomRows[RowIndex].mRooms[ColumnIndex].GetMutable<FRoom>().mWasSelected = true;
 }
 
-void FStage::ClearCurrentCombatRoom(const FTileTransform& Transform)
+void FStage::ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms)
 {
-	mRoomClearTileTransform = Transform;
+	mRoomClearTileTransforms = Transforms;
 }
 
 FRoom& FStage::GetRoom(int32 RowIndex, int32 ColumnIndex)

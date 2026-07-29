@@ -4,7 +4,8 @@
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
-#include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Singleton/InstanceSubsystem/PartyRestorationSubsystem.h"
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -432,7 +433,7 @@ bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
 	OutView.mIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
-	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
+	// OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;
 }
@@ -551,14 +552,13 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
  */
 void ARoomGameModeBase::RestorePlayerUnit()
 {
-	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
-	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
+	UPartyRestorationSubsystem* PartyRestorationSubsystem = GetGameInstance()->GetSubsystem<UPartyRestorationSubsystem>();
+	checkf(PartyRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	UPartyModel* PartyModel = PartyRestorationSubsystem->RestorePartyFromPersistData(GetWorld());
+	checkf(PartyModel != nullptr, TEXT("파티 모델 복원 오류"));
 
-	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
-	mPlayerUnit = PlayerUnit;
+	mPartyModel = PartyModel;
 }
 
 /**
@@ -612,16 +612,24 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 	return true;
 }
 
-/**
- * @brief 방 안에서 복원된 현재 플레이어 유닛 포인터를 제공한다.
- *
- * @details
- * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
- * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
- */
-UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel() const
+UPartyModel* ARoomGameModeBase::GetPartyModel() const
 {
-	return mPlayerUnit.Get();
+	return mPartyModel.Get();
+}
+
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel(int32 PlayerIndex) const
+{
+	if (mPartyModel.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	return mPartyModel->GetPlayerUnitModel(PlayerIndex);
+}
+
+TArray<TObjectPtr<UPlayerUnitModel>>& ARoomGameModeBase::GetPlayerUnitModels() const
+{
+	return mPartyModel->GetPlayerUnitModels();
 }
 
 const FName& ARoomGameModeBase::GetRoomSpawnSettingName() const

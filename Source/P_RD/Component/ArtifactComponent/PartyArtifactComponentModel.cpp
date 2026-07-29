@@ -1,17 +1,19 @@
 ﻿/*****************************************************************//**
- * @file   PartyArtifactModel.cpp
- * @brief  파티 보유 아티펙트 원본/배포 모델 구현
+ * @file   PartyArtifactComponentModel.cpp
+ * @brief  파티 보유 아티펙트 원본/배포 컴포넌트 모델 구현
  * @author 이문환
  * @date   2026-07-23
  *********************************************************************/
 
-#include "Pawn/Player/PartyArtifactModel.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 
 #include "Component/ArtifactComponent/ArtifactComponentModel.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
-#include "Pawn/Player/PlayerUnitModel.h"
 
-bool UPartyArtifactModel::AddArtifact(UStaticArtifactData* Data, const TArray<UPlayerUnitModel*>& PartyMembers)
+#include "Pawn/Player/PlayerUnitModel.h"
+#include "Actor/Party/PartyModel.h"
+
+bool UPartyArtifactComponentModel::AddArtifact(UStaticArtifactData* Data)
 {
 	if (Data == nullptr)
 	{
@@ -22,7 +24,8 @@ bool UPartyArtifactModel::AddArtifact(UStaticArtifactData* Data, const TArray<UP
 	mPartyArtifacts.Add(Data);
 
 	// 파티 구성원 전원에 장착
-	for (UPlayerUnitModel* PartyMember : PartyMembers)
+	TArray<TObjectPtr<UPlayerUnitModel>>& PartyMembers = GetPartyMembers();
+	for (TObjectPtr<UPlayerUnitModel>& PartyMember : PartyMembers)
 	{
 		if (PartyMember == nullptr)
 		{
@@ -33,10 +36,13 @@ bool UPartyArtifactModel::AddArtifact(UStaticArtifactData* Data, const TArray<UP
 			ArtifactComp->Equip(Data);
 		}
 	}
+
+	// 목록 변경 통지 (배포까지 끝난 뒤 최신 목록 전달)
+	OnChangeArtifact.Broadcast(mPartyArtifacts);
 	return true;
 }
 
-bool UPartyArtifactModel::AddArtifact(const FPrimaryAssetId& ArtifactId, const TArray<UPlayerUnitModel*>& PartyMembers)
+bool UPartyArtifactComponentModel::AddArtifact(const FPrimaryAssetId& ArtifactId)
 {
 	UStaticArtifactData* Data = UStaticArtifactData::LoadByAssetId(ArtifactId);
 	if (Data == nullptr)
@@ -44,10 +50,10 @@ bool UPartyArtifactModel::AddArtifact(const FPrimaryAssetId& ArtifactId, const T
 		return false;
 	}
 
-	return AddArtifact(Data, PartyMembers);
+	return AddArtifact(Data);
 }
 
-bool UPartyArtifactModel::RemoveArtifact(UStaticArtifactData* Data, const TArray<UPlayerUnitModel*>& PartyMembers)
+bool UPartyArtifactComponentModel::RemoveArtifact(UStaticArtifactData* Data)
 {
 	// 파티 목록에서 하나만 제거 (미보유면 실패)
 	const int32 Index = mPartyArtifacts.Find(Data);
@@ -58,6 +64,7 @@ bool UPartyArtifactModel::RemoveArtifact(UStaticArtifactData* Data, const TArray
 	mPartyArtifacts.RemoveAt(Index);
 
 	// 파티 구성원 전원에서 해제
+	TArray<TObjectPtr<UPlayerUnitModel>>& PartyMembers = GetPartyMembers();
 	for (UPlayerUnitModel* PartyMember : PartyMembers)
 	{
 		if (PartyMember == nullptr)
@@ -69,10 +76,13 @@ bool UPartyArtifactModel::RemoveArtifact(UStaticArtifactData* Data, const TArray
 			ArtifactComp->Unequip(Data);
 		}
 	}
+
+	// 목록 변경 통지 (해제 배포까지 끝난 뒤 최신 목록 전달)
+	OnChangeArtifact.Broadcast(mPartyArtifacts);
 	return true;
 }
 
-void UPartyArtifactModel::EquipArtifactsTo(UPlayerUnitModel* PartyMember) const
+void UPartyArtifactComponentModel::EquipArtifactsTo(UPlayerUnitModel* PartyMember) const
 {
 	if (PartyMember == nullptr)
 	{
@@ -94,7 +104,7 @@ void UPartyArtifactModel::EquipArtifactsTo(UPlayerUnitModel* PartyMember) const
 	}
 }
 
-void UPartyArtifactModel::RestoreFrom(const TArray<FPrimaryAssetId>& ArtifactIds)
+void UPartyArtifactComponentModel::RestoreFrom(const TArray<FPrimaryAssetId>& ArtifactIds)
 {
 	checkf(mPartyArtifacts.Num() == 0, TEXT("초기화된 경우에만 로드 가능"));
 
@@ -110,7 +120,7 @@ void UPartyArtifactModel::RestoreFrom(const TArray<FPrimaryAssetId>& ArtifactIds
 	}
 }
 
-TArray<FPrimaryAssetId> UPartyArtifactModel::GetPartyArtifactIds() const
+TArray<FPrimaryAssetId> UPartyArtifactComponentModel::GetPartyArtifactIds() const
 {
 	TArray<FPrimaryAssetId> ArtifactIds;
 	ArtifactIds.Reserve(mPartyArtifacts.Num());
@@ -121,4 +131,14 @@ TArray<FPrimaryAssetId> UPartyArtifactModel::GetPartyArtifactIds() const
 		ArtifactIds.Add(Data->GetPrimaryAssetId());
 	}
 	return ArtifactIds;
+}
+
+TArray<TObjectPtr<UPlayerUnitModel>>& UPartyArtifactComponentModel::GetPartyMembers()
+{
+	return GetOwnerModel<UPartyModel>()->GetPlayerUnitModels();
+}
+
+const TArray<TObjectPtr<UPlayerUnitModel>>& UPartyArtifactComponentModel::GetPartyMembers() const
+{
+	return GetOwnerModel<UPartyModel>()->GetPlayerUnitModels();
 }

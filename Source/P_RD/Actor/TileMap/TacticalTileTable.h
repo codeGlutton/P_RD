@@ -92,6 +92,9 @@ public:
 	// @brief 조준 가능한 {타일, 스킬, 타겟} 조합이 하나라도 있는 지 판정
 	bool HasAnyAimable() const;
 
+	// @brief 전술 타일 목록 조회
+	const TArray<FTacticalTileInfo>& GetTacticalTiles() const { return mTacticalTiles; }
+
 	// @brief 원점에서 해당 타겟까지의 경로 거리 (도달 불가면 MAX_int32)
 	int32 GetDistanceToTarget(int32 TargetIndex) const;
 

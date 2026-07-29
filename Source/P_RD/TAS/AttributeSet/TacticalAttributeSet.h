@@ -251,14 +251,16 @@ struct FTacticalAttributeSetInitter
 	virtual void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const = 0;
 	virtual void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const = 0;
 	virtual TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const { return TArray<float>(); }
+	virtual float GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const { return 0.f; }
 };
 
 struct FTacticalAttributeSetInitterDiscreteLevels : public FTacticalAttributeSetInitter
 {
-	virtual void PreloadAttributeSetData(const TArray<UCurveTable*>& CurveData) override;
-	virtual void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const override;
-	virtual void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const override;
-	virtual TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const override;
+	void PreloadAttributeSetData(const TArray<UCurveTable*>& CurveData) override;
+	void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const override;
+	void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const override;
+	TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const override;
+	float GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const override;
 
 private:
 	struct FAttributeDefaultValueList

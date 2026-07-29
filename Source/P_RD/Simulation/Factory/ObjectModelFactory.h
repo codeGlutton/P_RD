@@ -32,7 +32,7 @@ public:
 	}
 
 	template<typename T>
-	T* NewModel(const FTransform& ViewTransform, FName Name, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	T* NewModel(const FTransform& ViewTransform, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
 		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
 		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), ViewTransform, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
@@ -40,15 +40,15 @@ public:
 	}
 
 	template<typename T>
-	T* NewModel(const FTransform& ViewTransform = FTransform::Identity)
+	T* NewModel()
 	{
 		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
-		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), ViewTransform, NAME_None));
+		T* Result = Cast<T>(NewModel_Internal(T::StaticClass(), FTransform::Identity));
 		return Result;
 	}
 
 	template<typename T>
-	T* NewModelDeferred(const UClass* Class = T::StaticClass(), FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
+	T* NewModelDeferred(const UClass* Class, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
 		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
 		// 전달받은 구체 Class(예: BP_KnightPlayerUnitModel_C)를 그대로 넘긴다.

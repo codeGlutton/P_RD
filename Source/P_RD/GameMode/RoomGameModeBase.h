@@ -15,6 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
+class UPartyModel;
 class UPlayerUnitModel;
 
 /**
@@ -107,7 +108,9 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	UPlayerUnitModel* GetPlayerUnitModel() const;
+	UPartyModel* GetPartyModel() const;
+	UPlayerUnitModel* GetPlayerUnitModel(int32 PlayerIndex) const;
+	TArray<TObjectPtr<UPlayerUnitModel>>& GetPlayerUnitModels() const;
 
 public:
 	const FName& GetRoomSpawnSettingName() const;
@@ -117,7 +120,7 @@ protected:
 
 protected:
 	UPROPERTY()
-	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
+	TWeakObjectPtr<UPartyModel> mPartyModel;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

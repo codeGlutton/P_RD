@@ -79,7 +79,7 @@ public:
 	 * @return 런 생성과 첫 방 준비 요청에 성공하면 true
 	 */
 	UFUNCTION(Category = Title, BlueprintCallable)
-	bool StartNewRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	bool StartNewRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 
 	/**
 	 * @brief 저장된 활성 Run의 현재 방으로 이어서 입장한다.
@@ -144,11 +144,11 @@ protected:
 	 */
 	const TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>>& GetPlayerUnitDatas() const;
 	/**
-	 * @brief PlayerUnitId가 지정 가능한 유닛 ID가 맞는지 검증한다.
-	 * @param PlayerUnitId 검사할 플레이어 유닛 PrimaryAssetId
+	 * @brief 하나라도 PlayerUnitId가 지정 가능한 유닛 ID가 맞는지 검증한다.
+	 * @param PlayerUnitIds 검사할 플레이어 유닛 PlayerUnitIds
 	 * @return 유효성 여부
 	 */
-	bool IsPlayerUnitIdValid(const FPrimaryAssetId& PlayerUnitId) const;
+	bool IsAnyPlayerUnitIdValid(const TArray<FPrimaryAssetId>& PlayerUnitIds) const;
 	/**
 	 * @brief Difficulty가 지정 가능한 난이도가 맞는지 검증한다.
 	 * @param Difficulty 검사할 난이도
@@ -161,7 +161,7 @@ private:
 	void HandleCharacterSelectBackRequested();
 
 	bool OpenTitleCharacterSelect();
-	bool CreateRunData(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	bool CreateRunData(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 
 private:
 	mutable TArray<TSoftObjectPtr<UStaticPlayerUnitSpawnData>> mPlayerUnitDataCache;
