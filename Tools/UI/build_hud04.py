@@ -281,6 +281,33 @@ def local(rect, origin):
     return [rect[0] - origin[0], rect[1] - origin[1], rect[2], rect[3]]
 
 
+#: 판을 화면 어느 모서리에 붙이나.
+#:
+#: 자리를 픽셀로만 두면 화면 비가 달라질 때 다 같이 왼쪽 위로 쏠린다. 붙일
+#: 모서리를 정해 두면 그 모서리와의 거리가 유지된다 -- 라운드는 왼쪽 위에,
+#: 턴 종료는 오른쪽 아래에 그대로 있는다.
+#:
+#: 가운데(mc)로 붙인 것은 화면 폭이 바뀌어도 한가운데를 지킨다. 스킬 카드가
+#: 그렇다 -- 판 한가운데를 둘러싸고 도는 배치라 한쪽으로 쏠리면 안 된다.
+ANCHOR_OF = {
+    "top_left_parchment": "tl",
+    "top_center_turn_order": "tc",
+    "top_right_parchment": "tr",
+    "upper_right_enemy_panel": "tr",
+    "action_top": "mc",
+    "action_left_upper": "mc",
+    "action_right_upper": "mc",
+    "action_left_lower": "mc",
+    "action_right_lower": "mc",
+    "action_bottom": "mc",
+    "bottom_status_left": "bl",
+    "bottom_status_center": "bl",
+    "bottom_status_right": "bl",
+    "bottom_center_ap_bar": "bl",
+    "bottom_right_button": "br",
+}
+
+
 def group(blueprint, root, name, plate_name, z=Z_PLATE):
     """묶음 한 칸을 만든다. 부품은 전부 이 안에 들어간다.
 
@@ -288,7 +315,8 @@ def group(blueprint, root, name, plate_name, z=Z_PLATE):
     """
     x, y, w, h = at(PLACE[plate_name])
     kit.add(blueprint, "CanvasPanel", name, root)
-    kit.place(blueprint, name, x, y, w, h, "tl", None, z)
+    kit.place(blueprint, name, x, y, w, h,
+              ANCHOR_OF.get(plate_name, "tl"), None, z)
     return name, (x, y), (w, h)
 
 
@@ -743,7 +771,8 @@ def end_turn(blueprint, root):
     px, py, pw, ph = at(PLACE["bottom_right_button"])
     py -= ph + CONFIRM_GAP
     kit.add(blueprint, "CanvasPanel", "ConfirmPanel", root)
-    kit.place(blueprint, "ConfirmPanel", px, py, pw, ph, "tl", None, Z_PLATE)
+    kit.place(blueprint, "ConfirmPanel", px, py, pw, ph,
+              ANCHOR_OF.get("bottom_right_button", "tl"), None, Z_PLATE)
     kit.image(blueprint, "ConfirmPlate", "ConfirmPanel", 0, 0, pw, ph, None,
               z_order=Z_PLATE,
               texture="{}/KK_HUD04_confirm_button".format(ART), tint=kit.WHITE)
