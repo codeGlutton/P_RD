@@ -667,7 +667,8 @@ def align_in(blueprint, name, x, y, w, h, halign="center", valign="middle",
     slot.set_editor_property("layout_data", layout)
 
 
-def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
+def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None,
+        track_texture=None, fill_texture=None):
     """A progress bar dressed with the KayKit rail pieces.
 
     Slate draws the bar itself, so this is the one place a brush still gets
@@ -676,9 +677,13 @@ def bar(blueprint, name, parent, x, y, w, h, fill, parent_size=None):
     """
     progress = add(blueprint, "ProgressBar", name, parent)
     style = progress.get_editor_property("widget_style")
+    # 갈아 끼운 그림이 있으면 그것이 이긴다. 막대 껍데기를 따로 얹으면 같은
+    # 자리에 둘이 뜨므로, 껍데기가 아니라 **막대 자신의 그림**을 간다.
     for slot, texture, tint in (
-            ("background_image", KK_COMMON + "/KK_Bar_Track_Link", HP_TRACK),
-            ("fill_image", KK_COMMON + "/KK_Bar_Link", fill)):
+            ("background_image",
+             track_texture or (KK_COMMON + "/KK_Bar_Track_Link"), HP_TRACK),
+            ("fill_image",
+             fill_texture or (KK_COMMON + "/KK_Bar_Link"), fill)):
         brush = style.get_editor_property(slot)
         brush.set_editor_property("resource_object", art(texture))
         brush.set_editor_property("draw_as", unreal.SlateBrushDrawType.IMAGE)

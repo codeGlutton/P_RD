@@ -67,8 +67,6 @@ public:
 	/** @brief 누른 동안 줄어드는 정도. 더 줄이면 눌린 게 아니라 튄 것으로 보인다. */
 	static constexpr float PressedScale = 0.95f;
 
-	/** @brief 안 걸린 상태 홈의 흐림 정도. 더 흐리면 홈이 있는지도 안 보인다. */
-	static constexpr float EmptyStatusOpacity = 0.35f;
 
 public:
 	/**

@@ -619,15 +619,13 @@ def party(blueprint, root):
         bar = local(spot(plate_name, "hp_bar"), origin)
         if bar:
             bx, by, bw, bh = bar
-            # 틀 그림은 **구역에 얹은 것**을 쓴다. 여기서 텍스처를 못 박아
-            # 두었더니, 편집기에서 막대 그림을 따로 넣은 뒤 둘이 겹쳐 나왔다 --
-            # 같은 자리에 막대가 두 개로 보였다.
-            piece(blueprint, card, origin, "PartyHPPlate_%d" % index,
-                  plate_name, "hp_bar", z=Z_PLATE + 1)
-            inset = bh * 0.18
-            kit.bar(blueprint, "PartyHPBar_%d" % index, card,
-                    bx + inset, by + inset, bw - inset * 2, bh - inset * 2,
-                    unreal.LinearColor(0.44, 0.74, 0.24, 1.0))
+            # 껍데기를 따로 얹지 않는다. 구역에 얹은 그림을 **막대 자신의**
+            # 바탕으로 쓴다 -- 껍데기를 두면 같은 자리에 막대가 둘로 보이고,
+            # 갈아 끼운 그림이 어느 쪽인지도 헷갈린다.
+            track = zone_art(plate_name, "hp_bar")
+            kit.bar(blueprint, "PartyHPBar_%d" % index, card, bx, by, bw, bh,
+                    unreal.LinearColor(0.44, 0.74, 0.24, 1.0),
+                    track_texture="{}/{}".format(ART, track) if track else None)
 
         # AP 줄은 숫자판 하나와 낱개 열이다.
         #

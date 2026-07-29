@@ -640,11 +640,7 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 	}
 	for (int32 SlotNo = 0; SlotNo < Widgets.StatusFrames.Num(); ++SlotNo)
 	{
-		if (UWidget* Frame = Widgets.StatusFrames[SlotNo])
-		{
-			SetShown(Frame, true);
-			Frame->SetRenderOpacity(EmptyStatusOpacity);
-		}
+		SetShown(Widgets.StatusFrames[SlotNo], false);
 		if (Widgets.StatusIcons.IsValidIndex(SlotNo))
 		{
 			SetShown(Widgets.StatusIcons[SlotNo], false);
@@ -727,13 +723,12 @@ void UCombatLayoutHUDWidget::RefreshPartyStatus(
 	{
 		const bool bFilled = Effects.IsValidIndex(SlotNo);
 
-		// 홈은 늘 서 있고, 빈 홈만 흐려진다. 감추면 카드 위가 뻥 뚫려서
-		// 원래 그런 칸인지 사라진 것인지 모른다.
-		if (UWidget* Frame = Widgets.StatusFrames[SlotNo])
-		{
-			SetShown(Frame, true);
-			Frame->SetRenderOpacity(bFilled ? 1.f : EmptyStatusOpacity);
-		}
+		// 안 걸렸으면 홈까지 감춘다.
+		//
+		// 흐리게 세워 두었더니 빈 액자 셋이 늘 카드 위에 떠 있어, 걸린 것이
+		// 있는지 없는지가 오히려 안 읽혔다. 없을 때 아무것도 없는 편이
+		// "지금 걸린 게 있다" 를 또렷하게 만든다.
+		SetShown(Widgets.StatusFrames[SlotNo], bFilled);
 
 		UImage* Icon = Widgets.StatusIcons.IsValidIndex(SlotNo)
 			? Widgets.StatusIcons[SlotNo].Get() : nullptr;
