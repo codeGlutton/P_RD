@@ -622,6 +622,11 @@ float ATileMap::StepToYaw(const FTileIndex& Step)
 
 void ATileMap::SetMovePath(const TArray<FMovePathTile>& PathTiles)
 {
+	UE_LOG(LogTemp, Warning, TEXT("[화살표] ATileMap::SetMovePath 칸=%d 메시=%d 재질=%d"),
+		PathTiles.Num(),
+		mMovePathSet.mStraightMesh != nullptr ? 1 : 0,
+		mMovePathSet.mMaterial != nullptr ? 1 : 0);
+
 	// 이동 경로는 한 번에 하나 — 기존 표시(경유지 마커·원뿔 포함) 제거 후 이동 세트로 그리기 (공통 구현 위임)
 	ClearMovePath();
 
