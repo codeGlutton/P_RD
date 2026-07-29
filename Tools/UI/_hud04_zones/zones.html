@@ -1349,10 +1349,15 @@ $("drop").onclick = () => {
   flash(gone + " 지웠습니다");
 };
 
-// 판 크기. 띄워 놓은 그림의 원래 크기가 곧 판 크기다.
+// 판 크기.
+//
+// 그림의 원래 크기가 아니라 **판 자리**를 쓴다. 올린 그림은 판보다 훨씬 클 수
+// 있어서 -- 630 x 1453 짜리 용병창을 96 짜리 판에 올린다 -- 그림을 자로 쓰면
+// 가운데 맞추기가 엉뚱한 곳으로 간다.
 function plateSize() {
   const img = $("shell") && $("shell").querySelector("img");
-  return img ? [img.naturalWidth, img.naturalHeight] : null;
+  if (!img) { return null; }
+  return plateBox(img);
 }
 
 // 고른 구역을 판 한가운데로.
