@@ -23,6 +23,7 @@ class UVerticalBox;
 class UScrollBox;
 class USizeBox;
 class UTextBlock;
+class UTexture2D;
 class UWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFrontendMapWidgetSimpleEvent);
@@ -178,6 +179,9 @@ private:
 	/** @brief 지도 캔버스와 스크롤 영역의 고정 레이아웃 값을 적용한다. */
 	void ConfigureMapGraphLayout() const;
 
+	/** @brief 실기 HUD 재질에 맞춘 세로 양피지 보드와 장식 가시성을 적용한다. */
+	void ApplyCurrentMapArt() const;
+
 	/** @brief 노드 크기(시안 마커 Map_NodeMetrics 폭, 폴백 96). */
 	FVector2D GetMapNodeSize() const;
 
@@ -313,6 +317,10 @@ private:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_ParchmentBody;
+
+	/** @brief 원목/은색 프레임과 크림 양피지를 합친 세로 스크롤용 지도 본문 텍스처. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mMapParchmentTexture;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_ScrollRodTop;

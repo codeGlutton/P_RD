@@ -11,10 +11,13 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/GameViewportClient.h"
+#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameMode/RoomGameModeBase.h"
+#include "Styling/SlateBrush.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
+#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
@@ -331,6 +334,14 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	// 탑바 HUD(z=-10)보다 아래로 깔아, 지도를 풀스크린으로 채워도 탑바가 그 위에 뜨게 한다.
 	// (탑바는 알약/배너/버튼 개별 요소라 투명 부분으로 지도가 비친다. 프론트 지도엔 탑바 외 HUD가 없어 깔끔.)
 	mViewportZOrder = -20;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MapParchmentFinder(
+		TEXT("/Game/UI/Art/RunFlow/T_StageMap_Background_Current.T_StageMap_Background_Current"));
+	if (MapParchmentFinder.Succeeded())
+	{
+		mMapParchmentTexture = MapParchmentFinder.Object;
+	}
+
 	RefreshLocalizedTextCache();
 }
 
@@ -342,11 +353,35 @@ void UFrontendMapWidget::NativeConstruct()
 	Super::NativeConstruct();
 	ValidateDesignerBindings();
 	BindEvents();
-	// 배경/범례/버튼 스킨은 WBP(시안 빌더) 소유가 됐다 — C++ 런타임 생성/스타일링을 하지 않는다.
+	ApplyCurrentMapArt();
 	ConfigureMapGraphLayout();
 	RefreshLocalizedTextCache();
 	HideUnusedMapTextSurfaces();
 	RefreshMap();
+}
+
+void UFrontendMapWidget::ApplyCurrentMapArt() const
+{
+	if (Map_ParchmentBody != nullptr && mMapParchmentTexture != nullptr)
+	{
+		FSlateBrush Brush = Map_ParchmentBody->GetBrush();
+		Brush.SetResourceObject(mMapParchmentTexture);
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		// 생성 아트의 원목/금속 테두리는 유지하고, 긴 지도에서는 중앙 양피지만 늘어난다.
+		Brush.Margin = FMargin(0.15f, 0.09f, 0.15f, 0.09f);
+		Map_ParchmentBody->SetBrush(Brush);
+		Map_ParchmentBody->SetColorAndOpacity(FLinearColor::White);
+	}
+
+	// 새 지도 본문에 상·하단 프레임이 포함되어 있어 옛 청동 두루마리 장식은 중복 표시하지 않는다.
+	if (Map_ScrollRodTop != nullptr)
+	{
+		Map_ScrollRodTop->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (Map_ScrollRodBottom != nullptr)
+	{
+		Map_ScrollRodBottom->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 /**

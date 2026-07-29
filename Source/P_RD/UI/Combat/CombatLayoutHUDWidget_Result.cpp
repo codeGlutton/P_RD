@@ -22,7 +22,7 @@ namespace
 	const TCHAR* const FallbackVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
 	const TCHAR* const FallbackDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 	constexpr int32 CombatResultVideoZOrder = -20;
-	/** @brief 승/패 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
+	/** @brief 패배 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
 	constexpr float CombatResultStartDelaySeconds = 1.2f;
 }
 
@@ -32,7 +32,20 @@ void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentat
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
 
-	// 판정 직후 바로 영상이 틀어지면 급작스러워서, 전장을 잠깐 보여주는 텀을 두고 연출을 시작한다.
+	// 승리는 별도 영상/페이드 연출 없이 보상 화면을 즉시 연다. 배리어를 바로
+	// 놓으면 전투 모델이 보상 데이터를 밀고 OpenRequested를 방송한다.
+	// Ensure를 먼저 해야 같은 호출 스택에서 온 OpenRequested가 위젯을 놓치지
+	// 않는다.
+	if (mIsPlayerWin)
+	{
+		EnsureCombatResultWidgets();
+		SetCombatResultViewActive(true);
+		mCombatResultBarrier.Reset();
+		return;
+	}
+
+	// 패배만 기존 결과 영상을 유지한다. 판정 직후 바로 영상이 틀어지면
+	// 급작스러워서, 전장을 잠깐 보여주는 텀을 둔다.
 	// 배리어는 이미 붙잡고 있으므로 딜레이 동안 프레임워크 진행은 멈춰 있다.
 	if (UWorld* World = GetWorld())
 	{

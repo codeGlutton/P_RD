@@ -15,7 +15,8 @@ UENUM(BlueprintType)
 enum class EInventoryItemKind : uint8
 {
 	Skill,
-	Equipment
+	Equipment,
+	Artifact
 };
 
 /** @brief 인벤토리 한 칸(보유 스킬/장비 공통)을 그리기 위한 표시값입니다. */
@@ -39,22 +40,43 @@ struct FInventoryItemUI
 	UPROPERTY(BlueprintReadOnly) FText mDetailText;
 };
 
+/**
+ * @brief 가방의 용병별 성장/생존 상태 한 줄.
+ *
+ * @details 경험치가 파티 공용 값에서 용병별 값으로 바뀌었으므로 레벨과 EXP를
+ *          FInventoryUI 하나에 합치지 않는다. 각 용병의 현재 값을 독립적으로
+ *          담아 한 화면에서 비교할 수 있게 한다.
+ */
+USTRUCT(BlueprintType)
+struct FInventoryMercenaryUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mPartyIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+};
+
 /** @brief 인벤토리(현재 런 상태) 화면 전체 표시값입니다. */
-// 읽기 전용 요약 화면이다 — 플레이어 메타(골드/레벨/체력) + 보유 스킬/장비 목록.
+// 읽기 전용 요약 화면이다 — 파티 골드 + 용병별 성장 상태 + 획득 보상 목록.
 // UI 필요값:
-// - mGold/mLevel/mHP/mMaxHP: 상단 메타 표시.
-// - mSkills/mEquipment: 종류별 보유 목록 그리드.
-// [합의필요] 최종 소스 = URunPersistData + USkillData/장비 + UUnitData(HP/Gold).
+// - mGold: 파티 공용 재화.
+// - mMercenaries: 용병마다 별도로 저장되는 레벨/EXP/체력.
+// - mSkills/mEquipment/mArtifacts: 이번 런에서 실제로 획득해 보관 중인 보상.
 USTRUCT(BlueprintType)
 struct FInventoryUI
 {
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
-	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
-	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
-	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryMercenaryUI> mMercenaries;
 
 	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mSkills;
 	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mEquipment;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryItemUI> mArtifacts;
 };

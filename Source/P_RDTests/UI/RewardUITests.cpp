@@ -5,7 +5,9 @@
 
 #include "Misc/AutomationTest.h"
 
+#include "Components/Widget.h"
 #include "Engine/Engine.h"
+#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
@@ -52,6 +54,17 @@ bool FRewardUIImmediateClaimStateTest::RunTest(const FString& Parameters)
 	Reward.mLevelAfter = 3;
 	Reward.mExpAfter = 70.0f;
 	Reward.mMaxExp = 100.0f;
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		FRewardMercenaryExpUI& Mercenary =
+			Reward.mMercenaryExp.AddDefaulted_GetRef();
+		Mercenary.mName = FText::FromString(
+			FString::Printf(TEXT("Mercenary %d"), Index + 1));
+		Mercenary.mLevel = Index + 1;
+		Mercenary.mExpBefore = 10.f * Index;
+		Mercenary.mExpAfter = Mercenary.mExpBefore + Reward.mExpGained;
+		Mercenary.mMaxExp = 100.f;
+	}
 	Model->SetReward(Reward);
 
 	FRewardChoiceUI Choice;
@@ -61,6 +74,18 @@ bool FRewardUIImmediateClaimStateTest::RunTest(const FString& Parameters)
 	Model->SetRewardChoices({ Choice });
 
 	Widget->BindUIModel(Model);
+	const TSharedRef<SWidget> SlateWidget = Widget->TakeWidget();
+
+	TestEqual(TEXT("EXP 지급 대상 세 명의 진행도를 따로 유지한다"),
+		Model->GetReward().mMercenaryExp.Num(), 3);
+	TestNotNull(TEXT("현재 톤 보상 배경을 디자인 캔버스에 생성한다"),
+		Widget->GetWidgetFromName(TEXT("RewardBackgroundImage")));
+	if (UWidget* LegacyPanel = Widget->GetWidgetFromName(
+		TEXT("RewardElem_02_widget_00_widget")))
+	{
+		TestEqual(TEXT("구형 불투명 보상 판은 새 배경을 가리지 않는다"),
+			LegacyPanel->GetVisibility(), ESlateVisibility::Collapsed);
+	}
 
 	// 커맨드렛의 EditorWorld에는 GameViewport가 없어 IsOpened()를 검사할 수 없다.
 	// Bind 직후 별도 tick/timer 없이 행이 완성되는 것으로 정적 즉시 표시 계약을 검증한다.

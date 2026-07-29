@@ -1,7 +1,11 @@
 #include "UI/Reward/RewardUIWidgetBase.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -9,6 +13,7 @@
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardRowWidgetBase.h"
 #include "UI/ViewportZOrderType.h"
+#include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "RewardUIWidgetBase"
 
@@ -48,6 +53,13 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	mSkillIcon = mRewardGoldIconTexture;
 	mGoldIcon = mRewardGoldIconTexture;
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/UI/WBP_RewardRow.WBP_RewardRow_C"));
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> RewardBackgroundFinder(
+		TEXT("/Game/UI/Art/RunFlow/T_Reward_Background_Current.T_Reward_Background_Current"));
+	if (RewardBackgroundFinder.Succeeded())
+	{
+		mRewardBackgroundTexture = RewardBackgroundFinder.Object;
+	}
 }
 
 void URewardUIWidgetBase::OpenUI(FOnEndUIOpenAnimation Callback)
@@ -85,6 +97,7 @@ void URewardUIWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 	StopAllAnimations();
+	EnsureBackgroundArt();
 
 	if (mCloseButton != nullptr)
 	{
@@ -94,6 +107,54 @@ void URewardUIWidgetBase::NativeConstruct()
 
 	RefreshRows();
 	UpdateCloseButtonVisibility();
+}
+
+void URewardUIWidgetBase::EnsureBackgroundArt()
+{
+	if (WidgetTree == nullptr || mRewardBackgroundTexture == nullptr)
+	{
+		return;
+	}
+
+	UCanvasPanel* DesignCanvas = Cast<UCanvasPanel>(
+		WidgetTree->FindWidget(TEXT("RewardDesignCanvas")));
+	if (DesignCanvas == nullptr)
+	{
+		return;
+	}
+
+	// 기존 보상 시안의 불투명 금색/남색 판은 새 양피지 배경을 가린다.
+	// 버튼·스크롤·텍스트는 그대로 두고 판 이미지만 접는다.
+	if (UWidget* LegacyPanel = WidgetTree->FindWidget(
+		TEXT("RewardElem_02_widget_00_widget")))
+	{
+		LegacyPanel->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
+	if (mRewardBackgroundImage == nullptr)
+	{
+		mRewardBackgroundImage = Cast<UImage>(
+			WidgetTree->FindWidget(TEXT("RewardBackgroundImage")));
+	}
+	if (mRewardBackgroundImage == nullptr)
+	{
+		mRewardBackgroundImage = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), TEXT("RewardBackgroundImage"));
+		DesignCanvas->AddChildToCanvas(mRewardBackgroundImage);
+	}
+
+	mRewardBackgroundImage->SetBrushFromTexture(mRewardBackgroundTexture, true);
+	mRewardBackgroundImage->SetColorAndOpacity(FLinearColor::White);
+	mRewardBackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	if (UCanvasPanelSlot* BackgroundSlot = Cast<UCanvasPanelSlot>(mRewardBackgroundImage->Slot))
+	{
+		BackgroundSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+		BackgroundSlot->SetAlignment(FVector2D::ZeroVector);
+		BackgroundSlot->SetOffsets(FMargin(0.f));
+		BackgroundSlot->SetAutoSize(false);
+		BackgroundSlot->SetZOrder(-100);
+	}
 }
 
 void URewardUIWidgetBase::HandleCloseClicked()
@@ -305,9 +366,32 @@ void URewardUIWidgetBase::RefreshRows()
 		UTexture2D* ExpIcon = mRewardExpIconTexture != nullptr ? mRewardExpIconTexture.Get() : SummaryIcon;
 
 		FText ExpProgressText = FText::GetEmpty();
-		if (Reward.mMaxExp > 0.0f)
+		if (Reward.mMercenaryExp.IsEmpty() == false)
 		{
-			const int32 CurrentExp = FMath::RoundToInt(FMath::Clamp(Reward.mExpAfter, 0.0f, Reward.mMaxExp));
+			TArray<FString> MercenaryProgress;
+			MercenaryProgress.Reserve(Reward.mMercenaryExp.Num());
+			for (const FRewardMercenaryExpUI& Mercenary : Reward.mMercenaryExp)
+			{
+				const FString Progress = Mercenary.mMaxExp > 0.f
+					? FString::Printf(TEXT("%d→%d/%d"),
+						FMath::RoundToInt(Mercenary.mExpBefore),
+						FMath::RoundToInt(Mercenary.mExpAfter),
+						FMath::RoundToInt(Mercenary.mMaxExp))
+					: FString::Printf(TEXT("%d→%d"),
+						FMath::RoundToInt(Mercenary.mExpBefore),
+						FMath::RoundToInt(Mercenary.mExpAfter));
+				MercenaryProgress.Add(FText::Format(
+					LOCTEXT("MercenaryExpProgress", "{0} Lv.{1} · {2}"),
+					Mercenary.mName,
+					FText::AsNumber(Mercenary.mLevel),
+					FText::FromString(Progress)).ToString());
+			}
+			ExpProgressText = FText::FromString(
+				FString::Join(MercenaryProgress, TEXT("   |   ")));
+		}
+		else if (Reward.mMaxExp > 0.0f)
+		{
+			const int32 CurrentExp = FMath::RoundToInt(Reward.mExpAfter);
 			const int32 MaxExp = FMath::RoundToInt(Reward.mMaxExp);
 			if (Reward.mLevelAfter > 0 && Reward.mLevelAfter != Reward.mLevelBefore)
 			{
@@ -338,7 +422,11 @@ void URewardUIWidgetBase::RefreshRows()
 		AddRow(
 			ERewardClaimKind::Exp,
 			INDEX_NONE,
-			FText::Format(LOCTEXT("ExpRewardValue", "경험치 +{0}"), FText::AsNumber(Reward.mExpGained)),
+			FText::Format(
+				Reward.mMercenaryExp.Num() > 1
+					? LOCTEXT("PartyExpRewardValue", "모든 용병 경험치 +{0}")
+					: LOCTEXT("ExpRewardValue", "경험치 +{0}"),
+				FText::AsNumber(Reward.mExpGained)),
 			ExpProgressText,
 			ExpIcon);
 	}

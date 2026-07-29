@@ -82,6 +82,10 @@ public:
 	UFUNCTION()
 	void HandleAbandonRun();
 
+	/** @brief 전투 HUD 상단 가방 버튼에서 공용 인벤토리 패널을 연다. */
+	UFUNCTION()
+	void HandleOpenInventory();
+
 protected:
 	/**
 	 * @brief 보상 지급 요청을 검증하고 실제 런 데이터에 반영한다.

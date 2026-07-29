@@ -186,16 +186,39 @@ public:
 
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 
 	/** @brief 장비 자리 이름 같은 보조 한 줄. 없으면 빈 값. */
 	UPROPERTY(BlueprintReadOnly) FText mDetail;
 };
 
 /**
+ * @brief 인벤토리에서 확인하는 용병 한 명의 현재 성장 상태.
+ *
+ * @details EXP는 용병별 AttributeSet에 있으므로 파티 대표값을 만들지 않는다.
+ *          UI는 이 DTO를 그대로 한 줄씩 그리며 게임플레이 모델을 직접 조회하지 않는다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FInventoryMercenaryView
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly) int32 mPartyIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+};
+
+/**
  * @brief 가방 한 판.
  *
  * @details
- * 돈은 파티 공용이다(0728 결정). 용병마다 따로 두지 않는다.
+ * 돈은 파티 공용이다(0728 결정). 성장 상태는 용병마다 따로 보여준다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FInventoryView
@@ -205,9 +228,15 @@ struct P_RD_API FInventoryView
 public:
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
 
-	/** @brief 파티가 들고 있는 기술. */
+	/** @brief 현재 파티에 있는 용병별 레벨/EXP/체력. */
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryMercenaryView> mMercenaries;
+
+	/** @brief 보상으로 획득해 공용 보관함에 들어간 기술. */
 	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mSkills;
 
-	/** @brief 파티가 들고 있는 장비. */
+	/** @brief 보상으로 획득해 공용 보관함에 들어간 장비. */
 	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mEquipment;
+
+	/** @brief 파티가 공용으로 소유 중인 아티팩트. */
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mArtifacts;
 };

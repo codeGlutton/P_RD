@@ -17,7 +17,7 @@ class P_RD_API UMockInventoryDriver : public UObject
 	GENERATED_BODY()
 
 public:
-	/** @brief 가짜 보유 다이스/스킬/장비 + 메타를 만들어 UIModel에 push한다. */
+	/** @brief 가짜 용병별 EXP와 보유 스킬/장비/아티팩트 + 골드를 UIModel에 push한다. */
 	UFUNCTION(BlueprintCallable, Category = "Inventory|Mock")
 	void Start(UInventoryUIModel* UIModel);
 

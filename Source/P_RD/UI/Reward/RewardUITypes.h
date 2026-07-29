@@ -13,6 +13,19 @@
 
 class UTexture2D;
 
+/** @brief 경험치 보상을 받는 용병 한 명의 지급 전/후 표시값. */
+USTRUCT(BlueprintType)
+struct FRewardMercenaryExpUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	UPROPERTY(BlueprintReadOnly) float mExpBefore = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mExpAfter = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+};
+
 /** @brief 전투 결과 보상 한 건의 표시값(돈·경험치). */
 // - 골드: 이번에 번 양(mGoldGained)과 합산 후 잔액(mGoldBalance)을 함께 표시한다.
 // - 경험치: 이번에 번 양(mExpGained)과 레벨 내 전/후 값(mExpBefore→mExpAfter),
@@ -38,6 +51,9 @@ struct FRewardUI
 	UPROPERTY(BlueprintReadOnly) float mExpBefore = 0.f;   // 레벨업 후 레벨 기준 시작 채움
 	UPROPERTY(BlueprintReadOnly) float mExpAfter = 0.f;    // 최종 채움
 	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;      // 현재 레벨 최대 경험치
+
+	/** @brief EXP가 용병별 값으로 바뀐 뒤의 실제 지급 대상과 각 진행도. */
+	UPROPERTY(BlueprintReadOnly) TArray<FRewardMercenaryExpUI> mMercenaryExp;
 };
 
 /** @brief 보상 항목 한 칸의 종류. UI가 게임플레이 데이터 타입을 직접 모르게 어댑터가 변환해 넣는다. */

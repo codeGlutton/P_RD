@@ -108,6 +108,9 @@ private:
 	/** @brief 현재 UIModel 구독을 해제하고 참조를 비운다. */
 	void UnbindUIModel();
 
+	/** @brief 현재 HUD 톤의 정적 배경을 16:9 디자인 캔버스 가장 뒤에 설치한다. */
+	void EnsureBackgroundArt();
+
 	/** @brief 골드/경험치 값을 WBP 텍스트 슬롯에 반영한다. */
 	void RefreshSummary();
 
@@ -140,6 +143,14 @@ protected:
 	/** @brief 현재 바인딩된 보상 상태 소유자; 위젯은 이 객체를 소유하지 않고 구독만 한다. */
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URewardUIModel> mUIModel;
+
+	/** @brief 밝은 원목/은색/양피지 HUD 톤으로 다시 제작한 정적 보상 배경. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Reward|Art")
+	TObjectPtr<UTexture2D> mRewardBackgroundTexture;
+
+	/** @brief WBP 16:9 디자인 캔버스에 런타임으로 한 번만 추가하는 배경 이미지. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mRewardBackgroundImage;
 
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")

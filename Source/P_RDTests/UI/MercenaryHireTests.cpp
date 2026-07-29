@@ -24,6 +24,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatUIModel.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -333,6 +334,100 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("다시 눌러도 접히지 않는다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatHUDSkillLifecycleTest,
+	"P_RD.UI.CombatHUD.SkillLifecycle",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+/**
+ * @brief 스킬 카드는 플레이어의 실제 입력 구간에만 보인다.
+ *
+ * @details
+ * 턴 종료 뒤 TurnUI가 이전 플레이어를 잠시 가리키는 동안 카드가 남았고,
+ * BuildAction 종료와 SkillAction 시작 사이에도 한 프레임 다시 나타났다.
+ * 턴/액션 표시 알림을 직접 흘려 두 회귀를 함께 막는다.
+ */
+bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = nullptr;
+	if (GEngine != nullptr)
+	{
+		for (const FWorldContext& Context : GEngine->GetWorldContexts())
+		{
+			if (Context.World() != nullptr)
+			{
+				World = Context.World();
+				break;
+			}
+		}
+	}
+	if (World == nullptr)
+	{
+		AddInfo(TEXT("월드가 없어 건너뜀"));
+		return true;
+	}
+
+	UClass* HUDClass = LoadClass<UCombatLayoutHUDWidget>(nullptr,
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"));
+	if (!TestNotNull(TEXT("HUD 클래스"), HUDClass))
+	{
+		return false;
+	}
+
+	UCombatLayoutHUDWidget* HUD =
+		CreateWidget<UCombatLayoutHUDWidget>(World, HUDClass);
+	if (!TestNotNull(TEXT("HUD"), HUD))
+	{
+		return false;
+	}
+	HUD->TakeWidget();
+
+	// WBP 기본값은 실제 전투용이라 preview model을 만들지 않을 수 있다.
+	// 시험이 런타임 모델 연결과 같은 경로를 직접 구성한다.
+	UCombatUIModel* Model = NewObject<UCombatUIModel>(HUD);
+	HUD->BindUIModel(Model);
+
+	FUnitUI PlayerUnit;
+	PlayerUnit.mUnitId = 101;
+	PlayerUnit.mIsPlayer = true;
+	Model->SetUnitUIs({ PlayerUnit });
+
+	FTurnUI PlayerTurn;
+	PlayerTurn.mCurrentUnitId = PlayerUnit.mUnitId;
+	PlayerTurn.mTurnOrderUnitIds.Add(PlayerUnit.mUnitId);
+	Model->SetTurnUI(PlayerTurn);
+	Model->OnBeginAnyTurn.Broadcast(nullptr);
+
+	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
+	if (!TestNotNull(TEXT("전투 UI 모델"), Model)
+		|| !TestNotNull(TEXT("명령 카드"), Card))
+	{
+		return false;
+	}
+
+	TestEqual(TEXT("플레이어 턴에는 카드가 보인다"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
+
+	Model->OnEndAnyTurn.Broadcast(nullptr);
+	TestEqual(TEXT("턴 종료 알림 즉시 카드를 내린다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
+
+	Model->OnBeginAnyTurn.Broadcast(nullptr);
+	TestEqual(TEXT("다음 플레이어 턴 시작에 다시 보인다"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
+
+	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
+	TestEqual(TEXT("행동 시작부터 카드를 감춘다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
+
+	Model->OnEndAnyTurnAction.Broadcast(nullptr);
+	TestEqual(TEXT("행동 종료와 후속 행동 사이에는 즉시 다시 보이지 않는다"),
+		Card->GetVisibility(), ESlateVisibility::Collapsed);
+
+	// 다음 틱 예약이 시험 뒤 다른 상태를 건드리지 않게 턴 종료로 무효화한다.
+	Model->OnEndAnyTurn.Broadcast(nullptr);
 	return true;
 }
 

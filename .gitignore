@@ -88,6 +88,8 @@ DerivedDataCache/*
 /Content/Audio/
 /Content/**/T_*.uasset
 /Content/**/S_*.uasset
+# 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
+!/Content/UI/Art/RunFlow/T_*.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output

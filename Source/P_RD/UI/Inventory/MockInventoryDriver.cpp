@@ -42,9 +42,18 @@ void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 
 	FInventoryUI Inv;
 	Inv.mGold = 120;
-	Inv.mLevel = 3;
-	Inv.mHP = 24.f;
-	Inv.mMaxHP = 30.f;
+
+	for (int32 i = 0; i < 3; ++i)
+	{
+		FInventoryMercenaryUI& Mercenary = Inv.mMercenaries.AddDefaulted_GetRef();
+		Mercenary.mPartyIndex = i;
+		Mercenary.mName = FText::FromString(FString::Printf(TEXT("Mercenary %d"), i + 1));
+		Mercenary.mLevel = i + 1;
+		Mercenary.mExp = 20.f + 15.f * i;
+		Mercenary.mMaxExp = 100.f;
+		Mercenary.mHP = 24.f - 3.f * i;
+		Mercenary.mMaxHP = 30.f;
+	}
 
 	for (int32 i = 0; i < 4; ++i)
 	{
@@ -53,6 +62,10 @@ void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 	for (int32 i = 0; i < 3; ++i)
 	{
 		Inv.mEquipment.Add(MakeItem(EInventoryItemKind::Equipment, i, FString::Printf(TEXT("Equip %d"), i + 1), TEXT("장착")));
+	}
+	for (int32 i = 0; i < 2; ++i)
+	{
+		Inv.mArtifacts.Add(MakeItem(EInventoryItemKind::Artifact, i, FString::Printf(TEXT("Artifact %d"), i + 1), TEXT("파티 공용")));
 	}
 
 	mUIModel->SetInventory(Inv);

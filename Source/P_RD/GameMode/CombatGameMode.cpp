@@ -5,6 +5,7 @@
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
+#include "Components/Button.h"
 #include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
@@ -403,6 +404,12 @@ void ACombatGameMode::BeginRoom()
 			{
 				CombatLayoutHUDWidget->BindRewardUIModel(mRewardUIModel);
 			}
+			if (UButton* InventoryButton = Cast<UButton>(
+				CombatHUD->GetWidgetFromName(TEXT("MenuButton_2"))))
+			{
+				InventoryButton->OnClicked.AddUniqueDynamic(
+					this, &ACombatGameMode::HandleOpenInventory);
+			}
 			CombatHUD->OpenUI();
 		}
 	}
@@ -418,6 +425,19 @@ UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
 URewardUIModel* ACombatGameMode::GetRewardUIModel() const
 {
 	return mRewardUIModel;
+}
+
+void ACombatGameMode::HandleOpenInventory()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	URDUserWidget* InventoryWidget = WorldWidgetSubsystem != nullptr
+		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::Inventory))
+		: nullptr;
+	if (InventoryWidget != nullptr)
+	{
+		InventoryWidget->OpenUI();
+	}
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
@@ -1527,13 +1547,6 @@ void ACombatGameMode::PushCombatRewardUIData() const
 {
 	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
-	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
 	UPartyModel* PartyModel = GetPartyModel();
 	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
 
@@ -1555,19 +1568,53 @@ void ACombatGameMode::PushCombatRewardUIData() const
 
 	{
 		const float CurrentGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
-		const float CurrentExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-		const float MaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
-
 		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
-		RewardUIData.mExpBefore = CurrentExp;
-		RewardUIData.mExpAfter = CurrentExp + StaticCast<float>(RewardUIData.mExpGained);
-		RewardUIData.mMaxExp = MaxExp;
 	}
 
+	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+	RewardUIData.mMercenaryExp.Reserve(PlayerUnitModels.Num());
+	for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 	{
+		if (PlayerUnitModel == nullptr)
+		{
+			continue;
+		}
+
+		const UAttributeSetComponentModel* PlayerAttributes =
+			PlayerUnitModel->GetAttributeComponentModel();
+		if (PlayerAttributes == nullptr)
+		{
+			continue;
+		}
+
+		FRewardMercenaryExpUI& MercenaryExp =
+			RewardUIData.mMercenaryExp.AddDefaulted_GetRef();
+		MercenaryExp.mName = PlayerUnitModel->GetBoardActorDisplayName();
+		if (MercenaryExp.mName.IsEmpty())
+		{
+			MercenaryExp.mName = NSLOCTEXT(
+				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
+		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
-		RewardUIData.mLevelBefore = PlayerLevel;
-		RewardUIData.mLevelAfter = PlayerLevel;
+		MercenaryExp.mLevel = PlayerLevel;
+		MercenaryExp.mExpBefore = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetExpAttribute());
+		MercenaryExp.mExpAfter = MercenaryExp.mExpBefore
+			+ StaticCast<float>(RewardUIData.mExpGained);
+		MercenaryExp.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	}
+
+	// 기존 WBP/Blueprint가 단일 진행도 필드를 읽는 경우에는 첫 용병을
+	// 대표 fallback으로 유지한다. 네이티브 보상 행은 위 배열을 사용한다.
+	if (RewardUIData.mMercenaryExp.IsEmpty() == false)
+	{
+		const FRewardMercenaryExpUI& First = RewardUIData.mMercenaryExp[0];
+		RewardUIData.mLevelBefore = First.mLevel;
+		RewardUIData.mLevelAfter = First.mLevel;
+		RewardUIData.mExpBefore = First.mExpBefore;
+		RewardUIData.mExpAfter = First.mExpAfter;
+		RewardUIData.mMaxExp = First.mMaxExp;
 	}
 
 	mRewardUIModel->SetReward(RewardUIData);
