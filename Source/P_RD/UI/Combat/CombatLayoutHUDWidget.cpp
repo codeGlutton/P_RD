@@ -1369,12 +1369,28 @@ void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_1() { HandlePartyClicked(1); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_2() { HandlePartyClicked(2); }
 
+/**
+ * @brief 오른쪽 아래 단추를 눌렀다.
+ *
+ * @details
+ * 이 단추는 두 일을 한다. 무르는 중이면 '취소' 이고, 아니면 '턴 종료' 다.
+ *
+ * **글자만 바꾸고 하는 일은 안 바꿨었다.** 취소라고 적힌 것을 눌렀는데 턴이
+ * 넘어갔다 -- 무르려다 차례를 날리는 것이라 되돌릴 길이 없다.
+ */
 void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 {
-	if (mUIModel != nullptr)
+	if (mUIModel == nullptr)
 	{
-		mUIModel->RequestEndTurn();
+		return;
 	}
+
+	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	{
+		mUIModel->RequestCancel();
+		return;
+	}
+	mUIModel->RequestEndTurn();
 }
 
 #undef LOCTEXT_NAMESPACE
