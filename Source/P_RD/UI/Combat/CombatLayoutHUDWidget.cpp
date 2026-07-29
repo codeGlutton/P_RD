@@ -1465,14 +1465,16 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
-	HandleBoardPressed(FVector2D(InMouseEvent.GetScreenSpacePosition()));
+	mPressOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
+	mPressMoved = false;
 	return FReply::Handled();
 }
 
 FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
-	HandleBoardPressed(FVector2D(InTouchEvent.GetScreenSpacePosition()));
+	mPressOrigin = FVector2D(InTouchEvent.GetScreenSpacePosition());
+	mPressMoved = false;
 	return FReply::Handled();
 }
 
@@ -1490,6 +1492,52 @@ bool UCombatLayoutHUDWidget::IsOverChrome(const FVector2D& ScreenPosition) const
 		}
 	}
 	return false;
+}
+
+/**
+ * @brief 손가락을 뗐다. 톡 친 것이면 판 탭으로 넘긴다.
+ *
+ * @details
+ * 모바일은 **지도를 끌어 옮기는 것도 누르는 것**이다. 누르자마자 처리하면
+ * 화면을 밀 때마다 카드가 뒤집힌다 -- 실제로 그랬다.
+ *
+ * 그래서 누를 때는 자리만 적어 두고, 뗄 때 얼마나 움직였는지로 가른다.
+ */
+FReply UCombatLayoutHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry,
+	const FPointerEvent& InTouchEvent)
+{
+	FinishBoardPress(FVector2D(InTouchEvent.GetScreenSpacePosition()));
+	return Super::NativeOnTouchEnded(InGeometry, InTouchEvent);
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
+	const FPointerEvent& InTouchEvent)
+{
+	if (FVector2D(InTouchEvent.GetScreenSpacePosition()).Equals(mPressOrigin, BoardTapSlack) == false)
+	{
+		mPressMoved = true;
+	}
+	return Super::NativeOnTouchMoved(InGeometry, InTouchEvent);
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
+	const FPointerEvent& InMouseEvent)
+{
+	FinishBoardPress(FVector2D(InMouseEvent.GetScreenSpacePosition()));
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+/** @brief 뗀 자리가 누른 자리 가까이면 탭, 아니면 끈 것으로 본다. */
+void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
+{
+	const bool bDragged = mPressMoved
+		|| ScreenPosition.Equals(mPressOrigin, BoardTapSlack) == false;
+	mPressMoved = false;
+	if (bDragged == true)
+	{
+		return;
+	}
+	HandleBoardPressed(ScreenPosition);
 }
 
 void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)

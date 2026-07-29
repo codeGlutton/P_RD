@@ -202,6 +202,15 @@ private:
 	 */
 	void HandleBoardPressed(const FVector2D& ScreenPosition);
 
+	/** @brief 뗀 자리로 톡 친 것인지 가른다. */
+	void FinishBoardPress(const FVector2D& ScreenPosition);
+
+	/** @brief 이만큼 안에서 움직였으면 톡 친 것으로 본다(px). */
+	static constexpr float BoardTapSlack = 24.f;
+
+	FVector2D mPressOrigin = FVector2D::ZeroVector;
+	bool mPressMoved = false;
+
 	/**
 	 * @brief 이 자리가 HUD 위인가.
 	 *
@@ -221,6 +230,9 @@ private:
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
+	virtual FReply NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
+	virtual FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 	UFUNCTION() void HandleCommandClicked_0();
 	UFUNCTION() void HandleCommandClicked_1();

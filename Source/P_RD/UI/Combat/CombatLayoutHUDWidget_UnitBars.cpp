@@ -133,9 +133,17 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 
 	const int32 DesiredCount = mUIModel != nullptr ? mUIModel->GetUnitUIs().Num() : 0;
 
-	// HP바 z-order: 스킨(DesignCanvas = 탑바/스킬레일/버튼) "뒤"로 보내 다른 UI를 안 덮게 한다.
-	// (HP바는 풀뷰포트 mRootCanvas에 있어 기본적으로 스킨보다 위에 그려지므로, 스킨 z보다 낮춘다.)
-	int32 UnitHpBarZOrder = 5;
+	/*
+	 * HP바는 **판이 그린 것 전부보다 뒤**에 깔린다.
+	 *
+	 * 옛 HUD 는 겹이 둘(풀뷰포트 + 디자인 캔버스)이라 디자인 캔버스보다 낮은
+	 * 값을 골랐다. 새 HUD 는 캔버스가 하나뿐이라 그 기준이 없어졌는데 값만
+	 * 남아 있었다 -- WBP 가 그린 카드와 아군 칸이 0 근처라, 5 는 그것들보다
+	 * **위**였다. 머리 위 바가 스킬 카드를 덮었다.
+	 *
+	 * 음수로 내려 판이 그린 것 아래로 확실히 보낸다.
+	 */
+	const int32 UnitHpBarZOrder = -10;
 
 
 	// 유닛 수보다 많은 바는 제거.
