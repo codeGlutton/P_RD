@@ -81,6 +81,13 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		InitializeCameraTargetLocation();
 	}
 
+
+	/*
+	* @note 매 틱 중복 RayCast 문제
+	* 거의 매틱마다 RayCast를 여러함수에서 중복하여 쏘기 때문에 비용이 적지 않다고 생각됩니다.
+	* 추후 시간적 여유가 생긴다면 해당 RayCast를 SegmentPlaneIntersection로 변경하는 것을 고려해보는 것이 좋다고 생각됩니다.
+	*/
+
 	MoveSmooth(DeltaTime);		// 카메라를 이동시키는 함수입니다.
 	ZoomSmooth(DeltaTime);
 	FollowActor();				// 강조 시 액터가 있다면 액터를 따라가는 함수입니다.
