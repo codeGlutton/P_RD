@@ -16,6 +16,8 @@
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "AttributeSet/PartyAttributeSet.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -640,4 +642,31 @@ const FName& ARoomGameModeBase::GetRoomSpawnSettingName() const
 void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 {
 	mSelectedRoomSpawnSettingName = Name;
+}
+
+/**
+ * @brief 가방에 무엇이 있나.
+ *
+ * @details
+ * 아직 파티가 물건을 들고 다니는 자리가 없다. 돈만 진짜 값이고 목록은 빈
+ * 채로 돌려준다 -- 화면을 먼저 붙일 수 있게 자리만 내어 둔다.
+ *
+ * [합의필요] 가진 기술과 장비를 어디에 담나. 용병마다인가 파티 공용인가.
+ * 그것이 정해지면 여기서 그 목록을 읽어 채운다.
+ */
+bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
+{
+	OutView = FInventoryView();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	UAttributeSetComponentModel* Attributes = PartyModel != nullptr
+		? PartyModel->GetAttributeComponentModel() : nullptr;
+	if (Attributes == nullptr)
+	{
+		return false;
+	}
+
+	OutView.mGold = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+		UPartyAttributeSet::GetMoneyAttribute()));
+	return true;
 }
