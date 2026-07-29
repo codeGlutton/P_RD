@@ -359,12 +359,25 @@ void UMercenaryHireWidget::ConfirmParty()
 	{
 		return;
 	}
+	/*
+	 * 받는 쪽(URunPersistData::StartRun)은 **파티 칸 수만큼** 오기를 요구한다
+	 * -- 길이가 다르면 "파티 멤버 부족" 으로 죽는다. 빈 칸은 무효 id 로
+	 * 표현하고, 저쪽 반복문이 그것을 건너뛴다.
+	 *
+	 * 고른 것만 보내다가 한 명 출발에서 그대로 터졌다.
+	 */
 	TArray<FPrimaryAssetId> Party;
-	for (const int32 Index : mChosen)
+	Party.Init(FPrimaryAssetId(), mPartySize);
+	for (int32 SlotIndex = 0; SlotIndex < mPartySize; ++SlotIndex)
 	{
+		if (mChosen.IsValidIndex(SlotIndex) == false)
+		{
+			continue;
+		}
+		const int32 Index = mChosen[SlotIndex];
 		if (mCrew.IsValidIndex(Index))
 		{
-			Party.Add(mCrew[Index].mPlayerUnitId);
+			Party[SlotIndex] = mCrew[Index].mPlayerUnitId;
 		}
 	}
 	// 파티 저장과 화면 전환은 여기서 하지 않는다. 화면이 흐름까지 쥐면

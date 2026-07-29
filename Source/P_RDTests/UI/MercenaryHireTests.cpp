@@ -152,6 +152,18 @@ bool FMercenaryHireConfirmTest::RunTest(const FString& Parameters)
 	Board->mOnPartyConfirmed.AddLambda(
 		[&Sent](const TArray<FPrimaryAssetId>& Party) { Sent = Party; });
 
+	// 받는 쪽이 파티 칸 수만큼 오기를 요구한다. 빈 칸은 무효 id 다 --
+	// 고른 것만 보내면 "파티 멤버 부족" 으로 죽는다.
+	auto ValidCount = [](const TArray<FPrimaryAssetId>& Party)
+	{
+		int32 Count = 0;
+		for (const FPrimaryAssetId& Id : Party)
+		{
+			Count += Id.IsValid() ? 1 : 0;
+		}
+		return Count;
+	};
+
 	Board->ConfirmParty();
 	TestEqual(TEXT("아무도 안 고르면 안 넘어간다"), Sent.Num(), 0);
 
@@ -159,12 +171,14 @@ bool FMercenaryHireConfirmTest::RunTest(const FString& Parameters)
 	// 자료가 갖춰지면 mMinPartySize 를 셋으로 올리고 이 시험도 같이 조인다.
 	Choose(*Board, 1);
 	Board->ConfirmParty();
-	TestEqual(TEXT("한 명이면 넘어간다"), Sent.Num(), 1);
+	TestEqual(TEXT("한 명이어도 칸 수만큼 온다"), Sent.Num(), 3);
+	TestEqual(TEXT("그중 한 칸만 찼다"), ValidCount(Sent), 1);
 
 	Choose(*Board, 2);
 	Choose(*Board, 0);
 	Board->ConfirmParty();
 	TestEqual(TEXT("셋을 넘긴다"), Sent.Num(), 3);
+	TestEqual(TEXT("셋 다 찼다"), ValidCount(Sent), 3);
 	TestEqual(TEXT("고른 차례대로 온다"), Sent[2].PrimaryAssetName,
 		FName(TEXT("후보0")));
 	return true;
