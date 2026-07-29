@@ -9,8 +9,42 @@
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/MockCombatDriver.h"
 #include "GameMode/CombatGameMode.h"
+#include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
+
+/**
+ * @brief 머리 위 HP 바가 쓰는 그림들을 미리 물어 둔다.
+ *
+ * @details
+ * ini 강제 쿡 대신 생성자 하드 레퍼런스로 잡는다(#300 관행). 옛 HUD 가
+ * 하던 것 중 HP 바에 필요한 것만 옮겼다 -- 소리와 상세창은 그 기능을
+ * 옮길 때 같이 온다.
+ */
+UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(
+		TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
+	if (UnitHpBarClassFinder.Succeeded())
+	{
+		mUnitHpBarWidgetClass = UnitHpBarClassFinder.Class;
+	}
+
+#define RD_LOAD_TEX(Member, Path) 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
+	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
+	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
+	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
+	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
+	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Recovery.T_Status_HP_Recovery");
+	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
+	RD_LOAD_TEX(mLogIconGetDefense,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetDefense.T_Status_GetDefense");
+	RD_LOAD_TEX(mLogIconAgility,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Agility.T_Status_Agility");
+	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
+	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
+	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
+#undef RD_LOAD_TEX
+}
 
 namespace
 {
@@ -493,6 +527,7 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		RefreshParty();
 		RefreshEnemy();
 		RefreshTurnActionPoints();
+		RebuildUnitHpBars();   // 유닛 수가 바뀌면 머리 위 바도 다시 만든다.
 	}
 	if (bAll || Domain == ECombatUIDomain::Turn)
 	{
@@ -1088,6 +1123,18 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationBegin);
 		mActionEndHandle = mUIModel->OnEndAnyTurnAction.AddUObject(
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationEnd);
+
+		// 전투가 끝나면 결과 연출을 맡는다. 배리어를 넘겨받아 붙잡는다.
+		mVictoryWorldMapLocked = false;
+		mCombatResultFlowActive = false;
+		mUIModel->OnEndCombat.RemoveAll(this);
+		mEndCombatHandle = mUIModel->OnEndCombat.AddWeakLambda(this,
+			[this](TSharedPtr<FPresentationBarrier> Barrier)
+			{
+				HandleEndCombatUI(MoveTemp(Barrier));
+			});
+		mUIModel->OnCombatResultOpenRequested.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
 	}
 }
 
@@ -1097,6 +1144,9 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 	{
 		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
 		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
+		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
+		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
 	}
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
@@ -1130,6 +1180,8 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
 	RefreshScreenScale();
+	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
+	UpdateUnitHpBars();
 }
 
 void UCombatLayoutHUDWidget::RefreshScreenScale()

@@ -24,6 +24,38 @@
 
 struct FPresentationBarrier;
 
+/**
+ * @brief 유닛 머리 위 HP 바 한 개가 들고 있는 위젯들.
+ *
+ * @details
+ * 옛 HUD 의 FUnitHpBarWidget 을 그대로 옮겼다. 이름을 바꾼 것은 옛 헤더가
+ * 지워지기 전까지 같은 모듈에 USTRUCT 두 개가 같은 이름으로 있을 수 없기
+ * 때문이다.
+ */
+USTRUCT()
+struct FCombatUnitHpBarWidget
+{
+	GENERATED_BODY()
+
+	/** @brief 루트 캔버스에 붙는 WBP 알맹이. 월드 자리를 화면으로 옮겨 붙인다. */
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mRoot;
+	/** @brief 채움 그림. 아군은 초록, 적은 빨강으로 갈아 끼운다. */
+	UPROPERTY(Transient) TObjectPtr<class UImage> mFillImage;
+	/** @brief 채움을 비율만큼 잘라 내려고 폭을 줄이는 칸. */
+	UPROPERTY(Transient) TObjectPtr<class UCanvasPanelSlot> mFillClipSlot;
+	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mValueText;
+	/** @brief 방어도 아이콘과 수치. 0 이면 감춘다. */
+	UPROPERTY(Transient) TObjectPtr<class UImage> mDefenseIcon;
+	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mDefenseText;
+	/** @brief 다 찼을 때의 폭. 자를 기준이 된다. */
+	float mFillFullWidth = 0.0f;
+
+	UPROPERTY(Transient) TArray<TObjectPtr<class UImage>> mStatusIcons;
+	UPROPERTY(Transient) TArray<TObjectPtr<class UTextBlock>> mStatusCountTexts;
+	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mStatusOverflowText;
+};
+enum class ERewardClaimKind : uint8;
+
 class UButton;
 class UMockCombatDriver;
 class UImage;
@@ -37,6 +69,8 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+	UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 	/**
 	 * @brief 열면서 화면 전체를 덮지 않게 한다.
 	 *
@@ -243,6 +277,7 @@ private:
 	/** @brief 붙인 행동 알림 구독. 뗄 때 쓴다. */
 	FDelegateHandle mActionBeginHandle;
 	FDelegateHandle mActionEndHandle;
+	FDelegateHandle mEndCombatHandle;
 
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
@@ -328,6 +363,97 @@ private:
 	void RefreshScreenScale();
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
+
+	/* ── 전투 결과·보상 (옛 HUD 에서 옮김) ─────────────────────────────
+	 *
+	 * 승패가 갈리면 프레임워크가 **배리어를 쥐어 준다.** 그것을 붙잡고 있는
+	 * 동안 전투가 멈추고, 놓는 순간 다음으로 넘어간다 -- 결과 영상과 보상
+	 * 화면이 그 사이에 뜬다.
+	 *
+	 * 옛 HUD 가 이 배리어의 유일한 주인이었다. 그래서 옛것을 지우기 전에
+	 * 이쪽부터 옮겨야 했다. 안 옮기고 지웠으면 이겨도 아무 일이 안 일어난다.
+	 */
+	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin);
+	void StartCombatResultCinematic();
+	void EnsureCombatResultWidgets();
+	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
+	UFUNCTION() void HandleCombatResultOpenRequested();
+	UFUNCTION() void HandleCombatResultRewardConfirmed();
+	UFUNCTION() void HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+	UFUNCTION() void HandleCombatResultContinueConfirmed();
+	void CloseCombatResultCinematic(FSimpleDelegate Callback);
+	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
+	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
+
+	/* ── 유닛 머리 위 HP 바 (옛 HUD 에서 옮김) ────────────────────────────
+	 *
+	 * 아군 칸에는 파티 셋의 체력이 뜨지만 **적 체력은 볼 자리가 없다.** 머리
+	 * 위 바가 그 자리다 -- 이것 없이는 누구를 먼저 칠지 고를 수가 없다.
+	 *
+	 * 월드 자리를 매 프레임 화면으로 옮겨 붙이므로 Tick 에서 돈다.
+	 */
+	void RebuildUnitHpBars();
+	void UpdateUnitHpBars();
+	void SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar);
+	void CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& Bar) const;
+	void UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
+	UTexture2D* ResolveStatusIcon(const FGameplayTag& StatusTag) const;
+
+	UPROPERTY(Transient) TArray<FCombatUnitHpBarWidget> mUnitHpBars;
+	UPROPERTY(Transient) TObjectPtr<class UCanvasPanel> mRootCanvas;
+	UPROPERTY() TSubclassOf<UUserWidget> mUnitHpBarWidgetClass;
+	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpFillRedTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpFillGreenTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
+
+	/** @brief 상태이상 딱지 그림. 전용 그림이 없는 태그는 빈 칸으로 둔다. */
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpDamage;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpRecovery;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetMove;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetDefense;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconAgility;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
+
+	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
+	void OpenWorldMapForNextRoom();
+
+	/** @brief 결과 화면이 뜬 동안 조작을 감춘다. */
+	void SetCombatControlsShown(bool bShown);
+
+	/** @brief 전투가 끝났다. 결과 연출을 시작한다. */
+	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
+
+	UPROPERTY(Transient) TObjectPtr<class UCinematicWidget> mCombatResultCinematicWidget;
+	UPROPERTY(Transient) TObjectPtr<class UCombatResultOverlayWidget> mCombatResultOverlayWidget;
+	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
+	FTimerHandle mCombatResultStartDelayTimerHandle;
+	bool mIsPlayerWin = false;
+	bool mCombatResultFlowActive = false;
+	bool mVictoryWorldMapLocked = false;
+
+	/** @brief 보상 화면. 결과 영상이 끝나면 그 위에 뜬다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	TSubclassOf<class URewardUIWidgetBase> mRewardWidgetClass;
+	UPROPERTY(Transient) TObjectPtr<class URewardUIWidgetBase> mCombatRewardWidget;
+	UPROPERTY(Transient) TObjectPtr<class URewardUIModel> mCombatRewardUIModel;
+
+	/** @brief 결과 영상. 비어 있으면 코드에 박아 둔 자리를 쓴다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	FString mCombatVictoryVideoPath;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	FString mCombatDefeatVideoPath;
+
+	/** @brief 경험치가 차오를 때 나는 소리. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	TObjectPtr<USoundBase> mExpGainSound;
+
+	/** @brief 승리·패배 징글. 없으면 소리 없이 지나간다. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	TObjectPtr<USoundBase> mVictoryJingleSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
+	TObjectPtr<USoundBase> mDefeatJingleSound;
 
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();
