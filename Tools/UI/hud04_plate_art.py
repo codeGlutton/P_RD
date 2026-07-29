@@ -6,11 +6,10 @@
 """
 
 PLATE_ART = {
-    # 용병창 셋이 한 판을 나눠 쓴다.
-    "bottom_status_left": "KK_HUD04_party_card_wood",
-    "bottom_status_center": "KK_HUD04_party_card_wood",
-    "bottom_status_right": "KK_HUD04_party_card_wood",
     "bottom_center_ap_bar": "KK_HUD04_ap_bar_steel",
+    "bottom_status_center": "KK_HUD04_party_card_wood",
+    "bottom_status_left": "KK_HUD04_party_card_wood",
+    "bottom_status_right": "KK_HUD04_party_card_wood",
     "top_center_turn_order": "KK_HUD04_turn_order_v2",
     "top_right_parchment": "KK_HUD04_menu_bar",
 }
