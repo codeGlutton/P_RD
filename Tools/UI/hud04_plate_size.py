@@ -13,7 +13,7 @@
 PLATE_SIZE = {
     "bottom_center_ap_bar": (486, 800, 700, 129),
     "bottom_status_center": (118, 712, 96, 221),
-    "bottom_status_left": (14, 712, 96, 100),
+    "bottom_status_left": (14, 712, 96, 221),
     "bottom_status_right": (222, 712, 96, 221),
     "top_center_turn_order": (426, 12, 819, 158),
     "top_right_parchment": (392, 121),

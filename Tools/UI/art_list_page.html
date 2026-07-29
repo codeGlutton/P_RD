@@ -613,9 +613,22 @@ function rezoom() {
   if (img) { fit(img); paint(); }
 }
 
+//: 판을 얼마만 하게 그릴까. 손으로 고친 값이 있으면 그것이 이긴다.
+//:
+//: 그림 크기를 그대로 쓰면 판 크기를 고쳐도 화면이 안 바뀐다 -- 값은 저장되는데
+//: 아무 일도 안 일어나 보여서 "안 먹는다" 로 읽힌다.
+function plateBox(img) {
+  const at = placePick[picked.role];
+  if (at && at[2] > 0 && at[3] > 0) {
+    return [at[2], at[3]];
+  }
+  return [img.naturalWidth, img.naturalHeight];
+}
+
 function fit(img) {
-  img.style.width = img.naturalWidth * mode + "px";
-  img.style.height = img.naturalHeight * mode + "px";
+  const [bw, bh] = plateBox(img);
+  img.style.width = bw * mode + "px";
+  img.style.height = bh * mode + "px";
   const shell = $("shell");
   shell.style.width = img.style.width;
   shell.style.height = img.style.height;
@@ -643,8 +656,9 @@ function room() {
       const [x, y, w, h] = item.box;
       left = Math.max(left, -(x + spot[0]));
       top = Math.max(top, -(y + spot[1]));
-      right = Math.max(right, x + spot[0] + w - img.naturalWidth);
-      bottom = Math.max(bottom, y + spot[1] + h - img.naturalHeight);
+      const [bw, bh] = plateBox(img);
+      right = Math.max(right, x + spot[0] + w - bw);
+      bottom = Math.max(bottom, y + spot[1] + h - bh);
     }
   }
   // 손잡이가 구역 밖으로 7px 더 나온다. 넉넉히 24를 얹는다.
@@ -903,7 +917,10 @@ function bindPlaceFields(role) {
       try {
         localStorage.setItem(KEEP + ".place", JSON.stringify(placePick));
       } catch (err) {}
-      flash("판 자리를 바꿨습니다. 내려받아 넣으면 반영됩니다");
+      // 바로 다시 그린다. 값만 담아 두면 화면이 그대로라, 고쳐도 아무 일도
+      // 안 일어난 것처럼 보인다.
+      show();
+      flash("판을 " + at[2] + " x " + at[3] + " 로 바꿨습니다");
     };
   });
   const off = $("placeOff");
