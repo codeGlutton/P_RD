@@ -64,6 +64,7 @@ class UButton;
 class UMockCombatDriver;
 class UImage;
 class UProgressBar;
+class URewardUIModel;
 class UTextBlock;
 class UWidget;
 
@@ -91,6 +92,9 @@ public:
 	/** @brief 도메인 갱신 말고 행동 표현 알림도 같이 듣는다. */
 	virtual void BindUIModel(UCombatUIModel* InUIModel) override;
 	virtual void UnbindUIModel() override;
+
+	/** @brief 전투 종료 보상 화면이 읽고 claim 요청을 보낼 모델을 연결한다. */
+	void BindRewardUIModel(URewardUIModel* InUIModel);
 
 	/** @brief 판 탭 알림까지 같이 구독한다. */
 	/** @brief 이 배치안이 화면에 표시할 파티 인원. 기획상 최대 3명. */
@@ -400,7 +404,7 @@ private:
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
 	UFUNCTION() void HandleCombatResultOpenRequested();
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
-	UFUNCTION() void HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
@@ -534,6 +538,10 @@ private:
 
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
+
+	/** @brief 승리 지도는 다음 방을 고르기 전까지 닫히지 않도록 즉시 복원한다. */
+	UFUNCTION()
+	void HandleWorldMapCloseRequested();
 
 	/** @brief 결과 화면이 뜬 동안 조작을 감춘다. */
 	void SetCombatControlsShown(bool bShown);

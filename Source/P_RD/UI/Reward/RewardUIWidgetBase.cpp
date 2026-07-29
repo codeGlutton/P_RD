@@ -2,6 +2,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
+#include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Engine/Texture2D.h"
@@ -39,19 +40,51 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
-	// 아래 에셋들은 SVN 미연동 환경 등에서 파일이 없을 수 있으므로 LoadObject로 안전하게 로드합니다.
-	mEquipmentIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Items/T_Equip_SwordCommon.T_Equip_SwordCommon"));
-	mSkillIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic"));
-	mGoldIcon = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Stat_Gold.T_Stat_Gold"));
+	// 바뀐 보상 시안에 실제로 포함된 아이콘만 참조한다. 선택 보상은 데이터
+	// 에셋의 아이콘을 우선하고, 없을 때는 아래 공용 아이콘으로 폴백한다.
 	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
 	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
+	mEquipmentIcon = mRewardGoldIconTexture;
+	mSkillIcon = mRewardGoldIconTexture;
+	mGoldIcon = mRewardGoldIconTexture;
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/UI/WBP_RewardRow.WBP_RewardRow_C"));
+}
+
+void URewardUIWidgetBase::OpenUI(FOnEndUIOpenAnimation Callback)
+{
+	// 보상 화면은 결과를 읽는 화면이다. 시간 기반 등장 연출 없이 같은 프레임에 완성된 값을 보여 준다.
+	mCloseCommitted = false;
+	StopAllAnimations();
+	Super::OpenUI(MoveTemp(Callback));
+
+	// 파생 WBP가 과거의 Blueprint 애니메이션 이벤트를 남겨 두었더라도 계약상 즉시 완료한다.
+	StopAllAnimations();
+	FinishOpenUI();
+}
+
+void URewardUIWidgetBase::CloseUI(FOnEndUICloseAnimation Callback)
+{
+	StopAllAnimations();
+	Super::CloseUI(MoveTemp(Callback));
+	StopAllAnimations();
+	FinishCloseUI();
+}
+
+void URewardUIWidgetBase::PlayOpenUIAnimation_Implementation()
+{
+	FinishOpenUI();
+}
+
+void URewardUIWidgetBase::PlayCloseUIAnimation_Implementation()
+{
+	FinishCloseUI();
 }
 
 /** @brief 받기 버튼 클릭을 연결하고, BindUIModel이 먼저 됐다면 들어온 값을 즉시 그린다. */
 void URewardUIWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
+	StopAllAnimations();
 
 	if (mCloseButton != nullptr)
 	{
@@ -65,12 +98,18 @@ void URewardUIWidgetBase::NativeConstruct()
 
 void URewardUIWidgetBase::HandleCloseClicked()
 {
+	if (mCloseCommitted || AreAllRewardRowsClaimed() == false)
+	{
+		return;
+	}
+
+	mCloseCommitted = true;
 	if (mUIModel != nullptr)
 	{
 		mUIModel->RequestClaim();
 	}
 	OnClosed.Broadcast();
-	RemoveFromParent();
+	CloseUI();
 }
 
 /** @brief 새 UIModel을 구독하고 이미 들어온 보상 스냅샷도 즉시 한 번 그린다. */
@@ -88,6 +127,7 @@ void URewardUIWidgetBase::BindUIModel(URewardUIModel* InUIModel)
 	{
 		mUIModel->OnUIChanged.AddDynamic(this, &URewardUIWidgetBase::HandleUIChanged);
 		mUIModel->OnChoicesChanged.AddDynamic(this, &URewardUIWidgetBase::HandleChoicesChanged);
+		mUIModel->OnRewardClaimConfirmed.AddDynamic(this, &URewardUIWidgetBase::HandleRewardClaimConfirmed);
 		RefreshRows();
 	}
 }
@@ -95,10 +135,7 @@ void URewardUIWidgetBase::BindUIModel(URewardUIModel* InUIModel)
 /** @brief WBP의 받기 버튼 입력을 UIModel의 Claim 의도 이벤트로 전달한다. */
 void URewardUIWidgetBase::Claim()
 {
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestClaim();
-	}
+	HandleCloseClicked();
 }
 
 /** @brief 현재 UIModel 구독을 해제해 화면 파괴 후 알림이 들어오지 않게 한다. */
@@ -108,6 +145,7 @@ void URewardUIWidgetBase::UnbindUIModel()
 	{
 		mUIModel->OnUIChanged.RemoveDynamic(this, &URewardUIWidgetBase::HandleUIChanged);
 		mUIModel->OnChoicesChanged.RemoveDynamic(this, &URewardUIWidgetBase::HandleChoicesChanged);
+		mUIModel->OnRewardClaimConfirmed.RemoveDynamic(this, &URewardUIWidgetBase::HandleRewardClaimConfirmed);
 	}
 	mUIModel = nullptr;
 }
@@ -150,8 +188,8 @@ void URewardUIWidgetBase::UpdateCloseButtonVisibility() const
 		return;
 	}
 
-	// 보상 행이 하나도 없으면(=아직 데이터가 오기 전) 닫기를 숨긴다. 행이 있고 전부 받았을 때만 닫기를 노출한다.
-	const bool bCanClose = mUIModel != nullptr && mRewardClaimRows.Num() > 0 && AreAllRewardRowsClaimed();
+	// 보상이 0개인 방도 진행을 막지 않는다. 보상이 있으면 게임플레이가 전부 지급 성공을 확정한 뒤에만 닫는다.
+	const bool bCanClose = mUIModel != nullptr && AreAllRewardRowsClaimed();
 	mCloseButton->SetVisibility(bCanClose ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
 
@@ -166,6 +204,16 @@ bool URewardUIWidgetBase::AreAllRewardRowsClaimed() const
 	}
 
 	return true;
+}
+
+int32 URewardUIWidgetBase::GetClaimedRewardRowCount() const
+{
+	int32 ClaimedCount = 0;
+	for (const FRewardClaimRow& ClaimRow : mRewardClaimRows)
+	{
+		ClaimedCount += ClaimRow.mClaimed ? 1 : 0;
+	}
+	return ClaimedCount;
 }
 
 void URewardUIWidgetBase::RefreshSummary()
@@ -235,6 +283,11 @@ void URewardUIWidgetBase::RefreshRows()
 	};
 
 	const FRewardUI& Reward = mUIModel->GetReward();
+	if (mTitleText != nullptr)
+	{
+		mTitleText->SetText(Reward.mTitle);
+	}
+
 	UTexture2D* SummaryIcon = mGoldIcon != nullptr ? mGoldIcon.Get() : mRewardGoldIconTexture.Get();
 
 	if (Reward.mGoldGained != 0)
@@ -243,18 +296,50 @@ void URewardUIWidgetBase::RefreshRows()
 			ERewardClaimKind::Gold,
 			INDEX_NONE,
 			FText::Format(LOCTEXT("GoldRewardValue", "골드 +{0}"), FText::AsNumber(Reward.mGoldGained)),
-			FText::GetEmpty(),
+			FText::Format(LOCTEXT("GoldRewardBalance", "보유 골드 {0}"), FText::AsNumber(Reward.mGoldBalance)),
 			SummaryIcon);
 	}
 	if (Reward.mExpGained != 0)
 	{
 		// 경험치 행은 전용 아이콘(없으면 골드 아이콘 폴백).
 		UTexture2D* ExpIcon = mRewardExpIconTexture != nullptr ? mRewardExpIconTexture.Get() : SummaryIcon;
+
+		FText ExpProgressText = FText::GetEmpty();
+		if (Reward.mMaxExp > 0.0f)
+		{
+			const int32 CurrentExp = FMath::RoundToInt(FMath::Clamp(Reward.mExpAfter, 0.0f, Reward.mMaxExp));
+			const int32 MaxExp = FMath::RoundToInt(Reward.mMaxExp);
+			if (Reward.mLevelAfter > 0 && Reward.mLevelAfter != Reward.mLevelBefore)
+			{
+				ExpProgressText = FText::Format(
+					LOCTEXT("ExpRewardLevelUpProgress", "Lv.{0} → Lv.{1} · {2}/{3}"),
+					FText::AsNumber(Reward.mLevelBefore),
+					FText::AsNumber(Reward.mLevelAfter),
+					FText::AsNumber(CurrentExp),
+					FText::AsNumber(MaxExp));
+			}
+			else if (Reward.mLevelAfter > 0)
+			{
+				ExpProgressText = FText::Format(
+					LOCTEXT("ExpRewardProgressWithLevel", "Lv.{0} · {1}/{2}"),
+					FText::AsNumber(Reward.mLevelAfter),
+					FText::AsNumber(CurrentExp),
+					FText::AsNumber(MaxExp));
+			}
+			else
+			{
+				ExpProgressText = FText::Format(
+					LOCTEXT("ExpRewardProgress", "{0}/{1}"),
+					FText::AsNumber(CurrentExp),
+					FText::AsNumber(MaxExp));
+			}
+		}
+
 		AddRow(
 			ERewardClaimKind::Exp,
 			INDEX_NONE,
 			FText::Format(LOCTEXT("ExpRewardValue", "경험치 +{0}"), FText::AsNumber(Reward.mExpGained)),
-			FText::GetEmpty(),
+			ExpProgressText,
 			ExpIcon);
 	}
 
@@ -285,7 +370,12 @@ void URewardUIWidgetBase::HandleRewardRowClicked(int32 RewardRowIndex)
 	}
 }
 
-/** @brief 게임플레이가 지급을 확정한 보상 행을 목록에서 제거한다. VerticalBox에서 빠지면 아래 행이 자동으로 위로 올라온다. */
+void URewardUIWidgetBase::HandleRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	NotifyRewardClaimed(ClaimKind, ChoiceIndex);
+}
+
+/** @brief 게임플레이가 지급을 확정한 보상 행을 목록에 남긴 채 수령 완료 상태로 바꾼다. */
 void URewardUIWidgetBase::NotifyRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
 	for (int32 RowIndex = 0; RowIndex < mRewardClaimRows.Num(); ++RowIndex)
@@ -296,11 +386,11 @@ void URewardUIWidgetBase::NotifyRewardClaimed(ERewardClaimKind ClaimKind, int32 
 			continue;
 		}
 
-		// 행 인덱스(=위젯 클릭 시 넘어오는 값) 정렬을 유지하려고 배열은 줄이지 않고, 표시 위젯만 박스에서 제거한다.
+		// 결과를 사라지게 하지 않는다. 모든 보상을 한눈에 확인할 수 있고, 재클릭만 막는다.
 		ClaimRow.mClaimed = true;
 		if (mRewardRowWidgets.IsValidIndex(RowIndex) && mRewardRowWidgets[RowIndex] != nullptr)
 		{
-			mRewardRowWidgets[RowIndex]->RemoveFromParent();
+			mRewardRowWidgets[RowIndex]->SetClaimed(true);
 		}
 		break;
 	}

@@ -10,6 +10,7 @@
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/MockCombatDriver.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
@@ -1223,6 +1224,32 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 					mRoundChangeBarrier.Reset();
 				}
 			});
+	}
+}
+
+void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
+{
+	if (mCombatRewardUIModel == InUIModel)
+	{
+		return;
+	}
+
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimConfirmed.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed);
+	}
+
+	mCombatRewardUIModel = InUIModel;
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimConfirmed.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed);
+	}
+
+	if (mCombatRewardWidget != nullptr)
+	{
+		mCombatRewardWidget->BindUIModel(mCombatRewardUIModel);
 	}
 }
 

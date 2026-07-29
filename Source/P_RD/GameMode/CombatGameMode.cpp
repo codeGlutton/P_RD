@@ -17,6 +17,7 @@
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "UI/RDUserWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
 #include "Singleton/WorldSubsystem/WorldCameraModel.h"
@@ -232,6 +233,10 @@ void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
 
+	mGoldRewardClaimed = false;
+	mExpRewardClaimed = false;
+	mClaimedRewardChoiceIndices.Reset();
+
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
@@ -393,6 +398,10 @@ void ACombatGameMode::BeginRoom()
 			if (UCombatUIWidgetBase* CombatUIWidget = Cast<UCombatUIWidgetBase>(CombatHUD))
 			{
 				CombatUIWidget->BindUIModel(mCombatUIModel);
+			}
+			if (UCombatLayoutHUDWidget* CombatLayoutHUDWidget = Cast<UCombatLayoutHUDWidget>(CombatHUD))
+			{
+				CombatLayoutHUDWidget->BindRewardUIModel(mRewardUIModel);
 			}
 			CombatHUD->OpenUI();
 		}
@@ -567,66 +576,98 @@ void ACombatGameMode::ConfirmTargetTile()
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	const FRoom& CurrentRoomData = GetRunPersistData()->GetCurrentRoom();
+	if (ClaimCombatReward(ClaimKind, ChoiceIndex) && mRewardUIModel != nullptr)
+	{
+		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+	}
+}
+
+bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr)
+	{
+		return false;
+	}
+
+	const FRoom& CurrentRoomData = RunPersistData->GetCurrentRoom();
 	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
 
 	if (CurrentRoom == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (ClaimKind == ERewardClaimKind::Gold)
 	{
-		if (CurrentRoom->mRewardMoney == 0)
+		if (mGoldRewardClaimed || CurrentRoom->mRewardMoney <= 0)
 		{
-			return;
+			return false;
 		}
 
 		UPartyModel* PartyModel = GetPartyModel();
-		checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+		if (PartyModel == nullptr)
+		{
+			return false;
+		}
 
 		UAttributeSetComponentModel* AttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
-		checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+		if (AttributeSetComponentModel == nullptr)
+		{
+			return false;
+		}
 
 		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
+		mGoldRewardClaimed = true;
 		PushPlayerMetaUIData();
-		return;
+		return true;
 	}
 
 	if (ClaimKind == ERewardClaimKind::Exp)
 	{
-		if (CurrentRoom->mRewardExp == 0)
+		if (mExpRewardClaimed || CurrentRoom->mRewardExp <= 0)
 		{
-			return;
+			return false;
 		}
 
 		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
-		checkf(PlayerUnitModels.IsEmpty() == true, TEXT("플레이어 유닛 스폰 오류"));
-
-		const int32 PlayerMaxNum = PlayerUnitModels.Num();
-		for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+		bool bGrantedToAnyPlayer = false;
+		for (UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 		{
-			if (PlayerUnitModels[PlayerIndex] == nullptr)
+			if (PlayerUnitModel == nullptr)
 			{
 				continue;
 			}
 
-			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModels[PlayerIndex]->GetAttributeComponentModel();
-			checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+			if (AttributeSetComponentModel == nullptr)
+			{
+				continue;
+			}
 
 			AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+			bGrantedToAnyPlayer = true;
 		}
+
+		if (bGrantedToAnyPlayer == false)
+		{
+			return false;
+		}
+
+		mExpRewardClaimed = true;
 		PushPlayerMetaUIData();
-		return;
+		return true;
 	}
 
-	if (ClaimKind != ERewardClaimKind::Choice || ChoiceIndex == INDEX_NONE)
+	if (ClaimKind != ERewardClaimKind::Choice
+		|| ChoiceIndex == INDEX_NONE
+		|| mClaimedRewardChoiceIndices.Contains(ChoiceIndex)
+		|| mRewardUIModel == nullptr)
 	{
-		return;
+		return false;
 	}
 
-	/*const TArray<FRewardChoiceUI> Choices = MakeCombatRewardChoicesUI();
-	const FRewardChoiceUI* FoundChoice = Choices.FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
+	const FRewardChoiceUI* FoundChoice = mRewardUIModel->GetRewardChoices().FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
 	{
 		return Choice.mChoiceIndex == ChoiceIndex;
 	});
@@ -642,11 +683,18 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
 		break;
 	case ERewardChoiceKind::Skill:
+		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
 		break;
 	case ERewardChoiceKind::Gold:
 	default:
 		break;
-	}*/
+	}
+
+	if (bClaimed)
+	{
+		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
+	}
+	return bClaimed;
 }
 
 void ACombatGameMode::HandleAbandonRun()

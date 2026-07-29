@@ -10,7 +10,7 @@ void URewardUIModel::RequestClaim()
 /** @brief 확정 보상 스냅샷을 저장하고 모든 바인딩 위젯에 다시 그리라고 알린다. */
 void URewardUIModel::SetReward(const FRewardUI& Reward)
 {
-	// 전/후 값이 들어 있는 스냅샷을 보관해 WBP가 같은 데이터로 카운트업/막대 연출을 반복 재생할 수 있게 한다.
+	// 전/후 값이 들어 있는 스냅샷을 보관해 WBP가 완성된 결과 문구를 즉시 다시 그릴 수 있게 한다.
 	mReward = Reward;
 	OnUIChanged.Broadcast();
 }
@@ -30,6 +30,11 @@ void URewardUIModel::RequestClaimReward(ERewardClaimKind ClaimKind, int32 Choice
 	{
 		OnRewardChosen.Broadcast(ChoiceIndex);
 	}
+}
+
+void URewardUIModel::ConfirmRewardClaim(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	OnRewardClaimConfirmed.Broadcast(ClaimKind, ChoiceIndex);
 }
 
 /** @brief 룸 보상 항목 목록을 저장하고 보상 갱신 알림을 보낸다. */
