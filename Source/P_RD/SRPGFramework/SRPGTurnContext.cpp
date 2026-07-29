@@ -172,9 +172,12 @@ void USRPGTurnContext::BeginTurn()
 			// TODO: 파티시스템 도입 후 파티 정보를 Players에 입력 요망
 			TArray<UUnitModel*> Players = CombatModel->GetPlayerUnits();
 
+			// 판단근거 로그 식별용 라운드/턴 태그
+			const FString PlanLogTag = FString::Printf(TEXT("R%d/T%d"), CombatModel->GetRoundCount(), CombatModel->GetTurnCount());
+
 			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
 			// @note 스킬 랜덤 선택은 시뮬/라이브 동일 결과를 위해 룸의 이벤트 스트림 사용
-			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this)))
+			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this), PlanLogTag))
 			{
 				CommandRouterModel->SummitCommand(Command);
 			}
