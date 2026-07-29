@@ -1133,6 +1133,12 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 		// 전투가 끝나면 결과 연출을 맡는다. 배리어를 넘겨받아 붙잡는다.
 		mVictoryWorldMapLocked = false;
 		mCombatResultFlowActive = false;
+
+		// 승리 경로는 HUD 를 접은 채로 지도를 연다(결과 화면이 끝나고 조작을
+		// 되돌리지 않는 유일한 길이다). 그런데 OpenUI 는 **이미 열린 위젯이면
+		// 그냥 돌아가므로** 다음 전투에서 다시 펴 주지 않는다 -- 접힌 채로
+		// 남으면 그 판 내내 HUD 가 안 보인다. 붙을 때마다 여기서 편다.
+		SetCombatControlsShown(true);
 		mUIModel->OnEndCombat.RemoveAll(this);
 		mEndCombatHandle = mUIModel->OnEndCombat.AddWeakLambda(this,
 			[this](TSharedPtr<FPresentationBarrier> Barrier)
