@@ -27,6 +27,7 @@ UCombatLayoutHUDWidget 이 이름으로 위젯을 찾는다. 그 이름을 여�
     MenuButton_i
     EnemyPanel / EnemyPortrait / EnemyName / EnemyHPBar / EnemyHPText
     EnemyDefense / EnemyForecast
+    CommandLayer / PartyLayer  (좁은 화면에서 겹째로 커진다)
     EndTurnButton / EndTurnLabel / ConfirmButton / ConfirmLabel
     TurnAPText / TurnAPPip_j / TurnAPPipUsed_j
 
@@ -511,6 +512,19 @@ def enemy_panel(blueprint, root):
                 unreal.LinearColor(0.86, 0.24, 0.20, 1.0))
 
 
+def layer(blueprint, root, name, anchor):
+    """화면만 한 빈 겹. 그 안의 것이 함께 커지고 함께 붙는다.
+
+    카드를 하나씩 키우면 여섯이 제자리에서 부풀어 서로 겹친다. 겹째로 키워야
+    사이 간격까지 같이 커진다 -- 좁은 화면에서 HUD 가 작아 보이는 것은 카드
+    크기만이 아니라 그 사이가 벌어져 보이기 때문이다.
+    """
+    kit.add(blueprint, "CanvasPanel", name, root)
+    kit.place(blueprint, name, 0, 0, kit.CANVAS_W, kit.CANVAS_H, anchor,
+              None, Z_PLATE - 1)
+    return name
+
+
 def commands(blueprint, root):
     for index, (plate_name, name, damage, cooldown, cost) in enumerate(COMMANDS):
         card, origin, size = group(blueprint, root, "CommandCard_%d" % index,
@@ -795,9 +809,9 @@ bp = kit.create_asset(ASSET)
 kit.add(bp, "CanvasPanel", "RootCanvas", "")
 top_row(bp, "RootCanvas")
 enemy_panel(bp, "RootCanvas")
-commands(bp, "RootCanvas")
-party(bp, "RootCanvas")
-ap_bar(bp, "RootCanvas")
+commands(bp, layer(bp, "RootCanvas", "CommandLayer", "mc"))
+party(bp, layer(bp, "RootCanvas", "PartyLayer", "bl"))
+ap_bar(bp, "PartyLayer")
 end_turn(bp, "RootCanvas")
 # 저장 전에 컴파일한다.
 #

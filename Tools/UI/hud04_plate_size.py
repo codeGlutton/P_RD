@@ -11,7 +11,7 @@
 """
 
 PLATE_SIZE = {
-    "bottom_center_ap_bar": (486, 800, 355, 60),
+    "bottom_center_ap_bar": (326, 852, 355, 60),
     "bottom_status_center": (118, 712, 96, 200),
     "bottom_status_left": (14, 712, 96, 200),
     "bottom_status_right": (222, 712, 96, 200),

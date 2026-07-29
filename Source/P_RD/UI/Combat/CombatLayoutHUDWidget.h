@@ -290,6 +290,16 @@ private:
 	/** @brief 메뉴 넷. 왼쪽부터 지도 · 스킬 · 가방 · 설정. */
 	UPROPERTY() TArray<TObjectPtr<UButton>> mMenuButtons;
 
+	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 용병칸 · AP 막대. */
+	UPROPERTY() TObjectPtr<UWidget> mCommandLayer;
+	UPROPERTY() TObjectPtr<UWidget> mPartyLayer;
+
+	/** @brief 직전에 잰 화면 크기. 바뀔 때만 다시 잰다. */
+	FVector2D mLastViewport = FVector2D::ZeroVector;
+
+	/** @brief 아무리 좁아도 이보다는 안 키운다. 넘으면 판을 덮는다. */
+	static constexpr float MaxScreenScale = 1.6f;
+
 	/** @brief 확정 단추 묶음. 공격 범위가 뜬 그때만 편다. */
 	UPROPERTY() TObjectPtr<UWidget> mConfirmPanel;
 	UPROPERTY() TObjectPtr<UButton> mConfirmButton;
@@ -303,6 +313,21 @@ private:
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
 
 	UFUNCTION() void HandleConfirmClicked();
+
+	/**
+	 * @brief 좁은 화면에서 HUD 를 키운다.
+	 *
+	 * @details
+	 * 16:9 보다 좁아질수록(폴드처럼 세로로 긴 화면) 판이 작아 보인다. 가로가
+	 * 기준인데 그 가로가 줄기 때문이다.
+	 *
+	 * 그래서 **얼마나 좁아졌나**를 그대로 배율로 쓴다. 16:9 면 1.0 이고,
+	 * 4:3 이면 1.33 이다. 위쪽 줄(라운드·턴 순서·메뉴)은 안 건드린다 -- 그쪽은
+	 * 가로로 길어서 키우면 서로 부딪힌다.
+	 */
+	void RefreshScreenScale();
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
 
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();

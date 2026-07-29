@@ -222,6 +222,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
+	mCommandLayer = Find<UWidget>(WidgetTree, TEXT("CommandLayer"));
+	mPartyLayer = Find<UWidget>(WidgetTree, TEXT("PartyLayer"));
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
@@ -514,6 +516,7 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		RefreshCommandVisibility();
 		RefreshActionButtons();
 		RefreshTurnActionPoints();
+		RefreshScreenScale();
 	}
 	if (bAll || Domain == ECombatUIDomain::Unit)
 	{
@@ -1116,6 +1119,58 @@ bool UCombatLayoutHUDWidget::IsAiming() const
  * 판이 화면을 거의 다 덮고 있어 무를 자리가 없다 -- 늘 같은 자리에 있는
  * 단추가 그 길이 된다.
  */
+/**
+ * @brief 창 크기가 바뀌면 다시 잰다.
+ *
+ * 갱신은 전투가 움직일 때만 온다. 창만 끌어 늘리면 아무 갱신도 안 오므로
+ * 여기서 본다 -- 크기가 그대로면 아무 일도 안 한다.
+ */
+void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
+{
+	Super::NativeTick(MyGeometry, DeltaTime);
+	RefreshScreenScale();
+}
+
+void UCombatLayoutHUDWidget::RefreshScreenScale()
+{
+	const UWorld* World = GetWorld();
+	if (World == nullptr || World->GetGameViewport() == nullptr)
+	{
+		return;
+	}
+	FVector2D Viewport = FVector2D::ZeroVector;
+	World->GetGameViewport()->GetViewportSize(OUT Viewport);
+	if (Viewport.X <= 0.f || Viewport.Y <= 0.f || Viewport.Equals(mLastViewport))
+	{
+		return;
+	}
+	mLastViewport = Viewport;
+
+	// 16:9 보다 좁아진 만큼 키운다. 넓어져도 줄이지는 않는다 -- 넓은 화면에서
+	// 작아 보이는 것은 문제가 아니라 판이 넓게 보이는 것이다.
+	const float Wide = 16.f / 9.f;
+	const float Ratio = Viewport.X / Viewport.Y;
+	const float Scale = FMath::Clamp(Wide / Ratio, 1.f, MaxScreenScale);
+
+	// 스킬 카드는 한가운데에서, 용병칸은 왼쪽 아래에서 자란다. 붙여 둔
+	// 모서리와 같은 곳에서 자라야 자리가 안 밀린다.
+	const TPair<UWidget*, FVector2D> Layers[] = {
+		{ mCommandLayer, FVector2D(0.5f, 0.5f) },
+		{ mPartyLayer, FVector2D(0.f, 1.f) },
+	};
+	for (const TPair<UWidget*, FVector2D>& Layer : Layers)
+	{
+		if (Layer.Key == nullptr)
+		{
+			continue;
+		}
+		Layer.Key->SetRenderTransformPivot(Layer.Value);
+		FWidgetTransform Transform;
+		Transform.Scale = FVector2D(Scale, Scale);
+		Layer.Key->SetRenderTransform(Transform);
+	}
+}
+
 void UCombatLayoutHUDWidget::RefreshActionButtons()
 {
 	const ECombatBuildPhaseUI Phase = mUIModel != nullptr
