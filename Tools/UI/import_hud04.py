@@ -10,8 +10,8 @@ import_kaykit_ui.py 가 이미 있지만 그것은 여섯 갈래의 아트를 �
 
 ## 설정
 
-UI 판이라 밉맵을 끈다. 판을 원래 크기 그대로 놓는 방식이라 축소해서 그릴 일이
-없고, 밉맵이 있으면 첫 프레임에 흐린 단계가 잠깐 뜬다.
+UI 판이지만 밉맵을 만든다. 갈아 끼운 판은 그림이 훨씬 커서 줄여 그리는데,
+밉이 없으면 줄이는 자리마다 자글거린다.
 
     python (RunEditorPython) import_hud04.py
 """
@@ -52,8 +52,14 @@ for name in names:
     texture.set_editor_property("lod_group", unreal.TextureGroup.TEXTUREGROUP_UI)
     texture.set_editor_property("compression_settings",
                                 unreal.TextureCompressionSettings.TC_EDITOR_ICON)
+    # 밉맵을 만든다.
+    #
+    # 처음에는 껐다 -- "판을 원래 크기 그대로 놓으니 축소할 일이 없다" 였다.
+    # 그 전제가 깨졌다. 갈아 끼운 판은 그림이 훨씬 크다(용병창 630 x 1453 을
+    # 96 x 221 로 그린다). 밉 없이 여섯 배를 줄이면 픽셀을 건너뛰며 집어서
+    # 테두리가 자글자글 끓는다.
     texture.set_editor_property("mip_gen_settings",
-                                unreal.TextureMipGenSettings.TMGS_NO_MIPMAPS)
+                                unreal.TextureMipGenSettings.TMGS_SIMPLE_AVERAGE)
     texture.set_editor_property("srgb", True)
     unreal.EditorAssetLibrary.save_loaded_asset(texture, False)
 
