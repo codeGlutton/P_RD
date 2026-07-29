@@ -528,12 +528,6 @@ private:
 	UPROPERTY(Transient) TObjectPtr<class URewardUIWidgetBase> mCombatRewardWidget;
 	UPROPERTY(Transient) TObjectPtr<class URewardUIModel> mCombatRewardUIModel;
 
-	/** @brief 결과 영상. 비어 있으면 코드에 박아 둔 자리를 쓴다. */
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
-	FString mCombatVictoryVideoPath;
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
-	FString mCombatDefeatVideoPath;
-
 	/** @brief 경험치가 차오를 때 나는 소리. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
 	TObjectPtr<USoundBase> mExpGainSound;

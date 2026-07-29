@@ -11,6 +11,7 @@
 #include "UI/Combat/MockCombatDriver.h"
 #include "GameMode/CombatGameMode.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/Reward/RewardUIWidgetBase.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
 
@@ -45,6 +46,19 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
 #undef RD_LOAD_TEX
+
+	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(
+		TEXT("/Game/UI/WBP_Reward"));
+	if (RewardWidgetClassFinder.Succeeded())
+	{
+		mRewardWidgetClass = RewardWidgetClassFinder.Class;
+	}
+
+#define RD_LOAD_SOUND(Member, Path) 	{ static ConstructorHelpers::FObjectFinder<USoundBase> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
+	RD_LOAD_SOUND(mVictoryJingleSound, "/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Victory_Fupi_CC0.BGM_Jingle_Victory_Fupi_CC0");
+	RD_LOAD_SOUND(mDefeatJingleSound,  "/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_Spuispuin_CCBY4.BGM_Jingle_Defeat_Spuispuin_CCBY4");
+	RD_LOAD_SOUND(mExpGainSound,       "/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_XPGain_OGA_CC0_Rise03.SFX_XPGain_OGA_CC0_Rise03");
+#undef RD_LOAD_SOUND
 }
 
 namespace
