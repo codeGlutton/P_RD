@@ -1467,6 +1467,7 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 	}
 	mPressOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
 	mPressMoved = false;
+	mPressActive = true;
 	return FReply::Handled();
 }
 
@@ -1475,6 +1476,7 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 {
 	mPressOrigin = FVector2D(InTouchEvent.GetScreenSpacePosition());
 	mPressMoved = false;
+	mPressActive = true;
 	return FReply::Handled();
 }
 
@@ -1530,6 +1532,20 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry
 /** @brief 뗀 자리가 누른 자리 가까이면 탭, 아니면 끈 것으로 본다. */
 void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 {
+	/*
+	 * 한 번 누른 것은 **한 번만** 넘긴다.
+	 *
+	 * 안드로이드는 터치가 마우스 이벤트도 합성해서, 손가락 하나에 터치와
+	 * 마우스가 둘 다 온다. 누를 때 처리할 때는 안 드러났는데 뗄 때로 옮기니
+	 * 뗌도 둘 다 와서 탭이 두 번 나갔다 -- 사거리에서 한 번 찍었는데 선택과
+	 * 확정이 같이 되어 그 자리에서 발동했다.
+	 */
+	if (mPressActive == false)
+	{
+		return;
+	}
+	mPressActive = false;
+
 	const bool bDragged = mPressMoved
 		|| ScreenPosition.Equals(mPressOrigin, BoardTapSlack) == false;
 	mPressMoved = false;

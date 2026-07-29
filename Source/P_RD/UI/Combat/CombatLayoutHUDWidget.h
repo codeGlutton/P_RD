@@ -211,6 +211,9 @@ private:
 	FVector2D mPressOrigin = FVector2D::ZeroVector;
 	bool mPressMoved = false;
 
+	/** @brief 누름이 아직 안 끝났나. 터치와 마우스가 겹쳐 와도 한 번만 처리한다. */
+	bool mPressActive = false;
+
 	/**
 	 * @brief 이 자리가 HUD 위인가.
 	 *
