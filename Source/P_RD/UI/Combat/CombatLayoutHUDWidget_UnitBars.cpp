@@ -124,13 +124,6 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 
 void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 {
-	// 붙을 캔버스는 WBP 의 루트다. 옛 HUD 는 런타임 위젯 생성기에서 잡아
-	// 두었는데, 그 생성기는 안 옮겼으므로 여기서 한 번 잡는다.
-	if (mRootCanvas == nullptr && WidgetTree != nullptr)
-	{
-		mRootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
-	}
-
 	if (mRootCanvas == nullptr || WidgetTree == nullptr)
 	{
 		return;

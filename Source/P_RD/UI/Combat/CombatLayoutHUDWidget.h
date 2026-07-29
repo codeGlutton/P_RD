@@ -9,16 +9,20 @@
  * UCombatUIWidgetBase를 상속해 UCombatUIModel 하나만 보고 그린다. 게임플레이를
  * 직접 참조하지 않고, 탭은 Request*()로 의도만 보낸다.
  *
- * 기존 UCombatTileMapHUDWidget과 나란히 존재한다. 그쪽은 위젯을 C++에서
- * 만들어 붙이므로 WBP를 바꿔도 배치가 바뀌지 않는다. 이 클래스는 반대로
  * **배치를 WBP가 소유**한다. 위젯은 전부 이름으로 찾고, 없으면 그냥 건너뛴다.
  * 그래서 배치안마다 WBP만 새로 만들면 되고, 어떤 안이 어떤 요소를 빼도 된다.
+ *
+ * 머리 위 HP 바·플로팅 로그·라운드 배너처럼 월드 자리를 따라가야 하는 것만
+ * C++가 루트 캔버스에 직접 짓는다. 그것들은 WBP 에 미리 놓을 수가 없다 --
+ * 개수가 유닛 수에 따라 변한다.
  *
  * 한 배치안 = WBP 하나. BP_CombatGameMode에서 어느 WBP를 쓸지만 바꾼다.
  */
 
 #include "RDMinimal.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
+
+#include "UI/Combat/CombatUITypes.h"
 
 #include "CombatLayoutHUDWidget.generated.h"
 
@@ -113,7 +117,8 @@ public:
 	 * UMockCombatDriver를 만들어 고정된 장면을 세운다.
 	 *
 	 * 실제 전투에 연결되는 순간(BindUIModel이 먼저 불린 경우) 이 경로는 건너뛴다.
-	 * 배치안이 정해지면 이 기본값을 false로 내리면 된다.
+	 * 편집기에서 WBP 를 열었을 때와 찍는 시험이 이것으로 화면을 채운다 --
+	 * 게임모드가 없는 자리라 이걸 끄면 빈 HUD 가 나온다.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Layout")
 	bool mUsePreviewData = true;
@@ -278,6 +283,7 @@ private:
 	FDelegateHandle mActionBeginHandle;
 	FDelegateHandle mActionEndHandle;
 	FDelegateHandle mEndCombatHandle;
+	FDelegateHandle mBeginRoundHandle;
 
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
@@ -384,6 +390,89 @@ private:
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
+
+	/* ── 플로팅 로그 (옛 HUD 에서 옮김) ──────────────────────────────────
+	 *
+	 * 맞은 자리 위로 피해 숫자가 뜬다. 이것 없이는 몇 대 맞았는지, 얼마나
+	 * 아팠는지가 화면에 안 남는다.
+	 *
+	 * 실행 로그는 몰릴 때가 있어 큐에 쌓았다가 간격을 두고 하나씩 띄운다.
+	 * 미리보기 로그는 큐를 안 타고 바로 뜬다.
+	 */
+	UFUNCTION() void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
+	UFUNCTION() void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
+	UFUNCTION() void HandleCombatFloatingLogsCleared();
+	void UpdateFloatingCombatLogQueue(float InDeltaTime);
+	void UpdateFloatingCombatLogs(float InDeltaTime);
+	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);
+	void RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex);
+	UTexture2D* ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const;
+
+	/** @brief 아직 안 뜬 대기 칸. 원본 요청만 들고 있다. */
+	struct FQueuedFloatingCombatLogEntry
+	{
+		FCombatFloatingLogRequest mRequest;
+		int32 mArrivalOrder = 0;   // 같은 순서일 때 받은 차례를 지킨다
+	};
+
+	/** @brief 지금 떠 있는 로그 한 건. 위젯 수명은 캔버스가 쥔다. */
+	struct FFloatingCombatLogEntry
+	{
+		TObjectPtr<UWidget> mRoot;
+		FVector mWorldLocation = FVector::ZeroVector;
+		int32 mTurnIndex = INDEX_NONE;
+		int32 mActionIndex = INDEX_NONE;
+		int32 mMotionIndex = INDEX_NONE;
+		float mElapsed = 0.0f;
+		bool mIsPreview = false;      // 참이면 저절로 안 사라진다
+		float mStackOffsetY = 0.0f;   // 미리보기끼리 안 겹치게 쌓는 값
+		bool mIsDismissing = false;
+		float mDismissElapsed = 0.0f;
+	};
+	TArray<FQueuedFloatingCombatLogEntry> mPendingFloatingCombatLogs;
+	TArray<FFloatingCombatLogEntry> mFloatingCombatLogs;
+	int32 mNextFloatingCombatLogArrivalOrder = 0;
+	float mFloatingCombatLogQueueCooldown = 0.0f;
+
+	/* ── 라운드 배너 (옛 HUD 에서 옮김) ──────────────────────────────────
+	 *
+	 * 라운드가 오르면 배리어를 붙잡고 33장짜리 배너를 튼다. 다 돌면 놓아서
+	 * 그 라운드 첫 턴이 진행된다. **못 틀면 즉시 놓는다** -- 안 그러면
+	 * 라운드가 영영 안 넘어간다.
+	 */
+	bool PlayTurnChangeIntro();
+	void FinishTurnChangeIntro();
+	bool EnsureTurnChangeFrameTextures();
+	void PreloadTurnChangeFrameTextures();
+	void EnsureTurnChangeWidgets();
+	void SetTurnChangeIntroVisibility(bool bVisible) const;
+	int32 GetTurnChangeDisplayNumber() const;
+	FString ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const;
+	UTexture2D* LoadTurnChangeFrameTexture(const FString& FrameAssetPath) const;
+	void UpdateTurnChangeIntro(float InDeltaTime);
+	void ApplyTurnChangeFrame(int32 FrameIndex);
+
+	UPROPERTY(Transient) TObjectPtr<class UImage> mTurnChangeVideoImage;
+	UPROPERTY(Transient) TObjectPtr<class UButton> mTurnChangeInputBlocker;
+	UPROPERTY(Transient) TObjectPtr<class UBorder> mTurnChangeTurnTextPanel;
+	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mTurnChangeTurnText;
+	UPROPERTY(Transient) TObjectPtr<class UBorder> mTurnChangeBackdropPanel;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
+	TSharedPtr<struct FStreamableHandle> mTurnChangeFramePreloadHandle;
+	FSlateBrush mTurnChangeFrameBrush;
+	float mTurnChangeIntroElapsed = 0.0f;
+	int32 mTurnChangeCurrentFrameIndex = INDEX_NONE;
+	bool mTurnChangeIntroPlaying = false;
+
+	/**
+	 * @brief 배너를 강제로 끝내는 보험 타이머.
+	 *
+	 * 정상 종료는 Tick 의 경과 시간 판정뿐이다. 배너 도중 HUD 가 접혀 Tick 이
+	 * 멈추면 배리어가 영영 안 풀린다 -- 그 라운드가 진행 불능이 된다.
+	 */
+	FTimerHandle mTurnChangeSafetyTimerHandle;
+	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
+	int32 mLastShownTurnRound = 0;
 
 	/* ── 유닛 머리 위 HP 바 (옛 HUD 에서 옮김) ────────────────────────────
 	 *

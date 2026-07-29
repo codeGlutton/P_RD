@@ -154,7 +154,8 @@ ARoomGameModeBase::ARoomGameModeBase()
 	/*
 	 * 월드맵/설정/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
 	 * WorldWidgetSubsystem에 등록해두면 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
-	 * (패널을 여는 진입점은 전투 HUD의 내비 버튼 — CombatTileMapHUDWidget_Nav.cpp)
+	 * (전투 HUD의 내비 버튼이 진입점이었는데, 전투 중에 무엇을 여는지가 안 정해져
+	 *  옛 HUD와 함께 지웠다. 정해지면 새 HUD에 붙인다.)
 	 */
 	mWorldWidgets = { 
 		EWorldWidgetType::MsgNotify, 

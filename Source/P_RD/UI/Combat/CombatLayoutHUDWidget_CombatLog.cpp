@@ -1,4 +1,4 @@
-#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -12,7 +12,7 @@
 #include "UI/Combat/CombatUIModel.h"
 
 /**
- * @file   CombatTileMapHUDWidget_CombatLog.cpp
+ * @file   CombatLayoutHUDWidget_CombatLog.cpp
  * @brief  전투 플로팅 로그(대상 머리 위 텍스트) + 턴 라운드 배너의 표시 구현.
  *
  * @details
@@ -91,7 +91,7 @@ namespace
  * @return 해당 텍스처. None이거나 전용 아이콘이 아직 없는 종류(Poison/Fire/Move)면 nullptr.
  * @note StatusIcons 8종 연결됨. Poison/Fire/Move는 발행 배선도 아직 없어 아이콘이 준비돼도 지금은 안 뜬다.
  */
-UTexture2D* UCombatTileMapHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const
+UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const
 {
 	switch (IconType)
 	{
@@ -116,7 +116,7 @@ UTexture2D* UCombatTileMapHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType
  *          실행 로그면 대기 큐(mPendingFloatingCombatLogs)에 넣고, UpdateFloatingCombatLogQueue가 간격을 두고 하나씩 꺼내 스폰한다.
  * @param Request 위치/문구/아이콘·색 의미/모션 인덱스/미리보기 여부를 담은 요청(값 복사 — 다이나믹 델리게이트 규약).
  */
-void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest Request)
+void UCombatLayoutHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest Request)
 {
 	// 미리보기 로그는 스태거 없이 즉시 띄운다(조준 시 목록이 한꺼번에 나열돼야 하므로).
 	if (Request.mIsPreview == true)
@@ -135,7 +135,7 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest 
  * @brief [제거·모션] 한 모션 연출이 끝났으니 그 모션에 묶인 로그를 걷어낸다(OnCombatFloatingLogMotionFinished 구독).
  * @param MotionIndex 끝난 모션의 배열 인덱스. 같은 인덱스를 가진 로그가 여러 개여도 통째로 사라진다.
  */
-void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 MotionIndex)
+void UCombatLayoutHUDWidget::HandleCombatFloatingLogMotionFinished(int32 MotionIndex)
 {
 	RemoveFloatingCombatLogsByMotionIndex(MotionIndex);
 }
@@ -145,7 +145,7 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLogMotionFinished(int32 Motion
  * @details 시뮬레이션이 다른 것으로 넘어가 미리보기 목록을 통째로 버려야 할 때 쓰는 안전망.
  *          대기 큐를 먼저 비워 다음 프레임 부활을 막고 큐 상태를 초기화한 뒤, 화면 위젯을 캔버스에서 떼어낸다.
  */
-void UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared()
+void UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared()
 {
 	// 아직 안 뜬 대기분을 먼저 비운다(다음 프레임에 되살아나지 않게).
 	mPendingFloatingCombatLogs.Reset();
@@ -176,10 +176,10 @@ void UCombatTileMapHUDWidget::HandleCombatFloatingLogsCleared()
  *          (미리보기 로그는 이 큐를 타지 않고 즉시 스폰되므로 여기 관여하지 않는다.)
  * @param InDeltaTime 이번 프레임 경과 시간(쿨다운 차감용).
  */
-void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
+void UCombatLayoutHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
 {
 	// 지도(풀스크린) 열림 중에는 새 플로팅 로그를 스폰하지 않는다(탑바만 남기는 뷰).
-	if (mCombatControlsHidden)
+	if (GetVisibility() == ESlateVisibility::Collapsed)
 	{
 		return;
 	}
@@ -211,9 +211,9 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogQueue(float InDeltaTime)
  *          여기서는 위젯을 만들기만 하고, 실제 위치/투명도 갱신은 UpdateFloatingCombatLogs가 매 프레임 맡는다.
  * @param Request 스폰할 로그 요청.
  */
-void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request)
+void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request)
 {
-	if (RootCanvas == nullptr || WidgetTree == nullptr)
+	if (mRootCanvas == nullptr || WidgetTree == nullptr)
 	{
 		return;
 	}
@@ -257,7 +257,7 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
 		TextSlot->SetVerticalAlignment(VAlign_Center);
 	}
 
-	if (UCanvasPanelSlot* LogSlot = RootCanvas->AddChildToCanvas(LogBox))
+	if (UCanvasPanelSlot* LogSlot = mRootCanvas->AddChildToCanvas(LogBox))
 	{
 		LogSlot->SetAutoSize(true);
 		LogSlot->SetAlignment(FVector2D(0.5f, 1.0f)); // 바닥-중앙 기준으로 머리 위에 선다.
@@ -312,7 +312,7 @@ void UCombatTileMapHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloatin
  *          MotionFinished/Clear로만 제거된다. 역순 순회라 도중에 항목을 지워도 인덱스가 안 꼬인다.
  * @param InDeltaTime 이번 프레임 경과 시간(수명/상승/페이드 누적용).
  */
-void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
+void UCombatLayoutHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 {
 	if (mFloatingCombatLogs.Num() == 0)
 	{
@@ -320,7 +320,7 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 	}
 
 	// 지도(풀스크린) 열림 중에는 떠 있는 로그를 숨긴다(수명/이동은 멈춤 — 지도 닫으면 재개).
-	if (mCombatControlsHidden)
+	if (GetVisibility() == ESlateVisibility::Collapsed)
 	{
 		for (FFloatingCombatLogEntry& Entry : mFloatingCombatLogs)
 		{
@@ -417,7 +417,7 @@ void UCombatTileMapHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
  *          INDEX_NONE(모션에 안 묶인 실행 juice)은 대상이 아니라 여기서 즉시 반환한다.
  * @param MotionIndex 제거할 모션 배열 인덱스.
  */
-void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex)
+void UCombatLayoutHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 MotionIndex)
 {
 	if (MotionIndex == INDEX_NONE)
 	{
@@ -453,44 +453,4 @@ void UCombatTileMapHUDWidget::RemoveFloatingCombatLogsByMotionIndex(int32 Motion
 	}
 }
 
-void UCombatTileMapHUDWidget::RefreshTurnRoundBanner()
-{
-	if (mTurnRoundBannerText != nullptr)
-	{
-		mTurnRoundBannerText->SetText(FText::GetEmpty());
-		mTurnRoundBannerText->SetVisibility(ESlateVisibility::Collapsed);
-	}
 
-	if (mCombatUIModel != nullptr)
-	{
-		const int32 Round = mCombatUIModel->GetTurnUI().mRound;
-		if (Round > 0)
-		{
-			mLastShownTurnRound = Round;
-		}
-	}
-
-	mTurnRoundBannerElapsed = 0.0f;
-}
-
-void UCombatTileMapHUDWidget::UpdateTurnRoundBanner(float InDeltaTime)
-{
-	if (mTurnRoundBannerText == nullptr
-		|| mTurnRoundBannerText->GetVisibility() == ESlateVisibility::Collapsed)
-	{
-		return;
-	}
-
-	mTurnRoundBannerElapsed += InDeltaTime;
-	if (mTurnRoundBannerElapsed >= TurnBannerLifetime)
-	{
-		mTurnRoundBannerText->SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-
-	const float FadeStart = TurnBannerLifetime * TurnBannerFadePortion;
-	const float Opacity = mTurnRoundBannerElapsed <= FadeStart
-		? 1.0f
-		: 1.0f - (mTurnRoundBannerElapsed - FadeStart) / (TurnBannerLifetime - FadeStart);
-	mTurnRoundBannerText->SetRenderOpacity(FMath::Clamp(Opacity, 0.0f, 1.0f));
-}

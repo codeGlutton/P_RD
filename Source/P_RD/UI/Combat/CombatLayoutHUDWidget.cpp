@@ -2,6 +2,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
 #include "Components/ScaleBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -163,6 +164,11 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		return;
 	}
+
+	// 런타임에 짓는 것들 -- 머리 위 HP 바, 플로팅 로그, 라운드 배너 -- 이 다
+	// 여기에 붙는다. 옛 HUD 는 통짜 런타임 생성기가 잡아 주던 자리다.
+	mRootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+
 	mCached = true;
 
 	mRoundText = Find<UTextBlock>(WidgetTree, TEXT("RoundText"));
@@ -306,7 +312,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
  * @details
  * 전투 중이면 ACombatGameMode가 들고 있는 공용 UCombatUIModel에 붙는다.
  * HUD를 만든 쪽은 위젯을 CreateWidget으로 만들고 OpenUI()만 부르므로, 모델을
- * 찾아 붙이는 건 위젯 몫이다 -- 기존 UCombatTileMapHUDWidget도 같은 자리에서
+ * 찾아 붙이는 건 위젯 몫이다 -- 옛 HUD도 같은 자리에서
  * 같은 일을 한다. 이걸 빼면 인게임에서 가짜 데이터가 그려진다.
  *
  * 전투 게임모드가 아니면(에디터 미리보기, 캡처 테스트) 가짜 장면을 세운다.
@@ -1135,6 +1141,28 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			});
 		mUIModel->OnCombatResultOpenRequested.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
+
+		// 맞은 자리 위로 뜨는 피해 숫자.
+		mUIModel->OnCombatFloatingLog.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLog);
+		mUIModel->OnCombatFloatingLogMotionFinished.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
+
+		// 라운드 배너: 배리어를 붙잡고 틀었다가, 끝나면 놓아 첫 턴을 진행시킨다.
+		// 못 틀면 즉시 놓는다 -- 안 그러면 그 라운드가 영영 안 넘어간다.
+		mUIModel->OnBeginAnyRound.RemoveAll(this);
+		mBeginRoundHandle = mUIModel->OnBeginAnyRound.AddWeakLambda(this,
+			[this](TSharedPtr<FPresentationBarrier> Barrier)
+			{
+				mRoundChangeBarrier.Reset();
+				mRoundChangeBarrier = MoveTemp(Barrier);
+				if (PlayTurnChangeIntro() == false)
+				{
+					mRoundChangeBarrier.Reset();
+				}
+			});
 	}
 }
 
@@ -1147,6 +1175,13 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
 		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
+		mUIModel->OnCombatFloatingLog.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLog);
+		mUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogMotionFinished);
+		mUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
+		mUIModel->OnBeginAnyRound.Remove(mBeginRoundHandle);
 	}
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
@@ -1182,6 +1217,12 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	RefreshScreenScale();
 	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
 	UpdateUnitHpBars();
+	UpdateFloatingCombatLogQueue(DeltaTime);
+	UpdateFloatingCombatLogs(DeltaTime);
+	if (mTurnChangeIntroPlaying)
+	{
+		UpdateTurnChangeIntro(DeltaTime);
+	}
 }
 
 void UCombatLayoutHUDWidget::RefreshScreenScale()

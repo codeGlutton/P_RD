@@ -1,4 +1,8 @@
-#include "UI/CombatTileMapHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
+
+#include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 
 #include "Engine/AssetManager.h"   // 턴 전환 프레임 비동기 프리로드(첫 배너 동기 로드 히치 제거)
 #include "Components/Border.h"
@@ -28,9 +32,9 @@ namespace
 	}
 }
 
-bool UCombatTileMapHUDWidget::PlayTurnChangeIntro()
+bool UCombatLayoutHUDWidget::PlayTurnChangeIntro()
 {
-	EnsureRuntimeWidgets();
+	EnsureTurnChangeWidgets();
 
 	if (EnsureTurnChangeFrameTextures() == false)
 	{
@@ -46,11 +50,6 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro()
 	mTurnChangeIntroElapsed = 0.0f;
 	mTurnChangeCurrentFrameIndex = INDEX_NONE;
 
-	if (mTurnRoundBannerText != nullptr)
-	{
-		mTurnRoundBannerText->SetText(FText::GetEmpty());
-		mTurnRoundBannerText->SetVisibility(ESlateVisibility::Collapsed);
-	}
 
 	if (mTurnChangeTurnText != nullptr)
 	{
@@ -68,14 +67,14 @@ bool UCombatTileMapHUDWidget::PlayTurnChangeIntro()
 		const float SafetyDelay = StaticCast<float>(TurnChangeFrameCount) / TurnChangeFramesPerSecond + 1.0f;
 		World->GetTimerManager().SetTimer(
 			mTurnChangeSafetyTimerHandle,
-			FTimerDelegate::CreateUObject(this, &UCombatTileMapHUDWidget::FinishTurnChangeIntro),
+			FTimerDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::FinishTurnChangeIntro),
 			SafetyDelay,
 			false);
 	}
 	return true;
 }
 
-void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
+void UCombatLayoutHUDWidget::FinishTurnChangeIntro()
 {
 	if (mTurnChangeIntroPlaying == false)
 	{
@@ -98,7 +97,7 @@ void UCombatTileMapHUDWidget::FinishTurnChangeIntro()
 	mRoundChangeBarrier.Reset();
 }
 
-bool UCombatTileMapHUDWidget::EnsureTurnChangeFrameTextures()
+bool UCombatLayoutHUDWidget::EnsureTurnChangeFrameTextures()
 {
 	if (mTurnChangeFrameTextures.Num() == TurnChangeUsedFrameCount)
 	{
@@ -123,7 +122,7 @@ bool UCombatTileMapHUDWidget::EnsureTurnChangeFrameTextures()
 	return true;
 }
 
-void UCombatTileMapHUDWidget::PreloadTurnChangeFrameTextures()
+void UCombatLayoutHUDWidget::PreloadTurnChangeFrameTextures()
 {
 	if (mTurnChangeFramePreloadHandle.IsValid() || mTurnChangeFrameTextures.Num() == TurnChangeUsedFrameCount)
 	{
@@ -141,7 +140,7 @@ void UCombatTileMapHUDWidget::PreloadTurnChangeFrameTextures()
 	mTurnChangeFramePreloadHandle = UAssetManager::GetStreamableManager().RequestAsyncLoad(MoveTemp(FramePaths));
 }
 
-void UCombatTileMapHUDWidget::SetTurnChangeIntroVisibility(bool bVisible) const
+void UCombatLayoutHUDWidget::SetTurnChangeIntroVisibility(bool bVisible) const
 {
 	// 턴 전환 텍스처 에셋은 알파를 가지므로 영상 자체 뒤에는 딤 배경을 깔지 않는다.
 	if (mTurnChangeBackdropPanel != nullptr)
@@ -162,13 +161,13 @@ void UCombatTileMapHUDWidget::SetTurnChangeIntroVisibility(bool bVisible) const
 	}
 }
 
-int32 UCombatTileMapHUDWidget::GetTurnChangeDisplayNumber() const
+int32 UCombatLayoutHUDWidget::GetTurnChangeDisplayNumber() const
 {
-	const int32 Round = mCombatUIModel != nullptr ? mCombatUIModel->GetTurnUI().mRound : 0;
+	const int32 Round = mUIModel != nullptr ? mUIModel->GetTurnUI().mRound : 0;
 	return Round > 0 ? Round : FMath::Max(1, mLastShownTurnRound + 1);
 }
 
-FString UCombatTileMapHUDWidget::ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const
+FString UCombatLayoutHUDWidget::ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const
 {
 	const FString AssetName = FString::Printf(TEXT("T_TurnChange_%03d"), FrameIndex + 1);
 	return FString::Printf(
@@ -178,7 +177,7 @@ FString UCombatTileMapHUDWidget::ResolveTurnChangeFrameAssetPath(int32 FrameInde
 		*AssetName);
 }
 
-UTexture2D* UCombatTileMapHUDWidget::LoadTurnChangeFrameTexture(const FString& FrameAssetPath) const
+UTexture2D* UCombatLayoutHUDWidget::LoadTurnChangeFrameTexture(const FString& FrameAssetPath) const
 {
 	UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *FrameAssetPath);
 	if (Texture == nullptr)
@@ -190,7 +189,7 @@ UTexture2D* UCombatTileMapHUDWidget::LoadTurnChangeFrameTexture(const FString& F
 	return Texture;
 }
 
-void UCombatTileMapHUDWidget::UpdateTurnChangeIntro(float InDeltaTime)
+void UCombatLayoutHUDWidget::UpdateTurnChangeIntro(float InDeltaTime)
 {
 	mTurnChangeIntroElapsed += FMath::Max(0.0f, InDeltaTime);
 
@@ -204,7 +203,7 @@ void UCombatTileMapHUDWidget::UpdateTurnChangeIntro(float InDeltaTime)
 	ApplyTurnChangeFrame(GetClampedFrameIndex(mTurnChangeIntroElapsed));
 }
 
-void UCombatTileMapHUDWidget::ApplyTurnChangeFrame(int32 FrameIndex)
+void UCombatLayoutHUDWidget::ApplyTurnChangeFrame(int32 FrameIndex)
 {
 	if (mTurnChangeVideoImage == nullptr || mTurnChangeFrameTextures.IsValidIndex(FrameIndex) == false)
 	{
@@ -229,4 +228,96 @@ void UCombatTileMapHUDWidget::ApplyTurnChangeFrame(int32 FrameIndex)
 	mTurnChangeVideoImage->SetColorAndOpacity(FLinearColor::White);
 	mTurnChangeVideoImage->SetRenderOpacity(1.0f);
 	mTurnChangeVideoImage->SetBrush(mTurnChangeFrameBrush);
+}
+
+
+/**
+ * @brief 배너가 쓸 위젯 넷을 짓는다.
+ *
+ * @details
+ * 옛 HUD 는 통짜 생성기 하나가 배너·스킬 상세·전투 피드·MOVE 단추를 한꺼번에
+ * 지었다. 그 나머지는 안 옮기므로, 배너 몫만 여기서 짓는다.
+ *
+ * 자리는 화면 한가운데로 앵커를 걸어 잡는다 -- 옛 HUD 는 1920x1080 설계
+ * 좌표에 픽셀로 박아 두었는데, 새 HUD 는 해상도를 따라가야 한다.
+ */
+void UCombatLayoutHUDWidget::EnsureTurnChangeWidgets()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+	if (mRootCanvas == nullptr || mTurnChangeVideoImage != nullptr)
+	{
+		return;
+	}
+
+	/** @brief 화면을 다 덮게 앵커를 건다. */
+	auto StretchFull = [](UCanvasPanelSlot* CanvasSlot)
+	{
+		if (CanvasSlot == nullptr)
+		{
+			return;
+		}
+		CanvasSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+		CanvasSlot->SetOffsets(FMargin(0.f));
+	};
+
+	mTurnChangeInputBlocker = WidgetTree->ConstructWidget<UButton>(
+		UButton::StaticClass(), TEXT("TurnChangeInputBlocker"));
+	if (mTurnChangeInputBlocker != nullptr)
+	{
+		// 눌림만 삼키고 그림은 남기지 않는다.
+		FButtonStyle Clear = mTurnChangeInputBlocker->GetStyle();
+		Clear.Normal.TintColor = FSlateColor(FLinearColor::Transparent);
+		Clear.Hovered.TintColor = FSlateColor(FLinearColor::Transparent);
+		Clear.Pressed.TintColor = FSlateColor(FLinearColor::Transparent);
+		Clear.Disabled.TintColor = FSlateColor(FLinearColor::Transparent);
+		mTurnChangeInputBlocker->SetStyle(Clear);
+		mTurnChangeInputBlocker->SetVisibility(ESlateVisibility::Collapsed);
+		StretchFull(mRootCanvas->AddChildToCanvas(mTurnChangeInputBlocker));
+	}
+
+	mTurnChangeVideoImage = WidgetTree->ConstructWidget<UImage>(
+		UImage::StaticClass(), TEXT("TurnChangeVideoImage"));
+	if (mTurnChangeVideoImage != nullptr)
+	{
+		mTurnChangeVideoImage->SetColorAndOpacity(FLinearColor::White);
+		mTurnChangeVideoImage->SetVisibility(ESlateVisibility::Collapsed);
+		if (UCanvasPanelSlot* ImageSlot = mRootCanvas->AddChildToCanvas(mTurnChangeVideoImage))
+		{
+			// 한가운데에 원본 크기로 놓는다.
+			ImageSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+			ImageSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			ImageSlot->SetAutoSize(true);
+		}
+	}
+
+	mTurnChangeTurnTextPanel = WidgetTree->ConstructWidget<UBorder>(
+		UBorder::StaticClass(), TEXT("TurnChangeTurnTextPanel"));
+	mTurnChangeTurnText = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), TEXT("TurnChangeTurnText"));
+	if (mTurnChangeTurnTextPanel != nullptr && mTurnChangeTurnText != nullptr)
+	{
+		mTurnChangeTurnTextPanel->SetBrushColor(FLinearColor::Transparent);
+		mTurnChangeTurnTextPanel->SetHorizontalAlignment(HAlign_Center);
+		mTurnChangeTurnTextPanel->SetVerticalAlignment(VAlign_Center);
+		mTurnChangeTurnTextPanel->SetVisibility(ESlateVisibility::Collapsed);
+		mTurnChangeTurnTextPanel->AddChild(mTurnChangeTurnText);
+
+		mTurnChangeTurnText->SetJustification(ETextJustify::Center);
+		mTurnChangeTurnText->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.90f, 0.48f, 1.0f)));
+		mTurnChangeTurnText->SetShadowOffset(FVector2D(3.0f, 4.0f));
+		mTurnChangeTurnText->SetShadowColorAndOpacity(FLinearColor(0.02f, 0.01f, 0.0f, 0.85f));
+		FSlateFontInfo TurnFont = mTurnChangeTurnText->GetFont();
+		TurnFont.Size = 104;
+		mTurnChangeTurnText->SetFont(TurnFont);
+
+		if (UCanvasPanelSlot* PanelSlot = mRootCanvas->AddChildToCanvas(mTurnChangeTurnTextPanel))
+		{
+			PanelSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+			PanelSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			PanelSlot->SetAutoSize(true);
+		}
+	}
 }
