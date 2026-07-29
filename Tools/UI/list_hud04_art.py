@@ -200,8 +200,15 @@ def main():
                 image = image.convert("RGBA").resize((int(w), int(h)),
                                                      Image.LANCZOS)
                 image.save(os.path.join(OUT, "png", name + ".png"))
+            # 파일 이름 뒤에 크기를 붙인다.
+            #
+            # 판을 줄여 다시 깔아도 브라우저가 **옛 그림을 캐시**해서 그대로
+            # 띄운다. 이름이 같으니 새로 안 읽는다 -- 게임에서는 맞는데
+            # 편집기에서만 크게 나오는 일이 그래서 났다. 크기가 바뀌면 주소도
+            # 바뀌게 해서 다시 읽게 한다.
             items.append({"name": LABEL.get(plate, plate), "path": name,
-                          "note": note, "png": "png/%s.png" % name,
+                          "note": note,
+                          "png": "png/%s.png?v=%dx%d" % (name, w, h),
                           "role": plate})
         rows.append({"title": title, "users": users, "items": items})
 
