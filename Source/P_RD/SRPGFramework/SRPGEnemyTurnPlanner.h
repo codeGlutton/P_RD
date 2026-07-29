@@ -12,6 +12,9 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGEnemyTurnPlanner.generated.h"
 
+// 적 플래너의 판단근거 로그 카테고리
+DECLARE_LOG_CATEGORY_EXTERN(LogSRPGEnemyPlanner, Log, All);
+
 class UEnemyUnitModel;
 class UUnitModel;
 class UTileMapModel;
@@ -39,13 +42,15 @@ public:
 	 * @param Players 표적 후보가 될 플레이어 유닛들 (배열 순서가 곧 타겟 인덱스, null 원소는 제외됨)
 	 * @param TileMap 타일맵 모델 (도달/조준/효과 범위 계산)
 	 * @param EventStream 타겟 동률/스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
+	 * @param LogTag 판단근거 로그의 줄마다 붙는 식별 태그 (예: "R3/T12", 비어있으면 생략)
 	 * @return 커맨드 목록
 	 */
 	static TArray<TInstancedStruct<FSRPGCommand>> PlanTurn(
 		UEnemyUnitModel* Enemy,
 		const TArray<UUnitModel*>& Players,
 		const UTileMapModel* TileMap,
-		const FRandomStream& EventStream);
+		const FRandomStream& EventStream,
+		const FString& LogTag = FString());
 
 private:
 	/**

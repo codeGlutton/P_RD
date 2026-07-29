@@ -16,14 +16,116 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TacticalTileTable.h"
+
+DEFINE_LOG_CATEGORY(LogSRPGEnemyPlanner);
+
+namespace
+{
+	// @brief 유닛 로그 라벨 (키이름#모델ID)
+	FString MakeUnitLabel(const UBoardActorModel* Model)
+	{
+		return FString::Printf(TEXT("%s#%d"), *Model->GetBoardActorKeyName().ToString(), Model->GetModelId());
+	}
+
+	/**
+	 * @brief 시전하지 못한 턴의 판단근거 상세 로그
+	 * @details
+	 * 계획 헤더(위치/AP/성향) -> 스킬 슬롯별 상태 -> 타겟별 시전불가 사유 순서로 출력.
+	 * 타겟별 사유는 조준 가능한 {타일,스킬} 조합의 최소 소요 행동력을 근거로 남긴다.
+	 */
+	void LogNoCastDetails(
+		const FString& LogPrefix,
+		const FTileIndex& EnemyTile,
+		int32 ActionPoint,
+		EMoveTendency Tendency,
+		const USkillComponentModel* SkillComp,
+		const TArray<const UStaticSkillData*>& SkillDatas,
+		const TArray<const UUnitModel*>& TargetModels,
+		const TArray<FTileIndex>& TargetTiles,
+		const FTacticalTileTable& Table)
+	{
+		// 계획
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 계획: @(%d,%d) AP=%d 성향=%s 타겟수=%d"),
+			*LogPrefix, EnemyTile.mX, EnemyTile.mY, ActionPoint,
+			*StaticEnum<EMoveTendency>()->GetNameStringByValue(static_cast<int64>(Tendency)),
+			TargetTiles.Num());
+
+		// 스킬 정보 (비어있지 않은 슬롯별로 나열)
+		const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
+		for (int32 Slot = 0; Slot < Skills.Num(); ++Slot)
+		{
+			if (SkillDatas.IsValidIndex(Slot) && SkillDatas[Slot] != nullptr)
+			{
+				const UStaticSkillData* Skill = SkillDatas[Slot];
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 비용=%d 사거리=%d 패턴=%s %s"),
+					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredMovement, Skill->mAimRange,
+					*StaticEnum<EAimPattern>()->GetNameStringByValue(static_cast<int64>(Skill->mAimPattern)),
+					Skill->mIsIndirect ? TEXT("곡사") : TEXT("직사"));
+			}
+			else if (Skills[Slot].IsValid() == true)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 쿨다운 → 제외"),
+					*LogPrefix, Slot, *Skills[Slot].mData->GetName());
+			}
+		}
+
+		// 타겟별 시전불가 사유 탐색 (왜 이 타겟을 때리지 못했나)
+		for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
+		{
+			const int32 Distance = Table.GetDistanceToTarget(TargetIndex);
+			const FString DistanceText = (Distance == MAX_int32) ? FString(TEXT("도달불가")) : FString::FromInt(Distance);
+			const FString TargetLabel = MakeUnitLabel(TargetModels[TargetIndex]);
+
+			// 조준가능한 조합 중 최소행동력 탐색 (없으면: 조준이 안 됨, 있으면: 행동력 부족)
+			int32 MinNeed = MAX_int32;
+			int32 MinSlot = INDEX_NONE;
+			int32 MinMoveCost = 0;
+			FTileIndex MinTile = FTileIndex::Invalid;
+			for (const FTacticalTileInfo& Tile : Table.GetTacticalTiles())
+			{
+				for (int32 Slot = 0; Slot < SkillDatas.Num(); ++Slot)
+				{
+					if (SkillDatas[Slot] == nullptr || Table.IsAimable(Tile, Slot, TargetIndex) == false)
+					{
+						continue;
+					}
+					const int32 Need = Tile.mMoveCost + SkillDatas[Slot]->mRequiredMovement;
+					if (Need < MinNeed)
+					{
+						MinNeed = Need;
+						MinSlot = Slot;
+						MinMoveCost = Tile.mMoveCost;
+						MinTile = Tile.mIndex;
+					}
+				}
+			}
+
+			if (MinSlot == INDEX_NONE)
+			{
+				// 도달가능한 어떤 타일에서도 조준 불가
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s@(%d,%d) 경로거리=%s → 시전불가: 조준가능타일 없음(사거리/시야 밖)"),
+					*LogPrefix, TargetIndex, *TargetLabel, TargetTiles[TargetIndex].mX, TargetTiles[TargetIndex].mY, *DistanceText);
+			}
+			else
+			{
+				// 조준가능하지만 행동력 부족
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s@(%d,%d) 경로거리=%s → 시전불가: 최소소요 = 이동%d(→(%d,%d)) + 시전%d(스킬[%d]) = %d > AP%d"),
+					*LogPrefix, TargetIndex, *TargetLabel, TargetTiles[TargetIndex].mX, TargetTiles[TargetIndex].mY, *DistanceText,
+					MinMoveCost, MinTile.mX, MinTile.mY, SkillDatas[MinSlot]->mRequiredMovement, MinSlot, MinNeed, ActionPoint);
+			}
+		}
+	}
+}
 
 TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UEnemyUnitModel* Enemy,
 	const TArray<UUnitModel*>& Players,
 	const UTileMapModel* TileMap,
-	const FRandomStream& EventStream)
+	const FRandomStream& EventStream,
+	const FString& LogTag)
 {
 	TArray<TInstancedStruct<FSRPGCommand>> Commands;
 	{
@@ -43,21 +145,30 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	// 가드: 필수 입력이 없으면 행동 없이 턴만 종료
 	if (Enemy == nullptr || TileMap == nullptr)
 	{
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("[%s] 결정: 행동없음 — 적 또는 타일맵 없음"), *LogTag);
 		return Commands;
 	}
 
-	// 타겟 타일 수집: null 원소는 제외 (이후 타겟 인덱스는 이 목록 기준)
+	// 로그 헤더 문자열: [라운드/턴][유닛키#모델ID]
+	const FString LogPrefix = FString::Printf(TEXT("%s[%s]"),
+		LogTag.IsEmpty() ? TEXT("") : *FString::Printf(TEXT("[%s]"), *LogTag),
+		*MakeUnitLabel(Enemy));
+
+	// 타겟 타일 수집
 	TArray<FTileIndex> TargetTiles;
+	TArray<const UUnitModel*> TargetModels;
 	for (const UUnitModel* Player : Players)
 	{
 		if (Player != nullptr)
 		{
 			TargetTiles.Add(Player->GetTileTransform().mIndex);
+			TargetModels.Add(Player);
 		}
 	}
 	// 타겟이 하나도 없으면 할 게 없으므로 턴 종료
 	if (TargetTiles.IsEmpty())
 	{
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 행동없음 — 타겟 없음"), *LogPrefix);
 		return Commands;
 	}
 
@@ -65,6 +176,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	USkillComponentModel* SkillComp = Enemy->GetSkillComponentModel();
 	if (SkillComp == nullptr)
 	{
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 행동없음 — 스킬 컴포넌트 없음"), *LogPrefix);
 		return Commands;
 	}
 
@@ -84,6 +196,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	// 사용 가능한 스킬이 없으면 할 게 없으므로 턴 종료
 	if (HasUsableSkill == false)
 	{
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 행동없음 — 사용가능 스킬 없음(전부 쿨다운 또는 미장착)"), *LogPrefix);
 		return Commands;
 	}
 
@@ -91,6 +204,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UAttributeSetComponentModel* AttributeSetComp = Enemy->GetAttributeComponentModel();
 	if (AttributeSetComp == nullptr)
 	{
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 행동없음 — 속성 컴포넌트 없음"), *LogPrefix);
 		return Commands;
 	}
 
@@ -105,6 +219,19 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
 	FTacticalTileTable Table;
 	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, ActionPoint);
+
+	// 목적지 이동비용 조회 (판단근거 로그용)
+	auto GetTableMoveCost = [&Table](const FTileIndex& Tile)
+	{
+		for (const FTacticalTileInfo& Info : Table.GetTacticalTiles())
+		{
+			if (Info.mIndex == Tile)
+			{
+				return Info.mMoveCost;
+			}
+		}
+		return 0;
+	};
 
 	bool CanCast = false;
 	int32 ChosenSkillSlot = INDEX_NONE;
@@ -138,9 +265,33 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 				return Table.IsCastable(Tile, ChosenSkillSlot, ChosenTarget);
 			});
 		CanCast = true;
+
+		// 판단근거 로그: 시전 턴은 결정 1줄로 요약
+		{
+			const int32 MoveCost = GetTableMoveCost(Dest);
+			const int32 CastCost = SkillDatas[ChosenSkillSlot]->mRequiredMovement;
+			const FString TargetLabel = MakeUnitLabel(TargetModels[ChosenTarget]);
+			if (Dest != EnemyTile)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 이동+시전: 타겟[%d]=%s@(%d,%d) 스킬[%d]=%s, 이동 (%d,%d)→(%d,%d) 비용%d + 시전%d = %d ≤ AP%d"),
+					*LogPrefix, ChosenTarget, *TargetLabel, TargetTiles[ChosenTarget].mX, TargetTiles[ChosenTarget].mY,
+					ChosenSkillSlot, *SkillDatas[ChosenSkillSlot]->GetName(),
+					EnemyTile.mX, EnemyTile.mY, Dest.mX, Dest.mY, MoveCost, CastCost, MoveCost + CastCost, ActionPoint);
+			}
+			else
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 제자리시전: 타겟[%d]=%s@(%d,%d) 스킬[%d]=%s, 이동0 + 시전%d = %d ≤ AP%d"),
+					*LogPrefix, ChosenTarget, *TargetLabel, TargetTiles[ChosenTarget].mX, TargetTiles[ChosenTarget].mY,
+					ChosenSkillSlot, *SkillDatas[ChosenSkillSlot]->GetName(),
+					CastCost, CastCost, ActionPoint);
+			}
+		}
 	}
 	else
 	{
+		// 판단근거 로그: 시전하지 못한 턴은 근거를 상세히 남김
+		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), SkillComp, SkillDatas, TargetModels, TargetTiles, Table);
+
 		// 폴백의 기준 타겟: 전체 타겟 중 최근접
 		TArray<int32> AllTargets;
 		for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
@@ -159,6 +310,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 				{
 					return Tile.mAimableFlags.Contains(true);
 				});
+
+			// 판단근거 로그: 선점이동 결정
+			if (Dest != EnemyTile)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 선점이동 → (%d,%d) 이동%d/AP%d, 다음턴 시전 노림"),
+					*LogPrefix, Dest.mX, Dest.mY, GetTableMoveCost(Dest), ActionPoint);
+			}
+			else
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 제자리대기 — 이동해도 개선 없음"), *LogPrefix);
+			}
 		}
 		else
 		{
@@ -166,6 +328,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 			// 3단계: 어디로 가든 조준이 안 되면, 최근접 타겟에게 최대한 접근
 			//
 			Dest = ChooseApproachDestination(Table, NearestTarget, EnemyTile);
+
+			// 판단근거 로그: 접근이동 결정
+			if (Dest != EnemyTile)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 접근이동 → 타겟[%d]=%s 방향 (%d,%d) 이동%d/AP%d"),
+					*LogPrefix, NearestTarget, *MakeUnitLabel(TargetModels[NearestTarget]), Dest.mX, Dest.mY, GetTableMoveCost(Dest), ActionPoint);
+			}
+			else
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 제자리대기 — 접근 경로 없음"), *LogPrefix);
+			}
 		}
 	}
 
