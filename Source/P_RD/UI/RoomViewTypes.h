@@ -167,3 +167,47 @@ struct P_RD_API FRunControlView
 	UPROPERTY(Category = UI, BlueprintReadOnly)
 	int32 mDifficulty = 0;
 };
+
+/**
+ * @brief 가방 한 줄.
+ *
+ * @details
+ * 화면은 자산도 모델도 모른다. 무엇을 그릴지만 안다 -- 그래야 가진 것을
+ * 어디에 담아 두는지가 바뀌어도 화면이 안 바뀐다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FInventoryRowView
+{
+	GENERATED_BODY()
+
+public:
+	/** @brief 눌렀을 때 되돌려 보낼 번호. 목록 안 자리다. */
+	UPROPERTY(BlueprintReadOnly) int32 mIndex = INDEX_NONE;
+
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+
+	/** @brief 장비 자리 이름 같은 보조 한 줄. 없으면 빈 값. */
+	UPROPERTY(BlueprintReadOnly) FText mDetail;
+};
+
+/**
+ * @brief 가방 한 판.
+ *
+ * @details
+ * 돈은 파티 공용이다(0728 결정). 용병마다 따로 두지 않는다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FInventoryView
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
+
+	/** @brief 파티가 들고 있는 기술. */
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mSkills;
+
+	/** @brief 파티가 들고 있는 장비. */
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mEquipment;
+};

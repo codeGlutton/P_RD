@@ -21,6 +21,9 @@ class IBoardSelectionTarget;
 
 class UCombatUIModel;
 class URewardUIModel;
+class UPlayerUnitModel;
+class UStaticSkillData;
+struct FTileIndex;
 enum class ECombatInputType : uint8;
 
 // Combat Game Mode 신규 로그 카테고리 등록
@@ -87,6 +90,9 @@ protected:
 	 */
 	bool ResolveWorldTouchEvent(FVector2D ScreenPosition);
 
+	/** @brief 겨냥해 둔 칸을 그대로 다시 누른다. 확정 단추가 부른다. */
+	void ConfirmTargetTile();
+
 	/**
 	 * @brief 긴 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
@@ -108,6 +114,40 @@ protected:
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
 	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
+
+	/** @brief 톡 쳐서 고른 칸을 UI 에 내린다. 스킬 표시값도 같이 다시 내린다. */
+	void PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor);
+
+	/** @brief 겨냥을 풀고 화면을 겨냥하기 전으로 되돌린다. */
+	void ClearCombatTargetUIData();
+
+	/** @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나. 행동력과 사거리를 본다. */
+	bool IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
+		const UStaticSkillData& StaticSkillData) const;
+
+	/**
+	 * @brief 지금 카드에 스킬을 보여 줄 유닛. 없으면 지금 차례인 유닛.
+	 *
+	 * 하단 용병 칸을 눌러 남의 스킬을 들여다보는 동안에만 값이 들어 있다.
+	 * 차례가 넘어가면 지운다 -- 새 차례가 왔는데 옛 유닛 카드가 떠 있으면
+	 * 무엇을 조종하는 중인지 알 수 없다.
+	 */
+	int32 mInspectedUnitId = INDEX_NONE;
+
+	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
+	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
+
+	/**
+	 * @brief 지금 차례인 아군.
+	 *
+	 * @details
+	 * 0번 유닛을 지금 차례로 치던 자리가 여럿 있었다. 파티가 한 명일 때는
+	 * 맞았지만 셋이 되면 틀린다 -- 야만전사 차례에 기사의 카드가 떴다.
+	 *
+	 * 차례는 전투 모델이 안다. 적 차례면 nullptr 이다.
+	 * @return 지금 차례인 아군, 적 차례거나 없으면 nullptr
+	 */
+	UPlayerUnitModel* GetTurnPlayerUnitModel() const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;

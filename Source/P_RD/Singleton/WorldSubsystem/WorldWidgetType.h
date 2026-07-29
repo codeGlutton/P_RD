@@ -77,6 +77,32 @@ enum class EWorldWidgetType : uint8
 	 */
 	CharacterSelect,
 
+	/**
+	 * @brief 타이틀 START 로 여는 용병 선택 게시판
+	 *
+	 * @details
+	 * 런을 시작할 때 여섯 중 셋을 고르는 화면이다. 한 명만 고르던 캐릭터
+	 * 선택을 대신한다 -- 그 위젯은 아직 [9] 에 남아 있지만 게임 모드가 더는
+	 * 열지 않는다.
+	 *
+	 * @note
+	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
+	 * 앞 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, MercenaryHire는 [10] 매핑을 쓴다.
+	 */
+	MercenaryHire,
+
+	/**
+	 * @brief 방 어디서나 여는 가방
+	 *
+	 * @details
+	 * 상점이나 보상과 달리 특정 방의 화면이 아니다. 전투 중에도 상점에서도
+	 * 같은 것을 열어 본다 -- 방 HUD 에 두면 방마다 한 벌씩 만들어야 한다.
+	 *
+	 * 값은 ARoomGameModeBase::GetInventoryView() 로 꺼내 간다. 밀지 않는
+	 * 것은 가방이 열려 있을 때만 보면 되기 때문이다.
+	 */
+	Inventory,
+
 	Count UMETA(Hidden),
 };
 

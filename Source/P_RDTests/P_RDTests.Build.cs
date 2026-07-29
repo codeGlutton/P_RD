@@ -31,7 +31,20 @@ public class P_RDTests : ModuleRules
 
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",
+
+            /* UI 배치안을 오프스크린 렌더해서 PNG로 남기는 캡처 테스트용 */
+            "UMG",
+            "Slate",
+            "SlateCore",
+            "RenderCore",
+            "RHI",
         });
+
+        // 캡처 테스트는 에디터 월드에서만 돈다.
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.Add("UnrealEd");
+        }
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가
         PrivateIncludePaths.AddRange(new string[]
