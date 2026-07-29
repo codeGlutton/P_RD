@@ -209,6 +209,9 @@ def main():
             items.append({"name": LABEL.get(plate, plate), "path": name,
                           "note": note,
                           "png": "png/%s.png?v=%dx%d" % (name, w, h),
+                          # 전체 화면은 이 자리로 판을 늘어놓는다. 없으면
+                          # 늘어놓을 자리를 몰라 빈 화면이 된다.
+                          "rect": [x, y, w, h],
                           "role": plate})
         rows.append({"title": title, "users": users, "items": items})
 

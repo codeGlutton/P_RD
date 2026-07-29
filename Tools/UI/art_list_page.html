@@ -679,7 +679,18 @@ function slots() {
 }
 
 function plates() {
-  return GROUPS[0].items.filter((it) => it.rect && it.png);
+  // 묶음 하나가 아니라 **전부**를 늘어놓는다.
+  //
+  // 첫 묶음만 보던 것은 시안1 때의 자취다. 그쪽은 배치안 한 장이 곧 화면이라
+  // 첫 묶음이 전부였는데, 시안4는 판 열다섯이 모여 한 화면이 된다 -- 첫
+  // 묶음만 보면 위쪽 셋만 뜨고 나머지는 안 보인다.
+  const out = [];
+  for (const group of GROUPS) {
+    for (const it of group.items) {
+      if (it.rect && it.png) { out.push(it); }
+    }
+  }
+  return out;
 }
 
 function spots() {

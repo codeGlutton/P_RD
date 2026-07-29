@@ -605,24 +605,25 @@ def party(blueprint, root):
                       else None, tint=kit.WHITE)
             kit.fold(blueprint, icon_name)
 
+        # 가운데로 붙인다. 왼쪽 붙임은 가로로 긴 칸을 쓰던 때의 것이라,
+        # 세로 카드에서는 글자가 한쪽으로 쏠려 보인다.
         text(blueprint, "PartyName_%d" % index, card, origin,
-             spot(plate_name, "character_name"), name, 17, TEXT_PALE,
-             align="left", bold=True)
+             spot(plate_name, "character_name"), name, 17, TEXT_PALE, bold=True)
         text(blueprint, "PartyHPText_%d" % index, card, origin,
-             spot(plate_name, "hp_value"), hp, 15, TEXT_PALE, align="left")
+             spot(plate_name, "hp_value"), hp, 15, TEXT_PALE)
         text(blueprint, "PartyStatus_%d" % index, card, origin,
-             spot(plate_name, "status_text"), status, 14, TEXT_PALE,
-             align="left")
+             spot(plate_name, "status_text"), status, 14, TEXT_PALE)
 
         # HP 막대는 그림 틀 안에 든다. 막대만 두면 카드 안에서 홀로 떠
         # 보이고, 글자를 밖에 두면 좁은 세로 카드에서 놓을 자리가 없다.
         bar = local(spot(plate_name, "hp_bar"), origin)
         if bar:
             bx, by, bw, bh = bar
-            kit.image(blueprint, "PartyHPPlate_%d" % index, card,
-                      bx, by, bw, bh, None, z_order=Z_PLATE + 1,
-                      texture="{}/KK_HUD04_hp_bar_plate".format(ART),
-                      tint=kit.WHITE)
+            # 틀 그림은 **구역에 얹은 것**을 쓴다. 여기서 텍스처를 못 박아
+            # 두었더니, 편집기에서 막대 그림을 따로 넣은 뒤 둘이 겹쳐 나왔다 --
+            # 같은 자리에 막대가 두 개로 보였다.
+            piece(blueprint, card, origin, "PartyHPPlate_%d" % index,
+                  plate_name, "hp_bar", z=Z_PLATE + 1)
             inset = bh * 0.18
             kit.bar(blueprint, "PartyHPBar_%d" % index, card,
                     bx + inset, by + inset, bw - inset * 2, bh - inset * 2,
