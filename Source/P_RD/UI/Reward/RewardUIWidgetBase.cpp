@@ -6,6 +6,10 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -19,6 +23,51 @@
 
 namespace
 {
+	const FLinearColor RewardCreamColor(0.98f, 0.92f, 0.79f, 1.0f);
+	const FLinearColor RewardMutedColor(0.72f, 0.80f, 0.84f, 1.0f);
+	const FLinearColor RewardTitleColor(0.96f, 0.77f, 0.30f, 1.0f);
+
+	void SetRewardTextStyle(
+		UTextBlock* Text,
+		int32 FontSize,
+		const FLinearColor& Color)
+	{
+		if (Text == nullptr)
+		{
+			return;
+		}
+
+		FSlateFontInfo Font = Text->GetFont();
+		Font.Size = FontSize;
+		Text->SetFont(Font);
+		Text->SetColorAndOpacity(FSlateColor(Color));
+		Text->SetShadowOffset(FVector2D(1.5f, 1.5f));
+		Text->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.65f));
+	}
+
+	void PlaceOnCanvas(
+		UCanvasPanel* Canvas,
+		UWidget* Widget,
+		const FVector2D& Position,
+		const FVector2D& Size,
+		int32 ZOrder)
+	{
+		if (Canvas == nullptr || Widget == nullptr)
+		{
+			return;
+		}
+
+		if (UCanvasPanelSlot* Slot = Canvas->AddChildToCanvas(Widget))
+		{
+			Slot->SetAnchors(FAnchors(0.0f, 0.0f));
+			Slot->SetAlignment(FVector2D::ZeroVector);
+			Slot->SetPosition(Position);
+			Slot->SetSize(Size);
+			Slot->SetAutoSize(false);
+			Slot->SetZOrder(ZOrder);
+		}
+	}
+
 	FText MakeRewardChoiceText(const FRewardChoiceUI& Item)
 	{
 		if (Item.mName.IsEmpty() == false)
@@ -45,12 +94,24 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
-	// 바뀐 보상 시안에 실제로 포함된 아이콘만 참조한다. 선택 보상은 데이터
-	// 에셋의 아이콘을 우선하고, 없을 때는 아래 공용 아이콘으로 폴백한다.
+	// 선택 보상은 데이터 에셋 아이콘을 우선하고, 비어 있을 때만 종류별 공용
+	// 아이콘으로 폴백한다. 서로 다른 종류를 모두 골드로 보여 주면 보상 의미가
+	// 바뀌므로 스킬/장비 아이콘도 하드 레퍼런스로 함께 잡는다.
 	mRewardGoldIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
 	mRewardExpIconTexture = LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
-	mEquipmentIcon = mRewardGoldIconTexture;
-	mSkillIcon = mRewardGoldIconTexture;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> EquipmentIconFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
+	mEquipmentIcon = EquipmentIconFinder.Succeeded()
+		? EquipmentIconFinder.Object
+		: mRewardGoldIconTexture;
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> SkillIconFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_CombatHUD_SkillIcon_Basic.T_CombatHUD_SkillIcon_Basic"));
+	mSkillIcon = SkillIconFinder.Succeeded()
+		? SkillIconFinder.Object
+		: mRewardGoldIconTexture;
+
 	mGoldIcon = mRewardGoldIconTexture;
 	mRewardRowWidgetClass = LoadClass<URewardRowWidgetBase>(nullptr, TEXT("/Game/UI/WBP_RewardRow.WBP_RewardRow_C"));
 
@@ -59,6 +120,13 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	if (RewardBackgroundFinder.Succeeded())
 	{
 		mRewardBackgroundTexture = RewardBackgroundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> RewardRowFrameFinder(
+		TEXT("/Game/UI/Art/RunFlow/T_Reward_RowFrame_Current.T_Reward_RowFrame_Current"));
+	if (RewardRowFrameFinder.Succeeded())
+	{
+		mRewardRowFrameTexture = RewardRowFrameFinder.Object;
 	}
 }
 
@@ -154,6 +222,42 @@ void URewardUIWidgetBase::EnsureBackgroundArt()
 		BackgroundSlot->SetOffsets(FMargin(0.f));
 		BackgroundSlot->SetAutoSize(false);
 		BackgroundSlot->SetZOrder(-100);
+	}
+
+	// 기존 보상 ScrollBox는 470px 폭이라 16:9 시안에서만 간신히 맞고,
+	// Fold 계열 화면에서는 새 900px 행이 470px로 압축돼 문구가 겹쳤다.
+	// 새 중앙 보드의 실제 내부 영역에 맞춰 스크롤을 넓히고 기본 흰 막대는 숨긴다.
+	if (UScrollBox* RowsScroll = Cast<UScrollBox>(
+		WidgetTree->FindWidget(TEXT("RewardRowsScrollBox"))))
+	{
+		RowsScroll->SetScrollBarVisibility(ESlateVisibility::Collapsed);
+		if (UCanvasPanelSlot* RowsSlot =
+			Cast<UCanvasPanelSlot>(RowsScroll->Slot))
+		{
+			RowsSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			RowsSlot->SetAlignment(FVector2D::ZeroVector);
+			RowsSlot->SetPosition(FVector2D(386.0f, 220.0f));
+			RowsSlot->SetSize(FVector2D(900.0f, 480.0f));
+			RowsSlot->SetAutoSize(false);
+			RowsSlot->SetZOrder(4);
+		}
+	}
+
+	// WBP_Reward에는 제목 슬롯이 없어서 구형 패널을 접으면 화면 성격도
+	// 같이 사라진다. 새 배경의 남색 보드 상단에 런타임 제목을 한 번 만든다.
+	if (mTitleText == nullptr)
+	{
+		mTitleText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("RewardRuntimeTitle"));
+		mTitleText->SetJustification(ETextJustify::Center);
+		mTitleText->SetAutoWrapText(false);
+		SetRewardTextStyle(mTitleText, 34, RewardTitleColor);
+		PlaceOnCanvas(
+			DesignCanvas,
+			mTitleText,
+			FVector2D(430.0f, 166.0f),
+			FVector2D(812.0f, 48.0f),
+			5);
 	}
 }
 
@@ -301,6 +405,8 @@ void URewardUIWidgetBase::RefreshRows()
 {
 	mRewardClaimRows.Reset();
 	mRewardRowWidgets.Reset();
+	mRewardRowFrameImages.Reset();
+	mRewardRowVisuals.Reset();
 
 	if (mUIModel == nullptr || mRewardRowsBox == nullptr)
 	{
@@ -335,7 +441,126 @@ void URewardUIWidgetBase::RefreshRows()
 		RowWidget->OnRewardRowClicked.AddUniqueDynamic(this, &URewardUIWidgetBase::HandleRewardRowClicked);
 		mRewardRowWidgets.Add(RowWidget);
 
-		if (UVerticalBoxSlot* RowSlot = mRewardRowsBox->AddChildToVerticalBox(RowWidget))
+		UWidget* RowHost = RowWidget;
+		if (WidgetTree != nullptr && mRewardRowFrameTexture != nullptr)
+		{
+			const FString RowSuffix = FString::FromInt(RewardRowIndex);
+
+			USizeBox* RowSize = WidgetTree->ConstructWidget<USizeBox>(
+				USizeBox::StaticClass(),
+				*FString::Printf(TEXT("RewardRowFrameSize_%s"), *RowSuffix));
+			RowSize->SetWidthOverride(mRewardRowSize.X);
+			RowSize->SetHeightOverride(mRewardRowSize.Y);
+			RowSize->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UOverlay* RowOverlay = WidgetTree->ConstructWidget<UOverlay>(
+				UOverlay::StaticClass(),
+				*FString::Printf(TEXT("RewardRowOverlay_%s"), *RowSuffix));
+			RowOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			RowSize->AddChild(RowOverlay);
+
+			UImage* RowFrame = WidgetTree->ConstructWidget<UImage>(
+				UImage::StaticClass(),
+				*FString::Printf(TEXT("RewardRowFrame_%s"), *RowSuffix));
+			FSlateBrush RowFrameBrush;
+			RowFrameBrush.SetResourceObject(mRewardRowFrameTexture);
+			RowFrameBrush.DrawAs = ESlateBrushDrawType::Box;
+			// 왼쪽 아이콘 소켓과 네 귀퉁이는 보존하고, 가운데 남색 면만
+			// 가로로 늘린다. 1536x384 원본의 실제 장식 비율에 맞춘 값이다.
+			RowFrameBrush.Margin = FMargin(0.22f, 0.28f, 0.11f, 0.28f);
+			RowFrame->SetBrush(RowFrameBrush);
+			RowFrame->SetColorAndOpacity(FLinearColor::White);
+			RowFrame->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (UOverlaySlot* FrameSlot = RowOverlay->AddChildToOverlay(RowFrame))
+			{
+				FrameSlot->SetHorizontalAlignment(HAlign_Fill);
+				FrameSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+
+			UCanvasPanel* RowVisual = WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(),
+				*FString::Printf(TEXT("RewardRowVisual_%s"), *RowSuffix));
+			RowVisual->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (UOverlaySlot* VisualSlot = RowOverlay->AddChildToOverlay(RowVisual))
+			{
+				VisualSlot->SetHorizontalAlignment(HAlign_Fill);
+				VisualSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+
+			UImage* RewardIcon = WidgetTree->ConstructWidget<UImage>(
+				UImage::StaticClass(),
+				*FString::Printf(TEXT("RewardRowIcon_%s"), *RowSuffix));
+			if (IconTexture != nullptr)
+			{
+				RewardIcon->SetBrushFromTexture(IconTexture, false);
+			}
+			RewardIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
+			PlaceOnCanvas(
+				RowVisual,
+				RewardIcon,
+				FVector2D(61.0f, 17.0f),
+				FVector2D(72.0f, 72.0f),
+				1);
+
+			const bool bHasSubText = SubText.IsEmpty() == false;
+			UTextBlock* MainLabel = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(),
+				*FString::Printf(TEXT("RewardRowMainText_%s"), *RowSuffix));
+			MainLabel->SetText(MainText);
+			MainLabel->SetAutoWrapText(false);
+			SetRewardTextStyle(MainLabel, 24, RewardCreamColor);
+			PlaceOnCanvas(
+				RowVisual,
+				MainLabel,
+				FVector2D(174.0f, bHasSubText ? 30.0f : 36.0f),
+				FVector2D(676.0f, 36.0f),
+				1);
+
+			if (bHasSubText)
+			{
+				UTextBlock* SubLabel = WidgetTree->ConstructWidget<UTextBlock>(
+					UTextBlock::StaticClass(),
+					*FString::Printf(TEXT("RewardRowSubText_%s"), *RowSuffix));
+				SubLabel->SetText(SubText);
+				SubLabel->SetAutoWrapText(false);
+				SetRewardTextStyle(SubLabel, 15, RewardMutedColor);
+				PlaceOnCanvas(
+					RowVisual,
+					SubLabel,
+					FVector2D(174.0f, 60.0f),
+					FVector2D(676.0f, 28.0f),
+					1);
+			}
+
+			// 새 행은 프레임·아이콘·문구를 모두 직접 그린다. 구형 WBP는
+			// 보이지 않는 전체 행 입력면으로만 남겨 기존 click/claim 계약을 보존한다.
+			const FName LegacyVisualNames[] = {
+				TEXT("mRowIconFrame"),
+				TEXT("mRewardIcon"),
+				TEXT("mRewardSingleText"),
+				TEXT("mRewardMainText"),
+				TEXT("mRewardSubText"),
+			};
+			for (const FName LegacyVisualName : LegacyVisualNames)
+			{
+				if (UWidget* LegacyVisual =
+					RowWidget->GetWidgetFromName(LegacyVisualName))
+				{
+					LegacyVisual->SetVisibility(ESlateVisibility::Collapsed);
+				}
+			}
+			if (UOverlaySlot* InputSlot = RowOverlay->AddChildToOverlay(RowWidget))
+			{
+				InputSlot->SetHorizontalAlignment(HAlign_Fill);
+				InputSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+
+			mRewardRowFrameImages.Add(RowFrame);
+			mRewardRowVisuals.Add(RowSize);
+			RowHost = RowSize;
+		}
+
+		if (UVerticalBoxSlot* RowSlot = mRewardRowsBox->AddChildToVerticalBox(RowHost))
 		{
 			RowSlot->SetHorizontalAlignment(HAlign_Center);
 			RowSlot->SetVerticalAlignment(VAlign_Center);
@@ -373,17 +598,16 @@ void URewardUIWidgetBase::RefreshRows()
 			for (const FRewardMercenaryExpUI& Mercenary : Reward.mMercenaryExp)
 			{
 				const FString Progress = Mercenary.mMaxExp > 0.f
-					? FString::Printf(TEXT("%d→%d/%d"),
-						FMath::RoundToInt(Mercenary.mExpBefore),
+					? FString::Printf(TEXT("Lv.%d  %d/%d"),
+						Mercenary.mLevel,
 						FMath::RoundToInt(Mercenary.mExpAfter),
 						FMath::RoundToInt(Mercenary.mMaxExp))
-					: FString::Printf(TEXT("%d→%d"),
-						FMath::RoundToInt(Mercenary.mExpBefore),
+					: FString::Printf(TEXT("Lv.%d  %d"),
+						Mercenary.mLevel,
 						FMath::RoundToInt(Mercenary.mExpAfter));
 				MercenaryProgress.Add(FText::Format(
-					LOCTEXT("MercenaryExpProgress", "{0} Lv.{1} · {2}"),
+					LOCTEXT("MercenaryExpProgress", "{0}  {1}"),
 					Mercenary.mName,
-					FText::AsNumber(Mercenary.mLevel),
 					FText::FromString(Progress)).ToString());
 			}
 			ExpProgressText = FText::FromString(
@@ -479,6 +703,11 @@ void URewardUIWidgetBase::NotifyRewardClaimed(ERewardClaimKind ClaimKind, int32 
 		if (mRewardRowWidgets.IsValidIndex(RowIndex) && mRewardRowWidgets[RowIndex] != nullptr)
 		{
 			mRewardRowWidgets[RowIndex]->SetClaimed(true);
+		}
+		if (mRewardRowVisuals.IsValidIndex(RowIndex)
+			&& mRewardRowVisuals[RowIndex] != nullptr)
+		{
+			mRewardRowVisuals[RowIndex]->SetRenderOpacity(0.62f);
 		}
 		break;
 	}

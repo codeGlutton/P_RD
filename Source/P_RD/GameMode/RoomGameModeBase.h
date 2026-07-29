@@ -81,7 +81,7 @@ public:
 	bool GetRunControlView(FRunControlView& OutView) const;
 
 	/**
-	 * @brief 가방에 무엇이 있나.
+	 * @brief 파티 공용 인벤토리의 골드와 아티팩트를 조회한다.
 	 *
 	 * @details
 	 * 지도와 같은 규칙이다 -- 밀지 않고 물어보게 둔다. 가방은 열려 있을 때만

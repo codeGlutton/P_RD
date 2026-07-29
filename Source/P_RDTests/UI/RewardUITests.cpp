@@ -78,6 +78,8 @@ bool FRewardUIImmediateClaimStateTest::RunTest(const FString& Parameters)
 
 	TestEqual(TEXT("EXP 지급 대상 세 명의 진행도를 따로 유지한다"),
 		Model->GetReward().mMercenaryExp.Num(), 3);
+	TestTrue(TEXT("현재 톤의 보상 배경과 행 프레임을 모두 하드 로드한다"),
+		Widget->HasCurrentRewardArt());
 	TestNotNull(TEXT("현재 톤 보상 배경을 디자인 캔버스에 생성한다"),
 		Widget->GetWidgetFromName(TEXT("RewardBackgroundImage")));
 	if (UWidget* LegacyPanel = Widget->GetWidgetFromName(
@@ -91,6 +93,18 @@ bool FRewardUIImmediateClaimStateTest::RunTest(const FString& Parameters)
 	// Bind 직후 별도 tick/timer 없이 행이 완성되는 것으로 정적 즉시 표시 계약을 검증한다.
 	TestEqual(TEXT("골드·EXP·선택 보상이 별도 tick 없이 즉시 모두 그려진다"),
 		Widget->GetRewardRowCount(), 3);
+	TestEqual(TEXT("모든 보상 행에 현재 톤의 클릭 가능한 박스 프레임을 그린다"),
+		Widget->GetCurrentRewardRowFrameCount(), 3);
+	TestNotNull(TEXT("첫 번째 보상 행 프레임이 위젯 트리에 존재한다"),
+		Widget->GetWidgetFromName(TEXT("RewardRowFrame_0")));
+	TestNotNull(TEXT("구형 판을 접어도 런타임 보상 제목을 표시한다"),
+		Widget->GetWidgetFromName(TEXT("RewardRuntimeTitle")));
+	TestNotNull(TEXT("새 행 전용 아이콘을 프레임 소켓에 그린다"),
+		Widget->GetWidgetFromName(TEXT("RewardRowIcon_0")));
+	TestNotNull(TEXT("새 행 전용 본문을 구형 WBP와 분리해 그린다"),
+		Widget->GetWidgetFromName(TEXT("RewardRowMainText_0")));
+	TestNotNull(TEXT("용병별 EXP 진행도 보조문구를 별도 줄로 그린다"),
+		Widget->GetWidgetFromName(TEXT("RewardRowSubText_1")));
 	TestEqual(TEXT("처음에는 수령 완료 행이 없다"),
 		Widget->GetClaimedRewardRowCount(), 0);
 	TestFalse(TEXT("모든 지급이 확정되기 전에는 완료가 아니다"),

@@ -17,11 +17,8 @@
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
-#include "DataAsset/EquipmentData/StaticEquipmentData.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
 #include "AttributeSet/PartyAttributeSet.h"
-#include "AttributeSet/CombatTargetAttributeSet.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
@@ -153,14 +150,6 @@ namespace
 		);
 	}
 
-	FText GetInventoryAssetFallbackName(const FPrimaryAssetId& AssetId)
-	{
-		const FString AssetName = AssetId.PrimaryAssetName.ToString();
-		return AssetName.IsEmpty()
-			? NSLOCTEXT("RoomGameModeBase", "UnknownInventoryItem", "Unknown item")
-			: FText::FromString(AssetName);
-	}
-
 	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
 	{
 		switch (RarityType)
@@ -175,17 +164,6 @@ namespace
 		}
 	}
 
-	template <typename TAsset>
-	TAsset* ResolveInventoryAsset(UAssetManager& AssetManager, const FPrimaryAssetId& AssetId)
-	{
-		if (TAsset* LoadedAsset = AssetManager.GetPrimaryAssetObject<TAsset>(AssetId))
-		{
-			return LoadedAsset;
-		}
-
-		const FSoftObjectPath AssetPath = AssetManager.GetPrimaryAssetPath(AssetId);
-		return AssetPath.IsValid() ? Cast<TAsset>(AssetPath.TryLoad()) : nullptr;
-	}
 }
 
 ARoomGameModeBase::ARoomGameModeBase()
@@ -686,12 +664,11 @@ void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 }
 
 /**
- * @brief 가방에 무엇이 있나.
+ * @brief 파티 공용 인벤토리의 골드와 아티팩트를 만든다.
  *
  * @details
- * 파티 골드는 파티 AttributeSet에서, 용병별 EXP/체력은 각 용병 AttributeSet에서
- * 읽는다. 전투 보상으로 받은 스킬/장비는 RunPersistData의 공용 보관함을,
- * 아티팩트는 파티 공용 보유 목록을 읽는다.
+ * 파티 골드는 파티 AttributeSet에서, 아티팩트는 파티 공용 아티팩트 컴포넌트에서
+ * 읽는다. 용병 성장/스킬/장비는 각 용병 화면의 책임이므로 이 View에 넣지 않는다.
  */
 bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
 {
@@ -700,8 +677,9 @@ bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
 	UPartyModel* PartyModel = GetPartyModel();
 	UAttributeSetComponentModel* PartyAttributes = PartyModel != nullptr
 		? PartyModel->GetAttributeComponentModel() : nullptr;
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (PartyModel == nullptr || PartyAttributes == nullptr || RunPersistData == nullptr)
+	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (PartyModel == nullptr || PartyAttributes == nullptr || PartyArtifacts == nullptr)
 	{
 		return false;
 	}
@@ -709,102 +687,28 @@ bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
 	OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
 		UPartyAttributeSet::GetMoneyAttribute()));
 
-	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits = PartyModel->GetPlayerUnitModels();
-	OutView.mMercenaries.Reserve(PlayerUnits.Num());
-	for (int32 PlayerIndex = 0; PlayerIndex < PlayerUnits.Num(); ++PlayerIndex)
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+		PartyArtifacts->GetPartyArtifacts();
+	OutView.mArtifacts.Reserve(Artifacts.Num());
+	for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
 	{
-		const UPlayerUnitModel* PlayerUnit = PlayerUnits[PlayerIndex];
-		if (PlayerUnit == nullptr)
+		const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
+		if (Artifact == nullptr)
 		{
 			continue;
 		}
 
-		const UAttributeSetComponentModel* PlayerAttributes = PlayerUnit->GetAttributeComponentModel();
-		if (PlayerAttributes == nullptr)
-		{
-			continue;
-		}
-
-		FInventoryMercenaryView& Mercenary = OutView.mMercenaries.AddDefaulted_GetRef();
-		Mercenary.mPartyIndex = PlayerIndex;
-		Mercenary.mName = PlayerUnit->GetBoardActorDisplayName();
-		if (Mercenary.mName.IsEmpty())
-		{
-			Mercenary.mName = FText::Format(
-				NSLOCTEXT("RoomGameModeBase", "MercenaryFallbackName", "Mercenary {0}"),
-				FText::AsNumber(PlayerIndex + 1));
-		}
-		Mercenary.mPortrait = PlayerUnit->GetBoardActorPortrait();
-		if (Mercenary.mPortrait == nullptr)
-		{
-			Mercenary.mPortrait = PlayerUnit->GetBoardActorIcon();
-		}
-		Mercenary.mLevel = PlayerUnit->GetPlayerLevel();
-		Mercenary.mExp = PlayerAttributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetExpAttribute());
-		Mercenary.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetMaxExpAttribute());
-		Mercenary.mHP = PlayerAttributes->GetAttributeCurrentValue(
-			UCombatTargetAttributeSet::GetHPAttribute());
-		Mercenary.mMaxHP = PlayerAttributes->GetAttributeCurrentValue(
-			UCombatTargetAttributeSet::GetMaxHPAttribute());
-	}
-
-	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	if (AssetManager == nullptr)
-	{
-		return true;
-	}
-
-	const TArray<FPrimaryAssetId>& RewardSkillIds = RunPersistData->GetRewardSkillIds();
-	OutView.mSkills.Reserve(RewardSkillIds.Num());
-	for (int32 ItemIndex = 0; ItemIndex < RewardSkillIds.Num(); ++ItemIndex)
-	{
-		const FPrimaryAssetId& AssetId = RewardSkillIds[ItemIndex];
-		const UStaticSkillData* Skill = ResolveInventoryAsset<UStaticSkillData>(*AssetManager, AssetId);
-
-		FInventoryRowView& Row = OutView.mSkills.AddDefaulted_GetRef();
-		Row.mIndex = ItemIndex;
-		Row.mName = Skill != nullptr && Skill->mName.IsEmpty() == false
-			? Skill->mName : GetInventoryAssetFallbackName(AssetId);
-		Row.mIcon = Skill != nullptr ? Skill->mIcon.LoadSynchronous() : nullptr;
-		Row.mRarityColor = Skill != nullptr
-			? GetInventoryRarityColor(Skill->mRarityType) : FLinearColor::White;
-		Row.mDetail = NSLOCTEXT("RoomGameModeBase", "AcquiredSkill", "Acquired skill");
-	}
-
-	const TArray<FPrimaryAssetId>& RewardEquipmentIds = RunPersistData->GetRewardEquipmentIds();
-	OutView.mEquipment.Reserve(RewardEquipmentIds.Num());
-	for (int32 ItemIndex = 0; ItemIndex < RewardEquipmentIds.Num(); ++ItemIndex)
-	{
-		const FPrimaryAssetId& AssetId = RewardEquipmentIds[ItemIndex];
-		const UStaticEquipmentData* Equipment = ResolveInventoryAsset<UStaticEquipmentData>(*AssetManager, AssetId);
-
-		FInventoryRowView& Row = OutView.mEquipment.AddDefaulted_GetRef();
-		Row.mIndex = ItemIndex;
-		Row.mName = Equipment != nullptr && Equipment->mName.IsEmpty() == false
-			? Equipment->mName : GetInventoryAssetFallbackName(AssetId);
-		Row.mIcon = Equipment != nullptr ? Equipment->mIcon.LoadSynchronous() : nullptr;
-		Row.mRarityColor = Equipment != nullptr
-			? GetInventoryRarityColor(Equipment->mRarityType) : FLinearColor::White;
-		Row.mDetail = NSLOCTEXT("RoomGameModeBase", "AcquiredEquipment", "Acquired equipment");
-	}
-
-	const TArray<FPrimaryAssetId>& ArtifactIds = RunPersistData->GetArtifactIds();
-	OutView.mArtifacts.Reserve(ArtifactIds.Num());
-	for (int32 ItemIndex = 0; ItemIndex < ArtifactIds.Num(); ++ItemIndex)
-	{
-		const FPrimaryAssetId& AssetId = ArtifactIds[ItemIndex];
-		const UStaticArtifactData* Artifact = ResolveInventoryAsset<UStaticArtifactData>(*AssetManager, AssetId);
-
-		FInventoryRowView& Row = OutView.mArtifacts.AddDefaulted_GetRef();
-		Row.mIndex = ItemIndex;
-		Row.mName = Artifact != nullptr && Artifact->mName.IsEmpty() == false
-			? Artifact->mName : GetInventoryAssetFallbackName(AssetId);
-		Row.mIcon = Artifact != nullptr ? Artifact->mIcon.LoadSynchronous() : nullptr;
-		Row.mRarityColor = Artifact != nullptr
-			? GetInventoryRarityColor(Artifact->mRarityType) : FLinearColor::White;
-		Row.mDetail = NSLOCTEXT("RoomGameModeBase", "PartyArtifact", "Party artifact");
+		FInventoryArtifactView& Row = OutView.mArtifacts.AddDefaulted_GetRef();
+		Row.mArtifactIndex = ArtifactIndex;
+		Row.mName = Artifact->mName.IsEmpty() == false
+			? Artifact->mName
+			: FText::Format(
+				NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
+				FText::AsNumber(ArtifactIndex + 1));
+		Row.mIcon = Artifact->mIcon.LoadSynchronous();
+		Row.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
+		Row.mDetail = NSLOCTEXT(
+			"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
 	}
 
 	return true;

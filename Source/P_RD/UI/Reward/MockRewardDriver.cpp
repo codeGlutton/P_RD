@@ -4,6 +4,29 @@
 
 #define LOCTEXT_NAMESPACE "MockRewardDriver"
 
+void UMockRewardDriver::BindAutoConfirm(URewardUIModel* UIModel)
+{
+	if (UIModel == nullptr)
+	{
+		return;
+	}
+
+	if (mUIModel != UIModel)
+	{
+		UnbindUIModel();
+	}
+	mUIModel = UIModel;
+	mUIModel->OnRewardClaimRequested.AddUniqueDynamic(
+		this, &UMockRewardDriver::HandleClaimRequested);
+	mUIModel->OnRewardClaimed.AddUniqueDynamic(
+		this, &UMockRewardDriver::HandleClaimed);
+}
+
+void UMockRewardDriver::SetOnPreviewClosed(FSimpleDelegate InCallback)
+{
+	mOnPreviewClosed = MoveTemp(InCallback);
+}
+
 /** @brief 개발용 고정 보상 스냅샷을 UIModel에 주입해 WBP 연동만 검증한다. */
 void UMockRewardDriver::Start(URewardUIModel* UIModel)
 {
@@ -11,11 +34,10 @@ void UMockRewardDriver::Start(URewardUIModel* UIModel)
 	{
 		return;
 	}
-	mUIModel = UIModel;
+	BindAutoConfirm(UIModel);
 
 	// Mock은 실제 보상 지급자가 아니다. Claim/선택 입력이 UI에서 UIModel을 타고 올라오는지만 확인한다.
-	mUIModel->OnRewardClaimed.AddDynamic(this, &UMockRewardDriver::HandleClaimed);
-	mUIModel->OnRewardChosen.AddDynamic(this, &UMockRewardDriver::HandleChosen);
+	mUIModel->OnRewardChosen.AddUniqueDynamic(this, &UMockRewardDriver::HandleChosen);
 
 	// 가짜 보상 fixture: 돈 50, 경험치 30 (레벨 3, 40→70 / 최대 100). 밸런스 데이터로 쓰면 안 된다.
 	FRewardUI Reward;
@@ -53,12 +75,45 @@ void UMockRewardDriver::Start(URewardUIModel* UIModel)
 void UMockRewardDriver::HandleClaimed()
 {
 	UE_LOG(LogRD, Display, TEXT("MockRewardDriver: reward claimed"));
+
+	FSimpleDelegate ClosedCallback = MoveTemp(mOnPreviewClosed);
+	UnbindUIModel();
+	if (ClosedCallback.IsBound())
+	{
+		ClosedCallback.Execute();
+	}
 }
 
 /** @brief 보상 항목 선택 이벤트가 UIModel을 통해 되돌아왔는지만 확인한다. */
 void UMockRewardDriver::HandleChosen(int32 ChoiceIndex)
 {
 	UE_LOG(LogRD, Display, TEXT("MockRewardDriver: reward choice %d"), ChoiceIndex);
+}
+
+void UMockRewardDriver::HandleClaimRequested(
+	ERewardClaimKind ClaimKind,
+	int32 ChoiceIndex)
+{
+	if (mUIModel != nullptr)
+	{
+		mUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+	}
+}
+
+void UMockRewardDriver::UnbindUIModel()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+
+	mUIModel->OnRewardClaimRequested.RemoveDynamic(
+		this, &UMockRewardDriver::HandleClaimRequested);
+	mUIModel->OnRewardClaimed.RemoveDynamic(
+		this, &UMockRewardDriver::HandleClaimed);
+	mUIModel->OnRewardChosen.RemoveDynamic(
+		this, &UMockRewardDriver::HandleChosen);
+	mUIModel = nullptr;
 }
 
 #undef LOCTEXT_NAMESPACE

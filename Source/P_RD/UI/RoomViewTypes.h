@@ -169,56 +169,35 @@ struct P_RD_API FRunControlView
 };
 
 /**
- * @brief 가방 한 줄.
+ * @brief 공용 인벤토리의 아티팩트 한 줄.
  *
  * @details
  * 화면은 자산도 모델도 모른다. 무엇을 그릴지만 안다 -- 그래야 가진 것을
  * 어디에 담아 두는지가 바뀌어도 화면이 안 바뀐다.
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FInventoryRowView
+struct P_RD_API FInventoryArtifactView
 {
 	GENERATED_BODY()
 
 public:
 	/** @brief 눌렀을 때 되돌려 보낼 번호. 목록 안 자리다. */
-	UPROPERTY(BlueprintReadOnly) int32 mIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) int32 mArtifactIndex = INDEX_NONE;
 
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 
-	/** @brief 장비 자리 이름 같은 보조 한 줄. 없으면 빈 값. */
+	/** @brief 공용 효과 같은 보조 한 줄. 없으면 빈 값. */
 	UPROPERTY(BlueprintReadOnly) FText mDetail;
 };
 
 /**
- * @brief 인벤토리에서 확인하는 용병 한 명의 현재 성장 상태.
- *
- * @details EXP는 용병별 AttributeSet에 있으므로 파티 대표값을 만들지 않는다.
- *          UI는 이 DTO를 그대로 한 줄씩 그리며 게임플레이 모델을 직접 조회하지 않는다.
- */
-USTRUCT(BlueprintType)
-struct P_RD_API FInventoryMercenaryView
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(BlueprintReadOnly) int32 mPartyIndex = INDEX_NONE;
-	UPROPERTY(BlueprintReadOnly) FText mName;
-	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
-	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
-	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
-	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
-	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
-	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
-};
-
-/**
- * @brief 가방 한 판.
+ * @brief 파티 공용 인벤토리 한 판.
  *
  * @details
- * 돈은 파티 공용이다(0728 결정). 성장 상태는 용병마다 따로 보여준다.
+ * 골드와 아티팩트만 파티 공용이다. 용병 성장/스킬/장비는 각 용병 화면에서
+ * 다루므로 이 DTO에 들어오지 않는다.
  */
 USTRUCT(BlueprintType)
 struct P_RD_API FInventoryView
@@ -228,15 +207,6 @@ struct P_RD_API FInventoryView
 public:
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
 
-	/** @brief 현재 파티에 있는 용병별 레벨/EXP/체력. */
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryMercenaryView> mMercenaries;
-
-	/** @brief 보상으로 획득해 공용 보관함에 들어간 기술. */
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mSkills;
-
-	/** @brief 보상으로 획득해 공용 보관함에 들어간 장비. */
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mEquipment;
-
 	/** @brief 파티가 공용으로 소유 중인 아티팩트. */
-	UPROPERTY(BlueprintReadOnly) TArray<FInventoryRowView> mArtifacts;
+	UPROPERTY(BlueprintReadOnly) TArray<FInventoryArtifactView> mArtifacts;
 };

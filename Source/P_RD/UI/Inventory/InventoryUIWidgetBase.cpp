@@ -5,17 +5,17 @@
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Components/HorizontalBox.h"
-#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
-#include "Components/ProgressBar.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
-#include "Components/Spacer.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/WrapBox.h"
+#include "Components/WrapBoxSlot.h"
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameMode/RoomGameModeBase.h"
@@ -30,16 +30,15 @@ namespace
 {
 	constexpr float InventoryDesignWidth = 1672.f;
 	constexpr float InventoryDesignHeight = 941.f;
+	constexpr float ArtifactGridWrapWidth = 1420.f;
+	constexpr float ArtifactCardWidth = 250.f;
+	constexpr float ArtifactCardHeight = 178.f;
 
 	const FLinearColor InventoryBackgroundColor(0.008f, 0.016f, 0.027f, 1.f);
-	const FLinearColor InventoryNavyCardColor(0.018f, 0.047f, 0.088f, 0.76f);
-	const FLinearColor InventoryParchmentCardColor(0.94f, 0.82f, 0.59f, 0.28f);
-	const FLinearColor InventoryGoldColor(0.96f, 0.72f, 0.24f, 1.f);
-	const FLinearColor InventoryCreamColor(0.96f, 0.90f, 0.77f, 1.f);
+	const FLinearColor InventoryGoldColor(1.0f, 0.79f, 0.25f, 1.f);
+	const FLinearColor InventoryCreamColor(0.98f, 0.92f, 0.79f, 1.f);
+	const FLinearColor InventoryMutedTextColor(0.72f, 0.80f, 0.84f, 1.f);
 	const FLinearColor InventoryNavyTextColor(0.035f, 0.090f, 0.16f, 1.f);
-	const FLinearColor InventoryParchmentMutedColor(0.16f, 0.23f, 0.29f, 0.95f);
-	const FLinearColor InventoryMutedTextColor(0.68f, 0.76f, 0.79f, 1.f);
-	const FLinearColor InventoryExpColor(0.12f, 0.61f, 0.88f, 1.f);
 
 	void SetTextStyle(UTextBlock* Text, int32 Size, const FLinearColor& Color)
 	{
@@ -52,19 +51,6 @@ namespace
 		Font.Size = Size;
 		Text->SetFont(Font);
 		Text->SetColorAndOpacity(FSlateColor(Color));
-	}
-
-	void SetHorizontalFill(UHorizontalBoxSlot* Slot)
-	{
-		if (Slot == nullptr)
-		{
-			return;
-		}
-
-		FSlateChildSize Size;
-		Size.SizeRule = ESlateSizeRule::Fill;
-		Size.Value = 1.f;
-		Slot->SetSize(Size);
 	}
 
 	void PlaceOnDesignCanvas(
@@ -88,18 +74,15 @@ namespace
 		}
 	}
 
-	FInventoryItemUI MakeInventoryItem(
-		const FInventoryRowView& Row,
-		EInventoryItemKind Kind)
+	FInventoryArtifactUI MakeInventoryArtifact(const FInventoryArtifactView& Source)
 	{
-		FInventoryItemUI Item;
-		Item.mKind = Kind;
-		Item.mItemIndex = Row.mIndex;
-		Item.mName = Row.mName;
-		Item.mIcon = Row.mIcon;
-		Item.mRarityColor = Row.mRarityColor;
-		Item.mDetailText = Row.mDetail;
-		return Item;
+		FInventoryArtifactUI Artifact;
+		Artifact.mArtifactIndex = Source.mArtifactIndex;
+		Artifact.mName = Source.mName;
+		Artifact.mIcon = Source.mIcon;
+		Artifact.mRarityColor = Source.mRarityColor;
+		Artifact.mDetailText = Source.mDetail;
+		return Artifact;
 	}
 }
 
@@ -108,27 +91,11 @@ UInventoryUIWidgetBase::UInventoryUIWidgetBase(const FObjectInitializer& ObjectI
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
-	// CDO의 강한 참조로 남겨 WBP가 이 프로퍼티를 따로 설정하지 않아도
-	// 인벤토리 배경이 APK cook 대상에 포함된다.
 	static ConstructorHelpers::FObjectFinder<UTexture2D> BackgroundFinder(
 		TEXT("/Game/UI/Art/RunFlow/T_Inventory_Background_Current.T_Inventory_Background_Current"));
 	if (BackgroundFinder.Succeeded())
 	{
 		mDefaultBackgroundArt = BackgroundFinder.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UTexture2D> SkillIconFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_CombatHUD_SkillIcon_Basic.T_CombatHUD_SkillIcon_Basic"));
-	if (SkillIconFinder.Succeeded())
-	{
-		mDefaultSkillIcon = SkillIconFinder.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UTexture2D> EquipmentIconFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
-	if (EquipmentIconFinder.Succeeded())
-	{
-		mDefaultEquipmentIcon = EquipmentIconFinder.Object;
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> ArtifactIconFinder(
@@ -137,41 +104,24 @@ UInventoryUIWidgetBase::UInventoryUIWidgetBase(const FObjectInitializer& ObjectI
 	{
 		mDefaultArtifactIcon = ArtifactIconFinder.Object;
 	}
-}
 
-UTexture2D* UInventoryUIWidgetBase::ResolveInventoryIcon(const FInventoryItemUI& Item) const
-{
-	if (Item.mIcon != nullptr)
+	static ConstructorHelpers::FObjectFinder<UTexture2D> CardFrameFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/T_CombatHUD_SkillSlotFrame.T_CombatHUD_SkillSlotFrame"));
+	if (CardFrameFinder.Succeeded())
 	{
-		return Item.mIcon;
-	}
-
-	switch (Item.mKind)
-	{
-	case EInventoryItemKind::Skill:
-		return mDefaultSkillIcon;
-	case EInventoryItemKind::Equipment:
-		return mDefaultEquipmentIcon;
-	case EInventoryItemKind::Artifact:
-		return mDefaultArtifactIcon;
-	default:
-		return nullptr;
+		mArtifactCardFrame = CardFrameFinder.Object;
 	}
 }
 
-/**
- * @brief 전용 아트 WBP가 아직 제목/닫기만 가진 상태여도 코드 fallback을 만든 뒤
- *        버튼과 고정 라벨을 배선한다.
- */
 void UInventoryUIWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
-
 	EnsureFallbackLayout();
 
 	if (mCloseButton != nullptr)
 	{
-		mCloseButton->OnClicked.AddUniqueDynamic(this, &UInventoryUIWidgetBase::HandleCloseClicked);
+		mCloseButton->OnClicked.AddUniqueDynamic(
+			this, &UInventoryUIWidgetBase::HandleCloseClicked);
 	}
 	if (mCloseButtonText != nullptr)
 	{
@@ -179,19 +129,7 @@ void UInventoryUIWidgetBase::NativeConstruct()
 	}
 	if (mTitleText != nullptr)
 	{
-		mTitleText->SetText(LOCTEXT("Inventory", "INVENTORY"));
-	}
-	if (mPartyLabel != nullptr)
-	{
-		mPartyLabel->SetText(LOCTEXT("Mercenaries", "MERCENARIES"));
-	}
-	if (mSkillLabel != nullptr)
-	{
-		mSkillLabel->SetText(LOCTEXT("AcquiredSkills", "ACQUIRED SKILLS"));
-	}
-	if (mEquipLabel != nullptr)
-	{
-		mEquipLabel->SetText(LOCTEXT("AcquiredEquipment", "ACQUIRED EQUIPMENT"));
+		mTitleText->SetText(LOCTEXT("Inventory", "SHARED INVENTORY"));
 	}
 	if (mArtifactLabel != nullptr)
 	{
@@ -201,17 +139,23 @@ void UInventoryUIWidgetBase::NativeConstruct()
 	RefreshView();
 }
 
-/**
- * @brief AddToViewport로 NativeConstruct가 끝난 뒤 실제 GameMode 값을 읽는다.
- *        닫았다 다시 열 때도 매번 실행되어 직전 전투에서 받은 골드/EXP/보상이 바로 보인다.
- */
 void UInventoryUIWidgetBase::ApplyOpenUI()
 {
 	Super::ApplyOpenUI();
 	RefreshFromCurrentRoom();
 }
 
-/** @brief 새 UIModel을 구독하고 이미 들어온 스냅샷도 즉시 그린다. */
+void UInventoryUIWidgetBase::ApplyCloseUI()
+{
+	// 개발 프리뷰/자동화가 주입한 외부 모델을 닫힐 때 버린다. 다음 정상 열기는
+	// 반드시 현재 룸의 공용 골드와 아티팩트를 다시 읽는다.
+	if (mUIModel != nullptr && mUIModel != mRuntimeUIModel)
+	{
+		UnbindUIModel();
+	}
+	Super::ApplyCloseUI();
+}
+
 void UInventoryUIWidgetBase::BindUIModel(UInventoryUIModel* InUIModel)
 {
 	if (mUIModel == InUIModel)
@@ -224,7 +168,8 @@ void UInventoryUIWidgetBase::BindUIModel(UInventoryUIModel* InUIModel)
 	mUIModel = InUIModel;
 	if (mUIModel != nullptr)
 	{
-		mUIModel->OnUIChanged.AddDynamic(this, &UInventoryUIWidgetBase::HandleUIChanged);
+		mUIModel->OnUIChanged.AddDynamic(
+			this, &UInventoryUIWidgetBase::HandleUIChanged);
 		RefreshView();
 		OnInventoryRefreshed();
 	}
@@ -235,33 +180,14 @@ void UInventoryUIWidgetBase::HandleCloseClicked()
 	CloseUI();
 }
 
-void UInventoryUIWidgetBase::LongPressItem(EInventoryItemKind Kind, int32 ItemIndex)
-{
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestItemLongPress(Kind, ItemIndex);
-	}
-}
-
 int32 UInventoryUIWidgetBase::GetDisplayedGold() const
 {
 	return mUIModel != nullptr ? mUIModel->GetInventory().mGold : 0;
 }
 
-int32 UInventoryUIWidgetBase::GetMercenaryRowCount() const
+int32 UInventoryUIWidgetBase::GetArtifactCount() const
 {
-	return mUIModel != nullptr ? mUIModel->GetInventory().mMercenaries.Num() : 0;
-}
-
-int32 UInventoryUIWidgetBase::GetAcquiredItemCount() const
-{
-	if (mUIModel == nullptr)
-	{
-		return 0;
-	}
-
-	const FInventoryUI& Inventory = mUIModel->GetInventory();
-	return Inventory.mSkills.Num() + Inventory.mEquipment.Num() + Inventory.mArtifacts.Num();
+	return mUIModel != nullptr ? mUIModel->GetInventory().mArtifacts.Num() : 0;
 }
 
 bool UInventoryUIWidgetBase::HasBackgroundArt() const
@@ -269,18 +195,28 @@ bool UInventoryUIWidgetBase::HasBackgroundArt() const
 	return mBackgroundArt.IsNull() == false || mDefaultBackgroundArt != nullptr;
 }
 
-bool UInventoryUIWidgetBase::HasFallbackItemIcons() const
+bool UInventoryUIWidgetBase::HasFallbackArtifactIcon() const
 {
-	return mDefaultSkillIcon != nullptr
-		&& mDefaultEquipmentIcon != nullptr
-		&& mDefaultArtifactIcon != nullptr;
+	return mDefaultArtifactIcon != nullptr;
+}
+
+bool UInventoryUIWidgetBase::HasArtifactCardFrame() const
+{
+	return mArtifactCardFrame != nullptr;
+}
+
+UTexture2D* UInventoryUIWidgetBase::ResolveArtifactIcon(
+	const FInventoryArtifactUI& Artifact) const
+{
+	return Artifact.mIcon != nullptr ? Artifact.mIcon.Get() : mDefaultArtifactIcon.Get();
 }
 
 void UInventoryUIWidgetBase::UnbindUIModel()
 {
 	if (mUIModel != nullptr)
 	{
-		mUIModel->OnUIChanged.RemoveDynamic(this, &UInventoryUIWidgetBase::HandleUIChanged);
+		mUIModel->OnUIChanged.RemoveDynamic(
+			this, &UInventoryUIWidgetBase::HandleUIChanged);
 	}
 	mUIModel = nullptr;
 }
@@ -291,14 +227,9 @@ void UInventoryUIWidgetBase::HandleUIChanged()
 	OnInventoryRefreshed();
 }
 
-/**
- * @brief RoomGameMode의 읽기 전용 DTO를 화면 모델로 옮긴다.
- *
- * @details 인벤토리 화면이 AttributeSet이나 RunPersistData를 직접 알지 않게 유지한다.
- *          테스트/에디터 미리보기에서 외부 모델이 이미 바인딩된 경우에는 그 모델을 덮지 않는다.
- */
 void UInventoryUIWidgetBase::RefreshFromCurrentRoom()
 {
+	// 외부에서 mock/test 모델을 바인딩한 프리뷰는 실제 룸 값으로 덮지 않는다.
 	if (mUIModel != nullptr && mUIModel != mRuntimeUIModel)
 	{
 		return;
@@ -313,7 +244,8 @@ void UInventoryUIWidgetBase::RefreshFromCurrentRoom()
 	FInventoryUI Inventory;
 	const UWorld* World = GetWorld();
 	const ARoomGameModeBase* RoomGameMode = World != nullptr
-		? Cast<ARoomGameModeBase>(World->GetAuthGameMode()) : nullptr;
+		? Cast<ARoomGameModeBase>(World->GetAuthGameMode())
+		: nullptr;
 
 	FInventoryView View;
 	if (RoomGameMode == nullptr || RoomGameMode->GetInventoryView(View) == false)
@@ -323,65 +255,34 @@ void UInventoryUIWidgetBase::RefreshFromCurrentRoom()
 	}
 
 	Inventory.mGold = View.mGold;
-	Inventory.mMercenaries.Reserve(View.mMercenaries.Num());
-	for (const FInventoryMercenaryView& Source : View.mMercenaries)
-	{
-		FInventoryMercenaryUI& Target = Inventory.mMercenaries.AddDefaulted_GetRef();
-		Target.mPartyIndex = Source.mPartyIndex;
-		Target.mName = Source.mName;
-		Target.mPortrait = Source.mPortrait;
-		Target.mLevel = Source.mLevel;
-		Target.mExp = Source.mExp;
-		Target.mMaxExp = Source.mMaxExp;
-		Target.mHP = Source.mHP;
-		Target.mMaxHP = Source.mMaxHP;
-	}
-
-	Inventory.mSkills.Reserve(View.mSkills.Num());
-	for (const FInventoryRowView& Row : View.mSkills)
-	{
-		Inventory.mSkills.Add(MakeInventoryItem(Row, EInventoryItemKind::Skill));
-	}
-	Inventory.mEquipment.Reserve(View.mEquipment.Num());
-	for (const FInventoryRowView& Row : View.mEquipment)
-	{
-		Inventory.mEquipment.Add(MakeInventoryItem(Row, EInventoryItemKind::Equipment));
-	}
 	Inventory.mArtifacts.Reserve(View.mArtifacts.Num());
-	for (const FInventoryRowView& Row : View.mArtifacts)
+	for (const FInventoryArtifactView& Source : View.mArtifacts)
 	{
-		Inventory.mArtifacts.Add(MakeInventoryItem(Row, EInventoryItemKind::Artifact));
+		Inventory.mArtifacts.Add(MakeInventoryArtifact(Source));
 	}
 
 	mRuntimeUIModel->SetInventory(Inventory);
 }
 
-/**
- * @brief 전용 WBP 계약이 갖춰지기 전 사용하는 완전한 모바일용 fallback.
- *
- * @details WBP에 mPartyBox/mSkillBox/...가 생기면 이 함수는 아무 것도 만들지 않는다.
- *          새 배경 아트는 mBackgroundArt에 선택적으로 지정하며, 없으면 단색 배경으로 동작한다.
- */
 void UInventoryUIWidgetBase::EnsureFallbackLayout()
 {
 	if (mFallbackLayoutRoot != nullptr
 		|| (mMetaText != nullptr
-			&& mPartyBox != nullptr
-			&& mSkillBox != nullptr
-			&& mEquipBox != nullptr
-			&& mArtifactBox != nullptr))
+			&& mArtifactLabel != nullptr
+			&& mArtifactBox != nullptr
+			&& mCloseButton != nullptr))
 	{
 		return;
 	}
 
 	UCanvasPanel* RootCanvas = WidgetTree != nullptr
-		? Cast<UCanvasPanel>(WidgetTree->RootWidget) : nullptr;
+		? Cast<UCanvasPanel>(WidgetTree->RootWidget)
+		: nullptr;
 	if (RootCanvas == nullptr)
 	{
 		return;
 	}
 
-	// ScaleToFit 바깥 레터박스. 세로 화면에서도 남는 공간을 같은 남색으로 채운다.
 	UBorder* ScreenBackdrop = WidgetTree->ConstructWidget<UBorder>(
 		UBorder::StaticClass(), TEXT("InventoryScreenBackdrop"));
 	ScreenBackdrop->SetBrushColor(InventoryBackgroundColor);
@@ -392,8 +293,6 @@ void UInventoryUIWidgetBase::EnsureFallbackLayout()
 		BackdropSlot->SetZOrder(40);
 	}
 
-	// 배경과 모든 터치 영역을 같은 1672x941 좌표계에 둔다. 화면 비율이 바뀌어도
-	// 그림만 따로 늘어나거나 닫기 버튼이 프레임 밖으로 밀리지 않는다.
 	UScaleBox* DesignScale = WidgetTree->ConstructWidget<UScaleBox>(
 		UScaleBox::StaticClass(), TEXT("InventoryDesignScale"));
 	DesignScale->SetStretch(EStretch::ScaleToFit);
@@ -451,15 +350,44 @@ void UInventoryUIWidgetBase::EnsureFallbackLayout()
 	mTitleText->SetJustification(ETextJustify::Center);
 	PlaceOnDesignCanvas(
 		DesignCanvas, mTitleText,
-		FVector2D(360.f, 52.f), FVector2D(970.f, 62.f));
+		FVector2D(315.f, 54.f), FVector2D(880.f, 72.f), 2);
 
 	mMetaText = WidgetTree->ConstructWidget<UTextBlock>(
 		UTextBlock::StaticClass(), TEXT("InventoryRuntimeGold"));
 	SetTextStyle(mMetaText, 30, InventoryGoldColor);
-	mMetaText->SetJustification(ETextJustify::Center);
+	mMetaText->SetJustification(ETextJustify::Right);
 	PlaceOnDesignCanvas(
 		DesignCanvas, mMetaText,
-		FVector2D(1280.f, 304.f), FVector2D(285.f, 58.f));
+		FVector2D(1372.f, 72.f), FVector2D(145.f, 55.f), 2);
+
+	mArtifactLabel = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), TEXT("InventoryRuntimeArtifactLabel"));
+	SetTextStyle(mArtifactLabel, 26, InventoryCreamColor);
+	PlaceOnDesignCanvas(
+		DesignCanvas, mArtifactLabel,
+		FVector2D(125.f, 218.f), FVector2D(500.f, 45.f), 2);
+
+	USizeBox* ScrollFrame = WidgetTree->ConstructWidget<USizeBox>(
+		USizeBox::StaticClass(), TEXT("InventoryRuntimeArtifactScrollFrame"));
+	ScrollFrame->SetWidthOverride(1440.f);
+	ScrollFrame->SetHeightOverride(492.f);
+	PlaceOnDesignCanvas(
+		DesignCanvas, ScrollFrame,
+		FVector2D(116.f, 270.f), FVector2D(1440.f, 492.f), 2);
+
+	UScrollBox* ArtifactScroll = WidgetTree->ConstructWidget<UScrollBox>(
+		UScrollBox::StaticClass(), TEXT("InventoryRuntimeArtifactScroll"));
+	ArtifactScroll->SetOrientation(Orient_Vertical);
+	ScrollFrame->AddChild(ArtifactScroll);
+
+	mArtifactBox = WidgetTree->ConstructWidget<UWrapBox>(
+		UWrapBox::StaticClass(), TEXT("InventoryRuntimeArtifactGrid"));
+	mArtifactBox->SetOrientation(Orient_Horizontal);
+	mArtifactBox->SetExplicitWrapSize(true);
+	mArtifactBox->SetWrapSize(ArtifactGridWrapWidth);
+	mArtifactBox->SetInnerSlotPadding(FVector2D(17.f, 14.f));
+	mArtifactBox->SetHorizontalAlignment(HAlign_Center);
+	ArtifactScroll->AddChild(mArtifactBox);
 
 	mCloseButton = WidgetTree->ConstructWidget<UButton>(
 		UButton::StaticClass(), TEXT("InventoryRuntimeCloseButton"));
@@ -469,78 +397,14 @@ void UInventoryUIWidgetBase::EnsureFallbackLayout()
 	SetTextStyle(mCloseButtonText, 24, InventoryCreamColor);
 	mCloseButtonText->SetJustification(ETextJustify::Center);
 	mCloseButton->AddChild(mCloseButtonText);
-	// 아트의 우측 하단 나무 버튼 전체를 히트 영역으로 사용한다.
 	PlaceOnDesignCanvas(
 		DesignCanvas, mCloseButton,
-		FVector2D(1275.f, 765.f), FVector2D(305.f, 100.f), 3);
-
-	mPartyLabel = WidgetTree->ConstructWidget<UTextBlock>(
-		UTextBlock::StaticClass(), TEXT("InventoryRuntimePartyLabel"));
-	SetTextStyle(mPartyLabel, 22, InventoryNavyTextColor);
-	mPartyLabel->SetJustification(ETextJustify::Center);
-	PlaceOnDesignCanvas(
-		DesignCanvas, mPartyLabel,
-		FVector2D(94.f, 159.f), FVector2D(310.f, 38.f));
-
-	mPartyBox = WidgetTree->ConstructWidget<UVerticalBox>(
-		UVerticalBox::StaticClass(), TEXT("InventoryRuntimePartyBox"));
-	PlaceOnDesignCanvas(
-		DesignCanvas, mPartyBox,
-		FVector2D(83.f, 202.f), FVector2D(330.f, 600.f));
-
-	auto AddRewardSection = [this, DesignCanvas](
-		const TCHAR* LabelName,
-		const TCHAR* BoxName,
-		TObjectPtr<UTextBlock>& OutLabel,
-		TObjectPtr<UHorizontalBox>& OutBox,
-		const FVector2D& LabelPosition,
-		const FVector2D& LabelSize,
-		const FVector2D& SectionPosition,
-		const FVector2D& SectionSize)
-	{
-		OutLabel = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), LabelName);
-		SetTextStyle(OutLabel, 23, InventoryGoldColor);
-		PlaceOnDesignCanvas(DesignCanvas, OutLabel, LabelPosition, LabelSize, 2);
-
-		USizeBox* SectionFrame = WidgetTree->ConstructWidget<USizeBox>(
-			USizeBox::StaticClass(), *FString::Printf(TEXT("%sSize"), BoxName));
-		SectionFrame->SetWidthOverride(SectionSize.X);
-		SectionFrame->SetHeightOverride(SectionSize.Y);
-		PlaceOnDesignCanvas(
-			DesignCanvas, SectionFrame,
-			SectionPosition, SectionSize, 2);
-
-		UScrollBox* Scroll = WidgetTree->ConstructWidget<UScrollBox>(
-			UScrollBox::StaticClass(), *FString::Printf(TEXT("%sScroll"), BoxName));
-		Scroll->SetOrientation(Orient_Horizontal);
-		SectionFrame->AddChild(Scroll);
-
-		OutBox = WidgetTree->ConstructWidget<UHorizontalBox>(
-			UHorizontalBox::StaticClass(), BoxName);
-		Scroll->AddChild(OutBox);
-	};
-
-	AddRewardSection(
-		TEXT("InventoryRuntimeSkillLabel"), TEXT("InventoryRuntimeSkillBox"),
-		mSkillLabel, mSkillBox,
-		FVector2D(492.f, 204.f), FVector2D(680.f, 38.f),
-		FVector2D(480.f, 246.f), FVector2D(705.f, 215.f));
-	AddRewardSection(
-		TEXT("InventoryRuntimeEquipLabel"), TEXT("InventoryRuntimeEquipBox"),
-		mEquipLabel, mEquipBox,
-		FVector2D(492.f, 491.f), FVector2D(680.f, 38.f),
-		FVector2D(480.f, 533.f), FVector2D(705.f, 245.f));
-	AddRewardSection(
-		TEXT("InventoryRuntimeArtifactLabel"), TEXT("InventoryRuntimeArtifactBox"),
-		mArtifactLabel, mArtifactBox,
-		FVector2D(1276.f, 398.f), FVector2D(295.f, 38.f),
-		FVector2D(1265.f, 443.f), FVector2D(315.f, 285.f));
+		FVector2D(1265.f, 778.f), FVector2D(300.f, 103.f), 3);
 }
 
-/** @brief 한 획득 보상 섹션을 아이콘 카드로 채운다. */
-void UInventoryUIWidgetBase::FillSection(
-	UHorizontalBox* Box,
-	const TArray<FInventoryItemUI>& Items)
+void UInventoryUIWidgetBase::FillArtifacts(
+	UWrapBox* Box,
+	const TArray<FInventoryArtifactUI>& Artifacts)
 {
 	if (Box == nullptr)
 	{
@@ -548,188 +412,120 @@ void UInventoryUIWidgetBase::FillSection(
 	}
 	Box->ClearChildren();
 
-	if (Items.IsEmpty())
+	if (Artifacts.IsEmpty())
 	{
-		UTextBlock* EmptyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		EmptyText->SetText(LOCTEXT("NoAcquiredItems", "No acquired items"));
-		SetTextStyle(EmptyText, 15, InventoryMutedTextColor);
-		if (UHorizontalBoxSlot* EmptySlot = Box->AddChildToHorizontalBox(EmptyText))
+		USizeBox* EmptySize = WidgetTree->ConstructWidget<USizeBox>(
+			USizeBox::StaticClass(), TEXT("InventoryRuntimeEmptySize"));
+		EmptySize->SetWidthOverride(ArtifactGridWrapWidth);
+		EmptySize->SetHeightOverride(150.f);
+
+		UTextBlock* EmptyText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("InventoryRuntimeEmptyText"));
+		EmptyText->SetText(LOCTEXT("NoArtifacts", "No artifacts acquired"));
+		SetTextStyle(EmptyText, 22, InventoryMutedTextColor);
+		EmptyText->SetJustification(ETextJustify::Center);
+		EmptySize->AddChild(EmptyText);
+
+		if (UWrapBoxSlot* EmptySlot = Box->AddChildToWrapBox(EmptySize))
 		{
-			EmptySlot->SetPadding(FMargin(8.f, 12.f));
+			EmptySlot->SetFillEmptySpace(true);
+			EmptySlot->SetHorizontalAlignment(HAlign_Fill);
 		}
 		return;
 	}
 
-	for (const FInventoryItemUI& Item : Items)
+	for (int32 ArtifactPosition = 0; ArtifactPosition < Artifacts.Num(); ++ArtifactPosition)
 	{
-		UBorder* Card = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Card->SetBrushColor(Item.mRarityColor == FLinearColor::White
-			? InventoryNavyCardColor
+		const FInventoryArtifactUI& Artifact = Artifacts[ArtifactPosition];
+
+		USizeBox* CardSize = WidgetTree->ConstructWidget<USizeBox>(
+			USizeBox::StaticClass(),
+			*FString::Printf(TEXT("InventoryArtifactCard_%d"), ArtifactPosition));
+		CardSize->SetWidthOverride(ArtifactCardWidth);
+		CardSize->SetHeightOverride(ArtifactCardHeight);
+
+		UOverlay* Card = WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(),
+			*FString::Printf(TEXT("InventoryArtifactOverlay_%d"), ArtifactPosition));
+		CardSize->AddChild(Card);
+
+		UImage* Frame = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(),
+			*FString::Printf(TEXT("InventoryArtifactFrame_%d"), ArtifactPosition));
+		if (mArtifactCardFrame != nullptr)
+		{
+			Frame->SetBrushFromTexture(mArtifactCardFrame, false);
+		}
+		const FLinearColor RarityTint = Artifact.mRarityColor == FLinearColor::White
+			? FLinearColor::White
 			: FLinearColor(
-				Item.mRarityColor.R * 0.20f,
-				Item.mRarityColor.G * 0.20f,
-				Item.mRarityColor.B * 0.20f,
-				0.82f));
-		Card->SetPadding(FMargin(12.f, 10.f));
+				0.72f + Artifact.mRarityColor.R * 0.28f,
+				0.72f + Artifact.mRarityColor.G * 0.28f,
+				0.72f + Artifact.mRarityColor.B * 0.28f,
+				1.f);
+		Frame->SetColorAndOpacity(RarityTint);
+		if (UOverlaySlot* FrameSlot = Card->AddChildToOverlay(Frame))
+		{
+			FrameSlot->SetHorizontalAlignment(HAlign_Fill);
+			FrameSlot->SetVerticalAlignment(VAlign_Fill);
+		}
 
-		UHorizontalBox* CardContent = WidgetTree->ConstructWidget<UHorizontalBox>(
-			UHorizontalBox::StaticClass());
-		Card->SetContent(CardContent);
+		USizeBox* IconSize = WidgetTree->ConstructWidget<USizeBox>(
+			USizeBox::StaticClass());
+		IconSize->SetWidthOverride(92.f);
+		IconSize->SetHeightOverride(92.f);
+		if (UOverlaySlot* IconSizeSlot = Card->AddChildToOverlay(IconSize))
+		{
+			IconSizeSlot->SetHorizontalAlignment(HAlign_Center);
+			IconSizeSlot->SetVerticalAlignment(VAlign_Top);
+			IconSizeSlot->SetPadding(FMargin(0.f, 18.f, 0.f, 0.f));
+		}
 
-		USizeBox* IconSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-		IconSize->SetWidthOverride(82.f);
-		IconSize->SetHeightOverride(82.f);
-		CardContent->AddChildToHorizontalBox(IconSize);
-
-		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-		if (UTexture2D* Texture = ResolveInventoryIcon(Item))
+		UImage* Icon = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass());
+		if (UTexture2D* Texture = ResolveArtifactIcon(Artifact))
 		{
 			Icon->SetBrushFromTexture(Texture, false);
 		}
 		IconSize->AddChild(Icon);
 
-		UVerticalBox* Copy = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		if (UHorizontalBoxSlot* CopySlot = CardContent->AddChildToHorizontalBox(Copy))
+		UVerticalBox* Copy = WidgetTree->ConstructWidget<UVerticalBox>(
+			UVerticalBox::StaticClass());
+		if (UOverlaySlot* CopySlot = Card->AddChildToOverlay(Copy))
 		{
-			CopySlot->SetPadding(FMargin(8.f, 1.f, 8.f, 0.f));
-			CopySlot->SetVerticalAlignment(VAlign_Center);
+			CopySlot->SetHorizontalAlignment(HAlign_Fill);
+			CopySlot->SetVerticalAlignment(VAlign_Bottom);
+			CopySlot->SetPadding(FMargin(20.f, 0.f, 20.f, 18.f));
 		}
 
-		UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Name->SetText(Item.mName);
-		SetTextStyle(Name, 20, InventoryCreamColor);
+		UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass());
+		Name->SetText(Artifact.mName);
+		SetTextStyle(Name, 18, InventoryCreamColor);
+		Name->SetJustification(ETextJustify::Center);
 		Copy->AddChildToVerticalBox(Name);
 
-		if (Item.mDetailText.IsEmpty() == false)
+		if (Artifact.mDetailText.IsEmpty() == false)
 		{
-			UTextBlock* Detail = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-			Detail->SetText(Item.mDetailText);
-			SetTextStyle(Detail, 15, InventoryMutedTextColor);
-			Copy->AddChildToVerticalBox(Detail);
+			UTextBlock* Detail = WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass());
+			Detail->SetText(Artifact.mDetailText);
+			SetTextStyle(Detail, 13, InventoryMutedTextColor);
+			Detail->SetJustification(ETextJustify::Center);
+			if (UVerticalBoxSlot* DetailSlot = Copy->AddChildToVerticalBox(Detail))
+			{
+				DetailSlot->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
+			}
 		}
 
-		if (UHorizontalBoxSlot* BoxSlot = Box->AddChildToHorizontalBox(Card))
+		if (UWrapBoxSlot* CardSlot = Box->AddChildToWrapBox(CardSize))
 		{
-			BoxSlot->SetPadding(FMargin(4.f, 2.f));
+			CardSlot->SetHorizontalAlignment(HAlign_Center);
+			CardSlot->SetVerticalAlignment(VAlign_Center);
 		}
 	}
 }
 
-/** @brief 용병마다 별도 EXP 진행도를 한 행으로 그린다. */
-void UInventoryUIWidgetBase::FillMercenaries(
-	UVerticalBox* Box,
-	const TArray<FInventoryMercenaryUI>& Mercenaries)
-{
-	if (Box == nullptr)
-	{
-		return;
-	}
-	Box->ClearChildren();
-
-	for (const FInventoryMercenaryUI& Mercenary : Mercenaries)
-	{
-		USizeBox* RowSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-		RowSize->SetHeightOverride(132.f);
-		if (UVerticalBoxSlot* RowSizeSlot = Box->AddChildToVerticalBox(RowSize))
-		{
-			RowSizeSlot->SetPadding(FMargin(0.f, 4.f));
-		}
-
-		UBorder* Row = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-		Row->SetBrushColor(InventoryParchmentCardColor);
-		Row->SetPadding(FMargin(10.f, 8.f));
-		RowSize->AddChild(Row);
-
-		UHorizontalBox* RowContent = WidgetTree->ConstructWidget<UHorizontalBox>(
-			UHorizontalBox::StaticClass());
-		Row->SetContent(RowContent);
-
-		USizeBox* PortraitSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-		PortraitSize->SetWidthOverride(74.f);
-		PortraitSize->SetHeightOverride(94.f);
-		RowContent->AddChildToHorizontalBox(PortraitSize);
-
-		UImage* Portrait = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-		if (Mercenary.mPortrait != nullptr)
-		{
-			Portrait->SetBrushFromTexture(Mercenary.mPortrait, false);
-		}
-		PortraitSize->AddChild(Portrait);
-
-		UVerticalBox* Status = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-		if (UHorizontalBoxSlot* StatusSlot = RowContent->AddChildToHorizontalBox(Status))
-		{
-			SetHorizontalFill(StatusSlot);
-			StatusSlot->SetPadding(FMargin(10.f, 0.f, 14.f, 0.f));
-			StatusSlot->SetVerticalAlignment(VAlign_Fill);
-		}
-
-		UHorizontalBox* NameLine = WidgetTree->ConstructWidget<UHorizontalBox>(
-			UHorizontalBox::StaticClass());
-		if (UVerticalBoxSlot* NameLineSlot = Status->AddChildToVerticalBox(NameLine))
-		{
-			NameLineSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 2.f));
-		}
-
-		UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Name->SetText(Mercenary.mName);
-		SetTextStyle(Name, 15, InventoryNavyTextColor);
-		SetHorizontalFill(NameLine->AddChildToHorizontalBox(Name));
-
-		UTextBlock* Level = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		Level->SetText(FText::Format(LOCTEXT("MercenaryLevel", "Lv.{0}"),
-			FText::AsNumber(Mercenary.mLevel)));
-		SetTextStyle(Level, 13, InventoryNavyTextColor);
-		NameLine->AddChildToHorizontalBox(Level);
-
-		USizeBox* ExpBarSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
-		ExpBarSize->SetHeightOverride(14.f);
-		if (UVerticalBoxSlot* ExpBarSlot = Status->AddChildToVerticalBox(ExpBarSize))
-		{
-			ExpBarSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 3.f));
-		}
-
-		UProgressBar* ExpBar = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass());
-		ExpBar->SetPercent(Mercenary.mMaxExp > 0.f
-			? FMath::Clamp(Mercenary.mExp / Mercenary.mMaxExp, 0.f, 1.f)
-			: 0.f);
-		ExpBar->SetFillColorAndOpacity(InventoryExpColor);
-		ExpBarSize->AddChild(ExpBar);
-
-		UTextBlock* ExpText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		ExpText->SetText(Mercenary.mMaxExp > 0.f
-			? FText::Format(
-				LOCTEXT("MercenaryExpWithMax", "EXP {0} / {1}"),
-				FText::AsNumber(FMath::RoundToInt(Mercenary.mExp)),
-				FText::AsNumber(FMath::RoundToInt(Mercenary.mMaxExp)))
-			: FText::Format(
-				LOCTEXT("MercenaryExp", "EXP {0}"),
-				FText::AsNumber(FMath::RoundToInt(Mercenary.mExp))));
-		SetTextStyle(ExpText, 14, InventoryParchmentMutedColor);
-		if (UVerticalBoxSlot* ExpTextSlot = Status->AddChildToVerticalBox(ExpText))
-		{
-			ExpTextSlot->SetPadding(FMargin(0.f, 18.f, 0.f, 0.f));
-		}
-
-		UTextBlock* HPText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		HPText->SetText(FText::Format(
-			LOCTEXT("MercenaryHP", "HP {0} / {1}"),
-			FText::AsNumber(FMath::RoundToInt(Mercenary.mHP)),
-			FText::AsNumber(FMath::RoundToInt(Mercenary.mMaxHP))));
-		SetTextStyle(HPText, 13, InventoryParchmentMutedColor);
-		Status->AddChildToVerticalBox(HPText);
-	}
-
-	if (Mercenaries.IsEmpty())
-	{
-		UTextBlock* EmptyText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		EmptyText->SetText(LOCTEXT("NoMercenaries", "No mercenaries in the party"));
-		SetTextStyle(EmptyText, 17, InventoryNavyTextColor);
-		Box->AddChildToVerticalBox(EmptyText);
-	}
-}
-
-/** @brief 현재 모델의 골드/용병별 EXP/획득 보상을 BindWidget 또는 fallback에 반영한다. */
 void UInventoryUIWidgetBase::RefreshView()
 {
 	if (mUIModel == nullptr)
@@ -740,15 +536,9 @@ void UInventoryUIWidgetBase::RefreshView()
 	const FInventoryUI& Inventory = mUIModel->GetInventory();
 	if (mMetaText != nullptr)
 	{
-		mMetaText->SetText(FText::Format(
-			LOCTEXT("GoldValue", "GOLD  {0}"),
-			FText::AsNumber(Inventory.mGold)));
+		mMetaText->SetText(FText::AsNumber(Inventory.mGold));
 	}
-
-	FillMercenaries(mPartyBox, Inventory.mMercenaries);
-	FillSection(mSkillBox, Inventory.mSkills);
-	FillSection(mEquipBox, Inventory.mEquipment);
-	FillSection(mArtifactBox, Inventory.mArtifacts);
+	FillArtifacts(mArtifactBox, Inventory.mArtifacts);
 }
 
 void UInventoryUIWidgetBase::NativeDestruct()

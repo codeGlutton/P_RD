@@ -12,6 +12,7 @@
 
 class UButton;
 class UImage;
+class UWidget;
 class UTextBlock;
 class UTexture2D;
 class UVerticalBox;
@@ -73,6 +74,17 @@ public:
 	/** @brief 보상이 없거나 모든 보상의 지급이 확정됐는지 반환한다. */
 	UFUNCTION(BlueprintPure, Category = "Reward|UI")
 	bool IsRewardClaimComplete() const { return AreAllRewardRowsClaimed(); }
+
+	/** @brief 현재 보상 배경과 행 프레임이 모두 준비됐는지 반환한다. */
+	UFUNCTION(BlueprintPure, Category = "Reward|Art")
+	bool HasCurrentRewardArt() const
+	{
+		return mRewardBackgroundTexture != nullptr && mRewardRowFrameTexture != nullptr;
+	}
+
+	/** @brief 현재 동적으로 그린 보상 행 프레임 수. 자동화 시험에서 행/아트 결합을 확인한다. */
+	UFUNCTION(BlueprintPure, Category = "Reward|Art")
+	int32 GetCurrentRewardRowFrameCount() const { return mRewardRowFrameImages.Num(); }
 
 	/** @brief '받기'로 보상 화면이 닫혔을 때 발생. 승리 흐름이 구독해 다음 단계(월드맵)를 연다. */
 	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
@@ -152,6 +164,10 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UImage> mRewardBackgroundImage;
 
+	/** @brief 동적 보상 행 전체를 감싸는 원목/은장/남색 프레임. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Reward|Art")
+	TObjectPtr<UTexture2D> mRewardRowFrameTexture;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
 	TObjectPtr<UTexture2D> mEquipmentIcon;
@@ -172,13 +188,24 @@ protected:
 
 	/** @brief mRewardRowsBox에 추가되는 각 줄 사이 여백. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward|UI")
-	FMargin mRewardRowPadding = FMargin(0.0f, 0.0f, 0.0f, 24.0f);
+	FMargin mRewardRowPadding = FMargin(0.0f, 0.0f, 0.0f, 10.0f);
+
+	/** @brief 1672x941 보상 디자인 캔버스 기준 동적 행 크기. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward|UI")
+	FVector2D mRewardRowSize = FVector2D(900.0f, 105.0f);
 
 private:
 	TArray<FRewardClaimRow> mRewardClaimRows;
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<URewardRowWidgetBase>> mRewardRowWidgets;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRewardRowFrameImages;
+
+	/** @brief 수령 완료 시 행 전체를 흐리게 표시하기 위한 동적 행 호스트. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UWidget>> mRewardRowVisuals;
 
 	/** @brief C++/Blueprint 양쪽 클릭 배선이나 빠른 연타가 닫힘 신호를 중복 전송하지 않게 한다. */
 	bool mCloseCommitted = false;
