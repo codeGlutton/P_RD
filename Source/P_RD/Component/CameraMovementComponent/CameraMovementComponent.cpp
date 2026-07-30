@@ -6,6 +6,7 @@
 #include "Pawn/Camera/CombatCameraPlane.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Pawn/Camera/OrthographicCameraShakePattern.h"
+#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 
 // Sets default values for this component's properties
 UCameraMovementComponent::UCameraMovementComponent()
@@ -72,6 +73,13 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		if (FVector2D::Distance(mCurrentLookAtCameraLocation, mTargetLookAtCameraLocation) < 1.f && abs(mCurZoom - mTargetZoom) < 1.f)
 		{
 			mCamerControlState = ECameraControlState::Normal;
+
+			// 강조에서 완전히 돌아왔다. 카드 복귀처럼 "카메라가 제자리인
+			// 다음에" 할 일들이 이 신호를 기다린다.
+			if (UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this))
+			{
+				WorldCameraModel->NotifyMainCameraReturned();
+			}
 		}
 	}
 
