@@ -28,7 +28,9 @@ void USRPGAction::BeginAction()
 	checkf(mActionPhase == ESRPGActionPhase::ActionInit, TEXT("이미 액션 진행 중에 재실행 오류"));
 	mActionPhase = ESRPGActionPhase::ActionStart;
 
-	UE_LOG(LogSRPGCombat, Log, TEXT("액션 시작"));
+	UE_LOG(LogSRPGCombat, Log, TEXT("액션 시작: %s (%s)"),
+		*GetClass()->GetName(),
+		mInstigator.IsValid() ? *mInstigator->GetName() : TEXT("?"));
 
 	// 시작 연출 시작
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
@@ -69,7 +71,7 @@ void USRPGAction::EndAction()
 	checkf(mActionPhase == ESRPGActionPhase::ActionAbort, TEXT("액션 종료 절차 오류"));
 	mActionPhase = ESRPGActionPhase::ActionEnd;
 
-	UE_LOG(LogSRPGCombat, Log, TEXT("액션 종료"));
+	UE_LOG(LogSRPGCombat, Log, TEXT("액션 종료: %s"), *GetClass()->GetName());
 
 	// 액션 종료 로직
 	OnEndAction();
