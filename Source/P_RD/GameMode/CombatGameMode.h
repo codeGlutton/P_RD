@@ -22,7 +22,9 @@ class IBoardSelectionTarget;
 class UCombatUIModel;
 class URewardUIModel;
 class UPlayerUnitModel;
+class USkillComponentModel;
 class UStaticSkillData;
+struct FSkillDetailUI;
 struct FTileIndex;
 enum class ECombatInputType : uint8;
 
@@ -110,6 +112,22 @@ protected:
 	 */
 	bool ResolveWorldLongPressEvent(FVector2D ScreenPosition);
 
+	/**
+	 * @brief 길게 눌러 고른 대상이 적이면 그 위협 범위를 판에 칠한다.
+	 *
+	 * @details
+	 * 상세 패널과 같은 입력에서 함께 뜬다 -- 적을 살펴보는 이유가 "다음 턴에
+	 * 어디까지 오나" 라서, 패널만 띄우고 판을 안 칠하면 반쪽이다.
+	 * 아군이나 유닛이 아닌 것을 고르면 이전 칠을 지우기만 한다.
+	 *
+	 * 예산은 RechargeMovement(턴 시작 충전량)다. 적 자신의 턴 도중 잔량이 아니라
+	 * "다음 턴에 받을 행동력" 기준이어야 플레이어 계획에 맞는다.
+	 */
+	void ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const;
+
+	/** @brief 위협 범위 칠을 지운다. 행동이 시작되면 칠해 둔 전제가 낡는다. */
+	void ClearThreatRangeView() const;
+
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
 	void OnUnregisterUnit(UUnitModel* Unit);
@@ -123,7 +141,21 @@ protected:
 	void PushSkillUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
-	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
+	/**
+	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
+	 *
+	 * @details
+	 * 내려 준 유닛을 mDetailUnitModel 에 적어 둔다. 상세창의 스킬 칸을 탭하면
+	 * UI 는 SkillIndex 만 보내오므로, 어느 유닛의 스킬인지는 여기서 기억한
+	 * 것으로 되짚는다 -- 화면이 유닛을 짚으면 기준이 두 곳에 생긴다.
+	 */
+	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target);
+
+	/** @brief 상세창에 뜬 유닛의 SkillIndex번째 스킬 상세를 내린다(적 스킬일 수도 있다). */
+	void PushUnitSkillDetailUIData(int32 SkillIndex) const;
+
+	/** @brief 지금 상세창에 뜬 유닛. 상세창 스킬 칸 탭을 되짚는 기준이다. */
+	TWeakObjectPtr<UUnitModel> mDetailUnitModel;
 
 	/** @brief 톡 쳐서 고른 칸을 UI 에 내린다. 스킬 표시값도 같이 다시 내린다. */
 	void PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor);
@@ -160,6 +192,15 @@ protected:
 	UPlayerUnitModel* GetTurnPlayerUnitModel() const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
+
+	/**
+	 * @brief 스킬 하나의 상세 표시값을 채운다.
+	 *
+	 * 카드 레일(조종 중인 아군)과 상세창(들여다보는 유닛)이 같은 내용을 쓰므로
+	 * 채우는 자리를 하나로 둔다. 기준 유닛만 호출부가 정한다.
+	 */
+	void FillSkillDetailUIData(USkillComponentModel* SkillComponentModel,
+		int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const;
 	void PushEquipmentUIData() const;
 	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
 	void PushPlayerMetaUIData() const;

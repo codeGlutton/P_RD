@@ -24,7 +24,11 @@ enum class ECombatInputType : uint8
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
 	LongPressEquip,   // payload = SlotIndex (장비 상세)
 	InspectUnit,      // payload = UnitId (그 유닛의 스킬을 본다)
-	Confirm           // payload 없음(겨냥한 칸을 그대로 확정)
+	Confirm,          // payload 없음(겨냥한 칸을 그대로 확정)
+	// payload = SkillIndex. **지금 상세창에 뜬 유닛의** 스킬 상세를 청한다.
+	// LongPressSkill과 다른 것은 기준 유닛이다 -- 그쪽은 카드 레일(조종 중인 아군),
+	// 이쪽은 길게 눌러 들여다보는 중인 유닛이라 적 스킬일 수도 있다.
+	InspectUnitSkill
 };
 
 class UTexture2D;
@@ -140,6 +144,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnit(int32 UnitId);
 	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
+
+	/**
+	 * @brief 상세창에 뜬 유닛의 스킬 하나를 보여 달라.
+	 *
+	 * @details
+	 * 유닛 상세창의 스킬 칸을 탭했다는 뜻이다. 어느 유닛인지는 보내지 않는다 --
+	 * 그 상세를 내려 준 게임플레이가 이미 알고 있고, 화면이 유닛을 다시 짚으면
+	 * 기준이 두 곳에 생긴다.
+	 * @param SkillIndex FUnitDetailSkillUI.mSkillIndex 를 그대로 되돌려 보낸다
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnitSkill(int32 SkillIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 

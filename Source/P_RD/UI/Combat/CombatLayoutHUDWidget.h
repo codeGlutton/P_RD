@@ -233,6 +233,35 @@ private:
 	/** @brief 누름이 아직 안 끝났나. 터치와 마우스가 겹쳐 와도 한 번만 처리한다. */
 	bool mPressActive = false;
 
+	/** @brief 이 시간(초)을 넘게 누르고 있으면 긴 누름으로 본다. */
+	static constexpr float LongPressSeconds = 0.5f;
+
+	/**
+	 * @brief 판을 오래 눌렀다. 그 자리를 상세 요청으로 보낸다.
+	 *
+	 * @details
+	 * 뗄 때가 아니라 누르고 있는 도중에 발화한다 -- 뗄 때 판정하면 "길게
+	 * 눌렀다"는 감각과 화면 반응 사이가 벌어진다. 발화한 누름은 소비되어
+	 * 뗄 때(FinishBoardPress) 탭으로 한 번 더 처리되지 않는다.
+	 *
+	 * 어느 유닛인지는 게임플레이가 트레이스로 푼다. 상세는 SetUnitDetail 로
+	 * 되돌아오고, 적이면 위협 범위도 판에 같이 칠려 온다.
+	 */
+	void HandleBoardLongPress();
+	FTimerHandle mBoardLongPressTimerHandle;
+
+	/** @brief 카드를 오래 눌렀다. 그 스킬의 상세를 요청하고 이어질 클릭은 삼킨다. */
+	void HandleCommandLongPress(int32 SlotIndex);
+	FTimerHandle mCommandLongPressTimerHandle;
+
+	/**
+	 * @brief 긴 누름이 발화했으면 뒤따라 오는 클릭(뗌)을 한 번 무시한다.
+	 *
+	 * 버튼 클릭은 뗄 때 온다. 상세를 열어 준 누름이 뗌에서 선택으로 한 번 더
+	 * 처리되면, 설명을 보려던 손이 스킬을 골라 버린다.
+	 */
+	bool mSwallowNextCommandClick = false;
+
 	/**
 	 * @brief 이 자리가 HUD 위인가.
 	 *
@@ -563,6 +592,68 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
+
+	/* ── 상세 패널 (롱프레스 정보) ──────────────────────────────────────
+	 *
+	 * 판의 유닛을 길게 누르면 유닛 상세(적이면 위협 범위도 판에 칠린다),
+	 * 카드를 길게 누르면 스킬 상세가 뜬다.
+	 *
+	 * 패널은 **정보만 보여 주는 겹**(HitTestInvisible)이다. 눌림을 받으면
+	 * 화면 전체를 덮는 한 장이 되어 지도가 겪던 문제(OpenUI 주석)를 반복한다.
+	 * 닫는 탭은 HUD(HandleBoardPressed)가 받아 처리한다 -- 아무 데나 톡 치면
+	 * 닫힌다.
+	 */
+	bool EnsureDetailOverlayWidget();
+	void ShowUnitDetailOverlay();
+	void ShowSkillDetailOverlay();
+
+	/**
+	 * @brief 상세 패널을 닫는다.
+	 * @param bNotifyGameplay 참이면 위협 범위 칠도 걷으라고 게임플레이에 알린다.
+	 *        턴 전환처럼 게임플레이가 스스로 걷는 자리에서는 거짓으로 닫는다.
+	 */
+	void HideDetailOverlay(bool bNotifyGameplay);
+	bool IsDetailOverlayShown() const;
+
+	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
+	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mDetailOverlayWidget;
+	UPROPERTY(Transient) TObjectPtr<UImage> mDetailIconImage;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailTitleText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailBodyText;
+
+	/* ── 상세창 스킬 칸 ─────────────────────────────────────────────────
+	 *
+	 * 유닛 상세창 아래에 그 유닛의 스킬을 늘어놓고, 탭하면 그 스킬 상세로
+	 * 넘어간다. 적을 살펴보는 이유의 절반이 "무엇으로 때리나" 라서다.
+	 *
+	 * **칸은 C++ 가 짓는다.** 스킬 수가 유닛마다 달라 WBP 에 미리 놓을 수가
+	 * 없다 -- 머리 위 HP 바와 같은 이유다.
+	 */
+	static constexpr int32 DetailSkillSlotCount = 6;
+
+	/** @brief 스킬 칸 줄을 상세 패널 안에 한 번만 짓는다. */
+	void BuildDetailSkillRow();
+	/** @brief 지금 상세 스냅샷의 스킬로 칸을 채운다. 남는 칸은 접는다. */
+	void RefreshDetailSkillRow();
+	void SetDetailSkillRowShown(bool bShown);
+	void HandleDetailSkillClicked(int32 IconIndex);
+
+	UFUNCTION() void HandleDetailSkillClicked_0();
+	UFUNCTION() void HandleDetailSkillClicked_1();
+	UFUNCTION() void HandleDetailSkillClicked_2();
+	UFUNCTION() void HandleDetailSkillClicked_3();
+	UFUNCTION() void HandleDetailSkillClicked_4();
+	UFUNCTION() void HandleDetailSkillClicked_5();
+
+	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> mDetailSkillRow;
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mDetailSkillButtons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailSkillIcons;
+	/** @brief 그림이 없는 스킬은 이름을 적어 준다. 몬스터 스킬은 아이콘이 없는 것이 많다. */
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailSkillLabels;
+	/** @brief 칸 -> 그 유닛의 스킬 index. 빈 칸은 INDEX_NONE. */
+	TArray<int32> mDetailSkillIndices;
 
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
