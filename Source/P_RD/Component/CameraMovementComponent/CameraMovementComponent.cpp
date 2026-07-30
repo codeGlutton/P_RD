@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "Pawn/Camera/CombatCameraPlane.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Pawn/Camera/OrthographicCameraShakePattern.h"
 
 // Sets default values for this component's properties
 UCameraMovementComponent::UCameraMovementComponent()
@@ -90,6 +91,7 @@ void UCameraMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	MoveSmooth(DeltaTime);		// 카메라를 이동시키는 함수입니다.
 	ZoomSmooth(DeltaTime);
+	ShakeZoom();
 	FollowActor();				// 강조 시 액터가 있다면 액터를 따라가는 함수입니다.
 	ClampingCamera();			// 카메라의 Location, OrthoWidth를 제한하는 함수입니다.
 }
@@ -199,7 +201,7 @@ void UCameraMovementComponent::ClampingCamera()
 
 	// =============================
 	// 확대, 축소 최소 최대 Clamping
-	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth, mMinOrthoWidth, mMaxOrthoWidth);
+	mCurZoom = FMath::Clamp(mCurZoom, mMinOrthoWidth, mMaxOrthoWidth);
 
 	//=================================
 	// 카메라 이동의 제한을 둡니다.
@@ -282,9 +284,30 @@ void UCameraMovementComponent::ZoomSmooth(float DeltaTime)
 
 	mCameraComponent->OrthoWidth = FMath::Clamp(NewZoom, mMinOrthoWidth, mMaxOrthoWidth);
 	mCurZoom = mCameraComponent->OrthoWidth;
-
 }
 
+void UCameraMovementComponent::ShakeZoom()
+{
+	// 끝난 셰이크는 참조를 비워줌
+	if (IsValid(mActiveCameraShakeInstance) && mActiveCameraShakeInstance->IsFinished())
+	{
+		mActiveCameraShakeInstance = nullptr;
+	}
+
+	// 현재 ShakeInstance에서 OrthoWidthValue를 가져옵니다.
+	float OrthoOffset = 0.f;
+	if (IsValid(mActiveCameraShakeInstance))
+	{
+		if (UOrthographicCameraShakePattern* Pattern =
+			Cast<UOrthographicCameraShakePattern>(mActiveCameraShakeInstance->GetRootShakePattern()))
+		{
+			OrthoOffset = Pattern->GetCurrentOrhoWidthValue();
+		}
+	}
+
+	// 현재 Zoom에서 OrthoOffset을 변경하여 흔듭니다.
+	mCameraComponent->OrthoWidth = mCurZoom + OrthoOffset;
+}
 
 #pragma endregion
 
@@ -487,7 +510,7 @@ void UCameraMovementComponent::StartEmphasisToViewPortPositionWithZoom(float Tar
 		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
 			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
 		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
-			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+			mPreDefaultState.Zoom : mCurZoom;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
@@ -512,7 +535,7 @@ void UCameraMovementComponent::StartEmphasisToActorWithZoom(float TargetZoom, AA
 		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
 			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
 		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
-			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+			mPreDefaultState.Zoom : mCurZoom;
 	}
 
 	// 액터의 현재 위치를 구합니다.
@@ -541,7 +564,7 @@ void UCameraMovementComponent::StartEmphasisToWorldPosition(FVector WorldPositio
 		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
 			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
 		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
-			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+			mPreDefaultState.Zoom : mCurZoom;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
@@ -565,7 +588,7 @@ void UCameraMovementComponent::StartEmphasisToViewPortPosition(FVector2D ViewPor
 		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
 			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
 		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
-			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+			mPreDefaultState.Zoom : mCurZoom;
 	}
 
 	// 해당 위치로 Zoom과 이동을 수행합니다.
@@ -589,7 +612,7 @@ void UCameraMovementComponent::StartEmphasisToActor(AActor* EmphasisActor)
 		mPreDefaultState.Position = mCamerControlState == ECameraControlState::Emphasis_Returning ?
 			mPreDefaultState.Position : CameraRayHitResult.ImpactPoint;
 		mPreDefaultState.Zoom = mCamerControlState == ECameraControlState::Emphasis_Returning ?
-			mPreDefaultState.Zoom : mCameraComponent->OrthoWidth;
+			mPreDefaultState.Zoom : mCurZoom;
 	}
 
 	// 액터의 현재 위치를 구합니다.
@@ -629,7 +652,7 @@ void UCameraMovementComponent::StartCameraShake(TSubclassOf<class UCameraShakeBa
 		return;
 	}
 
-	FirstPlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
+	mActiveCameraShakeInstance = FirstPlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass);
 }
 
 #pragma endregion
@@ -639,8 +662,8 @@ void UCameraMovementComponent::StartCameraShake(TSubclassOf<class UCameraShakeBa
 void UCameraMovementComponent::ZoomCamera_Instant(float ZoomDelta)
 {
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));
-	mCameraComponent->OrthoWidth = FMath::Clamp(mCameraComponent->OrthoWidth + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
-	mCurZoom = mCameraComponent->OrthoWidth;
+	mCurZoom = FMath::Clamp(mCurZoom + ZoomDelta, mMinOrthoWidth, mMaxOrthoWidth);
+	mCameraComponent->OrthoWidth = mCurZoom;
 	mTargetZoom = mCurZoom;
 }
 

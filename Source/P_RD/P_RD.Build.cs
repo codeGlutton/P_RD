@@ -40,6 +40,9 @@ public class P_RD : ModuleRules
 
             /* AI Plugin Modules */
             "AIModule",
+
+            /* Camera Shaeks Modules*/
+            "EngineCameras"
         });
 
         PrivateIncludePaths.AddRange(new string[] {

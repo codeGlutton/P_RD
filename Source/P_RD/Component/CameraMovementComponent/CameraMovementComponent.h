@@ -106,7 +106,7 @@ protected:
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomSpeed", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 5.f;
 
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentZoom", AllowPrivateAccess = "true"))
 	float mCurZoom;
 
 	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetZoom", AllowPrivateAccess = "true"))
@@ -144,7 +144,7 @@ protected:
 	/*
 	* @brief 현재 카메라가 바라보고 있는 시선 위치
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "LookAtCameraLocation", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "LookAtCameraLocation", AllowPrivateAccess = "true"))
 	FVector2D mCurrentLookAtCameraLocation;
 
 	/*
@@ -183,6 +183,11 @@ protected:
 	* @details
 	*/
 	FCameraEmphasisState mPreDefaultState;
+
+protected:
+	UPROPERTY(Category = CameraShake, VisibleAnywhere,BlueprintReadOnly, meta = (DisplayName = "현재 카메라 셰이크 인스턴스", AllowPrivateAccess = "true"))
+	TObjectPtr<class UCameraShakeBase> mActiveCameraShakeInstance;
+
 
 private:
 	/*
@@ -227,6 +232,13 @@ private:
 	* 타이머로 호출합니다.
 	*/
 	void ZoomSmooth(float DeltaTime);
+
+	/*
+	* @breif 카메라 Shake 시 OrthoWidth를 조작하는 함수
+	* @details 
+	* 현재 활성화된 CameraShake에서 OrthoWidthValue를 가져와 Zoom을 흔듭니다.
+	*/
+	void ShakeZoom();
 
 	/*Get, Set*/
 public:
