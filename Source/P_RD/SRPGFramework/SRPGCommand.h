@@ -19,6 +19,15 @@ class IBoardSelectionTarget;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
 
 /**
+ * @brief 톡 친 칸이 어디였는지 알린다.
+ *
+ * 트레이스는 이 커맨드를 다루는 쪽이 한다. 화면은 좌표만 넘기고 타일이 뭔지
+ * 모르므로, 풀어낸 결과를 이 길로 돌려보내야 UI 가 겨냥한 자리를 안다.
+ * 액터는 그 칸에 선 것이고, 빈 칸이면 nullptr 이다.
+ */
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnSelectTargetTile, const FTileIndex& /*Tile*/, AActor* /*Actor*/);
+
+/**
  * @brief  사용자 입력 명령 객체
  */
 USTRUCT(BlueprintType)
@@ -63,5 +72,8 @@ public:
 
 public:
 	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
+
+	/** @brief 톡 쳐서 고른 칸. 롱프레스가 아닌 보통 탭에서 온다. */
+	FOnSelectTargetTile OnSelectTargetTile;
 };
 

@@ -71,18 +71,26 @@ ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInst
 		/* 월드 공간 터치 시 선택 위치에 따라서 결정 */
 
 		const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
+		AActor* HitActor = nullptr;
+		FTileIndex TileIndex = FTileIndex::Invalid;
+		GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, WorldTraceCommand.mScreenPosition, OUT HitActor, OUT TileIndex);
+
 		if (WorldTraceCommand.mIsLongPress == true)
 		{
-			AActor* HitActor = nullptr;
-			FTileIndex TileIndex = FTileIndex::Invalid;
-			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, WorldTraceCommand.mScreenPosition, OUT HitActor, OUT TileIndex);
-
 			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
 			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)
 			{
 				WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);
 			}
 			return ESRPGCommandResult::Handled;
+		}
+
+		// 보통 탭은 "여기를 겨냥한다" 는 뜻이다. 빈 칸이어도 알린다 -- 이동
+		// 목적지가 그렇다. 알리기만 하고 커맨드는 계속 흘려보낸다. 겨냥은
+		// 화면에 보여 줄 값이지 행동이 아니다.
+		if (TileIndex != FTileIndex::Invalid)
+		{
+			WorldTraceCommand.OnSelectTargetTile.Broadcast(TileIndex, HitActor);
 		}
 	}
 
