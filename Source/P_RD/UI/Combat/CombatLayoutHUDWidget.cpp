@@ -702,6 +702,9 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	if (bAll || Domain == ECombatUIDomain::Skill)
 	{
 		RefreshCommands();
+		// RefreshCommands 는 내용을 채우며 칸을 켠다. 접어 둔 카드가 스킬
+		// 갱신(겨냥 변경마다 온다)에 도로 펴지지 않게 표시 정책으로 되돌린다.
+		RefreshCommandVisibility();
 	}
 	if (bAll || Domain == ECombatUIDomain::Meta)
 	{
@@ -1040,7 +1043,15 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.Cooldown, false);
 			SetShown(Widgets.CooldownIcon, false);
 			SetShown(Widgets.Damage, false);
-			SetShown(Widgets.Disabled, false);
+			// 행동력이 바닥나면 이동도 잠근다. 갈 수 있는 칸이 없다 -- 스킬은
+			// 잠그면서 이동만 열어 두면 "왜 이것만 되지"가 된다. 긴 누름으로
+			// 설명을 읽는 것은 스킬과 마찬가지로 잠겨도 된다.
+			{
+				const FUnitUI* TurnUnit = FindTurnUnit();
+				const bool bCanMove = TurnUnit != nullptr
+					&& FMath::RoundToInt(TurnUnit->mMovementPoint) > 0;
+				SetShown(Widgets.Disabled, !bCanMove);
+			}
 			continue;
 		}
 
@@ -1205,10 +1216,17 @@ void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
 		return;
 	}
 	// 카드를 골랐으면 상세는 볼 만큼 봤다. 위협 범위 칠은 게임플레이가
-	// 선택 명령에서 스스로 걷으므로 화면만 닫는다.
+	// 알아서 관리하므로 화면만 닫는다.
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	if (SlotIndex == 0)
 	{
+		// 행동력이 없으면 이동 모드에 들어가지 않는다. 갈 칸이 없는데
+		// 조준만 열리면 취소밖에 할 게 없다.
+		const FUnitUI* TurnUnit = FindTurnUnit();
+		if (TurnUnit == nullptr || FMath::RoundToInt(TurnUnit->mMovementPoint) <= 0)
+		{
+			return;
+		}
 		mUIModel->RequestMove();
 		return;
 	}
@@ -1852,9 +1870,51 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 		return;
 	}
 
-	// 조준 중이 아니면 판 탭은 카드를 뒤집는 것뿐이다. 어느 칸을 눌렀는지는
-	// 안 본다 -- 타일을 눌러 카드를 여는 규칙은 없앴다. 판 아무 데나 누르면
-	// 펴지고, 다시 누르면 접힌다.
+	// 행동 연출이 도는 동안에는 살펴보기를 켜고 끄지 못한다. 스킬이 날아가는
+	// 중에 겨냥이 갈리면 어느 것이 지금 일이고 어느 것이 봐 둔 것인지 섞인다.
+	// 이미 칠해 둔 위협 범위는 **그대로 남는다** -- 막는 것은 켜고 끄기지,
+	// 켜 둔 것을 끄는 것이 아니다.
+	if (mIsActionPlaying == true)
+	{
+		return;
+	}
+
+	// 조준 중이 아닌 판 탭도 게임플레이로 보낸다. 적을 짚으면 위협 범위가
+	// 판에 칠리고 안내판이 그 적으로 바뀐다 -- 길게 눌러야만 위협을 볼 수
+	// 있으면 확인이 조작 사이에 못 끼어든다. 어느 칸에 무엇이 있는지는
+	// 트레이스한 쪽만 안다.
+	//
+	// 처리는 같은 호출 안에서 끝난다(델리게이트 직행). 그래서 보내기 전후의
+	// 겨냥을 비교하면 이 탭이 무엇을 한 탭인지 알 수 있다. 빈 땅 탭은
+	// 살펴보기를 건드리지 않으므로 겨냥이 그대로다.
+	const FCombatTargetUI BeforeTarget = mUIModel->GetTarget();
+
+	mUIModel->RequestWorldTouch(ScreenPosition, false);
+
+	const FCombatTargetUI& AfterTarget = mUIModel->GetTarget();
+	const bool bTargetChanged = BeforeTarget.mIsValid != AfterTarget.mIsValid
+		|| BeforeTarget.mUnitId != AfterTarget.mUnitId
+		|| (BeforeTarget.mTile == AfterTarget.mTile) == false;
+
+	if (bTargetChanged == true)
+	{
+		// 유닛을 새로 짚었으면 카드를 접는다 -- 위협 범위를 보라고 판에
+		// 칠했는데 카드 여섯 장이 그 판 한가운데를 덮고 있으면 칠이 안
+		// 보인다. 조준에 들어가면 카드가 비키는 것과 같은 이유다.
+		//
+		// 재탭으로 짚기를 풀었을 때는 카드를 **건드리지 않는다.** 그 탭은
+		// 칠을 걷으려던 손이지 카드를 부르던 손이 아니다. 카드는 빈 땅
+		// 탭으로만 여닫는다.
+		const bool bHasUnit = AfterTarget.mIsValid == true && AfterTarget.mUnitId != INDEX_NONE;
+		if (bHasUnit == true)
+		{
+			SetCommandsShown(false);
+		}
+		return;
+	}
+
+	// 겨냥이 그대로면 빈 땅 탭이다. 카드만 뒤집는다 -- 누르면 펴지고, 다시
+	// 누르면 접힌다. 짚어 둔 위협 범위는 그대로 남는다.
 	SetCommandsShown(!mCommandsShown);
 }
 
