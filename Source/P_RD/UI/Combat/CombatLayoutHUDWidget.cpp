@@ -851,7 +851,9 @@ void UCombatLayoutHUDWidget::RefreshPartyStatus(
 void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
 {
-	const int32 Left = FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
+	const int32 Left = mUIModel != nullptr
+		? mUIModel->ResolveDisplayedMovementPoint(Unit)
+		: FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
 	const int32 Total = FMath::Max(
 		FMath::RoundToInt(Unit.mMaxMovementPoint), Left);
 
@@ -1440,7 +1442,7 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 {
 	const FUnitUI* TurnUnit = FindTurnUnit();
 	const int32 Left = TurnUnit != nullptr
-		? FMath::Max(FMath::RoundToInt(TurnUnit->mMovementPoint), 0) : 0;
+		? mUIModel->ResolveDisplayedMovementPoint(*TurnUnit) : 0;
 	const int32 Total = TurnUnit != nullptr
 		? FMath::Max(FMath::RoundToInt(TurnUnit->mMaxMovementPoint), Left) : 0;
 

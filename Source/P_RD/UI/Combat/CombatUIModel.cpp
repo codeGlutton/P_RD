@@ -154,6 +154,83 @@ void UCombatUIModel::SetPendingAction(const FCombatPendingActionUI& PendingActio
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
+/**
+ * @brief 타일 도착 횟수에 맞춰 표시 AP를 갱신한다.
+ * @details 실제 이동 비용은 액션 종료 때 정산되므로 도착 시점의 Movement에는
+ *          아직 이동 비용이 빠지지 않았다. 타일 효과까지 반영된 현재값에서 절대
+ *          완료 칸 수를 빼 중복 알림에도 AP가 추가로 소모되지 않게 한다.
+ */
+void UCombatUIModel::SetMoveAPStepPresentation(
+	const int32 UnitId,
+	const int32 CompletedStepCount)
+{
+	if (UnitId == INDEX_NONE)
+	{
+		return;
+	}
+
+	const FUnitUI* Unit = mUnitUIs.FindByPredicate(
+		[UnitId](const FUnitUI& Candidate)
+		{
+			return Candidate.mUnitId == UnitId;
+		});
+	if (Unit == nullptr)
+	{
+		return;
+	}
+
+	if (mMoveAPPresentationUnitId != UnitId)
+	{
+		mMoveAPPresentationUnitId = UnitId;
+		mMoveAPPresentationDisplayed = FMath::Max(
+			FMath::RoundToInt(Unit->mMovementPoint), 0);
+		mMoveAPPresentationCompletedSteps = 0;
+	}
+
+	const int32 NewCompletedSteps = FMath::Max(CompletedStepCount, 0);
+	if (NewCompletedSteps < mMoveAPPresentationCompletedSteps)
+	{
+		return;
+	}
+
+	const int32 NewDisplayedAP = FMath::Max(
+		FMath::RoundToInt(Unit->mMovementPoint) - NewCompletedSteps, 0);
+	if (NewCompletedSteps == mMoveAPPresentationCompletedSteps
+		&& NewDisplayedAP == mMoveAPPresentationDisplayed)
+	{
+		return;
+	}
+
+	mMoveAPPresentationCompletedSteps = NewCompletedSteps;
+	mMoveAPPresentationDisplayed = NewDisplayedAP;
+	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+}
+
+/** @brief 이동 연출 표시를 끝내고 실제 FUnitUI의 Movement 표시로 돌아간다. */
+void UCombatUIModel::ClearMoveAPStepPresentation(const int32 UnitId)
+{
+	if (mMoveAPPresentationUnitId == INDEX_NONE
+		|| (UnitId != INDEX_NONE && UnitId != mMoveAPPresentationUnitId))
+	{
+		return;
+	}
+
+	mMoveAPPresentationUnitId = INDEX_NONE;
+	mMoveAPPresentationDisplayed = 0;
+	mMoveAPPresentationCompletedSteps = 0;
+	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+}
+
+/** @brief 실제 AP와 타일별 이동 연출 AP 중 현재 화면에 쓸 값을 고른다. */
+int32 UCombatUIModel::ResolveDisplayedMovementPoint(const FUnitUI& Unit) const
+{
+	if (Unit.mUnitId == mMoveAPPresentationUnitId)
+	{
+		return mMoveAPPresentationDisplayed;
+	}
+	return FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
+}
+
 /** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
 void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 {
