@@ -79,6 +79,10 @@ ATileMap::ATileMap()
 	// 테두리 기본값: 짙은 회색 (머티리얼에 BorderColor/BorderWidth 파라미터가 있어야 표시됨)
 	mTileBorderStyle.mColor = FLinearColor(0.2f, 0.2f, 0.2f, 0.8f);
 
+	// 위협 범위 기본값: 이동범위 = 파랑, 공격범위 = 빨강
+	mThreatMoveStyle.mColor = FLinearColor(0.15f, 0.4f, 1.0f, 0.6f);
+	mThreatAttackStyle.mColor = FLinearColor(1.0f, 0.15f, 0.1f, 0.5f);
+
 	// 경로 화살표/도착 마커 컴포넌트 생성 헬퍼 (장식용 — 타일 트레이스 방해 않도록 충돌 없음)
 	auto CreatePathComponent = [this](const TCHAR* Name) -> UInstancedStaticMeshComponent*
 	{
@@ -102,6 +106,12 @@ ATileMap::ATileMap()
 	// 경유지 마커, 도착지 원뿔 컴포넌트 생성 (이동 경로 전용)
 	mWaypointComponent = CreatePathComponent(TEXT("Waypoint"));
 	mDestConeComponent = CreatePathComponent(TEXT("DestCone"));
+
+	// 위협 범위 표시 컴포넌트 생성
+	mThreatMoveComponent = CreatePathComponent(TEXT("ThreatMove"));
+	mThreatMoveComponent->SetStaticMesh(mTileMesh);
+	mThreatAttackComponent = CreatePathComponent(TEXT("ThreatAttack"));
+	mThreatAttackComponent->SetStaticMesh(mTileMesh);
 
 	// 메시 로드 헬퍼 (경로가 잘못됐거나 SVN 미갱신이면 null 유지 — 회전 화살표는 직진으로 폴백됨)
 	auto FindMesh = [](const TCHAR* Path) -> UStaticMesh*
@@ -179,6 +189,10 @@ void ATileMap::BindModelDelegates()
 	mModel->mSetTileHighlightDelegate.BindUObject(this, &ATileMap::SetTileHighlight);
 	mModel->mClearTileHighlightDelegate.BindUObject(this, &ATileMap::ClearTileHighlight);
 
+	// 위협 범위 표시/해제 요청을 뷰의 SetThreatRange/ClearThreatRange로 연결
+	mModel->mSetThreatRangeDelegate.BindUObject(this, &ATileMap::SetThreatRange);
+	mModel->mClearThreatRangeDelegate.BindUObject(this, &ATileMap::ClearThreatRange);
+
 	// 좌표 변환 질의를 뷰의 컴포넌트 트랜스폼 기반 함수로 연결 (모델이 시각 정보가 필요한 변환을 질의)
 	mModel->mTileToWorldTransformDelegate.BindUObject(this, &ATileMap::TileToWorldTransform);
 	mModel->mTileToWorldLocationDelegate.BindUObject(this, &ATileMap::TileToWorldLocation);
@@ -211,6 +225,8 @@ void ATileMap::UnbindModel(UObjectModel* Model)
 		mModel->mSetMovePathDelegate.Unbind();
 		mModel->mSetTileHighlightDelegate.Unbind();
 		mModel->mClearTileHighlightDelegate.Unbind();
+		mModel->mSetThreatRangeDelegate.Unbind();
+		mModel->mClearThreatRangeDelegate.Unbind();
 		mModel->mTileToWorldTransformDelegate.Unbind();
 		mModel->mTileToWorldLocationDelegate.Unbind();
 		mModel->mWorldToTileIndexDelegate.Unbind();
@@ -665,6 +681,92 @@ void ATileMap::ClearTileHighlight(ETileHighlightFlag Flag)
 			RefreshTileCustomData(Index);
 		}
 	}
+}
+
+void ATileMap::SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles)
+{
+	// 기존 위협범위 삭제
+	ClearThreatRange();
+
+	if (mThreatMoveComponent == nullptr || mThreatAttackComponent == nullptr || mModel == nullptr || mTileSize <= 0.0f)
+		return;
+
+	// 머티리얼 선택: 전용 머티리얼이 있으면 그걸 사용하고, 없으면 타일 머티리얼 재사용
+	// 왜 생성자에서 안 하고 여기서 하냐면: 그래야 에디터에서 지정한 값을 사용할 수 있음
+	UMaterialInterface* Material = mThreatMaterial != nullptr ? mThreatMaterial.Get() : mTileMaterial.Get();
+	if (Material != nullptr)
+	{
+		mThreatMoveComponent->SetMaterial(0, Material);
+		mThreatAttackComponent->SetMaterial(0, Material);
+	}
+
+	// 위협 범위 관련 크기 설정
+	const float PlaneBaseSize = 100.0f;
+	const float VisualSize = mTileSize * mTileVisualScale;
+	const float BandWidth = VisualSize * mThreatBandWidthRatio;
+	const float BandHalf = (VisualSize - BandWidth) * 0.5f;
+	const float InnerSize = VisualSize - 2.0f * BandWidth;
+
+	// 인스턴스 색을 기록하는 헬퍼 (알파를 미리 곱해서 계산해 둠)
+	auto SetInstanceColor = [](UInstancedStaticMeshComponent* Component, int32 InstanceIndex, const FLinearColor& Color)
+	{
+		Component->SetCustomDataValue(InstanceIndex, 0, Color.R * Color.A);
+		Component->SetCustomDataValue(InstanceIndex, 1, Color.G * Color.A);
+		Component->SetCustomDataValue(InstanceIndex, 2, Color.B * Color.A);
+		Component->SetCustomDataValue(InstanceIndex, 3, Color.A, /*bMarkRenderStateDirty=*/true);
+	};
+
+	// 밴드 막대 4개의 배치표 (타일 중심 기준 {중심 오프셋, 크기})
+	// 세로 막대 2개는 전체 길이, 가로 막대 2개는 모서리에서 겹쳐 진해지지 않도록 밴드 폭만큼 줄임
+	const struct { FVector2D Center; FVector2D Size; } Bars[] = {
+		{ FVector2D(+BandHalf, 0.0f), FVector2D(BandWidth, VisualSize) },
+		{ FVector2D(-BandHalf, 0.0f), FVector2D(BandWidth, VisualSize) },
+		{ FVector2D(0.0f, +BandHalf), FVector2D(InnerSize, BandWidth) },
+		{ FVector2D(0.0f, -BandHalf), FVector2D(InnerSize, BandWidth) },
+	};
+
+	// 최대이동범위: 타일마다 밴드 막대 4개 배치
+	for (const FTileIndex& Tile : MoveTiles)
+	{
+		// 맵 밖 좌표 무시
+		if (mModel->IsValidIndex(Tile) == false)
+			continue;
+
+		const FVector TileCenter(Tile.mX * mTileSize, Tile.mY * mTileSize, mThreatHeightOffset);
+		for (const auto& Bar : Bars)
+		{
+			const FVector Location = TileCenter + FVector(Bar.Center.X, Bar.Center.Y, 0.0f);
+			const FVector Scale(Bar.Size.X / PlaneBaseSize, Bar.Size.Y / PlaneBaseSize, 1.0f);
+			const int32 InstanceIndex = mThreatMoveComponent->AddInstance(FTransform(FRotator::ZeroRotator, Location, Scale), /*bWorldSpace=*/false);
+			SetInstanceColor(mThreatMoveComponent, InstanceIndex, mThreatMoveStyle.mColor);
+		}
+	}
+
+	// 밴드 폭이 타일 절반에 달하면 내부가 없으므로 공격범위는 그리지 않음
+	if (InnerSize <= 0.0f)
+		return;
+
+	// 최대공격범위: 타일마다 밴드를 제외한 내부 전체를 플레인 1개로 채움
+	for (const FTileIndex& Tile : AttackTiles)
+	{
+		// 맵 밖 좌표 무시
+		if (mModel->IsValidIndex(Tile) == false)
+			continue;
+
+		const FVector Location(Tile.mX * mTileSize, Tile.mY * mTileSize, mThreatHeightOffset);
+		const FVector Scale(InnerSize / PlaneBaseSize, InnerSize / PlaneBaseSize, 1.0f);
+		const int32 InstanceIndex = mThreatAttackComponent->AddInstance(FTransform(FRotator::ZeroRotator, Location, Scale), /*bWorldSpace=*/false);
+		SetInstanceColor(mThreatAttackComponent, InstanceIndex, mThreatAttackStyle.mColor);
+	}
+}
+
+void ATileMap::ClearThreatRange()
+{
+	// 위협 표시 인스턴스 전부 제거
+	if (mThreatMoveComponent != nullptr)
+		mThreatMoveComponent->ClearInstances();
+	if (mThreatAttackComponent != nullptr)
+		mThreatAttackComponent->ClearInstances();
 }
 
 /* 좌표 유효성 (모델 위임) */
@@ -1200,6 +1302,15 @@ void ATileMap::DebugPushTest()
 
 	// 밀리지 못하는 몹(제자리 한 칸) — 아무것도 표시되지 않아야 함
 	AddPushPath({ FTileIndex(1, 5) });
+}
+
+void ATileMap::DebugThreatTest()
+{
+	// 다른 디버그 표시와 겹치지 않는 영역(y=4~5, x=2~5) 사용
+	// x=2 열은 이동 단독(밴드만), x=3~4 열은 겹침(밴드+채움), x=5 열은 공격 단독(채움만)
+	SetThreatRange(
+		{ FTileIndex(2, 4), FTileIndex(3, 4), FTileIndex(4, 4), FTileIndex(2, 5), FTileIndex(3, 5), FTileIndex(4, 5) },
+		{ FTileIndex(3, 4), FTileIndex(4, 4), FTileIndex(5, 4), FTileIndex(3, 5), FTileIndex(4, 5), FTileIndex(5, 5) });
 }
 #endif
 
