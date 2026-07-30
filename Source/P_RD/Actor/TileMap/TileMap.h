@@ -271,6 +271,22 @@ public:
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
+	/* 위협 범위 표시 */
+	/**
+	 * @brief 적 위협 범위 표시
+	 * @details
+	 * 최대이동범위는 타일 테두리 안쪽 밴드 영역, 최대공격범위는 밴드를 제외한 내부 전체
+	 * 기존 위협범위는 삭제되며 빈 배열일 경우 그리지 않음
+	 * @param[in] MoveTiles : 최대 이동 범위 타일 목록 (맵 밖 좌표는 무시)
+	 * @param[in] AttackTiles : 최대 공격 범위 타일 목록 (맵 밖 좌표는 무시)
+	 */
+	void SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles);
+
+	/**
+	 * @brief 적 위협 범위 표시 해제 (최대이동범위, 최대공격범위 모두 제거)
+	 */
+	void ClearThreatRange();
+
 	/* 이동 경로 */
 	/**
 	 * @brief 이동경로를 화살표와 경유지마커로 표시
@@ -442,6 +458,50 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
+
+	/* 위협 범위 표시 */
+
+	/**
+	 * @brief 최대이동범위 메시 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatMoveComponent;
+
+	/**
+	 * @brief 최대공격범위 메시 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatAttackComponent;
+
+	/**
+	 * @brief 최대이동범위 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Style"))
+	FTileHighlightStyle mThreatMoveStyle;
+
+	/**
+	 * @brief 최대공격범위 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Style"))
+	FTileHighlightStyle mThreatAttackStyle;
+
+	/**
+	 * @brief 밴드 폭 비율 (타일 시각 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Band Width Ratio", ClampMin = "0.01", ClampMax = "0.5"))
+	float mThreatBandWidthRatio = 0.12f;
+
+	/**
+	 * @brief 표시 높이 오프셋 (cm, 타일 면과의 z-파이팅 방지)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Height Offset", ClampMin = "0.0"))
+	float mThreatHeightOffset = 0.5f;
+
+	/**
+	 * @brief 위협 표시 전용 머티리얼 (없으면 타일 머티리얼 재사용)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Material"))
+	TObjectPtr<UMaterialInterface> mThreatMaterial;
 
 	/* 경로 표시 */
 
