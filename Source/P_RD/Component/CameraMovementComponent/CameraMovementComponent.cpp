@@ -37,7 +37,7 @@ void UCameraMovementComponent::BeginPlay()
 
 	// 카메라보다 아래에 카메라판을 생성합니다.
 	FVector SpawnPos = GetOwner()->GetActorLocation();
-	SpawnPos.Z = -500;
+	SpawnPos.Z -= 100;
 
 	mCameraPlane = GetWorld()->SpawnActor<ACombatCameraPlane>(
 		ACombatCameraPlane::StaticClass(),
@@ -192,6 +192,25 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 	return bHit;
 }
 
+FVector UCameraMovementComponent::ClampLocationWithinRotatedBox(const FVector& WorldLocation)
+{
+	FRotator OwnerRotator = FRotator(0, GetOwner()->GetActorRotation().Yaw,0);
+
+	// 1. 월드 -> 박스 로컬 공간으로 변환 (중심 기준으로 이동 후, 역회전)
+	FVector LocalLocation = OwnerRotator.UnrotateVector(WorldLocation - mMoveClampingBoxCenter);
+
+	// 2. 로컬 공간에서는 축 정렬이므로 그냥 Clamp
+	LocalLocation.X = FMath::Clamp(LocalLocation.X, -mMoveClampingBox.X / 2, mMoveClampingBox.X / 2);
+	LocalLocation.Y = FMath::Clamp(LocalLocation.Y, -mMoveClampingBox.Y / 2, mMoveClampingBox.Y / 2);
+	// 필요하면 Z도
+	// LocalLocation.Z = FMath::Clamp(LocalLocation.Z, -BoxExtentFull.Z / 2, BoxExtentFull.Z / 2);
+
+	// 3. 다시 박스 회전 적용 후 중심 좌표 더해서 월드로 복귀
+	FVector ClampedWorldLocation = OwnerRotator.RotateVector(LocalLocation) + mMoveClampingBoxCenter;
+
+	return ClampedWorldLocation;
+}
+
 void UCameraMovementComponent::ClampingCamera()
 {
 	if (!ensureMsgf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다")))
@@ -217,18 +236,15 @@ void UCameraMovementComponent::ClampingCamera()
 		return;
 	}
 
-	FVector ActorLocation = CameraCenterRayCastHitResult.ImpactPoint;
-
-	ActorLocation.X = FMath::Clamp(ActorLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	ActorLocation.Y = FMath::Clamp(ActorLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+	// 클램핑 시 영역을 구합니다.
+	FVector ActorLocation = ClampLocationWithinRotatedBox(CameraCenterRayCastHitResult.ImpactPoint);
 
 	mCurrentLookAtCameraLocation += FVector2D(ActorLocation - CameraCenterRayCastHitResult.ImpactPoint);
 
 	// 위치의 차를 이용하여 카메라의 위치를 옮깁니다.
 	GetOwner()->AddActorWorldOffset(ActorLocation - CameraCenterRayCastHitResult.ImpactPoint);
 
-	mTargetLookAtCameraLocation.X = FMath::Clamp(mTargetLookAtCameraLocation.X, mMoveClampingBoxCenter.X - mMoveClampingBox.X / 2, mMoveClampingBoxCenter.X + mMoveClampingBox.X / 2);
-	mTargetLookAtCameraLocation.Y = FMath::Clamp(mTargetLookAtCameraLocation.Y, mMoveClampingBoxCenter.Y - mMoveClampingBox.Y / 2, mMoveClampingBoxCenter.Y + mMoveClampingBox.Y / 2);
+	mTargetLookAtCameraLocation = FVector2D(ClampLocationWithinRotatedBox(FVector(mTargetLookAtCameraLocation,0.f)));
 
 	//==============================
 	// 이동 제한 범위를 보여줍니다.
@@ -238,6 +254,8 @@ void UCameraMovementComponent::ClampingCamera()
 	FVector Center = mMoveClampingBoxCenter;
 	FVector Extent = FVector(mMoveClampingBox / 2, 0);
 	FQuat Rotation = FRotator(0.f, GetOwner()->GetActorRotation().Yaw, 0.f).Quaternion();
+
+#if WITH_EDITOR
 
 	DrawDebugBox(
 		GetWorld(),
@@ -252,6 +270,8 @@ void UCameraMovementComponent::ClampingCamera()
 	);
 
 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * 100000.0f), FColor::Green);
+
+#endif
 }
 
 void UCameraMovementComponent::MoveSmooth(float DeltaTime)
