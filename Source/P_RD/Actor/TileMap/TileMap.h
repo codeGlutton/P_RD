@@ -206,6 +206,9 @@ public:
 	virtual void UnbindModel(UObjectModel* Model) override;
 
 protected:
+	// @brief Blueprint/native 기본 서브오브젝트 인스턴싱 완료 후 경로 컴포넌트 참조를 복구
+	virtual void PostInitializeComponents() override;
+
     // @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
     virtual void BeginPlay() override;
 

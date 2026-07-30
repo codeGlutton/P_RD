@@ -82,7 +82,17 @@ public:
 	UFUNCTION()
 	void HandleAbandonRun();
 
+	/** @brief 전투 HUD 상단 가방 버튼에서 공용 인벤토리 패널을 연다. */
+	UFUNCTION()
+	void HandleOpenInventory();
+
 protected:
+	/**
+	 * @brief 보상 지급 요청을 검증하고 실제 런 데이터에 반영한다.
+	 * @return 지급이 완료되어 UI가 해당 행을 수령 처리해도 되는 경우 true.
+	 */
+	bool ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
 	/**
 	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
 	 * @param ScreenPosition 입력 지점의 화면 좌표(픽셀). 모바일 터치는 커서가 없으므로 이 좌표로 트레이스한다.
@@ -164,4 +174,10 @@ public:
 	TObjectPtr<UCombatUIModel> mCombatUIModel;
 	UPROPERTY(Category = "UI", VisibleAnywhere, DuplicateTransient, meta = (DisplayName = "RewardUIModel"))
 	TObjectPtr<URewardUIModel> mRewardUIModel;
+
+private:
+	/** @brief 같은 결과 화면에서 빠른 중복 입력으로 보상이 두 번 지급되는 것을 막는다. */
+	bool mGoldRewardClaimed = false;
+	bool mExpRewardClaimed = false;
+	TSet<int32> mClaimedRewardChoiceIndices;
 };

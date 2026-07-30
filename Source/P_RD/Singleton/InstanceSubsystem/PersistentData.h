@@ -183,6 +183,8 @@ class P_RD_API URunPersistData : public UPartyPersistData
 public:
 	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 	void ClearRun();
+	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
+	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
@@ -202,6 +204,8 @@ public:
 	const FRoom& GetStartRoom() const;
 	const FRoom& GetCurrentRoom() const;
 	void GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const;
+	const TArray<FPrimaryAssetId>& GetRewardSkillIds() const;
+	const TArray<FPrimaryAssetId>& GetRewardEquipmentIds() const;
 
 public:
 	const FRunLog& GetRunLog() const;
@@ -218,6 +222,15 @@ protected:
 protected:
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "Stage"))
 	TInstancedStruct<FStage> mStage;
+
+	/**
+	 * @brief 런 동안 획득했지만 아직 특정 용병 슬롯에 장착하지 않은 공용 보관함.
+	 * @details 동일 스킬 소유를 허용하므로 배열에서 중복을 제거하지 않는다.
+	 */
+	UPROPERTY(Category = Reward, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardSkillIds"))
+	TArray<FPrimaryAssetId> mRewardSkillIds;
+	UPROPERTY(Category = Reward, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentIds"))
+	TArray<FPrimaryAssetId> mRewardEquipmentIds;
 
 protected:
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunLog"))

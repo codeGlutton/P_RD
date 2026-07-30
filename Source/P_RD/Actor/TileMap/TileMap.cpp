@@ -86,9 +86,6 @@ ATileMap::ATileMap()
 		Component->SetupAttachment(RootComponent);
 		Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Component->SetNumCustomDataFloats(4);
-
-		// 경로 표시 컴포넌트들은 런타임에 생성/설정되므로 굳이 파일로 저장할 필요가 없어 RF_Transient 플래그 설정
-		Component->SetFlags(RF_Transient);
 		return Component;
 	};
 
@@ -252,6 +249,62 @@ void ATileMap::OnConstruction(const FTransform& Transform)
 			ClearMovePath();
 	}
 #endif
+}
+
+void ATileMap::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	/*
+	 * BP_TileMap 이 예전 네이티브 컴포넌트 레이아웃으로 저장돼 있으면 구조체 안의
+	 * 포인터가 null 로 덮일 수 있다. 컴포넌트 인스턴싱이 끝난 이 시점에 현재
+	 * 서브오브젝트 이름으로 다시 연결하고, 이동 경로는 구 이름도 지원한다.
+	 */
+	auto Rebind = [this](
+		TObjectPtr<UInstancedStaticMeshComponent>& Target,
+		const FName CurrentName,
+		const FName LegacyName = NAME_None)
+	{
+		UInstancedStaticMeshComponent* Resolved =
+			Cast<UInstancedStaticMeshComponent>(GetDefaultSubobjectByName(CurrentName));
+
+		if (Resolved == nullptr && !LegacyName.IsNone())
+		{
+			Resolved = Cast<UInstancedStaticMeshComponent>(GetDefaultSubobjectByName(LegacyName));
+		}
+
+		if (Resolved != nullptr)
+		{
+			Target = Resolved;
+		}
+	};
+
+	Rebind(mMovePathSet.mStraightComponent, TEXT("MovePathStraight"), TEXT("PathArrow"));
+	Rebind(mMovePathSet.mTurnLeftComponent, TEXT("MovePathTurnLeft"), TEXT("PathTurnLeft"));
+	Rebind(mMovePathSet.mTurnRightComponent, TEXT("MovePathTurnRight"), TEXT("PathTurnRight"));
+	Rebind(mMovePathSet.mEndComponent, TEXT("MovePathEnd"), TEXT("PathEnd"));
+
+	Rebind(mPushPathSet.mStraightComponent, TEXT("PushPathStraight"));
+	Rebind(mPushPathSet.mTurnLeftComponent, TEXT("PushPathTurnLeft"));
+	Rebind(mPushPathSet.mTurnRightComponent, TEXT("PushPathTurnRight"));
+	Rebind(mPushPathSet.mEndComponent, TEXT("PushPathEnd"));
+
+	Rebind(mWaypointComponent, TEXT("Waypoint"));
+	Rebind(mDestConeComponent, TEXT("DestCone"));
+
+	ensureAlwaysMsgf(
+		mMovePathSet.mStraightComponent != nullptr &&
+		mMovePathSet.mTurnLeftComponent != nullptr &&
+		mMovePathSet.mTurnRightComponent != nullptr &&
+		mMovePathSet.mEndComponent != nullptr &&
+		mPushPathSet.mStraightComponent != nullptr &&
+		mPushPathSet.mTurnLeftComponent != nullptr &&
+		mPushPathSet.mTurnRightComponent != nullptr &&
+		mPushPathSet.mEndComponent != nullptr &&
+		mWaypointComponent != nullptr &&
+		mDestConeComponent != nullptr,
+		TEXT("TileMap path components are missing: %s"),
+		*GetClass()->GetPathName());
 }
 
 void ATileMap::BeginPlay()

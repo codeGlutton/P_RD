@@ -64,6 +64,7 @@ class UButton;
 class UMockCombatDriver;
 class UImage;
 class UProgressBar;
+class URewardUIModel;
 class UTextBlock;
 class UWidget;
 
@@ -91,6 +92,9 @@ public:
 	/** @brief 도메인 갱신 말고 행동 표현 알림도 같이 듣는다. */
 	virtual void BindUIModel(UCombatUIModel* InUIModel) override;
 	virtual void UnbindUIModel() override;
+
+	/** @brief 전투 종료 보상 화면이 읽고 claim 요청을 보낼 모델을 연결한다. */
+	void BindRewardUIModel(URewardUIModel* InUIModel);
 
 	/** @brief 판 탭 알림까지 같이 구독한다. */
 	/** @brief 이 배치안이 화면에 표시할 파티 인원. 기획상 최대 3명. */
@@ -174,18 +178,33 @@ private:
 	const FUnitUI* FindTurnUnit() const;
 
 	/**
+	 * @brief 턴이 실제로 열린 동안에만 카드를 보여 준다.
+	 *
+	 * @details
+	 * 턴 종료 알림 뒤에도 TurnUI에는 방금 끝난 유닛이 잠시 남는다. 유닛 id만
+	 * 보고 표시 여부를 정하면 그 틈에 플레이어 스킬 카드가 그대로 남는다.
+	 * 시작/종료 알림을 별도 상태로 받아 그 공백을 닫는다.
+	 */
+	void HandleTurnPresentationBegin(TSharedPtr<FPresentationBarrier> Barrier);
+	void HandleTurnPresentationEnd(TSharedPtr<FPresentationBarrier> Barrier);
+
+	/**
 	 * @brief 행동이 노는 동안 카드를 접어 둔다.
 	 *
 	 * @details
 	 * 걸어가는 중에 카드가 도로 떠서, 아직 안 끝난 것을 끝난 것처럼 보였다.
 	 * 행동은 표현이 다 끝난 뒤에야 끝났다고 알려 온다 -- 이동은 마지막 칸에
-	 * 도착한 뒤에 MarkActionCompleted 를 부른다. 그래서 이 두 알림 사이를
-	 * 접어 두면 애니메이션이 끝날 때까지 카드가 안 뜬다.
+	 * 도착한 뒤에 MarkActionCompleted 를 부른다.
+	 *
+	 * 빌드 액션 종료와 실제 스킬 액션 시작은 연달아 온다. 종료 알림에서 바로
+	 * 펴면 그 둘 사이 한 프레임 동안 카드가 공격 위에 번쩍인다. 종료는 다음
+	 * 틱에 확정하고, 그 전에 다음 액션/턴 알림이 오면 예약을 무효화한다.
 	 *
 	 * 배리어는 **붙잡지 않는다.** 붙잡으면 게임플레이가 화면을 기다린다.
 	 */
 	void HandleActionPresentationBegin(TSharedPtr<FPresentationBarrier> Barrier);
 	void HandleActionPresentationEnd(TSharedPtr<FPresentationBarrier> Barrier);
+	void CompleteActionPresentationEnd(uint64 PresentationSerial);
 
 	/**
 	 * @brief 판을 톡 쳤다는 알림. 화면을 한 단계 뒤로 되돌린다.
@@ -294,7 +313,20 @@ private:
 	/** @brief 행동 표현이 도는 중인가. 도는 동안 카드를 접는다. */
 	bool mIsActionPlaying = false;
 
-	/** @brief 붙인 행동 알림 구독. 뗄 때 쓴다. */
+	/** @brief BeginTurn부터 EndTurn까지 실제 턴이 열린 상태인가. */
+	bool mIsTurnActive = false;
+
+	/**
+	 * @brief 늦게 도착한 행동 종료 예약을 무효화하는 일련번호.
+	 *
+	 * BuildAction 종료 직후 SkillAction 시작처럼 같은 프레임에 알림이 이어질
+	 * 수 있어, bool 하나만으로는 사이 프레임의 재노출을 막을 수 없다.
+	 */
+	uint64 mActionPresentationSerial = 0;
+
+	/** @brief 붙인 턴/행동 알림 구독. 뗄 때 쓴다. */
+	FDelegateHandle mTurnBeginHandle;
+	FDelegateHandle mTurnEndHandle;
 	FDelegateHandle mActionBeginHandle;
 	FDelegateHandle mActionEndHandle;
 	FDelegateHandle mEndCombatHandle;
@@ -388,8 +420,8 @@ private:
 	/* ── 전투 결과·보상 (옛 HUD 에서 옮김) ─────────────────────────────
 	 *
 	 * 승패가 갈리면 프레임워크가 **배리어를 쥐어 준다.** 그것을 붙잡고 있는
-	 * 동안 전투가 멈추고, 놓는 순간 다음으로 넘어간다 -- 결과 영상과 보상
-	 * 화면이 그 사이에 뜬다.
+	 * 동안 전투가 멈추고, 놓는 순간 다음으로 넘어간다. 승리는 연출 없이
+	 * 배리어를 즉시 놓아 보상을 열고, 패배만 결과 영상을 재생한다.
 	 *
 	 * 옛 HUD 가 이 배리어의 유일한 주인이었다. 그래서 옛것을 지우기 전에
 	 * 이쪽부터 옮겨야 했다. 안 옮기고 지웠으면 이겨도 아무 일이 안 일어난다.
@@ -400,7 +432,7 @@ private:
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
 	UFUNCTION() void HandleCombatResultOpenRequested();
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
-	UFUNCTION() void HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
@@ -535,10 +567,14 @@ private:
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
 
+	/** @brief 승리 지도는 다음 방을 고르기 전까지 닫히지 않도록 즉시 복원한다. */
+	UFUNCTION()
+	void HandleWorldMapCloseRequested();
+
 	/** @brief 결과 화면이 뜬 동안 조작을 감춘다. */
 	void SetCombatControlsShown(bool bShown);
 
-	/** @brief 전투가 끝났다. 결과 연출을 시작한다. */
+	/** @brief 전투가 끝났다. 승리는 즉시 보상, 패배는 결과 연출을 시작한다. */
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
 
 	UPROPERTY(Transient) TObjectPtr<class UCinematicWidget> mCombatResultCinematicWidget;

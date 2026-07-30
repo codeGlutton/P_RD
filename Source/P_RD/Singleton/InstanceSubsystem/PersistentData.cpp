@@ -1,5 +1,6 @@
-﻿#include "Containers/Ticker.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
+﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
+
+#include "Containers/Ticker.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -444,6 +445,8 @@ void URunPersistData::ClearRun()
 	mMoney = 0;
 
 	mArtifactIds.Empty();
+	mRewardSkillIds.Empty();
+	mRewardEquipmentIds.Empty();
 	mStage.Reset();
 
 	mRunLog.Clear();
@@ -452,6 +455,30 @@ void URunPersistData::ClearRun()
 	{
 		PartyPlayer->ClearUnit();
 	}
+}
+
+bool URunPersistData::AddRewardSkill(const FPrimaryAssetId& SkillId)
+{
+	if (SkillId.IsValid() == false)
+	{
+		return false;
+	}
+
+	mRewardSkillIds.Add(SkillId);
+	++mRunLog.mAcquiredSkills.FindOrAdd(SkillId);
+	return true;
+}
+
+bool URunPersistData::AddRewardEquipment(const FPrimaryAssetId& EquipmentId)
+{
+	if (EquipmentId.IsValid() == false)
+	{
+		return false;
+	}
+
+	mRewardEquipmentIds.Add(EquipmentId);
+	++mRunLog.mAcquiredEquipment.FindOrAdd(EquipmentId);
+	return true;
 }
 
 void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage)
@@ -494,6 +521,8 @@ void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TAr
 		PlayerIds.Append(PartyPlayer->GetSkillIds());
 	}
 	PlayerIds.Append(GetArtifactIds());
+	PlayerIds.Append(GetRewardSkillIds());
+	PlayerIds.Append(GetRewardEquipmentIds());
 
 	StageId = GetStage().mStaticStageSpawnDataId;
 	GetRoom(RowIndex, ColumnIndex).CollectAssetIds(RoomId, AdditionalAssetIds);
@@ -533,6 +562,16 @@ void URunPersistData::GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& Column
 {
 	RowIndex = mStage.Get().mCurRow;
 	ColumnIndex = mStage.Get().mCurColumn;
+}
+
+const TArray<FPrimaryAssetId>& URunPersistData::GetRewardSkillIds() const
+{
+	return mRewardSkillIds;
+}
+
+const TArray<FPrimaryAssetId>& URunPersistData::GetRewardEquipmentIds() const
+{
+	return mRewardEquipmentIds;
 }
 
 const FRunLog& URunPersistData::GetRunLog() const

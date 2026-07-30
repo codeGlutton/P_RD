@@ -61,6 +61,10 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mRowClickSound;
 
+	/** @brief 수령 완료 문구를 붙였다가 새 데이터로 재사용할 때 복원할 원문. */
+	FText mBaseMainText;
+	FText mBaseSubText;
+
 	int32 mRewardRowIndex = INDEX_NONE;
 	bool mIsClaimed = false;
 	bool mIsPressed = false;

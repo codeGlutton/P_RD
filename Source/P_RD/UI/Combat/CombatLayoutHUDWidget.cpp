@@ -9,7 +9,9 @@
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/MockCombatDriver.h"
+#include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUIWidgetBase.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
@@ -396,6 +398,10 @@ void UCombatLayoutHUDWidget::StartPreviewIfUnbound()
 	UCombatUIModel* PreviewModel = NewObject<UCombatUIModel>(this);
 	mPreviewDriver = NewObject<UMockCombatDriver>(this);
 	BindUIModel(PreviewModel);
+	// 편집기/캡처용 가짜 전투에는 실제 TurnContext가 없어 시작 알림이 오지
+	// 않는다. 미리보기만 명시적으로 열린 턴으로 두어 작성한 HUD가 빈 화면이
+	// 되지 않게 한다.
+	mIsTurnActive = true;
 	mPreviewDriver->Start(PreviewModel);
 }
 
@@ -1155,28 +1161,95 @@ const FUnitUI* UCombatLayoutHUDWidget::FindTurnUnit() const
 bool UCombatLayoutHUDWidget::IsPlayerTurn() const
 {
 	const FUnitUI* TurnUnit = FindTurnUnit();
-	// 차례를 아직 모를 때는 접지 않는다. 전투가 막 시작돼 첫 갱신이 오기
-	// 전이 그런데, 여기서 접으면 첫 차례에 카드가 안 뜬다.
-	return TurnUnit == nullptr || TurnUnit->mIsPlayer;
+	// 차례를 모르는 짧은 공백을 아군 턴으로 간주하면, 적이 죽거나 턴 순서가
+	// 갈리는 프레임에 마지막 아군 카드가 다시 나타난다. 시작 알림에서
+	// TurnUI/UnitUI를 먼저 밀어주므로 모르는 동안은 안전하게 접는다.
+	return TurnUnit != nullptr && TurnUnit->mIsPlayer;
 }
 
-void UCombatLayoutHUDWidget::HandleActionPresentationBegin(TSharedPtr<FPresentationBarrier> Barrier)
+void UCombatLayoutHUDWidget::HandleTurnPresentationBegin(
+	TSharedPtr<FPresentationBarrier> /*Barrier*/)
 {
+	// 이전 행동의 "다음 틱에 다시 펴기" 예약이 남아 있어도 새 턴 상태보다
+	// 늦게 적용되지 않게 한다.
+	++mActionPresentationSerial;
+	mIsActionPlaying = false;
+	mIsTurnActive = true;
+	RefreshCommandVisibility();
+}
+
+void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
+	TSharedPtr<FPresentationBarrier> /*Barrier*/)
+{
+	// TurnUI는 다음 턴이 실제로 시작될 때까지 방금 끝난 아군을 가리킨다.
+	// 그 스냅샷과 무관하게 종료 알림 즉시 카드를 내린다.
+	++mActionPresentationSerial;
+	mIsActionPlaying = false;
+	mIsTurnActive = false;
+	RefreshCommandVisibility();
+}
+
+void UCombatLayoutHUDWidget::HandleActionPresentationBegin(
+	TSharedPtr<FPresentationBarrier> /*Barrier*/)
+{
+	++mActionPresentationSerial;
 	mIsActionPlaying = true;
 	RefreshCommandVisibility();
 }
 
-void UCombatLayoutHUDWidget::HandleActionPresentationEnd(TSharedPtr<FPresentationBarrier> Barrier)
+void UCombatLayoutHUDWidget::HandleActionPresentationEnd(
+	TSharedPtr<FPresentationBarrier> /*Barrier*/)
 {
+	const uint64 PresentationSerial = ++mActionPresentationSerial;
+
+	// BuildAction 종료 콜백이 반환되어야 그 다음 SkillAction이 시작된다.
+	// 여기서 즉시 false로 바꾸면 두 액션 사이에 카드가 한 프레임 보인다.
+	// 다음 틱으로 미루면 같은 프레임에 오는 다음 Begin이 일련번호를 바꿔
+	// 이 예약을 무효화한다.
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			FTimerDelegate::CreateWeakLambda(this,
+				[this, PresentationSerial]()
+				{
+					CompleteActionPresentationEnd(PresentationSerial);
+				}));
+		return;
+	}
+
+	CompleteActionPresentationEnd(PresentationSerial);
+}
+
+void UCombatLayoutHUDWidget::CompleteActionPresentationEnd(
+	const uint64 PresentationSerial)
+{
+	if (PresentationSerial != mActionPresentationSerial)
+	{
+		return;
+	}
+
 	mIsActionPlaying = false;
 	RefreshCommandVisibility();
 }
 
 void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 {
+	if (mUIModel == InUIModel)
+	{
+		return;
+	}
+
 	Super::BindUIModel(InUIModel);
 	if (mUIModel != nullptr)
 	{
+		++mActionPresentationSerial;
+		mIsTurnActive = false;
+		mIsActionPlaying = false;
+
+		mTurnBeginHandle = mUIModel->OnBeginAnyTurn.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandleTurnPresentationBegin);
+		mTurnEndHandle = mUIModel->OnEndAnyTurn.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandleTurnPresentationEnd);
 		mActionBeginHandle = mUIModel->OnBeginAnyTurnAction.AddUObject(
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationBegin);
 		mActionEndHandle = mUIModel->OnEndAnyTurnAction.AddUObject(
@@ -1226,10 +1299,38 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 	}
 }
 
+void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
+{
+	if (mCombatRewardUIModel == InUIModel)
+	{
+		return;
+	}
+
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimConfirmed.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed);
+	}
+
+	mCombatRewardUIModel = InUIModel;
+	if (mCombatRewardUIModel != nullptr)
+	{
+		mCombatRewardUIModel->OnRewardClaimConfirmed.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed);
+	}
+
+	if (mCombatRewardWidget != nullptr)
+	{
+		mCombatRewardWidget->BindUIModel(mCombatRewardUIModel);
+	}
+}
+
 void UCombatLayoutHUDWidget::UnbindUIModel()
 {
 	if (mUIModel != nullptr)
 	{
+		mUIModel->OnBeginAnyTurn.Remove(mTurnBeginHandle);
+		mUIModel->OnEndAnyTurn.Remove(mTurnEndHandle);
 		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
 		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
@@ -1243,6 +1344,11 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
 		mUIModel->OnBeginAnyRound.Remove(mBeginRoundHandle);
 	}
+	++mActionPresentationSerial;
+	mIsTurnActive = false;
+	mIsActionPlaying = false;
+	mTurnBeginHandle.Reset();
+	mTurnEndHandle.Reset();
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
 	Super::UnbindUIModel();
@@ -1424,6 +1530,7 @@ void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 	const bool bVisible = mCommandsShown == true
 		&& IsAiming() == false
 		&& IsPlayerTurn() == true
+		&& mIsTurnActive == true
 		&& mIsActionPlaying == false;
 	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
 	{

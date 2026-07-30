@@ -16,7 +16,9 @@
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "AttributeSet/PartyAttributeSet.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
@@ -147,6 +149,21 @@ namespace
 			FText::AsNumber(Room.mNextRoomColumns.Num())
 		);
 	}
+
+	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case ERarityType::Epic:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
+		}
+	}
+
 }
 
 ARoomGameModeBase::ARoomGameModeBase()
@@ -165,6 +182,7 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
 		EWorldWidgetType::SkillPanel,
+		EWorldWidgetType::Inventory,
 	};
 
 	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
@@ -646,28 +664,52 @@ void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 }
 
 /**
- * @brief 가방에 무엇이 있나.
+ * @brief 파티 공용 인벤토리의 골드와 아티팩트를 만든다.
  *
  * @details
- * 아직 파티가 물건을 들고 다니는 자리가 없다. 돈만 진짜 값이고 목록은 빈
- * 채로 돌려준다 -- 화면을 먼저 붙일 수 있게 자리만 내어 둔다.
- *
- * [합의필요] 가진 기술과 장비를 어디에 담나. 용병마다인가 파티 공용인가.
- * 그것이 정해지면 여기서 그 목록을 읽어 채운다.
+ * 파티 골드는 파티 AttributeSet에서, 아티팩트는 파티 공용 아티팩트 컴포넌트에서
+ * 읽는다. 용병 성장/스킬/장비는 각 용병 화면의 책임이므로 이 View에 넣지 않는다.
  */
 bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
 {
 	OutView = FInventoryView();
 
 	UPartyModel* PartyModel = GetPartyModel();
-	UAttributeSetComponentModel* Attributes = PartyModel != nullptr
+	UAttributeSetComponentModel* PartyAttributes = PartyModel != nullptr
 		? PartyModel->GetAttributeComponentModel() : nullptr;
-	if (Attributes == nullptr)
+	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (PartyModel == nullptr || PartyAttributes == nullptr || PartyArtifacts == nullptr)
 	{
 		return false;
 	}
 
-	OutView.mGold = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+	OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
 		UPartyAttributeSet::GetMoneyAttribute()));
+
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+		PartyArtifacts->GetPartyArtifacts();
+	OutView.mArtifacts.Reserve(Artifacts.Num());
+	for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
+	{
+		const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
+		if (Artifact == nullptr)
+		{
+			continue;
+		}
+
+		FInventoryArtifactView& Row = OutView.mArtifacts.AddDefaulted_GetRef();
+		Row.mArtifactIndex = ArtifactIndex;
+		Row.mName = Artifact->mName.IsEmpty() == false
+			? Artifact->mName
+			: FText::Format(
+				NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
+				FText::AsNumber(ArtifactIndex + 1));
+		Row.mIcon = Artifact->mIcon.LoadSynchronous();
+		Row.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
+		Row.mDetail = NSLOCTEXT(
+			"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
+	}
+
 	return true;
 }

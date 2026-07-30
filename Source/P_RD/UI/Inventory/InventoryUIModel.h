@@ -9,11 +9,10 @@
 #include "InventoryUIModel.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInventoryUIChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryItemLongPress, EInventoryItemKind, Kind, int32, ItemIndex);
 
 /** @brief 인벤토리 화면 뷰모델. 런 상태 패널을 열 때 게임플레이가 하나 만들어 위젯에 물린다. */
 // RewardUIModel과 같은 계약: 게임플레이가 SetInventory()로 밀어넣고, 위젯은 GetInventory()로 읽는다.
-// 읽기 전용 화면이라 입력 의도는 항목 롱프레스(상세 보기) 하나뿐이다. UIModel은 데이터를 만들지 않는다.
+// 현재 화면은 공용 보유 현황을 읽기만 하며 UIModel은 데이터를 만들지 않는다.
 UCLASS(BlueprintType)
 class P_RD_API UInventoryUIModel : public UObject
 {
@@ -24,17 +23,6 @@ public:
 	/** @brief 인벤토리 표시값이 설정/갱신됐음을 알림. 위젯은 목록을 다시 그린다. */
 	UPROPERTY(BlueprintAssignable, Category = "Inventory|UI")
 	FOnInventoryUIChanged OnUIChanged;
-
-	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
-public:
-	/** @brief 위젯이 항목을 길게 눌렀음(상세 보기 요청). */
-	UPROPERTY(BlueprintAssignable, Category = "Inventory|Input")
-	FOnInventoryItemLongPress OnItemLongPress;
-
-	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
-public:
-	/** @brief 항목 롱프레스 의도를 게임플레이 구독자에게 전달한다(상세 패널은 게임플레이가 띄운다). */
-	UFUNCTION(BlueprintCallable, Category = "Inventory|Input") void RequestItemLongPress(EInventoryItemKind Kind, int32 ItemIndex);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
 public:
