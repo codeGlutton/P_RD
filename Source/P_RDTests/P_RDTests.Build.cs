@@ -15,6 +15,9 @@ public class P_RDTests : ModuleRules
     public P_RDTests(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        // 여러 테스트 파일이 같은 이름의 익명-namespace 도우미를 갖는다.
+        // Unity translation unit으로 합치면 이들이 한 파일에서 재정의되므로 테스트 모듈은 개별 컴파일한다.
+        bUseUnity = false;
 
         PublicDependencyModuleNames.AddRange(new string[]
         {

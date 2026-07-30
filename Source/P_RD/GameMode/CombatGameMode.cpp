@@ -5,6 +5,7 @@
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
+#include "Components/Button.h"
 #include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
@@ -17,6 +18,7 @@
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "UI/RDUserWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
 #include "Singleton/WorldSubsystem/WorldCameraModel.h"
@@ -232,6 +234,10 @@ void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
 
+	mGoldRewardClaimed = false;
+	mExpRewardClaimed = false;
+	mClaimedRewardChoiceIndices.Reset();
+
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
@@ -394,6 +400,16 @@ void ACombatGameMode::BeginRoom()
 			{
 				CombatUIWidget->BindUIModel(mCombatUIModel);
 			}
+			if (UCombatLayoutHUDWidget* CombatLayoutHUDWidget = Cast<UCombatLayoutHUDWidget>(CombatHUD))
+			{
+				CombatLayoutHUDWidget->BindRewardUIModel(mRewardUIModel);
+			}
+			if (UButton* InventoryButton = Cast<UButton>(
+				CombatHUD->GetWidgetFromName(TEXT("MenuButton_2"))))
+			{
+				InventoryButton->OnClicked.AddUniqueDynamic(
+					this, &ACombatGameMode::HandleOpenInventory);
+			}
 			CombatHUD->OpenUI();
 		}
 	}
@@ -409,6 +425,19 @@ UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
 URewardUIModel* ACombatGameMode::GetRewardUIModel() const
 {
 	return mRewardUIModel;
+}
+
+void ACombatGameMode::HandleOpenInventory()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	URDUserWidget* InventoryWidget = WorldWidgetSubsystem != nullptr
+		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::Inventory))
+		: nullptr;
+	if (InventoryWidget != nullptr)
+	{
+		InventoryWidget->OpenUI();
+	}
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
@@ -567,66 +596,98 @@ void ACombatGameMode::ConfirmTargetTile()
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	const FRoom& CurrentRoomData = GetRunPersistData()->GetCurrentRoom();
+	if (ClaimCombatReward(ClaimKind, ChoiceIndex) && mRewardUIModel != nullptr)
+	{
+		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+	}
+}
+
+bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr)
+	{
+		return false;
+	}
+
+	const FRoom& CurrentRoomData = RunPersistData->GetCurrentRoom();
 	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
 
 	if (CurrentRoom == nullptr)
 	{
-		return;
+		return false;
 	}
 
 	if (ClaimKind == ERewardClaimKind::Gold)
 	{
-		if (CurrentRoom->mRewardMoney == 0)
+		if (mGoldRewardClaimed || CurrentRoom->mRewardMoney <= 0)
 		{
-			return;
+			return false;
 		}
 
 		UPartyModel* PartyModel = GetPartyModel();
-		checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+		if (PartyModel == nullptr)
+		{
+			return false;
+		}
 
 		UAttributeSetComponentModel* AttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
-		checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+		if (AttributeSetComponentModel == nullptr)
+		{
+			return false;
+		}
 
 		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
+		mGoldRewardClaimed = true;
 		PushPlayerMetaUIData();
-		return;
+		return true;
 	}
 
 	if (ClaimKind == ERewardClaimKind::Exp)
 	{
-		if (CurrentRoom->mRewardExp == 0)
+		if (mExpRewardClaimed || CurrentRoom->mRewardExp <= 0)
 		{
-			return;
+			return false;
 		}
 
 		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
-		checkf(PlayerUnitModels.IsEmpty() == true, TEXT("플레이어 유닛 스폰 오류"));
-
-		const int32 PlayerMaxNum = PlayerUnitModels.Num();
-		for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+		bool bGrantedToAnyPlayer = false;
+		for (UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 		{
-			if (PlayerUnitModels[PlayerIndex] == nullptr)
+			if (PlayerUnitModel == nullptr)
 			{
 				continue;
 			}
 
-			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModels[PlayerIndex]->GetAttributeComponentModel();
-			checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+			if (AttributeSetComponentModel == nullptr)
+			{
+				continue;
+			}
 
 			AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+			bGrantedToAnyPlayer = true;
 		}
+
+		if (bGrantedToAnyPlayer == false)
+		{
+			return false;
+		}
+
+		mExpRewardClaimed = true;
 		PushPlayerMetaUIData();
-		return;
+		return true;
 	}
 
-	if (ClaimKind != ERewardClaimKind::Choice || ChoiceIndex == INDEX_NONE)
+	if (ClaimKind != ERewardClaimKind::Choice
+		|| ChoiceIndex == INDEX_NONE
+		|| mClaimedRewardChoiceIndices.Contains(ChoiceIndex)
+		|| mRewardUIModel == nullptr)
 	{
-		return;
+		return false;
 	}
 
-	/*const TArray<FRewardChoiceUI> Choices = MakeCombatRewardChoicesUI();
-	const FRewardChoiceUI* FoundChoice = Choices.FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
+	const FRewardChoiceUI* FoundChoice = mRewardUIModel->GetRewardChoices().FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
 	{
 		return Choice.mChoiceIndex == ChoiceIndex;
 	});
@@ -642,11 +703,18 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
 		break;
 	case ERewardChoiceKind::Skill:
+		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
 		break;
 	case ERewardChoiceKind::Gold:
 	default:
 		break;
-	}*/
+	}
+
+	if (bClaimed)
+	{
+		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
+	}
+	return bClaimed;
 }
 
 void ACombatGameMode::HandleAbandonRun()
@@ -1479,13 +1547,6 @@ void ACombatGameMode::PushCombatRewardUIData() const
 {
 	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
-	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
 	UPartyModel* PartyModel = GetPartyModel();
 	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
 
@@ -1507,19 +1568,53 @@ void ACombatGameMode::PushCombatRewardUIData() const
 
 	{
 		const float CurrentGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
-		const float CurrentExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-		const float MaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
-
 		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
-		RewardUIData.mExpBefore = CurrentExp;
-		RewardUIData.mExpAfter = CurrentExp + StaticCast<float>(RewardUIData.mExpGained);
-		RewardUIData.mMaxExp = MaxExp;
 	}
 
+	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+	RewardUIData.mMercenaryExp.Reserve(PlayerUnitModels.Num());
+	for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 	{
+		if (PlayerUnitModel == nullptr)
+		{
+			continue;
+		}
+
+		const UAttributeSetComponentModel* PlayerAttributes =
+			PlayerUnitModel->GetAttributeComponentModel();
+		if (PlayerAttributes == nullptr)
+		{
+			continue;
+		}
+
+		FRewardMercenaryExpUI& MercenaryExp =
+			RewardUIData.mMercenaryExp.AddDefaulted_GetRef();
+		MercenaryExp.mName = PlayerUnitModel->GetBoardActorDisplayName();
+		if (MercenaryExp.mName.IsEmpty())
+		{
+			MercenaryExp.mName = NSLOCTEXT(
+				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
+		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
-		RewardUIData.mLevelBefore = PlayerLevel;
-		RewardUIData.mLevelAfter = PlayerLevel;
+		MercenaryExp.mLevel = PlayerLevel;
+		MercenaryExp.mExpBefore = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetExpAttribute());
+		MercenaryExp.mExpAfter = MercenaryExp.mExpBefore
+			+ StaticCast<float>(RewardUIData.mExpGained);
+		MercenaryExp.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	}
+
+	// 기존 WBP/Blueprint가 단일 진행도 필드를 읽는 경우에는 첫 용병을
+	// 대표 fallback으로 유지한다. 네이티브 보상 행은 위 배열을 사용한다.
+	if (RewardUIData.mMercenaryExp.IsEmpty() == false)
+	{
+		const FRewardMercenaryExpUI& First = RewardUIData.mMercenaryExp[0];
+		RewardUIData.mLevelBefore = First.mLevel;
+		RewardUIData.mLevelAfter = First.mLevel;
+		RewardUIData.mExpBefore = First.mExpBefore;
+		RewardUIData.mExpAfter = First.mExpAfter;
+		RewardUIData.mMaxExp = First.mMaxExp;
 	}
 
 	mRewardUIModel->SetReward(RewardUIData);

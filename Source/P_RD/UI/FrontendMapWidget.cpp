@@ -11,10 +11,13 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/GameViewportClient.h"
+#include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameMode/RoomGameModeBase.h"
+#include "Styling/SlateBrush.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
+#include "UObject/ConstructorHelpers.h"
 
 namespace
 {
@@ -323,14 +326,23 @@ namespace
  * @details
  * 선/노드 WBP 클래스는 WBP_FrontendMap Class Defaults에서 지정한다.
  * C++은 특정 WBP 경로를 직접 알지 않고, 런타임에는 지정된 클래스가 없을 때 경고만 남긴다.
- * 월드맵은 탑바에서 OpenUI()로 열리지만, 프론트 지도에서는 탑바 HUD 아래에 깔아 전체 배경처럼 표시한다.
+ * 월드맵은 탑바 조회와 승리 후 선택 흐름 모두에서 HUD보다 위인 전체 화면 팝업으로 표시한다.
  */
 UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	// 탑바 HUD(z=-10)보다 아래로 깔아, 지도를 풀스크린으로 채워도 탑바가 그 위에 뜨게 한다.
-	// (탑바는 알약/배너/버튼 개별 요소라 투명 부분으로 지도가 비친다. 프론트 지도엔 탑바 외 HUD가 없어 깔끔.)
-	mViewportZOrder = -20;
+	// 조회용 탑바 지도와 승리 후 방 선택 지도가 같은 전체 화면 위젯을 쓴다.
+	// HUD 아래에 두면 전투 중 열었을 때 스킬 카드와 턴 UI가 지도 위를 덮으므로
+	// 인벤토리/설정과 같은 팝업 레이어에서 입력과 표시를 독점한다.
+	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MapParchmentFinder(
+		TEXT("/Game/UI/Art/RunFlow/T_StageMap_Background_Current.T_StageMap_Background_Current"));
+	if (MapParchmentFinder.Succeeded())
+	{
+		mMapParchmentTexture = MapParchmentFinder.Object;
+	}
+
 	RefreshLocalizedTextCache();
 }
 
@@ -342,11 +354,40 @@ void UFrontendMapWidget::NativeConstruct()
 	Super::NativeConstruct();
 	ValidateDesignerBindings();
 	BindEvents();
-	// 배경/범례/버튼 스킨은 WBP(시안 빌더) 소유가 됐다 — C++ 런타임 생성/스타일링을 하지 않는다.
+	ApplyCurrentMapArt();
 	ConfigureMapGraphLayout();
 	RefreshLocalizedTextCache();
 	HideUnusedMapTextSurfaces();
 	RefreshMap();
+}
+
+void UFrontendMapWidget::ApplyCurrentMapArt() const
+{
+	if (Map_ParchmentBody != nullptr && mMapParchmentTexture != nullptr)
+	{
+		FSlateBrush Brush = Map_ParchmentBody->GetBrush();
+		Brush.SetResourceObject(mMapParchmentTexture);
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		// 941x1672 월드맵의 원목/은장 프레임 두께에 맞춰 9-slice한다.
+		// 이전 값은 테두리 안쪽 지형까지 고정 조각으로 잡아 좁은 폰에서
+		// 프레임이 과하게 두꺼워졌다. 실제 프레임만 보존하고 중앙 지형을
+		// 가변 그래프 높이에 맞게 늘린다.
+		Brush.Margin = FMargin(0.085f, 0.060f, 0.085f, 0.060f);
+		Map_ParchmentBody->SetBrush(Brush);
+		Map_ParchmentBody->SetColorAndOpacity(FLinearColor::White);
+		Map_ParchmentBody->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	// 새 지도 자체에 상·하단 원목/은장 프레임이 포함되어 있어 옛 청동
+	// 두루마리 로드를 계속 숨긴다. 둘을 같이 켜면 폰에서 상하 테두리가 겹친다.
+	if (Map_ScrollRodTop != nullptr)
+	{
+		Map_ScrollRodTop->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (Map_ScrollRodBottom != nullptr)
+	{
+		Map_ScrollRodBottom->SetVisibility(ESlateVisibility::Collapsed);
+	}
 }
 
 /**
@@ -1337,9 +1378,8 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(MapScrollBox->Slot))
 		{
 			ScrollSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			// 탑바 인셋 0: 지도를 화면 전체로 깔고, 전투 HUD 탑바(z=-10)가 지도(z=-20) 위에 겹쳐 뜨게 한다.
-			// WBP Class Defaults가 concept 시안 값(mTopUIInset)을 주입하지만, "탑바 아래 인셋"이 아니라 "겹침"이
-			// 확정 기획이라 여기서 0으로 강제한다 — WBP 저장 의존 제거(패키징에도 항상 반영).
+			// 팝업이 HUD를 덮는 동안 지도를 뷰포트 전체에 채운다. WBP의 옛
+			// 탑바 인셋 값에 의존하지 않도록 패키징에서도 항상 0으로 강제한다.
 			ScrollSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
 			ScrollSlot->SetAlignment(FVector2D::ZeroVector);
 			ScrollSlot->SetAutoSize(false);
@@ -1351,7 +1391,7 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		if (UCanvasPanelSlot* ScrimSlot = Cast<UCanvasPanelSlot>(Map_Scrim->Slot))
 		{
 			ScrimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			ScrimSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));   // 위와 동일: 탑바 인셋 0(겹침 설계, WBP 의존 제거).
+			ScrimSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
 		}
 	}
 	if (MapGraphCanvas != nullptr)

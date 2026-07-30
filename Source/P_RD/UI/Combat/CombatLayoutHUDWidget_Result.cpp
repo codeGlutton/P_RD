@@ -22,7 +22,7 @@ namespace
 	const TCHAR* const FallbackVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
 	const TCHAR* const FallbackDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 	constexpr int32 CombatResultVideoZOrder = -20;
-	/** @brief 승/패 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
+	/** @brief 패배 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
 	constexpr float CombatResultStartDelaySeconds = 1.2f;
 }
 
@@ -32,7 +32,20 @@ void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentat
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
 
-	// 판정 직후 바로 영상이 틀어지면 급작스러워서, 전장을 잠깐 보여주는 텀을 두고 연출을 시작한다.
+	// 승리는 별도 영상/페이드 연출 없이 보상 화면을 즉시 연다. 배리어를 바로
+	// 놓으면 전투 모델이 보상 데이터를 밀고 OpenRequested를 방송한다.
+	// Ensure를 먼저 해야 같은 호출 스택에서 온 OpenRequested가 위젯을 놓치지
+	// 않는다.
+	if (mIsPlayerWin)
+	{
+		EnsureCombatResultWidgets();
+		SetCombatResultViewActive(true);
+		mCombatResultBarrier.Reset();
+		return;
+	}
+
+	// 패배만 기존 결과 영상을 유지한다. 판정 직후 바로 영상이 틀어지면
+	// 급작스러워서, 전장을 잠깐 보여주는 텀을 둔다.
 	// 배리어는 이미 붙잡고 있으므로 딜레이 동안 프레임워크 진행은 멈춰 있다.
 	if (UWorld* World = GetWorld())
 	{
@@ -148,16 +161,13 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 	}));
 }
 
-void UCombatLayoutHUDWidget::HandleCombatRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+void UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	if (mCombatRewardWidget != nullptr)
+	// 지급 성공이 확인된 뒤에만 효과음을 낸다. 실패한 claim 요청은 행 상태와
+	// 소리를 바꾸지 않아 사용자가 실제 지급 여부를 오해하지 않게 한다.
+	if (ClaimKind == ERewardClaimKind::Exp && mExpGainSound != nullptr)
 	{
-		// 경험치 수령은 전용 상승음(골드는 카운트업 코인 사운드가 담당).
-		if (ClaimKind == ERewardClaimKind::Exp && mExpGainSound != nullptr)
-		{
-			UGameplayStatics::PlaySound2D(this, mExpGainSound);
-		}
-		mCombatRewardWidget->NotifyRewardClaimed(ClaimKind, ChoiceIndex);
+		UGameplayStatics::PlaySound2D(this, mExpGainSound);
 	}
 }
 
@@ -238,9 +248,9 @@ void UCombatLayoutHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> 
  * @brief 승리 뒤 다음 방을 고르도록 지도를 연다.
  *
  * @details
- * 옛 HUD 는 지도를 열고 나서 "닫아도 다시 연다" 는 잠금까지 들고 있었다.
- * 그 잠금은 지도 위젯이 방을 고를 때까지 풀리지 않는데, 여기서는 우선 여는
- * 것까지만 옮긴다 -- 잠금은 지도 흐름을 옮길 때 같이 가져온다.
+ * 보상 확인 뒤에는 조회용 지도가 아니라 다음 방 선택용 지도를 열어야 한다.
+ * 그래서 선택 모드와 최신 런 데이터를 먼저 적용하고, 다음 방으로 실제
+ * 전환되기 전에는 BACK으로 닫아 전투가 끝난 화면으로 돌아갈 수 없게 한다.
  */
 void UCombatLayoutHUDWidget::OpenWorldMapForNextRoom()
 {
@@ -248,13 +258,40 @@ void UCombatLayoutHUDWidget::OpenWorldMapForNextRoom()
 		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
 	if (WorldWidgetSubsystem == nullptr)
 	{
+		UE_LOG(LogRD, Warning, TEXT("CombatLayoutHUDWidget: WorldWidgetSubsystem is unavailable after victory."));
 		return;
 	}
-	if (URDUserWidget* MapWidget = Cast<URDUserWidget>(
-		WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::WorldMap)))
+
+	UFrontendMapWidget* MapWidget = Cast<UFrontendMapWidget>(
+		WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::WorldMap));
+	if (MapWidget == nullptr)
 	{
-		mVictoryWorldMapLocked = true;
-		MapWidget->OpenUI();
+		UE_LOG(LogRD, Warning, TEXT("CombatLayoutHUDWidget: WorldMap widget is not configured."));
+		return;
+	}
+
+	mVictoryWorldMapLocked = true;
+	MapWidget->OnCloseRequested.AddUniqueDynamic(
+		this, &UCombatLayoutHUDWidget::HandleWorldMapCloseRequested);
+	MapWidget->SetRoomSelectionEnabled(true);
+	MapWidget->ClearMapStatusOverride();
+	MapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(MapWidget, [](UUserWidget* OpenedWidget)
+	{
+		if (UFrontendMapWidget* OpenedMapWidget = Cast<UFrontendMapWidget>(OpenedWidget))
+		{
+			OpenedMapWidget->RefreshMap();
+		}
+	}));
+	// OpenUI가 이미 열린 위젯에서 즉시 반환하는 경우도 있으므로 여기서도
+	// 한 번 갱신한다. 갱신은 선택/ENTER 활성 상태까지 함께 다시 계산한다.
+	MapWidget->RefreshMap();
+}
+
+void UCombatLayoutHUDWidget::HandleWorldMapCloseRequested()
+{
+	if (mVictoryWorldMapLocked)
+	{
+		OpenWorldMapForNextRoom();
 	}
 }
 
