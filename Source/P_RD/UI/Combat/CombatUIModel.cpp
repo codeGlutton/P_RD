@@ -139,6 +139,21 @@ void UCombatUIModel::SetBuildPhase(ECombatBuildPhaseUI Phase)
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
+/** @brief 이동 경로 또는 선택 스킬이 확정 전에 소비할 AP를 캐시한다. */
+void UCombatUIModel::SetPendingAction(const FCombatPendingActionUI& PendingAction)
+{
+	mPendingAction = PendingAction;
+	if (mPendingAction.mType == ECombatPendingActionType::None)
+	{
+		mPendingAction.mActionPointCost = 0;
+	}
+	else
+	{
+		mPendingAction.mActionPointCost = FMath::Max(mPendingAction.mActionPointCost, 0);
+	}
+	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+}
+
 /** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
 void UCombatUIModel::SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment)
 {

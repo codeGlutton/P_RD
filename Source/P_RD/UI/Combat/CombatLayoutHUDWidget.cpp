@@ -954,8 +954,8 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		{
 			SetShown(Widgets.Root, true);
 			SetTextIfPresent(Widgets.Name, LOCTEXT("Move", "이동"));
-			SetTextIfPresent(Widgets.Cost, FText::FromString(TEXT("1")));
-			SetTextIfPresent(Widgets.CostLine, LOCTEXT("MoveCost", "AP 1"));
+			SetTextIfPresent(Widgets.Cost, LOCTEXT("MoveCostPerTileShort", "1/칸"));
+			SetTextIfPresent(Widgets.CostLine, LOCTEXT("MoveCost", "AP 1/칸"));
 			SetShown(Widgets.Cooldown, false);
 			SetShown(Widgets.CooldownIcon, false);
 			SetShown(Widgets.Damage, false);
@@ -1449,7 +1449,7 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 	mShownAPLeft = Left;
 
 	// 고른 카드가 가져갈 몫. 남은 것보다 크면 남은 만큼만 빛낸다.
-	mPendingAPCost = FMath::Clamp(GetSelectedSkillCost(), 0, Left);
+	mPendingAPCost = FMath::Clamp(GetPendingActionCost(), 0, Left);
 
 	const int32 Room = mTurnAPPips.Num();
 	const bool bTooMany = Total > Room;
@@ -1466,18 +1466,16 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 }
 
 /**
- * @brief 지금 고른 카드가 가져갈 행동력.
- * @return 고른 것이 없으면 0
+ * @brief 현재 프리뷰 중인 스킬 또는 이동 경로가 가져갈 행동력.
+ * @return 프리뷰가 없으면 0
  */
-int32 UCombatLayoutHUDWidget::GetSelectedSkillCost() const
+int32 UCombatLayoutHUDWidget::GetPendingActionCost() const
 {
 	if (mUIModel == nullptr)
 	{
 		return 0;
 	}
-	const int32 Index = mUIModel->GetSelectedSkillIndex();
-	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
-	return Skills.IsValidIndex(Index) ? Skills[Index].mActionPointCost : 0;
+	return mUIModel->GetPendingAction().mActionPointCost;
 }
 
 /**

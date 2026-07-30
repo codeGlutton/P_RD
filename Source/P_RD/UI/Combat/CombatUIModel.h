@@ -178,6 +178,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnUI(const FTurnUI& Turn);
 	/** @brief 조작 빌드 페이즈만 갱신(스킬/이동 빌드 공용). 턴 스냅샷 전체 교체 없이 페이즈 전환을 알릴 때 사용. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetBuildPhase(ECombatBuildPhaseUI Phase);
+	/** @brief 확정 전 행동 종류와 AP 예정 소모량을 갱신한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPendingAction(const FCombatPendingActionUI& PendingAction);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
 	/** @brief 장비 롱프레스 상세 스냅샷을 교체한다(GameMode의 PushEquipmentDetailUIData가 채워 밀어넣는다). */
@@ -222,6 +224,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatPendingActionUI& GetPendingAction() const { return mPendingAction; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
@@ -246,6 +249,8 @@ private:
 	UPROPERTY(Transient) TArray<FCombatQueueNode> mActionQueue;
 	/** @brief 현재 턴/라운드/페이즈 표시 스냅샷. */
 	UPROPERTY(Transient) FTurnUI mTurnUI;
+	/** @brief 현재 선택 중인 이동 경로 또는 스킬의 AP 예정 소모. */
+	UPROPERTY(Transient) FCombatPendingActionUI mPendingAction;
 	/** @brief 장비 슬롯 표시 스냅샷. */
 	UPROPERTY(Transient) TArray<FEquipmentUI> mEquipmentUIs;
 	UPROPERTY(Transient) FEquipmentDetailUI mEquipmentDetail;
