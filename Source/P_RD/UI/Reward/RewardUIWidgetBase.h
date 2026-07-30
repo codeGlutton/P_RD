@@ -123,7 +123,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Reward|UI")
 	TObjectPtr<UTexture2D> mRewardExpIconTexture;
 
-	/** @brief 보상 한 줄 WBP. 디자이너는 /Game/BP/UI/WBP_RewardRow에서 내부 배치를 조정한다. */
+	/** @brief 보상 한 줄 WBP. 디자이너는 /Game/UI/WBP_RewardRow에서 내부 배치를 조정한다. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Reward|UI")
 	TSubclassOf<URewardRowWidgetBase> mRewardRowWidgetClass;
 

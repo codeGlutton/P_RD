@@ -160,6 +160,15 @@ private:
 	UFUNCTION()
 	void HandleCharacterSelectBackRequested();
 
+	/** @brief 게시판에서 출발을 눌렀을 때 새 런을 만든다. */
+	void HandlePartyConfirmed(const TArray<FPrimaryAssetId>& PartyUnitIds);
+
+	/** @brief 데리고 갈 인원. @return 파티 인원 */
+	int32 GetPartySize() const;
+
+	/** @brief 게시판 출발 알림을 이미 걸었나. 두 번 걸면 런이 두 번 만들어진다. */
+	bool mWasHireDelegateBound = false;
+
 	bool OpenTitleCharacterSelect();
 	bool CreateRunData(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 

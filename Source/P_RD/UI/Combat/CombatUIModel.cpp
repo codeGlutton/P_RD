@@ -33,9 +33,20 @@ void UCombatUIModel::RequestEndTurn()
 }
 
 /** @brief 현재 선택/빌드 취소 의도를 전달한다. */
+void UCombatUIModel::RequestInspectUnit(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::InspectUnit, UnitId);
+}
+
 void UCombatUIModel::RequestCancel()
 {
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
+}
+
+/** @brief 겨냥해 둔 칸을 확정한다. */
+void UCombatUIModel::RequestConfirm()
+{
+	OnCombatCommand.Broadcast(ECombatInputType::Confirm, INDEX_NONE);
 }
 
 /** @brief 장비 슬롯 상세 요청을 SlotIndex payload로 전달한다. */
@@ -45,6 +56,22 @@ void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 }
 
 /** @brief 월드 터치 스크린 좌표를 변환하지 않고 그대로 게임플레이 경계로 넘긴다. */
+/**
+ * @brief 겨냥한 자리를 갈아 끼운다.
+ * @param Target 새로 겨냥한 자리. mIsValid 가 false 면 겨냥을 푼다
+ */
+void UCombatUIModel::SetTarget(const FCombatTargetUI& Target)
+{
+	if (mTarget.mIsValid == Target.mIsValid
+		&& mTarget.mTile == Target.mTile
+		&& mTarget.mUnitId == Target.mUnitId)
+	{
+		return;
+	}
+	mTarget = Target;
+	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+}
+
 void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);

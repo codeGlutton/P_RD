@@ -18,6 +18,8 @@
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIWidgetBase.h"
+#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 #include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
@@ -39,6 +41,7 @@
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
@@ -284,6 +287,9 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
+		// 무엇을 조종하는 중인지 알 수 없다.
+		mInspectedUnitId = INDEX_NONE;
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -305,26 +311,43 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
+		// 방금 쓴 스킬에 쿨타임이 걸렸다. 다시 안 내리면 카드가 옛 숫자를 그대로
+		// 들고 있어, 쓴 스킬이 아직 쓸 수 있는 것처럼 보인다.
+		//
+		// 행동력도 줄었으므로 유닛도 같이 내린다 -- 속성 델리게이트가 잡아
+		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
+		PushSkillUIData();
+		PushUnitUIData();
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
+	 *
+	 * 0번에게만 걸고 있었다. 그러면 야만전사가 스킬을 바꾸거나 모션을 끝내도
+	 * 화면이 모른다 -- 파티가 한 명일 때 짜 놓은 것이 셋이 되며 드러났다.
+	 */
 
-	/* 스킬 대리자 연결 */
+	for (UPlayerUnitModel* PartyUnitModel : GetPlayerUnitModels())
+	{
+		if (PartyUnitModel == nullptr)
+		{
+			continue;
+		}
+		USkillComponentModel* SkillComponentModel = PartyUnitModel->GetSkillComponentModel();
+		if (SkillComponentModel == nullptr)
+		{
+			continue;
+		}
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+		SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+			PushSkillUIData();
+			});
 
-	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
-		PushSkillUIData();
-		});
-
-	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
-		});
+		SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
+			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+			});
+	}
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
@@ -363,6 +386,14 @@ void ACombatGameMode::BeginRoom()
 	{
 		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
 		{
+			// 모델은 **여기서 건네준다.** UI 가 게임모드를 거꾸로 찾아오면
+			// UI 레이어에 게임모드 의존이 생긴다(#426 에서 걷어낸 그것).
+			// 붙이고 나서 연다 -- 열면서 첫 갱신이 도는데 그때 모델이 있어야
+			// 한 프레임 빈 화면이 안 스친다.
+			if (UCombatUIWidgetBase* CombatUIWidget = Cast<UCombatUIWidgetBase>(CombatHUD))
+			{
+				CombatUIWidget->BindUIModel(mCombatUIModel);
+			}
 			CombatHUD->OpenUI();
 		}
 	}
@@ -446,9 +477,31 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
 		break;
+	case ECombatInputType::InspectUnit:
+		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
+		mInspectedUnitId = IntPayload;
+		PushSkillUIData();
+		break;
 	case ECombatInputType::LongPressEquip:
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
 		PushEquipmentDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::Confirm:
+		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
+		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
+		// 판정을 UI 가 흉내 내면 규칙이 두 곳에 생긴다.
+		ConfirmTargetTile();
+		break;
+	case ECombatInputType::Cancel:
+		// 고른 스킬이 있으면 그것부터 무른다. 같은 스킬을 다시 고르는 것이
+		// 곧 취소이고, 그래야 판에 칠해 둔 사거리도 같이 지워진다.
+		if (mCombatUIModel != nullptr
+			&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+		{
+			SelectSkill(mCombatUIModel->GetSelectedSkillIndex());
+		}
+		// 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
+		ClearCombatTargetUIData();
 		break;
 	}
 }
@@ -478,6 +531,38 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 	{
 		ResolveWorldTouchEvent(ScreenPosition);
 	}
+}
+
+/**
+ * @brief 겨냥해 둔 칸을 그대로 다시 누른다.
+ *
+ * @details
+ * 판에서 두 번째 탭이 확정이다. 화면 아래 단추로도 되게 하려면 그 탭을
+ * 대신 놓아 주면 된다 -- 확정 판정을 UI 나 여기서 흉내 내면 규칙이 두 곳에
+ * 생긴다. 칸을 화면 좌표로 되돌려 같은 길로 흘려보낸다.
+ */
+void ACombatGameMode::ConfirmTargetTile()
+{
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetTarget().mIsValid == false)
+	{
+		return;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	if (TileMap == nullptr || Controller == nullptr)
+	{
+		return;
+	}
+
+	FVector2D ScreenPosition = FVector2D::ZeroVector;
+	const FVector World = TileMap->TileToWorldLocation(mCombatUIModel->GetTarget().mTile);
+	if (Controller->ProjectWorldLocationToScreen(World, OUT ScreenPosition) == false)
+	{
+		return;
+	}
+	ResolveWorldTouchEvent(ScreenPosition);
 }
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
@@ -579,6 +664,11 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
+	// 톡 친 칸을 UI 에 알린다. 어느 타일인지는 트레이스한 쪽만 안다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnSelectTargetTile.AddWeakLambda(this,
+		[this](const FTileIndex& Tile, AActor* HitActor) {
+			PushCombatTargetUIData(Tile, HitActor);
+		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
@@ -614,6 +704,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
+		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
+		PushSkillUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -736,13 +828,20 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
+		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+		// 둘이 같은 칸을 읽고 있었다. UPlayerUnitAttributeSet 은
+		// UCombatTargetAttributeSet 을 물려받으므로 GetMovementAttribute() 가
+		// **같은 속성**을 가리킨다 -- 그래서 10/10 을 다 쓰면 0/0 이 됐다.
+		//
+		// 한 턴에 받는 총량은 따로 있다. RechargeMovement 다. 턴이 시작될 때
+		// 그 수만큼 Movement 를 채운다(UUnitModel::OnBeginTurn).
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -773,13 +872,114 @@ void ACombatGameMode::PushUnitUIData() const
 	mCombatUIModel->SetUnitUIs(UnitUIDatas);
 }
 
+/**
+ * @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나.
+ *
+ * @details
+ * 두 가지만 본다. 행동력이 남았는지, 겨냥한 칸이 사거리 안인지.
+ *
+ * 칸 사이 거리는 가로세로 중 먼 쪽으로 잰다. 대각선을 한 칸으로 치는 판이라
+ * 그렇다. 조준 모양(십자/사각)까지 따지는 것은 조준 단계가 할 일이고 여기서는
+ * 카드를 켤지 끌지만 정한다 -- 여기서 정밀하게 세면 조준 단계와 두 벌이 되고
+ * 그 둘은 언젠가 어긋난다.
+ *
+ * 겨냥한 자리가 없으면 사거리는 안 본다. 아직 아무 데도 안 찍은 상태다.
+ * @param PlayerUnitModel 지금 차례인 유닛
+ * @param StaticSkillData 검사할 스킬
+ * @return 카드를 켜도 되면 true
+ */
+bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
+	const UStaticSkillData& StaticSkillData) const
+{
+	if (PlayerUnitModel == nullptr)
+	{
+		return false;
+	}
+
+	const FCombatTargetUI& Target = mCombatUIModel != nullptr
+		? mCombatUIModel->GetTarget() : FCombatTargetUI();
+	if (Target.mIsValid == false)
+	{
+		return true;
+	}
+
+	const FTileIndex& Here = PlayerUnitModel->GetTileTransform().mIndex;
+	const int32 Distance = FMath::Max(
+		FMath::Abs(Target.mTile.mX - Here.mX),
+		FMath::Abs(Target.mTile.mY - Here.mY));
+	return Distance <= StaticSkillData.mAimRange;
+}
+
+/**
+ * @brief 파티에서 이 id 의 유닛을 찾는다.
+ *
+ * @details
+ * UI 는 액터도 모델도 모르고 FUnitUI.mUnitId 만 안다. 그 id 로 되짚는 자리가
+ * 여기다.
+ * @param UnitId 찾을 유닛. INDEX_NONE 이면 안 찾는다
+ * @return 없으면 nullptr
+ */
+/**
+ * @brief 지금 차례인 아군.
+ * @return 적 차례거나 없으면 nullptr
+ */
+UPlayerUnitModel* ACombatGameMode::GetTurnPlayerUnitModel() const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const USRPGTurnContext* TurnContext = CombatModel != nullptr
+		? CombatModel->GetCurrentTurnContext() : nullptr;
+	UUnitModel* TurnUnit = TurnContext != nullptr ? TurnContext->GetOwner() : nullptr;
+	if (TurnUnit == nullptr || TurnUnit->IsPlayerUnitModel() == false)
+	{
+		return nullptr;
+	}
+	return FindPartyUnitModel(TurnUnit->GetModelId());
+}
+
+UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
+{
+	if (UnitId == INDEX_NONE)
+	{
+		return nullptr;
+	}
+
+	for (UPlayerUnitModel* PartyUnitModel : GetPlayerUnitModels())
+	{
+		if (PartyUnitModel != nullptr && PartyUnitModel->GetModelId() == UnitId)
+		{
+			return PartyUnitModel;
+		}
+	}
+	return nullptr;
+}
+
 void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	// 차례가 적에게 있으면 마지막으로 움직인 아군 것을 그대로 둔다. 카드는
+	// 적 차례에 어차피 접혀 있고, 여기서 비우면 차례가 돌아올 때 한 프레임
+	// 빈 카드가 스친다.
+	UPlayerUnitModel* TurnUnitModel = GetTurnPlayerUnitModel();
+	if (TurnUnitModel == nullptr)
+	{
+		TurnUnitModel = GetPlayerUnitModel(0);
+	}
+	if (TurnUnitModel == nullptr)
+	{
+		return;
+	}
+
+	// 들여다보는 유닛이 있으면 그쪽 스킬을 보여 준다. 없으면 지금 차례인 유닛.
+	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = TurnUnitModel;
+	}
+
+	// 제 차례가 아닌 유닛의 카드는 전부 꺼서 보여 준다. 무엇을 들고 있는지
+	// 아는 것과 지금 쓸 수 있는 것은 다른 이야기라, 감추는 대신 끈다.
+	const bool bIsOwnTurn = PlayerUnitModel == TurnUnitModel;
 
 	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
@@ -803,7 +1003,54 @@ void ACombatGameMode::PushSkillUIData() const
 		{
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-			SkillUIData.mIsUsable = true;
+			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+
+			// 쿨타임. 총량은 데이터에셋 값을 그대로 쓴다 -- GetCooldownDuration은
+			// 걸려 있는 효과를 읽으므로 쿨이 안 돌 때는 값이 없다.
+			SkillUIData.mCooldownTurns = FMath::Max(
+				SkillComponentModel->GetStaticCooldownDuration(i), 0);
+			SkillUIData.mRemainingCooldown = (SkillComponentModel->IsCooldown(i) == true)
+				? FMath::Max(SkillComponentModel->GetRemainingCooldownTime(i), 0) : 0;
+
+			// 피해. 한 스킬이 여러 모션으로 나뉘어 때리므로 다 더한 것이 카드에
+			// 적을 수다. 자동 생성 설명도 같은 값을 쓴다.
+			//
+			// [합의필요] min/max 로 나누기로 정했는데(0728) 데이터에셋은 아직
+			// mDamage 한 값이다. 그래서 지금은 min == max 다. 모호재님이 나누면
+			// 여기 두 줄만 각각 읽으면 된다.
+			//
+			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
+			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
+			int32 SkillDamage = 0;
+			for (const FSkillMotionLayer& MotionLayer : StaticSkillData->mSkillMotionLayers)
+			{
+				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+				{
+					if (const FSkillEffectLayer_Attack* Attack = EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+					{
+						SkillDamage += Attack->mDamage;
+					}
+				}
+			}
+			SkillUIData.mDamageMin = SkillDamage;
+			SkillUIData.mDamageMax = SkillDamage;
+			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
+			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
+			// 그쪽 값을 받아 이 줄을 지운다.
+			SkillUIData.mCriticalDamage = FMath::RoundToInt(SkillUIData.mDamageMax * 1.5f);
+			// 쓸 수 있는지는 세 가지를 다 본다. 하나라도 아니면 카드를 끈다.
+			//
+			//   쿨타임이 도는 중        IsCooldown
+			//   행동력이 모자람          HasRequiredMovement
+			//   겨냥한 자리가 사거리 밖   IsSkillUsableOnTarget
+			//
+			// 앞의 둘을 안 보고 있었다. 쿨타임이 도는 스킬도, AP 가 0 인
+			// 유닛의 스킬도 멀쩡히 켜져 있었다. 화면은 이 판정을 안 한다 --
+			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
+			SkillUIData.mIsUsable = bIsOwnTurn
+				&& SkillComponentModel->IsCooldown(i) == false
+				&& SkillComponentModel->HasRequiredMovement(i) == true
+				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
@@ -821,6 +1068,65 @@ void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	mCombatUIModel->SetSelectedSkill(SkillIndex);
+}
+
+/**
+ * @brief 톡 쳐서 고른 칸을 UI 에 내린다.
+ *
+ * @details
+ * 겨냥한 자리가 바뀌면 그 자리에 쓸 수 있는 스킬이 달라진다. 그래서 스킬
+ * 표시값도 같이 다시 내린다 -- 둘을 따로 내리면 한 프레임 동안 카드가 옛
+ * 자리 기준으로 켜져 있다.
+ * @param Tile     겨냥한 타일
+ * @param HitActor 그 칸에 선 액터. 빈 칸이면 nullptr
+ */
+void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor)
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 겨냥한 칸을 다시 누르면 무른다.
+	const FCombatTargetUI& Current = mCombatUIModel->GetTarget();
+	if (Current.mIsValid == true && Current.mTile == Tile)
+	{
+		ClearCombatTargetUIData();
+		return;
+	}
+
+	FCombatTargetUI TargetUIData;
+	TargetUIData.mIsValid = true;
+	TargetUIData.mTile = Tile;
+
+	// 액터가 아니라 모델의 id 를 싣는다. UI 는 FUnitUI.mUnitId 와 같은 id
+	// 공간만 알고 액터는 모른다.
+	if (const IActorView* ActorView = Cast<IActorView>(HitActor))
+	{
+		if (const UBoardActorModel* BoardActorModel =
+			Cast<UBoardActorModel>(ActorView->GetModel()))
+		{
+			TargetUIData.mUnitId = BoardActorModel->GetModelId();
+		}
+	}
+
+	mCombatUIModel->SetTarget(TargetUIData);
+	PushSkillUIData();
+}
+
+/**
+ * @brief 겨냥을 푼다.
+ *
+ * 겨냥이 풀리면 그 자리 기준으로 켜고 끄던 카드도 다시 계산해야 한다.
+ */
+void ACombatGameMode::ClearCombatTargetUIData()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+	mCombatUIModel->SetTarget(FCombatTargetUI());
+	PushSkillUIData();
 }
 
 void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const

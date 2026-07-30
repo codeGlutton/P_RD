@@ -17,6 +17,7 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
 #include "UI/CharacterSelectWidget.h"
+#include "UI/Hire/MercenaryHireWidget.h"
 
 #include "Setting/GamePlaySettings.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
@@ -32,6 +33,9 @@ namespace
 {
 	// [합의필요] 난이도 선택 UI가 들어오기 전까지 새 Run 생성은 프론트엔드 기본 난이도 1로 고정한다.
 	constexpr int32 DefaultDifficulty = 1;
+
+	/** @brief 데리고 갈 인원. 여섯 중 셋으로 시작한다. */
+	constexpr int32 DefaultPartySize = 3;
 
 	/** @brief UI 표시용 직업명(한글)을 GameMode에서 확정해 WBP가 enum 문자열을 직접 해석하지 않게 한다. */
 	FText GetPlayerJobName(EPlayerJobType JobType)
@@ -161,6 +165,10 @@ AFrontendGameMode::AFrontendGameMode()
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::InGameSettings,
 		EWorldWidgetType::CharacterSelect,
+		// 여기에 넣어야 서브시스템이 실제로 만든다. Config 의 클래스 매핑은
+		// "무엇을 만들지"만 정하고, 이 목록이 "만들지 말지"를 정한다 -- 매핑만
+		// 걸고 여기를 빠뜨려서 START 를 누르는 순간 위젯이 없다고 멈췄다.
+		EWorldWidgetType::MercenaryHire,
 	};
 
 	mShowFadeInUIOnTransition = true;
@@ -463,28 +471,69 @@ bool AFrontendGameMode::IsDifficultyValid(int32 Difficulty) const
 	return true;
 }
 
+/**
+ * @brief 용병 선택 게시판을 열고 타이틀 HUD를 잠시 닫는다.
+ *
+ * @details
+ * 예전에는 한 명만 고르는 캐릭터 선택 화면을 열었다. 런을 여섯 중 셋으로
+ * 시작하도록 기획이 바뀌면서 이 자리가 게시판으로 바뀌었다. 캐릭터 선택
+ * 위젯은 지우지 않고 두었다 -- 상점이나 도중 합류처럼 한 명만 고르는 자리가
+ * 다시 생길 수 있다.
+ *
+ * 게시판은 값을 모른다. 여기서 후보를 만들어 넘기고, 출발을 누르면 식별자만
+ * 돌려받아 런을 만든다.
+ */
 bool AFrontendGameMode::OpenTitleCharacterSelect()
 {
-	/*
-	 * 캐릭터 선택 화면은 타이틀 HUD와 분리된 독립 월드 위젯이다.
-	 * 타이틀 HUD 안에 끼워 넣지 않아야 새 WBP_CharacterSelect_New의 전체 화면 레이아웃과 버튼 배선이 그대로 동작한다.
-	 */
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect);
-	checkf(CharacterSelectWidget != nullptr, TEXT("캐릭터 선택 위젯이 준비가 안됨"));
+	UMercenaryHireWidget* HireWidget = WorldWidgetSubsystem->GetWorldWidget<UMercenaryHireWidget>(EWorldWidgetType::MercenaryHire);
+	checkf(HireWidget != nullptr, TEXT("용병 선택 위젯이 준비가 안됨"));
 
-	CharacterSelectWidget->OnBackToMainRequested.AddUniqueDynamic(this, &AFrontendGameMode::HandleCharacterSelectBackRequested);
+	TArray<FFrontendCharacterOption> Options;
+	if (GetCharacterOptions(OUT Options) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Warning, TEXT("고를 후보가 없음"));
+		return false;
+	}
+	HireWidget->SetCharacterOptions(Options, GetPartySize());
+
+	// 매번 새로 걸지 않는다. 이 화면은 서브시스템이 하나만 만들어 두고 계속
+	// 쓰므로, 열 때마다 걸면 출발 한 번에 런이 여러 번 만들어진다.
+	if (mWasHireDelegateBound == false)
+	{
+		HireWidget->mOnPartyConfirmed.AddUObject(this, &AFrontendGameMode::HandlePartyConfirmed);
+		mWasHireDelegateBound = true;
+	}
 
 	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())
 	{
 		TitleMenuWidget->CloseUI();
 	}
 
-	CharacterSelectWidget->OpenCharacterSelect();
-	CharacterSelectWidget->OpenUI();
+	HireWidget->OpenUI();
 	return true;
+}
+
+/**
+ * @brief 게시판에서 출발을 눌렀을 때 새 런을 만든다.
+ * @param PartyUnitIds 고른 차례대로의 유닛 식별자
+ */
+void AFrontendGameMode::HandlePartyConfirmed(const TArray<FPrimaryAssetId>& PartyUnitIds)
+{
+	// [합의필요] 난이도 선택 UI가 들어오기 전까지 기본 난이도로 시작한다.
+	if (StartNewRun(PartyUnitIds, DefaultDifficulty) == false)
+	{
+		UE_LOG(LogFrontendGameMode, Warning, TEXT("파티로 런을 시작하지 못함"));
+	}
+}
+
+/** @brief 데리고 갈 인원. */
+int32 AFrontendGameMode::GetPartySize() const
+{
+	// [합의필요] 인원이 바뀔 수 있으면 방 데이터나 밸런스 표로 옮긴다.
+	return DefaultPartySize;
 }
 
 void AFrontendGameMode::HandleCharacterSelectBackRequested()
