@@ -4,23 +4,33 @@ DEFINE_LOG_CATEGORY(LogWorldCamera)
 
 void UWorldCameraModel::RequestZoomInMainCamera(const FVector& Location, float ScreenSize)
 {
-	// 카메라 뷰가 붙어 있을 때만 강조 중으로 센다(mIsMainCameraEmphasized 주석 참고).
-	mIsMainCameraEmphasized = OnRequestZoomInMainCamera.IsBound();
 	OnRequestZoomInMainCamera.Broadcast(Location, ScreenSize);
 }
 
 void UWorldCameraModel::RequestZoomOutMainCamera()
 {
-	// 복귀를 알릴 카메라가 없으면 그 자리에서 끝난 것으로 친다.
-	if (OnRequestZoomOutMainCamera.IsBound() == false)
-	{
-		mIsMainCameraEmphasized = false;
-	}
+	const bool HasCameraView = OnRequestZoomOutMainCamera.IsBound();
 	OnRequestZoomOutMainCamera.Broadcast();
+
+	// 강조를 시작한 뷰가 이미 사라졌다면 복귀 애니메이션도 없다.
+	if (HasCameraView == false)
+	{
+		NotifyMainCameraReturned();
+	}
+}
+
+void UWorldCameraModel::NotifyMainCameraEmphasisStarted()
+{
+	mIsMainCameraEmphasized = true;
 }
 
 void UWorldCameraModel::NotifyMainCameraReturned()
 {
+	if (mIsMainCameraEmphasized == false)
+	{
+		return;
+	}
+
 	mIsMainCameraEmphasized = false;
 	OnMainCameraReturned.Broadcast();
 }

@@ -288,6 +288,7 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
+		CancelPendingActionEndAfterCameraReturn();
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
@@ -310,9 +311,12 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
+		CancelPendingActionEndAfterCameraReturn();
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
+		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
+		CancelPendingActionEndAfterCameraReturn();
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
@@ -333,15 +337,18 @@ void ACombatGameMode::InitializeRoom()
 		 *
 		 * 배리어는 잡지 않는다 -- 프레임워크 진행이 카메라를 기다리면 안 된다.
 		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
-		 * 그 사이 다음 액션이 시작되면 HUD 쪽 일련번호가 늦은 알림을 무효화한다.
+		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
 		 */
 		UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
 		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
 		{
-			TSharedRef<FDelegateHandle> HandleRef = MakeShared<FDelegateHandle>();
-			*HandleRef = WorldCameraModel->OnMainCameraReturned.AddWeakLambda(this,
-				[this, WorldCameraModel, HandleRef]() {
-					WorldCameraModel->OnMainCameraReturned.Remove(*HandleRef);
+			CancelPendingActionEndAfterCameraReturn();
+			mPendingActionEndAfterCameraReturnHandle =
+				WorldCameraModel->OnMainCameraReturned.AddWeakLambda(this,
+				[this, WorldCameraModel]() {
+					WorldCameraModel->OnMainCameraReturned.Remove(
+						mPendingActionEndAfterCameraReturnHandle);
+					mPendingActionEndAfterCameraReturnHandle.Reset();
 					if (mCombatUIModel != nullptr)
 					{
 						mCombatUIModel->OnEndAnyTurnAction.Broadcast(nullptr);
@@ -462,6 +469,22 @@ void ACombatGameMode::HandleOpenInventory()
 	{
 		InventoryWidget->OpenUI();
 	}
+}
+
+void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
+{
+	if (mPendingActionEndAfterCameraReturnHandle.IsValid() == false)
+	{
+		return;
+	}
+
+	if (UWorldCameraModel* WorldCameraModel =
+		GetWorldSubsystemModel<UWorldCameraModel>(this))
+	{
+		WorldCameraModel->OnMainCameraReturned.Remove(
+			mPendingActionEndAfterCameraReturnHandle);
+	}
+	mPendingActionEndAfterCameraReturnHandle.Reset();
 }
 
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)

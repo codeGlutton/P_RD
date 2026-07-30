@@ -176,6 +176,12 @@ public:
 	TObjectPtr<URewardUIModel> mRewardUIModel;
 
 private:
+	/** @brief 다음 액션/턴이 시작돼 더 이상 유효하지 않은 카메라 복귀 대기를 취소한다. */
+	void CancelPendingActionEndAfterCameraReturn();
+
+	/** @brief 카메라 복귀 뒤 보낼 현재 액션 종료 알림. 한 번에 최신 하나만 유지한다. */
+	FDelegateHandle mPendingActionEndAfterCameraReturnHandle;
+
 	/** @brief 같은 결과 화면에서 빠른 중복 입력으로 보상이 두 번 지급되는 것을 막는다. */
 	bool mGoldRewardClaimed = false;
 	bool mExpRewardClaimed = false;
