@@ -341,6 +341,13 @@ public:
 	 */
 	UFUNCTION(CallInEditor, Category = "SRPG")
 	void DebugPushTest();
+
+	/**
+	 * @brief [에디터 전용] 위협 범위 표시 시각 확인 (이동 단독/겹침/공격 단독)
+	 * @details 디테일 패널 버튼으로 호출. 이동범위 밴드만, 밴드+내부 채움, 내부 채움만 세 경우를 한 번에 그린다.
+	 */
+	UFUNCTION(CallInEditor, Category = "SRPG")
+	void DebugThreatTest();
 #endif
 
 #if WITH_EDITORONLY_DATA

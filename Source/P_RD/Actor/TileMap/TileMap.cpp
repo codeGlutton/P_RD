@@ -1250,5 +1250,14 @@ void ATileMap::DebugPushTest()
 	// 밀리지 못하는 몹(제자리 한 칸) — 아무것도 표시되지 않아야 함
 	AddPushPath({ FTileIndex(1, 5) });
 }
+
+void ATileMap::DebugThreatTest()
+{
+	// 다른 디버그 표시와 겹치지 않는 영역(y=4~5, x=2~5) 사용
+	// x=2 열은 이동 단독(밴드만), x=3~4 열은 겹침(밴드+채움), x=5 열은 공격 단독(채움만)
+	SetThreatRange(
+		{ FTileIndex(2, 4), FTileIndex(3, 4), FTileIndex(4, 4), FTileIndex(2, 5), FTileIndex(3, 5), FTileIndex(4, 5) },
+		{ FTileIndex(3, 4), FTileIndex(4, 4), FTileIndex(5, 4), FTileIndex(3, 5), FTileIndex(4, 5), FTileIndex(5, 5) });
+}
 #endif
 
