@@ -493,12 +493,13 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 {
 	switch (Type)
 	{
+	// 스킬/이동을 골라도 켜 둔 위협 범위는 걷지 않는다. "저기까지 오는데
+	// 어디로 피하지"를 보면서 고르라고 켜 둔 것이다 -- 켜고 끄는 것은 적
+	// 타일 탭만 한다. 턴이 끝나면 적이 움직여 칠이 낡으므로 그때는 걷는다.
 	case ECombatInputType::SelectSkill:
-		ClearThreatRangeView();
 		SelectSkill(IntPayload);
 		break;
 	case ECombatInputType::Move:
-		ClearThreatRangeView();
 		SelectMove();
 		break;
 	case ECombatInputType::EndTurn:
@@ -535,11 +536,9 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
 		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
 		// 판정을 UI 가 흉내 내면 규칙이 두 곳에 생긴다.
-		ClearThreatRangeView();
 		ConfirmTargetTile();
 		break;
 	case ECombatInputType::Cancel:
-		ClearThreatRangeView();
 		// 고른 스킬이 있으면 그것부터 무른다. 같은 스킬을 다시 고르는 것이
 		// 곧 취소이고, 그래야 판에 칠해 둔 사거리도 같이 지워진다.
 		if (mCombatUIModel != nullptr
@@ -1049,6 +1048,19 @@ bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitMo
 		return true;
 	}
 
+	/*
+	 * 조준 중이 아닐 때의 겨냥은 "살펴보기"다(적 안내판·위협 범위 표시용).
+	 *
+	 * 아직 아무 스킬도 고르지 않았는데 그 적까지의 거리로 카드를 잠그면,
+	 * 멀리 있는 적을 확인만 해도 스킬 전부가 잠긴 것처럼 보인다 -- 위협
+	 * 범위를 보면서 스킬을 고르라고 만든 기능이 스킬 선택을 막았다.
+	 * 사거리 판정은 실제로 조준에 들어간 뒤에만 한다.
+	 */
+	if (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None)
+	{
+		return true;
+	}
+
 	const FTileIndex& Here = PlayerUnitModel->GetTileTransform().mIndex;
 	const int32 Distance = FMath::Max(
 		FMath::Abs(Target.mTile.mX - Here.mX),
@@ -1233,10 +1245,49 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 		return;
 	}
 
+	/*
+	 * 조준 중이 아닌 탭은 "살펴보기"다.
+	 *
+	 * 유닛을 짚었을 때만 겨냥을 움직인다. 빈 칸을 겨냥으로 세우면 카드 사용
+	 * 가능 판정이 그 칸 사거리 기준으로 돌아서, 행동력이 멀쩡한데도 스킬이
+	 * 잠겨 보인다 -- 카드를 펴려고 판을 누른 손이 카드를 잠갔다.
+	 *
+	 * 빈 칸 탭은 살펴보기를 **건드리지 않는다.** 위협 범위와 겨냥은 그 적을
+	 * 다시 누르기 전까지 남는다 -- 카드를 펴려고 판을 누른 손이 봐 둔 위협을
+	 * 지우면, 볼 때마다 다시 짚어야 한다.
+	 *
+	 * 조준 중에는 빈 칸도 의미가 있다(이동 목적지, 바닥 조준). 그쪽은 기존
+	 * 규칙 그대로 둔다.
+	 */
+	const bool bBrowsing = mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None;
+	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+
+	// 유닛이 서 있는 타일을 짚은 것은 유닛을 짚은 것이다. 트레이스가 유닛
+	// 메시 대신 발밑 타일에 먼저 맞아도 뜻은 같다 -- 손가락은 칸을 누른다.
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+		if (TileMap != nullptr)
+		{
+			if (UUnitModel* OccupantUnitModel = TileMap->GetActorOnTile<UUnitModel>(Tile))
+			{
+				HitActor = OccupantUnitModel->GetView<AActor>();
+				SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			}
+		}
+	}
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		return;
+	}
+
 	// 겨냥한 칸을 다시 누르면 무른다.
 	const FCombatTargetUI& Current = mCombatUIModel->GetTarget();
 	if (Current.mIsValid == true && Current.mTile == Tile)
 	{
+		// 짚어서 칠해 둔 위협 범위도 같이 걷는다. 같은 적 재탭 = 그만 보기.
+		ClearThreatRangeView();
 		ClearCombatTargetUIData();
 		return;
 	}
@@ -1258,6 +1309,19 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 
 	mCombatUIModel->SetTarget(TargetUIData);
 	PushSkillUIData();
+
+	/*
+	 * 적을 짚으면 위협 범위를 판에 칠해 안내판(요약)과 나란히 읽히게 한다 --
+	 * 길게 눌러야만 위협을 볼 수 있으면 확인이 조작 사이에 못 끼어든다.
+	 * 아군을 짚으면 걷는다(ShowThreatRangeForTarget 내부 판정).
+	 *
+	 * 조준 중에는 건드리지 않는다. 사거리/효과 하이라이트와 겹치면 어느
+	 * 칠이 무엇인지 읽을 수 없다.
+	 */
+	if (bBrowsing == true)
+	{
+		ShowThreatRangeForTarget(SelectionTarget);
+	}
 }
 
 /**
