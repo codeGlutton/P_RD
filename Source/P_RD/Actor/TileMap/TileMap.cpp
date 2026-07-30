@@ -40,6 +40,8 @@ ATileMap::ATileMap()
 	// 타일 그리드용 인스턴스드 메시 컴포넌트 생성 및 루트에 부착
 	mTileMeshComponent = CreateDefaultSubobject<UInstancedStaticMeshComponent>(TEXT("TileMesh"));
 	mTileMeshComponent->SetupAttachment(RootComponent);
+	// 타일 인스턴스는 OnConstruction에서 매번 재생성되므로 저장 불필요 — RF_Transient 설정
+	mTileMeshComponent->SetFlags(RF_Transient);
 	// 터치 판정(타일 선택/정보 확인 트레이스)을 받기 위해 타일맵 프로파일 적용 (QueryOnly)
 	mTileMeshComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
 
@@ -399,6 +401,12 @@ void ATileMap::RefreshTileVisuals()
 			const FTransform InstanceTransform(FRotator::ZeroRotator, LocalLocation, FVector(InstanceScaleXY, InstanceScaleXY, 1.0f));
 			mTileMeshComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
 		}
+	}
+
+	// 크기가 다르면 레벨 로드 직후 등 초기화가 안 된 상태이므로 초기화 처리
+	if (mHighlights.Num() != mModel->GetWidth() * mModel->GetHeight())
+	{
+		mHighlights.Init(ETileHighlightFlag::None, mModel->GetWidth() * mModel->GetHeight());
 	}
 
 	// 새 인스턴스에 기본 구분색과 하이라이트를 다시 칠함
