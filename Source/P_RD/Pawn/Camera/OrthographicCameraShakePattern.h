@@ -55,10 +55,16 @@ public:
 	float LocationFrequencyMultiplier = 1.f;
 
 	/** Shake in the Y axis. */
+	/*
+	* @brief 카메라 좌우 흔들기
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Location)
 	FOrthographicNoiseShaker Y;
 
 	/** Shake in the Z axis. */
+	/*
+	* @brief 카메라 상하 흔들기
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Location)
 	FOrthographicNoiseShaker Z;
 
@@ -71,10 +77,18 @@ public:
 	float RotationFrequencyMultiplier = 1.f;
 
 	/** Roll shake. */
+	/*
+	* @brief 카메라 Roll 흔들기
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Rotation)
 	FOrthographicNoiseShaker Roll;
 
-	/** FOV shake. */
+	/** OrthoWidth shake. */
+	/*
+	* @brief 카메라 직교 넓이(Zoom) 흔들기
+	* @details
+	* OrthoWidth Shake를 사용하기 위해서는 반드시 CameraMovementComponent가 필요합니다.
+	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = OrthoWidth)
 	FOrthographicNoiseShaker OrthoWidth;
 
@@ -103,4 +117,16 @@ private:
 	float InitialOrthoWidthOffset;
 	/** Current perlin noise offset for OrthoWidth oscillation */
 	float CurrentOrthoWidthOffset;
+
+	float CurrentOrhoWidthValue;
+
+public:
+	/*
+	* @brif 카메라 OrthoWidth 변화량 반환
+	* @details 
+	* CameraMovementComponent에서 사용하는 함수
+	*/
+	UFUNCTION(BlueprintPure, Category = OrthoWidth)
+	float GetCurrentOrhoWidthValue() const { return CurrentOrhoWidthValue; }
+
 };

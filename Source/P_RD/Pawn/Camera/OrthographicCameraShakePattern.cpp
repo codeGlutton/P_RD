@@ -64,22 +64,12 @@ void UOrthographicCameraShakePattern::ScrubShakePatternImpl(const FCameraShakePa
 
 void UOrthographicCameraShakePattern::UpdateOrthographicNoise(float DeltaTime, FCameraShakePatternUpdateResult& OutResult)
 {
-	//OutResult.Location.X = X.Update(DeltaTime, LocationAmplitudeMultiplier, LocationFrequencyMultiplier, CurrentLocationOffset.X);
 	OutResult.Location.Y = Y.Update(DeltaTime, LocationAmplitudeMultiplier, LocationFrequencyMultiplier, CurrentLocationOffset.Y);
 	OutResult.Location.Z = Z.Update(DeltaTime, LocationAmplitudeMultiplier, LocationFrequencyMultiplier, CurrentLocationOffset.Z);
-	//UE_LOG(LogTemp, Log, TEXT("CurrentLocationOffset.X: %f"), CurrentLocationOffset.X);
-	//UE_LOG(LogTemp, Log, TEXT("CurrentLocationOffset.Y: %f"), CurrentLocationOffset.Y);
 
-
-	//OutResult.Rotation.Pitch = Pitch.Update(DeltaTime, RotationAmplitudeMultiplier, RotationFrequencyMultiplier, CurrentRotationOffset.X);
-	//OutResult.Rotation.Yaw = Yaw.Update(DeltaTime, RotationAmplitudeMultiplier, RotationFrequencyMultiplier, CurrentRotationOffset.Y);
 	OutResult.Rotation.Roll = Roll.Update(DeltaTime, RotationAmplitudeMultiplier, RotationFrequencyMultiplier, CurrentRotationOffset.Z);
-	UE_LOG(LogTemp, Log, TEXT("CurrentRotationOffset.Z: %f"), CurrentRotationOffset.Z);
 
-
-	//OutResult.FOV = FOV.Update(DeltaTime, 1.f, 1.f, CurrentFOVOffset);
-	OrthoWidth.Update(DeltaTime, 1.f, 1.f, CurrentOrthoWidthOffset);
-	//UE_LOG(LogTemp, Log, TEXT("CurrentOrthoWidthOffset: %f"), CurrentOrthoWidthOffset);
+	CurrentOrhoWidthValue = OrthoWidth.Update(DeltaTime, 1.f, 1.f, CurrentOrthoWidthOffset);
 }
 
 
