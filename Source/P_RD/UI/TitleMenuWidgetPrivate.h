@@ -4,7 +4,7 @@
  *
  * TitleMenuWidget.cpp와 TitleMenuWidget_Flow.cpp가 같은 프로필 목록/이름 규칙을 쓴다.
  * 익명 네임스페이스에 각자 정의하면 유니티 빌드에서 같은 TU로 합쳐질 때 재정의 충돌이 나므로,
- * CombatTileMapHUDWidgetPrivate.h와 같은 방식의 명명 네임스페이스 inline 정의로 한 곳에 둔다.
+ * 명명 네임스페이스 inline 정의로 위젯 이름을 한 곳에 둔다.
  */
 
 #pragma once

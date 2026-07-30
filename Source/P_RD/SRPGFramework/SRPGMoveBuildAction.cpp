@@ -229,6 +229,7 @@ void USRPGMoveBuildAction::ResetMoveBuild()
 
 void USRPGMoveBuildAction::AddWaypoint(const FTileIndex& TileIndex)
 {
+    UE_LOG(LogTemp, Warning, TEXT("[화살표] AddWaypoint 진입 tile=(%d,%d) phase=%d"), TileIndex.mX, TileIndex.mY, (int32)mMoveBuildPhase);
     checkf(mMoveBuildPhase == ESRPGMoveBuildPhase::DestSelection || mMoveBuildPhase == ESRPGMoveBuildPhase::Preview, TEXT("이동 빌드 순서 오류"));
 
     UTileMapModel* TileMap = GetTileMap();
@@ -353,6 +354,8 @@ int32 USRPGMoveBuildAction::GetRemainMovePoint() const
 void USRPGMoveBuildAction::RefreshPathPreview()
 {
     UTileMapModel* TileMap = GetTileMap();
+
+    UE_LOG(LogTemp, Warning, TEXT("[화살표] RefreshPathPreview 조각=%d"), mPathSegments.Num());
 
     // 부분경로가 없으면 프리뷰 해제
     if (mPathSegments.IsEmpty())

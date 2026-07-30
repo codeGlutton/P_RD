@@ -45,25 +45,25 @@ struct FPathArrowSet
 	/**
 	 * @brief 직진 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Straight Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Straight Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mStraightComponent;
 
 	/**
 	 * @brief 좌회전 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Turn Left Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Left Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTurnLeftComponent;
 
 	/**
 	 * @brief 우회전 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Turn Right Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Right Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTurnRightComponent;
 
 	/**
 	 * @brief 도착(끝) 타일 마커 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "End Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "End Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mEndComponent;
 
 	/**
@@ -382,7 +382,7 @@ protected:
 	/**
 	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
 
 	/**
@@ -424,13 +424,13 @@ protected:
 	/**
 	 * @brief 경유지 마커 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mWaypointComponent;
 
 	/**
 	 * @brief 도착지 원뿔 메시 컴포넌트 (기존 바닥 메시와 별개로 머리 위에서 위아래로 진동)
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mDestConeComponent;
 
 	/* 강조 표시 */
@@ -645,8 +645,9 @@ private:
 	/**
 	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
 	 * @details mTiles와 같은 1차원 인덱싱(y*Width+x), 크기 Width*Height. ISM custom data로 화면에 반영된다.
+	 *          런타임 전용이라 저장하지 않음 (단, 배열 크기는 보장해야해서 RefreshTileVisuals에서 Init 필수)
 	 */
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<ETileHighlightFlag> mHighlights;
 
 	/**

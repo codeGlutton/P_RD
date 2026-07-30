@@ -1,4 +1,5 @@
-﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
+﻿#include "Containers/Ticker.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -378,7 +379,7 @@ void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPl
 		});
 
 	// 아티팩트 추적
-	PartyArtifactComponentModel->OnChangePartyArtifactUI.AddLambda([this](const TArray<TObjectPtr<UStaticArtifactData>>& PartyArtifacts)
+	PartyArtifactComponentModel->OnChangeArtifact.AddLambda([this](const TArray<TObjectPtr<UStaticArtifactData>>& PartyArtifacts)
 		{
 			mArtifactIds.Empty(PartyArtifacts.Num());
 			for (const TObjectPtr<UStaticArtifactData>& PartyArtifact : PartyArtifacts)
@@ -849,9 +850,33 @@ void UOptionPersistData::ApplyScreenPercentage() const
 	}
 }
 
-/** @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다. */
+/**
+ * @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다.
+ *
+ * @details
+ * **그 자리에서 바꾸지 않고 다음 틱으로 미룬다.**
+ *
+ * ViewportResizedEvent 는 뷰포트가 크기를 바꾸는 "도중" 에 온다. 그때
+ * r.ScreenPercentage 를 또 건드리면 렌더 타깃이 다시 잡히는 와중에 한 번 더
+ * 다시 잡힌다. RHI 스레드는 그 사이 이미 버려진 파이프라인을 쓰려 하고,
+ * Adreno 드라이버가 vkCmdBindPipeline 에서 널을 읽어 죽었다(fault addr 0x8).
+ *
+ * 폴드를 접었다 펴거나 분할 화면으로 바꿀 때마다 재현됐고, Vulkan 과 GLES
+ * 양쪽에서 같은 모양으로 났다 -- API 문제가 아니라 타이밍 문제라는 뜻이다.
+ *
+ * 리사이즈가 끝난 뒤에 적용하면 충돌하지 않는다.
+ */
 void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
 {
-	ApplyScreenPercentage();
+	TWeakObjectPtr<UOptionPersistData> WeakThis(this);
+	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda(
+		[WeakThis](float /*DeltaTime*/)
+		{
+			if (const UOptionPersistData* Self = WeakThis.Get())
+			{
+				Self->ApplyScreenPercentage();
+			}
+			return false;   // 한 번만 돈다
+		}), 0.f);
 }
 
