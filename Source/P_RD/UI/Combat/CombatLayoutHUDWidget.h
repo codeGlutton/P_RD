@@ -608,6 +608,16 @@ private:
 	void ShowSkillDetailOverlay();
 
 	/**
+	 * @brief 이동 카드의 상세를 띄운다.
+	 *
+	 * @details
+	 * 이동에는 스킬 데이터가 없어 게임플레이에 청할 것이 없다. 대신 이미 내려와
+	 * 있는 값(지금 차례인 유닛의 남은 행동력)으로 화면이 조립한다 -- 칸당 비용을
+	 * 화면이 쥐는 것은 카드에 적는 "AP 1/칸"과 같은 자리라 새 규칙이 아니다.
+	 */
+	void ShowMoveDetailOverlay();
+
+	/**
 	 * @brief 상세 패널을 닫는다.
 	 * @param bNotifyGameplay 참이면 위협 범위 칠도 걷으라고 게임플레이에 알린다.
 	 *        턴 전환처럼 게임플레이가 스스로 걷는 자리에서는 거짓으로 닫는다.
