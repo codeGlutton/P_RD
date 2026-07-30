@@ -544,10 +544,10 @@ void UCombatLayoutHUDWidget::HandleAnyPressed()
 	// 뒤 버튼 밖에서 놓으면 클릭이 안 와서 표시가 그대로 남는다.
 	mSwallowNextCommandClick = false;
 
-	// 카드(0번 이동 제외)는 오래 누르면 상세다. 눌린 카드는 **줄임 피드백
-	// 대상과 따로** 찾는다 -- 카드 묶음(Root)이 WBP 에 없으면 그 map 에 아예
-	// 안 들어가는데, 그렇다고 설명을 못 읽을 이유는 없다.
-	for (int32 SlotIndex = 1; SlotIndex < mCommandSlots.Num(); ++SlotIndex)
+	// 카드는 오래 누르면 상세다. 눌린 카드는 **줄임 피드백 대상과 따로** 찾는다 --
+	// 카드 묶음(Root)이 WBP 에 없으면 그 map 에 아예 안 들어가는데, 그렇다고
+	// 설명을 못 읽을 이유는 없다.
+	for (int32 SlotIndex = 0; SlotIndex < mCommandSlots.Num(); ++SlotIndex)
 	{
 		UButton* CommandButton = mCommandSlots[SlotIndex].Button;
 		if (CommandButton == nullptr || CommandButton->IsPressed() == false)
@@ -581,10 +581,10 @@ void UCombatLayoutHUDWidget::HandleAnyPressed()
 }
 
 /**
- * @brief 카드를 오래 눌렀다. 그 스킬의 상세를 요청한다.
+ * @brief 카드를 오래 눌렀다. 그 카드의 상세를 띄운다.
  *
- * 상세는 SetSkillDetail 로 되돌아와 패널이 뜬다. 이어질 클릭(뗌)은 선택이
- * 아니라 놓는 동작이므로 한 번 삼킨다.
+ * 스킬 상세는 SetSkillDetail 로 되돌아와 패널이 뜬다. 이어질 클릭(뗌)은 고르는
+ * 동작이 아니라 놓는 동작이므로 한 번 삼킨다.
  */
 void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 {
@@ -593,6 +593,14 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 		return;
 	}
 	mSwallowNextCommandClick = true;
+
+	// 0번은 이동이다. 스킬이 아니라 게임플레이에 청할 것이 없으므로 화면이
+	// 이미 받아 둔 값으로 바로 조립한다.
+	if (SlotIndex == 0)
+	{
+		ShowMoveDetailOverlay();
+		return;
+	}
 	mUIModel->RequestLongPressSkill(SlotIndex - 1);
 }
 
@@ -2346,6 +2354,49 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 
 	SetPortraitCropped(mDetailIconImage, Detail.mIcon);
 	// 이 칸들은 유닛 상세의 것이다. 스킬 하나를 보는 중에는 걷는다.
+	SetDetailSkillRowShown(false);
+	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+/**
+ * @brief 이동 카드의 상세를 띄운다.
+ *
+ * @details
+ * 남은 행동력이 곧 갈 수 있는 칸 수다(칸당 1). 스킬처럼 사거리나 쿨타임이
+ * 없는 대신, 경유지로 길을 접는 조작법이 이동에만 있어서 그것을 적는다 --
+ * 판을 여러 번 찍어 돌아가는 길을 만들 수 있다는 것을 아는 사람이 없었다.
+ */
+void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
+{
+	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
+	{
+		return;
+	}
+
+	const FUnitUI* TurnUnit = FindTurnUnit();
+	const int32 Left = TurnUnit != nullptr
+		? FMath::Max(FMath::RoundToInt(TurnUnit->mMovementPoint), 0) : 0;
+
+	SetTextIfPresent(mDetailTitleText, LOCTEXT("MoveDetailTitle", "이동"));
+	SetTextIfPresent(mDetailSubtitleText, FText::FromString(
+		FString::Printf(TEXT("AP 1/칸  ·  남은 AP %d"), Left)));
+
+	FString Body = FString::Printf(
+		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다.\n지금 남은 행동력으로 최대 %d칸 갈 수 있다."), Left);
+	Body += TEXT("\n\n판을 톡 쳐서 갈 곳을 고른다. 여러 번 찍으면 그 자리가 경유지가 되어")
+		TEXT(" 찍은 차례대로 돌아간다.\n마지막으로 찍은 칸을 다시 누르면 확정하고,")
+		TEXT(" 판 밖을 누르면 마지막 경유지만 무른다.");
+	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+
+	// 카드에 그려 둔 그림을 그대로 쓴다. 이동은 상세용 그림이 따로 없다.
+	UTexture2D* MoveIcon = nullptr;
+	if (mCommandSlots.IsValidIndex(0) && mCommandSlots[0].Icon != nullptr)
+	{
+		MoveIcon = Cast<UTexture2D>(mCommandSlots[0].Icon->GetBrush().GetResourceObject());
+	}
+	SetPortraitCropped(mDetailIconImage, MoveIcon);
+
+	// 스킬 칸은 유닛 상세의 것이다.
 	SetDetailSkillRowShown(false);
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
