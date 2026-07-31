@@ -23,6 +23,7 @@ class UCombatUIModel;
 class URewardUIModel;
 class UPlayerUnitModel;
 class UStaticSkillData;
+class USRPGMoveBuildAction;
 struct FTileIndex;
 enum class ECombatInputType : uint8;
 
@@ -118,7 +119,7 @@ protected:
 	void PushCombatResultUIData(ESRPGCombatResult Result) const;
 	void PushTurnUIData() const;
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
-	void PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const;
+	void PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;
 	void PushSkillUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;

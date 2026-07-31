@@ -340,15 +340,19 @@ FTileIndex USRPGMoveBuildAction::GetLastWaypoint() const
     return mPathSegments.Last().Last();
 }
 
-int32 USRPGMoveBuildAction::GetRemainMovePoint() const
+int32 USRPGMoveBuildAction::GetPlannedMoveCost() const
 {
-    // 부분경로 하나가 사용하는 포인트 = 타일 수 - 1 (출발 타일 제외)
     int32 UsedMovePoint = 0;
     for (const TArray<FTileIndex>& Segment : mPathSegments)
     {
-        UsedMovePoint += Segment.Num() - 1;
+        UsedMovePoint += FMath::Max(Segment.Num() - 1, 0);
     }
-    return mMovePoint - UsedMovePoint;
+    return UsedMovePoint;
+}
+
+int32 USRPGMoveBuildAction::GetRemainMovePoint() const
+{
+    return FMath::Max(mMovePoint - GetPlannedMoveCost(), 0);
 }
 
 void USRPGMoveBuildAction::RefreshPathPreview()

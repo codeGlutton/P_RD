@@ -110,6 +110,10 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	// 방패 강타를 고른 상태로 둔다. 선택 강조가 어떻게 읽히는지가 평가
 	// 항목이고, 10안은 아예 "조준 중"을 그리는 배치다.
 	mUIModel->SetSelectedSkill(1);
+	FCombatPendingActionUI PendingAction;
+	PendingAction.mType = ECombatPendingActionType::Skill;
+	PendingAction.mActionPointCost = Skills[1].mActionPointCost;
+	mUIModel->SetPendingAction(PendingAction);
 
 	// 가짜 턴
 	FTurnUI Turn;
