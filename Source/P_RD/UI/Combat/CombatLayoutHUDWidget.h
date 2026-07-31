@@ -710,11 +710,10 @@ private:
 	 * 카드를 고르면 그 몫만큼 칸이 숨쉬듯 빛난다. 쓰면 뒤부터 없어지므로
 	 * 뒤에서부터 빛낸다.
 	 *
-	 * **이동은 아직 한 칸 값만 안다.** 카드에 적힌 값(mActionPointCost)이
-	 * 계약에 있는 전부다 -- 몇 칸을 갈지에 따라 달라지는 값은 게임플레이만
-	 * 아는 것이라, 그 칸이 생기면 여기 대신 넣으면 된다.
+	 * 스킬 비용과 이동 경로 비용은 게임플레이가 pending action으로 내려 준다.
+	 * 화면은 경로나 스킬 데이터를 다시 계산하지 않는다.
 	 */
-	int32 GetSelectedSkillCost() const;
+	int32 GetPendingActionCost() const;
 	void RefreshPendingAPGlow(float DeltaTime);
 
 	/** @brief 한 번 숨쉬는 데 걸리는 빠르기(라디안/초). */

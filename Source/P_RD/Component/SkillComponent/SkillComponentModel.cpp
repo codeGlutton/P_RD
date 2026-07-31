@@ -419,6 +419,15 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
+	// 구독자가 없으면 배리어를 잡을 사람이 없어 스킬이 그 자리에서 끝난다.
+	// 어떤 유닛/태그에서 그러는지 소리 내어 남긴다 -- 시뮬레이션(심)은 원래
+	// 구독자가 없는 것이 정상이라 라이브에서만 문제다.
+	if (OwnerUnitModel->OnPlayApplyAnimationUI.IsBound() == false)
+	{
+		UE_LOG(LogRD, Warning, TEXT("%s: 시전 연출 구독자 없음(태그 %s) — 배리어가 즉시 풀림"),
+			*OwnerUnitModel->GetName(), *MotionLayer.mApplyMotionTag.ToString());
+	}
+
 	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MoveTemp(TriggerCallback), MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }

@@ -237,6 +237,7 @@ void ACombatGameMode::InitializeRoom()
 	mGoldRewardClaimed = false;
 	mExpRewardClaimed = false;
 	mClaimedRewardChoiceIndices.Reset();
+	mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -284,10 +285,12 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		mCombatUIModel->OnBeginCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
@@ -296,6 +299,7 @@ void ACombatGameMode::InitializeRoom()
 		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
 		// 무엇을 조종하는 중인지 알 수 없다.
 		mInspectedUnitId = INDEX_NONE;
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -310,9 +314,11 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
@@ -324,6 +330,9 @@ void ACombatGameMode::InitializeRoom()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
+		// 성공 이동은 실제 최종 AP와 같은 값으로 유지되고, 취소 이동은 실제
+		// 차감이 없으므로 원래 AP로 돌아간다.
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
@@ -472,7 +481,7 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		PushMoveBuildUIData(Phase);
+		PushMoveBuildUIData(Action, Phase);
 		});
 
 	return CommandRouterModel->SummitCommand(MoveSelectCommand);
@@ -539,12 +548,20 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		ConfirmTargetTile();
 		break;
 	case ECombatInputType::Cancel:
-		// 고른 스킬이 있으면 그것부터 무른다. 같은 스킬을 다시 고르는 것이
-		// 곧 취소이고, 그래야 판에 칠해 둔 사거리도 같이 지워진다.
+		// 현재 빌드와 같은 명령을 다시 보내 취소한다. 이동 중 선택 스킬 index를
+		// 사용하면 엉뚱한 스킬이 열릴 수 있으므로 pending action 종류를 따른다.
 		if (mCombatUIModel != nullptr
 			&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
 		{
-			SelectSkill(mCombatUIModel->GetSelectedSkillIndex());
+			const FCombatPendingActionUI& PendingAction = mCombatUIModel->GetPendingAction();
+			if (PendingAction.mType == ECombatPendingActionType::Move)
+			{
+				SelectMove();
+			}
+			else if (PendingAction.mType == ECombatPendingActionType::Skill)
+			{
+				SelectSkill(mCombatUIModel->GetSelectedSkillIndex());
+			}
 		}
 		// 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
 		ClearCombatTargetUIData();
@@ -839,6 +856,14 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+	const int32 UnitId = Unit->GetModelId();
+
+	Unit->OnMoveStepArrivedUI.AddWeakLambda(
+		this,
+		[this, UnitId](const int32 CompletedStepCount, const int32 /*TotalStepCount*/)
+		{
+			mCombatUIModel->SetMoveAPStepPresentation(UnitId, CompletedStepCount);
+		});
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -869,6 +894,9 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	Unit->OnMoveStepArrivedUI.RemoveAll(this);
+	mCombatUIModel->ClearMoveAPStepPresentation(Unit->GetModelId());
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
@@ -920,6 +948,7 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	{
 	case ESRPGSkillBuildPhase::None:
 	case ESRPGSkillBuildPhase::Build:
+		mCombatUIModel->SetPendingAction(FCombatPendingActionUI());
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGSkillBuildPhase::AimSelection:
@@ -931,7 +960,7 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	}
 }
 
-void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
+void ACombatGameMode::PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -939,12 +968,25 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	{
 	case ESRPGMoveBuildPhase::None:
 	case ESRPGMoveBuildPhase::Build:
+		mCombatUIModel->SetPendingAction(FCombatPendingActionUI());
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGMoveBuildPhase::DestSelection:
+		{
+			FCombatPendingActionUI PendingAction;
+			PendingAction.mType = ECombatPendingActionType::Move;
+			mCombatUIModel->SetPendingAction(PendingAction);
+		}
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGMoveBuildPhase::Preview:
+		{
+			FCombatPendingActionUI PendingAction;
+			PendingAction.mType = ECombatPendingActionType::Move;
+			PendingAction.mActionPointCost = Action != nullptr
+				? Action->GetPlannedMoveCost() : 0;
+			mCombatUIModel->SetPendingAction(PendingAction);
+		}
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
@@ -1226,6 +1268,15 @@ void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	mCombatUIModel->SetSelectedSkill(SkillIndex);
+
+	FCombatPendingActionUI PendingAction;
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	if (Skills.IsValidIndex(SkillIndex))
+	{
+		PendingAction.mType = ECombatPendingActionType::Skill;
+		PendingAction.mActionPointCost = Skills[SkillIndex].mActionPointCost;
+	}
+	mCombatUIModel->SetPendingAction(PendingAction);
 }
 
 /**
