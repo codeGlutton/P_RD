@@ -53,6 +53,8 @@ class USRPGMoveBuildAction : public USRPGAction
 
 public:
 	USRPGMoveBuildAction();
+	/** @brief 현재 선택한 전체 경로가 소비할 AP. 이동 한 칸당 1을 사용한다. */
+	int32 GetPlannedMoveCost() const;
 
 	/* FSRPGAction 상속 */
 protected:

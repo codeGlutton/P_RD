@@ -43,6 +43,25 @@ enum class ECombatBuildPhaseUI : uint8
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
 };
 
+/** @brief 확정 전 AP 소모 표시가 어떤 행동을 가리키는지 구분한다. */
+UENUM(BlueprintType)
+enum class ECombatPendingActionType : uint8
+{
+	None,
+	Move,
+	Skill
+};
+
+/** @brief 현재 프리뷰 중인 행동의 AP 예정 소모 데이터. */
+USTRUCT(BlueprintType)
+struct FCombatPendingActionUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) ECombatPendingActionType mType = ECombatPendingActionType::None;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+};
+
 /**
  * @brief 플로팅 로그 아이콘의 "의미". 실제 어떤 Texture2D를 쓸지는 HUD(ResolveFloatingLogIcon)가 고른다.
  * @details 게임플레이는 "이건 HP다 / 독이다"라는 의미만 정하고 그림은 UI가 정한다(디자인 요소는 UI 소관).
