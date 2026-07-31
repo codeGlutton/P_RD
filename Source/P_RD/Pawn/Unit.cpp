@@ -104,34 +104,53 @@ void AUnit::BindModel(UObjectModel* Model)
 
 		// 스킬 Effect 타격 연출 구독
 		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, FOnRequestReceiveAnimation TriggerCallback, FGameplayTag ApplyMotionTag, ETileActorDirection LocalDirection) {
-			if (mMeshComp != nullptr)
+			/*
+			 * 어느 단계에서든 몽타쥬를 못 틀면 조용히 나가면 안 된다.
+			 *
+			 * 조용히 나가면 배리어가 그 자리에서 풀려 스킬 절차 전체가 한
+			 * 프레임에 끝난다 -- 치는 연출 없이 숫자만 튀고 카드가 곧장
+			 * 돌아온다. 못 튼 이유(메시 없음·다른 AnimInstance·태그 미배치)를
+			 * 소리 내어 남기고, 이 구독자가 배리어를 들고 있는 동안 커밋해서
+			 * 피격 연출이 살아 있는 배리어를 받게 한다 -- 최소한 맞는 쪽
+			 * 연출이 끝날 때까지는 스킬이 기다린다.
+			 */
+			UBoardActorAnimInstance* BoardActorAnimInst = mMeshComp != nullptr
+				? Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance()) : nullptr;
+			if (BoardActorAnimInst == nullptr)
 			{
-				UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance());
-				if (BoardActorAnimInst != nullptr)
-				{
-					/* 스킬 연출 유지를 위한 Barrier */
-
-					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
-					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier, TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
-						TriggerCallback.ExecuteIfBound(nullptr);
-						});
-					BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent));
-
-					/* 피격 적용 대기를 위한 Barrier */
-
-					FBoardActorAnimationEvent HitEvent;
-					HitEvent.OnTriggerAnimationEvent.AddLambda([TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, const FEventTriggerPayload* Payload) {
-						const FApplyEventTriggerPayload* ApplyPayload = nullptr;
-						if (Payload != nullptr && Payload->GetScriptStruct() == FApplyEventTriggerPayload::StaticStruct())
-						{
-							ApplyPayload = reinterpret_cast<const FApplyEventTriggerPayload*>(Payload);
-						}
-						TriggerCallback.ExecuteIfBound(ApplyPayload);
-						});
-					HitEvent.mIsOneTimeEvent = true;
-					BoardActorAnimInst->RegisterTagEventOnMontage(AnimationTags::Animation_Event_Hit, MoveTemp(HitEvent));
-				}
+				UE_LOG(LogRD, Warning, TEXT("%s: 시전 연출 불가(메시 또는 BoardActorAnimInstance 없음) — 연출 없이 즉시 커밋"),
+					*GetName());
+				TriggerCallback.ExecuteIfBound(nullptr);
+				return;
 			}
+
+			/* 스킬 연출 유지를 위한 Barrier */
+
+			FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
+			OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier, TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
+				TriggerCallback.ExecuteIfBound(nullptr);
+				});
+			if (BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent)) == false)
+			{
+				UE_LOG(LogRD, Warning, TEXT("%s: 시전 몽타쥬 없음(태그 %s, 방향 %d) — 연출 없이 즉시 커밋"),
+					*GetName(), *ApplyMotionTag.ToString(), StaticCast<int32>(LocalDirection));
+				TriggerCallback.ExecuteIfBound(nullptr);
+				return;
+			}
+
+			/* 피격 적용 대기를 위한 Barrier */
+
+			FBoardActorAnimationEvent HitEvent;
+			HitEvent.OnTriggerAnimationEvent.AddLambda([TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, const FEventTriggerPayload* Payload) {
+				const FApplyEventTriggerPayload* ApplyPayload = nullptr;
+				if (Payload != nullptr && Payload->GetScriptStruct() == FApplyEventTriggerPayload::StaticStruct())
+				{
+					ApplyPayload = reinterpret_cast<const FApplyEventTriggerPayload*>(Payload);
+				}
+				TriggerCallback.ExecuteIfBound(ApplyPayload);
+				});
+			HitEvent.mIsOneTimeEvent = true;
+			BoardActorAnimInst->RegisterTagEventOnMontage(AnimationTags::Animation_Event_Hit, MoveTemp(HitEvent));
 			});
 
 		// 스킬 Effect 피격 연출 구독
