@@ -212,6 +212,8 @@ private:
 	*/
 	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
 
+	FVector ClampLocationWithinRotatedBox(const FVector& WorldLocation);
+
 	/*
 	* @brief 카메라의 위치와 OrthoWidth의 크기를 범위에서 벗어나지 못하게 합니다.
 	*/
