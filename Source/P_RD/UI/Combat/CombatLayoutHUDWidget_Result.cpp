@@ -302,6 +302,13 @@ void UCombatLayoutHUDWidget::HandleWorldMapCloseRequested()
  */
 void UCombatLayoutHUDWidget::SetCombatControlsShown(const bool bShown)
 {
+	// 상세 패널은 뷰포트에 따로 얹혀 있어 HUD 를 접어도 같이 안 접힌다.
+	// 결과 화면 위에 남으면 안 되니 여기서 닫는다.
+	if (bShown == false)
+	{
+		HideDetailOverlay(/*bNotifyGameplay=*/false);
+	}
+
 	// 결과 영상과 보상 화면은 별개 위젯으로 화면 위에 얹힌다. 겹 하나하나를
 	// 접는 것보다 HUD 를 통째로 접는 편이 확실하다 -- 카드·판·아군 칸이
 	// 저마다 제 조건으로 다시 켜지는 일이 없다.

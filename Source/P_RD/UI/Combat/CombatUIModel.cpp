@@ -20,6 +20,12 @@ void UCombatUIModel::RequestLongPressUnit(int32 UnitId)
 	OnCombatCommand.Broadcast(ECombatInputType::LongPressUnit, UnitId);
 }
 
+/** @brief 상세창에 뜬 유닛의 스킬 상세 요청을 SkillIndex payload로 전달한다. */
+void UCombatUIModel::RequestInspectUnitSkill(int32 SkillIndex)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::InspectUnitSkill, SkillIndex);
+}
+
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {
@@ -96,11 +102,13 @@ void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
-/** @brief 유닛 상세 스냅샷을 교체하고 Unit 도메인 갱신을 알린다. */
+/** @brief 유닛 상세 스냅샷을 교체하고 UnitDetail 도메인 갱신을 알린다. */
+// Unit 도메인은 HP 변경마다 오므로, 상세는 전용 도메인으로 알려야 상세 패널이
+// "이번에 새로 요청된 상세"에만 반응할 수 있다.
 void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 {
 	mUnitDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+	OnUIChanged.Broadcast(ECombatUIDomain::UnitDetail);
 }
 
 /** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
@@ -117,11 +125,11 @@ void UCombatUIModel::SetSelectedSkill(int32 SelectedIndex)
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
-/** @brief 스킬 상세 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
+/** @brief 스킬 상세 스냅샷을 교체하고 SkillDetail 도메인을 갱신한다. */
 void UCombatUIModel::SetSkillDetail(const FSkillDetailUI& Detail)
 {
 	mSkillDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+	OnUIChanged.Broadcast(ECombatUIDomain::SkillDetail);
 }
 
 

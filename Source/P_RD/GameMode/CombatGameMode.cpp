@@ -502,6 +502,9 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 {
 	switch (Type)
 	{
+	// 스킬/이동을 골라도 켜 둔 위협 범위는 걷지 않는다. "저기까지 오는데
+	// 어디로 피하지"를 보면서 고르라고 켜 둔 것이다 -- 켜고 끄는 것은 적
+	// 타일 탭만 한다. 턴이 끝나면 적이 움직여 칠이 낡으므로 그때는 걷는다.
 	case ECombatInputType::SelectSkill:
 		SelectSkill(IntPayload);
 		break;
@@ -509,11 +512,25 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		SelectMove();
 		break;
 	case ECombatInputType::EndTurn:
+		ClearThreatRangeView();
 		EndTurn();
 		break;
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::InspectUnitSkill:
+		// 상세창의 스킬 칸을 탭했다. 기준은 그 상세창에 뜬 유닛이다.
+		PushUnitSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::LongPressUnit:
+		// UI 가 상세 패널을 닫았다는 신호로 INDEX_NONE 을 보낸다. 패널과 함께
+		// 뜬 위협 범위 칠도 같이 걷는다. 유닛 상세 요청 자체는 월드 롱프레스
+		// (HandleCombatWorldTouch)가 트레이스로 처리하므로 여기서는 닫기만 맡는다.
+		if (IntPayload == INDEX_NONE)
+		{
+			ClearThreatRangeView();
+		}
 		break;
 	case ECombatInputType::InspectUnit:
 		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
@@ -770,9 +787,69 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
 		PushCombatTargetDetailUIData(Target);
+		ShowThreatRangeForTarget(Target);
 		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
+}
+
+void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap == nullptr)
+	{
+		return;
+	}
+
+	IObjectView* ObjectView = Cast<IObjectView>(Target);
+	UUnitModel* UnitModel = ObjectView != nullptr ? ObjectView->GetModel<UUnitModel>() : nullptr;
+	if (UnitModel == nullptr || UnitModel->IsPlayerUnitModel() == true)
+	{
+		// 아군/장애물에는 위협 범위가 없다. 이전 적의 칠만 지운다.
+		TileMap->ClearThreatRange();
+		return;
+	}
+
+	USkillComponentModel* SkillComponentModel = UnitModel->GetSkillComponentModel();
+	UAttributeSetComponentModel* AttributeSetComponentModel = UnitModel->GetAttributeComponentModel();
+	if (SkillComponentModel == nullptr || AttributeSetComponentModel == nullptr)
+	{
+		TileMap->ClearThreatRange();
+		return;
+	}
+
+	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
+	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
+	TArray<const UStaticSkillData*> SkillDatas;
+	SkillDatas.Init(nullptr, Skills.Num());
+	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+	{
+		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
+		{
+			SkillDatas[Index] = Skills[Index].mData;
+		}
+	}
+
+	const int32 ActionPoint = FMath::Max(
+		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute()),
+		0
+	);
+
+	TArray<FTileIndex> MoveTiles;
+	TArray<FTileIndex> AttackTiles;
+	TileMap->GetThreatRanges(UnitModel->GetTileTransform().mIndex, ActionPoint, SkillDatas, UnitModel, OUT MoveTiles, OUT AttackTiles);
+	TileMap->SetThreatRange(MoveTiles, AttackTiles);
+}
+
+void ACombatGameMode::ClearThreatRangeView() const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap != nullptr)
+	{
+		TileMap->ClearThreatRange();
+	}
 }
 
 void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
@@ -1013,6 +1090,19 @@ bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitMo
 		return true;
 	}
 
+	/*
+	 * 조준 중이 아닐 때의 겨냥은 "살펴보기"다(적 안내판·위협 범위 표시용).
+	 *
+	 * 아직 아무 스킬도 고르지 않았는데 그 적까지의 거리로 카드를 잠그면,
+	 * 멀리 있는 적을 확인만 해도 스킬 전부가 잠긴 것처럼 보인다 -- 위협
+	 * 범위를 보면서 스킬을 고르라고 만든 기능이 스킬 선택을 막았다.
+	 * 사거리 판정은 실제로 조준에 들어간 뒤에만 한다.
+	 */
+	if (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None)
+	{
+		return true;
+	}
+
 	const FTileIndex& Here = PlayerUnitModel->GetTileTransform().mIndex;
 	const int32 Distance = FMath::Max(
 		FMath::Abs(Target.mTile.mX - Here.mX),
@@ -1206,10 +1296,49 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 		return;
 	}
 
+	/*
+	 * 조준 중이 아닌 탭은 "살펴보기"다.
+	 *
+	 * 유닛을 짚었을 때만 겨냥을 움직인다. 빈 칸을 겨냥으로 세우면 카드 사용
+	 * 가능 판정이 그 칸 사거리 기준으로 돌아서, 행동력이 멀쩡한데도 스킬이
+	 * 잠겨 보인다 -- 카드를 펴려고 판을 누른 손이 카드를 잠갔다.
+	 *
+	 * 빈 칸 탭은 살펴보기를 **건드리지 않는다.** 위협 범위와 겨냥은 그 적을
+	 * 다시 누르기 전까지 남는다 -- 카드를 펴려고 판을 누른 손이 봐 둔 위협을
+	 * 지우면, 볼 때마다 다시 짚어야 한다.
+	 *
+	 * 조준 중에는 빈 칸도 의미가 있다(이동 목적지, 바닥 조준). 그쪽은 기존
+	 * 규칙 그대로 둔다.
+	 */
+	const bool bBrowsing = mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None;
+	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+
+	// 유닛이 서 있는 타일을 짚은 것은 유닛을 짚은 것이다. 트레이스가 유닛
+	// 메시 대신 발밑 타일에 먼저 맞아도 뜻은 같다 -- 손가락은 칸을 누른다.
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+		if (TileMap != nullptr)
+		{
+			if (UUnitModel* OccupantUnitModel = TileMap->GetActorOnTile<UUnitModel>(Tile))
+			{
+				HitActor = OccupantUnitModel->GetView<AActor>();
+				SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			}
+		}
+	}
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		return;
+	}
+
 	// 겨냥한 칸을 다시 누르면 무른다.
 	const FCombatTargetUI& Current = mCombatUIModel->GetTarget();
 	if (Current.mIsValid == true && Current.mTile == Tile)
 	{
+		// 짚어서 칠해 둔 위협 범위도 같이 걷는다. 같은 적 재탭 = 그만 보기.
+		ClearThreatRangeView();
 		ClearCombatTargetUIData();
 		return;
 	}
@@ -1231,6 +1360,19 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 
 	mCombatUIModel->SetTarget(TargetUIData);
 	PushSkillUIData();
+
+	/*
+	 * 적을 짚으면 위협 범위를 판에 칠해 안내판(요약)과 나란히 읽히게 한다 --
+	 * 길게 눌러야만 위협을 볼 수 있으면 확인이 조작 사이에 못 끼어든다.
+	 * 아군을 짚으면 걷는다(ShowThreatRangeForTarget 내부 판정).
+	 *
+	 * 조준 중에는 건드리지 않는다. 사거리/효과 하이라이트와 겹치면 어느
+	 * 칠이 무엇인지 읽을 수 없다.
+	 */
+	if (bBrowsing == true)
+	{
+		ShowThreatRangeForTarget(SelectionTarget);
+	}
 }
 
 /**
@@ -1248,7 +1390,7 @@ void ACombatGameMode::ClearCombatTargetUIData()
 	PushSkillUIData();
 }
 
-void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target)
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -1263,8 +1405,10 @@ void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target
 	UnitDetailUIData.mName = BoardActorModel->GetBoardActorDisplayName();
 	UnitDetailUIData.mLevel = BoardActorModel->GetBoardActorLevel();
 	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
-	
+
 	UUnitModel* UnitModel = ObjectView->GetModel<UUnitModel>();
+	// 상세창 스킬 칸 탭을 되짚을 기준이다. 유닛이 아닌 것(장애물)을 골랐으면 비운다.
+	mDetailUnitModel = UnitModel;
 	if (UnitModel != nullptr)
 	{
 		UPassiveComponentModel* PassiveComponentModel = UnitModel->GetPassiveComponentModel();
@@ -1273,39 +1417,94 @@ void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target
 		{
 			UnitDetailUIData.mPassiveDescriptions.Add(Passive->GetStaticData()->mDescription);
 		}
+
+		// 들고 있는 스킬을 칸으로 내린다. 쿨타임이 돌든 안 돌든 다 내린다 --
+		// 상세창은 "무엇을 할 수 있는 유닛인가"를 보는 곳이고, 지금 쓸 수
+		// 있는지는 카드 레일이 말한다.
+		if (USkillComponentModel* SkillComponentModel = UnitModel->GetSkillComponentModel())
+		{
+			const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
+			for (int32 Index = 0; Index < SkillEntries.Num(); ++Index)
+			{
+				const UStaticSkillData* StaticSkillData = SkillEntries[Index].IsValid() == true
+					? SkillEntries[Index].mData.Get() : nullptr;
+				if (StaticSkillData == nullptr)
+				{
+					continue;
+				}
+				FUnitDetailSkillUI& SkillIcon = UnitDetailUIData.mSkills.AddDefaulted_GetRef();
+				SkillIcon.mSkillIndex = Index;
+				SkillIcon.mName = StaticSkillData->mName;
+				SkillIcon.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+			}
+		}
 	}
 	mCombatUIModel->SetUnitDetail(UnitDetailUIData);
+}
+
+void ACombatGameMode::PushUnitSkillDetailUIData(int32 SkillIndex) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	// 상세창이 닫힌 뒤 늦게 온 탭이거나 유닛이 죽어 사라졌을 수 있다.
+	const UUnitModel* UnitModel = mDetailUnitModel.Get();
+	if (UnitModel == nullptr)
+	{
+		return;
+	}
+
+	FSkillDetailUI SkillDetailUIData;
+	FillSkillDetailUIData(UnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
+	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
+}
+
+void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponentModel,
+	int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const
+{
+	OutDetail.mSkillIndex = SkillIndex;
+	if (SkillComponentModel == nullptr)
+	{
+		return;
+	}
+
+	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
+	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
+	if (StaticSkillData == nullptr)
+	{
+		return;
+	}
+
+	OutDetail.mName = StaticSkillData->mName;
+	OutDetail.mDescription = StaticSkillData->mDescription;
+	OutDetail.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+	OutDetail.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+	OutDetail.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
+	OutDetail.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+	OutDetail.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
+	OutDetail.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
+	OutDetail.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
 }
 
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
+	// 카드 레일(PushSkillUIData)과 같은 유닛을 봐야 한다. 들여다보는 유닛이
+	// 있으면 그쪽, 없으면 지금 차례인 유닛 -- 0번으로 고정하면 다른 용병의
+	// 카드를 길게 눌렀는데 기사의 스킬 설명이 뜬다.
+	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = GetTurnPlayerUnitModel();
+	}
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = GetPlayerUnitModel(0);
+	}
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
-
 	FSkillDetailUI SkillDetailUIData;
-	SkillDetailUIData.mSkillIndex = SkillIndex;
-
-	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
-	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
-	if (StaticSkillData != nullptr)
-	{
-		SkillDetailUIData.mName = StaticSkillData->mName;
-		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
-		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
-		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
-		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
-		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
-	}
-
+	FillSkillDetailUIData(PlayerUnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
 }
 

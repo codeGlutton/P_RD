@@ -25,7 +25,11 @@ enum class ECombatUIDomain : uint8
 	Turn,
 	Queue,
 	Equipment,
-	Meta       // 돈/경험치 등 플레이어 메타
+	Meta,       // 돈/경험치 등 플레이어 메타
+	// 상세 스냅샷은 목록 갱신(Unit/Skill)과 분리해 알린다. Unit은 HP 변경마다
+	// 오므로, 같은 도메인에 실으면 롱프레스 상세 패널이 HP 갱신마다 열린다.
+	UnitDetail,
+	SkillDetail
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
@@ -223,6 +227,22 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mStatusEffects;
 };
 
+/** @brief 유닛 상세창에 늘어놓는 스킬 한 칸. 탭하면 그 스킬의 상세로 넘어간다. */
+// UI 필요값:
+// - mSkillIndex: 탭했을 때 되돌려 보낼 왕복 식별자. **그 상세창에 뜬 유닛의** 스킬 배열 기준이다
+//                (카드 레일의 FSkillUI.mSkillIndex와 같은 배열이 아니다 — 적 스킬일 수도 있다).
+// - mName: 그림이 없을 때 대신 적을 글자. 손가락을 올려 둘 때의 안내에도 쓴다.
+// - mIcon: 칸에 그릴 그림.
+USTRUCT(BlueprintType)
+struct FUnitDetailSkillUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+};
+
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
 // 이 struct는 "상세 패널에만 추가로 필요한 값"만 담는다.
 // HP/MaxHP/AttackFactor 같은 라이브 전투 스탯은 여기서 중복 보관하지 않고,
@@ -242,6 +262,8 @@ struct FUnitDetailUI
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
 	UPROPERTY(BlueprintReadOnly) TArray<FText> mPassiveDescriptions;
+	/** @brief 이 유닛이 들고 있는 스킬 칸들. 탭하면 RequestInspectUnitSkill로 상세를 청한다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailSkillUI> mSkills;
 };
 
 /** @brief 스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울. */
