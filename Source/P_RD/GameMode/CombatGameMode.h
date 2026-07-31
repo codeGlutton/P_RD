@@ -17,7 +17,7 @@
 
 class USRPGTurnContext;
 class UUnitModel;
-class IBoardSelectionTarget;
+class IBoardSelectionTargetView;
 
 class UCombatUIModel;
 class URewardUIModel;
@@ -107,7 +107,7 @@ protected:
 	void PushSkillUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
-	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const;
+	void PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target) const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 	void PushEquipmentUIData() const;

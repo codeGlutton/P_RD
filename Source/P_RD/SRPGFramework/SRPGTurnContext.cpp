@@ -11,7 +11,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
-#include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "Actor/BoardActor/BoardSelectionTargetView.h"
 #include "Pawn/UnitModel.h"
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
@@ -77,7 +77,7 @@ ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInst
 			FTileIndex TileIndex = FTileIndex::Invalid;
 			GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileAnyTrace, WorldTraceCommand.mScreenPosition, OUT HitActor, OUT TileIndex);
 
-			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			IBoardSelectionTargetView* SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)
 			{
 				WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);

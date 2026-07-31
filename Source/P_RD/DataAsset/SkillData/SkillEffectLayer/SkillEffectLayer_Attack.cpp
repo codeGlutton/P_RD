@@ -1,6 +1,6 @@
-#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
+﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_MultiplyCompound.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 
@@ -11,51 +11,49 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel) const
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
+TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
 
-    TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDamage;
-    AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-}
+    TArray<FActiveTacticalEffectHandle> EffectHandles;
 
-void FSkillEffectLayer_Attack::ClearPointEffect(IBoardCombatTarget* ActorModel) const
-{
-    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
-    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-    AttributeSetComponentModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetAttackPointAttribute(), ETacticalModOp::Override, 0.f);
-}
-
-FActiveTacticalEffectHandle FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
-{
-    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
-    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-
-    FActiveTacticalEffectHandle EffectHandle;
-
-    /* 포인트를 Factor에 임시 추가 */
+    /* 기본 데미지를 Factor에 임시 추가 */
     {
+        const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(AttributeSetComponentModel);
+
+        int32 SkillDamage = RandomStream.RandRange(mMinDamage, mMaxDamage);
+        const float CriticalRandValue = RandomStream.FRand() * 100.f;
+        const bool IsCritical = CriticalRandValue < AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
+
+        if (IsCritical == true)
+        {
+            SkillDamage = mMaxDamage;
+
+            TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_MultiplyCompound::StaticClass(), EffectContext);
+            EffectSpec->mDynamicMagnitude = 1.5;
+            EffectHandles.Add(AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec));
+        }
+
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackPointAttribute());
-        EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+        EffectSpec->mDynamicMagnitude = SkillDamage;
+        EffectHandles.Add(AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec));
     }
 
-    return EffectHandle;
+    return EffectHandles;
 }
 
-void FSkillEffectLayer_Attack::ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const
+void FSkillEffectLayer_Attack::ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     /* 포인트를 Factor에서 제거 */
+    for (FActiveTacticalEffectHandle& Handle : Handles)
     {
         AttributeSetComponentModel->RemoveActiveTacticalEffect(Handle);
     }
@@ -89,8 +87,9 @@ void FSkillEffectLayer_Attack::CommitEffect(const FSkillEffectCommitParams& Para
 FText FSkillEffectLayer_Attack::MakeDescription() const
 {
 	return FText::Format(
-		LOCTEXT("AttackDesc", "대상에게 {0}의 데미지를 입힙니다."),
-		FText::AsNumber(mDamage)
+		LOCTEXT("AttackDesc", "대상에게 {0}~{1}의 데미지를 입힙니다."),
+		FText::AsNumber(mMinDamage),
+		FText::AsNumber(mMaxDamage)
 	);
 }
 

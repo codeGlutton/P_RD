@@ -50,11 +50,14 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Hit_DeBuff);
 
 
-
-
 	/* 애니메이션 이벤트 타입 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Hit);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_HitLogic);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_HitAnimation);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_HitVFX);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_CameraZoom);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_CameraShake);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Event_Skill_TimeScale);
 }
 
 /**

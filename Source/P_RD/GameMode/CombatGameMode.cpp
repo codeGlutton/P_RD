@@ -41,7 +41,7 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "Simulation/Logger/EventLogger.h"
 
-#include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "Actor/BoardActor/BoardSelectionTargetView.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
@@ -322,8 +322,8 @@ void ACombatGameMode::InitializeRoom()
 		PushSkillUIData();
 		});
 
-	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+	SkillComponentModel->OnEndPhaseLayerUI.AddWeakLambda(this, [this](int32 PhaseIndex) {
+		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(PhaseIndex);
 		});
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
@@ -593,7 +593,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
 	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
-	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTargetView* Target) {
 		PushCombatTargetDetailUIData(Target);
 		});
 
@@ -823,7 +823,7 @@ void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
 	mCombatUIModel->SetSelectedSkill(SkillIndex);
 }
 
-void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 

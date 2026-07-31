@@ -71,7 +71,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             MarkActionCompleted(ESRPGActionResult::Succeeded);
             });
 
-        SkillCompModel->ActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, MoveTemp(Callback));
+        SkillCompModel->ForcedActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, MoveTemp(Callback));
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }

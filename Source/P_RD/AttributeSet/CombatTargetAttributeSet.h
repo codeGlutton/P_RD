@@ -33,15 +33,11 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, Defense)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, Movement)
 
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, AttackPoint)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, HealPoint)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, DefensePoint)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, MovementPoint)
-
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, AttackFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, HealFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, DefenseFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, MovementFactor)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, CriticalFactor)
 
 	/* Instant로 즉각 적용되는 Attribute 값 */
 protected:
@@ -59,21 +55,6 @@ protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Movement;
 
-	/* 임시적으로 패시브들이 스냅샷 참고하라고 넣어두는 기본 값 */
-protected:
-	// @brief 스킬 모션 동안만 유지되는 기본 공격 포인트 (스킬 기본 공격량과 주사위 계수 합산 값)
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData AttackPoint;
-	// @brief 스킬 모션 동안만 유지되는 기본 회복 포인트 (스킬 기본 회복량과 주사위 계수 합산 값)
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData HealPoint;
-	// @brief 스킬 모션 동안만 유지되는 기본 방어 획득 포인트 (스킬 기본 방어 획득량과 주사위 계수 합산 값)
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData DefensePoint;
-	// @brief 스킬 모션 동안만 유지되는 기본 행동력 획득 포인트 (스킬 기본 움직임 획득량과 주사위 계수 합산 값)
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData MovementPoint;
-
 	/* 특정 기간적으로 추가되는 반영 스텟들 */
 protected:
 	// @brief 추가 공격력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
@@ -88,5 +69,8 @@ protected:
 	// @brief 추가 행동력 휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MovementFactor;
+	// @brief 크리티컬 확률 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData CriticalFactor;
 };
 

@@ -2,22 +2,26 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotify_ConditionalPlayNiagaraEffect)
 
-UAnimNotify_ConditionalPlayNiagaraEffect::UAnimNotify_ConditionalPlayNiagaraEffect()
+FLinearColor UAnimNotify_ConditionalPlayNiagaraEffect::GetEditorColor()
 {
+	FLinearColor Color = Super::GetEditorColor() * 0.5f;
+	Color.A = 255;
+
+	return Color;
 }
 
 UFXSystemComponent* UAnimNotify_ConditionalPlayNiagaraEffect::SpawnEffect(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	/* 조건 검사 후 이펙트 재생 */
 
-	if (ShouldPlayEffect(MeshComp) == false)
+	if (ShouldPlayNotify(MeshComp) == false)
 	{
 		return nullptr;
 	}
 	return Super::SpawnEffect(MeshComp, Animation);
 }
 
-bool UAnimNotify_ConditionalPlayNiagaraEffect::ShouldPlayEffect(const USkeletalMeshComponent* MeshComp) const
+bool UAnimNotify_ConditionalPlayNiagaraEffect::ShouldPlayNotify(const USkeletalMeshComponent* MeshComp) const
 {
 	if (MeshComp == nullptr)
 	{

@@ -14,9 +14,9 @@
 class USRPGAction;
 
 struct FEquippedEntry;
-class IBoardSelectionTarget;
+class IBoardSelectionTargetView;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTargetView* /*Target*/);
 
 /**
  * @brief  사용자 입력 명령 객체

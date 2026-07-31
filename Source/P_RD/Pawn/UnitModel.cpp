@@ -2,7 +2,7 @@
 #include "Setting/GameTeamType.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/UnitSkillComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
@@ -20,7 +20,7 @@
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-	mSkillCompModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComponentModel"));
+	mSkillCompModel = CreateDefaultSubobject<UUnitSkillComponentModel>(TEXT("UnitSkillComponentModel"));
 	mPassiveCompModel = CreateDefaultSubobject<UPassiveComponentModel>(TEXT("PassiveComponentModel"));
 	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
 
@@ -174,6 +174,16 @@ void UUnitModel::OnEndTurn(int32 TurnCount)
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration, 1);
 }
 
+UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const
+{
+	return mAttributeCompModel;
+}
+
+USkillComponentModel* UUnitModel::GetSkillComponentModel() const
+{
+	return mSkillCompModel;
+}
+
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)
 {
 	mTeamId = TeamID;
@@ -184,14 +194,174 @@ FGenericTeamId UUnitModel::GetGenericTeamId() const
 	return mTeamId;
 }
 
-UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const
+void UUnitModel::OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex)
 {
-	return mAttributeCompModel;
+	IBoardCombatTarget::OnStartUsingSkill(Context, SkillIndex);
+
+	/* 스킬 사용 시 패시브 발동 */
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill);
+
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(Snapshot);
+
+	for (UTacticalPassive*& Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
 }
 
-USkillComponentModel* UUnitModel::GetSkillComponentModel() const
+void UUnitModel::OnEndUsingSkill(int32 SkillIndex)
 {
-	return mSkillCompModel;
+	IBoardCombatTarget::OnEndUsingSkill(SkillIndex);
+
+	/* 스킬 종료 시 패시브 발동 */
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill);
+
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mTargets.Add(this);
+	PassiveContext.mTargetSnapshots.Add(Snapshot);
+
+	for (UTacticalPassive*& Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
+}
+
+void UUnitModel::OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+	IBoardCombatTarget::OnStartApplyingEffects(Context, PhaseIndex);
+
+	/* 이펙트 가격 전 패시브 적용 */
+
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartApplyingEffect);
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+
+	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
+	OtherSnapshots.Reserve(Context.mOtherCombatTargets.Num());
+	for (IBoardCombatTarget* OtherCombatTarget : Context.mOtherCombatTargets)
+	{
+		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
+		checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+		OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
+
+		PassiveContext.mTargets.Add(OtherActorModel);
+		PassiveContext.mTargetSnapshots.Add(OtherSnapshots.Last());
+	}
+
+	for (UTacticalPassive* Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartApplyingEffect, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
+}
+
+void UUnitModel::OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+	IBoardCombatTarget::OnEndApplyingEffects(Context, PhaseIndex);
+
+	/* 이펙트 가격 후 패시브 적용 */
+
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect);
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+
+	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
+	OtherSnapshots.Reserve(Context.mOtherCombatTargets.Num());
+	for (IBoardCombatTarget* OtherCombatTarget : Context.mOtherCombatTargets)
+	{
+		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
+		checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
+		OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
+
+		PassiveContext.mTargets.Add(OtherActorModel);
+		PassiveContext.mTargetSnapshots.Add(OtherSnapshots.Last());
+	}
+
+	for (UTacticalPassive* Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
+}
+
+void UUnitModel::OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+	IBoardCombatTarget::OnStartReceivingEffects(InstigatorSnapshot, Context, PhaseIndex);
+
+	/* 이펙트 피격 전 패시브 적용 */
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartReceivingEffect);
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	UBoardActorModel* InstigatorBoardActorModel = Cast<UBoardActorModel>(Context.mInstigator.GetObject());
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mTargets.Add(InstigatorBoardActorModel);
+	PassiveContext.mTargetSnapshots.Add(InstigatorSnapshot);
+
+	for (UTacticalPassive* Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartReceivingEffect, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
+}
+
+void UUnitModel::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+	IBoardCombatTarget::OnEndReceivingEffects(InstigatorSnapshot, Context, PhaseIndex);
+
+	/* 이펙트 피격 후 패시브 적용 */
+
+	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndReceivingEffect);
+	UBoardCombatTargetSnapshotData* Snapshot = MakeSnapshotData();
+
+	UBoardActorModel* InstigatorBoardActorModel = Cast<UBoardActorModel>(Context.mInstigator.GetObject());
+
+	FPassiveActivateContext PassiveContext;
+	PassiveContext.mOwner = this;
+	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mTargets.Add(InstigatorBoardActorModel);
+	PassiveContext.mTargetSnapshots.Add(InstigatorSnapshot);
+
+	for (UTacticalPassive* Passive : Passives)
+	{
+		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+
+		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndReceivingEffect, PassiveContext, OUT DynamicPassiveData);
+		Passive->CommitPassive(DynamicPassiveData);
+	}
 }
 
 UPassiveComponentModel* UUnitModel::GetPassiveComponentModel() const

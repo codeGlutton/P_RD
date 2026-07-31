@@ -19,13 +19,13 @@ class UStaticSkillData;
 
 struct FPresentationBarrier;
 struct FActiveSkillContext;
-struct FApplyEventTriggerPayload;
+struct FEventTriggerPayload;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayMotionLayerUI, int32 /*MotionIndex*/, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndMotionLayerUI, int32 /*MotionIndex*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/, TSharedPtr<FPresentationBarrier> /*SkillEndBarrier*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayPhaseLayerUI, const FActiveSkillContext& /*Context*/, int32 /*PhaseIndex*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndPhaseLayerUI, int32 /*PhaseIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 
 /**
@@ -65,6 +65,7 @@ public:
 
 	/* 스킬 임시 데이터 */
 public:
+	TScriptInterface<IBoardCombatTarget> mInstigator = nullptr;
 	TWeakObjectPtr<UTileMapModel> mMapModel = nullptr;
 
 public:
@@ -73,21 +74,21 @@ public:
 	TArray<FTileIndex> mEffectTileIndexes;
 
 public:
+	ETileActorDirection mMotionLocalDir = ETileActorDirection::Forward;
+	TSharedPtr<FPresentationBarrier> mSkillEndBarrier = nullptr;
+
+public:
 	int32 mSkillIndex = INDEX_NONE;
-	int32 mMotionIndex = INDEX_NONE;
+	int32 mAnimationIndex = INDEX_NONE;
+	int32 mPhaseIndex = INDEX_NONE;
 
 public:
 	FOnEndSkillUI mEndCallback;
 
-	/* 모션 임시 데이터 */
+	/* 페이즈 임시 데이터 */
 public:
 	TArray<FTileIndex> mTargetTileIndexes;
 	TArray<IBoardCombatTarget*> mOtherCombatTargets;
-
-public:
-	ETileActorDirection mMotionTileMapDir = ETileActorDirection::Forward;
-	TWeakPtr<FPresentationBarrier> mMotionEndBarrier = nullptr;
-	bool mIsMotionTriggered = false;
 };
 
 /**
@@ -101,6 +102,7 @@ class P_RD_API USkillComponentModel : public UComponentModel
 public:
 	USkillComponentModel();
 
+	/* 스킬 세팅 */
 public:
 	/**
 	 * @brief 스킬 목록(스폰 데이터 등)을 일괄 장착
@@ -114,7 +116,13 @@ public:
 	const FSkillEntry* GetSkill(int32 SkillIndex) const;
 	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
+	/* 스킬 실행 */
 public:
+	/**
+	 * @brief 액티브 스킬이 사용가능한지 체크하는 함수
+	 * @param SkillIndex 사용할 스킬의 인덱스
+	 * @return 사용가능 여부
+	 */
 	bool CanActiveSkill(int32 SkillIndex) const;
 
 	/**
@@ -123,26 +131,34 @@ public:
 	* @param SkillIndex 사용할 스킬의 인덱스
 	* @param TargetIndex 타겟팅 타일
 	*/
-	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
+	bool ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
+	void ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
 
 protected:
-	void PlayMotionLayer();
-	void PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget);
-	void TriggerMotionLayer(const FApplyEventTriggerPayload* Payload);
-	void EndMotionLayer();
+	virtual bool CanActiveSkill_Internal(int32 SkillIndex) const;
+	virtual void ConsumeResources_Internal(int32 SkillIndex);
+	virtual void ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback);
+
+protected:
+	void PlaySkillAnimation();
+	void EndSkillAnimation();
+
+protected:
+	void PreparePhaseLayer();
+	void TriggerPhaseLayer(const FEventTriggerPayload* Payload);
+	void FlushRemainingPhaseLayers();
+
 	void DeactivateSkill();
 
 public:
 	bool IsAnySkillActivated() const;
+	const FActiveSkillContext& GetActiveSkillContext() const;
 
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const;
 	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex) const;
 
 public:
-	bool HasRequiredMovement(int32 SkillIndex) const;
-	int32 GetRequiredMovement(int32 SkillIndex) const;
-
 	bool IsCooldown(int32 SkillIndex) const;
 	ETacticalEffectDurationUnitType GetCooldownUnit(int32 SkillIndex) const;
 	int32 GetStaticCooldownDuration(int32 SkillIndex) const;
@@ -160,13 +176,13 @@ public:
 	 */
 	FOnPlaySkillUI OnPlaySkillUI;
 	/**
-	 * @brief 모션 애니메이션 재생 시 호출되는 대리자
+	 * @brief 페이즈 재생 시 호출되는 대리자
 	 */
-	FOnPlayMotionLayerUI OnPlayMotionLayerUI;
+	FOnPlayPhaseLayerUI OnPlayPhaseLayerUI;
 	/**
-	 * @brief 모션 애니메이션 종료 시 호출되는 대리자
+	 * @brief 페이즈 종료 시 호출되는 대리자
 	 */
-	FOnEndMotionLayerUI OnEndMotionLayerUI;
+	FOnEndPhaseLayerUI OnEndPhaseLayerUI;
 	/**
 	 * @brief 스킬 종료 시 호출되는 대리자
 	 */

@@ -94,14 +94,14 @@ bool FArtifactStatModifierTests::RunTest(const FString& Parameters)
 	}
 
 	// 공격력 기본값 10 세팅 (현재값도 10으로 전파됨)
-	const FTacticalAttribute AttackPoint = UCombatTargetAttributeSet::GetAttackPointAttribute();
-	AttrComp->SetAttributeBaseValue(AttackPoint, 10.f);
-	TestEqual(TEXT("기본 공격력 10"), AttrComp->GetAttributeCurrentValue(AttackPoint), 10.f);
+	const FTacticalAttribute AttackFactor = UCombatTargetAttributeSet::GetAttackFactorAttribute();
+	AttrComp->SetAttributeBaseValue(AttackFactor, 10.f);
+	TestEqual(TEXT("기본 공격력 10"), AttrComp->GetAttributeCurrentValue(AttackFactor), 10.f);
 
 	// 아티펙트 DA (코드 구성): 공격력 +5 고유 스탯
 	UStaticArtifactData* Artifact = NewObject<UStaticArtifactData>();
 	FTacticalModifierInfo Mod;
-	Mod.mAttribute = AttackPoint;
+	Mod.mAttribute = AttackFactor;
 	Mod.mModifierOp = ETacticalModOp::AddBase;
 	Mod.mModifierMagnitude = 5.f;
 	Artifact->mStatModifiers.Add(Mod);
@@ -110,7 +110,7 @@ bool FArtifactStatModifierTests::RunTest(const FString& Parameters)
 	UArtifactComponentModel* ArtifactComp = NewObject<UArtifactComponentModel>();
 	const bool bEquipped = ArtifactComp->EquipInternal(Artifact, nullptr, AttrComp);
 	TestTrue(TEXT("장착 성공"), bEquipped);
-	TestEqual(TEXT("장착 후 공격력 15 (기본 10 + 스탯 5)"), AttrComp->GetAttributeCurrentValue(AttackPoint), 15.f);
+	TestEqual(TEXT("장착 후 공격력 15 (기본 10 + 스탯 5)"), AttrComp->GetAttributeCurrentValue(AttackFactor), 15.f);
 
 	// 스탯 이펙트 핸들이 유효해야 함
 	const FArtifactEntry* Entry = ArtifactComp->GetEquipped(Artifact);
@@ -121,13 +121,13 @@ bool FArtifactStatModifierTests::RunTest(const FString& Parameters)
 
 	// 중복 장착: 같은 아티펙트 하나 더 → 스탯도 중첩 (10 + 5 + 5)
 	TestTrue(TEXT("중복 장착 성공"), ArtifactComp->EquipInternal(Artifact, nullptr, AttrComp));
-	TestEqual(TEXT("중복 장착 후 공격력 20"), AttrComp->GetAttributeCurrentValue(AttackPoint), 20.f);
+	TestEqual(TEXT("중복 장착 후 공격력 20"), AttrComp->GetAttributeCurrentValue(AttackFactor), 20.f);
 
 	// 해제: 하나 내리면 15, 마저 내리면 10 원복
 	TestTrue(TEXT("해제 성공"), ArtifactComp->UnequipInternal(Artifact, nullptr, AttrComp));
-	TestEqual(TEXT("해제 후 공격력 15"), AttrComp->GetAttributeCurrentValue(AttackPoint), 15.f);
+	TestEqual(TEXT("해제 후 공격력 15"), AttrComp->GetAttributeCurrentValue(AttackFactor), 15.f);
 	TestTrue(TEXT("남은 엔트리 해제 성공"), ArtifactComp->UnequipInternal(Artifact, nullptr, AttrComp));
-	TestEqual(TEXT("전부 해제 후 공격력 10 원복"), AttrComp->GetAttributeCurrentValue(AttackPoint), 10.f);
+	TestEqual(TEXT("전부 해제 후 공격력 10 원복"), AttrComp->GetAttributeCurrentValue(AttackFactor), 10.f);
 
 	return true;
 }

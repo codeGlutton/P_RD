@@ -8,7 +8,7 @@
 #include "Misc/DataValidation.h"
 #endif
 
-TArray<FTileIndex> FSkillMotionLayer::FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const
+TArray<FTileIndex> FSkillPhaseLayer::FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
     TArray<FTileIndex> FilteredTileIndexes;
     if (EnumHasAllFlags(StaticCast<ETargetIndexFilter>(mTargetIndexFilter), ETargetIndexFilter::IncludeTargetIndexes) == true)
@@ -22,7 +22,7 @@ TArray<FTileIndex> FSkillMotionLayer::FilterTileIndexes(const FTileIndex& SelfIn
     return FilteredTileIndexes;
 }
 
-TArray<IBoardCombatTarget*> FSkillMotionLayer::FilterCombatTargets(const UTileMapModel* MapModel, const IBoardCombatTarget* SelfInstigator, const TArray<FTileIndex>& FilteredTileIndexes) const
+TArray<IBoardCombatTarget*> FSkillPhaseLayer::FilterCombatTargets(const UTileMapModel* MapModel, const IBoardCombatTarget* SelfInstigator, const TArray<FTileIndex>& FilteredTileIndexes) const
 {
     TArray<IBoardCombatTarget*> FilteredCombatTargets;
     for (const FTileIndex& FilteredTileIndex : FilteredTileIndexes)
@@ -64,10 +64,10 @@ FText UStaticSkillData::MakeDescription() const
 	DescriptionLines.Add(BaseHeader);
 
 	/* 2. 모션 및 이펙트 레이어 순회 */
-	const int32 MotionCount = mSkillMotionLayers.Num();
+	const int32 MotionCount = mSkillPhaseLayers.Num();
 	for (int32 MotionIndex = 0; MotionIndex < MotionCount; ++MotionIndex)
 	{
-		const FSkillMotionLayer& MotionLayer = mSkillMotionLayers[MotionIndex];
+		const FSkillPhaseLayer& MotionLayer = mSkillPhaseLayers[MotionIndex];
 
 		FText MotionHeader = FText::Format(
 			LOCTEXT("MotionHeaderFormat", "■ {0}타 모션:"),
@@ -117,7 +117,7 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
         Context.AddError(FText::FromString(TEXT("쿨다운 타입 미지정")));
         ThisResult = EDataValidationResult::Invalid;
     }
-    if (mSkillMotionLayers.IsEmpty() == true)
+    if (mSkillPhaseLayers.IsEmpty() == true)
     {
         Context.AddError(FText::FromString(TEXT("스킬 모션 미지정")));
         ThisResult = EDataValidationResult::Invalid;

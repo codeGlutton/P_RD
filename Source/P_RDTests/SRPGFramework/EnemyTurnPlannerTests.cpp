@@ -88,7 +88,7 @@ namespace
 		Skill->mEffectArea = 0;
 		Skill->mIsPenetration = false;
 		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
-		Skill->mSkillMotionLayers.AddDefaulted();
+		Skill->mSkillPhaseLayers.AddDefaulted();
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;

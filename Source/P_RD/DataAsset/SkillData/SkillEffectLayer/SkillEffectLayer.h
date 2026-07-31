@@ -46,15 +46,11 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel) const {}
-	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const {}
-
-public:
-	virtual FActiveTacticalEffectHandle ApplyFactorEffect(IBoardCombatTarget* ActorModel) const 
+	virtual TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel) const 
 	{ 
-		return FActiveTacticalEffectHandle();
+		return TArray<FActiveTacticalEffectHandle>();
 	}
-	virtual void ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const {}
+	virtual void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const {}
 
 public:
 	virtual void CommitEffect(const FSkillEffectCommitParams& Params) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );

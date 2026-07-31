@@ -34,7 +34,6 @@ public:
 	template<typename T>
 	T* GetOwnerModel() const
 	{
-		static_assert(TIsDerivedFrom<T, UActorModel>::IsDerived, "UActorModel를 상속해야함");
 		return Cast<T>(GetOwnerModel());
 	}
 
