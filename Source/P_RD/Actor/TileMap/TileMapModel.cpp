@@ -297,7 +297,7 @@ void UTileMapModel::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& S
 	}
 }
 
-void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const
+void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out) const
 {
 	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
 	FTileIndex Current = Origin;
@@ -314,8 +314,8 @@ void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileInde
 		// 이 칸은 영향에 포함 (점유 칸이면 "맞고 멈춤"이라 포함 후 종료)
 		Out.Add(Current);
 
-		// 관통하지 않는데 점유 칸이면 그 너머로는 진행하지 않음
-		if (!bPenetrate && IsOccupied(Current))
+		// 차단 레이어의 액터가 있는 칸이면 그 너머로는 진행하지 않음
+		if (GetActorsOnTile(Current, BlockerLayers).Num() > 0)
 			break;
 	}
 }
@@ -752,7 +752,7 @@ void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
  * - 1단계에서는 패턴에 따라 후보타일을 수집하고
  * - 2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단
  */
-TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
+TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, ETileLayerFlag BlockerLayers, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -803,11 +803,11 @@ TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int3
 	}
 
     /**
-     * 페이즈2: 각각의 타이레 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
+     * 페이즈2: 각각의 타일에 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
      */
 
-	// 장애물 막힘 검사 여부: 직선패턴 AND 직사공격 (Square 공격은 하늘에서 내리는 공격이니까 장애물 무시)
-	const bool bApplyLineOfSight = !bIndirect && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
+	// 차폐 검사 여부: 직선패턴 AND 차폐 레이어 지정 (Square 공격은 하늘에서 내리는 공격이니까 차폐 무시)
+	const bool bApplyLineOfSight = (BlockerLayers != ETileLayerFlag::None) && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
 
 	// 후보를 시야/점유 조건으로 거름
     // @note 인덱스를 뒤에서 앞으로 오면서 제거하면 배열 재할당 이슈 없음
@@ -816,7 +816,7 @@ TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int3
 		const FTileIndex& Candidate = Result[Index];
 
 		// 직사인데 시야가 막히면 조준 불가
-		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate, IgnoreBlocker))
+		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate, IgnoreBlocker, BlockerLayers))
 		{
 			Result.RemoveAt(Index);
 			continue;
@@ -832,7 +832,48 @@ TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int3
 	return Result;
 }
 
-TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const FTileIndex& Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const
+TArray<FTileIndex> UTileMapModel::GetTargetTiles(const FTileIndex& Caster, const FTileIndex& Target, ETargetPattern Pattern) const
+{
+	TArray<FTileIndex> Result;
+
+	// 조준 타일이 맵 밖이면 타겟 없음
+	if (!IsValidIndex(Target))
+		return Result;
+
+	switch (Pattern)
+	{
+	case ETargetPattern::TargetOnly:
+		// 조준 타일 한 칸만 타겟
+		Result.Add(Target);
+		break;
+
+	case ETargetPattern::LineToTarget:
+		{
+			// 시전자가 맵 밖이거나 조준 타일과 같으면 조준 타일만 타겟
+			if (!IsValidIndex(Caster) || Caster == Target)
+			{
+				Result.Add(Target);
+				break;
+			}
+
+			// 시전자→조준 타일 직선이 지나는 칸들을 래스터화 (첫 원소=시전자, 마지막 원소=조준 타일 보장)
+			TArray<FTileIndex> LineTiles;
+			RasterizeLine(Caster, Target, LineTiles);
+
+			// 시전자 칸을 제외하고 가까운 순으로 타겟에 추가
+			for (int32 Index = 1; Index < LineTiles.Num(); ++Index)
+				Result.Add(LineTiles[Index]);
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return Result;
+}
+
+TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Target, EEffectPattern Pattern, int32 Size, ETileLayerFlag BlockerLayers) const
 {
 	TArray<FTileIndex> Result;
 
@@ -847,42 +888,26 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	if (Pattern == EEffectPattern::Single || Size <= 0)
 		return Result;
 
-	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 관통 아니면 점유 칸에서 멈춤)
+	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 차단 레이어 칸에서 멈춤)
 	switch (Pattern)
 	{
 	case EEffectPattern::Cross:
 		// 중심에서 직교 4방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
 		break;
 
 	case EEffectPattern::Star:
 		// 중심에서 직교 + 대각 8방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
 		for (const FTileIndex& Step : Diagonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
 		break;
 
 	case EEffectPattern::Square:
 		// 중심 기준 사각형 범위 (하늘 낙하 개념 — 관통 무관)
 		AppendSquareTiles(Target, Size, Result);
-		break;
-
-	case EEffectPattern::Beam:
-		{
-			// 시전자→타겟 방향을 부호로 단위 스텝화 (8방향 중에 하나로 강제 매핑)
-			const FTileIndex Step(
-				FMath::Sign(Target.mX - Caster.mX),
-				FMath::Sign(Target.mY - Caster.mY)
-			);
-
-			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
-			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
-			// 비관통 빔이 점유 칸을 직접 조준한 경우 거기서 맞고 멈춤 — 너머로 뻗지 않음
-			if ((Step.mX != 0 || Step.mY != 0) && (bPenetrate || !IsOccupied(Target)))
-				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
-		}
 		break;
 
 	default:

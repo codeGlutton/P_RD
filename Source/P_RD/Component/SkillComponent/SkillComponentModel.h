@@ -64,7 +64,7 @@ public:
 public:
 	int32 mDiceSum = 0;
 	FTileIndex mSelfTileIndex = FTileIndex::Invalid;
-	FTileIndex mTargetTileIndex = FTileIndex::Invalid;
+	FTileIndex mAimedTileIndex = FTileIndex::Invalid;
 	TArray<FTileIndex> mEffectTileIndexes;
 
 public:
@@ -114,10 +114,10 @@ public:
 	* @brief 액티브 스킬을 활성화하는 함수
 	* @param MapModel 참고할 맵 모델
 	* @param SkillIndex 사용할 스킬의 인덱스
-	* @param TargetIndex 타겟팅 타일
+	* @param AimedTileIndex 조준 타일
 	* @param DiceSum 주사위 눈금 합
 	*/
-	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback = FOnEndSkillUI());
+	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum, FOnEndSkillUI Callback = FOnEndSkillUI());
 
 protected:
 	void PlayMotionLayer();
@@ -132,7 +132,8 @@ public:
 
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const;
-	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const;
+	TArray<FTileIndex> GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum) const;
 
 public:
 	/**

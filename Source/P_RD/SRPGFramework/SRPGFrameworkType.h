@@ -142,7 +142,18 @@ enum class EEffectPattern : uint8
     Cross       UMETA(ToolTip = "타겟에서 4방향 직선"),
     Star        UMETA(ToolTip = "타겟에서 8방향 직선"),
     Square      UMETA(ToolTip = "타겟 중심 사각형 범위 전체"),
-    Beam        UMETA(ToolTip = "시전자에서 타겟 방향으로 뻗는 직선"),
+};
+
+/**
+ * @brief 타겟 범위 패턴
+ * @details
+ * 시전자와 조준 타일을 입력으로 영향 범위의 시점 타일 목록을 결정
+ */
+UENUM(BlueprintType)
+enum class ETargetPattern : uint8
+{
+    TargetOnly      UMETA(ToolTip = "조준 타일 한 칸"),
+    LineToTarget    UMETA(ToolTip = "시전자에서 조준 타일까지의 경로 전체, 시전자 타일 제외"),
 };
 
 /**

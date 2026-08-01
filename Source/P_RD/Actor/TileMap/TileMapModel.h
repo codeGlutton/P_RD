@@ -296,7 +296,7 @@ public:
 	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
 	 * @param[in] Pattern : 조준 패턴
 	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
-	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
+	 * @param[in] BlockerLayers : 조준 시야를 막는 레이어 (None이면 아무것도 조준을 막지 않음)
 	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
 	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외)
@@ -306,31 +306,47 @@ public:
 		int32 Range,
 		EAimPattern Pattern,
 		bool bIncludeOccupied,
-		bool bIndirect,
+		ETileLayerFlag BlockerLayers,
 		const UBoardActorModel* Incoming = nullptr,
 		const UBoardActorModel* IgnoreBlocker = nullptr
+	) const;
+
+	/**
+	 * @brief 시전 타일에서부터 조준 타일로 가면서 타겟 패턴을 사용해서 타겟이 되는 타일들을 수집
+	 * @details
+	 * 수집된 타일들은 각각 영향 범위의 중심 타일이 됨. 전체 영향 범위를 계산할 때 중복은 호출하는 쪽에서 처리.
+	 * TargetOnly 패턴은 조준 타일 한 칸만 포함.
+	 * LineToTarget 패턴은 시전자→조준 타일 직선이 지나는 칸들을 시전자 제외,
+	 * 가까운 순으로 포함. 조준 타일은 어떤 패턴에서든 항상 포함.
+	 *
+	 * @param[in] Caster : 시전자 좌표
+	 * @param[in] Target : 조준 타일 좌표
+	 * @param[in] Pattern : 타겟 범위 패턴
+	 * @return TArray<FTileIndex> : 타겟 타일 좌표 목록 (시전자에서 가까운 순)
+	 */
+	TArray<FTileIndex> GetTargetTiles(
+		const FTileIndex& Caster,
+		const FTileIndex& Target,
+		ETargetPattern Pattern
 	) const;
 
 	/**
 	 * @brief 스킬 발동 시 영향받는 타일 목록 반환
 	 * @details
 	 * Target을 중심으로 패턴에 따라 영향 타일을 계산한다.
-	 * Beam 패턴은 Caster→Target 벡터로 방향을 결정한다.
 	 * Size가 0이면 Target 한 칸만 반환. Single 패턴은 Size 무시.
 	 *
-	 * @param[in] Caster : 시전자 좌표 (Beam 패턴의 방향 계산용)
 	 * @param[in] Target : 영향 범위 중심 좌표
 	 * @param[in] Pattern : 영향 범위 패턴
 	 * @param[in] Size : 범위 크기 (0=점, 이후 확장)
-	 * @param[in] bPenetrate : 관통 여부 (장애물 너머 타일도 포함)
+	 * @param[in] BlockerLayers : 영향 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
 	 * @return TArray<FTileIndex> : 영향받는 타일 좌표 목록 (맵 밖 좌표 제외)
 	 */
 	TArray<FTileIndex> GetEffectTiles(
-		const FTileIndex& Caster,
 		const FTileIndex& Target,
 		EEffectPattern Pattern,
 		int32 Size,
-		bool bPenetrate
+		ETileLayerFlag BlockerLayers
 	) const;
 
 	/**
@@ -525,18 +541,18 @@ private:
 	void AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const;
 
 	/**
-	 * @brief 원점에서 특정 방향으로 Range만큼 뻗되, 관통하지 않으면 점유 칸에서 멈추는 직선을 수집
+	 * @brief 원점에서 특정 방향으로 Range만큼 뻗되, 차단 레이어의 액터가 있는 칸에서 멈추는 직선을 수집
 	 * @details
-	 * AppendRayTiles와 달리, bPenetrate가 false면 장애물/유닛(IsOccupied) 칸을 만났을 때
-	 * 그 칸까지 포함한 뒤 더 진행하지 않는다(맞고 멈춤). true면 점유와 무관하게 Range 한도까지 진행한다.
-	 * 영향범위 Cross/Star/Beam 패턴용. 원점 자신은 포함하지 않는다.
+	 * AppendRayTiles와 달리, 차단 레이어의 액터가 있는 칸을 만났을 때
+	 * 그 칸까지 포함한 뒤 더 진행하지 않는다(맞고 멈춤). None이면 점유와 무관하게 Range 한도까지 진행한다.
+	 * 영향범위 Cross/Star 패턴용. 원점 자신은 포함하지 않는다.
 	 * @param[in] Origin 시작 좌표
 	 * @param[in] Step   한 칸 전진 방향 (예: (1,0)=오른쪽, (-1,1)=좌하단 대각)
 	 * @param[in] Range  뻗을 칸 수 (0 이하이면 아무것도 추가하지 않음)
-	 * @param[in] bPenetrate 관통 여부 (false면 점유 칸에서 멈춤)
+	 * @param[in] BlockerLayers 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
 	 * @param[in,out] Out 결과를 누적할 배열
 	 */
-	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const;
+	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out) const;
 
 	/**
 	 * @brief 타일에 장애물 또는 유닛이 있는 지 검사

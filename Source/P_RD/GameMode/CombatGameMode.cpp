@@ -89,8 +89,6 @@ namespace
 			return ECombatSkillHitShapeUI::Cross;
 		case EEffectPattern::Square:
 			return ECombatSkillHitShapeUI::Circle;
-		case EEffectPattern::Beam:
-			return ECombatSkillHitShapeUI::Single;
 		default:
 			return ECombatSkillHitShapeUI::None;
 		}
@@ -833,8 +831,9 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 			SkillUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-			SkillUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
-			SkillUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
+			// 차단 레이어가 비어 있으면 곡사/관통으로 표시
+			SkillUIData.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
+			SkillUIData.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
 		}
 	}
 
@@ -910,8 +909,9 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
 		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-		SkillDetailUIData.mTargeting.mIsIndirect = StaticSkillData->mIsIndirect;
-		SkillDetailUIData.mTargeting.mIsPenetration = StaticSkillData->mIsPenetration;
+		// 차단 레이어가 비어 있으면 곡사/관통으로 표시
+		SkillDetailUIData.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
+		SkillDetailUIData.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
 	}
 
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);

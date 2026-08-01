@@ -53,7 +53,7 @@ void FActiveSkillContext::Clear()
 	mMapModel = nullptr;
 	mDiceSum = 0;
 	mSelfTileIndex = FTileIndex::Invalid;
-	mTargetTileIndex = FTileIndex::Invalid;
+	mAimedTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
 
 	mSkillIndex = INDEX_NONE;
@@ -135,7 +135,7 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback)
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum, FOnEndSkillUI Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -156,8 +156,8 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	mActiveSkillContext.mDiceSum = DiceSum;
 	mActiveSkillContext.mMapModel = MapModel;
 	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
-	mActiveSkillContext.mTargetTileIndex = TargetIndex;
-	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
+	mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
+	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, AimedTileIndex, DiceSum);
 	mActiveSkillContext.mSkillIndex = SkillIndex;
 	mActiveSkillContext.mMotionIndex = 0;
 	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
@@ -258,7 +258,7 @@ void USkillComponentModel::PlayMotionLayer()
 	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
 	mActiveSkillContext.mMotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
 		mActiveSkillContext.mSelfTileIndex,
-		mActiveSkillContext.mTargetTileIndex,
+		mActiveSkillContext.mAimedTileIndex,
 		OwnerUnitModel->GetTileTransform().mDirection
 	);
 	mActiveSkillContext.mIsMotionTriggered = false;
@@ -644,7 +644,6 @@ bool USkillComponentModel::IsAnySkillActivated() const
 
 TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const
 {
-	TArray<FTileIndex> AimableTiles;
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
@@ -652,21 +651,42 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	const float AimRange = StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
 	const EAimPattern Pattern = StaticSkillData->mAimPattern;
 	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = StaticSkillData->mIsIndirect;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mAimBlockerMask);
 
-	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, BlockerLayers);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
-	TArray<FTileIndex> AimableTiles;
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
+	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
+
+	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
+}
+
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum) const
+{
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
 	const int32 EffectRange = StaticSkillData->mEffectAreaDefaultValue + DiceSum * StaticSkillData->mEffectAreaRatio;
-	const bool IsPenetration = StaticSkillData->mIsPenetration;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mEffectBlockerMask);
 
-	return MapModel->GetEffectTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, TargetIndex, Pattern, EffectRange, IsPenetration);
+	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
+	const TArray<FTileIndex> TargetTiles = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+
+	// 각 타겟 타일에서 영향 범위로 확산, 겹치는 타일은 한 번만 포함
+	TArray<FTileIndex> EffectTiles;
+	for (const FTileIndex& TargetTile : TargetTiles)
+	{
+		for (const FTileIndex& EffectTile : MapModel->GetEffectTiles(TargetTile, Pattern, EffectRange, BlockerLayers))
+		{
+			EffectTiles.AddUnique(EffectTile);
+		}
+	}
+
+	return EffectTiles;
 }

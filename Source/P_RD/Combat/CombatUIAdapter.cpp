@@ -219,7 +219,7 @@ void UCombatUIAdapter::HandleCombatCommand(ECombatInputType Type, int32 IntPaylo
 					}
 				}
 				// 사거리 = Square 범위(타일맵 GetAimableTiles, pyramidmine 구현). 점유 타일 포함(적 조준).
-				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, false);
+				mAimTiles = TileMap->GetAimableTiles(Origin, BasicAttackRange, EAimPattern::Square, true, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 				ClearAllHighlight();
 				TileMap->GetView<ATileMap>()->SetTileHighlight(mAimTiles, ETileHighlightFlag::Aim);   // 회색 사거리
 			}

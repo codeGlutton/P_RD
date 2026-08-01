@@ -81,10 +81,10 @@ namespace
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRangeDefaultValue = AimRange;
 		Skill->mCanAimBoardActor = true;
-		Skill->mIsIndirect = false;
+		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->mEffectPattern = EEffectPattern::Single;
 		Skill->mEffectAreaDefaultValue = 0;
-		Skill->mIsPenetration = false;
+		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
