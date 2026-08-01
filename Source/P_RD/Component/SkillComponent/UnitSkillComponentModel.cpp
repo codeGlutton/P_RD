@@ -1,6 +1,6 @@
 ﻿#include "Component/SkillComponent/UnitSkillComponentModel.h"
 
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Actor/ActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -67,7 +67,7 @@ bool UUnitSkillComponentModel::HasRequiredActionPoint(int32 SkillIndex) const
 		return false;
 	}
 
-	return SkillEntry->mData->mRequiredActionPoint <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
+	return StaticCast<UStaticUnitSkillData*>(SkillEntry->mData)->mRequiredActionPoint <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 }
 
 int32 UUnitSkillComponentModel::GetRequiredActionPoint(int32 SkillIndex) const
@@ -78,6 +78,6 @@ int32 UUnitSkillComponentModel::GetRequiredActionPoint(int32 SkillIndex) const
 		return false;
 	}
 
-	return SkillEntry->mData->mRequiredActionPoint;
+	return StaticCast<UStaticUnitSkillData*>(SkillEntry->mData)->mRequiredActionPoint;
 }
 

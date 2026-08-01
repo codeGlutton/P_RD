@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalTileTable.cpp
  * @brief  턴 계획용 전술 타일 테이블 구현
  * @author 이문환
@@ -8,14 +8,14 @@
 #include "Actor/TileMap/TacticalTileTable.h"
 
 #include "Actor/TileMap/TileMapModel.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 void FTacticalTileTable::Build(
 	const UTileMapModel* TileMap,
 	const UBoardActorModel* Self,
 	const FTileIndex& Origin,
 	const TArray<FTileIndex>& TargetTiles,
-	const TArray<const UStaticSkillData*>& Skills,
+	const TArray<const UStaticUnitSkillData*>& Skills,
 	int32 ActionPoint)
 {
 	// 재사용 대비 초기화
@@ -80,7 +80,7 @@ void FTacticalTileTable::Build(
 		Info.mCastableFlags.Init(false, mSkillSlotCount * mTargetCount);
 		for (int32 SkillSlot = 0; SkillSlot < mSkillSlotCount; ++SkillSlot)
 		{
-			const UStaticSkillData* Skill = Skills[SkillSlot];
+			const UStaticUnitSkillData* Skill = Skills[SkillSlot];
 			// 빈 슬롯은 전부 false 유지
 			if (Skill == nullptr)
 			{

@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   StaticSkillData.h
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset 구현 헤더
  * @author 모호재
@@ -80,15 +80,16 @@ class P_RD_API UStaticSkillData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
+    /* UPrimaryDataAsset 상속 */
 public:
     FPrimaryAssetId GetPrimaryAssetId() const override
     {
-        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
+        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetObstacleActiveType(), GetFName());
     }
 
 #if WITH_EDITOR
 public:
-    FText MakeDescription() const;
+    virtual FText MakeDescription() const;
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
@@ -102,31 +103,9 @@ public:
 
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
-
-    /* 스킬 자체 정보 */
-public:
-    // @brief 사용 타입 ()
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
-    EPlayerJobType mJobType = EPlayerJobType::None;
-
-    // @brief 스킬 타입
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))
-    ESkillType mSkillType;
-
-    // @brief 스킬 희귀도
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
-    ERarityType mRarityType;
-
-    // @brief 구매 시 가격
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
-    int32 mPrice;
     
     /* 논리적 설정값들 */
 public:
-    // @brief 필요 행동력
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredActionPoint"))
-    int32 mRequiredActionPoint;
-
     // @brief 쿨다운시 적용될 Effect Class
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownEffectClass", AssetBundles = "Actor"))
     TSoftClassPtr<UTacticalEffect_Cooldown> mCooldownEffectClass;

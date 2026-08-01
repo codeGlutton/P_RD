@@ -4,7 +4,6 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
@@ -22,7 +21,6 @@ UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 	mSkillCompModel = CreateDefaultSubobject<UUnitSkillComponentModel>(TEXT("UnitSkillComponentModel"));
 	mPassiveCompModel = CreateDefaultSubobject<UPassiveComponentModel>(TEXT("PassiveComponentModel"));
-	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
 
 	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit);
 	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);
@@ -367,10 +365,5 @@ void UUnitModel::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* Instigato
 UPassiveComponentModel* UUnitModel::GetPassiveComponentModel() const
 {
 	return mPassiveCompModel;
-}
-
-UEquipmentComponentModel* UUnitModel::GetEquipmentComponentModel() const
-{
-	return mEquipmentCompModel;
 }
 

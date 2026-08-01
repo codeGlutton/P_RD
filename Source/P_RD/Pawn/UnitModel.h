@@ -20,7 +20,6 @@ class UUnitModel;
 class UAttributeSetComponentModel;
 class UUnitSkillComponentModel;
 class UPassiveComponentModel;
-class UEquipmentComponentModel;
 
 /** @brief 이동 연출이 한 타일에 도착할 때마다 완료 칸 수를 UI 어댑터에 알린다. */
 DECLARE_MULTICAST_DELEGATE_TwoParams(
@@ -73,7 +72,6 @@ public:
 	/* 자체 함수 */
 public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
-	UEquipmentComponentModel* GetEquipmentComponentModel() const;
 
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
@@ -96,9 +94,6 @@ private:
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
 	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
-
-	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "EquipmentCompModel"))
-	TObjectPtr<UEquipmentComponentModel> mEquipmentCompModel;
 
 private:
 	// @brief 팀 ID

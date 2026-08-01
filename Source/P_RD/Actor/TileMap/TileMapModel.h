@@ -15,7 +15,7 @@
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
-class UStaticSkillData;
+class UStaticUnitSkillData;
 struct FPresentationBarrier;
 
 /**
@@ -403,7 +403,7 @@ public:
 	void GetThreatRanges(
 		const FTileIndex& Origin,
 		int32 ActionPoint,
-		const TArray<const UStaticSkillData*>& Skills,
+		const TArray<const UStaticUnitSkillData*>& Skills,
 		const UBoardActorModel* Self,
 		OUT TArray<FTileIndex>& MoveTiles,
 		OUT TArray<FTileIndex>& AttackTiles

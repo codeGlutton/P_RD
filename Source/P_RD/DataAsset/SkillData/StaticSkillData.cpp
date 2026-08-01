@@ -1,4 +1,4 @@
-#include "DataAsset/SkillData/StaticSkillData.h"
+﻿#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
@@ -53,8 +53,7 @@ FText UStaticSkillData::MakeDescription() const
 
 	/* 1. 패턴 이름 및 헤더 정보 현지화 합성 (RDMinimal.h의 EnumToText 활용) */
 	FText BaseHeader = FText::Format(
-		LOCTEXT("SkillDescriptionHeader", "[행동력: {0} | 사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
-		FText::AsNumber(mRequiredActionPoint),
+		LOCTEXT("SkillDescriptionHeader", "[사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
 		FText::AsNumber(mAimRange),
 		EnumToText(mAimPattern),
 		FText::AsNumber(mEffectArea),
@@ -105,11 +104,6 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
     if (mName.IsEmpty() == true)
     {
         Context.AddError(FText::FromString(TEXT("스킬 이름 미지정")));
-        ThisResult = EDataValidationResult::Invalid;
-    }
-    if (mJobType == EPlayerJobType::None)
-    {
-        Context.AddError(FText::FromString(TEXT("스킬 직업 분류 미지정")));
         ThisResult = EDataValidationResult::Invalid;
     }
     if (mCooldownEffectClass.ToSoftObjectPath().IsValid() == false)

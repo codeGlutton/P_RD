@@ -1,7 +1,7 @@
 ﻿#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "Algo/Reverse.h"
 
 namespace
@@ -965,7 +965,7 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 void UTileMapModel::GetThreatRanges(
 	const FTileIndex& Origin,
 	int32 ActionPoint,
-	const TArray<const UStaticSkillData*>& Skills,
+	const TArray<const UStaticUnitSkillData*>& Skills,
 	const UBoardActorModel* Self,
 	OUT TArray<FTileIndex>& MoveTiles,
 	OUT TArray<FTileIndex>& AttackTiles) const
@@ -989,7 +989,7 @@ void UTileMapModel::GetThreatRanges(
 	for (const FTileIndex& Tile : MoveTiles)
 	{
 		const int32 MoveCost = MoveCostField[TileIndexToLinearIndex(Tile)];
-		for (const UStaticSkillData* Skill : Skills)
+		for (const UStaticUnitSkillData* Skill : Skills)
 		{
 			// 빈 슬롯 무시
 			if (Skill == nullptr)

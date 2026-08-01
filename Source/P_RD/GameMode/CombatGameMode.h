@@ -202,8 +202,6 @@ protected:
 	 */
 	void FillSkillDetailUIData(USkillComponentModel* SkillComponentModel,
 		int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const;
-	void PushEquipmentUIData() const;
-	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
 	void PushPlayerMetaUIData() const;
 
 	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview = true) const;

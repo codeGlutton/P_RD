@@ -41,7 +41,7 @@
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
@@ -303,7 +303,6 @@ void ACombatGameMode::InitializeRoom()
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
-		PushEquipmentUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
@@ -583,10 +582,6 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
 		mInspectedUnitId = IntPayload;
 		PushSkillUIData();
-		break;
-	case ECombatInputType::LongPressEquip:
-		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
-		PushEquipmentDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
@@ -868,13 +863,13 @@ void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTargetView* Target
 
 	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
 	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
-	TArray<const UStaticSkillData*> SkillDatas;
+	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
 		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
 		{
-			SkillDatas[Index] = Skills[Index].mData;
+			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
 		}
 	}
 
@@ -1239,7 +1234,7 @@ void ACombatGameMode::PushSkillUIData() const
 		SkillUIData.mSkillIndex = i;   // UI가 스킬 선택 의도(SelectSkill)에 되돌려 보내는 왕복 식별자
 		SkillUIData.mIsUsable = false;
 
-		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
+		UStaticUnitSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? StaticCast<UStaticUnitSkillData*>(SkillEntry.mData.Get()) : nullptr;
 		if (StaticSkillData != nullptr)
 		{
 			SkillUIData.mName = StaticSkillData->mName;
@@ -1549,84 +1544,6 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	FSkillDetailUI SkillDetailUIData;
 	FillSkillDetailUIData(PlayerUnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
-}
-
-void ACombatGameMode::PushEquipmentUIData() const
-{
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
-	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
-
-	const int32 EquipSlotNum = StaticCast<int32>(EEquipmentType::Count);
-
-	TArray<FEquipmentUI> EquipmentUIDatas;
-	EquipmentUIDatas.Init(FEquipmentUI(), EquipSlotNum);
-
-	for (int32 i = 0; i < EquipSlotNum; ++i)
-	{
-		const EEquipmentType EquipType = StaticCast<EEquipmentType>(i);
-
-		const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipType);
-		FEquipmentUI& EquipmentUIData = EquipmentUIDatas[i];
-
-		EquipmentUIData.mSlotIndex = i;
-		EquipmentUIData.mName = GetEquipmentSlotFallbackName(EquipType);
-		EquipmentUIData.mIsEquipped = false;
-
-		const UStaticEquipmentData* StaticEquipmentData = EquippedEntry != nullptr ? EquippedEntry->mData.Get() : nullptr;
-		if (StaticEquipmentData != nullptr)
-		{
-			EquipmentUIData.mItemId = StaticEquipmentData->GetPrimaryAssetId();
-			EquipmentUIData.mName = StaticEquipmentData->mName.IsEmpty() == true ? EquipmentUIData.mName : StaticEquipmentData->mName;
-			EquipmentUIData.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
-			EquipmentUIData.mIsEquipped = true;
-			EquipmentUIData.mRarityColor = GetRarityColor(StaticEquipmentData->mRarityType);
-		}
-	}
-
-	mCombatUIModel->SetEquipmentUIs(EquipmentUIDatas);
-}
-
-void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
-{
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
-	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
-
-	const EEquipmentType EquipSlotType = StaticCast<EEquipmentType>(EquipmentIndex);
-	const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipSlotType);
-	if (EquippedEntry == nullptr)
-	{
-		// 빈 슬롯(장착 안 됨)을 롱프레스한 경우: 상세를 띄우지 않고 조용히 반환(크래시 방지).
-		return;
-	}
-
-	const UStaticEquipmentData* StaticEquipmentData = EquippedEntry->mData.Get();
-	if (StaticEquipmentData == nullptr)
-	{
-		return;
-	}
-
-	FEquipmentDetailUI EquipmentDetailUIData;
-	EquipmentDetailUIData.mSlotIndex = EquipmentIndex;
-	EquipmentDetailUIData.mItemId = StaticEquipmentData->GetPrimaryAssetId();
-	EquipmentDetailUIData.mName = StaticEquipmentData->mName;
-	EquipmentDetailUIData.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
-	EquipmentDetailUIData.mIsEquipped = true;
-	EquipmentDetailUIData.mDescription = StaticEquipmentData->mDescription;
-	EquipmentDetailUIData.mRarityColor = GetRarityColor(StaticEquipmentData->mRarityType);
-
-	mCombatUIModel->SetEquipmentDetail(EquipmentDetailUIData);
 }
 
 void ACombatGameMode::PushPlayerMetaUIData() const
