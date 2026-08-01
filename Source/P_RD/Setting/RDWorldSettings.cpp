@@ -2,8 +2,15 @@
 
 FName ARDWorldSettings::GetRandomRoomSpawnSettingName(const FRandomStream& Stream) const
 {
+	// 지정 전용 세팅은 추첨에서 제외 (방 DA가 이름으로 지정할 때만 사용)
 	TArray<FName> Keys;
-	mSpawnSettings.GenerateKeyArray(Keys);
+	for (const TPair<FName, FRoomSpawnSettings>& SettingPair : mSpawnSettings)
+	{
+		if (SettingPair.Value.mIsDedicated == false)
+		{
+			Keys.Add(SettingPair.Key);
+		}
+	}
 
 	if (Keys.Num() > 0)
 	{

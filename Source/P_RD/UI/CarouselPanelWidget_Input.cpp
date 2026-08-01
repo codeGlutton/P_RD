@@ -89,7 +89,7 @@ bool UCarouselPanelWidget::FinishCarouselPress(const FVector2D& ScreenPosition)
 {
 	/*
 	 * Press 시작 카드와 Release 카드가 같고 이동 거리가 작을 때만 탭으로 인정한다.
-	 * 터치 스크롤이나 주사위 드래그가 단순 선택으로 오인되지 않게 하기 위한 기준이다.
+	 * 터치 스크롤이나 카드 드래그가 단순 선택으로 오인되지 않게 하기 위한 기준이다.
 	 */
 	const int32 ReleasedItemIndex = FindCarouselItemIndexAtPosition(ScreenPosition);
 	const bool bIsTap = mPressedCarouselIndex != INDEX_NONE

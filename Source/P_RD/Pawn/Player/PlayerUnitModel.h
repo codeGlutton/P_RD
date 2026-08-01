@@ -15,7 +15,8 @@
 #include "PlayerUnitModel.generated.h"
 
 class UPlayerUnitModel;
-class UDicePoolModel;
+class UPartyModel;
+class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
 class ULevelAttributeSet;
@@ -37,10 +38,11 @@ public:
 
 	/* UUnitModel 상속 */
 public:
-	void PostInitializeComponentModels() override;
+	int32 GetBoardActorLevel() const override;
 
 public:
-	int32 GetBoardActorLevel() const override;
+	void SetOwnerParty(UPartyModel* PartyModel);
+	void SetPlayerLevel(int32 PlayerLevel);
 
 public:
 	EPlayerJobType GetPlayerJobType() const;
@@ -49,8 +51,7 @@ public:
 	bool IsPlayerUnitModel() const override;
 
 public:
-	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
-	UDicePoolModel* GetDicePoolModel() const;
+	UArtifactComponentModel* GetArtifactComponentModel() const;
 
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
@@ -64,9 +65,13 @@ private:
 	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
 	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
 
-	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
-	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))
-	TObjectPtr<UDicePoolModel> mDicePool;
+	/** @brief 아티펙트 컴포넌트 모델 */
+	UPROPERTY(Category = Artifact, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "ArtifactCompModel"))
+	TObjectPtr<UArtifactComponentModel> mArtifactCompModel;
+
+protected:
+	UPROPERTY(Category = Party, VisibleAnywhere, meta = (DisplayName = "OwnerParty"))
+	TWeakObjectPtr<UPartyModel> mOwnerParty;
 
 protected:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))

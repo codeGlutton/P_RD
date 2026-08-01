@@ -9,14 +9,13 @@
 #include "Setting/GameTeamType.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
-#include "TAS/Effect/TacticalEffectContext.h"
 
 UEnemyUnitModel::UEnemyUnitModel()
 {
@@ -41,60 +40,7 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
-		// 스폰 데이터의 스킬을 로드해서 슬롯 0부터 순서대로 장착
-		int32 SkillIndex = 0;
-		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft : EnemySpawn->mSkillDatas)
-		{
-			// 로드 성공한 스킬만 슬롯에 세팅
-			if (UStaticSkillData* Loaded = SkillSoft.LoadSynchronous())
-			{
-				SkillComp->SetSkill(SkillIndex++, Loaded);
-			}
-		}
-	}
-}
-
-void UEnemyUnitModel::OnBeginTurn()
-{
-	Super::OnBeginTurn();
-
-	/* 자기 자신에게 MovePoint 부여 */
-
-	UAttributeSetComponentModel* OwingAttributeSetComponentModel = GetAttributeComponentModel();
-	checkf(OwingAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-	const int32 DefaultMovePoint = FMath::Max(
-		OwingAttributeSetComponentModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute()), 
-		0
-	);
-
-	UTacticalEffectContext* EffectContext = OwingAttributeSetComponentModel->MakeEffectContext();
-	EffectContext->SetInstigator(this);
-	EffectContext->SetAttributeSetComponentModel(OwingAttributeSetComponentModel);
-
-	FActiveTacticalEffectHandle FactorHandle;
-	{
-		/* 기본 Move 만큼 Factor 부여 */
-
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = OwingAttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
-		EffectSpec->mDynamicMagnitude = DefaultMovePoint;
-		FactorHandle = OwingAttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-	}
-
-	{
-		/* MovePoint 습득 */
-
-		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = OwingAttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_GetMovement::StaticClass(), EffectContext);
-		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
-		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
-		OwingAttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-	}
-
-	{
-		/* 기본 Move 만큼 Factor 제거 */
-
-		OwingAttributeSetComponentModel->RemoveActiveTacticalEffect(FactorHandle);
+		SkillComp->SetSkillFrom(EnemySpawn->mSkillDatas);
 	}
 }
 
@@ -106,6 +52,11 @@ int32 UEnemyUnitModel::GetBoardActorLevel() const
 void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
 {
 	mDifficulty = Difficulty;
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
 int32 UEnemyUnitModel::GetDifficulty() const

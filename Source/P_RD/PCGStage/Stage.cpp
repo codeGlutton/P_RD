@@ -6,7 +6,13 @@ void FStage::SetCurrentRoom(int32 RowIndex, int32 ColumnIndex)
 
 	mCurRow = RowIndex;
 	mCurColumn = ColumnIndex;
+
 	mRoomRows[RowIndex].mRooms[ColumnIndex].GetMutable<FRoom>().mWasSelected = true;
+}
+
+void FStage::ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms)
+{
+	mRoomClearTileTransforms = Transforms;
 }
 
 FRoom& FStage::GetRoom(int32 RowIndex, int32 ColumnIndex)

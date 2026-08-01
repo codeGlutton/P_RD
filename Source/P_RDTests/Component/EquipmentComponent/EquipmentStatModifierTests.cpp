@@ -14,7 +14,7 @@
 #include "TAS/TASAttributeTestsHelper.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "DataAsset/EquipmentData/StaticWeaponEquipmentData.h"
+#include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
@@ -99,10 +99,10 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	TestEqual(TEXT("기본 공격력 10"), AttrComp->GetAttributeCurrentValue(AttackPoint), 10.f);
 
 	// 무기 DA (코드 구성): 공격력 +5 고유 스탯
-	UStaticWeaponEquipmentData* Weapon = NewObject<UStaticWeaponEquipmentData>();
+	UStaticEquipmentData* Weapon = NewObject<UStaticEquipmentData>();
 	FTacticalModifierInfo Mod;
 	Mod.mAttribute = AttackPoint;
-	Mod.mModifierOp = ETacticalModOp::Additive;
+	Mod.mModifierOp = ETacticalModOp::AddBase;
 	Mod.mModifierMagnitude = 5.f;
 	Weapon->mStatModifiers.Add(Mod);
 

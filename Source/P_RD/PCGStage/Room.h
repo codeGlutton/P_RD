@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "PCGStage/RoomType.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 #include "Room.generated.h"
 
 /**
@@ -73,6 +74,19 @@ public:
 	FPrimaryAssetId mRewardEquipmentDataId;
 };
 
+USTRUCT(BlueprintType)
+struct FShopItemList
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCategory"))
+	FName mSaleCategory;
+
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleItemIds"))
+	TArray<FPrimaryAssetId> mSaleItemIds;
+};
+
 /**
  * @brief  상점 방 데이터
  */
@@ -88,10 +102,12 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleSkillDataIds"))
-	TArray<FPrimaryAssetId> mSaleSkillDataIds;
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataIds"))
-	TArray<FPrimaryAssetId> mSaleEquipmentDataIds;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (ArraySizeEnum = "EPlayerJobType", DisplayName = "SaleJobSkillDataItems"))
+	FShopItemList mSaleJobSkillDataItems[static_cast<uint8>(EPlayerJobType::Count)];
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCommonSkillDataItems"))
+	FShopItemList mSaleCommonSkillDataItems;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataItems"))
+	FShopItemList mSaleEquipmentDataItems;
 };
 
 /**
@@ -141,11 +157,4 @@ struct FBossMonsterRoom : public FMonsterRoom
 
 public:
 	FBossMonsterRoom();
-
-public:
-	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
-
-public:
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardDiceDataId"))
-	FPrimaryAssetId mRewardDiceDataId;
 };

@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SkillEffectLayer_Fortification.h
  * @brief  하나의 스킬 모션 내에서 적용하는 요새화 버프 효과 단위 구현 헤더
  * @author 모호재
@@ -14,16 +14,15 @@
  * @brief  하나의 스킬 모션 내에서 적용하는 요새화 버프 효과 단위
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_Fortification : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_Fortification : public FSkillEffectLayer_TagBase
 {
 	GENERATED_BODY()
 
 public:
-	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+	TSubclassOf<UTacticalEffect> GetTagEffectClass() const override;
 
+#if WITH_EDITOR
 public:
-	UPROPERTY(Category = "Fortification", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultTagGain"))
-	float mDefaultTagGain = 0.f;
-	UPROPERTY(Category = "Fortification", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
-	float mDiceRatio = 0.f;
+	FText GetTagDisplayName() const override;
+#endif
 };

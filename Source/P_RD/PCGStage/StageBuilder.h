@@ -12,6 +12,7 @@
 #include "Setting/GameBalanceType.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "DataAsset/SkillData/SkillType.h"
+#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 #include "DataTable/StageBuilderParams.h"
 
 // Stage Builder 신규 로그 카테고리 등록
@@ -56,11 +57,9 @@ protected:
 	FRoom& CreateRoom(ERoomType Type, int32 Row, int32 Column, TInstancedStruct<FRoom>& Room) const;
 
 protected:
-	uint8 GetRandomEquipmentIndex() const;
-	EEquipmentType GetRandomEquipment() const;
-
-	uint8 GetRandomSkillIndex() const;
-	ESkillType GetRandomSkill() const;
+	TArray<FPrimaryAssetId> GetFilteredPrimaryAssets(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const;
+	TArray<FPrimaryAssetId> GetFilteredPrimaryAssets(const TArray<FAssetData>& AssetDataList, TFunctionRef<bool(const FAssetData&)> Filter) const;
+	TArray<FAssetData> GetFilteredPrimaryAssetDatas(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const;
 
 	uint8 GetRandomRarityIndex(const FRarityRate& RarityRate) const;
 	ERarityType GetRandomRarity(const FRarityRate& RarityRate) const;
@@ -73,7 +72,7 @@ protected:
 protected:
 	bool mIsLoadedIds = false;
 	TArray<FPrimaryAssetId> mRoomAssetIds[static_cast<uint8>(ERoomType::Count)];
-	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(EEquipmentType::Count)][static_cast<uint8>(ERarityType::Count)];
-	TArray<FPrimaryAssetId> mSkillAssetIds[static_cast<uint8>(ESkillType::Count)][static_cast<uint8>(ERarityType::Count)];
-	TArray<FPrimaryAssetId> mDiceAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mJobSkillAssetIds[static_cast<uint8>(EPlayerJobType::Count)][static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mCommonSkillAssetIds[static_cast<uint8>(ERarityType::Count)];
 };

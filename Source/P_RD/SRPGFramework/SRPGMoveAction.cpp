@@ -81,7 +81,7 @@ void USRPGMoveAction::OnEndAction()
         // 이동력 차감
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Additive, -static_cast<float>(SpentPoint));
+            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
         }
     }
 }
@@ -142,6 +142,13 @@ void USRPGMoveAction::OnStepPresentationFinished()
 
     // 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
     CompleteStep();
+
+    // 뷰가 이번 타일에 실제로 도착하고 타일 효과까지 반영된 시점이다. 실제
+    // 이동 비용은 액션 정상 종료 때 한 번에 정산하되, UI는 완료 칸 수를 받아
+    // AP를 한 칸씩 소모한 것처럼 표시한다.
+    mInstigator->OnMoveStepArrivedUI.Broadcast(
+        mCurrentStepIndex,
+        mPathTileIndexes.Num() - 1);
 
     // 1) 마지막 타일이면 이동 완료.
     if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)

@@ -18,6 +18,13 @@ UCLASS()
 class P_RD_API UUnitAttributeSet : public UCombatTargetAttributeSet
 {
 	GENERATED_BODY()
+
+public:
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeMovement)
+
+protected:
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData RechargeMovement;
 };
 
 /**
@@ -27,16 +34,6 @@ UCLASS()
 class P_RD_API UEnemyUnitAttributeSet : public UUnitAttributeSet
 {
 	GENERATED_BODY()
-
-public:
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UEnemyUnitAttributeSet, RechargeMovement)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UEnemyUnitAttributeSet, RechargeDiceSum)
-
-protected:
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData RechargeMovement;
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData RechargeDiceSum;
 };
 
 /**
@@ -55,14 +52,10 @@ public:
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, MaxExp)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Exp)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Money)
 
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData MaxExp;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Exp;
-	
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData Money;
 };

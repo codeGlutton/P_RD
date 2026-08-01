@@ -11,6 +11,12 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
+#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/PassiveActivateContext.h"
@@ -51,7 +57,6 @@ namespace
 void FActiveSkillContext::Clear()
 {
 	mMapModel = nullptr;
-	mDiceSum = 0;
 	mSelfTileIndex = FTileIndex::Invalid;
 	mAimedTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
@@ -80,17 +85,23 @@ FSkillEntry::FSkillEntry(UStaticSkillData* Data) : mData(Data)
 
 bool FSkillEntry::IsValid() const
 {
-	return mData != nullptr;
+	return mData != nullptr && mData->mSkillMotionLayers.IsEmpty() == false;
 }
 
 USkillComponentModel::USkillComponentModel()
 {
-	mSkillEntries.Init(FSkillEntry(), 4 /*추가 스킬*/ + 2 /*기본 스킬*/);
 }
 
 void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkillData>>& SkillList)
 {
 	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+
+	int32 SkillPoolSize = 4 /*추가 스킬*/ + 2 /*기본 스킬*/;
+	if (SkillList.Num() > SkillPoolSize)
+	{
+		SkillPoolSize = SkillList.Num();
+	}
+	mSkillEntries.Init(FSkillEntry(), SkillPoolSize);
 
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
@@ -102,6 +113,13 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList)
 {
 	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+
+	int32 SkillPoolSize = 4 /*추가 스킬*/ + 2 /*기본 스킬*/;
+	if (SkillList.Num() > SkillPoolSize)
+	{
+		SkillPoolSize = SkillList.Num();
+	}
+	mSkillEntries.Init(FSkillEntry(), SkillPoolSize);
 
 	int32 NextSkillIndex = 0;
 	for (const FPrimaryAssetId& AssetId : SkillList)
@@ -135,32 +153,59 @@ void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum, FOnEndSkillUI Callback)
+bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
+{
+	const bool HasEnoughMovement = HasRequiredMovement(SkillIndex);
+	const bool IsWaitingCooldown = IsCooldown(SkillIndex);
+
+	return HasEnoughMovement == true && IsWaitingCooldown == false;
+}
+
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerUnitModel->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
 	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
 	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
 
+	UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
+
+	/* 쿨다운 처리 */
+	
+	{
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Cooldown::StaticClass(), EffectContext);
+		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
+		SkillEntry.mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	/* 행동력 소모 */
+
+	{
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Movement::StaticClass(), EffectContext);
+		EffectSpec->mDynamicMagnitude = -GetRequiredMovement(SkillIndex);
+		AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
 	/* 활성화 스킬 데이터 채우기 */
 
-	mActiveSkillContext.mDiceSum = DiceSum;
-	mActiveSkillContext.mMapModel = MapModel;
-	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
-	mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
-	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, AimedTileIndex, DiceSum);
-	mActiveSkillContext.mSkillIndex = SkillIndex;
-	mActiveSkillContext.mMotionIndex = 0;
-	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+	{
+		mActiveSkillContext.mMapModel = MapModel;
+		mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
+		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
+		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, AimedTileIndex);
+		mActiveSkillContext.mSkillIndex = SkillIndex;
+		mActiveSkillContext.mMotionIndex = 0;
+		mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+	}
 
 	/* 스킬 실행 콜백 */
 
@@ -216,15 +261,6 @@ void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 		Passive->CommitPassive(DynamicPassiveData);
 	}
 
-	
-	// 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료
-	if (SkillData->mSkillMotionLayers.Num() == 0)
-	{
-		UE_LOG(LogRD, Warning, TEXT("스킬(index %d)에 모션 레이어가 없어 시전을 건너뜁니다 — DA에 mSkillMotionLayers 미설정"), SkillIndex);
-		DeactivateSkill();
-		return;
-	}
-
 	PlayMotionLayer();
 }
 
@@ -233,10 +269,8 @@ void USkillComponentModel::PlayMotionLayer()
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
@@ -267,7 +301,7 @@ void USkillComponentModel::PlayMotionLayer()
 
 	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 	{
-		EffectLayer.Get().ApplyPointEffect(OwnerCombatTarget, mActiveSkillContext.mDiceSum);
+		EffectLayer.Get().ApplyPointEffect(OwnerCombatTarget);
 	}
 
 	/* 이펙트 가격 전 패시브 적용 */
@@ -365,10 +399,8 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
@@ -387,6 +419,15 @@ void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDir
 
 	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
 
+	// 구독자가 없으면 배리어를 잡을 사람이 없어 스킬이 그 자리에서 끝난다.
+	// 어떤 유닛/태그에서 그러는지 소리 내어 남긴다 -- 시뮬레이션(심)은 원래
+	// 구독자가 없는 것이 정상이라 라이브에서만 문제다.
+	if (OwnerUnitModel->OnPlayApplyAnimationUI.IsBound() == false)
+	{
+		UE_LOG(LogRD, Warning, TEXT("%s: 시전 연출 구독자 없음(태그 %s) — 배리어가 즉시 풀림"),
+			*OwnerUnitModel->GetName(), *MotionLayer.mApplyMotionTag.ToString());
+	}
+
 	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MoveTemp(TriggerCallback), MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
 }
@@ -402,10 +443,8 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
@@ -450,8 +489,7 @@ void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* P
 			OwnerSnapshot, 
 			OtherCombatTargets, 
 			OtherSnapshots, 
-			mActiveSkillContext.mTargetTileIndexes, 
-			mActiveSkillContext.mDiceSum
+			mActiveSkillContext.mTargetTileIndexes
 		);
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
@@ -550,10 +588,8 @@ void USkillComponentModel::EndMotionLayer()
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전한 Owner가 유효하지 않음"));
@@ -590,10 +626,8 @@ void USkillComponentModel::EndMotionLayer()
 void USkillComponentModel::DeactivateSkill()
 {
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
@@ -642,13 +676,14 @@ bool USkillComponentModel::IsAnySkillActivated() const
 	return mActiveSkillContext.IsValid() == true;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
-	const float AimRange = StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
+	const float AimRange = StaticSkillData->mAimRange;
 	const EAimPattern Pattern = StaticSkillData->mAimPattern;
 	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
 	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mAimBlockerMask);
@@ -665,14 +700,15 @@ TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel,
 	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
-	const int32 EffectRange = StaticSkillData->mEffectAreaDefaultValue + DiceSum * StaticSkillData->mEffectAreaRatio;
+	const int32 EffectRange = StaticSkillData->mEffectArea;
 	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mEffectBlockerMask);
 
 	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
@@ -689,4 +725,125 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	}
 
 	return EffectTiles;
+}
+
+bool USkillComponentModel::HasRequiredMovement(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	const UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	if (OwnerUnitModel == nullptr)
+	{
+		return false;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerUnitModel->GetAttributeComponentModel();
+	if (AttributeSetCompModel == nullptr)
+	{
+		return false;
+	}
+
+	return SkillEntry->mData->mRequiredMovement <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+}
+
+int32 USkillComponentModel::GetRequiredMovement(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	return SkillEntry->mData->mRequiredMovement;
+}
+
+bool USkillComponentModel::IsCooldown(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	return SkillEntry->mCooldownHandle.IsValid() == true && SkillEntry->mCooldownHandle.GetOwningAttributeSetComponentModel() != nullptr;
+}
+
+ETacticalEffectDurationUnitType USkillComponentModel::GetCooldownUnit(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return ETacticalEffectDurationUnitType::EveryTurn;
+	}
+
+	UClass* CooldownEffectClass = SkillEntry->mData->mCooldownEffectClass.Get();
+	if (CooldownEffectClass == nullptr)
+	{
+		CooldownEffectClass = SkillEntry->mData->mCooldownEffectClass.LoadSynchronous();
+	}
+	if (CooldownEffectClass == nullptr)
+	{
+		return ETacticalEffectDurationUnitType::EveryTurn;
+	}
+
+	return GetDefault<UTacticalEffect>(CooldownEffectClass)->mDurationUnitPolicy;
+}
+
+int32 USkillComponentModel::GetStaticCooldownDuration(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	return SkillEntry->mData->mCooldownDuration;
+}
+
+int32 USkillComponentModel::GetCooldownDuration(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	const UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	if (OwnerUnitModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerUnitModel->GetAttributeComponentModel();
+	if (AttributeSetCompModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	return AttributeSetCompModel->GetActiveEffectsDuration(SkillEntry->mCooldownHandle);
+}
+
+int32 USkillComponentModel::GetRemainingCooldownTime(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	const UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	if (OwnerUnitModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerUnitModel->GetAttributeComponentModel();
+	if (AttributeSetCompModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	return AttributeSetCompModel->GetActiveEffectsTimeRemaining(SkillEntry->mCooldownHandle);
 }

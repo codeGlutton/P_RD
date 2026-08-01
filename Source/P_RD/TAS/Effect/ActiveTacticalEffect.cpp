@@ -33,8 +33,16 @@ void FActiveTacticalEffectHandle::ResetGlobalHandleMap(UWorld* World)
 
 UAttributeSetComponentModel* FActiveTacticalEffectHandle::GetOwningAttributeSetComponentModel() const
 {
+    if (mWorld == nullptr)
+    {
+        return nullptr;
+    }
+
     UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(mWorld.Get());
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+    if (TacticalFrameworkModel == nullptr)
+    {
+        return nullptr;
+    }
 
     TWeakObjectPtr<UAttributeSetComponentModel>* Ptr = TacticalFrameworkModel->mEffectOwningModelMap.Find(*this);
     if (Ptr != nullptr)
@@ -56,4 +64,23 @@ FActiveTacticalEffect::FActiveTacticalEffect(FActiveTacticalEffectHandle Handle,
     mHandle(Handle),
     mSpec(Spec)
 {
+}
+
+int32 FActiveTacticalEffect::GetTimeRemaining(int32 WorldTime) const
+{
+    int32 Duration = GetDuration();
+    return (Duration == FTacticalEffectConstants::INFINITE_DURATION ? -1 : Duration - (WorldTime - mStartTime));
+}
+int32 FActiveTacticalEffect::GetDuration() const
+{
+    return mSpec.GetDuration();
+}
+ETacticalEffectDurationUnitType FActiveTacticalEffect::GetDurationUnit() const
+{
+    return mSpec.mEffectClass->mDurationUnitPolicy;
+}
+int32 FActiveTacticalEffect::GetEndTime() const
+{
+    int32 Duration = GetDuration();
+    return (Duration == FTacticalEffectConstants::INFINITE_DURATION ? -1.f : Duration + mStartTime);
 }

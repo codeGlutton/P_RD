@@ -1,9 +1,12 @@
 ﻿#include "GameMode/CombatGameMode.h"
 
+#include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
+#include "Components/Button.h"
+#include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
@@ -11,10 +14,15 @@
 #include "PCGStage/Room.h"
 #include "Setting/RDWorldSettings.h"
 
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "UI/RDUserWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIWidgetBase.h"
+#include "Singleton/WorldSubsystem/WorldCameraModel.h"
+#include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
 
@@ -22,22 +30,20 @@
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
-#include "SRPGFramework/SRPGDiceRollAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "Dice/DicePoolModel.h"
-#include "Dice/DiceModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
+#include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
-#include "DataAsset/DiceData/StaticDiceData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Actor/BoardActor/BoardSelectionTarget.h"
@@ -203,6 +209,7 @@ namespace
 ACombatGameMode::ACombatGameMode()
 {
 	mCombatUIModel = CreateDefaultSubobject<UCombatUIModel>(TEXT("CombatUIModel"));
+	mRewardUIModel = CreateDefaultSubobject<URewardUIModel>(TEXT("RewardUIModel"));
 }
 
 void ACombatGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -224,10 +231,11 @@ void ACombatGameMode::InitGame(const FString& MapName, const FString& Options, F
 void ACombatGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
-	mCombatRewardClaimed = false;
-	mCombatRewardGoldClaimed = false;
-	mCombatRewardExpClaimed = false;
-	mCombatRewardChoiceClaimedIndices.Reset();
+
+	mGoldRewardClaimed = false;
+	mExpRewardClaimed = false;
+	mClaimedRewardChoiceIndices.Reset();
+	mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -243,97 +251,154 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
-	CombatModel->OnShowDicePanelAnyTurnUI.AddWeakLambda(this, [this](const USRPGTurnContext* TurnContext) {
-		// 턴 시작 주사위 준비(DicePrepare) 시점 — 굴림 오버레이를 열라고 UI에 통지한다.
-		mCombatUIModel->NotifyDiceRollRequested();
+	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this]() {
+		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
+		checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
+
+		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+		TArray<FTileTransform> PlayerTransforms;
+		for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
+		{
+			if (PlayerUnitModel != nullptr)
+			{
+				PlayerTransforms.Add(PlayerUnitModel->GetTileTransform());
+			}
+			else
+			{
+				PlayerTransforms.Add(FTileTransform::Invalid);
+			}
+		}
+
+		GameProfileSubsystem->ClearCurrentCombatRoom(PlayerTransforms);
+		SaveRunWithUIAsync();
+		GameProfileSubsystem->ClearCurrentCombatRoom(TArray<FTileTransform>());
+		});
+	CombatModel->OnShowCombatResultUI.AddWeakLambda(this, [this](ESRPGCombatResult Result) {
+		if (Result == ESRPGCombatResult::PlayerWin)
+		{
+			PushCombatRewardUIData();
+			PushCombatRewardChoicesUIData();
+		}
+		mCombatUIModel->NotifyCombatResultOpenRequested();
 		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
-		// OnBeginCombatUI.Broadcast(Barrier); 연출은 연결고리가 아직 없음
+		mCombatUIModel->OnBeginCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
+		CancelPendingActionEndAfterCameraReturn();
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
-		OnEndCombatUI.Broadcast(Barrier, Result);
+		PushCombatResultUIData(Result);
+		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
+		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
+		// 무엇을 조종하는 중인지 알 수 없다.
+		mInspectedUnitId = INDEX_NONE;
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushTurnUIData();
 		PushUnitUIData();
-		PushDiceUIData();
 		PushSkillUIData();
 		PushEquipmentUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
-		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
+		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
 	// 라운드 시작 연출: 데이터(mRound) 먼저 갱신 후 배리어를 HUD로 중계한다(순서 보장 위해 게임모드가 재방송).
 	// 프레임워크가 OnBeginAnyRoundUI를 방송하기 전까지 이 람다는 호출되지 않는다(휴면). 방송 배선은 SRPGCombatModel TODO 참고.
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
 		PushTurnUIData();   // 배너 숫자용 mRound 갱신
-		OnBeginAnyRoundUI.Broadcast(Barrier, RoundCount);
+		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
-		// OnEndAnyTurnUI.Broadcast(Barrier, TurnContext, Result); 연출은 연결고리가 아직 없음
+		CancelPendingActionEndAfterCameraReturn();
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
+		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
+		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
+		CancelPendingActionEndAfterCameraReturn();
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
-		// OnBeginAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action); 연출은 연결고리가 아직 없음
+		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
-		// 액션이 끝나면 UI의 스킬/주사위 선택 표시를 지운다.
-		mCombatUIModel->NotifyActionResolved();
-		// [비활성화] 실행 후 잠깐 떴다 사라지는 레거시 실행 로그(mIsPreview=false). 프리뷰(조준)만 쓰기로 함.
-		// 로그는 여전히 소비(Pop)해 쌓이지 않게 비운다.
-		if (UEventLogger* EventLogger = GetWorldEventLogger(this))
-		{
-			// 액션 실행 로그는 UI로 띄우지 않고 소비만 해서, 다음 조준 프리뷰에 섞이지 않게 한다.
-			EventLogger->PopSRPGLogs();
-		}
-		// OnEndAnyTurnActionUI.Broadcast(Barrier, TurnContext, Action, Result); 연출은 연결고리가 아직 없음
-		});
-
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	/* 주사위 대리자 연결 */
-
-	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
-	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
-
-	DicePoolModel->OnRollAllDicesUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
-		PushDiceUIData();
-		});
-	DicePoolModel->OnUseDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
-		PushDiceUIData();
-		});
-	DicePoolModel->OnResetAllDiceUI.AddWeakLambda(this, [this](const TArray<TObjectPtr<UDiceModel>>& Dices) {
-		PushDiceUIData();
-		});
-
-	DicePoolModel->OnSelectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
-		PushDiceUIData();
-		});
-	DicePoolModel->OnUnselectedDiceUI.AddWeakLambda(this, [this](const UDiceModel* Dice) {
-		PushDiceUIData();
-		});
-
-	/* 스킬 대리자 연결 */
-
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
-
-	SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+		// 방금 쓴 스킬에 쿨타임이 걸렸다. 다시 안 내리면 카드가 옛 숫자를 그대로
+		// 들고 있어, 쓴 스킬이 아직 쓸 수 있는 것처럼 보인다.
+		//
+		// 행동력도 줄었으므로 유닛도 같이 내린다 -- 속성 델리게이트가 잡아
+		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
+		PushUnitUIData();
+		// 성공 이동은 실제 최종 AP와 같은 값으로 유지되고, 취소 이동은 실제
+		// 차감이 없으므로 원래 AP로 돌아간다.
+		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
+		mCombatUIModel->NotifyActionResolved();
+
+		/*
+		 * 카메라가 스킬 강조에서 돌아오는 중이면 "행동 끝" 표시(카드 복귀)를
+		 * 카메라가 제자리에 온 다음으로 미룬다. 몽타쥬가 끝나도 화면은 아직
+		 * 줌인 자리라, 지금 카드를 펴면 연출 위로 카드가 튀어나온다.
+		 *
+		 * 배리어는 잡지 않는다 -- 프레임워크 진행이 카메라를 기다리면 안 된다.
+		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
+		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
+		 */
+		UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
+		{
+			CancelPendingActionEndAfterCameraReturn();
+			mPendingActionEndAfterCameraReturnHandle =
+				WorldCameraModel->OnMainCameraReturned.AddWeakLambda(this,
+				[this, WorldCameraModel]() {
+					WorldCameraModel->OnMainCameraReturned.Remove(
+						mPendingActionEndAfterCameraReturnHandle);
+					mPendingActionEndAfterCameraReturnHandle.Reset();
+					if (mCombatUIModel != nullptr)
+					{
+						mCombatUIModel->OnEndAnyTurnAction.Broadcast(nullptr);
+					}
+				});
+			return;
+		}
+		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
-	SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-		mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
-		});
+	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
+	 *
+	 * 0번에게만 걸고 있었다. 그러면 야만전사가 스킬을 바꾸거나 모션을 끝내도
+	 * 화면이 모른다 -- 파티가 한 명일 때 짜 놓은 것이 셋이 되며 드러났다.
+	 */
+
+	for (UPlayerUnitModel* PartyUnitModel : GetPlayerUnitModels())
+	{
+		if (PartyUnitModel == nullptr)
+		{
+			continue;
+		}
+		USkillComponentModel* SkillComponentModel = PartyUnitModel->GetSkillComponentModel();
+		if (SkillComponentModel == nullptr)
+		{
+			continue;
+		}
+
+		SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData) {
+			PushSkillUIData();
+			});
+
+		SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
+			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+			});
+	}
 
 	/* UI 조작 의도 라우팅 — 위젯 탭이 쏘는 Request*(OnCombatCommand)를 게임플레이 진입점에 연결 */
 
-	mCombatUIModel->OnApplyDiceResults.AddUniqueDynamic(this, &ACombatGameMode::HandleApplyDiceResults);
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
+	mCombatUIModel->OnAbandonRun.AddUniqueDynamic(this, &ACombatGameMode::HandleAbandonRun);
+	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
@@ -351,48 +416,204 @@ void ACombatGameMode::InitializeRoom()
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModel(), SpawnPointTransform);
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mRoomClearTileTransforms);
 }
 
-/**
- * @brief UIModel에서 올라온 버튼 입력을 전투 명령으로 보낸다.
- */
+void ACombatGameMode::BeginRoom()
+{
+	Super::BeginRoom();
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
+
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
+		{
+			// 모델은 **여기서 건네준다.** UI 가 게임모드를 거꾸로 찾아오면
+			// UI 레이어에 게임모드 의존이 생긴다(#426 에서 걷어낸 그것).
+			// 붙이고 나서 연다 -- 열면서 첫 갱신이 도는데 그때 모델이 있어야
+			// 한 프레임 빈 화면이 안 스친다.
+			if (UCombatUIWidgetBase* CombatUIWidget = Cast<UCombatUIWidgetBase>(CombatHUD))
+			{
+				CombatUIWidget->BindUIModel(mCombatUIModel);
+			}
+			if (UCombatLayoutHUDWidget* CombatLayoutHUDWidget = Cast<UCombatLayoutHUDWidget>(CombatHUD))
+			{
+				CombatLayoutHUDWidget->BindRewardUIModel(mRewardUIModel);
+			}
+			if (UButton* InventoryButton = Cast<UButton>(
+				CombatHUD->GetWidgetFromName(TEXT("MenuButton_2"))))
+			{
+				InventoryButton->OnClicked.AddUniqueDynamic(
+					this, &ACombatGameMode::HandleOpenInventory);
+			}
+			CombatHUD->OpenUI();
+		}
+	}
+
+	CombatModel->BeginCombat();
+}
+
+UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
+{
+	return mCombatUIModel;
+}
+
+URewardUIModel* ACombatGameMode::GetRewardUIModel() const
+{
+	return mRewardUIModel;
+}
+
+void ACombatGameMode::HandleOpenInventory()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	URDUserWidget* InventoryWidget = WorldWidgetSubsystem != nullptr
+		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::Inventory))
+		: nullptr;
+	if (InventoryWidget != nullptr)
+	{
+		InventoryWidget->OpenUI();
+	}
+}
+
+void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
+{
+	if (mPendingActionEndAfterCameraReturnHandle.IsValid() == false)
+	{
+		return;
+	}
+
+	if (UWorldCameraModel* WorldCameraModel =
+		GetWorldSubsystemModel<UWorldCameraModel>(this))
+	{
+		WorldCameraModel->OnMainCameraReturned.Remove(
+			mPendingActionEndAfterCameraReturnHandle);
+	}
+	mPendingActionEndAfterCameraReturnHandle.Reset();
+}
+
+bool ACombatGameMode::SelectSkill(int32 SkillIndex)
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
+	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnSelectSkill.AddWeakLambda(this, [this](int32 SkillIndex) {
+		PushSelectedSkillUIData(SkillIndex);
+		});
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
+		PushSkillBuildUIData(Phase);
+		});
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
+		PushSimulationFloatingLogs(EventLogs);
+		});
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
+		mCombatUIModel->NotifyCombatFloatingLogsCleared();
+		});
+
+	return CommandRouterModel->SummitCommand(SkillSelectCommand);
+}
+
+bool ACombatGameMode::SelectMove()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
+	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
+	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
+		PushMoveBuildUIData(Action, Phase);
+		});
+
+	return CommandRouterModel->SummitCommand(MoveSelectCommand);
+}
+
+bool ACombatGameMode::EndTurn()
+{
+	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+
+	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
+	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
+
+	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+}
+
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
 	switch (Type)
 	{
+	// 스킬/이동을 골라도 켜 둔 위협 범위는 걷지 않는다. "저기까지 오는데
+	// 어디로 피하지"를 보면서 고르라고 켜 둔 것이다 -- 켜고 끄는 것은 적
+	// 타일 탭만 한다. 턴이 끝나면 적이 움직여 칠이 낡으므로 그때는 걷는다.
 	case ECombatInputType::SelectSkill:
 		SelectSkill(IntPayload);
-		break;
-	case ECombatInputType::ToggleDice:
-		SelectDice(IntPayload);
-		break;
-	case ECombatInputType::RollDice:
-		RollDices();
 		break;
 	case ECombatInputType::Move:
 		SelectMove();
 		break;
 	case ECombatInputType::EndTurn:
+		ClearThreatRangeView();
 		EndTurn();
 		break;
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
 		PushSkillDetailUIData(IntPayload);
 		break;
+	case ECombatInputType::InspectUnitSkill:
+		// 상세창의 스킬 칸을 탭했다. 기준은 그 상세창에 뜬 유닛이다.
+		PushUnitSkillDetailUIData(IntPayload);
+		break;
+	case ECombatInputType::LongPressUnit:
+		// UI 가 상세 패널을 닫았다는 신호로 INDEX_NONE 을 보낸다. 패널과 함께
+		// 뜬 위협 범위 칠도 같이 걷는다. 유닛 상세 요청 자체는 월드 롱프레스
+		// (HandleCombatWorldTouch)가 트레이스로 처리하므로 여기서는 닫기만 맡는다.
+		if (IntPayload == INDEX_NONE)
+		{
+			ClearThreatRangeView();
+		}
+		break;
+	case ECombatInputType::InspectUnit:
+		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
+		mInspectedUnitId = IntPayload;
+		PushSkillUIData();
+		break;
 	case ECombatInputType::LongPressEquip:
 		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
 		PushEquipmentDetailUIData(IntPayload);
 		break;
+	case ECombatInputType::Confirm:
+		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
+		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
+		// 판정을 UI 가 흉내 내면 규칙이 두 곳에 생긴다.
+		ConfirmTargetTile();
+		break;
+	case ECombatInputType::Cancel:
+		// 현재 빌드와 같은 명령을 다시 보내 취소한다. 이동 중 선택 스킬 index를
+		// 사용하면 엉뚱한 스킬이 열릴 수 있으므로 pending action 종류를 따른다.
+		if (mCombatUIModel != nullptr
+			&& mCombatUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+		{
+			const FCombatPendingActionUI& PendingAction = mCombatUIModel->GetPendingAction();
+			if (PendingAction.mType == ECombatPendingActionType::Move)
+			{
+				SelectMove();
+			}
+			else if (PendingAction.mType == ECombatPendingActionType::Skill)
+			{
+				SelectSkill(mCombatUIModel->GetSelectedSkillIndex());
+			}
+		}
+		// 겨냥을 풀고 화면도 겨냥하기 전으로 되돌린다.
+		ClearCombatTargetUIData();
+		break;
 	}
 }
 
-/**
- * @brief 월드 탭/롱프레스를 조준 입력으로 처리한다.
- *
- * @details
- * 지금 명령에는 ScreenPosition을 싣지 않는다. 전투 로직은 현재 커서 아래 타일을 직접 찾는다.
- */
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	/*
@@ -420,125 +641,164 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 	}
 }
 
-void ACombatGameMode::HandleApplyDiceResults(const TArray<int32>& RolledFaceIndices)
-{
-	ApplyRolledDices(RolledFaceIndices);
-}
-
 /**
- * @brief 물리 굴림 연출이 확정한 면 index들을 굴림 커맨드에 실어 발행한다.
+ * @brief 겨냥해 둔 칸을 그대로 다시 누른다.
  *
  * @details
- * 입장 주사위 연출은 실제 물리로 굴려 멈춘 윗면을 보여준다. 그 "보이는 면"을 그대로
- * 게임 결과로 기록해야 표시와 판정이 어긋나지 않는다. 결과를 실은 DiceRoll 커맨드는
- * 대기 중인 USRPGDiceRollAction이 소비하며(내부 난수 굴림 대신 주입값 기록),
- * 이로써 굴림 액션이 완료되어 이후 스킬 빌드 커맨드가 흐를 수 있다.
+ * 판에서 두 번째 탭이 확정이다. 화면 아래 단추로도 되게 하려면 그 탭을
+ * 대신 놓아 주면 된다 -- 확정 판정을 UI 나 여기서 흉내 내면 규칙이 두 곳에
+ * 생긴다. 칸을 화면 좌표로 되돌려 같은 길로 흘려보낸다.
  */
-bool ACombatGameMode::ApplyRolledDices(const TArray<int32>& RolledFaceIndices)
+void ACombatGameMode::ConfirmTargetTile()
 {
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> DiceRollCommand;
-	DiceRollCommand.InitializeAs<FSRPGDiceRollCommand>();
-	DiceRollCommand.GetMutable<FSRPGDiceRollCommand>().mRolledFaceIndices = RolledFaceIndices;
-
-	return CommandRouterModel->SummitCommand(DiceRollCommand);
-}
-
-void ACombatGameMode::BeginRoom()
-{
-	Super::BeginRoom();
-
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	checkf(CombatModel != nullptr, TEXT("전투 시스템 모델 nullptr"));
-
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	if (mCombatUIModel == nullptr || mCombatUIModel->GetTarget().mIsValid == false)
 	{
-		if (URDUserWidget* CombatHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
-		{
-			CombatHUD->OpenUI();
-		}
+		return;
 	}
 
-	CombatModel->BeginCombat();
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	if (TileMap == nullptr || Controller == nullptr)
+	{
+		return;
+	}
+
+	FVector2D ScreenPosition = FVector2D::ZeroVector;
+	const FVector World = TileMap->TileToWorldLocation(mCombatUIModel->GetTarget().mTile);
+	if (Controller->ProjectWorldLocationToScreen(World, OUT ScreenPosition) == false)
+	{
+		return;
+	}
+	ResolveWorldTouchEvent(ScreenPosition);
 }
 
-UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
+void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	return mCombatUIModel;
+	if (ClaimCombatReward(ClaimKind, ChoiceIndex) && mRewardUIModel != nullptr)
+	{
+		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+	}
 }
 
-bool ACombatGameMode::SelectSkill(int32 SkillIndex)
+bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+	URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr)
+	{
+		return false;
+	}
 
-	TInstancedStruct<FSRPGCommand> SkillSelectCommand;
-	SkillSelectCommand.InitializeAs<FSRPGSkillSelectCommand>();
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().mSkillIndex = SkillIndex;
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnSelectSkill.AddWeakLambda(this, [this](int32 SkillIndex) {
-		PushSelectedSkillUIData(SkillIndex);
-		});
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
-		PushSkillBuildUIData(Phase);
-		});
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
-		PushSimulationFloatingLogs(EventLogs);
-		});
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
-		});
+	const FRoom& CurrentRoomData = RunPersistData->GetCurrentRoom();
+	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
 
-	return CommandRouterModel->SummitCommand(SkillSelectCommand);
+	if (CurrentRoom == nullptr)
+	{
+		return false;
+	}
+
+	if (ClaimKind == ERewardClaimKind::Gold)
+	{
+		if (mGoldRewardClaimed || CurrentRoom->mRewardMoney <= 0)
+		{
+			return false;
+		}
+
+		UPartyModel* PartyModel = GetPartyModel();
+		if (PartyModel == nullptr)
+		{
+			return false;
+		}
+
+		UAttributeSetComponentModel* AttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+		if (AttributeSetComponentModel == nullptr)
+		{
+			return false;
+		}
+
+		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
+		mGoldRewardClaimed = true;
+		PushPlayerMetaUIData();
+		return true;
+	}
+
+	if (ClaimKind == ERewardClaimKind::Exp)
+	{
+		if (mExpRewardClaimed || CurrentRoom->mRewardExp <= 0)
+		{
+			return false;
+		}
+
+		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+		bool bGrantedToAnyPlayer = false;
+		for (UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
+		{
+			if (PlayerUnitModel == nullptr)
+			{
+				continue;
+			}
+
+			UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+			if (AttributeSetComponentModel == nullptr)
+			{
+				continue;
+			}
+
+			AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+			bGrantedToAnyPlayer = true;
+		}
+
+		if (bGrantedToAnyPlayer == false)
+		{
+			return false;
+		}
+
+		mExpRewardClaimed = true;
+		PushPlayerMetaUIData();
+		return true;
+	}
+
+	if (ClaimKind != ERewardClaimKind::Choice
+		|| ChoiceIndex == INDEX_NONE
+		|| mClaimedRewardChoiceIndices.Contains(ChoiceIndex)
+		|| mRewardUIModel == nullptr)
+	{
+		return false;
+	}
+
+	const FRewardChoiceUI* FoundChoice = mRewardUIModel->GetRewardChoices().FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
+	{
+		return Choice.mChoiceIndex == ChoiceIndex;
+	});
+	if (FoundChoice == nullptr)
+	{
+		return false;
+	}
+
+	bool bClaimed = false;
+	switch (FoundChoice->mKind)
+	{
+	case ERewardChoiceKind::Equipment:
+		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Skill:
+		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Gold:
+	default:
+		break;
+	}
+
+	if (bClaimed)
+	{
+		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
+	}
+	return bClaimed;
 }
 
-bool ACombatGameMode::SelectDice(int32 DiceIndex)
+void ACombatGameMode::HandleAbandonRun()
 {
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
-	DiceSelectCommand.InitializeAs<FSRPGDiceSelectCommand>();
-	DiceSelectCommand.GetMutable<FSRPGDiceSelectCommand>().mDiceIndex = DiceIndex;
-
-	return CommandRouterModel->SummitCommand(DiceSelectCommand);
-}
-
-bool ACombatGameMode::RollDices()
-{
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
-	DiceSelectCommand.InitializeAs<FSRPGDiceRollCommand>();
-
-	return CommandRouterModel->SummitCommand(DiceSelectCommand);
-}
-
-bool ACombatGameMode::SelectMove()
-{
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
-	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
-	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
-		PushMoveBuildUIData(Phase);
-		});
-
-	return CommandRouterModel->SummitCommand(MoveSelectCommand);
-}
-
-bool ACombatGameMode::EndTurn()
-{
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> DiceSelectCommand;
-	DiceSelectCommand.InitializeAs<FSRPGTurnEndCommand>();
-
-	return CommandRouterModel->SummitCommand(DiceSelectCommand);
+	AbandonRunFromRoom();
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
@@ -551,6 +811,11 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
+	// 톡 친 칸을 UI 에 알린다. 어느 타일인지는 트레이스한 쪽만 안다.
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnSelectTargetTile.AddWeakLambda(this,
+		[this](const FTileIndex& Tile, AActor* HitActor) {
+			PushCombatTargetUIData(Tile, HitActor);
+		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
@@ -567,15 +832,83 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
 		PushCombatTargetDetailUIData(Target);
+		ShowThreatRangeForTarget(Target);
 		});
 
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
+}
+
+void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap == nullptr)
+	{
+		return;
+	}
+
+	IObjectView* ObjectView = Cast<IObjectView>(Target);
+	UUnitModel* UnitModel = ObjectView != nullptr ? ObjectView->GetModel<UUnitModel>() : nullptr;
+	if (UnitModel == nullptr || UnitModel->IsPlayerUnitModel() == true)
+	{
+		// 아군/장애물에는 위협 범위가 없다. 이전 적의 칠만 지운다.
+		TileMap->ClearThreatRange();
+		return;
+	}
+
+	USkillComponentModel* SkillComponentModel = UnitModel->GetSkillComponentModel();
+	UAttributeSetComponentModel* AttributeSetComponentModel = UnitModel->GetAttributeComponentModel();
+	if (SkillComponentModel == nullptr || AttributeSetComponentModel == nullptr)
+	{
+		TileMap->ClearThreatRange();
+		return;
+	}
+
+	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
+	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
+	TArray<const UStaticSkillData*> SkillDatas;
+	SkillDatas.Init(nullptr, Skills.Num());
+	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+	{
+		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
+		{
+			SkillDatas[Index] = Skills[Index].mData;
+		}
+	}
+
+	const int32 ActionPoint = FMath::Max(
+		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute()),
+		0
+	);
+
+	TArray<FTileIndex> MoveTiles;
+	TArray<FTileIndex> AttackTiles;
+	TileMap->GetThreatRanges(UnitModel->GetTileTransform().mIndex, ActionPoint, SkillDatas, UnitModel, OUT MoveTiles, OUT AttackTiles);
+	TileMap->SetThreatRange(MoveTiles, AttackTiles);
+}
+
+void ACombatGameMode::ClearThreatRangeView() const
+{
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap != nullptr)
+	{
+		TileMap->ClearThreatRange();
+	}
 }
 
 void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+	const int32 UnitId = Unit->GetModelId();
+
+	Unit->OnMoveStepArrivedUI.AddWeakLambda(
+		this,
+		[this, UnitId](const int32 CompletedStepCount, const int32 /*TotalStepCount*/)
+		{
+			mCombatUIModel->SetMoveAPStepPresentation(UnitId, CompletedStepCount);
+		});
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -586,13 +919,15 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
+		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
+		PushSkillUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
 
 	// 상태 이상 태그 변경 시에도 UI 갱신 바인딩
-	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
 		PushUnitUIData();
 		});
 
@@ -605,15 +940,25 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
+	Unit->OnMoveStepArrivedUI.RemoveAll(this);
+	mCombatUIModel->ClearMoveAPStepPresentation(Unit->GetModelId());
+
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
-	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, EGameplayTagEventType::NewOrRemoved).RemoveAll(this);
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
 
 	PushTurnUIData();
 	PushUnitUIData();
+}
+
+void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
+{
+	FCombatResultUI CombatResultUIData;
+	CombatResultUIData.mIsWin = Result == ESRPGCombatResult::PlayerWin;
+	mCombatUIModel->SetCombatResultUI(CombatResultUIData);
 }
 
 void ACombatGameMode::PushTurnUIData() const
@@ -648,6 +993,7 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	{
 	case ESRPGSkillBuildPhase::None:
 	case ESRPGSkillBuildPhase::Build:
+		mCombatUIModel->SetPendingAction(FCombatPendingActionUI());
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGSkillBuildPhase::AimSelection:
@@ -659,7 +1005,7 @@ void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
 	}
 }
 
-void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
+void ACombatGameMode::PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -667,12 +1013,25 @@ void ACombatGameMode::PushMoveBuildUIData(ESRPGMoveBuildPhase Phase) const
 	{
 	case ESRPGMoveBuildPhase::None:
 	case ESRPGMoveBuildPhase::Build:
+		mCombatUIModel->SetPendingAction(FCombatPendingActionUI());
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::None);
 		break;
 	case ESRPGMoveBuildPhase::DestSelection:
+		{
+			FCombatPendingActionUI PendingAction;
+			PendingAction.mType = ECombatPendingActionType::Move;
+			mCombatUIModel->SetPendingAction(PendingAction);
+		}
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::AimSelection);
 		break;
 	case ESRPGMoveBuildPhase::Preview:
+		{
+			FCombatPendingActionUI PendingAction;
+			PendingAction.mType = ECombatPendingActionType::Move;
+			PendingAction.mActionPointCost = Action != nullptr
+				? Action->GetPlannedMoveCost() : 0;
+			mCombatUIModel->SetPendingAction(PendingAction);
+		}
 		mCombatUIModel->SetBuildPhase(ECombatBuildPhaseUI::Preview);
 		break;
 	}
@@ -701,13 +1060,20 @@ void ACombatGameMode::PushUnitUIData() const
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
+		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+		// 둘이 같은 칸을 읽고 있었다. UPlayerUnitAttributeSet 은
+		// UCombatTargetAttributeSet 을 물려받으므로 GetMovementAttribute() 가
+		// **같은 속성**을 가리킨다 -- 그래서 10/10 을 다 쓰면 0/0 이 됐다.
+		//
+		// 한 턴에 받는 총량은 따로 있다. RechargeMovement 다. 턴이 시작될 때
+		// 그 수만큼 Movement 를 채운다(UUnitModel::OnBeginTurn).
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -738,68 +1104,127 @@ void ACombatGameMode::PushUnitUIData() const
 	mCombatUIModel->SetUnitUIs(UnitUIDatas);
 }
 
-void ACombatGameMode::PushDiceUIData() const
+/**
+ * @brief 지금 겨냥한 자리에 이 스킬을 쓸 수 있나.
+ *
+ * @details
+ * 두 가지만 본다. 행동력이 남았는지, 겨냥한 칸이 사거리 안인지.
+ *
+ * 칸 사이 거리는 가로세로 중 먼 쪽으로 잰다. 대각선을 한 칸으로 치는 판이라
+ * 그렇다. 조준 모양(십자/사각)까지 따지는 것은 조준 단계가 할 일이고 여기서는
+ * 카드를 켤지 끌지만 정한다 -- 여기서 정밀하게 세면 조준 단계와 두 벌이 되고
+ * 그 둘은 언젠가 어긋난다.
+ *
+ * 겨냥한 자리가 없으면 사거리는 안 본다. 아직 아무 데도 안 찍은 상태다.
+ * @param PlayerUnitModel 지금 차례인 유닛
+ * @param StaticSkillData 검사할 스킬
+ * @return 카드를 켜도 되면 true
+ */
+bool ACombatGameMode::IsSkillUsableOnTarget(const UPlayerUnitModel* PlayerUnitModel,
+	const UStaticSkillData& StaticSkillData) const
 {
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
-	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
-
-	const TArray<TObjectPtr<UDiceModel>>& DiceModels = DicePoolModel->GetDices();
-	const int32 DiceModelsNum = DiceModels.Num();
-
-	TArray<FDiceSlotUI> DiceSlotUIDatas;
-	DiceSlotUIDatas.Init(FDiceSlotUI(), DiceModelsNum);
-
-	for (int32 i = 0; i < DiceModelsNum; ++i)
+	if (PlayerUnitModel == nullptr)
 	{
-		const TObjectPtr<UDiceModel>& DiceModel = DiceModels[i];
-		FDiceSlotUI& DiceSlotUIData = DiceSlotUIDatas[i];
-
-		// UObject 기본 GetPrimaryAssetId()는 무효 id를 반환한다 — 주사위의 원본 정적 데이터 id를 써야
-		// 위젯의 희귀도 색(ResolveDiceRarity)/프리뷰 매칭이 동작한다.
-		DiceSlotUIData.mDiceId = DiceModel->GetSourceDiceId();
-		DiceSlotUIData.mResultValue = DiceModel->IsRolled() ? DiceModel->GetCurrentValue() : 0;
-		DiceSlotUIData.mRolledFaceIndex = DiceModel->GetRolledFaceIndex();
-		DiceSlotUIData.mIsRolled = DiceModel->IsRolled();
-		DiceSlotUIData.mIsSelected = DicePoolModel->IsSelectedDice(i);
-		DiceSlotUIData.mIsUsed = DiceModel->IsUsed();
-		DiceSlotUIData.mFaceCount = DiceModel->GetFaceCount();
-		DiceSlotUIData.mFaceValues = DiceModel->GetFaceValues();
-		DiceSlotUIData.mFaceTextures = DiceModel->GetFaceTextures();
-
-		DiceSlotUIData.mRarityText = FText::FromString(EnumToString(DiceModel->GetRarity()));
-		DiceSlotUIData.mRarityColor = GetRarityColor(DiceModel->GetRarity());
+		return false;
 	}
 
-	mCombatUIModel->SetDiceState(
-		DiceSlotUIDatas,
-		DicePoolModel->GetSelectedDices(),
-		DicePoolModel->GetSelectedDiceSum());
+	const FCombatTargetUI& Target = mCombatUIModel != nullptr
+		? mCombatUIModel->GetTarget() : FCombatTargetUI();
+	if (Target.mIsValid == false)
+	{
+		return true;
+	}
+
+	/*
+	 * 조준 중이 아닐 때의 겨냥은 "살펴보기"다(적 안내판·위협 범위 표시용).
+	 *
+	 * 아직 아무 스킬도 고르지 않았는데 그 적까지의 거리로 카드를 잠그면,
+	 * 멀리 있는 적을 확인만 해도 스킬 전부가 잠긴 것처럼 보인다 -- 위협
+	 * 범위를 보면서 스킬을 고르라고 만든 기능이 스킬 선택을 막았다.
+	 * 사거리 판정은 실제로 조준에 들어간 뒤에만 한다.
+	 */
+	if (mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None)
+	{
+		return true;
+	}
+
+	const FTileIndex& Here = PlayerUnitModel->GetTileTransform().mIndex;
+	const int32 Distance = FMath::Max(
+		FMath::Abs(Target.mTile.mX - Here.mX),
+		FMath::Abs(Target.mTile.mY - Here.mY));
+	return Distance <= StaticSkillData.mAimRange;
 }
 
-void ACombatGameMode::PushSelectedDiceUIData() const
+/**
+ * @brief 파티에서 이 id 의 유닛을 찾는다.
+ *
+ * @details
+ * UI 는 액터도 모델도 모르고 FUnitUI.mUnitId 만 안다. 그 id 로 되짚는 자리가
+ * 여기다.
+ * @param UnitId 찾을 유닛. INDEX_NONE 이면 안 찾는다
+ * @return 없으면 nullptr
+ */
+/**
+ * @brief 지금 차례인 아군.
+ * @return 적 차례거나 없으면 nullptr
+ */
+UPlayerUnitModel* ACombatGameMode::GetTurnPlayerUnitModel() const
 {
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	const USRPGTurnContext* TurnContext = CombatModel != nullptr
+		? CombatModel->GetCurrentTurnContext() : nullptr;
+	UUnitModel* TurnUnit = TurnContext != nullptr ? TurnContext->GetOwner() : nullptr;
+	if (TurnUnit == nullptr || TurnUnit->IsPlayerUnitModel() == false)
+	{
+		return nullptr;
+	}
+	return FindPartyUnitModel(TurnUnit->GetModelId());
+}
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
+{
+	if (UnitId == INDEX_NONE)
+	{
+		return nullptr;
+	}
 
-	UDicePoolModel* DicePoolModel = PlayerUnitModel->GetDicePoolModel();
-	checkf(DicePoolModel != nullptr, TEXT("주사위 컴포넌트 nullptr"));
-
-	mCombatUIModel->SetSelectedDice(DicePoolModel->GetSelectedDices(), DicePoolModel->GetSelectedDiceSum());
+	for (UPlayerUnitModel* PartyUnitModel : GetPlayerUnitModels())
+	{
+		if (PartyUnitModel != nullptr && PartyUnitModel->GetModelId() == UnitId)
+		{
+			return PartyUnitModel;
+		}
+	}
+	return nullptr;
 }
 
 void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	// 차례가 적에게 있으면 마지막으로 움직인 아군 것을 그대로 둔다. 카드는
+	// 적 차례에 어차피 접혀 있고, 여기서 비우면 차례가 돌아올 때 한 프레임
+	// 빈 카드가 스친다.
+	UPlayerUnitModel* TurnUnitModel = GetTurnPlayerUnitModel();
+	if (TurnUnitModel == nullptr)
+	{
+		TurnUnitModel = GetPlayerUnitModel(0);
+	}
+	if (TurnUnitModel == nullptr)
+	{
+		return;
+	}
+
+	// 들여다보는 유닛이 있으면 그쪽 스킬을 보여 준다. 없으면 지금 차례인 유닛.
+	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = TurnUnitModel;
+	}
+
+	// 제 차례가 아닌 유닛의 카드는 전부 꺼서 보여 준다. 무엇을 들고 있는지
+	// 아는 것과 지금 쓸 수 있는 것은 다른 이야기라, 감추는 대신 끈다.
+	const bool bIsOwnTurn = PlayerUnitModel == TurnUnitModel;
 
 	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
@@ -823,14 +1248,58 @@ void ACombatGameMode::PushSkillUIData() const
 		{
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-			SkillUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
-			SkillUIData.mIsUsable = true;
+			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+
+			// 쿨타임. 총량은 데이터에셋 값을 그대로 쓴다 -- GetCooldownDuration은
+			// 걸려 있는 효과를 읽으므로 쿨이 안 돌 때는 값이 없다.
+			SkillUIData.mCooldownTurns = FMath::Max(
+				SkillComponentModel->GetStaticCooldownDuration(i), 0);
+			SkillUIData.mRemainingCooldown = (SkillComponentModel->IsCooldown(i) == true)
+				? FMath::Max(SkillComponentModel->GetRemainingCooldownTime(i), 0) : 0;
+
+			// 피해. 한 스킬이 여러 모션으로 나뉘어 때리므로 다 더한 것이 카드에
+			// 적을 수다. 자동 생성 설명도 같은 값을 쓴다.
+			//
+			// [합의필요] min/max 로 나누기로 정했는데(0728) 데이터에셋은 아직
+			// mDamage 한 값이다. 그래서 지금은 min == max 다. 모호재님이 나누면
+			// 여기 두 줄만 각각 읽으면 된다.
+			//
+			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
+			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
+			int32 SkillDamage = 0;
+			for (const FSkillMotionLayer& MotionLayer : StaticSkillData->mSkillMotionLayers)
+			{
+				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+				{
+					if (const FSkillEffectLayer_Attack* Attack = EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+					{
+						SkillDamage += Attack->mDamage;
+					}
+				}
+			}
+			SkillUIData.mDamageMin = SkillDamage;
+			SkillUIData.mDamageMax = SkillDamage;
+			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
+			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
+			// 그쪽 값을 받아 이 줄을 지운다.
+			SkillUIData.mCriticalDamage = FMath::RoundToInt(SkillUIData.mDamageMax * 1.5f);
+			// 쓸 수 있는지는 세 가지를 다 본다. 하나라도 아니면 카드를 끈다.
+			//
+			//   쿨타임이 도는 중        IsCooldown
+			//   행동력이 모자람          HasRequiredMovement
+			//   겨냥한 자리가 사거리 밖   IsSkillUsableOnTarget
+			//
+			// 앞의 둘을 안 보고 있었다. 쿨타임이 도는 스킬도, AP 가 0 인
+			// 유닛의 스킬도 멀쩡히 켜져 있었다. 화면은 이 판정을 안 한다 --
+			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
+			SkillUIData.mIsUsable = bIsOwnTurn
+				&& SkillComponentModel->IsCooldown(i) == false
+				&& SkillComponentModel->HasRequiredMovement(i) == true
+				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-			SkillUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
+			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
-			SkillUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
+			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 			// 차단 레이어가 비어 있으면 곡사/관통으로 표시
 			SkillUIData.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
 			SkillUIData.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
@@ -845,9 +1314,129 @@ void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	mCombatUIModel->SetSelectedSkill(SkillIndex);
+
+	FCombatPendingActionUI PendingAction;
+	const TArray<FSkillUI>& Skills = mCombatUIModel->GetSkillUIs();
+	if (Skills.IsValidIndex(SkillIndex))
+	{
+		PendingAction.mType = ECombatPendingActionType::Skill;
+		PendingAction.mActionPointCost = Skills[SkillIndex].mActionPointCost;
+	}
+	mCombatUIModel->SetPendingAction(PendingAction);
 }
 
-void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target) const
+/**
+ * @brief 톡 쳐서 고른 칸을 UI 에 내린다.
+ *
+ * @details
+ * 겨냥한 자리가 바뀌면 그 자리에 쓸 수 있는 스킬이 달라진다. 그래서 스킬
+ * 표시값도 같이 다시 내린다 -- 둘을 따로 내리면 한 프레임 동안 카드가 옛
+ * 자리 기준으로 켜져 있다.
+ * @param Tile     겨냥한 타일
+ * @param HitActor 그 칸에 선 액터. 빈 칸이면 nullptr
+ */
+void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor)
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+
+	/*
+	 * 조준 중이 아닌 탭은 "살펴보기"다.
+	 *
+	 * 유닛을 짚었을 때만 겨냥을 움직인다. 빈 칸을 겨냥으로 세우면 카드 사용
+	 * 가능 판정이 그 칸 사거리 기준으로 돌아서, 행동력이 멀쩡한데도 스킬이
+	 * 잠겨 보인다 -- 카드를 펴려고 판을 누른 손이 카드를 잠갔다.
+	 *
+	 * 빈 칸 탭은 살펴보기를 **건드리지 않는다.** 위협 범위와 겨냥은 그 적을
+	 * 다시 누르기 전까지 남는다 -- 카드를 펴려고 판을 누른 손이 봐 둔 위협을
+	 * 지우면, 볼 때마다 다시 짚어야 한다.
+	 *
+	 * 조준 중에는 빈 칸도 의미가 있다(이동 목적지, 바닥 조준). 그쪽은 기존
+	 * 규칙 그대로 둔다.
+	 */
+	const bool bBrowsing = mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None;
+	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+
+	// 유닛이 서 있는 타일을 짚은 것은 유닛을 짚은 것이다. 트레이스가 유닛
+	// 메시 대신 발밑 타일에 먼저 맞아도 뜻은 같다 -- 손가락은 칸을 누른다.
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+		if (TileMap != nullptr)
+		{
+			if (UUnitModel* OccupantUnitModel = TileMap->GetActorOnTile<UUnitModel>(Tile))
+			{
+				HitActor = OccupantUnitModel->GetView<AActor>();
+				SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			}
+		}
+	}
+	if (bBrowsing == true && SelectionTarget == nullptr)
+	{
+		return;
+	}
+
+	// 겨냥한 칸을 다시 누르면 무른다.
+	const FCombatTargetUI& Current = mCombatUIModel->GetTarget();
+	if (Current.mIsValid == true && Current.mTile == Tile)
+	{
+		// 짚어서 칠해 둔 위협 범위도 같이 걷는다. 같은 적 재탭 = 그만 보기.
+		ClearThreatRangeView();
+		ClearCombatTargetUIData();
+		return;
+	}
+
+	FCombatTargetUI TargetUIData;
+	TargetUIData.mIsValid = true;
+	TargetUIData.mTile = Tile;
+
+	// 액터가 아니라 모델의 id 를 싣는다. UI 는 FUnitUI.mUnitId 와 같은 id
+	// 공간만 알고 액터는 모른다.
+	if (const IActorView* ActorView = Cast<IActorView>(HitActor))
+	{
+		if (const UBoardActorModel* BoardActorModel =
+			Cast<UBoardActorModel>(ActorView->GetModel()))
+		{
+			TargetUIData.mUnitId = BoardActorModel->GetModelId();
+		}
+	}
+
+	mCombatUIModel->SetTarget(TargetUIData);
+	PushSkillUIData();
+
+	/*
+	 * 적을 짚으면 위협 범위를 판에 칠해 안내판(요약)과 나란히 읽히게 한다 --
+	 * 길게 눌러야만 위협을 볼 수 있으면 확인이 조작 사이에 못 끼어든다.
+	 * 아군을 짚으면 걷는다(ShowThreatRangeForTarget 내부 판정).
+	 *
+	 * 조준 중에는 건드리지 않는다. 사거리/효과 하이라이트와 겹치면 어느
+	 * 칠이 무엇인지 읽을 수 없다.
+	 */
+	if (bBrowsing == true)
+	{
+		ShowThreatRangeForTarget(SelectionTarget);
+	}
+}
+
+/**
+ * @brief 겨냥을 푼다.
+ *
+ * 겨냥이 풀리면 그 자리 기준으로 켜고 끄던 카드도 다시 계산해야 한다.
+ */
+void ACombatGameMode::ClearCombatTargetUIData()
+{
+	if (mCombatUIModel == nullptr)
+	{
+		return;
+	}
+	mCombatUIModel->SetTarget(FCombatTargetUI());
+	PushSkillUIData();
+}
+
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target)
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -862,8 +1451,10 @@ void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target
 	UnitDetailUIData.mName = BoardActorModel->GetBoardActorDisplayName();
 	UnitDetailUIData.mLevel = BoardActorModel->GetBoardActorLevel();
 	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
-	
+
 	UUnitModel* UnitModel = ObjectView->GetModel<UUnitModel>();
+	// 상세창 스킬 칸 탭을 되짚을 기준이다. 유닛이 아닌 것(장애물)을 골랐으면 비운다.
+	mDetailUnitModel = UnitModel;
 	if (UnitModel != nullptr)
 	{
 		UPassiveComponentModel* PassiveComponentModel = UnitModel->GetPassiveComponentModel();
@@ -872,48 +1463,95 @@ void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target
 		{
 			UnitDetailUIData.mPassiveDescriptions.Add(Passive->GetStaticData()->mDescription);
 		}
+
+		// 들고 있는 스킬을 칸으로 내린다. 쿨타임이 돌든 안 돌든 다 내린다 --
+		// 상세창은 "무엇을 할 수 있는 유닛인가"를 보는 곳이고, 지금 쓸 수
+		// 있는지는 카드 레일이 말한다.
+		if (USkillComponentModel* SkillComponentModel = UnitModel->GetSkillComponentModel())
+		{
+			const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
+			for (int32 Index = 0; Index < SkillEntries.Num(); ++Index)
+			{
+				const UStaticSkillData* StaticSkillData = SkillEntries[Index].IsValid() == true
+					? SkillEntries[Index].mData.Get() : nullptr;
+				if (StaticSkillData == nullptr)
+				{
+					continue;
+				}
+				FUnitDetailSkillUI& SkillIcon = UnitDetailUIData.mSkills.AddDefaulted_GetRef();
+				SkillIcon.mSkillIndex = Index;
+				SkillIcon.mName = StaticSkillData->mName;
+				SkillIcon.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+			}
+		}
 	}
 	mCombatUIModel->SetUnitDetail(UnitDetailUIData);
 }
 
-/**
- * @brief 길게 누른 스킬의 상세 정보를 UIModel에 넣는다.
- *
- * @details
- * UI는 요청 직후 이 값을 읽는다. 데이터가 없는 슬롯이면 빈 상세 정보를 넣는다.
- */
+void ACombatGameMode::PushUnitSkillDetailUIData(int32 SkillIndex) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	// 상세창이 닫힌 뒤 늦게 온 탭이거나 유닛이 죽어 사라졌을 수 있다.
+	const UUnitModel* UnitModel = mDetailUnitModel.Get();
+	if (UnitModel == nullptr)
+	{
+		return;
+	}
+
+	FSkillDetailUI SkillDetailUIData;
+	FillSkillDetailUIData(UnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
+	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
+}
+
+void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponentModel,
+	int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const
+{
+	OutDetail.mSkillIndex = SkillIndex;
+	if (SkillComponentModel == nullptr)
+	{
+		return;
+	}
+
+	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
+	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
+	if (StaticSkillData == nullptr)
+	{
+		return;
+	}
+
+	OutDetail.mName = StaticSkillData->mName;
+	OutDetail.mDescription = StaticSkillData->mDescription;
+	OutDetail.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+	OutDetail.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+	OutDetail.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
+	OutDetail.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+	OutDetail.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
+	// 차단 레이어가 비어 있으면 곡사/관통으로 표시
+	OutDetail.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
+	OutDetail.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
+}
+
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// 카드 레일(PushSkillUIData)과 같은 유닛을 봐야 한다. 들여다보는 유닛이
+	// 있으면 그쪽, 없으면 지금 차례인 유닛 -- 0번으로 고정하면 다른 용병의
+	// 카드를 길게 눌렀는데 기사의 스킬 설명이 뜬다.
+	UPlayerUnitModel* PlayerUnitModel = FindPartyUnitModel(mInspectedUnitId);
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = GetTurnPlayerUnitModel();
+	}
+	if (PlayerUnitModel == nullptr)
+	{
+		PlayerUnitModel = GetPlayerUnitModel(0);
+	}
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
-	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
-
 	FSkillDetailUI SkillDetailUIData;
-	SkillDetailUIData.mSkillIndex = SkillIndex;
-
-	const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(SkillIndex);
-	UStaticSkillData* StaticSkillData = (SkillEntry != nullptr && SkillEntry->IsValid() == true) ? SkillEntry->mData.Get() : nullptr;
-	if (StaticSkillData != nullptr)
-	{
-		SkillDetailUIData.mName = StaticSkillData->mName;
-		SkillDetailUIData.mDescription = StaticSkillData->mDescription;
-		SkillDetailUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-		SkillDetailUIData.mDiceCost = StaticSkillData->mRequiredDiceCount;
-		SkillDetailUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
-		SkillDetailUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRangeDefaultValue);
-		SkillDetailUIData.mTargeting.mSelectRangeRatio = StaticSkillData->mAimRangeRatio;
-		SkillDetailUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
-		SkillDetailUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectAreaDefaultValue);
-		SkillDetailUIData.mTargeting.mHitRangeRatio = StaticSkillData->mEffectAreaRatio;
-		// 차단 레이어가 비어 있으면 곡사/관통으로 표시
-		SkillDetailUIData.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
-		SkillDetailUIData.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
-	}
-
+	FillSkillDetailUIData(PlayerUnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
 }
 
@@ -921,7 +1559,8 @@ void ACombatGameMode::PushEquipmentUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
@@ -961,7 +1600,8 @@ void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
 	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
@@ -997,250 +1637,26 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
+	// TODO : 여러 플레이어 등록해야함
+	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
 	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
 
-	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
-	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
+	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	UPartyModel* PartyModel = GetPartyModel();
+	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+
+	UAttributeSetComponentModel* PartyAttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+	checkf(PartyAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
 	FPlayerMetaUI PlayerMetaUIData;
 	PlayerMetaUIData.mLevel = PlayerUnitModel->GetPlayerLevel();
-	PlayerMetaUIData.mGold = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute());
-	PlayerMetaUIData.mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-	PlayerMetaUIData.mMaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	PlayerMetaUIData.mGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
+	PlayerMetaUIData.mExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+	PlayerMetaUIData.mMaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
-}
-
-FRewardUI ACombatGameMode::MakeCombatRewardUI() const
-{
-	FRewardUI RewardUI;
-	RewardUI.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "VICTORY REWARD");
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData != nullptr)
-	{
-		if (const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(RunPersistData->GetCurrentRoom()))
-		{
-			RewardUI.mGoldGained = CurrentRoom->mRewardMoney;
-			RewardUI.mExpGained = CurrentRoom->mRewardExp;
-		}
-	}
-
-	const UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	const UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
-	if (AttributeSetComponentModel != nullptr)
-	{
-		const float CurrentGold = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMoneyAttribute());
-		const float CurrentExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-		const float MaxExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
-
-		RewardUI.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUI.mGoldGained;
-		RewardUI.mExpBefore = CurrentExp;
-		RewardUI.mExpAfter = CurrentExp + StaticCast<float>(RewardUI.mExpGained);
-		RewardUI.mMaxExp = MaxExp;
-	}
-
-	if (PlayerUnitModel != nullptr)
-	{
-		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
-		RewardUI.mLevelBefore = PlayerLevel;
-		RewardUI.mLevelAfter = PlayerLevel;
-	}
-
-	return RewardUI;
-}
-
-TArray<FRewardChoiceUI> ACombatGameMode::MakeCombatRewardChoicesUI() const
-{
-	TArray<FRewardChoiceUI> Choices;
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr)
-	{
-		return Choices;
-	}
-
-	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
-	auto AddEquipmentReward = [&Choices](const FPrimaryAssetId& EquipmentId)
-	{
-		if (EquipmentId.IsValid() == false)
-		{
-			return;
-		}
-
-		FRewardChoiceUI Choice;
-		Choice.mChoiceIndex = Choices.Num();
-		Choice.mKind = ERewardChoiceKind::Equipment;
-		Choice.mSourceAssetId = EquipmentId;
-		Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
-
-		if (const UStaticEquipmentData* EquipmentData = LoadPrimaryAssetData<UStaticEquipmentData>(EquipmentId))
-		{
-			Choice.mName = EquipmentData->mName.IsEmpty() ? Choice.mName : EquipmentData->mName;
-			Choice.mDescription = EquipmentData->mDescription;
-			Choice.mIcon = EquipmentData->mIcon.LoadSynchronous();
-			Choice.mRarityColor = GetRarityColor(EquipmentData->mRarityType);
-		}
-
-		Choices.Add(Choice);
-	};
-
-	auto AddDiceReward = [&Choices](const FPrimaryAssetId& DiceId)
-	{
-		if (DiceId.IsValid() == false)
-		{
-			return;
-		}
-
-		FRewardChoiceUI Choice;
-		Choice.mChoiceIndex = Choices.Num();
-		Choice.mKind = ERewardChoiceKind::Dice;
-		Choice.mSourceAssetId = DiceId;
-		Choice.mName = FText::FromName(DiceId.PrimaryAssetName);
-
-		if (const UStaticDiceData* DiceData = LoadPrimaryAssetData<UStaticDiceData>(DiceId))
-		{
-			Choice.mDescription = FText::Format(
-				NSLOCTEXT("CombatGameMode", "DiceRewardDescription", "d{0}"),
-				FText::AsNumber(DiceData->mFaceCount));
-			Choice.mRarityColor = GetRarityColor(DiceData->mRarityType);
-
-			for (const FStaticDiceFaceData& FaceData : DiceData->mFaces)
-			{
-				if (FaceData.mTexture.IsNull() == false)
-				{
-					Choice.mIcon = FaceData.mTexture.LoadSynchronous();
-					break;
-				}
-			}
-		}
-
-		Choices.Add(Choice);
-	};
-
-	switch (CurrentRoom.mType)
-	{
-	case ERoomType::EliteMonster:
-		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
-		break;
-	case ERoomType::BossMonster:
-		AddDiceReward(static_cast<const FBossMonsterRoom&>(CurrentRoom).mRewardDiceDataId);
-		break;
-	default:
-		break;
-	}
-
-	return Choices;
-}
-
-bool ACombatGameMode::ClaimCombatReward()
-{
-	if (mCombatRewardClaimed)
-	{
-		return false;
-	}
-
-	bool bClaimedAny = false;
-	bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Gold, INDEX_NONE);
-	bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Exp, INDEX_NONE);
-
-	for (const FRewardChoiceUI& Choice : MakeCombatRewardChoicesUI())
-	{
-		bClaimedAny |= ClaimCombatReward(ERewardClaimKind::Choice, Choice.mChoiceIndex);
-	}
-
-	mCombatRewardClaimed = true;
-	return bClaimedAny;
-}
-
-bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
-{
-	URunPersistData* RunPersistData = GetRunPersistData();
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel();
-	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel != nullptr ? PlayerUnitModel->GetAttributeComponentModel() : nullptr;
-	if (RunPersistData == nullptr)
-	{
-		return false;
-	}
-
-	const FRoom& CurrentRoomData = RunPersistData->GetCurrentRoom();
-	const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(CurrentRoomData);
-
-	if (ClaimKind == ERewardClaimKind::Gold)
-	{
-		if (mCombatRewardGoldClaimed || CurrentRoom == nullptr || AttributeSetComponentModel == nullptr || CurrentRoom->mRewardMoney == 0)
-		{
-			mCombatRewardGoldClaimed = true;
-			return false;
-		}
-
-		AttributeSetComponentModel->ApplyModToAttribute(
-			UPlayerUnitAttributeSet::GetMoneyAttribute(),
-			ETacticalModOp::AddBase,
-			StaticCast<float>(CurrentRoom->mRewardMoney));
-
-		mCombatRewardGoldClaimed = true;
-		PushPlayerMetaUIData();
-		return true;
-	}
-
-	if (ClaimKind == ERewardClaimKind::Exp)
-	{
-		if (mCombatRewardExpClaimed || CurrentRoom == nullptr || AttributeSetComponentModel == nullptr || CurrentRoom->mRewardExp == 0)
-		{
-			mCombatRewardExpClaimed = true;
-			return false;
-		}
-
-		AttributeSetComponentModel->ApplyModToAttribute(
-			UPlayerUnitAttributeSet::GetExpAttribute(),
-			ETacticalModOp::AddBase,
-			StaticCast<float>(CurrentRoom->mRewardExp));
-
-		mCombatRewardExpClaimed = true;
-		PushPlayerMetaUIData();
-		return true;
-	}
-
-	if (ClaimKind != ERewardClaimKind::Choice || ChoiceIndex == INDEX_NONE || mCombatRewardChoiceClaimedIndices.Contains(ChoiceIndex))
-	{
-		return false;
-	}
-
-	const TArray<FRewardChoiceUI> Choices = MakeCombatRewardChoicesUI();
-	const FRewardChoiceUI* FoundChoice = Choices.FindByPredicate([ChoiceIndex](const FRewardChoiceUI& Choice)
-	{
-		return Choice.mChoiceIndex == ChoiceIndex;
-	});
-	if (FoundChoice == nullptr)
-	{
-		return false;
-	}
-
-	bool bClaimed = false;
-	switch (FoundChoice->mKind)
-	{
-	case ERewardChoiceKind::Equipment:
-		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
-		break;
-	case ERewardChoiceKind::Dice:
-		bClaimed = RunPersistData->AddRewardDice(FoundChoice->mSourceAssetId);
-		break;
-	case ERewardChoiceKind::Skill:
-		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
-		break;
-	case ERewardChoiceKind::Gold:
-	default:
-		break;
-	}
-
-	if (bClaimed)
-	{
-		mCombatRewardChoiceClaimedIndices.Add(ChoiceIndex);
-	}
-
-	return bClaimed;
 }
 
 void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview) const
@@ -1277,7 +1693,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 			Request.mIsPreview = IsPreview;
 			return Request;
 			};
-		
+
 		for (const FSRPGAttributeEffectEventLog& AttrLog : EventLog.mAttributeEffectEventLogs)
 		{
 			EFloatingLogIconType IconType = EFloatingLogIconType::None;
@@ -1422,4 +1838,133 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 	{
 		mCombatUIModel->NotifyCombatFloatingLogs(Requests);
 	}
+}
+
+void ACombatGameMode::PushCombatRewardUIData() const
+{
+	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	UPartyModel* PartyModel = GetPartyModel();
+	checkf(PartyModel != nullptr, TEXT("파티 모델 nullptr"));
+
+	UAttributeSetComponentModel* PartyAttributeSetComponentModel = PartyModel->GetAttributeComponentModel();
+	checkf(PartyAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	FRewardUI RewardUIData;
+	RewardUIData.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "VICTORY REWARD");
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData != nullptr)
+	{
+		if (const FMonsterRoom* CurrentRoom = GetMonsterRewardRoom(RunPersistData->GetCurrentRoom()))
+		{
+			RewardUIData.mGoldGained = CurrentRoom->mRewardMoney;
+			RewardUIData.mExpGained = CurrentRoom->mRewardExp;
+		}
+	}
+
+	{
+		const float CurrentGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
+		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
+	}
+
+	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
+	RewardUIData.mMercenaryExp.Reserve(PlayerUnitModels.Num());
+	for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
+	{
+		if (PlayerUnitModel == nullptr)
+		{
+			continue;
+		}
+
+		const UAttributeSetComponentModel* PlayerAttributes =
+			PlayerUnitModel->GetAttributeComponentModel();
+		if (PlayerAttributes == nullptr)
+		{
+			continue;
+		}
+
+		FRewardMercenaryExpUI& MercenaryExp =
+			RewardUIData.mMercenaryExp.AddDefaulted_GetRef();
+		MercenaryExp.mName = PlayerUnitModel->GetBoardActorDisplayName();
+		if (MercenaryExp.mName.IsEmpty())
+		{
+			MercenaryExp.mName = NSLOCTEXT(
+				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
+		}
+		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
+		MercenaryExp.mLevel = PlayerLevel;
+		MercenaryExp.mExpBefore = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetExpAttribute());
+		MercenaryExp.mExpAfter = MercenaryExp.mExpBefore
+			+ StaticCast<float>(RewardUIData.mExpGained);
+		MercenaryExp.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	}
+
+	// 기존 WBP/Blueprint가 단일 진행도 필드를 읽는 경우에는 첫 용병을
+	// 대표 fallback으로 유지한다. 네이티브 보상 행은 위 배열을 사용한다.
+	if (RewardUIData.mMercenaryExp.IsEmpty() == false)
+	{
+		const FRewardMercenaryExpUI& First = RewardUIData.mMercenaryExp[0];
+		RewardUIData.mLevelBefore = First.mLevel;
+		RewardUIData.mLevelAfter = First.mLevel;
+		RewardUIData.mExpBefore = First.mExpBefore;
+		RewardUIData.mExpAfter = First.mExpAfter;
+		RewardUIData.mMaxExp = First.mMaxExp;
+	}
+
+	mRewardUIModel->SetReward(RewardUIData);
+}
+
+void ACombatGameMode::PushCombatRewardChoicesUIData() const
+{
+	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	TArray<FRewardChoiceUI> Choices;
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr)
+	{
+		mRewardUIModel->SetRewardChoices(Choices);
+		return;
+	}
+
+	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
+	auto AddEquipmentReward = [&Choices](const FPrimaryAssetId& EquipmentId)
+		{
+			if (EquipmentId.IsValid() == false)
+			{
+				return;
+			}
+
+			FRewardChoiceUI Choice;
+			Choice.mChoiceIndex = Choices.Num();
+			Choice.mKind = ERewardChoiceKind::Equipment;
+			Choice.mSourceAssetId = EquipmentId;
+			Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
+
+			if (const UStaticEquipmentData* EquipmentData = LoadPrimaryAssetData<UStaticEquipmentData>(EquipmentId))
+			{
+				Choice.mName = EquipmentData->mName.IsEmpty() ? Choice.mName : EquipmentData->mName;
+				Choice.mDescription = EquipmentData->mDescription;
+				Choice.mIcon = EquipmentData->mIcon.LoadSynchronous();
+				Choice.mRarityColor = GetRarityColor(EquipmentData->mRarityType);
+			}
+
+			Choices.Add(Choice);
+		};
+
+	switch (CurrentRoom.mType)
+	{
+	case ERoomType::EliteMonster:
+		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
+		break;
+	case ERoomType::BossMonster:
+		break;
+	default:
+		break;
+	}
+
+	mRewardUIModel->SetRewardChoices(Choices);
 }

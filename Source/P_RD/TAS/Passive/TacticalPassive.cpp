@@ -128,8 +128,6 @@ void UTacticalPassive::NotifyPassive(
 
 		// 소유자를 시전자로 spec 생성 -> 계산된 크기를 배율로 주입 -> 대상에 적용 -> 핸들 저장
 		UTacticalEffectContext* EffectContext = OwnerComp->MakeEffectContext();
-		EffectContext->SetInstigator(Ctx.mOwner.Get());
-		EffectContext->SetAttributeSetComponentModel(OwnerComp);
 		EffectContext->SetAbility(this);
 
 		TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(mEffectClass, EffectContext);

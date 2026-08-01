@@ -1,9 +1,11 @@
 /*****************************************************************//**
  * @file   TileMapModelTests.cpp
- * @brief  UTileMapModel 타겟범위(GetTargetTiles)와 영향범위(GetEffectTiles) 유닛테스트
+ * @brief  UTileMapModel 타겟범위/영향범위/조준가능(CanAim)/위협범위(GetThreatRanges) 유닛테스트
  * @details
  * 타겟범위: TargetOnly/LineToTarget 경로 수집, 가까운 순 정렬, 차단 무관 검증.
  * 영향범위: 차단 레이어 마스크에 따른 확산 멈춤/관통 검증.
+ * CanAim은 GetAimableTiles와 판정이 일치해야 하므로 패턴/사거리/점유/차단 조합 전수 교차검증.
+ * GetThreatRanges는 시전 예산(제자리 시전/이동 후 시전)과 유닛 차단 검증 3케이스.
  * @author 이문환
  * @date   2026-08-01
  *********************************************************************/
@@ -15,6 +17,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"           // FTileIndex, ETargetPattern, EEffectPattern
 
 #include "Actor/TileMap/TileMapModel.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -36,6 +39,20 @@ namespace
 			}
 		}
 		return nullptr;
+	}
+
+	// @brief 위협 범위 테스트용 스킬 생성 (KeepAlive에 등록해 GC 방지)
+	UStaticSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredMovement)
+	{
+		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
+		Skill->mAimPattern = AimPattern;
+		Skill->mAimRange = AimRange;
+		Skill->mCanAimBoardActor = true;
+		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+		Skill->mRequiredMovement = RequiredMovement;
+		Skill->AddToRoot();
+		KeepAlive.Add(Skill);
+		return Skill;
 	}
 }
 
@@ -203,6 +220,206 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("[Case3] (2,0) 포함"), Tiles.Contains(FTileIndex(2, 0)));
 		TestTrue(TEXT("[Case3] (4,0) 포함"), Tiles.Contains(FTileIndex(4, 0)));
 	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelCanAimTests,
+	"P_RD.TileMap.CanAim",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForTileMapTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	/**
+	 * CanAim은 GetAimableTiles의 목록 생성과 별개 구현(패턴 기하 산술)이므로
+	 * 두 구현이 어긋나면 AI 계획과 실제 조준 판정이 달라진다.
+	 * 패턴/사거리/점유/곡사 전 조합에 대해, 맵의 모든 타일에서
+	 * CanAim(원점, 타일) == GetAimableTiles(원점).Contains(타일)을 전수 확인한다.
+	 */
+	// 맵 (7x5): 원점 O=(1,2), 시야/점유 변화를 만들 유닛 U1=(3,2), U2=(2,1)
+	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	TileMap->SetDimensions(7, 5);
+
+	UMockPlayerUnitModel* Unit1 = NewObject<UMockPlayerUnitModel>(World);
+	TileMap->PlaceActor(FTileTransform(FTileIndex(3, 2)), Unit1);
+	UMockPlayerUnitModel* Unit2 = NewObject<UMockPlayerUnitModel>(World);
+	TileMap->PlaceActor(FTileTransform(FTileIndex(2, 1)), Unit2);
+
+	const FTileIndex Origin(1, 2);
+
+	// 조합 축: 패턴 4종 × 사거리 {0,1,3} × 점유허용 {true,false} × 곡사 {false,true}
+	const EAimPattern Patterns[] = { EAimPattern::Single, EAimPattern::Cross, EAimPattern::Star, EAimPattern::Square };
+	const int32 Ranges[] = { 0, 1, 3 };
+	const bool Bools[] = { false, true };
+
+	for (const EAimPattern Pattern : Patterns)
+	{
+		for (const int32 Range : Ranges)
+		{
+			for (const bool bIncludeOccupied : Bools)
+			{
+				for (const bool bIndirect : Bools)
+				{
+					// 곡사 여부를 차단 레이어로 변환 (전 조합 유지)
+					const ETileLayerFlag BlockerLayers = bIndirect ? ETileLayerFlag::None : (ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+
+					// 기준: 목록 버전이 계산한 조준 가능 타일 집합
+					const TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(Origin, Range, Pattern, bIncludeOccupied, BlockerLayers);
+
+					// 맵의 모든 타일에 대해 판정 일치 확인
+					int32 MismatchCount = 0;
+					for (int32 Y = 0; Y < TileMap->GetHeight(); ++Y)
+					{
+						for (int32 X = 0; X < TileMap->GetWidth(); ++X)
+						{
+							const FTileIndex Target(X, Y);
+							const bool bCanAim = TileMap->CanAim(Origin, Target, Range, Pattern, bIncludeOccupied, BlockerLayers);
+							if (bCanAim != Aimables.Contains(Target))
+							{
+								++MismatchCount;
+								AddError(FString::Printf(TEXT("판정 불일치: 타일(%d,%d) 패턴=%d 사거리=%d 점유허용=%d 곡사=%d CanAim=%d"),
+									X, Y, static_cast<int32>(Pattern), Range, bIncludeOccupied, bIndirect, bCanAim));
+							}
+						}
+					}
+					TestEqual(FString::Printf(TEXT("패턴=%d 사거리=%d 점유허용=%d 곡사=%d 전 타일 판정 일치"),
+						static_cast<int32>(Pattern), Range, bIncludeOccupied, bIndirect), MismatchCount, 0);
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelThreatRangesTests,
+	"P_RD.TileMap.ThreatRanges",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForTileMapTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	// 유닛테스트 동안 스킬 데이터가 GC 당하지 않도록 걸어두는 장치
+	TArray<UObject*> KeepAlive;
+
+	/**
+	 * Case1: 시전비용 = 행동력 (기획안 예시 A)
+	 *   -> 이동은 3칸까지 가능하지만, 이동하면 시전 예산이 남지 않아 공격은 제자리에서만
+	 * 맵 (5x5): 적 E=(2,2), AP 3, 스킬 {비용 3, Cross 1}
+	 *   -> 이동범위: 이동거리 3 이내 20칸 + 원점 = 21칸
+	 *   -> 공격범위: 원점 Cross1 = 4칸
+	 */
+	AddInfo(TEXT("=== Case1: 시전비용 = 행동력 -> 제자리 시전만 ==="));
+	{
+		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		TileMap->SetDimensions(5, 5);
+
+		// 적 유닛 배치 (점유/차폐 제외 판정용 — 레이어만 필요하니 플레이어 Mock 재사용)
+		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
+
+		// 빈 슬롯(nullptr)이 무시되는지 함께 검증
+		const TArray<const UStaticSkillData*> Skills = { nullptr, MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 1, 3) };
+
+		TArray<FTileIndex> MoveTiles;
+		TArray<FTileIndex> AttackTiles;
+		TileMap->GetThreatRanges(FTileIndex(2, 2), 3, Skills, Enemy, OUT MoveTiles, OUT AttackTiles);
+
+		TestEqual(TEXT("[Case1] 이동범위 21칸 (거리3 이내 + 원점)"), MoveTiles.Num(), 21);
+		TestTrue(TEXT("[Case1] 이동범위에 원점 포함"), MoveTiles.Contains(FTileIndex(2, 2)));
+		TestEqual(TEXT("[Case1] 공격범위 4칸 (제자리 Cross1)"), AttackTiles.Num(), 4);
+		TestTrue(TEXT("[Case1] (1,2) 포함"), AttackTiles.Contains(FTileIndex(1, 2)));
+		TestTrue(TEXT("[Case1] (3,2) 포함"), AttackTiles.Contains(FTileIndex(3, 2)));
+		TestTrue(TEXT("[Case1] (2,1) 포함"), AttackTiles.Contains(FTileIndex(2, 1)));
+		TestTrue(TEXT("[Case1] (2,3) 포함"), AttackTiles.Contains(FTileIndex(2, 3)));
+	}
+
+	/**
+	 * Case2: 시전비용 1 (기획안 예시 B)
+	 *   -> 이동비용 2 이하인 타일에서 시전 가능, 공격범위가 이동만큼 넓어짐
+	 * 맵 (5x5): 적 E=(2,2), AP 3, 스킬 {비용 1, Cross 2}
+	 *   -> 이동범위: Case1과 동일 21칸
+	 *   -> 공격범위: 이동비용 2 이내 타일들의 Cross2 합집합 = 보드 전체 25칸
+	 */
+	AddInfo(TEXT("=== Case2: 시전비용 1 -> 이동 후 시전으로 공격범위 확장 ==="));
+	{
+		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		TileMap->SetDimensions(5, 5);
+
+		// 적 유닛 배치 (점유/차폐 제외 판정용 — 레이어만 필요하니 플레이어 Mock 재사용)
+		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
+
+		const TArray<const UStaticSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+
+		TArray<FTileIndex> MoveTiles;
+		TArray<FTileIndex> AttackTiles;
+		TileMap->GetThreatRanges(FTileIndex(2, 2), 3, Skills, Enemy, OUT MoveTiles, OUT AttackTiles);
+
+		TestEqual(TEXT("[Case2] 이동범위 21칸 (Case1과 동일)"), MoveTiles.Num(), 21);
+		TestEqual(TEXT("[Case2] 공격범위 25칸 (보드 전체)"), AttackTiles.Num(), 25);
+		TestTrue(TEXT("[Case2] 코너 (0,0) 포함 (이동2 + Cross2)"), AttackTiles.Contains(FTileIndex(0, 0)));
+		TestTrue(TEXT("[Case2] 코너 (4,4) 포함 (이동2 + Cross2)"), AttackTiles.Contains(FTileIndex(4, 4)));
+	}
+
+	/**
+	 * Case3: 차단 유닛 (통과 불가 + 시야 차폐)
+	 * 맵 (6x1): 적 E=(0,0), 차단 유닛 U=(2,0), AP 3, 스킬 {비용 1, Cross 2, 직사}
+	 *   -> 이동범위: {(0,0), (1,0)} — 유닛을 통과할 수 없어 뒤쪽 도달 불가
+	 *   -> 공격범위: {(0,0), (1,0), (2,0)} — 점유 칸은 조준 가능, 그 너머 (3,0)은 차폐로 미포함
+	 */
+	AddInfo(TEXT("=== Case3: 차단 유닛 -> 통과 불가 + 차폐 ==="));
+	{
+		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		TileMap->SetDimensions(6, 1);
+
+		// 적 유닛과 차단 유닛 배치 (레이어만 필요하니 플레이어 Mock 재사용)
+		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(0, 0)), Enemy);
+		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 0)), Blocker);
+
+		const TArray<const UStaticSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+
+		TArray<FTileIndex> MoveTiles;
+		TArray<FTileIndex> AttackTiles;
+		TileMap->GetThreatRanges(FTileIndex(0, 0), 3, Skills, Enemy, OUT MoveTiles, OUT AttackTiles);
+
+		TestEqual(TEXT("[Case3] 이동범위 2칸 (차단 유닛에 막힘)"), MoveTiles.Num(), 2);
+		TestTrue(TEXT("[Case3] 이동범위에 (1,0) 포함"), MoveTiles.Contains(FTileIndex(1, 0)));
+		TestFalse(TEXT("[Case3] 이동범위에 (2,0) 미포함 (점유 칸)"), MoveTiles.Contains(FTileIndex(2, 0)));
+		TestEqual(TEXT("[Case3] 공격범위 3칸"), AttackTiles.Num(), 3);
+		TestTrue(TEXT("[Case3] (2,0) 포함 (점유 칸 조준 가능)"), AttackTiles.Contains(FTileIndex(2, 0)));
+		TestFalse(TEXT("[Case3] (3,0) 미포함 (차단 유닛 너머 차폐)"), AttackTiles.Contains(FTileIndex(3, 0)));
+	}
+
+	// GC 안당하려고 KeepAlive에 매달아놨던 스킬 데이터 연결 해제 -> GC 대상
+	for (UObject* Object : KeepAlive)
+		if (IsValid(Object))
+			Object->RemoveFromRoot();
 
 	return true;
 }

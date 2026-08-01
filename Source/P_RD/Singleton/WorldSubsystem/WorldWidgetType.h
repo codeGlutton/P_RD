@@ -49,24 +49,13 @@ enum class EWorldWidgetType : uint8
 	 */
 	InGameSettings,
 
-	/**
-	 * @brief 인게임 탑바의 주사위 버튼으로 여는 공용 주사위 패널
-	 *
-	 * @details
-	 * 전투 HUD가 직접 소유하지 않고 WorldWidget으로 준비해 두면, 탑바는 다른 팝업과 같은 OpenUI/CloseUI 규칙으로 열 수 있다.
-	 * 현재는 실제 주사위 사용 로직이 아니라 WBP_DicePanel 표시, 카드 선택, 임시 회전 입력을 확인하는 단계다.
-	 *
-	 * @note
-	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
-	 * DicePanel 위치가 바뀌면 ini의 [7] 매핑도 같이 조정해야 한다.
-	 */
-	DicePanel,
+	// 삭제된 DicePanel의 직렬화 값을 보존한다. 뒤 enum 값과 ini 인덱스를 밀지 않는다.
+	ReservedLegacyDicePanelSlot UMETA(Hidden),
 
 	/**
 	 * @brief 인게임 탑바의 스킬 버튼으로 여는 공용 스킬 패널
 	 *
 	 * @details
-	 * 주사위 패널과 같은 플로팅 팝업 계층에 두어 MAP/SET/DICE/SKILL 중 하나만 열리는 규칙을 공유한다.
 	 * 현재는 실제 스킬 실행 로직이 아니라 WBP_SkillPanel을 탑바에서 열고 닫는 연결을 확인하는 단계다.
 	 *
 	 * @note
@@ -87,6 +76,32 @@ enum class EWorldWidgetType : uint8
 	 * 기존 [0..8] 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, CharacterSelect는 [9] 매핑을 쓴다.
 	 */
 	CharacterSelect,
+
+	/**
+	 * @brief 타이틀 START 로 여는 용병 선택 게시판
+	 *
+	 * @details
+	 * 런을 시작할 때 여섯 중 셋을 고르는 화면이다. 한 명만 고르던 캐릭터
+	 * 선택을 대신한다 -- 그 위젯은 아직 [9] 에 남아 있지만 게임 모드가 더는
+	 * 열지 않는다.
+	 *
+	 * @note
+	 * Config/DefaultGame.ini의 mWorldWidgetClasses index와 이 enum 순서는 직접 대응한다.
+	 * 앞 인덱스가 밀리지 않게 항상 마지막 실제 값으로 두고, MercenaryHire는 [10] 매핑을 쓴다.
+	 */
+	MercenaryHire,
+
+	/**
+	 * @brief 방 어디서나 여는 가방
+	 *
+	 * @details
+	 * 상점이나 보상과 달리 특정 방의 화면이 아니다. 전투 중에도 상점에서도
+	 * 같은 것을 열어 본다 -- 방 HUD 에 두면 방마다 한 벌씩 만들어야 한다.
+	 *
+	 * 값은 ARoomGameModeBase::GetInventoryView() 로 꺼내 간다. 밀지 않는
+	 * 것은 가방이 열려 있을 때만 보면 되기 때문이다.
+	 */
+	Inventory,
 
 	Count UMETA(Hidden),
 };

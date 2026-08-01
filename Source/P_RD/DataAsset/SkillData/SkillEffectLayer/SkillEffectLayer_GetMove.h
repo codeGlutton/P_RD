@@ -19,7 +19,7 @@ struct P_RD_API FSkillEffectLayer_GetMove : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
+	void ApplyPointEffect(IBoardCombatTarget* ActorModel) const override;
 	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
 
 public:
@@ -29,9 +29,12 @@ public:
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
+#if WITH_EDITOR
 public:
-	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultMoveGain"))
-	float mDefaultMoveGain = 0.f;
-	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
-	float mDiceRatio = 0.f;
+	FText MakeDescription() const override;
+#endif
+
+public:
+	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveGain"))
+	int32 mMoveGain = 0;
 };

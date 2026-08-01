@@ -113,8 +113,6 @@ protected:
 	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
 
 public:
-	FOnShowDicePanelAtTurnStartUI OnShowDicePanelAtTurnStartUI;
-
 	FOnBeginTurnUI OnBeginTurnUI;
 	FOnEndTurnUI OnEndTurnUI;
 	FOnBeginAnyActionUI OnBeginAnyActionUI;

@@ -17,79 +17,112 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	mUIModel->OnCombatCommand.AddDynamic(this, &UMockCombatDriver::HandleCommand);
 	mUIModel->OnCombatWorldTouch.AddDynamic(this, &UMockCombatDriver::HandleWorldTouch);
 
-	// 가짜 유닛: 플레이어 1 + 적 2
+	// 가짜 유닛: 용병 3명 + 적 2. 배치안 목업과 같은 상황을 쓴다 --
+	// 이미지로 평가한 안과 실제 WBP가 같은 수치로 그려져야 비교가 된다.
 	TArray<FUnitUI> Units;
 	{
-		FUnitUI Player;
-		Player.mUnitId = 0;
-		Player.mIsPlayer = true;
-		Player.mHP = 30.f; Player.mMaxHP = 30.f;
-		Player.mDamagePoint = 5.f; Player.mDefensePoint = 2.f; Player.mMovementPoint = 0.f; Player.mSkillPoint = 0.f;
-		Player.mTile = FTileIndex(4, 8);
-		Units.Add(Player);
-
-		for (int32 i = 0; i < 2; ++i)
+		struct FMockAlly { const TCHAR* Name; float HP; int32 AP; };
+		const FMockAlly Allies[] = {
+			{ TEXT("기사"),   90.f, 3 },
+			{ TEXT("궁수"),  100.f, 4 },
+			{ TEXT("마법사"), 75.f, 4 },
+		};
+		for (int32 i = 0; i < UE_ARRAY_COUNT(Allies); ++i)
 		{
-			FUnitUI Enemy;
-			Enemy.mUnitId = 1 + i;
-			Enemy.mIsPlayer = false;
-			Enemy.mHP = 12.f; Enemy.mMaxHP = 12.f;
-			Enemy.mDamagePoint = 4.f; Enemy.mDefensePoint = 1.f;
-			Enemy.mTile = FTileIndex(3 + i, 3);
-			Units.Add(Enemy);
+			FUnitUI Ally;
+			Ally.mUnitId = i;
+			Ally.mIsPlayer = true;
+			Ally.mName = FText::FromString(Allies[i].Name);
+			Ally.mHP = Allies[i].HP; Ally.mMaxHP = 100.f;
+			Ally.mActionPoints = Allies[i].AP; Ally.mMaxActionPoints = 4;
+			Ally.mDamagePoint = 5.f; Ally.mDefensePoint = 2.f;
+			Ally.mTile = FTileIndex(4 + i, 8);
+			// 목업의 기사에는 상태이상 표가 붙어 있다. 미리보기에도 하나는
+			// 있어야 그 자리가 비었는지 아닌지를 배치안마다 볼 수 있다.
+			if (i == 0)
+			{
+				FStatusEffectUI Debuff;
+				Debuff.mTag = FGameplayTag::RequestGameplayTag(TEXT(
+					"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness"));
+				Debuff.mStackCount = 2;
+				Ally.mStatusEffects.Add(Debuff);
+			}
+			Units.Add(Ally);
+		}
+
+		struct FMockFoe { const TCHAR* Name; float HP; float MaxHP; };
+		const FMockFoe Foes[] = {
+			{ TEXT("독수리"),   50.f, 50.f },
+			{ TEXT("독수리"),   38.f, 50.f },
+		};
+		for (int32 i = 0; i < UE_ARRAY_COUNT(Foes); ++i)
+		{
+			FUnitUI Foe;
+			Foe.mUnitId = 100 + i;
+			Foe.mIsPlayer = false;
+			Foe.mName = FText::FromString(Foes[i].Name);
+			Foe.mHP = Foes[i].HP; Foe.mMaxHP = Foes[i].MaxHP;
+			Foe.mActionPoints = 4; Foe.mMaxActionPoints = 4;
+			Foe.mDamagePoint = 4.f; Foe.mDefensePoint = 0.f;
+			Foe.mTile = FTileIndex(3 + i, 3);
+			Units.Add(Foe);
 		}
 	}
 	mUIModel->SetUnitUIs(Units);
 
-	// 가짜 주사위 6개. 면 수 배열은 지원 폴리헤드런(d2/d4/d6/d8/d12/d20) UI 슬롯 검증용 fixture다.
-	mDice.Reset();
-	const FLinearColor RarityColors[] = { FLinearColor(0.86f, 0.98f, 0.94f, 1.f), FLinearColor(0.55f, 0.72f, 1.f, 1.f), FLinearColor(0.82f, 0.58f, 1.f, 1.f) };
-	const FText RarityTexts[] = {
-		LOCTEXT("Common", "Common"),
-		LOCTEXT("Rare", "Rare"),
-		LOCTEXT("Epic", "Epic"),
-	};
-	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
-	for (int32 i = 0; i < 6; ++i)
-	{
-		FDiceSlotUI Die;
-		Die.mResultValue = 0;
-		Die.mRolledFaceIndex = INDEX_NONE;
-		Die.mIsRolled = false;
-		Die.mFaceCount = FaceCounts[i];
-		for (int32 FaceIndex = 0; FaceIndex < Die.mFaceCount; ++FaceIndex)
-		{
-			Die.mFaceValues.Add(FaceIndex + 1);
-			Die.mFaceTextures.Add(nullptr);
-		}
-		const int32 Tier = i % 3;
-		Die.mRarityColor = RarityColors[Tier];
-		Die.mRarityText = RarityTexts[Tier];
-		mDice.Add(Die);
-	}
-	RebuildDicePush();
-
-	// 가짜 스킬 6개
+	// 가짜 스킬 5개. 돌파 베기는 쿨타임 중이라 사용 불가 상태를 만든다 --
+	// 비활성 표현이 배치안 평가의 핵심 항목이다.
+	//
+	// 다섯 개인 이유: 배치안들은 이동 + 스킬 5개로 여섯 칸을 잡는다. 네 개만
+	// 채우면 마지막 칸이 비어서, 가운데 정렬한 레일이 한쪽으로 쏠린 것처럼
+	// 보이고 방사형 배치는 원이 이가 빠진 것처럼 보인다. 배치를 비교하려는데
+	// 데이터가 모자라 생긴 구멍을 배치 결함으로 읽게 된다.
 	TArray<FSkillUI> Skills;
-	for (int32 i = 0; i < 6; ++i)
 	{
-		FSkillUI Skill;
-		Skill.mSkillIndex = i;
-		Skill.mName = FText::Format(
-			LOCTEXT("Skill {0}", "Skill {0}"),
-			FText::AsNumber(i + 1));
-		Skill.mDiceCost = 1 + (i % 3);
-		Skill.mIsUsable = true;
-		Skills.Add(Skill);
+		struct FMockSkill
+		{
+			const TCHAR* Name; int32 Cost; int32 Cooldown; int32 Remaining;
+			int32 DamageMin; int32 DamageMax; bool bUsable;
+		};
+		const FMockSkill Table[] = {
+			{ TEXT("평타"),      1, 0, 0,  4,  7, true  },
+			{ TEXT("방패 강타"), 2, 2, 0,  8, 14, true  },
+			{ TEXT("고정 참격"), 1, 0, 0,  5,  9, true  },
+			{ TEXT("돌파 베기"), 2, 3, 3, 12, 18, false },
+			{ TEXT("반격 태세"), 1, 1, 0,  0,  0, true  },
+		};
+		for (int32 i = 0; i < UE_ARRAY_COUNT(Table); ++i)
+		{
+			FSkillUI Skill;
+			Skill.mSkillIndex = i;
+			Skill.mName = FText::FromString(Table[i].Name);
+			Skill.mActionPointCost = Table[i].Cost;
+			Skill.mCooldownTurns = Table[i].Cooldown;
+			Skill.mRemainingCooldown = Table[i].Remaining;
+			Skill.mDamageMin = Table[i].DamageMin;
+			Skill.mDamageMax = Table[i].DamageMax;
+			Skill.mCriticalDamage = FMath::RoundToInt(Table[i].DamageMax * 1.5f);
+			Skill.mIsUsable = Table[i].bUsable;
+			Skills.Add(Skill);
+		}
 	}
 	mUIModel->SetSkillUIs(Skills);
+	// 방패 강타를 고른 상태로 둔다. 선택 강조가 어떻게 읽히는지가 평가
+	// 항목이고, 10안은 아예 "조준 중"을 그리는 배치다.
+	mUIModel->SetSelectedSkill(1);
+	FCombatPendingActionUI PendingAction;
+	PendingAction.mType = ECombatPendingActionType::Skill;
+	PendingAction.mActionPointCost = Skills[1].mActionPointCost;
+	mUIModel->SetPendingAction(PendingAction);
 
 	// 가짜 턴
 	FTurnUI Turn;
 	Turn.mCurrentUnitId = 0;
 	Turn.mRound = 1;
 	Turn.mPhase = ECombatBuildPhaseUI::None;
-	Turn.mTurnOrderUnitIds = { 0, 1, 2 };
+	// 기사 -> 독수리 -> 궁수 -> 독수리 -> 마법사. 목업 열 장이 그리는
+	// 상황과 같아야 나란히 놓고 비교가 된다.
+	Turn.mTurnOrderUnitIds = { 0, 100, 1, 101, 2 };
 	mUIModel->SetTurnUI(Turn);
 
 	// 가짜 장비 3슬롯
@@ -114,62 +147,12 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	mUIModel->SetPlayerMeta(Meta);
 }
 
-/** @brief mock 주사위 선택 상태와 합계를 다시 계산해 UIModel Dice 도메인으로 push한다. */
-void UMockCombatDriver::RebuildDicePush()
-{
-	for (int32 i = 0; i < mDice.Num(); ++i)
-	{
-		mDice[i].mIsSelected = mSelectedDice.Contains(i);
-	}
-	if (mUIModel != nullptr)
-	{
-		mUIModel->SetDiceUIs(mDice);
-
-		int32 Sum = 0;
-		for (int32 Index : mSelectedDice)
-		{
-			if (mDice.IsValidIndex(Index))
-			{
-				Sum += mDice[Index].mResultValue;
-			}
-		}
-		mUIModel->SetSelectedDice(mSelectedDice, Sum);
-	}
-}
-
 /** @brief UIModel 입력 의도를 mock 상태 변경/상세 push로 흉내낸다. */
 void UMockCombatDriver::HandleCommand(ECombatInputType Type, int32 IntPayload)
 {
 	switch (Type)
 	{
-	case ECombatInputType::RollDice:
-		for (FDiceSlotUI& Die : mDice)
-		{
-			const int32 FaceCount = FMath::Max(1, Die.mFaceValues.Num());
-			Die.mRolledFaceIndex = FMath::RandRange(0, FaceCount - 1);
-			Die.mResultValue = Die.mFaceValues.IsValidIndex(Die.mRolledFaceIndex)
-				? Die.mFaceValues[Die.mRolledFaceIndex]
-				: Die.mRolledFaceIndex + 1;
-			Die.mIsRolled = true;
-		}
-		RebuildDicePush();
-		break;
-
-	case ECombatInputType::ToggleDice:
-		if (mSelectedDice.Contains(IntPayload))
-		{
-			mSelectedDice.Remove(IntPayload);
-		}
-		else if (mDice.IsValidIndex(IntPayload))
-		{
-			mSelectedDice.Add(IntPayload);
-		}
-		RebuildDicePush();
-		break;
-
 	case ECombatInputType::Cancel:
-		mSelectedDice.Reset();
-		RebuildDicePush();
 		break;
 
 	case ECombatInputType::LongPressUnit:

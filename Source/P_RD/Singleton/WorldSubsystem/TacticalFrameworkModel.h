@@ -82,17 +82,33 @@ public:
 
 	int32 GetGlobalBatchCount() const;
 
+	/* Duration 진행 */
+public:
+	void AdvanceRoundDuration(const int32 RoundCount);
+	void AdvanceTurnDuration(const int32 TurnCount);
+	int32 GetWorldTime(ETacticalEffectDurationUnitType UnitType) const;
+
+private:
+	void CheckEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+
 	/* 초기 구성 데이터 */
 protected:
 	UPROPERTY(Category = "Attribute", DuplicateTransient, VisibleAnywhere, meta = (DisplayName = "GlobalInitCurveTable"))
 	TObjectPtr<UCurveTable> mGlobalInitCurveTable;
 
-	TSharedPtr<FTacticalAttributeSetInitter> mGlobalAttributeSetInitter;
+	static TSharedPtr<FTacticalAttributeSetInitter> GlobalAttributeSetInitter;
 
 	/* Effect 매핑 데이터 */
 protected:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectOwningModelMap"))
 	TMap<FActiveTacticalEffectHandle, TWeakObjectPtr<UAttributeSetComponentModel>> mEffectOwningModelMap;
+
+	/* Duration 데이터 */
+protected:
+	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "RoundCount"))
+	int32 mRoundCount;
+	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "TurnCount"))
+	int32 mTurnCount;
 
 	/* 임시 데이터 */
 protected:

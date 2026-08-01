@@ -37,6 +37,9 @@ struct FTacticalEffectModCallbackData
 	UAttributeSetComponentModel& mModel;
 };
 
+/**
+ * @brief 속성의 실제 값을 담고 있는 객체
+ */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttributeData
 {
@@ -70,6 +73,9 @@ protected:
 	float mCurrentValue;
 };
 
+/**
+ * @brief 속성 자체의 타입 정보를 알려주는 객체
+ */
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttribute
 {
@@ -141,14 +147,12 @@ public:
 		return PointerHash(InAttribute.mAttribute.Get());
 	}
 
-	/** Returns name of attribute, usually the same as the property */
 	FString GetName() const
 	{
 		return mAttributeName.IsEmpty() ? *GetNameSafe(mAttribute.Get()) : mAttributeName;
 	}
 
 #if WITH_EDITORONLY_DATA
-	/** Custom serialization */
 	void PostSerialize(const FArchive& Ar);
 #endif
 
@@ -177,6 +181,9 @@ struct TStructOpsTypeTraits< FTacticalAttribute > : public TStructOpsTypeTraitsB
 };
 #endif
 
+/**
+ * @brief 속성들의 묶음
+ */
 UCLASS(DefaultToInstanced, Blueprintable)
 class P_RD_API UTacticalAttributeSet : public UObject
 {
@@ -209,6 +216,33 @@ public:
 	void CaptureAllAttributes(UBoardCombatTargetSnapshotData* Snapshot) const;
 };
 
+USTRUCT(BlueprintType)
+struct FTacticalAttributeMetaData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	FTacticalAttributeMetaData();
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "BaseValue"))
+	float mBaseValue;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MinValue"))
+	float mMinValue;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "MaxValue"))
+	float mMaxValue;
+
+	UPROPERTY()
+	FString	mDerivedAttributeInfo;
+
+	UPROPERTY(Category = "GameplayAttribute", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CanStack"))
+	bool mCanStack;
+};
+
+/**
+ * @brief 속성 초기화 로직 구현체
+ */
 struct FTacticalAttributeSetInitter
 {
 	virtual ~FTacticalAttributeSetInitter() {}
@@ -217,14 +251,16 @@ struct FTacticalAttributeSetInitter
 	virtual void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const = 0;
 	virtual void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const = 0;
 	virtual TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const { return TArray<float>(); }
+	virtual float GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const { return 0.f; }
 };
 
 struct FTacticalAttributeSetInitterDiscreteLevels : public FTacticalAttributeSetInitter
 {
-	virtual void PreloadAttributeSetData(const TArray<UCurveTable*>& CurveData) override;
-	virtual void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const override;
-	virtual void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const override;
-	virtual TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const override;
+	void PreloadAttributeSetData(const TArray<UCurveTable*>& CurveData) override;
+	void InitAttributeSetDefaults(UAttributeSetComponentModel* AttributeSetComponentModel, FName GroupName, int32 Level, bool bInitialInit) const override;
+	void ApplyAttributeDefault(UAttributeSetComponentModel* AttributeSetComponentModel, FTacticalAttribute& InAttribute, FName GroupName, int32 Level) const override;
+	TArray<float> GetAttributeSetValues(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName) const override;
+	float GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const override;
 
 private:
 	struct FAttributeDefaultValueList
@@ -261,6 +297,8 @@ private:
 
 	TMap<FName, FAttributeSetDefaultsCollection> mDefaults;
 };
+
+/* AttributeSet 내부의 Attribute를 정의하기 위한 헬퍼 매크로 */
 
 #define TACTICAL_ATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
 	static FTacticalAttribute Get##PropertyName##Attribute() \

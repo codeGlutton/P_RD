@@ -3,6 +3,11 @@
 
 #include "Setting/GamePlaySettings.h"
 
+UStaticCombatRoomSpawnData::UStaticCombatRoomSpawnData()
+{
+	mPlayerTransforms.Init(FTileTransform(), 3);
+}
+
 void UStaticCombatRoomSpawnData::PostInitProperties()
 {
 	Super::PostInitProperties();

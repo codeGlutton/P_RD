@@ -6,6 +6,8 @@
  * 추가로 직사 스킬 일직선 후퇴 시 자기 차폐로 제자리 사격하던 회귀 케이스(Case1-3),
  * 다른 몹에 막혀 조준 불가일 때 우회 접근하지 않고 제자리에 서던 회귀 케이스(Case3-3),
  * 다중 스킬 랜덤 선택 케이스(Case4-1) 포함.
+ * 다중 플레이어 대응: 최근접 타겟 선택(Case5-1), 시전 가능 타겟 우선(Case5-2),
+ * 균형 후퇴(Case5-3), 최근접 접근 폴백(Case5-4).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -24,7 +26,7 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "DataAsset/SkillData/StaticAttackSkillData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -75,16 +77,18 @@ namespace
 	}
 
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticAttackSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
+	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
-		UStaticAttackSkillData* Skill = NewObject<UStaticAttackSkillData>(World);
+		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
 		Skill->mAimPattern = AimPattern;
-		Skill->mAimRangeDefaultValue = AimRange;
+		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectAreaDefaultValue = 0;
+		Skill->mEffectArea = 0;
 		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
+		Skill->mSkillMotionLayers.AddDefaulted();
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
@@ -95,6 +99,7 @@ namespace
 	// @param AimPattern 스킬 조준 패턴 (Cross/Star 직사는 시야 검사 경로를 태움)
 	// @param SecondSkillAimRange 슬롯 1에 장착할 Square 스킬의 사거리 (0이면 미장착. 스킬 랜덤 선택 검증용)
 	// @param BlockerIndex 길/시야를 막는 제3의 유닛 배치 좌표 (Invalid면 미배치. 우회 접근 검증용)
+	// @param SecondPlayerIndex 두 번째 플레이어 배치 좌표 (Invalid면 미배치. 다중 타겟 선택 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -107,14 +112,17 @@ namespace
 		FTileIndex PlayerIndex,
 		EAimPattern AimPattern = EAimPattern::Square,
 		int32 SecondSkillAimRange = 0,
-		FTileIndex BlockerIndex = FTileIndex::Invalid)
+		FTileIndex BlockerIndex = FTileIndex::Invalid,
+		FTileIndex SecondPlayerIndex = FTileIndex::Invalid)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
 		TileMap->SetDimensions(TileMapWidth, TileMapHeight);
 
-		// 플레이어유닛 생성
+		// 플레이어유닛 생성 (배열 순서가 곧 타겟 인덱스)
+		TArray<UUnitModel*> Players;
 		UMockPlayerUnitModel* Player = NewObject<UMockPlayerUnitModel>(World);
+		Players.Add(Player);
 
 		// 적유닛 생성
 		UMockEnemyUnitModel* Enemy = NewObject<UMockEnemyUnitModel>(World);
@@ -122,8 +130,9 @@ namespace
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
 		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
-		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetRechargeDiceSumAttribute(), ETacticalModOp::Override, 0);
 
+		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
+		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
 		// 스킬 추가: 일반공격 계열
 		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));
 		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
@@ -136,6 +145,14 @@ namespace
 		TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);
 		TileMap->PlaceActor(FTileTransform(EnemyIndex), Enemy);
 
+		// 두 번째 플레이어(옵션): 다중 타겟 선택 검증용
+		if (TileMap->IsValidIndex(SecondPlayerIndex))
+		{
+			UMockPlayerUnitModel* SecondPlayer = NewObject<UMockPlayerUnitModel>(World);
+			Players.Add(SecondPlayer);
+			TileMap->PlaceActor(FTileTransform(SecondPlayerIndex), SecondPlayer);
+		}
+
 		// 차단 유닛(옵션): 길/시야를 막는 제3의 유닛 (Unit 레이어 점유만 필요하니 플레이어 Mock 재사용)
 		if (TileMap->IsValidIndex(BlockerIndex))
 		{
@@ -147,7 +164,7 @@ namespace
 		const FRandomStream Stream(20260710);
 
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
-		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Player, TileMap, Stream);
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, Stream);
 	}
 
 	// @brief 커맨드가 비어있지 않고, 마지막은 항상 턴 종료인 지 검증
@@ -396,6 +413,115 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		{
 			TestTrue(TEXT("[Case4-1] 스킬 인덱스는 장착 슬롯(0 또는 1)"), Cast->mSkillIndex == 0 || Cast->mSkillIndex == 1);
 		}
+	}
+
+	/**
+	 * Case5-1: 다중 플레이어 / 둘 다 시전 가능
+	 *   -> 최근접 타겟을 선택해서 시전
+	 * 맵 (6x3): E(2,1) P1(3,1) P2(0,1), 등거리 성향, 이동력 3, 사거리 1
+	 *   -> P1(거리1)이 P2(거리2)보다 가까우므로 제자리에서 P1에게 시전
+	 */
+	AddInfo(TEXT("=== Case5-1: 다중 플레이어 / 최근접 타겟 선택 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex(0, 1));
+		CheckTail(*this, Commands, TEXT("Case5-1"));
+		TestTrue(TEXT("[Case5-1] 이동커맨드 없음(제자리에서 최근접 시전 가능)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case5-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case5-1] 타겟은 최근접 플레이어(3,1)"), Cast->mTargetIndex == FTileIndex(3, 1));
+		}
+	}
+
+	/**
+	 * Case5-2: 다중 플레이어 / 최근접은 차단유닛에 막혀 시전 불가
+	 *   -> 시전 가능한 먼 타겟을 선택 (타겟 우선 구조 검증)
+	 * 맵 (7x1): P1(0,0) M(1,0) E(2,0) P2(5,0), 근접 성향, 이동력 2, 사거리 1
+	 *   -> P1은 인접 칸이 M에 막혀 시전/조준 모두 불가 -> P2에게 (4,0)으로 이동 후 시전
+	 */
+	AddInfo(TEXT("=== Case5-2: 다중 플레이어 / 시전 가능한 타겟 우선 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			2, 1, 7, 1,
+			FTileIndex(2, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex(1, 0),
+			/*SecondPlayerIndex*/FTileIndex(5, 0));
+		CheckTail(*this, Commands, TEXT("Case5-2"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case5-2] 이동커맨드 존재"), Move != nullptr) &&
+			TestTrue(TEXT("[Case5-2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case5-2] 목적지=(4,0)"), Move->mPathTileIndexes.Last() == FTileIndex(4, 0));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case5-2] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case5-2] 타겟은 시전 가능한 두 번째 플레이어(5,0)"), Cast->mTargetIndex == FTileIndex(5, 0));
+		}
+	}
+
+	/**
+	 * Case5-3: 다중 플레이어 / 원거리(MoveAway) 성향의 균형 후퇴
+	 *   -> 타겟에게서 멀어지되 다른 플레이어 옆으로 가면 안 됨 (최근접 거리 최대화 검증)
+	 * 맵 (7x1): P1(0,0) E(2,0) P2(6,0), 이동력 2, 사거리 3
+	 *   -> 타겟은 최근접 P1(거리2). 시전 가능 타일 (1,0)~(3,0) 중
+	 *      두 플레이어 모두에게서 가장 먼 정중앙 (3,0) 선택
+	 */
+	AddInfo(TEXT("=== Case5-3: 다중 플레이어 / 균형 후퇴 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			2, 3, 7, 1,
+			FTileIndex(2, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex(6, 0));
+		CheckTail(*this, Commands, TEXT("Case5-3"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case5-3] 이동커맨드 존재"), Move != nullptr) &&
+			TestTrue(TEXT("[Case5-3] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case5-3] 목적지는 두 플레이어의 정중앙(3,0)"), Move->mPathTileIndexes.Last() == FTileIndex(3, 0));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case5-3] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case5-3] 타겟은 최근접 플레이어(0,0)"), Cast->mTargetIndex == FTileIndex(0, 0));
+		}
+	}
+
+	/**
+	 * Case5-4: 다중 플레이어 / 전원 조준 불가
+	 *   -> 최근접 플레이어에게 접근
+	 * 맵 (10x3): P2(0,1) E(4,1) P1(9,1), 근접 성향, 이동력 2, 사거리 1
+	 *   -> 어느 타일에서도 조준 불가 -> 최근접 P2(거리4) 쪽 (2,1)로 접근, 시전 없음
+	 */
+	AddInfo(TEXT("=== Case5-4: 다중 플레이어 / 최근접 접근 폴백 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			2, 1, 10, 3,
+			FTileIndex(4, 1),
+			FTileIndex(9, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex(0, 1));
+		CheckApproachNoCast(*this, Commands, TEXT("Case5-4"), FTileIndex(2, 1));
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상

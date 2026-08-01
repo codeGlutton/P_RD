@@ -88,6 +88,8 @@ DerivedDataCache/*
 /Content/Audio/
 /Content/**/T_*.uasset
 /Content/**/S_*.uasset
+# 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
+!/Content/UI/Art/RunFlow/T_*.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
@@ -102,3 +104,19 @@ __pycache__/
 
 # 이전에 사용하던 파일
 .svnrev
+
+# 굽는 도구가 만든 것과 그 재료. 저장소에 안 둔다.
+#
+# 결과(uasset)는 SVN 에 있고 그림 재료(PNG)와 도구는 각자 손에만 둔다.
+# 여기 두면 같은 그림이 두 벌 들어가고, 도구가 만든 보고서까지 따라 들어온다.
+/Docs/
+/Tools/UI/_*
+/Tools/UI/KayKitUIKit/
+/Tools/UI/*.html
+/Tools/UI/*.json
+__MACOSX/
+
+# 도구가 옆에 흘려 놓는 것들. 전체를 담을 때 딸려 들어온다.
+/work/
+/outputs/
+.gdep/

@@ -18,10 +18,16 @@
 /**
  * @brief  장비 생성 시 사용되는 정적 Primary Data Asset
  */
-UCLASS(abstract)
+UCLASS()
 class P_RD_API UStaticEquipmentData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
+
+public:
+    FPrimaryAssetId GetPrimaryAssetId() const override
+    {
+        return FPrimaryAssetId(EquipmentPrimaryAssetTypes::GetEquipmentType(), GetFName());
+    }
 
 public:
     UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
@@ -41,7 +47,7 @@ public:
      * @details
      * Primary Asset을 장비 타입과 희귀도로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
      */
-    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RarityType"))
+    UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
     ERarityType mRarityType;
 
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive", AssetBundles = "Actor"))
@@ -55,9 +61,5 @@ public:
      */
     UPROPERTY(Category = "Equipment", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StatModifiers"))
     TArray<FTacticalModifierInfo> mStatModifiers;
-
-    /**
-     * @brief 장비 슬롯 타입 반환 (서브클래스가 자기 슬롯으로 override)
-     */
-    virtual EEquipmentType GetEquipmentType() const PURE_VIRTUAL(UStaticEquipmentData::GetEquipmentType, return EEquipmentType::Count;)
 };
+

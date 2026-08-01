@@ -1,18 +1,15 @@
 ﻿#include "Pawn/Player/PlayerUnitModel.h"
+#include "Actor/Party/PartyModel.h"
 #include "Setting/GameTeamType.h"
 
-#include "GameMode/RDGameModeBase.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
-
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
-#include "Singleton/WorldSubsystem/TacticalFrameworkSubsystem.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
 #include "AttributeSet/LevelAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
-#include "Dice/DicePoolModel.h"
+#include "Component/ArtifactComponent/ArtifactComponentModel.h"
 
 UPlayerUnitModel::UPlayerUnitModel()
 {
@@ -21,25 +18,33 @@ UPlayerUnitModel::UPlayerUnitModel()
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
     mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 
-    mDicePool = CreateDefaultSubobject<UDicePoolModel>(TEXT("DiceComp"));
-}
-
-void UPlayerUnitModel::PostInitializeComponentModels()
-{
-    Super::PostInitializeComponentModels();
-
-    UTacticalFrameworkSubsystem* TacticalFrameworkSubsystem = GetWorld()->GetSubsystem<UTacticalFrameworkSubsystem>();
-    checkf(TacticalFrameworkSubsystem != nullptr, TEXT("전략 프레임워크 서브시스템 nullptr"));
-
-    UTacticalFrameworkModel* TacticalFrameworkModel = TacticalFrameworkSubsystem->GetModel<UTacticalFrameworkModel>();
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), TEXT("PlayerLevel"), GetPlayerLevel(), true);
+    // 아티펙트 컴포넌트 모델 등록
+    mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
 }
 
 int32 UPlayerUnitModel::GetBoardActorLevel() const
 {
     return mPlayerLevel;
+}
+
+void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
+{
+    mOwnerParty = PartyModel;
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+}
+
+void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
+{
+    mPlayerLevel = PlayerLevel;
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
 }
 
 EPlayerJobType UPlayerUnitModel::GetPlayerJobType() const
@@ -54,18 +59,16 @@ EPlayerJobType UPlayerUnitModel::GetPlayerJobType() const
 
 int32 UPlayerUnitModel::GetPlayerLevel() const
 {
-    ARDGameModeBase* RDGameMode = GetWorld()->GetAuthGameMode<ARDGameModeBase>();
-    checkf(RDGameMode != nullptr, TEXT("게임 모드 nullptr"));
-
-    return RDGameMode->GetRunPersistData()->GetPlayerLevel();
+    return mPlayerLevel;
 }
 
 int32 UPlayerUnitModel::GetDifficulty() const
 {
-    ARDGameModeBase* RDGameMode = GetWorld()->GetAuthGameMode<ARDGameModeBase>();
-    checkf(RDGameMode != nullptr, TEXT("게임 모드 nullptr"));
-
-    return RDGameMode->GetRunPersistData()->GetDifficulty();
+    if (mOwnerParty.IsValid() == false)
+    {
+        return INDEX_NONE;
+    }
+    return mOwnerParty->GetDifficulty();
 }
 
 bool UPlayerUnitModel::IsPlayerUnitModel() const
@@ -73,7 +76,7 @@ bool UPlayerUnitModel::IsPlayerUnitModel() const
     return true;
 }
 
-UDicePoolModel* UPlayerUnitModel::GetDicePoolModel() const
+UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const
 {
-    return mDicePool;
+    return mArtifactCompModel;
 }

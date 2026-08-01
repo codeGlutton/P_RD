@@ -31,7 +31,7 @@ void UTacticalEffect_MaxHP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTE
 
 	FSRPGAttributeEffectEventLog Log;
 	Log.mEffectAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetMaxHPAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();

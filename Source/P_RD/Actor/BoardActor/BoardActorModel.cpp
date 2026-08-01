@@ -6,6 +6,11 @@ void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnD
 	mStaticSpawnData = StaticSpawnData;
 }
 
+FPrimaryAssetId UBoardActorModel::GetStaticSpawnDataId() const
+{
+	return mStaticSpawnData->GetPrimaryAssetId();
+}
+
 FName UBoardActorModel::GetBoardActorKeyName() const
 {
 	if (mStaticSpawnData == nullptr)
@@ -14,6 +19,17 @@ FName UBoardActorModel::GetBoardActorKeyName() const
 		return FName();
 	}
 	return mStaticSpawnData->GetKeyName();
+}
+
+/** @brief 이 액터가 나온 스폰 데이터의 식별자. @return PrimaryAssetId, 데이터가 없으면 빈 값 */
+FPrimaryAssetId UBoardActorModel::GetBoardActorAssetId() const
+{
+	if (mStaticSpawnData == nullptr)
+	{
+		UE_LOG(LogRD, Log, TEXT("보드 액터의 스폰 데이터 nullptr"));
+		return FPrimaryAssetId();
+	}
+	return mStaticSpawnData->GetPrimaryAssetId();
 }
 
 const FText& UBoardActorModel::GetBoardActorDisplayName() const
@@ -116,11 +132,11 @@ void UBoardActorModel::OnEndRoom()
 {
 }
 
-void UBoardActorModel::OnBeginRound()
+void UBoardActorModel::OnBeginRound(int32 RoundCount)
 {
 }
 
-void UBoardActorModel::OnEndRound()
+void UBoardActorModel::OnEndRound(int32 RoundCount)
 {
 }
 

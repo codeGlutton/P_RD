@@ -14,11 +14,9 @@ namespace
 	// mock 판매 목록 fixture. 밸런스 데이터 아님 — 구매→골드차감→품절 흐름 검증용.
 	// 이름은 실제 콘텐츠가 아니라 개발용 더미라 로컬라이즈하지 않고 FText::FromString으로 그대로 쓴다.
 	const FMockShopEntry GMockEntries[] = {
-		{ EShopItemKind::Dice,      TEXT("d8 Dice"),      40 },
 		{ EShopItemKind::Skill,     TEXT("Cleave"),       60 },
 		{ EShopItemKind::Equipment, TEXT("Leather"),      50 },
 		{ EShopItemKind::Heal,      TEXT("Heal +10"),     30 },
-		{ EShopItemKind::Upgrade,   TEXT("Dice Upgrade"), 80 },
 	};
 	constexpr int32 GMockEntryCount = sizeof(GMockEntries) / sizeof(GMockEntries[0]);
 }

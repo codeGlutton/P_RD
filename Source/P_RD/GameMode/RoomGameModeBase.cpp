@@ -4,7 +4,8 @@
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
-#include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Singleton/InstanceSubsystem/PartyRestorationSubsystem.h"
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -15,6 +16,10 @@
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "AttributeSet/PartyAttributeSet.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -144,14 +149,30 @@ namespace
 			FText::AsNumber(Room.mNextRoomColumns.Num())
 		);
 	}
+
+	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case ERarityType::Epic:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
+		}
+	}
+
 }
 
 ARoomGameModeBase::ARoomGameModeBase()
 {
 	/*
-	 * 월드맵/설정/주사위/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
+	 * 월드맵/설정/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
 	 * WorldWidgetSubsystem에 등록해두면 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
-	 * (패널을 여는 진입점은 전투 HUD의 내비 버튼 — CombatTileMapHUDWidget_Nav.cpp)
+	 * (전투 HUD의 내비 버튼이 진입점이었는데, 전투 중에 무엇을 여는지가 안 정해져
+	 *  옛 HUD와 함께 지웠다. 정해지면 새 HUD에 붙인다.)
 	 */
 	mWorldWidgets = { 
 		EWorldWidgetType::MsgNotify, 
@@ -160,11 +181,11 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::LoadingNotify,  
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::DicePanel,
 		EWorldWidgetType::SkillPanel,
+		EWorldWidgetType::Inventory,
 	};
 
-	/* 월드맵/설정/주사위/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
+	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
 	mShowFadeInUIOnTransition = true;
 	mShowFadeOutUIOnTransition = true;
 	mShowLoadingNotifyUIOnTransition = true;
@@ -237,7 +258,7 @@ void ARoomGameModeBase::InitializeCommonRoom()
  * @brief 실제 방에 들어오면 현재 Run 저장을 시작한다.
  *
  * @details
- * 방 공통 팝업(WorldMap/Settings/Dice/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
+ * 방 공통 팝업(WorldMap/Settings/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
  */
 void ARoomGameModeBase::BeginRoom()
 {
@@ -433,7 +454,7 @@ bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
 	OutView.mIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
-	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
+	// OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;
 }
@@ -552,14 +573,13 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
  */
 void ARoomGameModeBase::RestorePlayerUnit()
 {
-	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
-	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
+	UPartyRestorationSubsystem* PartyRestorationSubsystem = GetGameInstance()->GetSubsystem<UPartyRestorationSubsystem>();
+	checkf(PartyRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	UPartyModel* PartyModel = PartyRestorationSubsystem->RestorePartyFromPersistData(GetWorld());
+	checkf(PartyModel != nullptr, TEXT("파티 모델 복원 오류"));
 
-	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
-	mPlayerUnit = PlayerUnit;
+	mPartyModel = PartyModel;
 }
 
 /**
@@ -613,16 +633,24 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 	return true;
 }
 
-/**
- * @brief 방 안에서 복원된 현재 플레이어 유닛 포인터를 제공한다.
- *
- * @details
- * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
- * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
- */
-UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel() const
+UPartyModel* ARoomGameModeBase::GetPartyModel() const
 {
-	return mPlayerUnit.Get();
+	return mPartyModel.Get();
+}
+
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel(int32 PlayerIndex) const
+{
+	if (mPartyModel.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	return mPartyModel->GetPlayerUnitModel(PlayerIndex);
+}
+
+TArray<TObjectPtr<UPlayerUnitModel>>& ARoomGameModeBase::GetPlayerUnitModels() const
+{
+	return mPartyModel->GetPlayerUnitModels();
 }
 
 const FName& ARoomGameModeBase::GetRoomSpawnSettingName() const
@@ -633,4 +661,55 @@ const FName& ARoomGameModeBase::GetRoomSpawnSettingName() const
 void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 {
 	mSelectedRoomSpawnSettingName = Name;
+}
+
+/**
+ * @brief 파티 공용 인벤토리의 골드와 아티팩트를 만든다.
+ *
+ * @details
+ * 파티 골드는 파티 AttributeSet에서, 아티팩트는 파티 공용 아티팩트 컴포넌트에서
+ * 읽는다. 용병 성장/스킬/장비는 각 용병 화면의 책임이므로 이 View에 넣지 않는다.
+ */
+bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
+{
+	OutView = FInventoryView();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	UAttributeSetComponentModel* PartyAttributes = PartyModel != nullptr
+		? PartyModel->GetAttributeComponentModel() : nullptr;
+	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (PartyModel == nullptr || PartyAttributes == nullptr || PartyArtifacts == nullptr)
+	{
+		return false;
+	}
+
+	OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
+		UPartyAttributeSet::GetMoneyAttribute()));
+
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+		PartyArtifacts->GetPartyArtifacts();
+	OutView.mArtifacts.Reserve(Artifacts.Num());
+	for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
+	{
+		const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
+		if (Artifact == nullptr)
+		{
+			continue;
+		}
+
+		FInventoryArtifactView& Row = OutView.mArtifacts.AddDefaulted_GetRef();
+		Row.mArtifactIndex = ArtifactIndex;
+		Row.mName = Artifact->mName.IsEmpty() == false
+			? Artifact->mName
+			: FText::Format(
+				NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
+				FText::AsNumber(ArtifactIndex + 1));
+		Row.mIcon = Artifact->mIcon.LoadSynchronous();
+		Row.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
+		Row.mDetail = NSLOCTEXT(
+			"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
+	}
+
+	return true;
 }

@@ -54,7 +54,17 @@ public:
 	 */
 	void SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData);
 
+public:
+	FPrimaryAssetId GetStaticSpawnDataId() const;
 	FName GetBoardActorKeyName() const;
+	/**
+	 * @brief 이 액터가 어느 스폰 데이터에서 나왔는지.
+	 *
+	 * 저장본이 파티 칸을 이 값으로 찾는다. 표시 이름은 사람이 읽는 것이라
+	 * 바뀔 수 있어 짝을 맞추는 열쇠로 쓰기에 위태롭다.
+	 * @return 스폰 데이터의 PrimaryAssetId. 데이터가 없으면 빈 값
+	 */
+	FPrimaryAssetId GetBoardActorAssetId() const;
 	const FText& GetBoardActorDisplayName() const;
 	virtual int32 GetBoardActorLevel() const;
 	UTexture2D* GetBoardActorIcon() const;
@@ -128,8 +138,8 @@ public:
 	/**
 	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */
-	virtual void OnBeginRound();
-	virtual void OnEndRound();
+	virtual void OnBeginRound(int32 RoundCount);
+	virtual void OnEndRound(int32 RoundCount);
 
 private:
 	/**

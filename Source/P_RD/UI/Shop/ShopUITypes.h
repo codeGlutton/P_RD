@@ -13,11 +13,9 @@ class UTexture2D;
 UENUM(BlueprintType)
 enum class EShopItemKind : uint8
 {
-	Dice,        // 주사위 구매
 	Skill,       // 스킬 구매
 	Equipment,   // 장비 구매
-	Heal,        // 회복 서비스
-	Upgrade      // 강화 서비스
+	Heal         // 회복 서비스
 };
 
 /** @brief 상점 판매 슬롯 한 칸을 그리기 위한 표시값입니다. */
@@ -36,7 +34,7 @@ struct FShopItemUI
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
-	UPROPERTY(BlueprintReadOnly) EShopItemKind mKind = EShopItemKind::Dice;
+	UPROPERTY(BlueprintReadOnly) EShopItemKind mKind = EShopItemKind::Skill;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;

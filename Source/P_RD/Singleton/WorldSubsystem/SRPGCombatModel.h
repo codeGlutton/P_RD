@@ -27,6 +27,7 @@ class USRPGAction;
 class UBoardActorModel;
 class IBoardCombatTarget;
 class UUnitModel;
+class UPlayerUnitModel;
 class UTileMapModel;
 
 class UStaticCombatRoomSpawnData;
@@ -38,8 +39,6 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterObstacleUI, UBoardActorModel* /*Actor*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterObstacleUI, UBoardActorModel* /*Actor*/)
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAnyTurnUI, const USRPGTurnContext* /*TurnContext*/);
-
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndCombatUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, ESRPGCombatResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/)
@@ -47,6 +46,9 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginAnyRoundUI, TSharedPtr<FPresentatio
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndAnyTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/)
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/, ESRPGActionResult /*Result*/)
+
+DECLARE_MULTICAST_DELEGATE(FOnSaveCombatPlay);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnZoomInToActorsUI, const TArray<FTileIndex>& /*ActorTileIndexes*/);
 DECLARE_MULTICAST_DELEGATE(FOnZoomOutFromActorsUI);
@@ -83,7 +85,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, UUnitModel* PlayerUnit, const FTransform& RoomStartTransform);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const TArray<FTileTransform>& RoomClearTileTransforms);
 	void BeginCombat();
 	void EndCombat();
 
@@ -153,7 +155,7 @@ public:
 
 protected:
 	void SpawnTileMap(const FTransform& RoomStartTransform);
-	void RegisterPlayerUnit(UUnitModel* PlayerUnit, const FTileTransform& Transform);
+	void RegisterPlayerUnit(int32 PlayerIndex, UUnitModel* PlayerUnit, const FTileTransform& Transform);
 	void RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& EnemyPlacementDatas);
 	void RegisterUnit(UUnitModel* Unit, const FTileTransform& Transform);
 	void RegisterObstacles(TArray<FObstaclePlacementData>& ObstaclePlacementDatas);
@@ -179,11 +181,13 @@ public:
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
 	UTileMapModel* GetTileMap() const;
 
-	UUnitModel* GetPlayerUnit() const;
+	UUnitModel* GetPlayerUnit(int32 PlayerIndex) const;
+	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;
 	const TArray<TObjectPtr<UUnitModel>>& GetUnits() const;
 	const TArray<TObjectPtr<UBoardActorModel>>& GetObstacles() const;
 
 	int32 GetRoundCount() const;
+	int32 GetTurnCount() const;
 
 	/* 시뮬 함수 */
 public:
@@ -210,9 +214,13 @@ public:
 
 public:
 	/**
-	 * @brief 주사위 굴리기 패널 실행 타이밍 대리자
+	 * @brief 전투 저장 대리자
 	 */
-	FOnShowDicePanelAnyTurnUI OnShowDicePanelAnyTurnUI;
+	FOnSaveCombatPlay OnSaveCombatPlay;
+	/**
+	 * @brief 전투 결과 확인 타이밍 대리자
+	 */
+	FOnShowCombatResultUI OnShowCombatResultUI;
 
 public:
 	/**
@@ -297,6 +305,8 @@ protected:
 protected:
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
+	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnCount"))
+	int32 mTurnCount = 0;
 
 protected:
 	// @brief 배치된 타일맵
@@ -312,8 +322,8 @@ protected:
 
 protected:
 	// @brief 등록된 Player 유닛
-	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnit"))
-	TObjectPtr<UUnitModel> mPlayerUnit;
+	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerUnits"))
+	TArray<TObjectPtr<UUnitModel>> mPlayerUnits;
 	// @brief 모든 타격 가능 장애물
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargets"))
 	TArray<TScriptInterface<IBoardCombatTarget>> mCombatTargetObstacles;

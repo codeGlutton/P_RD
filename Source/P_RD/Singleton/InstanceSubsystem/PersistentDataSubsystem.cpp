@@ -42,13 +42,3 @@ const UOptionPersistData* UPersistentDataSubsystem::GetOptionPersistData() const
 	return mOptionPersistData;
 }
 
-void UPersistentDataSubsystem::DoStageBuildTest(bool UpdateBuildStream)
-{
-#if WITH_EDITOR
-	if (UpdateBuildStream == true)
-	{
-		mRunPersistData->StartRun(FPrimaryAssetId(), 1);
-	}
-	mRunPersistData->MakeStageAsync(EStageLevelType::Stage1, FOnCreateStage());
-#endif
-}

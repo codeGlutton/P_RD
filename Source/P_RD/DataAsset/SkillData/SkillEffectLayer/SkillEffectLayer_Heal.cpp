@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Heal.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Heal.h"
 #include "TAS/Effect/Stat/TacticalEffect_HealPoint.h"
 #include "TAS/Effect/Stat/TacticalEffect_HealFactor_AddBase.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
@@ -10,17 +10,15 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
+void FSkillEffectLayer_Heal::ApplyPointEffect(IBoardCombatTarget* ActorModel) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HealPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDefaultHealGain + DiceSum * mDiceRatio;
+    EffectSpec->mDynamicMagnitude = mHealGain;
     AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 }
 
@@ -38,8 +36,6 @@ FActiveTacticalEffectHandle FSkillEffectLayer_Heal::ApplyFactorEffect(IBoardComb
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     FActiveTacticalEffectHandle EffectHandle;
 
@@ -70,8 +66,6 @@ void FSkillEffectLayer_Heal::CommitEffect(const FSkillEffectCommitParams& Params
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(Params.mInstigator.GetObject()));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
 
     const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute());
     const float HealDiff = FMath::Floor(TotalHeal);
@@ -90,3 +84,17 @@ void FSkillEffectLayer_Heal::CommitEffect(const FSkillEffectCommitParams& Params
         }
     }
 }
+
+#if WITH_EDITOR
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_Heal"
+
+FText FSkillEffectLayer_Heal::MakeDescription() const
+{
+	return FText::Format(
+		LOCTEXT("HealDesc", "대상의 체력을 {0} 회복시킵니다."),
+		FText::AsNumber(mHealGain)
+	);
+}
+
+#undef LOCTEXT_NAMESPACE
+#endif

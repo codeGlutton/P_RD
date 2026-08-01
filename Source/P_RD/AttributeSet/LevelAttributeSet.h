@@ -27,6 +27,9 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ULevelAttributeSet, RareSkillWeight)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(ULevelAttributeSet, EpicSkillWeight)
 
+public:
+	static const FName KeyName;
+
 protected:
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData CommonSkillWeight;

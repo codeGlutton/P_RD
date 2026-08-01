@@ -15,6 +15,7 @@
  // Room Game Mode 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
+class UPartyModel;
 class UPlayerUnitModel;
 
 /**
@@ -80,6 +81,18 @@ public:
 	bool GetRunControlView(FRunControlView& OutView) const;
 
 	/**
+	 * @brief 파티 공용 인벤토리의 골드와 아티팩트를 조회한다.
+	 *
+	 * @details
+	 * 지도와 같은 규칙이다 -- 밀지 않고 물어보게 둔다. 가방은 열려 있을 때만
+	 * 보면 되므로, 매번 밀어 두면 안 볼 값을 계속 만드는 셈이 된다.
+	 * @param[out] OutView 채워 줄 판
+	 * @return 채웠으면 참
+	 */
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool GetInventoryView(FInventoryView& OutView) const;
+
+	/**
 	 * @brief 세팅 화면용 현재 런 상태를 조회한다.
 	 * @param RowIndex 현재 룸 행 index
 	 * @param ColumnIndex 현재 룸 열 index
@@ -96,9 +109,9 @@ public:
 
 protected:
 	bool PreloadAndTransitionSelectedRoomAsync();
+	void SaveRunWithUIAsync() const;
 
 private:
-	void SaveRunWithUIAsync() const;
 	void RestorePlayerUnit();
 
 private:
@@ -107,7 +120,9 @@ private:
 	bool IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const;
 
 public:
-	UPlayerUnitModel* GetPlayerUnitModel() const;
+	UPartyModel* GetPartyModel() const;
+	UPlayerUnitModel* GetPlayerUnitModel(int32 PlayerIndex) const;
+	TArray<TObjectPtr<UPlayerUnitModel>>& GetPlayerUnitModels() const;
 
 public:
 	const FName& GetRoomSpawnSettingName() const;
@@ -117,7 +132,7 @@ protected:
 
 protected:
 	UPROPERTY()
-	TWeakObjectPtr<UPlayerUnitModel> mPlayerUnit;
+	TWeakObjectPtr<UPartyModel> mPartyModel;
 
 protected:
 	int32 mSelectedRoomRow = INDEX_NONE;

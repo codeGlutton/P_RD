@@ -1,64 +1,145 @@
 #include "UI/Inventory/MockInventoryDriver.h"
 
+#include "Engine/Texture2D.h"
 #include "UI/Inventory/InventoryUIModel.h"
+#include "UObject/ConstructorHelpers.h"
+
+#if !UE_BUILD_SHIPPING
 
 namespace
 {
-	// 희귀도 색은 어댑터 책임이지만, mock은 표시 검증용으로 직접 색을 박는다(Common/Rare/Epic).
-	FLinearColor MockRarityColor(int32 Tier)
+	struct FMockArtifactDefinition
 	{
-		switch (Tier % 3)
+		const TCHAR* mName;
+		const TCHAR* mIconPath;
+	};
+
+	const FMockArtifactDefinition MockArtifacts[] = {
 		{
-		case 1:  return FLinearColor(0.55f, 0.72f, 1.0f, 1.0f);   // Rare
-		case 2:  return FLinearColor(0.82f, 0.58f, 1.0f, 1.0f);   // Epic
-		default: return FLinearColor(0.86f, 0.98f, 0.94f, 1.0f);  // Common
+			TEXT("Ember Coin"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure")
+		},
+		{
+			TEXT("Moon Chalice"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_RareTreasure.T_MapNode_RareTreasure")
+		},
+		{
+			TEXT("King's Reliquary"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure")
+		},
+		{
+			TEXT("Arcane Compass"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_ArcaneShop.T_MapNode_ArcaneShop")
+		},
+		{
+			TEXT("Witchglass"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_MagicShop.T_MapNode_MagicShop")
+		},
+		{
+			TEXT("Merchant's Seal"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop")
+		},
+		{
+			TEXT("Spider Idol"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster")
+		},
+		{
+			TEXT("Hunter's Crest"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite")
+		},
+		{
+			TEXT("Broken Crown"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss")
+		},
+		{
+			TEXT("Warning Bell"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Danger.T_MapNode_Danger")
+		},
+		{
+			TEXT("Blood Pennant"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EliteDanger.T_MapNode_EliteDanger")
+		},
+		{
+			TEXT("Dragon's Omen"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_BossDanger.T_MapNode_BossDanger")
+		},
+	};
+
+	FLinearColor MockRarityColor(int32 ArtifactIndex)
+	{
+		switch (ArtifactIndex % 3)
+		{
+		case 1:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case 2:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
 		}
 	}
 
-	// 종류/이름/희귀도/보조문구로 mock 항목 한 칸을 만든다.
-	FInventoryItemUI MakeItem(EInventoryItemKind Kind, int32 Index, const FString& Name, const FString& Detail)
+	FText MockRarityLabel(int32 ArtifactIndex)
 	{
-		FInventoryItemUI Item;
-		Item.mKind = Kind;
-		Item.mItemIndex = Index;
-		Item.mName = FText::FromString(Name);
-		Item.mDetailText = FText::FromString(Detail);
-		Item.mRarityColor = MockRarityColor(Index);
-		return Item;
+		switch (ArtifactIndex % 3)
+		{
+		case 1:
+			return NSLOCTEXT("MockInventoryDriver", "Rare", "RARE · PARTY-WIDE");
+		case 2:
+			return NSLOCTEXT("MockInventoryDriver", "Epic", "EPIC · PARTY-WIDE");
+		default:
+			return NSLOCTEXT("MockInventoryDriver", "Common", "COMMON · PARTY-WIDE");
+		}
 	}
 }
 
-/**
- * @details 게임플레이 어댑터가 붙기 전, 표시 검증용 가짜 런 상태를 채워 push한다.
- * 보유 다이스 6 / 스킬 4 / 장비 3 + 메타(골드/레벨/체력)로 그리드·상단바 레이아웃을 확인한다.
- */
+#endif
+
+UMockInventoryDriver::UMockInventoryDriver(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+#if !UE_BUILD_SHIPPING
+	mPreviewIcons.Reserve(UE_ARRAY_COUNT(MockArtifacts));
+	for (const FMockArtifactDefinition& Definition : MockArtifacts)
+	{
+		ConstructorHelpers::FObjectFinder<UTexture2D> IconFinder(
+			Definition.mIconPath);
+		mPreviewIcons.Add(IconFinder.Succeeded() ? IconFinder.Object : nullptr);
+	}
+#endif
+}
+
 void UMockInventoryDriver::Start(UInventoryUIModel* UIModel)
 {
+#if UE_BUILD_SHIPPING
+	// QA fixture와 그 아이콘 하드 레퍼런스는 배포 빌드에 들어가지 않는다.
+	return;
+#else
 	if (UIModel == nullptr)
 	{
 		return;
 	}
 	mUIModel = UIModel;
 
-	FInventoryUI Inv;
-	Inv.mGold = 120;
-	Inv.mLevel = 3;
-	Inv.mHP = 24.f;
-	Inv.mMaxHP = 30.f;
+	FInventoryUI Inventory;
+	Inventory.mGold = 1840;
+	Inventory.mArtifacts.Reserve(UE_ARRAY_COUNT(MockArtifacts));
 
-	const int32 FaceCounts[] = { 2, 4, 6, 8, 12, 20 };
-	for (int32 i = 0; i < 6; ++i)
+	for (int32 ArtifactIndex = 0;
+		ArtifactIndex < UE_ARRAY_COUNT(MockArtifacts);
+		++ArtifactIndex)
 	{
-		Inv.mDice.Add(MakeItem(EInventoryItemKind::Dice, i, FString::Printf(TEXT("Dice %d"), i + 1), FString::Printf(TEXT("d%d"), FaceCounts[i])));
-	}
-	for (int32 i = 0; i < 4; ++i)
-	{
-		Inv.mSkills.Add(MakeItem(EInventoryItemKind::Skill, i, FString::Printf(TEXT("Skill %d"), i + 1), TEXT("주사위 1")));
-	}
-	for (int32 i = 0; i < 3; ++i)
-	{
-		Inv.mEquipment.Add(MakeItem(EInventoryItemKind::Equipment, i, FString::Printf(TEXT("Equip %d"), i + 1), TEXT("장착")));
+		const FMockArtifactDefinition& Definition = MockArtifacts[ArtifactIndex];
+		FInventoryArtifactUI& Artifact = Inventory.mArtifacts.AddDefaulted_GetRef();
+		Artifact.mArtifactIndex = ArtifactIndex;
+		Artifact.mName = FText::FromString(Definition.mName);
+		Artifact.mIcon = mPreviewIcons.IsValidIndex(ArtifactIndex)
+			? mPreviewIcons[ArtifactIndex]
+			: nullptr;
+		Artifact.mRarityColor = MockRarityColor(ArtifactIndex);
+		Artifact.mDetailText = MockRarityLabel(ArtifactIndex);
 	}
 
-	mUIModel->SetInventory(Inv);
+	// UIModel만 바꾼다. RunPersistData, PartyModel, SaveGame에는 접근하지 않는다.
+	mUIModel->SetInventory(Inventory);
+#endif
 }

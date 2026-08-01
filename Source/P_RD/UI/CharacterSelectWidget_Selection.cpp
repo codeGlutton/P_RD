@@ -103,8 +103,8 @@ void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& Logic
 			TEXT("desc_frame"),
 			TEXT("mSelectedCharacterNameText"), TEXT("mSelectedCharacterRoleText"),
 			TEXT("mSelectedCharacterDescriptionText"), TEXT("mSelectedCharacterStatText"),
-			TEXT("icon_hp"), TEXT("icon_dice"), TEXT("icon_gold"),
-			TEXT("mMaxHPStatValueText"), TEXT("mDiceStatValueText"), TEXT("mGoldStatValueText"),
+			TEXT("icon_hp"), TEXT("icon_gold"),
+			TEXT("mMaxHPStatValueText"), TEXT("mGoldStatValueText"),
 		};
 		for (const TCHAR* WidgetName : DescriptionWidgetNames)
 		{
@@ -240,9 +240,7 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	}
 	if (mSelectedCharacterStatText != nullptr)
 	{
-		const bool bHasWBPStatValues = mMaxHPStatValueText != nullptr
-			&& mDiceStatValueText != nullptr
-			&& mGoldStatValueText != nullptr;
+		const bool bHasWBPStatValues = mMaxHPStatValueText != nullptr && mGoldStatValueText != nullptr;
 		mSelectedCharacterStatText->SetText(BuildCharacterStatText(*SelectedOption));
 		mSelectedCharacterStatText->SetVisibility(bHasWBPStatValues
 			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
@@ -250,10 +248,6 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 	if (mMaxHPStatValueText != nullptr)
 	{
 		mMaxHPStatValueText->SetText(FText::AsNumber(SelectedOption->mMaxHP));
-	}
-	if (mDiceStatValueText != nullptr)
-	{
-		mDiceStatValueText->SetText(FText::AsNumber(SelectedOption->mDice));
 	}
 	if (mGoldStatValueText != nullptr)
 	{
@@ -307,10 +301,6 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 	if (mMaxHPStatValueText != nullptr)
 	{
 		mMaxHPStatValueText->SetText(FText::GetEmpty());
-	}
-	if (mDiceStatValueText != nullptr)
-	{
-		mDiceStatValueText->SetText(FText::GetEmpty());
 	}
 	if (mGoldStatValueText != nullptr)
 	{
@@ -457,6 +447,5 @@ FText UCharacterSelectWidget::BuildCharacterStatText(const FFrontendCharacterOpt
 	return FText::Format(
 		RDCharacterSelect::Text(TEXT("CharacterStatFormat")),
 		FText::AsNumber(Option.mMaxHP),
-		FText::AsNumber(Option.mDice),
 		FText::AsNumber(Option.mGold));
 }

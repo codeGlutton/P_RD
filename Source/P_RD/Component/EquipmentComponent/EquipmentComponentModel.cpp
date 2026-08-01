@@ -111,7 +111,10 @@ bool UEquipmentComponentModel::EquipInternal(UStaticEquipmentData* Data, UPassiv
 	}
 
 	// 슬롯 결정, 이미 점유 중이면 먼저 해제(교체)
-	const EEquipmentType Slot = Data->GetEquipmentType();
+
+	// TODO : 리팩토링 단계에서 일시적으로 Slot 고정
+	//const EEquipmentType Slot = Data->GetEquipmentType();
+	const EEquipmentType Slot = EEquipmentType::Weapon;
 	if (Slot == EEquipmentType::Count)
 	{
 		return false;
@@ -151,7 +154,6 @@ bool UEquipmentComponentModel::EquipInternal(UStaticEquipmentData* Data, UPassiv
 
 		// 소유자를 시전자로 컨텍스트 구성 후 self 적용, 인스턴스·핸들 보관
 		UTacticalEffectContext* EffectContext = AttrComp->MakeEffectContext();
-		EffectContext->SetAttributeSetComponentModel(AttrComp);
 
 		FTacticalEffectSpec Spec(StatEffect, EffectContext);
 		Entry.mStatEffect = StatEffect;

@@ -14,6 +14,8 @@
 
 DEFINE_LOG_CATEGORY(LogTacticalFramework)
 
+TSharedPtr<FTacticalAttributeSetInitter> UTacticalFrameworkModel::GlobalAttributeSetInitter = nullptr;
+
 FScopeCurrentTacticalEffectBeingApplied::FScopeCurrentTacticalEffectBeingApplied(UWorld* World, const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
 {
 	mWorld = World;
@@ -61,8 +63,8 @@ UCurveTable* UTacticalFrameworkModel::GetGlobalInitCurveTable()
 
 FTacticalAttributeSetInitter* UTacticalFrameworkModel::GetAttributeSetInitter()
 {
-	check(mGlobalAttributeSetInitter.IsValid() == true);
-	return mGlobalAttributeSetInitter.Get();
+	check(GlobalAttributeSetInitter.IsValid() == true);
+	return GlobalAttributeSetInitter.Get();
 }
 
 void UTacticalFrameworkModel::ReloadAttributeDefaults()
@@ -85,7 +87,7 @@ void UTacticalFrameworkModel::ReloadAttributeDefaults()
 
 void UTacticalFrameworkModel::AllocAttributeSetInitter()
 {
-	mGlobalAttributeSetInitter = MakeShared<FTacticalAttributeSetInitterDiscreteLevels>();
+	GlobalAttributeSetInitter = MakeShared<FTacticalAttributeSetInitterDiscreteLevels>();
 }
 
 #if WITH_EDITOR
@@ -158,3 +160,45 @@ int32 UTacticalFrameworkModel::GetGlobalBatchCount() const
 {
 	return mGlobalBatchCount;
 }
+
+void UTacticalFrameworkModel::AdvanceRoundDuration(const int32 RoundCount)
+{
+	mRoundCount = RoundCount;
+	CheckEffectDurations(RoundCount, ETacticalEffectDurationUnitType::EveryRound);
+}
+
+void UTacticalFrameworkModel::AdvanceTurnDuration(const int32 TurnCount)
+{
+	mTurnCount = TurnCount;
+	CheckEffectDurations(TurnCount, ETacticalEffectDurationUnitType::EveryTurn);
+}
+
+int32 UTacticalFrameworkModel::GetWorldTime(ETacticalEffectDurationUnitType UnitType) const
+{
+	switch (UnitType)
+	{
+	case ETacticalEffectDurationUnitType::EveryTurn:
+		return mTurnCount;
+	case ETacticalEffectDurationUnitType::EveryRound:
+		return mRoundCount;
+	}
+	return INDEX_NONE;
+}
+
+void UTacticalFrameworkModel::CheckEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType)
+{
+	TSet<TWeakObjectPtr<UAttributeSetComponentModel>> Models;
+	for (auto& Pair : mEffectOwningModelMap)
+	{
+		Models.Add(Pair.Value);
+	}
+
+	for (TWeakObjectPtr<UAttributeSetComponentModel>& Model : Models)
+	{
+		if (Model.Get() != nullptr)
+		{
+			Model->CheckDurationExpired(GetWorldTime(UnitType), UnitType);
+		}
+	}
+}
+

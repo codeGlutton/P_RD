@@ -22,6 +22,12 @@ class USkillComponentModel;
 class UPassiveComponentModel;
 class UEquipmentComponentModel;
 
+/** @brief 이동 연출이 한 타일에 도착할 때마다 완료 칸 수를 UI 어댑터에 알린다. */
+DECLARE_MULTICAST_DELEGATE_TwoParams(
+	FOnMoveStepArrivedUI,
+	int32 /*CompletedStepCount*/,
+	int32 /*TotalStepCount*/);
+
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
  */
@@ -34,9 +40,6 @@ public:
 	UUnitModel();
 
 	/* UBoardActorModel 상속 */
-public:	
-	void PostInitializeComponentModels() override;
-
 public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;
@@ -45,8 +48,8 @@ public:
 	/**
 	 * @brief 자신의 턴 시작마다 실행될 함수
 	 */
-	virtual void OnBeginTurn();
-	virtual void OnEndTurn();
+	virtual void OnBeginTurn(int32 TurnCount);
+	virtual void OnEndTurn(int32 TurnCount);
 
 	/* IGenericTeamAgentInterface 상속 */
 public:
@@ -65,6 +68,14 @@ public:
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
+
+public:
+	/**
+	 * @brief 물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림.
+	 * @details 완료 칸 수는 이동 경로 시작 타일을 제외한 절대값이라 중복 알림에도
+	 *          UI가 AP를 두 번 차감하지 않고 같은 표시값으로 맞출 수 있다.
+	 */
+	FOnMoveStepArrivedUI OnMoveStepArrivedUI;
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
