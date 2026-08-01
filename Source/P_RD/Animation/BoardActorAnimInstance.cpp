@@ -88,13 +88,13 @@ bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTa
 
 	const bool HasMontageEvent = mActiveAnimationContext.mMontageEvents.Contains(EventTag);
 	const bool HasAllMontageEvent = mAllMontageEvents.Contains(EventTag);
-	if (HasMontageEvent == false || HasAllMontageEvent == false)
+	if (HasMontageEvent == false && HasAllMontageEvent == false)
 	{
 		// 존재하지 않는 이벤트
 		return false;
 	}
 
-	if (HasMontageEvent == false)
+	if (HasMontageEvent == true)
 	{
 		/* 현 몽타쥬 대상 이벤트 실행 */
 
@@ -109,7 +109,7 @@ bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTa
 			UnregisterTagEventOnMontage(EventTag);
 		}
 	}
-	if (HasAllMontageEvent == false)
+	if (HasAllMontageEvent == true)
 	{
 		/* 모든 몽타쥬 대상 이벤트 실행 */
 

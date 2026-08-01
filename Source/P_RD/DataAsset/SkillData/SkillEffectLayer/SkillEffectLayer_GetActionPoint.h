@@ -1,20 +1,20 @@
-﻿/*****************************************************************//**
- * @file   SkillEffectLayer_GetMove.h
- * @brief  하나의 스킬 모션 내에서 적용하는 기동력 습득 효과 단위 구현 헤더
+/*****************************************************************//**
+ * @file   SkillEffectLayer_GetActionPoint.h
+ * @brief  하나의 스킬 모션 내에서 적용하는 행동력 습득 효과 단위 구현 헤더
  * @author 모호재
- * @date   2026-07-03
+ * @date   2026-08-01
  *********************************************************************/
 
 #pragma once
 
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
-#include "SkillEffectLayer_GetMove.generated.h"
+#include "SkillEffectLayer_GetActionPoint.generated.h"
 
 /**
- * @brief  하나의 스킬 모션 내에서 적용하는 기동력 습득 효과 단위
+ * @brief  하나의 스킬 모션 내에서 적용하는 행동력 습득 효과 단위
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_GetMove : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_GetActionPoint : public FSkillEffectLayer
 {
 	GENERATED_BODY()
 
@@ -31,6 +31,6 @@ public:
 #endif
 
 public:
-	UPROPERTY(Category = "Move", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveGain"))
-	int32 mMoveGain = 0;
+	UPROPERTY(Category = "ActionPoint", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ActionPointGain"))
+	int32 mActionPointGain = 0;
 };

@@ -1,4 +1,4 @@
-﻿#include "SRPGFramework/SRPGMoveBuildAction.h"
+#include "SRPGFramework/SRPGMoveBuildAction.h"
 
 #include "Actor/ActorView.h"
 #include "RDCollision.h"
@@ -63,7 +63,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
         checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
-        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+        mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetActionPointAttribute());
 
         const FSRPGMoveSelectCommand& MoveSelectCommand = Command.Get<FSRPGMoveSelectCommand>();
         // 커맨드 델리깃을 복사해서 페이즈가 바뀔 때 통지

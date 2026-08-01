@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SRPGEnemyTurnPlanner.cpp
  * @brief  적 한 턴의 행동을 계산하는 모델 레이어 플래너 구현
  * @author 이문환
@@ -96,7 +96,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 사용 가능한 액션포인트
 	const int32 ActionPoint = FMath::Max(
-		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
+		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute()),
 		0
 	);
 

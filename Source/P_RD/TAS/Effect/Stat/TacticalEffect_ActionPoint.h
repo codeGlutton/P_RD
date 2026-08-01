@@ -1,26 +1,26 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_Movement.h
- * @brief  Movement 이펙트 정의 헤더
+/*****************************************************************//**
+ * @file   TacticalEffect_ActionPoint.h
+ * @brief  ActionPoint 이펙트 정의 헤더
  * @author 이문환, 모호재
- * @date   2026-07-01
+ * @date   2026-08-01
  *********************************************************************/
 
 #pragma once
 
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
-#include "TacticalEffect_Movement.generated.h"
+#include "TacticalEffect_ActionPoint.generated.h"
 
 /**
- * @brief Movement 이펙트
+ * @brief ActionPoint 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_Movement : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPoint : public UTacticalEffect
 {
 	GENERATED_BODY()
 
 public:
-	UTacticalEffect_Movement();
+	UTacticalEffect_ActionPoint();
 
 	/* UTacticalEffect 상속 */
 public:
@@ -28,10 +28,10 @@ public:
 };
 
 /**
- * @brief Movement 습득 계산기
+ * @brief ActionPoint 습득 계산기
  */
 UCLASS()
-class UTacticalEffectExecutionCalculation_GetMovement : public UTacticalEffectExecutionCalculation
+class UTacticalEffectExecutionCalculation_GetActionPoint : public UTacticalEffectExecutionCalculation
 {
 	GENERATED_BODY()
 
@@ -40,14 +40,13 @@ public:
 };
 
 /**
- * @brief Movement 습득 이펙트
+ * @brief ActionPoint 습득 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetMovement : public UTacticalEffect
+class P_RD_API UTacticalEffect_GetActionPoint : public UTacticalEffect
 {
 	GENERATED_BODY()
 
 public:
-	UTacticalEffect_GetMovement();
+	UTacticalEffect_GetActionPoint();
 };
-

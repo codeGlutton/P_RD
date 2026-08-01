@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalTileTable.cpp
  * @brief  턴 계획용 전술 타일 테이블 구현
  * @author 이문환
@@ -88,7 +88,7 @@ void FTacticalTileTable::Build(
 			}
 
 			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
-			const bool bBudgetOk = (Info.mMoveCost + Skill->mRequiredMovement <= ActionPoint);
+			const bool bBudgetOk = (Info.mMoveCost + Skill->mRequiredActionPoint <= ActionPoint);
 
 			for (int32 TargetIndex = 0; TargetIndex < mTargetCount; ++TargetIndex)
 			{

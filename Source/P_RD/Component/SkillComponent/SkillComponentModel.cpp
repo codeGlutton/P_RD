@@ -1,4 +1,4 @@
-﻿#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
@@ -13,7 +13,7 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 
 #include "Simulation/Logger/EventLog.h"
 #include "Simulation/Logger/EventLogger.h"

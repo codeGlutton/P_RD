@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   EnemyTurnPlannerTests.cpp
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
@@ -129,7 +129,7 @@ namespace
 		Enemy->Initialize();
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
-		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, MoveRange);
 
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());

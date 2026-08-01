@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   StaticSkillData.h
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset 구현 헤더
  * @author 모호재
@@ -124,8 +124,8 @@ public:
     /* 논리적 설정값들 */
 public:
     // @brief 필요 행동력
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredMovement"))
-    int32 mRequiredMovement;
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredActionPoint"))
+    int32 mRequiredActionPoint;
 
     // @brief 쿨다운시 적용될 Effect Class
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownEffectClass", AssetBundles = "Actor"))

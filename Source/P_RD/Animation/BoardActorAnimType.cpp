@@ -16,10 +16,10 @@ void FBoardActorAnimationContext::Clear()
 {
 	mMetaData.Reset();
 
-	mMontageEvents.Empty();
-	mMontageEndEvent.Clear();
-
 	mMontageTag = FGameplayTag::EmptyTag;
 	mMontageDir = ETileActorDirection::Count;
+
+	mMontageEvents.Empty();
+	mMontageEndEvent.Clear();
 }
 

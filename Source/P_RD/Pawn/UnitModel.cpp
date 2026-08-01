@@ -13,8 +13,8 @@
 #include "TAS/Passive/DynamicPassiveData.h"
 
 #include "AttributeSet/UnitAttributeSet.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
-#include "TAS/Effect/Stat/TacticalEffect_MovementFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPointFactor_AddBase.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
@@ -80,7 +80,7 @@ void UUnitModel::OnEndRoom()
 	/* 모두 제거 */
 
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
@@ -112,7 +112,7 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 	/* 자기 자신에게 MovePoint 부여 */
 
 	const int32 DefaultMovePoint = FMath::Max(
-		mAttributeCompModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeMovementAttribute()),
+		mAttributeCompModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeActionPointAttribute()),
 		0
 	);
 
@@ -120,25 +120,25 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 
 	FActiveTacticalEffectHandle FactorHandle;
 	{
-		/* 기본 Move 만큼 Factor 부여 */
+		/* 기본 행동력 만큼 Factor 부여 */
 
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_MovementFactor_AddBase::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_ActionPointFactor_AddBase::StaticClass(), EffectContext);
 		EffectSpec->mDynamicMagnitude = DefaultMovePoint;
 		FactorHandle = mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}
 
 	{
-		/* MovePoint 습득 */
+		/* 행동력 습득 */
 
 		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetMovement::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetActionPoint::StaticClass(), EffectContext);
 		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
 		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
 		mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}
 
 	{
-		/* 기본 Move 만큼 Factor 제거 */
+		/* 기본 행동력 만큼 Factor 제거 */
 
 		mAttributeCompModel->RemoveActiveTacticalEffect(FactorHandle);
 	}
@@ -167,7 +167,7 @@ void UUnitModel::OnEndTurn(int32 TurnCount)
 
 	/* 행동력 제거 */
 
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
 	
 	/* 턴제 상태이상 한 스택 감소 */
 

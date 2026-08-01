@@ -1,4 +1,4 @@
-﻿#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
@@ -54,7 +54,7 @@ FText UStaticSkillData::MakeDescription() const
 	/* 1. 패턴 이름 및 헤더 정보 현지화 합성 (RDMinimal.h의 EnumToText 활용) */
 	FText BaseHeader = FText::Format(
 		LOCTEXT("SkillDescriptionHeader", "[행동력: {0} | 사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
-		FText::AsNumber(mRequiredMovement),
+		FText::AsNumber(mRequiredActionPoint),
 		FText::AsNumber(mAimRange),
 		EnumToText(mAimPattern),
 		FText::AsNumber(mEffectArea),

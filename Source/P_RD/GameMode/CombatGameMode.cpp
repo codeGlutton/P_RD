@@ -1,4 +1,4 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -190,7 +190,7 @@ namespace
 			IconType = EFloatingLogIconType::HP;
 			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetMovementAttribute())
+		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetActionPointAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
 			ColorType = EFloatingLogColorType::PointUp;
@@ -612,7 +612,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -635,7 +635,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
@@ -741,8 +741,8 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMovementAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute());
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetActionPointAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 

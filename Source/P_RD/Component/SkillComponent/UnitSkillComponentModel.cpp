@@ -9,14 +9,16 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
+
+#include UE_INLINE_GENERATED_CPP_BY_NAME(UnitSkillComponentModel)
 
 bool UUnitSkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
 {
-	const bool IsWaitingCooldown = Super::CanActiveSkill_Internal(SkillIndex);
-	const bool HasEnoughMovement = HasRequiredMovement(SkillIndex);
+	const bool CanSuperActivateSkill = Super::CanActiveSkill_Internal(SkillIndex);
+	const bool HasEnoughMovement = HasRequiredActionPoint(SkillIndex);
 
-	return IsWaitingCooldown == false && HasEnoughMovement == true;
+	return CanSuperActivateSkill == true && HasEnoughMovement == true;
 }
 
 void UUnitSkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
@@ -39,13 +41,13 @@ void UUnitSkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 	/* 행동력 소모 */
 
 	{
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Movement::StaticClass(), EffectContext);
-		EffectSpec->mDynamicMagnitude = -GetRequiredMovement(SkillIndex);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_ActionPoint::StaticClass(), EffectContext);
+		EffectSpec->mDynamicMagnitude = -GetRequiredActionPoint(SkillIndex);
 		AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}
 }
 
-bool UUnitSkillComponentModel::HasRequiredMovement(int32 SkillIndex) const
+bool UUnitSkillComponentModel::HasRequiredActionPoint(int32 SkillIndex) const
 {
 	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
 	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
@@ -65,10 +67,10 @@ bool UUnitSkillComponentModel::HasRequiredMovement(int32 SkillIndex) const
 		return false;
 	}
 
-	return SkillEntry->mData->mRequiredMovement <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMovementAttribute());
+	return SkillEntry->mData->mRequiredActionPoint <= AttributeSetCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 }
 
-int32 UUnitSkillComponentModel::GetRequiredMovement(int32 SkillIndex) const
+int32 UUnitSkillComponentModel::GetRequiredActionPoint(int32 SkillIndex) const
 {
 	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
 	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
@@ -76,6 +78,6 @@ int32 UUnitSkillComponentModel::GetRequiredMovement(int32 SkillIndex) const
 		return false;
 	}
 
-	return SkillEntry->mData->mRequiredMovement;
+	return SkillEntry->mData->mRequiredActionPoint;
 }
 

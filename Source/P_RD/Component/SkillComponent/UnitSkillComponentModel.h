@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   UnitSkillComponentModel.h
  * @brief  유닛의 액티브 스킬 컴포넌트 모델 구현 정의 헤더
  * @author 모호재, 이문환
@@ -24,6 +24,6 @@ protected:
 	void ConsumeResources_Internal(int32 SkillIndex) override;
 
 public:
-	bool HasRequiredMovement(int32 SkillIndex) const;
-	int32 GetRequiredMovement(int32 SkillIndex) const;
+	bool HasRequiredActionPoint(int32 SkillIndex) const;
+	int32 GetRequiredActionPoint(int32 SkillIndex) const;
 };

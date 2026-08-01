@@ -1,11 +1,11 @@
 ﻿/*****************************************************************//**
- * @file   TacticalEffect_Movement.cpp
- * @brief  Movement 이펙트 구현
+ * @file   TacticalEffect_ActionPoint.cpp
+ * @brief  ActionPoint 이펙트 구현
  * @author 이문환, 모호재
- * @date   2026-07-01
+ * @date   2026-08-01
  *********************************************************************/
 
-#include "TAS/Effect/Stat/TacticalEffect_Movement.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
@@ -14,27 +14,27 @@
 #include "Setting/GameBalanceSettings.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 
-UTacticalEffect_Movement::UTacticalEffect_Movement()
+UTacticalEffect_ActionPoint::UTacticalEffect_ActionPoint()
 {
 	// 즉시형
 	mDurationPolicy = ETacticalEffectDurationType::Instant;
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UCombatTargetAttributeSet::GetMovementAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
 	mModifiers.Add(Info);
 }
 
-void UTacticalEffect_Movement::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+void UTacticalEffect_ActionPoint::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
 {
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UCombatTargetAttributeSet::GetMovementAttribute();
-	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetMovementAttribute())->mTotalMagnitude;
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetActionPointAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
@@ -42,7 +42,7 @@ void UTacticalEffect_Movement::OnExecuted(FActiveTacticalEffectsContainer& Activ
 	GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
 }
 
-void UTacticalEffectExecutionCalculation_GetMovement::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
 {
 	Super::Execute(ExecutionParams, OutExecutionOutput);
 
@@ -63,17 +63,17 @@ void UTacticalEffectExecutionCalculation_GetMovement::Execute(const FTacticalEff
 		ExecutionParams.GetOwningSpec().GetStackCount() * 
 		ExecutionParams.GetOwningSpec().mDynamicMagnitude * 
 		TargetAgilityRatio *
-		SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetMovementFactorAttribute()];
+		SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetActionPointFactorAttribute()];
 	const float MoveDiff = FMath::Floor(TotalMove);
 	
 	if (MoveDiff > 0.f)
 	{
 		/* 이동 증가 적용 */
-		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::AddBase, MoveDiff));
+		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, MoveDiff));
 	
 		/* 로그 적용 */
 		FSRPGAttributeEffectEventLog Log;
-		Log.mEffectAttribute = UCombatTargetAttributeSet::GetMovementAttribute();
+		Log.mEffectAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
 		Log.mMagnitude = MoveDiff;
 
 		UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
@@ -85,14 +85,13 @@ void UTacticalEffectExecutionCalculation_GetMovement::Execute(const FTacticalEff
 	OutExecutionOutput.MarkStackCountHandledManually();
 }
 
-UTacticalEffect_GetMovement::UTacticalEffect_GetMovement()
+UTacticalEffect_GetActionPoint::UTacticalEffect_GetActionPoint()
 {
 	// 즉시형
 	mDurationPolicy = ETacticalEffectDurationType::Instant;
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalEffectExecutionDefinition Definition;
-	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetMovement::StaticClass();
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetActionPoint::StaticClass();
 	mExecutions.Add(Definition);
 }
-
