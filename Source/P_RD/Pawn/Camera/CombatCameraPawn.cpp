@@ -32,6 +32,9 @@ ACombatCameraPawn::ACombatCameraPawn()
 	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
 	mCameraComponent->OrthoWidth = 2000.0f;
+	mCameraComponent->bAutoCalculateOrthoPlanes = false;
+	mCameraComponent->OrthoNearClipPlane = -2000.f;
+	mCameraComponent->OrthoFarClipPlane = 20000.f;
 	//mCameraComponent->bCameraMeshHiddenInGame = false;
 	mCameraComponent->SetupAttachment(mSceneComponent);
 
@@ -175,6 +178,6 @@ void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
 	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
-	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
+	mCameraMovementComponent.Get()->PinchZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }
 

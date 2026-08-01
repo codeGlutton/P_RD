@@ -18,6 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardClaimed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardChoicesChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardChosen, int32, ChoiceIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRewardClaimRequested, ERewardClaimKind, ClaimKind, int32, ChoiceIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRewardClaimConfirmed, ERewardClaimKind, ClaimKind, int32, ChoiceIndex);
 
 /** @brief 보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다. */
 // 이 객체는 보상을 계산하거나 지급하지 않는다. 표시 스냅샷과 UI 입력 의도만 양방향으로 중계한다.
@@ -28,7 +29,7 @@ class P_RD_API URewardUIModel : public UObject
 
 	/* ───────── 위젯이 구독하는 알림 ───────── */
 public:
-	/** @brief 보상값이 설정/갱신됐음을 알림. 위젯은 카운트업/막대 연출을 시작한다. */
+	/** @brief 보상값이 설정/갱신됐음을 알림. 위젯은 완성된 정적 결과를 즉시 다시 그린다. */
 	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
 	FOnRewardUIChanged OnUIChanged;
 
@@ -50,6 +51,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Reward|Input")
 	FOnRewardClaimRequested OnRewardClaimRequested;
 
+	/** @brief 게임플레이가 실제 지급에 성공한 보상 행. UI는 이 신호를 받은 행만 수령 완료로 바꾼다. */
+	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
+	FOnRewardClaimConfirmed OnRewardClaimConfirmed;
+
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
 	/** @brief UI가 '받기'를 눌렀다는 의도를 게임플레이 구독자에게 전달한다. */
@@ -70,6 +75,9 @@ public:
 
 	/** @brief 룸에서 나온 보상 항목 목록을 설정하고 변경 알림을 보낸다. */
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void SetRewardChoices(const TArray<FRewardChoiceUI>& Choices);
+
+	/** @brief 게임플레이가 보상 지급 성공을 UI에 확정한다. 실패한 요청에는 호출하지 않는다. */
+	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmRewardClaim(ERewardClaimKind ClaimKind, int32 ChoiceIndex = -1);
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:

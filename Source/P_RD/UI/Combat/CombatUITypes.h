@@ -25,7 +25,11 @@ enum class ECombatUIDomain : uint8
 	Turn,
 	Queue,
 	Equipment,
-	Meta       // 돈/경험치 등 플레이어 메타
+	Meta,       // 돈/경험치 등 플레이어 메타
+	// 상세 스냅샷은 목록 갱신(Unit/Skill)과 분리해 알린다. Unit은 HP 변경마다
+	// 오므로, 같은 도메인에 실으면 롱프레스 상세 패널이 HP 갱신마다 열린다.
+	UnitDetail,
+	SkillDetail
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
@@ -41,6 +45,25 @@ enum class ECombatBuildPhaseUI : uint8
 	SkillSelected,   // [UI 파생] 스킬을 골랐음(mSelectedSkillIndex != NONE)
 	AimSelection,    // [거울] ESRPGSkillBuildPhase::AimSelection
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
+};
+
+/** @brief 확정 전 AP 소모 표시가 어떤 행동을 가리키는지 구분한다. */
+UENUM(BlueprintType)
+enum class ECombatPendingActionType : uint8
+{
+	None,
+	Move,
+	Skill
+};
+
+/** @brief 현재 프리뷰 중인 행동의 AP 예정 소모 데이터. */
+USTRUCT(BlueprintType)
+struct FCombatPendingActionUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) ECombatPendingActionType mType = ECombatPendingActionType::None;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
 };
 
 /**
@@ -170,8 +193,17 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
 	/** @brief 유닛 초상화(DA mPortrait). 턴 순서 칩 등 상시 UI 표시용 — 없으면 텍스트 폴백. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
+	// 파티 카드가 3명의 이름을 동시에 보여줘야 해서 유닛 목록 쪽에도 필요하다.
+	// mName은 FUnitDetailUI에도 있지만 그쪽은 한 번에 한 유닛(롱프레스 상세)이다.
+	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+	// 행동력. 이동과 스킬이 함께 쓰는 단일 자원이라 유닛 단위로 표시해야 한다.
+	// 원본은 SkillComponentModel의 mActionPoints / mMaxActionPoints.
+	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPoints = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
@@ -195,6 +227,22 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mStatusEffects;
 };
 
+/** @brief 유닛 상세창에 늘어놓는 스킬 한 칸. 탭하면 그 스킬의 상세로 넘어간다. */
+// UI 필요값:
+// - mSkillIndex: 탭했을 때 되돌려 보낼 왕복 식별자. **그 상세창에 뜬 유닛의** 스킬 배열 기준이다
+//                (카드 레일의 FSkillUI.mSkillIndex와 같은 배열이 아니다 — 적 스킬일 수도 있다).
+// - mName: 그림이 없을 때 대신 적을 글자. 손가락을 올려 둘 때의 안내에도 쓴다.
+// - mIcon: 칸에 그릴 그림.
+USTRUCT(BlueprintType)
+struct FUnitDetailSkillUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+};
+
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
 // 이 struct는 "상세 패널에만 추가로 필요한 값"만 담는다.
 // HP/MaxHP/AttackFactor 같은 라이브 전투 스탯은 여기서 중복 보관하지 않고,
@@ -214,6 +262,8 @@ struct FUnitDetailUI
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
 	UPROPERTY(BlueprintReadOnly) TArray<FText> mPassiveDescriptions;
+	/** @brief 이 유닛이 들고 있는 스킬 칸들. 탭하면 RequestInspectUnitSkill로 상세를 청한다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailSkillUI> mSkills;
 };
 
 /** @brief 스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울. */
@@ -258,6 +308,39 @@ struct FSkillTargetingUI
 	UPROPERTY(BlueprintReadOnly) bool mIsPenetration = false;     // 관통(막히지 않고 투사체가 뚫음)
 };
 
+/**
+ * @brief 지금 겨냥한 자리.
+ *
+ * @details
+ * 판을 톡 치면 그 칸이 겨냥한 자리가 된다. **타일 하나**이고, 그 위에 유닛이
+ * 있으면 유닛 id 도 같이 온다. 빈 칸도 겨냥할 수 있다 -- 이동 목적지가 그렇다.
+ *
+ * 왜 유닛 id 만으로 안 되나: "여기로 이동" 은 유닛이 없는 칸을 가리킨다.
+ * 유닛만 겨냥할 수 있게 하면 이동이 이 흐름 밖으로 밀려난다.
+ *
+ * UI 는 이 값을 만들지 않는다. 화면 좌표를 RequestWorldTouch 로 넘기면
+ * 게임플레이가 어느 타일인지 풀어서 SetTarget 으로 내린다 -- 화면은 타일맵
+ * 좌표계를 모른다.
+ *
+ * 이 값이 바뀌면 게임플레이가 FSkillUI.mIsUsable 을 다시 계산해 내려준다.
+ * 그래서 "사거리에 따라 카드가 켜지고 꺼진다" 는 UI 가 판정하는 것이 아니라
+ * 받아 그리는 것이다.
+ */
+USTRUCT(BlueprintType)
+struct FCombatTargetUI
+{
+	GENERATED_BODY()
+
+	/** @brief 겨냥한 것이 있나. 없으면 아래 값은 뜻이 없다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsValid = false;
+
+	/** @brief 겨냥한 타일. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	/** @brief 그 타일에 선 유닛. 빈 칸이면 INDEX_NONE. */
+	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
+};
+
 /** @brief 스킬 레일에 그릴 스킬 한 칸. */
 // UI 필요값:
 // - mSkillIndex: 클릭/롱프레스 시 RequestSelectSkill/RequestLongPressSkill payload.
@@ -274,6 +357,17 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	// 새 전투 규칙: 이동과 스킬이 행동력 하나를 나눠 쓰고, 스킬은 턴 쿨타임을
+	// 가지며, 피해는 min~max에 크리티컬이 max의 1.5배다. 스킬 카드가 이 넷을
+	// 모두 보여줘야 플레이어가 무엇을 고를지 판단할 수 있다.
+	// @TODO 게임플레이: PushSkillUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mRemainingCooldown = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCriticalDamage = 0;
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };

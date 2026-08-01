@@ -22,7 +22,13 @@ enum class ECombatInputType : uint8
 	Move,             // payload 없음(채운 무브포인트 소모)
 	EndTurn,          // payload 없음
 	Cancel,           // payload 없음(딴 데 탭 = 초기화)
-	LongPressEquip    // payload = SlotIndex (장비 상세)
+	LongPressEquip,   // payload = SlotIndex (장비 상세)
+	InspectUnit,      // payload = UnitId (그 유닛의 스킬을 본다)
+	Confirm,          // payload 없음(겨냥한 칸을 그대로 확정)
+	// payload = SkillIndex. **지금 상세창에 뜬 유닛의** 스킬 상세를 청한다.
+	// LongPressSkill과 다른 것은 기준 유닛이다 -- 그쪽은 카드 레일(조종 중인 아군),
+	// 이쪽은 길게 눌러 들여다보는 중인 유닛이라 적 스킬일 수도 있다.
+	InspectUnitSkill
 };
 
 class UTexture2D;
@@ -112,13 +118,46 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestMove();
 	/** @brief 턴 종료 버튼 의도. 실제 턴 시스템 호출과 실패 처리는 게임플레이가 맡는다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestEndTurn();
+	/**
+	 * @brief 겨냥해 둔 칸을 확정한다.
+	 *
+	 * 판에서 그 칸을 다시 누르는 것과 같은 뜻이다. 화면 아래 단추로도 할 수
+	 * 있어야 해서 따로 둔다 -- 좁은 화면에서 칸을 두 번 정확히 짚는 것은
+	 * 손가락으로 하기 어렵다.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Request") void RequestConfirm();
+
 	/** @brief 현재 스킬/타겟 선택 취소 의도. UI 강조 해제는 OnActionResolved로 되돌아온다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestCancel();
+
+	/**
+	 * @brief 이 유닛의 스킬을 보여 달라.
+	 *
+	 * @details
+	 * 하단 용병 칸을 누르면 그 용병이 무엇을 할 수 있는지 보고 싶다는 뜻이다.
+	 * 제 차례가 아니어도 보여 준다 -- 다만 그때는 카드가 전부 꺼진 채로 온다.
+	 * 무엇을 들고 있는지 아는 것과 지금 쓸 수 있는 것은 다른 이야기다.
+	 *
+	 * 차례가 넘어가면 저절로 풀린다. 화면이 따로 되돌릴 필요가 없다.
+	 * @param UnitId 볼 유닛. INDEX_NONE 이면 지금 차례인 유닛으로 되돌린다
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnit(int32 UnitId);
 	/** @brief 장비 슬롯 상세 요청. SlotIndex는 FEquipmentUI.mSlotIndex와 같은 계약이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestLongPressEquip(int32 SlotIndex);
+
+	/**
+	 * @brief 상세창에 뜬 유닛의 스킬 하나를 보여 달라.
+	 *
+	 * @details
+	 * 유닛 상세창의 스킬 칸을 탭했다는 뜻이다. 어느 유닛인지는 보내지 않는다 --
+	 * 그 상세를 내려 준 게임플레이가 이미 알고 있고, 화면이 유닛을 다시 짚으면
+	 * 기준이 두 곳에 생긴다.
+	 * @param SkillIndex FUnitDetailSkillUI.mSkillIndex 를 그대로 되돌려 보낸다
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnitSkill(int32 SkillIndex);
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
-	
+
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
@@ -131,6 +170,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitUIs(const TArray<FUnitUI>& Units);
 	/** @brief 유닛 롱프레스 상세(이름/레벨/초상화/패시브). [합의필요] UUnitData 연결. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetUnitDetail(const FUnitDetailUI& Detail);
+
+	/**
+	 * @brief 지금 겨냥한 자리를 내린다.
+	 *
+	 * @details
+	 * 판을 톡 친 좌표(RequestWorldTouch)를 받아 게임플레이가 어느 타일인지 풀고
+	 * 이 함수로 내려준다. 화면은 타일맵 좌표계를 모르므로 스스로 못 만든다.
+	 *
+	 * 이 값이 바뀌면 그 자리에 쓸 수 있는 스킬이 달라진다. 같이 SetSkillUIs()
+	 * 로 mIsUsable 을 다시 내려 주어야 카드가 맞게 켜지고 꺼진다.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTarget(const FCombatTargetUI& Target);
 	/** @brief 스킬 레일(이름/아이콘/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
 
@@ -142,6 +193,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTurnUI(const FTurnUI& Turn);
 	/** @brief 조작 빌드 페이즈만 갱신(스킬/이동 빌드 공용). 턴 스냅샷 전체 교체 없이 페이즈 전환을 알릴 때 사용. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetBuildPhase(ECombatBuildPhaseUI Phase);
+	/** @brief 확정 전 행동 종류와 AP 예정 소모량을 갱신한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPendingAction(const FCombatPendingActionUI& PendingAction);
+	/**
+	 * @brief 이동 연출의 완료 칸 수를 표시 AP에 반영한다.
+	 * @details 타일 효과가 반영된 현재 실제 AP에서 절대 완료 칸 수를 빼서 계산한다.
+	 *          실제 FUnitUI 스냅샷은 수정하지 않는다.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetMoveAPStepPresentation(int32 UnitId, int32 CompletedStepCount);
+	/** @brief 이동 연출용 AP 표시값을 해제한다. UnitId가 INDEX_NONE이면 대상을 가리지 않는다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ClearMoveAPStepPresentation(int32 UnitId);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
 	/** @brief 장비 롱프레스 상세 스냅샷을 교체한다(GameMode의 PushEquipmentDetailUIData가 채워 밀어넣는다). */
@@ -180,9 +241,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FUnitDetailUI& GetUnitDetail() const { return mUnitDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FSkillUI>& GetSkillUIs() const { return mSkillUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetSelectedSkillIndex() const { return mSelectedSkillIndex; }
+
+	/** @brief 찜해 둔 대상. 없으면 INDEX_NONE. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatTargetUI& GetTarget() const { return mTarget; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FSkillDetailUI& GetSkillDetail() const { return mSkillDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatPendingActionUI& GetPendingAction() const { return mPendingAction; }
+	/** @brief 실제 AP 또는 현재 이동 연출 단계에 맞춘 표시 AP를 반환한다. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 ResolveDisplayedMovementPoint(const FUnitUI& Unit) const;
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
@@ -198,12 +265,23 @@ private:
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
+
+	/** @brief 찜해 둔 대상 유닛. 없으면 INDEX_NONE. */
+	UPROPERTY(Transient) FCombatTargetUI mTarget;
 	/** @brief 마지막 스킬 상세 스냅샷. */
 	UPROPERTY(Transient) FSkillDetailUI mSkillDetail;
 	/** @brief 아직 재생되지 않은 행동 결과 큐. ResolveFrontQueueNode()가 앞에서 하나씩 제거한다. */
 	UPROPERTY(Transient) TArray<FCombatQueueNode> mActionQueue;
 	/** @brief 현재 턴/라운드/페이즈 표시 스냅샷. */
 	UPROPERTY(Transient) FTurnUI mTurnUI;
+	/** @brief 현재 선택 중인 이동 경로 또는 스킬의 AP 예정 소모. */
+	UPROPERTY(Transient) FCombatPendingActionUI mPendingAction;
+	/** @brief 타일별 이동 연출 중 표시 AP를 덮어쓸 유닛. 비활성은 INDEX_NONE. */
+	UPROPERTY(Transient) int32 mMoveAPPresentationUnitId = INDEX_NONE;
+	/** @brief 현재 완료 칸 수까지 반영한 화면용 AP. */
+	UPROPERTY(Transient) int32 mMoveAPPresentationDisplayed = 0;
+	/** @brief 현재까지 물리적으로 도착한 타일 수. */
+	UPROPERTY(Transient) int32 mMoveAPPresentationCompletedSteps = 0;
 	/** @brief 장비 슬롯 표시 스냅샷. */
 	UPROPERTY(Transient) TArray<FEquipmentUI> mEquipmentUIs;
 	UPROPERTY(Transient) FEquipmentDetailUI mEquipmentDetail;

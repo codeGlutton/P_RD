@@ -1,6 +1,7 @@
 ﻿#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 #include "Algo/Reverse.h"
 
 namespace
@@ -747,6 +748,20 @@ void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
 		mClearTileHighlightDelegate.Execute(Flag);
 }
 
+void UTileMapModel::SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles)
+{
+	// 위협 범위 표시를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mSetThreatRangeDelegate.IsBound())
+		mSetThreatRangeDelegate.Execute(MoveTiles, AttackTiles);
+}
+
+void UTileMapModel::ClearThreatRange()
+{
+	// 위협 범위 해제를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mClearThreatRangeDelegate.IsBound())
+		mClearThreatRangeDelegate.Execute();
+}
+
 /**
  * @brief
  * - 1단계에서는 패턴에 따라 후보타일을 수집하고
@@ -945,6 +960,50 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	}
 
 	return Result;
+}
+
+void UTileMapModel::GetThreatRanges(
+	const FTileIndex& Origin,
+	int32 ActionPoint,
+	const TArray<const UStaticSkillData*>& Skills,
+	const UBoardActorModel* Self,
+	OUT TArray<FTileIndex>& MoveTiles,
+	OUT TArray<FTileIndex>& AttackTiles) const
+{
+	MoveTiles.Reset();
+	AttackTiles.Reset();
+
+	// 원점이 맵 밖이거나 행동력이 음수면 계산 불가 (행동력 0은 제자리 시전이 가능하므로 유효)
+	if (IsValidIndex(Origin) == false || ActionPoint < 0)
+		return;
+
+	// 최대이동범위: 행동력 전부를 이동에 쓸 때 도달 가능한 타일 + 원점(제자리)
+	MoveTiles = GetReachableTiles(Origin, ActionPoint, Self);
+	MoveTiles.Add(Origin);
+
+	// 이동거리장: 각 도달 타일까지의 이동비용 (시전 예산 판정용)
+	const TArray<int32> MoveCostField = GetDistanceField(Origin, Self);
+
+	// 최대공격범위: 예산이 되는 타일에서 각 스킬로 조준 가능한 타일 합집합
+	TSet<FTileIndex> AttackSet;
+	for (const FTileIndex& Tile : MoveTiles)
+	{
+		const int32 MoveCost = MoveCostField[TileIndexToLinearIndex(Tile)];
+		for (const UStaticSkillData* Skill : Skills)
+		{
+			// 빈 슬롯 무시
+			if (Skill == nullptr)
+				continue;
+
+			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
+			if (MoveCost + Skill->mRequiredMovement > ActionPoint)
+				continue;
+
+			// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
+			AttackSet.Append(GetAimableTiles(Tile, Skill->mAimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, Skill->mIsIndirect, /*Incoming*/nullptr, /*IgnoreBlocker*/Self));
+		}
+	}
+	AttackTiles = AttackSet.Array();
 }
 
 TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const

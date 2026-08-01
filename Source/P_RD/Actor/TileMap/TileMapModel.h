@@ -15,6 +15,7 @@
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
+class UStaticSkillData;
 struct FPresentationBarrier;
 
 /**
@@ -84,6 +85,14 @@ DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FMovePathTile>&);
  */
 DECLARE_DELEGATE_TwoParams(FSetTileHighlightDelegate, const TArray<FTileIndex>&, ETileHighlightFlag);
 DECLARE_DELEGATE_OneParam(FClearTileHighlightDelegate, ETileHighlightFlag);
+
+/**
+ * @brief 모델이 뷰(ATileMap)에 위협 범위 표시/해제를 요청하는 델리깃
+ * @details 강조 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetThreatRange/ClearThreatRange로
+ *          바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다.
+ */
+DECLARE_DELEGATE_TwoParams(FSetThreatRangeDelegate, const TArray<FTileIndex>&, const TArray<FTileIndex>&);
+DECLARE_DELEGATE(FClearThreatRangeDelegate);
 
 /**
  * @brief  타일맵 데이터 모델 클래스
@@ -213,6 +222,12 @@ public:
 	FSetTileHighlightDelegate mSetTileHighlightDelegate;
 	FClearTileHighlightDelegate mClearTileHighlightDelegate;
 
+	/**
+	 * @brief 위협 범위 표시/해제 요청 델리깃 (라이브에서 ATileMap이 SetThreatRange/ClearThreatRange로 바인딩, 미바인딩=심이면 표시 없음)
+	 */
+	FSetThreatRangeDelegate mSetThreatRangeDelegate;
+	FClearThreatRangeDelegate mClearThreatRangeDelegate;
+
 	/* 이동 / 범위 조회 */
 	/**
 	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환
@@ -288,6 +303,20 @@ public:
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
+	/* 위협 범위 표시 */
+	/**
+	 * @brief 적 위협 범위 표시 요청 (뷰의 SetThreatRange로 위임)
+	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다. 빈 배열일 경우 그리지 않음
+	 * @param[in] MoveTiles : 최대 이동 범위 타일 목록
+	 * @param[in] AttackTiles : 최대 공격 범위 타일 목록
+	 */
+	void SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles);
+
+	/**
+	 * @brief 적 위협 범위 표시 해제 요청 (뷰의 ClearThreatRange로 위임)
+	 */
+	void ClearThreatRange();
+
 	/**
 	 * @brief 기준 좌표에서 조준 가능한 타일 목록 반환
 	 * @details
@@ -356,6 +385,28 @@ public:
 		EEffectPattern Pattern,
 		int32 Size,
 		bool bPenetrate
+	) const;
+
+	/**
+	 * @brief 적 위협 범위(최대이동범위/최대공격범위) 계산
+	 * @details
+	 * 최대이동범위: 행동력 전부를 이동에 쓸 때 도달 가능한 타일 + 원점
+	 * 최대공격범위: "이동비용 + 스킬 시전비용 ≤ 행동력"인 타일에서 각 스킬로 조준 가능한 타일의 합집합
+	 * 조준 가능한 타일만 포함하며 이펙트 확산은 포함하지 않음
+	 * @param[in] Origin : 적의 현재 타일
+	 * @param[in] ActionPoint : 이동과 스킬 시전이 나눠 쓰는 행동력
+	 * @param[in] Skills : 스킬 데이터 목록 (빈 슬롯 nullptr 허용, 쿨다운 제외는 호출부 책임)
+	 * @param[in] Self : 계획 주체 (이동으로 자리를 비울 예정이므로 통과/차폐 판정에서 제외)
+	 * @param[out] MoveTiles : 최대 이동 범위 타일 목록
+	 * @param[out] AttackTiles : 최대 공격 범위 타일 목록
+	 */
+	void GetThreatRanges(
+		const FTileIndex& Origin,
+		int32 ActionPoint,
+		const TArray<const UStaticSkillData*>& Skills,
+		const UBoardActorModel* Self,
+		OUT TArray<FTileIndex>& MoveTiles,
+		OUT TArray<FTileIndex>& AttackTiles
 	) const;
 
 	/**

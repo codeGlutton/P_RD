@@ -15,6 +15,9 @@ public class P_RDTests : ModuleRules
     public P_RDTests(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+        // 여러 테스트 파일이 같은 이름의 익명-namespace 도우미를 갖는다.
+        // Unity translation unit으로 합치면 이들이 한 파일에서 재정의되므로 테스트 모듈은 개별 컴파일한다.
+        bUseUnity = false;
 
         PublicDependencyModuleNames.AddRange(new string[]
         {
@@ -31,7 +34,20 @@ public class P_RDTests : ModuleRules
 
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",
+
+            /* UI 배치안을 오프스크린 렌더해서 PNG로 남기는 캡처 테스트용 */
+            "UMG",
+            "Slate",
+            "SlateCore",
+            "RenderCore",
+            "RHI",
         });
+
+        // 캡처 테스트는 에디터 월드에서만 돈다.
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.Add("UnrealEd");
+        }
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가
         PrivateIncludePaths.AddRange(new string[]

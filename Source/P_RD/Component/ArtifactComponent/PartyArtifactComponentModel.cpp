@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   PartyArtifactComponentModel.cpp
- * @brief  파티 보유 아티펙트 원본/배포 컴포넌트 모델 정의 헤더
+ * @brief  파티 보유 아티펙트 원본/배포 컴포넌트 모델 구현
  * @author 이문환
  * @date   2026-07-23
  *********************************************************************/
@@ -36,6 +36,9 @@ bool UPartyArtifactComponentModel::AddArtifact(UStaticArtifactData* Data)
 			ArtifactComp->Equip(Data);
 		}
 	}
+
+	// 목록 변경 통지 (배포까지 끝난 뒤 최신 목록 전달)
+	OnChangeArtifact.Broadcast(mPartyArtifacts);
 	return true;
 }
 
@@ -73,6 +76,9 @@ bool UPartyArtifactComponentModel::RemoveArtifact(UStaticArtifactData* Data)
 			ArtifactComp->Unequip(Data);
 		}
 	}
+
+	// 목록 변경 통지 (해제 배포까지 끝난 뒤 최신 목록 전달)
+	OnChangeArtifact.Broadcast(mPartyArtifacts);
 	return true;
 }
 

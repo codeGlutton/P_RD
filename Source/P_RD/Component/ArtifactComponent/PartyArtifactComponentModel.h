@@ -14,7 +14,7 @@
 class UStaticArtifactData;
 class UPlayerUnitModel;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangePartyArtifactUI, const TArray<TObjectPtr<UStaticArtifactData>>& /*PartyArtifacts*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeArtifact, const TArray<TObjectPtr<UStaticArtifactData>>& /*PartyArtifacts*/);
 
 /**
  * @brief 파티 아티펙트 모델
@@ -80,7 +80,8 @@ protected:
 	const TArray<TObjectPtr<UPlayerUnitModel>>& GetPartyMembers() const;
 
 public:
-	FOnChangePartyArtifactUI OnChangePartyArtifactUI;
+	// 파티 아티펙트 목록 변경 이벤트 (획득/제거 성공 시 최신 목록 전달)
+	FOnChangeArtifact OnChangeArtifact;
 
 private:
 	// 파티 보유 아티펙트 목록 (로드된 DA 참조)

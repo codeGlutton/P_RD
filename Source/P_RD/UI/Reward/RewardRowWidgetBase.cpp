@@ -8,6 +8,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
+#define LOCTEXT_NAMESPACE "RewardRowWidgetBase"
+
 URewardRowWidgetBase::URewardRowWidgetBase(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
@@ -23,8 +25,11 @@ void URewardRowWidgetBase::SetRewardRow(const FText& MainText, const FText& SubT
 {
 	SetVisibility(ESlateVisibility::Visible);
 	SetIsEnabled(true);
+	SetRenderOpacity(1.0f);
 	mIsClaimed = false;
 	mIsPressed = false;
+	mBaseMainText = MainText;
+	mBaseSubText = SubText;
 
 	if (mRowIconFrame != nullptr)
 	{
@@ -74,7 +79,30 @@ void URewardRowWidgetBase::SetClaimed(bool bClaimed)
 	mIsClaimed = bClaimed;
 	mIsPressed = false;
 	SetIsEnabled(bClaimed == false);
-	SetVisibility(bClaimed ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+	SetVisibility(ESlateVisibility::Visible);
+	SetRenderOpacity(bClaimed ? 0.62f : 1.0f);
+
+	const bool bHasSubText = mBaseSubText.IsEmpty() == false;
+	const FText CompletedText = LOCTEXT("RewardClaimed", "수령 완료");
+	const FText MainText = bClaimed && bHasSubText == false
+		? FText::Format(LOCTEXT("RewardClaimedSingleLine", "{0}  ·  {1}"), mBaseMainText, CompletedText)
+		: mBaseMainText;
+	const FText SubText = bClaimed && bHasSubText
+		? FText::Format(LOCTEXT("RewardClaimedSubLine", "{0}  ·  {1}"), mBaseSubText, CompletedText)
+		: mBaseSubText;
+
+	if (mRewardSingleText != nullptr)
+	{
+		mRewardSingleText->SetText(MainText);
+	}
+	if (mRewardMainText != nullptr)
+	{
+		mRewardMainText->SetText(MainText);
+	}
+	if (mRewardSubText != nullptr)
+	{
+		mRewardSubText->SetText(SubText);
+	}
 }
 
 FReply URewardRowWidgetBase::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -105,3 +133,5 @@ FReply URewardRowWidgetBase::NativeOnMouseButtonUp(const FGeometry& InGeometry, 
 	mIsPressed = false;
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
+
+#undef LOCTEXT_NAMESPACE

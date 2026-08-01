@@ -45,25 +45,25 @@ struct FPathArrowSet
 	/**
 	 * @brief 직진 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Straight Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Straight Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mStraightComponent;
 
 	/**
 	 * @brief 좌회전 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Turn Left Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Left Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTurnLeftComponent;
 
 	/**
 	 * @brief 우회전 화살표 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "Turn Right Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Right Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTurnRightComponent;
 
 	/**
 	 * @brief 도착(끝) 타일 마커 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, meta = (DisplayName = "End Component"))
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "End Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mEndComponent;
 
 	/**
@@ -206,6 +206,9 @@ public:
 	virtual void UnbindModel(UObjectModel* Model) override;
 
 protected:
+	// @brief Blueprint/native 기본 서브오브젝트 인스턴싱 완료 후 경로 컴포넌트 참조를 복구
+	virtual void PostInitializeComponents() override;
+
     // @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
     virtual void BeginPlay() override;
 
@@ -271,6 +274,22 @@ public:
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
+	/* 위협 범위 표시 */
+	/**
+	 * @brief 적 위협 범위 표시
+	 * @details
+	 * 최대이동범위는 타일 테두리 안쪽 밴드 영역, 최대공격범위는 밴드를 제외한 내부 전체
+	 * 기존 위협범위는 삭제되며 빈 배열일 경우 그리지 않음
+	 * @param[in] MoveTiles : 최대 이동 범위 타일 목록 (맵 밖 좌표는 무시)
+	 * @param[in] AttackTiles : 최대 공격 범위 타일 목록 (맵 밖 좌표는 무시)
+	 */
+	void SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles);
+
+	/**
+	 * @brief 적 위협 범위 표시 해제 (최대이동범위, 최대공격범위 모두 제거)
+	 */
+	void ClearThreatRange();
+
 	/* 이동 경로 */
 	/**
 	 * @brief 이동경로를 화살표와 경유지마커로 표시
@@ -325,6 +344,13 @@ public:
 	 */
 	UFUNCTION(CallInEditor, Category = "SRPG")
 	void DebugPushTest();
+
+	/**
+	 * @brief [에디터 전용] 위협 범위 표시 시각 확인 (이동 단독/겹침/공격 단독)
+	 * @details 디테일 패널 버튼으로 호출. 이동범위 밴드만, 밴드+내부 채움, 내부 채움만 세 경우를 한 번에 그린다.
+	 */
+	UFUNCTION(CallInEditor, Category = "SRPG")
+	void DebugThreatTest();
 #endif
 
 #if WITH_EDITORONLY_DATA
@@ -366,7 +392,7 @@ protected:
 	/**
 	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
 
 	/**
@@ -408,13 +434,13 @@ protected:
 	/**
 	 * @brief 경유지 마커 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mWaypointComponent;
 
 	/**
 	 * @brief 도착지 원뿔 메시 컴포넌트 (기존 바닥 메시와 별개로 머리 위에서 위아래로 진동)
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mDestConeComponent;
 
 	/* 강조 표시 */
@@ -442,6 +468,50 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
+
+	/* 위협 범위 표시 */
+
+	/**
+	 * @brief 최대이동범위 메시 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatMoveComponent;
+
+	/**
+	 * @brief 최대공격범위 메시 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatAttackComponent;
+
+	/**
+	 * @brief 최대이동범위 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Style"))
+	FTileHighlightStyle mThreatMoveStyle;
+
+	/**
+	 * @brief 최대공격범위 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Style"))
+	FTileHighlightStyle mThreatAttackStyle;
+
+	/**
+	 * @brief 밴드 폭 비율 (타일 시각 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Band Width Ratio", ClampMin = "0.01", ClampMax = "0.5"))
+	float mThreatBandWidthRatio = 0.12f;
+
+	/**
+	 * @brief 표시 높이 오프셋 (cm, 타일 면과의 z-파이팅 방지)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Height Offset", ClampMin = "0.0"))
+	float mThreatHeightOffset = 0.5f;
+
+	/**
+	 * @brief 위협 표시 전용 머티리얼 (없으면 타일 머티리얼 재사용)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Material"))
+	TObjectPtr<UMaterialInterface> mThreatMaterial;
 
 	/* 경로 표시 */
 
@@ -585,8 +655,9 @@ private:
 	/**
 	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
 	 * @details mTiles와 같은 1차원 인덱싱(y*Width+x), 크기 Width*Height. ISM custom data로 화면에 반영된다.
+	 *          런타임 전용이라 저장하지 않음 (단, 배열 크기는 보장해야해서 RefreshTileVisuals에서 Init 필수)
 	 */
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<ETileHighlightFlag> mHighlights;
 
 	/**
