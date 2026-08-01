@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   SRPGEnemyTurnPlanner.cpp
  * @brief  적 한 턴의 행동을 계산하는 모델 레이어 플래너 구현
  * @author 이문환
@@ -61,7 +61,7 @@ namespace
 			{
 				const UStaticSkillData* Skill = SkillDatas[Slot];
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 비용=%d 사거리=%d 패턴=%s %s"),
-					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredMovement, Skill->mAimRange,
+					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredActionPoint, Skill->mAimRange,
 					*StaticEnum<EAimPattern>()->GetNameStringByValue(static_cast<int64>(Skill->mAimPattern)),
 					Skill->mIsIndirect ? TEXT("곡사") : TEXT("직사"));
 			}
@@ -92,7 +92,7 @@ namespace
 					{
 						continue;
 					}
-					const int32 Need = Tile.mMoveCost + SkillDatas[Slot]->mRequiredMovement;
+					const int32 Need = Tile.mMoveCost + SkillDatas[Slot]->mRequiredActionPoint;
 					if (Need < MinNeed)
 					{
 						MinNeed = Need;
@@ -114,7 +114,7 @@ namespace
 				// 조준가능하지만 행동력 부족
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s@(%d,%d) 경로거리=%s → 시전불가: 최소소요 = 이동%d(→(%d,%d)) + 시전%d(스킬[%d]) = %d > AP%d"),
 					*LogPrefix, TargetIndex, *TargetLabel, TargetTiles[TargetIndex].mX, TargetTiles[TargetIndex].mY, *DistanceText,
-					MinMoveCost, MinTile.mX, MinTile.mY, SkillDatas[MinSlot]->mRequiredMovement, MinSlot, MinNeed, ActionPoint);
+					MinMoveCost, MinTile.mX, MinTile.mY, SkillDatas[MinSlot]->mRequiredActionPoint, MinSlot, MinNeed, ActionPoint);
 			}
 		}
 	}
@@ -269,7 +269,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 판단근거 로그: 시전 턴은 결정 1줄로 요약
 		{
 			const int32 MoveCost = GetTableMoveCost(Dest);
-			const int32 CastCost = SkillDatas[ChosenSkillSlot]->mRequiredMovement;
+			const int32 CastCost = SkillDatas[ChosenSkillSlot]->mRequiredActionPoint;
 			const FString TargetLabel = MakeUnitLabel(TargetModels[ChosenTarget]);
 			if (Dest != EnemyTile)
 			{

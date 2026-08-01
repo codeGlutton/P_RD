@@ -42,14 +42,14 @@ namespace
 	}
 
 	// @brief 위협 범위 테스트용 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredMovement)
+	UStaticSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredActionPoint)
 	{
 		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mIsIndirect = false;
-		Skill->mRequiredMovement = RequiredMovement;
+		Skill->mRequiredActionPoint = RequiredActionPoint;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;

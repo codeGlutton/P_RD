@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -21,7 +21,6 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
-#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 #include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
@@ -35,7 +34,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/UnitSkillComponentModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
@@ -348,7 +347,7 @@ void ACombatGameMode::InitializeRoom()
 		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
 		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
 		 */
-		UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+		/*UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
 		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
 		{
 			CancelPendingActionEndAfterCameraReturn();
@@ -365,6 +364,7 @@ void ACombatGameMode::InitializeRoom()
 				});
 			return;
 		}
+		*/
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
@@ -390,7 +390,7 @@ void ACombatGameMode::InitializeRoom()
 			PushSkillUIData();
 			});
 
-		SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 PhaseIndex) {
+		SkillComponentModel->OnEndPhaseLayerUI.AddWeakLambda(this, [this](int32 PhaseIndex) {
 			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(PhaseIndex);
 			});
 	}
@@ -487,12 +487,12 @@ void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 		return;
 	}
 
-	if (UWorldCameraModel* WorldCameraModel =
+	/*if (UWorldCameraModel* WorldCameraModel =
 		GetWorldSubsystemModel<UWorldCameraModel>(this))
 	{
 		WorldCameraModel->OnMainCameraReturned.Remove(
 			mPendingActionEndAfterCameraReturnHandle);
-	}
+	}*/
 	mPendingActionEndAfterCameraReturnHandle.Reset();
 }
 
@@ -840,7 +840,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const
+void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTargetView* Target) const
 {
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
@@ -879,7 +879,7 @@ void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) co
 	}
 
 	const int32 ActionPoint = FMath::Max(
-		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute()),
+		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute()),
 		0
 	);
 
@@ -1068,7 +1068,7 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
@@ -1222,7 +1222,7 @@ void ACombatGameMode::PushSkillUIData() const
 	// 아는 것과 지금 쓸 수 있는 것은 다른 이야기라, 감추는 대신 끈다.
 	const bool bIsOwnTurn = PlayerUnitModel == TurnUnitModel;
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	UUnitSkillComponentModel* SkillComponentModel = Cast<UUnitSkillComponentModel>(PlayerUnitModel->GetSkillComponentModel());
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
 	const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
@@ -1244,7 +1244,7 @@ void ACombatGameMode::PushSkillUIData() const
 		{
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+			SkillUIData.mActionPointCost = StaticSkillData->mRequiredActionPoint;
 
 			// 쿨타임. 총량은 데이터에셋 값을 그대로 쓴다 -- GetCooldownDuration은
 			// 걸려 있는 효과를 읽으므로 쿨이 안 돌 때는 값이 없다.
@@ -1262,19 +1262,21 @@ void ACombatGameMode::PushSkillUIData() const
 			//
 			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
 			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
-			int32 SkillDamage = 0;
-			for (const FSkillMotionLayer& MotionLayer : StaticSkillData->mSkillMotionLayers)
+			int32 MinSkillDamage = 0;
+			int32 MaxSkillDamage = 0;
+			for (const FSkillPhaseLayer& MotionLayer : StaticSkillData->mSkillPhaseLayers)
 			{
 				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 				{
 					if (const FSkillEffectLayer_Attack* Attack = EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
 					{
-						SkillDamage += Attack->mDamage;
+						MinSkillDamage += Attack->mMinDamage;
+						MaxSkillDamage += Attack->mMaxDamage;
 					}
 				}
 			}
-			SkillUIData.mDamageMin = SkillDamage;
-			SkillUIData.mDamageMax = SkillDamage;
+			SkillUIData.mDamageMin = MinSkillDamage;
+			SkillUIData.mDamageMax = MaxSkillDamage;
 			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
 			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
 			// 그쪽 값을 받아 이 줄을 지운다.
@@ -1290,7 +1292,7 @@ void ACombatGameMode::PushSkillUIData() const
 			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
 			SkillUIData.mIsUsable = bIsOwnTurn
 				&& SkillComponentModel->IsCooldown(i) == false
-				&& SkillComponentModel->HasRequiredMovement(i) == true
+				&& SkillComponentModel->HasRequiredActionPoint(i) == true
 				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
@@ -1352,7 +1354,7 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 	 * 규칙 그대로 둔다.
 	 */
 	const bool bBrowsing = mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None;
-	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+	IBoardSelectionTargetView* SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 
 	// 유닛이 서 있는 타일을 짚은 것은 유닛을 짚은 것이다. 트레이스가 유닛
 	// 메시 대신 발밑 타일에 먼저 맞아도 뜻은 같다 -- 손가락은 칸을 누른다.
@@ -1365,7 +1367,7 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 			if (UUnitModel* OccupantUnitModel = TileMap->GetActorOnTile<UUnitModel>(Tile))
 			{
 				HitActor = OccupantUnitModel->GetView<AActor>();
-				SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+				SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 			}
 		}
 	}
@@ -1431,7 +1433,7 @@ void ACombatGameMode::ClearCombatTargetUIData()
 	PushSkillUIData();
 }
 
-void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target)
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target)
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 

@@ -996,7 +996,7 @@ void UTileMapModel::GetThreatRanges(
 				continue;
 
 			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
-			if (MoveCost + Skill->mRequiredMovement > ActionPoint)
+			if (MoveCost + Skill->mRequiredActionPoint > ActionPoint)
 				continue;
 
 			// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외

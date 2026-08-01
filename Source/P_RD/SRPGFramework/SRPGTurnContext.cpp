@@ -77,7 +77,7 @@ ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInst
 
 		if (WorldTraceCommand.mIsLongPress == true)
 		{
-			IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+			IBoardSelectionTargetView* SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 			if (SelectionTarget != nullptr && SelectionTarget->IsSelectable() == true)
 			{
 				WorldTraceCommand.OnShowTargetDetailPanelUI.Broadcast(SelectionTarget);
