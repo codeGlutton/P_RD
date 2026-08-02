@@ -25,6 +25,7 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "RHI.h"
 #include "Slate/WidgetRenderer.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
@@ -538,6 +539,13 @@ bool FCombatLayoutElementCaptureTest::RunTest(const FString& Parameters)
 {
 	using namespace CombatLayoutCapture;
 
+	// NullRHI 환경에서는 오프스크린 렌더가 불가능하므로 캡처 생략
+	if (GUsingNullRHI == true)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 캡처 생략"));
+		return true;
+	}
+
 	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
 	if (!TestNotNull(TEXT("에디터 월드가 있어야 위젯을 만들 수 있다"), World))
 	{
@@ -560,6 +568,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 {
 	using namespace CombatLayoutCapture;
+
+	// NullRHI 환경에서는 오프스크린 렌더가 불가능하므로 캡처 생략
+	if (GUsingNullRHI == true)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 캡처 생략"));
+		return true;
+	}
 
 	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
 	if (!TestNotNull(TEXT("에디터 월드가 있어야 위젯을 만들 수 있다"), World))
