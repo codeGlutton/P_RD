@@ -222,7 +222,7 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 		DeactivateSkill();
 		}));
 	{
-		mActiveSkillContext.mInstigator = this;
+		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
 		mActiveSkillContext.mMapModel = MapModel;
 		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
 		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
