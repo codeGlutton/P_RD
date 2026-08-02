@@ -38,15 +38,15 @@ namespace
 	constexpr int32 DefaultPartySize = 3;
 
 	/** @brief UI 표시용 직업명(한글)을 GameMode에서 확정해 WBP가 enum 문자열을 직접 해석하지 않게 한다. */
-	FText GetPlayerJobName(EPlayerJobType JobType)
+	FText GetPlayerJobName(EUnitJobType JobType)
 	{
 		switch (JobType)
 		{
-		case EPlayerJobType::Knight:
+		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "기사");
-		case EPlayerJobType::Archer:
+		case EUnitJobType::Archer:
 			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "도적");
-		case EPlayerJobType::Mage:
+		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageNameText", "마법사");
 		default:
 			return NSLOCTEXT("FrontendGameMode", "UnknownNameText", "알 수 없음");
@@ -54,15 +54,15 @@ namespace
 	}
 
 	/** @brief 이름과 구분되는 역할 한 줄 문구. 카드 상세에서 이름 아래 부제로 쓴다. */
-	FText GetPlayerJobRole(EPlayerJobType JobType)
+	FText GetPlayerJobRole(EUnitJobType JobType)
 	{
 		switch (JobType)
 		{
-		case EPlayerJobType::Knight:
+		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightRoleText", "방패 탱커 · 근접");
-		case EPlayerJobType::Archer:
+		case EUnitJobType::Archer:
 			return NSLOCTEXT("FrontendGameMode", "ArcherRoleText", "기습 암살자 · 민첩");
-		case EPlayerJobType::Mage:
+		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageRoleText", "주문 술사 · 원거리");
 		default:
 			return FText::GetEmpty();
@@ -70,15 +70,15 @@ namespace
 	}
 
 	/** @brief 직업별 설명 문구(DataAsset 설명이 비어 있을 때 폴백). 설명 스크림에 표시된다. */
-	FText GetPlayerJobDescription(EPlayerJobType JobType)
+	FText GetPlayerJobDescription(EUnitJobType JobType)
 	{
 		switch (JobType)
 		{
-		case EPlayerJobType::Knight:
+		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightDesc", "두꺼운 갑옷과 방패로 전열을 지키는 근접 수호자.\n높은 체력으로 적의 공격을 버틴다.");
-		case EPlayerJobType::Archer:
+		case EUnitJobType::Archer:
 			return NSLOCTEXT("FrontendGameMode", "ArcherDesc", "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다.");
-		case EPlayerJobType::Mage:
+		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageDesc", "주사위 마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다.");
 		default:
 			return FText::GetEmpty();
@@ -86,7 +86,7 @@ namespace
 	}
 
 	/** @brief 실제 DataAsset 후보에 특정 직업이 이미 있는지 확인해 잠금 placeholder 중복 생성을 막는다. */
-	bool HasCharacterOptionForJob(const TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
+	bool HasCharacterOptionForJob(const TArray<FFrontendCharacterOption>& Options, EUnitJobType JobType)
 	{
 		/*
 		 * 실제 PlayerUnit DataAsset에서 특정 직업 카드가 내려왔는지 확인한다.
@@ -100,7 +100,7 @@ namespace
 	}
 
 	/** @brief 아직 DataAsset이 없는 직업을 선택 불가 View 데이터로 추가해 레이아웃 슬롯을 유지한다. */
-	void AppendLockedCharacterOption(TArray<FFrontendCharacterOption>& Options, EPlayerJobType JobType)
+	void AppendLockedCharacterOption(TArray<FFrontendCharacterOption>& Options, EUnitJobType JobType)
 	{
 		/*
 		 * 아직 DataAsset이 준비되지 않은 캐릭터도 화면 슬롯은 유지한다.
@@ -120,15 +120,15 @@ namespace
 		Options.Add(MoveTemp(NewOption));
 	}
 
-	int32 GetClassSelectSortOrder(EPlayerJobType JobType)
+	int32 GetClassSelectSortOrder(EUnitJobType JobType)
 	{
 		switch (JobType)
 		{
-		case EPlayerJobType::Knight:
+		case EUnitJobType::Knight:
 			return 0;
-		case EPlayerJobType::Mage:
+		case EUnitJobType::Mage:
 			return 1;
-		case EPlayerJobType::Archer:
+		case EUnitJobType::Archer:
 			return 2;
 		default:
 			return 99;
@@ -387,13 +387,13 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 
 	// [합의필요] Archer/Mage DataAsset이 준비되면 placeholder 보강을 제거하고 DA_TestFrontend.mPlayableUnits만 단일 출처로 둔다.
 
-	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Archer))
+	if (!HasCharacterOptionForJob(OutOptions, EUnitJobType::Archer))
 	{
-		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Archer);
+		AppendLockedCharacterOption(OutOptions, EUnitJobType::Archer);
 	}
-	if (!HasCharacterOptionForJob(OutOptions, EPlayerJobType::Mage))
+	if (!HasCharacterOptionForJob(OutOptions, EUnitJobType::Mage))
 	{
-		AppendLockedCharacterOption(OutOptions, EPlayerJobType::Mage);
+		AppendLockedCharacterOption(OutOptions, EUnitJobType::Mage);
 	}
 
 	// 위 placeholder는 선택 불가 View 데이터라 런 생성으로 이어지지 않는다.

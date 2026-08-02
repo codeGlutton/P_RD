@@ -11,9 +11,9 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "BoardActorAnimType.generated.h"
 
-struct FEventTriggerPayload;
+struct FEventTriggerPayloadBase;
 
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UAnimMontage* /*EndAnim*/, const FEventTriggerPayload* /*Payload*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UAnimMontage* /*EndAnim*/, const FEventTriggerPayloadBase* /*Payload*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerEndAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UAnimMontage* /*EndAnim*/, bool /*IsInterrupted*/);
 
 /**

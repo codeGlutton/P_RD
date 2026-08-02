@@ -1,11 +1,11 @@
-// @file CharacterSelectTypes.h
+﻿// @file CharacterSelectTypes.h
 // @brief 캐릭터 선택 화면에서 쓰는 View 타입 정의
 // @date 2026-06-04
 
 #pragma once
 
 #include "RDMinimal.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 
 #include "CharacterSelectTypes.generated.h"
 
@@ -47,7 +47,7 @@ struct P_RD_API FFrontendCharacterOption
 
 	// 화면 아트 선택용 직업 키. 게임 로직 enum 이름과 표시 이름이 달라도 UI는 이 값으로 이미지를 고른다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	EPlayerJobType mJobType = EPlayerJobType::None;
+	EUnitJobType mJobType = EUnitJobType::None;
 
 	// 카드/상세 패널용 설명 문구.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)

@@ -51,28 +51,20 @@ FText UStaticSkillData::MakeDescription() const
 {
 	TArray<FText> DescriptionLines;
 
-	/* 1. 패턴 이름 및 헤더 정보 현지화 합성 (RDMinimal.h의 EnumToText 활용) */
-	FText BaseHeader = FText::Format(
-		LOCTEXT("SkillDescriptionHeader", "[사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
-		FText::AsNumber(mAimRange),
-		EnumToText(mAimPattern),
-		FText::AsNumber(mEffectArea),
-		EnumToText(mEffectPattern),
-		FText::AsNumber(mCooldownDuration)
-	);
-	DescriptionLines.Add(BaseHeader);
-
-	/* 2. 모션 및 이펙트 레이어 순회 */
-	const int32 MotionCount = mSkillPhaseLayers.Num();
-	for (int32 MotionIndex = 0; MotionIndex < MotionCount; ++MotionIndex)
+	/* 1. 모션 및 이펙트 레이어 순회 */
+	const int32 PhaseCount = mSkillPhaseLayers.Num();
+	for (int32 PhaseIndex = 0; PhaseIndex < PhaseCount; ++PhaseIndex)
 	{
-		const FSkillPhaseLayer& MotionLayer = mSkillPhaseLayers[MotionIndex];
+		const FSkillPhaseLayer& MotionLayer = mSkillPhaseLayers[PhaseIndex];
 
-		FText MotionHeader = FText::Format(
-			LOCTEXT("MotionHeaderFormat", "■ {0}타 모션:"),
-			FText::AsNumber(MotionIndex + 1)
-		);
-		DescriptionLines.Add(MotionHeader);
+        if (PhaseCount > 1)
+        {
+            FText MotionHeader = FText::Format(
+                LOCTEXT("MotionHeaderFormat", "■ {0}타 모션:"),
+                FText::AsNumber(PhaseIndex + 1)
+            );
+            DescriptionLines.Add(MotionHeader);
+        }
 
 		for (const TInstancedStruct<FSkillEffectLayer>& InstancedEffect : MotionLayer.mSkillEffectLayers)
 		{

@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
- * @file   PlayerJobType.h
- * @brief  플레이어 직업 열거형 정의 헤더
+ * @file   UnitJobType.h
+ * @brief  직업 열거형 정의 헤더
  * @author 모호재
  * @date   2026-06-01
  *********************************************************************/
@@ -8,13 +8,13 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "PlayerJobType.generated.h"
+#include "UnitJobType.generated.h"
 
 /**
- * @brief  플레이어 직업 열거형
+ * @brief  직업 열거형
  */
 UENUM(BlueprintType)
-enum class EPlayerJobType : uint8
+enum class EUnitJobType : uint8
 {
 	/* 확정 직업 */ 
 
@@ -25,9 +25,9 @@ enum class EPlayerJobType : uint8
 	Archer,
 	Mage,
 
-	Count			UMETA(Hidden),
+	PlayerJobCount			UMETA(Hidden),
 	
-	/* 스킬 클래스 타입 구분을 위한 추가 열거형 */
+	/* 추가 열거형 */
 
 	Common,
 	Monster,

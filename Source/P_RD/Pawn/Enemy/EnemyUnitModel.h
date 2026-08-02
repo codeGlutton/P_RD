@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "Pawn/UnitModel.h"
-#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h" // EMoveTendency
+#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "EnemyUnitModel.generated.h"
 
 class UEnemyUnitAttributeSet;
@@ -42,9 +42,8 @@ public:
 	void SetDifficulty(int32 Difficulty);
 
 public:
-	// @brief 난이도
+	EUnitJobType GetUnitJobType() const override;
 	int32 GetDifficulty() const override;
-	// @brief 플레이어유닛 여부
 	bool IsPlayerUnitModel() const override { return false; }
 
 	// @brief 이동 성향

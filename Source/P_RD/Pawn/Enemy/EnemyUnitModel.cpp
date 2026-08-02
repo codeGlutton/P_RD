@@ -63,6 +63,11 @@ void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
 	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
+EUnitJobType UEnemyUnitModel::GetUnitJobType() const
+{
+	return EUnitJobType::Monster;
+}
+
 int32 UEnemyUnitModel::GetDifficulty() const
 {
 	return mDifficulty;
