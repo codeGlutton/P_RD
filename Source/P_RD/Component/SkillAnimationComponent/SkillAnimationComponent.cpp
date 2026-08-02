@@ -7,7 +7,6 @@
 #include "Actor/BoardActor/BoardCombatTargetView.h"
 
 #include "Animation/BoardActorAnimInstance.h"
-
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "Component/SkillComponent/SkillComponentModel.h"
@@ -16,6 +15,8 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
+
+#include "FunctionLibrary/VFXFunctionLibrary.h"
 
 USkillAnimationComponent::USkillAnimationComponent()
 {
@@ -275,9 +276,21 @@ void USkillAnimationComponent::PlayHitAnimation(TSharedPtr<FPresentationBarrier>
 {
 }
 
-void USkillAnimationComponent::SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FApplyNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const
+void USkillAnimationComponent::SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const
 {
+	// 대상
+	UPrimitiveComponent* TargetMeshComponent = GetOwner<IBoardCombatTargetView>()->GetTargetMeshComponent();
+	if (TargetMeshComponent == nullptr)
+	{
+		return;
+	}
+
+	for (const FNiagaraSpawnData& NiagaraSpawnData : NiagaraSpawnDatas)
+	{
+		UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(NiagaraSpawnData, TargetMeshComponent, LocalDirection);
+	}
 }
+
 
 void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, FVector WorldPosition) const
 {

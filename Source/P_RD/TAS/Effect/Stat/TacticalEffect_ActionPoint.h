@@ -49,4 +49,9 @@ class P_RD_API UTacticalEffect_GetActionPoint : public UTacticalEffect
 
 public:
 	UTacticalEffect_GetActionPoint();
+
+	/* UTacticalEffect 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
+

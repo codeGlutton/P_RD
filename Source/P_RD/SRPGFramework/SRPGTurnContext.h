@@ -76,7 +76,7 @@ class USRPGTurnContext : public UObject
 
 	/* 생명 주기 함수 */
 protected:
-	void InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount);
+	void InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId);
 	void BeginTurn();
 	void TickTurn(float DeltaTime);
 	void EndTurn();
@@ -103,9 +103,6 @@ public:
 	UUnitModel* GetOwner() const;
 
 	int32 GetTurnId() const;
-
-	bool IsPermanent() const;
-	int32 GetLifeCount() const;
 
 	/* 시뮬 함수 */
 protected:
@@ -134,13 +131,6 @@ protected:
 	// @brief 턴 종료 결과
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnResult"))
 	ESRPGTurnResult mTurnResult = ESRPGTurnResult::Succeeded;
-
-protected:
-	static constexpr int32 PERMENENT_TURN = -1;
-
-	// @brief 남은 턴 수명
-	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "LifeCount"))
-	int32 mLifeCount = 0;
 
 protected:
 	// @brief 예약된 액션들

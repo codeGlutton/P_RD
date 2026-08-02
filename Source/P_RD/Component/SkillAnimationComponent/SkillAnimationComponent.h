@@ -17,7 +17,7 @@
 class UBoardActorModel;
 struct FPresentationBarrier;
 
-struct FApplyNiagaraSpawnData;
+struct FNiagaraSpawnData;
 
 class UCameraShakeBase;
 
@@ -59,7 +59,6 @@ protected:
 	 * @param Context 애니메이션 실행 컨텍스트
 	 */
 	virtual void PlayApplyAnimation(const FBoardActorAnimationContext& Context);
-
 	/**
 	 * @brief 모델의 애니메이션에서 피격자로의 애니메이션 실행
 	 * @param SkillEndBarrier 스킬 연출 완료 시기를 제어하는 배리어
@@ -73,13 +72,35 @@ protected:
 	 * @param NiagaraSpawnData 나이아가라 스폰 요청 정보
 	 * @param LocalDirection 방향
 	 */
-	virtual void SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FApplyNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
-	
+	void SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
+	/**
+	 * @brief 모델의 애니메이션에서 카메라 줌 처리
+	 * @param EndEvent 종료시 호출될 대리자
+	 * @param TargetZoom 줌 스케일
+	 * @param WorldPosition 위치
+	 */
 	void ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, FVector WorldPosition) const;
+	/**
+	 * @brief 모델의 애니메이션에서 카메라 줌 처리
+	 * @param EndEvent 종료시 호출될 대리자
+	 * @param TargetZoom 줌 스케일
+	 * @param EmphasisActor 대상 액터
+	 */
 	void ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, AActor* EmphasisActor) const;
-
+	/**
+	 * @brief 모델의 애니메이션에서 카메라 흔들기 처리
+	 * @param CameraShakeClass 카메라 흔들기 클래스
+	 */
 	void ShakeCamera(TSubclassOf<UCameraShakeBase> CameraShakeClass) const;
-	
+	/**
+	 * @brief 모델의 애니메이션에서 시간 조정
+	 * @param EndEvent 종료시 호출될 대리자
+	 * @param Requester 요청자
+	 * @param TargetTimeScale 시간 스케일
+	 * @param Priority 시간 조정 우선순위
+	 * @param BlendSpeed 시간 블렌딩 스케일
+	 * @param Duration 유지 시간
+	 */
 	void RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration) const;
 
 protected:

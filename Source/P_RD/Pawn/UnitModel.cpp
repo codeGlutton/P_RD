@@ -13,7 +13,9 @@
 
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_ActionPointFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPointFactor.h"
+#include "TAS/Effect/Stat/TacticalEffect_SpeedPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_SpeedPointFactor.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
@@ -77,16 +79,57 @@ void UUnitModel::OnEndRoom()
 
 	/* 모두 제거 */
 
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
+}
+
+void UUnitModel::OnBeginRound(int32 RoundCount)
+{
+	Super::OnBeginRound(RoundCount);
+
+	/* 자기 자신에게 SpeedPoint 부여 */
+
+	const int32 DefaultSpeedPoint = FMath::Max(
+		mAttributeCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeSpeedPointAttribute()),
+		0
+	);
+
+	UTacticalEffectContext* EffectContext = mAttributeCompModel->MakeEffectContext();
+
+	/* 스피드 습득 */
+
+	FActiveTacticalEffectHandle FactorHandle;
+	{
+		/* 기본 스피드 만큼 Factor 부여 */
+
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_SpeedPointFactor_AddBase::StaticClass(), EffectContext);
+		EffectSpec->mDynamicMagnitude = DefaultSpeedPoint;
+		FactorHandle = mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	{
+		/* 스피드 습득 */
+
+		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetSpeedPoint::StaticClass(), EffectContext);
+		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
+		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
+		mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	{
+		/* 기본 스피드 만큼 Factor 제거 */
+
+		mAttributeCompModel->RemoveActiveTacticalEffect(FactorHandle);
+	}
 }
 
 void UUnitModel::OnBeginTurn(int32 TurnCount)
 {
 	/* 방어도 제거 */
 
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
 
 	/* 턴 시작 패시브 처리 */
 
@@ -110,7 +153,7 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 	/* 자기 자신에게 MovePoint 부여 */
 
 	const int32 DefaultMovePoint = FMath::Max(
-		mAttributeCompModel->GetAttributeCurrentValue(UEnemyUnitAttributeSet::GetRechargeActionPointAttribute()),
+		mAttributeCompModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute()),
 		0
 	);
 
@@ -165,7 +208,7 @@ void UUnitModel::OnEndTurn(int32 TurnCount)
 
 	/* 행동력 제거 */
 
-	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
 	
 	/* 턴제 상태이상 한 스택 감소 */
 

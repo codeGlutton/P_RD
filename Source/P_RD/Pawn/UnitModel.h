@@ -45,6 +45,8 @@ public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;
 
+	void OnBeginRound(int32 RoundCount) override;
+
 public:
 	/**
 	 * @brief 자신의 턴 시작마다 실행될 함수

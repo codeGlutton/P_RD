@@ -49,6 +49,76 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }
 
+void UTacticalEffectExecutionCalculation_Heal::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
+	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
+
+	// 최종 공격력과 방어력
+	const int32 TotalHeal =
+		FMath::Floor(
+			ExecutionParams.GetOwningSpec().GetStackCount() *
+			ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+			SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetHealFactorAttribute()]
+		);
+
+	/* 체력 힐 */
+	{
+		const float HPDiff = TotalHeal;
+		if (HPDiff > 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::AddBase, HPDiff));
+
+			/* 로그 적용 */
+			FSRPGAttributeEffectEventLog Log;
+			Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+			Log.mMagnitude = HPDiff;
+
+			UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+			const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();
+			GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+UTacticalEffect_Heal::UTacticalEffect_Heal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_Heal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+bool UTacticalEffect_Heal::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetHealFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void UTacticalEffectExecutionCalculation_Attack::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
 {
 	Super::Execute(ExecutionParams, OutExecutionOutput);
@@ -133,3 +203,27 @@ UTacticalEffect_Attack::UTacticalEffect_Attack()
 	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_Attack::StaticClass();
 	mExecutions.Add(Definition);
 }
+
+bool UTacticalEffect_Attack::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetAttackFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+

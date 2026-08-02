@@ -1,5 +1,5 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetDefense.h"
-#include "TAS/Effect/Stat/TacticalEffect_DefenseFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_DefenseFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 
 #include "Actor/ActorModel.h"

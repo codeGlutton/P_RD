@@ -24,19 +24,8 @@ class P_RD_API USkeletonSkillAnimationComponent : public USkillAnimationComponen
 
 	/* USkillAnimationComponent 상속 */
 protected:
-	void OnRegister() override;
-
-protected:
 	void PlayApplyAnimation(const FBoardActorAnimationContext& Context) override;
 	void PlayHitAnimation(TSharedPtr<FPresentationBarrier> SkillEndBarrier, FGameplayTag MontageTag, ETileActorDirection MontageDir) const override;
-	void SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FApplyNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const override;
-
-public:
-	/**
-	 * @brief 대상 스켈레탈 메시 컴포넌트 설정
-	 * @param TargetMesh 대상 메시 컴포넌트
-	 */
-	void SetTargetMeshComponent(USkeletalMeshComponent* TargetMesh);
 
 public:
 	USkeletalMeshComponent* GetTargetMeshComponent() const;
@@ -44,7 +33,7 @@ public:
 
 protected:
 	// @brief 애니메이션을 수행할 대상 스켈레탈 메시 컴포넌트
-	TWeakObjectPtr<USkeletalMeshComponent> mTargetMeshComponent = nullptr;
+	mutable TWeakObjectPtr<USkeletalMeshComponent> mTargetMeshComponent = nullptr;
 	// @brief 애니메이션을 수행할 애님 인스턴스
-	TWeakObjectPtr<UBoardActorAnimInstance> mTargetAnimInstance = nullptr;
+	mutable TWeakObjectPtr<UBoardActorAnimInstance> mTargetAnimInstance = nullptr;
 };

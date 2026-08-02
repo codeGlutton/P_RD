@@ -95,3 +95,26 @@ UTacticalEffect_GetDefense::UTacticalEffect_GetDefense()
 	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetDefense::StaticClass();
 	mExecutions.Add(Definition);
 }
+
+bool UTacticalEffect_GetDefense::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetDefenseFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+

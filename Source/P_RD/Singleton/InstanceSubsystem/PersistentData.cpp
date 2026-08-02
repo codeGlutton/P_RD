@@ -390,6 +390,18 @@ void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPl
 		});
 }
 
+void URunPersistData::MakeCaches()
+{
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+
+	const auto& EffectVFXMapping = GamePlaySettings->mGlobalStatusEffectVFXSetting.mEffectVFXs;
+	mRunPersistDataCache.mEffectVFXs.Reserve(EffectVFXMapping.Num());
+	for (auto& EffectVFXPair : EffectVFXMapping)
+	{
+		mRunPersistDataCache.mEffectVFXs.Add(EffectVFXPair.Value.mNiagaraSystem.LoadSynchronous());
+	}
+}
+
 void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)
 {
 	checkf(PlayerUnitIds.Num() == mPartyPlayers.Num(), TEXT("파티 멤버 부족"));
@@ -624,38 +636,27 @@ void UUserPersistData::UpdateLog(const FRunLog& RunLog)
 	}
 }
 
-/** @brief 유저 표시 이름을 반환한다. @return 유저 이름 */
 const FText& UUserPersistData::GetUserName() const
 {
 	return mUserName;
 }
 
-/** @brief 유저 데이터가 활성 상태인지(이름이 설정되어 있는지) 여부를 반환한다. @return 이름이 비어있지 않으면 true */
 bool UUserPersistData::IsActive() const
 {
 	return mUserName.IsEmpty() == false;
 }
 
-/** @brief 유저 누적 로그(통계/도감)를 반환한다. @return 유저 로그(읽기 전용) */
 const FUserLog& UUserPersistData::GetUserLog() const
 {
 	return mUserLog;
 }
 
-/**
- * @brief 옵션 영속 데이터 기본 생성자. 볼륨 배열을 볼륨 타입 개수만큼 1.0(최대)으로,
- *        사운드 클래스 캐시 배열을 같은 길이만큼 nullptr 로 초기화한다.
- */
 UOptionPersistData::UOptionPersistData()
 {
 	mVolumes.Init(1.f, StaticCast<int32>(EGameVolumeType::Count));
 	mOptionPersistDataCache.mSoundClassObjects.Init(nullptr, StaticCast<int32>(EGameVolumeType::Count));
 }
 
-/**
- * @brief 사운드 믹스/클래스 객체 캐시를 구성한다.
- *        설정에 지정된 SoundMix 와 볼륨 타입별 SoundClass 를 동기 로드해 캐시 배열에 채운다.
- */
 void UOptionPersistData::MakeCaches()
 {
 	// 이미 로드되어 있기 때문에, 대기 없음
@@ -669,22 +670,14 @@ void UOptionPersistData::MakeCaches()
 		mOptionPersistDataCache.mSoundClassObjects[i] = Cast<USoundClass>(GamePlaySettings->mSoundClasses[i].ToSoftObjectPath().TryLoad());
 	}
 
-	if (mViewportResizedHandle.IsValid() == false)
-	{
-		mViewportResizedHandle = FViewport::ViewportResizedEvent.AddUObject(this, &UOptionPersistData::OnResizeViewport);
-	}
+	FViewport::ViewportResizedEvent.AddUObject(this, &UOptionPersistData::OnResizeViewport);
 }
 
-/** @brief 옵션 데이터 초기 생성 훅(현재 별도 동작 없음, 향후 확장용). */
 void UOptionPersistData::MakeOption()
 {
 	ClearOption();
 }
 
-/**
- * @brief 옵션을 기본값(CDO)으로 되돌리고 즉시 적용한다.
- *        볼륨/언어/해상도를 CDO 값으로 복사한 뒤 ApplyCurrentOptions 로 실제 시스템에 반영한다.
- */
 void UOptionPersistData::ClearOption()
 {
 	const UOptionPersistData* CDO = GetDefault<UOptionPersistData>();
@@ -698,11 +691,6 @@ void UOptionPersistData::ClearOption()
 	ApplyCurrentOptions();
 }
 
-/**
- * @brief 특정 볼륨 타입의 볼륨을 설정하고 SoundMix 오버라이드로 즉시 반영한다.
- * @param VolumeType 설정할 볼륨 타입(마스터/BGM/SFX 등)
- * @param Volume     적용할 볼륨(0.0~1.0 범위로 클램프됨)
- */
 void UOptionPersistData::SetVolume(EGameVolumeType VolumeType, float Volume)
 {
 	Volume = FMath::Clamp(Volume, 0.f, 1.f);
@@ -725,11 +713,6 @@ void UOptionPersistData::SetVolume(EGameVolumeType VolumeType, float Volume)
 	);
 }
 
-/**
- * @brief 게임 언어(컬처)를 설정한다. 지원 언어를 컬처 코드로 매핑해 국제화 시스템에 적용한다.
- *        매핑되지 않은(빈 문자열) 언어 타입이면 아무 변경 없이 반환한다.
- * @param LanguageType 적용할 언어 타입(한국어/영어)
- */
 void UOptionPersistData::SetLanguage(ELanguageType LanguageType)
 {
 	FString LanguageStr;
@@ -775,7 +758,6 @@ void UOptionPersistData::SetOverallQuality(EOverallQualityType QualityType)
 	ApplyScreenPercentage();
 }
 
-/** @brief FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다. */
 void UOptionPersistData::SetFpsLimit(int32 FpsLimit)
 {
 	UGameUserSettings* GameUserSettings = UGameUserSettings::GetGameUserSettings();
@@ -797,10 +779,6 @@ void UOptionPersistData::SetEffectVFXEnabled(bool IsEnabled)
 	mEffectVFXEnabled = IsEnabled;
 }
 
-/**
- * @brief 현재 보관 중인 모든 옵션(볼륨 전 타입 + 언어 + 해상도)을 실제 시스템에 일괄 적용한다.
- *        옵션 로드/초기화 직후 상태를 런타임에 동기화하는 진입점.
- */
 void UOptionPersistData::ApplyCurrentOptions()
 {
 	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
@@ -815,29 +793,21 @@ void UOptionPersistData::ApplyCurrentOptions()
 	SetEffectVFXEnabled(mEffectVFXEnabled);
 }
 
-/**
- * @brief 특정 볼륨 타입의 현재 볼륨을 반환한다.
- * @param VolumeType 조회할 볼륨 타입
- * @return 해당 타입의 볼륨(0.0~1.0)
- */
 float UOptionPersistData::GetVolume(EGameVolumeType VolumeType) const
 {
 	return mVolumes[StaticCast<int32>(VolumeType)];
 }
 
-/** @brief 현재 설정된 언어 타입을 반환한다. @return 언어 타입 */
 ELanguageType UOptionPersistData::GetLanguage() const
 {
 	return mLanguageType;
 }
 
-/** @brief 현재 설정된 퀄리티를 반환한다. @return 퀄리티 타입 */
 EOverallQualityType UOptionPersistData::GetOverallQuality() const
 {
 	return mOverallQuality;
 }
 
-/** @brief 현재 FPS 제한 값을 반환한다. @return 30 또는 60 */
 int32 UOptionPersistData::GetFpsLimit() const
 {
 	return mFpsLimit;
@@ -853,16 +823,11 @@ bool UOptionPersistData::IsEffectVFXEnabled() const
 	return mEffectVFXEnabled;
 }
 
-/** @brief 옵션 데이터 활성 여부. 옵션은 항상 유효하므로 언제나 true. @return 항상 true */
 bool UOptionPersistData::IsActive() const
 {
 	return true;
 }
 
-/**
- * @brief 보관 중인 목표 짧은변을 현재 백버퍼 크기 대비 r.ScreenPercentage 비율로 적용한다.
- *        부팅 직후처럼 뷰포트 크기를 아직 알 수 없으면 건너뛴다(뷰포트 리사이즈 이벤트에서 재시도).
- */
 void UOptionPersistData::ApplyScreenPercentage() const
 {
 	FIntPoint BackBufferSize = FIntPoint::ZeroValue;
@@ -889,33 +854,14 @@ void UOptionPersistData::ApplyScreenPercentage() const
 	}
 }
 
-/**
- * @brief 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율을 재계산한다.
- *
- * @details
- * **그 자리에서 바꾸지 않고 다음 틱으로 미룬다.**
- *
- * ViewportResizedEvent 는 뷰포트가 크기를 바꾸는 "도중" 에 온다. 그때
- * r.ScreenPercentage 를 또 건드리면 렌더 타깃이 다시 잡히는 와중에 한 번 더
- * 다시 잡힌다. RHI 스레드는 그 사이 이미 버려진 파이프라인을 쓰려 하고,
- * Adreno 드라이버가 vkCmdBindPipeline 에서 널을 읽어 죽었다(fault addr 0x8).
- *
- * 폴드를 접었다 펴거나 분할 화면으로 바꿀 때마다 재현됐고, Vulkan 과 GLES
- * 양쪽에서 같은 모양으로 났다 -- API 문제가 아니라 타이밍 문제라는 뜻이다.
- *
- * 리사이즈가 끝난 뒤에 적용하면 충돌하지 않는다.
- */
 void UOptionPersistData::OnResizeViewport(FViewport* Viewport, uint32 Unused)
 {
-	TWeakObjectPtr<UOptionPersistData> WeakThis(this);
-	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda(
-		[WeakThis](float /*DeltaTime*/)
+	FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateWeakLambda(this, [this](float /*DeltaTime*/)
 		{
-			if (const UOptionPersistData* Self = WeakThis.Get())
-			{
-				Self->ApplyScreenPercentage();
-			}
-			return false;   // 한 번만 돈다
+			ApplyScreenPercentage();
+
+			// 한 번만 돈다
+			return false;   
 		}), 0.f);
 }
 

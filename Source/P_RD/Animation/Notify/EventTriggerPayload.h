@@ -8,31 +8,13 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "NiagaraSystem.h"
+#include "Setting/GamePlayType.h"
 #include "EventTriggerPayload.generated.h"
 
 class UCameraShakeBase;
 
 DECLARE_DELEGATE(FOnEndDurationEventTrigger);
 
-USTRUCT(BlueprintType)
-struct FApplyNiagaraSpawnData
-{
-    GENERATED_BODY()
-
-public:
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSystem"))
-    TObjectPtr<UNiagaraSystem> mNiagaraSystem = nullptr;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SocketName"))
-    FName mSocketName = NAME_None;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RelativeTransform"))
-    FTransform mRelativeTransform = FTransform::Identity;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Attached"))
-    bool mAttached = true;
-};
 
 UENUM(BlueprintType)
 enum class ECameraZoomTargetType : uint8
@@ -190,7 +172,7 @@ public:
 
 public:
     UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
-    TArray<FApplyNiagaraSpawnData> mNiagaraSpawnDatas;
+    TArray<FNiagaraSpawnData> mNiagaraSpawnDatas;
 };
 
 /**

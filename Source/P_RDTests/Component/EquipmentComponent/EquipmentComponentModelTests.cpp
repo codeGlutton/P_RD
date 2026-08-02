@@ -18,7 +18,7 @@
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 
 namespace
 {

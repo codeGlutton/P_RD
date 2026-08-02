@@ -14,6 +14,7 @@
 
 #include "Setting/GameTeamType.h"
 #include "Setting/ModelViewMapping.h"
+#include "Setting/GamePlayType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
@@ -50,16 +51,19 @@ public:
     UFUNCTION(Category = Team, BlueprintPure)
     static ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);
 
+    /* 월드 위젯 세팅 */
 public:
     UPROPERTY(Config, Category = UI, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EWorldWidgetType"))
     TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
+    /* 모델-뷰 맵핑 세팅 */
 public:
     UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SubsystemModelViewMappings", ConfigRestartRequired = true))
     TSet<FSubsystemModelViewMapping> mSubsystemModelViewMappings;
     UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "WorldModelViewMappings", ConfigRestartRequired = true))
     TSet<FWorldModelViewMapping> mWorldModelViewMappings;
 
+    /* 기본 룸 세팅 */
 public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendRoomId"))
     FPrimaryAssetId mFrontendRoomId;
@@ -67,6 +71,7 @@ public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
 
+    /* 비디오 세팅 */
 public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicVideoPath"))
     FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
@@ -80,6 +85,7 @@ public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatDefeatVideoPath"))
     FString mCombatDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
+    /* 룸 별 게임모드 세팅 */
 public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mFrontendGameMode;
@@ -90,11 +96,19 @@ public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TreasureGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mTreasureGameMode;
 
+    /* 팀 세팅 */
 public:
     UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TeamRelations"))
     TMap<TEnumAsByte<EGameTeamType::Type>, FGameTeamRelation> mTeamRelations;
 
+    /* 사운드 세팅 */
 public:
     UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
     TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
+
+    /* 상태이상 VFX 세팅 */
+public:
+    UPROPERTY(Config, Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectVFXSetting", ToolTip = "상태이상 연출 시 사용되는 전역 VFX 설정 값"))
+    FGlobalStatusEffectVFXSetting mGlobalStatusEffectVFXSetting;
 };
+
