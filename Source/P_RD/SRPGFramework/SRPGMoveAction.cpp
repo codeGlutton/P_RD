@@ -1,4 +1,4 @@
-﻿#include "SRPGFramework/SRPGMoveAction.h"
+#include "SRPGFramework/SRPGMoveAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
@@ -81,7 +81,7 @@ void USRPGMoveAction::OnEndAction()
         // 이동력 차감
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetMovementAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
+            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
         }
     }
 }

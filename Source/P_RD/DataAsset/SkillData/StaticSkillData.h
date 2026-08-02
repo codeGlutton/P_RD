@@ -21,12 +21,36 @@ class UTileMapModel;
 class UTacticalEffect_Cooldown;
 
 /**
+* @brief 스킬 실행 시 재생될 애니메이션 세트
+*/
+USTRUCT(BlueprintType)
+struct FSkillAnimationSet
+{
+    GENERATED_BODY()
+
+public:
+    /**
+    * @brief 타격 처리 시에 활용할 애니메이션들 구분 태그. 연속으로 실행
+    * @details
+    * (ex: GameplayAnim.Attack, GameplayAnim.Spell)
+    */
+    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ApplyMotionTags"))
+    TArray<FGameplayTag> mApplyMotionTags;
+
+    /**
+     * @brief 상대 방향으로 자동 회원 전환 여부
+     */
+    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AutoRotateTowardTarget"))
+    bool mAutoRotateTowardTarget = true;
+};
+
+/**
 * @brief 하나의 스킬 내에서 같은 타이밍에 처리하는 단위
 * @details
 * 발동될 하나의 애니메이션과 여러 효과를 묶어 "모션"이라는 단위로 정의
 */
 USTRUCT(BlueprintType)
-struct FSkillMotionLayer
+struct FSkillPhaseLayer
 {
     GENERATED_BODY()
 
@@ -38,28 +62,6 @@ public:
     // @brief 하나의 모션 내에서 적용하는 단일 효과 단위의 TArray 묶음
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillEffectLayers"))
     TArray<TInstancedStruct<FSkillEffectLayer>> mSkillEffectLayers;
-
-public:
-    /**
-    * @brief 타격 처리 시에 활용할 애니메이션 구분 태그
-    * @details
-    * (ex: GameplayAnim.Attack, GameplayAnim.Spell)
-    */
-    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ApplyMotionTag"))
-    FGameplayTag mApplyMotionTag;
-    /**
-    * @brief 피격 처리 시에 활용할 애니메이션 구분 태그
-    * @details
-    * (ex: GameplayAnim.Hit.Slash, GameplayAnim.Hit.Stab)
-    */
-    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReceiveMotionTag"))
-    FGameplayTag mReceiveMotionTag;
-
-    /**
-     * @brief 상대 방향으로 자동 회원 전환 여부
-     */
-    UPROPERTY(Category = "Motion", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AutoRotateTowardTarget"))
-    bool mAutoRotateTowardTarget = true;
 
 public:
     // @brief 자신, 지정 범위 포함 여부 타겟 필터링
@@ -79,15 +81,16 @@ class P_RD_API UStaticSkillData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 
+    /* UPrimaryDataAsset 상속 */
 public:
     FPrimaryAssetId GetPrimaryAssetId() const override
     {
-        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
+        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetObstacleActiveType(), GetFName());
     }
 
 #if WITH_EDITOR
 public:
-    FText MakeDescription() const;
+    virtual FText MakeDescription() const;
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
@@ -101,31 +104,9 @@ public:
 
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
     TSoftObjectPtr<UTexture2D> mIcon;
-
-    /* 스킬 자체 정보 */
-public:
-    // @brief 사용 타입 ()
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
-    EPlayerJobType mJobType = EPlayerJobType::None;
-
-    // @brief 스킬 타입
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))
-    ESkillType mSkillType;
-
-    // @brief 스킬 희귀도
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
-    ERarityType mRarityType;
-
-    // @brief 구매 시 가격
-    UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
-    int32 mPrice;
     
     /* 논리적 설정값들 */
 public:
-    // @brief 필요 행동력
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredMovement"))
-    int32 mRequiredMovement;
-
     // @brief 쿨다운시 적용될 Effect Class
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownEffectClass", AssetBundles = "Actor"))
     TSoftClassPtr<UTacticalEffect_Cooldown> mCooldownEffectClass;
@@ -135,8 +116,8 @@ public:
     int32 mCooldownDuration;
 
     // @brief 하나의 스킬 내에서 적용하는 단일 처리 단위의 TArray 묶음 (1개 : 단타, N개 : 연타)
-    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillMotionLayers"))
-    TArray<FSkillMotionLayer> mSkillMotionLayers;
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillPhaseLayers"))
+    TArray<FSkillPhaseLayer> mSkillPhaseLayers;
 
 public:
     // @brief 조준 범위 유형
@@ -172,5 +153,11 @@ public:
     // @brief 영향 확산을 막는 레이어 (비어 있으면 아무것도 확산을 막지 않음)
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "EffectBlockerMask"))
     int32 mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+
+    /* 연출 설정값들 */
+public:
+    // @brief 스킬 실행 시 호출될 애니메이션 몽타쥬
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillAnimationSet"))
+    FSkillAnimationSet mSkillAnimationSet;
 };
 

@@ -94,7 +94,7 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	}
 
 	// 공격력 기본값 10 세팅 (현재값도 10으로 전파됨)
-	const FTacticalAttribute AttackPoint = UCombatTargetAttributeSet::GetAttackPointAttribute();
+	const FTacticalAttribute AttackPoint = UCombatTargetAttributeSet::GetAttackFactorAttribute();
 	AttrComp->SetAttributeBaseValue(AttackPoint, 10.f);
 	TestEqual(TEXT("기본 공격력 10"), AttrComp->GetAttributeCurrentValue(AttackPoint), 10.f);
 

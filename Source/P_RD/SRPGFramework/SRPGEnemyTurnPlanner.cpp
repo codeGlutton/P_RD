@@ -15,7 +15,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TacticalTileTable.h"
@@ -42,7 +42,7 @@ namespace
 		int32 ActionPoint,
 		EMoveTendency Tendency,
 		const USkillComponentModel* SkillComp,
-		const TArray<const UStaticSkillData*>& SkillDatas,
+		const TArray<const UStaticUnitSkillData*>& SkillDatas,
 		const TArray<const UUnitModel*>& TargetModels,
 		const TArray<FTileIndex>& TargetTiles,
 		const FTacticalTileTable& Table)
@@ -59,9 +59,9 @@ namespace
 		{
 			if (SkillDatas.IsValidIndex(Slot) && SkillDatas[Slot] != nullptr)
 			{
-				const UStaticSkillData* Skill = SkillDatas[Slot];
+				const UStaticUnitSkillData* Skill = SkillDatas[Slot];
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 비용=%d 사거리=%d 패턴=%s %s"),
-					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredMovement, Skill->mAimRange,
+					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredActionPoint, Skill->mAimRange,
 					*StaticEnum<EAimPattern>()->GetNameStringByValue(static_cast<int64>(Skill->mAimPattern)),
 					(Skill->mAimBlockerMask == 0) ? TEXT("곡사") : TEXT("직사"));
 			}
@@ -92,7 +92,9 @@ namespace
 					{
 						continue;
 					}
-					const int32 Need = Tile.mMoveCost + SkillDatas[Slot]->mRequiredMovement;
+
+					const UStaticUnitSkillData* Skill = SkillDatas[Slot];
+					const int32 Need = Tile.mMoveCost + Skill->mRequiredActionPoint;
 					if (Need < MinNeed)
 					{
 						MinNeed = Need;
@@ -114,7 +116,7 @@ namespace
 				// 조준가능하지만 행동력 부족
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s@(%d,%d) 경로거리=%s → 시전불가: 최소소요 = 이동%d(→(%d,%d)) + 시전%d(스킬[%d]) = %d > AP%d"),
 					*LogPrefix, TargetIndex, *TargetLabel, TargetTiles[TargetIndex].mX, TargetTiles[TargetIndex].mY, *DistanceText,
-					MinMoveCost, MinTile.mX, MinTile.mY, SkillDatas[MinSlot]->mRequiredMovement, MinSlot, MinNeed, ActionPoint);
+					MinMoveCost, MinTile.mX, MinTile.mY, SkillDatas[MinSlot]->mRequiredActionPoint, MinSlot, MinNeed, ActionPoint);
 			}
 		}
 	}
@@ -182,14 +184,14 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움 (사용불가 슬롯은 nullptr 유지)
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
-	TArray<const UStaticSkillData*> SkillDatas;
+	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
 	bool HasUsableSkill = false;
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
 		if (Skills[Index].IsValid() && SkillComp->IsCooldown(Index) == false)
 		{
-			SkillDatas[Index] = Skills[Index].mData;
+			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
 			HasUsableSkill = true;
 		}
 	}
@@ -210,7 +212,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 사용 가능한 액션포인트
 	const int32 ActionPoint = FMath::Max(
-		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute()),
+		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute()),
 		0
 	);
 
@@ -269,7 +271,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 판단근거 로그: 시전 턴은 결정 1줄로 요약
 		{
 			const int32 MoveCost = GetTableMoveCost(Dest);
-			const int32 CastCost = SkillDatas[ChosenSkillSlot]->mRequiredMovement;
+			const int32 CastCost = SkillDatas[ChosenSkillSlot]->mRequiredActionPoint;
 			const FString TargetLabel = MakeUnitLabel(TargetModels[ChosenTarget]);
 			if (Dest != EnemyTile)
 			{

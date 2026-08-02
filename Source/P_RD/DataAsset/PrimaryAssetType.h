@@ -45,6 +45,7 @@ namespace RoomPrimaryAssetTypes
 namespace ObstaclePrimaryAssetTypes
 {
 	DECLARE_PRIMARY_ASSET_TYPE(Obstacle);
+	DECLARE_PRIMARY_ASSET_TYPE(CombatTargetObstacle);
 }
 
 /**
@@ -81,6 +82,7 @@ namespace SkillPrimaryAssetTypes
 {
 	DECLARE_PRIMARY_ASSET_TYPE(Passive);
 	DECLARE_PRIMARY_ASSET_TYPE(Active);
+	DECLARE_PRIMARY_ASSET_TYPE(ObstacleActive);
 }
 
 /**

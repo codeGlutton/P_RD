@@ -19,6 +19,8 @@ class UFrontendMapLineWidget;
 class UFrontendMapNodeWidget;
 class UHorizontalBox;
 class UImage;
+class UMaterialInterface;
+class URetainerBox;
 class UVerticalBox;
 class UScrollBox;
 class USizeBox;
@@ -143,6 +145,18 @@ private:
 	/** @brief 지도 위젯에서 사용하는 기본 문구 캐시를 갱신한다. */
 	void RefreshLocalizedTextCache();
 
+	/**
+	 * @brief WBP에 닫기 버튼이 없을 때 화면 우상단에 BACK 버튼을 만든다.
+	 *
+	 * @details 조회용 지도는 전투 HUD 위의 모달로 열리므로 바깥 MAP 버튼에
+	 *          의존해 닫을 수 없다. 디자이너 버튼이 생기면 그 버튼을 그대로
+	 *          쓰고, 현재 B안처럼 없는 자산에서만 런타임 안전망을 만든다.
+	 */
+	void EnsureCloseButton();
+
+	/** @brief BACK 단추를 오른쪽 아래 구석에 판 그림 비율대로 배치한다. */
+	void UpdateCloseButtonLayout() const;
+
 	/** @brief WBP_FrontendMap이 필수 바인딩과 노드/선 클래스를 제공하는지 로그로 확인한다. */
 	void ValidateDesignerBindings() const;
 
@@ -182,8 +196,70 @@ private:
 	/** @brief 실기 HUD 재질에 맞춘 세로 양피지 보드와 장식 가시성을 적용한다. */
 	void ApplyCurrentMapArt() const;
 
-	/** @brief 노드 크기(시안 마커 Map_NodeMetrics 폭, 폴백 96). */
+	/**
+	 * @brief 스크롤 레이어를 RetainerBox로 감싸 화면 고정 원근 머티리얼을 건다.
+	 *
+	 * @details
+	 * UMG는 affine 변환만 지원해 원근을 못 건다. 이미지에 원근을 구우면
+	 * 스크롤 위치마다 착시가 깨지므로(내용에 원근이 고정됨), 지도 내용은
+	 * 평평하게 그리고 리테이너 머티리얼(M_MapPerspective)이 화면 고정
+	 * 사다리꼴로 왜곡한다. 노드/선/양피지가 한 렌더타겟에서 함께 왜곡된다.
+	 */
+	void InstallMapPerspectiveRetainer();
+
+	/** @brief 화면(리테이너) UV를 원근 왜곡 이전의 콘텐츠 UV로 역변환한다. 사다리꼴 밖이면 X가 [0,1]을 벗어난다. */
+	static FVector2D InverseMapPerspectiveUV(const FVector2D& ScreenUV);
+
+	/** @brief 원근 지도 위 탭을 역변환해 가장 가까운 선택 가능 노드 클릭으로 처리한다. */
+	bool TryHandleMapPerspectiveTap(const FVector2D& ScreenPosition);
+
+	/**
+	 * @brief 범례 아이콘 이미지가 물고 있는 옛 노드 아이콘을 v2 텍스처로 바꾼다.
+	 *
+	 * @details
+	 * 범례 행은 시안 빌더가 WBP에 구웠고 에디터 파이썬으로는 WidgetTree 접근이
+	 * 막혀 있어, 런타임에 옛 경로 키워드를 보고 교체한다. 노드 아이콘은
+	 * WBP_FrontendMapNode 클래스 디폴트가 v2 를 직접 참조한다.
+	 */
+	void ApplyLegendIconsV2() const;
+
+	/** @brief 지도 본문 위 베일(어둡게+채도낮춤)을 한 번 만들어 그래프 캔버스에 얹는다. */
+	void EnsureParchmentVeil();
+
+	/**
+	 * @brief 톤 맞춘 범례 판 이미지를 WBP 범례 그룹 자리에 놓는다.
+	 *
+	 * @details
+	 * 시안 범례는 프레임 + 아이콘/글자 행을 위젯으로 쌓아 만든 것인데, 새 범례는
+	 * 글자까지 그려진 완성 이미지 한 장이다. 둘을 같이 켜면 글자가 겹치므로
+	 * 기존 그룹을 접고 이미지로 대체한다.
+	 */
+	void EnsureLegendPlate();
+
+	/** @brief 범례 판 크기를 화면에 맞춰 다시 잡는다(시안 고정 크기는 폰에서 너무 작다). */
+	void UpdateLegendPlateLayout() const;
+
+	/** @brief 범례 여닫기 단추를 왼쪽 아래에 만든다(없을 때만). */
+	void EnsureLegendToggleButton();
+
+	/** @brief 범례 펼침 상태를 판/단추 문구에 반영한다. */
+	void ApplyLegendShownState() const;
+
+	/** @brief 지도 단추(BACK/범례)의 글자 크기를 단추 높이에 맞춘다. */
+	void ApplyMapButtonFontSize(UTextBlock* ButtonText, float ButtonHeight) const;
+
+	/** @brief 범례 여닫기 단추 입력. */
+	UFUNCTION()
+	void HandleLegendToggleClicked();
+
+	/** @brief 이번 갱신에 쓸 노드 크기. 확정값이 있으면 그것, 없으면 시안 크기. */
 	FVector2D GetMapNodeSize() const;
+
+	/** @brief 시안이 정한 노드 크기(마커 x 배율) — 좁은 화면에서 줄어들기 전의 상한. */
+	float GetMapNodeDesignSize() const;
+
+	/** @brief 이번 갱신의 노드 크기와 행 간격을 확정한다(겹침 방지 + 적은 층 세로 채움). */
+	void ResolveNodeMetrics(int32 MaxColumn);
 
 	/** @brief 행 간격(시안 마커 Map_NodeMetrics 높이, 폴백 176) — 그래프 높이의 정본. */
 	float GetMapRowPitch() const;
@@ -212,6 +288,9 @@ private:
 
 	/** @brief 이번 RefreshMap()에서 쓰지 않은 노드/선을 숨겨 다음 갱신 때 재사용한다. */
 	void HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 UsedNodeCount);
+
+	/** @brief 풀에 없는데 캔버스에 남아 있는 노드/선을 접는다(지도 두 벌 방지 안전장치). */
+	void CollapseOrphanGraphWidgets() const;
 
 	/** @brief 닫기 버튼 입력을 외부 닫기 요청 이벤트로 전달한다. */
 	UFUNCTION()
@@ -318,9 +397,115 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_ParchmentBody;
 
-	/** @brief 원목/은색 프레임과 크림 양피지를 합친 세로 스크롤용 지도 본문 텍스처. */
+	/** @brief B안 흑단/황동 프레임과 세로 지형을 합친 스크롤 지도 본문 텍스처. */
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UTexture2D> mMapParchmentTexture;
+
+	/**
+	 * @brief 지도 팝업 뒤 배경(정사각 2048).
+	 *
+	 * @details
+	 * 기기마다 화면 비율이 달라 정사각 그림을 cover-fit(긴 변 기준)으로 깐다.
+	 * 세로 화면에서는 좌우가, 가로 화면에서는 상하가 잘린다 — 단순한 그림이라
+	 * 어디를 잘라도 성립한다.
+	 */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mMapPopupBackgroundTexture;
+
+	/** @brief 양피지 위 어둡게-채도낮춤 베일(런타임 생성). 노드 아래, 지도 위. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mMapParchmentVeil;
+
+	/**
+	 * @brief 지도 본문을 눌러 노드 아이콘을 띄우는 베일 색.
+	 *
+	 * @details
+	 * 지도 그림이 노드 아이콘과 채도·명도가 비슷해 아이콘이 묻힌다. 곱하기
+	 * 틴트는 어둡게만 할 뿐 채도를 못 낮추므로, 배경과 같은 네이비를 반투명으로
+	 * 덮어 어둡게+채도낮춤을 한 번에 한다. 알파를 0으로 두면 원본 색이 된다.
+	 */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mMapParchmentVeilColor = FLinearColor(0.043f, 0.055f, 0.098f, 0.f);
+
+	/** @brief 지도 UI 버튼 판(BACK 단추 바탕). 비율 2.5:1 통짜 그림. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mMapButtonPlateTexture;
+
+	/** @brief 톤 맞춘 범례 판(글자까지 그려진 완성 이미지). WBP 범례 행을 대체한다. */
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UTexture2D> mMapLegendTexture;
+
+	/** @brief 범례 판 이미지(런타임 생성). Map_LegendGroup 자리에 대신 놓는다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mMapLegendPlate;
+
+	/** @brief 범례 여닫기 단추(런타임 생성). 왼쪽 아래 구석. */
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mMapLegendToggleButton;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> mMapLegendToggleText;
+
+	/**
+	 * @brief 범례를 펴 놓았는지 여부. 기본은 접힘.
+	 *
+	 * @details
+	 * 범례는 화면 위에 얹히는 판이라 어떤 화면 비율에서는 반드시 노드를 가린다
+	 * (특히 정사각형에 가까운 폴드 비율). 자주 보는 정보가 아니므로 기본은 접어
+	 * 두고 단추로 펴게 한다 -- 그러면 어떤 비율에서도 지도를 가리지 않는다.
+	 */
+	bool mMapLegendShown = false;
+
+	/**
+	 * @brief 노드 아이콘 크기 배율(폰 가독성) — 이 값은 상한일 뿐이다.
+	 *
+	 * @details
+	 * 기본 크기의 정본은 시안 마커(Map_NodeMetrics)지만, 그 마커는 WBP 안에
+	 * 있어 에디터 파이썬으로 건드릴 수 없다(WidgetTree 미노출). 폰에서 아이콘이
+	 * 너무 작아 종류가 구분되지 않아 코드 쪽 배율로 키운다.
+	 *
+	 * 실제 크기는 ResolveNodeMetrics()가 행/열 간격 안에 들어가도록 다시 줄이므로,
+	 * 이 값을 키워도 겹치지 않는다. 화면이 넓을 때 얼마나 커질 수 있는지의 상한이다.
+	 */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	float mMapNodeSizeScale = 2.2f;
+
+	/**
+	 * @brief 이번 갱신에서 확정한 아이콘 크기(px). 0이면 아직 미확정.
+	 *
+	 * @details
+	 * 열 간격에서 파생한 값이라 방 데이터(최대 열)와 화면 폭을 알아야 정해진다.
+	 * RefreshMap이 매번 다시 계산하고, GetMapNodeSize()가 이 값을 돌려준다.
+	 */
+	UPROPERTY(Transient)
+	float mResolvedNodeSize = 0.f;
+
+	/** @brief 이번 갱신에서 확정한 행 간격(px). 0이면 시안 마커 값을 쓴다. */
+	UPROPERTY(Transient)
+	float mResolvedRowPitch = 0.f;
+
+	/**
+	 * @brief 눕힌 원근(리테이너 왜곡)을 쓸지 여부. 기본은 끔.
+	 *
+	 * @details
+	 * 책상 배경을 버리고 팝업으로 바꾸면서 "책상 위에 눕힌 지도"라는 기울임의
+	 * 근거가 사라졌다. 끄면 탭 좌표 역변환(InverseMapPerspectiveUV) 경로도 같이
+	 * 빠져 입력이 단순해진다. 다시 기울이고 싶으면 이 값만 켜면 된다.
+	 */
+	UPROPERTY(Category = "Frontend Map", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	bool mUseMapPerspective = false;
+
+	/** @brief 화면 고정 원근 UI 머티리얼(M_MapPerspective). 리테이너 이펙트로 쓴다. */
+	/** @brief 룸 아이콘 v2(범례 교체용). 키는 옛 텍스처 경로에서 찾는 종류 키워드. */
+	UPROPERTY(Transient)
+	TMap<FString, TObjectPtr<UTexture2D>> mMapIconV2ByKeyword;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Map|Art", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMaterialInterface> mMapPerspectiveMaterial;
+
+	/** @brief 원근 왜곡 리테이너(런타임 생성). 스크롤 레이어를 감싼다. */
+	UPROPERTY(Transient)
+	TObjectPtr<URetainerBox> mMapPerspectiveRetainer;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_ScrollRodTop;
@@ -422,6 +607,27 @@ private:
 	bool mMapDragScrolling = false;
 
 	FVector2D mMapDragLastScreenPosition = FVector2D::ZeroVector;
+
+	/** @brief 드래그 시작 위치 — 이동량이 작으면 탭으로 보고 노드 클릭을 시도한다. */
+	FVector2D mMapDragStartScreenPosition = FVector2D::ZeroVector;
+
+	/** @brief 탭 역변환용 노드 중심 캐시(좌표, 콘텐츠 px, 선택 가능 여부). RefreshMap마다 갱신. */
+	struct FMapTapTarget
+	{
+		FIntPoint mCoord = FIntPoint(INDEX_NONE, INDEX_NONE);
+		FVector2D mCenter = FVector2D::ZeroVector;
+		bool mSelectable = false;
+	};
+	TArray<FMapTapTarget> mMapTapTargets;
+
+	/**
+	 * @brief 화면 상단에서의 지도 폭 비율(하단 1.0 기준 사다리꼴).
+	 *
+	 * @details
+	 * M_MapPerspective의 TopWidth 파라미터와 탭 좌표 역변환이 같은 값을
+	 * 써야 그림과 입력이 일치한다. C++이 정본이고 MID에 주입한다.
+	 */
+	static constexpr float MapPerspectiveTopWidth = 0.85f;
 
 	/** @brief 뷰포트 변화 감지용 마지막 크기 — 창 리사이즈/회전 시 그래프를 다시 깐다(라이브 리사이즈 재배치). */
 	FVector2D mLastViewportSize = FVector2D::ZeroVector;

@@ -127,11 +127,11 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     TestEqual(TEXT("Instant HP 변경 후, 현재 MaxHP는 80.f이어야 합니다."), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute()), 80.f);
 
     // ----------------------------------------------------
-    // 5. 테스트 케이스 3: Infinite Effect 적용 및 해제 검증 (DefensePoint +30)
+    // 5. 테스트 케이스 3: Infinite Effect 적용 및 해제 검증 (Defense +30)
     // ----------------------------------------------------
     AddInfo(TEXT("=== 테스트 케이스 3: Infinite 이펙트 적용 및 제거 검증 ==="));
-    CompModel->SetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute(), 10.f);
-    TestEqual(TEXT("기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
+    CompModel->SetAttributeBaseValue(UCombatTargetAttributeSet::GetDefenseAttribute(), 10.f);
+    TestEqual(TEXT("기본 방어력은 10.f이어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefenseAttribute()), 10.f);
 
     UTacticalEffectContext* EffectContext2 = CompModel->MakeEffectContext();
 
@@ -141,12 +141,12 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
 
     TestTrue(TEXT("ActiveHandle이 유효해야 합니다."), ActiveHandle.IsValid());
     // Infinite Effect는 베이스 값은 그대로 두고 현재 값만 변화시킴 (Aggregator에 가산)
-    TestEqual(TEXT("기본 방어력은 10.f로 유지되어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
-    TestEqual(TEXT("현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)"), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 40.f);
+    TestEqual(TEXT("기본 방어력은 10.f로 유지되어야 합니다."), CompModel->GetAttributeBaseValue(UCombatTargetAttributeSet::GetDefenseAttribute()), 10.f);
+    TestEqual(TEXT("현재 방어력은 40.f이어야 합니다. (기본 10 + 모디파이어 30)"), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute()), 40.f);
 
     // 이펙트 제거 후 원래대로 복원되는지 확인
     CompModel->RemoveActiveTacticalEffect(ActiveHandle);
-    TestEqual(TEXT("Infinite 이펙트 제거 후, 현재 방어력은 10.f로 복구되어야 합니다."), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefensePointAttribute()), 10.f);
+    TestEqual(TEXT("Infinite 이펙트 제거 후, 현재 방어력은 10.f로 복구되어야 합니다."), CompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute()), 10.f);
 
     // ----------------------------------------------------
     // 6. 테스트 케이스 4: Loose Tag 부여 및 해제 검증

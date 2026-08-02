@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   EnemyTurnPlannerTests.cpp
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
@@ -27,6 +27,7 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -79,7 +80,8 @@ namespace
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
-		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
+		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		Skill->mRequiredActionPoint = 0;	// 시전 비용 없음 (플래너 AP 판정용)
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
@@ -88,7 +90,7 @@ namespace
 		Skill->mEffectArea = 0;
 		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
-		Skill->mSkillMotionLayers.AddDefaulted();
+		Skill->mSkillPhaseLayers.AddDefaulted();
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
@@ -129,7 +131,7 @@ namespace
 		Enemy->Initialize();
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
-		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetMovementAttribute(), ETacticalModOp::Override, MoveRange);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, MoveRange);
 
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());

@@ -20,10 +20,10 @@ class P_RD_API UAnimNotify_ConditionalPlayNiagaraEffect : public UAnimNotify_Pla
 {
 	GENERATED_BODY()
 
-public:
-	UAnimNotify_ConditionalPlayNiagaraEffect();
-
 	/* UAnimNotify 상속 */
+public:
+	FLinearColor GetEditorColor() override;
+
 protected:
 	UFXSystemComponent* SpawnEffect(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation) override;
 
@@ -33,7 +33,7 @@ protected:
 	 * @param MeshComp 대상 스켈레탈 메시 컴포넌트
 	 * @return 이펙트 재생이 가능하면 true
 	 */
-	bool ShouldPlayEffect(const USkeletalMeshComponent* MeshComp) const;
+	bool ShouldPlayNotify(const USkeletalMeshComponent* MeshComp) const;
 
 protected:
 #if WITH_EDITORONLY_DATA

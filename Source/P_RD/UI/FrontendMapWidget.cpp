@@ -7,6 +7,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/RetainerBox.h"
 #include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
@@ -14,10 +15,13 @@
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "GameMode/RoomGameModeBase.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 #include "Styling/SlateBrush.h"
 #include "UI/FrontendMapGraphWidgets.h"
 #include "UI/ViewportZOrderType.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UObject/UObjectIterator.h"
 
 namespace
 {
@@ -42,6 +46,57 @@ namespace
 	constexpr float MapNodeAreaMaxRightInsetPx = 96.f;
 	constexpr float MapNodeAreaMinUsableWidthPx = 260.f;
 	constexpr float MapNodeLegendGapPx = 36.f;
+
+	/*
+	 * 시안 마커(0.22~0.80)는 1920 가로 화면 + 책상 장식 기준으로 잡힌 값이다.
+	 * 책상 배경은 폐기했고, 폰 세로 화면에서 그 여백을 그대로 두면 노드가 놓일
+	 * 폭이 화면의 58%로 줄어 열 간격이 아이콘보다 좁아진다(실측 42.5px vs 162px).
+	 * 좁은 화면에서는 마커보다 넓게 펴서 열 간격을 확보한다.
+	 */
+	constexpr float MapNodeAreaMinSpanFrac = 0.92f;
+	constexpr float MapNodeAreaEdgeInsetPx = 10.f;
+
+	/*
+	 * 아이콘 크기는 열 간격에서 파생한다. 둘을 따로 정하면 화면이 좁아질 때
+	 * 반드시 겹친다 -- 열 간격에는 상한만 있고 아이콘 크기와 묶인 하한이 없었다.
+	 * 한 열이 차지하는 칸의 이 비율만큼만 아이콘이 차지하게 해 겹침을 원천 차단한다.
+	 */
+	constexpr float MapNodeSlotFillRatio = 0.82f;
+	constexpr float MapNodeMinSizePx = 56.f;
+
+	/** @brief 연결선 두께 = 노드 지름의 이 비율(시안 두께가 하한). 노드가 커지면 선도 굵어진다. */
+	constexpr float MapLineThicknessNodeRatio = 0.11f;
+
+	/*
+	 * 범례 판 크기. 시안이 준 고정 크기(429x599)는 1920 가로 기준이라 폰에서
+	 * 글자가 작다. 화면 폭 기준으로 잡되, 짧은 화면에서 세로를 다 덮지 않도록
+	 * 높이에 상한을 둔다.
+	 */
+	// 범례는 단추로 여닫으므로 펼쳤을 때는 시원하게 크게 보여준다(가릴 걱정이 없다).
+	constexpr float MapLegendWidthFrac = 0.42f;
+	constexpr float MapLegendMaxHeightFrac = 0.72f;
+
+	/** @brief 범례/단추를 화면 가장자리에서 띄우는 여백(화면 폭 비율). */
+	constexpr float MapLegendEdgeMarginFrac = 0.025f;
+
+	/** @brief BACK 단추 폭(화면 폭 비율)과 판 그림 비율(2.5:1). 늘려도 찌그러지지 않게 비율 유지. */
+	constexpr float MapCloseButtonWidthFrac = 0.24f;
+	constexpr float MapCloseButtonAspect = 2.508f;
+	constexpr float MapCloseButtonMinWidthPx = 220.f;
+
+	/** @brief 열 간격 상한이 아이콘보다 좁아지지 않게 하는 최소 배수(아이콘 지름 대비). */
+	constexpr float MapColPitchMinNodeRatio = 1.2f;
+
+	/** @brief 방마다 붙은 -1~1 흔들림의 최대 진폭(px). 남은 여유 안에서만 흔든다. */
+	constexpr float MapNodeJitterMaxPx = 18.f;
+
+	/*
+	 * 지도 팝업이 차지하는 세로 밴드(화면 비율). 위아래로만 배경을 살짝 보여
+	 * "떠 있는 팝업"으로 읽히게 한다. 가로는 폰에서 지도를 최대한 크게 쓰려고
+	 * 꽉 채우며, 원근 사다리꼴이 위쪽 좌우를 알아서 비운다.
+	 */
+	constexpr float MapPopupBandTopFrac = 0.035f;
+	constexpr float MapPopupBandBottomFrac = 0.965f;
 
 	const FLinearColor PanelDarkColor(0.215f, 0.240f, 0.260f, 1.f);
 	const FLinearColor AccentFillColor(0.255f, 0.565f, 0.590f, 1.f);
@@ -77,6 +132,10 @@ namespace
 		if (FCString::Strcmp(Key, TEXT("EnterText")) == 0)
 		{
 			return NSLOCTEXT("FrontendMapWidget", "EnterText", "ENTER");
+		}
+		if (FCString::Strcmp(Key, TEXT("LegendText")) == 0)
+		{
+			return NSLOCTEXT("FrontendMapWidget", "LegendText", "LEGEND");
 		}
 		if (FCString::Strcmp(Key, TEXT("LoadingStatusText")) == 0)
 		{
@@ -336,11 +395,60 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	// 인벤토리/설정과 같은 팝업 레이어에서 입력과 표시를 독점한다.
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
+	// 원근은 이미지에 굽지 않는다 — 평평한 지도 + 리테이너 머티리얼이 정본.
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapParchmentFinder(
-		TEXT("/Game/UI/Art/RunFlow/T_StageMap_Background_Current.T_StageMap_Background_Current"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_Scroll_Flat.T_StageMap_Scroll_Flat"));
 	if (MapParchmentFinder.Succeeded())
 	{
 		mMapParchmentTexture = MapParchmentFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MapBackgroundFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_PopupBackground.T_StageMap_PopupBackground"));
+	if (MapBackgroundFinder.Succeeded())
+	{
+		mMapPopupBackgroundTexture = MapBackgroundFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MapLegendFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_Legend_V2.T_StageMap_Legend_V2"));
+	if (MapLegendFinder.Succeeded())
+	{
+		mMapLegendTexture = MapLegendFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MapButtonPlateFinder(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapUI_ButtonPlate_V1.T_MapUI_ButtonPlate_V1"));
+	if (MapButtonPlateFinder.Succeeded())
+	{
+		mMapButtonPlateTexture = MapButtonPlateFinder.Object;
+	}
+
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MapPerspectiveFinder(
+		TEXT("/Game/UI/Art/RunFlow/M_MapPerspective.M_MapPerspective"));
+	if (MapPerspectiveFinder.Succeeded())
+	{
+		mMapPerspectiveMaterial = MapPerspectiveFinder.Object;
+	}
+
+	// 범례 아이콘 v2 교체용. 키워드는 옛 텍스처 경로에서 종류를 찾을 때 쓴다.
+	// monster 는 corruptedmonster 와도 겹치므로 마지막에 검사한다(ApplyLegendIconsV2).
+	static const struct { const TCHAR* Keyword; const TCHAR* Path; } IconV2Entries[] = {
+		{ TEXT("elite"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Elite_V2.T_MapNode_Elite_V2") },
+		{ TEXT("boss"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Boss_V2.T_MapNode_Boss_V2") },
+		{ TEXT("shop"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Shop_V2.T_MapNode_Shop_V2") },
+		{ TEXT("treasure"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Treasure_V2.T_MapNode_Treasure_V2") },
+		{ TEXT("rest"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
+		{ TEXT("camp"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
+		{ TEXT("monster"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Monster_V2.T_MapNode_Monster_V2") },
+	};
+	for (const auto& Entry : IconV2Entries)
+	{
+		ConstructorHelpers::FObjectFinder<UTexture2D> IconFinder(Entry.Path);
+		if (IconFinder.Succeeded())
+		{
+			mMapIconV2ByKeyword.Add(FString(Entry.Keyword), IconFinder.Object);
+		}
 	}
 
 	RefreshLocalizedTextCache();
@@ -352,13 +460,152 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 void UFrontendMapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	EnsureCloseButton();
 	ValidateDesignerBindings();
 	BindEvents();
+	InstallMapPerspectiveRetainer();
+	EnsureParchmentVeil();
+	EnsureLegendPlate();
+	EnsureLegendToggleButton();
+	ApplyLegendShownState();
 	ApplyCurrentMapArt();
+	ApplyLegendIconsV2();
+
 	ConfigureMapGraphLayout();
 	RefreshLocalizedTextCache();
 	HideUnusedMapTextSurfaces();
 	RefreshMap();
+}
+
+/**
+ * @brief 디자이너 자산에 닫기 컨트롤이 없을 때만 런타임 BACK 버튼을 보완한다.
+ */
+void UFrontendMapWidget::EnsureCloseButton()
+{
+	if (CloseButton != nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(
+		WidgetTree->FindWidget(TEXT("FrontendMapRoot")));
+	if (RootCanvas == nullptr)
+	{
+		RootCanvas = Cast<UCanvasPanel>(WidgetTree->RootWidget);
+	}
+	if (RootCanvas == nullptr)
+	{
+		UE_LOG(LogRD, Warning,
+			TEXT("FrontendMapWidget: runtime CloseButton requires a CanvasPanel root."));
+		return;
+	}
+
+	CloseButton = Cast<UButton>(
+		WidgetTree->FindWidget(TEXT("RuntimeCloseButton")));
+	if (CloseButton == nullptr)
+	{
+		CloseButton = WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), TEXT("RuntimeCloseButton"));
+	}
+	if (CloseButton == nullptr)
+	{
+		return;
+	}
+
+	if (mMapButtonPlateTexture != nullptr)
+	{
+		/*
+		 * 지도 톤에 맞춘 단추 판. 그림이 비율 2.5:1이고 모서리 리벳이 있어
+		 * 9-slice로 늘리면 리벳이 뭉개진다. 통짜로 그리고 슬롯 크기를 같은
+		 * 비율로 잡아(UpdateCloseButtonLayout) 왜곡을 막는다.
+		 */
+		FSlateBrush PlateBrush;
+		PlateBrush.DrawAs = ESlateBrushDrawType::Image;
+		PlateBrush.SetResourceObject(mMapButtonPlateTexture);
+		PlateBrush.ImageSize = FVector2D(mMapButtonPlateTexture->GetSizeX(),
+			mMapButtonPlateTexture->GetSizeY());
+
+		FButtonStyle PlateStyle;
+		PlateStyle.SetNormal(PlateBrush);
+		FSlateBrush HoveredBrush = PlateBrush;
+		HoveredBrush.TintColor = FSlateColor(FLinearColor(1.12f, 1.12f, 1.08f, 1.f));
+		PlateStyle.SetHovered(HoveredBrush);
+		FSlateBrush PressedBrush = PlateBrush;
+		PressedBrush.TintColor = FSlateColor(FLinearColor(0.78f, 0.78f, 0.76f, 1.f));
+		PlateStyle.SetPressed(PressedBrush);
+		PlateStyle.SetDisabled(PlateBrush);
+		CloseButton->SetStyle(PlateStyle);
+	}
+	else if (EnterRoomButton != nullptr)
+	{
+		// 판 텍스처가 없으면 ENTER와 같은 재질로 폴백한다.
+		CloseButton->SetStyle(EnterRoomButton->GetStyle());
+	}
+
+	CloseButtonText = Cast<UTextBlock>(
+		WidgetTree->FindWidget(TEXT("RuntimeCloseButtonText")));
+	if (CloseButtonText == nullptr)
+	{
+		CloseButtonText = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TEXT("RuntimeCloseButtonText"));
+	}
+	if (CloseButtonText != nullptr && CloseButtonText->GetParent() == nullptr)
+	{
+		CloseButtonText->SetText(mCloseText);
+		CloseButtonText->SetJustification(ETextJustify::Center);
+		if (EnterButtonText != nullptr)
+		{
+			CloseButtonText->SetFont(EnterButtonText->GetFont());
+			CloseButtonText->SetColorAndOpacity(
+				EnterButtonText->GetColorAndOpacity());
+		}
+		CloseButton->AddChild(CloseButtonText);
+	}
+
+	if (CloseButton->GetParent() == nullptr)
+	{
+		UCanvasPanelSlot* CanvasSlot = RootCanvas->AddChildToCanvas(CloseButton);
+		if (CanvasSlot != nullptr)
+		{
+			// 오른쪽 아래 구석(범례는 왼쪽 아래). 크기/여백은 화면에 맞춰
+			// UpdateCloseButtonLayout()이 매 갱신마다 다시 잡는다.
+			CanvasSlot->SetAnchors(FAnchors(1.f, 1.f));
+			CanvasSlot->SetAlignment(FVector2D(1.f, 1.f));
+			CanvasSlot->SetZOrder(500);
+		}
+	}
+}
+
+void UFrontendMapWidget::UpdateCloseButtonLayout() const
+{
+	if (CloseButton == nullptr)
+	{
+		return;
+	}
+	UCanvasPanelSlot* ButtonSlot = Cast<UCanvasPanelSlot>(CloseButton->Slot);
+	if (ButtonSlot == nullptr)
+	{
+		return;
+	}
+
+	const FVector2D ScreenSize = GetCachedGeometry().GetLocalSize();
+	if (ScreenSize.X <= 64.f || ScreenSize.Y <= 64.f)
+	{
+		return;   // 아직 레이아웃 전. 다음 갱신에서 다시 잡는다.
+	}
+
+	// 판 그림 비율(2.5:1)을 지켜야 모서리 리벳이 찌그러지지 않는다.
+	const float ButtonWidth = FMath::Max(MapCloseButtonMinWidthPx,
+		ScreenSize.X * MapCloseButtonWidthFrac);
+	const float ButtonHeight = ButtonWidth / MapCloseButtonAspect;
+	const float Margin = ScreenSize.X * MapLegendEdgeMarginFrac;
+
+	ButtonSlot->SetAnchors(FAnchors(1.f, 1.f, 1.f, 1.f));
+	ButtonSlot->SetAlignment(FVector2D(1.f, 1.f));
+	ButtonSlot->SetAutoSize(false);
+	ButtonSlot->SetPosition(FVector2D(-Margin, -Margin));
+	ButtonSlot->SetSize(FVector2D(ButtonWidth, ButtonHeight));
+	ApplyMapButtonFontSize(CloseButtonText, ButtonHeight);
 }
 
 void UFrontendMapWidget::ApplyCurrentMapArt() const
@@ -367,18 +614,32 @@ void UFrontendMapWidget::ApplyCurrentMapArt() const
 	{
 		FSlateBrush Brush = Map_ParchmentBody->GetBrush();
 		Brush.SetResourceObject(mMapParchmentTexture);
-		Brush.DrawAs = ESlateBrushDrawType::Box;
-		// 941x1672 월드맵의 원목/은장 프레임 두께에 맞춰 9-slice한다.
-		// 이전 값은 테두리 안쪽 지형까지 고정 조각으로 잡아 좁은 폰에서
-		// 프레임이 과하게 두꺼워졌다. 실제 프레임만 보존하고 중앙 지형을
-		// 가변 그래프 높이에 맞게 늘린다.
-		Brush.Margin = FMargin(0.085f, 0.060f, 0.085f, 0.060f);
+		/*
+		 * 지도 본문은 평평한 통짜 그림이다. 눕힌 원근은 리테이너 머티리얼
+		 * (M_MapPerspective)이 화면에서 걸므로 이미지/브러시에는 원근이 없어야
+		 * 한다. 9-slice 를 쓰면 왜곡 후 프레임 경계가 찢어지므로 금지.
+		 */
+		Brush.DrawAs = ESlateBrushDrawType::Image;
+		Brush.Margin = FMargin(0.f);
 		Map_ParchmentBody->SetBrush(Brush);
 		Map_ParchmentBody->SetColorAndOpacity(FLinearColor::White);
 		Map_ParchmentBody->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
 
-	// 새 지도 자체에 상·하단 원목/은장 프레임이 포함되어 있어 옛 청동
+	// 지도 팝업 뒤 배경. 크기/위치(cover-fit)는 ConfigureMapGraphLayout이 잡는다.
+	if (Map_Scrim != nullptr && mMapPopupBackgroundTexture != nullptr)
+	{
+		FSlateBrush ScrimBrush = Map_Scrim->GetBrush();
+		ScrimBrush.SetResourceObject(mMapPopupBackgroundTexture);
+		ScrimBrush.DrawAs = ESlateBrushDrawType::Image;
+		ScrimBrush.Margin = FMargin(0.f);
+		ScrimBrush.TintColor = FSlateColor(FLinearColor::White);
+		Map_Scrim->SetBrush(ScrimBrush);
+		Map_Scrim->SetColorAndOpacity(FLinearColor::White);
+		Map_Scrim->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	// B안 지도 자체에 상·하단 흑단/황동 프레임이 포함되어 있어 옛 청동
 	// 두루마리 로드를 계속 숨긴다. 둘을 같이 켜면 폰에서 상하 테두리가 겹친다.
 	if (Map_ScrollRodTop != nullptr)
 	{
@@ -388,6 +649,398 @@ void UFrontendMapWidget::ApplyCurrentMapArt() const
 	{
 		Map_ScrollRodBottom->SetVisibility(ESlateVisibility::Collapsed);
 	}
+}
+
+void UFrontendMapWidget::ApplyLegendIconsV2() const
+{
+	UWidget* LegendRoot = Map_LegendGroup != nullptr
+		? Map_LegendGroup.Get()
+		: MapLegendList.Get();
+	if (LegendRoot == nullptr || mMapIconV2ByKeyword.Num() == 0)
+	{
+		return;
+	}
+
+	TArray<UWidget*> Pending;
+	Pending.Add(LegendRoot);
+	while (Pending.Num() > 0)
+	{
+		UWidget* Current = Pending.Pop();
+		if (UPanelWidget* Panel = Cast<UPanelWidget>(Current))
+		{
+			for (int32 Index = 0; Index < Panel->GetChildrenCount(); ++Index)
+			{
+				Pending.Add(Panel->GetChildAt(Index));
+			}
+		}
+		UImage* IconImage = Cast<UImage>(Current);
+		if (IconImage == nullptr)
+		{
+			continue;
+		}
+		UObject* Resource = IconImage->GetBrush().GetResourceObject();
+		if (Resource == nullptr)
+		{
+			continue;
+		}
+		const FString ResourcePath = Resource->GetPathName().ToLower();
+		if (ResourcePath.Contains(TEXT("_v2")))
+		{
+			continue;   // 이미 교체됨
+		}
+		for (const TPair<FString, TObjectPtr<UTexture2D>>& Entry : mMapIconV2ByKeyword)
+		{
+			if (Entry.Value != nullptr && ResourcePath.Contains(Entry.Key))
+			{
+				IconImage->SetBrushFromTexture(Entry.Value.Get());
+				break;
+			}
+		}
+	}
+}
+
+void UFrontendMapWidget::EnsureParchmentVeil()
+{
+	if (mMapParchmentVeil != nullptr || MapGraphCanvas == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UImage* Veil = WidgetTree->ConstructWidget<UImage>(
+		UImage::StaticClass(), TEXT("Map_ParchmentVeil"));
+	if (Veil == nullptr)
+	{
+		return;
+	}
+
+	FSlateBrush VeilBrush;
+	VeilBrush.DrawAs = ESlateBrushDrawType::Image;
+	VeilBrush.TintColor = FSlateColor(FLinearColor::White);
+	Veil->SetBrush(VeilBrush);
+	Veil->SetColorAndOpacity(mMapParchmentVeilColor);
+	Veil->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	if (UCanvasPanelSlot* VeilSlot = MapGraphCanvas->AddChildToCanvas(Veil))
+	{
+		VeilSlot->SetAutoSize(false);
+		// 양피지(-200)보다 위, 연결선(0)/노드(1)보다 아래.
+		VeilSlot->SetZOrder(-150);
+	}
+	mMapParchmentVeil = Veil;
+}
+
+void UFrontendMapWidget::EnsureLegendPlate()
+{
+	if (mMapLegendTexture == nullptr || Map_LegendGroup == nullptr
+		|| WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	UCanvasPanel* ParentCanvas = Cast<UCanvasPanel>(Map_LegendGroup->GetParent());
+	UCanvasPanelSlot* GroupSlot = Cast<UCanvasPanelSlot>(Map_LegendGroup->Slot);
+	if (ParentCanvas == nullptr || GroupSlot == nullptr)
+	{
+		return;
+	}
+
+	if (mMapLegendPlate == nullptr)
+	{
+		mMapLegendPlate = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), TEXT("Map_LegendPlate"));
+		if (mMapLegendPlate == nullptr)
+		{
+			return;
+		}
+
+		FSlateBrush PlateBrush;
+		PlateBrush.DrawAs = ESlateBrushDrawType::Image;
+		PlateBrush.SetResourceObject(mMapLegendTexture);
+		mMapLegendPlate->SetBrush(PlateBrush);
+		// 보임/숨김은 여닫기 단추 상태(ApplyLegendShownState)가 정한다.
+
+		if (UCanvasPanelSlot* PlateSlot = ParentCanvas->AddChildToCanvas(mMapLegendPlate))
+		{
+			// 시안 범례가 놓였던 자리(앵커/정렬/위치)를 그대로 물려받는다. 크기는
+			// 화면에 맞춰 UpdateLegendPlateLayout()이 매 갱신마다 다시 잡는다.
+			PlateSlot->SetAnchors(GroupSlot->GetAnchors());
+			PlateSlot->SetAlignment(GroupSlot->GetAlignment());
+			PlateSlot->SetPosition(GroupSlot->GetPosition());
+			PlateSlot->SetAutoSize(false);
+			PlateSlot->SetZOrder(GroupSlot->GetZOrder());
+		}
+	}
+
+	// 시안 범례 행(아이콘+글자)은 새 그림에 이미 그려져 있어 켜두면 겹친다.
+	Map_LegendGroup->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+void UFrontendMapWidget::EnsureLegendToggleButton()
+{
+	if (mMapLegendToggleButton != nullptr || WidgetTree == nullptr
+		|| mMapLegendPlate == nullptr)
+	{
+		return;
+	}
+	UCanvasPanel* ParentCanvas = Cast<UCanvasPanel>(mMapLegendPlate->GetParent());
+	if (ParentCanvas == nullptr)
+	{
+		return;
+	}
+
+	mMapLegendToggleButton = WidgetTree->ConstructWidget<UButton>(
+		UButton::StaticClass(), TEXT("RuntimeLegendToggleButton"));
+	if (mMapLegendToggleButton == nullptr)
+	{
+		return;
+	}
+	if (CloseButton != nullptr)
+	{
+		mMapLegendToggleButton->SetStyle(CloseButton->GetStyle());
+	}
+
+	mMapLegendToggleText = WidgetTree->ConstructWidget<UTextBlock>(
+		UTextBlock::StaticClass(), TEXT("RuntimeLegendToggleText"));
+	if (mMapLegendToggleText != nullptr)
+	{
+		mMapLegendToggleText->SetJustification(ETextJustify::Center);
+		if (CloseButtonText != nullptr)
+		{
+			mMapLegendToggleText->SetFont(CloseButtonText->GetFont());
+			mMapLegendToggleText->SetColorAndOpacity(
+				CloseButtonText->GetColorAndOpacity());
+		}
+		mMapLegendToggleButton->AddChild(mMapLegendToggleText);
+	}
+
+	if (UCanvasPanelSlot* ToggleSlot = ParentCanvas->AddChildToCanvas(mMapLegendToggleButton))
+	{
+		ToggleSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+		ToggleSlot->SetAlignment(FVector2D(0.f, 1.f));
+		ToggleSlot->SetAutoSize(false);
+		ToggleSlot->SetZOrder(500);
+	}
+	mMapLegendToggleButton->OnClicked.AddUniqueDynamic(
+		this, &UFrontendMapWidget::HandleLegendToggleClicked);
+}
+
+void UFrontendMapWidget::HandleLegendToggleClicked()
+{
+	mMapLegendShown = !mMapLegendShown;
+	ApplyLegendShownState();
+}
+
+void UFrontendMapWidget::ApplyLegendShownState() const
+{
+	if (mMapLegendPlate != nullptr)
+	{
+		mMapLegendPlate->SetVisibility(mMapLegendShown
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed);
+	}
+	if (mMapLegendToggleText != nullptr)
+	{
+		mMapLegendToggleText->SetText(FrontendMapText(TEXT("LegendText")));
+	}
+}
+
+void UFrontendMapWidget::ApplyMapButtonFontSize(UTextBlock* ButtonText, float ButtonHeight) const
+{
+	if (ButtonText == nullptr || ButtonHeight <= 1.f)
+	{
+		return;
+	}
+	/*
+	 * 단추 크기는 화면 폭을 따라가는데 글자는 시안 고정 크기라 큰 화면에서
+	 * 글자만 작게 남는다. 판 높이에 비례시켜 어느 화면에서도 같은 비율로 읽히게 한다.
+	 */
+	FSlateFontInfo Font = ButtonText->GetFont();
+	Font.Size = FMath::Max(8.f, ButtonHeight * 0.34f);
+	ButtonText->SetFont(Font);
+}
+
+void UFrontendMapWidget::UpdateLegendPlateLayout() const
+{
+	if (mMapLegendPlate == nullptr || mMapLegendTexture == nullptr)
+	{
+		return;
+	}
+	UCanvasPanelSlot* PlateSlot = Cast<UCanvasPanelSlot>(mMapLegendPlate->Slot);
+	if (PlateSlot == nullptr)
+	{
+		return;
+	}
+
+	FVector2D ScreenSize = GetCachedGeometry().GetLocalSize();
+	if (ScreenSize.X <= 64.f || ScreenSize.Y <= 64.f)
+	{
+		return;   // 아직 레이아웃 전. 다음 갱신에서 다시 잡는다.
+	}
+
+	const float TextureAspect = mMapLegendTexture->GetSizeY() > 0
+		? StaticCast<float>(mMapLegendTexture->GetSizeX())
+			/ StaticCast<float>(mMapLegendTexture->GetSizeY())
+		: 0.667f;
+
+	float PlateWidth = ScreenSize.X * MapLegendWidthFrac;
+	float PlateHeight = PlateWidth / FMath::Max(0.1f, TextureAspect);
+
+	// 짧은 화면에서 범례가 세로를 다 덮지 않게 높이를 먼저 제한하고 폭을 되돌린다.
+	const float MaxHeight = ScreenSize.Y * MapLegendMaxHeightFrac;
+	if (PlateHeight > MaxHeight)
+	{
+		PlateHeight = MaxHeight;
+		PlateWidth = PlateHeight * TextureAspect;
+	}
+	/*
+	 * 왼쪽 아래 구석의 여닫기 단추 바로 위에 붙인다. 정렬을 (0,1)로 두면 판이
+	 * 커져도 화면 안쪽(위/오른쪽)으로만 자라 잘리지 않는다.
+	 * 오른쪽 아래는 BACK 단추 자리다.
+	 */
+	const float Margin = ScreenSize.X * MapLegendEdgeMarginFrac;
+	const float ToggleWidth = FMath::Max(MapCloseButtonMinWidthPx,
+		ScreenSize.X * MapCloseButtonWidthFrac);
+	const float ToggleHeight = ToggleWidth / MapCloseButtonAspect;
+
+	if (mMapLegendToggleButton != nullptr)
+	{
+		if (UCanvasPanelSlot* ToggleSlot = Cast<UCanvasPanelSlot>(mMapLegendToggleButton->Slot))
+		{
+			ToggleSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+			ToggleSlot->SetAlignment(FVector2D(0.f, 1.f));
+			ToggleSlot->SetAutoSize(false);
+			ToggleSlot->SetPosition(FVector2D(Margin, -Margin));
+			ToggleSlot->SetSize(FVector2D(ToggleWidth, ToggleHeight));
+		}
+		ApplyMapButtonFontSize(mMapLegendToggleText, ToggleHeight);
+	}
+
+	// 판이 단추를 덮지 않도록 단추 높이만큼 위로 올린다.
+	const float PlateBottomOffset = mMapLegendToggleButton != nullptr
+		? Margin + ToggleHeight + Margin * 0.5f
+		: Margin;
+	PlateSlot->SetAnchors(FAnchors(0.f, 1.f, 0.f, 1.f));
+	PlateSlot->SetAlignment(FVector2D(0.f, 1.f));
+	PlateSlot->SetPosition(FVector2D(Margin, -PlateBottomOffset));
+	PlateSlot->SetSize(FVector2D(PlateWidth, PlateHeight));
+}
+
+void UFrontendMapWidget::InstallMapPerspectiveRetainer()
+{
+	if (!mUseMapPerspective || MapScrollBox == nullptr
+		|| mMapPerspectiveMaterial == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+	// 위젯 재사용(닫았다 다시 열기)으로 NativeConstruct가 다시 와도 한 번만 감싼다.
+	if (mMapPerspectiveRetainer != nullptr
+		&& MapScrollBox->GetParent() == mMapPerspectiveRetainer)
+	{
+		return;
+	}
+
+	UPanelWidget* ParentPanel = MapScrollBox->GetParent();
+	if (ParentPanel == nullptr)
+	{
+		return;
+	}
+
+	URetainerBox* Retainer = WidgetTree->ConstructWidget<URetainerBox>(
+		URetainerBox::StaticClass(), TEXT("MapPerspectiveRetainer"));
+	if (Retainer == nullptr)
+	{
+		return;
+	}
+
+	// 같은 자리(형제 순서 유지)에 리테이너를 넣고 스크롤 박스를 그 안으로 옮긴다.
+	if (!ParentPanel->ReplaceChild(MapScrollBox, Retainer))
+	{
+		return;
+	}
+	Retainer->AddChild(MapScrollBox);
+
+	Retainer->SetRetainRendering(true);
+	Retainer->SetTextureParameter(TEXT("Texture"));
+	Retainer->SetEffectMaterial(mMapPerspectiveMaterial);
+	if (UMaterialInstanceDynamic* EffectMID = Retainer->GetEffectMaterial())
+	{
+		EffectMID->SetScalarParameterValue(TEXT("TopWidth"), MapPerspectiveTopWidth);
+	}
+
+	mMapPerspectiveRetainer = Retainer;
+}
+
+FVector2D UFrontendMapWidget::InverseMapPerspectiveUV(const FVector2D& ScreenUV)
+{
+	/*
+	 * M_MapPerspective 의 HLSL과 같은 사영 변환(대칭 사다리꼴 호모그래피)의
+	 * 역이다. 화면 v -> 콘텐츠 t 는 원근 단축 때문에 비선형이다.
+	 * 머티리얼과 이 함수가 어긋나면 보이는 노드와 눌리는 노드가 어긋난다.
+	 */
+	const float W = FMath::Clamp(MapPerspectiveTopWidth, 0.05f, 1.f);
+	const float V = FMath::Clamp(ScreenUV.Y, 0.f, 1.f);
+	const float T = V / (W + (1.f - W) * V);
+	const float D = (W - 1.f) * T + 1.f;
+	const float S = (ScreenUV.X * D - (0.5f - 0.5f * W) * (1.f - T)) / W;
+	return FVector2D(S, T);
+}
+
+bool UFrontendMapWidget::TryHandleMapPerspectiveTap(const FVector2D& ScreenPosition)
+{
+	if (mMapPerspectiveRetainer == nullptr || MapScrollBox == nullptr
+		|| mMapTapTargets.Num() == 0)
+	{
+		return false;
+	}
+	// 노드 버튼 대신 지도 레벨에서 탭을 받으므로, 선택 허용 여부도 여기서 막는다.
+	if (!IsRoomSelectionEnabled() || mEnterRequested)
+	{
+		return false;
+	}
+
+	const FGeometry& RetainerGeometry = mMapPerspectiveRetainer->GetCachedGeometry();
+	const FVector2D LocalSize = RetainerGeometry.GetLocalSize();
+	if (LocalSize.X <= KINDA_SMALL_NUMBER || LocalSize.Y <= KINDA_SMALL_NUMBER)
+	{
+		return false;
+	}
+
+	const FVector2D Local = RetainerGeometry.AbsoluteToLocal(ScreenPosition);
+	const FVector2D ContentUV = InverseMapPerspectiveUV(Local / LocalSize);
+	if (ContentUV.X < 0.f || ContentUV.X > 1.f)
+	{
+		return false;   // 사다리꼴 밖(책상 영역) 탭
+	}
+
+	const FVector2D GraphSize = GetMapGraphContentSize();
+	const FVector2D ContentPoint(
+		ContentUV.X * GraphSize.X,
+		ContentUV.Y * LocalSize.Y + MapScrollBox->GetScrollOffset());
+
+	const FVector2D NodeSize = GetMapNodeSize();
+	const float TapRadius = FMath::Max(NodeSize.X, NodeSize.Y) * 0.75f;
+	float BestDistanceSquared = TapRadius * TapRadius;
+	const FMapTapTarget* BestTarget = nullptr;
+	for (const FMapTapTarget& Target : mMapTapTargets)
+	{
+		if (!Target.mSelectable)
+		{
+			continue;
+		}
+		const float DistanceSquared = (Target.mCenter - ContentPoint).SizeSquared();
+		if (DistanceSquared < BestDistanceSquared)
+		{
+			BestDistanceSquared = DistanceSquared;
+			BestTarget = &Target;
+		}
+	}
+	if (BestTarget == nullptr)
+	{
+		return false;
+	}
+
+	HandleMapRoomClicked(BestTarget->mCoord.X, BestTarget->mCoord.Y);
+	return true;
 }
 
 /**
@@ -404,8 +1057,15 @@ void UFrontendMapWidget::NativeDestruct()
 			NodeEntry.mNodeWidget->OnMapNodeClicked.RemoveDynamic(this, &UFrontendMapWidget::HandleMapNodeClicked);
 		}
 	}
-	mMapLinePool.Reset();
-	mMapNodePool.Reset();
+	/*
+	 * 풀을 비우지 않는다.
+	 *
+	 * 노드/선 위젯은 MapGraphCanvas의 자식으로 남아 있는데, 풀 배열만 비우면
+	 * 다음 NativeConstruct에서 같은 수만큼 새로 만들어 캔버스에 또 얹는다.
+	 * 옛 위젯은 캔버스에 그대로 보이므로 지도가 두 벌로 겹쳐 보인다
+	 * (실측: 풀 25개인데 화면에 보이는 노드 50개).
+	 * 델리게이트만 끊고 위젯은 남겨 두었다가 Acquire에서 다시 묶어 재사용한다.
+	 */
 	Super::NativeDestruct();
 }
 
@@ -442,6 +1102,7 @@ FReply UFrontendMapWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, 
 		{
 			mMapDragScrolling = true;
 			mMapDragLastScreenPosition = ScreenPosition;
+			mMapDragStartScreenPosition = ScreenPosition;
 			MapScrollBox->EndInertialScrolling();
 			return FReply::Handled().CaptureMouse(TakeWidget());
 		}
@@ -455,6 +1116,19 @@ FReply UFrontendMapWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, co
 	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && mMapDragScrolling)
 	{
 		mMapDragScrolling = false;
+
+		/*
+		 * 원근 리테이너가 켜지면 노드 버튼은 히트테스트를 받지 않는다(그리는
+		 * 위치와 버튼 위치가 어긋나므로). 이동량이 작은 눌림은 탭으로 보고
+		 * 좌표를 역변환해 노드 클릭으로 처리한다.
+		 */
+		const FVector2D ScreenPosition = InMouseEvent.GetScreenSpacePosition();
+		const float TapSlopPx = 12.f;
+		if ((ScreenPosition - mMapDragStartScreenPosition).SizeSquared()
+			<= TapSlopPx * TapSlopPx)
+		{
+			TryHandleMapPerspectiveTap(ScreenPosition);
+		}
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 
@@ -668,9 +1342,58 @@ FFrontendMapNodePoolEntry* UFrontendMapWidget::AcquireMapNodeWidget(int32 NodeIn
 	FFrontendMapNodePoolEntry& Entry = mMapNodePool[NodeIndex];
 	if (Entry.mNodeWidget != nullptr)
 	{
-		Entry.mNodeWidget->SetVisibility(ESlateVisibility::Visible);
+		// NativeDestruct에서 끊긴 델리게이트를 다시 묶는다(재사용 경로). 중복 등록은 없다.
+		Entry.mNodeWidget->OnMapNodeClicked.AddUniqueDynamic(
+			this, &UFrontendMapWidget::HandleMapNodeClicked);
+		/*
+		 * 원근 리테이너가 켜지면 노드가 그려지는 화면 위치와 버튼의 히트테스트
+		 * 위치가 어긋난다(왜곡은 그리기에만 적용). 버튼 입력을 끄고 지도
+		 * 레벨의 탭 역변환(TryHandleMapPerspectiveTap)이 클릭을 대신한다.
+		 */
+		Entry.mNodeWidget->SetVisibility(mMapPerspectiveRetainer != nullptr
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Visible);
 	}
 	return &Entry;
+}
+
+void UFrontendMapWidget::CollapseOrphanGraphWidgets() const
+{
+	/*
+	 * 풀에 없는데 캔버스에 남아 있는 노드/선을 접는다.
+	 *
+	 * 풀을 유지하도록 고쳤으므로 이제 고아는 생기지 않지만, 이전 빌드에서 만든
+	 * 위젯이 저장된 화면에 남아 있거나 다른 경로로 캔버스에 얹히면 지도가 두 벌로
+	 * 보인다. 그리기 전에 한 번 훑어 내 풀 소속이 아닌 것은 숨긴다.
+	 */
+	if (MapGraphCanvas == nullptr)
+	{
+		return;
+	}
+
+	TSet<const UWidget*> PooledWidgets;
+	PooledWidgets.Reserve(mMapNodePool.Num() + mMapLinePool.Num());
+	for (const FFrontendMapNodePoolEntry& Entry : mMapNodePool)
+	{
+		PooledWidgets.Add(Entry.mNodeWidget);
+	}
+	for (const FFrontendMapLinePoolEntry& Entry : mMapLinePool)
+	{
+		PooledWidgets.Add(Entry.mLineWidget);
+	}
+
+	for (int32 Index = 0; Index < MapGraphCanvas->GetChildrenCount(); ++Index)
+	{
+		UWidget* Child = MapGraphCanvas->GetChildAt(Index);
+		if (Child == nullptr || PooledWidgets.Contains(Child))
+		{
+			continue;
+		}
+		if (Child->IsA<UFrontendMapNodeWidget>() || Child->IsA<UFrontendMapLineWidget>())
+		{
+			Child->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
 }
 
 void UFrontendMapWidget::HideUnusedMapGraphWidgets(int32 UsedLineCount, int32 UsedNodeCount)
@@ -741,6 +1464,16 @@ bool UFrontendMapWidget::RefreshMap()
 		MaxRowIndex = FMath::Max(MaxRowIndex, Room.mRow);
 	}
 	mCachedRowCount = bHasRooms ? MaxRowIndex + 1 : 0;
+
+	// 노드 크기는 열 간격에서 파생하므로 레이아웃보다 먼저 확정한다
+	// (그래프 높이 계산이 노드 크기를 쓴다).
+	int32 MaxColumnIndex = 0;
+	for (const FMapRoomView& Room : Rooms)
+	{
+		MaxColumnIndex = FMath::Max(MaxColumnIndex, Room.mColumn);
+	}
+	ResolveNodeMetrics(MaxColumnIndex);
+
 	ConfigureMapGraphLayout();
 
 	if (!bHasRooms)
@@ -766,9 +1499,17 @@ bool UFrontendMapWidget::RefreshMap()
 	const FVector2D GraphSize = GetMapGraphContentSize();
 
 	TMap<FIntPoint, FVector2D> NodeCenters;
+	mMapTapTargets.Reset();
 	for (const FMapRoomView& Room : Rooms)
 	{
-		NodeCenters.Add(FIntPoint(Room.mRow, Room.mColumn), GetMapRoomNodeCenter(Rooms, Room, GraphSize));
+		const FVector2D Center = GetMapRoomNodeCenter(Rooms, Room, GraphSize);
+		NodeCenters.Add(FIntPoint(Room.mRow, Room.mColumn), Center);
+		// 원근 탭 역변환용 캐시. 선택 가능 여부는 최종적으로 GameMode가 다시 검증한다.
+		FMapTapTarget TapTarget;
+		TapTarget.mCoord = FIntPoint(Room.mRow, Room.mColumn);
+		TapTarget.mCenter = Center;
+		TapTarget.mSelectable = Room.mSelectable;
+		mMapTapTargets.Add(TapTarget);
 	}
 
 	// 현재 위치 = 방문(Cleared) 경로의 마지막 행. 선택된 경로에서는 행마다 방문 방이 하나뿐이다.
@@ -825,7 +1566,10 @@ bool UFrontendMapWidget::RefreshMap()
 			LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
 			ConnectionLine->SetRenderTransform(LineTransform);
 
-			const float LineThickness = ConnectionLine->GetLineThickness();
+			// 시안 두께(14)는 1920 기준이라 폰에서 실처럼 얇다. 노드가 커지면
+			// 선도 같이 굵어지도록 노드 지름에 비례시키고, 시안 값을 하한으로 둔다.
+			const float LineThickness = FMath::Max(ConnectionLine->GetLineThickness(),
+				GetMapNodeSize().X * MapLineThicknessNodeRatio);
 			if (UCanvasPanelSlot* LineSlot = Cast<UCanvasPanelSlot>(ConnectionLine->Slot))
 			{
 				LineSlot->SetSize(FVector2D(Length, LineThickness));
@@ -893,6 +1637,7 @@ bool UFrontendMapWidget::RefreshMap()
 	}
 
 	HideUnusedMapGraphWidgets(UsedLineCount, UsedNodeCount);
+	CollapseOrphanGraphWidgets();
 	UpdateOverlayMarkers(NodeCenters, CurrentCoord, SelectedCoord);
 
 	if (bHasSelectedRoom)
@@ -1199,14 +1944,83 @@ FVector2D UFrontendMapWidget::GetMapGraphContentSize() const
 
 FVector2D UFrontendMapWidget::GetMapNodeSize() const
 {
+	if (mResolvedNodeSize > 1.f)
+	{
+		return FVector2D(mResolvedNodeSize, mResolvedNodeSize);
+	}
+	return FVector2D(GetMapNodeDesignSize(), GetMapNodeDesignSize());
+}
+
+float UFrontendMapWidget::GetMapNodeDesignSize() const
+{
 	const float Size = (Map_NodeMetrics != nullptr && Map_NodeMetrics->GetWidthOverride() > 1.f)
 		? Map_NodeMetrics->GetWidthOverride()
 		: MapNodeFallbackSize;
-	return FVector2D(Size, Size);
+	// 간격(행/열 피치)은 배율을 곱하지 않는다 — 아이콘만 상대적으로 커져야 한다.
+	return Size * FMath::Max(0.1f, mMapNodeSizeScale);
+}
+
+void UFrontendMapWidget::ResolveNodeMetrics(int32 MaxColumn)
+{
+	/*
+	 * 아이콘 크기를 "한 칸"에서 파생시키고, 행 간격은 화면 높이에 맞춰 편다.
+	 *
+	 * 예전에는 아이콘 크기(시안 마커 x 배율)와 열 간격(가용폭 / 열수)이 서로
+	 * 모르는 채 계산됐다. 열 간격에는 상한만 있고 아이콘 크기와 묶인 하한이
+	 * 없어서, 화면이 좁아지면 반드시 겹쳤다(720폭 실측: 간격 42.5 vs 아이콘 162).
+	 *
+	 * 행 간격도 마찬가지다. 층이 15에서 8로 줄면 시안 간격(176) 그대로는 노드가
+	 * 화면 아래쪽에만 뭉치고 위쪽 양피지가 텅 빈다. 그래서 스크롤이 필요 없을
+	 * 만큼 층이 적으면 남는 높이에 행을 고르게 편다.
+	 */
+	mResolvedNodeSize = 0.f;    // 아래 계산은 마커 기준으로 재야 하므로 확정값을 비운다
+	mResolvedRowPitch = 0.f;
+
+	const float DesignSize = GetMapNodeDesignSize();
+	const FVector2D ProbeSize = GetMapGraphContentSize();
+	if (MaxColumn <= 0 || ProbeSize.X <= 64.f)
+	{
+		mResolvedNodeSize = DesignSize;
+		return;
+	}
+
+	float LeftFrac = 0.f;
+	float RightFrac = 0.f;
+	float TopPx = 0.f;
+	float BottomPx = 0.f;
+	GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx, ProbeSize.X);
+
+	/*
+	 * 가로: 한 열이 차지하는 칸 안에 아이콘이 들어가야 한다.
+	 * 실제 배치는 열 간격 상한(GetMapColPitchMax)에도 걸리므로, 둘 중 좁은 쪽을
+	 * 기준으로 잡아야 한다 -- 칸만 보고 키우면 상한에 걸린 간격보다 커져 겹친다.
+	 */
+	const float SpanPx = FMath::Max(0.f, (RightFrac - LeftFrac) * ProbeSize.X);
+	const float SlotPitch = FMath::Min(GetMapColPitchMax(),
+		SpanPx / StaticCast<float>(MaxColumn + 1));
+
+	// 세로: 남는 높이에 행을 고르게 편다(시안 간격이 하한).
+	const float MarkerRowPitch = GetMapRowPitch();
+	float RowPitch = MarkerRowPitch;
+	if (mCachedRowCount > 1)
+	{
+		const float UsableHeight = FMath::Max(0.f, ProbeSize.Y - TopPx - BottomPx);
+		RowPitch = FMath::Max(MarkerRowPitch,
+			(UsableHeight - DesignSize) / StaticCast<float>(mCachedRowCount - 1));
+	}
+	mResolvedRowPitch = RowPitch;
+
+	const float FitSize = FMath::Min(SlotPitch, RowPitch) * MapNodeSlotFillRatio;
+	mResolvedNodeSize = FMath::Clamp(FitSize,
+		FMath::Min(MapNodeMinSizePx, DesignSize), DesignSize);
 }
 
 float UFrontendMapWidget::GetMapRowPitch() const
 {
+	if (mResolvedRowPitch > 1.f)
+	{
+		return mResolvedRowPitch;
+	}
 	return (Map_NodeMetrics != nullptr && Map_NodeMetrics->GetHeightOverride() > 1.f)
 		? Map_NodeMetrics->GetHeightOverride()
 		: MapRowPitchFallback;
@@ -1214,9 +2028,15 @@ float UFrontendMapWidget::GetMapRowPitch() const
 
 float UFrontendMapWidget::GetMapColPitchMax() const
 {
-	return (Map_ColPitch != nullptr && Map_ColPitch->GetWidthOverride() > 1.f)
+	const float MarkerPitchMax = (Map_ColPitch != nullptr && Map_ColPitch->GetWidthOverride() > 1.f)
 		? Map_ColPitch->GetWidthOverride()
 		: MapColPitchMaxFallback;
+	/*
+	 * 시안 상한(240)은 열이 적을 때 노드가 과하게 벌어지는 것을 막으려는 값인데,
+	 * 아이콘을 키우면 이 상한이 아이콘보다 좁아져 다시 겹친다. 아이콘이 들어갈
+	 * 만큼은 항상 벌어지도록 하한을 둔다.
+	 */
+	return FMath::Max(MarkerPitchMax, GetMapNodeDesignSize() * MapColPitchMinNodeRatio);
 }
 
 void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx, float InGraphWidth) const
@@ -1289,6 +2109,19 @@ void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFr
 		RightPx = CenterPx + MapNodeAreaMinUsableWidthPx * 0.5f;
 	}
 
+	/*
+	 * 마지막으로 최소 폭을 보장한다. 위의 장식/범례 여백은 넓은 화면 기준이라
+	 * 폰에서는 노드가 놓일 폭을 절반 가까이 깎는다. 지도 가독성이 범례 비침보다
+	 * 우선이므로, 좁아진 경우 화면 중앙 기준으로 다시 펴 준다.
+	 */
+	const float MinSpanPx = InGraphWidth * MapNodeAreaMinSpanFrac;
+	if (RightPx - LeftPx < MinSpanPx)
+	{
+		const float CenterPx = InGraphWidth * 0.5f;
+		LeftPx = FMath::Max(MapNodeAreaEdgeInsetPx, CenterPx - MinSpanPx * 0.5f);
+		RightPx = FMath::Min(InGraphWidth - MapNodeAreaEdgeInsetPx, CenterPx + MinSpanPx * 0.5f);
+	}
+
 	OutLeftFrac = FMath::Clamp(LeftPx / InGraphWidth, 0.f, 1.f);
 	OutRightFrac = FMath::Clamp(RightPx / InGraphWidth, OutLeftFrac, 1.f);
 }
@@ -1340,7 +2173,21 @@ FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& R
 
 	const float Y = ClampMaxY - StaticCast<float>(Room.mRow) * GetMapRowPitch();
 
-	const FVector2D Offset(Room.mPositionOffsetRate.X * 18.f, Room.mPositionOffsetRate.Y * 18.f);
+	/*
+	 * 배치는 평평한 콘텐츠 좌표 그대로 둔다. 눕힌 원근은 리테이너 머티리얼이
+	 * 화면에서 걸므로(노드 포함 한 렌더타겟), 여기서 사다리꼴 보정을 하면
+	 * 이중 왜곡이 된다.
+	 */
+	/*
+	 * 기계적인 격자 느낌을 깨는 흔들림. 다만 좌우로는 열 간격에서 아이콘을 뺀
+	 * 여유 안에서만 흔든다 — 고정 18px로 흔들면 간격이 좁을 때 이웃과 겹친다
+	 * (실측: 간격 42.5px에서 두 노드가 29px까지 붙었다).
+	 */
+	const float FreeGapX = FMath::Max(0.f, ColPitch - NodeSize.X);
+	const float JitterX = FMath::Min(MapNodeJitterMaxPx, FreeGapX * 0.4f);
+	const FVector2D Offset(
+		Room.mPositionOffsetRate.X * JitterX,
+		Room.mPositionOffsetRate.Y * MapNodeJitterMaxPx);
 	return FVector2D(
 		FMath::Clamp(X + Offset.X, ClampMinX, ClampMaxX),
 		FMath::Clamp(Y + Offset.Y, ClampMinY, ClampMaxY));
@@ -1357,12 +2204,20 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 
 	// 범례 반응형 축소: 로그 실측상 고정 크기(429x599)가 좁은 화면(폭 1110)에서 39%를 덮는다.
 	// 디자인 폭 / 기준 폭 비율로 통째로 줄이되(우측 중앙 피벗 - 오른쪽에 붙은 채 축소), 하한은 시안이 정한다.
-	if (Map_LegendGroup != nullptr && mLegendRefWidth > KINDA_SMALL_NUMBER)
+	UpdateCloseButtonLayout();
+	// 범례가 접혀 있어도 여닫기 단추 배치는 여기서 같이 갱신된다.
+	if (mMapLegendPlate != nullptr)
+	{
+		// 새 범례 판은 크기를 직접 화면에 맞추므로 축소 트랜스폼을 걸지 않는다
+		// (같이 걸면 두 번 줄어 폰에서 글자가 안 읽힌다).
+		UpdateLegendPlateLayout();
+	}
+	else if (Map_LegendGroup != nullptr && mLegendRefWidth > KINDA_SMALL_NUMBER)
 	{
 		const float LegendScale = GetFrontendMapLegendScale(GraphSize.X, mLegendRefWidth, mLegendMinScale);
-		Map_LegendGroup->SetRenderTransformPivot(FVector2D(1.f, 0.5f));
 		FWidgetTransform LegendTransform;
 		LegendTransform.Scale = FVector2D(LegendScale, LegendScale);
+		Map_LegendGroup->SetRenderTransformPivot(FVector2D(1.f, 0.5f));
 		Map_LegendGroup->SetRenderTransform(LegendTransform);
 	}
 	if (MapGraphSize != nullptr)
@@ -1375,23 +2230,57 @@ void UFrontendMapWidget::ConfigureMapGraphLayout() const
 		MapScrollBox->SetOrientation(Orient_Vertical);
 		MapScrollBox->SetScrollBarVisibility(ESlateVisibility::Collapsed);
 		MapScrollBox->SetClipping(EWidgetClipping::ClipToBounds);
-		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(MapScrollBox->Slot))
+		// 원근 리테이너가 스크롤 박스를 감싸면 캔버스 슬롯은 리테이너 소유다.
+		UWidget* ScrollOuter = (mMapPerspectiveRetainer != nullptr
+				&& MapScrollBox->GetParent() == mMapPerspectiveRetainer)
+			? StaticCast<UWidget*>(mMapPerspectiveRetainer)
+			: StaticCast<UWidget*>(MapScrollBox);
+		if (UCanvasPanelSlot* ScrollSlot = Cast<UCanvasPanelSlot>(ScrollOuter->Slot))
 		{
-			ScrollSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			// 팝업이 HUD를 덮는 동안 지도를 뷰포트 전체에 채운다. WBP의 옛
-			// 탑바 인셋 값에 의존하지 않도록 패키징에서도 항상 0으로 강제한다.
+			// 가로는 풀블리드, 세로는 팝업 밴드. WBP의 옛 탑바 인셋 값에
+			// 의존하지 않도록 패키징에서도 항상 강제한다.
+			ScrollSlot->SetAnchors(FAnchors(
+				0.0f, MapPopupBandTopFrac, 1.0f, MapPopupBandBottomFrac));
 			ScrollSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
 			ScrollSlot->SetAlignment(FVector2D::ZeroVector);
 			ScrollSlot->SetAutoSize(false);
 			ScrollSlot->SetZOrder(0);
 		}
 	}
+	if (mMapPerspectiveRetainer != nullptr)
+	{
+		// MID 는 Slate 페인트 후에야 생기므로 설치 시점에 못 넣었으면 여기서 재시도.
+		// 머티리얼 기본값도 같은 수치라 못 넣어도 그림/입력은 어긋나지 않는다.
+		if (UMaterialInstanceDynamic* EffectMID = mMapPerspectiveRetainer->GetEffectMaterial())
+		{
+			EffectMID->SetScalarParameterValue(TEXT("TopWidth"), MapPerspectiveTopWidth);
+		}
+	}
 	if (Map_Scrim != nullptr)
 	{
 		if (UCanvasPanelSlot* ScrimSlot = Cast<UCanvasPanelSlot>(Map_Scrim->Slot))
 		{
-			ScrimSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
-			ScrimSlot->SetOffsets(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
+			/*
+			 * 정사각 배경 cover-fit: 짧은 변에 맞추면 긴 변 쪽에 빈 곳이 생기므로
+			 * 긴 변 기준으로 키우고 중앙 정렬해 넘치는 쪽을 잘라낸다.
+			 * 세로 화면이면 좌우가, 가로 화면이면 상하가 잘린다.
+			 */
+			FVector2D ScreenSize = GetCachedGeometry().GetLocalSize();
+			if (ScreenSize.X <= 64.f || ScreenSize.Y <= 64.f)
+			{
+				ScreenSize = MapScrollBox != nullptr
+					? MapScrollBox->GetCachedGeometry().GetLocalSize()
+					: FVector2D::ZeroVector;
+			}
+			const float Side = FMath::Max(
+				FMath::Max(StaticCast<float>(ScreenSize.X), StaticCast<float>(ScreenSize.Y)),
+				64.f);
+			ScrimSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+			ScrimSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+			ScrimSlot->SetAutoSize(false);
+			ScrimSlot->SetPosition(FVector2D::ZeroVector);
+			ScrimSlot->SetSize(FVector2D(Side, Side));
+			ScrimSlot->SetZOrder(-1000);
 		}
 	}
 	if (MapGraphCanvas != nullptr)
@@ -1418,6 +2307,25 @@ void UFrontendMapWidget::UpdateGraphDecorLayout(const FVector2D& GraphSize) cons
 			BodySlot->SetZOrder(-200);
 		}
 		Map_ParchmentBody->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	// 베일은 양피지와 같은 자리를 덮어야 한다(노드는 그 위에 남는다).
+	if (mMapParchmentVeil != nullptr)
+	{
+		if (UCanvasPanelSlot* VeilSlot = Cast<UCanvasPanelSlot>(mMapParchmentVeil->Slot))
+		{
+			VeilSlot->SetAnchors(FAnchors(0.f, 0.f));
+			VeilSlot->SetAlignment(FVector2D::ZeroVector);
+			VeilSlot->SetAutoSize(false);
+			VeilSlot->SetPosition(FVector2D::ZeroVector);
+			VeilSlot->SetSize(GraphSize);
+			VeilSlot->SetZOrder(-150);
+		}
+		mMapParchmentVeil->SetColorAndOpacity(mMapParchmentVeilColor);
+		// 지도 그림 자체가 이미 눌려 있으면 베일은 필요 없다(이중으로 누르지 않는다).
+		mMapParchmentVeil->SetVisibility(mMapParchmentVeilColor.A > 0.01f
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed);
 	}
 
 	if (Map_ScrollRodTop != nullptr)

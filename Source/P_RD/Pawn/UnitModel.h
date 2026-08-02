@@ -18,9 +18,8 @@
 class UUnitModel;
 
 class UAttributeSetComponentModel;
-class USkillComponentModel;
+class UUnitSkillComponentModel;
 class UPassiveComponentModel;
-class UEquipmentComponentModel;
 
 /** @brief 이동 연출이 한 타일에 도착할 때마다 완료 칸 수를 UI 어댑터에 알린다. */
 DECLARE_MULTICAST_DELEGATE_TwoParams(
@@ -51,19 +50,28 @@ public:
 	virtual void OnBeginTurn(int32 TurnCount);
 	virtual void OnEndTurn(int32 TurnCount);
 
-	/* IGenericTeamAgentInterface 상속 */
+	/* IBoardCombatTarget 상속 */
+public:
+	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
+	USkillComponentModel* GetSkillComponentModel() const override;
+
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
 	FGenericTeamId GetGenericTeamId() const override;
 
-	/* IBoardCombatTarget 상속 */
 public:
-	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
+	void OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex) override;
+	void OnEndUsingSkill(int32 SkillIndex) override;
 
 public:
-	USkillComponentModel* GetSkillComponentModel() const;
+	void OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex) override;
+
+	/* 자체 함수 */
+public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
-	UEquipmentComponentModel* GetEquipmentComponentModel() const;
 
 public:
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
@@ -82,13 +90,10 @@ private:
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillCompModel"))
-	TObjectPtr<USkillComponentModel> mSkillCompModel;
+	TObjectPtr<UUnitSkillComponentModel> mSkillCompModel;
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
 	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
-
-	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "EquipmentCompModel"))
-	TObjectPtr<UEquipmentComponentModel> mEquipmentCompModel;
 
 private:
 	// @brief 팀 ID

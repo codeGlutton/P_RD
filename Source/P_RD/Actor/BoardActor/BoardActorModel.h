@@ -16,7 +16,7 @@
 struct FTile;
 class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
-struct FApplyEventTriggerPayload;
+struct FBoardActorAnimationContext;
 
 DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
 
@@ -28,9 +28,7 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /*
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
-DECLARE_DELEGATE_OneParam(FOnRequestReceiveAnimation, const FApplyEventTriggerPayload* /*Payload*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FOnRequestReceiveAnimation /*TriggerCallback*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FApplyEventTriggerPayload* /*Payload*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FBoardActorAnimationContext& /*Context*/);
 
 
 /**
@@ -180,13 +178,9 @@ public:
 	FOnRotate OnRotate;
 
 	/**
-	 * @brief 능동적 행동을 전달하는 대리자
+	 * @brief 애니메이션 실행 대리자
 	 */
-	FOnPlayApplyAnimationUI OnPlayApplyAnimationUI;
-	/**
-	 * @brief 피동적 행동을 전달하는 대리자
-	 */
-	FOnPlayReceiveAnimationUI OnPlayReceiveAnimationUI;
+	FOnPlayAnimationUI OnPlayAnimationUI;
 
 protected:
 	// @brief 액터가 속한 레이어 타입

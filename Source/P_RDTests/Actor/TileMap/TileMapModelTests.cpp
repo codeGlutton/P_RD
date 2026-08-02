@@ -17,7 +17,7 @@
 #include "SRPGFramework/SRPGFrameworkType.h"           // FTileIndex, ETargetPattern, EEffectPattern
 
 #include "Actor/TileMap/TileMapModel.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -42,14 +42,14 @@ namespace
 	}
 
 	// @brief 위협 범위 테스트용 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredMovement)
+	UStaticUnitSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredActionPoint)
 	{
-		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
+		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
-		Skill->mRequiredMovement = RequiredMovement;
+		Skill->mRequiredActionPoint = RequiredActionPoint;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
@@ -342,7 +342,7 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
 
 		// 빈 슬롯(nullptr)이 무시되는지 함께 검증
-		const TArray<const UStaticSkillData*> Skills = { nullptr, MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 1, 3) };
+		const TArray<const UStaticUnitSkillData*> Skills = { nullptr, MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 1, 3) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;
@@ -373,7 +373,7 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
 
-		const TArray<const UStaticSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;
@@ -402,7 +402,7 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 0)), Blocker);
 
-		const TArray<const UStaticSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;

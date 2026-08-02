@@ -14,9 +14,9 @@
 class USRPGAction;
 
 struct FEquippedEntry;
-class IBoardSelectionTarget;
+class IBoardSelectionTargetView;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTarget* /*Target*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowTargetDetailPanelUI, IBoardSelectionTargetView* /*Target*/);
 
 /**
  * @brief 톡 친 칸이 어디였는지 알린다.

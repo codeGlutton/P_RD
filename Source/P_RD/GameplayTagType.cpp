@@ -31,7 +31,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_DeBuff,									"Animation.Montage.Hit.DeBuff");
 
 
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Hit,												"Animation.Event.Hit");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_HitLogic,									"Animation.Event.Skill.HitLogic");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_HitAnimation,								"Animation.Event.Skill.HitAnimation");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_HitVFX,									"Animation.Event.Skill.HitVFX");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_CameraZoom,								"Animation.Event.Skill.CameraZoom");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_CameraShake,								"Animation.Event.Skill.CameraShake");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Event_Skill_TimeScale,									"Animation.Event.Skill.TimeScale");
 }
 
 namespace AbilityTags
