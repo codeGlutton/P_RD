@@ -1,20 +1,20 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TileMapModelTests.cpp
- * @brief  UTileMapModel 효과범위(GetEffectTiles)/조준가능 질의(CanAim)/위협범위 질의(GetThreatRanges) 유닛테스트
+ * @brief  UTileMapModel 타겟범위/영향범위/조준가능(CanAim)/위협범위(GetThreatRanges) 유닛테스트
  * @details
- * 빔(Beam) 패턴의 점유 칸 처리 검증 3케이스.
- * 비관통 빔이 점유 칸을 직접 조준하면 그 칸에서 멈추는 회귀 케이스 포함.
- * CanAim은 GetAimableTiles와 판정이 일치해야 하므로 패턴/사거리/점유/곡사 조합 전수 교차검증.
+ * 타겟범위: TargetOnly/LineToTarget 경로 수집, 가까운 순 정렬, 차단 무관 검증.
+ * 영향범위: 차단 레이어 마스크에 따른 확산 멈춤/관통 검증.
+ * CanAim은 GetAimableTiles와 판정이 일치해야 하므로 패턴/사거리/점유/차단 조합 전수 교차검증.
  * GetThreatRanges는 시전 예산(제자리 시전/이동 후 시전)과 유닛 차단 검증 3케이스.
  * @author 이문환
- * @date   2026-07-10
+ * @date   2026-08-01
  *********************************************************************/
 
 #include "P_RDTests.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h" // UMockPlayerUnitModel (점유 판정용 유닛 Mock)
-#include "SRPGFramework/SRPGFrameworkType.h"           // FTileIndex, EEffectPattern
+#include "SRPGFramework/SRPGFrameworkType.h"           // FTileIndex, ETargetPattern, EEffectPattern
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
@@ -48,12 +48,112 @@ namespace
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
-		Skill->mIsIndirect = false;
+		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->mRequiredActionPoint = RequiredActionPoint;
 		Skill->AddToRoot();
 		KeepAlive.Add(Skill);
 		return Skill;
 	}
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelTargetTilesTests,
+	"P_RD.TileMap.TargetTiles",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FTileMapModelTargetTilesTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForTileMapTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	// 맵 (8x8): 시전자 C=(0,0)
+	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	TileMap->SetDimensions(8, 8);
+
+	const FTileIndex Caster(0, 0);
+
+	/**
+	 * Case1: TargetOnly / (3,0) 조준
+	 *   -> 조준 타일 한 칸만 타겟
+	 *   -> 기대: {(3,0)}
+	 */
+	AddInfo(TEXT("=== Case1: TargetOnly -> 조준 타일 한 칸 ==="));
+	{
+		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, FTileIndex(3, 0), ETargetPattern::TargetOnly);
+		TestEqual(TEXT("[Case1] 타겟 타일 수 1"), Tiles.Num(), 1);
+		TestTrue(TEXT("[Case1] (3,0) 포함"), Tiles.Contains(FTileIndex(3, 0)));
+	}
+
+	/**
+	 * Case2: LineToTarget / 직선 (3,0) 조준
+	 *   -> 시전자 제외, 시전자에서 가까운 순으로 경로 수집
+	 *   -> 기대: {(1,0), (2,0), (3,0)} 순서 보장
+	 */
+	AddInfo(TEXT("=== Case2: LineToTarget 직선 -> 가까운 순 경로 ==="));
+	{
+		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, FTileIndex(3, 0), ETargetPattern::LineToTarget);
+		TestEqual(TEXT("[Case2] 타겟 타일 수 3"), Tiles.Num(), 3);
+		if (Tiles.Num() == 3)
+		{
+			TestTrue(TEXT("[Case2] 첫째 (1,0)"), Tiles[0] == FTileIndex(1, 0));
+			TestTrue(TEXT("[Case2] 둘째 (2,0)"), Tiles[1] == FTileIndex(2, 0));
+			TestTrue(TEXT("[Case2] 셋째 (3,0)"), Tiles[2] == FTileIndex(3, 0));
+		}
+	}
+
+	/**
+	 * Case3: LineToTarget / 경로 위 점유 유닛 (2,0)
+	 *   -> 타겟 수집은 차단과 무관하게 경로 전체 유지 (차단은 조준/영향 단계 소관)
+	 *   -> 기대: {(1,0), (2,0), (3,0)}
+	 */
+	AddInfo(TEXT("=== Case3: LineToTarget / 경로 위 점유 -> 경로 불변 ==="));
+	{
+		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 0)), Blocker);
+
+		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, FTileIndex(3, 0), ETargetPattern::LineToTarget);
+		TestEqual(TEXT("[Case3] 타겟 타일 수 3"), Tiles.Num(), 3);
+		TestTrue(TEXT("[Case3] 점유 칸 (2,0) 포함"), Tiles.Contains(FTileIndex(2, 0)));
+	}
+
+	/**
+	 * Case4: LineToTarget / 시전자 타일 조준
+	 *   -> 조준 타일은 어떤 패턴에서든 항상 포함
+	 *   -> 기대: {(0,0)}
+	 */
+	AddInfo(TEXT("=== Case4: LineToTarget / 자기 타일 조준 -> 조준 타일만 ==="));
+	{
+		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, Caster, ETargetPattern::LineToTarget);
+		TestEqual(TEXT("[Case4] 타겟 타일 수 1"), Tiles.Num(), 1);
+		TestTrue(TEXT("[Case4] (0,0) 포함"), Tiles.Contains(FTileIndex(0, 0)));
+	}
+
+	/**
+	 * Case5: LineToTarget / 대각 (3,3) 조준
+	 *   -> 대각 경로도 가까운 순으로 수집
+	 *   -> 기대: {(1,1), (2,2), (3,3)} 순서 보장
+	 */
+	AddInfo(TEXT("=== Case5: LineToTarget 대각 -> 가까운 순 경로 ==="));
+	{
+		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, FTileIndex(3, 3), ETargetPattern::LineToTarget);
+		TestEqual(TEXT("[Case5] 타겟 타일 수 3"), Tiles.Num(), 3);
+		if (Tiles.Num() == 3)
+		{
+			TestTrue(TEXT("[Case5] 첫째 (1,1)"), Tiles[0] == FTileIndex(1, 1));
+			TestTrue(TEXT("[Case5] 둘째 (2,2)"), Tiles[1] == FTileIndex(2, 2));
+			TestTrue(TEXT("[Case5] 셋째 (3,3)"), Tiles[2] == FTileIndex(3, 3));
+		}
+	}
+
+	return true;
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -74,7 +174,7 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 맵 (8x1): 시전자 C=(0,0), 점유 유닛 U=(3,0)
+	// 맵 (8x1): 점유 유닛 U=(3,0)
 	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
 	TileMap->SetDimensions(8, 1);
 
@@ -82,48 +182,43 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 	UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
 	TileMap->PlaceActor(FTileTransform(FTileIndex(3, 0)), Blocker);
 
-	const FTileIndex Caster(0, 0);
-
 	/**
-	 * Case1: 비관통 빔 / 빈 타일 (1,0) 조준, 길이 4
-	 *   -> 빔이 뻗다가 점유 칸(3,0)을 맞고 멈춤 (점유 칸까지는 포함)
-	 *   -> 기대: {(1,0), (2,0), (3,0)}
+	 * Case1: Cross / 중심 (1,0), 크기 4, 차단 마스크 Unit+Obstacle
+	 *   -> 오른쪽 확산이 점유 칸(3,0)을 맞고 멈춤 (점유 칸까지는 포함)
+	 *   -> 기대: {(1,0), (0,0), (2,0), (3,0)}
 	 */
-	AddInfo(TEXT("=== Case1: 비관통 빔 / 빈 타일 조준 -> 점유 칸에서 정지 ==="));
+	AddInfo(TEXT("=== Case1: 차단 마스크 확산 -> 점유 칸에서 정지 ==="));
 	{
-		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(Caster, FTileIndex(1, 0), EEffectPattern::Beam, 4, /*bPenetrate*/false);
-		TestEqual(TEXT("[Case1] 효과 타일 수 3"), Tiles.Num(), 3);
-		TestTrue(TEXT("[Case1] (1,0) 포함"), Tiles.Contains(FTileIndex(1, 0)));
-		TestTrue(TEXT("[Case1] (2,0) 포함"), Tiles.Contains(FTileIndex(2, 0)));
+		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(FTileIndex(1, 0), EEffectPattern::Cross, 4, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+		TestEqual(TEXT("[Case1] 효과 타일 수 4"), Tiles.Num(), 4);
 		TestTrue(TEXT("[Case1] (3,0) 포함(맞고 멈춤)"), Tiles.Contains(FTileIndex(3, 0)));
 		TestFalse(TEXT("[Case1] (4,0) 미포함(점유 칸 너머 진행 금지)"), Tiles.Contains(FTileIndex(4, 0)));
 	}
 
 	/**
-	 * Case2: 비관통 빔 / 점유 칸 (3,0) 직접 조준, 길이 4 (회귀 케이스)
-	 *   -> 조준 칸 자체가 점유라 거기서 맞고 멈춤 — 너머로 뻗으면 관통 버그
-	 *   -> 기대: {(3,0)}
+	 * Case2: Cross / 중심 (1,0), 크기 4, 차단 마스크 None
+	 *   -> 아무것도 확산을 막지 않으므로 점유 칸 너머로 계속 진행
+	 *   -> 기대: {(1,0), (0,0), (2,0), (3,0), (4,0), (5,0)}
 	 */
-	AddInfo(TEXT("=== Case2: 비관통 빔 / 점유 칸 직접 조준 -> 관통 금지 (회귀) ==="));
+	AddInfo(TEXT("=== Case2: None 마스크 -> 관통 진행 ==="));
 	{
-		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(Caster, FTileIndex(3, 0), EEffectPattern::Beam, 4, /*bPenetrate*/false);
-		TestEqual(TEXT("[Case2] 효과 타일 수 1"), Tiles.Num(), 1);
-		TestTrue(TEXT("[Case2] (3,0) 포함"), Tiles.Contains(FTileIndex(3, 0)));
-		TestFalse(TEXT("[Case2] (4,0) 미포함(점유 칸 너머 진행 금지)"), Tiles.Contains(FTileIndex(4, 0)));
+		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(FTileIndex(1, 0), EEffectPattern::Cross, 4, ETileLayerFlag::None);
+		TestEqual(TEXT("[Case2] 효과 타일 수 6"), Tiles.Num(), 6);
+		TestTrue(TEXT("[Case2] (4,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(4, 0)));
+		TestTrue(TEXT("[Case2] (5,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(5, 0)));
 	}
 
 	/**
-	 * Case3: 관통 빔 / 점유 칸 (3,0) 직접 조준, 길이 3
-	 *   -> 관통이면 점유 칸 너머로도 계속 진행
-	 *   -> 기대: {(3,0), (4,0), (5,0)}
+	 * Case3: Cross / 점유 칸 (3,0)을 중심으로, 크기 2, 차단 마스크 Unit+Obstacle
+	 *   -> 중심 점유 여부는 확산에 영향 없음 (중심은 항상 포함, 확산은 계속)
+	 *   -> 기대: {(3,0), (2,0), (1,0), (4,0), (5,0)}
 	 */
-	AddInfo(TEXT("=== Case3: 관통 빔 / 점유 칸 직접 조준 -> 통과 유지 ==="));
+	AddInfo(TEXT("=== Case3: 점유 칸 중심 -> 확산 계속 ==="));
 	{
-		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(Caster, FTileIndex(3, 0), EEffectPattern::Beam, 3, /*bPenetrate*/true);
-		TestEqual(TEXT("[Case3] 효과 타일 수 3"), Tiles.Num(), 3);
-		TestTrue(TEXT("[Case3] (3,0) 포함"), Tiles.Contains(FTileIndex(3, 0)));
-		TestTrue(TEXT("[Case3] (4,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(4, 0)));
-		TestTrue(TEXT("[Case3] (5,0) 포함(관통 진행)"), Tiles.Contains(FTileIndex(5, 0)));
+		const TArray<FTileIndex> Tiles = TileMap->GetEffectTiles(FTileIndex(3, 0), EEffectPattern::Cross, 2, ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+		TestEqual(TEXT("[Case3] 효과 타일 수 5"), Tiles.Num(), 5);
+		TestTrue(TEXT("[Case3] (2,0) 포함"), Tiles.Contains(FTileIndex(2, 0)));
+		TestTrue(TEXT("[Case3] (4,0) 포함"), Tiles.Contains(FTileIndex(4, 0)));
 	}
 
 	return true;
@@ -177,8 +272,11 @@ bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
 			{
 				for (const bool bIndirect : Bools)
 				{
+					// 곡사 여부를 차단 레이어로 변환 (전 조합 유지)
+					const ETileLayerFlag BlockerLayers = bIndirect ? ETileLayerFlag::None : (ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
+
 					// 기준: 목록 버전이 계산한 조준 가능 타일 집합
-					const TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(Origin, Range, Pattern, bIncludeOccupied, bIndirect);
+					const TArray<FTileIndex> Aimables = TileMap->GetAimableTiles(Origin, Range, Pattern, bIncludeOccupied, BlockerLayers);
 
 					// 맵의 모든 타일에 대해 판정 일치 확인
 					int32 MismatchCount = 0;
@@ -187,7 +285,7 @@ bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
 						for (int32 X = 0; X < TileMap->GetWidth(); ++X)
 						{
 							const FTileIndex Target(X, Y);
-							const bool bCanAim = TileMap->CanAim(Origin, Target, Range, Pattern, bIncludeOccupied, bIndirect);
+							const bool bCanAim = TileMap->CanAim(Origin, Target, Range, Pattern, bIncludeOccupied, BlockerLayers);
 							if (bCanAim != Aimables.Contains(Target))
 							{
 								++MismatchCount;

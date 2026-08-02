@@ -60,7 +60,7 @@ void FActiveSkillContext::Clear()
 	mInstigator = nullptr;
 	mMapModel = nullptr;
 	mSelfTileIndex = FTileIndex::Invalid;
-	mTargetTileIndex = FTileIndex::Invalid;
+	mAimedTileIndex = FTileIndex::Invalid;
 	mEffectTileIndexes.Reset();
 
 	mMotionLocalDir = ETileActorDirection::Forward;
@@ -151,7 +151,7 @@ bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
 	return CanActiveSkill_Internal(SkillIndex);
 }
 
-bool USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback)
+bool USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	if (CanActiveSkill_Internal(SkillIndex) == false)
 	{
@@ -159,14 +159,14 @@ bool USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	}
 
 	ConsumeResources_Internal(SkillIndex);
-	ActivateSkill_Internal(MapModel, SkillIndex, TargetIndex, Callback);
+	ActivateSkill_Internal(MapModel, SkillIndex, AimedTileIndex, Callback);
 	return true;
 }
 
-void USkillComponentModel::ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback)
+void USkillComponentModel::ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	ConsumeResources_Internal(SkillIndex);
-	ActivateSkill_Internal(MapModel, SkillIndex, TargetIndex, Callback);
+	ActivateSkill_Internal(MapModel, SkillIndex, AimedTileIndex, Callback);
 }
 
 bool USkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
@@ -200,7 +200,7 @@ void USkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 	}
 }
 
-void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, FOnEndSkillUI Callback)
+void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
@@ -225,8 +225,8 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 		mActiveSkillContext.mInstigator = this;
 		mActiveSkillContext.mMapModel = MapModel;
 		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
-		mActiveSkillContext.mTargetTileIndex = TargetIndex;
-		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex);
+		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
+		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, AimedTileIndex);
 		mActiveSkillContext.mSkillEndBarrier = SkillEndBarrier;
 		mActiveSkillContext.mSkillIndex = SkillIndex;
 		mActiveSkillContext.mAnimationIndex = 0;
@@ -247,7 +247,7 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 
 	const ETileActorDirection MotionTileMapDir = MapModel->TileDeltaToDirection(
 		mActiveSkillContext.mSelfTileIndex,
-		mActiveSkillContext.mTargetTileIndex,
+		mActiveSkillContext.mAimedTileIndex,
 		OwnerBoardActorModel->GetTileTransform().mDirection
 	);
 
@@ -544,12 +544,21 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	const float AimRange = StaticSkillData->mAimRange;
 	const EAimPattern Pattern = StaticSkillData->mAimPattern;
 	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = StaticSkillData->mIsIndirect;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mAimBlockerMask);
 
-	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, BlockerLayers);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex) const
+TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
+	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
+
+	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
+}
+
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	
@@ -558,9 +567,22 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
 	const int32 EffectRange = StaticSkillData->mEffectArea;
-	const bool IsPenetration = StaticSkillData->mIsPenetration;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mEffectBlockerMask);
 
-	return MapModel->GetEffectTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, TargetIndex, Pattern, EffectRange, IsPenetration);
+	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
+	const TArray<FTileIndex> TargetTiles = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+
+	// 각 타겟 타일에서 영향 범위로 확산, 겹치는 타일은 한 번만 포함
+	TArray<FTileIndex> EffectTiles;
+	for (const FTileIndex& TargetTile : TargetTiles)
+	{
+		for (const FTileIndex& EffectTile : MapModel->GetEffectTiles(TargetTile, Pattern, EffectRange, BlockerLayers))
+		{
+			EffectTiles.AddUnique(EffectTile);
+		}
+	}
+
+	return EffectTiles;
 }
 
 bool USkillComponentModel::IsCooldown(int32 SkillIndex) const

@@ -27,6 +27,7 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -79,14 +80,15 @@ namespace
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
-		UStaticSkillData* Skill = NewObject<UStaticSkillData>(World);
+		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		Skill->mRequiredActionPoint = 0;	// 시전 비용 없음 (플래너 AP 판정용)
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
-		Skill->mIsIndirect = false;
+		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->mEffectPattern = EEffectPattern::Single;
 		Skill->mEffectArea = 0;
-		Skill->mIsPenetration = false;
+		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
 		Skill->mSkillPhaseLayers.AddDefaulted();
 		Skill->AddToRoot();

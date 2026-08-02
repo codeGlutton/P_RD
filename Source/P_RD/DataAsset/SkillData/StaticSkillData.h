@@ -12,6 +12,7 @@
 #include "DataAsset/UnitSpawnData/PlayerJobType.h"
 #include "DataAsset/SkillData/SkillType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "Actor/TileMap/TileLayer.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
 #include "StaticSkillData.generated.h"
 
@@ -127,13 +128,18 @@ public:
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRange"))
     int32 mAimRange;
 
-    // @brief 곡사 여부
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsIndirect"))
-    bool mIsIndirect;
+    // @brief 조준 시야를 막는 레이어 (비어 있으면 아무것도 조준을 막지 않음)
+    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "AimBlockerMask"))
+    int32 mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 
     // @brief 보드 액터도 조준 대상으로 지정 가능 여부
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CanAimBoardActor"))
     bool mCanAimBoardActor = true;
+
+public:
+    // @brief 타겟 범위 유형
+    UPROPERTY(Category = "TargetLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetPattern"))
+    ETargetPattern mTargetPattern = ETargetPattern::TargetOnly;
 
 public:
     // @brief 영향 범위 유형
@@ -144,9 +150,9 @@ public:
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectArea"))
     int32 mEffectArea;
 
-    // @brief 관통 여부
-    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsPenetration"))
-    bool mIsPenetration;
+    // @brief 영향 확산을 막는 레이어 (비어 있으면 아무것도 확산을 막지 않음)
+    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "EffectBlockerMask"))
+    int32 mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 
     /* 연출 설정값들 */
 public:

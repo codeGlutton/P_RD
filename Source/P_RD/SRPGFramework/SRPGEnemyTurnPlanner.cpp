@@ -63,7 +63,7 @@ namespace
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 비용=%d 사거리=%d 패턴=%s %s"),
 					*LogPrefix, Slot, *Skill->GetName(), Skill->mRequiredActionPoint, Skill->mAimRange,
 					*StaticEnum<EAimPattern>()->GetNameStringByValue(static_cast<int64>(Skill->mAimPattern)),
-					Skill->mIsIndirect ? TEXT("곡사") : TEXT("직사"));
+					(Skill->mAimBlockerMask == 0) ? TEXT("곡사") : TEXT("직사"));
 			}
 			else if (Skills[Slot].IsValid() == true)
 			{

@@ -99,7 +99,7 @@ void FTacticalTileTable::Build(
 					Skill->mAimRange,
 					Skill->mAimPattern,
 					Skill->mCanAimBoardActor,
-					Skill->mIsIndirect,
+					static_cast<ETileLayerFlag>(Skill->mAimBlockerMask),
 					/*Incoming*/nullptr,
 					/*IgnoreBlocker*/Self);
 
