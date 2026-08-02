@@ -21,7 +21,6 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
-#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 #include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
@@ -35,18 +34,18 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/UnitSkillComponentModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
-#include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "Actor/BoardActor/BoardSelectionTargetView.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
@@ -195,7 +194,7 @@ namespace
 			IconType = EFloatingLogIconType::HP;
 			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetMovementAttribute())
+		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetActionPointAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
 			ColorType = EFloatingLogColorType::PointUp;
@@ -304,7 +303,6 @@ void ACombatGameMode::InitializeRoom()
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
-		PushEquipmentUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
@@ -348,7 +346,7 @@ void ACombatGameMode::InitializeRoom()
 		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
 		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
 		 */
-		UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
+		/*UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
 		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
 		{
 			CancelPendingActionEndAfterCameraReturn();
@@ -365,6 +363,7 @@ void ACombatGameMode::InitializeRoom()
 				});
 			return;
 		}
+		*/
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
@@ -390,8 +389,8 @@ void ACombatGameMode::InitializeRoom()
 			PushSkillUIData();
 			});
 
-		SkillComponentModel->OnEndMotionLayerUI.AddWeakLambda(this, [this](int32 MotionIndex) {
-			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(MotionIndex);
+		SkillComponentModel->OnEndPhaseLayerUI.AddWeakLambda(this, [this](int32 PhaseIndex) {
+			mCombatUIModel->NotifyCombatFloatingLogMotionFinished(PhaseIndex);
 			});
 	}
 
@@ -487,12 +486,12 @@ void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 		return;
 	}
 
-	if (UWorldCameraModel* WorldCameraModel =
+	/*if (UWorldCameraModel* WorldCameraModel =
 		GetWorldSubsystemModel<UWorldCameraModel>(this))
 	{
 		WorldCameraModel->OnMainCameraReturned.Remove(
 			mPendingActionEndAfterCameraReturnHandle);
-	}
+	}*/
 	mPendingActionEndAfterCameraReturnHandle.Reset();
 }
 
@@ -583,10 +582,6 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
 		mInspectedUnitId = IntPayload;
 		PushSkillUIData();
-		break;
-	case ECombatInputType::LongPressEquip:
-		// 길게 누른 장비의 상세 정보를 UIModel에 채운다.
-		PushEquipmentDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
@@ -832,7 +827,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = true;
 	// 모바일 터치는 커서가 없으므로, 롱프레스 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
-	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTarget* Target) {
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnShowTargetDetailPanelUI.AddWeakLambda(this, [this](IBoardSelectionTargetView* Target) {
 		PushCombatTargetDetailUIData(Target);
 		ShowThreatRangeForTarget(Target);
 		});
@@ -840,7 +835,7 @@ bool ACombatGameMode::ResolveWorldLongPressEvent(FVector2D ScreenPosition)
 	return CommandRouterModel->SummitCommand(WorldTraceActionCommand);
 }
 
-void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const
+void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTargetView* Target) const
 {
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
@@ -868,18 +863,18 @@ void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTarget* Target) co
 
 	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
 	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
-	TArray<const UStaticSkillData*> SkillDatas;
+	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
 		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
 		{
-			SkillDatas[Index] = Skills[Index].mData;
+			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
 		}
 	}
 
 	const int32 ActionPoint = FMath::Max(
-		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute()),
+		AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute()),
 		0
 	);
 
@@ -919,7 +914,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		});
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
 		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
 		PushSkillUIData();
@@ -947,7 +942,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
-	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMovementAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
@@ -1068,14 +1063,8 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		// 둘이 같은 칸을 읽고 있었다. UPlayerUnitAttributeSet 은
-		// UCombatTargetAttributeSet 을 물려받으므로 GetMovementAttribute() 가
-		// **같은 속성**을 가리킨다 -- 그래서 10/10 을 다 쓰면 0/0 이 됐다.
-		//
-		// 한 턴에 받는 총량은 따로 있다. RechargeMovement 다. 턴이 시작될 때
-		// 그 수만큼 Movement 를 채운다(UUnitModel::OnBeginTurn).
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMovementAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeMovementAttribute());
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -1228,7 +1217,7 @@ void ACombatGameMode::PushSkillUIData() const
 	// 아는 것과 지금 쓸 수 있는 것은 다른 이야기라, 감추는 대신 끈다.
 	const bool bIsOwnTurn = PlayerUnitModel == TurnUnitModel;
 
-	USkillComponentModel* SkillComponentModel = PlayerUnitModel->GetSkillComponentModel();
+	UUnitSkillComponentModel* SkillComponentModel = Cast<UUnitSkillComponentModel>(PlayerUnitModel->GetSkillComponentModel());
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
 	const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
@@ -1245,12 +1234,12 @@ void ACombatGameMode::PushSkillUIData() const
 		SkillUIData.mSkillIndex = i;   // UI가 스킬 선택 의도(SelectSkill)에 되돌려 보내는 왕복 식별자
 		SkillUIData.mIsUsable = false;
 
-		UStaticSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? SkillEntry.mData.Get() : nullptr;
+		UStaticUnitSkillData* StaticSkillData = (SkillEntry.IsValid() == true) ? StaticCast<UStaticUnitSkillData*>(SkillEntry.mData.Get()) : nullptr;
 		if (StaticSkillData != nullptr)
 		{
 			SkillUIData.mName = StaticSkillData->mName;
 			SkillUIData.mIcon = StaticSkillData->mIcon.LoadSynchronous();
-			SkillUIData.mActionPointCost = StaticSkillData->mRequiredMovement;
+			SkillUIData.mActionPointCost = StaticSkillData->mRequiredActionPoint;
 
 			// 쿨타임. 총량은 데이터에셋 값을 그대로 쓴다 -- GetCooldownDuration은
 			// 걸려 있는 효과를 읽으므로 쿨이 안 돌 때는 값이 없다.
@@ -1268,19 +1257,21 @@ void ACombatGameMode::PushSkillUIData() const
 			//
 			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
 			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
-			int32 SkillDamage = 0;
-			for (const FSkillMotionLayer& MotionLayer : StaticSkillData->mSkillMotionLayers)
+			int32 MinSkillDamage = 0;
+			int32 MaxSkillDamage = 0;
+			for (const FSkillPhaseLayer& MotionLayer : StaticSkillData->mSkillPhaseLayers)
 			{
 				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 				{
 					if (const FSkillEffectLayer_Attack* Attack = EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
 					{
-						SkillDamage += Attack->mDamage;
+						MinSkillDamage += Attack->mMinDamage;
+						MaxSkillDamage += Attack->mMaxDamage;
 					}
 				}
 			}
-			SkillUIData.mDamageMin = SkillDamage;
-			SkillUIData.mDamageMax = SkillDamage;
+			SkillUIData.mDamageMin = MinSkillDamage;
+			SkillUIData.mDamageMax = MaxSkillDamage;
 			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
 			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
 			// 그쪽 값을 받아 이 줄을 지운다.
@@ -1296,7 +1287,7 @@ void ACombatGameMode::PushSkillUIData() const
 			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
 			SkillUIData.mIsUsable = bIsOwnTurn
 				&& SkillComponentModel->IsCooldown(i) == false
-				&& SkillComponentModel->HasRequiredMovement(i) == true
+				&& SkillComponentModel->HasRequiredActionPoint(i) == true
 				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
@@ -1358,7 +1349,7 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 	 * 규칙 그대로 둔다.
 	 */
 	const bool bBrowsing = mCombatUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None;
-	IBoardSelectionTarget* SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+	IBoardSelectionTargetView* SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 
 	// 유닛이 서 있는 타일을 짚은 것은 유닛을 짚은 것이다. 트레이스가 유닛
 	// 메시 대신 발밑 타일에 먼저 맞아도 뜻은 같다 -- 손가락은 칸을 누른다.
@@ -1371,7 +1362,7 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 			if (UUnitModel* OccupantUnitModel = TileMap->GetActorOnTile<UUnitModel>(Tile))
 			{
 				HitActor = OccupantUnitModel->GetView<AActor>();
-				SelectionTarget = Cast<IBoardSelectionTarget>(HitActor);
+				SelectionTarget = Cast<IBoardSelectionTargetView>(HitActor);
 			}
 		}
 	}
@@ -1437,7 +1428,7 @@ void ACombatGameMode::ClearCombatTargetUIData()
 	PushSkillUIData();
 }
 
-void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTarget* Target)
+void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target)
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
@@ -1553,84 +1544,6 @@ void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
 	FSkillDetailUI SkillDetailUIData;
 	FillSkillDetailUIData(PlayerUnitModel->GetSkillComponentModel(), SkillIndex, OUT SkillDetailUIData);
 	mCombatUIModel->SetSkillDetail(SkillDetailUIData);
-}
-
-void ACombatGameMode::PushEquipmentUIData() const
-{
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
-	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
-
-	const int32 EquipSlotNum = StaticCast<int32>(EEquipmentType::Count);
-
-	TArray<FEquipmentUI> EquipmentUIDatas;
-	EquipmentUIDatas.Init(FEquipmentUI(), EquipSlotNum);
-
-	for (int32 i = 0; i < EquipSlotNum; ++i)
-	{
-		const EEquipmentType EquipType = StaticCast<EEquipmentType>(i);
-
-		const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipType);
-		FEquipmentUI& EquipmentUIData = EquipmentUIDatas[i];
-
-		EquipmentUIData.mSlotIndex = i;
-		EquipmentUIData.mName = GetEquipmentSlotFallbackName(EquipType);
-		EquipmentUIData.mIsEquipped = false;
-
-		const UStaticEquipmentData* StaticEquipmentData = EquippedEntry != nullptr ? EquippedEntry->mData.Get() : nullptr;
-		if (StaticEquipmentData != nullptr)
-		{
-			EquipmentUIData.mItemId = StaticEquipmentData->GetPrimaryAssetId();
-			EquipmentUIData.mName = StaticEquipmentData->mName.IsEmpty() == true ? EquipmentUIData.mName : StaticEquipmentData->mName;
-			EquipmentUIData.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
-			EquipmentUIData.mIsEquipped = true;
-			EquipmentUIData.mRarityColor = GetRarityColor(StaticEquipmentData->mRarityType);
-		}
-	}
-
-	mCombatUIModel->SetEquipmentUIs(EquipmentUIDatas);
-}
-
-void ACombatGameMode::PushEquipmentDetailUIData(int32 EquipmentIndex) const
-{
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	// TODO : 여러 플레이어 등록해야함
-	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
-
-	UEquipmentComponentModel* EquipmentComponentModel = PlayerUnitModel->GetEquipmentComponentModel();
-	checkf(EquipmentComponentModel != nullptr, TEXT("장비 컴포넌트 nullptr"));
-
-	const EEquipmentType EquipSlotType = StaticCast<EEquipmentType>(EquipmentIndex);
-	const FEquippedEntry* EquippedEntry = EquipmentComponentModel->GetEquipped(EquipSlotType);
-	if (EquippedEntry == nullptr)
-	{
-		// 빈 슬롯(장착 안 됨)을 롱프레스한 경우: 상세를 띄우지 않고 조용히 반환(크래시 방지).
-		return;
-	}
-
-	const UStaticEquipmentData* StaticEquipmentData = EquippedEntry->mData.Get();
-	if (StaticEquipmentData == nullptr)
-	{
-		return;
-	}
-
-	FEquipmentDetailUI EquipmentDetailUIData;
-	EquipmentDetailUIData.mSlotIndex = EquipmentIndex;
-	EquipmentDetailUIData.mItemId = StaticEquipmentData->GetPrimaryAssetId();
-	EquipmentDetailUIData.mName = StaticEquipmentData->mName;
-	EquipmentDetailUIData.mIcon = StaticEquipmentData->mIcon.LoadSynchronous();
-	EquipmentDetailUIData.mIsEquipped = true;
-	EquipmentDetailUIData.mDescription = StaticEquipmentData->mDescription;
-	EquipmentDetailUIData.mRarityColor = GetRarityColor(StaticEquipmentData->mRarityType);
-
-	mCombatUIModel->SetEquipmentDetail(EquipmentDetailUIData);
 }
 
 void ACombatGameMode::PushPlayerMetaUIData() const

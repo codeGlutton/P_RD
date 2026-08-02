@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   UnitAttributeSet.h
  * @brief  Unit에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -20,11 +20,26 @@ class P_RD_API UUnitAttributeSet : public UCombatTargetAttributeSet
 	GENERATED_BODY()
 
 public:
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeMovement)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, SpeedPoint)
 
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeActionPoint)
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, SpeedPointFactor)
+
+	/* Instant로 즉각 적용되는 Attribute 값 */
 protected:
+	// @brief 자신의 턴마다 회복하는 행동력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData RechargeMovement;
+	FTacticalAttributeData SpeedPoint;
+
+	/* 특정 기간적으로 추가되는 반영 스텟들 */
+protected:
+	// @brief 자신의 턴마다 회복하는 행동력 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData RechargeActionPoint;
+
+	// @brief 라운드마다 부여되는 속도 포인트 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData SpeedPointFactor;
 };
 
 /**

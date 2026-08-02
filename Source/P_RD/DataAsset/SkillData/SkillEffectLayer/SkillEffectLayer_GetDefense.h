@@ -19,12 +19,8 @@ struct P_RD_API FSkillEffectLayer_GetDefense : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel) const override;
-	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
-
-public:
-	FActiveTacticalEffectHandle ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
-	void ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const override;
+	TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
+	void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const override;
 
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;

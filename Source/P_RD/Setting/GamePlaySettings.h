@@ -97,15 +97,4 @@ public:
 public:
     UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
     TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
-
-public:
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomDefaultSize"))
-    float mSkillZoomDefaultSize = 1250.f;
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomSizeRatio"))
-    float mSkillZoomSizeRatio = 0.5f;
-
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMinZoomSize"))
-    float mSkillMinZoomSize = 1250.f;
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMaxZoomSize"))
-    float mSkillMaxZoomSize = 2000.f;
 };

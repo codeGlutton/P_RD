@@ -14,6 +14,9 @@
 #include "BoardCombatTarget.generated.h"
 
 class UAttributeSetComponentModel;
+class USkillComponentModel;
+struct FActiveSkillContext;
+class UBoardCombatTargetSnapshotData;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeCombatTargetAliveState, bool /*IsAlive*/);
 
@@ -52,6 +55,7 @@ class P_RD_API IBoardCombatTarget
 {
 	GENERATED_BODY()
 
+	/* 전투 로직 */
 public:
 	/**
 	 * 현재 타격 가능한 여부를 반환하는 함수
@@ -71,14 +75,31 @@ public:
 	 */
 	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const = 0;
 	/**
+	 * 스킬 컴포넌트를 반환하는 함수
+	 * @return 보유한 스킬 컴포넌트
+	 */
+	virtual USkillComponentModel* GetSkillComponentModel() const = 0;
+	/**
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터
 	 */
 	UBoardCombatTargetSnapshotData* MakeSnapshotData() const;
 
+	/* 팀 로직 */
 public:
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;
 	virtual FGenericTeamId GetGenericTeamId() const = 0;
 
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const UObject& Other) const;
+
+	/* 추가적인 훅들 */
+public:
+	virtual void OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex);
+	virtual void OnEndUsingSkill(int32 SkillIndex);
+
+public:
+	virtual void OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex);
 };

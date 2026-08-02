@@ -25,14 +25,21 @@ enum class ETileActorDirection : uint8
 
 inline ETileActorDirection TileMapToLocalDirection(ETileActorDirection TileMapDirection, ETileActorDirection FacingTileMapDirection)
 {
-    const int32 LocalDir = (static_cast<int32>(TileMapDirection) - static_cast<int32>(FacingTileMapDirection) + 4) % 4;
-    return static_cast<ETileActorDirection>(LocalDir);
+    const int32 LocalDir = (StaticCast<int32>(TileMapDirection) - StaticCast<int32>(FacingTileMapDirection) + 4) % 4;
+    return StaticCast<ETileActorDirection>(LocalDir);
 }
 
 inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDirection, ETileActorDirection FacingTileMapDirection)
 {
-    const int32 TileMapDir = (static_cast<int32>(LocalDirection) + static_cast<int32>(FacingTileMapDirection)) % 4;
-    return static_cast<ETileActorDirection>(TileMapDir);
+    const int32 TileMapDir = (StaticCast<int32>(LocalDirection) + StaticCast<int32>(FacingTileMapDirection)) % 4;
+    return StaticCast<ETileActorDirection>(TileMapDir);
+}
+
+inline ETileActorDirection ConvertOtherLocalTileMapDirection(ETileActorDirection SourceLocalDirection, ETileActorDirection SourceForward, ETileActorDirection DestForward)
+{
+    const int32 Delta = StaticCast<int32>(DestForward) - StaticCast<int32>(SourceForward);
+
+    return StaticCast<ETileActorDirection>((StaticCast<int32>(SourceLocalDirection) + Delta + 4) % 4);
 }
 
 /**

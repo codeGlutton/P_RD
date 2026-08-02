@@ -1,7 +1,7 @@
 ﻿#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "Algo/Reverse.h"
 
 namespace
@@ -965,7 +965,7 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 void UTileMapModel::GetThreatRanges(
 	const FTileIndex& Origin,
 	int32 ActionPoint,
-	const TArray<const UStaticSkillData*>& Skills,
+	const TArray<const UStaticUnitSkillData*>& Skills,
 	const UBoardActorModel* Self,
 	OUT TArray<FTileIndex>& MoveTiles,
 	OUT TArray<FTileIndex>& AttackTiles) const
@@ -989,14 +989,14 @@ void UTileMapModel::GetThreatRanges(
 	for (const FTileIndex& Tile : MoveTiles)
 	{
 		const int32 MoveCost = MoveCostField[TileIndexToLinearIndex(Tile)];
-		for (const UStaticSkillData* Skill : Skills)
+		for (const UStaticUnitSkillData* Skill : Skills)
 		{
 			// 빈 슬롯 무시
 			if (Skill == nullptr)
 				continue;
 
 			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
-			if (MoveCost + Skill->mRequiredMovement > ActionPoint)
+			if (MoveCost + Skill->mRequiredActionPoint > ActionPoint)
 				continue;
 
 			// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외

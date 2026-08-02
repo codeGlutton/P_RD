@@ -168,7 +168,7 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UCombatTargetAttributeSet::GetDefensePointAttribute();
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
 		Info.mModifierOp = ETacticalModOp::AddBase;
 		Info.mModifierMagnitude = 1.f;
 
@@ -216,7 +216,7 @@ public:
 		mDurationMagnitude = 2;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UCombatTargetAttributeSet::GetDefensePointAttribute();
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
 		Info.mModifierOp = ETacticalModOp::AddBase;
 		Info.mModifierMagnitude = 5.f;
 
@@ -243,7 +243,7 @@ public:
 		mStackExpirationPolicy = ETacticalEffectStackingExpirationPolicy::RemoveSingleStackAndRefreshDuration;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UCombatTargetAttributeSet::GetDefensePointAttribute();
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
 		Info.mModifierOp = ETacticalModOp::AddBase;
 		Info.mModifierMagnitude = 3.f;
 

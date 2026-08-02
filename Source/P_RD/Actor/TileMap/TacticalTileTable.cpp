@@ -8,14 +8,14 @@
 #include "Actor/TileMap/TacticalTileTable.h"
 
 #include "Actor/TileMap/TileMapModel.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 void FTacticalTileTable::Build(
 	const UTileMapModel* TileMap,
 	const UBoardActorModel* Self,
 	const FTileIndex& Origin,
 	const TArray<FTileIndex>& TargetTiles,
-	const TArray<const UStaticSkillData*>& Skills,
+	const TArray<const UStaticUnitSkillData*>& Skills,
 	int32 ActionPoint)
 {
 	// 재사용 대비 초기화
@@ -80,7 +80,7 @@ void FTacticalTileTable::Build(
 		Info.mCastableFlags.Init(false, mSkillSlotCount * mTargetCount);
 		for (int32 SkillSlot = 0; SkillSlot < mSkillSlotCount; ++SkillSlot)
 		{
-			const UStaticSkillData* Skill = Skills[SkillSlot];
+			const UStaticUnitSkillData* Skill = Skills[SkillSlot];
 			// 빈 슬롯은 전부 false 유지
 			if (Skill == nullptr)
 			{
@@ -88,7 +88,7 @@ void FTacticalTileTable::Build(
 			}
 
 			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
-			const bool bBudgetOk = (Info.mMoveCost + Skill->mRequiredMovement <= ActionPoint);
+			const bool bBudgetOk = (Info.mMoveCost + Skill->mRequiredActionPoint <= ActionPoint);
 
 			for (int32 TargetIndex = 0; TargetIndex < mTargetCount; ++TargetIndex)
 			{

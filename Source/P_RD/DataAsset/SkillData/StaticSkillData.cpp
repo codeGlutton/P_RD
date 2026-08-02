@@ -8,7 +8,7 @@
 #include "Misc/DataValidation.h"
 #endif
 
-TArray<FTileIndex> FSkillMotionLayer::FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const
+TArray<FTileIndex> FSkillPhaseLayer::FilterTileIndexes(const FTileIndex& SelfIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
     TArray<FTileIndex> FilteredTileIndexes;
     if (EnumHasAllFlags(StaticCast<ETargetIndexFilter>(mTargetIndexFilter), ETargetIndexFilter::IncludeTargetIndexes) == true)
@@ -22,7 +22,7 @@ TArray<FTileIndex> FSkillMotionLayer::FilterTileIndexes(const FTileIndex& SelfIn
     return FilteredTileIndexes;
 }
 
-TArray<IBoardCombatTarget*> FSkillMotionLayer::FilterCombatTargets(const UTileMapModel* MapModel, const IBoardCombatTarget* SelfInstigator, const TArray<FTileIndex>& FilteredTileIndexes) const
+TArray<IBoardCombatTarget*> FSkillPhaseLayer::FilterCombatTargets(const UTileMapModel* MapModel, const IBoardCombatTarget* SelfInstigator, const TArray<FTileIndex>& FilteredTileIndexes) const
 {
     TArray<IBoardCombatTarget*> FilteredCombatTargets;
     for (const FTileIndex& FilteredTileIndex : FilteredTileIndexes)
@@ -53,8 +53,7 @@ FText UStaticSkillData::MakeDescription() const
 
 	/* 1. 패턴 이름 및 헤더 정보 현지화 합성 (RDMinimal.h의 EnumToText 활용) */
 	FText BaseHeader = FText::Format(
-		LOCTEXT("SkillDescriptionHeader", "[행동력: {0} | 사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
-		FText::AsNumber(mRequiredMovement),
+		LOCTEXT("SkillDescriptionHeader", "[사거리: {1} ({2}) | 적용 범위: {3} ({4}) | 쿨다운: {5}턴]"),
 		FText::AsNumber(mAimRange),
 		EnumToText(mAimPattern),
 		FText::AsNumber(mEffectArea),
@@ -64,10 +63,10 @@ FText UStaticSkillData::MakeDescription() const
 	DescriptionLines.Add(BaseHeader);
 
 	/* 2. 모션 및 이펙트 레이어 순회 */
-	const int32 MotionCount = mSkillMotionLayers.Num();
+	const int32 MotionCount = mSkillPhaseLayers.Num();
 	for (int32 MotionIndex = 0; MotionIndex < MotionCount; ++MotionIndex)
 	{
-		const FSkillMotionLayer& MotionLayer = mSkillMotionLayers[MotionIndex];
+		const FSkillPhaseLayer& MotionLayer = mSkillPhaseLayers[MotionIndex];
 
 		FText MotionHeader = FText::Format(
 			LOCTEXT("MotionHeaderFormat", "■ {0}타 모션:"),
@@ -107,17 +106,12 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
         Context.AddError(FText::FromString(TEXT("스킬 이름 미지정")));
         ThisResult = EDataValidationResult::Invalid;
     }
-    if (mJobType == EPlayerJobType::None)
-    {
-        Context.AddError(FText::FromString(TEXT("스킬 직업 분류 미지정")));
-        ThisResult = EDataValidationResult::Invalid;
-    }
     if (mCooldownEffectClass.ToSoftObjectPath().IsValid() == false)
     {
         Context.AddError(FText::FromString(TEXT("쿨다운 타입 미지정")));
         ThisResult = EDataValidationResult::Invalid;
     }
-    if (mSkillMotionLayers.IsEmpty() == true)
+    if (mSkillPhaseLayers.IsEmpty() == true)
     {
         Context.AddError(FText::FromString(TEXT("스킬 모션 미지정")));
         ThisResult = EDataValidationResult::Invalid;

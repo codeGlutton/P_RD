@@ -12,7 +12,7 @@
 
 class UTileMapModel;
 class UBoardActorModel;
-class UStaticSkillData;
+class UStaticUnitSkillData;
 
 /**
  * @brief 타일 하나의 전술 정보
@@ -74,7 +74,7 @@ public:
 		const UBoardActorModel* Self,
 		const FTileIndex& Origin,
 		const TArray<FTileIndex>& TargetTiles,
-		const TArray<const UStaticSkillData*>& Skills,
+		const TArray<const UStaticUnitSkillData*>& Skills,
 		int32 ActionPoint);
 
 	// @brief 해당 타일에서 해당 스킬로 해당 타겟을 조준 가능한 지 판정

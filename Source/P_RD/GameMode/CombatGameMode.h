@@ -17,7 +17,7 @@
 
 class USRPGTurnContext;
 class UUnitModel;
-class IBoardSelectionTarget;
+class IBoardSelectionTargetView;
 
 class UCombatUIModel;
 class URewardUIModel;
@@ -124,7 +124,7 @@ protected:
 	 * 예산은 RechargeMovement(턴 시작 충전량)다. 적 자신의 턴 도중 잔량이 아니라
 	 * "다음 턴에 받을 행동력" 기준이어야 플레이어 계획에 맞는다.
 	 */
-	void ShowThreatRangeForTarget(IBoardSelectionTarget* Target) const;
+	void ShowThreatRangeForTarget(IBoardSelectionTargetView* Target) const;
 
 	/** @brief 위협 범위 칠을 지운다. 행동이 시작되면 칠해 둔 전제가 낡는다. */
 	void ClearThreatRangeView() const;
@@ -150,7 +150,7 @@ protected:
 	 * UI 는 SkillIndex 만 보내오므로, 어느 유닛의 스킬인지는 여기서 기억한
 	 * 것으로 되짚는다 -- 화면이 유닛을 짚으면 기준이 두 곳에 생긴다.
 	 */
-	void PushCombatTargetDetailUIData(IBoardSelectionTarget* Target);
+	void PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target);
 
 	/** @brief 상세창에 뜬 유닛의 SkillIndex번째 스킬 상세를 내린다(적 스킬일 수도 있다). */
 	void PushUnitSkillDetailUIData(int32 SkillIndex) const;
@@ -202,8 +202,6 @@ protected:
 	 */
 	void FillSkillDetailUIData(USkillComponentModel* SkillComponentModel,
 		int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const;
-	void PushEquipmentUIData() const;
-	void PushEquipmentDetailUIData(int32 EquipmentIndex) const;
 	void PushPlayerMetaUIData() const;
 
 	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview = true) const;

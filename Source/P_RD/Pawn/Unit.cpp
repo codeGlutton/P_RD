@@ -11,11 +11,7 @@
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
-
-#include "Animation/BoardActorAnimInstance.h"
-#include "Animation/Notify/EventTriggerPayload.h"
-
-#include "NiagaraFunctionLibrary.h"
+#include "Component/SkillAnimationComponent/SkeletonSkillAnimationComponent.h"
 
 #include "Algo/BinarySearch.h"
 
@@ -32,6 +28,7 @@ AUnit::AUnit()
 	mMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	mMovementComp = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
+	mSkillAnimationComp = CreateDefaultSubobject<USkeletonSkillAnimationComponent>(TEXT("SkillAnimationComp"));
 
 	if (mCapsuleComp != nullptr)
 	{
@@ -74,11 +71,11 @@ AUnit::AUnit()
 		mArrowComp->bIsScreenSizeScaled = true;
 		mArrowComp->SetSimulatePhysics(false);
 	}
-}
 
-UObjectModel* AUnit::GetModel_Internal() const
-{
-	return mUnitModel.Get();
+	if (mSkillAnimationComp != nullptr)
+	{
+		mSkillAnimationComp->SetTargetMeshComponent(mMeshComp);
+	}
 }
 
 void AUnit::BindModel(UObjectModel* Model)
@@ -101,90 +98,6 @@ void AUnit::BindModel(UObjectModel* Model)
 		mUnitModel->OnStartMoveStep.AddUObject(this, &AUnit::OnStartMoveStep);
 		// 방향 전환 연출 요청 구독
 		mUnitModel->OnRotate.AddUObject(this, &AUnit::OnRotate);
-
-		// 스킬 Effect 타격 연출 구독
-		mUnitModel->OnPlayApplyAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, FOnRequestReceiveAnimation TriggerCallback, FGameplayTag ApplyMotionTag, ETileActorDirection LocalDirection) {
-			/*
-			 * 어느 단계에서든 몽타쥬를 못 틀면 조용히 나가면 안 된다.
-			 *
-			 * 조용히 나가면 배리어가 그 자리에서 풀려 스킬 절차 전체가 한
-			 * 프레임에 끝난다 -- 치는 연출 없이 숫자만 튀고 카드가 곧장
-			 * 돌아온다. 못 튼 이유(메시 없음·다른 AnimInstance·태그 미배치)를
-			 * 소리 내어 남기고, 이 구독자가 배리어를 들고 있는 동안 커밋해서
-			 * 피격 연출이 살아 있는 배리어를 받게 한다 -- 최소한 맞는 쪽
-			 * 연출이 끝날 때까지는 스킬이 기다린다.
-			 */
-			UBoardActorAnimInstance* BoardActorAnimInst = mMeshComp != nullptr
-				? Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance()) : nullptr;
-			if (BoardActorAnimInst == nullptr)
-			{
-				UE_LOG(LogRD, Warning, TEXT("%s: 시전 연출 불가(메시 또는 BoardActorAnimInstance 없음) — 연출 없이 즉시 커밋"),
-					*GetName());
-				TriggerCallback.ExecuteIfBound(nullptr);
-				return;
-			}
-
-			/* 스킬 연출 유지를 위한 Barrier */
-
-			FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
-			OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier, TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
-				TriggerCallback.ExecuteIfBound(nullptr);
-				});
-			if (BoardActorAnimInst->PlayMontageUsingTag(ApplyMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent)) == false)
-			{
-				UE_LOG(LogRD, Warning, TEXT("%s: 시전 몽타쥬 없음(태그 %s, 방향 %d) — 연출 없이 즉시 커밋"),
-					*GetName(), *ApplyMotionTag.ToString(), StaticCast<int32>(LocalDirection));
-				TriggerCallback.ExecuteIfBound(nullptr);
-				return;
-			}
-
-			/* 피격 적용 대기를 위한 Barrier */
-
-			FBoardActorAnimationEvent HitEvent;
-			HitEvent.OnTriggerAnimationEvent.AddLambda([TriggerCallback](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, const FEventTriggerPayload* Payload) {
-				const FApplyEventTriggerPayload* ApplyPayload = nullptr;
-				if (Payload != nullptr && Payload->GetScriptStruct() == FApplyEventTriggerPayload::StaticStruct())
-				{
-					ApplyPayload = reinterpret_cast<const FApplyEventTriggerPayload*>(Payload);
-				}
-				TriggerCallback.ExecuteIfBound(ApplyPayload);
-				});
-			HitEvent.mIsOneTimeEvent = true;
-			BoardActorAnimInst->RegisterTagEventOnMontage(AnimationTags::Animation_Event_Hit, MoveTemp(HitEvent));
-			});
-
-		// 스킬 Effect 피격 연출 구독
-		mUnitModel->OnPlayReceiveAnimationUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> MotionEndBarrier, const FApplyEventTriggerPayload* Payload, FGameplayTag ReceiveMotionTag, ETileActorDirection LocalDirection) {
-			if (mMeshComp != nullptr)
-			{
-				UBoardActorAnimInstance* BoardActorAnimInst = Cast<UBoardActorAnimInstance>(mMeshComp->GetAnimInstance());
-				if (BoardActorAnimInst != nullptr)
-				{
-					/* 스킬 연출 유지를 위한 Barrier */
-
-					FOnTriggerEndAnimationEvent OnTriggerEndAnimationEvent;
-					OnTriggerEndAnimationEvent.AddLambda([MotionEndBarrier](FGameplayTag Tag, ETileActorDirection LocalDir, UAnimMontage* EndAnim, bool IsInterrupted) {
-						});
-					BoardActorAnimInst->PlayMontageUsingTag(ReceiveMotionTag, LocalDirection, MoveTemp(OnTriggerEndAnimationEvent));
-				}
-
-				if (Payload != nullptr)
-				{
-					const ARDGameModeBase* GameMode = Cast<ARDGameModeBase>(GetWorld()->GetAuthGameMode());
-					if (GameMode != nullptr)
-					{
-						const UOptionPersistData* OptionData = GameMode->GetOptionPersistData();
-						if (OptionData != nullptr && OptionData->IsEffectVFXEnabled() == true)
-						{
-							for (const FApplyNiagaraSpawnData& NiagaraSpawnData : Payload->mNiagaraSpawnDatas)
-							{
-								SpawnHitVFX(NiagaraSpawnData, LocalDirection);
-							}
-						}
-					}
-				}
-			}
-			});
 	}
 }
 
@@ -209,6 +122,16 @@ void AUnit::UnbindModel(UObjectModel* Model)
 	mCurrentMoveVelocity = FVector::ZeroVector;
 	// 이동 중 해제될 수 있으므로 폴리라인 이동상태도 초기화
 	ResetPolyLineState();
+}
+
+UObjectModel* AUnit::GetModel_Internal() const
+{
+	return mUnitModel.Get();
+}
+
+USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
+{
+	return mSkillAnimationComp;
 }
 
 void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
@@ -288,51 +211,6 @@ void AUnit::OnRotate(const FRotator& TargetWorldRotation, TSharedPtr<FPresentati
 
 	// 틱 시작
 	SetActorTickEnabled(true);
-}
-
-void AUnit::SpawnHitVFX(const FApplyNiagaraSpawnData& NiagaraSpawnData, ETileActorDirection LocalDirection) const
-{
-	if (NiagaraSpawnData.mNiagaraSystem == nullptr)
-	{
-		return;
-	}
-
-	// 소켓의 컴포넌트 기준 Transform
-	const FTransform SocketLocalTransform = GetMesh()->GetSocketTransform(NiagaraSpawnData.mSocketName, RTS_Component);
-
-	// 추가 방향 절대 회전 Transform
-	const float Yaw = StaticCast<uint8>(LocalDirection) * 90.f;
-	const FTransform DirectionTransform(FRotator(0.f, Yaw, 0.f).Quaternion());
-
-	// 소켓 Transform을 컴포넌트 축으로 절대 회전 방향으로 돌리고, 그 다음에 로컬 트랜스폼 적용
-	const FTransform FinalLocalTransform = NiagaraSpawnData.mRelativeTransform * DirectionTransform * SocketLocalTransform;
-	// 월드 트랜스폼으로 변환
-	const FTransform FinalWorldTransform = FinalLocalTransform * GetMesh()->GetComponentTransform();
-
-	if (NiagaraSpawnData.mAttached == true)
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAttached(
-			NiagaraSpawnData.mNiagaraSystem,
-			GetMesh(),
-			NAME_None,
-			FinalLocalTransform.GetLocation(),
-			FinalLocalTransform.Rotator(),
-			FinalLocalTransform.GetScale3D(),
-			EAttachLocation::KeepRelativeOffset,
-			true,
-			ENCPoolMethod::None
-		);
-	}
-	else
-	{
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			NiagaraSpawnData.mNiagaraSystem,
-			FinalWorldTransform.GetLocation(),
-			FinalWorldTransform.Rotator(),
-			FinalWorldTransform.GetScale3D()
-		);
-	}
 }
 
 void AUnit::Tick(float DeltaSeconds)

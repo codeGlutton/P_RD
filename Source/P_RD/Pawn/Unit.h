@@ -11,7 +11,8 @@
 
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/ActorView.h"
-#include "Actor/BoardActor/BoardSelectionTarget.h"
+#include "Actor/BoardActor/BoardCombatTargetView.h"
+#include "Actor/BoardActor/BoardSelectionTargetView.h"
 #include "GameFramework/Pawn.h"
 
 #include "Unit.generated.h"
@@ -24,20 +25,21 @@ class USkeletalMeshComponent;
 class UFloatingPawnMovement;
 class UCapsuleComponent;
 class UArrowComponent;
-
-struct FApplyNiagaraSpawnData;
+class USkeletonSkillAnimationComponent;
 
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스
  */
 UCLASS(abstract)
-class P_RD_API AUnit : public APawn, public IActorView, public IBoardSelectionTarget
+class P_RD_API AUnit : public APawn, public IActorView, public IBoardCombatTargetView, public IBoardSelectionTargetView
 {
 	GENERATED_BODY()
 
 public:
 	AUnit();
 
+	/* APawn 상속 */
+public:
 	// @brief 이동 연출
 	// @note 플레이어 및 몹 모두 이동해야 하니까 베이스 클래스에서 구현
 	void Tick(float DeltaSeconds) override;
@@ -49,6 +51,7 @@ public:
 	FVector GetVelocity() const override;
 
 	/* IActorView 상속 */
+public:
 	// @brief 이동 델리게이트 구독
 	void BindModel(UObjectModel* Model) override;
 	// @brief 이동 델리게이트 구독 해제
@@ -57,6 +60,11 @@ public:
 protected:
 	UObjectModel* GetModel_Internal() const override;
 
+	/* IBoardCombatTargetView 상속 */
+public:
+	USkillAnimationComponent* GetSkillAnimationComponent() const override;
+
+public:
 	// @brief 배치 요청을 수신
 	virtual void OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform);
 
@@ -111,9 +119,6 @@ private:
 	bool GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutTangent) const;
 	// @brief 폴리라인 이동상태 초기화 (직선 이동모드로 전환)
 	void ResetPolyLineState();
-
-protected:
-	void SpawnHitVFX(const FApplyNiagaraSpawnData& NiagaraSpawnData, ETileActorDirection LocalDirection) const;
 
 public:
 	UCapsuleComponent* GetCapsuleComponent() const;
@@ -198,6 +203,9 @@ private:
 
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ArrowComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UArrowComponent> mArrowComp;
+
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
 
 protected:
 	TWeakObjectPtr<UUnitModel> mUnitModel;

@@ -1,11 +1,4 @@
-﻿/*****************************************************************//**
- * @file   EnemyUnitModel.cpp
- * @brief  적 베이스 유닛 모델 구현
- * @author 이문환
- * @date   2026-07-01
- *********************************************************************/
-
-#include "Pawn/Enemy/EnemyUnitModel.h"
+﻿#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Setting/GameTeamType.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
@@ -13,15 +6,17 @@
 
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
 UEnemyUnitModel::UEnemyUnitModel()
 {
 	UUnitModel::SetGenericTeamId(EGameTeamType::Enemy);
 
-	// 적 스탯 세트 생성 — 속성 컴포넌트가 자식 AttributeSet을 자동 수집해 스탯 커브 초기화 대상이 된다(플레이어와 동일 패턴).
+	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
 	mUnitAttributeSet = CreateDefaultSubobject<UEnemyUnitAttributeSet>(TEXT("EnemyUnitAttributeSet"));
 }
 
@@ -42,11 +37,20 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	{
 		SkillComp->SetSkillFrom(EnemySpawn->mSkillDatas);
 	}
+	if (UEquipmentComponentModel* EquipComp = GetEquipmentComponentModel())
+	{
+		EquipComp->EquipFrom(EnemySpawn->mEquipmentDatas);
+	}
 }
 
 int32 UEnemyUnitModel::GetBoardActorLevel() const
 {
 	return GetDifficulty();
+}
+
+UEquipmentComponentModel* UEnemyUnitModel::GetEquipmentComponentModel() const
+{
+	return mEquipmentCompModel;
 }
 
 void UEnemyUnitModel::SetDifficulty(int32 Difficulty)

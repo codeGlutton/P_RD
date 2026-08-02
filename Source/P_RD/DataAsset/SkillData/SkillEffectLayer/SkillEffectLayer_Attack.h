@@ -19,12 +19,8 @@ struct P_RD_API FSkillEffectLayer_Attack : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel) const override;
-	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
-
-public:
-	FActiveTacticalEffectHandle ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
-	void ClearFactorEffect(IBoardCombatTarget* ActorModel, FActiveTacticalEffectHandle Handle) const override;
+	TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
+	void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const override;
 
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
@@ -35,6 +31,9 @@ public:
 #endif
 
 public:
-	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Damage"))
-	int32 mDamage = 0;
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxDamage"))
+	int32 mMaxDamage = 0;
+
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinDamage"))
+	int32 mMinDamage = 0;
 };
