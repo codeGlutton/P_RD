@@ -28,7 +28,7 @@ struct P_RD_API FTimeScaleRequest
 	int32 Priority = 0;
 
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "남은 시간", AllowPrivateAccess = "true"))
-	float RemaingTime;
+	float RemaingTime = 0.f;
 
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "요청한 대상", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UObject> Requester;
