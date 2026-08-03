@@ -1,11 +1,11 @@
-#include "SRPGFramework/SRPGMoveAction.h"
+﻿#include "SRPGFramework/SRPGMoveAction.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
 #include "Pawn/UnitModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/CombatTargetAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Actor/TileMap/TileMapModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
@@ -81,7 +81,7 @@ void USRPGMoveAction::OnEndAction()
         // 이동력 차감
         if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
         {
-            AttrComp->ApplyModToAttribute(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
+            AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
         }
     }
 }

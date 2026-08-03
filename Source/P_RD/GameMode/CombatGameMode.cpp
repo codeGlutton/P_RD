@@ -187,17 +187,17 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetHPAttribute())
+		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
 		{
 			IconType = EFloatingLogIconType::HP;
 			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetActionPointAttribute())
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetActionPointAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
 			ColorType = EFloatingLogColorType::PointUp;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetDefenseAttribute())
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
 		{
 			IconType = EFloatingLogIconType::GetDefense;
 			ColorType = EFloatingLogColorType::PointUp;
@@ -1058,10 +1058,10 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
-		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
-		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
-		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute());
+		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
+		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
+		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당

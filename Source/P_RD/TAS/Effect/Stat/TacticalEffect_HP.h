@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_HP.h
  * @brief  체력(HP) 가감 이펙트 정의 헤더
  * @author 이문환
@@ -37,6 +37,34 @@ public:
  * @brief HP 데미지 계산기
  */
 UCLASS()
+class UTacticalEffectExecutionCalculation_Heal : public UTacticalEffectExecutionCalculation
+{
+	GENERATED_BODY()
+
+public:
+	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+};
+
+/**
+ * @brief HP 데미지 적용 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_Heal : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_Heal();
+
+	/* UTacticalEffect 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
+};
+
+/**
+ * @brief HP 데미지 계산기
+ */
+UCLASS()
 class UTacticalEffectExecutionCalculation_Attack : public UTacticalEffectExecutionCalculation
 {
 	GENERATED_BODY()
@@ -55,5 +83,10 @@ class P_RD_API UTacticalEffect_Attack : public UTacticalEffect
 
 public:
 	UTacticalEffect_Attack();
+
+	/* UTacticalEffect 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
+
 

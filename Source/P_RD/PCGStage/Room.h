@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "PCGStage/RoomType.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "Room.generated.h"
 
 /**
@@ -102,8 +102,8 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (ArraySizeEnum = "EPlayerJobType", DisplayName = "SaleJobSkillDataItems"))
-	FShopItemList mSaleJobSkillDataItems[static_cast<uint8>(EPlayerJobType::Count)];
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (ArraySizeEnum = "EUnitJobType", DisplayName = "SaleJobSkillDataItems"))
+	FShopItemList mSaleJobSkillDataItems[static_cast<uint8>(EUnitJobType::PlayerJobCount)];
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCommonSkillDataItems"))
 	FShopItemList mSaleCommonSkillDataItems;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataItems"))

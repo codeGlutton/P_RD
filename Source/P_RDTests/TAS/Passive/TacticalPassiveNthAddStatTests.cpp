@@ -16,7 +16,7 @@
 #include "TAS/Passive/DynamicPassiveData_NthCounter.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "AttributeSet/UnitAttributeSet.h"
 

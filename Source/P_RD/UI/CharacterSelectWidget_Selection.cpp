@@ -58,12 +58,12 @@ void UCharacterSelectWidget::RefreshResponsiveClassLayout(const FVector2D& Logic
 	struct FActionImageTarget
 	{
 		UImage* mImage;
-		EPlayerJobType mJobType;
+		EUnitJobType mJobType;
 	};
 	const FActionImageTarget ActionImages[] = {
-		{ mKnightActionImage, EPlayerJobType::Knight },
-		{ mRogueActionImage, EPlayerJobType::Archer },
-		{ mMageActionImage, EPlayerJobType::Mage },
+		{ mKnightActionImage, EUnitJobType::Knight },
+		{ mRogueActionImage, EUnitJobType::Archer },
+		{ mMageActionImage, EUnitJobType::Mage },
 	};
 	for (const FActionImageTarget& Target : ActionImages)
 	{
@@ -282,7 +282,7 @@ void UCharacterSelectWidget::SyncSelectedCharacter()
 /** @brief 후보가 없거나 선택이 무효한 상태를 상세 패널 fallback으로 되돌린다. */
 void UCharacterSelectWidget::ClearSelectedCharacter()
 {
-	SyncSelectedCharacterArt(EPlayerJobType::None);
+	SyncSelectedCharacterArt(EUnitJobType::None);
 	BP_OnSelectedCharacterCleared();
 
 	if (mSelectedCharacterNameText != nullptr)
@@ -326,14 +326,14 @@ void UCharacterSelectWidget::ClearSelectedCharacter()
 }
 
 /** @brief 선택 직업에 맞는 액션 일러스트만 표시하고 구형 Portrait 슬롯은 fallback 경로로 유지한다. */
-void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
+void UCharacterSelectWidget::SyncSelectedCharacterArt(EUnitJobType JobType)
 {
 	/*
 	 * 직업별 액션 이미지는 WBP에 이미 배치돼 있지만 브러시가 비어 있다.
 	 * 아트 원본은 팀 정책상 git이 아니라 SVN(Content/SVN)에만 있으므로, 타이틀 로고와 동일하게
 	 * 런타임에 PNG를 로드해 각 이미지에 채우고(캐시), 선택된 직업의 이미지만 표시한다.
 	 */
-	const auto ApplyJobImage = [this](UImage* Image, EPlayerJobType ImageJob, EPlayerJobType SelectedJob)
+	const auto ApplyJobImage = [this](UImage* Image, EUnitJobType ImageJob, EUnitJobType SelectedJob)
 	{
 		if (Image == nullptr)
 		{
@@ -366,10 +366,10 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 		}
 	};
 
-	ApplyJobImage(mKnightActionImage, EPlayerJobType::Knight, JobType);
+	ApplyJobImage(mKnightActionImage, EUnitJobType::Knight, JobType);
 	// [합의필요] 현재 WBP/아트 파일명은 Rogue지만 게임 enum은 Archer라 매핑을 코드에서 고정한다.
-	ApplyJobImage(mRogueActionImage, EPlayerJobType::Archer, JobType);
-	ApplyJobImage(mMageActionImage, EPlayerJobType::Mage, JobType);
+	ApplyJobImage(mRogueActionImage, EUnitJobType::Archer, JobType);
+	ApplyJobImage(mMageActionImage, EUnitJobType::Mage, JobType);
 
 	const bool bHasClassActionImages = mKnightActionImage != nullptr || mRogueActionImage != nullptr || mMageActionImage != nullptr;
 	if (mSelectedCharacterPortraitImage == nullptr)
@@ -411,7 +411,7 @@ void UCharacterSelectWidget::SyncSelectedCharacterArt(EPlayerJobType JobType)
 }
 
 /** @brief 직업별 일러스트 가져오기 */
-UTexture2D* UCharacterSelectWidget::GetJobIllustration(EPlayerJobType JobType)
+UTexture2D* UCharacterSelectWidget::GetJobIllustration(EUnitJobType JobType)
 {
 	const TObjectPtr<UTexture2D>* Asset = mJobIllustrationAssets.Find(JobType);
 	if (Asset == nullptr)

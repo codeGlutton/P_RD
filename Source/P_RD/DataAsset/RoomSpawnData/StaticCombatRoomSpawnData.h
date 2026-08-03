@@ -45,6 +45,10 @@ public:
 	FTileTransform mTransform;
 
 public:
+	UPROPERTY(Category = "Speed", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RechargeSpeedPointOffset", ToolTip = "스피트 포인트 충전 값 오프셋 "))
+	int32 mRechargeSpeedPointOffset = 0;
+
+	// @brief 유닛 스피드로 변경되어 폐기 예정. 
 	UPROPERTY(Category = "Turn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TurnPriority", ToolTip = "턴 초기 배치 우선 순위"))
 	int32 mTurnPriority = 0;
 };

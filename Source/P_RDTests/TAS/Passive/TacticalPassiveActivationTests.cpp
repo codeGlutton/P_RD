@@ -23,7 +23,7 @@
 #include "TAS/Passive/DynamicPassiveData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
 #include "GameplayTagType.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -343,7 +343,7 @@ bool FPassiveAddTagTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 	// 패시브 값 설정: 취약 3 (태그형 이펙트는 Magnitude가 태그 카운트로 들어감)
-	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_Vulnerability::StaticClass(), 3.f, OnEndTurn, FGameplayTag(), 0);
+	UStaticPassiveData* Data = MakePassiveData(UTacticalEffect_GetVulnerability::StaticClass(), 3.f, OnEndTurn, FGameplayTag(), 0);
 
 	UTacticalPassive_AddStat* Passive = NewObject<UTacticalPassive_AddStat>();
 	Passive->SetStaticData(Data);

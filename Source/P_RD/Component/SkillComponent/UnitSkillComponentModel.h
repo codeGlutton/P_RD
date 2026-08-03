@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   UnitSkillComponentModel.h
  * @brief  유닛의 액티브 스킬 컴포넌트 모델 구현 정의 헤더
  * @author 모호재, 이문환
@@ -20,6 +20,7 @@ class P_RD_API UUnitSkillComponentModel : public USkillComponentModel
 
 	/* USkillComponentModel 상속 */
 protected:
+	bool IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const override;
 	bool CanActiveSkill_Internal(int32 SkillIndex) const override;
 	void ConsumeResources_Internal(int32 SkillIndex) override;
 

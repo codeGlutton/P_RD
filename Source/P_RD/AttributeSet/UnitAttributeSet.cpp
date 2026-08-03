@@ -2,6 +2,22 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
+void UUnitAttributeSet::PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue)
+{
+	/* 충전 값 감소 시, 마이너스 방지 */
+	if (Attribute == GetRechargeActionPointAttribute() || Attribute == GetRechargeSpeedPointAttribute())
+	{
+		NewValue = FMath::Max(NewValue, 0.f);
+	}
+
+	Super::PreAttributeChange(Attribute, NewValue);
+}
+
+void UUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+}
+
 /**
  * @brief 플레이어 어트리뷰트 반영 직전 보정. Exp가 음수로 내려가는 것을 막는다.
  * @param Attribute 변경 대상 어트리뷰트.
@@ -12,7 +28,6 @@ void UPlayerUnitAttributeSet::PreAttributeChange(const FTacticalAttribute& Attri
 	/* 경험치 감소 시, 마이너스 방지 */
 	if (Attribute == GetExpAttribute())
 	{
-		// Exp 하한을 0으로 고정 — 경험치 차감 효과가 누적되어 음수가 되는 것을 방지한다.
 		NewValue = FMath::Max(NewValue, 0.f);
 	}
 
@@ -41,3 +56,5 @@ void UPlayerUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attr
 		}
 	}
 }
+
+

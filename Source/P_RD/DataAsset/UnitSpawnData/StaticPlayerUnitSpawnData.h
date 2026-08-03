@@ -8,7 +8,7 @@
 #pragma once
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "StaticPlayerUnitSpawnData.generated.h"
 
 class UStaticDiceData;
@@ -34,5 +34,5 @@ public:
 
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "JobType"))
-	EPlayerJobType mJobType = EPlayerJobType::None;
+	EUnitJobType mJobType = EUnitJobType::None;
 };

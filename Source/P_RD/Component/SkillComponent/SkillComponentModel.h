@@ -19,7 +19,7 @@ class UStaticSkillData;
 
 struct FPresentationBarrier;
 struct FActiveSkillContext;
-struct FEventTriggerPayload;
+struct FEventTriggerPayloadBase;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 
@@ -112,9 +112,11 @@ public:
 	void SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList);
 
 public:
+	bool IsAcquirableSkill(UStaticSkillData* SkillData) const;
+
 	const TArray<FSkillEntry>& GetSkills() const;
 	const FSkillEntry* GetSkill(int32 SkillIndex) const;
-	void SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
+	bool SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
 	/* 스킬 실행 */
 public:
@@ -135,6 +137,7 @@ public:
 	void ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
 
 protected:
+	virtual bool IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const;
 	virtual bool CanActiveSkill_Internal(int32 SkillIndex) const;
 	virtual void ConsumeResources_Internal(int32 SkillIndex);
 	virtual void ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback);
@@ -145,7 +148,7 @@ protected:
 
 protected:
 	void PreparePhaseLayer();
-	void TriggerPhaseLayer(const FEventTriggerPayload* Payload);
+	void TriggerPhaseLayer(const FEventTriggerPayloadBase* Payload);
 	void FlushRemainingPhaseLayers();
 
 	void DeactivateSkill();

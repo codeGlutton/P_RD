@@ -71,11 +71,6 @@ AUnit::AUnit()
 		mArrowComp->bIsScreenSizeScaled = true;
 		mArrowComp->SetSimulatePhysics(false);
 	}
-
-	if (mSkillAnimationComp != nullptr)
-	{
-		mSkillAnimationComp->SetTargetMeshComponent(mMeshComp);
-	}
 }
 
 void AUnit::BindModel(UObjectModel* Model)
@@ -132,6 +127,11 @@ UObjectModel* AUnit::GetModel_Internal() const
 USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
 {
 	return mSkillAnimationComp;
+}
+
+UPrimitiveComponent* AUnit::GetTargetMeshComponent() const
+{
+	return mMeshComp;
 }
 
 void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)

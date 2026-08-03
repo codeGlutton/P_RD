@@ -63,6 +63,7 @@ protected:
 	/* IBoardCombatTargetView 상속 */
 public:
 	USkillAnimationComponent* GetSkillAnimationComponent() const override;
+	UPrimitiveComponent* GetTargetMeshComponent() const override;
 
 public:
 	// @brief 배치 요청을 수신

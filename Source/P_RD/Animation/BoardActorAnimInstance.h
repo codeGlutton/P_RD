@@ -45,7 +45,7 @@ protected:
 	void OnEndMontageUsingTag(UAnimMontage* EndAnim, bool IsInterrupted);
 
 public:
-	bool TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayload* Payload);
+	bool TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayloadBase* Payload);
 
 	bool RegisterTagEventOnMontage(const FGameplayTag& EventTag, FBoardActorAnimationEvent&& Event);
 	bool UnregisterTagEventOnMontage(const FGameplayTag& EventTag);

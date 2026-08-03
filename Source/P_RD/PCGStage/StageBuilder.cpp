@@ -119,10 +119,10 @@ void FStageBuilder::LoadAllAssetIds()
 		mEquipmentAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(EquipmentPrimaryAssetTypes::GetEquipmentType(), RarityFilter);
 		const TArray<FAssetData> SkillAssetDatas = GetFilteredPrimaryAssetDatas(SkillPrimaryAssetTypes::GetActiveType(), RarityFilter);
 		
-		const uint8 JobTypeCount = StaticCast<uint8>(EPlayerJobType::Count);
+		const uint8 JobTypeCount = StaticCast<uint8>(EUnitJobType::PlayerJobCount);
 		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
 		{
-			auto JobFilter = [FilterStr = EnumToString(StaticCast<EPlayerJobType>(JobTypeIndex))](const FAssetData& AssetData) -> bool {
+			auto JobFilter = [FilterStr = EnumToString(StaticCast<EUnitJobType>(JobTypeIndex))](const FAssetData& AssetData) -> bool {
 				FString FoundStr;
 				bool IsFound = AssetData.GetTagValue(TEXT("mJobType"), OUT FoundStr) == true;
 				return IsFound == true && FoundStr == FilterStr;
@@ -131,7 +131,7 @@ void FStageBuilder::LoadAllAssetIds()
 			mJobSkillAssetIds[JobTypeIndex][RarityTypeIndex] = GetFilteredPrimaryAssets(SkillAssetDatas, JobFilter);
 		}
 
-		auto JobFilter = [FilterStr = EnumToString(EPlayerJobType::Common)](const FAssetData& AssetData) -> bool {
+		auto JobFilter = [FilterStr = EnumToString(EUnitJobType::Common)](const FAssetData& AssetData) -> bool {
 			FString FoundStr;
 			bool IsFound = AssetData.GetTagValue(TEXT("mJobType"), OUT FoundStr) == true;
 			return IsFound == true && FoundStr == FilterStr;
@@ -392,7 +392,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FShopRoom>();
 		auto& NewRoom = Room.GetMutable<FShopRoom>();
 
-		const uint8 JobTypeCount = StaticCast<uint8>(EPlayerJobType::Count);
+		const uint8 JobTypeCount = StaticCast<uint8>(EUnitJobType::PlayerJobCount);
 		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
 		{
 			for (int32 i = 0; i < 2; ++i)
