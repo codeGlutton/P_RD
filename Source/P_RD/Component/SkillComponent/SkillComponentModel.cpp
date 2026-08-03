@@ -156,6 +156,7 @@ bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
 
 	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
+	return true;
 }
 
 bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
