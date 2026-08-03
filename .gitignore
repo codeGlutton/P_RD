@@ -90,30 +90,6 @@ DerivedDataCache/*
 /Content/**/S_*.uasset
 # 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
 !/Content/UI/Art/RunFlow/T_*.uasset
-# 전투 용병 탭 셸도 코드가 직접 참조하므로 같은 변경에 포함한다.
-!/Content/UI/Art/Combat/T_MercenaryRoster_Shell.uasset
-# 생성한 전투 스킬 카드 프레임도 WBP가 직접 참조하므로 PR에 포함한다.
-!/Content/UI/Art/Combat/T_SkillCard_Frame_Combat.uasset
-# 용병 선택 WBP가 직접 참조하는 Marchbound 기사 배경과 분리 파츠를 포함한다.
-!/Content/UI/Art/Marchbound/T_MB_KnightSelectionSquare.uasset
-!/Content/UI/Art/Marchbound/T_MB_KnightSelectionIllustration2D.uasset
-!/Content/UI/Art/Marchbound/T_MB_KnightSelectionIllustration2D_v02.uasset
-!/Content/UI/Art/Marchbound/Hire/T_MB_*.uasset
-!/Content/UI/Art/Marchbound/Mercenaries/T_MB_*.uasset
-# 전투 HUD(턴/라운드/속도/상태이상/아티팩트/옵션 레일)와 용병 카드 프레임을 WBP가 직접 참조한다.
-!/Content/UI/Art/Marchbound/Combat/T_MB_*.uasset
-!/Content/UI/Art/Marchbound/T_MB_ActionButtonFrame.uasset
-!/Content/UI/Art/Marchbound/T_MB_GenericDetailPanel.uasset
-!/Content/UI/Art/Marchbound/T_MB_StatusSocket.uasset
-!/Content/UI/Art/Marchbound/T_MB_TurnTokenSpeed.uasset
-!/Content/UI/Art/Combat/T_MB_MercenaryCard_Normal.uasset
-!/Content/UI/Art/Combat/T_MB_MercenaryCard_Selected.uasset
-# 패배 화면 WBP가 직접 참조하는 파츠.
-!/Content/UI/Art/Marchbound/Defeat/T_MB_*.uasset
-# 몬스터 탭 WBP가 직접 참조하는 파츠.
-!/Content/UI/MonsterTab/Textures/T_MT_*.uasset
-# 보상 정산 WBP가 직접 참조하는 파츠.
-!/Content/UI/RewardSettlement/Textures/T_RS_*.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output

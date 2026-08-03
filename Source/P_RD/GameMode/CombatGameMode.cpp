@@ -1,4 +1,4 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -71,18 +71,18 @@ namespace
 			const TCHAR* Path;
 		};
 		static const FPortraitRule Rules[] = {
-			{ TEXT("기사"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
-			{ TEXT("Knight"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
-			{ TEXT("마법사"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
-			{ TEXT("Mage"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
-			{ TEXT("궁수"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
-			{ TEXT("Ranger"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
-			{ TEXT("도적"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
-			{ TEXT("Rogue"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
-			{ TEXT("야만"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
-			{ TEXT("Barbarian"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
-			{ TEXT("드루이드"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
-			{ TEXT("Druid"), TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
+			{ TEXT("기사"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
+			{ TEXT("Knight"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
+			{ TEXT("마법사"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
+			{ TEXT("Mage"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
+			{ TEXT("궁수"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
+			{ TEXT("Ranger"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
+			{ TEXT("도적"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
+			{ TEXT("Rogue"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
+			{ TEXT("야만"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
+			{ TEXT("Barbarian"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
+			{ TEXT("드루이드"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
+			{ TEXT("Druid"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
 			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
 			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
 			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
@@ -105,7 +105,7 @@ namespace
 			}
 		}
 		return LoadObject<UTexture2D>(nullptr, UnitModel->IsPlayerUnitModel()
-			? TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")
+			? TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")
 			: TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
 	}
 

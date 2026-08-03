@@ -32,11 +32,11 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 		};
 		const FMockAlly Allies[] = {
 			{ TEXT("기사"), 90.f, 3, 5.f,
-				TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
 			{ TEXT("궁수"), 100.f, 4, 7.f,
-				TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
 			{ TEXT("마법사"), 75.f, 4, 4.f,
-				TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
 		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Allies); ++i)
 		{

@@ -165,15 +165,15 @@ namespace CombatDefeatWidgetBuilder
 		UCanvasPanel* Canvas = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("DefeatDesignCanvas"));
 		DesignSize->SetContent(Canvas);
 
-		UTexture2D* OuterFrame = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_OuterFrame.T_MB_Defeat_OuterFrame"));
-		UTexture2D* TitleBanner = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_TitleBanner.T_MB_Defeat_TitleBanner"));
-		UTexture2D* MercenaryCard = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_MercenaryCard.T_MB_Defeat_MercenaryCard"));
-		UTexture2D* Summary = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_BattleSummary.T_MB_Defeat_BattleSummary"));
-		UTexture2D* Secondary = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_ButtonSecondary.T_MB_Defeat_ButtonSecondary"));
-		UTexture2D* Primary = Texture(TEXT("/Game/UI/Art/Marchbound/Defeat/T_MB_Defeat_ButtonPrimary.T_MB_Defeat_ButtonPrimary"));
-		UTexture2D* Knight = Texture(TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
-		UTexture2D* Rogue = Texture(TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
-		UTexture2D* Mage = Texture(TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
+		UTexture2D* OuterFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_OuterFrame.T_MB_Defeat_OuterFrame"));
+		UTexture2D* TitleBanner = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_TitleBanner.T_MB_Defeat_TitleBanner"));
+		UTexture2D* MercenaryCard = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_MercenaryCard.T_MB_Defeat_MercenaryCard"));
+		UTexture2D* Summary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_BattleSummary.T_MB_Defeat_BattleSummary"));
+		UTexture2D* Secondary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonSecondary.T_MB_Defeat_ButtonSecondary"));
+		UTexture2D* Primary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonPrimary.T_MB_Defeat_ButtonPrimary"));
+		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
+		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
+		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
 
 		const FBox2f OuterUV(FVector2f(.089319f, .064227f), FVector2f(.909761f, .928867f));
 		const FBox2f TitleUV(FVector2f(.033298f, .282840f), FVector2f(.968851f, .665089f));

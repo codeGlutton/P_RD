@@ -80,7 +80,7 @@ bool FCombatDefeatWBPStructureTest::RunTest(const FString& Parameters)
 		TEXT("T_MB_Defeat_ButtonSecondary"), TEXT("T_MB_Defeat_ButtonPrimary") })
 	{
 		const FString Path = FString::Printf(
-			TEXT("/Game/UI/Art/Marchbound/Defeat/%s.%s"), AssetName, AssetName);
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/%s.%s"), AssetName, AssetName);
 		TestNotNull(*Path, LoadObject<UTexture2D>(nullptr, *Path));
 	}
 	return true;

@@ -196,11 +196,11 @@ namespace RewardSettlementWidgetBuilder
 		CastChecked<UOverlaySlot>(Screen->Slot)->SetHorizontalAlignment(HAlign_Fill);
 		CastChecked<UOverlaySlot>(Screen->Slot)->SetVerticalAlignment(VAlign_Fill);
 
-		UTexture2D* TitlePlate = Texture(TEXT("/Game/UI/RewardSettlement/Textures/T_RS_TitlePlate.T_RS_TitlePlate"));
-		UTexture2D* StepPlate = Texture(TEXT("/Game/UI/RewardSettlement/Textures/T_RS_Step1Active.T_RS_Step1Active"));
-		UTexture2D* VictoryPanel = Texture(TEXT("/Game/UI/RewardSettlement/Textures/T_RS_VictoryPanelNeutral.T_RS_VictoryPanelNeutral"));
-		UTexture2D* ExpFrame = Texture(TEXT("/Game/UI/RewardSettlement/Textures/T_RS_ExpFrame.T_RS_ExpFrame"));
-		UTexture2D* NextPlate = Texture(TEXT("/Game/UI/RewardSettlement/Textures/T_RS_NextButton.T_RS_NextButton"));
+		UTexture2D* TitlePlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_TitlePlate.T_RS_TitlePlate"));
+		UTexture2D* StepPlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_Step1Active.T_RS_Step1Active"));
+		UTexture2D* VictoryPanel = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_VictoryPanelNeutral.T_RS_VictoryPanelNeutral"));
+		UTexture2D* ExpFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpFrame.T_RS_ExpFrame"));
+		UTexture2D* NextPlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_NextButton.T_RS_NextButton"));
 
 		const FBox2f TitleUV(FVector2f(46.f / 2149.f, 127.f / 732.f), FVector2f(2119.f / 2149.f, 506.f / 732.f));
 		const FBox2f StepUV(FVector2f(34.f / 2172.f, 248.f / 724.f), FVector2f(2137.f / 2172.f, 472.f / 724.f));

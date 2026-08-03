@@ -301,29 +301,29 @@ namespace CombatHUDWidgetBuilder
 		const FSlateFontInfo BaseFont = RoundText->GetFont();
 
 		UTexture2D* MercenaryTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph"));
 		UTexture2D* MonsterTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph"));
 		UTexture2D* SpeedTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_Icon_Speed.T_MB_Icon_Speed"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_Icon_Speed.T_MB_Icon_Speed"));
 		UTexture2D* TurnTokenFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
 		UTexture2D* OptionsRailFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame"));
 		UTexture2D* MapTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_OptionsIcon_Map.T_MB_OptionsIcon_Map"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_Map.T_MB_OptionsIcon_Map"));
 		UTexture2D* SettingsTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_OptionsIcon_Settings.T_MB_OptionsIcon_Settings"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_Settings.T_MB_OptionsIcon_Settings"));
 		UTexture2D* ArtifactSlotTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_ArtifactSlot_Frame.T_MB_ArtifactSlot_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_ArtifactSlot_Frame.T_MB_ArtifactSlot_Frame"));
 		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
 		UTexture2D* MercenaryShellTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell"));
 		UTexture2D* MercenaryCardNormalTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* MercenaryCardSelectedTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/UI/Art/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
 		if (MercenaryTexture == nullptr || MonsterTexture == nullptr
 			|| SpeedTexture == nullptr || TurnTokenFrameTexture == nullptr
 			|| OptionsRailFrameTexture == nullptr || MapTexture == nullptr

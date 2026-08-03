@@ -34,11 +34,11 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	: Super(ObjectInitializer)
 {
 	mMercenaryRosterShellTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/UI/Art/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell")));
 	mMercenaryCardNormalTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/UI/Art/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal")));
 	mMercenaryCardSelectedTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/UI/Art/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected")));
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(
 		TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
@@ -51,7 +51,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
 	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
 	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
-	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/UI/Art/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
+	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
 	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
 	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Recovery.T_Status_HP_Recovery");
 	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");

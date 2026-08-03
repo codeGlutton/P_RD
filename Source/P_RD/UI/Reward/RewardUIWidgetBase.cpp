@@ -123,7 +123,7 @@ URewardUIWidgetBase::URewardUIWidgetBase(const FObjectInitializer& ObjectInitial
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> RewardRowFrameFinder(
-		TEXT("/Game/UI/Art/RunFlow/T_Reward_RowFrame_Current.T_Reward_RowFrame_Current"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RunFlow/T_Reward_RowFrame_Current.T_Reward_RowFrame_Current"));
 	if (RewardRowFrameFinder.Succeeded())
 	{
 		mRewardRowFrameTexture = RewardRowFrameFinder.Object;

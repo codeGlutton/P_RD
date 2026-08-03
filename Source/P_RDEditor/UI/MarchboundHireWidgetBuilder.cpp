@@ -197,31 +197,31 @@ namespace MarchboundHireWidgetBuilder
 		const FSlateFontInfo Font = FontSource->GetFont();
 
 		UTexture2D* KnightBackground = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight"));
 		UTexture2D* ListFrame = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireListFrame.T_MB_HireListFrame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireListFrame.T_MB_HireListFrame"));
 		UTexture2D* RowNormal = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireRowNormal.T_MB_HireRowNormal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowNormal.T_MB_HireRowNormal"));
 		UTexture2D* RowSelected = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireRowSelected.T_MB_HireRowSelected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowSelected.T_MB_HireRowSelected"));
 		UTexture2D* BackPlate = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireBackButton.T_MB_HireBackButton"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireBackButton.T_MB_HireBackButton"));
 		UTexture2D* TitlePlate = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireTitlePlate.T_MB_HireTitlePlate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireTitlePlate.T_MB_HireTitlePlate"));
 		UTexture2D* PartyFrame = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HirePartyFrame.T_MB_HirePartyFrame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HirePartyFrame.T_MB_HirePartyFrame"));
 		UTexture2D* PartyPlus = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HirePartyRowPlus.T_MB_HirePartyRowPlus"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HirePartyRowPlus.T_MB_HirePartyRowPlus"));
 		UTexture2D* PartyEmpty = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HirePartyRowEmpty.T_MB_HirePartyRowEmpty"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HirePartyRowEmpty.T_MB_HirePartyRowEmpty"));
 		UTexture2D* DepartPlate = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireDepartButton.T_MB_HireDepartButton"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireDepartButton.T_MB_HireDepartButton"));
 		UTexture2D* NamePlate = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireNamePlate.T_MB_HireNamePlate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireNamePlate.T_MB_HireNamePlate"));
 		UTexture2D* StatsStrip = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireStatsStrip.T_MB_HireStatsStrip"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireStatsStrip.T_MB_HireStatsStrip"));
 		UTexture2D* SkillFrame = Texture(
-			TEXT("/Game/UI/Art/Marchbound/Hire/T_MB_HireSkillButtonFrame.T_MB_HireSkillButtonFrame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireSkillButtonFrame.T_MB_HireSkillButtonFrame"));
 
 		UCanvasPanel* OldBackdrop = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("Backdrop"));
 		OldBackdrop->SetVisibility(ESlateVisibility::Collapsed);
@@ -311,12 +311,12 @@ namespace MarchboundHireWidgetBuilder
 			TEXT("근접"), TEXT("근접"), TEXT("지원")
 		};
 		const TCHAR* PortraitPaths[6] = {
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"),
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"),
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"),
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian"),
-			TEXT("/Game/UI/Art/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid")
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid")
 		};
 		for (int32 Index = 0; Index < 6; ++Index)
 		{

@@ -96,11 +96,11 @@ URewardSettlementWidgetBase::URewardSettlementWidgetBase(const FObjectInitialize
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
 #define RD_SETTLEMENT_TEX(Member, Path) Member = LoadObject<UTexture2D>(nullptr, TEXT(Path))
-	RD_SETTLEMENT_TEX(mMercenaryRowTexture, "/Game/UI/RewardSettlement/Textures/T_RS_MercenaryRow.T_RS_MercenaryRow");
-	RD_SETTLEMENT_TEX(mPortraitFrameTexture, "/Game/UI/RewardSettlement/Textures/T_RS_PortraitFrame.T_RS_PortraitFrame");
-	RD_SETTLEMENT_TEX(mXPBadgeTexture, "/Game/UI/RewardSettlement/Textures/T_RS_XPBadge.T_RS_XPBadge");
-	RD_SETTLEMENT_TEX(mExpTrackTexture, "/Game/UI/RewardSettlement/Textures/T_RS_ExpTrack.T_RS_ExpTrack");
-	RD_SETTLEMENT_TEX(mExpFillTexture, "/Game/UI/RewardSettlement/Textures/T_RS_ExpFill.T_RS_ExpFill");
+	RD_SETTLEMENT_TEX(mMercenaryRowTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_MercenaryRow.T_RS_MercenaryRow");
+	RD_SETTLEMENT_TEX(mPortraitFrameTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_PortraitFrame.T_RS_PortraitFrame");
+	RD_SETTLEMENT_TEX(mXPBadgeTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_XPBadge.T_RS_XPBadge");
+	RD_SETTLEMENT_TEX(mExpTrackTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpTrack.T_RS_ExpTrack");
+	RD_SETTLEMENT_TEX(mExpFillTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpFill.T_RS_ExpFill");
 	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
 	RD_SETTLEMENT_TEX(mExpIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon");
 	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");

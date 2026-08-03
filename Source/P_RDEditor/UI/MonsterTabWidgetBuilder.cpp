@@ -194,11 +194,11 @@ namespace MonsterTabWidgetBuilder
 		DesignSize->SetContent(Canvas);
 
 		UTexture2D* BaseFrame = Texture(
-			TEXT("/Game/UI/MonsterTab/Textures/T_MT_BaseFrame.T_MT_BaseFrame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_BaseFrame.T_MT_BaseFrame"));
 		UTexture2D* RowNormal = Texture(
-			TEXT("/Game/UI/MonsterTab/Textures/T_MT_RowNormal.T_MT_RowNormal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowNormal.T_MT_RowNormal"));
 		UTexture2D* RowSelected = Texture(
-			TEXT("/Game/UI/MonsterTab/Textures/T_MT_RowSelected.T_MT_RowSelected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowSelected.T_MT_RowSelected"));
 		AddImage(Blueprint, Canvas, TEXT("MonsterTabBaseFrame"), BaseFrame,
 			FVector2D::ZeroVector, FVector2D(1920.0f, 1080.0f), 0, true);
 
