@@ -155,9 +155,7 @@ bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
 
-	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
-
-	return true;
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
 }
 
 bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
@@ -241,7 +239,7 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 		DeactivateSkill();
 		}));
 	{
-		mActiveSkillContext.mInstigator = this;
+		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
 		mActiveSkillContext.mMapModel = MapModel;
 		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
 		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;

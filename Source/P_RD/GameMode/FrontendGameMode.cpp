@@ -20,6 +20,7 @@
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #include "Setting/GamePlaySettings.h"
+#include "HAL/IConsoleManager.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
@@ -155,6 +156,44 @@ namespace
 		}
 	}
 
+#if !UE_BUILD_SHIPPING
+	// @brief 디버깅용: 새 Run의 시작 스테이지를 대체할 스테이지 레벨 이름 (None 또는 빈 값이면 미사용)
+	FString GFixedFirstStageLevelNameForDebugging;
+
+	FAutoConsoleVariableRef CFixedFirstStageLevelNameForDebugging(
+		TEXT("Stage.FixedFirstStageLevel"),
+		GFixedFirstStageLevelNameForDebugging,
+		TEXT("디버깅을 위해서 새 Run의 시작 스테이지를 지정 레벨로 고정 (예: Stage2). None 또는 빈 값이면 미사용"),
+		ECVF_Default
+	);
+
+	/**
+	 * @brief 디버깅용 시작 스테이지 고정 콘솔 변수를 스테이지 레벨로 해석
+	 * @param StageLevel [out] 해석된 스테이지 레벨
+	 * @return 고정이 켜져 있고 유효한 레벨 이름이면 true
+	 */
+	bool TryGetFixedFirstStageLevelForDebugging(OUT EStageLevelType& StageLevel)
+	{
+		if (GFixedFirstStageLevelNameForDebugging.IsEmpty() == true)
+		{
+			return false;
+		}
+
+		// 콘솔 변수 문자열을 스테이지 레벨로 해석 (예: "Stage2"), 잘못된 이름이나 None이면 미사용 처리
+		const UEnum* StageLevelEnum = StaticEnum<EStageLevelType>();
+		const int64 StageLevelValue = StageLevelEnum != nullptr ? StageLevelEnum->GetValueByNameString(GFixedFirstStageLevelNameForDebugging) : INDEX_NONE;
+		if (StageLevelValue == INDEX_NONE ||
+			StaticCast<EStageLevelType>(StageLevelValue) == EStageLevelType::None)
+		{
+			UE_LOG(LogFrontendGameMode, Warning, TEXT("시작 스테이지 고정 미적용. %s은(는) 유효한 스테이지 레벨 아님"), *GFixedFirstStageLevelNameForDebugging);
+			return false;
+		}
+
+		StageLevel = StaticCast<EStageLevelType>(StageLevelValue);
+		return true;
+	}
+#endif
+
 }
 
 AFrontendGameMode::AFrontendGameMode()
@@ -261,8 +300,19 @@ bool AFrontendGameMode::StartNewRun(const TArray<FPrimaryAssetId>& PlayerUnitIds
 		return false;
 	}
 
-	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(EStageLevelType::Stage1);
-	checkf(IsTransitionStarted == true, TEXT("스테이지 1 처음 방으로 전환 실패"));
+	// 새 Run의 시작 스테이지는 Stage1 고정
+	EStageLevelType FirstStageLevel = EStageLevelType::Stage1;
+
+#if !UE_BUILD_SHIPPING
+	// 디버깅용 시작 스테이지 고정이 켜져 있으면 지정 레벨로 대체 (꺼져 있으면 기존 흐름 그대로)
+	if (TryGetFixedFirstStageLevelForDebugging(OUT FirstStageLevel) == true)
+	{
+		UE_LOG(LogFrontendGameMode, Warning, TEXT("시작 스테이지를 %s로 고정 (Stage.FixedFirstStageLevel)"), *GFixedFirstStageLevelNameForDebugging);
+	}
+#endif
+
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(FirstStageLevel);
+	checkf(IsTransitionStarted == true, TEXT("시작 스테이지 처음 방으로 전환 실패"));
 	return IsTransitionStarted;
 }
 

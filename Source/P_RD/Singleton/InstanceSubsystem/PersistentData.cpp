@@ -244,15 +244,24 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 // 플레이어 스킬 추적
 	 SkillComponentModel->OnChangeSkillUI.AddLambda([this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
 		 {
-			 if (mSkillIds.Num() < SkillIndex)
+			 // 음수 인덱스 방어
+			 if (SkillIndex < 0)
 			 {
-				 FPrimaryAssetId NextSkillId;
-				 if (NewSkillData != nullptr)
-				 {
-					 NextSkillId = NewSkillData->GetPrimaryAssetId();
-				 }
-				 mSkillIds[SkillIndex] = NextSkillId;
+				 return;
 			 }
+
+			 // 슬롯이 부족하면 확장 후 기록
+			 if (SkillIndex >= mSkillIds.Num())
+			 {
+				 mSkillIds.SetNum(SkillIndex + 1);
+			 }
+
+			 FPrimaryAssetId NextSkillId;
+			 if (NewSkillData != nullptr)
+			 {
+				 NextSkillId = NewSkillData->GetPrimaryAssetId();
+			 }
+			 mSkillIds[SkillIndex] = NextSkillId;
 		 });
 }
 
