@@ -17,13 +17,14 @@
 namespace
 {
 	/** @brief 상점 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
-	// [갭] Heal 전용 아이콘은 아직 없어 골드 아이콘으로 대체 표시한다(이미지 확보 후 교체 예정).
+	// [갭] 용병/회복 전용 아이콘은 아직 없어 골드 아이콘으로 대체 표시한다(이미지 확보 후 교체 예정).
 	const TCHAR* ShopKindIconPath(EShopItemKind Kind)
 	{
 		switch (Kind)
 		{
 		case EShopItemKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
-		case EShopItemKind::Equipment: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
+		case EShopItemKind::Artifact:  return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
+		case EShopItemKind::Mercenary:
 		case EShopItemKind::Heal:
 		default:                       return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Gold.T_Reward_Gold");
 		}
@@ -121,9 +122,15 @@ void UShopUIWidgetBase::UnbindUIModel()
 	mUIModel = nullptr;
 }
 
-/** @brief UIModel 변경 알림 → 뷰 갱신 후 WBP 구현 이벤트로도 전달. */
-void UShopUIWidgetBase::HandleUIChanged()
+/** @brief UIModel 변경 알림 → 거래 도메인이면 뷰 갱신 후 WBP 구현 이벤트로도 전달. */
+void UShopUIWidgetBase::HandleUIChanged(EShopUIDomain Domain)
 {
+	// 이 위젯은 거래 화면 — 프리뷰 등 다른 도메인 알림은 각자의 위젯이 처리
+	if (Domain != EShopUIDomain::Trade)
+	{
+		return;
+	}
+
 	RefreshView();
 	OnShopRefreshed();
 }

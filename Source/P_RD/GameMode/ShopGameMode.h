@@ -13,6 +13,7 @@
 class UTileMapModel;
 class UShopUIModel;
 struct FShopItemList;
+struct FShopUI;
 
 /**
  * @brief  상점 방에 대한 GameMode
@@ -52,8 +53,26 @@ private:
 	/** @brief 지금 파는 것과 가진 돈을 화면에 내린다. */
 	void PushShopUIData() const;
 
+	/**
+	 * @brief 소지품(버리기 대상)을 표시값으로 채움
+	 * @details 파티 공용 아티펙트 + 유닛별 소지 스킬. 거래마다 판매 목록과 함께 갱신됨
+	 */
+	void FillOwnedItems(FShopUI& ShopUIData) const;
+
 	/** @brief 한 칸을 샀다. 돈을 깎고 품절로 매긴 뒤 다시 내린다. */
 	UFUNCTION() void HandleBuyRequested(int32 SlotIndex);
+
+	/**
+	 * @brief 소지 아티펙트 하나를 버림 (0골드 거래)
+	 * @details 파티 원본에서 제거 — 전 구성원 해제 배포까지 컴포넌트가 처리
+	 */
+	UFUNCTION() void HandleDiscardArtifactRequested(int32 ArtifactIndex);
+
+	/**
+	 * @brief 유닛의 스킬 슬롯 하나를 버림 (0골드 거래)
+	 * @details 슬롯을 비움 — 저장 추적(OnChangeSkillUI)이 즉시 반영
+	 */
+	UFUNCTION() void HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex);
 
 	/** @brief 나간다. 지도를 열어 다음 방을 고르게 한다. */
 	UFUNCTION() void HandleLeaveRequested();

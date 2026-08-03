@@ -6,6 +6,7 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/Shop/ShopUITypes.h"
 #include "ShopUIWidgetBase.generated.h"
 
 class UButton;
@@ -58,8 +59,8 @@ private:
 	/** @brief 나가기 버튼 클릭 → Leave 의도 전달 후 화면을 닫는다. */
 	UFUNCTION() void HandleCloseClicked();
 
-	/** @brief UIModel 변경 알림을 받아 BindWidget 위젯에 값을 채운다. */
-	UFUNCTION() void HandleUIChanged();
+	/** @brief UIModel 변경 알림을 받아 BindWidget 위젯에 값을 채운다. 거래 도메인 알림만 처리한다. */
+	UFUNCTION() void HandleUIChanged(EShopUIDomain Domain);
 
 	/** @brief 현재 UIModel 구독을 해제하고 참조를 비운다. */
 	void UnbindUIModel();

@@ -117,6 +117,7 @@ void FStageBuilder::LoadAllAssetIds()
 			return IsFound == true && FoundStr == FilterStr;
 			};
 		mEquipmentAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(EquipmentPrimaryAssetTypes::GetEquipmentType(), RarityFilter);
+		mArtifactAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(ArtifactPrimaryAssetTypes::GetArtifactType(), RarityFilter);
 		const TArray<FAssetData> SkillAssetDatas = GetFilteredPrimaryAssetDatas(SkillPrimaryAssetTypes::GetActiveType(), RarityFilter);
 		
 		const uint8 JobTypeCount = StaticCast<uint8>(EPlayerJobType::Count);

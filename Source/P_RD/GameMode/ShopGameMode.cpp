@@ -9,8 +9,12 @@
 #include "Actor/Party/PartyModel.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "PCGStage/Room.h"
 #include "UI/Shop/ShopUIModel.h"
 
@@ -42,6 +46,10 @@ void AShopGameMode::InitializeRoom()
 		mShopUIModel = NewObject<UShopUIModel>(this, TEXT("ShopUIModel"));
 		mShopUIModel->OnBuyRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleBuyRequested);
+		mShopUIModel->OnDiscardArtifactRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleDiscardArtifactRequested);
+		mShopUIModel->OnDiscardSkillRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleDiscardSkillRequested);
 		mShopUIModel->OnLeaveRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleLeaveRequested);
 	}

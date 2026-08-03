@@ -73,6 +73,7 @@ protected:
 	bool mIsLoadedIds = false;
 	TArray<FPrimaryAssetId> mRoomAssetIds[static_cast<uint8>(ERoomType::Count)];
 	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mArtifactAssetIds[static_cast<uint8>(ERarityType::Count)];
 	TArray<FPrimaryAssetId> mJobSkillAssetIds[static_cast<uint8>(EPlayerJobType::Count)][static_cast<uint8>(ERarityType::Count)];
 	TArray<FPrimaryAssetId> mCommonSkillAssetIds[static_cast<uint8>(ERarityType::Count)];
 };
