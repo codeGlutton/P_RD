@@ -212,7 +212,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 사용 가능한 액션포인트
 	const int32 ActionPoint = FMath::Max(
-		AttributeSetComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute()),
+		AttributeSetComp->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute()),
 		0
 	);
 

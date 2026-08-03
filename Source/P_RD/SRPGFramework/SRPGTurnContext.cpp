@@ -102,7 +102,7 @@ TWeakObjectPtr<USRPGTurnContext> USRPGDetailInfoPopupCommandHandler::GetParent()
 	return mParent;
 }
 
-void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount)
+void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId)
 {
 	checkf(Parent != nullptr, TEXT("전투 서브시스템 nullptr"));
 	checkf(Owner != nullptr, TEXT("턴 오너 유닛 nullptr"));
@@ -113,7 +113,6 @@ void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int
 	mParent = Parent;
 	mOwner = Owner;
 	mTurnId = TurnId;
-	mLifeCount = LifeCount;
 
 	USRPGActionCreationCommandHandler* ActionCreationCommandHandler = NewObject<USRPGActionCreationCommandHandler>(this);
 	ActionCreationCommandHandler->mParent = this;
@@ -224,13 +223,7 @@ void USRPGTurnContext::EndTurn()
 
 	// 턴 종료 연출
 	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		if (IsPermanent() == false)
-		{
-			--mLifeCount;
-		}
 		mReservedActions.Empty();
-		// 큐를 비우면 소비 인덱스도 함께 되돌려야 한다. 이 컨텍스트는 다음 턴에 재사용되므로, 인덱스가 남아 있으면
-		// 새로 등록된 액션이 mReservedActions.Num() > mHeadActionIndex 조건을 통과하지 못해 영원히 시작되지 않는다.
 		mHeadActionIndex = 0;
 
 		// 핸들러 등록 해제
@@ -392,16 +385,6 @@ UUnitModel* USRPGTurnContext::GetOwner() const
 int32 USRPGTurnContext::GetTurnId() const
 {
 	return mTurnId;
-}
-
-bool USRPGTurnContext::IsPermanent() const
-{
-	return mLifeCount == PERMENENT_TURN;
-}
-
-int32 USRPGTurnContext::GetLifeCount() const
-{
-	return mLifeCount;
 }
 
 void USRPGTurnContext::ForcedClearActions()

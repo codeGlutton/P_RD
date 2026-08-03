@@ -9,6 +9,7 @@ void UPersistentDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	mRunPersistData = NewObject<URunPersistData>(this);
 	mOptionPersistData = NewObject<UOptionPersistData>(this);
 
+	mRunPersistData->MakeCaches();
 	mOptionPersistData->MakeCaches();
 }
 

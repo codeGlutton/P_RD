@@ -12,7 +12,7 @@
 #include "Setting/GameBalanceType.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "DataAsset/SkillData/SkillType.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "DataTable/StageBuilderParams.h"
 
 // Stage Builder 신규 로그 카테고리 등록
@@ -74,6 +74,6 @@ protected:
 	TArray<FPrimaryAssetId> mRoomAssetIds[static_cast<uint8>(ERoomType::Count)];
 	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(ERarityType::Count)];
 	TArray<FPrimaryAssetId> mArtifactAssetIds[static_cast<uint8>(ERarityType::Count)];
-	TArray<FPrimaryAssetId> mJobSkillAssetIds[static_cast<uint8>(EPlayerJobType::Count)][static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mJobSkillAssetIds[static_cast<uint8>(EUnitJobType::PlayerJobCount)][static_cast<uint8>(ERarityType::Count)];
 	TArray<FPrimaryAssetId> mCommonSkillAssetIds[static_cast<uint8>(ERarityType::Count)];
 };

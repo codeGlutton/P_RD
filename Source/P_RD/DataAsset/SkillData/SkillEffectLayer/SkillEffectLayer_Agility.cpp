@@ -1,9 +1,9 @@
-#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Agility.h"
+﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Agility.h"
 #include "TAS/Effect/Tag/TacticalEffect_Agility.h"
 
 TSubclassOf<UTacticalEffect> FSkillEffectLayer_Agility::GetTagEffectClass() const
 {
-    return UTacticalEffect_Agility::StaticClass();
+    return UTacticalEffect_GetAgility::StaticClass();
 }
 
 #if WITH_EDITOR

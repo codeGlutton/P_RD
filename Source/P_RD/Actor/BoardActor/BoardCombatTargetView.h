@@ -28,4 +28,5 @@ class P_RD_API IBoardCombatTargetView
 
 public:
 	virtual USkillAnimationComponent* GetSkillAnimationComponent() const = 0;
+	virtual UPrimitiveComponent* GetTargetMeshComponent() const = 0;
 };

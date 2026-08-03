@@ -3,6 +3,7 @@
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 
 #include "Actor/ActorModel.h"
+#include "Pawn/UnitModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -12,6 +13,27 @@
 #include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(UnitSkillComponentModel)
+
+bool UUnitSkillComponentModel::IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const
+{
+	UStaticUnitSkillData* UnitSkillData = Cast<UStaticUnitSkillData>(SkillData);
+	if (UnitSkillData == nullptr)
+	{
+		/* 유닛 스킬이 아님 */
+		return false;
+	}
+
+	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	if (UnitSkillData->mJobType != EUnitJobType::Common && OwnerUnitModel->GetUnitJobType() != UnitSkillData->mJobType)
+	{
+		/* 유닛 직업이 일치하지 않음 */
+		return false;
+	}
+
+	return true;
+}
 
 bool UUnitSkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
 {

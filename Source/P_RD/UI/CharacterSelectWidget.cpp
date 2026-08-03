@@ -42,17 +42,17 @@ UCharacterSelectWidget::UCharacterSelectWidget(const FObjectInitializer& ObjectI
 	static ConstructorHelpers::FObjectFinder<UTexture2D> KnightIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_knight_v2.class_illust_knight_v2"));
 	if (KnightIllustrationAssets.Succeeded() == true)
 	{
-		mJobIllustrationAssets.Add(EPlayerJobType::Knight, KnightIllustrationAssets.Object);
+		mJobIllustrationAssets.Add(EUnitJobType::Knight, KnightIllustrationAssets.Object);
 	}
 	static ConstructorHelpers::FObjectFinder<UTexture2D> ArcherIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_rogue_v2.class_illust_rogue_v2"));
 	if (ArcherIllustrationAssets.Succeeded() == true)
 	{
-		mJobIllustrationAssets.Add(EPlayerJobType::Archer, ArcherIllustrationAssets.Object);
+		mJobIllustrationAssets.Add(EUnitJobType::Archer, ArcherIllustrationAssets.Object);
 	}
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MageIllustrationAssets(TEXT("/Game/SVN/OutSideAsset/AICreation/ClassSelect/class_illust_mage_v2.class_illust_mage_v2"));
 	if (MageIllustrationAssets.Succeeded() == true)
 	{
-		mJobIllustrationAssets.Add(EPlayerJobType::Mage, MageIllustrationAssets.Object);
+		mJobIllustrationAssets.Add(EUnitJobType::Mage, MageIllustrationAssets.Object);
 	}
 }
 

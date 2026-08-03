@@ -116,14 +116,14 @@ private:
 	void SetConfirmButtonText(const FText& InText) const;
 
 	/** @brief 선택 직업에 맞는 액션 일러스트만 보이고 구형 포트레이트 슬롯은 fallback으로 사용한다. */
-	void SyncSelectedCharacterArt(EPlayerJobType JobType);
+	void SyncSelectedCharacterArt(EUnitJobType JobType);
 
 	/** @brief 클래스 선택 화면의 배경/설명/카드 줄을 현재 논리 뷰포트 안에 맞춘다. */
 	void RefreshResponsiveClassLayout(const FVector2D& LogicalViewportSize);
 
 	/** @brief 직업별 SVN 일러스트 PNG를 런타임 로드한다. 한 번 로드한 텍스처는 캐시해 재사용한다. */
 	// [합의필요] SVN 임포트 uasset 경로 계약은 아트 교체/패키징 규칙과 함께 갱신되어야 한다.
-	UTexture2D* GetJobIllustration(EPlayerJobType JobType);
+	UTexture2D* GetJobIllustration(EUnitJobType JobType);
 
 	/** @brief 선택된 PlayerUnitId로 새 Run 생성을 요청하고 첫 방 전환 시작 여부만 돌려준다. */
 	bool BeginFirstRoomEntryWithSelectedCharacter();
@@ -221,7 +221,7 @@ private:
 
 	/** @brief 직업별 일러스트 텍스처(SVN 임포트 uasset) 참조. 기본값은 생성자에서 지정, WBP에서 덮어쓸 수 있다. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select|Art", meta = (AllowPrivateAccess = true))
-	TMap<EPlayerJobType, TObjectPtr<UTexture2D>> mJobIllustrationAssets;
+	TMap<EUnitJobType, TObjectPtr<UTexture2D>> mJobIllustrationAssets;
 
 	/** @brief 확인 버튼용 배경 프레임 텍스처 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select|Art", meta = (AllowPrivateAccess = "true"))

@@ -27,7 +27,6 @@ public:
 
 #if WITH_EDITOR
 public:
-    FText MakeDescription() const override;
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
@@ -35,7 +34,7 @@ public:
 public:
     // @brief 사용 타입
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
-    EPlayerJobType mJobType = EPlayerJobType::None;
+    EUnitJobType mJobType = EUnitJobType::None;
 
     // @brief 스킬 타입
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))

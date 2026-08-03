@@ -7,21 +7,29 @@
 
 #pragma once
 
-#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "TacticalEffect_Weakness.generated.h"
 
-/**
- * @brief  Weakness 이펙트
- */
+ /**
+  * @brief  Weakness 이펙트
+  */
 UCLASS()
-class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect
+class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect_StatusTag
 {
 	GENERATED_BODY()
 
 public:
 	UTacticalEffect_Weakness();
+};
 
-	/* UTacticalEffect 상속 */
+/**
+ * @brief  Weakness 부여 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_GetWeakness : public UTacticalEffect_GetStatusTag
+{
+	GENERATED_BODY()
+
 public:
-	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
+	UTacticalEffect_GetWeakness();
 };

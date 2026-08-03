@@ -63,6 +63,16 @@ void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
 	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
 }
 
+void UEnemyUnitModel::AddRechargeSpeedPointOffset(int32 Offset)
+{
+	GetAttributeComponentModel()->ApplyModToAttribute(UUnitAttributeSet::GetRechargeSpeedPointAttribute(), ETacticalModOp::AddBase, Offset);
+}
+
+EUnitJobType UEnemyUnitModel::GetUnitJobType() const
+{
+	return EUnitJobType::Monster;
+}
+
 int32 UEnemyUnitModel::GetDifficulty() const
 {
 	return mDifficulty;

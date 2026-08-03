@@ -10,7 +10,6 @@
 #include "RDMinimal.h"
 
 #include "Pawn/UnitModel.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
 
 #include "PlayerUnitModel.generated.h"
 
@@ -45,8 +44,8 @@ public:
 	void SetPlayerLevel(int32 PlayerLevel);
 
 public:
-	EPlayerJobType GetPlayerJobType() const;
 	int32 GetPlayerLevel() const;
+	EUnitJobType GetUnitJobType() const override;
 	int32 GetDifficulty() const override;
 	bool IsPlayerUnitModel() const override;
 
