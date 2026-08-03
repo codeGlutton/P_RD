@@ -80,13 +80,19 @@ void UCombatLayoutHUDWidget::EnsureCombatResultWidgets()
 {
 	if (mCombatResultOverlayWidget == nullptr)
 	{
-		static const TCHAR* DefeatWidgetClassPath =
-			TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C");
-		UClass* DefeatWidgetClass = LoadClass<UCombatResultOverlayWidget>(nullptr, DefeatWidgetClassPath);
+		// 생성자에서 하드 레퍼런스로 든 클래스를 우선 쓴다. 문자열 로드는
+		// 테스트 픽스처 등 클래스가 비어 있는 환경의 폴백이다.
+		UClass* DefeatWidgetClass = mDefeatWidgetClass.Get();
 		if (DefeatWidgetClass == nullptr)
 		{
-			UE_LOG(LogRD, Warning, TEXT("Combat defeat WBP is unavailable: %s"), DefeatWidgetClassPath);
-			DefeatWidgetClass = UCombatResultOverlayWidget::StaticClass();
+			static const TCHAR* DefeatWidgetClassPath =
+				TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C");
+			DefeatWidgetClass = LoadClass<UCombatResultOverlayWidget>(nullptr, DefeatWidgetClassPath);
+			if (DefeatWidgetClass == nullptr)
+			{
+				UE_LOG(LogRD, Warning, TEXT("Combat defeat WBP is unavailable: %s"), DefeatWidgetClassPath);
+				DefeatWidgetClass = UCombatResultOverlayWidget::StaticClass();
+			}
 		}
 		mCombatResultOverlayWidget = CreateWidget<UCombatResultOverlayWidget>(GetOwningPlayer(), DefeatWidgetClass);
 	}

@@ -18,6 +18,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
+#include "UI/CombatResultOverlayWidget.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
 
@@ -66,6 +67,15 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	if (RewardWidgetClassFinder.Succeeded())
 	{
 		mRewardWidgetClass = RewardWidgetClassFinder.Class;
+	}
+
+	// 패배 WBP도 하드 레퍼런스로 든다. 문자열 LoadClass만 있으면 Always Cook
+	// 목록에 없는 /Game/UI/CombatResult가 패키징에서 빠진다.
+	static ConstructorHelpers::FClassFinder<UCombatResultOverlayWidget> DefeatWidgetClassFinder(
+		TEXT("/Game/UI/CombatResult/WBP_CombatDefeat"));
+	if (DefeatWidgetClassFinder.Succeeded())
+	{
+		mDefeatWidgetClass = DefeatWidgetClassFinder.Class;
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> DetailOverlayClassFinder(

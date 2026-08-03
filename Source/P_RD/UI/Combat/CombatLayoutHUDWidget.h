@@ -802,6 +802,10 @@ private:
 	bool mCombatReviewWorldMapOpen = false;
 	bool mShowMouseCursorBeforeCombatReviewMap = true;
 
+	/** @brief 패배 화면 WBP. 하드 레퍼런스로 들어야 Cook에서 안 빠진다. */
+	UPROPERTY()
+	TSubclassOf<class UCombatResultOverlayWidget> mDefeatWidgetClass;
+
 	/** @brief 보상 화면. 결과 영상이 끝나면 그 위에 뜬다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
 	TSubclassOf<class URewardSettlementWidgetBase> mRewardWidgetClass;
