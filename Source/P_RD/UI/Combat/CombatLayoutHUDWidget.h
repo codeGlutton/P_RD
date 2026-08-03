@@ -125,6 +125,12 @@ public:
 	{
 		mDetailOverlayWidgetClass = WidgetClass;
 	}
+
+	/** @brief 몬스터 탭의 실제 버튼 배선을 자동화에서 확인한다. */
+	UUserWidget* GetMonsterTabWidgetForTest() const
+	{
+		return mMonsterTabWidget;
+	}
 #endif
 
 public:
@@ -336,6 +342,8 @@ private:
 	UFUNCTION() void HandleMonsterTabRowClicked_1();
 	UFUNCTION() void HandleMonsterTabRowClicked_2();
 	void HandleMonsterTabRowClicked(int32 RowIndex);
+	/** @brief 몬스터 탭 WBP의 뒤로 버튼으로 모달을 닫는다. */
+	UFUNCTION() void HandleMonsterTabBackClicked();
 
 	/** @brief 보유 용병 패널의 닫기 단추를 눌렀다. */
 	UFUNCTION() void HandleMercenaryCloseClicked();

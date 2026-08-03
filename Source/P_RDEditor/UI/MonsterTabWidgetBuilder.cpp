@@ -199,6 +199,8 @@ namespace MonsterTabWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowNormal.T_MT_RowNormal"));
 		UTexture2D* RowSelected = Texture(
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowSelected.T_MT_RowSelected"));
+		UTexture2D* BackButtonTexture = Texture(
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireBackButton.T_MB_HireBackButton"));
 		AddImage(Blueprint, Canvas, TEXT("MonsterTabBaseFrame"), BaseFrame,
 			FVector2D::ZeroVector, FVector2D(1920.0f, 1080.0f), 0, true);
 
@@ -207,6 +209,15 @@ namespace MonsterTabWidgetBuilder
 			FVector2D(355.0f, 80.0f), FVector2D(620.0f, 92.0f), 10,
 			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
 		Title->SetShadowOffset(FVector2D(3.0f, 3.0f));
+
+		AddImage(Blueprint, Canvas, TEXT("MonsterBackArt"), BackButtonTexture,
+			FVector2D(1600.0f, 41.0f), FVector2D(270.0f, 106.0f), 30, true);
+		AddText(Blueprint, Canvas, TEXT("MonsterBackText"),
+			NSLOCTEXT("MarchboundMonsterTab", "Back", "뒤로"), 32,
+			FVector2D(1600.0f, 53.0f), FVector2D(270.0f, 76.0f), 31,
+			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
+		AddTransparentButton(Blueprint, Canvas, TEXT("MonsterBackButton"),
+			FVector2D(1600.0f, 41.0f), FVector2D(270.0f, 106.0f), 32);
 
 		const TCHAR* MonsterNames[3] = { TEXT("독수리"), TEXT("늑대인간"), TEXT("골렘") };
 		const TCHAR* HeadPaths[3] = {

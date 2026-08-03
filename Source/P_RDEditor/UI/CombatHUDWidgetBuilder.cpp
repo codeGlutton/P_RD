@@ -86,7 +86,7 @@ namespace CombatHUDWidgetBuilder
 
 	void BuildMercenaryPanel(UWidgetBlueprint* Blueprint, const FSlateFontInfo& BaseFont,
 		UTexture2D* ShellTexture, UTexture2D* NormalCardTexture,
-		UTexture2D* SelectedCardTexture)
+		UTexture2D* SelectedCardTexture, UTexture2D* BackButtonTexture)
 	{
 		UCanvasPanel* Root = CastChecked<UCanvasPanel>(Blueprint->WidgetTree->RootWidget);
 		UCanvasPanel* Panel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("MercenaryPanel"));
@@ -148,15 +148,20 @@ namespace CombatHUDWidgetBuilder
 		GoldText->SetText(FText::AsNumber(0));
 		SetReadableFont(GoldText, BaseFont, 36);
 
+		UImage* BackArt = FindOrCreate<UImage>(Blueprint, TEXT("MercenaryBackArt"));
+		PlaceCanvas(Board, BackArt, FVector2D(1600.f, 41.f), FVector2D(270.f, 106.f), 5);
+		BackArt->SetBrushFromTexture(BackButtonTexture, false);
+		BackArt->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
 		UTextBlock* CloseText = FindOrCreate<UTextBlock>(Blueprint,
 			TEXT("MercenaryCloseText"));
-		PlaceCanvas(Board, CloseText, FVector2D(1814.f, 55.f), FVector2D(67.f, 67.f), 5);
-		CloseText->SetText(FText::FromString(TEXT("×")));
-		SetReadableFont(CloseText, BaseFont, 42);
+		PlaceCanvas(Board, CloseText, FVector2D(1600.f, 53.f), FVector2D(270.f, 76.f), 6);
+		CloseText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "뒤로"));
+		SetReadableFont(CloseText, BaseFont, 32);
 
 		UButton* CloseButton = FindOrCreate<UButton>(Blueprint,
 			TEXT("MercenaryCloseButton"));
-		PlaceCanvas(Board, CloseButton, FVector2D(1801.f, 41.f), FVector2D(94.f, 94.f), 6);
+		PlaceCanvas(Board, CloseButton, FVector2D(1600.f, 41.f), FVector2D(270.f, 106.f), 7);
 		SetInvisibleButtonChrome(CloseButton);
 
 		const FVector2D LocalCardSize(350.f, 190.f);
@@ -324,13 +329,15 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* MercenaryCardSelectedTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
+		UTexture2D* BackButtonTexture = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireBackButton.T_MB_HireBackButton"));
 		if (MercenaryTexture == nullptr || MonsterTexture == nullptr
 			|| SpeedTexture == nullptr || TurnTokenFrameTexture == nullptr
 			|| OptionsRailFrameTexture == nullptr || MapTexture == nullptr
 			|| SettingsTexture == nullptr || ArtifactSlotTexture == nullptr
 			|| RoundBadgeTexture == nullptr || MercenaryShellTexture == nullptr
 			|| MercenaryCardNormalTexture == nullptr
-			|| MercenaryCardSelectedTexture == nullptr)
+			|| MercenaryCardSelectedTexture == nullptr || BackButtonTexture == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_BUILD HUD textures missing"));
 			return;
@@ -346,7 +353,7 @@ namespace CombatHUDWidgetBuilder
 		}
 
 		BuildMercenaryPanel(Blueprint, BaseFont, MercenaryShellTexture,
-			MercenaryCardNormalTexture, MercenaryCardSelectedTexture);
+			MercenaryCardNormalTexture, MercenaryCardSelectedTexture, BackButtonTexture);
 		UCanvasPanel* TurnPanel = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnPanel")));
 		if (UCanvasPanelSlot* TurnPanelSlot = Cast<UCanvasPanelSlot>(TurnPanel->Slot))

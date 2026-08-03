@@ -2432,6 +2432,11 @@ void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_0() { HandleMonsterTabRo
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_1() { HandleMonsterTabRowClicked(1); }
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_2() { HandleMonsterTabRowClicked(2); }
 
+void UCombatLayoutHUDWidget::HandleMonsterTabBackClicked()
+{
+	SetMonsterTabShown(false);
+}
+
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked(const int32 RowIndex)
 {
 	if (mMonsterTabUnitIds.IsValidIndex(RowIndex) == false)
@@ -2538,6 +2543,12 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	if (UButton* Row2 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_2"))))
 	{
 		Row2->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_2);
+	}
+	if (UButton* BackButton = Cast<UButton>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackButton"))))
+	{
+		BackButton->OnClicked.AddDynamic(
+			this, &UCombatLayoutHUDWidget::HandleMonsterTabBackClicked);
 	}
 	return true;
 }

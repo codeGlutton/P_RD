@@ -17,6 +17,7 @@
 #include "Misc/AutomationTest.h"
 
 #include "Frontend/CharacterSelectTypes.h"
+#include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -627,6 +628,18 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryGoldText"))));
 	TestNotNull(TEXT("용병 패널 닫기 단추"),
 		Cast<UButton>(Tree->FindWidget(TEXT("MercenaryCloseButton"))));
+	TestNotNull(TEXT("용병 패널 뒤로 프레임"),
+		Cast<UImage>(Tree->FindWidget(TEXT("MercenaryBackArt"))));
+	if (UTextBlock* BackText =
+		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryCloseText"))))
+	{
+		TestEqual(TEXT("용병 패널 뒤로 문구"),
+			BackText->GetText().ToString(), FString(TEXT("뒤로")));
+	}
+	else
+	{
+		AddError(TEXT("MercenaryCloseText를 찾을 수 없다"));
+	}
 	if (MercenaryPanel != nullptr)
 	{
 		TestEqual(TEXT("용병 패널 WBP 기본값은 닫힘"),
@@ -707,6 +720,30 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 				TestEqual(*FString::Printf(TEXT("%s 는 숨김"), *FrameName),
 					Frame->GetVisibility(), ESlateVisibility::Collapsed);
 			}
+		}
+	}
+
+	UClass* MonsterTabClass = LoadClass<UUserWidget>(nullptr,
+		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound_C"));
+	UWidgetBlueprintGeneratedClass* MonsterGenerated =
+		Cast<UWidgetBlueprintGeneratedClass>(MonsterTabClass);
+	UWidgetTree* MonsterTree = MonsterGenerated != nullptr
+		? MonsterGenerated->GetWidgetTreeArchetype() : nullptr;
+	if (TestNotNull(TEXT("몬스터 탭 WBP 나무"), MonsterTree))
+	{
+		TestNotNull(TEXT("몬스터 탭 뒤로 프레임"),
+			Cast<UImage>(MonsterTree->FindWidget(TEXT("MonsterBackArt"))));
+		TestNotNull(TEXT("몬스터 탭 뒤로 단추"),
+			Cast<UButton>(MonsterTree->FindWidget(TEXT("MonsterBackButton"))));
+		if (UTextBlock* BackText =
+			Cast<UTextBlock>(MonsterTree->FindWidget(TEXT("MonsterBackText"))))
+		{
+			TestEqual(TEXT("몬스터 탭 뒤로 문구"),
+				BackText->GetText().ToString(), FString(TEXT("뒤로")));
+		}
+		else
+		{
+			AddError(TEXT("MonsterBackText를 찾을 수 없다"));
 		}
 	}
 	return true;
@@ -862,9 +899,16 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 			DetailResponder->mLastPayload, MonsterUnit.mUnitId);
 		TestFalse(TEXT("몬스터 탭이 열리면 PR457 상세 겹은 뜨지 않는다"),
 			HUD->IsDetailOverlayShown());
-		MonsterMenu->OnClicked.Broadcast();
-		TestFalse(TEXT("몬스터 메뉴를 다시 누르면 탭이 닫힌다"),
-			HUD->IsMonsterTabShown());
+		UUserWidget* MonsterTab = HUD->GetMonsterTabWidgetForTest();
+		UButton* MonsterBack = MonsterTab != nullptr
+			? Cast<UButton>(MonsterTab->GetWidgetFromName(TEXT("MonsterBackButton")))
+			: nullptr;
+		if (TestNotNull(TEXT("몬스터 탭 뒤로 단추"), MonsterBack))
+		{
+			MonsterBack->OnClicked.Broadcast();
+			TestFalse(TEXT("몬스터 뒤로 단추를 누르면 탭이 닫힌다"),
+				HUD->IsMonsterTabShown());
+		}
 	}
 	else
 	{
