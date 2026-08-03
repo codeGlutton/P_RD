@@ -67,7 +67,7 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection_Internal
 	}
 
 	// 대상 트랜스폼 수집
-	const FTransform FinalTargetTransform = FinalTargetComponent->GetComponentTransform();;
+	const FTransform FinalTargetTransform = FinalTargetComponent->GetComponentTransform();
 	const FTransform SocketLocalTransform = FinalTargetComponent->GetSocketTransform(SocketName, RTS_Component);
 
 	// 히트한 방향 Transform
