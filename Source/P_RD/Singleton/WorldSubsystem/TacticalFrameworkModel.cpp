@@ -130,8 +130,6 @@ void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSp
 	const AActor* ActorView = Instigator->GetView<AActor>();
 	if (ActorView != nullptr && SpawnData != nullptr && SpawnData->mNiagaraSystem.IsNull() == false)
 	{
-		UPrimitiveComponent* TargetComponent;
-
 		const IBoardCombatTargetView* CombatTargetView = Instigator->GetView<IBoardCombatTargetView>();
 		if (CombatTargetView != nullptr)
 		{
