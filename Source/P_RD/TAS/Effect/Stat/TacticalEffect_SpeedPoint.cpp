@@ -86,3 +86,26 @@ UTacticalEffect_GetSpeedPoint::UTacticalEffect_GetSpeedPoint()
 	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetSpeedPoint::StaticClass();
 	mExecutions.Add(Definition);
 }
+
+bool UTacticalEffect_GetSpeedPoint::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UUnitAttributeSet::GetSpeedPointFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+

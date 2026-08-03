@@ -1,4 +1,4 @@
-#include "Component/SkillComponent/SkillComponentModel.h"
+﻿#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
@@ -99,7 +99,8 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
 	{
-		SetSkill(NextSkillIndex++, Skill.Get());
+		const bool IsSettingSkill = SetSkill(NextSkillIndex++, Skill.Get());
+		checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당"));
 	}
 }
 
@@ -120,9 +121,15 @@ void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList
 		UStaticSkillData* StaticSkillData = LoadStaticSkillData(AssetId);
 		if (StaticSkillData != nullptr)
 		{
-			SetSkill(NextSkillIndex++, StaticSkillData);
+			const bool IsSettingSkill = SetSkill(NextSkillIndex++, StaticSkillData);
+			checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당"));
 		}
 	}
+}
+
+bool USkillComponentModel::IsAcquirableSkill(UStaticSkillData* SkillData) const
+{
+	return IsAcquirableSkill_Internal(SkillData);
 }
 
 const TArray<FSkillEntry>& USkillComponentModel::GetSkills() const
@@ -136,14 +143,20 @@ const FSkillEntry* USkillComponentModel::GetSkill(int32 SkillIndex) const
 	return &mSkillEntries[SkillIndex];
 }
 
-void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillData)
+bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillData)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+
+	if (IsAcquirableSkill(SkillData) == false)
+	{
+		return false;
+	}
 
 	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
 
-	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
+	return true;
 }
 
 bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
@@ -167,6 +180,11 @@ void USkillComponentModel::ForcedActivateSkill(UTileMapModel* MapModel, int32 Sk
 {
 	ConsumeResources_Internal(SkillIndex);
 	ActivateSkill_Internal(MapModel, SkillIndex, AimedTileIndex, Callback);
+}
+
+bool USkillComponentModel::IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const
+{
+	return true;
 }
 
 bool USkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
@@ -222,7 +240,7 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 		DeactivateSkill();
 		}));
 	{
-		mActiveSkillContext.mInstigator = this;
+		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
 		mActiveSkillContext.mMapModel = MapModel;
 		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
 		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
@@ -292,7 +310,7 @@ void USkillComponentModel::PlaySkillAnimation()
 
 	FBoardActorAnimationEvent ApplyEvent;
 	ApplyEvent.mIsOneTimeEvent = false;
-	ApplyEvent.OnTriggerAnimationEvent.AddWeakLambda(this, [this](const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayload* Payload) {
+	ApplyEvent.OnTriggerAnimationEvent.AddWeakLambda(this, [this](const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload) {
 		TriggerPhaseLayer(Payload);
 		});
 	const FGameplayTag& ApplyMotionTag = SkillAnimationSet.mApplyMotionTags[mActiveSkillContext.mAnimationIndex];
@@ -361,7 +379,7 @@ void USkillComponentModel::PreparePhaseLayer()
 	OnPlayPhaseLayerUI.Broadcast(mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 }
 
-void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayload* Payload)
+void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Payload)
 {
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 

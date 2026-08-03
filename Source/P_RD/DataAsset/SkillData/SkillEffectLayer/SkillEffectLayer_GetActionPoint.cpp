@@ -1,5 +1,5 @@
-#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetActionPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_ActionPointFactor_AddBase.h"
+﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetActionPoint.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPointFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 
 #include "Actor/ActorModel.h"

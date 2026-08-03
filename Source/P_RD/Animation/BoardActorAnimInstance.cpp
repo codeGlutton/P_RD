@@ -78,7 +78,7 @@ void UBoardActorAnimInstance::OnEndMontageUsingTag(UAnimMontage* EndAnim, bool I
 	mActiveAnimationContext.Clear();
 }
 
-bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayload* Payload)
+bool UBoardActorAnimInstance::TriggerMontageTagEvent(const FGameplayTag& EventTag, const FEventTriggerPayloadBase* Payload)
 {
 	if (IsPlayingMontageUsingTag() == false)
 	{

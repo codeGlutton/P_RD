@@ -13,6 +13,8 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "GenericTeamAgentInterface.h"
 
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
+
 #include "UnitModel.generated.h"
 
 class UUnitModel;
@@ -42,6 +44,8 @@ public:
 public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;
+
+	void OnBeginRound(int32 RoundCount) override;
 
 public:
 	/**
@@ -74,6 +78,7 @@ public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
 
 public:
+	virtual EUnitJobType GetUnitJobType() const PURE_VIRTUAL(UUnitModel::GetUnitJobType, return EUnitJobType::None;)
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
 

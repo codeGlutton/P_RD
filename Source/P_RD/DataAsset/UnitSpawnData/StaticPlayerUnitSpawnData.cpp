@@ -16,7 +16,7 @@ EDataValidationResult UStaticPlayerUnitSpawnData::IsDataValid(FDataValidationCon
     EDataValidationResult SuperResult = Super::IsDataValid(Context);
     EDataValidationResult ThisResult = EDataValidationResult::Valid;
 
-    if (mJobType >= EPlayerJobType::Count)
+    if (mJobType >= EUnitJobType::PlayerJobCount)
     {
         Context.AddError(FText::FromString(TEXT("잘못된 직업 타입")));
         ThisResult = EDataValidationResult::Invalid;

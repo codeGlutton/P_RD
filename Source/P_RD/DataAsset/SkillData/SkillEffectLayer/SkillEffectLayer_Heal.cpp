@@ -1,5 +1,5 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Heal.h"
-#include "TAS/Effect/Stat/TacticalEffect_HealFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_HealFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 #include "Actor/ActorModel.h"
@@ -47,21 +47,18 @@ void FSkillEffectLayer_Heal::CommitEffect(const FSkillEffectCommitParams& Params
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
 
-    const float TotalHeal = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute());
-    const float HealDiff = FMath::Floor(TotalHeal);
-
-    if (HealDiff > 0.f)
+    /* 힐 적용 */
+    const int32 TargetNum = Params.mTargets.Num();
+    for (int32 i = 0; i < TargetNum; ++i)
     {
-        /* 힐 적용 */
-        for (const TScriptInterface<IBoardCombatTarget>& OtherCombatTarget : Params.mTargets)
-        {
-            UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
-            checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+        const TScriptInterface<IBoardCombatTarget>& OtherCombatTarget = Params.mTargets[i];
+        UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
+        checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-            TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), EffectContext);
-            EffectSpec->mDynamicMagnitude = HealDiff;
-            AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
-        }
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Heal::StaticClass(), EffectContext);
+        EffectSpec->SetInstigatorSnapshotData(Params.mInstigatorSnapshot);
+        EffectSpec->SetTargetSnapshotData(Params.mTargetSnapshots[i]);
+        AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }
 

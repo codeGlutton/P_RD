@@ -209,12 +209,6 @@ void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurn
 		return;
 	}
 
-	// 수명이 다 된 Turn Context 제거
-	if (TurnContext->GetLifeCount() == 0)
-	{
-		UnregisterTurn(TurnContext);
-	}
-
 	AdvanceTurn();
 }
 
@@ -297,10 +291,10 @@ void USRPGCombatModel::EvaluateCombatEndState()
 	}
 }
 
-USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner, int32 LifeCount)
+USRPGTurnContext* USRPGCombatModel::RegisterTurn(UUnitModel* Owner)
 {
 	USRPGTurnContext* TurnContext = NewObject<USRPGTurnContext>(this);
-	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++, LifeCount);
+	TurnContext->InitTurn(this, Owner, mTurnContextMaxIndex++);
 	TurnContext->OnBeginTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
 		OnBeginAnyTurnUI.Broadcast(Barrier, TurnContext);
 		});
@@ -459,6 +453,7 @@ void USRPGCombatModel::RegisterEnemyUnit(FEnemyUnitPlacementData& EnemyPlacement
 	EnemyUnit->SetStaticSpawnData(EnemyUnitSpawnData);
 	EnemyUnit->FinishCreating(mTileMap->TileToWorldTransform(EnemyPlacementData.mTransform));
 	EnemyUnit->SetDifficulty(EnemyPlacementData.mDifficulty);
+	EnemyUnit->AddRechargeSpeedPointOffset(StaticCast<float>(EnemyPlacementData.mRechargeSpeedPointOffset));
 
 	RegisterUnit(EnemyUnit, EnemyPlacementData.mTransform);
 }
@@ -508,6 +503,7 @@ void USRPGCombatModel::UnregisterUnit(UUnitModel* Unit)
 	mTileMap->RemoveActor(Unit);
 
 	mUnits.RemoveSingleSwap(Unit);
+	mPlayerUnits.RemoveSingleSwap(Unit);
 
 	if (Unit->IsPlayerUnitModel() == false)
 	{
@@ -534,6 +530,8 @@ void USRPGCombatModel::UnregisterObstacle(UBoardActorModel* Obstacle)
 	mTileMap->RemoveActor(Obstacle);
 
 	mObstacles.RemoveSingleSwap(Obstacle);
+	mCombatTargetObstacles.RemoveSingleSwap(Obstacle);
+
 	if (Obstacle->GetClass()->ImplementsInterface(UBoardCombatTarget::StaticClass()) == true)
 	{
 		mCombatTargetObstacles.RemoveSingleSwap(Obstacle);
@@ -572,7 +570,6 @@ void USRPGCombatModel::RegisterEnemyUnits(TArray<FEnemyUnitPlacementData>& Enemy
 	TSortedMap<int32, TArray<FEnemyUnitPlacementData*>> RegisterMap;
 	for (FEnemyUnitPlacementData& PlacementData : EnemyPlacementDatas)
 	{
-		// UE TSortedMap::operator[]는 FindChecked(키 없으면 assert)라 삽입에 쓰면 크래시. 새 키는 FindOrAdd로.
 		RegisterMap.FindOrAdd(PlacementData.mTurnPriority).Push(&PlacementData);
 	}
 

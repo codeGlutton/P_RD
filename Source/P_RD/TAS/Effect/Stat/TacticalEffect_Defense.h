@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Defense.h
  * @brief  Defense 이펙트 정의 헤더
  * @author 이문환
@@ -49,4 +49,9 @@ class P_RD_API UTacticalEffect_GetDefense : public UTacticalEffect
 
 public:
 	UTacticalEffect_GetDefense();
+
+	/* UTacticalEffect 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
+

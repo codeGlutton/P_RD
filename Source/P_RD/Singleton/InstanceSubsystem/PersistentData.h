@@ -18,6 +18,7 @@ class UPartyModel;
 class UPlayerUnitModel;
 class FViewport;
 class UStaticSkillData;
+class UNiagaraSystem;
 
 DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
@@ -172,6 +173,16 @@ protected:
 	float mMoney = 0.f;
 };
 
+USTRUCT()
+struct FRunPersistDataCache
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TArray<TObjectPtr<UNiagaraSystem>> mEffectVFXs;
+};
+
 /**
  * @brief 이번 런의 영구적 데이터
  */
@@ -179,6 +190,9 @@ UCLASS()
 class P_RD_API URunPersistData : public UPartyPersistData
 {
 	GENERATED_BODY()
+
+public:
+	void MakeCaches();
 
 public:
 	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
@@ -235,6 +249,11 @@ protected:
 protected:
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunLog"))
 	FRunLog mRunLog;
+
+	/* 캐싱 */
+private:
+	UPROPERTY()
+	FRunPersistDataCache mRunPersistDataCache;
 };
 
 /**
@@ -350,8 +369,4 @@ protected:
 private:
 	UPROPERTY()
 	FOptionPersistDataCache mOptionPersistDataCache;
-
-private:
-	// 뷰포트 생성/리사이즈(폴더블 접힘 전환 포함) 시 렌더 해상도 비율 재계산용 구독 핸들
-	FDelegateHandle mViewportResizedHandle;
 };

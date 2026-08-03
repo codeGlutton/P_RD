@@ -6,7 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
-#include "AttributeSet/CombatTargetAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
@@ -21,7 +21,7 @@ UTacticalEffect_ActionPoint::UTacticalEffect_ActionPoint()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
+	Info.mAttribute = UUnitAttributeSet::GetActionPointAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
@@ -33,8 +33,8 @@ void UTacticalEffect_ActionPoint::OnExecuted(FActiveTacticalEffectsContainer& Ac
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
-	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetActionPointAttribute())->mTotalMagnitude;
+	Log.mEffectAttribute = UUnitAttributeSet::GetActionPointAttribute();
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UUnitAttributeSet::GetActionPointAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
@@ -63,17 +63,17 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 		ExecutionParams.GetOwningSpec().GetStackCount() * 
 		ExecutionParams.GetOwningSpec().mDynamicMagnitude * 
 		TargetAgilityRatio *
-		SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetActionPointFactorAttribute()];
+		SourceSnapshotData->mAttributes[UUnitAttributeSet::GetActionPointFactorAttribute()];
 	const float MoveDiff = FMath::Floor(TotalMove);
 	
 	if (MoveDiff > 0.f)
 	{
 		/* 이동 증가 적용 */
-		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, MoveDiff));
+		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, MoveDiff));
 	
 		/* 로그 적용 */
 		FSRPGAttributeEffectEventLog Log;
-		Log.mEffectAttribute = UCombatTargetAttributeSet::GetActionPointAttribute();
+		Log.mEffectAttribute = UUnitAttributeSet::GetActionPointAttribute();
 		Log.mMagnitude = MoveDiff;
 
 		UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
@@ -95,3 +95,26 @@ UTacticalEffect_GetActionPoint::UTacticalEffect_GetActionPoint()
 	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetActionPoint::StaticClass();
 	mExecutions.Add(Definition);
 }
+
+bool UTacticalEffect_GetActionPoint::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UUnitAttributeSet::GetActionPointFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+

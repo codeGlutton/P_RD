@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   EventTriggerPayload.h
  * @brief  이벤트 호출 애님 노티파이의 추가 데이터 정의 헤더
  * @author 모호재
@@ -8,31 +8,13 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "NiagaraSystem.h"
+#include "Setting/GamePlayType.h"
 #include "EventTriggerPayload.generated.h"
 
 class UCameraShakeBase;
 
 DECLARE_DELEGATE(FOnEndDurationEventTrigger);
 
-USTRUCT(BlueprintType)
-struct FApplyNiagaraSpawnData
-{
-    GENERATED_BODY()
-
-public:
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSystem"))
-    TObjectPtr<UNiagaraSystem> mNiagaraSystem = nullptr;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SocketName"))
-    FName mSocketName = NAME_None;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RelativeTransform"))
-    FTransform mRelativeTransform = FTransform::Identity;
-
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Attached"))
-    bool mAttached = true;
-};
 
 UENUM(BlueprintType)
 enum class ECameraZoomTargetType : uint8
@@ -70,20 +52,20 @@ public:
 };
 
 /**
- * @brief  이벤트 호출 애님 노티파이의 추가 데이터
+ * @brief  이벤트 호출 애님 노티파이의 추가 데이터 베이스
  */
 USTRUCT(BlueprintType)
-struct FEventTriggerPayload
+struct FEventTriggerPayloadBase
 {
     GENERATED_BODY()
 
 public:
-    virtual ~FEventTriggerPayload() = default;
+    virtual ~FEventTriggerPayloadBase() = default;
 
 public:
     virtual UScriptStruct* GetScriptStruct() const
     {
-        return FEventTriggerPayload::StaticStruct();
+        return FEventTriggerPayloadBase::StaticStruct();
     }
 
     virtual FLinearColor GetEditorColor() const
@@ -93,10 +75,25 @@ public:
 };
 
 /**
+ * @brief  이벤트 호출 애님 노티파이의 추가 데이터
+ */
+USTRUCT(BlueprintType)
+struct FEventTriggerPayload : public FEventTriggerPayloadBase
+{
+    GENERATED_BODY()
+
+public:
+    UScriptStruct* GetScriptStruct() const override
+    {
+        return FEventTriggerPayload::StaticStruct();
+    }
+};
+
+/**
  * @brief 시간을 가지는 이벤트 호출 애님 노티파이의 추가 데이터
  */
 USTRUCT(BlueprintType)
-struct FDurationEventTriggerPayload : public FEventTriggerPayload
+struct FDurationEventTriggerPayload : public FEventTriggerPayloadBase
 {
     GENERATED_BODY()
 
@@ -175,7 +172,7 @@ public:
 
 public:
     UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
-    TArray<FApplyNiagaraSpawnData> mNiagaraSpawnDatas;
+    TArray<FNiagaraSpawnData> mNiagaraSpawnDatas;
 };
 
 /**

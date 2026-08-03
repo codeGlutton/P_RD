@@ -244,17 +244,17 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetHPAttribute())
+		if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
 		{
 			IconType = EFloatingLogIconType::HP;
 			ColorType = AttrLog.mMagnitude > 0.f ? EFloatingLogColorType::Heal : EFloatingLogColorType::Damage;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetActionPointAttribute())
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetActionPointAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
 			ColorType = EFloatingLogColorType::PointUp;
 		}
-		else if (AttrLog.mEffectAttribute == UCombatTargetAttributeSet::GetDefenseAttribute())
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
 		{
 			IconType = EFloatingLogIconType::GetDefense;
 			ColorType = EFloatingLogColorType::PointUp;
@@ -1167,19 +1167,23 @@ void ACombatGameMode::PushUnitUIData() const
 			UnitUIData.mTurnPortrait = UnitUIData.mPortrait;
 		}
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
-		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHPAttribute());
-		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
-		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute());
+		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
+		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
+		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
+		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
+		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
+			UUnitAttributeSet::GetRechargeSpeedPointAttribute());
 		if (UnitUIData.mSpeedPoint <= 0.f)
 		{
-			// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 0일 수 있다.
-			// 턴바에는 유닛의 고유 속도인 Factor를 폴백으로 보여 준다.
 			UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
 				UUnitAttributeSet::GetSpeedPointFactorAttribute());
 		}
-		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
-		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetActionPointAttribute());
+		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
+		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
+		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
+		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
+		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 

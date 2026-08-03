@@ -31,12 +31,10 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, MaxHP)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, HP)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, Defense)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, ActionPoint)
 
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, AttackFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, HealFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, DefenseFactor)
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, ActionPointFactor)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, CriticalFactor)
 
 	/* Instant로 즉각 적용되는 Attribute 값 */
@@ -51,9 +49,6 @@ protected:
 	// @brief 이번 턴 동안 유지되는 방어 스택
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Defense;
-	// @brief 이번 턴 동안 유지되는 행동력 스택 
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData ActionPoint;
 
 	/* 특정 기간적으로 추가되는 반영 스텟들 */
 protected:
@@ -66,9 +61,6 @@ protected:
 	// @brief 추가 방어휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData DefenseFactor;
-	// @brief 추가 행동력 휙득력 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData ActionPointFactor;
 	// @brief 크리티컬 확률 값 (ex 버프, 장비, 특정 기간 동안의 패시브 반영)
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData CriticalFactor;

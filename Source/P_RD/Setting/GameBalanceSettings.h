@@ -43,5 +43,5 @@ public:
 	TSoftObjectPtr<UCurveTable> mInitializeCurveTable;
 
 	UPROPERTY(Config, Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectSetting", ToolTip = "상태 이상 적용 시, 사용되는 전역 설정 값"))
-	FGlobalStatusEffectSetting mGlobalStatusEffectSetting;
+	FGlobalStatusEffectBalanceSetting mGlobalStatusEffectSetting;
 };

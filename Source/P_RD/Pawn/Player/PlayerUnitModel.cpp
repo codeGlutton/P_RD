@@ -47,19 +47,19 @@ void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
     TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
 }
 
-EPlayerJobType UPlayerUnitModel::GetPlayerJobType() const
+int32 UPlayerUnitModel::GetPlayerLevel() const
+{
+    return mPlayerLevel;
+}
+
+EUnitJobType UPlayerUnitModel::GetUnitJobType() const
 {
     UStaticPlayerUnitSpawnData* PlayerUnitSpawnData = Cast<UStaticPlayerUnitSpawnData>(mStaticSpawnData);
     if (PlayerUnitSpawnData == nullptr)
     {
-        return EPlayerJobType::None;
+        return EUnitJobType::None;
     }
     return PlayerUnitSpawnData->mJobType;
-}
-
-int32 UPlayerUnitModel::GetPlayerLevel() const
-{
-    return mPlayerLevel;
 }
 
 int32 UPlayerUnitModel::GetDifficulty() const

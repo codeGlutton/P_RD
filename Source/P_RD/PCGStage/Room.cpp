@@ -41,7 +41,7 @@ void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimary
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	const int32 MaxJobCount = StaticCast<int32>(EPlayerJobType::Count);
+	const int32 MaxJobCount = StaticCast<int32>(EUnitJobType::PlayerJobCount);
 	for (int32 i = 0; i < MaxJobCount; ++i)
 	{
 		AdditionalAssetIds.Append(mSaleJobSkillDataItems[i].mSaleItemIds);

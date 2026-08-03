@@ -1,6 +1,5 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_MultiplyCompound.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 

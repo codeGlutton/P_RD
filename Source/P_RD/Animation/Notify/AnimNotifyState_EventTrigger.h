@@ -42,6 +42,6 @@ protected:
 	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "TargetEventTag", ToolTip = "호출할 이벤트 태그"))
 	FGameplayTag mTargetEventTag;
 
-	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "EventPayload", ToolTip = "같이 전달할 페이로드"))
+	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "EventPayload", ToolTip = "같이 전달할 페이로드", ExcludeBaseStruct))
 	TInstancedStruct<FDurationEventTriggerPayload> mEventPayload;
 };

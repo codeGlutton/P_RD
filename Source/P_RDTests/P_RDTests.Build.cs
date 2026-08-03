@@ -35,6 +35,9 @@ public class P_RDTests : ModuleRules
             /* AI Module (BoardCombatTarget가 참조하는 GenericTeamAgentInterface 등) */
             "AIModule",
 
+            /* P_RD 공개 헤더(GamePlayType.h)가 NiagaraSystem.h를 포함해서 필요하다 */
+            "Niagara",
+
             /* UI 배치안을 오프스크린 렌더해서 PNG로 남기는 캡처 테스트용 */
             "UMG",
             "Slate",
