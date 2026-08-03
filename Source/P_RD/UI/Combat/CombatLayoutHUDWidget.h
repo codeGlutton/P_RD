@@ -116,6 +116,9 @@ public:
 	/** @brief PR457 상세 겹이 현재 열려 있는가. 입력 흐름과 자동화 검증이 함께 쓴다. */
 	bool IsDetailOverlayShown() const;
 
+	/** @brief 몬스터 탭이 지금 열려 있는가. 입력 흐름과 자동화 검증이 함께 쓴다. */
+	bool IsMonsterTabShown() const;
+
 #if WITH_DEV_AUTOMATION_TESTS
 	/** @brief 외부 UI 자산 없이 상세 왕복을 검증할 때 쓸 위젯 클래스를 넣는다. */
 	void SetDetailOverlayWidgetClassForTest(TSubclassOf<UUserWidget> WidgetClass)
@@ -171,6 +174,9 @@ private:
 
 	/** @brief 보유 용병 패널이 지금 열려 있는가. */
 	bool IsMercenaryPanelShown() const;
+
+	/** @brief 전투 HUD의 몬스터 메뉴에서 몬스터 탭(WBP_MonsterTab_Marchbound)을 펴거나 접는다. */
+	void SetMonsterTabShown(bool bShown);
 
 	/**
 	 * @brief 명령 카드를 펴거나 접는다.
@@ -323,8 +329,13 @@ private:
 
 	/** @brief 상단 용병 메뉴를 눌러 보유 용병 패널을 토글한다. */
 	UFUNCTION() void HandleMercenaryMenuClicked();
-	/** @brief 상단 몬스터 메뉴에서 첫 생존 적의 정보 패널을 연다. */
+	/** @brief 상단 몬스터 메뉴로 몬스터 탭을 토글한다. 탭 WBP가 없으면 첫 생존 적의 정보 패널로 대신한다. */
 	UFUNCTION() void HandleMonsterMenuClicked();
+
+	UFUNCTION() void HandleMonsterTabRowClicked_0();
+	UFUNCTION() void HandleMonsterTabRowClicked_1();
+	UFUNCTION() void HandleMonsterTabRowClicked_2();
+	void HandleMonsterTabRowClicked(int32 RowIndex);
 
 	/** @brief 보유 용병 패널의 닫기 단추를 눌렀다. */
 	UFUNCTION() void HandleMercenaryCloseClicked();
@@ -696,6 +707,25 @@ private:
 	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> mDetailOverlayWidget;
+
+	/* ── 몬스터 탭 (WBP_MonsterTab_Marchbound) ──────────────────────────
+	 *
+	 * 상단 몬스터 메뉴로 여닫는 전체 화면 모달이다. 행 3칸은 살아 있는 적을
+	 * 나온 차례대로 채우고, 행을 누르면 오른쪽 상세가 그 몬스터로 바뀐다.
+	 * 목록/스탯은 FUnitUI 값으로 바로 채우고, 스킬 이름은 RequestInspectUnit
+	 * 응답(FUnitDetailUI)이 채운다 -- 상세 응답이 탭이 열린 동안 오면 PR457
+	 * 상세 겹 대신 이 탭이 받는다.
+	 */
+	bool EnsureMonsterTabWidget();
+	void RefreshMonsterTab();
+	void RefreshMonsterTabDetail();
+	UPROPERTY() TSubclassOf<UUserWidget> mMonsterTabWidgetClass;
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mMonsterTabWidget;
+	/** @brief 행 순서대로 담은 표시 대상 적 id. 클릭 행→유닛 매핑의 단일 출처. */
+	TArray<int32> mMonsterTabUnitIds;
+	int32 mMonsterTabSelectedRow = 0;
+	/** @brief 마지막으로 상세를 청한 몬스터 id. 유닛 갱신마다 재요청하지 않기 위한 가드. */
+	int32 mMonsterTabInspectedUnitId = INDEX_NONE;
 	UPROPERTY(Transient) TObjectPtr<UImage> mDetailIconImage;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailTitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;

@@ -485,20 +485,66 @@ bool FCombatHUDCardNestingTest::RunTest(const FString& Parameters)
 			CountChildren(*Name) >= 4);
 	}
 
+	// 새 파티 카드는 부품을 중간 컨테이너(PartyContent)로 한 번 감싼다. 접힘
+	// 계약은 "부품이 카드 계보 안에 있는가"이므로 직계가 아니라 자손으로 센다.
+	auto CountDescendants = [Tree](const TCHAR* Name) -> int32
+	{
+		UPanelWidget* Panel = Cast<UPanelWidget>(Tree->FindWidget(FName(Name)));
+		if (Panel == nullptr)
+		{
+			return -1;
+		}
+		int32 Count = 0;
+		TArray<UWidget*> Pending;
+		for (int32 Child = 0; Child < Panel->GetChildrenCount(); ++Child)
+		{
+			Pending.Add(Panel->GetChildAt(Child));
+		}
+		while (Pending.Num() > 0)
+		{
+			UWidget* Widget = Pending.Pop();
+			if (Widget == nullptr)
+			{
+				continue;
+			}
+			++Count;
+			if (UPanelWidget* Nested = Cast<UPanelWidget>(Widget))
+			{
+				for (int32 Child = 0; Child < Nested->GetChildrenCount(); ++Child)
+				{
+					Pending.Add(Nested->GetChildAt(Child));
+				}
+			}
+		}
+		return Count;
+	};
+	auto IsInsideCard = [](UWidget* Widget, UPanelWidget* Card) -> bool
+	{
+		for (UPanelWidget* Parent = Widget != nullptr ? Widget->GetParent() : nullptr;
+			Parent != nullptr; Parent = Parent->GetParent())
+		{
+			if (Parent == Card)
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+
 	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::PartySlotCount; ++Index)
 	{
 		const FString Name = FString::Printf(TEXT("PartyCard_%d"), Index);
 		TestTrue(*FString::Printf(TEXT("%s 가 부품을 품는다"), *Name),
-			CountChildren(*Name) >= 4);
+			CountDescendants(*Name) >= 4);
 
-		// 다시 펴는 손잡이. 카드 안에 있어야 접힌 카드가 안 눌린다.
+		// 다시 펴는 손잡이. 카드 계보 안에 있어야 접힌 카드가 안 눌린다.
 		const FString ButtonName = FString::Printf(TEXT("PartyButton_%d"), Index);
 		UWidget* Button = Tree->FindWidget(FName(*ButtonName));
 		if (TestNotNull(*ButtonName, Button))
 		{
-			TestEqual(*FString::Printf(TEXT("%s 가 카드 안에 있다"), *ButtonName),
-				Button->GetParent(),
-				Cast<UPanelWidget>(Tree->FindWidget(FName(*Name))));
+			TestTrue(*FString::Printf(TEXT("%s 가 카드 안에 있다"), *ButtonName),
+				IsInsideCard(Button,
+					Cast<UPanelWidget>(Tree->FindWidget(FName(*Name)))));
 		}
 	}
 
@@ -809,10 +855,25 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	MonsterUnit.mMaxHP = 50.f;
 	Model->SetUnitUIs({ MonsterUnit });
 	MonsterMenu->OnClicked.Broadcast();
-	TestEqual(TEXT("몬스터 메뉴는 첫 생존 적을 InspectUnit으로 연다"),
-		DetailResponder->mLastPayload, MonsterUnit.mUnitId);
-	TestTrue(TEXT("몬스터 메뉴는 상세 오버레이를 연다"),
-		HUD->IsDetailOverlayShown());
+	if (HUD->IsMonsterTabShown() == true)
+	{
+		// 몬스터 탭 WBP가 있는 환경: 탭이 열리고 선택 몬스터의 상세를 청한다.
+		TestEqual(TEXT("몬스터 탭은 선택 몬스터를 InspectUnit으로 청한다"),
+			DetailResponder->mLastPayload, MonsterUnit.mUnitId);
+		TestFalse(TEXT("몬스터 탭이 열리면 PR457 상세 겹은 뜨지 않는다"),
+			HUD->IsDetailOverlayShown());
+		MonsterMenu->OnClicked.Broadcast();
+		TestFalse(TEXT("몬스터 메뉴를 다시 누르면 탭이 닫힌다"),
+			HUD->IsMonsterTabShown());
+	}
+	else
+	{
+		// 탭 WBP가 없는 환경: 예전 계약대로 첫 생존 적의 상세 겹을 연다.
+		TestEqual(TEXT("몬스터 메뉴는 첫 생존 적을 InspectUnit으로 연다"),
+			DetailResponder->mLastPayload, MonsterUnit.mUnitId);
+		TestTrue(TEXT("몬스터 메뉴는 상세 오버레이를 연다"),
+			HUD->IsDetailOverlayShown());
+	}
 
 	FPlayerMetaUI Meta;
 	Meta.mGold = 123456;
