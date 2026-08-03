@@ -198,7 +198,6 @@ namespace
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
-		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::InGameSettings,
