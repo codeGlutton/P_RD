@@ -373,6 +373,12 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mDescription = LoadedPlayerUnitData->mDescription.IsEmpty()
 			? JobDesc : LoadedPlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), DefaultDifficulty));
+		NewOption.mMaxAP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(
+			GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+			UUnitAttributeSet::GetRechargeActionPointAttribute(), DefaultDifficulty));
+		NewOption.mSpeed = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(
+			GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+			UUnitAttributeSet::GetSpeedPointAttribute(), DefaultDifficulty));
 		NewOption.mStatSummary = FText::Format(
 			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Gold {1}"),
 			FText::AsNumber(NewOption.mMaxHP),
@@ -504,6 +510,7 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 	if (mWasHireDelegateBound == false)
 	{
 		HireWidget->mOnPartyConfirmed.AddUObject(this, &AFrontendGameMode::HandlePartyConfirmed);
+		HireWidget->mOnBackRequested.AddUObject(this, &AFrontendGameMode::HandleMercenaryHireBackRequested);
 		mWasHireDelegateBound = true;
 	}
 
@@ -536,16 +543,16 @@ int32 AFrontendGameMode::GetPartySize() const
 	return DefaultPartySize;
 }
 
-void AFrontendGameMode::HandleCharacterSelectBackRequested()
+void AFrontendGameMode::HandleMercenaryHireBackRequested()
 {
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
 		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
 		: nullptr;
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	if (UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect))
+	if (UMercenaryHireWidget* HireWidget = WorldWidgetSubsystem->GetWorldWidget<UMercenaryHireWidget>(EWorldWidgetType::MercenaryHire))
 	{
-		CharacterSelectWidget->CloseUI();
+		HireWidget->CloseUI();
 	}
 
 	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())

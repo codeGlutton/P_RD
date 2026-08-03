@@ -55,6 +55,7 @@ struct FCombatUnitHpBarWidget
 	float mFillFullWidth = 0.0f;
 
 	UPROPERTY(Transient) TArray<TObjectPtr<class UImage>> mStatusIcons;
+	UPROPERTY(Transient) TArray<TObjectPtr<class UImage>> mStatusFrames;
 	UPROPERTY(Transient) TArray<TObjectPtr<class UTextBlock>> mStatusCountTexts;
 	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mStatusOverflowText;
 };
@@ -101,7 +102,10 @@ public:
 	static constexpr int32 PartySlotCount = 3;
 
 	/** @brief 턴 순서에 표시할 최대 인원. */
-	static constexpr int32 TurnSlotCount = 6;
+	static constexpr int32 TurnSlotCount = 10;
+
+	/** @brief 좌하단 AP 위에 한 줄로 보이는 파티 공용 아티팩트 수. */
+	static constexpr int32 ArtifactSlotCount = 6;
 
 	/** @brief 커맨드 레일 칸 수. 이동 + 기본공격 + 스킬 4개. */
 	static constexpr int32 CommandSlotCount = 6;
@@ -109,6 +113,16 @@ public:
 	/** @brief 누른 동안 줄어드는 정도. 더 줄이면 눌린 게 아니라 튄 것으로 보인다. */
 	static constexpr float PressedScale = 0.95f;
 
+	/** @brief PR457 상세 겹이 현재 열려 있는가. 입력 흐름과 자동화 검증이 함께 쓴다. */
+	bool IsDetailOverlayShown() const;
+
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 외부 UI 자산 없이 상세 왕복을 검증할 때 쓸 위젯 클래스를 넣는다. */
+	void SetDetailOverlayWidgetClassForTest(TSubclassOf<UUserWidget> WidgetClass)
+	{
+		mDetailOverlayWidgetClass = WidgetClass;
+	}
+#endif
 
 public:
 	/**
@@ -148,6 +162,15 @@ private:
 	void RefreshCommands();
 	void RefreshEnemy();
 	void RefreshMeta();
+
+	/** @brief 프리미엄 용병 셸을 패널 최하단에 한 번 만들고 구식 판을 숨긴다. */
+	void EnsureMercenaryRosterShell();
+
+	/** @brief 전투 HUD의 용병 메뉴에서 보유 용병 패널을 펴거나 접는다. */
+	void SetMercenaryPanelShown(bool bShown);
+
+	/** @brief 보유 용병 패널이 지금 열려 있는가. */
+	bool IsMercenaryPanelShown() const;
 
 	/**
 	 * @brief 명령 카드를 펴거나 접는다.
@@ -298,8 +321,19 @@ private:
 	UFUNCTION() void HandlePartyClicked_2();
 	void HandlePartyClicked(int32 SlotIndex);
 
+	/** @brief 상단 용병 메뉴를 눌러 보유 용병 패널을 토글한다. */
+	UFUNCTION() void HandleMercenaryMenuClicked();
+	/** @brief 상단 몬스터 메뉴에서 첫 생존 적의 정보 패널을 연다. */
+	UFUNCTION() void HandleMonsterMenuClicked();
+
+	/** @brief 보유 용병 패널의 닫기 단추를 눌렀다. */
+	UFUNCTION() void HandleMercenaryCloseClicked();
+
+	/** @brief 상단 지도 메뉴를 눌러 현재 런 지도를 조회용으로 토글한다. */
+	UFUNCTION() void HandleWorldMapMenuClicked();
+
 	/**
-	 * @brief 하단 용병 칸 SlotIndex 에 서 있는 유닛의 id.
+	 * @brief 용병 패널 SlotIndex 에 서 있는 유닛의 id.
 	 *
 	 * 칸은 아군을 나온 차례대로 채운다 -- RefreshParty() 와 같은 순서로 세야
 	 * 눌린 칸과 유닛이 어긋나지 않는다.
@@ -320,11 +354,14 @@ private:
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
 
+	/** @brief 턴바가 마지막으로 본 라운드. 한 유닛 전투에서도 페이지를 되감는다. */
+	int32 mLastTurnBarRound = INDEX_NONE;
+
 	/**
 	 * @brief 턴 순서 줄에서 지금 보고 있는 창의 시작 자리.
 	 *
 	 * @details
-	 * 칸이 여섯인데 도는 유닛이 더 많을 수 있다. 양끝 넘김칸을 눌러 창을
+	 * 칸이 열인데 도는 유닛이 더 많을 수 있다. 양끝 넘김칸을 눌러 창을
 	 * 옮긴다. **차례가 바뀌면 0으로 되돌린다** -- 줄 자체가 한 칸 밀리므로,
 	 * 옮겨 둔 창을 그대로 두면 다음 턴에 엉뚱한 곳을 보고 있다.
 	 */
@@ -404,10 +441,36 @@ private:
 	/** @brief 지금 줄여 둔 묶음. 놓으면 되돌린다. */
 	UPROPERTY() TObjectPtr<UWidget> mPressedTarget = nullptr;
 
-	/** @brief 메뉴 넷. 왼쪽부터 지도 · 스킬 · 가방 · 설정. */
+	/** @brief 메뉴 넷. 왼쪽부터 지도 · 용병 · 빈칸 · 설정. */
 	UPROPERTY() TArray<TObjectPtr<UButton>> mMenuButtons;
 
-	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 용병칸 · AP 막대. */
+	/** @brief 보유 용병만 보여 주는 전투 내 읽기 전용 패널. 고용은 상점 몫이다. */
+	UPROPERTY() TObjectPtr<UWidget> mMercenaryPanel;
+
+	/** @brief 프리미엄 셸. 소프트 참조라 에셋 import 전에도 CDO 로드가 깨지지 않는다. */
+	UPROPERTY()
+	TSoftObjectPtr<UTexture2D> mMercenaryRosterShellTexture;
+	/** @brief 좌측 용병 선택 카드의 일반/현재 턴 상태 프레임. */
+	UPROPERTY()
+	TSoftObjectPtr<UTexture2D> mMercenaryCardNormalTexture;
+	UPROPERTY()
+	TSoftObjectPtr<UTexture2D> mMercenaryCardSelectedTexture;
+
+	/** @brief MercenaryPanel 최하단에 런타임으로 붙인 프리미엄 셸 그림. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mMercenaryRosterShellImage;
+
+	/** @brief 용병 패널의 현재 보유 골드 숫자와 닫기 단추. */
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryGoldText;
+	UPROPERTY() TObjectPtr<UButton> mMercenaryCloseButton;
+	/** @brief 좌측 목록에서 현재 턴 용병을 크게 보여 주는 중앙/우측 요약. */
+	UPROPERTY() TObjectPtr<UImage> mMercenaryHeroPortrait;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailName;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailHP;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailAP;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailSpeed;
+
+	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 AP 막대. */
 	UPROPERTY() TObjectPtr<class UScaleBox> mCommandLayer;
 	UPROPERTY() TObjectPtr<class UScaleBox> mPartyLayer;
 
@@ -428,6 +491,10 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnAPText;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPips;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
+
+	/** @brief 좌하단 AP 위의 파티 공용 아티팩트 그림. 별도 프레임은 쓰지 않는다. */
+	UPROPERTY() TArray<TObjectPtr<UImage>> mArtifactIcons;
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mArtifactFrames;
 
 	UFUNCTION() void HandleConfirmClicked();
 
@@ -463,6 +530,7 @@ private:
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
 	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
+	UFUNCTION() void HandleCombatResultRetryConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
@@ -582,6 +650,7 @@ private:
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpFillRedTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpFillGreenTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mUnitStatusSlotTexture;
 
 	/** @brief 상태이상 딱지 그림. 전용 그림이 없는 태그는 빈 칸으로 둔다. */
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpDamage;
@@ -623,7 +692,6 @@ private:
 	 *        턴 전환처럼 게임플레이가 스스로 걷는 자리에서는 거짓으로 닫는다.
 	 */
 	void HideDetailOverlay(bool bNotifyGameplay);
-	bool IsDetailOverlayShown() const;
 
 	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
@@ -668,7 +736,16 @@ private:
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
 
-	/** @brief 승리 지도는 다음 방을 고르기 전까지 닫히지 않도록 즉시 복원한다. */
+	/** @brief 전투 중 현재 런 지도를 방 선택 없이 조회용으로 연다. */
+	void OpenWorldMapForCombatReview();
+
+	/** @brief 조회용 지도를 닫고 전투 HUD와 입력 모드를 복원한다. */
+	void CloseWorldMapForCombatReview();
+
+	/** @brief 지도 닫기 완료 뒤 전투 입력을 안전하게 되돌린다. */
+	void RestoreCombatInputAfterWorldMap();
+
+	/** @brief 승리 지도는 잠그고, 조회 지도는 정상적으로 닫는다. */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
@@ -686,10 +763,19 @@ private:
 	bool mCombatResultFlowActive = false;
 	bool mVictoryWorldMapLocked = false;
 
+	/** @brief 공용 서브시스템 초기화가 늦은 경로에서 조회 지도를 직접 만들 때 쓸 클래스. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Navigation")
+	TSubclassOf<class UFrontendMapWidget> mWorldMapWidgetClass;
+
+	/** @brief MAP 메뉴로 연 조회용 지도. 승리 후 방 선택 지도와 상태를 구분한다. */
+	UPROPERTY(Transient) TObjectPtr<class UFrontendMapWidget> mCombatReviewWorldMap;
+	bool mCombatReviewWorldMapOpen = false;
+	bool mShowMouseCursorBeforeCombatReviewMap = true;
+
 	/** @brief 보상 화면. 결과 영상이 끝나면 그 위에 뜬다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
-	TSubclassOf<class URewardUIWidgetBase> mRewardWidgetClass;
-	UPROPERTY(Transient) TObjectPtr<class URewardUIWidgetBase> mCombatRewardWidget;
+	TSubclassOf<class URewardSettlementWidgetBase> mRewardWidgetClass;
+	UPROPERTY(Transient) TObjectPtr<class URewardSettlementWidgetBase> mCombatRewardWidget;
 	UPROPERTY(Transient) TObjectPtr<class URewardUIModel> mCombatRewardUIModel;
 
 	/** @brief 경험치가 차오를 때 나는 소리. */
@@ -731,6 +817,8 @@ private:
 	struct FPartySlotWidgets
 	{
 		TObjectPtr<UWidget> Root;
+		/** @brief 새 용병탭의 가로형 일반/선택 카드 프레임. */
+		TObjectPtr<UImage> Plate;
 		/**
 		 * @brief 판과 프레임을 뺀 내용 전체.
 		 *
@@ -782,7 +870,12 @@ private:
 		TObjectPtr<UWidget> Root;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
+		TObjectPtr<UWidget> SpeedIcon;
+		TObjectPtr<UTextBlock> Speed;
 		TObjectPtr<UWidget> Current;
+		/** @brief 이 슬롯 앞에서 라운드가 바뀔 때만 보이는 세로 막대와 R# 표기. */
+		TObjectPtr<UWidget> RoundDivider;
+		TObjectPtr<UTextBlock> RoundLabel;
 	};
 
 	/** @brief 빈 아군 칸을 접지 않고 "비어 있음"으로 그린다. */

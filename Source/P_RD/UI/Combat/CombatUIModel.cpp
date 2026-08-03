@@ -88,6 +88,11 @@ void UCombatUIModel::RequestAbandonRun()
 	OnAbandonRun.Broadcast();
 }
 
+void UCombatUIModel::RequestRetryCombat()
+{
+	OnRetryCombat.Broadcast();
+}
+
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
 
 void UCombatUIModel::SetCombatResultUI(const FCombatResultUI& Result)

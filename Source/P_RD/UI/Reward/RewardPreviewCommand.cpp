@@ -12,7 +12,7 @@
 #include "UI/Reward/MockRewardDriver.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUITypes.h"
-#include "UI/Reward/RewardUIWidgetBase.h"
+#include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "UObject/StrongObjectPtr.h"
 
 #if !UE_BUILD_SHIPPING
@@ -20,9 +20,9 @@
 namespace RewardPreview
 {
 	const TCHAR* RewardWidgetPath =
-		TEXT("/Game/UI/WBP_Reward.WBP_Reward_C");
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C");
 
-	TWeakObjectPtr<URewardUIWidgetBase> ShownWidget;
+	TWeakObjectPtr<URewardSettlementWidgetBase> ShownWidget;
 	TStrongObjectPtr<UMockRewardDriver> PreviewDriver;
 
 	void ReleasePreviewDriver()
@@ -77,7 +77,7 @@ namespace RewardPreview
 			return;
 		}
 
-		UClass* WidgetClass = LoadClass<URewardUIWidgetBase>(
+		UClass* WidgetClass = LoadClass<URewardSettlementWidgetBase>(
 			nullptr, RewardWidgetPath);
 		if (WidgetClass == nullptr)
 		{
@@ -88,9 +88,9 @@ namespace RewardPreview
 		}
 
 		APlayerController* Controller = World->GetFirstPlayerController();
-		URewardUIWidgetBase* Widget = Controller != nullptr
-			? CreateWidget<URewardUIWidgetBase>(Controller, WidgetClass)
-			: CreateWidget<URewardUIWidgetBase>(World, WidgetClass);
+		URewardSettlementWidgetBase* Widget = Controller != nullptr
+			? CreateWidget<URewardSettlementWidgetBase>(Controller, WidgetClass)
+			: CreateWidget<URewardSettlementWidgetBase>(World, WidgetClass);
 		if (Widget == nullptr)
 		{
 			UE_LOG(LogRD, Warning, TEXT("RD.RewardPreview: 위젯 생성에 실패했습니다."));
@@ -103,7 +103,7 @@ namespace RewardPreview
 
 		FRewardUI Reward;
 		Reward.mTitle = NSLOCTEXT(
-			"RewardPreview", "RewardPreviewTitle", "VICTORY REWARD");
+			"RewardPreview", "RewardPreviewTitle", "전투 보상");
 		Reward.mGoldGained = 75;
 		Reward.mGoldBalance = 245;
 		Reward.mExpGained = 50;
@@ -113,11 +113,17 @@ namespace RewardPreview
 			NSLOCTEXT("RewardPreview", "MageName", "Mage"),
 			NSLOCTEXT("RewardPreview", "RogueName", "Rogue"),
 		};
+		UTexture2D* MercenaryPortraits[] = {
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Knight_HeadV2.KK_Face_Knight_HeadV2")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Mage_HeadV2.KK_Face_Mage_HeadV2")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Ranger_HeadV2.KK_Face_Ranger_HeadV2")),
+		};
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(MercenaryNames); ++Index)
 		{
 			FRewardMercenaryExpUI& Mercenary =
 				Reward.mMercenaryExp.AddDefaulted_GetRef();
 			Mercenary.mName = MercenaryNames[Index];
+			Mercenary.mPortrait = MercenaryPortraits[Index];
 			Mercenary.mLevel = Index + 1;
 			Mercenary.mExpBefore = 25.f + 30.f * Index;
 			Mercenary.mExpAfter = Mercenary.mExpBefore

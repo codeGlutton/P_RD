@@ -44,6 +44,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbandonRun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRetryCombat);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
@@ -106,6 +107,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnAbandonRun OnAbandonRun;
 
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnRetryCombat OnRetryCombat;
+
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
 	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
@@ -159,6 +163,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestRetryCombat();
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).

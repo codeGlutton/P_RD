@@ -54,6 +54,9 @@ enum class EMercenaryCardState : uint8
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnMercenaryPartyConfirmed,
 	const TArray<FPrimaryAssetId>& /*Chosen*/);
 
+/** @brief 뒤로 버튼을 눌러 타이틀로 돌아가 달라는 요청. */
+DECLARE_MULTICAST_DELEGATE(FOnMercenaryHireBackRequested);
+
 /**
  * @brief 이력서 한 장에 딸린 위젯들.
  */
@@ -71,6 +74,7 @@ struct FMercenaryCardWidgets
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mSkills;
 	UPROPERTY() TObjectPtr<UTextBlock> mBadge = nullptr;
 	UPROPERTY() TObjectPtr<UWidget> mSeal = nullptr;
+	UPROPERTY() TObjectPtr<UWidget> mSelected = nullptr;
 	/** @brief 특성 한 줄. 왜 이 사람을 데려가는지. 설명 문구를 그대로 건다. */
 	UPROPERTY() TObjectPtr<UTextBlock> mTrait = nullptr;
 	/** @brief 검토 중 금색 테두리. 판에 없어 낱장으로 얹는다. */
@@ -85,8 +89,10 @@ struct FMercenarySlotWidgets
 	GENERATED_BODY()
 
 	UPROPERTY() TObjectPtr<UWidget> mRoot = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mButton = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mFace = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mName = nullptr;
+	UPROPERTY() TObjectPtr<UWidget> mPlus = nullptr;
 };
 
 /**
@@ -120,6 +126,9 @@ public:
 	 */
 	void ClickCard(int32 CardIndex);
 
+	/** @brief 채워진 파티 슬롯을 눌러 그 용병을 파티에서 뺀다. */
+	void ClickPartySlot(int32 SlotIndex);
+
 	/** @brief 이력서 한 장이 지금 어떤 상태인가. */
 	EMercenaryCardState StateOf(int32 CardIndex) const;
 
@@ -135,14 +144,29 @@ public:
 	/** @brief 출발을 눌렀을 때 알려준다. 고른 차례대로 온다. */
 	FOnMercenaryPartyConfirmed mOnPartyConfirmed;
 
+	/** @brief 뒤로 버튼을 눌렀을 때 알려준다. 화면 전환은 프론트엔드가 맡는다. */
+	FOnMercenaryHireBackRequested mOnBackRequested;
+
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 자동화가 실제 세로/가로 재배치를 한 프레임 기다리지 않고 검사한다. */
+	void ApplyResponsiveLayoutForTest(const FVector2D& ViewportSize)
+	{
+		ApplyResponsiveLayout(ViewportSize);
+	}
+#endif
+
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:
 	void CacheWidgets();
+	void EnsureMarchboundPreviewCrew();
+	void ApplyResponsiveLayout(const FVector2D& ViewportSize);
 	void Refresh();
 	void RefreshCard(int32 CardIndex);
 	void RefreshBottomBar();
+	void RefreshDetail();
 
 	void ToggleChoice(int32 CardIndex);
 
@@ -152,7 +176,11 @@ private:
 	UFUNCTION() void HandleCardClicked_3();
 	UFUNCTION() void HandleCardClicked_4();
 	UFUNCTION() void HandleCardClicked_5();
+	UFUNCTION() void HandlePartySlotClicked_0();
+	UFUNCTION() void HandlePartySlotClicked_1();
+	UFUNCTION() void HandlePartySlotClicked_2();
 	UFUNCTION() void HandleDepartClicked();
+	UFUNCTION() void HandleBackClicked();
 
 	/** @brief 화면에 걸린 후보들. 비어 있으면 시안 값이 그대로 남는다. */
 	UPROPERTY() TArray<FFrontendCharacterOption> mCrew;
@@ -164,6 +192,19 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mNoticeText = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mDepartButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDepartLabel = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mDetailName = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mDetailHP = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mDetailAP = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mDetailSpeed = nullptr;
+	UPROPERTY() TObjectPtr<UImage> mHeroIllustration = nullptr;
+	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mDetailSkills;
+
+	/** @brief 신규 Marchbound 레이아웃에서만 추가 표시 규칙을 사용한다. */
+	bool mIsMarchboundLayout = false;
+	bool mHasAppliedResponsiveLayout = false;
+	bool mIsPortraitLayout = false;
+	FVector2D mLastResponsiveSize = FVector2D::ZeroVector;
 
 	/** @brief 고른 이력서 번호. 누른 차례가 곧 파티 칸 순서다. */
 	TArray<int32> mChosen;

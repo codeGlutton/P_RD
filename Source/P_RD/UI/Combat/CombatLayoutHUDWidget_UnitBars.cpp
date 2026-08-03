@@ -18,22 +18,23 @@ namespace
 	// (WBP 클래스/채움 텍스처는 UCombatLayoutHUDWidget 생성자에서 ConstructorHelpers로 하드 레퍼런스한다 — #300 컨벤션.)
 
 	// ▼▼▼ HP바 머리위 표시 크기 조절: 이 값만 바꾸면 됨(1.0=WBP 원본 360x68, 0.35=35%). ▼▼▼
-	constexpr float UnitHpBarRenderScale = 0.35f;
+	constexpr float UnitHpBarRenderScale = 0.52f;
 	// 줌 배율 기준이 되는 직교 카메라 폭(CombatCameraPawn 기본 OrthoWidth). 이 값일 때 배율 1.0.
 	constexpr float UnitHpBarBaseOrthoWidth = 2000.0f;
 
 	// 머리 위 HP바가 유닛 머리에서 얼마나 위로 뜰지(뷰포트 픽셀). 크기 바꾸면 같이 조절.
-	constexpr float UnitHpBarHeadOffsetY = -60.0f;
+	constexpr float UnitHpBarHeadOffsetY = -78.0f;
 
 	// HP 숫자 폰트 크기(WBP 디자인 좌표 기준 — 렌더 스케일이 곱해져 화면에 보임). 크게 해서 바를 꽉 채운다.
-	constexpr float UnitHpBarValueFontSize = 34.0f;
+	constexpr float UnitHpBarValueFontSize = 38.0f;
 
 	// 상태이상 칸 레이아웃(디자인 좌표). WBP 기본(24px)은 렌더스케일 0.35에서 너무 작아 크게+넓게 재배치한다.
-	constexpr float UnitHpBarStatusIconSize = 52.0f;     // 아이콘 한 변
-	constexpr float UnitHpBarStatusIconStep = 60.0f;     // 아이콘 좌상단 간격
+	constexpr float UnitHpBarStatusFrameSize = 68.0f;    // 얇은 원형 개별 프레임
+	constexpr float UnitHpBarStatusIconSize = 58.0f;     // 프레임 안을 크게 채우는 아이콘
+	constexpr float UnitHpBarStatusIconStep = 72.0f;     // 5칸이 360 폭에 정확히 들어감
 	constexpr float UnitHpBarStatusRowTop = 66.0f;       // 바(백플레이트 68) 바로 아래
-	constexpr float UnitHpBarStatusRowLeft = 46.0f;      // 5칸 가로 중앙 정렬 시작 x((360-(4*60+52))/2)
-	constexpr float UnitHpBarStatusCountFontSize = 26.0f;
+	constexpr float UnitHpBarStatusRowLeft = 2.0f;       // 5칸 가로 중앙 정렬
+	constexpr float UnitHpBarStatusCountFontSize = 30.0f;
 
 }
 
@@ -81,6 +82,7 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 		Bar.mStatusCountTexts.Add(Count);
 
 		const float SlotX = UnitHpBarStatusRowLeft + StaticCast<float>(SlotIndex - 1) * UnitHpBarStatusIconStep;
+		const float IconInset = (UnitHpBarStatusFrameSize - UnitHpBarStatusIconSize) * 0.5f;
 		// 아이콘: 크게 + 한 줄로 재배치(WBP 기본 24px은 렌더스케일에서 안 보임).
 		if (Icon != nullptr)
 		{
@@ -88,7 +90,7 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 			{
 				IconSlot->SetAnchors(FAnchors(0.0f, 0.0f));
 				IconSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-				IconSlot->SetPosition(FVector2D(SlotX, UnitHpBarStatusRowTop));
+				IconSlot->SetPosition(FVector2D(SlotX + IconInset, UnitHpBarStatusRowTop + IconInset));
 				IconSlot->SetSize(FVector2D(UnitHpBarStatusIconSize, UnitHpBarStatusIconSize));
 				IconSlot->SetAutoSize(false);
 			}
@@ -111,7 +113,8 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 			{
 				CountSlot->SetAnchors(FAnchors(0.0f, 0.0f));
 				CountSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-				CountSlot->SetPosition(FVector2D(SlotX + UnitHpBarStatusIconSize * 0.35f, UnitHpBarStatusRowTop + UnitHpBarStatusIconSize * 0.42f));
+				CountSlot->SetPosition(FVector2D(SlotX + IconInset + UnitHpBarStatusIconSize * 0.35f,
+					UnitHpBarStatusRowTop + IconInset + UnitHpBarStatusIconSize * 0.42f));
 				CountSlot->SetSize(FVector2D(UnitHpBarStatusIconSize * 0.65f, UnitHpBarStatusIconSize * 0.58f));
 				CountSlot->SetAutoSize(false);
 			}
@@ -206,6 +209,34 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 		{
 			if (UCanvasPanel* BarCanvas = Cast<UCanvasPanel>(BarTree->RootWidget))
 			{
+				if (mUnitStatusSlotTexture != nullptr)
+				{
+					NewBar.mStatusFrames.Reset();
+					for (int32 SlotIndex = 0; SlotIndex < 5; ++SlotIndex)
+					{
+						UImage* StatusFrame = BarTree->ConstructWidget<UImage>(UImage::StaticClass(),
+							FName(*FString::Printf(TEXT("StatusFrame_%02d"), SlotIndex + 1)));
+						if (StatusFrame == nullptr)
+						{
+							NewBar.mStatusFrames.Add(nullptr);
+							continue;
+						}
+						StatusFrame->SetBrushFromTexture(mUnitStatusSlotTexture, false);
+						StatusFrame->SetVisibility(ESlateVisibility::Collapsed);
+						if (UCanvasPanelSlot* FrameSlot = BarCanvas->AddChildToCanvas(StatusFrame))
+						{
+							FrameSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+							FrameSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+							FrameSlot->SetPosition(FVector2D(
+								UnitHpBarStatusRowLeft + SlotIndex * UnitHpBarStatusIconStep,
+								UnitHpBarStatusRowTop));
+							FrameSlot->SetSize(FVector2D(UnitHpBarStatusFrameSize, UnitHpBarStatusFrameSize));
+							FrameSlot->SetAutoSize(false);
+							FrameSlot->SetZOrder(-5);
+						}
+						NewBar.mStatusFrames.Add(StatusFrame);
+					}
+				}
 				if (mUnitDefenseIconTexture != nullptr)
 				{
 					if (UImage* DefenseIcon = BarTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DefenseIcon")))
@@ -352,24 +383,24 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 			Bar.mFillClipSlot->SetSize(FillSize);
 		}
 
-		// HP 숫자: 현재/최대.
+		// HP 숫자: 모바일에서 현재치만 보면 최대치와 피해 비율을 다시
+		// 추론해야 한다. 바 안에 현재/최대를 같이 크게 표시한다.
 		if (Bar.mValueText != nullptr)
 		{
-			Bar.mValueText->SetText(FText::AsNumber(FMath::RoundToInt(Unit.mHP)));
+			Bar.mValueText->SetText(FText::FromString(FString::Printf(
+				TEXT("%d/%d"), FMath::RoundToInt(Unit.mHP),
+				FMath::RoundToInt(Unit.mMaxHP))));
 		}
 
-		// 방어도: 0보다 클 때만 HP바 왼쪽에 아이콘+수치 표시.
-		const int32 DefensePoint = FMath::RoundToInt(Unit.mDefensePoint);
-		const ESlateVisibility DefenseVisibility = DefensePoint > 0
-			? ESlateVisibility::HitTestInvisible
-			: ESlateVisibility::Collapsed;
+		// 전투 HUD의 공개 수치는 HP/AP/속도뿐이다. 구형 방어도 슬롯이
+		// 남아 있더라도 월드 HP바에서는 항상 감춘다.
+		const ESlateVisibility DefenseVisibility = ESlateVisibility::Collapsed;
 		if (Bar.mDefenseIcon != nullptr)
 		{
 			Bar.mDefenseIcon->SetVisibility(DefenseVisibility);
 		}
 		if (Bar.mDefenseText != nullptr)
 		{
-			Bar.mDefenseText->SetText(FText::AsNumber(DefensePoint));
 			Bar.mDefenseText->SetVisibility(DefenseVisibility);
 		}
 
@@ -467,6 +498,15 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, 
 	for (int32 SlotIndex = Shown; SlotIndex < Bar.mStatusCountTexts.Num(); ++SlotIndex)
 	{
 		if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex]) { CountText->SetVisibility(ESlateVisibility::Collapsed); }
+	}
+	for (int32 SlotIndex = 0; SlotIndex < Bar.mStatusFrames.Num(); ++SlotIndex)
+	{
+		if (UImage* StatusFrame = Bar.mStatusFrames[SlotIndex])
+		{
+			StatusFrame->SetVisibility(SlotIndex < Shown
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed);
+		}
 	}
 
 	// 5칸 초과 상태 개수를 "+N"으로.
