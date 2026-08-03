@@ -8,12 +8,12 @@
 #pragma once
 
 #include "GameMode/RoomGameModeBase.h"
+#include "UI/Shop/ShopUITypes.h"
 #include "ShopGameMode.generated.h"
 
 class UTileMapModel;
 class UShopUIModel;
 struct FShopItemList;
-struct FShopUI;
 
 /**
  * @brief  상점 방에 대한 GameMode
@@ -51,7 +51,7 @@ private:
 	void SpawnTileMap();
 
 	/** @brief 지금 파는 것과 가진 돈을 화면에 내린다. */
-	void PushShopUIData() const;
+	void PushShopUIData();
 
 	/**
 	 * @brief 소지품(버리기 대상)을 표시값으로 채움
@@ -61,6 +61,12 @@ private:
 
 	/** @brief 한 칸을 샀다. 돈을 깎고 품절로 매긴 뒤 다시 내린다. */
 	UFUNCTION() void HandleBuyRequested(int32 SlotIndex);
+
+	/**
+	 * @brief 스킬 한 칸을 샀다 (지급 대상 유닛 지정)
+	 * @details 첫 빈 슬롯에 장착. SetSkill의 직업 검사가 거부하면 과금하지 않음
+	 */
+	UFUNCTION() void HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex);
 
 	/**
 	 * @brief 소지 아티펙트 하나를 버림 (0골드 거래)
@@ -80,6 +86,9 @@ private:
 	/** @brief 지금 가진 돈. @return 없으면 0 */
 	int32 GetPartyGold() const;
 
+	/** @brief 파티 골드 소비. 0 이하 가격은 무시 */
+	void SpendPartyGold(int32 Price);
+
 private:
 	// @brief 상점방 타일맵 모델 (뷰 액터는 모델 팩토리가 함께 스폰)
 	UPROPERTY(Transient)
@@ -92,9 +101,23 @@ private:
 	 * @brief 이미 팔린 칸.
 	 *
 	 * @details
-	 * 방 데이터(FShopRoom)를 지우지 않는다. 그쪽은 저장되는 값이라 여기서
-	 * 손대면 되돌릴 길이 없다 -- 이 방에 다시 들어올 일이 없더라도, 사는 것을
-	 * 무르는 규칙이 나중에 생기면 그때 곤란해진다.
+	 * 원본(FShopRoom)은 세이브되는 값이라 읽기만 하고 수정하지 않는다.
+	 * 팔린 슬롯 번호만 여기에 기록하고, 화면에 내릴 때마다
+	 * "원본 + 팔림 오버레이"로 스냅샷(FShopUI)을 새로 만든다.
+	 * 원본이 보존되므로 구매 무르기(환불) 규칙이 나중에 생겨도 대응할 수 있다.
 	 */
 	TSet<int32> mSoldSlots;
+
+	/**
+	 * @brief 판매 슬롯 번호가 가리키는 실제 상품
+	 * @details
+	 * 화면은 슬롯 번호만 돌려보내므로 지급할 상품은 여기서 찾는다.
+	 * PushShopUIData가 판매 목록을 내릴 때마다 다시 기록한다.
+	 */
+	struct FShopSlotSource
+	{
+		EShopItemKind mKind = EShopItemKind::Skill;
+		FPrimaryAssetId mItemId;
+	};
+	TMap<int32, FShopSlotSource> mSlotSources;
 };

@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopUIChanged, EShopUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopBuyRequested, int32, SlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShopBuySkillRequested, int32, SlotIndex, int32, UnitIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopDiscardArtifactRequested, int32, ArtifactIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShopDiscardSkillRequested, int32, UnitIndex, int32, SlotIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShopLeaveRequested);
@@ -38,6 +39,13 @@ public:
 	FOnShopBuyRequested OnBuyRequested;
 
 	/**
+	 * @brief 위젯이 스킬 구매를 확정했음 (슬롯 index + 지급 대상 유닛 index)
+	 * @details 스킬은 유닛별 소유라 버리기와 마찬가지로 대상 유닛 지정이 필요
+	 */
+	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
+	FOnShopBuySkillRequested OnBuySkillRequested;
+
+	/**
 	 * @brief 위젯이 소지 아티펙트 하나를 버리려 함 (파티 공용 배열 index)
 	 * @details 실제 제거는 게임플레이가 처리 — 버리기는 0골드 거래로 구매와 같은 파이프를 탐
 	 */
@@ -59,6 +67,9 @@ public:
 public:
 	/** @brief SlotIndex 구매 의도를 게임플레이 구독자에게 전달한다(구매 확인은 화면/팝업이 먼저 처리). */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestBuy(int32 SlotIndex);
+
+	/** @brief 스킬 구매 의도를 전달 (지급 대상 유닛 선택은 화면이 먼저 처리) */
+	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestBuySkill(int32 SlotIndex, int32 UnitIndex);
 
 	/** @brief 소지 아티펙트 버리기 의도를 전달 (버리기 확인은 화면/팝업이 먼저 처리) */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestDiscardArtifact(int32 ArtifactIndex);
