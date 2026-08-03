@@ -178,6 +178,14 @@ public:
 	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner) const;
 	TArray<TObjectPtr<USRPGTurnContext>> GetTurnContexts(const UUnitModel* Owner) const;
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
+	/**
+	 * @brief 현재 턴을 포함해 이번 라운드에 아직 남은 턴 컨텍스트 수.
+	 *
+	 * @details 턴 순서는 원형 리스트지만 라운드 경계는 tail -> head다. UI가
+	 *          GetOrderedTurnContexts()의 어느 지점부터 다음 라운드인지 추측하지
+	 *          않도록 모델이 경계까지의 거리를 함께 제공한다.
+	 */
+	int32 GetRemainingTurnCountInRound() const;
 	UTileMapModel* GetTileMap() const;
 
 	UUnitModel* GetPlayerUnit(int32 PlayerIndex) const;

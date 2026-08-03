@@ -66,6 +66,14 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mMaxHP = 0;
 
+	// 한 턴에 충전되는 기본 AP. 선택 상세의 AP 표시에 사용한다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	int32 mMaxAP = 0;
+
+	// 턴 순서 계산에 쓰는 기본 속도 포인트. 선택 상세의 속도 표시에 사용한다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	int32 mSpeed = 0;
+
 	// 시작 골드. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mGold = 0;

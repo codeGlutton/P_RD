@@ -246,32 +246,8 @@ void UCameraMovementComponent::ClampingCamera()
 
 	mTargetLookAtCameraLocation = FVector2D(ClampLocationWithinRotatedBox(FVector(mTargetLookAtCameraLocation,0.f)));
 
-	//==============================
-	// 이동 제한 범위를 보여줍니다.
-	// @note 
-	// 직교 카메라로 보고 있을 때는 제한 범위가 이상해 보일 것입니다.
-	// 에디터 카메라로 보아야지 제한 범위가 납득이 되실 것입니다.
-	FVector Center = mMoveClampingBoxCenter;
-	FVector Extent = FVector(mMoveClampingBox / 2, 0);
-	FQuat Rotation = FRotator(0.f, GetOwner()->GetActorRotation().Yaw, 0.f).Quaternion();
-
-#if WITH_EDITOR
-
-	DrawDebugBox(
-		GetWorld(),
-		Center,
-		Extent,
-		Rotation,
-		FColor::Red,
-		false,
-		-1.0f,
-		0,
-		5.0f
-	);
-
-	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * 100000.0f), FColor::Green);
-
-#endif
+	// 편집기 플레이에서도 실제 전투 화면을 평가할 수 있도록 이동 제한 박스와
+	// 카메라 방향 디버그 선을 렌더하지 않는다. 제한 계산 자체는 위에서 유지된다.
 }
 
 void UCameraMovementComponent::MoveSmooth(float DeltaTime)
