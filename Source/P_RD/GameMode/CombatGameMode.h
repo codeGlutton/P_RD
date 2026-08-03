@@ -16,6 +16,7 @@
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
+class UBoardActorModel;
 class UUnitModel;
 class IBoardSelectionTargetView;
 
@@ -85,6 +86,9 @@ public:
 	UFUNCTION()
 	void HandleAbandonRun();
 
+	UFUNCTION()
+	void HandleRetryCombat();
+
 	/** @brief 전투 HUD 상단 가방 버튼에서 공용 인벤토리 패널을 연다. */
 	UFUNCTION()
 	void HandleOpenInventory();
@@ -142,6 +146,9 @@ protected:
 	void PushSkillUIData() const;
 	void PushSelectedSkillUIData(int32 SkillIndex) const;
 
+	/** @brief 이번 전투에서 제거된 적 수. 패배 결과판의 전투 요약에 사용한다. */
+	int32 mDefeatedMonsterCount = 0;
+
 	/**
 	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
 	 *
@@ -151,6 +158,15 @@ protected:
 	 * 것으로 되짚는다 -- 화면이 유닛을 짚으면 기준이 두 곳에 생긴다.
 	 */
 	void PushCombatTargetDetailUIData(IBoardSelectionTargetView* Target);
+
+	/**
+	 * @brief 이미 식별한 보드 액터 모델의 상세를 UI 에 내린다.
+	 *
+	 * 월드 롱프레스는 IBoardSelectionTarget에서 모델을 꺼내고, 용병 탭은
+	 * UnitId로 파티 모델을 찾는다. 입력 경로만 다를 뿐 같은 상세창을 쓰므로
+	 * 스냅샷 조립은 이 한 곳에서 맡는다.
+	 */
+	void PushBoardActorDetailUIData(UBoardActorModel* BoardActorModel);
 
 	/** @brief 상세창에 뜬 유닛의 SkillIndex번째 스킬 상세를 내린다(적 스킬일 수도 있다). */
 	void PushUnitSkillDetailUIData(int32 SkillIndex) const;

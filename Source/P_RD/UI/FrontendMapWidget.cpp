@@ -425,7 +425,7 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	}
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MapPerspectiveFinder(
-		TEXT("/Game/UI/Art/RunFlow/M_MapPerspective.M_MapPerspective"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RunFlow/M_MapPerspective.M_MapPerspective"));
 	if (MapPerspectiveFinder.Succeeded())
 	{
 		mMapPerspectiveMaterial = MapPerspectiveFinder.Object;

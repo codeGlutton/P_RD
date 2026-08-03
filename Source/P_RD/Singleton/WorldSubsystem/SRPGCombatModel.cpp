@@ -756,6 +756,33 @@ TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetOrderedTurnContexts() 
 	return Contexts;
 }
 
+int32 USRPGCombatModel::GetRemainingTurnCountInRound() const
+{
+	if (mCurTurnContextOrder == nullptr || mTurnContextOrder.IsEmpty())
+	{
+		return 0;
+	}
+
+	auto* TailNode = mTurnContextOrder.GetTail();
+	auto* Node = mCurTurnContextOrder;
+	const int32 TotalTurnCount = mTurnContextOrder.Num();
+	for (int32 RemainingTurnCount = 1;
+		RemainingTurnCount <= TotalTurnCount;
+		++RemainingTurnCount)
+	{
+		if (Node == TailNode)
+		{
+			return RemainingTurnCount;
+		}
+		Node = Node->GetNextNode();
+	}
+
+	// current는 항상 같은 원형 리스트 안에 있어야 한다. 저장 데이터 손상 등으로
+	// 불변식이 깨져도 UI 배열 범위를 넘는 값을 반환하지 않는다.
+	ensureMsgf(false, TEXT("현재 턴 노드가 턴 순서 리스트에 존재하지 않음"));
+	return TotalTurnCount;
+}
+
 UTileMapModel* USRPGCombatModel::GetTileMap() const
 {
 	return mTileMap;

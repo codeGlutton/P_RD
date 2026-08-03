@@ -115,6 +115,18 @@ struct FCombatResultUI
 public:
 	/** @brief 승리 여부 */
 	UPROPERTY(BlueprintReadWrite) bool mIsWin = false;
+	/** @brief 결과 화면에 표시할 현재 전투 지역 이름. */
+	UPROPERTY(BlueprintReadWrite) FText mLocationName;
+	/** @brief 패배가 확정된 라운드. */
+	UPROPERTY(BlueprintReadWrite) int32 mRound = 0;
+	/** @brief 이번 전투에서 처치한 몬스터 수. */
+	UPROPERTY(BlueprintReadWrite) int32 mDefeatedMonsterCount = 0;
+	/** @brief 패배 결과에서 확정된 골드 획득량. */
+	UPROPERTY(BlueprintReadWrite) int32 mGoldGained = 0;
+	/** @brief 패배 결과에서 확정된 경험치 획득량. */
+	UPROPERTY(BlueprintReadWrite) int32 mExpGained = 0;
+	/** @brief 패배 카드에 표시할 파티 초상화(최대 3명). */
+	UPROPERTY(BlueprintReadWrite) TArray<TObjectPtr<UTexture2D>> mPartyPortraits;
 };
 
 /**
@@ -191,8 +203,15 @@ struct FUnitUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
-	/** @brief 유닛 초상화(DA mPortrait). 턴 순서 칩 등 상시 UI 표시용 — 없으면 텍스트 폴백. */
+	/** @brief 유닛 세로 초상화(DA mPortrait). 파티·적·상세 카드용. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
+	/**
+	 * @brief 턴바 얼굴 초상화(DA mIcon).
+	 *
+	 * @details 256x256 HeadV2를 우선 사용한다. 어댑터가 아이콘 없는 신규
+	 *          유닛에는 mPortrait를 넣으므로 턴바가 빈칸이 되지 않는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mTurnPortrait;
 	// 파티 카드가 3명의 이름을 동시에 보여줘야 해서 유닛 목록 쪽에도 필요하다.
 	// mName은 FUnitDetailUI에도 있지만 그쪽은 한 번에 한 유닛(롱프레스 상세)이다.
 	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
@@ -204,6 +223,8 @@ struct FUnitUI
 	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
 	UPROPERTY(BlueprintReadOnly) int32 mActionPoints = 0;
 	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
+	/** @brief 턴 순서 칩 아래에 표시할 현재 속도. */
+	UPROPERTY(BlueprintReadOnly) float mSpeedPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
@@ -456,11 +477,23 @@ struct FEquipmentDetailUI
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 };
 
+/** @brief 전투 HUD에 늘 꺼내 놓는 파티 공용 아티팩트 한 칸. */
+USTRUCT(BlueprintType)
+struct FCombatArtifactUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+};
+
 /** @brief 플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨). */
 // UI 필요값:
 // - mGold: 상단 HUD의 현재 골드.
 // - mLevel: 플레이어/런 레벨 표시.
 // - mExp/mMaxExp: 경험치 바와 레벨업 진행도 표시.
+// - mArtifacts: 좌하단 AP 위에 늘 보이는 파티 공용 아티팩트.
 // [합의필요] Gold/Exp 최종 소스는 UUnitData/URunPersistData 쪽에서 정리 필요.
 USTRUCT(BlueprintType)
 struct FPlayerMetaUI
@@ -471,6 +504,7 @@ struct FPlayerMetaUI
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) TArray<FCombatArtifactUI> mArtifacts;
 };
 
 /** @brief 현재 턴/라운드/페이즈 상태. */
@@ -479,6 +513,7 @@ struct FPlayerMetaUI
 // - mRound: 라운드 카운터.
 // - mPhase: 스킬 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
 // - mTurnOrderUnitIds: 턴 순서 바/다음 행동자 표시.
+// - mCurrentRoundRemainingTurnCount: 위 배열에서 이번 라운드에 속하는 앞쪽 원소 수.
 // [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected는 어댑터 파생).
 USTRUCT(BlueprintType)
 struct FTurnUI
@@ -490,4 +525,11 @@ struct FTurnUI
 	UPROPERTY(BlueprintReadOnly) int32 mRound = 0;
 	UPROPERTY(BlueprintReadOnly) ECombatBuildPhaseUI mPhase = ECombatBuildPhaseUI::None;
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
+	/**
+	 * @brief mTurnOrderUnitIds 앞에서부터 이번 라운드에 남은 원소 수(현재 턴 포함).
+	 *
+	 * @details 그 다음 원소부터는 원형 턴 순서가 한 번 감겨 다음 라운드다.
+	 *          0은 전투 시작 전 또는 경계 메타를 제공하지 않는 구형 목업을 뜻한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mCurrentRoundRemainingTurnCount = 0;
 };
