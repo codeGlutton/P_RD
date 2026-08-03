@@ -159,6 +159,18 @@ bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 	return true;
 }
 
+void USkillComponentModel::RemoveSkill(int32 SkillIndex)
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+
+	// 비우기는 장착이 아니므로 습득 가능 검사를 거치지 않는다
+	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
+	mSkillEntries[SkillIndex] = FSkillEntry();
+
+	// 세이브 추적(OnChangeSkillUI)이 장착 해제로 인지하도록 동일 계약으로 통지
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, nullptr);
+}
+
 bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
 {
 	return CanActiveSkill_Internal(SkillIndex);

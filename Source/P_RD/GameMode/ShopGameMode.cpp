@@ -12,11 +12,28 @@
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
-#include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "PCGStage/Room.h"
 #include "UI/Shop/ShopUIModel.h"
+
+namespace
+{
+	// TODO: 희귀도 색상 임시값 (인벤토리 GetInventoryRarityColor와 동일) -> 나중에 확정판에서 용수님의 UI 값으로 수정
+	FLinearColor GetShopRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case ERarityType::Epic:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
+		}
+	}
+}
 
 void AShopGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
@@ -84,6 +101,9 @@ void AShopGameMode::PushShopUIData() const
 	FShopUI ShopUIData;
 	ShopUIData.mGold = GetPartyGold();
 
+	// 소지품(버리기 대상)은 방 데이터와 무관하게 항상 채운다.
+	FillOwnedItems(ShopUIData);
+
 	// 방을 갈래로 가른다. 전투 쪽이 GetMonsterRewardRoom 으로 하는 것과 같다 --
 	// FRoom 은 갈래가 mType 에 적혀 있고 실제 알맹이는 파생 구조체에 있다.
 	const URunPersistData* RunPersistData = GetRunPersistData();
@@ -133,10 +153,15 @@ void AShopGameMode::PushShopUIData() const
 						Item.mIcon = Data->mIcon.LoadSynchronous();
 					}
 				}
-				else if (const UStaticEquipmentData* Data =
-					AssetManager->GetPrimaryAssetObject<UStaticEquipmentData>(ItemId))
+				// 아티펙트는 전용 자산에서 이름과 아이콘을 읽는다. 장비 폴백 없음.
+				else if (Kind == EShopItemKind::Artifact)
 				{
-					Item.mName = Data->mName;
+					if (const UStaticArtifactData* Data =
+						AssetManager->GetPrimaryAssetObject<UStaticArtifactData>(ItemId))
+					{
+						Item.mName = Data->mName;
+						Item.mIcon = Data->mIcon.LoadSynchronous();
+					}
 				}
 
 				Item.mIsAffordable = Item.mIsSoldOut == false
@@ -150,9 +175,77 @@ void AShopGameMode::PushShopUIData() const
 		AddList(List, EShopItemKind::Skill);
 	}
 	AddList(ShopRoom->mSaleCommonSkillDataItems, EShopItemKind::Skill);
-	AddList(ShopRoom->mSaleEquipmentDataItems, EShopItemKind::Equipment);
+	AddList(ShopRoom->mSaleArtifactDataItems, EShopItemKind::Artifact);
 
 	mShopUIModel->SetShop(ShopUIData);
+}
+
+/**
+ * @brief 소지품(버리기 대상)을 표시값으로 채움
+ * @details
+ * 아티펙트는 파티 공용 배열의 index, 스킬은 (유닛 index, 슬롯 index) 쌍이
+ * 그대로 버리기 요청 payload가 된다.
+ * @param ShopUIData 채울 스냅샷
+ */
+void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	// 파티 공용 아티펙트
+	if (const UPartyArtifactComponentModel* ArtifactModel = PartyModel->GetPartyArtifactComponentModel())
+	{
+		const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts = ArtifactModel->GetPartyArtifacts();
+		for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
+		{
+			const UStaticArtifactData* Data = Artifacts[ArtifactIndex];
+			if (Data == nullptr)
+			{
+				continue;
+			}
+
+			FShopOwnedArtifactUI OwnedArtifact;
+			OwnedArtifact.mArtifactIndex = ArtifactIndex;
+			OwnedArtifact.mName = Data->mName;
+			OwnedArtifact.mIcon = Data->mIcon.LoadSynchronous();
+			OwnedArtifact.mRarityColor = GetShopRarityColor(Data->mRarityType);
+			ShopUIData.mOwnedArtifacts.Add(OwnedArtifact);
+		}
+	}
+
+	// 유닛별 소지 스킬 (파티는 3슬롯 고정 + 빈 슬롯 허용)
+	const TArray<TObjectPtr<UPlayerUnitModel>>& UnitModels = PartyModel->GetPlayerUnitModels();
+	for (int32 UnitIndex = 0; UnitIndex < UnitModels.Num(); ++UnitIndex)
+	{
+		const UPlayerUnitModel* UnitModel = UnitModels[UnitIndex];
+		USkillComponentModel* SkillModel = UnitModel != nullptr
+			? UnitModel->GetSkillComponentModel() : nullptr;
+		if (SkillModel == nullptr)
+		{
+			continue;
+		}
+
+		const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
+		for (int32 SlotIndex = 0; SlotIndex < Skills.Num(); ++SlotIndex)
+		{
+			// 스킬이 존재하면 버릴 수 있는 유효한 상태로 본다
+			const UStaticSkillData* Data = Skills[SlotIndex].mData;
+			if (Data == nullptr)
+			{
+				continue;
+			}
+
+			FShopOwnedSkillUI OwnedSkill;
+			OwnedSkill.mUnitIndex = UnitIndex;
+			OwnedSkill.mSlotIndex = SlotIndex;
+			OwnedSkill.mName = Data->mName;
+			OwnedSkill.mIcon = Data->mIcon.LoadSynchronous();
+			ShopUIData.mOwnedSkills.Add(OwnedSkill);
+		}
+	}
 }
 
 /**
@@ -192,6 +285,66 @@ void AShopGameMode::HandleBuyRequested(int32 SlotIndex)
 	// [합의필요] 산 것을 어디에 넣나. 기술은 스킬 칸, 장비는 인벤토리인데
 	// 둘 다 "누구에게" 가 안 정해졌다. 지금은 품절만 매긴다.
 	mSoldSlots.Add(SlotIndex);
+	PushShopUIData();
+}
+
+/**
+ * @brief 소지 아티펙트 하나를 버림 (0골드 거래)
+ * @param ArtifactIndex 파티 공용 아티펙트 배열 index (FShopOwnedArtifactUI가 돌려준 값)
+ */
+void AShopGameMode::HandleDiscardArtifactRequested(int32 ArtifactIndex)
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	UPartyArtifactComponentModel* ArtifactModel = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (ArtifactModel == nullptr)
+	{
+		return;
+	}
+
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts = ArtifactModel->GetPartyArtifacts();
+	if (Artifacts.IsValidIndex(ArtifactIndex) == false || Artifacts[ArtifactIndex] == nullptr)
+	{
+		return;
+	}
+
+	// RemoveArtifact가 전 구성원 해제 배포와 저장 추적(OnChangeArtifact)까지 처리한다
+	ArtifactModel->RemoveArtifact(Artifacts[ArtifactIndex]);
+	PushShopUIData();
+}
+
+/**
+ * @brief 유닛의 스킬 슬롯 하나를 버림 (0골드 거래)
+ * @param UnitIndex 파티 유닛 슬롯 index (FShopOwnedSkillUI가 돌려준 값)
+ * @param SlotIndex 유닛 내 스킬 슬롯 index
+ */
+void AShopGameMode::HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex)
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	// 파티원 인덱스와 유효성을 미리 검사
+	const TArray<TObjectPtr<UPlayerUnitModel>>& UnitModels = PartyModel->GetPlayerUnitModels();
+	if (UnitModels.IsValidIndex(UnitIndex) == false || UnitModels[UnitIndex] == nullptr)
+	{
+		return;
+	}
+	USkillComponentModel* SkillModel = UnitModels[UnitIndex]->GetSkillComponentModel();
+	if (SkillModel == nullptr)
+	{
+		return;
+	}
+	const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
+	if (Skills.IsValidIndex(SlotIndex) == false || Skills[SlotIndex].mData == nullptr)
+	{
+		return;
+	}
+
+	// 슬롯 비우기 (OnChangeSkillUI에서 저장 처리)
+	SkillModel->RemoveSkill(SlotIndex);
 	PushShopUIData();
 }
 

@@ -47,7 +47,7 @@ void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimary
 		AdditionalAssetIds.Append(mSaleJobSkillDataItems[i].mSaleItemIds);
 	}
 	AdditionalAssetIds.Append(mSaleCommonSkillDataItems.mSaleItemIds);
-	AdditionalAssetIds.Append(mSaleEquipmentDataItems.mSaleItemIds);
+	AdditionalAssetIds.Append(mSaleArtifactDataItems.mSaleItemIds);
 }
 
 FMonsterRoom::FMonsterRoom()

@@ -106,8 +106,8 @@ public:
 	FShopItemList mSaleJobSkillDataItems[static_cast<uint8>(EUnitJobType::PlayerJobCount)];
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCommonSkillDataItems"))
 	FShopItemList mSaleCommonSkillDataItems;
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataItems"))
-	FShopItemList mSaleEquipmentDataItems;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleArtifactDataItems"))
+	FShopItemList mSaleArtifactDataItems;
 };
 
 /**
