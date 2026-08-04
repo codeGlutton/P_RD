@@ -1771,7 +1771,10 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 
 	// TODO : 여러 플레이어 등록해야함
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	if (PlayerUnitModel == nullptr)
+	{
+		return;
+	}
 
 	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
 	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
