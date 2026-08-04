@@ -61,7 +61,7 @@ struct FSRPGTurnCandidate
 public:
 	bool operator<(const FSRPGTurnCandidate& Other) const
 	{
-		if (mRemainSpeedPoint != Other.mRemainSpeedPoint)
+		if (mRemainSpeedPoint == Other.mRemainSpeedPoint)
 		{
 			return mRandomTieBreaker < Other.mRandomTieBreaker;
 		}
@@ -69,7 +69,7 @@ public:
 	}
 	bool operator>(const FSRPGTurnCandidate& Other) const
 	{
-		return operator<(Other) == false;
+		return Other < *this;
 	}
 
 public:
