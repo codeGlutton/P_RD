@@ -411,9 +411,42 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyName = Find<UTextBlock>(WidgetTree, TEXT("EnemyName"));
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
-	mEnemyDefenseText = Find<UTextBlock>(WidgetTree, TEXT("EnemyDefense"));
+	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
+	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
+	mEnemyStatusFrames.Reset();
+	mEnemyStatusIcons.Reset();
+	mEnemyStatusCounts.Reset();
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		mEnemyStatusFrames.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusFrame_%d"), Index)));
+		mEnemyStatusIcons.Add(Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusIcon_%d"), Index)));
+		mEnemyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusCount_%d"), Index)));
+	}
+	mAllyPanel = Find<UWidget>(WidgetTree, TEXT("AllyPanel"));
+	mAllyPortrait = Find<UImage>(WidgetTree, TEXT("AllyPortrait"));
+	mAllyName = Find<UTextBlock>(WidgetTree, TEXT("AllyName"));
+	mAllyHPBar = Find<UProgressBar>(WidgetTree, TEXT("AllyHPBar"));
+	mAllyHPText = Find<UTextBlock>(WidgetTree, TEXT("AllyHPText"));
+	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
+	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
+	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
+	mAllyStatusFrames.Reset();
+	mAllyStatusIcons.Reset();
+	mAllyStatusCounts.Reset();
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		mAllyStatusFrames.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusFrame_%d"), Index)));
+		mAllyStatusIcons.Add(Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusIcon_%d"), Index)));
+		mAllyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusCount_%d"), Index)));
+	}
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
@@ -479,7 +512,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	// 눌러도 걸린다.
 	mChromeWidgets.Reset();
 	for (const TCHAR* Name : { TEXT("RoundPanel"), TEXT("TurnPanel"),
-		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("EndTurnPanel"),
+		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("AllyPanel"), TEXT("EndTurnPanel"),
 		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2"),
 		TEXT("MercenaryPanel") })
 	{
@@ -982,12 +1015,13 @@ void UCombatLayoutHUDWidget::RefreshParty()
 
 		SetTextIfPresent(Widgets.Name, Unit.mName);
 
-		// 유닛 초상은 배치안이 깔아 둔 얼굴을 덮는다. 데이터에셋 초상이
-		// 배경이 안 뚫린 사각형이라 금속 테를 가리는데, 그건 자산 문제라
-		// 여기서 안 피한다 -- 피하면 게임에서 영영 안 보인다.
-		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr)
+		// 목록 칸은 정사각 대갈치기 전용이다. 큰 히어로 일러스트(mPortrait)를
+		// 이 작은 칸에 다시 크롭하면 얼굴과 실루엣이 뭉개진다.
+		UTexture2D* ListPortrait = Unit.mTurnPortrait != nullptr
+			? Unit.mTurnPortrait.Get() : Unit.mPortrait.Get();
+		if (Widgets.Portrait != nullptr && ListPortrait != nullptr)
 		{
-			SetPortraitCropped(Widgets.Portrait, Unit.mPortrait);
+			SetPortraitCropped(Widgets.Portrait, ListPortrait);
 		}
 		if (Widgets.HPBar != nullptr)
 		{
@@ -1045,6 +1079,59 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			FocusUnit->mMaxActionPoints)));
 		SetTextIfPresent(mMercenaryDetailSpeed, FText::FromString(FString::Printf(
 			TEXT("속도  %d"), FMath::RoundToInt(FocusUnit->mSpeedPoint))));
+	}
+
+	// 우측 아래는 전투 중 현재 용병이 실제로 쓸 수 있는 여섯 커맨드의 요약이다.
+	// 0번 이동 + 스킬 다섯 칸(첫 스킬이 평타)으로, 전투 레일과 같은 순서라
+	// 메뉴를 닫은 뒤 카드 위치가 바뀌지 않는다.
+	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
+	for (int32 Index = 0; Index < CommandSlotCount; ++Index)
+	{
+		UWidget* Frame = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillFrame_%d"), Index));
+		UImage* Icon = Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillIcon_%d"), Index));
+		UTextBlock* Name = Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillName_%d"), Index));
+		UTextBlock* Cost = Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillCost_%d"), Index));
+
+		const bool bHasCommand = bHasFocus
+			&& (Index == 0 || Skills.IsValidIndex(Index - 1));
+		SetShown(Frame, bHasFocus);
+		SetShown(Icon, bHasCommand);
+		SetShown(Name, bHasCommand);
+		SetShown(Cost, bHasCommand);
+		if (bHasCommand == false)
+		{
+			continue;
+		}
+
+		UTexture2D* CommandIcon = nullptr;
+		if (Index == 0)
+		{
+			SetTextIfPresent(Name, LOCTEXT("MercenaryMoveSummary", "이동"));
+			SetTextIfPresent(Cost, FText::AsNumber(1));
+		}
+		else
+		{
+			const FSkillUI& Skill = Skills[Index - 1];
+			SetTextIfPresent(Name, Skill.mName);
+			SetTextIfPresent(Cost, FText::AsNumber(Skill.mActionPointCost));
+			CommandIcon = Skill.mIcon;
+		}
+		// 목업/구형 데이터는 Skill.mIcon이 비어 있을 수 있다. 전투 카드가 이미
+		// 들고 있는 기본 아이콘을 복사해 요약 칸만 텅 비는 것을 막는다.
+		if (CommandIcon == nullptr && mCommandSlots.IsValidIndex(Index)
+			&& mCommandSlots[Index].Icon != nullptr)
+		{
+			CommandIcon = Cast<UTexture2D>(
+				mCommandSlots[Index].Icon->GetBrush().GetResourceObject());
+		}
+		if (Icon != nullptr && CommandIcon != nullptr)
+		{
+			Icon->SetBrushFromTexture(CommandIcon, false);
+		}
 	}
 }
 
@@ -1432,16 +1519,83 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FCombatTargetUI& Target = mUIModel->GetTarget();
 	const int32 TargetId = Target.mIsValid ? Target.mUnitId : INDEX_NONE;
-	const FUnitUI* Shown = TargetId != INDEX_NONE
+	const FUnitUI* TargetUnit = TargetId != INDEX_NONE
 		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
-			{ return Unit.mUnitId == TargetId && !Unit.mIsPlayer && Unit.mHP > 0.f; })
+			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
 		: nullptr;
+	const FUnitUI* AllyShown = TargetUnit != nullptr && TargetUnit->mIsPlayer
+		? TargetUnit : nullptr;
+	const FUnitUI* Shown = TargetUnit != nullptr && !TargetUnit->mIsPlayer
+		? TargetUnit : nullptr;
 	if (Shown == nullptr)
 	{
 		const FUnitUI* TurnUnit = FindTurnUnit();
-		if (TurnUnit != nullptr && !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
+		if (TargetUnit == nullptr && TurnUnit != nullptr
+			&& !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
 		{
 			Shown = TurnUnit;
+		}
+	}
+
+	SetShown(mAllyPanel, AllyShown != nullptr);
+	if (AllyShown != nullptr)
+	{
+		SetTextIfPresent(mAllyName, AllyShown->mName);
+		UTexture2D* AllyPortrait = AllyShown->mTurnPortrait != nullptr
+			? AllyShown->mTurnPortrait.Get() : AllyShown->mPortrait.Get();
+		if (mAllyPortrait != nullptr && AllyPortrait != nullptr)
+		{
+			SetPortraitCropped(mAllyPortrait, AllyPortrait);
+		}
+		if (mAllyHPBar != nullptr)
+		{
+			mAllyHPBar->SetPercent(AllyShown->mMaxHP > 0.f
+				? AllyShown->mHP / AllyShown->mMaxHP : 0.f);
+		}
+		SetTextIfPresent(mAllyHPText, FText::FromString(FString::Printf(
+			TEXT("HP  %d / %d"), FMath::RoundToInt(AllyShown->mHP),
+			FMath::RoundToInt(AllyShown->mMaxHP))));
+		SetTextIfPresent(mAllyAPText, FText::FromString(AllyShown->mMaxActionPoints > 0
+			? FString::Printf(TEXT("AP  %d / %d"), AllyShown->mActionPoints,
+				AllyShown->mMaxActionPoints)
+			: FString::Printf(TEXT("AP  %d"), AllyShown->mActionPoints)));
+		SetTextIfPresent(mAllySpeedText, FText::FromString(FString::Printf(
+			TEXT("속도  %d"), FMath::RoundToInt(AllyShown->mSpeedPoint))));
+
+		if (mAllyStatusText != nullptr)
+		{
+			TArray<FString> Parts;
+			for (const FStatusEffectUI& Status : AllyShown->mStatusEffects)
+			{
+				Parts.Add(StatusDisplayName(Status.mTag));
+			}
+			mAllyStatusText->SetText(FText::FromString(Parts.IsEmpty()
+				? TEXT("상태 없음") : FString::Join(Parts, TEXT(" · "))));
+			SetShown(mAllyStatusText, true);
+		}
+
+		for (int32 Index = 0; Index < mAllyStatusFrames.Num(); ++Index)
+		{
+			const bool bHasStatus = AllyShown->mStatusEffects.IsValidIndex(Index);
+			SetShown(mAllyStatusFrames[Index], bHasStatus);
+			UImage* Icon = mAllyStatusIcons.IsValidIndex(Index)
+				? mAllyStatusIcons[Index].Get() : nullptr;
+			UTextBlock* Count = mAllyStatusCounts.IsValidIndex(Index)
+				? mAllyStatusCounts[Index].Get() : nullptr;
+			UTexture2D* Art = bHasStatus
+				? StatusIconFor(AllyShown->mStatusEffects[Index].mTag) : nullptr;
+			SetShown(Icon, Art != nullptr);
+			if (Icon != nullptr && Art != nullptr)
+			{
+				Icon->SetBrushFromTexture(Art, false);
+			}
+			const int32 StackCount = bHasStatus
+				? AllyShown->mStatusEffects[Index].mStackCount : 0;
+			SetShown(Count, StackCount > 1);
+			if (Count != nullptr && StackCount > 1)
+			{
+				Count->SetText(FText::AsNumber(StackCount));
+			}
 		}
 	}
 
@@ -1462,23 +1616,49 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
-		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
-	SetTextIfPresent(mEnemyDefenseText, FText::FromString(FString::Printf(
-		TEXT("방어 %d"), FMath::RoundToInt(Shown->mDefensePoint))));
+		TEXT("HP  %d / %d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
+	SetTextIfPresent(mEnemyAPText, FText::FromString(Shown->mMaxActionPoints > 0
+		? FString::Printf(TEXT("AP  %d / %d"), Shown->mActionPoints, Shown->mMaxActionPoints)
+		: FString::Printf(TEXT("AP  %d"), Shown->mActionPoints)));
+	SetTextIfPresent(mEnemySpeedText, FText::FromString(FString::Printf(
+		TEXT("속도  %d"), FMath::RoundToInt(Shown->mSpeedPoint))));
 
 	if (mEnemyStatusText != nullptr)
 	{
 		TArray<FString> Parts;
 		for (const FStatusEffectUI& Status : Shown->mStatusEffects)
 		{
-			Parts.Add(Status.mTag.GetTagName().ToString());
+			Parts.Add(StatusDisplayName(Status.mTag));
 		}
-		const bool bAny = Parts.Num() > 0;
-		SetShown(mEnemyStatusText, bAny);
-		if (bAny)
+		mEnemyStatusText->SetText(FText::FromString(Parts.IsEmpty()
+			? TEXT("상태 없음")
+			: FString::Join(Parts, TEXT(" · "))));
+		SetShown(mEnemyStatusText, true);
+	}
+
+	for (int32 Index = 0; Index < mEnemyStatusFrames.Num(); ++Index)
+	{
+		const bool bHasStatus = Shown->mStatusEffects.IsValidIndex(Index);
+		SetShown(mEnemyStatusFrames[Index], bHasStatus);
+
+		UImage* Icon = mEnemyStatusIcons.IsValidIndex(Index)
+			? mEnemyStatusIcons[Index].Get() : nullptr;
+		UTextBlock* Count = mEnemyStatusCounts.IsValidIndex(Index)
+			? mEnemyStatusCounts[Index].Get() : nullptr;
+		UTexture2D* Art = bHasStatus
+			? StatusIconFor(Shown->mStatusEffects[Index].mTag) : nullptr;
+		SetShown(Icon, Art != nullptr);
+		if (Icon != nullptr && Art != nullptr)
 		{
-			mEnemyStatusText->SetText(FText::FromString(
-				FString::Join(Parts, TEXT(" / "))));
+			Icon->SetBrushFromTexture(Art, false);
+		}
+
+		const int32 StackCount = bHasStatus
+			? Shown->mStatusEffects[Index].mStackCount : 0;
+		SetShown(Count, StackCount > 1);
+		if (Count != nullptr && StackCount > 1)
+		{
+			Count->SetText(FText::AsNumber(StackCount));
 		}
 	}
 

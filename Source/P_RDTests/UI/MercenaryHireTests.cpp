@@ -618,6 +618,42 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
+	// 전장 유닛 탭은 상세창을 열지 않고 같은 크기의 요약판 두 종류로 읽는다.
+	// 아군/적 중 하나만 선택되지만 WBP에는 두 계약이 모두 있어야 한다.
+	for (const TCHAR* Prefix : { TEXT("Enemy"), TEXT("Ally") })
+	{
+		const FName PanelName(*FString::Printf(TEXT("%sPanel"), Prefix));
+		UWidget* SummaryPanel = Tree->FindWidget(PanelName);
+		if (TestNotNull(*FString::Printf(TEXT("%s 요약판"), Prefix), SummaryPanel))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 요약판 기본값은 닫힘"), Prefix),
+				SummaryPanel->GetVisibility(), ESlateVisibility::Collapsed);
+			if (const UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(SummaryPanel->Slot))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 요약판 너비"), Prefix),
+					Slot->GetSize().X, 600.0);
+				TestEqual(*FString::Printf(TEXT("%s 요약판 높이"), Prefix),
+					Slot->GetSize().Y, 430.0);
+			}
+		}
+		for (const TCHAR* Suffix : {
+			TEXT("Portrait"), TEXT("Name"), TEXT("HPBar"), TEXT("HPText"),
+			TEXT("APText"), TEXT("SpeedText"), TEXT("Status") })
+		{
+			const FString WidgetName = FString::Printf(TEXT("%s%s"), Prefix, Suffix);
+			TestNotNull(*WidgetName, Tree->FindWidget(FName(*WidgetName)));
+		}
+		for (int32 StatusIndex = 0; StatusIndex < 3; ++StatusIndex)
+		{
+			for (const TCHAR* Suffix : { TEXT("Frame"), TEXT("Icon"), TEXT("Count") })
+			{
+				const FString WidgetName = FString::Printf(
+					TEXT("%sStatus%s_%d"), Prefix, Suffix, StatusIndex);
+				TestNotNull(*WidgetName, Tree->FindWidget(FName(*WidgetName)));
+			}
+		}
+	}
+
 	UPanelWidget* MercenaryPanel =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("MercenaryPanel")));
 	UPanelWidget* MercenaryBoard =

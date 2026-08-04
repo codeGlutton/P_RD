@@ -205,19 +205,22 @@ namespace MonsterTabWidgetBuilder
 			FVector2D::ZeroVector, FVector2D(1920.0f, 1080.0f), 0, true);
 
 		UTextBlock* Title = AddText(Blueprint, Canvas, TEXT("MonsterTabTitleText"),
-			NSLOCTEXT("MarchboundMonsterTab", "Title", "몬스터"), 58,
-			FVector2D(355.0f, 80.0f), FVector2D(620.0f, 92.0f), 10,
+			NSLOCTEXT("MarchboundMonsterTab", "Title", "몬스터"), 62,
+			FVector2D(340.0f, 69.0f), FVector2D(640.0f, 104.0f), 10,
 			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
 		Title->SetShadowOffset(FVector2D(3.0f, 3.0f));
 
+		// The back action belongs to the detail sheet. Keeping it inside the
+		// upper-right panel prevents it from colliding with the combat HUD's
+		// persistent option rail on wide mobile viewports.
 		AddImage(Blueprint, Canvas, TEXT("MonsterBackArt"), BackButtonTexture,
-			FVector2D(1600.0f, 41.0f), FVector2D(270.0f, 106.0f), 30, true);
+			FVector2D(1650.0f, 151.0f), FVector2D(190.0f, 76.0f), 30, true);
 		AddText(Blueprint, Canvas, TEXT("MonsterBackText"),
-			NSLOCTEXT("MarchboundMonsterTab", "Back", "뒤로"), 32,
-			FVector2D(1600.0f, 53.0f), FVector2D(270.0f, 76.0f), 31,
+			NSLOCTEXT("MarchboundMonsterTab", "Back", "뒤로"), 29,
+			FVector2D(1650.0f, 157.0f), FVector2D(190.0f, 60.0f), 31,
 			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
 		AddTransparentButton(Blueprint, Canvas, TEXT("MonsterBackButton"),
-			FVector2D(1600.0f, 41.0f), FVector2D(270.0f, 106.0f), 32);
+			FVector2D(1650.0f, 151.0f), FVector2D(190.0f, 76.0f), 32);
 
 		const TCHAR* MonsterNames[3] = { TEXT("독수리"), TEXT("늑대인간"), TEXT("골렘") };
 		const TCHAR* HeadPaths[3] = {
@@ -230,32 +233,32 @@ namespace MonsterTabWidgetBuilder
 			UCanvasPanel* Row = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 				UCanvasPanel::StaticClass(),
 				FName(*FString::Printf(TEXT("MonsterRow_%d"), Index)));
-			Place(Canvas, Row, FVector2D(34.0f, 270.0f + 225.0f * Index),
-				FVector2D(455.0f, 164.0f), 20);
+			Place(Canvas, Row, FVector2D(42.0f, 260.0f + 225.0f * Index),
+				FVector2D(448.0f, 160.0f), 20);
 			Expose(Blueprint, Row);
 
 			AddImage(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowNormal_%d"), Index)), RowNormal,
-				FVector2D::ZeroVector, FVector2D(455.0f, 164.0f), 0, true);
+				FVector2D::ZeroVector, FVector2D(448.0f, 160.0f), 0, true);
 			UImage* Selected = AddImage(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowSelected_%d"), Index)), RowSelected,
-				FVector2D::ZeroVector, FVector2D(455.0f, 164.0f), 2, true);
+				FVector2D::ZeroVector, FVector2D(448.0f, 160.0f), 2, true);
 			Selected->SetVisibility(Index == 1
 				? ESlateVisibility::SelfHitTestInvisible
 				: ESlateVisibility::Collapsed);
 
 			UImage* Portrait = AddImage(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowPortrait_%d"), Index)),
-				Texture(HeadPaths[Index]), FVector2D(32.0f, 18.0f),
-				FVector2D(126.0f, 126.0f), 6, true);
+				Texture(HeadPaths[Index]), FVector2D(30.0f, 15.0f),
+				FVector2D(130.0f, 130.0f), 6, true);
 			Portrait->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 			AddText(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowName_%d"), Index)),
-				FText::FromString(MonsterNames[Index]), 35,
-				FVector2D(172.0f, 48.0f), FVector2D(240.0f, 68.0f), 8);
+				FText::FromString(MonsterNames[Index]), 38,
+				FVector2D(168.0f, 43.0f), FVector2D(246.0f, 74.0f), 8);
 			AddTransparentButton(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowButton_%d"), Index)),
-				FVector2D::ZeroVector, FVector2D(455.0f, 164.0f), 20);
+				FVector2D::ZeroVector, FVector2D(448.0f, 160.0f), 20);
 		}
 
 		UScaleBox* PortraitScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
@@ -263,8 +266,8 @@ namespace MonsterTabWidgetBuilder
 		PortraitScale->SetStretch(EStretch::ScaleToFit);
 		PortraitScale->SetStretchDirection(EStretchDirection::Both);
 		PortraitScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-		Place(Canvas, PortraitScale, FVector2D(555.0f, 235.0f),
-			FVector2D(485.0f, 665.0f), 15);
+		Place(Canvas, PortraitScale, FVector2D(530.0f, 220.0f),
+			FVector2D(530.0f, 685.0f), 15);
 		UImage* DetailPortrait = Blueprint->WidgetTree->ConstructWidget<UImage>(
 			UImage::StaticClass(), TEXT("MonsterDetailPortrait"));
 		DetailPortrait->SetBrushFromTexture(Texture(
@@ -275,62 +278,62 @@ namespace MonsterTabWidgetBuilder
 
 		AddText(Blueprint, Canvas, TEXT("MonsterCenterNameText"),
 			NSLOCTEXT("MarchboundMonsterTab", "CenterWerewolf", "늑대인간"), 40,
-			FVector2D(570.0f, 900.0f), FVector2D(455.0f, 70.0f), 20);
+			FVector2D(570.0f, 908.0f), FVector2D(450.0f, 70.0f), 20);
 
 		AddText(Blueprint, Canvas, TEXT("MonsterDetailNameText"),
-			NSLOCTEXT("MarchboundMonsterTab", "DetailWerewolf", "늑대인간"), 48,
-			FVector2D(1160.0f, 150.0f), FVector2D(650.0f, 72.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "DetailWerewolf", "늑대인간"), 52,
+			FVector2D(1120.0f, 151.0f), FVector2D(500.0f, 78.0f), 20);
 		AddText(Blueprint, Canvas, TEXT("MonsterDetailTypeText"),
-			NSLOCTEXT("MarchboundMonsterTab", "DetailType", "야수 · 근접"), 27,
-			FVector2D(1160.0f, 220.0f), FVector2D(650.0f, 48.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "DetailType", "야수 · 근접"), 29,
+			FVector2D(1120.0f, 224.0f), FVector2D(500.0f, 48.0f), 20);
 
-		AddText(Blueprint, Canvas, TEXT("MonsterDetailHPLabel"), FText::FromString(TEXT("HP")), 32,
-			FVector2D(1165.0f, 302.0f), FVector2D(90.0f, 54.0f), 20,
+		AddText(Blueprint, Canvas, TEXT("MonsterDetailHPLabel"), FText::FromString(TEXT("HP")), 34,
+			FVector2D(1120.0f, 301.0f), FVector2D(100.0f, 58.0f), 20,
 			FLinearColor(0.36f, 0.04f, 0.025f, 1.0f), ETextJustify::Left);
 		UProgressBar* HPBar = Blueprint->WidgetTree->ConstructWidget<UProgressBar>(
 			UProgressBar::StaticClass(), TEXT("MonsterDetailHPBar"));
 		HPBar->SetPercent(1.0f);
 		HPBar->SetFillColorAndOpacity(FLinearColor(0.74f, 0.04f, 0.025f, 1.0f));
-		Place(Canvas, HPBar, FVector2D(1250.0f, 307.0f), FVector2D(530.0f, 44.0f), 20);
+		Place(Canvas, HPBar, FVector2D(1225.0f, 305.0f), FVector2D(590.0f, 50.0f), 20);
 		Expose(Blueprint, HPBar);
-		AddText(Blueprint, Canvas, TEXT("MonsterDetailHPText"), FText::FromString(TEXT("120 / 120")), 26,
-			FVector2D(1260.0f, 309.0f), FVector2D(510.0f, 39.0f), 22,
+		AddText(Blueprint, Canvas, TEXT("MonsterDetailHPText"), FText::FromString(TEXT("120 / 120")), 28,
+			FVector2D(1235.0f, 309.0f), FVector2D(570.0f, 42.0f), 22,
 			FLinearColor::White);
-		AddText(Blueprint, Canvas, TEXT("MonsterDetailAPText"), FText::FromString(TEXT("AP  5")), 31,
-			FVector2D(1170.0f, 375.0f), FVector2D(285.0f, 54.0f), 20);
+		AddText(Blueprint, Canvas, TEXT("MonsterDetailAPText"), FText::FromString(TEXT("AP  5")), 34,
+			FVector2D(1135.0f, 378.0f), FVector2D(320.0f, 58.0f), 20);
 		AddText(Blueprint, Canvas, TEXT("MonsterDetailSpeedText"),
-			NSLOCTEXT("MarchboundMonsterTab", "SpeedPreview", "속도  4"), 31,
-			FVector2D(1465.0f, 375.0f), FVector2D(285.0f, 54.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "SpeedPreview", "속도  4"), 34,
+			FVector2D(1480.0f, 378.0f), FVector2D(320.0f, 58.0f), 20);
 
 		AddText(Blueprint, Canvas, TEXT("MonsterSkillHeading"),
-			NSLOCTEXT("MarchboundMonsterTab", "SkillHeading", "스킬"), 31,
-			FVector2D(1170.0f, 450.0f), FVector2D(600.0f, 50.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "SkillHeading", "스킬"), 33,
+			FVector2D(1130.0f, 454.0f), FVector2D(680.0f, 54.0f), 20);
 		const TCHAR* SkillNames[4] = {
 			TEXT("야수의 발톱"), TEXT("도약"), TEXT("포효"), TEXT("사냥 본능")
 		};
 		for (int32 Index = 0; Index < 4; ++Index)
 		{
-			const float X = 1155.0f + 310.0f * (Index % 2);
-			const float Y = 510.0f + 132.0f * (Index / 2);
+			const float X = 1125.0f + 350.0f * (Index % 2);
+			const float Y = 518.0f + 144.0f * (Index / 2);
 			AddDarkWell(Blueprint, Canvas,
 				FName(*FString::Printf(TEXT("MonsterSkillBox_%d"), Index)),
-				FVector2D(X, Y), FVector2D(292.0f, 116.0f), 20);
+				FVector2D(X, Y), FVector2D(330.0f, 126.0f), 20);
 			AddText(Blueprint, Canvas,
 				FName(*FString::Printf(TEXT("MonsterSkillName_%d"), Index)),
-				FText::FromString(SkillNames[Index]), 25,
-				FVector2D(X + 18.0f, Y + 31.0f), FVector2D(256.0f, 54.0f), 22,
+				FText::FromString(SkillNames[Index]), 28,
+				FVector2D(X + 18.0f, Y + 34.0f), FVector2D(294.0f, 58.0f), 22,
 				FLinearColor(1.0f, 0.91f, 0.73f, 1.0f));
 		}
 
 		AddText(Blueprint, Canvas, TEXT("MonsterStatusHeading"),
-			NSLOCTEXT("MarchboundMonsterTab", "StatusHeading", "상태"), 31,
-			FVector2D(1170.0f, 790.0f), FVector2D(600.0f, 50.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "StatusHeading", "상태"), 33,
+			FVector2D(1130.0f, 816.0f), FVector2D(680.0f, 54.0f), 20);
 		AddText(Blueprint, Canvas, TEXT("MonsterStatusText_0"),
-			NSLOCTEXT("MarchboundMonsterTab", "StatusBleedImmune", "출혈 면역"), 27,
-			FVector2D(1170.0f, 855.0f), FVector2D(285.0f, 62.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "StatusBleedImmune", "출혈 면역"), 30,
+			FVector2D(1135.0f, 878.0f), FVector2D(320.0f, 70.0f), 20);
 		AddText(Blueprint, Canvas, TEXT("MonsterStatusText_1"),
-			NSLOCTEXT("MarchboundMonsterTab", "StatusAlert", "경계"), 27,
-			FVector2D(1465.0f, 855.0f), FVector2D(285.0f, 62.0f), 20);
+			NSLOCTEXT("MarchboundMonsterTab", "StatusAlert", "경계"), 30,
+			FVector2D(1480.0f, 878.0f), FVector2D(320.0f, 70.0f), 20);
 
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);
@@ -344,7 +347,7 @@ namespace MonsterTabWidgetBuilder
 		}
 
 		UE_LOG(LogTemp, Display,
-			TEXT("RD_MONSTER_TAB_BUILD success asset=%s rows=3 skills=4 design=1920x1080"),
+			TEXT("RD_MONSTER_TAB_BUILD success asset=%s rows=3 skills=4 design=1920x1080 layout=mobile-v2"),
 			AssetPath);
 	}
 }

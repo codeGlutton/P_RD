@@ -935,9 +935,25 @@ private:
 	TObjectPtr<UTextBlock> mEnemyName;
 	TObjectPtr<UProgressBar> mEnemyHPBar;
 	TObjectPtr<UTextBlock> mEnemyHPText;
-	TObjectPtr<UTextBlock> mEnemyDefenseText;
+	TObjectPtr<UTextBlock> mEnemyAPText;
+	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
 	TObjectPtr<UTextBlock> mEnemyForecastText;
+	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
+	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
+
+	TObjectPtr<UWidget> mAllyPanel;
+	TObjectPtr<UImage> mAllyPortrait;
+	TObjectPtr<UTextBlock> mAllyName;
+	TObjectPtr<UProgressBar> mAllyHPBar;
+	TObjectPtr<UTextBlock> mAllyHPText;
+	TObjectPtr<UTextBlock> mAllyAPText;
+	TObjectPtr<UTextBlock> mAllySpeedText;
+	TObjectPtr<UTextBlock> mAllyStatusText;
+	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;
+	TArray<TObjectPtr<UImage>> mAllyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
 	TObjectPtr<UButton> mEndTurnButton;
 

@@ -11,7 +11,7 @@
             └─────────────────────────────────────┘
       │ GetReward() / OnUIChanged
       ▼
-[UI] URewardUIWidgetBase 상속 WBP — 돈/경험치 카운트업·막대 연출 + 받기 버튼
+[UI] URewardSettlementWidgetBase 상속 WBP — 돈/경험치 카운트업·막대 연출 + 받기 버튼
 ```
 
 ## 구성
@@ -19,14 +19,18 @@
 |------|------|
 | `RewardUITypes.h` | `FRewardUI` — 돈(번 양·잔액) + 경험치(번 양·레벨 전/후·막대 전/후·최대) |
 | `RewardUIModel.h/.cpp` | 경계. `SetReward`/`GetReward`+`OnUIChanged`(읽기) · `RequestClaim`→`OnRewardClaimed`(주기) |
-| `RewardUIWidgetBase.h/.cpp` | WBP 베이스. `BindUIModel` 후 `OnRewardRefreshed`만 구현, 버튼은 `Claim()` |
+| `RewardSettlementWidgetBase.h/.cpp` | WBP 베이스(`WBP_RewardSettlement_Runtime`). `BindUIModel` 후 Model 데이터로 정산 화면을 그린다 |
+| `RewardPreviewCommand.cpp` | 에디터에서 정산 화면 프리뷰 콘솔 명령 |
 | `MockRewardDriver.h/.cpp` | 게임플레이 없이 가짜 보상 push + 받기 로그 — UI 선개발/테스트 |
 
+구형 `RewardUIWidgetBase`/`RewardRowWidgetBase`(WBP_Reward/WBP_RewardRow 기반)는
+`RewardSettlementWidgetBase`로 대체되어 삭제했다.
+
 ## 박용수(UI) 사용법
-1. WBP를 `URewardUIWidgetBase` 상속으로 만든다.
+1. WBP를 `URewardSettlementWidgetBase` 상속으로 만든다.
 2. `BindUIModel(VM)` 호출.
-3. `OnRewardRefreshed()`에서 `VM->GetReward()`를 읽어 돈/경험치 카운트업·막대 채움(전→후) 연출.
-4. '받기' 버튼 → `Claim()`.
+3. Model의 `GetReward()`를 읽어 돈/경험치 카운트업·막대 채움(전→후) 연출.
+4. '받기' 버튼 → `RequestClaim()`.
 5. 게임플레이 전이라도 `UMockRewardDriver::Start(VM)`로 표시·연출·받기 테스트.
 
 ## 모호재(게임플레이) 사용법

@@ -16,7 +16,6 @@
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
-#include "UI/CharacterSelectWidget.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #include "Setting/GamePlaySettings.h"
@@ -199,11 +198,9 @@ namespace
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
-		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::CharacterSelect,
 		// 여기에 넣어야 서브시스템이 실제로 만든다. Config 의 클래스 매핑은
 		// "무엇을 만들지"만 정하고, 이 목록이 "만들지 말지"를 정한다 -- 매핑만
 		// 걸고 여기를 빠뜨려서 START 를 누르는 순간 위젯이 없다고 멈췄다.

@@ -29,14 +29,18 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			int32 AP;
 			float Speed;
 			const TCHAR* TurnPortraitPath;
+			const TCHAR* HeroPortraitPath;
 		};
 		const FMockAlly Allies[] = {
 			{ TEXT("기사"), 90.f, 3, 5.f,
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight") },
 			{ TEXT("궁수"), 100.f, 4, 7.f,
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Ranger.T_MB_HireHero_Ranger") },
 			{ TEXT("마법사"), 75.f, 4, 4.f,
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Mage.T_MB_HireHero_Mage") },
 		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Allies); ++i)
 		{
@@ -49,6 +53,8 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Ally.mSpeedPoint = Allies[i].Speed;
 			Ally.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
 				Allies[i].TurnPortraitPath);
+			Ally.mPortrait = LoadObject<UTexture2D>(nullptr,
+				Allies[i].HeroPortraitPath);
 			Ally.mMovementPoint = Allies[i].AP; Ally.mMaxMovementPoint = 4.f;
 			Ally.mDamagePoint = 5.f; Ally.mDefensePoint = 2.f;
 			Ally.mTile = FTileIndex(4 + i, 8);
@@ -126,6 +132,13 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			{ TEXT("돌파 베기"), 2, 3, 3, 12, 18, false },
 			{ TEXT("반격 태세"), 1, 1, 0,  0,  0, true  },
 		};
+		const TCHAR* SkillIconPaths[] = {
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_upper__action_icon.KK_HUD04_action_left_upper__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_upper__action_icon.KK_HUD04_action_right_upper__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_lower__action_icon.KK_HUD04_action_left_lower__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_lower__action_icon.KK_HUD04_action_right_lower__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_bottom__action_icon.KK_HUD04_action_bottom__action_icon"),
+		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Table); ++i)
 		{
 			FSkillUI Skill;
@@ -138,6 +151,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Skill.mDamageMax = Table[i].DamageMax;
 			Skill.mCriticalDamage = FMath::RoundToInt(Table[i].DamageMax * 1.5f);
 			Skill.mIsUsable = Table[i].bUsable;
+			Skill.mIcon = LoadObject<UTexture2D>(nullptr, SkillIconPaths[i]);
 			Skills.Add(Skill);
 		}
 	}

@@ -290,8 +290,8 @@ void URewardSettlementWidgetBase::AddSummaryRow(
 		mSummaryRowsBox->GetChildrenCount());
 	USizeBox* Size = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 		*FString::Printf(TEXT("SettlementSummarySize_%s"), *Suffix));
-	Size->SetWidthOverride(310.0f);
-	Size->SetHeightOverride(92.0f);
+	Size->SetWidthOverride(320.0f);
+	Size->SetHeightOverride(88.0f);
 
 	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),
 		*FString::Printf(TEXT("SettlementSummaryOverlay_%s"), *Suffix));
@@ -311,19 +311,19 @@ void URewardSettlementWidgetBase::AddSummaryRow(
 		*FString::Printf(TEXT("SettlementSummaryIcon_%s"), *Suffix));
 	IconImage->SetBrush(TextureBrush(Icon));
 	IconImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, IconImage, FVector2D(14.0f, 14.0f), FVector2D(64.0f, 64.0f), 1);
+	Place(Canvas, IconImage, FVector2D(13.0f, 12.0f), FVector2D(64.0f, 64.0f), 1);
 
 	UTextBlock* Main = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementSummaryMain_%s"), *Suffix));
 	Main->SetText(MainText);
 	StyleText(Main, 25, Cream);
-	Place(Canvas, Main, FVector2D(90.0f, 13.0f), FVector2D(205.0f, 38.0f), 2);
+	Place(Canvas, Main, FVector2D(88.0f, 10.0f), FVector2D(218.0f, 38.0f), 2);
 
 	UTextBlock* Sub = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementSummarySub_%s"), *Suffix));
 	Sub->SetText(SubText);
 	StyleText(Sub, 16, FLinearColor(0.78f, 0.72f, 0.62f, 1.0f));
-	Place(Canvas, Sub, FVector2D(90.0f, 51.0f), FVector2D(205.0f, 28.0f), 2);
+	Place(Canvas, Sub, FVector2D(88.0f, 48.0f), FVector2D(218.0f, 28.0f), 2);
 
 	if (UVerticalBoxSlot* RowSlot = mSummaryRowsBox->AddChildToVerticalBox(Size))
 	{
@@ -358,8 +358,8 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 	const FString Suffix = FString::Printf(TEXT("%d_%d"), mDynamicBuildGeneration, RowIndex);
 	USizeBox* Size = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenarySize_%s"), *Suffix));
-	Size->SetWidthOverride(960.0f);
-	Size->SetHeightOverride(145.0f);
+	Size->SetWidthOverride(1050.0f);
+	Size->SetHeightOverride(128.0f);
 	UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryCanvas_%s"), *Suffix));
 	Size->SetContent(Canvas);
@@ -370,7 +370,7 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 		*FString::Printf(TEXT("SettlementMercenaryBackground_%s"), *Suffix));
 	RowBackground->SetBrush(TextureBrush(mMercenaryRowTexture, &RowUV));
 	RowBackground->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, RowBackground, FVector2D::ZeroVector, FVector2D(960.0f, 145.0f), 0);
+	Place(Canvas, RowBackground, FVector2D::ZeroVector, FVector2D(1050.0f, 128.0f), 0);
 
 	const FBox2f FrameUV(FVector2f(148.0f / 1254.0f, 133.0f / 1254.0f),
 		FVector2f(1106.0f / 1254.0f, 1110.0f / 1254.0f));
@@ -378,7 +378,7 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 		*FString::Printf(TEXT("SettlementPortraitPlate_%s"), *Suffix));
 	PortraitFrame->SetBrush(TextureBrush(mPortraitFrameTexture, &FrameUV));
 	PortraitFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, PortraitFrame, FVector2D(15.0f, 10.0f), FVector2D(125.0f, 125.0f), 1);
+	Place(Canvas, PortraitFrame, FVector2D(13.0f, 9.0f), FVector2D(110.0f, 110.0f), 1);
 
 	UImage* Portrait = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
 		*FString::Printf(TEXT("SettlementPortrait_%s"), *Suffix));
@@ -386,19 +386,19 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 	Portrait->SetVisibility(Mercenary.mPortrait != nullptr
 		? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 	// 프레임 중앙이 불투명한 원본이므로 초상을 프레임보다 위에, 금색 테두리 안쪽에 둔다.
-	Place(Canvas, Portrait, FVector2D(29.0f, 24.0f), FVector2D(97.0f, 97.0f), 2);
+	Place(Canvas, Portrait, FVector2D(25.0f, 21.0f), FVector2D(86.0f, 86.0f), 2);
 
 	UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryName_%s"), *Suffix));
 	Name->SetText(Mercenary.mName);
-	StyleText(Name, 29, Ink);
-	Place(Canvas, Name, FVector2D(156.0f, 17.0f), FVector2D(185.0f, 42.0f), 3);
+	StyleText(Name, 27, Ink);
+	Place(Canvas, Name, FVector2D(140.0f, 14.0f), FVector2D(200.0f, 40.0f), 3);
 
 	UTextBlock* Level = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryLevel_%s"), *Suffix));
 	Level->SetText(FText::Format(LOCTEXT("Level", "Lv.{0}"), FText::AsNumber(Mercenary.mLevel)));
-	StyleText(Level, 23, Blue);
-	Place(Canvas, Level, FVector2D(156.0f, 66.0f), FVector2D(185.0f, 38.0f), 3);
+	StyleText(Level, 22, Blue);
+	Place(Canvas, Level, FVector2D(140.0f, 57.0f), FVector2D(200.0f, 36.0f), 3);
 
 	UTextBlock* Transition = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryTransition_%s"), *Suffix));
@@ -406,7 +406,7 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpBefore)),
 		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpAfter))));
 	StyleText(Transition, 24, Ink, ETextJustify::Center);
-	Place(Canvas, Transition, FVector2D(355.0f, 15.0f), FVector2D(350.0f, 42.0f), 3);
+	Place(Canvas, Transition, FVector2D(350.0f, 12.0f), FVector2D(390.0f, 40.0f), 3);
 
 	UProgressBar* Bar = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryBar_%s"), *Suffix));
@@ -422,7 +422,7 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 	Bar->SetPercent(Mercenary.mMaxExp > 0.0f
 		? FMath::Clamp(Mercenary.mExpAfter / Mercenary.mMaxExp, 0.0f, 1.0f) : 0.0f);
 	Bar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, Bar, FVector2D(365.0f, 72.0f), FVector2D(350.0f, 48.0f), 3);
+	Place(Canvas, Bar, FVector2D(350.0f, 61.0f), FVector2D(400.0f, 45.0f), 3);
 
 	UTextBlock* BarText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementMercenaryBarText_%s"), *Suffix));
@@ -430,7 +430,7 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpAfter)),
 		FText::AsNumber(FMath::RoundToInt(Mercenary.mMaxExp))));
 	StyleText(BarText, 21, FLinearColor::White, ETextJustify::Center);
-	Place(Canvas, BarText, FVector2D(365.0f, 78.0f), FVector2D(350.0f, 34.0f), 4);
+	Place(Canvas, BarText, FVector2D(350.0f, 66.0f), FVector2D(400.0f, 34.0f), 4);
 
 	const FBox2f BadgeUV(FVector2f(158.0f / 1649.0f, 197.0f / 954.0f),
 		FVector2f(1488.0f / 1649.0f, 733.0f / 954.0f));
@@ -438,13 +438,13 @@ void URewardSettlementWidgetBase::AddMercenaryRow(
 		*FString::Printf(TEXT("SettlementXPBadge_%s"), *Suffix));
 	Badge->SetBrush(TextureBrush(mXPBadgeTexture, &BadgeUV));
 	Badge->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, Badge, FVector2D(760.0f, 35.0f), FVector2D(175.0f, 72.0f), 3);
+	Place(Canvas, Badge, FVector2D(820.0f, 28.0f), FVector2D(190.0f, 72.0f), 3);
 
 	UTextBlock* XP = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 		*FString::Printf(TEXT("SettlementXPText_%s"), *Suffix));
 	XP->SetText(FText::Format(LOCTEXT("XPBadge", "+{0} XP"), FText::AsNumber(ExpGained)));
 	StyleText(XP, 24, FLinearColor::White, ETextJustify::Center);
-	Place(Canvas, XP, FVector2D(760.0f, 48.0f), FVector2D(175.0f, 42.0f), 4);
+	Place(Canvas, XP, FVector2D(820.0f, 41.0f), FVector2D(190.0f, 42.0f), 4);
 
 	if (UVerticalBoxSlot* RowSlot = mMercenaryRowsBox->AddChildToVerticalBox(Size))
 	{

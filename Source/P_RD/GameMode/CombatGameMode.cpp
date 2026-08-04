@@ -54,16 +54,73 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
+	{
+		return UnitModel != nullptr
+			? FString::Printf(TEXT("%s %s %s"),
+				*UnitModel->GetBoardActorKeyName().ToString(),
+				*UnitModel->GetBoardActorAssetId().ToString(),
+				*UnitModel->GetBoardActorDisplayName().ToString())
+			: FString();
+	}
+
+	/**
+	 * @brief Marchbound가 새로 그린 용병 전용 얼굴/히어로 그림을 직업으로 찾는다.
+	 *
+	 * 데이터에셋의 mIcon/mPortrait는 아직 구형 픽셀 초상을 가리키는 것이 있다.
+	 * 용병 UI만 새 그림을 쓰도록 어댑터에서 한 번 정규화하면 턴바·목록·상세가
+	 * 각자 다른 폴백 규칙을 갖지 않는다.
+	 */
+	UTexture2D* ResolveMarchboundMercenaryPortrait(const UUnitModel* UnitModel,
+		const bool bHeroIllustration)
+	{
+		if (UnitModel == nullptr || UnitModel->IsPlayerUnitModel() == false)
+		{
+			return nullptr;
+		}
+		const FString Identity = CombatPortraitIdentity(UnitModel);
+		struct FMercenaryPortraitRule
+		{
+			const TCHAR* KoreanNeedle;
+			const TCHAR* EnglishNeedle;
+			const TCHAR* AssetStem;
+		};
+		static const FMercenaryPortraitRule Rules[] = {
+			{ TEXT("기사"), TEXT("Knight"), TEXT("Knight") },
+			{ TEXT("마법사"), TEXT("Mage"), TEXT("Mage") },
+			{ TEXT("궁수"), TEXT("Ranger"), TEXT("Ranger") },
+			{ TEXT("도적"), TEXT("Rogue"), TEXT("Rogue") },
+			{ TEXT("야만"), TEXT("Barbarian"), TEXT("Barbarian") },
+			{ TEXT("드루이드"), TEXT("Druid"), TEXT("Druid") },
+		};
+		for (const FMercenaryPortraitRule& Rule : Rules)
+		{
+			if (Identity.Contains(Rule.KoreanNeedle, ESearchCase::IgnoreCase)
+				|| Identity.Contains(Rule.EnglishNeedle, ESearchCase::IgnoreCase))
+			{
+				const FString AssetName = FString::Printf(TEXT("T_MB_Hire%s_%s"),
+					bHeroIllustration ? TEXT("Hero") : TEXT("Icon"), Rule.AssetStem);
+				const FString AssetPath = FString::Printf(
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
+					*AssetName, *AssetName);
+				return LoadObject<UTexture2D>(nullptr, *AssetPath);
+			}
+		}
+		return nullptr;
+	}
+
 	UTexture2D* ResolveTurnPortraitFallback(const UUnitModel* UnitModel)
 	{
 		if (UnitModel == nullptr)
 		{
 			return nullptr;
 		}
-		const FString Identity = FString::Printf(TEXT("%s %s %s"),
-			*UnitModel->GetBoardActorKeyName().ToString(),
-			*UnitModel->GetBoardActorAssetId().ToString(),
-			*UnitModel->GetBoardActorDisplayName().ToString());
+		if (UTexture2D* MercenaryPortrait =
+			ResolveMarchboundMercenaryPortrait(UnitModel, false))
+		{
+			return MercenaryPortrait;
+		}
+		const FString Identity = CombatPortraitIdentity(UnitModel);
 
 		struct FPortraitRule
 		{
@@ -71,18 +128,6 @@ namespace
 			const TCHAR* Path;
 		};
 		static const FPortraitRule Rules[] = {
-			{ TEXT("기사"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
-			{ TEXT("Knight"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight") },
-			{ TEXT("마법사"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
-			{ TEXT("Mage"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage") },
-			{ TEXT("궁수"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
-			{ TEXT("Ranger"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger") },
-			{ TEXT("도적"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
-			{ TEXT("Rogue"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue") },
-			{ TEXT("야만"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
-			{ TEXT("Barbarian"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Barbarian.T_MB_HireIcon_Barbarian") },
-			{ TEXT("드루이드"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
-			{ TEXT("Druid"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid") },
 			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
 			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
 			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
@@ -104,9 +149,8 @@ namespace
 				return LoadObject<UTexture2D>(nullptr, Rule.Path);
 			}
 		}
-		return LoadObject<UTexture2D>(nullptr, UnitModel->IsPlayerUnitModel()
-			? TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")
-			: TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
+		return LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
 	}
 
 	FLinearColor GetRarityColor(ERarityType RarityType)
@@ -1041,7 +1085,12 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 			continue;
 		}
 
-		UTexture2D* Portrait = PlayerUnitModel->GetBoardActorIcon();
+		UTexture2D* Portrait = ResolveMarchboundMercenaryPortrait(
+			PlayerUnitModel, false);
+		if (Portrait == nullptr)
+		{
+			Portrait = PlayerUnitModel->GetBoardActorIcon();
+		}
 		if (Portrait == nullptr)
 		{
 			Portrait = PlayerUnitModel->GetBoardActorPortrait();
@@ -1154,10 +1203,20 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();
+		if (UTexture2D* MarchboundHero =
+			ResolveMarchboundMercenaryPortrait(UnitModel, true))
+		{
+			UnitUIData.mPortrait = MarchboundHero;
+		}
 		// 큰 카드의 972x1619 세로 초상을 턴 칩에 억지로 눌러 넣지 않는다.
 		// DA mIcon에는 256x256 HeadV2 얼굴판을 두며, 아직 아이콘이 없는
 		// 신규/임시 유닛만 기존 초상으로 안전하게 폴백한다.
-		UnitUIData.mTurnPortrait = UnitModel->GetBoardActorIcon();
+		UnitUIData.mTurnPortrait = ResolveMarchboundMercenaryPortrait(
+			UnitModel, false);
+		if (UnitUIData.mTurnPortrait == nullptr)
+		{
+			UnitUIData.mTurnPortrait = UnitModel->GetBoardActorIcon();
+		}
 		if (UnitUIData.mTurnPortrait == nullptr)
 		{
 			UnitUIData.mTurnPortrait = ResolveTurnPortraitFallback(UnitModel);
@@ -1598,6 +1657,11 @@ void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorMod
 	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
 
 	UUnitModel* UnitModel = Cast<UUnitModel>(BoardActorModel);
+	if (UTexture2D* MarchboundHero =
+		ResolveMarchboundMercenaryPortrait(UnitModel, true))
+	{
+		UnitDetailUIData.mPortrait = MarchboundHero;
+	}
 	// 상세창 스킬 칸 탭을 되짚을 기준이다. 유닛이 아닌 것(장애물)을 골랐으면 비운다.
 	mDetailUnitModel = UnitModel;
 	if (UnitModel != nullptr)
@@ -2009,10 +2073,19 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			MercenaryExp.mName = NSLOCTEXT(
 				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
 		}
-		MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorIcon();
+		MercenaryExp.mPortrait = ResolveMarchboundMercenaryPortrait(
+			PlayerUnitModel, false);
+		if (MercenaryExp.mPortrait == nullptr)
+		{
+			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorIcon();
+		}
 		if (MercenaryExp.mPortrait == nullptr)
 		{
 			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorPortrait();
+		}
+		if (MercenaryExp.mPortrait == nullptr)
+		{
+			MercenaryExp.mPortrait = ResolveTurnPortraitFallback(PlayerUnitModel);
 		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
 		MercenaryExp.mLevel = PlayerLevel;

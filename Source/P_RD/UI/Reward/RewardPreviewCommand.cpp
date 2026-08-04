@@ -114,9 +114,9 @@ namespace RewardPreview
 			NSLOCTEXT("RewardPreview", "RogueName", "Rogue"),
 		};
 		UTexture2D* MercenaryPortraits[] = {
-			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Knight_HeadV2.KK_Face_Knight_HeadV2")),
-			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Mage_HeadV2.KK_Face_Mage_HeadV2")),
-			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Ranger_HeadV2.KK_Face_Ranger_HeadV2")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue")),
 		};
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(MercenaryNames); ++Index)
 		{
