@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -1119,7 +1119,7 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
 	TurnUI.mCurrentRoundRemainingTurnCount =
-		CombatModel->GetRemainingTurnCountInRound();
+		CombatModel->GetTurnContextCount();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
