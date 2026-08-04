@@ -24,7 +24,6 @@ enum class EUnitJobType : uint8
 	Barbarian,
 	Rogue,
 	Druid,
-	Engineer,
 
 	PlayerJobCount			UMETA(Hidden),
 	
