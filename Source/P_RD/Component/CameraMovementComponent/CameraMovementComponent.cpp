@@ -194,7 +194,7 @@ bool UCameraMovementComponent::GetCameraRayHitPoint(OUT FHitResult& HitResult)
 
 FVector UCameraMovementComponent::ClampLocationWithinRotatedBox(const FVector& WorldLocation)
 {
-	FRotator OwnerRotator = FRotator(0, GetOwner()->GetActorRotation().Yaw,0);
+	FRotator OwnerRotator = FRotator(0, GetOwner()->GetActorRotation().Yaw + mMoveClampingBoxRotation,0);
 
 	// 1. 월드 -> 박스 로컬 공간으로 변환 (중심 기준으로 이동 후, 역회전)
 	FVector LocalLocation = OwnerRotator.UnrotateVector(WorldLocation - mMoveClampingBoxCenter);
@@ -246,15 +246,19 @@ void UCameraMovementComponent::ClampingCamera()
 
 	mTargetLookAtCameraLocation = FVector2D(ClampLocationWithinRotatedBox(FVector(mTargetLookAtCameraLocation,0.f)));
 
-	//==============================
+	// 편집기 플레이에서도 실제 전투 화면을 평가할 수 있도록 이동 제한 박스와
+	// 카메라 방향 디버그 선을 렌더하지 않는다. 제한 계산 자체는 위에서 유지된다.
+
+		//==============================
 	// 이동 제한 범위를 보여줍니다.
 	// @note 
 	// 직교 카메라로 보고 있을 때는 제한 범위가 이상해 보일 것입니다.
 	// 에디터 카메라로 보아야지 제한 범위가 납득이 되실 것입니다.
 	FVector Center = mMoveClampingBoxCenter;
 	FVector Extent = FVector(mMoveClampingBox / 2, 0);
-	FQuat Rotation = FRotator(0.f, GetOwner()->GetActorRotation().Yaw, 0.f).Quaternion();
+	FQuat Rotation = FRotator(0.f, GetOwner()->GetActorRotation().Yaw + mMoveClampingBoxRotation, 0.f).Quaternion();
 
+	/*
 #if WITH_EDITOR
 
 	DrawDebugBox(
@@ -272,6 +276,7 @@ void UCameraMovementComponent::ClampingCamera()
 	DrawDebugLine(GetWorld(), GetOwner()->GetActorLocation(), GetOwner()->GetActorLocation() + (GetOwner()->GetActorForwardVector() * 100000.0f), FColor::Green);
 
 #endif
+	*/
 }
 
 void UCameraMovementComponent::MoveSmooth(float DeltaTime)

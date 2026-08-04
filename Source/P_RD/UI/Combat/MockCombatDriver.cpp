@@ -1,6 +1,7 @@
 #include "UI/Combat/MockCombatDriver.h"
 
 #include "UI/Combat/CombatUIModel.h"
+#include "Engine/Texture2D.h"
 
 #define LOCTEXT_NAMESPACE "MockCombatDriver"
 
@@ -21,11 +22,25 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	// 이미지로 평가한 안과 실제 WBP가 같은 수치로 그려져야 비교가 된다.
 	TArray<FUnitUI> Units;
 	{
-		struct FMockAlly { const TCHAR* Name; float HP; int32 AP; };
+		struct FMockAlly
+		{
+			const TCHAR* Name;
+			float HP;
+			int32 AP;
+			float Speed;
+			const TCHAR* TurnPortraitPath;
+			const TCHAR* HeroPortraitPath;
+		};
 		const FMockAlly Allies[] = {
-			{ TEXT("기사"),   90.f, 3 },
-			{ TEXT("궁수"),  100.f, 4 },
-			{ TEXT("마법사"), 75.f, 4 },
+			{ TEXT("기사"), 90.f, 3, 5.f,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight") },
+			{ TEXT("궁수"), 100.f, 4, 7.f,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Ranger.T_MB_HireHero_Ranger") },
+			{ TEXT("마법사"), 75.f, 4, 4.f,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Mage.T_MB_HireHero_Mage") },
 		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Allies); ++i)
 		{
@@ -35,6 +50,12 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Ally.mName = FText::FromString(Allies[i].Name);
 			Ally.mHP = Allies[i].HP; Ally.mMaxHP = 100.f;
 			Ally.mActionPoints = Allies[i].AP; Ally.mMaxActionPoints = 4;
+			Ally.mSpeedPoint = Allies[i].Speed;
+			Ally.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
+				Allies[i].TurnPortraitPath);
+			Ally.mPortrait = LoadObject<UTexture2D>(nullptr,
+				Allies[i].HeroPortraitPath);
+			Ally.mMovementPoint = Allies[i].AP; Ally.mMaxMovementPoint = 4.f;
 			Ally.mDamagePoint = 5.f; Ally.mDefensePoint = 2.f;
 			Ally.mTile = FTileIndex(4 + i, 8);
 			// 목업의 기사에는 상태이상 표가 붙어 있다. 미리보기에도 하나는
@@ -50,10 +71,18 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Units.Add(Ally);
 		}
 
-		struct FMockFoe { const TCHAR* Name; float HP; float MaxHP; };
+		struct FMockFoe
+		{
+			const TCHAR* Name;
+			float HP;
+			float MaxHP;
+			const TCHAR* TurnPortraitPath;
+		};
 		const FMockFoe Foes[] = {
-			{ TEXT("독수리"),   50.f, 50.f },
-			{ TEXT("독수리"),   38.f, 50.f },
+			{ TEXT("독수리"), 50.f, 50.f,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
+			{ TEXT("독수리"), 38.f, 50.f,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
 		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Foes); ++i)
 		{
@@ -63,8 +92,20 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Foe.mName = FText::FromString(Foes[i].Name);
 			Foe.mHP = Foes[i].HP; Foe.mMaxHP = Foes[i].MaxHP;
 			Foe.mActionPoints = 4; Foe.mMaxActionPoints = 4;
+			Foe.mSpeedPoint = 3.f + i;
+			Foe.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
+				Foes[i].TurnPortraitPath);
+			Foe.mMovementPoint = 4.f; Foe.mMaxMovementPoint = 4.f;
 			Foe.mDamagePoint = 4.f; Foe.mDefensePoint = 0.f;
 			Foe.mTile = FTileIndex(3 + i, 3);
+			// 적 머리 위 바도 상태 슬롯을 반드시 검증한다. 첫 적은 취약,
+			// 둘째 적은 민첩을 넣어 아군/적 공통 표시 계약을 고정한다.
+			FStatusEffectUI Status;
+			Status.mTag = FGameplayTag::RequestGameplayTag(i == 0
+				? TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability")
+				: TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff.Agility"));
+			Status.mStackCount = i == 0 ? 2 : 1;
+			Foe.mStatusEffects.Add(Status);
 			Units.Add(Foe);
 		}
 	}
@@ -91,6 +132,13 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			{ TEXT("돌파 베기"), 2, 3, 3, 12, 18, false },
 			{ TEXT("반격 태세"), 1, 1, 0,  0,  0, true  },
 		};
+		const TCHAR* SkillIconPaths[] = {
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_upper__action_icon.KK_HUD04_action_left_upper__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_upper__action_icon.KK_HUD04_action_right_upper__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_lower__action_icon.KK_HUD04_action_left_lower__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_lower__action_icon.KK_HUD04_action_right_lower__action_icon"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_bottom__action_icon.KK_HUD04_action_bottom__action_icon"),
+		};
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Table); ++i)
 		{
 			FSkillUI Skill;
@@ -103,6 +151,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Skill.mDamageMax = Table[i].DamageMax;
 			Skill.mCriticalDamage = FMath::RoundToInt(Table[i].DamageMax * 1.5f);
 			Skill.mIsUsable = Table[i].bUsable;
+			Skill.mIcon = LoadObject<UTexture2D>(nullptr, SkillIconPaths[i]);
 			Skills.Add(Skill);
 		}
 	}
@@ -123,6 +172,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	// 기사 -> 독수리 -> 궁수 -> 독수리 -> 마법사. 목업 열 장이 그리는
 	// 상황과 같아야 나란히 놓고 비교가 된다.
 	Turn.mTurnOrderUnitIds = { 0, 100, 1, 101, 2 };
+	Turn.mCurrentRoundRemainingTurnCount = Turn.mTurnOrderUnitIds.Num();
 	mUIModel->SetTurnUI(Turn);
 
 	// 가짜 장비 3슬롯
@@ -144,6 +194,25 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	Meta.mGold = 120;
 	Meta.mLevel = 3;
 	Meta.mExp = 40.f; Meta.mMaxExp = 100.f;
+	const TCHAR* ArtifactPaths[] = {
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_RareTreasure.T_MapNode_RareTreasure"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure"),
+	};
+	const FLinearColor ArtifactColors[] = {
+		FLinearColor(0.86f, 0.98f, 0.94f, 1.f),
+		FLinearColor(0.55f, 0.72f, 1.f, 1.f),
+		FLinearColor(0.82f, 0.58f, 1.f, 1.f),
+	};
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(ArtifactPaths); ++Index)
+	{
+		FCombatArtifactUI& Artifact = Meta.mArtifacts.AddDefaulted_GetRef();
+		Artifact.mName = FText::Format(
+			LOCTEXT("PreviewArtifactName", "아티팩트 {0}"),
+			FText::AsNumber(Index + 1));
+		Artifact.mIcon = LoadObject<UTexture2D>(nullptr, ArtifactPaths[Index]);
+		Artifact.mRarityColor = ArtifactColors[Index];
+	}
 	mUIModel->SetPlayerMeta(Meta);
 }
 

@@ -124,14 +124,20 @@ void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSp
 
 	/* VFX 생성 */
 
+	const FSoftNiagaraSpawnData* SpawnData = GamePlaySettings->mGlobalStatusEffectVFXSetting.mEffectVFXs.Find(Spec.mEffectClass->GetClass());
+
 	const UActorModel* Instigator = Model->GetOwnerModel();
-	const IBoardCombatTargetView* TargetView = Instigator->GetView<IBoardCombatTargetView>();
-	if (TargetView != nullptr)
+	const AActor* ActorView = Instigator->GetView<AActor>();
+	if (ActorView != nullptr && SpawnData != nullptr && SpawnData->mNiagaraSystem.IsNull() == false)
 	{
-		const FSoftNiagaraSpawnData* SpawnData = GamePlaySettings->mGlobalStatusEffectVFXSetting.mEffectVFXs.Find(Spec.mEffectClass->GetClass());
-		if (SpawnData != nullptr && SpawnData->mNiagaraSystem.IsNull() == false)
+		const IBoardCombatTargetView* CombatTargetView = Instigator->GetView<IBoardCombatTargetView>();
+		if (CombatTargetView != nullptr)
 		{
-			UVFXFunctionLibrary::SpawnNiagaraEffect(*SpawnData, TargetView->GetTargetMeshComponent());
+			UVFXFunctionLibrary::SpawnNiagaraEffect(*SpawnData, CombatTargetView->GetTargetMeshComponent());
+		}
+		else
+		{
+			UVFXFunctionLibrary::SpawnNiagaraEffect(*SpawnData, ActorView);
 		}
 	}
 }

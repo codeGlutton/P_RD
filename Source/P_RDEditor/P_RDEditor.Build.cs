@@ -15,11 +15,13 @@ public class P_RDEditor : ModuleRules
             "InputCore",
             "EnhancedInput",
             "UMG",
+            "UMGEditor",
 
             /* Editor Core Modules */
             "UnrealEd",
             "EditorFramework", 
             "AssetRegistry",
+			"AssetTools",
             "PropertyEditor",
             "Slate",
             "SlateCore",

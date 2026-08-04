@@ -16,7 +16,6 @@
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/TitleMenuWidget.h"
-#include "UI/CharacterSelectWidget.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 
 #include "Setting/GamePlaySettings.h"
@@ -199,11 +198,9 @@ namespace
 AFrontendGameMode::AFrontendGameMode()
 {
 	mWorldWidgets = {
-		EWorldWidgetType::MsgNotify,
 		EWorldWidgetType::FadeInOut,
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::CharacterSelect,
 		// 여기에 넣어야 서브시스템이 실제로 만든다. Config 의 클래스 매핑은
 		// "무엇을 만들지"만 정하고, 이 목록이 "만들지 말지"를 정한다 -- 매핑만
 		// 걸고 여기를 빠뜨려서 START 를 누르는 순간 위젯이 없다고 멈췄다.
@@ -423,6 +420,14 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 		NewOption.mDescription = LoadedPlayerUnitData->mDescription.IsEmpty()
 			? JobDesc : LoadedPlayerUnitData->mDescription;
 		NewOption.mMaxHP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(GetWorld(), UPlayerUnitAttributeSet::StaticClass(), UPlayerUnitAttributeSet::GetMaxHPAttribute(), DefaultDifficulty));
+		NewOption.mMaxAP = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(
+			GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+			UUnitAttributeSet::GetRechargeActionPointAttribute(), DefaultDifficulty));
+		// 선택 화면의 속도는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)다.
+		// SpeedPoint는 전투 중 누적 자원이라 기본값이 0으로 나올 수 있다.
+		NewOption.mSpeed = FMath::RoundToInt(LoadedPlayerUnitData->GetDefaultAttributeValue(
+			GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+			UUnitAttributeSet::GetRechargeSpeedPointAttribute(), DefaultDifficulty));
 		NewOption.mStatSummary = FText::Format(
 			NSLOCTEXT("FrontendGameMode", "CharacterStatSummary", "HP {0} / Gold {1}"),
 			FText::AsNumber(NewOption.mMaxHP),
@@ -554,6 +559,7 @@ bool AFrontendGameMode::OpenTitleCharacterSelect()
 	if (mWasHireDelegateBound == false)
 	{
 		HireWidget->mOnPartyConfirmed.AddUObject(this, &AFrontendGameMode::HandlePartyConfirmed);
+		HireWidget->mOnBackRequested.AddUObject(this, &AFrontendGameMode::HandleMercenaryHireBackRequested);
 		mWasHireDelegateBound = true;
 	}
 
@@ -586,16 +592,16 @@ int32 AFrontendGameMode::GetPartySize() const
 	return DefaultPartySize;
 }
 
-void AFrontendGameMode::HandleCharacterSelectBackRequested()
+void AFrontendGameMode::HandleMercenaryHireBackRequested()
 {
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
 		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>()
 		: nullptr;
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr"));
 
-	if (UCharacterSelectWidget* CharacterSelectWidget = WorldWidgetSubsystem->GetWorldWidget<UCharacterSelectWidget>(EWorldWidgetType::CharacterSelect))
+	if (UMercenaryHireWidget* HireWidget = WorldWidgetSubsystem->GetWorldWidget<UMercenaryHireWidget>(EWorldWidgetType::MercenaryHire))
 	{
-		CharacterSelectWidget->CloseUI();
+		HireWidget->CloseUI();
 	}
 
 	if (UTitleMenuWidget* TitleMenuWidget = WorldWidgetSubsystem->GetHUD<UTitleMenuWidget>())

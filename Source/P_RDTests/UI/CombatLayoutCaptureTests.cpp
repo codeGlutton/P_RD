@@ -195,8 +195,12 @@ namespace CombatLayoutCapture
 		return Count;
 	}
 
-	/** @brief 배치안 하나를 렌더해서 PNG로 저장한다. 실패 사유는 OutError로. */
-	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError)
+	/**
+	 * @brief 배치안 하나를 렌더해서 PNG로 저장한다. 실패 사유는 OutError로.
+	 * @param bShowMercenaryPanel 참이면 전투 기본 HUD 대신 보유 용병 탭을 찍는다.
+	 */
+	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError,
+		const bool bShowMercenaryPanel = false)
 	{
 		UClass* LayoutClass = LoadClass<UUserWidget>(nullptr, ClassPath);
 		if (LayoutClass == nullptr)
@@ -217,8 +221,17 @@ namespace CombatLayoutCapture
 		// URDUserWidget은 OpenUI() 전까지 Collapsed다. 여기서는 뷰포트에 올리지
 		// 않고 그리기만 하므로 표시 상태를 직접 세운다.
 		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		// TakeWidget()에서 NativeConstruct가 돌며 패널을 기본 Collapsed로
+		// 되돌린다. 변형 상태는 Construct가 끝난 뒤 세워야 캡처에 남는다.
+		if (bShowMercenaryPanel && Layout->WidgetTree != nullptr)
+		{
+			if (UWidget* MercenaryPanel =
+				Layout->WidgetTree->FindWidget(TEXT("MercenaryPanel")))
+			{
+				MercenaryPanel->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
 		Layout->ForceLayoutPrepass();
 
 		const int32 TextureCount = ResidentBrushTextures(*Layout);
@@ -372,7 +385,8 @@ namespace CombatLayoutCapture
 		Stem.Split(TEXT("."), nullptr, &Stem, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
 		Stem.RemoveFromEnd(TEXT("_C"));
 		const FString OutputPath = FPaths::Combine(
-			OutputDirectory(), FString::Printf(TEXT("%s.png"), *Stem));
+			OutputDirectory(), FString::Printf(TEXT("%s%s.png"), *Stem,
+				bShowMercenaryPanel ? TEXT("_Mercenaries") : TEXT("")));
 
 		TArray64<uint8> PngData;
 		FImageUtils::PNGCompressImageArray(CaptureWidth, CaptureHeight, Pixels, PngData);
@@ -589,6 +603,42 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 		{
 			AddError(FString::Printf(TEXT("%s: %s"), ClassPath, *Error));
 		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error, true))
+		{
+			AddError(FString::Printf(TEXT("%s 용병 탭: %s"), ClassPath, *Error));
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FMercenaryHireLayoutCaptureTest,
+	"P_RD.UI.MercenaryHireMarchbound.Capture",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FMercenaryHireLayoutCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+
+	if (GUsingNullRHI == true)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 캡처 생략"));
+		return true;
+	}
+
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드가 있어야 용병 선택 WBP를 만들 수 있다"), World))
+	{
+		return false;
+	}
+
+	FString Error;
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C"),
+		Error))
+	{
+		AddError(Error);
 	}
 	return true;
 }

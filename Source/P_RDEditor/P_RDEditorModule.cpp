@@ -2,11 +2,22 @@
 #include "PropertyEditorModule.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/SkillData/StaticSkillDataPropertyCustomization.h"
+#include "UI/MarchboundHireWidgetBuilder.h"
+#include "UI/CombatHUDWidgetBuilder.h"
+#include "UI/RewardSettlementWidgetBuilder.h"
+#include "UI/CombatDefeatWidgetBuilder.h"
+#include "UI/MonsterTabWidgetBuilder.h"
 
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
 void FP_RDEditorModule::StartupModule()
 {
+	RegisterMarchboundHireWidgetBuilderCommands();
+	RegisterCombatHUDWidgetBuilderCommands();
+	RegisterRewardSettlementWidgetBuilderCommands();
+	RegisterCombatDefeatWidgetBuilderCommands();
+	RegisterMonsterTabWidgetBuilderCommands();
+
 	/* 커스텀 디테일 레이아웃 등록 */
 
 	FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -21,6 +32,12 @@ void FP_RDEditorModule::StartupModule()
 
 void FP_RDEditorModule::ShutdownModule()
 {
+	UnregisterMarchboundHireWidgetBuilderCommands();
+	UnregisterCombatHUDWidgetBuilderCommands();
+	UnregisterRewardSettlementWidgetBuilderCommands();
+	UnregisterCombatDefeatWidgetBuilderCommands();
+	UnregisterMonsterTabWidgetBuilderCommands();
+
 	/* 커스텀 디테일 레이아웃 등록 해제 */
 
 	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor") == true)
