@@ -901,9 +901,9 @@ USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext() const
 
 USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner) const
 {
-	for (auto* FoundNode = mTurnContextOrders.GetHead(); FoundNode != nullptr; FoundNode = FoundNode->GetNextNode())
+	for (const int32 TurnId : mTurnContextOrders)
 	{
-		USRPGTurnContext* FoundTurnContext = mTurnContextMap[FoundNode->GetValue()];
+		USRPGTurnContext* FoundTurnContext = mTurnContextMap[TurnId];
 		if (FoundTurnContext->GetOwner() == Owner)
 		{
 			return FoundTurnContext;
