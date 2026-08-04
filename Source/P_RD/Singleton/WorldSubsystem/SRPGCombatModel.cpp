@@ -553,7 +553,7 @@ bool USRPGCombatModel::UnregisterTurn(UUnitModel* Owner, bool IgnoreCurTurn)
 		++FoundNode;
 	}
 
-	while (FoundNode != mTurnContextOrders.GetTail())
+	while (FoundNode != nullptr)
 	{
 		USRPGTurnContext* FoundTurnContext = mTurnContextMap[FoundNode->GetValue()];
 		if (FoundTurnContext->GetOwner() == Owner)
@@ -901,7 +901,7 @@ USRPGTurnContext* USRPGCombatModel::GetCurrentTurnContext() const
 
 USRPGTurnContext* USRPGCombatModel::GetTurnContext(const UUnitModel* Owner) const
 {
-	for (auto* FoundNode = mTurnContextOrders.GetHead(); FoundNode != mTurnContextOrders.GetTail(); ++FoundNode)
+	for (auto* FoundNode = mTurnContextOrders.GetHead(); FoundNode != nullptr; ++FoundNode)
 	{
 		USRPGTurnContext* FoundTurnContext = mTurnContextMap[FoundNode->GetValue()];
 		if (FoundTurnContext->GetOwner() == Owner)
