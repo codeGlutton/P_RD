@@ -307,8 +307,6 @@ void ACombatGameMode::InitializeRoom()
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
-	// 라운드 시작 연출: 데이터(mRound) 먼저 갱신 후 배리어를 HUD로 중계한다(순서 보장 위해 게임모드가 재방송).
-	// 프레임워크가 OnBeginAnyRoundUI를 방송하기 전까지 이 람다는 호출되지 않는다(휴면). 방송 배선은 SRPGCombatModel TODO 참고.
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
 		PushTurnUIData();   // 배너 숫자용 mRound 갱신
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
