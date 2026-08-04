@@ -847,6 +847,11 @@ bool USRPGCombatModel::PushAction(USRPGAction* Action)
 	return true;
 }
 
+int32 USRPGCombatModel::GetRemainingTurnCountInRound() const
+{
+	return 0;
+}
+
 void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
 {
 	checkf(HasAnyTurnContext() == true, TEXT("현재 진행 중인 턴이 없음"));

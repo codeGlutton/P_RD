@@ -202,6 +202,7 @@ public:
 	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner) const;
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
 	TArray<FSRPGTurnCandidate> GetOrderedTurnCandidates() const;
+	int32 GetRemainingTurnCountInRound() const;
 	UTileMapModel* GetTileMap() const;
 
 	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;

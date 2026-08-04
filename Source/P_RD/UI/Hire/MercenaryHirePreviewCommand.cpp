@@ -26,7 +26,7 @@
 namespace MercenaryHirePreview
 {
 	const TCHAR* WidgetPath =
-		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire.WBP_MercenaryHire_C");
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C");
 
 	TWeakObjectPtr<UMercenaryHireWidget> Shown;
 

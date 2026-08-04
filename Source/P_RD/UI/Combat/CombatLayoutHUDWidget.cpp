@@ -17,7 +17,8 @@
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UI/Reward/RewardUIModel.h"
-#include "UI/Reward/RewardUIWidgetBase.h"
+#include "UI/Reward/RewardSettlementWidgetBase.h"
+#include "UI/CombatResultOverlayWidget.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
 
@@ -32,6 +33,13 @@
 UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	mMercenaryRosterShellTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell")));
+	mMercenaryCardNormalTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal")));
+	mMercenaryCardSelectedTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected")));
+
 	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(
 		TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
 	if (UnitHpBarClassFinder.Succeeded())
@@ -43,6 +51,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
 	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
 	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
+	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
 	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
 	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Recovery.T_Status_HP_Recovery");
 	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
@@ -53,11 +62,20 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
 #undef RD_LOAD_TEX
 
-	static ConstructorHelpers::FClassFinder<URewardUIWidgetBase> RewardWidgetClassFinder(
-		TEXT("/Game/UI/WBP_Reward"));
+	static ConstructorHelpers::FClassFinder<URewardSettlementWidgetBase> RewardWidgetClassFinder(
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime"));
 	if (RewardWidgetClassFinder.Succeeded())
 	{
 		mRewardWidgetClass = RewardWidgetClassFinder.Class;
+	}
+
+	// 패배 WBP도 하드 레퍼런스로 든다. 문자열 LoadClass만 있으면 Always Cook
+	// 목록에 없는 /Game/UI/CombatResult가 패키징에서 빠진다.
+	static ConstructorHelpers::FClassFinder<UCombatResultOverlayWidget> DefeatWidgetClassFinder(
+		TEXT("/Game/UI/CombatResult/WBP_CombatDefeat"));
+	if (DefeatWidgetClassFinder.Succeeded())
+	{
+		mDefeatWidgetClass = DefeatWidgetClassFinder.Class;
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> DetailOverlayClassFinder(
@@ -65,6 +83,22 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	if (DetailOverlayClassFinder.Succeeded())
 	{
 		mDetailOverlayWidgetClass = DetailOverlayClassFinder.Class;
+	}
+
+	// 몬스터 탭도 보상창처럼 하드 레퍼런스로 든다 -- 문자열 LoadClass만 있으면
+	// Always Cook 목록에 없는 이 WBP가 패키징에서 빠진다.
+	static ConstructorHelpers::FClassFinder<UUserWidget> MonsterTabClassFinder(
+		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound"));
+	if (MonsterTabClassFinder.Succeeded())
+	{
+		mMonsterTabWidgetClass = MonsterTabClassFinder.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<UUserWidget> WorldMapClassFinder(
+		TEXT("/Game/UI/WBP_FrontendMap"));
+	if (WorldMapClassFinder.Succeeded())
+	{
+		mWorldMapWidgetClass = WorldMapClassFinder.Class;
 	}
 
 #define RD_LOAD_SOUND(Member, Path) 	{ static ConstructorHelpers::FObjectFinder<USoundBase> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
@@ -112,6 +146,10 @@ namespace
 		const float WantHeight = Width / Aspect;
 		if (WantHeight < Height)
 		{
+			// UV만 정사각으로 잘라도 Brush의 원본 desired size가 세로로 길면
+			// ScaleBox가 다시 폭을 눌러 버린다. 잘라 쓴 영역의 비율도 함께
+			// 알려 얼굴이 정사각 crop wrapper 안에서 늘어나지 않게 한다.
+			Brush.ImageSize = FVector2D(Width, WantHeight);
 			Brush.SetUVRegion(FBox2f(FVector2f(0.f, 0.f),
 				FVector2f(1.f, WantHeight / Height)));
 		}
@@ -119,10 +157,32 @@ namespace
 		{
 			const float WantWidth = Height * Aspect;
 			const float Margin = (1.f - WantWidth / Width) * 0.5f;
+			Brush.ImageSize = FVector2D(WantWidth, Height);
 			Brush.SetUVRegion(FBox2f(FVector2f(Margin, 0.f),
 				FVector2f(1.f - Margin, 1.f)));
 		}
 		Image->SetBrush(Brush);
+	}
+
+	/**
+	 * @brief 턴바가 실제로 투영할 순서 수.
+	 *
+	 * 이번 라운드 잔여분 뒤에 다음 라운드 한 바퀴를 반드시 붙이고, 유닛이
+	 * 적어도 열 칸은 미래 순서로 채운다.
+	 */
+	int32 ProjectedTurnCount(const FTurnUI& Turn, const int32 SlotRoom)
+	{
+		const int32 CycleCount = Turn.mTurnOrderUnitIds.Num();
+		if (CycleCount <= 0)
+		{
+			return 0;
+		}
+		const int32 RemainingThisRound = FMath::Clamp(
+			Turn.mCurrentRoundRemainingTurnCount > 0
+				? Turn.mCurrentRoundRemainingTurnCount
+				: CycleCount,
+			1, CycleCount);
+		return FMath::Max(SlotRoom, RemainingThisRound + CycleCount);
 	}
 
 	/** @brief 이름으로 위젯을 찾되 중첩 UserWidget 안까지 내려간다. */
@@ -164,6 +224,17 @@ namespace
 		{
 			Widget->SetVisibility(bShown
 				? ESlateVisibility::SelfHitTestInvisible
+				: ESlateVisibility::Collapsed);
+		}
+	}
+
+	/** @brief 실제로 눌러야 하는 버튼은 표시 중 hit test를 유지한다. */
+	void SetInteractiveShown(UButton* Button, const bool bShown)
+	{
+		if (Button != nullptr)
+		{
+			Button->SetVisibility(bShown
+				? ESlateVisibility::Visible
 				: ESlateVisibility::Collapsed);
 		}
 	}
@@ -256,6 +327,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		FPartySlotWidgets& Widgets = mPartySlots[Index];
 		const FString Suffix = FString::Printf(TEXT("_%d"), Index);
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("PartyCard") + Suffix);
+		Widgets.Plate = Find<UImage>(WidgetTree, TEXT("PartyPlate") + Suffix);
 		Widgets.Content = Find<UWidget>(WidgetTree, TEXT("PartyContent") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("PartyPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("PartyName") + Suffix);
@@ -325,7 +397,13 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("TurnToken") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("TurnPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("TurnName") + Suffix);
+		Widgets.SpeedIcon = Find<UWidget>(WidgetTree, TEXT("TurnSpeedIcon") + Suffix);
+		Widgets.Speed = Find<UTextBlock>(WidgetTree, TEXT("TurnSpeed") + Suffix);
 		Widgets.Current = Find<UWidget>(WidgetTree, TEXT("TurnCurrent") + Suffix);
+		Widgets.RoundDivider = Find<UWidget>(
+			WidgetTree, TEXT("TurnRoundDivider") + Suffix);
+		Widgets.RoundLabel = Find<UTextBlock>(
+			WidgetTree, TEXT("TurnRoundLabel") + Suffix);
 	}
 
 	mEnemyPanel = Find<UWidget>(WidgetTree, TEXT("EnemyPanel"));
@@ -333,14 +411,64 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyName = Find<UTextBlock>(WidgetTree, TEXT("EnemyName"));
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
-	mEnemyDefenseText = Find<UTextBlock>(WidgetTree, TEXT("EnemyDefense"));
+	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
+	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
+	mEnemyStatusFrames.Reset();
+	mEnemyStatusIcons.Reset();
+	mEnemyStatusCounts.Reset();
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		mEnemyStatusFrames.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusFrame_%d"), Index)));
+		mEnemyStatusIcons.Add(Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusIcon_%d"), Index)));
+		mEnemyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusCount_%d"), Index)));
+	}
+	mAllyPanel = Find<UWidget>(WidgetTree, TEXT("AllyPanel"));
+	mAllyPortrait = Find<UImage>(WidgetTree, TEXT("AllyPortrait"));
+	mAllyName = Find<UTextBlock>(WidgetTree, TEXT("AllyName"));
+	mAllyHPBar = Find<UProgressBar>(WidgetTree, TEXT("AllyHPBar"));
+	mAllyHPText = Find<UTextBlock>(WidgetTree, TEXT("AllyHPText"));
+	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
+	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
+	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
+	mAllyStatusFrames.Reset();
+	mAllyStatusIcons.Reset();
+	mAllyStatusCounts.Reset();
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		mAllyStatusFrames.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusFrame_%d"), Index)));
+		mAllyStatusIcons.Add(Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusIcon_%d"), Index)));
+		mAllyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusCount_%d"), Index)));
+	}
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 
 	mCommandLayer = Find<UScaleBox>(WidgetTree, TEXT("CommandLayerScale"));
 	mPartyLayer = Find<UScaleBox>(WidgetTree, TEXT("PartyLayerScale"));
+	const bool bFirstMercenaryPanelCache = mMercenaryPanel == nullptr;
+	mMercenaryPanel = Find<UWidget>(WidgetTree, TEXT("MercenaryPanel"));
+	EnsureMercenaryRosterShell();
+	mMercenaryGoldText = Find<UTextBlock>(WidgetTree, TEXT("MercenaryGoldText"));
+	mMercenaryCloseButton = Find<UButton>(WidgetTree, TEXT("MercenaryCloseButton"));
+	mMercenaryHeroPortrait = Find<UImage>(WidgetTree, TEXT("MercenaryHeroPortrait"));
+	mMercenaryDetailName = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailName"));
+	mMercenaryDetailHP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailHP"));
+	mMercenaryDetailAP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailAP"));
+	mMercenaryDetailSpeed = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailSpeed"));
+	// WBP 기본값이 잘못 저장되어도 전투 진입 때는 닫힌 상태로 시작한다.
+	// 이후 도메인 갱신에서도 CacheAuthoredWidgets가 다시 불린다. 그때까지
+	// 접으면, 골드가 갱신되는 순간 사용자가 열어 둔 탭이 닫혀 버린다.
+	if (bFirstMercenaryPanelCache == true && mMercenaryPanel != nullptr)
+	{
+		mMercenaryPanel->SetVisibility(ESlateVisibility::Collapsed);
+	}
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
@@ -359,6 +487,18 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		mTurnAPPipsUsed.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("TurnAPPipUsed_%d"), Pip)));
 	}
+	mArtifactIcons.SetNum(ArtifactSlotCount);
+	mArtifactFrames.SetNum(ArtifactSlotCount);
+	for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
+	{
+		mArtifactIcons[Index] = Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("ArtifactIcon_%d"), Index));
+		mArtifactFrames[Index] = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("ArtifactFrame_%d"), Index));
+		SetShown(mArtifactFrames[Index], false);
+	}
+	SetShown(Find<UWidget>(WidgetTree, TEXT("ArtifactStripPlate")), false);
+	SetShown(Find<UWidget>(WidgetTree, TEXT("ArtifactStripLabel")), false);
 
 	mTurnPageLeft = Find<UButton>(WidgetTree, TEXT("TurnPageLeft"));
 	mTurnPageRight = Find<UButton>(WidgetTree, TEXT("TurnPageRight"));
@@ -372,13 +512,64 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	// 눌러도 걸린다.
 	mChromeWidgets.Reset();
 	for (const TCHAR* Name : { TEXT("RoundPanel"), TEXT("TurnPanel"),
-		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("EndTurnPanel"),
-		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2") })
+		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("AllyPanel"), TEXT("EndTurnPanel"),
+		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2"),
+		TEXT("MercenaryPanel") })
 	{
 		if (UWidget* Found = Find<UWidget>(WidgetTree, Name))
 		{
 			mChromeWidgets.Add(Found);
 		}
+	}
+}
+
+void UCombatLayoutHUDWidget::EnsureMercenaryRosterShell()
+{
+	UCanvasPanel* Panel = Cast<UCanvasPanel>(mMercenaryPanel);
+	if (Panel == nullptr || WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	if (mMercenaryRosterShellImage == nullptr)
+	{
+		mMercenaryRosterShellImage = Find<UImage>(
+			WidgetTree, TEXT("RuntimeMercenaryRosterShell"));
+	}
+	if (mMercenaryRosterShellImage == nullptr)
+	{
+		mMercenaryRosterShellImage = WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), TEXT("RuntimeMercenaryRosterShell"));
+		if (UCanvasPanelSlot* ShellSlot =
+			Panel->AddChildToCanvas(mMercenaryRosterShellImage))
+		{
+			ShellSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			ShellSlot->SetOffsets(FMargin(0.f));
+			ShellSlot->SetAlignment(FVector2D::ZeroVector);
+			ShellSlot->SetZOrder(-100);
+		}
+	}
+
+	// 그림 자체는 버튼 입력을 절대 받지 않는다. 제목·골드·닫기·용병 카드가
+	// 같은 Canvas의 더 높은 z-order에서 그대로 작동한다.
+	mMercenaryRosterShellImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+	if (UTexture2D* Texture = mMercenaryRosterShellTexture.LoadSynchronous())
+	{
+		mMercenaryRosterShellImage->SetBrushFromTexture(Texture, false);
+	}
+
+	// 새 셸에 이미 구워진 판들만 걷는다. 실제 정보/입력 위젯은 남겨 둔다.
+	static const TCHAR* const LegacyPlateNames[] = {
+		TEXT("MercenaryScrim"),
+		TEXT("MercenaryHeaderPlate"),
+		TEXT("MercenaryBoardPlate"),
+		TEXT("MercenaryBoardShadow"),
+		TEXT("MercenaryBoardInner"),
+		TEXT("MercenaryClosePlate"),
+	};
+	for (const TCHAR* Name : LegacyPlateNames)
+	{
+		SetShown(Find<UWidget>(WidgetTree, Name), false);
 	}
 }
 
@@ -494,9 +685,7 @@ void UCombatLayoutHUDWidget::WireCommands()
 		BindPressFeedback(mTurnPageRight, mTurnPageRight);
 	}
 
-	// 상단 메뉴 넷. 무엇을 열지는 아직 안 정해서 누르는 느낌만 걸어 둔다 --
-	// 전투 중에 지도와 가방을 여는 것이 맞는지가 기획 결정이라 UI 혼자
-	// 정하지 않는다.
+	// 상단 메뉴 넷. 1번은 보유 용병, 2번은 생존 몬스터 정보를 연다.
 	mMenuButtons.Reset();
 	for (int32 Index = 0; ; ++Index)
 	{
@@ -508,6 +697,28 @@ void UCombatLayoutHUDWidget::WireCommands()
 		}
 		BindPressFeedback(Button, Button);
 		mMenuButtons.Add(Button);
+	}
+	if (mMenuButtons.IsValidIndex(1))
+	{
+		mMenuButtons[1]->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleMercenaryMenuClicked);
+	}
+	if (mMenuButtons.IsValidIndex(0))
+	{
+		mMenuButtons[0]->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleWorldMapMenuClicked);
+	}
+	if (mMenuButtons.IsValidIndex(2))
+	{
+		mMenuButtons[2]->SetIsEnabled(true);
+		mMenuButtons[2]->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleMonsterMenuClicked);
+	}
+	if (mMercenaryCloseButton != nullptr)
+	{
+		mMercenaryCloseButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleMercenaryCloseClicked);
+		BindPressFeedback(mMercenaryCloseButton, mMercenaryCloseButton);
 	}
 }
 
@@ -593,6 +804,7 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 		return;
 	}
 	mSwallowNextCommandClick = true;
+	UE_LOG(LogRD, Log, TEXT("[탭진단] 카드 %d 긴 누름 발화 — 상세 요청, 다음 클릭 삼킴 예약"), SlotIndex);
 
 	// 0번은 이동이다. 스킬이 아니라 게임플레이에 청할 것이 없으므로 화면이
 	// 이미 받아 둔 값으로 바로 조립한다.
@@ -604,28 +816,35 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 	mUIModel->RequestLongPressSkill(SlotIndex - 1);
 }
 
-/**
- * @brief 왼쪽 넘김칸을 눌렀다. 창을 맨 앞으로 되돌린다.
- *
- * @details
- * 한 칸씩 밀지 않는다. 여섯 칸 창에서 볼 것이 그렇게 많지 않은데 한 칸씩
- * 밀면 여덟 번을 눌러야 하는 판이 생긴다.
- */
+/** @brief 왼쪽 넘김칸을 눌러 직전 열 칸 페이지로 간다. */
 void UCombatLayoutHUDWidget::HandleTurnPageLeftClicked()
 {
-	mTurnWindowStart = 0;
+	const int32 SlotRoom = mTurnSlots.Num();
+	if (SlotRoom <= 0)
+	{
+		return;
+	}
+
+	// 마지막 페이지가 열 칸 경계와 맞지 않아도 14 -> 10 -> 0처럼
+	// 직전 정규 페이지를 거친다. 그래야 중간 순서를 건너뛰지 않는다.
+	mTurnWindowStart = FMath::Max(
+		((mTurnWindowStart - 1) / SlotRoom) * SlotRoom, 0);
 	RefreshTurnOrder();
 }
 
-/** @brief 오른쪽 넘김칸을 눌렀다. 창을 맨 뒤로 옮긴다. */
+/** @brief 오른쪽 넘김칸을 눌러 다음 열 칸 페이지로 간다. */
 void UCombatLayoutHUDWidget::HandleTurnPageRightClicked()
 {
 	if (mUIModel == nullptr)
 	{
 		return;
 	}
-	mTurnWindowStart = FMath::Max(
-		mUIModel->GetTurnUI().mTurnOrderUnitIds.Num() - mTurnSlots.Num(), 0);
+	const FTurnUI& Turn = mUIModel->GetTurnUI();
+	const int32 SlotRoom = mTurnSlots.Num();
+	const int32 LastStart = FMath::Max(
+		ProjectedTurnCount(Turn, SlotRoom) - SlotRoom, 0);
+	mTurnWindowStart = FMath::Min(
+		mTurnWindowStart + SlotRoom, LastStart);
 	RefreshTurnOrder();
 }
 
@@ -663,16 +882,16 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 	if (bAll || Domain == ECombatUIDomain::Turn)
 	{
-		RefreshTurnOrder();
-		RefreshParty();
 		// 차례가 **바뀌었을 때만** 편다. 갱신이 올 때마다 펴면 접자마자 다시
 		// 펴져서 접기가 안 먹는 것처럼 보인다 -- 실제로 그랬다. Turn 갱신은
 		// 차례가 그대로여도 여러 번 온다.
 		const int32 TurnUnitId = mUIModel != nullptr
 			? mUIModel->GetTurnUI().mCurrentUnitId : INDEX_NONE;
-		if (TurnUnitId != mLastTurnUnitId)
+		const int32 TurnRound = mUIModel->GetTurnUI().mRound;
+		if (TurnUnitId != mLastTurnUnitId || TurnRound != mLastTurnBarRound)
 		{
 			mLastTurnUnitId = TurnUnitId;
+			mLastTurnBarRound = TurnRound;
 			SetCommandsShown(true);
 			// 줄 자체가 한 칸 밀렸다. 옮겨 둔 창을 그대로 두면 다음 턴에
 			// 엉뚱한 곳을 보고 있다.
@@ -681,6 +900,10 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 			// 턴 종료 명령에서 게임플레이가 이미 걷었다.
 			HideDetailOverlay(/*bNotifyGameplay=*/false);
 		}
+		// 페이지 원점 변경을 반영한 뒤 그린다. 먼저 그리면 턴이 바뀐 한
+		// 프레임 동안 이전 마지막 페이지가 남는다.
+		RefreshTurnOrder();
+		RefreshParty();
 
 		// 조준에 들었거나 조준이 끝났을 수 있다. 카드가 비켜 있을지 여기서
 		// 다시 정한다 -- 조준 단계는 Turn 으로 실려 온다.
@@ -698,6 +921,12 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 			&& mUIModel->GetTarget().mIsValid)
 			? mUIModel->GetTarget().mUnitId : INDEX_NONE;
 		mLastTargetUnitId = TargetId;
+		// 몬스터 탭이 떠 있으면 HP·상태 변화를 따라간다. 죽은 몬스터는 행에서
+		// 빠지고 선택이 남은 행으로 옮겨 간다.
+		if (IsMonsterTabShown() == true)
+		{
+			RefreshMonsterTab();
+		}
 	}
 	if (bAll || Domain == ECombatUIDomain::Skill)
 	{
@@ -714,7 +943,16 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	// 바인딩 직후 All 갱신이 빈 상세 패널을 띄우지 않는다.
 	if (Domain == ECombatUIDomain::UnitDetail)
 	{
-		ShowUnitDetailOverlay();
+		// 몬스터 탭이 열려 있는 동안의 상세 응답은 탭의 스킬 칸이 받는다.
+		// PR457 상세 겹을 같이 띄우면 전체 화면 탭 위에 또 한 장이 얹힌다.
+		if (IsMonsterTabShown() == true)
+		{
+			RefreshMonsterTabDetail();
+		}
+		else
+		{
+			ShowUnitDetailOverlay();
+		}
 	}
 	if (Domain == ECombatUIDomain::SkillDetail)
 	{
@@ -726,6 +964,24 @@ void UCombatLayoutHUDWidget::RefreshParty()
 {
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const int32 CurrentUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
+	UTexture2D* NormalCard = mMercenaryCardNormalTexture.LoadSynchronous();
+	UTexture2D* SelectedCard = mMercenaryCardSelectedTexture.LoadSynchronous();
+	const FUnitUI* FocusUnit = nullptr;
+	for (const FUnitUI& Unit : Units)
+	{
+		if (Unit.mIsPlayer == false)
+		{
+			continue;
+		}
+		if (FocusUnit == nullptr || Unit.mUnitId == CurrentUnitId)
+		{
+			FocusUnit = &Unit;
+		}
+		if (Unit.mUnitId == CurrentUnitId)
+		{
+			break;
+		}
+	}
 
 	int32 SlotIndex = 0;
 	for (const FUnitUI& Unit : Units)
@@ -737,6 +993,16 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		const FPartySlotWidgets& Widgets = mPartySlots[SlotIndex];
 		SetShown(Widgets.Root, true);
 		SetShown(Widgets.Content, true);
+		SetShown(Widgets.Plate, true);
+		if (Widgets.Plate != nullptr)
+		{
+			UTexture2D* CardTexture = Unit.mUnitId == CurrentUnitId
+				? SelectedCard : NormalCard;
+			if (CardTexture != nullptr)
+			{
+				Widgets.Plate->SetBrushFromTexture(CardTexture, false);
+			}
+		}
 
 		// 빈 칸 처리가 접어 둔 것들을 다시 켠다.
 		//
@@ -749,12 +1015,13 @@ void UCombatLayoutHUDWidget::RefreshParty()
 
 		SetTextIfPresent(Widgets.Name, Unit.mName);
 
-		// 유닛 초상은 배치안이 깔아 둔 얼굴을 덮는다. 데이터에셋 초상이
-		// 배경이 안 뚫린 사각형이라 금속 테를 가리는데, 그건 자산 문제라
-		// 여기서 안 피한다 -- 피하면 게임에서 영영 안 보인다.
-		if (Widgets.Portrait != nullptr && Unit.mPortrait != nullptr)
+		// 목록 칸은 정사각 대갈치기 전용이다. 큰 히어로 일러스트(mPortrait)를
+		// 이 작은 칸에 다시 크롭하면 얼굴과 실루엣이 뭉개진다.
+		UTexture2D* ListPortrait = Unit.mTurnPortrait != nullptr
+			? Unit.mTurnPortrait.Get() : Unit.mPortrait.Get();
+		if (Widgets.Portrait != nullptr && ListPortrait != nullptr)
 		{
-			SetPortraitCropped(Widgets.Portrait, Unit.mPortrait);
+			SetPortraitCropped(Widgets.Portrait, ListPortrait);
 		}
 		if (Widgets.HPBar != nullptr)
 		{
@@ -790,6 +1057,82 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	{
 		ClearPartySlot(mPartySlots[SlotIndex]);
 	}
+
+	const bool bHasFocus = FocusUnit != nullptr;
+	SetShown(mMercenaryHeroPortrait, bHasFocus);
+	SetShown(mMercenaryDetailName, bHasFocus);
+	SetShown(mMercenaryDetailHP, bHasFocus);
+	SetShown(mMercenaryDetailAP, bHasFocus);
+	SetShown(mMercenaryDetailSpeed, bHasFocus);
+	if (bHasFocus)
+	{
+		if (mMercenaryHeroPortrait != nullptr && FocusUnit->mPortrait != nullptr)
+		{
+			SetPortraitCropped(mMercenaryHeroPortrait, FocusUnit->mPortrait);
+		}
+		SetTextIfPresent(mMercenaryDetailName, FocusUnit->mName);
+		SetTextIfPresent(mMercenaryDetailHP, FText::FromString(FString::Printf(
+			TEXT("HP  %d / %d"), FMath::RoundToInt(FocusUnit->mHP),
+			FMath::RoundToInt(FocusUnit->mMaxHP))));
+		SetTextIfPresent(mMercenaryDetailAP, FText::FromString(FString::Printf(
+			TEXT("AP  %d / %d"), FocusUnit->mActionPoints,
+			FocusUnit->mMaxActionPoints)));
+		SetTextIfPresent(mMercenaryDetailSpeed, FText::FromString(FString::Printf(
+			TEXT("속도  %d"), FMath::RoundToInt(FocusUnit->mSpeedPoint))));
+	}
+
+	// 우측 아래는 전투 중 현재 용병이 실제로 쓸 수 있는 여섯 커맨드의 요약이다.
+	// 0번 이동 + 스킬 다섯 칸(첫 스킬이 평타)으로, 전투 레일과 같은 순서라
+	// 메뉴를 닫은 뒤 카드 위치가 바뀌지 않는다.
+	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
+	for (int32 Index = 0; Index < CommandSlotCount; ++Index)
+	{
+		UWidget* Frame = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillFrame_%d"), Index));
+		UImage* Icon = Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillIcon_%d"), Index));
+		UTextBlock* Name = Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillName_%d"), Index));
+		UTextBlock* Cost = Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillCost_%d"), Index));
+
+		const bool bHasCommand = bHasFocus
+			&& (Index == 0 || Skills.IsValidIndex(Index - 1));
+		SetShown(Frame, bHasFocus);
+		SetShown(Icon, bHasCommand);
+		SetShown(Name, bHasCommand);
+		SetShown(Cost, bHasCommand);
+		if (bHasCommand == false)
+		{
+			continue;
+		}
+
+		UTexture2D* CommandIcon = nullptr;
+		if (Index == 0)
+		{
+			SetTextIfPresent(Name, LOCTEXT("MercenaryMoveSummary", "이동"));
+			SetTextIfPresent(Cost, FText::AsNumber(1));
+		}
+		else
+		{
+			const FSkillUI& Skill = Skills[Index - 1];
+			SetTextIfPresent(Name, Skill.mName);
+			SetTextIfPresent(Cost, FText::AsNumber(Skill.mActionPointCost));
+			CommandIcon = Skill.mIcon;
+		}
+		// 목업/구형 데이터는 Skill.mIcon이 비어 있을 수 있다. 전투 카드가 이미
+		// 들고 있는 기본 아이콘을 복사해 요약 칸만 텅 비는 것을 막는다.
+		if (CommandIcon == nullptr && mCommandSlots.IsValidIndex(Index)
+			&& mCommandSlots[Index].Icon != nullptr)
+		{
+			CommandIcon = Cast<UTexture2D>(
+				mCommandSlots[Index].Icon->GetBrush().GetResourceObject());
+		}
+		if (Icon != nullptr && CommandIcon != nullptr)
+		{
+			Icon->SetBrushFromTexture(CommandIcon, false);
+		}
+	}
 }
 
 /**
@@ -803,6 +1146,14 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 {
 	SetShown(Widgets.Root, true);
 	SetShown(Widgets.Content, false);
+	SetShown(Widgets.Plate, true);
+	if (Widgets.Plate != nullptr)
+	{
+		if (UTexture2D* NormalCard = mMercenaryCardNormalTexture.LoadSynchronous())
+		{
+			Widgets.Plate->SetBrushFromTexture(NormalCard, false);
+		}
+	}
 
 	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
 	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
@@ -960,12 +1311,12 @@ void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 }
 
 /**
- * @brief 턴 순서 줄을 그린다. 칸보다 도는 유닛이 많으면 양끝에 남은 수를 적는다.
+ * @brief 현재 라운드 잔여분 뒤에 다음 라운드 순서를 이어 턴바에 그린다.
  *
  * @details
- * 칸은 여섯인데 한 판에 일곱이 돌 수 있다. 잘라 버리면 일곱째가 있는지조차
- * 모른다 -- 지금까지 그랬다. 창을 두고 양끝에 **그쪽에 가려진 수**를 적는다.
- * 화살표가 아니라 수라, 누르지 않고도 몇이 도는지 읽힌다.
+ * 순서 배열은 현재 유닛부터 한 바퀴다. 이번 라운드에 남은 앞부분 뒤로 배열을
+ * 순환 반복하면 다음 라운드 전체가 자연스럽게 이어진다. 미래 라운드는
+ * 반투명으로, 경계에는 세로 막대와 R#을 표시한다.
  */
 void UCombatLayoutHUDWidget::RefreshTurnOrder()
 {
@@ -973,10 +1324,18 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 
 	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
+		FString::Printf(TEXT("R%d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
-	const int32 Total = Turn.mTurnOrderUnitIds.Num();
+	const int32 CycleCount = Turn.mTurnOrderUnitIds.Num();
+	const int32 RemainingThisRound = CycleCount > 0
+		? FMath::Clamp(
+			Turn.mCurrentRoundRemainingTurnCount > 0
+				? Turn.mCurrentRoundRemainingTurnCount
+				: CycleCount,
+			1, CycleCount)
+		: 0;
+	const int32 Total = ProjectedTurnCount(Turn, SlotRoom);
 	const int32 Start = FMath::Clamp(mTurnWindowStart, 0,
 		FMath::Max(Total - SlotRoom, 0));
 	mTurnWindowStart = Start;
@@ -985,9 +1344,9 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	const int32 HiddenRight = FMath::Max(Total - (Start + SlotRoom), 0);
 	// 글자는 버튼의 자식이 아니라 옆에 있는 형제다. 버튼만 접으면 수가
 	// 허공에 남는다.
-	SetShown(mTurnPageLeft, HiddenLeft > 0);
+	SetInteractiveShown(mTurnPageLeft, HiddenLeft > 0);
 	SetShown(mTurnPageLeftText, HiddenLeft > 0);
-	SetShown(mTurnPageRight, HiddenRight > 0);
+	SetInteractiveShown(mTurnPageRight, HiddenRight > 0);
 	SetShown(mTurnPageRightText, HiddenRight > 0);
 	SetTextIfPresent(mTurnPageLeftText, FText::AsNumber(HiddenLeft));
 	SetTextIfPresent(mTurnPageRightText, FText::AsNumber(HiddenRight));
@@ -995,28 +1354,61 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	for (int32 Index = 0; Index < SlotRoom; ++Index)
 	{
 		const FTurnSlotWidgets& Widgets = mTurnSlots[Index];
-		if (!Turn.mTurnOrderUnitIds.IsValidIndex(Start + Index))
+		const int32 ProjectedIndex = Start + Index;
+		if (CycleCount <= 0 || ProjectedIndex >= Total)
 		{
 			SetShown(Widgets.Root, false);
+			SetShown(Widgets.RoundDivider, false);
+			SetShown(Widgets.RoundLabel, false);
+			SetShown(Widgets.SpeedIcon, false);
+			SetShown(Widgets.Speed, false);
 			continue;
 		}
-		const int32 UnitId = Turn.mTurnOrderUnitIds[Start + Index];
+		const int32 UnitId =
+			Turn.mTurnOrderUnitIds[ProjectedIndex % CycleCount];
 		const FUnitUI* Unit = Units.FindByPredicate(
 			[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 		if (Unit == nullptr)
 		{
 			SetShown(Widgets.Root, false);
+			SetShown(Widgets.RoundDivider, false);
+			SetShown(Widgets.RoundLabel, false);
+			SetShown(Widgets.SpeedIcon, false);
+			SetShown(Widgets.Speed, false);
 			continue;
 		}
+
+		const int32 RoundOffset = ProjectedIndex < RemainingThisRound
+			? 0
+			: 1 + (ProjectedIndex - RemainingThisRound) / CycleCount;
+		const bool bStartsShownRound = ProjectedIndex == 0
+			|| (ProjectedIndex >= RemainingThisRound
+				&& (ProjectedIndex - RemainingThisRound) % CycleCount == 0);
+
 		SetShown(Widgets.Root, true);
-		SetShown(Widgets.Current, UnitId == Turn.mCurrentUnitId);
+		SetShown(Widgets.SpeedIcon, true);
+		SetShown(Widgets.Speed, true);
+		SetTextIfPresent(Widgets.Speed,
+			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
+		Widgets.Root->SetRenderOpacity(RoundOffset == 0 ? 1.f : 0.45f);
+		SetShown(Widgets.Current, ProjectedIndex == 0);
 		SetTextIfPresent(Widgets.Name, Unit->mName);
-		// 얼굴이 있을 때만 편다. 브러시가 없는 이미지는 흰 네모로 그려져서,
-		// 접힌 채로 구워 두고 여기서 편다.
-		SetShown(Widgets.Portrait, Unit->mPortrait != nullptr);
-		if (Widgets.Portrait != nullptr && Unit->mPortrait != nullptr)
+		SetShown(Widgets.RoundDivider, bStartsShownRound);
+		SetShown(Widgets.RoundLabel, bStartsShownRound);
+		if (bStartsShownRound)
 		{
-			SetPortraitCropped(Widgets.Portrait, Unit->mPortrait);
+			SetTextIfPresent(Widgets.RoundLabel,
+				FText::FromString(FString::Printf(TEXT("R%d"),
+					Turn.mRound + RoundOffset)));
+		}
+		// 턴바는 DA mIcon의 정사각 HeadV2를 쓴다. 아이콘이 없는 구형
+		// 스냅샷은 세로 초상으로 폴백해 텍스트만 남는 회귀를 막는다.
+		UTexture2D* TurnPortrait = Unit->mTurnPortrait != nullptr
+			? Unit->mTurnPortrait.Get() : Unit->mPortrait.Get();
+		SetShown(Widgets.Portrait, TurnPortrait != nullptr);
+		if (Widgets.Portrait != nullptr && TurnPortrait != nullptr)
+		{
+			SetPortraitCropped(Widgets.Portrait, TurnPortrait);
 		}
 	}
 }
@@ -1127,16 +1519,83 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FCombatTargetUI& Target = mUIModel->GetTarget();
 	const int32 TargetId = Target.mIsValid ? Target.mUnitId : INDEX_NONE;
-	const FUnitUI* Shown = TargetId != INDEX_NONE
+	const FUnitUI* TargetUnit = TargetId != INDEX_NONE
 		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
-			{ return Unit.mUnitId == TargetId && !Unit.mIsPlayer && Unit.mHP > 0.f; })
+			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
 		: nullptr;
+	const FUnitUI* AllyShown = TargetUnit != nullptr && TargetUnit->mIsPlayer
+		? TargetUnit : nullptr;
+	const FUnitUI* Shown = TargetUnit != nullptr && !TargetUnit->mIsPlayer
+		? TargetUnit : nullptr;
 	if (Shown == nullptr)
 	{
 		const FUnitUI* TurnUnit = FindTurnUnit();
-		if (TurnUnit != nullptr && !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
+		if (TargetUnit == nullptr && TurnUnit != nullptr
+			&& !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
 		{
 			Shown = TurnUnit;
+		}
+	}
+
+	SetShown(mAllyPanel, AllyShown != nullptr);
+	if (AllyShown != nullptr)
+	{
+		SetTextIfPresent(mAllyName, AllyShown->mName);
+		UTexture2D* AllyPortrait = AllyShown->mTurnPortrait != nullptr
+			? AllyShown->mTurnPortrait.Get() : AllyShown->mPortrait.Get();
+		if (mAllyPortrait != nullptr && AllyPortrait != nullptr)
+		{
+			SetPortraitCropped(mAllyPortrait, AllyPortrait);
+		}
+		if (mAllyHPBar != nullptr)
+		{
+			mAllyHPBar->SetPercent(AllyShown->mMaxHP > 0.f
+				? AllyShown->mHP / AllyShown->mMaxHP : 0.f);
+		}
+		SetTextIfPresent(mAllyHPText, FText::FromString(FString::Printf(
+			TEXT("HP  %d / %d"), FMath::RoundToInt(AllyShown->mHP),
+			FMath::RoundToInt(AllyShown->mMaxHP))));
+		SetTextIfPresent(mAllyAPText, FText::FromString(AllyShown->mMaxActionPoints > 0
+			? FString::Printf(TEXT("AP  %d / %d"), AllyShown->mActionPoints,
+				AllyShown->mMaxActionPoints)
+			: FString::Printf(TEXT("AP  %d"), AllyShown->mActionPoints)));
+		SetTextIfPresent(mAllySpeedText, FText::FromString(FString::Printf(
+			TEXT("속도  %d"), FMath::RoundToInt(AllyShown->mSpeedPoint))));
+
+		if (mAllyStatusText != nullptr)
+		{
+			TArray<FString> Parts;
+			for (const FStatusEffectUI& Status : AllyShown->mStatusEffects)
+			{
+				Parts.Add(StatusDisplayName(Status.mTag));
+			}
+			mAllyStatusText->SetText(FText::FromString(Parts.IsEmpty()
+				? TEXT("상태 없음") : FString::Join(Parts, TEXT(" · "))));
+			SetShown(mAllyStatusText, true);
+		}
+
+		for (int32 Index = 0; Index < mAllyStatusFrames.Num(); ++Index)
+		{
+			const bool bHasStatus = AllyShown->mStatusEffects.IsValidIndex(Index);
+			SetShown(mAllyStatusFrames[Index], bHasStatus);
+			UImage* Icon = mAllyStatusIcons.IsValidIndex(Index)
+				? mAllyStatusIcons[Index].Get() : nullptr;
+			UTextBlock* Count = mAllyStatusCounts.IsValidIndex(Index)
+				? mAllyStatusCounts[Index].Get() : nullptr;
+			UTexture2D* Art = bHasStatus
+				? StatusIconFor(AllyShown->mStatusEffects[Index].mTag) : nullptr;
+			SetShown(Icon, Art != nullptr);
+			if (Icon != nullptr && Art != nullptr)
+			{
+				Icon->SetBrushFromTexture(Art, false);
+			}
+			const int32 StackCount = bHasStatus
+				? AllyShown->mStatusEffects[Index].mStackCount : 0;
+			SetShown(Count, StackCount > 1);
+			if (Count != nullptr && StackCount > 1)
+			{
+				Count->SetText(FText::AsNumber(StackCount));
+			}
 		}
 	}
 
@@ -1157,23 +1616,49 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
-		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
-	SetTextIfPresent(mEnemyDefenseText, FText::FromString(FString::Printf(
-		TEXT("방어 %d"), FMath::RoundToInt(Shown->mDefensePoint))));
+		TEXT("HP  %d / %d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
+	SetTextIfPresent(mEnemyAPText, FText::FromString(Shown->mMaxActionPoints > 0
+		? FString::Printf(TEXT("AP  %d / %d"), Shown->mActionPoints, Shown->mMaxActionPoints)
+		: FString::Printf(TEXT("AP  %d"), Shown->mActionPoints)));
+	SetTextIfPresent(mEnemySpeedText, FText::FromString(FString::Printf(
+		TEXT("속도  %d"), FMath::RoundToInt(Shown->mSpeedPoint))));
 
 	if (mEnemyStatusText != nullptr)
 	{
 		TArray<FString> Parts;
 		for (const FStatusEffectUI& Status : Shown->mStatusEffects)
 		{
-			Parts.Add(Status.mTag.GetTagName().ToString());
+			Parts.Add(StatusDisplayName(Status.mTag));
 		}
-		const bool bAny = Parts.Num() > 0;
-		SetShown(mEnemyStatusText, bAny);
-		if (bAny)
+		mEnemyStatusText->SetText(FText::FromString(Parts.IsEmpty()
+			? TEXT("상태 없음")
+			: FString::Join(Parts, TEXT(" · "))));
+		SetShown(mEnemyStatusText, true);
+	}
+
+	for (int32 Index = 0; Index < mEnemyStatusFrames.Num(); ++Index)
+	{
+		const bool bHasStatus = Shown->mStatusEffects.IsValidIndex(Index);
+		SetShown(mEnemyStatusFrames[Index], bHasStatus);
+
+		UImage* Icon = mEnemyStatusIcons.IsValidIndex(Index)
+			? mEnemyStatusIcons[Index].Get() : nullptr;
+		UTextBlock* Count = mEnemyStatusCounts.IsValidIndex(Index)
+			? mEnemyStatusCounts[Index].Get() : nullptr;
+		UTexture2D* Art = bHasStatus
+			? StatusIconFor(Shown->mStatusEffects[Index].mTag) : nullptr;
+		SetShown(Icon, Art != nullptr);
+		if (Icon != nullptr && Art != nullptr)
 		{
-			mEnemyStatusText->SetText(FText::FromString(
-				FString::Join(Parts, TEXT(" / "))));
+			Icon->SetBrushFromTexture(Art, false);
+		}
+
+		const int32 StackCount = bHasStatus
+			? Shown->mStatusEffects[Index].mStackCount : 0;
+		SetShown(Count, StackCount > 1);
+		if (Count != nullptr && StackCount > 1)
+		{
+			Count->SetText(FText::AsNumber(StackCount));
 		}
 	}
 
@@ -1203,6 +1688,77 @@ void UCombatLayoutHUDWidget::RefreshMeta()
 	}
 	SetTextIfPresent(mObjectiveText, FText::FromString(
 		FString::Printf(TEXT("모든 적 처치 — 남은 적 %d"), Alive)));
+	SetTextIfPresent(mMercenaryGoldText,
+		FText::AsNumber(mUIModel->GetPlayerMeta().mGold));
+
+	const TArray<FCombatArtifactUI>& Artifacts =
+		mUIModel->GetPlayerMeta().mArtifacts;
+	for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
+	{
+		const FCombatArtifactUI* Artifact =
+			Artifacts.IsValidIndex(Index) ? &Artifacts[Index] : nullptr;
+		UImage* Icon = mArtifactIcons.IsValidIndex(Index)
+			? mArtifactIcons[Index].Get() : nullptr;
+		UWidget* Frame = mArtifactFrames.IsValidIndex(Index)
+			? mArtifactFrames[Index].Get() : nullptr;
+		const bool bHasArtifact = Artifact != nullptr && Artifact->mIcon != nullptr;
+		SetShown(Icon, bHasArtifact);
+		SetShown(Frame, bHasArtifact);
+		if (bHasArtifact)
+		{
+			Icon->SetBrushFromTexture(Artifact->mIcon);
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
+{
+	if (mMercenaryPanel == nullptr)
+	{
+		return;
+	}
+
+	// 용병 패널과 몬스터 탭은 상호 배타 모달이다. 먼저 접어야 아래의
+	// TurnPanel 접힘 결정이 이 함수 것으로 남는다.
+	if (bShown == true)
+	{
+		SetMonsterTabShown(false);
+	}
+
+	// 먼저 패널을 세워 둔다. RequestCancel 이 즉시 UI 갱신을 쏘더라도 그
+	// 갱신에서 커맨드 카드가 다시 튀어나오지 않는다.
+	mMercenaryPanel->SetVisibility(
+		bShown ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	// 모달 셸이 떠 있을 때 턴 라벨이 헤더 위로 새어 나오지 않게 한다.
+	// Canvas 중첩의 자식 레이어는 부모 z-order와 별개로 배치될 수 있으므로,
+	// 가리는 데 기대지 않고 턴 묶음을 명시적으로 접는다.
+	SetShown(Find<UWidget>(WidgetTree, TEXT("TurnPanel")), bShown == false);
+	if (bShown == true)
+	{
+		// 용병을 보러 가는 동안 앞서 열어 둔 상세와 조준은 다른 맥락이다.
+		HideDetailOverlay(/*bNotifyGameplay=*/true);
+		if (mUIModel != nullptr && IsAiming() == true)
+		{
+			mUIModel->RequestCancel();
+		}
+		if (mUIModel != nullptr)
+		{
+			RefreshParty();
+			RefreshMeta();
+		}
+	}
+	RefreshCommandVisibility();
+}
+
+bool UCombatLayoutHUDWidget::IsMercenaryPanelShown() const
+{
+	if (mMercenaryPanel == nullptr)
+	{
+		return false;
+	}
+	const ESlateVisibility PanelVisibility = mMercenaryPanel->GetVisibility();
+	return PanelVisibility != ESlateVisibility::Collapsed
+		&& PanelVisibility != ESlateVisibility::Hidden;
 }
 
 void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
@@ -1215,8 +1771,10 @@ void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
 	if (mSwallowNextCommandClick == true)
 	{
 		mSwallowNextCommandClick = false;
+		UE_LOG(LogRD, Log, TEXT("[탭진단] 카드 %d 클릭 삼킴(긴 누름 뒤 놓기)"), SlotIndex);
 		return;
 	}
+	UE_LOG(LogRD, Log, TEXT("[탭진단] 카드 %d 클릭 → 선택 경로"), SlotIndex);
 	// 카드를 골랐으면 상세는 볼 만큼 봤다. 위협 범위 칠은 게임플레이가
 	// 알아서 관리하므로 화면만 닫는다.
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
@@ -1655,12 +2213,26 @@ void UCombatLayoutHUDWidget::HandleConfirmClicked()
 
 void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 {
-	// 넷이 다 참이어야 보인다. 하나라도 아니면 접는다.
+	// 조건이 다 참이어야 보인다. 하나라도 아니면 접는다.
 	const bool bVisible = mCommandsShown == true
 		&& IsAiming() == false
 		&& IsPlayerTurn() == true
 		&& mIsTurnActive == true
-		&& mIsActionPlaying == false;
+		&& mIsActionPlaying == false
+		&& IsMercenaryPanelShown() == false
+		&& IsMonsterTabShown() == false;
+
+	// [진단] 카드 표시 결정이 바뀌는 순간의 조건을 남긴다. 카드가 안 돌아오는
+	// 버그를 잡으면 지운다.
+	static bool bLastVisible = true;
+	if (bVisible != bLastVisible)
+	{
+		bLastVisible = bVisible;
+		UE_LOG(LogRD, Log, TEXT("[카드진단] 표시=%d (펴둠=%d 조준중=%d 아군턴=%d 턴열림=%d 연출중=%d 용병패널=%d)"),
+			bVisible, mCommandsShown, IsAiming(), IsPlayerTurn(),
+			mIsTurnActive, mIsActionPlaying, IsMercenaryPanelShown());
+	}
+
 	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
 	{
 		SetShown(Widgets.Root, bVisible);
@@ -1688,6 +2260,7 @@ void UCombatLayoutHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 	// 화면 전체가 눌림을 받아야 카드 밖 탭을 안다. 옛 전투 HUD 도 같은
 	// 방식이었다 -- 자식 버튼이 먼저 가져가고, 버튼 밖만 이 위젯이 받는다.
 	SetVisibility(ESlateVisibility::Visible);
+	SetMercenaryPanelShown(false);
 }
 
 /**
@@ -1738,7 +2311,8 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
  */
 void UCombatLayoutHUDWidget::HandleBoardLongPress()
 {
-	if (mPressActive == false || mPressMoved == true || mUIModel == nullptr)
+	if (mPressActive == false || mPressMoved == true || mUIModel == nullptr
+		|| IsMercenaryPanelShown() == true)
 	{
 		return;
 	}
@@ -1846,10 +2420,19 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 		return;
 	}
 
+	// 용병 패널은 모달이다. 패널 바깥으로 새어 온 눌림도 전장 명령이나
+	// 커맨드 토글로 해석하지 않는다.
+	if (IsMercenaryPanelShown() == true)
+	{
+		UE_LOG(LogRD, Log, TEXT("[탭진단] 판 탭 삼킴: 용병 패널 열림"));
+		return;
+	}
+
 	// 상세 패널이 떠 있으면 이 탭은 닫기다. 열어 둔 채 다른 일까지 겸하면,
 	// 스킬을 쏘려던 탭이었는지 패널을 닫는 탭이었는지 알 수 없다.
 	if (IsDetailOverlayShown() == true)
 	{
+		UE_LOG(LogRD, Log, TEXT("[탭진단] 판 탭 = 상세 닫기"));
 		HideDetailOverlay(/*bNotifyGameplay=*/true);
 		return;
 	}
@@ -1858,6 +2441,7 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 	// 안내판을 누르려다 엉뚱한 칸에 스킬을 쏘면 무를 길이 없다.
 	if (IsOverChrome(ScreenPosition) == true)
 	{
+		UE_LOG(LogRD, Log, TEXT("[탭진단] 판 탭 삼킴: HUD(chrome) 위"));
 		return;
 	}
 
@@ -1954,6 +2538,11 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 	{
 		return;
 	}
+	const int32 UnitId = PartyUnitIdAt(SlotIndex);
+	if (UnitId == INDEX_NONE)
+	{
+		return;
+	}
 
 	// 다른 용병을 보러 간다. 떠 있던 상세는 이전 맥락이다.
 	HideDetailOverlay(/*bNotifyGameplay=*/true);
@@ -1965,18 +2554,373 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 		mUIModel->RequestCancel();
 	}
 
-	// 그 용병의 스킬로 갈아 끼워 달라고 한다. 제 차례가 아니면 전부 꺼진 채로
-	// 온다 -- 끄는 판정은 게임플레이가 한다.
-	mUIModel->RequestInspectUnit(PartyUnitIdAt(SlotIndex));
+	// 상세 응답은 RequestInspectUnit 안에서 동기적으로 돌아올 수 있다. 목록을
+	// 먼저 닫아 둬야 마지막 화면 상태가 PR457 상세 겹이 된다.
+	SetMercenaryPanelShown(false);
 
-	// 접혀 있었으면 편다. 스킬을 보러 눌렀는데 안 펴지면 아무 일도 안 일어난
-	// 것처럼 보인다.
+	// 기존 계약대로 밑의 커맨드도 그 용병 것으로 갈아 끼운다. 상세를 닫은 뒤
+	// 무엇을 들었는지 바로 이어 볼 수 있고, 제 차례가 아니면 게임플레이가
+	// 전부 비활성으로 내려 준다.
 	SetCommandsShown(true);
+	mUIModel->RequestInspectUnit(UnitId);
 }
 
 void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_1() { HandlePartyClicked(1); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_2() { HandlePartyClicked(2); }
+void UCombatLayoutHUDWidget::HandleMercenaryMenuClicked()
+{
+	SetMercenaryPanelShown(IsMercenaryPanelShown() == false);
+}
+void UCombatLayoutHUDWidget::HandleMonsterMenuClicked()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	if (IsMonsterTabShown() == true)
+	{
+		SetMonsterTabShown(false);
+		return;
+	}
+	if (mMonsterTabWidgetClass != nullptr)
+	{
+		SetMonsterTabShown(true);
+		return;
+	}
+
+	// 몬스터 탭 WBP가 없는 환경(테스트 픽스처 등)에서는 예전 계약대로
+	// 첫 생존 적의 상세 패널을 연다.
+	SetMercenaryPanelShown(false);
+	HideDetailOverlay(/*bNotifyGameplay=*/true);
+	if (IsAiming() == true)
+	{
+		mUIModel->RequestCancel();
+	}
+	const FUnitUI* Monster = mUIModel->GetUnitUIs().FindByPredicate(
+		[](const FUnitUI& Unit)
+		{
+			return Unit.mIsPlayer == false && Unit.mHP > 0.f;
+		});
+	if (Monster != nullptr)
+	{
+		mUIModel->RequestInspectUnit(Monster->mUnitId);
+	}
+}
+
+void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_0() { HandleMonsterTabRowClicked(0); }
+void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_1() { HandleMonsterTabRowClicked(1); }
+void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_2() { HandleMonsterTabRowClicked(2); }
+
+void UCombatLayoutHUDWidget::HandleMonsterTabBackClicked()
+{
+	SetMonsterTabShown(false);
+}
+
+void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked(const int32 RowIndex)
+{
+	if (mMonsterTabUnitIds.IsValidIndex(RowIndex) == false)
+	{
+		return;
+	}
+	mMonsterTabSelectedRow = RowIndex;
+	RefreshMonsterTab();
+}
+
+void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
+{
+	if (bShown == true && EnsureMonsterTabWidget() == false)
+	{
+		return;
+	}
+	if (mMonsterTabWidget == nullptr)
+	{
+		return;
+	}
+
+	if (bShown == true)
+	{
+		// 다른 모달·상세·조준을 먼저 걷는다. 용병 패널 접기가 TurnPanel을
+		// 되살리므로, 이 함수의 TurnPanel 접힘이 마지막 결정이 되게 한다.
+		SetMercenaryPanelShown(false);
+		HideDetailOverlay(/*bNotifyGameplay=*/true);
+		if (mUIModel != nullptr && IsAiming() == true)
+		{
+			mUIModel->RequestCancel();
+		}
+	}
+
+	mMonsterTabWidget->SetVisibility(
+		bShown ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	// 용병 패널과 같은 모달 계약: 탭이 떠 있는 동안 턴 묶음은 접는다.
+	SetShown(Find<UWidget>(WidgetTree, TEXT("TurnPanel")),
+		bShown == false && IsMercenaryPanelShown() == false);
+
+	if (bShown == true)
+	{
+		RefreshMonsterTab();
+	}
+	else
+	{
+		// 상세 요청으로 칠렸을 수 있는 위협 범위를 걷으라는 신호. INDEX_NONE = "닫았다".
+		if (mUIModel != nullptr && mMonsterTabInspectedUnitId != INDEX_NONE)
+		{
+			mUIModel->RequestLongPressUnit(INDEX_NONE);
+		}
+		mMonsterTabInspectedUnitId = INDEX_NONE;
+	}
+	RefreshCommandVisibility();
+}
+
+bool UCombatLayoutHUDWidget::IsMonsterTabShown() const
+{
+	if (mMonsterTabWidget == nullptr)
+	{
+		return false;
+	}
+	const ESlateVisibility TabVisibility = mMonsterTabWidget->GetVisibility();
+	return TabVisibility != ESlateVisibility::Collapsed
+		&& TabVisibility != ESlateVisibility::Hidden;
+}
+
+bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
+{
+	if (mMonsterTabWidget != nullptr)
+	{
+		return true;
+	}
+	if (mMonsterTabWidgetClass == nullptr)
+	{
+		return false;
+	}
+	if (APlayerController* OwningPlayer = GetOwningPlayer())
+	{
+		mMonsterTabWidget = CreateWidget<UUserWidget>(OwningPlayer, mMonsterTabWidgetClass);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		// 에디터 자동화처럼 로컬 플레이어가 없는 월드에서도 탭 계약은 검증할
+		// 수 있어야 한다. 실제 플레이에서는 늘 위의 소유 플레이어를 쓴다.
+		mMonsterTabWidget = CreateWidget<UUserWidget>(World, mMonsterTabWidgetClass);
+	}
+	if (mMonsterTabWidget == nullptr)
+	{
+		return false;
+	}
+	// 상세 겹(50)보다 위. 탭이 떠 있는 동안 아래 HUD·판 눌림은 딤이 삼킨다.
+	mMonsterTabWidget->AddToViewport(/*ZOrder=*/55);
+	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	// AddDynamic은 함수 이름을 문자열로 찍는 매크로라 포인터 배열로 돌릴 수 없다.
+	if (UButton* Row0 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_0"))))
+	{
+		Row0->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_0);
+	}
+	if (UButton* Row1 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_1"))))
+	{
+		Row1->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_1);
+	}
+	if (UButton* Row2 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_2"))))
+	{
+		Row2->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_2);
+	}
+	if (UButton* BackButton = Cast<UButton>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackButton"))))
+	{
+		BackButton->OnClicked.AddDynamic(
+			this, &UCombatLayoutHUDWidget::HandleMonsterTabBackClicked);
+	}
+	return true;
+}
+
+void UCombatLayoutHUDWidget::RefreshMonsterTab()
+{
+	if (mMonsterTabWidget == nullptr || mUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 살아 있는 적을 나온 차례대로 행에 채운다. 클릭 행→유닛 매핑도 이 배열
+	// 하나로 센다 -- RefreshParty()와 같은 원칙이다.
+	mMonsterTabUnitIds.Reset();
+	TArray<const FUnitUI*> Monsters;
+	for (const FUnitUI& Unit : mUIModel->GetUnitUIs())
+	{
+		if (Unit.mIsPlayer == true || Unit.mHP <= 0.f)
+		{
+			continue;
+		}
+		if (Monsters.Num() >= 3)
+		{
+			break;
+		}
+		Monsters.Add(&Unit);
+		mMonsterTabUnitIds.Add(Unit.mUnitId);
+	}
+	if (mMonsterTabSelectedRow >= Monsters.Num())
+	{
+		mMonsterTabSelectedRow = FMath::Max(0, Monsters.Num() - 1);
+	}
+
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		UWidget* Row = mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterRow_%d"), Index)));
+		const bool bHasMonster = Monsters.IsValidIndex(Index);
+		if (Row != nullptr)
+		{
+			Row->SetVisibility(bHasMonster
+				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		}
+		if (bHasMonster == false)
+		{
+			continue;
+		}
+		if (UWidget* Selected = mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterRowSelected_%d"), Index))))
+		{
+			Selected->SetVisibility(Index == mMonsterTabSelectedRow
+				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (UImage* Portrait = Cast<UImage>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterRowPortrait_%d"), Index)))))
+		{
+			UTexture2D* Head = Monsters[Index]->mTurnPortrait != nullptr
+				? Monsters[Index]->mTurnPortrait.Get() : Monsters[Index]->mPortrait.Get();
+			if (Head != nullptr)
+			{
+				Portrait->SetBrushFromTexture(Head);
+			}
+		}
+		if (UTextBlock* Name = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterRowName_%d"), Index)))))
+		{
+			Name->SetText(Monsters[Index]->mName);
+		}
+	}
+
+	if (Monsters.IsValidIndex(mMonsterTabSelectedRow) == false)
+	{
+		return;
+	}
+	const FUnitUI& Monster = *Monsters[mMonsterTabSelectedRow];
+
+	const auto SetTabText = [this](const TCHAR* Name, const FText& Value)
+	{
+		if (UTextBlock* Text = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(Name)))
+		{
+			Text->SetText(Value);
+		}
+	};
+	SetTabText(TEXT("MonsterCenterNameText"), Monster.mName);
+	SetTabText(TEXT("MonsterDetailNameText"), Monster.mName);
+	// 종족/공격 유형은 아직 내려오는 데이터가 없다. 자리 문구를 지운다.
+	if (UWidget* TypeText = mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailTypeText")))
+	{
+		TypeText->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (UProgressBar* HPBar = Cast<UProgressBar>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailHPBar"))))
+	{
+		HPBar->SetPercent(Monster.mMaxHP > 0.f ? Monster.mHP / Monster.mMaxHP : 0.f);
+	}
+	SetTabText(TEXT("MonsterDetailHPText"), FText::FromString(FString::Printf(
+		TEXT("%d / %d"), FMath::RoundToInt(Monster.mHP), FMath::RoundToInt(Monster.mMaxHP))));
+	SetTabText(TEXT("MonsterDetailAPText"), FText::FromString(FString::Printf(
+		TEXT("AP  %d"), Monster.mActionPoints)));
+	SetTabText(TEXT("MonsterDetailSpeedText"), FText::FromString(FString::Printf(
+		TEXT("속도  %d"), FMath::RoundToInt(Monster.mSpeedPoint))));
+	if (UImage* DetailPortrait = Cast<UImage>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
+	{
+		UTexture2D* Body = Monster.mPortrait != nullptr
+			? Monster.mPortrait.Get() : Monster.mTurnPortrait.Get();
+		if (Body != nullptr)
+		{
+			DetailPortrait->SetBrushFromTexture(Body);
+		}
+	}
+
+	// 상태이상 두 칸: 실제 걸린 상태만 이름+스택으로 보여 주고 남는 칸은 접는다.
+	for (int32 Index = 0; Index < 2; ++Index)
+	{
+		UTextBlock* StatusText = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterStatusText_%d"), Index))));
+		if (StatusText == nullptr)
+		{
+			continue;
+		}
+		if (Monster.mStatusEffects.IsValidIndex(Index) == true)
+		{
+			const FStatusEffectUI& Status = Monster.mStatusEffects[Index];
+			StatusText->SetText(FText::FromString(Status.mStackCount > 1
+				? FString::Printf(TEXT("%s x%d"), *StatusDisplayName(Status.mTag), Status.mStackCount)
+				: StatusDisplayName(Status.mTag)));
+			StatusText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		else
+		{
+			StatusText->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	// 스킬 이름은 목록 DTO에 없다. 상세 응답(FUnitDetailUI)이 도착하면
+	// RefreshMonsterTabDetail()이 채운다. 같은 몬스터면 다시 청하지 않는다.
+	if (mMonsterTabInspectedUnitId != Monster.mUnitId)
+	{
+		mMonsterTabInspectedUnitId = Monster.mUnitId;
+		mUIModel->RequestInspectUnit(Monster.mUnitId);
+	}
+}
+
+void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
+{
+	if (mMonsterTabWidget == nullptr || mUIModel == nullptr)
+	{
+		return;
+	}
+	const FUnitDetailUI& Detail = mUIModel->GetUnitDetail();
+	// 늦게 도착한 다른 유닛의 상세로 현재 선택을 덮어쓰지 않는다.
+	if (Detail.mUnitId == INDEX_NONE || Detail.mUnitId != mMonsterTabInspectedUnitId)
+	{
+		return;
+	}
+
+	for (int32 Index = 0; Index < 4; ++Index)
+	{
+		UTextBlock* SkillName = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillName_%d"), Index))));
+		UWidget* SkillBox = mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillBox_%d"), Index)));
+		const bool bHasSkill = Detail.mSkills.IsValidIndex(Index);
+		if (SkillName != nullptr)
+		{
+			if (bHasSkill == true)
+			{
+				SkillName->SetText(Detail.mSkills[Index].mName);
+			}
+			SkillName->SetVisibility(bHasSkill
+				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (SkillBox != nullptr)
+		{
+			SkillBox->SetVisibility(bHasSkill
+				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+	}
+	if (Detail.mPortrait != nullptr)
+	{
+		if (UImage* DetailPortrait = Cast<UImage>(
+			mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
+		{
+			DetailPortrait->SetBrushFromTexture(Detail.mPortrait);
+		}
+	}
+}
+void UCombatLayoutHUDWidget::HandleMercenaryCloseClicked()
+{
+	SetMercenaryPanelShown(false);
+}
 
 /**
  * @brief 오른쪽 아래 단추를 눌렀다.
@@ -2081,7 +3025,18 @@ bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 	{
 		return false;
 	}
-	mDetailOverlayWidget = CreateWidget<UUserWidget>(GetOwningPlayer(), mDetailOverlayWidgetClass);
+	if (APlayerController* OwningPlayer = GetOwningPlayer())
+	{
+		mDetailOverlayWidget =
+			CreateWidget<UUserWidget>(OwningPlayer, mDetailOverlayWidgetClass);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		// 에디터 자동화처럼 로컬 플레이어가 없는 월드에서도 상세 계약은
+		// 검증할 수 있어야 한다. 실제 플레이에서는 늘 위의 소유 플레이어를 쓴다.
+		mDetailOverlayWidget =
+			CreateWidget<UUserWidget>(World, mDetailOverlayWidgetClass);
+	}
 	if (mDetailOverlayWidget == nullptr)
 	{
 		return false;

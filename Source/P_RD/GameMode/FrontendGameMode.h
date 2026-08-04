@@ -158,7 +158,7 @@ protected:
 
 private:
 	UFUNCTION()
-	void HandleCharacterSelectBackRequested();
+	void HandleMercenaryHireBackRequested();
 
 	/** @brief 게시판에서 출발을 눌렀을 때 새 런을 만든다. */
 	void HandlePartyConfirmed(const TArray<FPrimaryAssetId>& PartyUnitIds);

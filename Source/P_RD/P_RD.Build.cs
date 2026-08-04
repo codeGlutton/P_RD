@@ -15,6 +15,9 @@ public class P_RD : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        // 공개 헤더(GamePlayType.h)가 NiagaraSystem.h를 노출하므로 소비 모듈에 전파한다.
+        PublicDependencyModuleNames.Add("Niagara");
+
         PrivateDependencyModuleNames.AddRange(new string[] {
             /* Engine Core Modules */
             "Core",
@@ -32,7 +35,6 @@ public class P_RD : ModuleRules
             "SlateCore",
 
             /* VFX */
-            "Niagara",
             "NiagaraAnimNotifies",
 
             /* Gameplay Tag Modules */

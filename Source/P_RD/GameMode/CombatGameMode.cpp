@@ -1,11 +1,11 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Engine/AssetManager.h"
-#include "Components/Button.h"
+#include "Engine/Texture2D.h"
 #include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
@@ -32,6 +32,7 @@
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
@@ -42,6 +43,7 @@
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
 #include "Simulation/Logger/EventLogger.h"
 
@@ -52,6 +54,105 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
+	{
+		return UnitModel != nullptr
+			? FString::Printf(TEXT("%s %s %s"),
+				*UnitModel->GetBoardActorKeyName().ToString(),
+				*UnitModel->GetBoardActorAssetId().ToString(),
+				*UnitModel->GetBoardActorDisplayName().ToString())
+			: FString();
+	}
+
+	/**
+	 * @brief Marchbound가 새로 그린 용병 전용 얼굴/히어로 그림을 직업으로 찾는다.
+	 *
+	 * 데이터에셋의 mIcon/mPortrait는 아직 구형 픽셀 초상을 가리키는 것이 있다.
+	 * 용병 UI만 새 그림을 쓰도록 어댑터에서 한 번 정규화하면 턴바·목록·상세가
+	 * 각자 다른 폴백 규칙을 갖지 않는다.
+	 */
+	UTexture2D* ResolveMarchboundMercenaryPortrait(const UUnitModel* UnitModel,
+		const bool bHeroIllustration)
+	{
+		if (UnitModel == nullptr || UnitModel->IsPlayerUnitModel() == false)
+		{
+			return nullptr;
+		}
+		const FString Identity = CombatPortraitIdentity(UnitModel);
+		struct FMercenaryPortraitRule
+		{
+			const TCHAR* KoreanNeedle;
+			const TCHAR* EnglishNeedle;
+			const TCHAR* AssetStem;
+		};
+		static const FMercenaryPortraitRule Rules[] = {
+			{ TEXT("기사"), TEXT("Knight"), TEXT("Knight") },
+			{ TEXT("마법사"), TEXT("Mage"), TEXT("Mage") },
+			{ TEXT("궁수"), TEXT("Ranger"), TEXT("Ranger") },
+			{ TEXT("도적"), TEXT("Rogue"), TEXT("Rogue") },
+			{ TEXT("야만"), TEXT("Barbarian"), TEXT("Barbarian") },
+			{ TEXT("드루이드"), TEXT("Druid"), TEXT("Druid") },
+		};
+		for (const FMercenaryPortraitRule& Rule : Rules)
+		{
+			if (Identity.Contains(Rule.KoreanNeedle, ESearchCase::IgnoreCase)
+				|| Identity.Contains(Rule.EnglishNeedle, ESearchCase::IgnoreCase))
+			{
+				const FString AssetName = FString::Printf(TEXT("T_MB_Hire%s_%s"),
+					bHeroIllustration ? TEXT("Hero") : TEXT("Icon"), Rule.AssetStem);
+				const FString AssetPath = FString::Printf(
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
+					*AssetName, *AssetName);
+				return LoadObject<UTexture2D>(nullptr, *AssetPath);
+			}
+		}
+		return nullptr;
+	}
+
+	UTexture2D* ResolveTurnPortraitFallback(const UUnitModel* UnitModel)
+	{
+		if (UnitModel == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTexture2D* MercenaryPortrait =
+			ResolveMarchboundMercenaryPortrait(UnitModel, false))
+		{
+			return MercenaryPortrait;
+		}
+		const FString Identity = CombatPortraitIdentity(UnitModel);
+
+		struct FPortraitRule
+		{
+			const TCHAR* Needle;
+			const TCHAR* Path;
+		};
+		static const FPortraitRule Rules[] = {
+			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
+			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
+			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
+			{ TEXT("Leshy"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Leshy_HeadV2.KK_Face_Enemy_Leshy_HeadV2") },
+			{ TEXT("Mushroom"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Mushroom_HeadV2.KK_Face_Enemy_Mushroom_HeadV2") },
+			{ TEXT("Necromancer"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Necromancer_HeadV2.KK_Face_Enemy_Necromancer_HeadV2") },
+			{ TEXT("SkeletonGolem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonGolem_HeadV2.KK_Face_Enemy_SkeletonGolem_HeadV2") },
+			{ TEXT("SkeletonMinionRanged"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionRanged_HeadV2.KK_Face_Enemy_SkeletonMinionRanged_HeadV2") },
+			{ TEXT("SkeletonMinionMelee"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionMelee_HeadV2.KK_Face_Enemy_SkeletonMinionMelee_HeadV2") },
+			{ TEXT("SkeletonMinion"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinion_HeadV2.KK_Face_Enemy_SkeletonMinion_HeadV2") },
+			{ TEXT("Slime"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Slime_HeadV2.KK_Face_Enemy_Slime_HeadV2") },
+			{ TEXT("Spider"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Spider_HeadV2.KK_Face_Enemy_Spider_HeadV2") },
+			{ TEXT("Golem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2") },
+		};
+		for (const FPortraitRule& Rule : Rules)
+		{
+			if (Identity.Contains(Rule.Needle, ESearchCase::IgnoreCase))
+			{
+				return LoadObject<UTexture2D>(nullptr, Rule.Path);
+			}
+		}
+		return LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
+	}
+
 	FLinearColor GetRarityColor(ERarityType RarityType)
 	{
 		switch (RarityType)
@@ -398,6 +499,7 @@ void ACombatGameMode::InitializeRoom()
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 	mCombatUIModel->OnAbandonRun.AddUniqueDynamic(this, &ACombatGameMode::HandleAbandonRun);
+	mCombatUIModel->OnRetryCombat.AddUniqueDynamic(this, &ACombatGameMode::HandleRetryCombat);
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
@@ -441,12 +543,6 @@ void ACombatGameMode::BeginRoom()
 			if (UCombatLayoutHUDWidget* CombatLayoutHUDWidget = Cast<UCombatLayoutHUDWidget>(CombatHUD))
 			{
 				CombatLayoutHUDWidget->BindRewardUIModel(mRewardUIModel);
-			}
-			if (UButton* InventoryButton = Cast<UButton>(
-				CombatHUD->GetWidgetFromName(TEXT("MenuButton_2"))))
-			{
-				InventoryButton->OnClicked.AddUniqueDynamic(
-					this, &ACombatGameMode::HandleOpenInventory);
 			}
 			CombatHUD->OpenUI();
 		}
@@ -493,7 +589,6 @@ void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 	}*/
 	mPendingActionEndAfterCameraReturnHandle.Reset();
 }
-
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
@@ -578,9 +673,11 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		}
 		break;
 	case ECombatInputType::InspectUnit:
-		// 하단 용병 칸을 눌렀다. 그 용병의 스킬로 카드를 갈아 끼운다.
+		// 용병 탭의 보유 용병을 눌렀다. 기존처럼 그 용병의 스킬로 카드를
+		// 갈아 끼우되, 같은 id 로 PR457 유닛 상세도 함께 내린다.
 		mInspectedUnitId = IntPayload;
 		PushSkillUIData();
+		PushBoardActorDetailUIData(FindPartyUnitModel(IntPayload));
 		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
@@ -797,6 +894,24 @@ void ACombatGameMode::HandleAbandonRun()
 	AbandonRunFromRoom();
 }
 
+void ACombatGameMode::HandleRetryCombat()
+{
+	const URunPersistData* RunData = GetRunPersistData();
+	if (RunData == nullptr || RunData->IsActive() == false)
+	{
+		UE_LOG(LogCombatGameMode, Warning, TEXT("Retry combat ignored because no active run exists."));
+		return;
+	}
+
+	const FRoom& CurrentRoom = RunData->GetCurrentRoom();
+	const bool bTransitionStarted = PreloadAndTransitionRoomAsync(CurrentRoom.mRow, CurrentRoom.mColumn);
+	if (bTransitionStarted == false)
+	{
+		UE_LOG(LogCombatGameMode, Warning, TEXT("Retry combat failed to preload current room (%d, %d)."),
+			CurrentRoom.mRow, CurrentRoom.mColumn);
+	}
+}
+
 bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
@@ -946,6 +1061,11 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
 
+	if (Unit->IsPlayerUnitModel() == false)
+	{
+		++mDefeatedMonsterCount;
+	}
+
 	PushTurnUIData();
 	PushUnitUIData();
 }
@@ -954,6 +1074,30 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 {
 	FCombatResultUI CombatResultUIData;
 	CombatResultUIData.mIsWin = Result == ESRPGCombatResult::PlayerWin;
+	CombatResultUIData.mLocationName = NSLOCTEXT("CombatGameMode", "CurrentCombatArea", "현재 전투 지역");
+	CombatResultUIData.mRound = mCombatUIModel != nullptr ? mCombatUIModel->GetTurnUI().mRound : 0;
+	CombatResultUIData.mDefeatedMonsterCount = mDefeatedMonsterCount;
+	CombatResultUIData.mGoldGained = 0;
+	CombatResultUIData.mExpGained = 0;
+	for (const UPlayerUnitModel* PlayerUnitModel : GetPlayerUnitModels())
+	{
+		if (PlayerUnitModel == nullptr || CombatResultUIData.mPartyPortraits.Num() >= 3)
+		{
+			continue;
+		}
+
+		UTexture2D* Portrait = ResolveMarchboundMercenaryPortrait(
+			PlayerUnitModel, false);
+		if (Portrait == nullptr)
+		{
+			Portrait = PlayerUnitModel->GetBoardActorIcon();
+		}
+		if (Portrait == nullptr)
+		{
+			Portrait = PlayerUnitModel->GetBoardActorPortrait();
+		}
+		CombatResultUIData.mPartyPortraits.Add(Portrait);
+	}
 	mCombatUIModel->SetCombatResultUI(CombatResultUIData);
 }
 
@@ -974,6 +1118,8 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
+	TurnUI.mCurrentRoundRemainingTurnCount =
+		CombatModel->GetRemainingTurnCountInRound();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
@@ -1057,13 +1203,47 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
-		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();   // 턴 순서 칩 등 상시 UI용(없으면 nullptr → 텍스트 폴백).
+		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();
+		if (UTexture2D* MarchboundHero =
+			ResolveMarchboundMercenaryPortrait(UnitModel, true))
+		{
+			UnitUIData.mPortrait = MarchboundHero;
+		}
+		// 큰 카드의 972x1619 세로 초상을 턴 칩에 억지로 눌러 넣지 않는다.
+		// DA mIcon에는 256x256 HeadV2 얼굴판을 두며, 아직 아이콘이 없는
+		// 신규/임시 유닛만 기존 초상으로 안전하게 폴백한다.
+		UnitUIData.mTurnPortrait = ResolveMarchboundMercenaryPortrait(
+			UnitModel, false);
+		if (UnitUIData.mTurnPortrait == nullptr)
+		{
+			UnitUIData.mTurnPortrait = UnitModel->GetBoardActorIcon();
+		}
+		if (UnitUIData.mTurnPortrait == nullptr)
+		{
+			UnitUIData.mTurnPortrait = ResolveTurnPortraitFallback(UnitModel);
+		}
+		if (UnitUIData.mTurnPortrait == nullptr)
+		{
+			UnitUIData.mTurnPortrait = UnitUIData.mPortrait;
+		}
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
+		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
+		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
+		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
+			UUnitAttributeSet::GetRechargeSpeedPointAttribute());
+		if (UnitUIData.mSpeedPoint <= 0.f)
+		{
+			UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetSpeedPointFactorAttribute());
+		}
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
+		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
+		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
+		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);
 
 		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
@@ -1081,6 +1261,29 @@ void ACombatGameMode::PushUnitUIData() const
 			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
 			UnitUIData.mStatusEffects.Add(StatusEffect);
 		}
+
+#if WITH_EDITOR
+		// 에디터 Standalone/PIE에서 전투 HUD의 큰 상태 슬롯을 바로 검수한다.
+		// 실제 태그가 없는 첫 아군과 첫 적에만 DTO 표시용 fixture를 보탠다.
+		if (UnitUIData.mStatusEffects.IsEmpty())
+		{
+			const bool bFirstPlayer = UnitUIData.mIsPlayer && i == 0;
+			const bool bFirstEnemy = !UnitUIData.mIsPlayer
+				&& !UnitUIDatas.ContainsByPredicate([](const FUnitUI& Existing)
+				{
+					return !Existing.mIsPlayer && !Existing.mStatusEffects.IsEmpty();
+				});
+			if (bFirstPlayer || bFirstEnemy)
+			{
+				FStatusEffectUI PreviewStatus;
+				PreviewStatus.mTag = bFirstPlayer
+					? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification
+					: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+				PreviewStatus.mStackCount = bFirstPlayer ? 1 : 2;
+				UnitUIData.mStatusEffects.Add(PreviewStatus);
+			}
+		}
+#endif
 
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 스냅샷 폴백, mViewActor는 이동을 매 프레임 따라가는 라이브 투영 소스(UnitBars).
@@ -1438,13 +1641,28 @@ void ACombatGameMode::PushCombatTargetDetailUIData(IBoardSelectionTargetView* Ta
 	UBoardActorModel* BoardActorModel = ObjectView->GetModel<UBoardActorModel>();
 	checkf(BoardActorModel != nullptr, TEXT("선택한 보드 액터 모델 nullptr"));
 
+	PushBoardActorDetailUIData(BoardActorModel);
+}
+
+void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorModel)
+{
+	if (mCombatUIModel == nullptr || BoardActorModel == nullptr)
+	{
+		return;
+	}
+
 	FUnitDetailUI UnitDetailUIData;
 	UnitDetailUIData.mUnitId = BoardActorModel->GetModelId();
 	UnitDetailUIData.mName = BoardActorModel->GetBoardActorDisplayName();
 	UnitDetailUIData.mLevel = BoardActorModel->GetBoardActorLevel();
 	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
 
-	UUnitModel* UnitModel = ObjectView->GetModel<UUnitModel>();
+	UUnitModel* UnitModel = Cast<UUnitModel>(BoardActorModel);
+	if (UTexture2D* MarchboundHero =
+		ResolveMarchboundMercenaryPortrait(UnitModel, true))
+	{
+		UnitDetailUIData.mPortrait = MarchboundHero;
+	}
 	// 상세창 스킬 칸 탭을 되짚을 기준이다. 유닛이 아닌 것(장애물)을 골랐으면 비운다.
 	mDetailUnitModel = UnitModel;
 	if (UnitModel != nullptr)
@@ -1569,6 +1787,56 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	PlayerMetaUIData.mGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
 	PlayerMetaUIData.mExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
 	PlayerMetaUIData.mMaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+
+	if (const UPartyArtifactComponentModel* PartyArtifacts =
+		PartyModel->GetPartyArtifactComponentModel())
+	{
+		for (const UStaticArtifactData* ArtifactData : PartyArtifacts->GetPartyArtifacts())
+		{
+			if (ArtifactData == nullptr)
+			{
+				continue;
+			}
+			FCombatArtifactUI& ArtifactUI =
+				PlayerMetaUIData.mArtifacts.AddDefaulted_GetRef();
+			ArtifactUI.mName = ArtifactData->mName;
+			ArtifactUI.mIcon = ArtifactData->mIcon.LoadSynchronous();
+			ArtifactUI.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
+		}
+	}
+
+#if WITH_EDITOR
+	// UI 검수용 에디터 실행에서는 빈 파티도 아티팩트 줄을 확인할 수 있게 한다.
+	// 실제 보유물이 하나라도 있으면 이 fixture는 전혀 개입하지 않는다.
+	if (PlayerMetaUIData.mArtifacts.IsEmpty())
+	{
+		struct FPreviewArtifact
+		{
+			const TCHAR* Name;
+			const TCHAR* IconPath;
+			FLinearColor RarityColor;
+		};
+		static const FPreviewArtifact PreviewArtifacts[] = {
+			{ TEXT("정찰의 나침반"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"),
+				FLinearColor(0.86f, 0.98f, 0.94f, 1.f) },
+			{ TEXT("푸른 깃털"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_RareTreasure.T_MapNode_RareTreasure"),
+				FLinearColor(0.55f, 0.72f, 1.f, 1.f) },
+			{ TEXT("왕의 부적"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure"),
+				FLinearColor(0.82f, 0.58f, 1.f, 1.f) },
+		};
+		for (const FPreviewArtifact& Preview : PreviewArtifacts)
+		{
+			FCombatArtifactUI& Artifact =
+				PlayerMetaUIData.mArtifacts.AddDefaulted_GetRef();
+			Artifact.mName = FText::FromString(Preview.Name);
+			Artifact.mIcon = LoadObject<UTexture2D>(nullptr, Preview.IconPath);
+			Artifact.mRarityColor = Preview.RarityColor;
+		}
+	}
+#endif
 
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
@@ -1765,7 +2033,7 @@ void ACombatGameMode::PushCombatRewardUIData() const
 	checkf(PartyAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
 	FRewardUI RewardUIData;
-	RewardUIData.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "VICTORY REWARD");
+	RewardUIData.mTitle = NSLOCTEXT("CombatGameMode", "VictoryRewardTitle", "전투 보상");
 
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	if (RunPersistData != nullptr)
@@ -1805,6 +2073,20 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		{
 			MercenaryExp.mName = NSLOCTEXT(
 				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
+		}
+		MercenaryExp.mPortrait = ResolveMarchboundMercenaryPortrait(
+			PlayerUnitModel, false);
+		if (MercenaryExp.mPortrait == nullptr)
+		{
+			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorIcon();
+		}
+		if (MercenaryExp.mPortrait == nullptr)
+		{
+			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorPortrait();
+		}
+		if (MercenaryExp.mPortrait == nullptr)
+		{
+			MercenaryExp.mPortrait = ResolveTurnPortraitFallback(PlayerUnitModel);
 		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
 		MercenaryExp.mLevel = PlayerLevel;

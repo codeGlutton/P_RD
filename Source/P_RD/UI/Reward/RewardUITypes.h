@@ -20,6 +20,8 @@ struct FRewardMercenaryExpUI
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly) FText mName;
+	/** @brief 정산 행에 표시할 실제 용병 얼굴 아이콘. */
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
 	UPROPERTY(BlueprintReadOnly) float mExpBefore = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mExpAfter = 0.f;
