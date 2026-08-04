@@ -34,6 +34,21 @@ public:
 	}
 
 public:
+	template<typename T>
+	static void ShuffleArray(const FRandomStream& Stream, TArray<T>& Array)
+	{
+		const int32 Num = Array.Num();
+		for (int32 i = 0; i < Num - 1; ++i)
+		{
+			const int32 IndexToSwap = Stream.RandRange(i, Num - 1);
+			if (i != IndexToSwap)
+			{
+				Array.Swap(i, IndexToSwap);
+			}
+		}
+	}
+
+public:
 	static int32 GetRandomFromInterval(const FRandomStream& Stream, const FInt32Interval& Interval);
 	static float GetRandomFromInterval(const FRandomStream& Stream, const FFloatInterval& Interval);
 };

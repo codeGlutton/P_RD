@@ -250,27 +250,30 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
-	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this]() {
+	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this](const TArray<TObjectPtr<UUnitModel>>& PlayerModels, int32 RoundCount, int32 TurnCount) {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 		checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
 
+		FRoomClearData RoomClearData;
+		RoomClearData.mIsCleared = true;
+		RoomClearData.mRoundCount = RoundCount;
+		RoomClearData.mTurnCount = TurnCount;
+
 		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
-		TArray<FTileTransform> PlayerTransforms;
 		for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 		{
 			if (PlayerUnitModel != nullptr)
 			{
-				PlayerTransforms.Add(PlayerUnitModel->GetTileTransform());
+				RoomClearData.mPlayerTileTransforms.Add(PlayerUnitModel->GetTileTransform());
 			}
 			else
 			{
-				PlayerTransforms.Add(FTileTransform::Invalid);
+				RoomClearData.mPlayerTileTransforms.Add(FTileTransform::Invalid);
 			}
 		}
 
-		GameProfileSubsystem->ClearCurrentCombatRoom(PlayerTransforms);
+		GameProfileSubsystem->SetRoomClearData(RoomClearData);
 		SaveRunWithUIAsync();
-		GameProfileSubsystem->ClearCurrentCombatRoom(TArray<FTileTransform>());
 		});
 	CombatModel->OnShowCombatResultUI.AddWeakLambda(this, [this](ESRPGCombatResult Result) {
 		if (Result == ESRPGCombatResult::PlayerWin)
@@ -415,7 +418,7 @@ void ACombatGameMode::InitializeRoom()
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mRoomClearTileTransforms);
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mClearData);
 }
 
 void ACombatGameMode::BeginRoom()

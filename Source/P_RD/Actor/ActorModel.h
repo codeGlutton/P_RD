@@ -31,7 +31,7 @@ public:
 private:
 	void ResetComponentModels();
 
-	/* IObjectModel 상속 */
+	/* UObjectModel 상속 */
 public:
 	void Initialize() override;
 	void Uninitialize() override;
