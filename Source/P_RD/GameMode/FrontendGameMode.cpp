@@ -44,7 +44,7 @@ namespace
 		{
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "기사");
-		case EUnitJobType::Archer:
+		case EUnitJobType::Ranger:
 			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "도적");
 		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageNameText", "마법사");
@@ -60,7 +60,7 @@ namespace
 		{
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightRoleText", "방패 탱커 · 근접");
-		case EUnitJobType::Archer:
+		case EUnitJobType::Ranger:
 			return NSLOCTEXT("FrontendGameMode", "ArcherRoleText", "기습 암살자 · 민첩");
 		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageRoleText", "주문 술사 · 원거리");
@@ -76,7 +76,7 @@ namespace
 		{
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightDesc", "두꺼운 갑옷과 방패로 전열을 지키는 근접 수호자.\n높은 체력으로 적의 공격을 버틴다.");
-		case EUnitJobType::Archer:
+		case EUnitJobType::Ranger:
 			return NSLOCTEXT("FrontendGameMode", "ArcherDesc", "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다.");
 		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageDesc", "주사위 마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다.");
@@ -128,7 +128,7 @@ namespace
 			return 0;
 		case EUnitJobType::Mage:
 			return 1;
-		case EUnitJobType::Archer:
+		case EUnitJobType::Ranger:
 			return 2;
 		default:
 			return 99;
@@ -442,9 +442,9 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 
 	// [합의필요] Archer/Mage DataAsset이 준비되면 placeholder 보강을 제거하고 DA_TestFrontend.mPlayableUnits만 단일 출처로 둔다.
 
-	if (!HasCharacterOptionForJob(OutOptions, EUnitJobType::Archer))
+	if (!HasCharacterOptionForJob(OutOptions, EUnitJobType::Ranger))
 	{
-		AppendLockedCharacterOption(OutOptions, EUnitJobType::Archer);
+		AppendLockedCharacterOption(OutOptions, EUnitJobType::Ranger);
 	}
 	if (!HasCharacterOptionForJob(OutOptions, EUnitJobType::Mage))
 	{
