@@ -39,7 +39,7 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_NormalSlash,			"Animation.Montage.Skill.Mercenary.Barbarian.NormalSlash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_PowerSlash,			"Animation.Montage.Skill.Mercenary.Barbarian.PowerSlash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_SpinAttack,			"Animation.Montage.Skill.Mercenary.Barbarian.SpinAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Whirlwind,			"Animation.Montage.Skill.Mercenary.Barbarian.Whirlwind");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Meditation,			"Animation.Montage.Skill.Mercenary.Barbarian.Meditation");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Rage,				"Animation.Montage.Skill.Mercenary.Barbarian.Rage");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Taunt,				"Animation.Montage.Skill.Mercenary.Barbarian.Taunt");
