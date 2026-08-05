@@ -37,17 +37,21 @@ public:
 
 	/* UUnitModel 상속 */
 public:
-	int32 GetBoardActorLevel() const override;
+	void PostInitializeComponentModels() override;
 
+public:
+	int32 GetBoardActorLevel() const override;
+	EUnitJobType GetUnitJobType() const override;
+	int32 GetDifficulty() const override;
+	bool IsPlayerUnitModel() const override;
+
+	/* 파티 함수 */
 public:
 	void SetOwnerParty(UPartyModel* PartyModel);
 	void SetPlayerLevel(int32 PlayerLevel);
 
 public:
 	int32 GetPlayerLevel() const;
-	EUnitJobType GetUnitJobType() const override;
-	int32 GetDifficulty() const override;
-	bool IsPlayerUnitModel() const override;
 
 public:
 	UArtifactComponentModel* GetArtifactComponentModel() const;

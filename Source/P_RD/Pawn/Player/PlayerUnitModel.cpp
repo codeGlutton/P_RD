@@ -22,32 +22,30 @@ UPlayerUnitModel::UPlayerUnitModel()
     mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
 }
 
+void UPlayerUnitModel::PostInitializeComponentModels()
+{
+    Super::PostInitializeComponentModels();
+
+    /* 죽음으로 인한 파티 해제 처리 */
+
+    GetAttributeComponentModel()->RegisterTacticalTagEvent(EffectTags::GameplayEffect_ActorState_Dead, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(
+        this, [this](const FGameplayTag Tag, int32 Count) {
+            if (Count <= 0)
+            {
+                return;
+            }
+
+            UPartyModel* OwnerParty = mOwnerParty.Get();
+            if (OwnerParty != nullptr)
+            {
+                OwnerParty->RemovePlayerUnitModel(this);
+                mOwnerParty = nullptr;
+            }
+        }
+    );
+}
+
 int32 UPlayerUnitModel::GetBoardActorLevel() const
-{
-    return mPlayerLevel;
-}
-
-void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
-{
-    mOwnerParty = PartyModel;
-
-    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
-}
-
-void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
-{
-    mPlayerLevel = PlayerLevel;
-
-    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
-}
-
-int32 UPlayerUnitModel::GetPlayerLevel() const
 {
     return mPlayerLevel;
 }
@@ -74,6 +72,31 @@ int32 UPlayerUnitModel::GetDifficulty() const
 bool UPlayerUnitModel::IsPlayerUnitModel() const
 {
     return true;
+}
+
+void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
+{
+    mOwnerParty = PartyModel;
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+}
+
+void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
+{
+    mPlayerLevel = PlayerLevel;
+
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
+}
+
+int32 UPlayerUnitModel::GetPlayerLevel() const
+{
+    return mPlayerLevel;
 }
 
 UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const
