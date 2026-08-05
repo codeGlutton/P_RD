@@ -117,8 +117,8 @@ public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCategory"))
 	FText mSaleCategory;
 
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleMercenaryIds"))
-	TArray<FMercenaryCandidate> mSaleMercenaryIds;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "Candidates"))
+	TArray<FMercenaryCandidate> mCandidates;
 };
 
 /**
