@@ -39,9 +39,12 @@ public:
 
 	/* 전투 구성 */
 public:
-	UPROPERTY(Config, Category = Attribute, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "InitializeCurveTable", ToolTip = "Attribute 초기 값 테이블", ConfigRestartRequired = true))
+	UPROPERTY(Config, Category = Combat, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "InitializeCurveTable", ToolTip = "Attribute 초기 값 테이블", ConfigRestartRequired = true))
 	TSoftObjectPtr<UCurveTable> mInitializeCurveTable;
 
-	UPROPERTY(Config, Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectSetting", ToolTip = "상태 이상 적용 시, 사용되는 전역 설정 값"))
+	UPROPERTY(Config, Category = Combat, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectSetting", ToolTip = "상태 이상 적용 시, 사용되는 전역 설정 값"))
 	FGlobalStatusEffectBalanceSetting mGlobalStatusEffectSetting;
+
+	UPROPERTY(Config, Category = Combat, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RequiredSpeedPointForTurn", ToolTip = "턴을 소유하기 위해 소모되는 스피드 포인트 값"))
+	int32 mRequiredSpeedPointForTurn = 10;
 };

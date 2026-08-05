@@ -93,6 +93,7 @@ public:
 
 public:
 	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
+	void UnregisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
@@ -107,6 +108,7 @@ public:
 protected:
 	void SyncPlayerPersistData( UPlayerUnitModel* PlayerUnit);
 	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
+	void UnbindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
@@ -203,7 +205,7 @@ public:
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
-	void ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms);
+	void SetRoomClearData(const FRoomClearData& ClearData);
 
 public:
 	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;

@@ -14,10 +14,11 @@
 
 UEnemyUnitModel::UEnemyUnitModel()
 {
-	UUnitModel::SetGenericTeamId(EGameTeamType::Enemy);
+	SetGenericTeamId(EGameTeamType::Enemy);
+
+	mUnitAttributeSet = CreateDefaultSubobject<UEnemyUnitAttributeSet>(TEXT("EnemyUnitAttributeSet"));
 
 	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
-	mUnitAttributeSet = CreateDefaultSubobject<UEnemyUnitAttributeSet>(TEXT("EnemyUnitAttributeSet"));
 }
 
 void UEnemyUnitModel::PostInitializeComponentModels()
