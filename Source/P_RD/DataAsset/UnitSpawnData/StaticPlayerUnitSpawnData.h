@@ -33,6 +33,6 @@ public:
 #endif
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "JobType"))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
 	EUnitJobType mJobType = EUnitJobType::None;
 };

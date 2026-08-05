@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   PlayerUnitModel.h
  * @brief  플레이어 베이스 유닛 정의 헤더
  * @author 모호재
@@ -18,7 +18,6 @@ class UPartyModel;
 class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
-class ULevelAttributeSet;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*PlayerLevel*/);
 
@@ -63,10 +62,6 @@ private:
 	/** @brief 난이도 스케일 AttributeSet */
 	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
 	TObjectPtr<UPlayerUnitAttributeSet> mUnitAttributeSet;
-
-	/** @brief 레벨 스케일 AttributeSet */
-	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
-	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
 
 	/** @brief 아티펙트 컴포넌트 모델 */
 	UPROPERTY(Category = Artifact, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "ArtifactCompModel"))

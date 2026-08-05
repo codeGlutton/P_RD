@@ -12,6 +12,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "AttributeSet/LevelAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
@@ -478,7 +479,7 @@ void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int
 		mMoney = TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValue(
 			UPartyAttributeSet::StaticClass(),
 			UPartyAttributeSet::GetMoneyAttribute().GetUProperty(),
-			UPartyAttributeSet::KeyName,
+			UPartyAttributeSet::KEY_NAME,
 			mDifficulty
 		);
 	}
@@ -541,8 +542,11 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 		const FStageBuilderParams& BuilderParams = *BalanceSetting->FindRow<FStageBuilderParams>(*EnumToString(Type), TEXT("밸런스 세팅 테이블 탐색 에러"));
 		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
+		const FLevelAttributeCache LevelAttributeCache = ULevelAttributeSet::MakeCache(this);
 
-		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
+		mStage.InitializeAs<FStage>(
+			FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, LevelAttributeCache).SetParams(BuilderParams).Build()
+		);
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
 		}));
