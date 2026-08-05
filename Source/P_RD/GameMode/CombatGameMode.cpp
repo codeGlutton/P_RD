@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -351,27 +351,30 @@ void ACombatGameMode::InitializeRoom()
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
 
-	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this]() {
+	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this](const TArray<TObjectPtr<UUnitModel>>& PlayerModels, int32 RoundCount, int32 TurnCount) {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
 		checkf(GameProfileSubsystem != nullptr, TEXT("게임 프로필 서브시스템 nullptr 오류"));
 
+		FRoomClearData RoomClearData;
+		RoomClearData.mIsCleared = true;
+		RoomClearData.mRoundCount = RoundCount;
+		RoomClearData.mTurnCount = TurnCount;
+
 		const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
-		TArray<FTileTransform> PlayerTransforms;
 		for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
 		{
 			if (PlayerUnitModel != nullptr)
 			{
-				PlayerTransforms.Add(PlayerUnitModel->GetTileTransform());
+				RoomClearData.mPlayerTileTransforms.Add(PlayerUnitModel->GetTileTransform());
 			}
 			else
 			{
-				PlayerTransforms.Add(FTileTransform::Invalid);
+				RoomClearData.mPlayerTileTransforms.Add(FTileTransform::Invalid);
 			}
 		}
 
-		GameProfileSubsystem->ClearCurrentCombatRoom(PlayerTransforms);
+		GameProfileSubsystem->SetRoomClearData(RoomClearData);
 		SaveRunWithUIAsync();
-		GameProfileSubsystem->ClearCurrentCombatRoom(TArray<FTileTransform>());
 		});
 	CombatModel->OnShowCombatResultUI.AddWeakLambda(this, [this](ESRPGCombatResult Result) {
 		if (Result == ESRPGCombatResult::PlayerWin)
@@ -405,8 +408,6 @@ void ACombatGameMode::InitializeRoom()
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
-	// 라운드 시작 연출: 데이터(mRound) 먼저 갱신 후 배리어를 HUD로 중계한다(순서 보장 위해 게임모드가 재방송).
-	// 프레임워크가 OnBeginAnyRoundUI를 방송하기 전까지 이 람다는 호출되지 않는다(휴면). 방송 배선은 SRPGCombatModel TODO 참고.
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
 		PushTurnUIData();   // 배너 숫자용 mRound 갱신
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
@@ -517,7 +518,7 @@ void ACombatGameMode::InitializeRoom()
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mRoomClearTileTransforms);
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mClearData);
 }
 
 void ACombatGameMode::BeginRoom()
@@ -1118,7 +1119,7 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
 	TurnUI.mCurrentRoundRemainingTurnCount =
-		CombatModel->GetRemainingTurnCountInRound();
+		CombatModel->GetTurnContextCount();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
@@ -1770,7 +1771,10 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 
 	// TODO : 여러 플레이어 등록해야함
 	UPlayerUnitModel* PlayerUnitModel = GetPlayerUnitModel(0);
-	checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	if (PlayerUnitModel == nullptr)
+	{
+		return;
+	}
 
 	UAttributeSetComponentModel* PlayerAttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
 	checkf(PlayerAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));

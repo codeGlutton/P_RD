@@ -140,6 +140,29 @@ public:
 inline const FTileTransform FTileTransform::Invalid = FTileTransform(FTileIndex::Invalid);
 
 /**
+ * @brief 방 클리어 데이터
+ */
+USTRUCT(BlueprintType)
+struct FRoomClearData
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsCleared"))
+    bool mIsCleared = false;
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerTileTransforms"))
+    TArray<FTileTransform> mPlayerTileTransforms;
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "RoundCount"))
+    int32 mRoundCount = 0;
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "TurnCount"))
+    int32 mTurnCount = 0;
+};
+
+/**
  * @brief 조준 범위 패턴
  */
 UENUM(BlueprintType)
