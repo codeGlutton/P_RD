@@ -456,7 +456,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, CommonSkillArray));
 			}
 
-			NewRoom.mSaleMercenaryDataCandidates.mSaleMercenaryIds.Add(Candidate);
+			NewRoom.mSaleMercenaryDataCandidates.mCandidates.Add(Candidate);
 		}
 
 		NewRoomPtr = &NewRoom;
