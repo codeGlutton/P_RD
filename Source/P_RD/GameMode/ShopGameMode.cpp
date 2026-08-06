@@ -158,7 +158,11 @@ void AShopGameMode::PushShopUIData()
 					if (const UStaticSkillData* Data =
 						AssetManager->GetPrimaryAssetObject<UStaticSkillData>(ItemId))
 					{
-						Item.mName = Data->mName;
+						// 이름 미설정 DA(placeholder)는 에셋 이름 폴백 유지
+						if (Data->mName.IsEmpty() == false)
+						{
+							Item.mName = Data->mName;
+						}
 						Item.mIcon = Data->mIcon.LoadSynchronous();
 						// 가격은 유닛 스킬 파생 타입(UStaticUnitSkillData)에 있다
 						if (const UStaticUnitSkillData* UnitSkillData = Cast<UStaticUnitSkillData>(Data))
@@ -173,7 +177,11 @@ void AShopGameMode::PushShopUIData()
 					if (const UStaticArtifactData* Data =
 						AssetManager->GetPrimaryAssetObject<UStaticArtifactData>(ItemId))
 					{
-						Item.mName = Data->mName;
+						// 이름 미설정 DA(placeholder)는 에셋 이름 폴백 유지
+						if (Data->mName.IsEmpty() == false)
+						{
+							Item.mName = Data->mName;
+						}
 						Item.mIcon = Data->mIcon.LoadSynchronous();
 						Item.mPrice = Data->mPrice;
 					}
@@ -196,10 +204,11 @@ void AShopGameMode::PushShopUIData()
 }
 
 /**
- * @brief 소지품(버리기 대상)을 표시값으로 채움
+ * @brief 소지품과 파티 유닛을 표시값으로 채움
  * @details
- * 아티펙트는 파티 공용 배열의 index, 스킬은 (유닛 index, 슬롯 index) 쌍이
- * 그대로 버리기 요청 payload가 된다.
+ * 아티펙트는 파티 소유 — 배열 index가 그대로 버리기 요청 payload.
+ * 스킬은 유닛+슬롯 소유 — 유닛 카드에 슬롯째(빈 칸 포함) 담아
+ * (유닛 index, 슬롯 배열 위치)가 구매/교체 대상 지정 payload가 된다.
  * @param ShopUIData 채울 스냅샷
  */
 void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
@@ -231,35 +240,40 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 		}
 	}
 
-	// 유닛별 소지 스킬 (파티는 3슬롯 고정 + 빈 슬롯 허용)
+	// 파티 유닛 카드 (파티는 3슬롯 고정 + 빈 슬롯 허용, 빈 파티 슬롯은 생략)
+	// 유닛 모델엔 표시용 이름이 없어 직업+레벨로 식별
 	const TArray<TObjectPtr<UPlayerUnitModel>>& UnitModels = PartyModel->GetPlayerUnitModels();
 	for (int32 UnitIndex = 0; UnitIndex < UnitModels.Num(); ++UnitIndex)
 	{
 		const UPlayerUnitModel* UnitModel = UnitModels[UnitIndex];
-		USkillComponentModel* SkillModel = UnitModel != nullptr
-			? UnitModel->GetSkillComponentModel() : nullptr;
-		if (SkillModel == nullptr)
+		if (UnitModel == nullptr)
 		{
 			continue;
 		}
 
-		const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
-		for (int32 SlotIndex = 0; SlotIndex < Skills.Num(); ++SlotIndex)
-		{
-			// 스킬이 존재하면 버릴 수 있는 유효한 상태로 본다
-			const UStaticSkillData* Data = Skills[SlotIndex].mData;
-			if (Data == nullptr)
-			{
-				continue;
-			}
+		FShopOwnedUnitUI OwnedUnit;
+		OwnedUnit.mUnitIndex = UnitIndex;
+		OwnedUnit.mJobType = UnitModel->GetUnitJobType();
+		OwnedUnit.mLevel = UnitModel->GetPlayerLevel();
 
-			FShopOwnedSkillUI OwnedSkill;
-			OwnedSkill.mUnitIndex = UnitIndex;
-			OwnedSkill.mSlotIndex = SlotIndex;
-			OwnedSkill.mName = Data->mName;
-			OwnedSkill.mIcon = Data->mIcon.LoadSynchronous();
-			ShopUIData.mOwnedSkills.Add(OwnedSkill);
+		// 빈 슬롯도 담아 배열 위치 = 스킬 슬롯 index 유지 (구매/교체 대상 지정용)
+		if (const USkillComponentModel* SkillModel = UnitModel->GetSkillComponentModel())
+		{
+			const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
+			for (const FSkillEntry& Entry : Skills)
+			{
+				FShopOwnedSkillSlotUI SkillSlot;
+				if (const UStaticSkillData* Data = Entry.mData)
+				{
+					SkillSlot.mIsEmpty = false;
+					SkillSlot.mName = Data->mName;
+					SkillSlot.mIcon = Data->mIcon.LoadSynchronous();
+				}
+				OwnedUnit.mSkillSlots.Add(SkillSlot);
+			}
 		}
+
+		ShopUIData.mOwnedUnits.Add(OwnedUnit);
 	}
 }
 
@@ -309,14 +323,15 @@ void AShopGameMode::HandleBuyRequested(int32 SlotIndex)
 }
 
 /**
- * @brief 스킬 한 칸을 샀다 (지급 대상 유닛 지정)
+ * @brief 스킬 한 칸을 샀다 (지급 대상 유닛+스킬 슬롯 지정)
  * @details
  * 선지급 후 직업이 불일치하면 과금하지 않음.
  * 실제로는 UI 단계에서 필터링 되겠지만 로직에서도 검사 추가해서 정합성 유지.
  * @param SlotIndex 화면이 돌려보낸 판매 자리 번호
  * @param UnitIndex 지급 대상 파티 유닛 슬롯 index
+ * @param SkillSlotIndex 지급 대상 유닛 내 스킬 슬롯 index
  */
-void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex)
+void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, int32 SkillSlotIndex)
 {
 	if (mShopUIModel == nullptr || mSoldSlots.Contains(SlotIndex) == true)
 	{
@@ -362,23 +377,14 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex)
 		return;
 	}
 
-	// 첫 빈 슬롯 탐색. 빈 슬롯이 없으면 구매 실패
-	// TODO: 슬롯이 꽉 찼을 때 교체 구매 규칙 -> 기획 확정 후 처리
+	// 지정 슬롯 검사. 빈 슬롯이면 장착, 찬 슬롯이면 교체
 	const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
-	int32 EmptySlotIndex = INDEX_NONE;
-	for (int32 i = 0; i < Skills.Num(); ++i)
+	if (Skills.IsValidIndex(SkillSlotIndex) == false)
 	{
-		if (Skills[i].mData == nullptr)
-		{
-			EmptySlotIndex = i;
-			break;
-		}
-	}
-	if (EmptySlotIndex == INDEX_NONE)
-	{
-		UE_LOG(LogRD, Log, TEXT("스킬 구매 거절: 유닛 스킬 슬롯 만석 (Unit=%d)"), UnitIndex);
+		UE_LOG(LogRD, Log, TEXT("스킬 구매 거절: 스킬 슬롯 범위 밖 (Unit=%d, SkillSlot=%d)"), UnitIndex, SkillSlotIndex);
 		return;
 	}
+	const bool bIsReplace = Skills[SkillSlotIndex].mData != nullptr;
 
 	// 스킬 데이터 로드 (판매 목록 표시 때 이미 로드된 에셋)
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
@@ -391,13 +397,14 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex)
 	}
 
 	// 지급. SetSkill의 직업 검사(IsAcquirableSkill)가 거부하면 과금하지 않음
-	if (SkillModel->SetSkill(EmptySlotIndex, SkillData) == false)
+	if (SkillModel->SetSkill(SkillSlotIndex, SkillData) == false)
 	{
 		UE_LOG(LogRD, Log, TEXT("스킬 구매 거절: 습득 불가 스킬 (Slot=%d, Unit=%d, 직업 불일치 등)"), SlotIndex, UnitIndex);
 		return;
 	}
 
-	UE_LOG(LogRD, Log, TEXT("스킬 구매 성공: Slot=%d -> Unit=%d 스킬슬롯=%d"), SlotIndex, UnitIndex, EmptySlotIndex);
+	UE_LOG(LogRD, Log, TEXT("스킬 구매 성공(%s): Slot=%d -> Unit=%d 스킬슬롯=%d"),
+		bIsReplace ? TEXT("교체") : TEXT("장착"), SlotIndex, UnitIndex, SkillSlotIndex);
 
 	// 과금 + 품절 처리
 	SpendPartyGold(Item->mPrice);
@@ -432,7 +439,7 @@ void AShopGameMode::HandleDiscardArtifactRequested(int32 ArtifactIndex)
 
 /**
  * @brief 유닛의 스킬 슬롯 하나를 버림 (0골드 거래)
- * @param UnitIndex 파티 유닛 슬롯 index (FShopOwnedSkillUI가 돌려준 값)
+ * @param UnitIndex 파티 유닛 슬롯 index (FShopOwnedUnitUI가 돌려준 값)
  * @param SlotIndex 유닛 내 스킬 슬롯 index
  */
 void AShopGameMode::HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex)
@@ -491,6 +498,30 @@ void AShopGameMode::SpendPartyGold(int32 Price)
 		}
 	}
 }
+
+#if !UE_BUILD_SHIPPING
+/** @brief 개발 치트: 파티 골드를 더하고 화면을 갱신한다. */
+void AShopGameMode::AddPartyGoldDev(int32 Amount)
+{
+	if (Amount <= 0)
+	{
+		return;
+	}
+
+	if (UPartyModel* PartyModel = GetPartyModel())
+	{
+		if (UAttributeSetComponentModel* Attributes =
+			PartyModel->GetAttributeComponentModel())
+		{
+			Attributes->ApplyModToAttribute(
+				UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase,
+				StaticCast<float>(Amount));
+		}
+	}
+
+	PushShopUIData();
+}
+#endif
 
 /** @brief 지금 가진 돈. */
 int32 AShopGameMode::GetPartyGold() const

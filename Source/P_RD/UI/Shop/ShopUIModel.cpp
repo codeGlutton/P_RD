@@ -7,9 +7,9 @@ void UShopUIModel::RequestBuy(int32 SlotIndex)
 }
 
 /** @details 스킬 구매 의도만 중계한다. 직업 검증과 지급은 게임플레이(ShopGameMode)가 처리한다. */
-void UShopUIModel::RequestBuySkill(int32 SlotIndex, int32 UnitIndex)
+void UShopUIModel::RequestBuySkill(int32 SlotIndex, int32 UnitIndex, int32 SkillSlotIndex)
 {
-	OnBuySkillRequested.Broadcast(SlotIndex, UnitIndex);
+	OnBuySkillRequested.Broadcast(SlotIndex, UnitIndex, SkillSlotIndex);
 }
 
 /** @details 아티펙트 버리기 의도만 중계한다. 실제 제거는 게임플레이(ShopGameMode)가 처리한다. */

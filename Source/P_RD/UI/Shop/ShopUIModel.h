@@ -10,7 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopUIChanged, EShopUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopBuyRequested, int32, SlotIndex);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShopBuySkillRequested, int32, SlotIndex, int32, UnitIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnShopBuySkillRequested, int32, SlotIndex, int32, UnitIndex, int32, SkillSlotIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopDiscardArtifactRequested, int32, ArtifactIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShopDiscardSkillRequested, int32, UnitIndex, int32, SlotIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShopLeaveRequested);
@@ -68,8 +68,8 @@ public:
 	/** @brief SlotIndex 구매 의도를 게임플레이 구독자에게 전달한다(구매 확인은 화면/팝업이 먼저 처리). */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestBuy(int32 SlotIndex);
 
-	/** @brief 스킬 구매 의도를 전달 (지급 대상 유닛 선택은 화면이 먼저 처리) */
-	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestBuySkill(int32 SlotIndex, int32 UnitIndex);
+	/** @brief 스킬 구매 의도를 전달 (지급 대상 유닛+스킬 슬롯 지정) */
+	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestBuySkill(int32 SlotIndex, int32 UnitIndex, int32 SkillSlotIndex);
 
 	/** @brief 소지 아티펙트 버리기 의도를 전달 (버리기 확인은 화면/팝업이 먼저 처리) */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestDiscardArtifact(int32 ArtifactIndex);

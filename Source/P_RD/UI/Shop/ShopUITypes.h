@@ -5,6 +5,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "ShopUITypes.generated.h"
 
 class UTexture2D;
@@ -84,27 +85,48 @@ struct FShopOwnedArtifactUI
 };
 
 /**
- * @brief 소지 중인 스킬 한 칸의 표시값
- * @details 스킬은 유닛별 소유 — 버리기 요청 payload는 (mUnitIndex, mSlotIndex) 쌍
+ * @brief 소지 용병의 스킬 슬롯 한 칸의 표시값
+ * @details
+ * 빈 슬롯도 배열에 담아 배열 위치가 곧 스킬 슬롯 index —
+ * 스킬 구매(빈 슬롯에 장착)와 교체(찬 슬롯 지정) 대상 선택에 그대로 씀
  */
 USTRUCT(BlueprintType)
-struct FShopOwnedSkillUI
+struct FShopOwnedSkillSlotUI
 {
 	GENERATED_BODY()
 
-	// 파티 유닛 슬롯 index (버리기 요청 payload 1)
-	UPROPERTY(BlueprintReadOnly) int32 mUnitIndex = INDEX_NONE;
-	// 유닛 내 스킬 슬롯 index (버리기 요청 payload 2)
-	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
+	// 빈 슬롯 여부 (빈 슬롯 = 구매 대상, 찬 슬롯 = 교체 대상)
+	UPROPERTY(BlueprintReadOnly) bool mIsEmpty = true;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+};
+
+/**
+ * @brief 소지 용병(파티 유닛) 한 명의 표시값
+ * @details
+ * 스킬 구매/교체는 유닛 index + 슬롯 index 지정이 필요해
+ * 스킬 슬롯 전체(빈 칸 포함)를 유닛 단위로 담음.
+ * 유닛 모델엔 표시용 이름이 없어 직업+레벨로 식별
+ */
+USTRUCT(BlueprintType)
+struct FShopOwnedUnitUI
+{
+	GENERATED_BODY()
+
+	// 파티 유닛 슬롯 index (스킬 구매/버리기 요청 payload 1)
+	UPROPERTY(BlueprintReadOnly) int32 mUnitIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) EUnitJobType mJobType = EUnitJobType::None;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	// 스킬 슬롯 전체. 배열 위치 = 스킬 슬롯 index
+	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedSkillSlotUI> mSkillSlots;
 };
 
 /** @brief 상점 화면 전체 표시값입니다. */
 // UI 필요값:
 // - mGold: 상단 보유 골드(구매 가능 여부 갱신 기준).
 // - mItems: 판매 슬롯 목록.
-// - mOwnedArtifacts/mOwnedSkills: 소지품(버리기 대상). 거래마다 판매 목록과 함께 갱신되므로 같은 스냅샷에 담음.
+// - mOwnedArtifacts: 파티 소유 소지품. 거래마다 판매 목록과 함께 갱신되므로 같은 스냅샷에 담음.
+// - mOwnedUnits: 파티 유닛. 스킬은 파티가 아닌 유닛+슬롯 소유라 유닛 카드에 슬롯째 담음.
 USTRUCT(BlueprintType)
 struct FShopUI
 {
@@ -113,5 +135,5 @@ struct FShopUI
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopItemUI> mItems;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedArtifactUI> mOwnedArtifacts;
-	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedSkillUI> mOwnedSkills;
+	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedUnitUI> mOwnedUnits;
 };

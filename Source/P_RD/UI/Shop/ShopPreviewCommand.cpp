@@ -134,26 +134,28 @@ namespace ShopPreview
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&Buy));
 
 	/**
-	 * @brief 스킬 구매 -- 지급 대상 유닛까지 지정해 RequestBuySkill 호출
+	 * @brief 스킬 구매 -- 지급 대상 유닛+스킬 슬롯까지 지정해 RequestBuySkill 호출
 	 */
 	void BuySkill(const TArray<FString>& Args, UWorld* World)
 	{
 		int32 SlotIndex = 0;
 		int32 UnitIndex = 0;
-		if (GetIntArg(Args, 0, SlotIndex) == false || GetIntArg(Args, 1, UnitIndex) == false)
+		int32 SkillSlotIndex = 0;
+		if (GetIntArg(Args, 0, SlotIndex) == false || GetIntArg(Args, 1, UnitIndex) == false
+			|| GetIntArg(Args, 2, SkillSlotIndex) == false)
 		{
-			UE_LOG(LogRD, Warning, TEXT("사용법: RD.ShopBuySkill <슬롯번호> <유닛번호>"));
+			UE_LOG(LogRD, Warning, TEXT("사용법: RD.ShopBuySkill <슬롯번호> <유닛번호> <스킬슬롯번호>"));
 			return;
 		}
 		if (UShopUIModel* Model = FindLiveModel(World))
 		{
-			Model->RequestBuySkill(SlotIndex, UnitIndex);
+			Model->RequestBuySkill(SlotIndex, UnitIndex, SkillSlotIndex);
 		}
 	}
 
 	FAutoConsoleCommandWithWorldAndArgs BuySkillCommand(
 		TEXT("RD.ShopBuySkill"),
-		TEXT("판매 슬롯의 스킬을 지정 유닛에게 사준다. 사용법: RD.ShopBuySkill <슬롯번호> <유닛번호>"),
+		TEXT("판매 슬롯의 스킬을 지정 유닛의 지정 슬롯에 사준다(찬 슬롯이면 교체). 사용법: RD.ShopBuySkill <슬롯번호> <유닛번호> <스킬슬롯번호>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&BuySkill));
 
 	/**
@@ -200,6 +202,30 @@ namespace ShopPreview
 		TEXT("RD.ShopDiscardSkill"),
 		TEXT("유닛의 스킬 슬롯을 비운다. 사용법: RD.ShopDiscardSkill <유닛번호> <스킬슬롯번호>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&DiscardSkill));
+
+	/**
+	 * @brief 골드 치트 -- 구매 테스트용 파티 골드 지급
+	 */
+	void AddGold(const TArray<FString>& Args, UWorld* World)
+	{
+		// 액수 생략 시 10000골드
+		int32 Amount = 10000;
+		GetIntArg(Args, 0, Amount);
+
+		AShopGameMode* GameMode = (World != nullptr && World->IsGameWorld() == true)
+			? World->GetAuthGameMode<AShopGameMode>() : nullptr;
+		if (GameMode == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("RD.ShopAddGold: 상점방이 아닙니다. 상점방에서 실행하세요."));
+			return;
+		}
+		GameMode->AddPartyGoldDev(Amount);
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs AddGoldCommand(
+		TEXT("RD.ShopAddGold"),
+		TEXT("파티 골드를 지급한다(치트). 사용법: RD.ShopAddGold [액수, 생략 시 10000]"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&AddGold));
 }
 
 #endif

@@ -40,6 +40,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Shop")
 	UShopUIModel* GetShopUIModel() const { return mShopUIModel; }
 
+#if !UE_BUILD_SHIPPING
+	/** @brief 개발 치트: 파티 골드 지급 후 구매 가능 여부가 다시 계산되게 화면 갱신 */
+	void AddPartyGoldDev(int32 Amount);
+#endif
+
 protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;
@@ -63,10 +68,10 @@ private:
 	UFUNCTION() void HandleBuyRequested(int32 SlotIndex);
 
 	/**
-	 * @brief 스킬 한 칸을 샀다 (지급 대상 유닛 지정)
-	 * @details 첫 빈 슬롯에 장착. SetSkill의 직업 검사가 거부하면 과금하지 않음
+	 * @brief 스킬 한 칸을 샀다 (지급 대상 유닛+스킬 슬롯 지정)
+	 * @details 지정 슬롯에 장착, 찬 슬롯이면 교체. SetSkill의 직업 검사가 거부하면 과금하지 않음
 	 */
-	UFUNCTION() void HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex);
+	UFUNCTION() void HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, int32 SkillSlotIndex);
 
 	/**
 	 * @brief 소지 아티펙트 하나를 버림 (0골드 거래)
