@@ -112,7 +112,7 @@ void UUnitModel::OnBeginRound(int32 RoundCount)
 		/* 스피드 습득 */
 
 		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetSpeedPoint::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_RechargeSpeedPoint::StaticClass(), EffectContext);
 		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
 		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
 		mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
@@ -172,7 +172,7 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 		/* 행동력 습득 */
 
 		UBoardCombatTargetSnapshotData* OwingSnapshot = MakeSnapshotData();
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetActionPoint::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_RechargeActionPoint::StaticClass(), EffectContext);
 		EffectSpec->SetInstigatorSnapshotData(OwingSnapshot);
 		EffectSpec->SetTargetSnapshotData(OwingSnapshot);
 		mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
