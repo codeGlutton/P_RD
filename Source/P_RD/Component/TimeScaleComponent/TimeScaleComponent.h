@@ -17,6 +17,9 @@ struct P_RD_API FTimeScaleRequest
 
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "목표 시간 배율", AllowPrivateAccess = "true"))
 	float TargetTimeScale = 1.f;
+
+	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 시간 배율", AllowPrivateAccess = "true"))
+	float CurrentTimeScale = 1.f;
 	
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "블랜드 속도", AllowPrivateAccess = "true"))
 	float BlendSpeed = 0.f;
@@ -24,11 +27,11 @@ struct P_RD_API FTimeScaleRequest
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "지속 시간", AllowPrivateAccess = "true"))
 	float Duration = 0.f;
 
-	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "우선순위", AllowPrivateAccess = "true"))
-	int32 Priority = 0;
-
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "남은 시간", AllowPrivateAccess = "true"))
 	float RemaingTime = 0.f;
+
+	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "해제 상태", AllowPrivateAccess = "true"))
+	bool bReleasing = false;
 
 	UPROPERTY(Category = TimeScaleRequest, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "요청한 대상", AllowPrivateAccess = "true"))
 	TWeakObjectPtr<UObject> Requester;
@@ -80,14 +83,14 @@ protected:
 	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "시간 조정 요청", AllowPrivateAccess = "true"))
 	TMap<int32, FTimeScaleRequest> mActivateRequests;
 
+	UPROPERTY(Category = TimeScale, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "최소 시간 배율", AllowPrivateAccess = "true"))
+	float mMinTimeScale = 0.01f;
+
+	UPROPERTY(Category = TimeScale, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "최소 변경 시간", AllowPrivateAccess = "true"))
+	float mMinBlendSpeed = 0.01f;
+
 	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "현재 시간 배율", AllowPrivateAccess = "true"))
-	float mCurScale = 1.f;
-
-	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "목표 시간 배율", AllowPrivateAccess = "true"))
-	float mTargetScale = 1.f;
-
-	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "블랜드 속도", AllowPrivateAccess = "true"))
-	float mBlendSpeed = FLT_MAX;
+	float mCurrentTimeScale = 1.f;
 
 
 public:
@@ -97,12 +100,11 @@ public:
 	/*
 	* @brief 시간 배율 조정을 요청하는 함수입니다.
 	* 
+	* @details 
+	* Duration이 끝나고 배율 복구까지 시간이 걸리므로 총 (변경 시간 + 유지시간)Duration + 변경시간 동안 시간 배율 변경됩니다.
+	* 
 	* @params Requester 요청자
 	* 무기한 시간 배율 요청자가 존재할 시 요청자가 제거되면 시간 배율 요청도 제거하기 위한 파라미터입니다.
-	* 
-	* @params Priority 우선순위
-	* 요청이 여러개가 들어왔다면 
-	* 우선순위가 높은 대상의 요청만 적용합니다.
 	* 
 	* @params TargetScale
 	* 변경 시키고 싶은 TimeScale 값입니다.
@@ -115,13 +117,13 @@ public:
 	* @params Duration 요청 후 시간 배율 조정이 유지되는 시간입니다.
 	* Duration은 게임 시간 기준입니다. TimeScale이 감소할 수록 실제시간으로 오래 걸리며, TimeScale이 증가할 수록 실제 시간으로 짧게 걸립니다.
 	* Duration = -1이라면 무기한 유지됩니다.
-	* Duration = 1이라면 요청이 들어오고 1초 후 해제합니다.
+	* Duration = 1이라면 요청이 들어오고 1초 후 배율 복구하기 시작합니다.
 	* 
 	* @return FTileScaleHandle
 	* 요청을 해제할 때 사용하는 구조체입니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	FTimeScaleHandle RequestTimeScale(UObject* Requester, float TargetTimeScale, int32 Priority = 0, float BlendSpeed = 3.402823466e+38f, float Duration = -1.f);
+	FTimeScaleHandle RequestTimeScale(UObject* Requester, float TargetTimeScale, float BlendSpeed = 3.402823466e+38f, float Duration = -1.f);
 
 
 	/*
@@ -129,9 +131,10 @@ public:
 	* 
 	* @params Handle
 	* RequestTimeScale에서 반환된 Handle을 매개변수로 넣어서 시간 배율 조정을 해제합니다.
+	* 해제하여도 복구하는데 시간이 걸립니다.
 	*/
 	UFUNCTION(BlueprintCallable)
-	void ReleaseTimeScale(FTimeScaleHandle Handle);
+	void ReleaseTimeScale(const FTimeScaleHandle& Handle);
 
 private:
 

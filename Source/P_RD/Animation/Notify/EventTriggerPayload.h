@@ -245,8 +245,6 @@ public:
 public:
     UPROPERTY(Category = "Time", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimeScale"))
     float mTimeScale = 1.f;
-    UPROPERTY(Category = "Time", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Priority"))
-    int32 mPriority = 0;
     UPROPERTY(Category = "Time", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "BlendSpeed"))
     float mBlendSpeed = 3.f;
 };
