@@ -9,22 +9,23 @@
 
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
-FStageBuilder::FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting) :
+FStageBuilder::FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache) :
 	mBuildStream(BuildStream),
-	mGlobalSetting(GlobalSetting)
+	mGlobalSetting(GlobalSetting),
+	mLevelCache(LevelCache)
 {
 }
 
-FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting)
+FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache)
 {
-	FStageBuilder Builder(BuildStream, GlobalSetting);
+	FStageBuilder Builder(BuildStream, GlobalSetting, LevelCache);
 
 	return Builder;
 }
 
-FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FStageBuilderParams& Params)
+FStageBuilder FStageBuilder::Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache, const FStageBuilderParams& Params)
 {
-	FStageBuilder Builder = FStageBuilder::Make(BuildStream, GlobalSetting);
+	FStageBuilder Builder = FStageBuilder::Make(BuildStream, GlobalSetting, LevelCache);
 	Builder.SetParams(Params);
 
 	return Builder;
@@ -96,6 +97,8 @@ void FStageBuilder::LoadAllAssetIds()
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 
+	/* 방 PrimaryAssetId 캐싱 */
+
 	auto StageFilter = [FilterStr = EnumToString(mParams.mStageLevel)](const FAssetData& AssetData) -> bool {
 		FString FoundStr;
 		bool IsFound = AssetData.GetTagValue(TEXT("mStageLevel"), OUT FoundStr) == true;
@@ -108,6 +111,8 @@ void FStageBuilder::LoadAllAssetIds()
 	mRoomAssetIds[static_cast<uint8>(ERoomType::EliteMonster)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(), StageFilter);
 	mRoomAssetIds[static_cast<uint8>(ERoomType::BossMonster)] = GetFilteredPrimaryAssets(RoomPrimaryAssetTypes::GetBossMonsterRoomType(), StageFilter);
 
+	/* 아티팩트 및 스킬 PrimaryAssetId 캐싱 */
+
 	const uint8 RarityTypeCount = StaticCast<uint8>(ERarityType::Count);
 	for (uint8 RarityTypeIndex = 0; RarityTypeIndex < RarityTypeCount; ++RarityTypeIndex)
 	{
@@ -116,7 +121,6 @@ void FStageBuilder::LoadAllAssetIds()
 			bool IsFound = AssetData.GetTagValue(TEXT("mRarityType"), OUT FoundStr) == true;
 			return IsFound == true && FoundStr == FilterStr;
 			};
-		mEquipmentAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(EquipmentPrimaryAssetTypes::GetEquipmentType(), RarityFilter);
 		mArtifactAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(ArtifactPrimaryAssetTypes::GetArtifactType(), RarityFilter);
 		const TArray<FAssetData> SkillAssetDatas = GetFilteredPrimaryAssetDatas(SkillPrimaryAssetTypes::GetActiveType(), RarityFilter);
 		
@@ -138,8 +142,11 @@ void FStageBuilder::LoadAllAssetIds()
 			return IsFound == true && FoundStr == FilterStr;
 			};
 		mCommonSkillAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(SkillAssetDatas, JobFilter);
-
 	}
+
+	/* 용병 PrimaryAssetId 캐싱 */
+
+	AssetManager->GetPrimaryAssetIdList(UnitPrimaryAssetTypes::GetPlayerUnitType(), mMercenaryAssetIds);
 
 	mIsLoadedIds = true;
 }
@@ -378,12 +385,14 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 	case ERoomType::Treasure:
 	{
+		/* 보상 아티팩트 */
+
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
 
-		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[RarityTypeIndex];
-		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
+		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
+		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
+		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
 		
 		NewRoomPtr = &NewRoom;
 		break;
@@ -392,6 +401,8 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	{
 		Room.InitializeAs<FShopRoom>();
 		auto& NewRoom = Room.GetMutable<FShopRoom>();
+
+		/* 판매 아이템들 */
 
 		const uint8 JobTypeCount = StaticCast<uint8>(EUnitJobType::PlayerJobCount);
 		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
@@ -413,13 +424,44 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		/* 판매 아티펙트 선정 (해당 희귀도 에셋이 없으면 빈 슬롯 허용) */
 		for (int32 i = 0; i < 3; ++i)
 		{
-			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
+			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 			const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
 			if (ArtifactIdArray.IsEmpty() == true)
 			{
 				continue;
 			}
 			NewRoom.mSaleArtifactDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray));
+		}
+
+		/* 고용가능한 용병 */
+
+		for (int32 i = 0; i < 3; ++i)
+		{
+			FMercenaryCandidate Candidate;
+			Candidate.mSaleMercenaryId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, mMercenaryAssetIds);
+			Candidate.mLevel = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mParams.mMercenaryLevelRange);
+
+			const UEnum* StaticJobEnum = StaticEnum<EUnitJobType>();
+			const FString FoundJobStr = GetPropertyAssetData(Candidate.mSaleMercenaryId, TEXT("mJobType"));
+			const int64 FoundJobIndex = StaticJobEnum->GetValueByNameString(FoundJobStr);
+
+			/* 최대 레벨부터 내림차순으로 스킬 선택 (레벨 2 이상, 최대 4개) */
+
+			for (int32 SkillLevel = Candidate.mLevel; SkillLevel >= 2; --SkillLevel)
+			{
+				if (Candidate.mOwingSkillIds.Num() >= 4)
+				{
+					break;
+				}
+
+				const FRarityRate RarityRate = mLevelCache.GetRarityRate(SkillLevel);
+				const uint8 RarityIndex = GetRandomRarityIndex(RarityRate);
+
+				const TArray<FPrimaryAssetId>& CommonSkillArray = mJobSkillAssetIds[FoundJobIndex][RarityIndex];
+				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, CommonSkillArray));
+			}
+
+			NewRoom.mSaleMercenaryDataCandidates.mCandidates.Add(Candidate);
 		}
 
 		NewRoomPtr = &NewRoom;
@@ -438,26 +480,33 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	}
 	case ERoomType::EliteMonster:
 	{
+		/* 보상 아티팩트 */
+
 		Room.InitializeAs<FEliteMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FEliteMonsterRoom>();
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mEliteRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
 
-		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mEquipmentRarityRate);
-		const TArray<FPrimaryAssetId>& EquipmentIdArray = mEquipmentAssetIds[RarityTypeIndex];
-		NewRoom.mRewardEquipmentDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, EquipmentIdArray);
+		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
+		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
+		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
 	}
 	case ERoomType::BossMonster:
 	{
+		/* 보상 아티팩트 (보스방은 항상 에픽만) */
+
 		Room.InitializeAs<FBossMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FBossMonsterRoom>();
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mBossRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
+
+		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[StaticCast<uint8>(ERarityType::Epic)];
+		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -529,6 +578,23 @@ TArray<FAssetData> FStageBuilder::GetFilteredPrimaryAssetDatas(const FPrimaryAss
 	}
 
 	return ResultDatas;
+}
+
+FString FStageBuilder::GetPropertyAssetData(const FPrimaryAssetId& AssetId, const FName& PropertyName) const
+{
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
+
+	FString FoundStr;
+
+	FAssetData AssetData;
+	const bool IsFoundAssetData = AssetManager->GetPrimaryAssetData(AssetId, OUT AssetData);
+	if (IsFoundAssetData == true)
+	{
+		AssetData.GetTagValue(PropertyName, OUT FoundStr);
+	}
+
+	return FoundStr;
 }
 
 uint8 FStageBuilder::GetRandomRarityIndex(const FRarityRate& RarityRate) const

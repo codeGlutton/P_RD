@@ -23,7 +23,7 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPartyAttributeSet, Money)
 
 public:
-	static const FName KeyName;
+	static const FName KEY_NAME;
 
 protected:
 	// @brief 최대 체력

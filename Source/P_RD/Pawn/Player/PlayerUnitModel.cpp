@@ -1,4 +1,4 @@
-﻿#include "Pawn/Player/PlayerUnitModel.h"
+#include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/Party/PartyModel.h"
 #include "Setting/GameTeamType.h"
 
@@ -6,7 +6,6 @@
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
-#include "AttributeSet/LevelAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "Component/ArtifactComponent/ArtifactComponentModel.h"
@@ -16,7 +15,6 @@ UPlayerUnitModel::UPlayerUnitModel()
     SetGenericTeamId(EGameTeamType::Adventurer);
     
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
-    mLevelAttributeSet = CreateDefaultSubobject<ULevelAttributeSet>(TEXT("LevelAttributeSet"));
 
     // 아티펙트 컴포넌트 모델 등록
     mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
@@ -87,11 +85,7 @@ void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
 void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
 {
     mPlayerLevel = PlayerLevel;
-
-    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), ULevelAttributeSet::KeyName, GetPlayerLevel(), true);
+    OnChangePlayerLevel.Broadcast(this, mPlayerLevel);
 }
 
 int32 UPlayerUnitModel::GetPlayerLevel() const

@@ -2157,7 +2157,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	switch (CurrentRoom.mType)
 	{
 	case ERoomType::EliteMonster:
-		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardEquipmentDataId);
+		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataId);
 		break;
 	case ERoomType::BossMonster:
 		break;

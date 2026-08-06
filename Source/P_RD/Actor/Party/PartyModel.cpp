@@ -78,7 +78,7 @@ void UPartyModel::SetDifficulty(int32 Difficulty)
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
-	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), UPartyAttributeSet::KeyName, GetDifficulty(), true);
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), UPartyAttributeSet::KEY_NAME, GetDifficulty(), true);
 }
 
 TArray<TObjectPtr<UPlayerUnitModel>>& UPartyModel::GetPlayerUnitModels()
