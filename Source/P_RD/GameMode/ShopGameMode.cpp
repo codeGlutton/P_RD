@@ -142,7 +142,7 @@ void AShopGameMode::PushShopUIData() const
 		AddList(List, EShopItemKind::Skill);
 	}
 	AddList(ShopRoom->mSaleCommonSkillDataItems, EShopItemKind::Skill);
-	AddList(ShopRoom->mSaleEquipmentDataItems, EShopItemKind::Equipment);
+	AddList(ShopRoom->mSaleArtifactDataItems, EShopItemKind::Equipment);
 
 	mShopUIModel->SetShop(ShopUIData);
 }

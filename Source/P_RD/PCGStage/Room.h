@@ -32,7 +32,7 @@ public:
 	 * @brief 방 표시 이름 반환 
 	 * @return 방 타입에 따른 이름
 	 */
-	FText GetDisplayName() const;
+	virtual FText GetDisplayName() const;
 
 public:
 	UPROPERTY(Category = Room, SaveGame, VisibleAnywhere, meta = (DisplayName = "Type"))
@@ -68,10 +68,11 @@ public:
 
 public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
+	FText GetDisplayName() const override;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
-	FPrimaryAssetId mRewardEquipmentDataId;
+	FPrimaryAssetId mRewardArtifactDataId;
 };
 
 USTRUCT(BlueprintType)
@@ -81,10 +82,43 @@ struct FShopItemList
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCategory"))
-	FName mSaleCategory;
+	FText mSaleCategory;
 
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleItemIds"))
 	TArray<FPrimaryAssetId> mSaleItemIds;
+};
+
+
+USTRUCT(BlueprintType)
+struct FMercenaryCandidate
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "Price"))
+	int32 mPrice = 0;
+
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleMercenaryId"))
+	FPrimaryAssetId mSaleMercenaryId;
+
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "Level"))
+	int32 mLevel = 1;
+
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "OwingSkillIds"))
+	TArray<FPrimaryAssetId> mOwingSkillIds;
+};
+
+USTRUCT(BlueprintType)
+struct FMercenaryCandidateList
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCategory"))
+	FText mSaleCategory;
+
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "Candidates"))
+	TArray<FMercenaryCandidate> mCandidates;
 };
 
 /**
@@ -100,6 +134,7 @@ public:
 
 public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
+	FText GetDisplayName() const override;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (ArraySizeEnum = "EUnitJobType", DisplayName = "SaleJobSkillDataItems"))
@@ -107,7 +142,9 @@ public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleCommonSkillDataItems"))
 	FShopItemList mSaleCommonSkillDataItems;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleEquipmentDataItems"))
-	FShopItemList mSaleEquipmentDataItems;
+	FShopItemList mSaleArtifactDataItems;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "SaleMercenaryDataCandidates"))
+	FMercenaryCandidateList mSaleMercenaryDataCandidates;
 };
 
 /**
@@ -120,6 +157,9 @@ struct FMonsterRoom : public FRoom
 
 public:
 	FMonsterRoom();
+
+public:
+	FText GetDisplayName() const override;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
@@ -141,10 +181,11 @@ public:
 
 public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
+	FText GetDisplayName() const override;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
-	FPrimaryAssetId mRewardEquipmentDataId;
+	FPrimaryAssetId mRewardArtifactDataId;
 };
 
 /**
@@ -157,4 +198,12 @@ struct FBossMonsterRoom : public FMonsterRoom
 
 public:
 	FBossMonsterRoom();
+
+public:
+	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
+	FText GetDisplayName() const override;
+
+public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
+	FPrimaryAssetId mRewardArtifactDataId;
 };
