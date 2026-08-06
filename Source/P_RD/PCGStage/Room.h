@@ -70,8 +70,12 @@ public:
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 
 public:
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
-	FPrimaryAssetId mRewardEquipmentDataId;
+	// 상자 개봉 시 지급될 골드
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
+	int32 mRewardMoney = 0;
+	// 상자 개봉 시 지급될 아티팩트 목록
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataIds"))
+	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 };
 
 USTRUCT(BlueprintType)

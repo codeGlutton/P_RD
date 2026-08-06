@@ -29,7 +29,8 @@ void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPri
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardEquipmentDataId);
+	// 보상 아티팩트도 방 진입 전에 미리 로드 대상에 포함
+	AdditionalAssetIds.Append(mRewardArtifactDataIds);
 }
 
 FShopRoom::FShopRoom()
