@@ -198,6 +198,8 @@ void UTreasureUIWidgetBase::RefreshView()
 		{
 			Name->SetText(Item.mName);
 			Name->SetJustification(ETextJustify::Center);
+			// 등급은 이름 색으로 표시 (골드 카드는 기본 흰색)
+			Name->SetColorAndOpacity(FSlateColor(Item.mRarityColor));
 			if (UVerticalBoxSlot* NameSlot = Card->AddChildToVerticalBox(Name))
 			{
 				NameSlot->SetPadding(FMargin(0.f, 6.f, 0.f, 0.f));

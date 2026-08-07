@@ -11,7 +11,9 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "PCGStage/Room.h"
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/Treasure/TreasureUIModel.h"
+#include "UI/Treasure/TreasureUIWidgetBase.h"
 
 #define LOCTEXT_NAMESPACE "TreasureGameMode"
 
@@ -65,10 +67,24 @@ void ATreasureGameMode::InitializeRoom()
 	}
 }
 
-/** @brief 방이 열리면 개봉 전 상태를 한 번 내림 */
+/** @brief 방이 열리면 화면을 뷰모델에 붙여 열고 개봉 전 상태를 한 번 내림 */
 void ATreasureGameMode::BeginRoom()
 {
 	Super::BeginRoom();
+
+	// 모델은 게임모드가 위젯에 건네줌 (위젯이 게임모드를 역참조하면 UI에 게임플레이 의존이 생김)
+	// 붙인 뒤 열어야 첫 갱신 시점에 모델이 있어 빈 화면이 스치지 않음
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (URDUserWidget* TreasureHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
+		{
+			if (UTreasureUIWidgetBase* TreasureUIWidget = Cast<UTreasureUIWidgetBase>(TreasureHUD))
+			{
+				TreasureUIWidget->BindUIModel(mTreasureUIModel);
+			}
+			TreasureHUD->OpenUI();
+		}
+	}
 
 	PushTreasureUIData();
 }
@@ -140,7 +156,11 @@ void ATreasureGameMode::PushTreasureUIData()
 		{
 			if (const UStaticArtifactData* Data = AssetManager->GetPrimaryAssetObject<UStaticArtifactData>(ArtifactId))
 			{
-				Item.mName = Data->mName;
+				// 데이터 이름이 비어 있으면 에셋명 폴백 유지
+				if (Data->mName.IsEmpty() == false)
+				{
+					Item.mName = Data->mName;
+				}
 				Item.mIcon = Data->mIcon.LoadSynchronous();
 				Item.mRarityColor = GetTreasureRarityColor(Data->mRarityType);
 			}
