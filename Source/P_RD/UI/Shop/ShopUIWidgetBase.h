@@ -6,11 +6,13 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/Shop/ShopUITypes.h"
 #include "ShopUIWidgetBase.generated.h"
 
 class UButton;
 class UHorizontalBox;
 class UTextBlock;
+class UWrapBox;
 class UShopUIModel;
 
 /** @brief 상점 화면 WBP 베이스. WBP(create_shop_wbp.py 생성) 위젯 이름은 아래 BindWidget 멤버명과 일치해야 한다. */
@@ -58,14 +60,17 @@ private:
 	/** @brief 나가기 버튼 클릭 → Leave 의도 전달 후 화면을 닫는다. */
 	UFUNCTION() void HandleCloseClicked();
 
-	/** @brief UIModel 변경 알림을 받아 BindWidget 위젯에 값을 채운다. */
-	UFUNCTION() void HandleUIChanged();
+	/** @brief UIModel 변경 알림을 받아 BindWidget 위젯에 값을 채운다. 거래 도메인 알림만 처리한다. */
+	UFUNCTION() void HandleUIChanged(EShopUIDomain Domain);
 
 	/** @brief 현재 UIModel 구독을 해제하고 참조를 비운다. */
 	void UnbindUIModel();
 
 	/** @brief 현재 모델의 골드/판매 슬롯을 BindWidget 위젯에 반영한다. */
 	void RefreshView();
+
+	/** @brief 소지 아티펙트(파티 소유)와 파티 유닛 카드를 소지 박스에 반영한다. */
+	void RefreshOwnedView(const FShopUI& Shop);
 
 protected:
 	// ---- WBP BindWidget (이름은 Tools/UI/create_shop_wbp.py 의 위젯 이름과 정확히 일치) ----
@@ -77,6 +82,22 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UHorizontalBox> mItemBox;
+
+	/** @brief 스킬 판매 슬롯 전용 박스. WBP에 있으면 스킬 카드는 여기로, 없으면 mItemBox 폴백 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWrapBox> mSkillItemBox;
+
+	/** @brief 아티펙트 판매 슬롯 전용 박스. WBP에 있으면 아티펙트 카드는 여기로, 없으면 mItemBox 폴백 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWrapBox> mArtifactItemBox;
+
+	/** @brief 소지 아티펙트(파티 소유) 표시 박스. 없으면 소지 아티펙트 표시 생략 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWrapBox> mOwnedArtifactBox;
+
+	/** @brief 파티 유닛 카드(직업/레벨 + 스킬 슬롯) 표시 박스. 없으면 유닛 표시 생략 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWrapBox> mOwnedUnitBox;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> mCloseButton;

@@ -33,55 +33,50 @@ void UTimeScaleComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	UpdateActivateRequests(DeltaTime);		// 요청 상태 갱신
 }
 
-FTimeScaleHandle UTimeScaleComponent::RequestTimeScale(UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration)
+FTimeScaleHandle UTimeScaleComponent::RequestTimeScale(UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration)
 {
 	const int32 NewID = mNextHandleID++;
 
 	FTimeScaleRequest TimeScaleRequest;
 	TimeScaleRequest.TargetTimeScale = TargetTimeScale;
-	TimeScaleRequest.Priority = Priority;
-	TimeScaleRequest.BlendSpeed = BlendSpeed;
+	TimeScaleRequest.CurrentTimeScale = 1.f;
+	TimeScaleRequest.BlendSpeed = FMath::Max(BlendSpeed, mMinBlendSpeed);
 	TimeScaleRequest.Duration = Duration;
 	TimeScaleRequest.RemaingTime = Duration;
 	TimeScaleRequest.Requester = Requester;
+	TimeScaleRequest.bReleasing = false;
 
 	mActivateRequests.Add(NewID, TimeScaleRequest);
 
 	return FTimeScaleHandle(NewID);
 }
 
-void UTimeScaleComponent::ReleaseTimeScale(FTimeScaleHandle Handle)
+void UTimeScaleComponent::ReleaseTimeScale(const FTimeScaleHandle& Handle)
 {
 	if (!Handle.IsValid())
 		return;
 
-	mActivateRequests.Remove(Handle.ID);
+	if (FTimeScaleRequest* Req = mActivateRequests.Find(Handle.ID))
+	{
+		Req->bReleasing = true;
+		Req->TargetTimeScale = 1.f;
+	}
 
-	// Handle을 무효화합니다.
-	Handle.Invalidate();
 }
 
 void UTimeScaleComponent::UpdateTimeScale(float DeltaTime)
 {
-	//=====================================
-	// 우선순위가 가장 높은 요청만 처리합니다.
-	mTargetScale = 1.f;
-	//mBlendSpeed = FLT_MAX;
-	int32 Priority = -1.f;
+	mCurrentTimeScale = 1.f;
 
-	for (const auto& Pair : mActivateRequests)
+	for (auto& Pair : mActivateRequests)
 	{
-		if (Priority < Pair.Value.Priority)
-		{
-			mTargetScale = Pair.Value.TargetTimeScale;
-			mBlendSpeed = Pair.Value.BlendSpeed;
-			Priority = Pair.Value.Priority;
-		}
+		Pair.Value.CurrentTimeScale = FMath::FInterpConstantTo(Pair.Value.CurrentTimeScale, Pair.Value.TargetTimeScale, DeltaTime, Pair.Value.BlendSpeed);
+		mCurrentTimeScale *= Pair.Value.CurrentTimeScale;
 	}
 
-	mCurScale = FMath::FInterpConstantTo(mCurScale, mTargetScale, DeltaTime, mBlendSpeed);
+	mCurrentTimeScale = FMath::Max(mCurrentTimeScale, mMinTimeScale);
 
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), mCurScale);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), mCurrentTimeScale);
 }
 
 void UTimeScaleComponent::UpdateActivateRequests(float DeltaTime)
@@ -91,25 +86,31 @@ void UTimeScaleComponent::UpdateActivateRequests(float DeltaTime)
 
 	for (auto& Pair : mActivateRequests)
 	{
-		Pair.Value.RemaingTime -= DeltaTime;
+		FTimeScaleRequest& Req = Pair.Value;
 
-		// 주기가 -1이라면 무기한이므로 시간을 감소시키지 않습니다.
-		if (Pair.Value.Duration == -1.f)
+		if (!Req.bReleasing)
 		{
-			// 요청자가 무효하다면 요청을 제거합니다.
-			if (!Pair.Value.Requester.IsValid())
+			if (Req.Duration == -1.f)
 			{
-				// 제거 목록에 추가
-				KeysToRemove.Add(Pair.Key);
+				// 무기한 요청은 Requester 무효화 시에만 종료 트리거
+				if (!Req.Requester.IsValid())
+				{
+					Req.bReleasing = true;
+					Req.TargetTimeScale = 1.f;
+				}
 			}
-
-			continue;
+			else
+			{
+				Req.RemaingTime -= DeltaTime;
+				if (Req.RemaingTime <= 0.f)
+				{
+					Req.bReleasing = true;
+					Req.TargetTimeScale = 1.f;
+				}
+			}
 		}
-
-		// 지속시간이 다 지냈다면 종료합니다.
-		if (Pair.Value.RemaingTime <= 0.f)
+		else if (FMath::IsNearlyEqual(Req.CurrentTimeScale, 1.f, KINDA_SMALL_NUMBER))
 		{
-			// 제거 목록에 추가
 			KeysToRemove.Add(Pair.Key);
 		}
 	}
