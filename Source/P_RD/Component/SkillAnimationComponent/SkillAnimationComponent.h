@@ -101,7 +101,7 @@ protected:
 	 * @param BlendSpeed 시간 블렌딩 스케일
 	 * @param Duration 유지 시간
 	 */
-	void RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration) const;
+	void RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const;
 
 protected:
 	// @brief 소유 모델 객체

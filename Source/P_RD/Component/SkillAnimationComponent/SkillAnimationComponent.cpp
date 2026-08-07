@@ -265,7 +265,7 @@ void USkillAnimationComponent::OnHandleTimeScaleEvent(const FBoardActorAnimation
 {
 	const FTimeScaleEventTriggerPayload* TimeScalePayload = StaticCast<const FTimeScaleEventTriggerPayload*>(Payload);
 
-	RequestTimeScale(TimeScalePayload->OnEndDurationEventTrigger, this, TimeScalePayload->mTimeScale, TimeScalePayload->mPriority, TimeScalePayload->mBlendSpeed, -1);
+	RequestTimeScale(TimeScalePayload->OnEndDurationEventTrigger, this, TimeScalePayload->mTimeScale, TimeScalePayload->mBlendSpeed, -1);
 }
 
 void USkillAnimationComponent::PlayApplyAnimation(const FBoardActorAnimationContext& Context)
@@ -325,12 +325,12 @@ void USkillAnimationComponent::ShakeCamera(TSubclassOf<UCameraShakeBase> CameraS
 	}
 }
 
-void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration) const
+void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const
 {
 	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
 	if (CameraPawn != nullptr)
 	{
-		FTimeScaleHandle Handle = CameraPawn->GetTimeScaleComponent()->RequestTimeScale(Requester, TargetTimeScale, Priority, BlendSpeed, Duration);
+		FTimeScaleHandle Handle = CameraPawn->GetTimeScaleComponent()->RequestTimeScale(Requester, TargetTimeScale, BlendSpeed, Duration);
 		EndEvent.BindWeakLambda(CameraPawn, [CameraPawn, Handle]() {
 			CameraPawn->GetTimeScaleComponent()->ReleaseTimeScale(Handle);
 			});
