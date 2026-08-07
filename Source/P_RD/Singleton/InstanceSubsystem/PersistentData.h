@@ -183,6 +183,8 @@ struct FRunPersistDataCache
 public:
 	UPROPERTY()
 	TArray<TObjectPtr<UNiagaraSystem>> mEffectVFXs;
+	UPROPERTY()
+	TArray<TObjectPtr<UCurveBase>> mEffectCurves;
 };
 
 /**

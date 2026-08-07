@@ -106,9 +106,12 @@ public:
     UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
     TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
 
-    /* 상태이상 VFX 세팅 */
+    /* VFX 세팅 */
 public:
-    UPROPERTY(Config, Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectVFXSetting", ToolTip = "상태이상 연출 시 사용되는 전역 VFX 설정 값"))
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectVFXSetting", ToolTip = "상태이상 연출 시 사용되는 전역 VFX 설정 값"))
     FGlobalStatusEffectVFXSetting mGlobalStatusEffectVFXSetting;
+    
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetDissolveVFXSetting", ToolTip = "전투 대상이 타일맵에서 사라질 때 사용되는 설정 값"))
+    FCombatTargetDissolveVFXSetting mCombatTargetDissolveVFXSetting;
 };
 

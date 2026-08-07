@@ -1192,6 +1192,7 @@ void UTileMapModel::RemoveActor(UBoardActorModel* Actor)
 
 	// 논리 좌표 무효화
 	Actor->SetTileTransform(FTileTransform::Invalid);
+	Actor->OnRemoveTileTransform.Broadcast();
 }
 
 void UTileMapModel::RefreshActorPlacements()
