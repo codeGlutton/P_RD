@@ -16,7 +16,9 @@
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "PCGStage/Room.h"
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/Shop/ShopUIModel.h"
+#include "UI/Shop/ShopUIWidgetBase.h"
 
 namespace
 {
@@ -75,12 +77,24 @@ void AShopGameMode::InitializeRoom()
 	}
 }
 
-/** @brief 방이 열리면 파는 것을 한 번 내린다. */
+/** @brief 방이 열리면 파는 것을 한 번 내리고, HUD로 지정된 상점 화면에 뷰모델을 물려 연다. */
 void AShopGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
 	PushShopUIData();
+
+	// HUD(mHUDClass)가 상점 화면이면 뷰모델을 붙이고 나서 연다
+	// — 열면서 도는 첫 갱신에 모델이 있어야 빈 화면이 한 프레임 스치지 않음.
+	// HUD 미설정이거나 다른 위젯이면 생략 (RD.ShopPreview 콘솔 경로는 그대로 동작)
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (UShopUIWidgetBase* ShopHUD = WorldWidgetSubsystem->GetHUD<UShopUIWidgetBase>())
+		{
+			ShopHUD->BindUIModel(mShopUIModel);
+			ShopHUD->OpenUI();
+		}
+	}
 }
 
 /**
