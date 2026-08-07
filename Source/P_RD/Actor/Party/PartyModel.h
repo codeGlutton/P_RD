@@ -31,6 +31,9 @@ public:
 
 public:
 	void SetPlayerUnitModel(int32 PlayerIndex, UPlayerUnitModel* PlayerUnitModel);
+	bool AddPlayerUnitModel(UPlayerUnitModel* NewPlayerUnitModel);
+	bool RemovePlayerUnitModel(UPlayerUnitModel* ExistPlayerUnitModel);
+
 	void SetDifficulty(int32 Difficulty);
 
 public:

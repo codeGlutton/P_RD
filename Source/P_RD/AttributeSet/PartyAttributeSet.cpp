@@ -1,3 +1,3 @@
 ﻿#include "AttributeSet/PartyAttributeSet.h"
 
-const FName UPartyAttributeSet::KeyName = TEXT("Party");
+const FName UPartyAttributeSet::KEY_NAME = TEXT("Party");

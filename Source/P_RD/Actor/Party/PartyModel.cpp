@@ -31,6 +31,46 @@ void UPartyModel::SetPlayerUnitModel(int32 PlayerIndex, UPlayerUnitModel* Player
 	OnChangePartyPlayer.Broadcast(PlayerIndex, PrePlayerUnitModel, PlayerUnitModel);
 }
 
+bool UPartyModel::AddPlayerUnitModel(UPlayerUnitModel* NewPlayerUnitModel)
+{
+	if (NewPlayerUnitModel == nullptr)
+	{
+		return false;
+	}
+
+	const int32 PlayerMaxNum = mPlayerUnitModels.Num();
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		TObjectPtr<UPlayerUnitModel>& PlayerUnitModel = mPlayerUnitModels[PlayerIndex];
+		if (PlayerUnitModel == nullptr)
+		{
+			SetPlayerUnitModel(PlayerIndex, NewPlayerUnitModel);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool UPartyModel::RemovePlayerUnitModel(UPlayerUnitModel* ExistPlayerUnitModel)
+{
+	if (ExistPlayerUnitModel == nullptr)
+	{
+		return false;
+	}
+
+	const int32 PlayerMaxNum = mPlayerUnitModels.Num();
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		TObjectPtr<UPlayerUnitModel>& PlayerUnitModel = mPlayerUnitModels[PlayerIndex];
+		if (PlayerUnitModel == ExistPlayerUnitModel)
+		{
+			SetPlayerUnitModel(PlayerIndex, nullptr);
+			return true;
+		}
+	}
+	return false;
+}
+
 void UPartyModel::SetDifficulty(int32 Difficulty)
 {
 	mDifficulty = Difficulty;
@@ -38,7 +78,7 @@ void UPartyModel::SetDifficulty(int32 Difficulty)
 	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
-	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), UPartyAttributeSet::KeyName, GetDifficulty(), true);
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), UPartyAttributeSet::KEY_NAME, GetDifficulty(), true);
 }
 
 TArray<TObjectPtr<UPlayerUnitModel>>& UPartyModel::GetPlayerUnitModels()

@@ -1,4 +1,4 @@
-﻿#include "PCGStage/Room.h"
+#include "PCGStage/Room.h"
 
 #define LOCTEXT_NAMESPACE "Room"
 
@@ -9,20 +9,17 @@ void FRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAsse
 
 FText FRoom::GetDisplayName() const
 {
-	switch (mType)
-	{
-	case ERoomType::Monster:      return LOCTEXT("RoomNameMonster", "일반");
-	case ERoomType::EliteMonster: return LOCTEXT("RoomNameElite", "엘리트");
-	case ERoomType::BossMonster:  return LOCTEXT("RoomNameBoss", "보스");
-	case ERoomType::Shop:         return LOCTEXT("RoomNameShop", "상점");
-	case ERoomType::Treasure:     return LOCTEXT("RoomNameTreasure", "보물");
-	default:                      return FText::GetEmpty();
-	}
+	return FText::GetEmpty();
 }
 
 FTreasureRoom::FTreasureRoom()
 {
 	mType = ERoomType::Treasure;
+}
+
+FText FTreasureRoom::GetDisplayName() const
+{
+	return LOCTEXT("RoomNameTreasure", "보물");
 }
 
 void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
@@ -36,6 +33,20 @@ void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPri
 FShopRoom::FShopRoom()
 {
 	mType = ERoomType::Shop;
+
+	const int32 PlayerUnitJobCount = StaticCast<int32>(EUnitJobType::PlayerJobCount);
+	for (int32 PlayerUnitJobIndex = 0; PlayerUnitJobIndex < PlayerUnitJobCount; ++PlayerUnitJobIndex)
+	{
+		mSaleJobSkillDataItems[PlayerUnitJobIndex].mSaleCategory = EnumToText(StaticCast<EUnitJobType>(PlayerUnitJobIndex));
+	}
+	mSaleCommonSkillDataItems.mSaleCategory = EnumToText(EUnitJobType::Common);
+	mSaleArtifactDataItems.mSaleCategory = LOCTEXT("Artifact", "아티팩트");
+	mSaleMercenaryDataCandidates.mSaleCategory = LOCTEXT("Mercenary", "용병");
+}
+
+FText FShopRoom::GetDisplayName() const
+{
+	return LOCTEXT("RoomNameShop", "상점");
 }
 
 void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
@@ -48,7 +59,7 @@ void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimary
 		AdditionalAssetIds.Append(mSaleJobSkillDataItems[i].mSaleItemIds);
 	}
 	AdditionalAssetIds.Append(mSaleCommonSkillDataItems.mSaleItemIds);
-	AdditionalAssetIds.Append(mSaleEquipmentDataItems.mSaleItemIds);
+	AdditionalAssetIds.Append(mSaleArtifactDataItems.mSaleItemIds);
 }
 
 FMonsterRoom::FMonsterRoom()
@@ -56,21 +67,43 @@ FMonsterRoom::FMonsterRoom()
 	mType = ERoomType::Monster;
 }
 
+FText FMonsterRoom::GetDisplayName() const
+{
+	return LOCTEXT("RoomNameMonster", "일반");
+}
+
 FEliteMonsterRoom::FEliteMonsterRoom()
 {
 	mType = ERoomType::EliteMonster;
+}
+
+FText FEliteMonsterRoom::GetDisplayName() const
+{
+	return LOCTEXT("RoomNameElite", "엘리트");
 }
 
 void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardEquipmentDataId);
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 FBossMonsterRoom::FBossMonsterRoom()
 {
 	mType = ERoomType::BossMonster;
+}
+
+FText FBossMonsterRoom::GetDisplayName() const
+{
+	return LOCTEXT("RoomNameBoss", "보스");
+}
+
+void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const
+{
+	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
+
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 #undef LOCTEXT_NAMESPACE
