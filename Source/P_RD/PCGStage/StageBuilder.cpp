@@ -421,10 +421,15 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			NewRoom.mSaleCommonSkillDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
 		}
 
+		/* 판매 아티펙트 선정 (해당 희귀도 에셋이 없으면 빈 슬롯 허용) */
 		for (int32 i = 0; i < 3; ++i)
 		{
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 			const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
+			if (ArtifactIdArray.IsEmpty() == true)
+			{
+				continue;
+			}
 			NewRoom.mSaleArtifactDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray));
 		}
 
