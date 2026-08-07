@@ -36,7 +36,7 @@ struct FStage
 
 public:
 	void SetCurrentRoom(int32 RowIndex, int32 ColumnIndex);
-	void ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms);
+	void SetRoomClearData(const FRoomClearData& ClearData);
 
 public:
 	FRoom& GetRoom(int32 RowIndex, int32 ColumnIndex);
@@ -61,12 +61,12 @@ public:
 
 public:
 	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurColumn"))
-	int32 mCurColumn = -1;
+	int32 mCurColumn = INDEX_NONE;
 	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "CurRow"))
-	int32 mCurRow = -1;
+	int32 mCurRow = INDEX_NONE;
 
-	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "RoomClearTileTransforms"))
-	TArray<FTileTransform> mRoomClearTileTransforms;
+	UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "ClearData"))
+	FRoomClearData mClearData;
 
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "StaticStageSpawnDataId"))

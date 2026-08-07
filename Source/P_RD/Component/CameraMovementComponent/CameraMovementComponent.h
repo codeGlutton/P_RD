@@ -106,10 +106,10 @@ protected:
 	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SmoothZoomSpeed", AllowPrivateAccess = "true"))
 	float mZoomSpeed = 5.f;
 
-	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CurrentZoom", AllowPrivateAccess = "true"))
 	float mCurZoom;
 
-	UPROPERTY(Category = Zoom, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetZoom", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Zoom, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetZoom", AllowPrivateAccess = "true"))
 	float mTargetZoom;
 
 
@@ -122,6 +122,14 @@ protected:
 	*/
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxCenter", AllowPrivateAccess = "true"))
 	FVector mMoveClampingBoxCenter = FVector(0, 0, 0);
+
+	/*
+	* @brief 클램핑 박스 yaw 회전
+	* @details
+	* Yaw 회전
+	*/
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBoxRotation", AllowPrivateAccess = "true"))
+	float mMoveClampingBoxRotation = 45.f;
 	
 	/*
 	* @brief 클램핑 박스
@@ -131,6 +139,8 @@ protected:
 	*/
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveClampingBox", AllowPrivateAccess = "true"))
 	FVector2D mMoveClampingBox = FVector2D(10000, 10000);
+
+
 
 	/*
 	* @brief 이동 속도
@@ -144,13 +154,13 @@ protected:
 	/*
 	* @brief 현재 카메라가 바라보고 있는 시선 위치
 	*/
-	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "LookAtCameraLocation", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "LookAtCameraLocation", AllowPrivateAccess = "true"))
 	FVector2D mCurrentLookAtCameraLocation;
 
 	/*
 	* @brief 카메라가 최종적으로 바라볼 시선 위치
 	*/
-	UPROPERTY(Category = CameraMove, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetLookAtCameraLocation", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetLookAtCameraLocation", AllowPrivateAccess = "true"))
 	FVector2D mTargetLookAtCameraLocation;
 	
 

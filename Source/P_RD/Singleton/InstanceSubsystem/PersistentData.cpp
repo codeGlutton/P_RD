@@ -12,6 +12,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "AttributeSet/LevelAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
@@ -169,6 +170,13 @@ void UPlayerUnitPersistData::RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit)
 	BindPlayerUnitEvent(PlayerUnit);
 }
 
+void UPlayerUnitPersistData::UnregisterPlayerUnit(UPlayerUnitModel* PlayerUnit)
+{
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+
+	UnbindPlayerUnitEvent(PlayerUnit);
+}
+
 const FPrimaryAssetId& UPlayerUnitPersistData::GetPlayerUnitId() const
 {
 	return mPlayerUnitId;
@@ -217,23 +225,23 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
 
 	 // 레벨 추적
-	 PlayerUnit->OnChangePlayerLevel.AddLambda([this](UPlayerUnitModel* Model, int32 PlayerLevel) {
+	 PlayerUnit->OnChangePlayerLevel.AddWeakLambda(this, [this](UPlayerUnitModel* Model, int32 PlayerLevel) {
 		 mPlayerLevel = PlayerLevel;
 		 });
 
 	 // 스텟 추적
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 	 	mMaxHP = Data.mNewValue;
 	 	});
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 	 	mHP = Data.mNewValue;
 	 	});
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddLambda([this](const FTacticalAttributeChangeData& Data) {
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 	 	mExp = Data.mNewValue;
 	 	});
 
 	 // 패시브 스택 비용 태그의 개수 변화를 추적
-	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddLambda([this](const FGameplayTag Tag, int32 Count) {
+	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
 	 	mTagCountMap[Tag] = Count;
 	 	if (Count == 0)
 	 	{
@@ -242,7 +250,7 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 	});
 
 	 // 플레이어 스킬 추적
-	 SkillComponentModel->OnChangeSkillUI.AddLambda([this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
+	 SkillComponentModel->OnChangeSkillUI.AddWeakLambda(this, [this](int32 SkillIndex, const UStaticSkillData* PreSkillData, const UStaticSkillData* NewSkillData)
 		 {
 			 // 음수 인덱스 방어
 			 if (SkillIndex < 0)
@@ -263,6 +271,22 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 			 }
 			 mSkillIds[SkillIndex] = NextSkillId;
 		 });
+}
+
+void UPlayerUnitPersistData::UnbindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
+{
+	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 nullptr"));
+	UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnit->GetAttributeComponentModel();
+	checkf(AttributeSetComponentModel != nullptr, TEXT("어빌리티 시스템 컴포넌트 nullptr"));
+	USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
+
+	PlayerUnit->OnChangePlayerLevel.RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).RemoveAll(this);
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).RemoveAll(this);
+	SkillComponentModel->OnChangeSkillUI.RemoveAll(this);
 }
 
 void UPlayerUnitPersistData::Serialize(FArchive& Ar)
@@ -374,6 +398,7 @@ void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPl
 	Party->OnChangePartyPlayer.AddLambda([this](int32 PlayerIndex, UPlayerUnitModel* PreModel, UPlayerUnitModel* NextModel) {
 		if (PreModel != nullptr)
 		{
+			mPartyPlayers[PlayerIndex]->UnregisterPlayerUnit(PreModel);
 			mPartyPlayers[PlayerIndex]->ClearUnit();
 		}
 		if (NextModel != nullptr)
@@ -454,7 +479,7 @@ void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int
 		mMoney = TacticalFrameworkModel->GetAttributeSetInitter()->GetAttributeSetValue(
 			UPartyAttributeSet::StaticClass(),
 			UPartyAttributeSet::GetMoneyAttribute().GetUProperty(),
-			UPartyAttributeSet::KeyName,
+			UPartyAttributeSet::KEY_NAME,
 			mDifficulty
 		);
 	}
@@ -517,8 +542,11 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 		const FStageBuilderParams& BuilderParams = *BalanceSetting->FindRow<FStageBuilderParams>(*EnumToString(Type), TEXT("밸런스 세팅 테이블 탐색 에러"));
 		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
+		const FLevelAttributeCache LevelAttributeCache = ULevelAttributeSet::MakeCache(this);
 
-		mStage.InitializeAs<FStage>(FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, BuilderParams).Build());
+		mStage.InitializeAs<FStage>(
+			FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, LevelAttributeCache).SetParams(BuilderParams).Build()
+		);
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
 		}));
@@ -529,9 +557,9 @@ void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
 }
 
-void URunPersistData::ClearCurrentCombatRoom(const TArray<FTileTransform>& Transforms)
+void URunPersistData::SetRoomClearData(const FRoomClearData& ClearData)
 {
-	mStage.GetMutable().ClearCurrentCombatRoom(Transforms);
+	mStage.GetMutable().SetRoomClearData(ClearData);
 }
 
 void URunPersistData::CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const

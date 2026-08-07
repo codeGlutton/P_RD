@@ -16,14 +16,14 @@
 UENUM(BlueprintType)
 enum class EUnitJobType : uint8
 {
-	/* 확정 직업 */ 
+	/* 용병 직업 */ 
 
 	Knight = 0,
-
-	/* 아래는 수정될 수 있는 임시 직업 */
-
-	Archer,
+	Ranger,
 	Mage,
+	Barbarian,
+	Rogue,
+	Druid,
 
 	PlayerJobCount			UMETA(Hidden),
 	
