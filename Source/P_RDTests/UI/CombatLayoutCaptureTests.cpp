@@ -180,15 +180,15 @@ namespace CombatLayoutCapture
 			}
 			else if (const UProgressBar* Bar = Cast<UProgressBar>(Candidate))
 			{
-				MakeResident(Bar->WidgetStyle.BackgroundImage);
-				MakeResident(Bar->WidgetStyle.FillImage);
+				MakeResident(Bar->GetWidgetStyle().BackgroundImage);
+				MakeResident(Bar->GetWidgetStyle().FillImage);
 			}
 			else if (const UButton* Button = Cast<UButton>(Candidate))
 			{
-				MakeResident(Button->WidgetStyle.Normal);
-				MakeResident(Button->WidgetStyle.Hovered);
-				MakeResident(Button->WidgetStyle.Pressed);
-				MakeResident(Button->WidgetStyle.Disabled);
+				MakeResident(Button->GetStyle().Normal);
+				MakeResident(Button->GetStyle().Hovered);
+				MakeResident(Button->GetStyle().Pressed);
+				MakeResident(Button->GetStyle().Disabled);
 			}
 		}
 		FlushRenderingCommands();
