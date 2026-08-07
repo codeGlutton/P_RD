@@ -42,11 +42,13 @@
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "Setting/GameBalanceSettings.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetActionPoint.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Actor/BoardActor/BoardSelectionTargetView.h"
@@ -675,11 +677,13 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		}
 		break;
 	case ECombatInputType::InspectUnit:
-		// 용병 탭의 보유 용병을 눌렀다. 기존처럼 그 용병의 스킬로 카드를
-		// 갈아 끼우되, 같은 id 로 PR457 유닛 상세도 함께 내린다.
+		// 유닛 하나를 살펴보겠다는 청 -- 그 유닛의 스킬로 카드를 갈아 끼우고,
+		// 같은 id 로 PR457 유닛 상세도 함께 내린다. 아군(용병 탭)만이 아니라
+		// **몬스터 탭도 이 길을 쓴다**: 아군만 찾으면 몬스터 탭 스킬 칸이
+		// 영영 빈다(0807 감사).
 		mInspectedUnitId = IntPayload;
 		PushSkillUIData();
-		PushBoardActorDetailUIData(FindPartyUnitModel(IntPayload));
+		PushBoardActorDetailUIData(FindUnitModelById(IntPayload));
 		break;
 	case ECombatInputType::FocusUnit:
 		// 스킬 단추를 눌렀다. 그 스킬을 쓰는 유닛을 화면 가운데로 데려온다.
@@ -1130,6 +1134,77 @@ void ACombatGameMode::PushTurnUIData() const
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
+
+	/*
+	 * 다음 라운드 미리보기.
+	 *
+	 * 모델의 후보 계산(GetOrderedTurnCandidates)은 **지금** 속도로 판정한다 --
+	 * 라운드 교대 시점(충전 직후)에 쓰는 함수라 그렇다. 라운드 중반에 그대로
+	 * 부르면 이번 턴에 속도를 이미 쓴 유닛이 전부 탈락해 미리보기가 빈다
+	 * (0806 검수: 다음 라운드가 안 뜸). 그래서 여기서는 라운드가 넘어갈 때
+	 * 받을 충전량을 더한 값으로 내다본다. 동률 무작위까지는 흉내 내지 않는다
+	 * -- 이건 예고지 약속이 아니다.
+	 */
+	struct FNextRoundPreview
+	{
+		int32 mUnitId = INDEX_NONE;
+		int32 mProjectedSpeed = 0;
+	};
+	TArray<FNextRoundPreview> Previews;
+	const int32 RequiredSpeed =
+		GetDefault<UGameBalanceSettings>()->mRequiredSpeedPointForTurn;
+
+	/*
+	 * 아무도 못 차는 빈 라운드는 모델이 즉시 건너뛴다(충전 5 · 비용 10이면
+	 * 턴은 두 라운드에 한 번). 그래서 충전을 한 라운드씩 쌓아 보며 누군가
+	 * 처음 차는 라운드를 찾고, 그 라운드를 "다음"으로 표기한다 -- 한 라운드
+	 * 뒤만 보면 미리보기가 늘 비어 있었다(0806 검수).
+	 */
+	int32 RoundsAhead = 1;
+	constexpr int32 MaxRoundsToScan = 20;
+	for (; RoundsAhead <= MaxRoundsToScan && Previews.IsEmpty(); ++RoundsAhead)
+	{
+		for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
+		{
+			UAttributeSetComponentModel* Attributes = UnitModel != nullptr
+				? UnitModel->GetAttributeComponentModel() : nullptr;
+			if (Attributes == nullptr)
+			{
+				continue;
+			}
+			// 죽은 유닛은 다음 라운드에 없다. 모델에서 빠지는 것은 턴이
+			// 끝날 때라, 그 사이 미리보기에 끼는 것을 막는다(0807 감사).
+			if (Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetHPAttribute()) <= 0.f)
+			{
+				continue;
+			}
+			const int32 ProjectedSpeed = StaticCast<int32>(FMath::Floor(
+				Attributes->GetAttributeCurrentValue(
+					UUnitAttributeSet::GetSpeedPointAttribute())
+				+ Attributes->GetAttributeCurrentValue(
+					UUnitAttributeSet::GetRechargeSpeedPointAttribute())
+					* RoundsAhead));
+			if (ProjectedSpeed < RequiredSpeed)
+			{
+				continue;
+			}
+			Previews.Add({ UnitModel->GetModelId(), ProjectedSpeed });
+		}
+		if (Previews.IsEmpty() == false)
+		{
+			break;
+		}
+	}
+	// 동률 무작위까지는 흉내 내지 않는다 -- 이건 예고지 약속이 아니다.
+	Previews.StableSort(
+		[](const FNextRoundPreview& Lhs, const FNextRoundPreview& Rhs)
+		{ return Lhs.mProjectedSpeed > Rhs.mProjectedSpeed; });
+	for (const FNextRoundPreview& Preview : Previews)
+	{
+		TurnUI.mNextRoundUnitIds.Add(Preview.mUnitId);
+	}
+	TurnUI.mNextRoundOffset = FMath::Max(RoundsAhead, 1);
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 
@@ -1402,6 +1477,28 @@ UPlayerUnitModel* ACombatGameMode::GetTurnPlayerUnitModel() const
 	return FindPartyUnitModel(TurnUnit->GetModelId());
 }
 
+/** @brief 아군/적 가리지 않고 id 로 유닛 모델을 찾는다. 없으면 nullptr. */
+UUnitModel* ACombatGameMode::FindUnitModelById(const int32 UnitId) const
+{
+	if (UnitId == INDEX_NONE)
+	{
+		return nullptr;
+	}
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return nullptr;
+	}
+	for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
+	{
+		if (UnitModel != nullptr && UnitModel->GetModelId() == UnitId)
+		{
+			return UnitModel;
+		}
+	}
+	return nullptr;
+}
+
 UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
 {
 	if (UnitId == INDEX_NONE)
@@ -1439,20 +1536,9 @@ void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
 		return;
 	}
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	if (CombatModel == nullptr)
-	{
-		return;
-	}
-	AActor* ViewActor = nullptr;
-	for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
-	{
-		if (UnitModel != nullptr && UnitModel->GetModelId() == UnitId)
-		{
-			ViewActor = UnitModel->GetView<AActor>();
-			break;
-		}
-	}
+	UUnitModel* UnitModel = FindUnitModelById(UnitId);
+	AActor* ViewActor = UnitModel != nullptr
+		? UnitModel->GetView<AActor>() : nullptr;
 	if (ViewActor == nullptr)
 	{
 		return;
@@ -1461,10 +1547,25 @@ void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
 	 * 연출 없이 바로 옮긴다. 부드럽게 따라가면 판이 흐르듯 움직여 어지럽다는
 	 * 검수가 있었다(0806). 강조로 잡으면 카메라 조작까지 잠겨서 안 쓴다.
 	 *
-	 * 높이 보정은 카메라 쪽이 한다 -- 판(카메라 평면)이 어디 떠 있는지는
-	 * 카메라만 안다. 여기서는 유닛 자리를 그대로 넘긴다.
+	 * 액터 피벗(발밑)이 아니라 **몸통 가운데**를 넘긴다. 기운 카메라에서
+	 * 발을 가운데 두면 몸은 화면 위로 밀려 "가운데가 아니다"로 읽힌다
+	 * (0806 검수). 충돌 바운즈 중심이 치비 몸통의 가운데다.
+	 *
+	 * 놓을 화면 자리는 UI 가 세워 둔 앵커(0~1 비율)를 쓴다 -- "가운데" 는
+	 * 화면 한가운데가 아니라 스킬 카드들이 둘러싼 자리다(0807 합의).
 	 */
-	CameraMovement->JumpToWorldPosition(ViewActor->GetActorLocation());
+	FVector BoundsOrigin = ViewActor->GetActorLocation();
+	FVector BoundsExtent = FVector::ZeroVector;
+	ViewActor->GetActorBounds(/*bOnlyCollidingComponents=*/true,
+		OUT BoundsOrigin, OUT BoundsExtent);
+
+	int32 ViewX = 0;
+	int32 ViewY = 0;
+	PlayerController->GetViewportSize(OUT ViewX, OUT ViewY);
+	const FVector2D AnchorFraction = mCombatUIModel != nullptr
+		? mCombatUIModel->GetFocusScreenAnchor() : FVector2D(0.5f, 0.5f);
+	CameraMovement->JumpToWorldPositionAtScreen(BoundsOrigin,
+		FVector2D(AnchorFraction.X * ViewX, AnchorFraction.Y * ViewY));
 }
 
 void ACombatGameMode::PushSkillUIData() const
@@ -1527,16 +1628,14 @@ void ACombatGameMode::PushSkillUIData() const
 				? FMath::Max(SkillComponentModel->GetRemainingCooldownTime(i), 0) : 0;
 
 			// 피해. 한 스킬이 여러 모션으로 나뉘어 때리므로 다 더한 것이 카드에
-			// 적을 수다. 자동 생성 설명도 같은 값을 쓴다.
-			//
-			// [합의필요] min/max 로 나누기로 정했는데(0728) 데이터에셋은 아직
-			// mDamage 한 값이다. 그래서 지금은 min == max 다. 모호재님이 나누면
-			// 여기 두 줄만 각각 읽으면 된다.
+			// 적을 수다. 자동 생성 설명도 같은 값을 쓴다. 데이터에셋의
+			// mMinDamage/mMaxDamage 분리(0806, 모호재)를 그대로 읽는다.
 			//
 			// 버프는 안 들어간다. 실제 피해는 AttackPoint/AttackFactor 를 거쳐
 			// 나오는데, 카드에 적는 것은 스킬이 원래 가진 수다.
 			int32 MinSkillDamage = 0;
 			int32 MaxSkillDamage = 0;
+			int32 ActionPointGain = 0;
 			for (const FSkillPhaseLayer& MotionLayer : StaticSkillData->mSkillPhaseLayers)
 			{
 				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
@@ -1546,10 +1645,18 @@ void ACombatGameMode::PushSkillUIData() const
 						MinSkillDamage += Attack->mMinDamage;
 						MaxSkillDamage += Attack->mMaxDamage;
 					}
+					// 행동력을 돌려주는 스킬(회복류)의 회수량. 안 채우면 필드가
+					// 늘 0이라 카드가 회복 스킬을 맹탕으로 보여 준다(0807 감사).
+					if (const FSkillEffectLayer_GetActionPoint* Gain =
+						EffectLayer.GetPtr<FSkillEffectLayer_GetActionPoint>())
+					{
+						ActionPointGain += Gain->mActionPointGain;
+					}
 				}
 			}
 			SkillUIData.mDamageMin = MinSkillDamage;
 			SkillUIData.mDamageMax = MaxSkillDamage;
+			SkillUIData.mActionPointGain = ActionPointGain;
 			// [합의필요] 크리티컬은 최종 피해 x1.5 고정으로 정했다(0728). 아직
 			// 피해 계산에 크리 분기가 없어 UI 가 곱해 보여 준다. 계산이 생기면
 			// 그쪽 값을 받아 이 줄을 지운다.

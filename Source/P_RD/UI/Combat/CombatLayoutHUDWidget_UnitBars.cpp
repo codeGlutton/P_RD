@@ -20,9 +20,6 @@ namespace
 
 	// HP바는 기존 크기를 유지한다. 상태이상만 아래의 독립 레이아웃 값으로 키운다.
 	constexpr float UnitHpBarRenderScale = 0.52f;
-	// 모바일 전장에서는 월드 위 상태 아이콘이 유닛과 타일을 가리므로 표시하지 않는다.
-	// 상태 데이터와 용병/몬스터 상세 패널 표시는 그대로 유지한다.
-	constexpr bool bShowUnitHpBarStatusIcons = false;
 	// 줌 배율 기준이 되는 직교 카메라 폭(CombatCameraPawn 기본 OrthoWidth). 이 값일 때 배율 1.0.
 	constexpr float UnitHpBarBaseOrthoWidth = 2000.0f;
 
@@ -102,14 +99,6 @@ namespace
 		}
 	}
 
-	float StatusRowLeft(const int32 VisibleCount)
-	{
-		const int32 SafeCount = FMath::Max(VisibleCount, 1);
-		const float RowWidth = UnitHpBarStatusFrameSize
-			+ StaticCast<float>(SafeCount - 1) * UnitHpBarStatusIconStep;
-		return (UnitHpBarDesignWidth - RowWidth) * 0.5f;
-	}
-
 }
 
 /**
@@ -138,7 +127,13 @@ void UCombatLayoutHUDWidget::SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar)
 	Bar.mFillClipSlot = FillSlot;   // Update에서 폭을 % 만큼 조절할 대상(채움 이미지 자체 슬롯).
 }
 
-/** @brief WBP의 상태 슬롯(StatusIcon_0N/StatusCountText_0N/Overflow)을 캐시하고 기본은 숨김으로 둔다. */
+/**
+ * @brief WBP의 상태 슬롯 위젯을 캐시하고 접는다.
+ *
+ * @details 월드 상태 아이콘은 폐기했다(0807 결정) -- 유닛과 타일을 가린다.
+ * WBP 에 위젯이 남아 있어 찾아서 접기만 한다. 무엇이 걸렸는지는 요약판이,
+ * 뭔가 걸렸다는 신호는 상태 띠가 맡는다.
+ */
 void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& Bar) const
 {
 	if (Bar.mRoot == nullptr)
@@ -150,69 +145,17 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 	Bar.mStatusCountTexts.Reset();
 	for (int32 SlotIndex = 1; SlotIndex <= 5; ++SlotIndex)
 	{
-		UImage* Icon = Cast<UImage>(Bar.mRoot->GetWidgetFromName(FName(*FString::Printf(TEXT("StatusIcon_%02d"), SlotIndex))));
-		UTextBlock* Count = Cast<UTextBlock>(Bar.mRoot->GetWidgetFromName(FName(*FString::Printf(TEXT("StatusCountText_%02d"), SlotIndex))));
-		if (SlotIndex > UnitHpBarVisibleStatusSlots)
-		{
-			if (Icon != nullptr) { Icon->SetVisibility(ESlateVisibility::Collapsed); }
-			if (Count != nullptr) { Count->SetVisibility(ESlateVisibility::Collapsed); }
-			continue;
-		}
-		Bar.mStatusIcons.Add(Icon);
-		Bar.mStatusCountTexts.Add(Count);
-
-		const float SlotX = StatusRowLeft(UnitHpBarVisibleStatusSlots)
-			+ StaticCast<float>(SlotIndex - 1) * UnitHpBarStatusIconStep;
-		const float IconInset = (UnitHpBarStatusFrameSize - UnitHpBarStatusIconSize) * 0.5f;
-		// 아이콘: 크게 + 한 줄로 재배치(WBP 기본 24px은 렌더스케일에서 안 보임).
-		if (Icon != nullptr)
-		{
-			if (UCanvasPanelSlot* IconSlot = Cast<UCanvasPanelSlot>(Icon->Slot))
-			{
-				IconSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-				IconSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-				IconSlot->SetPosition(FVector2D(SlotX + IconInset, UnitHpBarStatusRowTop + IconInset));
-				IconSlot->SetSize(FVector2D(UnitHpBarStatusIconSize, UnitHpBarStatusIconSize));
-				IconSlot->SetAutoSize(false);
-			}
-			Icon->SetColorAndOpacity(FLinearColor::White);   // 투명도 제거(불투명, 틴트 없음).
-			Icon->SetRenderOpacity(1.0f);
-			Icon->SetVisibility(ESlateVisibility::Collapsed);     // 기본 숨김(데이터 있을 때만 켠다).
-		}
-		// 개수 텍스트: 아이콘 우하단에 겹쳐서 크게 + 외곽선.
-		if (Count != nullptr)
-		{
-			FSlateFontInfo CountFont = Count->GetFont();
-			CountFont.Size = UnitHpBarStatusCountFontSize;
-			CountFont.OutlineSettings.OutlineSize = 3;
-			CountFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
-			Count->SetFont(CountFont);
-			Count->SetJustification(ETextJustify::Right);
-			Count->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-			Count->SetRenderOpacity(1.0f);   // 투명도 제거(불투명).
-			// 글자가 _Center Overlay로 감싸져 자기 캔버스 슬롯이 없을 수 있다.
-			// 자리를 쥔 조상의 슬롯을 잡는다(직접 캐스트는 감싼 뒤로 조용히 실패).
-			if (UCanvasPanelSlot* CountSlot = FindCanvasSlotUp(Count))
-			{
-				CountSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-				CountSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-				CountSlot->SetPosition(FVector2D(SlotX + IconInset + UnitHpBarStatusIconSize * 0.35f,
-					UnitHpBarStatusRowTop + IconInset + UnitHpBarStatusIconSize * 0.42f));
-				CountSlot->SetSize(FVector2D(UnitHpBarStatusIconSize * 0.65f, UnitHpBarStatusIconSize * 0.58f));
-				CountSlot->SetAutoSize(false);
-			}
-			Count->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		UImage* Icon = Cast<UImage>(Bar.mRoot->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("StatusIcon_%02d"), SlotIndex))));
+		UTextBlock* Count = Cast<UTextBlock>(Bar.mRoot->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("StatusCountText_%02d"), SlotIndex))));
+		if (Icon != nullptr) { Icon->SetVisibility(ESlateVisibility::Collapsed); }
+		if (Count != nullptr) { Count->SetVisibility(ESlateVisibility::Collapsed); }
 	}
-	Bar.mStatusOverflowText = Cast<UTextBlock>(Bar.mRoot->GetWidgetFromName(TEXT("StatusOverflowText")));
+	Bar.mStatusOverflowText = Cast<UTextBlock>(
+		Bar.mRoot->GetWidgetFromName(TEXT("StatusOverflowText")));
 	if (Bar.mStatusOverflowText != nullptr)
 	{
-		FSlateFontInfo OverflowFont = Bar.mStatusOverflowText->GetFont();
-		OverflowFont.Size = UnitHpBarStatusCountFontSize;
-		OverflowFont.OutlineSettings.OutlineSize = 3;
-		OverflowFont.OutlineSettings.OutlineColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.9f);
-		Bar.mStatusOverflowText->SetFont(OverflowFont);
-		Bar.mStatusOverflowText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
@@ -328,34 +271,6 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 		{
 			if (UCanvasPanel* BarCanvas = Cast<UCanvasPanel>(BarTree->RootWidget))
 			{
-				if (bShowUnitHpBarStatusIcons && mUnitStatusSlotTexture != nullptr)
-				{
-					NewBar.mStatusFrames.Reset();
-					for (int32 SlotIndex = 0; SlotIndex < UnitHpBarVisibleStatusSlots; ++SlotIndex)
-					{
-						UImage* StatusFrame = BarTree->ConstructWidget<UImage>(UImage::StaticClass(),
-							FName(*FString::Printf(TEXT("StatusFrame_%02d"), SlotIndex + 1)));
-						if (StatusFrame == nullptr)
-						{
-							NewBar.mStatusFrames.Add(nullptr);
-							continue;
-						}
-						StatusFrame->SetBrushFromTexture(mUnitStatusSlotTexture, false);
-						StatusFrame->SetVisibility(ESlateVisibility::Collapsed);
-						if (UCanvasPanelSlot* FrameSlot = BarCanvas->AddChildToCanvas(StatusFrame))
-						{
-							FrameSlot->SetAnchors(FAnchors(0.0f, 0.0f));
-							FrameSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-							FrameSlot->SetPosition(FVector2D(
-								StatusRowLeft(UnitHpBarVisibleStatusSlots) + SlotIndex * UnitHpBarStatusIconStep,
-								UnitHpBarStatusRowTop));
-							FrameSlot->SetSize(FVector2D(UnitHpBarStatusFrameSize, UnitHpBarStatusFrameSize));
-							FrameSlot->SetAutoSize(false);
-							FrameSlot->SetZOrder(-5);
-						}
-						NewBar.mStatusFrames.Add(StatusFrame);
-					}
-				}
 				if (mUnitDefenseIconTexture != nullptr)
 				{
 					if (UImage* DefenseIcon = BarTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DefenseIcon")))
@@ -556,19 +471,8 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	}
 }
 
-/** @brief 상태이상 태그 → 아이콘 텍스처. 로그용 아이콘(mLogIcon*)을 재사용한다. 전용 아이콘 없는 태그는 nullptr. */
-UTexture2D* UCombatLayoutHUDWidget::ResolveStatusIcon(const FGameplayTag& StatusTag) const
-{
-	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility))        { return mLogIconAgility; }
-	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification))  { return mLogIconFortification; }
-	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability)) { return mLogIconVulnerability; }
-	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness))     { return mLogIconWeakness; }
-	return nullptr;
-}
-
 /**
- * @brief 유닛 HP바 밑 상태이상 칸(큰 아이콘 3개 + 개수 + 오버플로)을 DTO(mStatusEffects)로 채운다.
- * @details 아이콘 있는 상태만 가운데 정렬하고, 3칸 초과분은 StatusOverflowText에 "+N". 스택 2 이상만 개수 표시.
+ * @brief 유닛 HP바의 상태 표시(테두리 색 + 밑 상태 띠)를 DTO(mStatusEffects)로 갱신한다.
  */
 void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const
 {
@@ -659,143 +563,26 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, 
 		}
 	}
 
-	if (bShowUnitHpBarStatusIcons == false)
+	/*
+	 * 월드 상태 아이콘은 폐기했다(0807 결정). 유닛과 타일을 가려서 껐다가
+	 * 다시 안 살리기로 했다 -- "무엇이 걸렸는지" 는 요약판 아이콘이,
+	 * "뭔가 걸렸다" 는 위의 상태 띠가 맡는다. WBP 에 남은 아이콘 줄 위젯은
+	 * 여기서 늘 접어 둔다.
+	 */
+	for (UImage* Icon : Bar.mStatusIcons)
 	{
-		for (UImage* Icon : Bar.mStatusIcons)
-		{
-			if (Icon != nullptr) { Icon->SetVisibility(ESlateVisibility::Collapsed); }
-		}
-		for (UImage* Frame : Bar.mStatusFrames)
-		{
-			if (Frame != nullptr) { Frame->SetVisibility(ESlateVisibility::Collapsed); }
-		}
-		for (UTextBlock* Count : Bar.mStatusCountTexts)
-		{
-			if (Count != nullptr) { Count->SetVisibility(ESlateVisibility::Collapsed); }
-		}
-		if (Bar.mStatusOverflowText != nullptr)
-		{
-			Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		return;
+		if (Icon != nullptr) { Icon->SetVisibility(ESlateVisibility::Collapsed); }
 	}
-
-	const int32 SlotCount = Bar.mStatusIcons.Num();
-
-	int32 Shown = 0;
-	int32 Iconable = 0;
-	for (const FStatusEffectUI& Status : Unit.mStatusEffects)
+	for (UImage* Frame : Bar.mStatusFrames)
 	{
-		if (ResolveStatusIcon(Status.mTag) != nullptr)
-		{
-			++Iconable;
-		}
+		if (Frame != nullptr) { Frame->SetVisibility(ESlateVisibility::Collapsed); }
 	}
-
-	const int32 VisibleCount = FMath::Min(Iconable, SlotCount);
-	const float RowLeft = StatusRowLeft(VisibleCount);
-	const float IconInset = (UnitHpBarStatusFrameSize - UnitHpBarStatusIconSize) * 0.5f;
-	for (int32 SlotIndex = 0; SlotIndex < SlotCount; ++SlotIndex)
+	for (UTextBlock* Count : Bar.mStatusCountTexts)
 	{
-		const float SlotX = RowLeft + StaticCast<float>(SlotIndex) * UnitHpBarStatusIconStep;
-		if (UImage* IconImage = Bar.mStatusIcons[SlotIndex])
-		{
-			if (UCanvasPanelSlot* IconSlot = Cast<UCanvasPanelSlot>(IconImage->Slot))
-			{
-				IconSlot->SetPosition(FVector2D(SlotX + IconInset, UnitHpBarStatusRowTop + IconInset));
-			}
-		}
-		if (Bar.mStatusCountTexts.IsValidIndex(SlotIndex))
-		{
-			if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex])
-			{
-				// 감싼 뒤로 직접 캐스트는 조용히 실패한다. 조상 슬롯을 잡는다.
-				if (UCanvasPanelSlot* CountSlot = FindCanvasSlotUp(CountText))
-				{
-					CountSlot->SetPosition(FVector2D(
-						SlotX + IconInset + UnitHpBarStatusIconSize * 0.35f,
-						UnitHpBarStatusRowTop + IconInset + UnitHpBarStatusIconSize * 0.42f));
-				}
-			}
-		}
-		if (Bar.mStatusFrames.IsValidIndex(SlotIndex))
-		{
-			if (UImage* StatusFrame = Bar.mStatusFrames[SlotIndex])
-			{
-				if (UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(StatusFrame->Slot))
-				{
-					FrameSlot->SetPosition(FVector2D(SlotX, UnitHpBarStatusRowTop));
-				}
-			}
-		}
+		if (Count != nullptr) { Count->SetVisibility(ESlateVisibility::Collapsed); }
 	}
-
-	for (const FStatusEffectUI& Status : Unit.mStatusEffects)
-	{
-		UTexture2D* Icon = ResolveStatusIcon(Status.mTag);
-		if (Icon == nullptr)
-		{
-			continue;   // 전용 아이콘 없는 상태는 표시 생략.
-		}
-		if (Shown >= SlotCount)
-		{
-			continue;   // 슬롯 초과분은 아래 오버플로로만 집계.
-		}
-
-		if (UImage* IconImage = Bar.mStatusIcons[Shown])
-		{
-			IconImage->SetBrushResourceObject(Icon);
-			IconImage->SetVisibility(ESlateVisibility::HitTestInvisible);
-		}
-		if (Bar.mStatusCountTexts.IsValidIndex(Shown))
-		{
-			if (UTextBlock* CountText = Bar.mStatusCountTexts[Shown])
-			{
-				if (Status.mStackCount > 1)
-				{
-					CountText->SetText(FText::AsNumber(Status.mStackCount));
-					CountText->SetVisibility(ESlateVisibility::HitTestInvisible);
-				}
-				else
-				{
-					CountText->SetVisibility(ESlateVisibility::Collapsed);
-				}
-			}
-		}
-		++Shown;
-	}
-
-	// 채우지 못한 뒤쪽 슬롯 숨김.
-	for (int32 SlotIndex = Shown; SlotIndex < SlotCount; ++SlotIndex)
-	{
-		if (UImage* IconImage = Bar.mStatusIcons[SlotIndex]) { IconImage->SetVisibility(ESlateVisibility::Collapsed); }
-	}
-	for (int32 SlotIndex = Shown; SlotIndex < Bar.mStatusCountTexts.Num(); ++SlotIndex)
-	{
-		if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex]) { CountText->SetVisibility(ESlateVisibility::Collapsed); }
-	}
-	for (int32 SlotIndex = 0; SlotIndex < Bar.mStatusFrames.Num(); ++SlotIndex)
-	{
-		if (UImage* StatusFrame = Bar.mStatusFrames[SlotIndex])
-		{
-			StatusFrame->SetVisibility(SlotIndex < Shown
-			? ESlateVisibility::HitTestInvisible
-			: ESlateVisibility::Collapsed);
-		}
-	}
-
-	// 세 칸 초과 상태 개수를 "+N"으로.
 	if (Bar.mStatusOverflowText != nullptr)
 	{
-		const int32 Overflow = Iconable - SlotCount;
-		if (Overflow > 0)
-		{
-			Bar.mStatusOverflowText->SetText(FText::FromString(FString::Printf(TEXT("+%d"), Overflow)));
-			Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		}
-		else
-		{
-			Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		Bar.mStatusOverflowText->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }

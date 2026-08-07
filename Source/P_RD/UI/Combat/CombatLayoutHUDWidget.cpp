@@ -178,19 +178,20 @@ namespace
 	 * 이번 라운드 잔여분 뒤에 다음 라운드 한 바퀴를 반드시 붙이고, 유닛이
 	 * 적어도 열 칸은 미래 순서로 채운다.
 	 */
+	/** @brief 다음 턴 라운드 앞에 낀 빈 라운드 수. 칸 하나씩 표기한다(0807). */
+	int32 EmptyRoundCellCount(const FTurnUI& Turn)
+	{
+		// 보여 줄 다음 턴이 없으면 빈 라운드 예고도 무의미하다.
+		return Turn.mNextRoundUnitIds.IsEmpty()
+			? 0 : FMath::Max(Turn.mNextRoundOffset - 1, 0);
+	}
+
 	int32 ProjectedTurnCount(const FTurnUI& Turn, const int32 SlotRoom)
 	{
-		const int32 CycleCount = Turn.mTurnOrderUnitIds.Num();
-		if (CycleCount <= 0)
-		{
-			return 0;
-		}
-		const int32 RemainingThisRound = FMath::Clamp(
-			Turn.mCurrentRoundRemainingTurnCount > 0
-				? Turn.mCurrentRoundRemainingTurnCount
-				: CycleCount,
-			1, CycleCount);
-		return FMath::Max(SlotRoom, RemainingThisRound + CycleCount);
+		// 이번 라운드 잔여 + 빈 라운드 칸 + 다음 턴 라운드 미리보기. 그보다
+		// 먼 미래는 속도 변화로 얼마든지 뒤집혀서 안 그린다(0806 합의).
+		return Turn.mTurnOrderUnitIds.Num() + EmptyRoundCellCount(Turn)
+			+ Turn.mNextRoundUnitIds.Num();
 	}
 
 	/** @brief 이름으로 위젯을 찾되 중첩 UserWidget 안까지 내려간다. */
@@ -459,6 +460,9 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	}
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
+	mSkillToggleButton = Find<UButton>(WidgetTree, TEXT("SkillToggleButton"));
+	mSkillTogglePlate = Find<UWidget>(WidgetTree, TEXT("SkillTogglePlate"));
+	mSkillToggleLabel = Find<UWidget>(WidgetTree, TEXT("SkillToggleLabel"));
 
 	mCommandLayer = Find<UScaleBox>(WidgetTree, TEXT("CommandLayerScale"));
 	mPartyLayer = Find<UScaleBox>(WidgetTree, TEXT("PartyLayerScale"));
@@ -679,6 +683,12 @@ void UCombatLayoutHUDWidget::WireCommands()
 		mEndTurnButton->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleEndTurnClicked);
 		BindPressFeedback(mEndTurnButton, mEndTurnButton);
+	}
+	if (mSkillToggleButton != nullptr)
+	{
+		mSkillToggleButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleSkillToggleClicked);
+		BindPressFeedback(mSkillToggleButton, mSkillToggleButton);
 	}
 
 	if (mConfirmButton != nullptr)
@@ -972,6 +982,115 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 	mUIModel->RequestLongPressSkill(SlotIndex - 1);
 }
 
+/**
+ * @brief 카드 고리의 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳이다.
+ *
+ * @details "가운데" 는 화면 한가운데가 아니라 스킬 카드 여섯 장이 둘러싼
+ * 자리다(0807 합의). 카드 자리는 WBP 캔버스에 고정돼 있으므로 슬롯
+ * 좌표의 평균을 판 크기로 나눠 비율로 만든다 -- 해상도가 바뀌어도 맞는다.
+ */
+FVector2D UCombatLayoutHUDWidget::ComputeCommandRingAnchor() const
+{
+	/*
+	 * 슬롯의 캔버스 좌표를 쓰면 안 된다 -- 카드마다 앵커 기준이 달라서(가운데
+	 * 앵커는 좌표가 음수) 평균이 쓰레기가 된다(0807 검증 로그: 앵커 (-1,67)).
+	 * 대신 **실제 그려진 지오메트리**로 잰다. 카드 자리는 고정이라, 지금
+	 * 접혀 있어도 마지막으로 그려진 값이 그대로 맞다.
+	 */
+	FVector2D Sum = FVector2D::ZeroVector;
+	int32 Count = 0;
+	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
+	{
+		if (Widgets.Root == nullptr)
+		{
+			continue;
+		}
+		const FGeometry& Geometry = Widgets.Root->GetCachedGeometry();
+		if (Geometry.GetAbsoluteSize().X <= 0.f)
+		{
+			continue;   // 아직 한 번도 안 그려진 칸
+		}
+		Sum += FVector2D(Geometry.GetAbsolutePosition())
+			+ FVector2D(Geometry.GetAbsoluteSize()) * 0.5f;
+		++Count;
+	}
+	const FGeometry& RootGeometry = GetCachedGeometry();
+	if (Count > 0)
+	{
+		const FVector2D RootSize = FVector2D(RootGeometry.GetAbsoluteSize());
+		if (RootSize.X > 0.f && RootSize.Y > 0.f)
+		{
+			// 같은 절대(데스크톱) 좌표계에서 판 원점을 빼고 크기로 나눠 비율로.
+			const FVector2D Anchor =
+				(Sum / Count - FVector2D(RootGeometry.GetAbsolutePosition()))
+				/ RootSize;
+			if (Anchor.X >= 0.f && Anchor.X <= 1.f
+				&& Anchor.Y >= 0.f && Anchor.Y <= 1.f)
+			{
+				return Anchor;
+			}
+		}
+	}
+
+	/*
+	 * 아직 카드가 한 번도 안 그려졌다(전투 들어와서 첫 클릭 -- 카드는 이제
+	 * 저절로 안 펴지니 흔한 일이다). 그려진 자국 대신 **슬롯 레이아웃**으로
+	 * 같은 값을 계산한다(0807 검수: 첫 클릭만 세부조정이 빠짐).
+	 */
+	const FVector2D RootLocal = RootGeometry.GetLocalSize();
+	if (RootLocal.X <= 0.f || RootLocal.Y <= 0.f)
+	{
+		return FVector2D(0.5f, 0.5f);
+	}
+	Sum = FVector2D::ZeroVector;
+	Count = 0;
+	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
+	{
+		const UCanvasPanelSlot* CardSlot = Widgets.Root != nullptr
+			? Cast<UCanvasPanelSlot>(Widgets.Root->Slot) : nullptr;
+		if (CardSlot == nullptr)
+		{
+			continue;
+		}
+		const FAnchors Anchors = CardSlot->GetAnchors();
+		if (Anchors.Minimum != Anchors.Maximum)
+		{
+			continue;   // 늘어나는 앵커는 여기서 계산할 일이 없다
+		}
+		// 점 앵커 배치 공식 그대로: 앵커점 + 오프셋 - 정렬*크기 = 왼쪽 위.
+		const FVector2D Size = CardSlot->GetSize();
+		const FVector2D TopLeft = RootLocal * Anchors.Minimum
+			+ CardSlot->GetPosition() - CardSlot->GetAlignment() * Size;
+		Sum += TopLeft + Size * 0.5f;
+		++Count;
+	}
+	if (Count == 0)
+	{
+		return FVector2D(0.5f, 0.5f);
+	}
+	const FVector2D Anchor = (Sum / Count) / RootLocal;
+	if (Anchor.X < 0.f || Anchor.X > 1.f || Anchor.Y < 0.f || Anchor.Y > 1.f)
+	{
+		return FVector2D(0.5f, 0.5f);
+	}
+	return Anchor;
+}
+
+/** @brief 이 유닛을 화면 가운데로 데려오라고 청한다. */
+void UCombatLayoutHUDWidget::RequestCameraFocus(const int32 UnitId,
+	const bool bWithCommandRing)
+{
+	if (mUIModel == nullptr || UnitId == INDEX_NONE)
+	{
+		return;
+	}
+	// 카드 고리 세부조정은 카드가 실제로 뜰 때만 한다(0807). 카드 없이
+	// 고리 자리로 내리면 화면 가운데를 비워 둔 채 유닛만 아래로 처진다.
+	mUIModel->SetFocusScreenAnchor(bWithCommandRing == true
+		? ComputeCommandRingAnchor() : FVector2D(0.5f, 0.5f));
+	mUIModel->RequestFocusUnit(UnitId);
+}
+
 /** @brief 지금 조종 중인 유닛을 화면 가운데로. 누구 스킬인지 판에서 보여 준다. */
 void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
 {
@@ -989,18 +1108,17 @@ void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
 	{
 		FocusUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
 	}
-	if (FocusUnitId != INDEX_NONE)
-	{
-		mCameraFocusedUnitId = FocusUnitId;
-		mUIModel->RequestFocusUnit(FocusUnitId);
-	}
+	// 용병 패널이 덮고 있으면 카드는 안 보인다 -- 그때는 한가운데로.
+	RequestCameraFocus(FocusUnitId,
+		/*bWithCommandRing=*/IsMercenaryPanelShown() == false);
 }
 
 /** @brief 왼쪽 넘김칸을 눌러 직전 열 칸 페이지로 간다. */
 void UCombatLayoutHUDWidget::HandleTurnPageLeftClicked()
 {
+	// 모델이 풀린 뒤(전투 정리 중) 눌러도 안전해야 한다 -- 오른쪽과 짝.
 	const int32 SlotRoom = mTurnSlots.Num();
-	if (SlotRoom <= 0)
+	if (mUIModel == nullptr || SlotRoom <= 0)
 	{
 		return;
 	}
@@ -1072,7 +1190,10 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		{
 			mLastTurnUnitId = TurnUnitId;
 			mLastTurnBarRound = TurnRound;
-			SetCommandsShown(true);
+			// 차례가 와도 카드를 자동으로 펴지 않는다(0807) -- 판을 먼저
+			// 봐야 하는데 카드 여섯 장이 시야를 덮는다. 카드는 스킬 단추나
+			// 유닛 탭으로만 편다. 지난 차례 카드가 남아 있으면 접는다.
+			SetCommandsShown(false);
 			// 줄 자체가 한 칸 밀렸다. 옮겨 둔 창을 그대로 두면 다음 턴에
 			// 엉뚱한 곳을 보고 있다.
 			mTurnWindowStart = 0;
@@ -1097,10 +1218,6 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		// 겨냥한 자리가 바뀌어도 카드를 억지로 펴지 않는다. 펴고 접는 것은
 		// 판을 누른 그 손이 정한다 -- 여기서 같이 펴면, 닫으려고 누른 탭이
 		// 자리도 바꾸는 바람에 닫자마자 도로 열린다.
-		const int32 TargetId = (mUIModel != nullptr
-			&& mUIModel->GetTarget().mIsValid)
-			? mUIModel->GetTarget().mUnitId : INDEX_NONE;
-		mLastTargetUnitId = TargetId;
 		// 몬스터 탭이 떠 있으면 HP·상태 변화를 따라간다. 죽은 몬스터는 행에서
 		// 빠지고 선택이 남은 행으로 옮겨 간다.
 		if (IsMonsterTabShown() == true)
@@ -1569,14 +1686,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		FString::Printf(TEXT("R%d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
-	const int32 CycleCount = Turn.mTurnOrderUnitIds.Num();
-	const int32 RemainingThisRound = CycleCount > 0
-		? FMath::Clamp(
-			Turn.mCurrentRoundRemainingTurnCount > 0
-				? Turn.mCurrentRoundRemainingTurnCount
-				: CycleCount,
-			1, CycleCount)
-		: 0;
+	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
 	const int32 Total = ProjectedTurnCount(Turn, SlotRoom);
 	const int32 Start = FMath::Clamp(mTurnWindowStart, 0,
 		FMath::Max(Total - SlotRoom, 0));
@@ -1600,7 +1710,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	{
 		const FTurnSlotWidgets& Widgets = mTurnSlots[Index];
 		const int32 ProjectedIndex = Start + Index;
-		if (CycleCount <= 0 || ProjectedIndex >= Total)
+		if (ProjectedIndex >= Total)
 		{
 			SetShown(Widgets.Root, false);
 			SetShown(Widgets.RoundDivider, false);
@@ -1609,8 +1719,40 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			SetShown(Widgets.Speed, false);
 			continue;
 		}
-		const int32 UnitId =
-			Turn.mTurnOrderUnitIds[ProjectedIndex % CycleCount];
+		// 앞쪽은 이번 라운드 잔여, 가운데는 빈 라운드 칸, 뒤는 다음 턴
+		// 라운드 미리보기다.
+		const int32 EmptyRounds = EmptyRoundCellCount(Turn);
+		const int32 EmptyIndex = ProjectedIndex - RemainingThisRound;
+		if (EmptyIndex >= 0 && EmptyIndex < EmptyRounds)
+		{
+			/*
+			 * 아무도 턴을 못 차는 라운드. 칸 하나를 비워 "이런 라운드가
+			 * 지나간다" 만 알린다(0807 합의) -- 안 그리면 R2 다음에 R4 가
+			 * 붙어 라운드 번호가 뛰는 것처럼 보인다.
+			 */
+			mTurnSlotUnitIds[Index] = INDEX_NONE;
+			SetShown(Widgets.Root, true);
+			if (Widgets.Root != nullptr)
+			{
+				Widgets.Root->SetRenderOpacity(0.45f);
+			}
+			SetShown(Widgets.Portrait, false);
+			SetTextIfPresent(Widgets.Name, FText::GetEmpty());
+			SetShown(Widgets.SpeedIcon, false);
+			SetShown(Widgets.Speed, false);
+			SetShown(Widgets.Current, false);
+			SetShown(Widgets.RoundDivider, true);
+			SetShown(Widgets.RoundLabel, true);
+			SetTextIfPresent(Widgets.RoundLabel,
+				FText::FromString(FString::Printf(TEXT("R%d"),
+					Turn.mRound + 1 + EmptyIndex)));
+			continue;
+		}
+
+		const bool bNextRound = ProjectedIndex >= RemainingThisRound + EmptyRounds;
+		const int32 UnitId = bNextRound
+			? Turn.mNextRoundUnitIds[ProjectedIndex - RemainingThisRound - EmptyRounds]
+			: Turn.mTurnOrderUnitIds[ProjectedIndex];
 		const FUnitUI* Unit = Units.FindByPredicate(
 			[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 		if (Unit == nullptr)
@@ -1623,12 +1765,11 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			continue;
 		}
 
-		const int32 RoundOffset = ProjectedIndex < RemainingThisRound
-			? 0
-			: 1 + (ProjectedIndex - RemainingThisRound) / CycleCount;
+		// 빈 라운드는 건너뛰므로 "다음" 이 mRound+1이 아닐 수 있다.
+		const int32 RoundOffset = bNextRound
+			? FMath::Max(Turn.mNextRoundOffset, 1) : 0;
 		const bool bStartsShownRound = ProjectedIndex == 0
-			|| (ProjectedIndex >= RemainingThisRound
-				&& (ProjectedIndex - RemainingThisRound) % CycleCount == 0);
+			|| ProjectedIndex == RemainingThisRound + EmptyRounds;
 
 		mTurnSlotUnitIds[Index] = UnitId;
 		SetShown(Widgets.Root, true);
@@ -1636,7 +1777,10 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		SetShown(Widgets.Speed, true);
 		SetTextIfPresent(Widgets.Speed,
 			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
-		Widgets.Root->SetRenderOpacity(RoundOffset == 0 ? 1.f : 0.45f);
+		if (Widgets.Root != nullptr)
+		{
+			Widgets.Root->SetRenderOpacity(RoundOffset == 0 ? 1.f : 0.45f);
+		}
 		SetShown(Widgets.Current, ProjectedIndex == 0);
 		SetTextIfPresent(Widgets.Name, Unit->mName);
 		SetShown(Widgets.RoundDivider, bStartsShownRound);
@@ -1792,6 +1936,22 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		: nullptr;
 	const FUnitUI* AllyShown = TargetUnit != nullptr && TargetUnit->mIsPlayer
 		? TargetUnit : nullptr;
+	/*
+	 * 조준 중에는 아군 요약판을 **행동하는 유닛**으로 붙들어 둔다.
+	 *
+	 * 사거리에서 자리를 짚으면 겨냥이 그 타일(유닛 없음)로 갈려서 판이
+	 * 내려갔다(0807 검수). 스킬을 고른 사람이 누구인지는 조준 내내 보여야
+	 * 하는 정보다.
+	 */
+	if (AllyShown == nullptr
+		&& mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	{
+		const FUnitUI* TurnUnit = FindTurnUnit();
+		if (TurnUnit != nullptr && TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
+		{
+			AllyShown = TurnUnit;
+		}
+	}
 	const FUnitUI* Shown = TargetUnit != nullptr && !TargetUnit->mIsPlayer
 		? TargetUnit : nullptr;
 	if (Shown == nullptr)
@@ -2134,6 +2294,9 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
 	++mActionPresentationSerial;
 	mIsActionPlaying = false;
 	mIsTurnActive = false;
+	// 상태까지 접는다. 가리기만 하면 다음 턴이 열리는 순간 카드가 저절로
+	// 되살아난다 -- 카드는 스킬 단추로만 연다는 계약(0807)이 깨진다.
+	mCommandsShown = false;
 	RefreshCommandVisibility();
 }
 
@@ -2385,6 +2548,13 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 	SetShown(mConfirmPanel, Phase == ECombatBuildPhaseUI::Preview);
 	SetTextIfPresent(mEndTurnLabel, Phase == ECombatBuildPhaseUI::None
 		? LOCTEXT("EndTurn", "턴 종료") : LOCTEXT("CancelAim", "취소"));
+
+	// 조준에 들어가면 스킬 단추는 비킨다 -- 같은 자리에 확정 단추가 선다
+	// (0807 검수: 둘이 겹침). 조준 중 카드 여닫기는 어차피 막혀 있다.
+	const bool bSkillButtonShown = Phase == ECombatBuildPhaseUI::None;
+	SetInteractiveShown(mSkillToggleButton, bSkillButtonShown);
+	SetShown(mSkillTogglePlate, bSkillButtonShown);
+	SetShown(mSkillToggleLabel, bSkillButtonShown);
 }
 
 /** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
@@ -2403,15 +2573,21 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 	// 고른 카드가 가져갈 몫. 남은 것보다 크면 남은 만큼만 빛낸다.
 	mPendingAPCost = FMath::Clamp(GetPendingActionCost(), 0, Left);
 
+	/*
+	 * 칸보다 AP 가 많으면 **칸 수에서 멈춘다**(0806 합의). 전에는 넘치면
+	 * 아이콘을 전부 접었는데, 그러면 12/12 인데 빈 막대만 남아 "AP 없음"
+	 * 으로 읽혔다. 정확한 수는 옆의 숫자가 말하고, 아이콘은 감이다.
+	 */
 	const int32 Room = mTurnAPPips.Num();
-	const bool bTooMany = Total > Room;
+	const int32 ShownTotal = FMath::Min(Total, Room);
+	const int32 ShownLeft = FMath::Min(Left, Room);
 	for (int32 Pip = 0; Pip < Room; ++Pip)
 	{
-		const bool bHasPip = !bTooMany && Pip < Total;
-		SetShown(mTurnAPPips[Pip], bHasPip && Pip < Left);
+		const bool bHasPip = Pip < ShownTotal;
+		SetShown(mTurnAPPips[Pip], bHasPip && Pip < ShownLeft);
 		if (mTurnAPPipsUsed.IsValidIndex(Pip))
 		{
-			SetShown(mTurnAPPipsUsed[Pip], bHasPip && Pip >= Left);
+			SetShown(mTurnAPPipsUsed[Pip], bHasPip && Pip >= ShownLeft);
 		}
 	}
 	RefreshPendingAPGlow(0.f);
@@ -2766,6 +2942,12 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 				[TappedId](const FUnitUI& Candidate)
 				{ return Candidate.mUnitId == TappedId; });
 			const bool bIsAlly = Tapped != nullptr && Tapped->mIsPlayer;
+
+			// 짚은 유닛을 화면 가운데로 -- 판에서 직접 누른 손도 턴 칸을
+			// 누른 손과 같은 대접을 받는다(0806). 카드 고리 세부조정은
+			// 카드가 뜨는 아군일 때만(0807).
+			RequestCameraFocus(TappedId, /*bWithCommandRing=*/bIsAlly);
+
 			if (bIsAlly == true)
 			{
 				// 카드만 갈아 끼운다. 상세 겹은 안 띄운다.
@@ -2774,23 +2956,31 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 			}
 			SetCommandsShown(bIsAlly);
 		}
+		else
+		{
+			// 겨냥이 걷혔다(빈 땅 탭으로 살펴보기 해제). 카드도 함께 접는다 --
+			// 요약판은 내려갔는데 카드만 남으면 화면이 안 닫힌 것처럼
+			// 보인다(0806 검수: 밖을 눌러도 스킬 UI 가 안 내려감).
+			SetCommandsShown(false);
+		}
 		return;
 	}
 
 	/*
-	 * 겨냥이 그대로다. **정말 빈 땅일 때만** 접는다.
+	 * 겨냥이 그대로다 = **판 밖**(타일 없는 곳)을 눌렀다. 전부 내린다.
 	 *
-	 * 전에는 여기서 뒤집어서, 판 아무 데나 누를 때마다 카드가 튀어나왔다.
-	 * 그래서 접기만 하게 했더니 이번엔 반대 탈이 났다 -- 아군을 누르면
-	 * 겨냥이 서면서 카드가 펴지는데, 같은 탭이 한 번 더 들어오면 그때는
-	 * "겨냥 그대로"라 방금 편 카드를 도로 접었다(0806 검수: 용병을 눌러도
-	 * 스킬 카드가 안 뜸). 짚어 둔 유닛이 있으면 그 카드는 그대로 둔다.
+	 * 타일 위 탭은 어떤 경우든 겨냥을 움직인다(유닛 탭 = 짚기, 빈 타일 탭 =
+	 * 살펴보기 해제, 같은 유닛 재탭 = 무르기). 그런데 판 밖 탭은 트레이스에
+	 * 타일이 없어 겨냥 알림 자체가 안 오고, 그래서 여기로 온다. 이 손의
+	 * 뜻은 "다 치워라"다 -- 카드도, 짚어 둔 요약판도, 위협 칠도 내린다
+	 * (0806 검수: 밖을 눌러도 스킬 UI 가 안 내려감).
 	 */
-	const bool bStillPointingUnit = AfterTarget.mIsValid == true
-		&& AfterTarget.mUnitId != INDEX_NONE;
-	if (bStillPointingUnit == false)
+	SetCommandsShown(false);
+	if (AfterTarget.mIsValid == true)
 	{
-		SetCommandsShown(false);
+		mUIModel->SetTarget(FCombatTargetUI());
+		// 칠 걷기는 판 소관이다. INDEX_NONE = "그만 본다".
+		mUIModel->RequestLongPressUnit(INDEX_NONE);
 	}
 }
 
@@ -2847,6 +3037,22 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 	mMercenarySelectedSlot = SlotIndex;
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	RefreshParty();
+
+	// 어느 화면에서 골랐든 "이 용병을 본다" 는 게임플레이에 알린다 -- 스킬
+	// 소켓 상세가 이 유닛 기준으로 풀려야 해서다(0807 감사: 패널 선택이
+	// GameMode 살펴보기 유닛과 어긋나 엉뚱한 스킬 상세가 떴다). 상세 겹은
+	// 안 띄운다.
+	mSuppressNextUnitDetailOverlay = true;
+	mUIModel->RequestInspectUnit(UnitId);
+
+	// 전투 화면에서 아군 칸을 누른 것은 "이 용병 스킬을 보겠다"다. 차례가
+	// 와도 카드가 저절로 안 열리는 새 계약(0807)에서는 여기가 여는 손 중
+	// 하나다. 용병 패널이 열려 있으면 목록 고르기일 뿐이라 안 편다.
+	if (IsMercenaryPanelShown() == false)
+	{
+		RequestCameraFocus(UnitId, /*bWithCommandRing=*/true);
+		SetCommandsShown(true);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
@@ -3180,18 +3386,30 @@ void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 		return;
 	}
 
+	/*
+	 * 조준 중에는 아무것도 안 한다. 여기서 겨냥을 덮으면 확정 단추가
+	 * "겨냥한 칸 재탭" 을 흉내 내는 구조라, 조준해 둔 칸이 아니라 턴 칩의
+	 * 유닛 칸으로 확정이 나간다(0807 감사).
+	 */
+	if (IsAiming() == true)
+	{
+		return;
+	}
+
 	// 떠 있던 상세를 **먼저** 닫는다. 카메라를 잡은 뒤에 닫으면 닫기가 방금
 	// 잡은 것을 도로 놓아 버려 화면이 안 움직였다(0806 검수).
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 
-	// 누른 유닛을 화면 가운데로. 아군이든 적이든 이건 똑같이 해 준다.
-	mCameraFocusedUnitId = UnitId;
-	mUIModel->RequestFocusUnit(UnitId);
-
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FUnitUI* Unit = Units.FindByPredicate(
 		[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
-	if (Unit == nullptr || Unit->mIsPlayer == false)
+	const bool bIsAlly = Unit != nullptr && Unit->mIsPlayer;
+
+	// 누른 유닛을 화면 가운데로. 카드 고리 세부조정은 카드가 뜨는
+	// 아군일 때만 한다(0807).
+	RequestCameraFocus(UnitId, /*bWithCommandRing=*/bIsAlly);
+
+	if (bIsAlly == false)
 	{
 		// 적이면 짚어 주기만 한다 -- 요약판이 그 적으로 갈린다.
 		FCombatTargetUI Target;
@@ -3532,8 +3750,6 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 	{
 		UTextBlock* SkillName = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
 			FName(*FString::Printf(TEXT("MonsterSkillName_%d"), Index))));
-		UWidget* SkillBox = mMonsterTabWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("MonsterSkillBox_%d"), Index)));
 		const bool bHasSkill = Index < SkillCount;
 		if (SkillName != nullptr)
 		{
@@ -3542,11 +3758,6 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 				SkillName->SetText(Detail.mSkills[Index].mName);
 			}
 			SkillName->SetVisibility(bHasSkill
-				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
-		}
-		if (SkillBox != nullptr)
-		{
-			SkillBox->SetVisibility(bHasSkill
 				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 		}
 		// 아이콘 칸과 그 틀. 민무늬 글상자만 보여 주던 것을 용병탭과 같은
@@ -3592,6 +3803,37 @@ void UCombatLayoutHUDWidget::HandleMercenaryCloseClicked()
  * **글자만 바꾸고 하는 일은 안 바꿨었다.** 취소라고 적힌 것을 눌렀는데 턴이
  * 넘어갔다 -- 무르려다 차례를 날리는 것이라 되돌릴 길이 없다.
  */
+/**
+ * @brief 스킬 단추. 차례 유닛의 카드를 펴고 카메라를 그 유닛에 맞춘다.
+ *
+ * @details 차례가 와도 카드는 저절로 안 편다(0807) -- 이 단추가 카드를 여는
+ * 정문이다. 다시 누르면 접는다.
+ */
+void UCombatLayoutHUDWidget::HandleSkillToggleClicked()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	if (mCommandsShown == true)
+	{
+		SetCommandsShown(false);
+		return;
+	}
+	const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
+	// 적 차례에는 펼 카드가 없다. 여기서 그냥 열면 억제 플래그만 세워 두고
+	// 응답이 안 와, 다음 정상 상세가 조용히 한 번 먹힌다(0807 감사).
+	if (TurnUnitId == INDEX_NONE || IsPlayerTurn() == false)
+	{
+		return;
+	}
+	// 다른 용병을 살펴보던 중이었어도 카드는 차례 유닛 것으로 되돌린다.
+	mSuppressNextUnitDetailOverlay = true;
+	mUIModel->RequestInspectUnit(TurnUnitId);
+	RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
+	SetCommandsShown(true);
+}
+
 void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 {
 	if (mUIModel == nullptr)
@@ -4555,13 +4797,8 @@ void UCombatLayoutHUDWidget::HideDetailOverlay(const bool bNotifyGameplay)
 	}
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
 
-	// 스킬을 보려고 잡아 둔 카메라를 놓아 준다. 상세를 닫았는데 화면이 그
-	// 유닛에 붙어 있으면 판을 다시 못 본다(0806 카메라 배선).
-	if (mUIModel != nullptr && mCameraFocusedUnitId != INDEX_NONE)
-	{
-		mCameraFocusedUnitId = INDEX_NONE;
-		mUIModel->RequestFocusUnit(INDEX_NONE);
-	}
+	// 카메라는 안 건드린다. 즉시 이동 방식이라 잡아 둔 것이 없고,
+	// 해제 신호를 보내 봐야 게임플레이가 무시한다(0807 감사에서 노-옵 확인).
 
 	// 패널과 함께 칠린 위협 범위를 걷으라는 신호다. INDEX_NONE = "닫았다".
 	// 칠을 걷는 것은 판(게임플레이) 소관이라 화면이 직접 지우지 않는다.

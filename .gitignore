@@ -120,3 +120,6 @@ __MACOSX/
 /work/
 /outputs/
 .gdep/
+
+# UI 목업 편집기의 로컬 에셋 미러 -- 원본은 SVN, git 에는 안 올린다 (0807)
+Tools/UI/**/*.png

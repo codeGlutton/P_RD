@@ -171,6 +171,15 @@ public:
 	 * @param UnitId 가운데로 데려올 유닛
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnit(int32 UnitId);
+	/**
+	 * @brief 초점 유닛이 놓일 화면 자리(0~1 비율). RequestFocusUnit 전에 세운다.
+	 *
+	 * @details "가운데" 는 화면 한가운데가 아니라 **스킬 카드들이 둘러싼
+	 * 자리**다(0807 합의). 카드가 화면 어디에 있는지는 UI 만 알므로 UI 가
+	 * 비율로 알려 주고, 카메라를 옮기는 게임플레이는 이 값을 읽기만 한다.
+	 */
+	void SetFocusScreenAnchor(const FVector2D& AnchorFraction) { mFocusScreenAnchor = AnchorFraction; }
+	const FVector2D& GetFocusScreenAnchor() const { return mFocusScreenAnchor; }
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
@@ -282,6 +291,9 @@ private:
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
+
+	/** @brief 초점 유닛이 놓일 화면 자리(0~1 비율). 기본은 한가운데. */
+	UPROPERTY(Transient) FVector2D mFocusScreenAnchor = FVector2D(0.5f, 0.5f);
 
 	/** @brief 찜해 둔 대상 유닛. 없으면 INDEX_NONE. */
 	UPROPERTY(Transient) FCombatTargetUI mTarget;

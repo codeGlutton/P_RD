@@ -140,6 +140,11 @@ h1 { font-size: 20px; color: #f0c479; }
       <div class="stage editable" id="settings"
            style="width:1920px;height:1080px;transform:scale(0.5);transform-origin:0 0"></div>
     </div></div>
+  <div><div class="cap">지도 — 새 WBP 시안 (1920x1080 을 반으로 줄여 보임) — 편집</div>
+    <div style="width:960px;height:540px">
+      <div class="stage editable" id="worldmap"
+           style="width:1920px;height:1080px;transform:scale(0.5);transform-origin:0 0"></div>
+    </div></div>
 </div>
 
 <b id="tryTab">◂ 갈아 끼우기</b>
@@ -380,6 +385,7 @@ const STAGES = {
   merc:     { board: "merc",  side: { key: "A" }, editable: true, scale: 0.5 },
   monster:  { board: "mt",    side: { key: "A" }, editable: true, scale: 0.5 },
   settings: { board: "set",   side: { key: "A" }, editable: true, scale: 0.5 },
+  worldmap: { board: "map",   side: { key: "A" }, editable: true, scale: 0.5 },
 };
 
 /* 보기 글: 옆 메뉴에서 바꾼 것이 있으면 그걸, 없으면 기본을. */
@@ -892,6 +898,170 @@ SET_BUTTONS.forEach((button, index) => {
         { kr: true, color: button.warn ? "#f0b0a0" : "#f2e0b4" });
   };
 });
+
+/* ---- 지도: 새 WBP 시안 (0807, 기존 WBP_FrontendMap 을 갈아엎는 판) ---- */
+
+/* 방 종류와 기본 아이콘. 범례와 노드 그물이 같은 슬롯을 읽어서, 하나를
+   갈아 끼우면 양쪽 다 바뀐다. */
+const MAP_NODE_TYPES = [
+  ["monster",  "전투",   "T_MapNode_Monster_V2"],
+  ["elite",    "엘리트", "T_MapNode_Elite_V2"],
+  ["boss",     "보스",   "T_MapNode_Boss_V2"],
+  ["shop",     "상점",   "T_MapNode_Shop_V2"],
+  ["treasure", "보물",   "T_MapNode_Treasure_V2"],
+  ["rest",     "휴식",   "T_MapNode_Rest_V2"],
+];
+
+DEFAULT.mapPanel = { board: "map", x: 0, y: 0, w: 1920, h: 1080,
+                     on: true, label: "지도: 양피지 판" };
+ART_SLOTS.mapPanel = { plate: { label: "양피지",
+                               def: "T_StageMap_Background_Parchment",
+                               kind: "img" } };
+TEXT_DEF.mapPanel = { A: "" };
+DRAW.mapPanel = (host, w, h, s) => {
+  art(host, artOf("mapPanel", "plate"), 0, 0, w, h);
+};
+
+DEFAULT.mapTitle = { board: "map", x: 660, y: 34, w: 600, h: 104,
+                     on: true, label: "지도: 제목" };
+ART_SLOTS.mapTitle = { plate: { label: "제목판", def: "T_Shop_TitlePlate_V01",
+                                kind: "img" } };
+TEXT_DEF.mapTitle = { A: "정찰 지도" };
+DRAW.mapTitle = (host, w, h, s) => {
+  art(host, artOf("mapTitle", "plate"), 0, 0, w, h);
+  txt(host, 0, -3, w, h, sample("mapTitle", s), fontPx("mapTitle", h * 0.44),
+      { kr: true, color: "#fff6dd" });
+};
+
+DEFAULT.mapFloor = { board: "map", x: 64, y: 46, w: 430, h: 80,
+                     on: true, label: "지도: 층 표시" };
+ART_SLOTS.mapFloor = { plate: { label: "띠판", def: "T_MB_HireStatsStrip",
+                               kind: "slice" } };
+TEXT_DEF.mapFloor = { A: "스테이지 1 · 여름 마을" };
+DRAW.mapFloor = (host, w, h, s) => {
+  art(host, artOf("mapFloor", "plate"), 0, 0, w, h);
+  txt(host, 0, -2, w, h, sample("mapFloor", s), fontPx("mapFloor", h * 0.4),
+      { kr: true, dark: true });
+};
+
+/* 노드 그물: 가로 진행(왼쪽 출발 -> 오른쪽 보스). 열 사이 길은 다음 열로만
+   이어진다. 견본 배치는 StageBuilder 가 뽑는 8열 x 5줄 꼴을 흉내 낸 것. */
+DEFAULT.mapNodes = { board: "map", x: 170, y: 190, w: 1400, h: 620,
+                     on: true, label: "지도: 노드 그물" };
+ART_SLOTS.mapNodes = {
+  monster:  { label: "전투 노드",   def: "T_MapNode_Monster_V2",  kind: "img" },
+  elite:    { label: "엘리트 노드", def: "T_MapNode_Elite_V2",    kind: "img" },
+  boss:     { label: "보스 노드",   def: "T_MapNode_Boss_V2",     kind: "img" },
+  shop:     { label: "상점 노드",   def: "T_MapNode_Shop_V2",     kind: "img" },
+  treasure: { label: "보물 노드",   def: "T_MapNode_Treasure_V2", kind: "img" },
+  rest:     { label: "휴식 노드",   def: "T_MapNode_Rest_V2",     kind: "img" },
+  ring:     { label: "현재 위치 테", def: "T_MapNode_RingSelected_V2",
+              kind: "img" },
+};
+TEXT_DEF.mapNodes = { A: "" };
+DRAW.mapNodes = (host, w, h, s) => {
+  // [종류, 줄(0~4), 현재?] -- 열 순서대로.
+  const COLS = [
+    [["monster", 2, true]],
+    [["monster", 1], ["shop", 3]],
+    [["elite", 0], ["monster", 2], ["treasure", 4]],
+    [["shop", 1], ["monster", 3]],
+    [["treasure", 2]],
+    [["elite", 1], ["monster", 3]],
+    [["rest", 2]],
+    [["boss", 2]],
+  ];
+  const nodePx = Math.min(96, h / 5.6);
+  const colGap = (w - nodePx) / (COLS.length - 1);
+  const laneGap = (h - nodePx) / 4;
+  const cx = (c) => c * colGap + nodePx / 2;
+  const cy = (lane) => lane * laneGap + nodePx / 2;
+  // 길 먼저(아래), 노드 나중(위). 첫 열에서 나가는 길만 밝다 = 지금 고를 수
+  // 있는 길. 실제 게임에선 길 그림(T_MapPath_*_V2)을 쓴다.
+  let lines = "";
+  for (let c = 0; c < COLS.length - 1; c++) {
+    for (const [, laneA] of COLS[c]) {
+      for (const [, laneB] of COLS[c + 1]) {
+        if (Math.abs(laneA - laneB) > 2) continue;
+        const bright = c === 0;
+        lines += `<line x1="${cx(c)}" y1="${cy(laneA)}"` +
+                 ` x2="${cx(c + 1)}" y2="${cy(laneB)}"` +
+                 ` stroke="${bright ? "#7a5a33" : "#7a5a3355"}"` +
+                 ` stroke-width="6" stroke-linecap="round"` +
+                 ` stroke-dasharray="${bright ? "none" : "2 14"}"/>`;
+      }
+    }
+  }
+  el(host, 0, 0, w, h,
+     `<svg width="${w}" height="${h}" style="position:absolute;left:0;top:0">${lines}</svg>`,
+     "");
+  for (let c = 0; c < COLS.length; c++) {
+    for (const [kind, lane, current] of COLS[c]) {
+      const x = cx(c) - nodePx / 2;
+      const y = cy(lane) - nodePx / 2;
+      art(host, artOf("mapNodes", kind), x, y, nodePx, nodePx);
+      if (current) {
+        art(host, artOf("mapNodes", "ring"),
+            x - nodePx * 0.18, y - nodePx * 0.18,
+            nodePx * 1.36, nodePx * 1.36);
+      }
+    }
+  }
+};
+
+DEFAULT.mapLegend = { board: "map", x: 1580, y: 190, w: 290, h: 560,
+                      on: true, label: "지도: 범례" };
+ART_SLOTS.mapLegend = { plate: { label: "범례판", def: "T_MB_GenericDetailPanel",
+                                kind: "slice" } };
+TEXT_DEF.mapLegend = { A: "" };
+DRAW.mapLegend = (host, w, h, s) => {
+  art(host, artOf("mapLegend", "plate"), 0, 0, w, h);
+  const pad = h * 0.09;
+  const rowH = (h - pad * 2) / MAP_NODE_TYPES.length;
+  const icon = Math.min(rowH * 0.78, w * 0.22);
+  MAP_NODE_TYPES.forEach(([kind, label], index) => {
+    const y = pad + index * rowH;
+    art(host, artOf("mapNodes", kind),
+        w * 0.14, y + (rowH - icon) / 2, icon, icon);
+    txt(host, w * 0.14 + icon + 12, y, w - icon - w * 0.14 - 24, rowH,
+        label, Math.round(rowH * 0.42),
+        { kr: true, color: "#e8d7b4", align: "left",
+          style: "justify-content:flex-start" });
+  });
+};
+
+DEFAULT.mapStatus = { board: "map", x: 560, y: 838, w: 800, h: 72,
+                      on: true, label: "지도: 안내 글" };
+ART_SLOTS.mapStatus = { plate: { label: "띠판", def: "T_MB_HireStatsStrip",
+                                kind: "slice" } };
+TEXT_DEF.mapStatus = { A: "다음 방을 골라 입장하세요" };
+DRAW.mapStatus = (host, w, h, s) => {
+  art(host, artOf("mapStatus", "plate"), 0, 0, w, h);
+  txt(host, 0, -2, w, h, sample("mapStatus", s), fontPx("mapStatus", h * 0.42),
+      { kr: true, dark: true });
+};
+
+DEFAULT.mapEnter = { board: "map", x: 1500, y: 928, w: 360, h: 112,
+                     on: true, label: "지도: 입장 단추" };
+ART_SLOTS.mapEnter = { btn: { label: "단추 판", def: "T_Hire_ButtonOrange_V12",
+                              kind: "img" } };
+TEXT_DEF.mapEnter = { A: "입장" };
+DRAW.mapEnter = (host, w, h, s) => {
+  art(host, artOf("mapEnter", "btn"), 0, 0, w, h);
+  txt(host, 0, -4, w, h, sample("mapEnter", s), fontPx("mapEnter", h * 0.4),
+      { kr: true, color: "#fff6dd" });
+};
+
+DEFAULT.mapBack = { board: "map", x: 64, y: 932, w: 320, h: 104,
+                    on: true, label: "지도: 뒤로 단추" };
+ART_SLOTS.mapBack = { btn: { label: "단추 판", def: "T_KitA_Button_Wide_Normal",
+                             kind: "img" } };
+TEXT_DEF.mapBack = { A: "뒤로" };
+DRAW.mapBack = (host, w, h, s) => {
+  art(host, artOf("mapBack", "btn"), 0, 0, w, h);
+  txt(host, 0, -4, w, h, sample("mapBack", s), fontPx("mapBack", h * 0.4),
+      { kr: true, color: "#f2e0b4" });
+};
 
 // 부품을 펼친 뒤라야 기본 배치에 그것들이 들어간다.
 layout = JSON.parse(JSON.stringify(DEFAULT));

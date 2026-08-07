@@ -555,12 +555,29 @@ struct FTurnUI
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mRound = 0;
 	UPROPERTY(BlueprintReadOnly) ECombatBuildPhaseUI mPhase = ECombatBuildPhaseUI::None;
+	/**
+	 * @brief 이번 라운드에 **남은** 턴 순서(현재 턴이 [0]).
+	 *
+	 * @details 턴 개편(속도제) 후 모델의 턴 목록은 소비형이다 -- 지나간 턴은
+	 *          빠진다. 그래서 이 배열은 한 바퀴 전체가 아니라 잔여분이다.
+	 *          지나간 순서를 다시 그리려고 감아 돌리면 안 된다.
+	 */
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
 	/**
-	 * @brief mTurnOrderUnitIds 앞에서부터 이번 라운드에 남은 원소 수(현재 턴 포함).
+	 * @brief 다음 라운드 순서 미리보기(속도 기준 재계산).
 	 *
-	 * @details 그 다음 원소부터는 원형 턴 순서가 한 번 감겨 다음 라운드다.
-	 *          0은 전투 시작 전 또는 경계 메타를 제공하지 않는 구형 목업을 뜻한다.
+	 * @details 표기는 다음 라운드까지만 하기로 했다(0806 합의). 속도가 모자라
+	 *          다음 라운드에 턴을 못 받는 유닛은 여기 없다.
 	 */
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mNextRoundUnitIds;
+	/** @brief mTurnOrderUnitIds 원소 수와 같다(전부 이번 라운드 잔여분). */
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentRoundRemainingTurnCount = 0;
+	/**
+	 * @brief 다음 턴이 실제로 서는 라운드까지의 거리(라운드 수).
+	 *
+	 * @details 충전 5·비용 10이면 턴은 두 라운드에 한 번 서고, 사이의 빈
+	 *          라운드는 모델이 즉시 건너뛴다. 그래서 "다음" 이 mRound+1이
+	 *          아닐 수 있다 -- 표기는 이 거리를 더한 라운드 번호로 한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mNextRoundOffset = 1;
 };

@@ -377,6 +377,8 @@ private:
 	UFUNCTION() void HandleCommandClicked_4();
 	UFUNCTION() void HandleCommandClicked_5();
 	UFUNCTION() void HandleEndTurnClicked();
+	/** @brief 스킬 단추 -- 차례 유닛의 카드를 펴고 접는 정문(0807). */
+	UFUNCTION() void HandleSkillToggleClicked();
 
 	UFUNCTION() void HandlePartyClicked_0();
 	UFUNCTION() void HandlePartyClicked_1();
@@ -416,9 +418,6 @@ private:
 	 * RefreshCommandVisibility() 를 보라.
 	 */
 	bool mCommandsShown = true;
-
-	/** @brief 직전에 찜해 둔 대상. 바뀌면 카드를 편다. */
-	int32 mLastTargetUnitId = INDEX_NONE;
 
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
@@ -711,7 +710,6 @@ private:
 	void SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar);
 	void CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& Bar) const;
 	void UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
-	UTexture2D* ResolveStatusIcon(const FGameplayTag& StatusTag) const;
 
 	UPROPERTY(Transient) TArray<FCombatUnitHpBarWidget> mUnitHpBars;
 	UPROPERTY(Transient) TObjectPtr<class UCanvasPanel> mRootCanvas;
@@ -791,8 +789,15 @@ private:
 	/** @brief 스킬을 보는 동안 그 스킬 주인을 화면 가운데로 데려온다. */
 	void FocusCameraOnTurnUnit();
 
-	/** @brief 카메라를 잡아 둔 유닛. 상세를 닫을 때 놓아 주려고 기억한다. */
-	int32 mCameraFocusedUnitId = INDEX_NONE;
+	/** @brief 카드 고리 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳. */
+	FVector2D ComputeCommandRingAnchor() const;
+
+	/**
+	 * @brief 이 유닛을 화면 가운데로 데려오라고 청한다.
+	 * @param bWithCommandRing 스킬 카드가 함께 뜨는 경우 true -- 그때만 카드
+	 *        고리 가운데로 세부조정한다. 카드가 안 뜨면 화면 한가운데(0807).
+	 */
+	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing);
 
 	/**
 	 * @brief 다음 유닛 상세 응답으로는 상세창을 띄우지 않는다.
@@ -1155,6 +1160,9 @@ private:
 	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
 	TObjectPtr<UButton> mEndTurnButton;
+	TObjectPtr<UButton> mSkillToggleButton;
+	TObjectPtr<UWidget> mSkillTogglePlate;
+	TObjectPtr<UWidget> mSkillToggleLabel;
 
 	/** @brief 미리보기용 가짜 전투 드라이버. 실제 전투에서는 null이다. */
 	UPROPERTY(Transient) TObjectPtr<UMockCombatDriver> mPreviewDriver;

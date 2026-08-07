@@ -235,7 +235,9 @@ def place_summary_panel(tree, prefix):
     scale = 0.72
     width, height = 600.0, 430.0
     margin_x, top = 16.0, 168.0
-    left = margin_x if prefix == "Ally" else 1920.0 - margin_x - width * scale
+    # 아군판도 적판 자리(오른쪽 위)에 둔다(0807). 한 번에 하나만 뜨는
+    # 판들이라 같은 자리를 나눠 써도 안 겹친다.
+    left = 1920.0 - margin_x - width * scale
     # set_box 로 둬야 앵커까지 좌상단으로 맞춘다. 오른쪽 앵커가 남아 있으면
     # 같은 숫자가 "오른쪽 끝에서 1472px" 로 읽혀 판이 화면 밖으로 나간다.
     set_box(panel, left, top, width, height)
@@ -429,6 +431,8 @@ def apply_hud():
                       z=40)
         made += 1
     say(f"    턴 칸 단추 {made}개")
+
+    ensure_skill_toggle(tree)
     unreal.SystemLibrary.execute_console_command(
         None, f"RD.Editor.CleanWidgetVariables {HUD}")
     unreal.BlueprintEditorLibrary.compile_blueprint(blueprint)
@@ -461,6 +465,218 @@ def walk_widgets(root):
         yield node
         if isinstance(node, unreal.PanelWidget):
             stack.extend(list(node.get_all_children()))
+
+
+def descendants(widget):
+    """패널 계열 위젯의 자식 전부(재귀)."""
+    out = []
+    if isinstance(widget, unreal.PanelWidget):
+        for index in range(widget.get_children_count()):
+            child = widget.get_child_at(index)
+            out.append(child)
+            out.extend(descendants(child))
+    return out
+
+
+def ensure_skill_toggle(tree):
+    """스킬 단추(0807): 차례가 와도 카드가 저절로 안 열리므로, 여는 정문을
+    턴 종료 위에 둔다 -- 엄지가 닿는 오른쪽 아래 무리. 생김은 턴 종료판의
+    나무 판을 그대로 빌려 한 무리로 보이게 한다."""
+    end_panel = find(tree, "EndTurnPanel")
+    end_slot = canvas_slot(end_panel)
+    root_canvas = end_panel.get_parent() if end_panel is not None else None
+    if end_slot is None or not isinstance(root_canvas, unreal.CanvasPanel):
+        say("    !! 턴 종료판 못 찾음 -- 스킬 단추 생략")
+        return
+    # 턴 종료판은 우하단 앵커라 offset 이 앵커 상대값이다. 디자인 절대
+    # 좌표로 되돌려 그 위에 얹는다.
+    ex, ey, ew, eh = design_box(end_slot)
+    w = ew
+    h = min(eh, 110.0)
+    x = ex
+    y = ey - h - 14.0
+
+    plate = ensure_image(tree, root_canvas, "SkillTogglePlate", x, y, w, h, z=45)
+    donor = None
+    if isinstance(end_panel, unreal.Image):
+        donor = end_panel.get_editor_property("brush")
+    else:
+        for cand in descendants(end_panel):
+            if isinstance(cand, unreal.Image):
+                donor = cand.get_editor_property("brush")
+                break
+            if isinstance(cand, unreal.Border):
+                donor = cand.get_editor_property("background")
+                break
+    if donor is not None:
+        plate.set_editor_property("brush", donor)
+    else:
+        set_brush(plate, "row_empty")
+    plate.set_visibility(unreal.SlateVisibility.HIT_TEST_INVISIBLE)
+
+    label = ensure_text(tree, root_canvas, "SkillToggleLabel", x, y, w, h,
+                        "스킬", int(h * 0.42), color("fff6dd"), z=50)
+    outline_text(label, size=2)
+    ensure_button(tree, root_canvas, "SkillToggleButton", x, y, w, h, z=60)
+    say(f"    스킬 단추 ({x:.0f},{y:.0f} {w:.0f}x{h:.0f})")
+
+
+DESIGN_W, DESIGN_H = 1920.0, 1080.0
+
+
+def design_box(slot):
+    """어떤 앵커가 걸려 있든 1920x1080 디자인 절대 상자(x,y,w,h)로 되돌린다."""
+    anchors = slot.get_anchors()
+    amin = anchors.get_editor_property("minimum")
+    amax = anchors.get_editor_property("maximum")
+    align = slot.get_alignment()
+    off = slot.get_offsets()
+    if amin.x == amax.x:
+        w = off.right
+        x = DESIGN_W * amin.x + off.left - align.x * w
+    else:
+        x = DESIGN_W * amin.x + off.left
+        w = DESIGN_W * (amax.x - amin.x) - off.left - off.right
+    if amin.y == amax.y:
+        h = off.bottom
+        y = DESIGN_H * amin.y + off.top - align.y * h
+    else:
+        y = DESIGN_H * amin.y + off.top
+        h = DESIGN_H * (amax.y - amin.y) - off.top - off.bottom
+    return x, y, w, h
+
+
+def _pin_point(slot, ax, ay, x, y, w, h):
+    slot.set_anchors(unreal.Anchors(minimum=unreal.Vector2D(ax, ay),
+                                    maximum=unreal.Vector2D(ax, ay)))
+    slot.set_alignment(unreal.Vector2D(ax, ay))
+    slot.set_offsets(unreal.Margin(x + w * ax - DESIGN_W * ax,
+                                   y + h * ay - DESIGN_H * ay, w, h))
+
+
+def hud_anchor_policy(name, cx, cy):
+    """HUD 는 구역별로: 모서리 것은 모서리에, 가운데 무리는 가운데에."""
+    if name.startswith("Turn") and cy < DESIGN_H / 3.0:
+        return 0.5, 0.0   # 턴 줄은 위 가운데 한 덩어리 -- 칸별로 찢기면 안 됨
+    if name.startswith("CommandCard"):
+        return 0.5, 0.5   # 카드 고리도 한 덩어리
+    ax = 0.0 if cx < DESIGN_W / 3.0 else (0.5 if cx < DESIGN_W * 2.0 / 3.0 else 1.0)
+    ay = 0.0 if cy < DESIGN_H / 3.0 else (0.5 if cy < DESIGN_H * 2.0 / 3.0 else 1.0)
+    return ax, ay
+
+
+def centered_policy(name, cx, cy):
+    """가운데 한 장짜리 판(상세·탭)은 전부 가운데에 묶는다."""
+    return 0.5, 0.5
+
+
+def find_root_canvas(tree, seeds):
+    """뿌리 캔버스. WidgetTree 의 root 속성이 파이썬에 안 나와 있어,
+    아는 위젯에서 부모를 타고 끝까지 올라간다."""
+    for name in seeds:
+        widget = find(tree, name)
+        while widget is not None and widget.get_parent() is not None:
+            widget = widget.get_parent()
+        if isinstance(widget, unreal.CanvasPanel):
+            return widget
+    return None
+
+
+def pin_anchors(tree, policy, seeds, overrides=None, label=""):
+    """뿌리 캔버스 아이들에게 화면 구역 앵커를 건다(0807).
+
+    편집기 좌표는 1920x1080 기준 절대값이라, 비율이 다른 화면에서는 왼쪽
+    위로 몰리거나 늘어난다. 각 부품을 제 구역(모서리/가운데)에 묶으면
+    비율이 달라져도 제자리에 남는다. 이미 점(0,0)이 아닌 앵커는 손대지
+    않는다 -- 누군가 이유가 있어 걸어 둔 것이다.
+    """
+    root = find_root_canvas(tree, seeds)
+    if root is None:
+        say(f"    !! 뿌리 캔버스 못 찾음: {label}")
+        return
+    pinned = _pin_canvas_children(root, policy, overrides)
+    say(f"    앵커 고정 {pinned}개 ({label})")
+
+
+def _pin_canvas_children(canvas, policy, overrides):
+    pinned = 0
+    for index in range(canvas.get_children_count()):
+        child = canvas.get_child_at(index)
+        slot = canvas_slot(child)
+        if slot is None:
+            continue
+        anchors = slot.get_anchors()
+        amin = anchors.get_editor_property("minimum")
+        amax = anchors.get_editor_property("maximum")
+        bIsPointZero = (amin.x == 0.0 and amin.y == 0.0
+                        and amax.x == 0.0 and amax.y == 0.0)
+        bIsFullStretch = (amin.x == 0.0 and amin.y == 0.0
+                          and amax.x == 1.0 and amax.y == 1.0)
+        name = child.get_name()
+        bOverridden = overrides is not None and name in overrides
+        off = slot.get_offsets()
+        # 전면 스트레치 **캔버스 컨테이너**는 그 안이 실제 화면이다 --
+        # 컨테이너가 화면 따라 늘어나면 안의 절대좌표가 쏠린다(0807
+        # 오버레이가 그랬다). 안으로 들어가 아이들에게 앵커를 건다.
+        if (bOverridden == False and bIsFullStretch == True
+                and isinstance(child, unreal.CanvasPanel)
+                and abs(off.left) <= 20.0 and abs(off.top) <= 20.0
+                and abs(off.right) <= 20.0 and abs(off.bottom) <= 20.0):
+            pinned += _pin_canvas_children(child, policy, overrides)
+            continue
+        # 이미 다른 앵커가 걸린 것은 건드리지 않는다 -- 단, 스트레치로
+        # "억지로 늘어나는" 것(0807 검수)과 지정 예외는 다시 건다.
+        if bIsPointZero == False and bIsFullStretch == False \
+                and bOverridden == False:
+            continue
+        x, y, w, h = design_box(slot)
+        if w <= 0.0 or h <= 0.0:
+            continue
+        bFullScreen = w >= DESIGN_W - 20.0 and h >= DESIGN_H - 20.0
+        if bIsFullStretch == True and bFullScreen == True \
+                and bOverridden == False:
+            continue   # 진짜 전면 덮개(스크림·캐치)는 늘어나도 뜻이 맞다
+        if bOverridden == True:
+            ax, ay = overrides[name]
+        elif bFullScreen == True:
+            if isinstance(child, unreal.Button):
+                # 전면 캐치 단추는 화면 전체를 덮어야 한다 -- 사방 늘림.
+                slot.set_anchors(unreal.Anchors(
+                    minimum=unreal.Vector2D(0.0, 0.0),
+                    maximum=unreal.Vector2D(1.0, 1.0)))
+                slot.set_offsets(unreal.Margin(
+                    x, y, DESIGN_W - x - w, DESIGN_H - y - h))
+                pinned += 1
+                continue
+            # 전체 화면 그림/판은 늘리면 비율이 깨진다 -- 가운데 고정.
+            ax, ay = 0.5, 0.5
+        else:
+            ax, ay = policy(name, x + w * 0.5, y + h * 0.5)
+        _pin_point(slot, ax, ay, x, y, w, h)
+        pinned += 1
+    return pinned
+
+
+def apply_anchor_pass():
+    """모든 판의 앵커를 마지막에 한 번에 건다. 자리 잡는 함수들(set_box)이
+    앵커를 (0,0)으로 되돌리므로 반드시 맨 끝에 돌아야 한다."""
+    say("앵커 패스")
+    for path, policy, seeds, overrides in (
+            (HUD, hud_anchor_policy, ("EndTurnPanel", "AllyPanel"),
+             {"AllyPanel": (1.0, 0.0), "EnemyPanel": (1.0, 0.0),
+              "MercenaryPanel": (0.5, 0.5)}),
+            (OVERLAY, centered_policy,
+             ("DetailFrameImage", "DetailCloseButton"), None),
+            (MONSTER, centered_policy,
+             ("MonsterBackButton", "MonsterCenterNameText"), None)):
+        blueprint = unreal.EditorAssetLibrary.load_asset(path)
+        if blueprint is None:
+            continue
+        tree = unreal.find_object(None, blueprint.get_path_name() + ":WidgetTree")
+        blueprint.modify()
+        pin_anchors(tree, policy, seeds, overrides, path.rsplit("/", 1)[-1])
+        unreal.BlueprintEditorLibrary.compile_blueprint(blueprint)
+        say(f"  저장={unreal.EditorAssetLibrary.save_loaded_asset(blueprint, False)}")
 
 
 def apply_overlay():
@@ -1299,5 +1515,6 @@ apply_merc_tab()
 apply_monster_tab()
 apply_unit_hp_bar()
 apply_overlay()
+apply_anchor_pass()
 RESULT.parent.mkdir(parents=True, exist_ok=True)
 RESULT.write_text("\n".join(LINES) + "\n", encoding="utf-8")

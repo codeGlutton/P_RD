@@ -429,48 +429,21 @@
  },
  "setPanel": {
   "board": "set",
-  "x": 0,
-  "y": 0,
-  "w": 1920,
-  "h": 1080,
+  "x": 210,
+  "y": 60,
+  "w": 1500,
+  "h": 960,
   "on": true,
   "label": "설정: 판"
  },
  "setTitle": {
   "board": "set",
   "x": 660,
-  "y": 22,
+  "y": 96,
   "w": 600,
-  "h": 64,
+  "h": 72,
   "on": true,
   "label": "설정: 제목"
- },
- "setRail": {
-  "board": "set",
-  "x": 300,
-  "y": 250,
-  "w": 260,
-  "h": 420,
-  "on": true,
-  "label": "설정: 분류 레일"
- },
- "setRows": {
-  "board": "set",
-  "x": 600,
-  "y": 250,
-  "w": 852,
-  "h": 496,
-  "on": true,
-  "label": "설정: 항목 줄"
- },
- "setButtons": {
-  "board": "set",
-  "x": 600,
-  "y": 810,
-  "w": 900,
-  "h": 92,
-  "on": true,
-  "label": "설정: 아래 단추"
  },
  "arPanel": {
   "board": "art",
@@ -543,5 +516,233 @@
   "h": 46,
   "on": true,
   "label": "아티: 닫기"
+ },
+ "setGroup0": {
+  "board": "set",
+  "x": 300,
+  "y": 214,
+  "w": 240,
+  "h": 46,
+  "on": true,
+  "label": "설정: 묶음 소리"
+ },
+ "setGroup1": {
+  "board": "set",
+  "x": 300,
+  "y": 504,
+  "w": 240,
+  "h": 46,
+  "on": true,
+  "label": "설정: 묶음 화면"
+ },
+ "setGroup2": {
+  "board": "set",
+  "x": 300,
+  "y": 794,
+  "w": 240,
+  "h": 46,
+  "on": true,
+  "label": "설정: 묶음 게임"
+ },
+ "setRow0": {
+  "board": "set",
+  "x": 560,
+  "y": 214,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 소리/전체 음량"
+ },
+ "setRow1": {
+  "board": "set",
+  "x": 560,
+  "y": 278,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 소리/배경음"
+ },
+ "setRow2": {
+  "board": "set",
+  "x": 560,
+  "y": 342,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 소리/효과음"
+ },
+ "setRow3": {
+  "board": "set",
+  "x": 560,
+  "y": 406,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 소리/UI 사운드"
+ },
+ "setRow4": {
+  "board": "set",
+  "x": 560,
+  "y": 504,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 화면/그래픽 품질"
+ },
+ "setRow5": {
+  "board": "set",
+  "x": 560,
+  "y": 568,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 화면/FPS 제한"
+ },
+ "setRow6": {
+  "board": "set",
+  "x": 560,
+  "y": 632,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 화면/화면 흔들림"
+ },
+ "setRow7": {
+  "board": "set",
+  "x": 560,
+  "y": 696,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 화면/전투 이펙트"
+ },
+ "setRow8": {
+  "board": "set",
+  "x": 560,
+  "y": 794,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 게임/진동"
+ },
+ "setRow9": {
+  "board": "set",
+  "x": 560,
+  "y": 858,
+  "w": 1060,
+  "h": 56,
+  "on": true,
+  "label": "설정: 게임/언어"
+ },
+ "setBtn0": {
+  "board": "set",
+  "x": 400,
+  "y": 930,
+  "w": 264,
+  "h": 74,
+  "on": true,
+  "label": "설정: 단추 기본값"
+ },
+ "setBtn1": {
+  "board": "set",
+  "x": 688,
+  "y": 930,
+  "w": 264,
+  "h": 74,
+  "on": true,
+  "label": "설정: 단추 돌아가기"
+ },
+ "setBtn2": {
+  "board": "set",
+  "x": 976,
+  "y": 930,
+  "w": 264,
+  "h": 74,
+  "on": true,
+  "label": "설정: 단추 저장 후 종료"
+ },
+ "setBtn3": {
+  "board": "set",
+  "x": 1264,
+  "y": 930,
+  "w": 264,
+  "h": 74,
+  "on": true,
+  "label": "설정: 단추 런 포기"
+ },
+ "mapPanel": {
+  "board": "map",
+  "x": 0,
+  "y": 0,
+  "w": 1920,
+  "h": 1080,
+  "on": true,
+  "label": "지도: 양피지 판"
+ },
+ "mapTitle": {
+  "board": "map",
+  "x": 660,
+  "y": 34,
+  "w": 600,
+  "h": 104,
+  "on": true,
+  "label": "지도: 제목"
+ },
+ "mapFloor": {
+  "board": "map",
+  "x": 64,
+  "y": 46,
+  "w": 430,
+  "h": 80,
+  "on": true,
+  "label": "지도: 층 표시"
+ },
+ "mapNodes": {
+  "board": "map",
+  "x": 170,
+  "y": 190,
+  "w": 1400,
+  "h": 620,
+  "on": true,
+  "label": "지도: 노드 그물"
+ },
+ "mapLegend": {
+  "board": "map",
+  "x": 1580,
+  "y": 190,
+  "w": 290,
+  "h": 560,
+  "on": true,
+  "label": "지도: 범례",
+  "art": {
+   "plate": "T_SkillCard_Frame_Combat"
+  }
+ },
+ "mapStatus": {
+  "board": "map",
+  "x": 560,
+  "y": 838,
+  "w": 800,
+  "h": 72,
+  "on": true,
+  "label": "지도: 안내 글"
+ },
+ "mapEnter": {
+  "board": "map",
+  "x": 1500,
+  "y": 928,
+  "w": 360,
+  "h": 112,
+  "on": true,
+  "label": "지도: 입장 단추"
+ },
+ "mapBack": {
+  "board": "map",
+  "x": 64,
+  "y": 932,
+  "w": 320,
+  "h": 104,
+  "on": true,
+  "label": "지도: 뒤로 단추"
  }
 }

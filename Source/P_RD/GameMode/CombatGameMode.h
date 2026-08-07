@@ -196,6 +196,9 @@ protected:
 	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
 	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
 
+	/** @brief 아군/적 가리지 않고 id 로 유닛 모델을 찾는다. 없으면 nullptr. */
+	class UUnitModel* FindUnitModelById(int32 UnitId) const;
+
 	/**
 	 * @brief 지금 차례인 아군.
 	 *

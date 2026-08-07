@@ -1463,6 +1463,11 @@ bool UFrontendMapWidget::RefreshMap()
 		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. WorldMap data must be provided by RoomGameMode."));
 	}
 
+	// 진단(0807): 빈 지도가 보고됐는데 경고 로그가 하나도 없었다. 성공 경로도
+	// 수를 남겨야 "데이터가 없었는지, 그리기가 실패했는지" 를 가를 수 있다.
+	UE_LOG(LogRD, Log, TEXT("[지도] RefreshMap: 방 %d개 (데이터 %s)"),
+		Rooms.Num(), bHasRooms ? TEXT("있음") : TEXT("없음"));
+
 	// 그래프 높이는 행 수 x 행 간격이므로, 데이터를 읽은 뒤에 레이아웃을 확정한다.
 	int32 MaxRowIndex = 0;
 	for (const FMapRoomView& Room : Rooms)

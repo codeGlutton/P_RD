@@ -185,41 +185,68 @@ void UMercenaryHireWidget::EnsureMarchboundPreviewCrew()
 		mCrew.SetNum(MercenaryHireDetail::CardCount);
 	}
 
-	// 현재 용병 선택은 실제 데이터가 기사 한 명뿐인 UI/UX 검수 단계다.
-	// 프론트엔드의 잠금 placeholder를 그대로 쓰면 Mage와 Archer가 눌리지 않고,
-	// Archer의 옛 한글명 "도적"이 Ranger 행에 남는다. 여섯 행의 표시값과
-	// 선택 가능 여부를 확정된 용병 순서로 정규화한다. 실제 id가 없는 후보만
-	// 현재 유효한 기사 id를 공유해 선택/해제/출발 흐름까지 검수한다.
+	/*
+	 * 실데이터 우선(0807). 직업 DA 6종이 들어와 프론트엔드가 한글 직업명·DA
+	 * 스탯·실제 id 를 다 내려주므로, 그 값은 **건드리지 않는다** -- 전에는
+	 * 검수용 하드코딩 표가 전부 덮어써서 DA 스탯이 화면에 안 나왔다.
+	 * 표는 아직 DA 가 없는 빈 칸을 채우는 폴백으로만 남긴다.
+	 *
+	 * 표는 기사·마법사·레인저·도적·야만전사·드루이드 순서다. 실데이터 줄은
+	 * 정렬이 달라질 수 있어 index 가 아니라 직업으로 표를 찾는다.
+	 */
+	const auto TableIndexForJob = [](const EUnitJobType JobType) -> int32
+	{
+		switch (JobType)
+		{
+		case EUnitJobType::Knight:    return 0;
+		case EUnitJobType::Mage:      return 1;
+		case EUnitJobType::Ranger:    return 2;
+		case EUnitJobType::Rogue:     return 3;
+		case EUnitJobType::Barbarian: return 4;
+		case EUnitJobType::Druid:     return 5;
+		default:                      return INDEX_NONE;
+		}
+	};
 	for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 	{
 		FFrontendCharacterOption& Option = mCrew[Index];
 		Option.mIndex = Index;
-		Option.mDisplayName = FText::FromString(Names[Index]);
-		Option.mRoleText = FText::FromString(Roles[Index]);
-		Option.mRoleShort = FText::FromString(RoleShorts[Index]);
-		Option.mDescription = FText::FromString(Roles[Index]);
-		Option.mMaxHP = HP[Index];
-		Option.mMaxAP = AP[Index];
-		Option.mSpeed = Speed[Index];
-		Option.mSelectable = true;
-		Option.mDisabledReason = FText::GetEmpty();
-		Option.mPortrait = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-			MercenaryHireDetail::HeroPaths[Index]));
-		Option.mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-			MercenaryHireDetail::IconPaths[Index]));
-		if (!Option.mPlayerUnitId.IsValid())
+		const int32 JobTable = TableIndexForJob(Option.mJobType);
+		const int32 Fallback = JobTable != INDEX_NONE ? JobTable : Index;
+
+		if (Option.mPlayerUnitId.IsValid() == false)
 		{
+			// DA 없는 빈 칸: 견본 값으로 채우고 기사 id 를 빌려 흐름만 검수.
+			Option.mDisplayName = FText::FromString(Names[Fallback]);
+			Option.mRoleText = FText::FromString(Roles[Fallback]);
+			Option.mDescription = FText::FromString(Roles[Fallback]);
+			Option.mMaxHP = HP[Fallback];
+			Option.mMaxAP = AP[Fallback];
+			Option.mSpeed = Speed[Fallback];
+			Option.mSelectable = true;
+			Option.mDisabledReason = FText::GetEmpty();
 			Option.mPlayerUnitId = PreviewUnitId;
 		}
-		Option.mSkillNames.Reset();
-		Option.mSkillIcons.Reset();
-		for (int32 SkillIndex = 0; SkillIndex < 4; ++SkillIndex)
+		if (Option.mRoleShort.IsEmpty() == true)
 		{
-			Option.mSkillNames.Add(FText::FromString(Skills[Index][SkillIndex]));
-			const TCHAR* IconPath = SkillIconPaths[Index][SkillIndex];
-			Option.mSkillIcons.Add(IconPath != nullptr
-				? TSoftObjectPtr<UTexture2D>(FSoftObjectPath(IconPath))
-				: TSoftObjectPtr<UTexture2D>());
+			Option.mRoleShort = FText::FromString(RoleShorts[Fallback]);
+		}
+		// 화면 아트(대갈치기 초상·아이콘)는 화면 사정이라 직업 기준으로 건다.
+		Option.mPortrait = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+			MercenaryHireDetail::HeroPaths[Fallback]));
+		Option.mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+			MercenaryHireDetail::IconPaths[Fallback]));
+		if (Option.mSkillNames.IsEmpty() == true)
+		{
+			for (int32 SkillIndex = 0; SkillIndex < 4; ++SkillIndex)
+			{
+				Option.mSkillNames.Add(
+					FText::FromString(Skills[Fallback][SkillIndex]));
+				const TCHAR* IconPath = SkillIconPaths[Fallback][SkillIndex];
+				Option.mSkillIcons.Add(IconPath != nullptr
+					? TSoftObjectPtr<UTexture2D>(FSoftObjectPath(IconPath))
+					: TSoftObjectPtr<UTexture2D>());
+			}
 		}
 
 		// 스킬 이름·아이콘은 **전투와 같은 출처**(유닛 스폰데이터의 스킬 DA)로
@@ -529,26 +556,21 @@ void UMercenaryHireWidget::ClickPartySlot(const int32 SlotIndex)
 }
 
 /**
- * @brief 고르거나 뺀다. 자리가 찼으면 마지막에 고른 자리를 내준다.
+ * @brief 빈 자리가 있을 때만 고른다.
  *
  * @details
- * 자리가 찼을 때 아무 일도 안 일어나게 두면, 넷째를 넣으려면 먼저 하나를
- * 빼야 한다는 것을 눌러 보고 알아내야 한다 -- 눌렀는데 화면이 안 움직이면
- * 잠긴 것인지 못 누른 것인지 구별이 안 된다.
- *
- * 내주는 자리를 **마지막에 고른 것**으로 한 이유: 처음 고른 사람일수록 마음이
- * 굳은 쪽이다. 뒤로 갈수록 견주다 고른 자리이므로 그쪽을 내주는 편이 덜 아깝다.
+ * 목록 쪽에서는 **빼지도, 바꿔치지도 않는다**(0807 검수 2회). 뽑는 손과
+ * 빼는 손이 같은 줄에 겹치면 상세를 보려던 손이 편성을 건드린다. 자리가
+ * 찼을 때 마지막 자리를 내주던 것도 같은 이유로 걷었다 -- 상세를 보려고
+ * 눌렀는데 파티가 바뀌면 더 놀란다. 빼기는 오른쪽 파티 칸이 맡는다
+ * (ClickPartySlot). 목록 클릭은 상세 보기 + 빈 자리 채우기, 둘뿐이다.
  * @param CardIndex 누른 이력서
  */
 void UMercenaryHireWidget::ToggleChoice(const int32 CardIndex)
 {
-	if (mChosen.Remove(CardIndex) > 0)
+	if (mChosen.Contains(CardIndex) || mChosen.Num() >= mPartySize)
 	{
-		return;
-	}
-	if (mChosen.Num() >= mPartySize)
-	{
-		mChosen.Pop();
+		return;   // 상세만 갈리고 편성은 그대로.
 	}
 	mChosen.Add(CardIndex);
 }

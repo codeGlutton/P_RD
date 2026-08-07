@@ -17,15 +17,20 @@
 namespace
 {
 	/** @brief 상점 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
-	// [갭] Heal 전용 아이콘은 아직 없어 골드 아이콘으로 대체 표시한다(이미지 확보 후 교체 예정).
+	// 옛 InSideAsset 경로 3종은 프로젝트에서 지워져 아이콘이 빈칸으로
+	// 나왔다(0807 감사). 실재하는 SVN 에셋으로 갈아 끼운다.
 	const TCHAR* ShopKindIconPath(EShopItemKind Kind)
 	{
 		switch (Kind)
 		{
-		case EShopItemKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
-		case EShopItemKind::Equipment: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
+		case EShopItemKind::Skill:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind");
+		case EShopItemKind::Equipment:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
 		case EShopItemKind::Heal:
-		default:                       return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Gold.T_Reward_Gold");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_skill_meditation_heal_icon.T_skill_meditation_heal_icon");
+		default:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_gold_icon.T_gold_icon");
 		}
 	}
 
