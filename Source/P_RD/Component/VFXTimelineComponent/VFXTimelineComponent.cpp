@@ -391,14 +391,29 @@ void UDissolveVFXTimelineComponent::Dissolve()
 	mDissolveMeshCompCaches.Empty(1);
 	mDissolveNiagaraCompCaches.Empty(1);
 
+	/* 나이아가라 컴포넌트 등록 */
+
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
 	UNiagaraComponent* SpawnedNiagaraComp = UVFXFunctionLibrary::SpawnNiagaraEffect(
 		GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX, 
 		BoardCombatTargetView->GetTargetMeshComponent()
 	);
 
-	mDissolveMeshCompCaches.Add(BoardCombatTargetView->GetTargetMeshComponent());
 	mDissolveNiagaraCompCaches.Add(SpawnedNiagaraComp);
+
+	/* 메시 컴포넌트 등록 */
+
+	UPrimitiveComponent* TargetMeshComp = BoardCombatTargetView->GetTargetMeshComponent();
+	for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComp->GetAttachChildren())
+	{
+		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
+		if (ChildMeshComp != nullptr)
+		{
+			mDissolveMeshCompCaches.Add(ChildMeshComp);
+		}
+	}
+
+	mDissolveMeshCompCaches.Add(BoardCombatTargetView->GetTargetMeshComponent());
 
 	PlayFromStart();
 }
