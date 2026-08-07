@@ -353,6 +353,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
 
+	/*
+	* @brief 카메라를 그 자리로 **바로** 옮긴다(따라가는 연출 없음).
+	* @details 화면(UI)에서 "이 유닛을 보여 줘" 할 때 쓴다. 부드럽게 따라가면
+	*          판이 흐르듯 움직여 어지럽다는 검수가 있었다(0806).
+	*          강조와 달리 카메라를 잠그지 않는다 -- 옮긴 뒤 손으로 계속 본다.
+	* @param WorldPosition 이 자리가 화면 가운데 오게 옮긴다
+	*/
+	UFUNCTION(BlueprintCallable)
+	void JumpToWorldPosition(FVector WorldPosition);
+
 	/* 카메라 셰이크*/
 public:
 	UFUNCTION(BlueprintCallable)

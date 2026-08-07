@@ -79,7 +79,12 @@ namespace
 	/** @brief 범례/단추를 화면 가장자리에서 띄우는 여백(화면 폭 비율). */
 	constexpr float MapLegendEdgeMarginFrac = 0.025f;
 
-	/** @brief BACK 단추 폭(화면 폭 비율)과 판 그림 비율(2.5:1). 늘려도 찌그러지지 않게 비율 유지. */
+	/**
+	 * @brief BACK 단추 폭(화면 폭 비율)과 가로세로 비율.
+	 *
+	 * 판을 9-slice 로 그리게 되면서 이 비율은 더 이상 그림이 강제하는 값이 아니다.
+	 * 단추가 알약처럼 보이게 하는 모양 선택일 뿐이라 자유롭게 바꿔도 된다.
+	 */
 	constexpr float MapCloseButtonWidthFrac = 0.24f;
 	constexpr float MapCloseButtonAspect = 2.508f;
 	constexpr float MapCloseButtonMinWidthPx = 220.f;
@@ -397,28 +402,21 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 
 	// 원근은 이미지에 굽지 않는다 — 평평한 지도 + 리테이너 머티리얼이 정본.
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapParchmentFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_Scroll_Flat.T_StageMap_Scroll_Flat"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Map/T_StageMap_Background_Parchment.T_StageMap_Background_Parchment"));
 	if (MapParchmentFinder.Succeeded())
 	{
 		mMapParchmentTexture = MapParchmentFinder.Object;
 	}
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> MapBackgroundFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_PopupBackground.T_StageMap_PopupBackground"));
-	if (MapBackgroundFinder.Succeeded())
-	{
-		mMapPopupBackgroundTexture = MapBackgroundFinder.Object;
-	}
-
-	static ConstructorHelpers::FObjectFinder<UTexture2D> MapLegendFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_Legend_V2.T_StageMap_Legend_V2"));
-	if (MapLegendFinder.Succeeded())
-	{
-		mMapLegendTexture = MapLegendFinder.Object;
-	}
+	/*
+	 * 지도 뒷배경과 범례 그림은 지웠다. 새 그림으로 갈 예정이라 자리만 비운다.
+	 * 여기서 못 찾은 경로를 남겨 두면 CDO 를 만들 때마다 로그가 찍히므로
+	 * FObjectFinder 자체를 걷는다. ApplyCurrentMapArt()/UpdateLegendPlateLayout()
+	 * 은 이미 nullptr 을 검사하고 조용히 건너뛴다.
+	 */
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapButtonPlateFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapUI_ButtonPlate_V1.T_MapUI_ButtonPlate_V1"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
 	if (MapButtonPlateFinder.Succeeded())
 	{
 		mMapButtonPlateTexture = MapButtonPlateFinder.Object;
@@ -515,15 +513,23 @@ void UFrontendMapWidget::EnsureCloseButton()
 	if (mMapButtonPlateTexture != nullptr)
 	{
 		/*
-		 * 지도 톤에 맞춘 단추 판. 그림이 비율 2.5:1이고 모서리 리벳이 있어
-		 * 9-slice로 늘리면 리벳이 뭉개진다. 통짜로 그리고 슬롯 크기를 같은
-		 * 비율로 잡아(UpdateCloseButtonLayout) 왜곡을 막는다.
+		 * 공용 단추 판(KitA). 지도만 다른 단추를 쓰던 것을 다른 화면과 같은
+		 * 그림으로 맞췄다 -- 같은 기능인데 지도·탭·설정이 서로 다른 단추를
+		 * 쓰고 있었다(0804 검수).
+		 *
+		 * 이 그림은 9-slice 로 그린다. 모서리 장식 45px, 테두리 44px 을 실측해
+		 * 뒀고(Saved/UIKit/ConceptA/_nineslice.txt), 잘라낼 때 남긴 투명 여백
+		 * 8px 을 더한 자리가 마진이다. 그래서 폭을 늘려도 모서리가 안 늘어난다.
 		 */
-		FSlateBrush PlateBrush;
-		PlateBrush.DrawAs = ESlateBrushDrawType::Image;
-		PlateBrush.SetResourceObject(mMapButtonPlateTexture);
-		PlateBrush.ImageSize = FVector2D(mMapButtonPlateTexture->GetSizeX(),
+		const FVector2D PlateSize(mMapButtonPlateTexture->GetSizeX(),
 			mMapButtonPlateTexture->GetSizeY());
+		FSlateBrush PlateBrush;
+		PlateBrush.DrawAs = ESlateBrushDrawType::Box;
+		PlateBrush.Margin = FMargin(
+			(8.f + 45.f) / PlateSize.X, (8.f + 44.f) / PlateSize.Y,
+			(8.f + 45.f) / PlateSize.X, (8.f + 44.f) / PlateSize.Y);
+		PlateBrush.SetResourceObject(mMapButtonPlateTexture);
+		PlateBrush.ImageSize = PlateSize;
 
 		FButtonStyle PlateStyle;
 		PlateStyle.SetNormal(PlateBrush);

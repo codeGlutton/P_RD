@@ -1,0 +1,547 @@
+{
+ "panel": {
+  "board": "sum",
+  "x": 0,
+  "y": 0,
+  "w": 600,
+  "h": 430,
+  "on": true,
+  "label": "판 바탕",
+  "art": {}
+ },
+ "portrait": {
+  "board": "sum",
+  "x": 61,
+  "y": 86,
+  "w": 168,
+  "h": 186,
+  "on": true,
+  "label": "초상",
+  "art": {
+   "frame": "T_RS_PortraitFrame"
+  }
+ },
+ "name": {
+  "board": "sum",
+  "x": 153,
+  "y": 31,
+  "w": 290,
+  "h": 50,
+  "on": true,
+  "label": "이름"
+ },
+ "hp": {
+  "board": "sum",
+  "x": 224,
+  "y": 103,
+  "w": 289,
+  "h": 49,
+  "on": true,
+  "label": "HP바"
+ },
+ "ap": {
+  "board": "sum",
+  "x": 216,
+  "y": 156,
+  "w": 135,
+  "h": 49,
+  "on": true,
+  "label": "AP 칸",
+  "art": {
+   "plate": "T_MB_HirePartyRowEmpty"
+  }
+ },
+ "speed": {
+  "board": "sum",
+  "x": 217,
+  "y": 205,
+  "w": 131,
+  "h": 45,
+  "on": true,
+  "label": "속도 칸",
+  "art": {
+   "plate": "T_MB_HirePartyRowEmpty"
+  }
+ },
+ "crit": {
+  "board": "sum",
+  "x": 363,
+  "y": 159,
+  "w": 131,
+  "h": 42,
+  "on": true,
+  "label": "요약: 치명타",
+  "art": {
+   "plate": "T_MB_HirePartyRowEmpty"
+  }
+ },
+ "statusRow": {
+  "board": "sum",
+  "x": 80,
+  "y": 251,
+  "w": 247,
+  "h": 81,
+  "on": true,
+  "label": "상태 아이콘"
+ },
+ "nextSkill": {
+  "board": "sum",
+  "x": 429,
+  "y": 243,
+  "w": 86,
+  "h": 86,
+  "on": true,
+  "label": "다음 스킬(적만)",
+  "enemyOnly": true
+ },
+ "skPanel": {
+  "board": "skill",
+  "x": -1,
+  "y": 0,
+  "w": 800,
+  "h": 520,
+  "on": true,
+  "label": "스킬: 판"
+ },
+ "skName": {
+  "board": "skill",
+  "x": 204,
+  "y": 34,
+  "w": 390,
+  "h": 70,
+  "on": true,
+  "label": "스킬: 이름"
+ },
+ "skIcon": {
+  "board": "skill",
+  "x": 97,
+  "y": 115,
+  "w": 150,
+  "h": 150,
+  "on": true,
+  "label": "스킬: 아이콘"
+ },
+ "skStats": {
+  "board": "skill",
+  "x": 244,
+  "y": 118,
+  "w": 455,
+  "h": 53,
+  "on": true,
+  "label": "스킬: 스탯 띠"
+ },
+ "skPlate": {
+  "board": "skill",
+  "x": -9,
+  "y": 198,
+  "w": 821,
+  "h": 374,
+  "on": true,
+  "label": "스킬: 판때기",
+  "art": {
+   "plate": "T_MB_Defeat_BattleSummary"
+  }
+ },
+ "skDesc": {
+  "board": "skill",
+  "x": 254,
+  "y": 176,
+  "w": 422,
+  "h": 79,
+  "on": true,
+  "label": "스킬: 설명"
+ },
+ "skDivider": {
+  "board": "skill",
+  "x": 94,
+  "y": 273,
+  "w": 602,
+  "h": 8,
+  "on": true,
+  "label": "스킬: 구분선"
+ },
+ "skSelName": {
+  "board": "skill",
+  "x": 107,
+  "y": 285,
+  "w": 145,
+  "h": 43,
+  "on": true,
+  "label": "스킬: 사거리 제목"
+ },
+ "skGridSelect": {
+  "board": "skill",
+  "x": 106,
+  "y": 330,
+  "w": 200,
+  "h": 100,
+  "on": true,
+  "label": "스킬: 사거리 타일"
+ },
+ "skSelCaption": {
+  "board": "skill",
+  "x": 106,
+  "y": 431,
+  "w": 200,
+  "h": 24,
+  "on": true,
+  "label": "스킬: 사거리 설명"
+ },
+ "skHitName": {
+  "board": "skill",
+  "x": 288,
+  "y": 287,
+  "w": 161,
+  "h": 38,
+  "on": true,
+  "label": "스킬: 영향 제목"
+ },
+ "skGridHit": {
+  "board": "skill",
+  "x": 289,
+  "y": 331,
+  "w": 191,
+  "h": 96,
+  "on": true,
+  "label": "스킬: 영향 타일"
+ },
+ "skHitCaption": {
+  "board": "skill",
+  "x": 290,
+  "y": 429,
+  "w": 200,
+  "h": 24,
+  "on": true,
+  "label": "스킬: 영향 설명"
+ },
+ "skBlockTitle": {
+  "board": "skill",
+  "x": 472,
+  "y": 286,
+  "w": 183,
+  "h": 38,
+  "on": true,
+  "label": "스킬: 차단 제목"
+ },
+ "skBlockAim": {
+  "board": "skill",
+  "x": 474,
+  "y": 333,
+  "w": 230,
+  "h": 32,
+  "on": true,
+  "label": "스킬: 조준 차단"
+ },
+ "skBlockEffect": {
+  "board": "skill",
+  "x": 475,
+  "y": 377,
+  "w": 230,
+  "h": 32,
+  "on": true,
+  "label": "스킬: 영향 차단"
+ },
+ "skClose": {
+  "board": "skill",
+  "x": 343,
+  "y": 467,
+  "w": 152,
+  "h": 46,
+  "on": true,
+  "label": "스킬: 닫기"
+ },
+ "mcPanel": {
+  "board": "merc",
+  "x": 0,
+  "y": 0,
+  "w": 1920,
+  "h": 1080,
+  "on": true,
+  "label": "용병: 판"
+ },
+ "mcTitle": {
+  "board": "merc",
+  "x": 486,
+  "y": 76,
+  "w": 940,
+  "h": 144,
+  "on": true,
+  "label": "용병: 제목"
+ },
+ "mcRoster": {
+  "board": "merc",
+  "x": 231,
+  "y": 279,
+  "w": 375,
+  "h": 392,
+  "on": true,
+  "label": "용병: 목록(3명)"
+ },
+ "mcPortrait": {
+  "board": "merc",
+  "x": 642,
+  "y": 254,
+  "w": 335,
+  "h": 360,
+  "on": true,
+  "label": "용병: 초상",
+  "art": {
+   "frame": "T_KitA_Cell_Normal"
+  }
+ },
+ "mcName": {
+  "board": "merc",
+  "x": 1003,
+  "y": 250,
+  "w": 565,
+  "h": 92,
+  "on": true,
+  "label": "용병: 이름판"
+ },
+ "mcExp": {
+  "board": "merc",
+  "x": 1017,
+  "y": 354,
+  "w": 565,
+  "h": 30,
+  "on": true,
+  "label": "용병: 경험치"
+ },
+ "mcStats": {
+  "board": "merc",
+  "x": 999,
+  "y": 406,
+  "w": 530,
+  "h": 214,
+  "on": true,
+  "label": "용병: 스탯 4줄"
+ },
+ "mcSkillHeader": {
+  "board": "merc",
+  "x": 652,
+  "y": 642,
+  "w": 930,
+  "h": 32,
+  "on": true,
+  "label": "용병: 스킬 구분선"
+ },
+ "mcSkills": {
+  "board": "merc",
+  "x": 642,
+  "y": 692,
+  "w": 930,
+  "h": 118,
+  "on": true,
+  "label": "용병: 스킬 6칸"
+ },
+ "mcClose": {
+  "board": "merc",
+  "x": 810,
+  "y": 900,
+  "w": 300,
+  "h": 92,
+  "on": true,
+  "label": "용병: 닫기"
+ },
+ "mtPanel": {
+  "board": "mt",
+  "x": 0,
+  "y": 0,
+  "w": 1920,
+  "h": 1080,
+  "on": true,
+  "label": "몬탭: 판"
+ },
+ "mtTitle": {
+  "board": "mt",
+  "x": 490,
+  "y": 76,
+  "w": 938,
+  "h": 140,
+  "on": true,
+  "label": "몬탭: 제목"
+ },
+ "mtRoster": {
+  "board": "mt",
+  "x": 265,
+  "y": 271,
+  "w": 375,
+  "h": 392,
+  "on": true,
+  "label": "몬탭: 목록(3종)"
+ },
+ "mtPortrait": {
+  "board": "mt",
+  "x": 670,
+  "y": 248,
+  "w": 335,
+  "h": 360,
+  "on": true,
+  "label": "몬탭: 초상",
+  "art": {
+   "frame": "T_KitA_Cell_Normal"
+  }
+ },
+ "mtName": {
+  "board": "mt",
+  "x": 1011,
+  "y": 256,
+  "w": 565,
+  "h": 92,
+  "on": true,
+  "label": "몬탭: 이름판"
+ },
+ "mtStats": {
+  "board": "mt",
+  "x": 1017,
+  "y": 376,
+  "w": 530,
+  "h": 214,
+  "on": true,
+  "label": "몬탭: 스탯 4줄"
+ },
+ "mtSkillHeader": {
+  "board": "mt",
+  "x": 694,
+  "y": 646,
+  "w": 930,
+  "h": 32,
+  "on": true,
+  "label": "몬탭: 스킬 구분선"
+ },
+ "mtSkills": {
+  "board": "mt",
+  "x": 684,
+  "y": 698,
+  "w": 930,
+  "h": 118,
+  "on": true,
+  "label": "몬탭: 스킬 4칸"
+ },
+ "mtClose": {
+  "board": "mt",
+  "x": 810,
+  "y": 900,
+  "w": 300,
+  "h": 92,
+  "on": true,
+  "label": "몬탭: 닫기"
+ },
+ "setPanel": {
+  "board": "set",
+  "x": 0,
+  "y": 0,
+  "w": 1920,
+  "h": 1080,
+  "on": true,
+  "label": "설정: 판"
+ },
+ "setTitle": {
+  "board": "set",
+  "x": 660,
+  "y": 22,
+  "w": 600,
+  "h": 64,
+  "on": true,
+  "label": "설정: 제목"
+ },
+ "setRail": {
+  "board": "set",
+  "x": 300,
+  "y": 250,
+  "w": 260,
+  "h": 420,
+  "on": true,
+  "label": "설정: 분류 레일"
+ },
+ "setRows": {
+  "board": "set",
+  "x": 600,
+  "y": 250,
+  "w": 852,
+  "h": 496,
+  "on": true,
+  "label": "설정: 항목 줄"
+ },
+ "setButtons": {
+  "board": "set",
+  "x": 600,
+  "y": 810,
+  "w": 900,
+  "h": 92,
+  "on": true,
+  "label": "설정: 아래 단추"
+ },
+ "arPanel": {
+  "board": "art",
+  "x": 0,
+  "y": 0,
+  "w": 800,
+  "h": 520,
+  "on": true,
+  "label": "아티: 판"
+ },
+ "arName": {
+  "board": "art",
+  "x": 205,
+  "y": 32,
+  "w": 392,
+  "h": 72,
+  "on": true,
+  "label": "아티: 이름"
+ },
+ "arSlot": {
+  "board": "art",
+  "x": 97,
+  "y": 122,
+  "w": 160,
+  "h": 170,
+  "on": true,
+  "label": "아티: 틀"
+ },
+ "arRarity": {
+  "board": "art",
+  "x": 275,
+  "y": 126,
+  "w": 190,
+  "h": 42,
+  "on": true,
+  "label": "아티: 희귀도"
+ },
+ "arHeader": {
+  "board": "art",
+  "x": 276,
+  "y": 175,
+  "w": 130,
+  "h": 36,
+  "on": true,
+  "label": "아티: 효과 제목"
+ },
+ "arDesc": {
+  "board": "art",
+  "x": 275,
+  "y": 221,
+  "w": 417,
+  "h": 164,
+  "on": true,
+  "label": "아티: 설명"
+ },
+ "arDivider": {
+  "board": "art",
+  "x": 70,
+  "y": 448,
+  "w": 660,
+  "h": 8,
+  "on": true,
+  "label": "아티: 구분선"
+ },
+ "arClose": {
+  "board": "art",
+  "x": 324,
+  "y": 466,
+  "w": 152,
+  "h": 46,
+  "on": true,
+  "label": "아티: 닫기"
+ }
+}

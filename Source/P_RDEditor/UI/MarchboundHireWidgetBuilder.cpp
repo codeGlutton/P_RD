@@ -1,4 +1,6 @@
 #include "UI/MarchboundHireWidgetBuilder.h"
+#include "UI/UIPartRects.h"
+#include "UI/UIFont.h"
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
@@ -98,9 +100,7 @@ namespace MarchboundHireWidgetBuilder
 
 	void SetFont(UTextBlock* Text, const FSlateFontInfo& Template, const int32 Size)
 	{
-		FSlateFontInfo Font = Template;
-		Font.Size = Size;
-		Text->SetFont(Font);
+		Text->SetFont(UIFont::Make(Template, Size));
 		Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.12f, 0.065f, 0.025f, 1.0f)));
 		Text->SetShadowOffset(FVector2D(1.0f, 1.0f));
 		Text->SetShadowColorAndOpacity(FLinearColor(1.0f, 0.86f, 0.60f, 0.35f));
@@ -109,9 +109,7 @@ namespace MarchboundHireWidgetBuilder
 
 	void SetLightFont(UTextBlock* Text, const FSlateFontInfo& Template, const int32 Size)
 	{
-		FSlateFontInfo Font = Template;
-		Font.Size = Size;
-		Text->SetFont(Font);
+		Text->SetFont(UIFont::Make(Template, Size));
 		Text->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.91f, 0.73f, 1.0f)));
 		Text->SetShadowOffset(FVector2D(2.0f, 2.0f));
 		Text->SetShadowColorAndOpacity(FLinearColor(0.03f, 0.012f, 0.004f, 0.95f));
@@ -289,8 +287,12 @@ namespace MarchboundHireWidgetBuilder
 			TEXT("HireRightRegion"), FVector2D(520.0f, 1080.0f),
 			FAnchors(0.70f, 0.0f, 1.0f, 1.0f), 10);
 
+		const FVector2D ListPos(55.0f, 100.0f);
+		const FVector2D ListSize(500.0f, 850.0f);
 		AddImage(Blueprint, LeftRegion, TEXT("HireListFrameArt"), ListFrame,
-			FVector2D(55.0f, 100.0f), FVector2D(500.0f, 850.0f), 0);
+			ListPos, ListSize, 0);
+		const FBox2D ListInner = UIPartRects::Inner(TEXT("T_MB_HireListFrame"),
+			ListPos, ListSize, false);
 
 		UCanvasPanel* TitlePanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireTitlePanel"));
 		PlaceCanvas(CenterRegion, TitlePanel, FVector2D(190.0f, 18.0f), FVector2D(430.0f, 106.0f), 30);
@@ -322,7 +324,11 @@ namespace MarchboundHireWidgetBuilder
 		{
 			UCanvasPanel* Card = FindOrCreate<UCanvasPanel>(Blueprint,
 				FName(*FString::Printf(TEXT("HireCard_%d"), Index)));
-			PlaceCanvas(LeftRegion, Card, FVector2D(95.0f, 158.0f + 124.0f * Index), CardSize, 10);
+			// 카드는 목록 틀의 **구멍 안**에 줄 세운다. 95,158 은 눈대중이었다.
+			PlaceCanvas(LeftRegion, Card,
+				FVector2D(ListInner.Min.X + (ListInner.GetSize().X - CardSize.X) * 0.5f,
+					ListInner.Min.Y + 12.f + (CardSize.Y + 8.f) * Index),
+				CardSize, 10);
 			Card->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 
 			UImage* Art = FindOrCreate<UImage>(Blueprint,
@@ -338,22 +344,34 @@ namespace MarchboundHireWidgetBuilder
 				? ESlateVisibility::SelfHitTestInvisible
 				: ESlateVisibility::Collapsed);
 
+			// 카드 그림은 통짜로 그린다(비율 그대로). 안쪽 자리도 비율로 구한다.
+			// 24,11 · 126,19 는 눈대중이었고, 사람이 맞춘 칸은 3.6%/8.8% 다.
+			const FBox2D CardInner = UIPartRects::Inner(TEXT("T_MB_HireRowNormal"),
+				FVector2D::ZeroVector, CardSize, false);
+			const FVector2D CardSpan = CardInner.GetSize();
+			const float FaceExtent = CardSpan.Y;
+
 			UImage* Portrait = FindOrCreate<UImage>(Blueprint,
 				FName(*FString::Printf(TEXT("HirePortrait_%d"), Index)));
-			PlaceCanvas(Card, Portrait, FVector2D(24.0f, 11.0f), FVector2D(88.0f, 94.0f), 12);
+			PlaceCanvas(Card, Portrait, CardInner.Min,
+				FVector2D(FaceExtent, FaceExtent), 12);
 			SetImage(Portrait, Texture(PortraitPaths[Index]));
 			Portrait->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("HireName_%d"), Index)));
-			PlaceCanvas(Card, Name, FVector2D(126.0f, 19.0f), FVector2D(230.0f, 44.0f), 15);
+			PlaceCanvas(Card, Name,
+				CardInner.Min + FVector2D(FaceExtent + 14.f, CardSpan.Y * 0.06f),
+				FVector2D(CardSpan.X - FaceExtent - 14.f, CardSpan.Y * 0.46f), 15);
 			Name->SetText(FText::FromString(DefaultNames[Index]));
 			Name->SetJustification(ETextJustify::Left);
 			SetFont(Name, Font, 29);
 
 			UTextBlock* Role = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("HireRole_%d"), Index)));
-			PlaceCanvas(Card, Role, FVector2D(126.0f, 62.0f), FVector2D(220.0f, 36.0f), 15);
+			PlaceCanvas(Card, Role,
+				CardInner.Min + FVector2D(FaceExtent + 14.f, CardSpan.Y * 0.54f),
+				FVector2D(CardSpan.X - FaceExtent - 14.f, CardSpan.Y * 0.38f), 15);
 			Role->SetText(FText::FromString(DefaultRoles[Index]));
 			Role->SetJustification(ETextJustify::Left);
 			SetFont(Role, Font, 20);
@@ -386,19 +404,31 @@ namespace MarchboundHireWidgetBuilder
 		PlaceCanvas(CenterRegion, NamePanel, FVector2D(180.0f, 628.0f), FVector2D(520.0f, 120.0f), 20);
 		AddImage(Blueprint, NamePanel, TEXT("HireDetailNameArt"), NamePlate,
 			FVector2D::ZeroVector, FVector2D(520.0f, 120.0f), 0);
+		const FBox2D NameInner = UIPartRects::Inner(TEXT("T_MB_HireNamePlate"),
+			FVector2D::ZeroVector, FVector2D(520.0f, 120.0f), false);
 		AddText(Blueprint, NamePanel, TEXT("HireDetailName"), NSLOCTEXT("MarchboundHire", "Knight", "기사"),
-			Font, 38, FVector2D(45.0f, 30.0f), FVector2D(430.0f, 60.0f), 10);
+			Font, 38, NameInner.Min, NameInner.GetSize(), 10);
 
 		UCanvasPanel* StatsPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailStatsPanel"));
 		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(95.0f, 746.0f), FVector2D(690.0f, 96.0f), 20);
 		AddImage(Blueprint, StatsPanel, TEXT("HireDetailStatsArt"), StatsStrip,
 			FVector2D::ZeroVector, FVector2D(690.0f, 96.0f), 0);
-		AddText(Blueprint, StatsPanel, TEXT("HireDetailHP"), FText::FromString(TEXT("HP 100")), Font, 28,
-			FVector2D(24.0f, 22.0f), FVector2D(205.0f, 54.0f), 10);
-		AddText(Blueprint, StatsPanel, TEXT("HireDetailAP"), FText::FromString(TEXT("AP 7")), Font, 28,
-			FVector2D(242.0f, 22.0f), FVector2D(205.0f, 54.0f), 10);
-		AddText(Blueprint, StatsPanel, TEXT("HireDetailSpeed"), NSLOCTEXT("MarchboundHire", "SpeedDefault", "속도 3"), Font, 28,
-			FVector2D(460.0f, 22.0f), FVector2D(205.0f, 54.0f), 10);
+		// 이 띠에는 세로 칸막이가 둘 그려져 있다. 셋으로 나눠 쓴다.
+		// 칸을 셋 그어 두면 그 셋을 그대로 쓰고, 하나만 그어져 있으면 그
+		// 하나를 셋으로 나눈다 -- 어느 쪽이든 배치는 안 고쳐도 된다.
+		const FVector2D StatsSize(690.0f, 96.0f);
+		const TCHAR* const StatNames[3] = {
+			TEXT("HireDetailHP"), TEXT("HireDetailAP"), TEXT("HireDetailSpeed") };
+		const FText StatDefaults[3] = {
+			FText::FromString(TEXT("HP 100")), FText::FromString(TEXT("AP 7")),
+			NSLOCTEXT("MarchboundHire", "SpeedDefault", "속도 3") };
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			const FBox2D StatCell = UIPartRects::Cell(TEXT("T_MB_HireStatsStrip"),
+				FVector2D::ZeroVector, StatsSize, false, Index, 3);
+			AddText(Blueprint, StatsPanel, StatNames[Index], StatDefaults[Index],
+				Font, 28, StatCell.Min, StatCell.GetSize(), 10);
+		}
 
 		const TCHAR* DefaultSkillLabels[6] = {
 			TEXT("평타"), TEXT("이동"), TEXT("스킬 1"),
@@ -413,10 +443,12 @@ namespace MarchboundHireWidgetBuilder
 			AddImage(Blueprint, SkillPanel,
 				FName(*FString::Printf(TEXT("HireDetailSkillArt_%d"), Index)), SkillFrame,
 				FVector2D::ZeroVector, FVector2D(116.0f, 116.0f), 0);
+			const FBox2D SkillInner = UIPartRects::Inner(TEXT("T_MB_HireSkillButtonFrame"),
+				FVector2D::ZeroVector, FVector2D(116.0f, 116.0f), false);
 			UTextBlock* SkillText = AddText(Blueprint, SkillPanel,
 				FName(*FString::Printf(TEXT("HireDetailSkillText_%d"), Index)),
 				FText::FromString(DefaultSkillLabels[Index]), Font, 18,
-				FVector2D(8.0f, 37.0f), FVector2D(100.0f, 42.0f), 10);
+				SkillInner.Min, SkillInner.GetSize(), 10);
 			SetLightFont(SkillText, Font, 18);
 			UButton* SkillButton = FindOrCreate<UButton>(Blueprint,
 				FName(*FString::Printf(TEXT("HireDetailSkillButton_%d"), Index)));
@@ -431,8 +463,16 @@ namespace MarchboundHireWidgetBuilder
 		PlaceCanvas(PartyPanel, PartyFrameArt, FVector2D::ZeroVector, FVector2D(420.0f, 660.0f), 0);
 		SetImage(PartyFrameArt, PartyFrame);
 
+		// 이 틀 그림에는 칸이 둘이다 -- 사람이 맞춰 둔 몸통(0)과 머리칸(1).
+		// 인원수는 머리칸에, 자리들은 몸통에 넣는다.
+		const FVector2D PartySize(420.0f, 660.0f);
+		const FBox2D PartyBody = UIPartRects::Inner(TEXT("T_MB_HirePartyFrame"),
+			FVector2D::ZeroVector, PartySize, false, 0);
+		const FBox2D PartyHead = UIPartRects::Inner(TEXT("T_MB_HirePartyFrame"),
+			FVector2D::ZeroVector, PartySize, false, 1);
+
 		UTextBlock* PartyCount = FindOrCreate<UTextBlock>(Blueprint, TEXT("PartyCountText"));
-		PlaceCanvas(PartyPanel, PartyCount, FVector2D(50.0f, 28.0f), FVector2D(320.0f, 54.0f), 15);
+		PlaceCanvas(PartyPanel, PartyCount, PartyHead.Min, PartyHead.GetSize(), 15);
 		PartyCount->SetText(NSLOCTEXT("MarchboundHire", "PartyDefault", "파티 0/3"));
 		PartyCount->SetJustification(ETextJustify::Center);
 		SetLightFont(PartyCount, Font, 32);
@@ -441,37 +481,52 @@ namespace MarchboundHireWidgetBuilder
 		{
 			UCanvasPanel* SlotPanel = FindOrCreate<UCanvasPanel>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlot_%d"), Index)));
-			PlaceCanvas(PartyPanel, SlotPanel, FVector2D(40.0f, 112.0f + 150.0f * Index),
-				FVector2D(340.0f, 140.0f), 10);
+			// 자리 셋을 몸통 칸에 고르게 나눠 넣는다. 40,112 · 150 간격은
+			// 눈대중이었고, 그 값들은 틀 그림이 바뀌면 같이 안 따라왔다.
+			const FVector2D BodySpan = PartyBody.GetSize();
+			const float SlotPitch = BodySpan.Y / 3.f;
+			const FVector2D SlotSize(BodySpan.X, SlotPitch - 10.f);
+			PlaceCanvas(PartyPanel, SlotPanel,
+				PartyBody.Min + FVector2D(0.f, SlotPitch * Index),
+				SlotSize, 10);
 
 			AddImage(Blueprint, SlotPanel,
 				FName(*FString::Printf(TEXT("PartySlotArt_%d"), Index)), PartyEmpty,
-				FVector2D::ZeroVector, FVector2D(340.0f, 140.0f), 0);
+				FVector2D::ZeroVector, SlotSize, 0);
 			AddImage(Blueprint, SlotPanel,
 				FName(*FString::Printf(TEXT("PartySlotPlus_%d"), Index)), PartyPlus,
-				FVector2D::ZeroVector, FVector2D(340.0f, 140.0f), 2);
+				FVector2D::ZeroVector, SlotSize, 2);
 
 			UImage* Face = FindOrCreate<UImage>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotFace_%d"), Index)));
-			PlaceCanvas(SlotPanel, Face, FVector2D(22.0f, 17.0f), FVector2D(106.0f, 106.0f), 10);
+			// 얼굴과 이름은 자리 그림에서 잰 칸 안에 넣는다.
+			const FBox2D SlotInner = UIPartRects::Inner(TEXT("T_MB_HirePartyRowEmpty"),
+				FVector2D::ZeroVector, SlotSize, false);
+			const FVector2D SlotSpan = SlotInner.GetSize();
+			const float SlotFace = SlotSpan.Y;
+			PlaceCanvas(SlotPanel, Face, SlotInner.Min,
+				FVector2D(SlotFace, SlotFace), 10);
 			Face->SetVisibility(ESlateVisibility::Collapsed);
 
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotName_%d"), Index)));
-			PlaceCanvas(SlotPanel, Name, FVector2D(140.0f, 42.0f), FVector2D(160.0f, 54.0f), 12);
+			PlaceCanvas(SlotPanel, Name,
+				SlotInner.Min + FVector2D(SlotFace + 12.f, SlotSpan.Y * 0.28f),
+				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.44f), 12);
 			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 26);
 			Name->SetVisibility(ESlateVisibility::Collapsed);
 
 			UButton* SlotButton = FindOrCreate<UButton>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotButton_%d"), Index)));
-			PlaceCanvas(SlotPanel, SlotButton, FVector2D::ZeroVector,
-				FVector2D(340.0f, 140.0f), 30);
+			PlaceCanvas(SlotPanel, SlotButton, FVector2D::ZeroVector, SlotSize, 30);
 			SetTransparentButton(SlotButton);
 		}
 
 		UTextBlock* Notice = FindOrCreate<UTextBlock>(Blueprint, TEXT("NoticeText"));
-		PlaceCanvas(PartyPanel, Notice, FVector2D(28.0f, 562.0f), FVector2D(364.0f, 58.0f), 15);
+		PlaceCanvas(PartyPanel, Notice,
+			FVector2D(PartyBody.Min.X, PartyBody.Max.Y - 46.f),
+			FVector2D(PartyBody.GetSize().X, 46.f), 15);
 		Notice->SetText(NSLOCTEXT("MarchboundHire", "NoticeDefault", "1명 이상 선택하면 출발 가능"));
 		Notice->SetJustification(ETextJustify::Center);
 		SetLightFont(Notice, Font, 20);
@@ -481,7 +536,9 @@ namespace MarchboundHireWidgetBuilder
 		AddImage(Blueprint, Depart, TEXT("DepartArt"), DepartPlate,
 			FVector2D::ZeroVector, FVector2D(340.0f, 160.0f), 0);
 		UTextBlock* DepartLabel = FindOrCreate<UTextBlock>(Blueprint, TEXT("DepartLabel"));
-		PlaceCanvas(Depart, DepartLabel, FVector2D(30.0f, 43.0f), FVector2D(280.0f, 72.0f), 15);
+		const FBox2D DepartInner = UIPartRects::Inner(TEXT("T_MB_HireDepartButton"),
+			FVector2D::ZeroVector, FVector2D(340.0f, 160.0f), false);
+		PlaceCanvas(Depart, DepartLabel, DepartInner.Min, DepartInner.GetSize(), 15);
 		DepartLabel->SetText(NSLOCTEXT("MarchboundHire", "Depart", "출발"));
 		DepartLabel->SetJustification(ETextJustify::Center);
 		SetLightFont(DepartLabel, Font, 44);

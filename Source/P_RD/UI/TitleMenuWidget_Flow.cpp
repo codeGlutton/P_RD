@@ -14,7 +14,13 @@ using namespace RDTitleMenu;
 
 namespace
 {
-	/** @brief 프로필 위젯의 실제 배치 캔버스 슬롯을 찾는다(텍스트는 런타임 _CenterOverlay로 감싸질 수 있으므로 그 부모 슬롯을 우선한다). */
+	/**
+	 * @brief 프로필 위젯의 실제 배치 캔버스 슬롯을 찾는다.
+	 *
+	 * 틀·글자·버튼은 WBP에서 XxxMount(Overlay) 하나로 묶여 있고 자리는 그 Mount가 쥔다.
+	 * 그래서 이름으로 찾은 위젯이 캔버스에 없으면 위로 올라가며 캔버스 슬롯을 가진 조상을 쓴다.
+	 * 부모 이름을 문자열로 넘겨짚던 예전 방식과 달리, 무엇으로 감싸든 통한다.
+	 */
 	UCanvasPanelSlot* FindProfileCanvasSlot(UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName)
 	{
 		if (Owner == nullptr)
@@ -23,27 +29,15 @@ namespace
 		}
 
 		UWidget* Widget = Owner->GetWidgetFromName(MakeProfileWidgetName(BaseName, ProfileName));
-		if (Widget == nullptr)
+		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
 		{
-			return nullptr;
-		}
-
-		// TextBlock은 AlignMenuTextBlock에서 _CenterOverlay로 감싸지므로, 캔버스 슬롯을 가진 쪽(부모 Overlay)을 실제 배치 위젯으로 본다.
-		if (Cast<UCanvasPanelSlot>(Widget->Slot) == nullptr)
-		{
-			if (UPanelWidget* ParentWidget = Widget->GetParent())
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Node->Slot))
 			{
-				if (ParentWidget->GetName().Contains(TEXT("_CenterOverlay")))
-				{
-					if (UCanvasPanelSlot* ParentCanvasSlot = Cast<UCanvasPanelSlot>(ParentWidget->Slot))
-					{
-						return ParentCanvasSlot;
-					}
-				}
+				return CanvasSlot;
 			}
 		}
 
-		return Cast<UCanvasPanelSlot>(Widget->Slot);
+		return nullptr;
 	}
 
 	/** @brief ToBase 프로필 위젯의 세로 위치(Y)만 FromBase 프로필 위젯의 Y로 맞춘다(X/크기는 그대로). */
@@ -70,13 +64,14 @@ namespace
 
 		Widget->SetVisibility(Visibility);
 
-		// TitleMenuWidget.cpp가 세로 중앙 정렬 보정을 위해 TextBlock을 런타임 Overlay로 감싼다.
-		// 실제 텍스트를 숨길 때 그 임시 부모도 같이 숨겨야 빈 Overlay가 입력/레이아웃에 남지 않는다.
-		if (UPanelWidget* ParentWidget = Widget->GetParent())
+		// 캔버스에 놓인 조상(XxxMount 또는 런타임 _CenterOverlay)도 같이 숨긴다.
+		// 빈 판이 남으면 입력과 레이아웃에 그대로 자리를 차지한다.
+		for (UWidget* Node = Widget->GetParent(); Node != nullptr; Node = Node->GetParent())
 		{
-			if (ParentWidget->GetName().Contains(TEXT("_CenterOverlay")))
+			if (Cast<UCanvasPanelSlot>(Node->Slot) != nullptr)
 			{
-				ParentWidget->SetVisibility(Visibility);
+				Node->SetVisibility(Visibility);
+				break;
 			}
 		}
 	}
@@ -154,7 +149,13 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 	const bool bCanContinueRun = CanContinueRun();
 	const ESlateVisibility ContinueVisibility = bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
 
-	if (TitleLayoutSwitcher != nullptr)
+	// 프로필 위젯을 쓰는 판인지 본다. 전에는 스위처가 있느냐로 물었는데,
+	// 스위처는 벌이 여럿일 때만 있던 것이고 이제 한 벌뿐이라 없앴다.
+	// 물어야 할 것은 처음부터 "접미사 붙은 단추가 있느냐" 였다.
+	const bool bUsesProfileLayouts = const_cast<UTitleMenuWidget*>(this)
+		->GetWidgetFromName(MakeProfileWidgetName(
+			TEXT("StartButton"), TitleLayoutProfileBase16x9)) != nullptr;
+	if (bUsesProfileLayouts)
 	{
 		SetWidgetAndGeneratedParentVisibility(StartButton, ESlateVisibility::Collapsed);
 		SetWidgetAndGeneratedParentVisibility(ContinueButton, ESlateVisibility::Collapsed);
@@ -196,12 +197,12 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		// 이때 NEW START(프레임/버튼/텍스트)를 비어 있는 CONTINUE 슬롯 위치로 내려 SETTING/EXIT 묶음과 붙인다.
 		if (bCanContinueRun == false)
 		{
+			// 틀·글자·버튼이 XxxMount 하나로 묶여 있으므로 자리도 하나만 옮기면 된다.
+			// 예전에는 셋을 따로 옮겼고, 하나라도 빠뜨리면 글자만 제자리에 남았다.
 			UTitleMenuWidget* MutableSelf = const_cast<UTitleMenuWidget*>(this);
 			for (const FName ProfileName : TitleLayoutProfiles)
 			{
 				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButtonFrameImage"), TEXT("StartButtonFrameImage"), ProfileName);
-				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButton"), TEXT("StartButton"), ProfileName);
-				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButtonText"), TEXT("StartButtonText"), ProfileName);
 			}
 		}
 

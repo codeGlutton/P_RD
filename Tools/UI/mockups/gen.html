@@ -1,0 +1,139 @@
+<meta charset="utf-8">
+<title>만든 것 고르기</title>
+<style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+body { background: #14100c; color: #efe3cd; padding: 18px 22px 70px;
+       font: 14px/1.55 "Malgun Gothic", system-ui, sans-serif; }
+h1 { font-size: 20px; color: #f0c479; }
+.note { color: #a2917a; font-size: 12.5px; margin: 5px 0 14px; }
+.bar { position: sticky; top: 0; z-index: 30; background: #14100cf2; padding: 9px 0 11px;
+       border-bottom: 1px solid #3a2d1c; margin-bottom: 16px;
+       display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.bar button { background: #3a2d1c; color: #e6d6b8; border: 1px solid #6b5433;
+              border-radius: 5px; padding: 5px 12px; cursor: pointer; font-size: 12.5px; }
+.bar button:hover { background: #55401f; }
+.bar .n { color: #a2917a; font-size: 12.5px; }
+.bar .n b { color: #f0c479; }
+.mini { display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+        font-size: 11.5px; color: #a2917a; }
+.mini .track { width: 120px; height: 8px; background: #241b12; border-radius: 4px;
+               overflow: hidden; display: inline-block; vertical-align: -1px; }
+.mini .track i { display: block; height: 100%; background: #57804a; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.on { background: #57e08a; } .off { background: #e05757; }
+
+.grid { display: flex; flex-wrap: wrap; gap: 14px; }
+.pair { width: 300px; border: 1px solid #3a2d1c; border-radius: 6px; overflow: hidden;
+        background: #1e1710; cursor: pointer; user-select: none; }
+.pair:hover { border-color: #8a6a3a; }
+.pair .ims { display: flex; background: #241b12; }
+.pair .ims > div { flex: 1; position: relative; }
+.pair .ims img { width: 100%; display: block; }
+.pair .ims .tag { position: absolute; left: 3px; top: 2px; font-size: 9.5px;
+                  color: #ffffff8c; text-shadow: 0 0 3px #000; }
+.pair .cap { padding: 5px 8px 7px; }
+.pair .cap .nm { font-size: 12px; color: #d9c6a4;
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pair .cap .gp { font-size: 10.5px; color: #7d6e5c; }
+.pair.out { opacity: .34; border-color: #7a2f2f; }
+.pair.out .cap .nm { text-decoration: line-through; }
+.pair .mark { float: right; font-size: 11px; color: #f09090; }
+.hide { display: none; }
+
+/* 페이지끼리 오가는 줄. 없으면 주소를 손으로 쳐야 한다 -- 실제로 한 번
+   에셋 페이지로 넘어갔다가 돌아올 길이 없었다. */
+.nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+       margin: 0 0 12px; font: 12.5px/1.4 "Malgun Gothic", system-ui, sans-serif; }
+.nav a { text-decoration: none; padding: 4px 11px; border-radius: 5px;
+         background: #241b12; color: #c6b498; border: 1px solid #3a2d1c; }
+.nav a:hover { background: #55401f; color: #ffe9c0; }
+.nav a.here { background: #55401f; color: #ffe9c0; border-color: #6b5433;
+              font-weight: 600; }
+</style>
+
+<div class="nav"><a href="current.html" class="">지금 배치</a><a href="assets.html" class="">에셋 · 영역</a><a href="index.html" class="">시안 목록</a><a href="variants.html" class="">시안 갤러리</a><a href="gen.html" class="here">만든 것</a></div><h1>만든 것 고르기</h1>
+<p class="note">왼쪽이 <b style="color:#c9b58e">게임 원본</b>, 오른쪽이 <b style="color:#9ad19a">만든 것</b>이다.
+칸을 <b>누르면 탈락</b>, 다시 누르면 되돌아온다. 고른 것은 저절로 저장되니 이름을 적어 주실 필요 없다.</p>
+
+<div class="bar">
+  <button id="onlyLive">남은 것만</button>
+  <button id="showAll">전부</button>
+  <button id="clear">탈락 해제</button>
+  <span class="n">남음 <b id="live">0</b> · 탈락 <b id="out">0</b></span>
+  <span class="mini" id="mini"></span>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+const GB = 1073741824;
+let picks = {};       // 이름 -> true 면 탈락
+let images = [];
+let onlyLive = false;
+let saveTimer = null;
+
+async function loadPicks() {
+  try { picks = await (await fetch('gen_picks.json?t=' + Date.now())).json(); }
+  catch (e) { picks = {}; }
+}
+
+function save() {
+  // 누를 때마다 보내면 시끄럽다. 잠깐 모았다 한 번에.
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    fetch('/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ picks }) });
+  }, 800);
+}
+
+function draw() {
+  const grid = document.getElementById('grid');
+  let live = 0, out = 0;
+  grid.innerHTML = images.map(p => {
+    const dead = !!picks[p.name];
+    dead ? out++ : live++;
+    if (onlyLive && dead) return '';
+    const left = p.src
+      ? '<div><img loading="lazy" src="' + p.src + '"><span class="tag">원본</span></div>'
+      : '';
+    return '<div class="pair' + (dead ? ' out' : '') + '" data-n="' + p.name + '">'
+      + '<div class="ims">' + left
+      + '<div><img loading="lazy" src="' + p.file + '?t=' + p.when + '">'
+      + '<span class="tag">만든 것</span></div></div>'
+      + '<div class="cap"><span class="mark">' + (dead ? '탈락' : '') + '</span>'
+      + '<div class="nm">' + p.name + '</div>'
+      + '<div class="gp">' + p.group + '</div></div></div>';
+  }).join('');
+  document.getElementById('live').textContent = live;
+  document.getElementById('out').textContent = out;
+}
+
+document.getElementById('grid').addEventListener('click', event => {
+  const pair = event.target.closest('.pair');
+  if (!pair) return;
+  const name = pair.dataset.n;
+  if (picks[name]) delete picks[name]; else picks[name] = true;
+  save(); draw();
+});
+document.getElementById('onlyLive').onclick = () => { onlyLive = true; draw(); };
+document.getElementById('showAll').onclick = () => { onlyLive = false; draw(); };
+document.getElementById('clear').onclick = () => { picks = {}; save(); draw(); };
+
+async function tick() {
+  let s;
+  try { s = await (await fetch('genstatus.json?t=' + Date.now())).json(); } catch (e) { return; }
+  const changed = JSON.stringify(s.images.map(i => i.file)) !== JSON.stringify(images.map(i => i.file));
+  images = s.images;
+  if (changed) draw();
+
+  const q = s.queue;
+  document.getElementById('mini').innerHTML =
+    s.downloads.filter(d => !d.done).map(d =>
+      d.name + ' <span class="track"><i style="width:' + (d.have / d.total * 100) + '%"></i></span> '
+      + (d.have / GB).toFixed(1) + '/' + (d.total / GB).toFixed(1) + 'GB').join(' &nbsp; ')
+    + ' &nbsp; <span class="dot ' + (q.up ? 'on' : 'off') + '"></span> ComfyUI '
+    + (q.up ? '그리는 중 ' + q.running + ' · 대기 ' + q.pending : '꺼짐');
+}
+
+(async () => { await loadPicks(); await tick(); draw(); setInterval(tick, 5000); })();
+</script>

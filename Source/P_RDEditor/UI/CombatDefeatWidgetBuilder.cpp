@@ -168,7 +168,8 @@ namespace CombatDefeatWidgetBuilder
 		UTexture2D* OuterFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_OuterFrame.T_MB_Defeat_OuterFrame"));
 		UTexture2D* TitleBanner = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_TitleBanner.T_MB_Defeat_TitleBanner"));
 		UTexture2D* MercenaryCard = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_MercenaryCard.T_MB_Defeat_MercenaryCard"));
-		UTexture2D* Summary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_BattleSummary.T_MB_Defeat_BattleSummary"));
+		// 옛 전투 기록 판은 지웠다. 공용 KitA 틀로 바꾼다 -- 9-slice 라 크기를 안 탄다.
+		UTexture2D* Summary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* Secondary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonSecondary.T_MB_Defeat_ButtonSecondary"));
 		UTexture2D* Primary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonPrimary.T_MB_Defeat_ButtonPrimary"));
 		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));

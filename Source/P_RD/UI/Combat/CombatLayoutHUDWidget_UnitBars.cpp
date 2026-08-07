@@ -8,6 +8,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -26,7 +27,23 @@ namespace
 	constexpr float UnitHpBarBaseOrthoWidth = 2000.0f;
 
 	// 머리 위 HP바가 유닛 머리에서 얼마나 위로 뜰지(뷰포트 픽셀). 크기 바꾸면 같이 조절.
-	constexpr float UnitHpBarHeadOffsetY = -78.0f;
+	//
+	// 바가 멀리 떠 보이던 진짜 원인은 오프셋이 아니라 **자동 크기**였다 —
+	// 루트 슬롯이 WBP 크기를 그대로 받는데, 판 아래 숨은 상태이상 줄까지
+	// 상자에 들어가 "바닥 정렬" 기준이 그 빈 공간 밑바닥이었다. 이제 슬롯을
+	// 판 높이로 고정하므로(-8) 이 값이 곧 판 바닥과 머리 사이 간격이다.
+	// -8 로 했더니 투영점이 머리가 아니라 유닛 가운데라 바가 유닛을 덮었다.
+	// -52 도 헬멧에 살짝 걸려("좀 더 위로") 한 뼘 더 올린다.
+	constexpr float UnitHpBarHeadOffsetY = -64.0f;
+	// 판(백플레이트)만의 디자인 크기. 그 아래 상태이상 줄 자리는 상자에서 뺀다.
+	constexpr float UnitHpBarPlateWidth = 360.0f;
+	constexpr float UnitHpBarPlateHeight = 68.0f;
+
+	// HP 숫자 줄 시작(채움 묶음 위에서부터, px).
+	// 백플레이트 개구는 세로 15..53(그어 둔 칸 실측), 38pt 숫자 잉크는 37px에
+	// 윗공백 9.6px — 가운데 정렬은 줄 상자(57px)가 개구보다 커서 못 쓰고,
+	// 위 정렬에 이 여백을 줘 잉크를 개구 한가운데(34) 에 놓는다.
+	constexpr float UnitHpBarValueTextPadTop = -2.0f;
 
 	// HP 숫자 폰트 크기(WBP 디자인 좌표 기준 — 렌더 스케일이 곱해져 화면에 보임). 크게 해서 바를 꽉 채운다.
 	constexpr float UnitHpBarValueFontSize = 38.0f;
@@ -40,6 +57,50 @@ namespace
 	constexpr float UnitHpBarStatusIconStep = 184.0f;    // 아이콘 사이 최소 여백
 	constexpr float UnitHpBarStatusRowTop = 72.0f;       // HP바와 시각적으로 분리
 	constexpr float UnitHpBarStatusCountFontSize = 42.0f;
+
+	/**
+	 * @brief 위젯에서 위로 올라가며 캔버스 슬롯을 가진 조상을 찾는다.
+	 *
+	 * WBP에서 글자를 Overlay(_Center/Mount)로 감싼 뒤로, 글자의 Slot을 바로
+	 * Cast<UCanvasPanelSlot> 하던 코드는 조용히 실패했다 — HP 숫자가 38pt로
+	 * 커진 채 자리 보정 없이 남아 바 밖으로 넘친 원인. 자리는 감싼 판이
+	 * 쥐고 있으므로 그 판의 슬롯을 잡아야 한다.
+	 */
+	UCanvasPanelSlot* FindCanvasSlotUp(UWidget* Widget)
+	{
+		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		{
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Node->Slot))
+			{
+				return CanvasSlot;
+			}
+		}
+		return nullptr;
+	}
+
+	/**
+	 * @brief 글자와 캔버스 조상 사이의 Overlay 슬롯들을 꽉 채움/세로 가운데로 편다.
+	 *
+	 * 감싼 판(HpFillImageMount)이 이미 채움 바 영역을 차지하므로, 사이 여백을
+	 * 지우면 글자가 그 영역 전체를 쓰며 세로 가운데에 온다 — 감싸기 전에
+	 * 캔버스 슬롯을 (20,34)·323x44로 옮기던 것과 같은 의도다.
+	 */
+	void SpreadTextInWrappers(UWidget* Widget)
+	{
+		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		{
+			if (Cast<UCanvasPanelSlot>(Node->Slot) != nullptr)
+			{
+				break;
+			}
+			if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Node->Slot))
+			{
+				OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+				OverlaySlot->SetVerticalAlignment(VAlign_Center);
+				OverlaySlot->SetPadding(FMargin(0.0f));
+			}
+		}
+	}
 
 	float StatusRowLeft(const int32 VisibleCount)
 	{
@@ -129,7 +190,9 @@ void UCombatLayoutHUDWidget::CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& B
 			Count->SetJustification(ETextJustify::Right);
 			Count->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 			Count->SetRenderOpacity(1.0f);   // 투명도 제거(불투명).
-			if (UCanvasPanelSlot* CountSlot = Cast<UCanvasPanelSlot>(Count->Slot))
+			// 글자가 _Center Overlay로 감싸져 자기 캔버스 슬롯이 없을 수 있다.
+			// 자리를 쥔 조상의 슬롯을 잡는다(직접 캐스트는 감싼 뒤로 조용히 실패).
+			if (UCanvasPanelSlot* CountSlot = FindCanvasSlotUp(Count))
 			{
 				CountSlot->SetAnchors(FAnchors(0.0f, 0.0f));
 				CountSlot->SetAlignment(FVector2D(0.0f, 0.0f));
@@ -208,6 +271,20 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 		// 라이브 트리에 붙인 뒤 UMG WidgetTree를 재부모화하면 Slate 트리와 어긋나 렌더 크래시가 난다.
 		NewBar.mFillImage = Cast<UImage>(NewBar.mRoot->GetWidgetFromName(TEXT("HpFillImage")));
 		NewBar.mValueText = Cast<UTextBlock>(NewBar.mRoot->GetWidgetFromName(TEXT("HpValueText")));
+		NewBar.mBackplateImage = Cast<UImage>(
+			NewBar.mRoot->GetWidgetFromName(TEXT("HpBackplateImage")));
+		// 상태 띠는 판이 깔아 둔 두 칸을 쓴다(HpStatusRailBuff/Debuff).
+		NewBar.mStatusRailBuff = Cast<UImage>(
+			NewBar.mRoot->GetWidgetFromName(TEXT("HpStatusRailBuff")));
+		NewBar.mStatusRailDebuff = Cast<UImage>(
+			NewBar.mRoot->GetWidgetFromName(TEXT("HpStatusRailDebuff")));
+		for (UImage* Rail : { NewBar.mStatusRailBuff.Get(), NewBar.mStatusRailDebuff.Get() })
+		{
+			if (Rail != nullptr)
+			{
+				Rail->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
 		CacheUnitHpBarStatusSlots(NewBar);   // 상태칸 캐시+숨김. 실제 표시는 UpdateUnitHpBarStatus에서 DTO로 매 프레임 채운다.
 		SetupUnitHpBarFillClip(NewBar);
 
@@ -229,6 +306,19 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 				ValueSlot->SetPosition(FVector2D(20.0f, 34.0f));
 				ValueSlot->SetSize(FVector2D(323.0f, 44.0f));
 				ValueSlot->SetAutoSize(false);
+			}
+			else
+			{
+				// 글자가 Overlay로 감싸져 캔버스 슬롯이 없다. 감싼 판이 이미
+				// 채움 바 자리를 쥐고 있으니, 사이 여백만 지워 같은 결과를 낸다.
+				SpreadTextInWrappers(NewBar.mValueText);
+				// 세로는 가운데 정렬 대신 위 정렬 + 실측 여백. 38pt 줄 상자가
+				// 묶음(53px)보다 커서 가운데 정렬은 조용히 위에 붙고 바닥이 잘렸다.
+				if (UOverlaySlot* ValueTextSlot = Cast<UOverlaySlot>(NewBar.mValueText->Slot))
+				{
+					ValueTextSlot->SetVerticalAlignment(VAlign_Top);
+					ValueTextSlot->SetPadding(FMargin(0.0f, UnitHpBarValueTextPadTop, 0.0f, 0.0f));
+				}
 			}
 		}
 
@@ -333,7 +423,11 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 		mRootCanvas->AddChildToCanvas(NewBar.mRoot);
 		if (UCanvasPanelSlot* RootSlot = Cast<UCanvasPanelSlot>(NewBar.mRoot->Slot))
 		{
-			RootSlot->SetAutoSize(true);                      // WBP가 정한 자체 크기를 사용.
+			// 자동 크기를 쓰면 판 아래 숨은 상태이상 줄 자리(빈 33px)까지
+			// 상자에 들어가, 바닥 정렬 기준이 그 밑바닥이 된다 — 바가 유닛
+			// 머리에서 멀리 떠 보이던 원인. 판 크기로 못 박는다.
+			RootSlot->SetAutoSize(false);
+			RootSlot->SetSize(FVector2D(UnitHpBarPlateWidth, UnitHpBarPlateHeight));
 			RootSlot->SetAlignment(FVector2D(0.5f, 1.0f));    // 가로 중앙, 세로 아래 기준(유닛 머리 위에 놓기).
 			RootSlot->SetZOrder(UnitHpBarZOrder);             // 스킨 뒤로(다른 UI를 안 덮게).
 		}
@@ -478,6 +572,93 @@ UTexture2D* UCombatLayoutHUDWidget::ResolveStatusIcon(const FGameplayTag& Status
  */
 void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const
 {
+	/*
+	 * 테두리 색으로 버프/디버프를 알린다(0806 합의).
+	 *
+	 * 월드 위 상태 아이콘은 유닛과 타일을 가려서 껐다. 그래도 "지금 뭔가
+	 * 걸려 있다" 는 판에서 바로 보여야 한다. 무엇이 걸렸는지는 요약판이
+	 * 아이콘으로 맡고, 여기서는 좋은 것/나쁜 것만 색으로 구분한다.
+	 * 둘 다 걸리면 두 색을 섞는다 -- 하나만 골라 보이면 나머지가 숨는다.
+	 */
+	const FLinearColor BuffTint(0.42f, 1.00f, 0.55f, 1.0f);    // 이로운 것
+	const FLinearColor DebuffTint(1.00f, 0.42f, 0.42f, 1.0f);  // 해로운 것
+	bool bHasBuff = false;
+	bool bHasDebuff = false;
+	for (const FStatusEffectUI& Status : Unit.mStatusEffects)
+	{
+		const FString TagName = Status.mTag.GetTagName().ToString();
+		bHasDebuff |= TagName.Contains(TEXT(".Debuff."));
+		// "Debuff" 안에도 "Buff" 가 들어 있어 앞에 점을 붙여 가른다.
+		bHasBuff |= TagName.Contains(TEXT(".Buff."));
+	}
+	FLinearColor StatusTint = FLinearColor::White;
+	if (bHasBuff && bHasDebuff)
+	{
+		StatusTint = (BuffTint + DebuffTint) * 0.5f;
+		StatusTint.A = 1.0f;
+	}
+	else if (bHasBuff)
+	{
+		StatusTint = BuffTint;
+	}
+	else if (bHasDebuff)
+	{
+		StatusTint = DebuffTint;
+	}
+	if (Bar.mBackplateImage != nullptr)
+	{
+		Bar.mBackplateImage->SetColorAndOpacity(StatusTint);
+	}
+
+	/*
+	 * HP바 밑 상태 띠.
+	 *
+	 * 종류를 **자리로** 가른다 -- 왼쪽이 이로운 것, 오른쪽이 해로운 것.
+	 * 하나만 걸렸으면 그 띠가 폭을 다 쓰고, 둘 다면 반씩 나눠 가진다.
+	 * 색만으로 뜻을 나르면 색을 못 가리는 사람에게는 아무 표시도 아니다.
+	 */
+	const float RailInset = 20.0f;   // 판 테두리 안쪽(채움과 같은 여백)
+	const float RailWidth = UnitHpBarPlateWidth - RailInset * 2.0f;
+	const float RailTop = UnitHpBarPlateHeight - 2.0f;
+	const float RailHeight = 9.0f;
+	const bool bBothRails = bHasBuff && bHasDebuff;
+	const float HalfWidth = (RailWidth - 4.0f) * 0.5f;
+
+	if (Bar.mStatusRailBuff != nullptr)
+	{
+		Bar.mStatusRailBuff->SetVisibility(bHasBuff
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bHasBuff == true)
+		{
+			if (UCanvasPanelSlot* RailSlot =
+				Cast<UCanvasPanelSlot>(Bar.mStatusRailBuff->Slot))
+			{
+				RailSlot->SetPosition(FVector2D(RailInset, RailTop));
+				RailSlot->SetSize(FVector2D(
+					bBothRails ? HalfWidth : RailWidth, RailHeight));
+			}
+			Bar.mStatusRailBuff->SetColorAndOpacity(BuffTint);
+		}
+	}
+	if (Bar.mStatusRailDebuff != nullptr)
+	{
+		Bar.mStatusRailDebuff->SetVisibility(bHasDebuff
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		if (bHasDebuff == true)
+		{
+			if (UCanvasPanelSlot* RailSlot =
+				Cast<UCanvasPanelSlot>(Bar.mStatusRailDebuff->Slot))
+			{
+				// 둘 다면 오른쪽 반, 아니면 띠 전체를 쓴다.
+				RailSlot->SetPosition(FVector2D(
+					bBothRails ? RailInset + HalfWidth + 4.0f : RailInset, RailTop));
+				RailSlot->SetSize(FVector2D(
+					bBothRails ? HalfWidth : RailWidth, RailHeight));
+			}
+			Bar.mStatusRailDebuff->SetColorAndOpacity(DebuffTint);
+		}
+	}
+
 	if (bShowUnitHpBarStatusIcons == false)
 	{
 		for (UImage* Icon : Bar.mStatusIcons)
@@ -528,7 +709,8 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, 
 		{
 			if (UTextBlock* CountText = Bar.mStatusCountTexts[SlotIndex])
 			{
-				if (UCanvasPanelSlot* CountSlot = Cast<UCanvasPanelSlot>(CountText->Slot))
+				// 감싼 뒤로 직접 캐스트는 조용히 실패한다. 조상 슬롯을 잡는다.
+				if (UCanvasPanelSlot* CountSlot = FindCanvasSlotUp(CountText))
 				{
 					CountSlot->SetPosition(FVector2D(
 						SlotX + IconInset + UnitHpBarStatusIconSize * 0.35f,

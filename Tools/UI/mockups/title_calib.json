@@ -1,0 +1,8 @@
+{
+ "_설명": "게임 화면을 찍어 잰 값. 대문자 가운데가 그어 둔 칸 가운데보다 몇 px 아래에 그려졌나. fit_title_textbox 가 이만큼 올려 놓는다. 글꼴이나 크기를 바꾸면 다시 재야 한다(대화 기록의 calib0.png 측정 참고).",
+ "StartButtonText__base_16_9": 3.3,
+ "ContinueButtonText__base_16_9": 2.8,
+ "SettingsButtonText__base_16_9": 2.8,
+ "ExitButtonText__base_16_9": 2.5,
+ "VersionText__base_16_9": 1.8
+}

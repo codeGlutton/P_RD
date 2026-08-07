@@ -1,5 +1,9 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 
+#include "Actor/TileMap/TileLayer.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
+#include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
@@ -13,6 +17,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/SettingsPanelWidget.h"
 #include "UI/Combat/MockCombatDriver.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
@@ -33,12 +38,14 @@
 UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	mMercenaryRosterShellTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell")));
+	// 명단 셸 그림은 지웠다(새 그림 예정). 비워 두면 EnsureMercenaryRosterShell()
+	// 이 그림 없이 자리만 잡는다 -- LoadSynchronous() 가 null 을 주고 넘어간다.
+	// 확정 시안(0806): 목록 줄은 고용 화면과 같은 양피지 줄판을 쓴다.
+	// 옛 남색 카드(T_MB_MercenaryCard_*)는 세로 카드용이라 가로 줄에 안 맞았다.
 	mMercenaryCardNormalTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowNormal.T_MB_HireRowNormal")));
 	mMercenaryCardSelectedTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowSelected.T_MB_HireRowSelected")));
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(
 		TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
@@ -52,6 +59,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
 	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
 	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
+	RD_LOAD_TEX(mCommandMoveIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
 	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
 	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Recovery.T_Status_HP_Recovery");
 	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
@@ -415,6 +423,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
+	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
+	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
@@ -486,6 +496,12 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		mTurnAPPips.Add(Found);
 		mTurnAPPipsUsed.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("TurnAPPipUsed_%d"), Pip)));
+	}
+	mArtifactButtons.SetNum(ArtifactSlotCount);
+	for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
+	{
+		mArtifactButtons[Index] = Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("ArtifactButton_%d"), Index));
 	}
 	mArtifactIcons.SetNum(ArtifactSlotCount);
 	mArtifactFrames.SetNum(ArtifactSlotCount);
@@ -714,11 +730,146 @@ void UCombatLayoutHUDWidget::WireCommands()
 		mMenuButtons[2]->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleMonsterMenuClicked);
 	}
+	if (mMenuButtons.IsValidIndex(3))
+	{
+		// 넷째 톱니는 아무 데도 안 붙어 있었다. 눌러도 조용히 아무 일이 없었다.
+		mMenuButtons[3]->SetIsEnabled(true);
+		mMenuButtons[3]->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleSettingsMenuClicked);
+	}
+	// 아티팩트 칸은 꾹 눌러야 상세가 뜬다. 짧게 누르면 아무 일도 없다 --
+	// 전투 중에 잘못 눌러 화면이 덮이면 곤란하다.
+	{
+		using FArtifactHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FArtifactHandler PressHandlers[ArtifactSlotCount] = {
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_0,
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_1,
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_2,
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_3,
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_4,
+			&UCombatLayoutHUDWidget::HandleArtifactPressed_5 };
+		static const TCHAR* const PressNames[ArtifactSlotCount] = {
+			TEXT("HandleArtifactPressed_0"), TEXT("HandleArtifactPressed_1"),
+			TEXT("HandleArtifactPressed_2"), TEXT("HandleArtifactPressed_3"),
+			TEXT("HandleArtifactPressed_4"), TEXT("HandleArtifactPressed_5") };
+		for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
+		{
+			UButton* Button = mArtifactButtons.IsValidIndex(Index)
+				? mArtifactButtons[Index].Get() : nullptr;
+			if (Button == nullptr)
+			{
+				continue;
+			}
+			Button->OnPressed.__Internal_AddUniqueDynamic(
+				this, PressHandlers[Index], PressNames[Index]);
+			Button->OnReleased.AddUniqueDynamic(
+				this, &UCombatLayoutHUDWidget::HandleArtifactReleased);
+			BindPressFeedback(Button, Button);
+		}
+	}
 	if (mMercenaryCloseButton != nullptr)
 	{
 		mMercenaryCloseButton->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleMercenaryCloseClicked);
 		BindPressFeedback(mMercenaryCloseButton, mMercenaryCloseButton);
+	}
+
+	// 요약판 상태 아이콘 클릭 → 상태 상세. 판이 소켓 위에 투명 단추를 깔아 둔다.
+	{
+		using FClickHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FClickHandler StatusHandlers[2][3] = {
+			{ &UCombatLayoutHUDWidget::HandleAllyStatusClicked_0,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusClicked_1,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusClicked_2 },
+			{ &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_0,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_1,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_2 } };
+		static const TCHAR* const StatusHandlerNames[2][3] = {
+			{ TEXT("HandleAllyStatusClicked_0"), TEXT("HandleAllyStatusClicked_1"),
+			  TEXT("HandleAllyStatusClicked_2") },
+			{ TEXT("HandleEnemyStatusClicked_0"), TEXT("HandleEnemyStatusClicked_1"),
+			  TEXT("HandleEnemyStatusClicked_2") } };
+		const TCHAR* const Sides[2] = { TEXT("Ally"), TEXT("Enemy") };
+		for (int32 Side = 0; Side < 2; ++Side)
+		{
+			for (int32 Index = 0; Index < 3; ++Index)
+			{
+				UButton* Button = Find<UButton>(WidgetTree, FString::Printf(
+					TEXT("%sStatusButton_%d"), Sides[Side], Index));
+				if (Button != nullptr)
+				{
+					Button->OnClicked.__Internal_AddUniqueDynamic(
+						this, StatusHandlers[Side][Index],
+						StatusHandlerNames[Side][Index]);
+				}
+			}
+		}
+	}
+
+	// 턴 칸 클릭 → 그 유닛을 화면 가운데로 + (아군이면) 카드 펴기.
+	{
+		using FClickHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FClickHandler TurnHandlers[TurnSlotCount] = {
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_0,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_1,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_2,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_3,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_4,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_5,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_6,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_7,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_8,
+			&UCombatLayoutHUDWidget::HandleTurnTokenClicked_9 };
+		static const TCHAR* const TurnHandlerNames[TurnSlotCount] = {
+			TEXT("HandleTurnTokenClicked_0"), TEXT("HandleTurnTokenClicked_1"),
+			TEXT("HandleTurnTokenClicked_2"), TEXT("HandleTurnTokenClicked_3"),
+			TEXT("HandleTurnTokenClicked_4"), TEXT("HandleTurnTokenClicked_5"),
+			TEXT("HandleTurnTokenClicked_6"), TEXT("HandleTurnTokenClicked_7"),
+			TEXT("HandleTurnTokenClicked_8"), TEXT("HandleTurnTokenClicked_9") };
+		for (int32 Index = 0; Index < TurnSlotCount; ++Index)
+		{
+			UButton* Button = Find<UButton>(WidgetTree,
+				FString::Printf(TEXT("TurnTokenButton_%d"), Index));
+			if (Button != nullptr)
+			{
+				Button->OnClicked.__Internal_AddUniqueDynamic(
+					this, TurnHandlers[Index], TurnHandlerNames[Index]);
+			}
+		}
+	}
+
+	// 적 요약판 다음 스킬 소켓 클릭 → 그 스킬 상세.
+	if (UButton* NextSkillButton = Find<UButton>(WidgetTree,
+		TEXT("EnemyNextSkillButton")))
+	{
+		NextSkillButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleEnemyNextSkillClicked);
+	}
+
+	// 용병탭 스킬 소켓 클릭 → 스킬 상세 (0번 이동 카드는 이동 상세).
+	{
+		using FClickHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FClickHandler SkillHandlers[6] = {
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_0,
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_1,
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_2,
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_3,
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_4,
+			&UCombatLayoutHUDWidget::HandleMercenarySkillClicked_5 };
+		static const TCHAR* const SkillHandlerNames[6] = {
+			TEXT("HandleMercenarySkillClicked_0"), TEXT("HandleMercenarySkillClicked_1"),
+			TEXT("HandleMercenarySkillClicked_2"), TEXT("HandleMercenarySkillClicked_3"),
+			TEXT("HandleMercenarySkillClicked_4"), TEXT("HandleMercenarySkillClicked_5") };
+		for (int32 Index = 0; Index < 6; ++Index)
+		{
+			UButton* Button = Find<UButton>(WidgetTree, FString::Printf(
+				TEXT("MercenarySkillButton_%d"), Index));
+			if (Button != nullptr)
+			{
+				Button->OnClicked.__Internal_AddUniqueDynamic(
+					this, SkillHandlers[Index], SkillHandlerNames[Index]);
+			}
+		}
 	}
 }
 
@@ -806,6 +957,11 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 	mSwallowNextCommandClick = true;
 	UE_LOG(LogRD, Log, TEXT("[탭진단] 카드 %d 긴 누름 발화 — 상세 요청, 다음 클릭 삼킴 예약"), SlotIndex);
 
+	// 상세를 여는 김에 그 스킬을 쓸 유닛을 화면 가운데로 데려온다.
+	// 스킬 칸은 판 아래에 따로 있어서, 누른 스킬이 누구 것인지 판을 봐야
+	// 안다 -- 카메라가 그 유닛을 잡아 주면 그 왕복이 없어진다(0806 합의).
+	FocusCameraOnTurnUnit();
+
 	// 0번은 이동이다. 스킬이 아니라 게임플레이에 청할 것이 없으므로 화면이
 	// 이미 받아 둔 값으로 바로 조립한다.
 	if (SlotIndex == 0)
@@ -814,6 +970,30 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 		return;
 	}
 	mUIModel->RequestLongPressSkill(SlotIndex - 1);
+}
+
+/** @brief 지금 조종 중인 유닛을 화면 가운데로. 누구 스킬인지 판에서 보여 준다. */
+void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	// 용병 탭에서 골라 둔 용병이 있으면 그 쪽이 기준이다. 없으면 차례인 유닛.
+	int32 FocusUnitId = INDEX_NONE;
+	if (mMercenarySelectedSlot != INDEX_NONE)
+	{
+		FocusUnitId = PartyUnitIdAt(mMercenarySelectedSlot);
+	}
+	if (FocusUnitId == INDEX_NONE)
+	{
+		FocusUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
+	}
+	if (FocusUnitId != INDEX_NONE)
+	{
+		mCameraFocusedUnitId = FocusUnitId;
+		mUIModel->RequestFocusUnit(FocusUnitId);
+	}
 }
 
 /** @brief 왼쪽 넘김칸을 눌러 직전 열 칸 페이지로 간다. */
@@ -949,6 +1129,13 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		{
 			RefreshMonsterTabDetail();
 		}
+		else if (mSuppressNextUnitDetailOverlay == true)
+		{
+			// 카드만 갈아 끼우려고 청한 상세다. 겹은 띄우지 않는다 --
+			// "용병 상세 필요 없다"(0806). 값은 이미 모델에 들어와 있어
+			// 용병 패널 오른쪽이 그대로 쓴다.
+			mSuppressNextUnitDetailOverlay = false;
+		}
 		else
 		{
 			ShowUnitDetailOverlay();
@@ -966,21 +1153,39 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	const int32 CurrentUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
 	UTexture2D* NormalCard = mMercenaryCardNormalTexture.LoadSynchronous();
 	UTexture2D* SelectedCard = mMercenaryCardSelectedTexture.LoadSynchronous();
+	/*
+	 * 오른쪽 상세가 누구를 보여 줄지.
+	 *
+	 * 목록에서 고른 줄이 있으면 그 용병, 없으면 지금 차례인 용병이다.
+	 * 전에는 줄을 누르면 패널을 닫고 상세 겹을 띄웠는데, 상세는 이미 이
+	 * 패널 오른쪽에 있어서 같은 것을 두 번 보여 주는 꼴이었다(0806).
+	 */
 	const FUnitUI* FocusUnit = nullptr;
+	int32 PlayerIndex = 0;
 	for (const FUnitUI& Unit : Units)
 	{
 		if (Unit.mIsPlayer == false)
 		{
 			continue;
 		}
-		if (FocusUnit == nullptr || Unit.mUnitId == CurrentUnitId)
+		if (FocusUnit == nullptr)
 		{
 			FocusUnit = &Unit;
 		}
-		if (Unit.mUnitId == CurrentUnitId)
+		if (mMercenarySelectedSlot != INDEX_NONE)
 		{
+			if (PlayerIndex == mMercenarySelectedSlot)
+			{
+				FocusUnit = &Unit;
+				break;
+			}
+		}
+		else if (Unit.mUnitId == CurrentUnitId)
+		{
+			FocusUnit = &Unit;
 			break;
 		}
+		++PlayerIndex;
 	}
 
 	int32 SlotIndex = 0;
@@ -996,8 +1201,11 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		SetShown(Widgets.Plate, true);
 		if (Widgets.Plate != nullptr)
 		{
-			UTexture2D* CardTexture = Unit.mUnitId == CurrentUnitId
-				? SelectedCard : NormalCard;
+			// 고른 줄이 있으면 그 줄이, 없으면 지금 차례인 용병이 밝은 판이다.
+			const bool bHighlighted = mMercenarySelectedSlot != INDEX_NONE
+				? SlotIndex == mMercenarySelectedSlot
+				: Unit.mUnitId == CurrentUnitId;
+			UTexture2D* CardTexture = bHighlighted ? SelectedCard : NormalCard;
 			if (CardTexture != nullptr)
 			{
 				Widgets.Plate->SetBrushFromTexture(CardTexture, false);
@@ -1014,6 +1222,11 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		SetShown(Widgets.Portrait, true);
 
 		SetTextIfPresent(Widgets.Name, Unit.mName);
+		if (Widgets.Name != nullptr)
+		{
+			// 빈 칸 처리가 흐린 색으로 바꿔 뒀을 수 있다. 되돌린다.
+			Widgets.Name->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		}
 
 		// 목록 칸은 정사각 대갈치기 전용이다. 큰 히어로 일러스트(mPortrait)를
 		// 이 작은 칸에 다시 크롭하면 얼굴과 실루엣이 뭉개진다.
@@ -1032,19 +1245,28 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		RefreshPartyActionPoints(Widgets, Unit);
 		RefreshPartyStatus(Widgets, Unit);
 
-		if (Widgets.StatusText != nullptr)
-		{
-			const bool bHasStatus = Unit.mStatusEffects.Num() > 0;
-			SetShown(Widgets.StatusText, bHasStatus);
-			SetShown(Widgets.StatusIcon, bHasStatus);
-			if (bHasStatus)
-			{
-				const FStatusEffectUI& First = Unit.mStatusEffects[0];
-				Widgets.StatusText->SetText(FText::FromString(FString::Printf(
-					TEXT("%s %d턴"),
-					*StatusDisplayName(First.mTag), First.mStackCount)));
-			}
-		}
+		/*
+		 * 확정 시안(0806): 목록 줄은 **초상 · 이름 · Lv** 만 보여 준다.
+		 *
+		 * HP·AP·상태는 오른쪽 상세 판이 이미 크게 적는다. 줄에까지 겹쳐 적으면
+		 * 좁은 칸에 숫자가 다닥다닥 붙어 이름이 안 읽혔다. 위에서 값을 채운 뒤
+		 * 여기서 걷는다 -- 값 채우는 코드를 지우지 않는 것은, 줄에 다시 정보를
+		 * 얹기로 하면 이 몇 줄만 지우면 되게 하기 위해서다.
+		 */
+		SetShown(Widgets.HPBar, false);
+		SetShown(Widgets.HPText, false);
+		SetShown(Widgets.APText, false);
+		SetShown(Widgets.APPlate, false);
+		SetShown(Widgets.StatusText, false);
+		SetShown(Widgets.StatusIcon, false);
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("PartyAPPipRow_%d"), SlotIndex)), false);
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("PartyStatusRow_%d"), SlotIndex)), false);
+		SetTextIfPresent(Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("PartyLevel_%d"), SlotIndex)),
+			FText::FromString(FString::Printf(TEXT("Lv %d"),
+				FMath::Max(1, Unit.mLevel))));
 		++SlotIndex;
 	}
 
@@ -1066,19 +1288,23 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	SetShown(mMercenaryDetailSpeed, bHasFocus);
 	if (bHasFocus)
 	{
-		if (mMercenaryHeroPortrait != nullptr && FocusUnit->mPortrait != nullptr)
+		// 확정 시안(0806): 큰 일러스트 대신 정사각 대갈치기를 건다.
+		UTexture2D* HeroFace = FocusUnit->mTurnPortrait != nullptr
+			? FocusUnit->mTurnPortrait.Get() : FocusUnit->mPortrait.Get();
+		if (mMercenaryHeroPortrait != nullptr && HeroFace != nullptr)
 		{
-			SetPortraitCropped(mMercenaryHeroPortrait, FocusUnit->mPortrait);
+			SetPortraitCropped(mMercenaryHeroPortrait, HeroFace);
 		}
 		SetTextIfPresent(mMercenaryDetailName, FocusUnit->mName);
+		// 라벨(HP/AP/속도)은 줄판 왼쪽에 따로 있으니 수치에는 값만 적는다.
 		SetTextIfPresent(mMercenaryDetailHP, FText::FromString(FString::Printf(
-			TEXT("HP  %d / %d"), FMath::RoundToInt(FocusUnit->mHP),
+			TEXT("%d/%d"), FMath::RoundToInt(FocusUnit->mHP),
 			FMath::RoundToInt(FocusUnit->mMaxHP))));
 		SetTextIfPresent(mMercenaryDetailAP, FText::FromString(FString::Printf(
-			TEXT("AP  %d / %d"), FocusUnit->mActionPoints,
+			TEXT("%d/%d"), FocusUnit->mActionPoints,
 			FocusUnit->mMaxActionPoints)));
-		SetTextIfPresent(mMercenaryDetailSpeed, FText::FromString(FString::Printf(
-			TEXT("속도  %d"), FMath::RoundToInt(FocusUnit->mSpeedPoint))));
+		SetTextIfPresent(mMercenaryDetailSpeed, FText::AsNumber(
+			FMath::RoundToInt(FocusUnit->mSpeedPoint)));
 	}
 
 	// 우측 아래는 전투 중 현재 용병이 실제로 쓸 수 있는 여섯 커맨드의 요약이다.
@@ -1112,6 +1338,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		{
 			SetTextIfPresent(Name, LOCTEXT("MercenaryMoveSummary", "이동"));
 			SetTextIfPresent(Cost, FText::AsNumber(1));
+			CommandIcon = mCommandMoveIconTexture;
 		}
 		else
 		{
@@ -1128,10 +1355,20 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			CommandIcon = Cast<UTexture2D>(
 				mCommandSlots[Index].Icon->GetBrush().GetResourceObject());
 		}
+		/*
+		 * 그림이 없으면 **아이콘을 끈다.**
+		 *
+		 * 전에는 그림이 없어도 켜 두었다. 브러시에 텍스처가 없는 Image 는
+		 * 흰 사각으로 그려져서, 스킬 칸 두 개가 흰 판으로 떠 있었다.
+		 * 그림이 없는 칸은 이름만 보여 주는 편이 낫다.
+		 */
+		SetShown(Icon, CommandIcon != nullptr);
 		if (Icon != nullptr && CommandIcon != nullptr)
 		{
 			Icon->SetBrushFromTexture(CommandIcon, false);
 		}
+		// 그림이 있으면 칸은 그림으로 말한다. 없을 때만 이름을 띄운다.
+		SetShown(Name, CommandIcon == nullptr);
 	}
 }
 
@@ -1155,7 +1392,12 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
 		}
 	}
 
-	SetTextIfPresent(Widgets.Name, FText::GetEmpty());
+	// 이름을 비우면 카드가 뜻 없는 검은 상자로 남는다. 자리가 비었다고 적는다.
+	SetTextIfPresent(Widgets.Name, LOCTEXT("PartySlotEmpty", "빈 자리"));
+	if (Widgets.Name != nullptr)
+	{
+		Widgets.Name->SetColorAndOpacity(FSlateColor(FLinearColor(0.62f, 0.56f, 0.46f, 1.f)));
+	}
 	SetTextIfPresent(Widgets.HPText, FText::GetEmpty());
 	SetTextIfPresent(Widgets.APText, FText::GetEmpty());
 	SetShown(Widgets.APText, false);
@@ -1351,6 +1593,9 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	SetTextIfPresent(mTurnPageLeftText, FText::AsNumber(HiddenLeft));
 	SetTextIfPresent(mTurnPageRightText, FText::AsNumber(HiddenRight));
 
+	// 어느 칸이 누구인지 기억해 둔다 -- 칸을 누르면 그 유닛을 잡아야 한다.
+	mTurnSlotUnitIds.Init(INDEX_NONE, SlotRoom);
+
 	for (int32 Index = 0; Index < SlotRoom; ++Index)
 	{
 		const FTurnSlotWidgets& Widgets = mTurnSlots[Index];
@@ -1385,6 +1630,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			|| (ProjectedIndex >= RemainingThisRound
 				&& (ProjectedIndex - RemainingThisRound) % CycleCount == 0);
 
+		mTurnSlotUnitIds[Index] = UnitId;
 		SetShown(Widgets.Root, true);
 		SetShown(Widgets.SpeedIcon, true);
 		SetShown(Widgets.Speed, true);
@@ -1437,6 +1683,16 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.Cooldown, false);
 			SetShown(Widgets.CooldownIcon, false);
 			SetShown(Widgets.Damage, false);
+			// 이동 카드도 아이콘을 갖는다. 스킬 카드만 그림이 생기니 이
+			// 칸만 비어 보였다. (판 기본이 NoDraw라 DrawAs 도 되돌린다.)
+			if (Widgets.Icon != nullptr && mCommandMoveIconTexture != nullptr)
+			{
+				Widgets.Icon->SetBrushFromTexture(mCommandMoveIconTexture, false);
+				FSlateBrush MoveIconBrush = Widgets.Icon->GetBrush();
+				MoveIconBrush.DrawAs = ESlateBrushDrawType::Image;
+				Widgets.Icon->SetBrush(MoveIconBrush);
+				SetShown(Widgets.Icon, true);
+			}
 			// 행동력이 바닥나면 이동도 잠근다. 갈 수 있는 칸이 없다 -- 스킬은
 			// 잠그면서 이동만 열어 두면 "왜 이것만 되지"가 된다. 긴 누름으로
 			// 설명을 읽는 것은 스킬과 마찬가지로 잠겨도 된다.
@@ -1464,9 +1720,20 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 		SetTextIfPresent(Widgets.CostLine, FText::Format(
 			LOCTEXT("SkillCost", "AP {0}"), ShownCost));
 
-		if (Widgets.Icon != nullptr && Skill.mIcon != nullptr)
+		if (Widgets.Icon != nullptr)
 		{
-			Widgets.Icon->SetBrushFromTexture(Skill.mIcon, false);
+			if (Skill.mIcon != nullptr)
+			{
+				Widgets.Icon->SetBrushFromTexture(Skill.mIcon, false);
+				// 판은 빈 칸이 흰 사각으로 뜨지 말라고 NoDraw로 두었다.
+				// SetBrushFromTexture는 그림만 갈아끼우고 그리기 방식은 안
+				// 바꾸므로, 여기서 Image로 돌려놓지 않으면 아이콘이 영영 안
+				// 그려진다 — 데이터에 아이콘이 다 있는데 카드가 비어 있던 원인.
+				FSlateBrush IconBrush = Widgets.Icon->GetBrush();
+				IconBrush.DrawAs = ESlateBrushDrawType::Image;
+				Widgets.Icon->SetBrush(IconBrush);
+			}
+			SetShown(Widgets.Icon, Skill.mIcon != nullptr);
 		}
 
 		// 쿨타임: 남은 턴이 있으면 그 숫자를, 없으면 설정된 쿨타임을 알려준다.
@@ -1553,26 +1820,19 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 				? AllyShown->mHP / AllyShown->mMaxHP : 0.f);
 		}
 		SetTextIfPresent(mAllyHPText, FText::FromString(FString::Printf(
-			TEXT("HP  %d / %d"), FMath::RoundToInt(AllyShown->mHP),
+			TEXT("%d/%d"), FMath::RoundToInt(AllyShown->mHP),
 			FMath::RoundToInt(AllyShown->mMaxHP))));
+		// 확정 시안 표기: "AP 10/10", 속도는 아이콘 옆 숫자만.
 		SetTextIfPresent(mAllyAPText, FText::FromString(AllyShown->mMaxActionPoints > 0
-			? FString::Printf(TEXT("AP  %d / %d"), AllyShown->mActionPoints,
+			? FString::Printf(TEXT("AP %d/%d"), AllyShown->mActionPoints,
 				AllyShown->mMaxActionPoints)
-			: FString::Printf(TEXT("AP  %d"), AllyShown->mActionPoints)));
-		SetTextIfPresent(mAllySpeedText, FText::FromString(FString::Printf(
-			TEXT("속도  %d"), FMath::RoundToInt(AllyShown->mSpeedPoint))));
+			: FString::Printf(TEXT("AP %d"), AllyShown->mActionPoints)));
+		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
+			FMath::RoundToInt(AllyShown->mSpeedPoint)));
 
-		if (mAllyStatusText != nullptr)
-		{
-			TArray<FString> Parts;
-			for (const FStatusEffectUI& Status : AllyShown->mStatusEffects)
-			{
-				Parts.Add(StatusDisplayName(Status.mTag));
-			}
-			mAllyStatusText->SetText(FText::FromString(Parts.IsEmpty()
-				? TEXT("상태 없음") : FString::Join(Parts, TEXT(" · "))));
-			SetShown(mAllyStatusText, true);
-		}
+		// 확정 시안: 상태는 아이콘으로만 보여 준다. 글줄은 걷는다.
+		SetShown(mAllyStatusText, false);
+		mAllyShownStatuses = AllyShown->mStatusEffects;   // 아이콘 클릭 → 상태 상세용
 
 		for (int32 Index = 0; Index < mAllyStatusFrames.Num(); ++Index)
 		{
@@ -1606,35 +1866,31 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	}
 
 	SetTextIfPresent(mEnemyName, Shown->mName);
-	if (mEnemyPortrait != nullptr && Shown->mPortrait != nullptr)
+	// 아군과 같은 대비: 요약 초상이 비면 턴바용 정사각(HeadV2)으로 대신 건다.
+	// 적 유닛은 mPortrait 가 비어 있는 경우가 많아 원이 검게 비어 있었다.
+	UTexture2D* EnemyPortraitArt = Shown->mTurnPortrait != nullptr
+		? Shown->mTurnPortrait.Get() : Shown->mPortrait.Get();
+	if (mEnemyPortrait != nullptr && EnemyPortraitArt != nullptr)
 	{
-		SetPortraitCropped(mEnemyPortrait, Shown->mPortrait);
+		SetPortraitCropped(mEnemyPortrait, EnemyPortraitArt);
 	}
 	if (mEnemyHPBar != nullptr)
 	{
 		mEnemyHPBar->SetPercent(
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
+	// 확정 시안 표기: "100/100" · "AP 0/5" · 속도는 아이콘 옆 숫자만.
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
-		TEXT("HP  %d / %d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
+		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
 	SetTextIfPresent(mEnemyAPText, FText::FromString(Shown->mMaxActionPoints > 0
-		? FString::Printf(TEXT("AP  %d / %d"), Shown->mActionPoints, Shown->mMaxActionPoints)
-		: FString::Printf(TEXT("AP  %d"), Shown->mActionPoints)));
-	SetTextIfPresent(mEnemySpeedText, FText::FromString(FString::Printf(
-		TEXT("속도  %d"), FMath::RoundToInt(Shown->mSpeedPoint))));
+		? FString::Printf(TEXT("AP %d/%d"), Shown->mActionPoints, Shown->mMaxActionPoints)
+		: FString::Printf(TEXT("AP %d"), Shown->mActionPoints)));
+	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
+		FMath::RoundToInt(Shown->mSpeedPoint)));
 
-	if (mEnemyStatusText != nullptr)
-	{
-		TArray<FString> Parts;
-		for (const FStatusEffectUI& Status : Shown->mStatusEffects)
-		{
-			Parts.Add(StatusDisplayName(Status.mTag));
-		}
-		mEnemyStatusText->SetText(FText::FromString(Parts.IsEmpty()
-			? TEXT("상태 없음")
-			: FString::Join(Parts, TEXT(" · "))));
-		SetShown(mEnemyStatusText, true);
-	}
+	// 확정 시안: 상태는 아이콘으로만 보여 준다. 글줄은 걷는다.
+	SetShown(mEnemyStatusText, false);
+	mEnemyShownStatuses = Shown->mStatusEffects;   // 아이콘 클릭 → 상태 상세용
 
 	for (int32 Index = 0; Index < mEnemyStatusFrames.Num(); ++Index)
 	{
@@ -1662,19 +1918,24 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		}
 	}
 
-	// 예상 피해는 선택된 스킬에서 읽는다. 고른 게 없으면 감춘다.
-	if (mEnemyForecastText != nullptr)
+	// 확정 시안: 예상 피해 줄은 없앴다. 대신 다음 스킬 소켓에 아이콘을 건다.
+	SetShown(mEnemyForecastText, false);
+	mEnemyShownUnitId = Shown->mUnitId;                     // 소켓 클릭 → 상세용
+	mEnemyShownNextSkillIndex = Shown->mNextSkillIndex;
+	const bool bHasNextSkill = Shown->mNextSkillIcon != nullptr;
+	SetShown(mEnemyNextSkillFrame, bHasNextSkill);
+	SetShown(mEnemyNextSkillIcon, bHasNextSkill);
+	// 눌러야 하는 단추라 SetShown(=SelfHitTestInvisible)을 쓰면 안 된다.
+	// 그렇게 두면 그림은 보여도 눌림이 안 닿는다 (0806: 소켓 클릭이 죽었다).
+	SetInteractiveShown(Find<UButton>(WidgetTree, TEXT("EnemyNextSkillButton")),
+		bHasNextSkill);
+	if (mEnemyNextSkillIcon != nullptr && bHasNextSkill)
 	{
-		const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
-		const int32 Selected = mUIModel->GetSelectedSkillIndex();
-		const bool bHas = Skills.IsValidIndex(Selected) && Skills[Selected].mDamageMax > 0;
-		SetShown(mEnemyForecastText, bHas);
-		if (bHas)
-		{
-			mEnemyForecastText->SetText(FText::FromString(FString::Printf(
-				TEXT("예상 피해 %d~%d"),
-				Skills[Selected].mDamageMin, Skills[Selected].mDamageMax)));
-		}
+		mEnemyNextSkillIcon->SetBrushFromTexture(Shown->mNextSkillIcon.Get(), false);
+		// SetBrushFromTexture 는 DrawAs 를 안 바꾼다 — NoDraw 판이면 영영 안 그려진다.
+		FSlateBrush IconBrush = mEnemyNextSkillIcon->GetBrush();
+		IconBrush.DrawAs = ESlateBrushDrawType::Image;
+		mEnemyNextSkillIcon->SetBrush(IconBrush);
 	}
 }
 
@@ -1723,6 +1984,9 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 	if (bShown == true)
 	{
 		SetMonsterTabShown(false);
+		// 열 때는 지금 차례인 용병부터 보여 준다. 지난번에 고른 줄이
+		// 남아 있으면 누구를 보는지 알 수 없다.
+		mMercenarySelectedSlot = INDEX_NONE;
 	}
 
 	// 먼저 패널을 세워 둔다. RequestCancel 이 즉시 UI 갱신을 쏘더라도 그
@@ -2482,24 +2746,52 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 
 	if (bTargetChanged == true)
 	{
-		// 유닛을 새로 짚었으면 카드를 접는다 -- 위협 범위를 보라고 판에
-		// 칠했는데 카드 여섯 장이 그 판 한가운데를 덮고 있으면 칠이 안
-		// 보인다. 조준에 들어가면 카드가 비키는 것과 같은 이유다.
-		//
-		// 재탭으로 짚기를 풀었을 때는 카드를 **건드리지 않는다.** 그 탭은
-		// 칠을 걷으려던 손이지 카드를 부르던 손이 아니다. 카드는 빈 땅
-		// 탭으로만 여닫는다.
-		const bool bHasUnit = AfterTarget.mIsValid == true && AfterTarget.mUnitId != INDEX_NONE;
+		/*
+		 * 유닛을 새로 짚었다.
+		 *
+		 * 아군이면 요약판과 함께 **그 용병의 카드도 편다** -- 판에서 누른
+		 * 손과 카드를 부르는 손이 따로면, 쓰려는 스킬을 보려고 턴 칸까지
+		 * 다시 가야 한다(0806 검수).
+		 *
+		 * 적이면 카드를 접는다. 위협 범위를 보라고 판에 칠했는데 카드 여섯
+		 * 장이 그 한가운데를 덮으면 칠이 안 보인다.
+		 */
+		const bool bHasUnit = AfterTarget.mIsValid == true
+			&& AfterTarget.mUnitId != INDEX_NONE;
 		if (bHasUnit == true)
 		{
-			SetCommandsShown(false);
+			const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
+			const int32 TappedId = AfterTarget.mUnitId;
+			const FUnitUI* Tapped = Units.FindByPredicate(
+				[TappedId](const FUnitUI& Candidate)
+				{ return Candidate.mUnitId == TappedId; });
+			const bool bIsAlly = Tapped != nullptr && Tapped->mIsPlayer;
+			if (bIsAlly == true)
+			{
+				// 카드만 갈아 끼운다. 상세 겹은 안 띄운다.
+				mSuppressNextUnitDetailOverlay = true;
+				mUIModel->RequestInspectUnit(TappedId);
+			}
+			SetCommandsShown(bIsAlly);
 		}
 		return;
 	}
 
-	// 겨냥이 그대로면 빈 땅 탭이다. 카드만 뒤집는다 -- 누르면 펴지고, 다시
-	// 누르면 접힌다. 짚어 둔 위협 범위는 그대로 남는다.
-	SetCommandsShown(!mCommandsShown);
+	/*
+	 * 겨냥이 그대로다. **정말 빈 땅일 때만** 접는다.
+	 *
+	 * 전에는 여기서 뒤집어서, 판 아무 데나 누를 때마다 카드가 튀어나왔다.
+	 * 그래서 접기만 하게 했더니 이번엔 반대 탈이 났다 -- 아군을 누르면
+	 * 겨냥이 서면서 카드가 펴지는데, 같은 탭이 한 번 더 들어오면 그때는
+	 * "겨냥 그대로"라 방금 편 카드를 도로 접었다(0806 검수: 용병을 눌러도
+	 * 스킬 카드가 안 뜸). 짚어 둔 유닛이 있으면 그 카드는 그대로 둔다.
+	 */
+	const bool bStillPointingUnit = AfterTarget.mIsValid == true
+		&& AfterTarget.mUnitId != INDEX_NONE;
+	if (bStillPointingUnit == false)
+	{
+		SetCommandsShown(false);
+	}
 }
 
 /**
@@ -2544,25 +2836,17 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 		return;
 	}
 
-	// 다른 용병을 보러 간다. 떠 있던 상세는 이전 맥락이다.
-	HideDetailOverlay(/*bNotifyGameplay=*/true);
-
-	// 조준 중이었으면 무른다. 남의 스킬을 보러 가면서 겨냥만 남겨 두면 그
-	// 사거리가 누구 것인지 알 수 없다.
-	if (IsAiming() == true)
-	{
-		mUIModel->RequestCancel();
-	}
-
-	// 상세 응답은 RequestInspectUnit 안에서 동기적으로 돌아올 수 있다. 목록을
-	// 먼저 닫아 둬야 마지막 화면 상태가 PR457 상세 겹이 된다.
-	SetMercenaryPanelShown(false);
-
-	// 기존 계약대로 밑의 커맨드도 그 용병 것으로 갈아 끼운다. 상세를 닫은 뒤
-	// 무엇을 들었는지 바로 이어 볼 수 있고, 제 차례가 아니면 게임플레이가
-	// 전부 비활성으로 내려 준다.
-	SetCommandsShown(true);
-	mUIModel->RequestInspectUnit(UnitId);
+	/*
+	 * 목록에서 고르기만 한다 -- 패널은 그대로 두고 오른쪽 상세만 갈린다.
+	 *
+	 * 전에는 여기서 패널을 닫고 상세 겹(유닛 상세창)을 띄웠다. 그런데 그
+	 * 내용은 이 패널 오른쪽이 이미 크게 보여 주고 있어서, 누를 때마다 같은
+	 * 것이 다른 판으로 한 번 더 뜨고 목록이 사라졌다(0806 검수: "용병 상세탭
+	 * 필요 없다"). 고른 줄만 기억하고 다시 그린다.
+	 */
+	mMercenarySelectedSlot = SlotIndex;
+	HideDetailOverlay(/*bNotifyGameplay=*/false);
+	RefreshParty();
 }
 
 void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
@@ -2607,6 +2891,340 @@ void UCombatLayoutHUDWidget::HandleMonsterMenuClicked()
 		mUIModel->RequestInspectUnit(Monster->mUnitId);
 	}
 }
+
+/**
+ * @brief 공용 설정 팝업을 연다. 여기서 만들지 않고 서브시스템 것을 쓴다.
+ */
+void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
+{
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+	USettingsPanelWidget* Settings = WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+		EWorldWidgetType::InGameSettings);
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	// 이 패널은 스스로 닫지 않는다. Back 을 누르면 OnBackRequested 만 알릴 뿐이고,
+	// 닫는 일은 연 쪽의 몫이다(타이틀도 같은 규칙이다). 전에는 열기만 하고
+	// 이 줄이 없어서 Back 이 아무 일도 안 했다.
+	Settings->OnBackRequested.AddUniqueDynamic(
+		this, &UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested);
+	Settings->SetPanelMode(ESettingsPanelMode::InGame);
+	// 전투 중에는 런을 저장하거나 포기할 수 있다. 타이틀에서 열 때와 다른 점이다.
+	Settings->RefreshPanelState(true, true);
+	Settings->HideAbandonConfirm();
+	Settings->SetStatusText(FText::GetEmpty());
+	Settings->OpenUI();
+}
+
+/** @brief 설정 패널의 Back 요청을 받아 패널을 닫는다. */
+void UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested()
+{
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+	if (USettingsPanelWidget* Settings = WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+		EWorldWidgetType::InGameSettings))
+	{
+		Settings->CloseUI();
+	}
+}
+
+void UCombatLayoutHUDWidget::HandleArtifactPressed_0() { BeginArtifactPress(0); }
+void UCombatLayoutHUDWidget::HandleArtifactPressed_1() { BeginArtifactPress(1); }
+void UCombatLayoutHUDWidget::HandleArtifactPressed_2() { BeginArtifactPress(2); }
+void UCombatLayoutHUDWidget::HandleArtifactPressed_3() { BeginArtifactPress(3); }
+void UCombatLayoutHUDWidget::HandleArtifactPressed_4() { BeginArtifactPress(4); }
+void UCombatLayoutHUDWidget::HandleArtifactPressed_5() { BeginArtifactPress(5); }
+
+void UCombatLayoutHUDWidget::BeginArtifactPress(const int32 SlotIndex)
+{
+	mArtifactPressedSlot = SlotIndex;
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+	World->GetTimerManager().SetTimer(mArtifactLongPressTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this, SlotIndex]()
+			{
+				HandleArtifactLongPress(SlotIndex);
+			}),
+		LongPressSeconds, false);
+}
+
+void UCombatLayoutHUDWidget::HandleArtifactReleased()
+{
+	// 꾹 누르기 전에 떼면 아무 일도 없다.
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mArtifactLongPressTimerHandle);
+	}
+	mArtifactPressedSlot = INDEX_NONE;
+}
+
+void UCombatLayoutHUDWidget::HandleArtifactLongPress(const int32 SlotIndex)
+{
+	ShowArtifactDetailOverlay(SlotIndex);
+}
+
+/**
+ * @brief 아티팩트 상세를 공용 상세 겹에 채워 띄운다.
+ *
+ * @details 값은 이미 내려와 있는 PlayerMeta 를 읽는다. 스킬/유닛 상세와 달리
+ * 게임플레이에 따로 청하지 않는다 -- 아티팩트는 전투 중에 바뀌지 않아 목록
+ * 스냅샷으로 충분하다.
+ */
+void UCombatLayoutHUDWidget::ShowArtifactDetailOverlay(const int32 SlotIndex)
+{
+	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
+	{
+		return;
+	}
+	const TArray<FCombatArtifactUI>& Artifacts = mUIModel->GetPlayerMeta().mArtifacts;
+	if (Artifacts.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	const FCombatArtifactUI& Artifact = Artifacts[SlotIndex];
+	ApplyDetailColumnLayout(true);
+
+	SetTextIfPresent(mDetailTitleText, Artifact.mName);
+
+	FString Subtitle = Artifact.mRarityName.IsEmpty()
+		? FString() : Artifact.mRarityName.ToString();
+	if (Artifact.mPrice > 0)
+	{
+		if (Subtitle.IsEmpty() == false)
+		{
+			Subtitle += TEXT("  ·  ");
+		}
+		Subtitle += FString::Printf(TEXT("판매가 %d"), Artifact.mPrice);
+	}
+	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
+
+	FString Body;
+	for (const FText& Line : Artifact.mEffectDescriptions)
+	{
+		if (Body.IsEmpty() == false)
+		{
+			Body += LINE_TERMINATOR;
+		}
+		Body += TEXT("· ");
+		Body += Line.ToString();
+	}
+	if (Body.IsEmpty() == true)
+	{
+		Body = TEXT("효과 설명이 아직 없다.");
+	}
+	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+
+	SetPortraitCropped(mDetailIconImage, Artifact.mIcon);
+
+	// 아티팩트에는 사거리도 수치 칩도 없다. 스킬 상세가 남긴 것을 걷는다.
+	//
+	// 값만 비우면 "-" 다섯 개가 그대로 떠서 무언가 못 채운 화면처럼 보인다.
+	// 실제로 그렇게 나왔다(0804 검수). 칩 묶음을 통째로 끈다.
+	ClearDetailGrids();
+	ClearDetailChips();
+	SetShown(mDetailStatBlock, false);
+	SetDetailSkillRowShown(false);
+	// 효과 목록은 왼쪽 설명 칸에 넣기엔 길다. 판이 잡아 둔 넓은 칸에 넣는다.
+	SetTextIfPresent(mDetailExtraHeading, LOCTEXT("DetailExtraArtifact", "효과"));
+	SetTextIfPresent(mDetailExtraText, FText::FromString(Body));
+	ShowDetailRightBlock(mDetailExtraBlock);
+
+	// 확정 시안: 아티팩트에는 스킬용 받침판과 왼쪽 설명 글이 없다. 대신
+	// 희귀도 보석 줄을 켠다 (일반 1 · 희귀 3 · 영웅 5).
+	if (UWidget* FreePlate = mDetailOverlayWidget->GetWidgetFromName(
+		TEXT("DetailFreePlate")))
+	{
+		FreePlate->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	SetShown(mDetailBodyText, false);
+	static const int32 LitByRarity[] = { 1, 3, 5 };
+	const int32 LitCount = LitByRarity[FMath::Clamp(Artifact.mRarityLevel, 0, 2)];
+	for (int32 Index = 0; Index < 5; ++Index)
+	{
+		UImage* Gem = Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))));
+		if (Gem == nullptr)
+		{
+			continue;
+		}
+		Gem->SetVisibility(ESlateVisibility::HitTestInvisible);
+		// 안 켠 보석은 같은 그림을 어둡게 깐다 -- 자리를 비우면 등급이 몇 칸
+		// 짜리인지 읽히지 않는다.
+		Gem->SetColorAndOpacity(Index < LitCount
+			? FLinearColor::White : FLinearColor(0.18f, 0.16f, 0.14f, 1.f));
+	}
+	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+/**
+ * @brief 상태이상 상세 -- 스킬 상세와 같은 판을 쓴다.
+ *
+ * @details 설명은 화면이 쥔 고정 표다. 게임플레이에 상태 설명 API 가 아직
+ * 없어서다. 새 상태가 오면 이름만 뜨고 설명은 기본 문구로 빠진다.
+ */
+void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
+	const FGameplayTag& StatusTag, const int32 StackCount)
+{
+	if (EnsureDetailOverlayWidget() == false)
+	{
+		return;
+	}
+	ApplyDetailColumnLayout(true);
+
+	SetTextIfPresent(mDetailTitleText,
+		FText::FromString(StatusDisplayName(StatusTag)));
+	SetTextIfPresent(mDetailSubtitleText, FText::FromString(StackCount > 1
+		? FString::Printf(TEXT("상태이상  ·  %d중첩"), StackCount)
+		: FString(TEXT("상태이상"))));
+
+	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
+	static const TMap<FString, FString> Descriptions = {
+		{ TEXT("Fortification"), TEXT("받는 피해가 줄어든다.") },
+		{ TEXT("Vulnerability"), TEXT("받는 피해가 늘어난다.") },
+		{ TEXT("Weakness"),      TEXT("주는 피해가 줄어든다.") },
+		{ TEXT("Agility"),       TEXT("속도가 올라간다.") },
+		{ TEXT("Poison"),        TEXT("턴마다 피해를 입는다.") },
+		{ TEXT("Bleed"),         TEXT("턴마다 피해를 입는다.") },
+		{ TEXT("Stun"),          TEXT("턴을 진행할 수 없다.") },
+		{ TEXT("Stealth"),       TEXT("적의 대상이 되지 않는다.") },
+	};
+	FString Leaf = StatusTag.GetTagName().ToString();
+	int32 Dot = INDEX_NONE;
+	if (Leaf.FindLastChar(TEXT('.'), Dot))
+	{
+		Leaf = Leaf.Mid(Dot + 1);
+	}
+	const FString* Description = Descriptions.Find(Leaf);
+	FString Body = Description != nullptr
+		? *Description : TEXT("효과 설명이 아직 없다.");
+	Body += TEXT("\n턴이 지나면 사라진다.");
+	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+
+	SetPortraitCropped(mDetailIconImage, StatusIconFor(StatusTag));
+
+	ClearDetailGrids();
+	ClearDetailChips();
+	SetShown(mDetailStatBlock, false);
+	SetDetailSkillRowShown(false);
+	SetTextIfPresent(mDetailExtraHeading, FText::GetEmpty());
+	SetTextIfPresent(mDetailExtraText, FText::GetEmpty());
+	ShowDetailRightBlock(nullptr);
+	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UCombatLayoutHUDWidget::HandleStatusClicked(const bool bAlly, const int32 SlotIndex)
+{
+	const TArray<FStatusEffectUI>& Statuses = bAlly
+		? mAllyShownStatuses : mEnemyShownStatuses;
+	if (Statuses.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	ShowStatusDetailOverlay(Statuses[SlotIndex].mTag,
+		Statuses[SlotIndex].mStackCount);
+}
+
+void UCombatLayoutHUDWidget::HandleAllyStatusClicked_0() { HandleStatusClicked(true, 0); }
+void UCombatLayoutHUDWidget::HandleAllyStatusClicked_1() { HandleStatusClicked(true, 1); }
+void UCombatLayoutHUDWidget::HandleAllyStatusClicked_2() { HandleStatusClicked(true, 2); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_0() { HandleStatusClicked(false, 0); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_1() { HandleStatusClicked(false, 1); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_2() { HandleStatusClicked(false, 2); }
+
+/** @brief 용병탭 스킬 소켓 클릭. 0번은 이동, 나머지는 전투 레일과 같은 스킬 번호. */
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
+{
+	// 스킬 칸은 초상과 따로 있다. 누른 스킬의 주인을 화면 가운데로 데려온다.
+	FocusCameraOnTurnUnit();
+	if (SlotIndex == 0)
+	{
+		ShowMoveDetailOverlay();
+		return;
+	}
+	if (mUIModel != nullptr)
+	{
+		mUIModel->RequestLongPressSkill(SlotIndex - 1);
+	}
+}
+
+/**
+ * @brief 턴 칸을 눌렀다.
+ *
+ * @details 아군이면 그 용병의 스킬 카드를 펴고, 적이면 카메라만 옮긴다 --
+ * 적 스킬은 카드 레일이 아니라 요약판/상세가 맡는다(0806 합의).
+ */
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
+{
+	if (mUIModel == nullptr || mTurnSlotUnitIds.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	const int32 UnitId = mTurnSlotUnitIds[SlotIndex];
+	if (UnitId == INDEX_NONE)
+	{
+		return;
+	}
+
+	// 떠 있던 상세를 **먼저** 닫는다. 카메라를 잡은 뒤에 닫으면 닫기가 방금
+	// 잡은 것을 도로 놓아 버려 화면이 안 움직였다(0806 검수).
+	HideDetailOverlay(/*bNotifyGameplay=*/false);
+
+	// 누른 유닛을 화면 가운데로. 아군이든 적이든 이건 똑같이 해 준다.
+	mCameraFocusedUnitId = UnitId;
+	mUIModel->RequestFocusUnit(UnitId);
+
+	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
+	const FUnitUI* Unit = Units.FindByPredicate(
+		[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
+	if (Unit == nullptr || Unit->mIsPlayer == false)
+	{
+		// 적이면 짚어 주기만 한다 -- 요약판이 그 적으로 갈린다.
+		FCombatTargetUI Target;
+		Target.mIsValid = true;
+		Target.mUnitId = UnitId;
+		Target.mTile = Unit != nullptr ? Unit->mTile : FTileIndex();
+		mUIModel->SetTarget(Target);
+		return;
+	}
+
+	// 아군이면 그 용병의 카드로 갈아 끼우고 편다(상세 겹은 안 띄운다).
+	mSuppressNextUnitDetailOverlay = true;
+	mUIModel->RequestInspectUnit(UnitId);
+	SetCommandsShown(true);
+}
+
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_0() { HandleTurnTokenClicked(0); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_1() { HandleTurnTokenClicked(1); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_2() { HandleTurnTokenClicked(2); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_3() { HandleTurnTokenClicked(3); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_4() { HandleTurnTokenClicked(4); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_5() { HandleTurnTokenClicked(5); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_6() { HandleTurnTokenClicked(6); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_7() { HandleTurnTokenClicked(7); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_8() { HandleTurnTokenClicked(8); }
+void UCombatLayoutHUDWidget::HandleTurnTokenClicked_9() { HandleTurnTokenClicked(9); }
+
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_0() { HandleMercenarySkillClicked(0); }
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_1() { HandleMercenarySkillClicked(1); }
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_2() { HandleMercenarySkillClicked(2); }
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_3() { HandleMercenarySkillClicked(3); }
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_4() { HandleMercenarySkillClicked(4); }
+void UCombatLayoutHUDWidget::HandleMercenarySkillClicked_5() { HandleMercenarySkillClicked(5); }
 
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_0() { HandleMonsterTabRowClicked(0); }
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked_1() { HandleMonsterTabRowClicked(1); }
@@ -2797,6 +3415,13 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		{
 			Name->SetText(Monsters[Index]->mName);
 		}
+		// 용병 목록처럼 줄 오른쪽에 레벨 배지 (0806 확정 시안)
+		if (UTextBlock* Level = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterRowLevel_%d"), Index)))))
+		{
+			Level->SetText(FText::FromString(FString::Printf(
+				TEXT("Lv %d"), FMath::Max(1, Monsters[Index]->mLevel))));
+		}
 	}
 
 	if (Monsters.IsValidIndex(mMonsterTabSelectedRow) == false)
@@ -2824,12 +3449,14 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 	{
 		HPBar->SetPercent(Monster.mMaxHP > 0.f ? Monster.mHP / Monster.mMaxHP : 0.f);
 	}
+	// 라벨(HP/AP/속도/치명타)은 줄판에 따로 있으니 값만 적는다.
+	// 치명타 확률은 아직 게임 데이터에 없어 판이 "-" 로 두고 있다(0806 합의).
 	SetTabText(TEXT("MonsterDetailHPText"), FText::FromString(FString::Printf(
-		TEXT("%d / %d"), FMath::RoundToInt(Monster.mHP), FMath::RoundToInt(Monster.mMaxHP))));
+		TEXT("%d/%d"), FMath::RoundToInt(Monster.mHP), FMath::RoundToInt(Monster.mMaxHP))));
 	SetTabText(TEXT("MonsterDetailAPText"), FText::FromString(FString::Printf(
-		TEXT("AP  %d"), Monster.mActionPoints)));
-	SetTabText(TEXT("MonsterDetailSpeedText"), FText::FromString(FString::Printf(
-		TEXT("속도  %d"), FMath::RoundToInt(Monster.mSpeedPoint))));
+		TEXT("%d/%d"), Monster.mActionPoints, Monster.mMaxActionPoints)));
+	SetTabText(TEXT("MonsterDetailSpeedText"), FText::AsNumber(
+		FMath::RoundToInt(Monster.mSpeedPoint)));
 	if (UImage* DetailPortrait = Cast<UImage>(
 		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
 	{
@@ -2871,6 +3498,12 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		mMonsterTabInspectedUnitId = Monster.mUnitId;
 		mUIModel->RequestInspectUnit(Monster.mUnitId);
 	}
+	// 응답 알림에만 기대지 않고 한 번 더 그린다.
+	//
+	// 탭을 여는 순간의 요청은 응답이 동기로 돌아오는데, 그때는 아직 탭이 보이는
+	// 상태가 아니어서 알림 쪽 분기가 상세창을 대신 열고 지나간다. 그러면 스킬 칸은
+	// 만든 그대로(빈 이름 + 흰 사각형) 남는다. 실제로 화면에 그렇게 나왔다.
+	RefreshMonsterTabDetail();
 }
 
 void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
@@ -2880,10 +3513,19 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 		return;
 	}
 	const FUnitDetailUI& Detail = mUIModel->GetUnitDetail();
-	// 늦게 도착한 다른 유닛의 상세로 현재 선택을 덮어쓰지 않는다.
-	if (Detail.mUnitId == INDEX_NONE || Detail.mUnitId != mMonsterTabInspectedUnitId)
+	// 늦게 도착한 다른 유닛의 상세로 현재 선택을 덮어쓰지 않는다. 아직 안 왔으면
+	// 칸을 접어 둔다 -- 만든 그대로 두면 빈 이름과 흰 사각형이 그대로 남는다.
+	const bool bHasDetail = Detail.mUnitId != INDEX_NONE
+		&& Detail.mUnitId == mMonsterTabInspectedUnitId;
+	const int32 SkillCount = bHasDetail ? Detail.mSkills.Num() : 0;
+
+	// 레벨은 목록 줄의 Lv 배지가 맡는다(0806 확정 시안). 이름판 밑 TypeText 는
+	// 목록 갱신이 접은 그대로 둔다.
+	if (UTextBlock* Heading = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterSkillHeading"))))
 	{
-		return;
+		Heading->SetText(SkillCount > 0 ? LOCTEXT("MonsterTabSkills", "스킬")
+			: LOCTEXT("MonsterTabNoSkills", "스킬  ·  없음"));
 	}
 
 	for (int32 Index = 0; Index < 4; ++Index)
@@ -2892,7 +3534,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 			FName(*FString::Printf(TEXT("MonsterSkillName_%d"), Index))));
 		UWidget* SkillBox = mMonsterTabWidget->GetWidgetFromName(
 			FName(*FString::Printf(TEXT("MonsterSkillBox_%d"), Index)));
-		const bool bHasSkill = Detail.mSkills.IsValidIndex(Index);
+		const bool bHasSkill = Index < SkillCount;
 		if (SkillName != nullptr)
 		{
 			if (bHasSkill == true)
@@ -2905,6 +3547,25 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 		if (SkillBox != nullptr)
 		{
 			SkillBox->SetVisibility(bHasSkill
+				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		// 아이콘 칸과 그 틀. 민무늬 글상자만 보여 주던 것을 용병탭과 같은
+		// 규칙(그림 + 이름)으로 맞춘다. 그림이 없는 스킬은 칸만 비워 둔다.
+		if (UImage* SkillIcon = Cast<UImage>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillIcon_%d"), Index)))))
+		{
+			UTexture2D* Icon = bHasSkill ? Detail.mSkills[Index].mIcon.Get() : nullptr;
+			if (Icon != nullptr)
+			{
+				SkillIcon->SetBrushFromTexture(Icon, false);
+			}
+			SkillIcon->SetVisibility(bHasSkill && Icon != nullptr
+				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (UWidget* SkillSlot = mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillSlot_%d"), Index))))
+		{
+			SkillSlot->SetVisibility(bHasSkill
 				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 		}
 	}
@@ -2979,6 +3640,34 @@ namespace
 	}
 
 	/** @brief 사거리/타격범위/곡사·관통을 한 줄로 요약한다. 없는 항목은 뺀다. */
+	/**
+	 * @brief 차단 레이어 비트마스크를 사람 말로 바꾼다.
+	 *
+	 * @details INDEX_NONE 은 게임플레이가 아직 안 채운 것이라 빈 문자열을
+	 * 돌려준다 -- 모르는 것을 "없음" 이라고 하면 관통 스킬로 읽힌다.
+	 */
+	FString DescribeBlocker(const int32 Mask)
+	{
+		if (Mask == INDEX_NONE)
+		{
+			return FString();
+		}
+		if (Mask == 0)
+		{
+			return TEXT("없음");
+		}
+		TArray<FString> Layers;
+		if ((Mask & StaticCast<int32>(ETileLayerFlag::Obstacle)) != 0)
+		{
+			Layers.Add(TEXT("장애물"));
+		}
+		if ((Mask & StaticCast<int32>(ETileLayerFlag::Unit)) != 0)
+		{
+			Layers.Add(TEXT("유닛"));
+		}
+		return Layers.Num() > 0 ? FString::Join(Layers, TEXT("·")) : TEXT("없음");
+	}
+
 	FString DescribeTargeting(const FSkillTargetingUI& Targeting)
 	{
 		TArray<FString> Parts;
@@ -2992,13 +3681,15 @@ namespace
 			Parts.Add(FString::Printf(TEXT("타격 %s %.0f"),
 				HitShapeName(Targeting.mHitShape), Targeting.mHitRange));
 		}
-		if (Targeting.mIsIndirect == true)
+		const FString Aim = DescribeBlocker(Targeting.mAimBlockerMask);
+		if (Aim.IsEmpty() == false)
 		{
-			Parts.Add(TEXT("곡사"));
+			Parts.Add(FString::Printf(TEXT("조준 차단 %s"), *Aim));
 		}
-		if (Targeting.mIsPenetration == true)
+		const FString Effect = DescribeBlocker(Targeting.mEffectBlockerMask);
+		if (Effect.IsEmpty() == false)
 		{
-			Parts.Add(TEXT("관통"));
+			Parts.Add(FString::Printf(TEXT("영향 차단 %s"), *Effect));
 		}
 		return FString::Join(Parts, TEXT("  ·  "));
 	}
@@ -3048,6 +3739,7 @@ bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 	mDetailTitleText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailTitleText")));
 	mDetailSubtitleText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSubtitleText")));
 	mDetailBodyText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailBodyText")));
+	BindDetailExtras();
 
 	/*
 	 * 판·틀·글자는 눌림을 **삼키지 않게** 해 둔다.
@@ -3071,8 +3763,48 @@ bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 		PanelRoot->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 
+	// 어디를 눌러도 닫히게 하는 받이. 용병탭처럼 판(Board) 눌림이 안 닿는
+	// 자리에서 열렸을 때도 이 받이가 닫아 준다 (0806 검수: 닫을 길이 없었다).
+	if (UButton* CloseCatch = Cast<UButton>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseCatch"))))
+	{
+		CloseCatch->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked);
+	}
+	// 확정 시안의 "닫기" 단추도 같은 곳으로 배선한다.
+	if (UButton* CloseButton = Cast<UButton>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton"))))
+	{
+		CloseButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked);
+	}
+
 	BuildDetailSkillRow();
 	return true;
+}
+
+void UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked()
+{
+	HideDetailOverlay(/*bNotifyGameplay=*/true);
+}
+
+/**
+ * @brief 적 요약판의 다음 스킬 소켓 클릭 → 그 스킬 상세.
+ *
+ * @details 유닛 조사와 스킬 조사를 이어 청한다. 응답이 동기로 돌아오는 흐름이라
+ * 마지막 응답(스킬 상세)이 화면에 남는다.
+ */
+void UCombatLayoutHUDWidget::HandleEnemyNextSkillClicked()
+{
+	if (mUIModel == nullptr || mEnemyShownUnitId == INDEX_NONE)
+	{
+		return;
+	}
+	mUIModel->RequestInspectUnit(mEnemyShownUnitId);
+	if (mEnemyShownNextSkillIndex != INDEX_NONE)
+	{
+		mUIModel->RequestInspectUnitSkill(mEnemyShownNextSkillIndex);
+	}
 }
 
 /**
@@ -3095,7 +3827,16 @@ void UCombatLayoutHUDWidget::BuildDetailSkillRow()
 		return;
 	}
 
-	UCanvasPanel* Host = Cast<UCanvasPanel>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailPanelRoot")));
+	// 판이 자리를 잡아 준 칸이 있으면 그 안에 넣는다. 없으면 옛 판이므로
+	// 예전처럼 패널 비율 자리에 앉힌다 -- 상세창은 화면 담당이 갈아 끼우는
+	// 자산이라 이쪽이 특정 위젯을 강제하지 않는다.
+	UCanvasPanel* Host = Cast<UCanvasPanel>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillRowHost")));
+	const bool bHosted = Host != nullptr;
+	if (Host == nullptr)
+	{
+		Host = Cast<UCanvasPanel>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailPanelRoot")));
+	}
 	if (Host == nullptr)
 	{
 		Host = Cast<UCanvasPanel>(Tree->RootWidget);
@@ -3103,16 +3844,6 @@ void UCombatLayoutHUDWidget::BuildDetailSkillRow()
 	if (Host == nullptr)
 	{
 		return;
-	}
-
-	mDetailSkillRow = Tree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	UCanvasPanelSlot* RowSlot = Host->AddChildToCanvas(mDetailSkillRow);
-	if (RowSlot != nullptr)
-	{
-		// 본문 글자 아래 빈 자리에 앉힌다. 비율로 잡아 두면 패널 크기가 바뀌어도 따라간다.
-		RowSlot->SetAnchors(FAnchors(0.10f, 0.66f, 0.90f, 0.90f));
-		RowSlot->SetOffsets(FMargin(0.f));
-		RowSlot->SetAlignment(FVector2D(0.f, 0.f));
 	}
 
 	static const TCHAR* const HandlerNames[DetailSkillSlotCount] = {
@@ -3132,36 +3863,92 @@ void UCombatLayoutHUDWidget::BuildDetailSkillRow()
 	mDetailSkillLabels.Reset();
 	mDetailSkillIndices.Init(INDEX_NONE, DetailSkillSlotCount);
 
+	/*
+	 * 칸은 판이 미리 만들어 둔 것을 쓴다.
+	 *
+	 * 여기서 UButton 을 만들면 아무 스타일도 못 받아 슬레이트 기본 밝은 회색
+	 * 사각으로 그려진다. 상세창 오른쪽 열을 덮고 있던 회색 판이 그것이다.
+	 * 런타임에는 부품 그림을 불러올 수 없으므로(PR#300) 판에서 입혀야 한다.
+	 *
+	 * 칸이 없는 옛 판이면 예전처럼 만든다 -- 회색이지만 눌리기는 한다.
+	 */
+	UButton* const FirstPrebuilt = Cast<UButton>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillButton_0")));
+	UHorizontalBox* FallbackRow = nullptr;
+	if (FirstPrebuilt != nullptr)
+	{
+		mDetailSkillRow = Host;
+	}
+	else
+	{
+		FallbackRow = Tree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+		mDetailSkillRow = FallbackRow;
+		if (UCanvasPanelSlot* RowSlot = Host->AddChildToCanvas(FallbackRow))
+		{
+			RowSlot->SetAnchors(bHosted
+				? FAnchors(0.f, 0.f, 1.f, 1.f) : FAnchors(0.10f, 0.66f, 0.90f, 0.90f));
+			RowSlot->SetOffsets(FMargin(0.f));
+			RowSlot->SetAlignment(FVector2D(0.f, 0.f));
+		}
+	}
+
 	for (int32 Index = 0; Index < DetailSkillSlotCount; ++Index)
 	{
-		UButton* Button = Tree->ConstructWidget<UButton>(UButton::StaticClass());
-		if (UHorizontalBoxSlot* ButtonSlot = mDetailSkillRow->AddChildToHorizontalBox(Button))
+		UButton* Button = nullptr;
+		UImage* Icon = nullptr;
+		UTextBlock* Label = nullptr;
+
+		if (FallbackRow == nullptr)
 		{
-			ButtonSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-			ButtonSlot->SetPadding(FMargin(6.f, 0.f));
+			Button = Cast<UButton>(mDetailOverlayWidget->GetWidgetFromName(
+				*FString::Printf(TEXT("DetailSkillButton_%d"), Index)));
+			Icon = Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
+				*FString::Printf(TEXT("DetailSkillIcon_%d"), Index)));
+			Label = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(
+				*FString::Printf(TEXT("DetailSkillLabel_%d"), Index)));
+		}
+		else
+		{
+			Button = Tree->ConstructWidget<UButton>(UButton::StaticClass());
+			if (UHorizontalBoxSlot* ButtonSlot = FallbackRow->AddChildToHorizontalBox(Button))
+			{
+				ButtonSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+				ButtonSlot->SetPadding(FMargin(6.f, 0.f));
+			}
+
+			// 그림과 글자를 겹쳐 둔다. 아이콘이 있으면 그림, 없으면 이름을 보여 준다.
+			UOverlay* Content = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+			Button->AddChild(Content);
+
+			Icon = Tree->ConstructWidget<UImage>(UImage::StaticClass());
+			if (UOverlaySlot* IconSlot = Cast<UOverlaySlot>(Content->AddChild(Icon)))
+			{
+				IconSlot->SetHorizontalAlignment(HAlign_Fill);
+				IconSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+
+			Label = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+			if (UOverlaySlot* LabelSlot = Cast<UOverlaySlot>(Content->AddChild(Label)))
+			{
+				LabelSlot->SetHorizontalAlignment(HAlign_Center);
+				LabelSlot->SetVerticalAlignment(VAlign_Center);
+			}
+			Label->SetJustification(ETextJustify::Center);
+			Label->SetAutoWrapText(true);
 		}
 
-		// 그림과 글자를 겹쳐 둔다. 아이콘이 있으면 그림, 없으면 이름을 보여 준다.
-		UOverlay* Content = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
-		Button->AddChild(Content);
-
-		UImage* Icon = Tree->ConstructWidget<UImage>(UImage::StaticClass());
-		if (UOverlaySlot* IconSlot = Cast<UOverlaySlot>(Content->AddChild(Icon)))
+		if (Button == nullptr)
 		{
-			IconSlot->SetHorizontalAlignment(HAlign_Fill);
-			IconSlot->SetVerticalAlignment(VAlign_Fill);
+			continue;
 		}
-		Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
-
-		UTextBlock* Label = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-		if (UOverlaySlot* LabelSlot = Cast<UOverlaySlot>(Content->AddChild(Label)))
+		if (Icon != nullptr)
 		{
-			LabelSlot->SetHorizontalAlignment(HAlign_Center);
-			LabelSlot->SetVerticalAlignment(VAlign_Center);
+			Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
-		Label->SetJustification(ETextJustify::Center);
-		Label->SetAutoWrapText(true);
-		Label->SetVisibility(ESlateVisibility::Collapsed);
+		if (Label != nullptr)
+		{
+			Label->SetVisibility(ESlateVisibility::Collapsed);
+		}
 
 		Button->OnClicked.__Internal_AddUniqueDynamic(this, Handlers[Index], HandlerNames[Index]);
 		Button->SetVisibility(ESlateVisibility::Collapsed);
@@ -3267,6 +4054,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	{
 		return;
 	}
+	ApplyDetailColumnLayout(false);
 
 	SetTextIfPresent(mDetailTitleText, Detail.mName);
 
@@ -3292,6 +4080,34 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	}
 	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
 
+	// 소켓에는 이 유닛의 초상을 건다. 안 걸면 직전 스킬 아이콘이 그대로 남는다
+	// (0806 검수: 적 상세에 칼 아이콘이 떠 있었다).
+	if (Unit != nullptr)
+	{
+		UTexture2D* Portrait = Unit->mTurnPortrait != nullptr
+			? Unit->mTurnPortrait.Get() : Unit->mPortrait.Get();
+		if (Portrait != nullptr)
+		{
+			SetPortraitCropped(mDetailIconImage, Portrait);
+		}
+	}
+
+	// 유닛에는 조준/타격 형태가 없다. 스킬 상세가 칠해 둔 칸을 걷고, 칩은 유닛
+	// 스탯으로 갈아 끼운다 -- 스킬 값이 남아 있으면 다른 대상 수치로 읽힌다.
+	ClearDetailGrids();
+	ClearDetailChips();
+	SetDetailChip(0, LOCTEXT("DetailChipLevel", "레벨"), FText::AsNumber(Detail.mLevel));
+	if (Unit != nullptr)
+	{
+		SetDetailChip(1, LOCTEXT("DetailChipHp", "HP"), FText::FromString(
+			FString::Printf(TEXT("%.0f/%.0f"), Unit->mHP, Unit->mMaxHP)));
+		SetDetailChip(2, LOCTEXT("DetailChipDefense", "방어"),
+			FText::AsNumber(FMath::RoundToInt(Unit->mDefensePoint)));
+		SetDetailChip(3, LOCTEXT("DetailChipSpeed", "속도"),
+			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
+		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
+	}
+
 	FString Body;
 	for (const FText& Passive : Detail.mPassiveDescriptions)
 	{
@@ -3315,10 +4131,261 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
 
 	SetPortraitCropped(mDetailIconImage, Detail.mPortrait);
+	SetShown(mDetailStatBlock, true);
+	ShowDetailRightBlock(mDetailSkillBlock);
 	RefreshDetailSkillRow();
 	// 자기는 눌림을 안 받고 스킬 칸만 받는다. 그래서 칸 밖을 톡 치면 눌림이
 	// HUD 까지 내려가 패널이 닫힌다.
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+/**
+ * @brief 상세창의 수치 칩과 범위 칸을 이름으로 찾아 둔다.
+ *
+ * @details 없으면 그냥 건너뛴다. 옛 WBP 처럼 칩·칸이 없는 판도 그대로 돌아가야
+ * 한다 -- 상세창은 화면 담당이 갈아 끼우는 자산이라 이쪽이 강제하지 않는다.
+ */
+void UCombatLayoutHUDWidget::BindDetailExtras()
+{
+	mDetailChipLabels.Reset();
+	mDetailChipValues.Reset();
+	for (int32 ChipSlot = 0; ChipSlot < DetailChipCount; ++ChipSlot)
+	{
+		mDetailChipLabels.Add(Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("DetailChip%dLabel"), ChipSlot)))));
+		mDetailChipValues.Add(Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("DetailChip%dValue"), ChipSlot)))));
+	}
+
+	mDetailSelectCells.Reset();
+	mDetailHitCells.Reset();
+	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
+	{
+		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
+		{
+			mDetailSelectCells.Add(Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("DetailSelectCell_R%dC%d"), Row, Column)))));
+			mDetailHitCells.Add(Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("DetailHitCell_R%dC%d"), Row, Column)))));
+		}
+	}
+
+	mDetailAimBlockerText = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailAimBlockerText")));
+	mDetailEffectBlockerText = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailEffectBlockerText")));
+	mDetailSelectCaptionText = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSelectCaptionText")));
+	mDetailHitCaptionText = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailHitCaptionText")));
+
+	mDetailStatBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatBlock"));
+	mDetailTargetBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailTargetBlock"));
+	mDetailSkillBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillBlock"));
+	mDetailExtraBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraBlock"));
+	mDetailExtraHeading = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraHeading")));
+	mDetailExtraText = Cast<UTextBlock>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraText")));
+	mDetailIdentityColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityColumn"));
+	mDetailStatColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatColumn"));
+	mDetailRightColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailRightColumn"));
+	mDetailWideColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailWideColumn"));
+	mDetailDivider0 = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailDivider_0"));
+	mDetailDivider1 = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailDivider_1"));
+}
+
+/**
+ * @brief 오른쪽 열의 세 덩어리 중 하나만 켠다.
+ * @param Wanted 켤 덩어리. nullptr 이면 셋 다 끈다
+ */
+void UCombatLayoutHUDWidget::ShowDetailRightBlock(const UWidget* Wanted)
+{
+	UWidget* const Blocks[] = { mDetailTargetBlock, mDetailSkillBlock, mDetailExtraBlock };
+	for (UWidget* Block : Blocks)
+	{
+		if (Block != nullptr)
+		{
+			SetShown(Block, Block == Wanted);
+		}
+	}
+}
+
+/**
+ * @brief 상세 종류에 맞춰 열 자체를 재배치한다.
+ *
+ * @details 루트만 화면 전체에 앵커링하고 자식을 1920 좌표에 고정하면 20:9에서
+ * 오른쪽이 비거나 늘어난다. 열을 화면 비율 앵커로 두면 폭이 달라져도 비율을
+ * 유지한다. 아티팩트는 값만 숨기는 것이 아니라 가운데 열과 두 번째 기둥을
+ * 접고, 정체성/효과 열을 34:66으로 다시 펼친다.
+ */
+void UCombatLayoutHUDWidget::ApplyDetailColumnLayout(const bool bArtifactTwoColumn)
+{
+	/*
+	 * 자리는 **판이 정한다.** 여기서는 켜고 끄기만 한다.
+	 *
+	 * 전에는 이 함수가 열마다 앵커 비율을 제 손으로 적어 두고 다시 앉혔다
+	 * (0.034 / 0.227 / 0.278 …). 그래서 배치 빌더에서 열 비율을 고치면
+	 * 화면은 안 따라오고, 두 값이 어긋난 채로 남았다. 자리를 재는 곳이
+	 * 둘이면 어느 쪽이 맞는지 늘 따지게 된다.
+	 *
+	 * 이제 판이 세 열과 "가운데+오른쪽을 이은 넓은 열" 을 모두 만들어 두고,
+	 * 여기서는 화면에 맞는 쪽을 편다.
+	 */
+	SetShown(mDetailStatColumn, bArtifactTwoColumn == false);
+	SetShown(mDetailRightColumn, bArtifactTwoColumn == false);
+	SetShown(mDetailWideColumn, bArtifactTwoColumn);
+
+	// 확정 시안(0806)의 기본 모습으로 되돌린다. 아티팩트만 이 뒤에서
+	// 받침판을 걷고 보석 줄을 켠다 -- 한 번 켠 것이 다음 화면에 남지 않게.
+	if (mDetailOverlayWidget != nullptr)
+	{
+		if (UWidget* FreePlate = mDetailOverlayWidget->GetWidgetFromName(
+			TEXT("DetailFreePlate")))
+		{
+			FreePlate->SetVisibility(bArtifactTwoColumn
+				? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+		}
+		SetShown(mDetailBodyText, true);
+		for (int32 Index = 0; Index < 5; ++Index)
+		{
+			SetShown(mDetailOverlayWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))), false);
+		}
+	}
+	// 기둥 하나는 정체성 열과의 사이, 다른 하나는 가운데와 오른쪽 사이다.
+	// 두 열을 이어 붙이면 그 사이 기둥은 판 한가운데를 가로지른다.
+	SetShown(mDetailDivider0, true);
+	SetShown(mDetailDivider1, bArtifactTwoColumn == false);
+}
+
+void UCombatLayoutHUDWidget::SetDetailChip(int32 ChipSlot, const FText& Label, const FText& Value)
+{
+	if (mDetailChipLabels.IsValidIndex(ChipSlot) == true)
+	{
+		SetTextIfPresent(mDetailChipLabels[ChipSlot], Label);
+	}
+	if (mDetailChipValues.IsValidIndex(ChipSlot) == true)
+	{
+		SetTextIfPresent(mDetailChipValues[ChipSlot], Value);
+	}
+}
+
+void UCombatLayoutHUDWidget::ClearDetailChips()
+{
+	for (int32 ChipSlot = 0; ChipSlot < DetailChipCount; ++ChipSlot)
+	{
+		SetDetailChip(ChipSlot, FText::GetEmpty(), FText::FromString(TEXT("-")));
+	}
+}
+
+namespace CombatDetailGrid
+{
+	// 빈 칸 / 조준 범위 / 타격 범위 / 시전자. 판에 칠하는 색과 같은 계열로 둔다.
+	const FLinearColor Empty(0.10f, 0.085f, 0.065f, 0.55f);
+	const FLinearColor Select(0.28f, 0.60f, 0.95f, 0.95f);
+	const FLinearColor Hit(0.90f, 0.32f, 0.30f, 0.95f);
+	const FLinearColor Caster(0.98f, 0.80f, 0.35f, 0.95f);
+
+	/** @brief 시전자(가운데)에서 (Row,Column)까지 이 형태가 닿는가. */
+	bool SelectCovers(ECombatSkillSelectShapeUI Shape, int32 Range, int32 dRow, int32 dColumn)
+	{
+		const int32 Manhattan = FMath::Abs(dRow) + FMath::Abs(dColumn);
+		const int32 Chebyshev = FMath::Max(FMath::Abs(dRow), FMath::Abs(dColumn));
+		switch (Shape)
+		{
+		case ECombatSkillSelectShapeUI::Single:   return Manhattan == 0;
+		case ECombatSkillSelectShapeUI::Cross:    return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
+		case ECombatSkillSelectShapeUI::Square:   return Chebyshev <= Range;
+		case ECombatSkillSelectShapeUI::Diagonal: return Chebyshev <= Range;
+		case ECombatSkillSelectShapeUI::Line:     return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
+		default:                                  return false;
+		}
+	}
+
+	bool HitCovers(ECombatSkillHitShapeUI Shape, int32 Range, int32 dRow, int32 dColumn)
+	{
+		const int32 Manhattan = FMath::Abs(dRow) + FMath::Abs(dColumn);
+		const int32 Chebyshev = FMath::Max(FMath::Abs(dRow), FMath::Abs(dColumn));
+		switch (Shape)
+		{
+		case ECombatSkillHitShapeUI::Single: return Manhattan == 0;
+		case ECombatSkillHitShapeUI::Cross:  return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
+		case ECombatSkillHitShapeUI::Circle: return Chebyshev <= Range;
+		default:                             return false;
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::PaintSelectGrid(const FSkillTargetingUI& Targeting)
+{
+	using namespace CombatDetailGrid;
+	const int32 Center = DetailGridExtent / 2;
+	const int32 Range = FMath::RoundToInt(Targeting.mSelectRange);
+	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
+	{
+		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
+		{
+			UImage* Cell = mDetailSelectCells.IsValidIndex(Row * DetailGridExtent + Column)
+				? mDetailSelectCells[Row * DetailGridExtent + Column].Get() : nullptr;
+			if (Cell == nullptr)
+			{
+				continue;
+			}
+			const int32 dRow = Row - Center;
+			const int32 dColumn = Column - Center;
+			const bool bCaster = (dRow == 0 && dColumn == 0);
+			const bool bCovered = SelectCovers(Targeting.mSelectShape, Range, dRow, dColumn);
+			Cell->SetColorAndOpacity(bCaster ? Caster : (bCovered ? Select : Empty));
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::PaintHitGrid(const FSkillTargetingUI& Targeting)
+{
+	using namespace CombatDetailGrid;
+	const int32 Center = DetailGridExtent / 2;
+	const int32 Range = FMath::RoundToInt(Targeting.mHitRange);
+	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
+	{
+		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
+		{
+			UImage* Cell = mDetailHitCells.IsValidIndex(Row * DetailGridExtent + Column)
+				? mDetailHitCells[Row * DetailGridExtent + Column].Get() : nullptr;
+			if (Cell == nullptr)
+			{
+				continue;
+			}
+			const int32 dRow = Row - Center;
+			const int32 dColumn = Column - Center;
+			const bool bCaster = (dRow == 0 && dColumn == 0);
+			const bool bCovered = HitCovers(Targeting.mHitShape, Range, dRow, dColumn);
+			Cell->SetColorAndOpacity(bCaster ? Caster : (bCovered ? Hit : Empty));
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::ClearDetailGrids()
+{
+	using namespace CombatDetailGrid;
+	for (TObjectPtr<UImage>& Cell : mDetailSelectCells)
+	{
+		if (Cell != nullptr)
+		{
+			Cell->SetColorAndOpacity(Empty);
+		}
+	}
+	for (TObjectPtr<UImage>& Cell : mDetailHitCells)
+	{
+		if (Cell != nullptr)
+		{
+			Cell->SetColorAndOpacity(Empty);
+		}
+	}
+	SetTextIfPresent(mDetailSelectCaptionText, FText::GetEmpty());
+	SetTextIfPresent(mDetailHitCaptionText, FText::GetEmpty());
+	SetTextIfPresent(mDetailAimBlockerText, FText::GetEmpty());
+	SetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
 }
 
 /** @brief 스킬 상세를 패널에 채워 띄운다. 비용/쿨타임은 카드 레일 스냅샷에서 읽는다. */
@@ -3333,11 +4400,51 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	{
 		return;
 	}
+	ApplyDetailColumnLayout(false);
 
 	SetTextIfPresent(mDetailTitleText, Detail.mName);
 
 	FString Subtitle;
 	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
+	// 칩과 범위 칸은 모델 값 그대로 채운다. 값이 없으면 "-" 로 두고 지어내지 않는다.
+	ClearDetailChips();
+	if (Skills.IsValidIndex(Detail.mSkillIndex) == true)
+	{
+		const FSkillUI& Chip = Skills[Detail.mSkillIndex];
+		SetDetailChip(0, LOCTEXT("DetailChipCost", "AP"),
+			FText::AsNumber(Chip.mActionPointCost));
+		SetDetailChip(1, LOCTEXT("DetailChipDamage", "피해"),
+			Chip.mDamageMax <= 0 ? FText::FromString(TEXT("-"))
+			: (Chip.mDamageMin == Chip.mDamageMax
+				? FText::AsNumber(Chip.mDamageMax)
+				: FText::FromString(FString::Printf(TEXT("%d~%d"),
+					Chip.mDamageMin, Chip.mDamageMax))));
+		SetDetailChip(2, LOCTEXT("DetailChipCooldown", "쿨타임"),
+			Chip.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
+			: FText::FromString(FString::Printf(TEXT("%d턴"), Chip.mCooldownTurns)));
+		// 타수는 칩으로 두지 않는다. 2타 이상일 때 설명 문장에 적기로 합의돼
+		// 있어(0802), 칩까지 두면 같은 정보가 두 군데 나온다.
+		SetDetailChip(3, LOCTEXT("DetailChipRange", "사거리"),
+			FText::AsNumber(FMath::RoundToInt(Chip.mTargeting.mSelectRange)));
+		SetDetailChip(4, LOCTEXT("DetailChipCritical", "치명"),
+			Chip.mCriticalDamage <= 0 ? FText::FromString(TEXT("-"))
+			: FText::AsNumber(Chip.mCriticalDamage));
+	}
+	SetShown(mDetailStatBlock, true);
+	ShowDetailRightBlock(mDetailTargetBlock);
+	PaintSelectGrid(Detail.mTargeting);
+	PaintHitGrid(Detail.mTargeting);
+	SetTextIfPresent(mDetailAimBlockerText, FText::FromString(
+		DescribeBlocker(Detail.mTargeting.mAimBlockerMask)));
+	SetTextIfPresent(mDetailEffectBlockerText, FText::FromString(
+		DescribeBlocker(Detail.mTargeting.mEffectBlockerMask)));
+	SetTextIfPresent(mDetailSelectCaptionText, FText::FromString(FString::Printf(
+		TEXT("%s · 거리 %.0f"), SelectShapeName(Detail.mTargeting.mSelectShape),
+		Detail.mTargeting.mSelectRange)));
+	SetTextIfPresent(mDetailHitCaptionText, FText::FromString(FString::Printf(
+		TEXT("%s · 범위 %.0f"), HitShapeName(Detail.mTargeting.mHitShape),
+		Detail.mTargeting.mHitRange)));
+
 	if (Skills.IsValidIndex(Detail.mSkillIndex) == true)
 	{
 		const FSkillUI& Skill = Skills[Detail.mSkillIndex];
@@ -3351,6 +4458,14 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 			Subtitle += Skill.mDamageMin == Skill.mDamageMax
 				? FString::Printf(TEXT("  ·  피해 %d"), Skill.mDamageMax)
 				: FString::Printf(TEXT("  ·  피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax);
+		}
+		// 수치 칩 기둥을 걷었으니(확정 시안) 사거리·치명도 이 줄에 싣는다.
+		Subtitle += FString::Printf(TEXT("  ·  사거리 %.0f"),
+			Skill.mTargeting.mSelectRange);
+		if (Skill.mCriticalDamage > 0)
+		{
+			// "치명"만 쓰면 확률인지 피해인지 못 읽는다(0806 검수). 이 값은 피해다.
+			Subtitle += FString::Printf(TEXT("  ·  치명타피해 %d"), Skill.mCriticalDamage);
 		}
 	}
 	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
@@ -3387,6 +4502,7 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 	{
 		return;
 	}
+	ApplyDetailColumnLayout(false);
 
 	const FUnitUI* TurnUnit = FindTurnUnit();
 	const int32 Left = TurnUnit != nullptr
@@ -3396,12 +4512,23 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 	SetTextIfPresent(mDetailSubtitleText, FText::FromString(
 		FString::Printf(TEXT("AP 1/칸  ·  남은 AP %d"), Left)));
 
+	// 이동에는 조준 형태가 없다. 스킬 상세가 남긴 칸과 칩을 걷는다.
+	ClearDetailGrids();
+	ClearDetailChips();
+	SetDetailChip(0, LOCTEXT("DetailChipMoveCost", "AP/칸"), FText::AsNumber(1));
+	SetDetailChip(1, LOCTEXT("DetailChipMoveLeft", "남은 AP"), FText::AsNumber(Left));
+	SetDetailChip(2, LOCTEXT("DetailChipMoveRange", "최대 칸"), FText::AsNumber(Left));
+
 	FString Body = FString::Printf(
 		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다.\n지금 남은 행동력으로 최대 %d칸 갈 수 있다."), Left);
-	Body += TEXT("\n\n판을 톡 쳐서 갈 곳을 고른다. 여러 번 찍으면 그 자리가 경유지가 되어")
-		TEXT(" 찍은 차례대로 돌아간다.\n마지막으로 찍은 칸을 다시 누르면 확정하고,")
-		TEXT(" 판 밖을 누르면 마지막 경유지만 무른다.");
 	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	// 조작 안내는 규칙 설명과 결이 다르다. 한 칸에 이어 붙이면
+	// 한 덩어리로 읽혀 어디까지가 규칙인지 흐려진다. 오른쪽 열로 리자.
+	const FString Guide = FString(
+		TEXT("판을 톡 쳐서 갈 곳을 고른다. 여러 번 찍으면 그 자리가 경유지가 되어"))
+		+ TEXT(" 찍은 차례대로 돌아간다.") + LINE_TERMINATOR
+		+ TEXT("마지막으로 찍은 칸을 다시 누르면 확정하고, 판 밖을 누르면")
+		+ TEXT(" 마지막 경유지만 무른다.");
 
 	// 카드에 그려 둔 그림을 그대로 쓴다. 이동은 상세용 그림이 따로 없다.
 	UTexture2D* MoveIcon = nullptr;
@@ -3413,6 +4540,10 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 
 	// 스킬 칸은 유닛 상세의 것이다.
 	SetDetailSkillRowShown(false);
+	SetShown(mDetailStatBlock, true);
+	SetTextIfPresent(mDetailExtraHeading, LOCTEXT("DetailExtraMove", "조작"));
+	SetTextIfPresent(mDetailExtraText, FText::FromString(Guide));
+	ShowDetailRightBlock(mDetailExtraBlock);
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
 
@@ -3423,6 +4554,14 @@ void UCombatLayoutHUDWidget::HideDetailOverlay(const bool bNotifyGameplay)
 		return;
 	}
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	// 스킬을 보려고 잡아 둔 카메라를 놓아 준다. 상세를 닫았는데 화면이 그
+	// 유닛에 붙어 있으면 판을 다시 못 본다(0806 카메라 배선).
+	if (mUIModel != nullptr && mCameraFocusedUnitId != INDEX_NONE)
+	{
+		mCameraFocusedUnitId = INDEX_NONE;
+		mUIModel->RequestFocusUnit(INDEX_NONE);
+	}
 
 	// 패널과 함께 칠린 위협 범위를 걷으라는 신호다. INDEX_NONE = "닫았다".
 	// 칠을 걷는 것은 판(게임플레이) 소관이라 화면이 직접 지우지 않는다.

@@ -80,14 +80,8 @@ private:
 	// 텍스트 적용을 한 곳에 모아 두면 나중에 로컬라이징이나 옵션 설정을 붙일 때 바꾸는 위치가 줄어든다.
 	void SyncMainText();
 
-	/** @brief 현재 화면비에 맞는 타이틀 레이아웃 프로필을 WidgetSwitcher에서 선택한다. */
-	void RefreshResponsiveTitleLayout(const FVector2D& ViewportSize);
 
-	/** @brief 타이틀 레이아웃 프로필 선택/스케일/주요 위젯 위치를 로그로 남긴다. */
-	void LogResponsiveTitleLayoutMetrics(const FVector2D& ViewportSize, FName ProfileName, const UWidget* ActiveLayoutWidget, int32 ActiveWidgetIndex) const;
 
-	/** @brief 화면비를 타이틀 레이아웃 프로필 이름으로 변환한다. */
-	FName SelectTitleLayoutProfile(const FVector2D& ViewportSize) const;
 
 	/** @brief WBP에 있는 모든 타이틀 메뉴 버튼을 같은 입력 핸들러에 연결한다. */
 	void BindMainMenuButtons();
@@ -267,9 +261,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TitleBackgroundImage;
 
-	/** @brief 화면비별 타이틀 레이아웃 캔버스를 고르는 WidgetSwitcher */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidgetSwitcher> TitleLayoutSwitcher;
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
 	// Transient: 세이브/직렬화 대상이 아닌 순수 런타임 핸들 묶음이라 저장하지 않는다.
@@ -277,16 +268,7 @@ private:
 	UPROPERTY(Transient)
 	FTitleMenuBackgroundRuntimeAssets mBackgroundRuntime;
 
-	/** @brief 마지막으로 활성화한 타이틀 레이아웃 프로필 */
-	UPROPERTY(Transient)
-	FName mActiveTitleLayoutProfileName;
 
-	/** @brief 마지막으로 타이틀 반응형 레이아웃 수치를 로그에 남긴 프로필 */
-	UPROPERTY(Transient)
-	FName mLastLoggedTitleLayoutProfileName;
 
-	/** @brief 마지막으로 타이틀 반응형 레이아웃 수치를 로그에 남긴 뷰포트 크기 */
-	UPROPERTY(Transient)
-	FVector2D mLastLoggedTitleLayoutViewportSize;
 
 };

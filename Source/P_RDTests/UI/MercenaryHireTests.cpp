@@ -669,8 +669,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	if (UTextBlock* BackText =
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryCloseText"))))
 	{
-		TestEqual(TEXT("용병 패널 뒤로 문구"),
-			BackText->GetText().ToString(), FString(TEXT("뒤로")));
+		// 확정 시안: 보유 용병 조회 탭이라 "뒤로" 대신 "닫기"다.
+		TestEqual(TEXT("용병 패널 닫기 문구"),
+			BackText->GetText().ToString(), FString(TEXT("닫기")));
 	}
 	else
 	{
@@ -704,8 +705,17 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (TestNotNull(*ScaleName, Scale)
 			&& TestNotNull(*CardName, Card))
 		{
-			TestEqual(*FString::Printf(TEXT("%s 는 용병 판 안"), *ScaleName),
-				Scale->GetParent(), MercenaryBoard);
+			// 카드들은 편집 편의를 위해 로스터 구역(MercRosterSection)으로
+			// 묶였다. 구역이 판 안에 있고, 카드가 구역 안에 있으면 된다.
+			UPanelWidget* Roster = Cast<UPanelWidget>(
+				Tree->FindWidget(TEXT("MercRosterSection")));
+			TestEqual(*FString::Printf(TEXT("%s 는 로스터 구역 안"), *ScaleName),
+				Scale->GetParent(), Roster != nullptr ? Roster : MercenaryBoard);
+			if (Roster != nullptr)
+			{
+				TestEqual(TEXT("로스터 구역은 용병 판 안"),
+					Roster->GetParent(), MercenaryBoard);
+			}
 			TestEqual(*FString::Printf(TEXT("%s 는 크기 래퍼 안"), *CardName),
 				Card->GetParent(), Scale);
 		}
@@ -774,8 +784,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (UTextBlock* BackText =
 			Cast<UTextBlock>(MonsterTree->FindWidget(TEXT("MonsterBackText"))))
 		{
-			TestEqual(TEXT("몬스터 탭 뒤로 문구"),
-				BackText->GetText().ToString(), FString(TEXT("뒤로")));
+			// 확정 시안: 몬스터 탭도 "뒤로" 대신 "닫기"다.
+			TestEqual(TEXT("몬스터 탭 닫기 문구"),
+				BackText->GetText().ToString(), FString(TEXT("닫기")));
 		}
 		else
 		{
@@ -1013,18 +1024,21 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	Model->SetUnitUIs({ PartyUnit });
 	MercenaryMenu->OnClicked.Broadcast();
 	PartyButton->OnClicked.Broadcast();
-	TestEqual(TEXT("용병을 고르면 목록이 닫힌다"),
-		Panel->GetVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("용병 카드는 InspectUnit 요청을 보낸다"),
-		DetailResponder->mLastType, ECombatInputType::InspectUnit);
-	TestEqual(TEXT("카드의 실제 UnitId를 보낸다"),
-		DetailResponder->mLastPayload, PartyUnit.mUnitId);
-	TestEqual(TEXT("몬스터와 용병 InspectUnit은 각각 한 번 요청된다"),
-		DetailResponder->mInspectRequestCount, 2);
-	TestEqual(TEXT("상세 응답도 같은 UnitId다"),
-		Model->GetUnitDetail().mUnitId, PartyUnit.mUnitId);
-	TestTrue(TEXT("동기 상세 응답 뒤 PR457 오버레이가 열린다"),
-		HUD->IsDetailOverlayShown());
+	/*
+	 * 0806 확정: 목록에서 고르면 **패널 안에서** 오른쪽 상세만 갈린다.
+	 *
+	 * 전에는 목록을 닫고 상세 겹을 따로 띄웠는데, 같은 내용을 두 판으로
+	 * 두 번 보여 주고 목록이 사라지는 흐름이었다.
+	 */
+	TestEqual(TEXT("용병을 골라도 목록은 열려 있다"),
+		Panel->GetVisibility(), ESlateVisibility::Visible);
+	TestFalse(TEXT("따로 뜨는 상세 겹은 없다"), HUD->IsDetailOverlayShown());
+	if (UTextBlock* DetailName = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("MercenaryDetailName"))))
+	{
+		TestEqual(TEXT("오른쪽 상세가 고른 용병으로 갈린다"),
+			DetailName->GetText().ToString(), PartyUnit.mName.ToString());
+	}
 	return true;
 }
 

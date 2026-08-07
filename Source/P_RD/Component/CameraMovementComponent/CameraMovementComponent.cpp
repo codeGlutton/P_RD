@@ -758,6 +758,35 @@ void UCameraMovementComponent::MoveToWorldPosition_Instant(FVector WorldPosition
 	MoveToViewportPosition_Instant(ViewPort);
 }
 
+/**
+ * @brief 화면(UI)이 청하는 "이 자리를 보여 줘". 연출 없이 바로 옮긴다.
+ *
+ * @details 내부 이동 함수는 조작 흐름에 묶여 private 이라, 화면이 부를 수 있는
+ * 문 하나만 밖에 낸다. 강조(Emphasis)와 달리 카메라를 잠그지 않는다 --
+ * 옮겨 준 뒤 손으로 계속 판을 볼 수 있어야 한다.
+ */
+void UCameraMovementComponent::JumpToWorldPosition(FVector WorldPosition)
+{
+	if (mCameraComponent.IsValid() == false)
+	{
+		return;
+	}
+	/*
+	 * 높이를 **카메라 판**에 맞춘다.
+	 *
+	 * 이동은 "화면 좌표를 카메라 판으로 되쏘아 그 지점을 가운데로" 하는
+	 * 방식이다. 그런데 판은 바닥(Z=0)이 아니라 카메라 100 아래에 떠 있어서,
+	 * 유닛의 실제 높이를 그대로 주면 투영과 되쏘기가 다른 높이를 가리켜
+	 * 그만큼 빗나간다(0806 검수: "딱 중앙이 아님"). 판과 같은 높이의 점으로
+	 * 바꿔 주면 되쏜 지점이 정확히 그 자리가 된다.
+	 */
+	if (mCameraPlane.IsValid() == true)
+	{
+		WorldPosition.Z = mCameraPlane->GetActorLocation().Z;
+	}
+	MoveToWorldPosition_Instant(WorldPosition);
+}
+
 void UCameraMovementComponent::MoveToViewportPosition_Smooth(FVector2D ViewPortPos)
 {
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));

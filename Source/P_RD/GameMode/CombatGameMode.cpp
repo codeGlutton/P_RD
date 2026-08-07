@@ -16,6 +16,8 @@
 
 #include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
+#include "Pawn/Camera/CombatCameraPawn.h"
+#include "Component/CameraMovementComponent/CameraMovementComponent.h"
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
@@ -678,6 +680,10 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		PushSkillUIData();
 		PushBoardActorDetailUIData(FindPartyUnitModel(IntPayload));
 		break;
+	case ECombatInputType::FocusUnit:
+		// 스킬 단추를 눌렀다. 그 스킬을 쓰는 유닛을 화면 가운데로 데려온다.
+		FocusCameraOnUnit(IntPayload);
+		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
 		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
@@ -1226,6 +1232,7 @@ void ACombatGameMode::PushUnitUIData() const
 			UnitUIData.mTurnPortrait = UnitUIData.mPortrait;
 		}
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
+		UnitUIData.mLevel = UnitModel->GetBoardActorLevel();
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
 		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
@@ -1283,6 +1290,27 @@ void ACombatGameMode::PushUnitUIData() const
 			}
 		}
 #endif
+
+		// 적 요약판의 "다음 스킬" 소켓: 장착 스킬 중 첫 유효 슬롯 아이콘을 대표로 건다.
+		if (UnitUIData.mIsPlayer == false)
+		{
+			if (USkillComponentModel* SkillComponentModel = UnitModel->GetSkillComponentModel())
+			{
+				const TArray<FSkillEntry>& SkillEntries = SkillComponentModel->GetSkills();
+				for (int32 SkillIndex = 0; SkillIndex < SkillEntries.Num(); ++SkillIndex)
+				{
+					const FSkillEntry& SkillEntry = SkillEntries[SkillIndex];
+					const UStaticUnitSkillData* SkillData = SkillEntry.IsValid()
+						? StaticCast<const UStaticUnitSkillData*>(SkillEntry.mData.Get()) : nullptr;
+					if (SkillData != nullptr && SkillData->mIcon.IsNull() == false)
+					{
+						UnitUIData.mNextSkillIcon = SkillData->mIcon.LoadSynchronous();
+						UnitUIData.mNextSkillIndex = SkillIndex;   // 소켓 클릭 → 상세용
+						break;
+					}
+				}
+			}
+		}
 
 		// 죽는 유닛 등 뷰가 이미 없는 경로에서도 push가 돌 수 있어 null 가드한다.
 		// mWorldLocation은 스냅샷 폴백, mViewActor는 이동을 매 프레임 따라가는 라이브 투영 소스(UnitBars).
@@ -1390,6 +1418,54 @@ UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
 	return nullptr;
 }
 
+void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
+{
+	APlayerController* PlayerController = GetWorld() != nullptr
+		? GetWorld()->GetFirstPlayerController() : nullptr;
+	ACombatCameraPawn* CameraPawn = PlayerController != nullptr
+		? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
+	UCameraMovementComponent* CameraMovement = CameraPawn != nullptr
+		? CameraPawn->GetCameraMovementComponent() : nullptr;
+	if (CameraMovement == nullptr)
+	{
+		return;
+	}
+
+	// INDEX_NONE 은 "그만 봐도 된다" 는 뜻이다. 바로 옮기는 방식이라
+	// 되돌릴 것이 없다 -- 카메라는 사람이 마지막으로 본 자리에 그대로 둔다.
+	if (UnitId == INDEX_NONE)
+	{
+		return;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (CombatModel == nullptr)
+	{
+		return;
+	}
+	AActor* ViewActor = nullptr;
+	for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
+	{
+		if (UnitModel != nullptr && UnitModel->GetModelId() == UnitId)
+		{
+			ViewActor = UnitModel->GetView<AActor>();
+			break;
+		}
+	}
+	if (ViewActor == nullptr)
+	{
+		return;
+	}
+	/*
+	 * 연출 없이 바로 옮긴다. 부드럽게 따라가면 판이 흐르듯 움직여 어지럽다는
+	 * 검수가 있었다(0806). 강조로 잡으면 카메라 조작까지 잠겨서 안 쓴다.
+	 *
+	 * 높이 보정은 카메라 쪽이 한다 -- 판(카메라 평면)이 어디 떠 있는지는
+	 * 카메라만 안다. 여기서는 유닛 자리를 그대로 넘긴다.
+	 */
+	CameraMovement->JumpToWorldPosition(ViewActor->GetActorLocation());
+}
+
 void ACombatGameMode::PushSkillUIData() const
 {
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
@@ -1494,9 +1570,10 @@ void ACombatGameMode::PushSkillUIData() const
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
-			// 차단 레이어가 비어 있으면 곡사/관통으로 표시
-			SkillUIData.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
-			SkillUIData.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
+			// 차단 레이어를 그대로 넘긴다. 예전에는 "비었나" 만 bool 로 넘겨서
+			// 장애물만 막힘 / 유닛만 막힘 / 둘 다 막힘이 한 값으로 뭉개졌다.
+			SkillUIData.mTargeting.mAimBlockerMask = StaticSkillData->mAimBlockerMask;
+			SkillUIData.mTargeting.mEffectBlockerMask = StaticSkillData->mEffectBlockerMask;
 		}
 	}
 
@@ -1570,6 +1647,16 @@ void ACombatGameMode::PushCombatTargetUIData(const FTileIndex& Tile, AActor* Hit
 	}
 	if (bBrowsing == true && SelectionTarget == nullptr)
 	{
+		/*
+		 * 빈 칸을 눌렀다. 살펴보던 것을 놓는다.
+		 *
+		 * 전에는 그대로 뒀다 -- 그때는 판 탭이 카드를 펴는 손이기도 해서,
+		 * 카드를 부르려다 봐 둔 위협까지 지우면 곤란했다. 이제 카드는 턴
+		 * 칸에서만 펴므로(0806) 판 탭은 "그만 보기" 하나만 뜻한다. 안 걷으면
+		 * 요약판이 화면에 눌어붙어 안 내려간다(0806 검수).
+		 */
+		ClearThreatRangeView();
+		ClearCombatTargetUIData();
 		return;
 	}
 
@@ -1737,8 +1824,8 @@ void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponent
 	OutDetail.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
 	OutDetail.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 	// 차단 레이어가 비어 있으면 곡사/관통으로 표시
-	OutDetail.mTargeting.mIsIndirect = (StaticSkillData->mAimBlockerMask == 0);
-	OutDetail.mTargeting.mIsPenetration = (StaticSkillData->mEffectBlockerMask == 0);
+	OutDetail.mTargeting.mAimBlockerMask = StaticSkillData->mAimBlockerMask;
+	OutDetail.mTargeting.mEffectBlockerMask = StaticSkillData->mEffectBlockerMask;
 }
 
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
@@ -1801,6 +1888,20 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 			ArtifactUI.mName = ArtifactData->mName;
 			ArtifactUI.mIcon = ArtifactData->mIcon.LoadSynchronous();
 			ArtifactUI.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
+			ArtifactUI.mRarityName = StaticEnum<ERarityType>() != nullptr
+				? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(
+					StaticCast<int64>(ArtifactData->mRarityType))
+				: FText::GetEmpty();
+			ArtifactUI.mPrice = ArtifactData->mPrice;
+			ArtifactUI.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
+			// 설명은 붙은 패시브에서 모은다. 유닛 상세가 패시브를 모으는 것과 같다.
+			for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft : ArtifactData->mStaticPassiveData)
+			{
+				if (const UStaticPassiveData* Passive = PassiveSoft.LoadSynchronous())
+				{
+					ArtifactUI.mEffectDescriptions.Add(Passive->mDescription);
+				}
+			}
 		}
 	}
 

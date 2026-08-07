@@ -13,20 +13,26 @@
 
 namespace RDTitleMenu
 {
-	/** @brief 화면비별 타이틀 레이아웃 프로필 이름(WidgetSwitcher 자식/프로필 위젯 접미사와 1:1). */
+	/**
+	 * @brief 타이틀 레이아웃 프로필. **한 벌뿐이다.**
+	 *
+	 * @details
+	 * 전에는 화면비마다 한 벌씩 다섯이었다. 재 보니 넷은 1920x1080 기준에서
+	 * 30~44px 밀린 것이 전부였고(위젯 크기는 하나도 안 달랐다), fold_inner 만
+	 * 단추 묶음을 **0.898배**로 줄인 것이었다 -- 레이아웃이 아니라 배율이다.
+	 *
+	 * 그 차이를 캔버스 통째 복사로 표현하느라 위젯이 14 x 5 = 70개였고,
+	 * 타이틀에 뭘 고치려면 다섯 군데를 고쳐야 했다. 자리 차이는 앵커가,
+	 * 배율 차이는 ScaleBox 가 이미 하는 일이다.
+	 *
+	 * 이름은 남긴다 -- 위젯 접미사(``StartButton__base_16_9``)와 1:1 이고,
+	 * 접미사까지 떼면 판을 다시 저작해야 한다.
+	 */
 	inline const FName TitleLayoutProfileBase16x9(TEXT("base_16_9"));
-	inline const FName TitleLayoutProfilePhoneWide(TEXT("phone_wide"));
-	inline const FName TitleLayoutProfilePhoneUltraWide(TEXT("phone_ultrawide"));
-	inline const FName TitleLayoutProfileFoldInner(TEXT("fold_inner"));
-	inline const FName TitleLayoutProfileTablet16x10(TEXT("tablet_16_10"));
 
 	inline const FName TitleLayoutProfiles[] =
 	{
 		TitleLayoutProfileBase16x9,
-		TitleLayoutProfilePhoneWide,
-		TitleLayoutProfilePhoneUltraWide,
-		TitleLayoutProfileFoldInner,
-		TitleLayoutProfileTablet16x10,
 	};
 
 	/** @brief 프로필별 위젯 이름 규칙: "{Base}__{프로필}" (WBP 저작 규칙과 1:1). */
