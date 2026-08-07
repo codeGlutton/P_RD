@@ -118,6 +118,13 @@ public:
 	const FSkillEntry* GetSkill(int32 SkillIndex) const;
 	bool SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
 
+	/**
+	 * @brief 스킬 슬롯을 비움 (버리기)
+	 * @details 장착이 아니므로 습득 가능 검사(IsAcquirableSkill) 대상이 아님
+	 * @param SkillIndex 비울 스킬 슬롯 인덱스
+	 */
+	void RemoveSkill(int32 SkillIndex);
+
 	/* 스킬 실행 */
 public:
 	/**
