@@ -7,6 +7,7 @@
 #include "UI/RewardSettlementWidgetBuilder.h"
 #include "UI/CombatDefeatWidgetBuilder.h"
 #include "UI/MonsterTabWidgetBuilder.h"
+#include "UI/SettingsPanelWidgetBuilder.h"
 #include "UI/WidgetVariableCleanup.h"
 #include "UI/WidgetTexturePurge.h"
 
@@ -19,6 +20,7 @@ void FP_RDEditorModule::StartupModule()
 	RegisterRewardSettlementWidgetBuilderCommands();
 	RegisterCombatDefeatWidgetBuilderCommands();
 	RegisterMonsterTabWidgetBuilderCommands();
+	RegisterSettingsPanelWidgetBuilderCommands();
 	RegisterWidgetVariableCleanupCommands();
 	RegisterWidgetTexturePurgeCommands();
 
@@ -41,6 +43,7 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterRewardSettlementWidgetBuilderCommands();
 	UnregisterCombatDefeatWidgetBuilderCommands();
 	UnregisterMonsterTabWidgetBuilderCommands();
+	UnregisterSettingsPanelWidgetBuilderCommands();
 	UnregisterWidgetVariableCleanupCommands();
 	UnregisterWidgetTexturePurgeCommands();
 

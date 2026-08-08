@@ -138,70 +138,70 @@ void USettingsPanelWidget::SyncText() const
 
 	if (SettingsTitleText != nullptr)
 	{
-		SettingsTitleText->SetText(LOCTEXT("Settings", "Settings"));
+		SettingsTitleText->SetText(LOCTEXT("Settings", "설정"));
 	}
-	SetNamedText(TEXT("SettingsTitleText"), LOCTEXT("Settings", "Settings"));
-	SetNamedText(TEXT("Set_sec_graphics_text"), LOCTEXT("Graphics", "Graphics"));
-	SetNamedText(TEXT("Set_sec_display_text"), LOCTEXT("Graphics", "Graphics"));
-	SetNamedText(TEXT("Set_sec_audio_text"), LOCTEXT("Volume", "Volume"));
-	SetNamedText(TEXT("Set_sec_volume_text"), LOCTEXT("Volume", "Volume"));
-	SetNamedText(TEXT("Set_sec_gameplay_text"), LOCTEXT("Gameplay", "Gameplay"));
+	SetNamedText(TEXT("SettingsTitleText"), LOCTEXT("Settings", "설정"));
+	SetNamedText(TEXT("Set_sec_graphics_text"), LOCTEXT("Graphics", "화면"));
+	SetNamedText(TEXT("Set_sec_display_text"), LOCTEXT("Graphics", "화면"));
+	SetNamedText(TEXT("Set_sec_audio_text"), LOCTEXT("Volume", "소리"));
+	SetNamedText(TEXT("Set_sec_volume_text"), LOCTEXT("Volume", "소리"));
+	SetNamedText(TEXT("Set_sec_gameplay_text"), LOCTEXT("Gameplay", "게임"));
 	SetNamedText(TEXT("Set_row_fps_label"), LOCTEXT("FPS", "FPS"));
 	SetNamedText(TEXT("FpsThirtyButton"), LOCTEXT("30", "30"));
 	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
-	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
-	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
-	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
-	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
-	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
-	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
-	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
-	SetNamedText(TEXT("Set_row_effects_text"), LOCTEXT("Effects", "Effects"));
-	SetNamedText(TEXT("EffectsRow_Label"), LOCTEXT("Effects", "Effects"));
-	SetNamedText(TEXT("Set_row_language_label"), LOCTEXT("Language", "Language"));
-	SetNamedText(TEXT("LanguageRow_Label"), LOCTEXT("Language", "Language"));
+	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "그래픽 품질"));
+	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "그래픽 품질"));
+	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "낮음"));
+	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "중간"));
+	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "높음"));
+	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "낮음"));
+	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "중간"));
+	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "높음"));
+	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "화면 흔들림"));
+	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "화면 흔들림"));
+	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "전투 이펙트"));
+	SetNamedText(TEXT("Set_row_effects_text"), LOCTEXT("Effects", "전투 이펙트"));
+	SetNamedText(TEXT("EffectsRow_Label"), LOCTEXT("Effects", "전투 이펙트"));
+	SetNamedText(TEXT("Set_row_language_label"), LOCTEXT("Language", "언어"));
+	SetNamedText(TEXT("LanguageRow_Label"), LOCTEXT("Language", "언어"));
 	// 언어 이름은 번역하지 않는다 — 각 언어를 그 언어 자체 이름으로 보여줘야 사용자가 자기 언어를 알아본다.
 	SetNamedText(TEXT("LanguageKoreanButton"), FText::FromString(TEXT("한국어")));
 	SetNamedText(TEXT("LanguageEnglishButton"), FText::FromString(TEXT("English")));
-	SetNamedText(TEXT("Set_row_master_label"), LOCTEXT("Master", "Master"));
-	SetNamedText(TEXT("MasterVolumeRow_Label"), LOCTEXT("Master", "Master"));
+	SetNamedText(TEXT("Set_row_master_label"), LOCTEXT("Master", "전체 음량"));
+	SetNamedText(TEXT("MasterVolumeRow_Label"), LOCTEXT("Master", "전체 음량"));
 	SetNamedText(TEXT("Set_row_bgm_label"), LOCTEXT("BGM", "BGM"));
 	SetNamedText(TEXT("BGMVolumeRow_Label"), LOCTEXT("BGM", "BGM"));
 	SetNamedText(TEXT("Set_row_sfx_label"), LOCTEXT("SFX", "SFX"));
 	SetNamedText(TEXT("SFXVolumeRow_Label"), LOCTEXT("SFX", "SFX"));
 	SetNamedText(TEXT("Set_row_ui_label"), LOCTEXT("UI", "UI"));
 	SetNamedText(TEXT("UIVolumeRow_Label"), LOCTEXT("UI", "UI"));
-	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "Back"));
-	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "Save and Exit"));
-	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "Abandon Run"));
-	SetNamedText(TEXT("ResetButton"), LOCTEXT("Reset", "Reset"));
+	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "뒤로"));
+	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "저장 후 종료"));
+	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "런 포기"));
+	SetNamedText(TEXT("ResetButton"), LOCTEXT("Reset", "기본값"));
 	if (BackButtonText != nullptr)
 	{
-		BackButtonText->SetText(LOCTEXT("Back", "Back"));
+		BackButtonText->SetText(LOCTEXT("Back", "뒤로"));
 	}
 	if (SaveAndExitButtonText != nullptr)
 	{
-		SaveAndExitButtonText->SetText(LOCTEXT("Save and Exit", "Save and Exit"));
+		SaveAndExitButtonText->SetText(LOCTEXT("Save and Exit", "저장 후 종료"));
 	}
 	if (AbandonRunButtonText != nullptr)
 	{
-		AbandonRunButtonText->SetText(LOCTEXT("Abandon Run", "Abandon Run"));
+		AbandonRunButtonText->SetText(LOCTEXT("Abandon Run", "런 포기"));
 	}
 	if (ResetButtonText != nullptr)
 	{
-		ResetButtonText->SetText(LOCTEXT("Reset", "Reset"));
+		ResetButtonText->SetText(LOCTEXT("Reset", "기본값"));
 	}
 	if (AudioSectionHeader != nullptr)
 	{
-		AudioSectionHeader->SetText(LOCTEXT("Audio", "Audio"));
+		AudioSectionHeader->SetText(LOCTEXT("Audio", "소리"));
 	}
 	if (MasterVolumeRow_Label != nullptr)
 	{
-		MasterVolumeRow_Label->SetText(LOCTEXT("Master", "Master"));
+		MasterVolumeRow_Label->SetText(LOCTEXT("Master", "전체 음량"));
 	}
 	if (BGMVolumeRow_Label != nullptr)
 	{
@@ -217,7 +217,7 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (DisplaySectionHeader != nullptr)
 	{
-		DisplaySectionHeader->SetText(LOCTEXT("Display", "Display"));
+		DisplaySectionHeader->SetText(LOCTEXT("Display", "화면"));
 	}
 	if (BrightnessRow_Label != nullptr)
 	{
@@ -225,19 +225,19 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (ScreenShakeRow_Label != nullptr)
 	{
-		ScreenShakeRow_Label->SetText(LOCTEXT("Screen Shake", "Screen Shake"));
+		ScreenShakeRow_Label->SetText(LOCTEXT("Screen Shake", "화면 흔들림"));
 	}
 	if (VibrationRow_Label != nullptr)
 	{
-		VibrationRow_Label->SetText(LOCTEXT("Vibration", "Vibration"));
+		VibrationRow_Label->SetText(LOCTEXT("Vibration", "진동"));
 	}
 	if (QualityRow_Label != nullptr)
 	{
-		QualityRow_Label->SetText(LOCTEXT("Quality", "Quality"));
+		QualityRow_Label->SetText(LOCTEXT("Quality", "그래픽 품질"));
 	}
 	if (GameplaySectionHeader != nullptr)
 	{
-		GameplaySectionHeader->SetText(LOCTEXT("Gameplay", "Gameplay"));
+		GameplaySectionHeader->SetText(LOCTEXT("Gameplay", "게임"));
 	}
 	if (FastModeRow_Label != nullptr)
 	{

@@ -179,7 +179,6 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::Inventory,
 	};
 
 	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */

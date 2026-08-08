@@ -21,6 +21,7 @@
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
@@ -651,6 +652,59 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			}
 		}
 	}
+	// 구형 요약판 빌더의 큰 AP 판은 (54,184), 230x58이었다. 호환 위젯의
+	// Visibility는 BP 그래프/겹 순서가 관리할 수 있으므로, 실제 회귀 원인이었던
+	// 좌표 서명을 검사한다.
+	if (UWidget* EnemyAPPlate = Tree->FindWidget(TEXT("EnemyAPPlate")))
+	{
+		if (const UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(EnemyAPPlate->Slot))
+		{
+			const bool bLegacyBuilderLayout =
+				Slot->GetPosition().Equals(FVector2D(54.f, 184.f))
+				&& Slot->GetSize().Equals(FVector2D(230.f, 58.f));
+			TestFalse(TEXT("몬스터 AP 판이 구형 전체 HUD 빌더 좌표로 돌아가지 않는다"),
+				bLegacyBuilderLayout);
+		}
+	}
+	UPanelWidget* EnemyAPPipRow = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("EnemyAPPipRow")));
+	if (TestNotNull(TEXT("몬스터 요약판 AP 보석 WBP 행"), EnemyAPPipRow))
+	{
+		TestNotNull(TEXT("몬스터 AP 보석 행은 배경 없는 Canvas"),
+			Cast<UCanvasPanel>(EnemyAPPipRow));
+		if (UWidget* LegacyAPBar = Tree->FindWidget(TEXT("EnemyCritPlate")))
+		{
+			TestEqual(TEXT("몬스터 AP 보석 뒤 구식 막대는 숨김"),
+				LegacyAPBar->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+		for (int32 Index = 0; Index < 10; ++Index)
+		{
+			UImage* Pip = Cast<UImage>(Tree->FindWidget(FName(*FString::Printf(
+				TEXT("EnemyAPPip_%d"), Index))));
+			UImage* UsedPip = Cast<UImage>(Tree->FindWidget(FName(*FString::Printf(
+				TEXT("EnemyAPPipUsed_%d"), Index))));
+			if (TestNotNull(*FString::Printf(TEXT("몬스터 AP 보석 %d"), Index), Pip))
+			{
+				TestEqual(*FString::Printf(TEXT("몬스터 AP 보석 %d 부모"), Index),
+					Pip->GetParent(), EnemyAPPipRow);
+				TestNotNull(*FString::Printf(TEXT("몬스터 AP 보석 %d 텍스처"), Index),
+					Pip->GetBrush().GetResourceObject());
+				if (UCanvasPanelSlot* PipSlot = Cast<UCanvasPanelSlot>(Pip->Slot))
+				{
+					TestEqual(*FString::Printf(TEXT("몬스터 AP 보석 %d 크기"), Index),
+						PipSlot->GetSize(), FVector2D(30.f, 30.f));
+				}
+			}
+			if (TestNotNull(*FString::Printf(TEXT("몬스터 빈 AP 보석 %d"), Index),
+				UsedPip))
+			{
+				TestEqual(*FString::Printf(TEXT("몬스터 빈 AP 보석 %d 부모"), Index),
+					UsedPip->GetParent(), EnemyAPPipRow);
+				TestNotNull(*FString::Printf(TEXT("몬스터 빈 AP 보석 %d 텍스처"), Index),
+					UsedPip->GetBrush().GetResourceObject());
+			}
+		}
+	}
 
 	UPanelWidget* MercenaryPanel =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("MercenaryPanel")));
@@ -719,6 +773,116 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
+	UPanelWidget* InventoryTab = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("MercenaryInventoryTab")));
+	UPanelWidget* InventoryScale = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("MercenaryInventoryScale")));
+	if (TestNotNull(TEXT("용병 목록 아래 인벤토리 WBP 탭"), InventoryTab))
+	{
+		UPanelWidget* Roster = Cast<UPanelWidget>(
+			Tree->FindWidget(TEXT("MercRosterSection")));
+		if (TestNotNull(TEXT("인벤토리 탭 크기 래퍼"), InventoryScale))
+		{
+			TestEqual(TEXT("인벤토리 탭 래퍼는 세 용병과 같은 로스터 안"),
+				InventoryScale->GetParent(), Roster);
+			TestEqual(TEXT("인벤토리 카드는 크기 래퍼 안"),
+				InventoryTab->GetParent(), InventoryScale);
+		}
+		UWidget* SecondCard = Tree->FindWidget(TEXT("MercenaryCardScale_1"));
+		UWidget* ThirdCard = Tree->FindWidget(TEXT("MercenaryCardScale_2"));
+		UCanvasPanelSlot* SecondSlot = SecondCard != nullptr
+			? Cast<UCanvasPanelSlot>(SecondCard->Slot) : nullptr;
+		UCanvasPanelSlot* ThirdSlot = ThirdCard != nullptr
+			? Cast<UCanvasPanelSlot>(ThirdCard->Slot) : nullptr;
+		UCanvasPanelSlot* InventorySlot = InventoryScale != nullptr
+			? Cast<UCanvasPanelSlot>(InventoryScale->Slot) : nullptr;
+		if (TestNotNull(TEXT("두 번째 용병 카드 Canvas 슬롯"), SecondSlot)
+			&& TestNotNull(TEXT("세 번째 용병 카드 Canvas 슬롯"), ThirdSlot)
+			&& TestNotNull(TEXT("인벤토리 탭 Canvas 슬롯"), InventorySlot))
+		{
+			const FVector2D ExpectedPosition = ThirdSlot->GetPosition()
+				+ (ThirdSlot->GetPosition() - SecondSlot->GetPosition());
+			const FVector2D ActualPosition = InventorySlot->GetPosition();
+			TestTrue(*FString::Printf(
+				TEXT("인벤토리 탭은 세 용병 바로 다음 행 (expected=%s actual=%s)"),
+				*ExpectedPosition.ToString(), *ActualPosition.ToString()),
+				ActualPosition.Equals(ExpectedPosition, 0.5f));
+			TestEqual(TEXT("인벤토리 탭 크기는 용병 카드와 동일"),
+				InventorySlot->GetSize(), ThirdSlot->GetSize());
+		}
+		for (const TCHAR* Name : {
+			TEXT("MercenaryInventoryTabPlate"),
+			TEXT("MercenaryInventoryTabIcon"),
+			TEXT("MercenaryInventoryTabText"),
+			TEXT("MercenaryInventoryButton") })
+		{
+			UWidget* Part = Tree->FindWidget(FName(Name));
+			if (TestNotNull(*FString::Printf(TEXT("%s WBP 부품"), Name), Part))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 는 인벤토리 탭 안"), Name),
+					Part->GetParent(), InventoryTab);
+			}
+		}
+		if (UImage* Icon = Cast<UImage>(
+			Tree->FindWidget(TEXT("MercenaryInventoryTabIcon"))))
+		{
+			TestNotNull(TEXT("인벤토리 탭 아이콘 텍스처"),
+				Cast<UTexture2D>(Icon->GetBrush().GetResourceObject()));
+		}
+		UImage* InventoryPlate = Cast<UImage>(
+			Tree->FindWidget(TEXT("MercenaryInventoryTabPlate")));
+		UImage* PartyPlate = Cast<UImage>(Tree->FindWidget(TEXT("PartyPlate_2")));
+		if (TestNotNull(TEXT("인벤토리 탭 카드 판"), InventoryPlate)
+			&& TestNotNull(TEXT("용병 카드 판"), PartyPlate))
+		{
+			TestEqual(TEXT("인벤토리 탭은 용병 카드와 같은 에셋"),
+				InventoryPlate->GetBrush().GetResourceObject(),
+				PartyPlate->GetBrush().GetResourceObject());
+		}
+	}
+	UPanelWidget* InventoryPage = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("MercenaryInventoryPage")));
+	if (TestNotNull(TEXT("용병 판 내부 인벤토리 페이지"), InventoryPage))
+	{
+		TestEqual(TEXT("인벤토리 페이지는 용병 판 안"),
+			InventoryPage->GetParent(), MercenaryBoard);
+		TestEqual(TEXT("인벤토리 페이지 WBP 기본값은 닫힘"),
+			InventoryPage->GetVisibility(), ESlateVisibility::Collapsed);
+		UCanvasPanelSlot* InventoryPageSlot =
+			Cast<UCanvasPanelSlot>(InventoryPage->Slot);
+		if (TestNotNull(TEXT("인벤토리 페이지 Canvas 슬롯"), InventoryPageSlot))
+		{
+			TestTrue(TEXT("인벤토리 페이지는 왼쪽 로스터를 침범하지 않는다"),
+				InventoryPageSlot->GetPosition().X >= 400.f);
+			TestTrue(TEXT("인벤토리 페이지는 전체 화면 덮개가 아니다"),
+				InventoryPageSlot->GetSize().X < 1600.f
+				&& InventoryPageSlot->GetSize().Y < 900.f);
+		}
+		TestNotNull(TEXT("인벤토리 페이지 골드"),
+			Tree->FindWidget(TEXT("MercenaryInventoryGoldText")));
+		TestNotNull(TEXT("인벤토리 페이지 골드 실에셋"),
+			Tree->FindWidget(TEXT("MercenaryInventoryGoldIcon")));
+		TestNotNull(TEXT("인벤토리 설명 실에셋 판"),
+			Tree->FindWidget(TEXT("MercenaryInventoryDescriptionPlate")));
+		TestNotNull(TEXT("인벤토리 선택 설명"),
+			Tree->FindWidget(TEXT("MercenaryInventoryDescriptionText")));
+		for (int32 Index = 0; Index < 8; ++Index)
+		{
+			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 프레임 %d"), Index),
+				Tree->FindWidget(FName(*FString::Printf(
+					TEXT("MercenaryInventoryArtifactFrame_%d"), Index))));
+			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 아이콘 %d"), Index),
+				Tree->FindWidget(FName(*FString::Printf(
+					TEXT("MercenaryInventoryArtifactIcon_%d"), Index))));
+			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 선택판 %d"), Index),
+				Tree->FindWidget(FName(*FString::Printf(
+					TEXT("MercenaryInventoryArtifactSelection_%d"), Index))));
+			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 버튼 %d"), Index),
+				Tree->FindWidget(FName(*FString::Printf(
+					TEXT("MercenaryInventoryArtifactButton_%d"), Index))));
+		}
+	}
+
 	UPanelWidget* TurnAPScale =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("TurnAPScale")));
 	UWidget* TurnAPPanel = Tree->FindWidget(TEXT("TurnAPPanel"));
@@ -729,43 +893,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TurnAPPanel->GetParent(), TurnAPScale);
 	}
 
-	UPanelWidget* ArtifactStrip =
-		Cast<UPanelWidget>(Tree->FindWidget(TEXT("ArtifactStrip")));
-	if (TestNotNull(TEXT("AP 위 아티팩트 줄"), ArtifactStrip))
-	{
-		UWidget* StripPlate = Tree->FindWidget(TEXT("ArtifactStripPlate"));
-		UWidget* StripLabel = Tree->FindWidget(TEXT("ArtifactStripLabel"));
-		if (TestNotNull(TEXT("옛 아티팩트 배경판"), StripPlate))
-		{
-			TestEqual(TEXT("아티팩트 배경판은 숨김"),
-				StripPlate->GetVisibility(), ESlateVisibility::Collapsed);
-		}
-		if (TestNotNull(TEXT("옛 아티팩트 제목"), StripLabel))
-		{
-			TestEqual(TEXT("아티팩트 제목은 숨김"),
-				StripLabel->GetVisibility(), ESlateVisibility::Collapsed);
-		}
-		for (int32 Index = 0; Index < 6; ++Index)
-		{
-			const FString Name =
-				FString::Printf(TEXT("ArtifactIcon_%d"), Index);
-			const FString FrameName =
-				FString::Printf(TEXT("ArtifactFrame_%d"), Index);
-			UImage* Icon =
-				Cast<UImage>(Tree->FindWidget(FName(*Name)));
-			UWidget* Frame = Tree->FindWidget(FName(*FrameName));
-			if (TestNotNull(*Name, Icon))
-			{
-				TestEqual(*FString::Printf(TEXT("%s 는 아티팩트 줄 안"), *Name),
-					Icon->GetParent(), ArtifactStrip);
-			}
-			if (TestNotNull(*FrameName, Frame))
-			{
-				TestEqual(*FString::Printf(TEXT("%s 는 숨김"), *FrameName),
-					Frame->GetVisibility(), ESlateVisibility::Collapsed);
-			}
-		}
-	}
+	TestNull(TEXT("전투 화면 독립 아티팩트 WBP 줄 제거"),
+		Tree->FindWidget(TEXT("ArtifactStrip")));
 
 	UClass* MonsterTabClass = LoadClass<UUserWidget>(nullptr,
 		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound_C"));
@@ -848,6 +977,26 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("MercenaryCloseButton")));
 	UButton* PartyButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("PartyButton_0")));
+	UButton* InventoryButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("MercenaryInventoryButton")));
+	UWidget* TurnAPScale = HUD->WidgetTree->FindWidget(TEXT("TurnAPScale"));
+	UWidget* EnemyPanel = HUD->WidgetTree->FindWidget(TEXT("EnemyPanel"));
+	UTextBlock* EnemyAPText = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyAPText")));
+	UWidget* AllyPanel = HUD->WidgetTree->FindWidget(TEXT("AllyPanel"));
+	UTextBlock* AllyName = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("AllyName")));
+	UWidget* InventoryPage = HUD->WidgetTree->FindWidget(
+		TEXT("MercenaryInventoryPage"));
+	UWidget* DetailSection = HUD->WidgetTree->FindWidget(TEXT("MercDetailSection"));
+	UTextBlock* InventoryGold = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("MercenaryInventoryGoldText")));
+	UImage* InventoryArtifact0 = Cast<UImage>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenaryInventoryArtifactIcon_0")));
+	UButton* InventoryArtifactButton1 = Cast<UButton>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenaryInventoryArtifactButton_1")));
+	UTextBlock* InventoryDescription = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenaryInventoryDescriptionText")));
 	UImage* RuntimeShell = Cast<UImage>(
 		HUD->WidgetTree->FindWidget(TEXT("RuntimeMercenaryRosterShell")));
 	if (!TestNotNull(TEXT("용병 메뉴"), MercenaryMenu)
@@ -858,6 +1007,18 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("보유 골드"), Gold)
 		|| !TestNotNull(TEXT("닫기"), Close)
 		|| !TestNotNull(TEXT("첫 용병"), PartyButton)
+		|| !TestNotNull(TEXT("인벤토리 탭 단추"), InventoryButton)
+		|| !TestNotNull(TEXT("공용 AP 막대"), TurnAPScale)
+		|| !TestNotNull(TEXT("몬스터 요약판"), EnemyPanel)
+		|| !TestNotNull(TEXT("몬스터 요약판 AP"), EnemyAPText)
+		|| !TestNotNull(TEXT("용병 요약판"), AllyPanel)
+		|| !TestNotNull(TEXT("용병 요약판 이름"), AllyName)
+		|| !TestNotNull(TEXT("용병 내부 인벤토리 페이지"), InventoryPage)
+		|| !TestNotNull(TEXT("용병 상세 구역"), DetailSection)
+		|| !TestNotNull(TEXT("내부 인벤토리 골드"), InventoryGold)
+		|| !TestNotNull(TEXT("내부 인벤토리 첫 아티팩트"), InventoryArtifact0)
+		|| !TestNotNull(TEXT("내부 인벤토리 둘째 선택 버튼"), InventoryArtifactButton1)
+		|| !TestNotNull(TEXT("내부 인벤토리 선택 설명"), InventoryDescription)
 		|| !TestNotNull(TEXT("런타임 프리미엄 셸"), RuntimeShell))
 	{
 		return false;
@@ -875,10 +1036,10 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 			ShellSlot->GetZOrder(), -100);
 		TestEqual(TEXT("프리미엄 셸 왼쪽 위 앵커"),
 			ShellSlot->GetAnchors().Minimum, FVector2D::ZeroVector);
-		TestEqual(TEXT("프리미엄 셸 오른쪽 아래 앵커"),
-			ShellSlot->GetAnchors().Maximum, FVector2D(1.f, 1.f));
-		TestEqual(TEXT("프리미엄 셸은 패널을 빈틈없이 채운다"),
-			ShellSlot->GetOffsets(), FMargin(0.f));
+		TestEqual(TEXT("프리미엄 셸은 1920 기준 고정 배치다"),
+			ShellSlot->GetAnchors().Maximum, FVector2D::ZeroVector);
+		TestEqual(TEXT("프리미엄 셸은 전투 HUD가 둘레에 보이는 모달 여백을 둔다"),
+			ShellSlot->GetOffsets(), FMargin(90.f, 70.f, 1740.f, 960.f));
 	}
 	else
 	{
@@ -921,6 +1082,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		MonsterMenuIcon->GetBrush().GetResourceObject());
 	TestTrue(TEXT("닫기 단추에 동작이 묶여 있다"),
 		Close->OnClicked.IsBound());
+	TestTrue(TEXT("인벤토리 탭에 열기 동작이 묶여 있다"),
+		InventoryButton->OnClicked.IsBound());
 	TestEqual(TEXT("전투 진입 때 용병 패널은 닫힘"),
 		Panel->GetVisibility(), ESlateVisibility::Collapsed);
 
@@ -935,7 +1098,67 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	MonsterUnit.mName = FText::FromString(TEXT("상세를 볼 몬스터"));
 	MonsterUnit.mHP = 50.f;
 	MonsterUnit.mMaxHP = 50.f;
+	MonsterUnit.mActionPoints = 3;
+	MonsterUnit.mMaxActionPoints = 5;
+	MonsterUnit.mMovementPoint = 3.f;
+	MonsterUnit.mMaxMovementPoint = 5.f;
 	Model->SetUnitUIs({ MonsterUnit });
+	FTurnUI MonsterTurn;
+	MonsterTurn.mCurrentUnitId = MonsterUnit.mUnitId;
+	MonsterTurn.mTurnOrderUnitIds.Add(MonsterUnit.mUnitId);
+	Model->SetTurnUI(MonsterTurn);
+	TestEqual(TEXT("몬스터 차례에는 공용 AP 막대를 접는다"),
+		TurnAPScale->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("몬스터 차례에는 몬스터 요약판을 보인다"),
+		EnemyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("몬스터 차례에는 겹친 용병 요약판을 접는다"),
+		AllyPanel->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("몬스터 AP는 요약판에서 읽는다"),
+		EnemyAPText->GetText().ToString(), FString(TEXT("AP 3/5")));
+	for (int32 Index = 0; Index < 10; ++Index)
+	{
+		UWidget* Pip = HUD->WidgetTree->FindWidget(FName(*FString::Printf(
+			TEXT("EnemyAPPip_%d"), Index)));
+		UWidget* UsedPip = HUD->WidgetTree->FindWidget(FName(*FString::Printf(
+			TEXT("EnemyAPPipUsed_%d"), Index)));
+		if (TestNotNull(*FString::Printf(TEXT("몬스터 AP 보석 %d"), Index), Pip))
+		{
+			TestEqual(*FString::Printf(TEXT("남은 AP에 맞춘 보석 %d"), Index),
+				Pip->GetVisibility(), Index < 3
+					? ESlateVisibility::SelfHitTestInvisible
+					: ESlateVisibility::Collapsed);
+		}
+		if (TestNotNull(*FString::Printf(TEXT("몬스터 빈 AP 보석 %d"), Index),
+			UsedPip))
+		{
+			TestEqual(*FString::Printf(TEXT("남은 10칸을 빈 보석으로 표시 %d"), Index),
+				UsedPip->GetVisibility(), Index >= 3
+					? ESlateVisibility::SelfHitTestInvisible
+					: ESlateVisibility::Collapsed);
+		}
+	}
+	Model->SetMoveAPStepPresentation(MonsterUnit.mUnitId, 1);
+	TestEqual(TEXT("몬스터 이동 한 칸 연출 때 AP 숫자가 즉시 줄어든다"),
+		EnemyAPText->GetText().ToString(), FString(TEXT("AP 2/5")));
+	if (UWidget* MovingSpentPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipUsed_2")))
+	{
+		TestEqual(TEXT("몬스터 이동 연출 때 보석이 빈 칸으로 바뀐다"),
+			MovingSpentPip->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	}
+	Model->ClearMoveAPStepPresentation(MonsterUnit.mUnitId);
+	MonsterUnit.mActionPoints = 2;
+	MonsterUnit.mMovementPoint = 2.f;
+	Model->SetUnitUIs({ MonsterUnit });
+	if (UWidget* SpentPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPip_2")))
+	{
+		TestEqual(TEXT("몬스터가 AP를 쓰면 보석 하나가 사라진다"),
+			SpentPip->GetVisibility(), ESlateVisibility::Collapsed);
+	}
+	if (UWidget* EmptyPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipUsed_2")))
+	{
+		TestEqual(TEXT("몬스터가 스킬 AP를 쓰면 빈 보석이 남는다"),
+			EmptyPip->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	}
 	MonsterMenu->OnClicked.Broadcast();
 	if (HUD->IsMonsterTabShown() == true)
 	{
@@ -973,34 +1196,17 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	FCombatArtifactUI& First = Meta.mArtifacts.AddDefaulted_GetRef();
 	First.mName = FText::FromString(TEXT("첫 아티팩트"));
 	First.mIcon = FirstArtifact;
+	First.mEffectDescriptions.Add(FText::FromString(TEXT("첫 효과 설명")));
 	FCombatArtifactUI& Second = Meta.mArtifacts.AddDefaulted_GetRef();
 	Second.mName = FText::FromString(TEXT("둘째 아티팩트"));
 	Second.mIcon = SecondArtifact;
+	Second.mEffectDescriptions.Add(FText::FromString(TEXT("둘째 효과 설명")));
 	Model->SetPlayerMeta(Meta);
 
 	TestEqual(TEXT("보유 골드는 메타의 현재 값"),
 		Gold->GetText().ToString(), FText::AsNumber(Meta.mGold).ToString());
-	for (int32 Index = 0; Index < 6; ++Index)
-	{
-		UImage* Icon = Cast<UImage>(HUD->WidgetTree->FindWidget(FName(
-			*FString::Printf(TEXT("ArtifactIcon_%d"), Index))));
-		if (!TestNotNull(*FString::Printf(TEXT("아티팩트 칸 %d"), Index), Icon))
-		{
-			continue;
-		}
-
-		const bool bFilled = Index < Meta.mArtifacts.Num();
-		TestEqual(*FString::Printf(TEXT("아티팩트 칸 %d 표시"), Index),
-			Icon->GetVisibility(), bFilled
-				? ESlateVisibility::SelfHitTestInvisible
-				: ESlateVisibility::Collapsed);
-		if (bFilled)
-		{
-			TestEqual(*FString::Printf(TEXT("아티팩트 칸 %d 그림"), Index),
-				Icon->GetBrush().GetResourceObject(),
-				static_cast<UObject*>(Meta.mArtifacts[Index].mIcon.Get()));
-		}
-	}
+	TestNull(TEXT("실행 HUD에도 독립 아티팩트 줄 없음"),
+		HUD->WidgetTree->FindWidget(TEXT("ArtifactStrip")));
 
 	MercenaryMenu->OnClicked.Broadcast();
 	TestEqual(TEXT("용병 메뉴를 누르면 패널이 열린다"),
@@ -1019,7 +1225,34 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	PartyUnit.mUnitId = 777;
 	PartyUnit.mIsPlayer = true;
 	PartyUnit.mName = FText::FromString(TEXT("상세를 볼 용병"));
-	Model->SetUnitUIs({ PartyUnit });
+	PartyUnit.mHP = 90.f;
+	PartyUnit.mMaxHP = 100.f;
+	PartyUnit.mActionPoints = 7;
+	PartyUnit.mMaxActionPoints = 7;
+	PartyUnit.mMovementPoint = 7.f;
+	PartyUnit.mMaxMovementPoint = 7.f;
+	// 플레이어가 적을 짚어 둔 상태여도 같은 자리를 쓰는 적 요약판이 용병판을
+	// 덮으면 안 된다. 요약판의 진영은 현재 턴이 결정한다.
+	Model->SetUnitUIs({ PartyUnit, MonsterUnit });
+	FCombatTargetUI EnemyTarget;
+	EnemyTarget.mIsValid = true;
+	EnemyTarget.mUnitId = MonsterUnit.mUnitId;
+	Model->SetTarget(EnemyTarget);
+	FTurnUI PlayerTurn;
+	PlayerTurn.mCurrentUnitId = PartyUnit.mUnitId;
+	PlayerTurn.mTurnOrderUnitIds.Add(PartyUnit.mUnitId);
+	Model->SetTurnUI(PlayerTurn);
+	TestEqual(TEXT("플레이어 차례에는 공용 AP 막대를 보인다"),
+		TurnAPScale->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("플레이어 차례라도 적을 클릭하면 적 요약판을 보인다"),
+		EnemyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("선택한 적 요약판과 용병 요약판은 겹치지 않는다"),
+		AllyPanel->GetVisibility(), ESlateVisibility::Collapsed);
+	Model->SetTarget(FCombatTargetUI());
+	TestEqual(TEXT("적 선택을 풀면 현재 용병 요약판으로 돌아온다"),
+		AllyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("용병 요약판은 현재 턴 용병을 표시한다"),
+		AllyName->GetText().ToString(), PartyUnit.mName.ToString());
 	MercenaryMenu->OnClicked.Broadcast();
 	PartyButton->OnClicked.Broadcast();
 	/*
@@ -1037,6 +1270,32 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("오른쪽 상세가 고른 용병으로 갈린다"),
 			DetailName->GetText().ToString(), PartyUnit.mName.ToString());
 	}
+	InventoryButton->OnClicked.Broadcast();
+	TestEqual(TEXT("인벤토리 탭을 눌러도 용병 패널은 유지된다"),
+		Panel->GetVisibility(), ESlateVisibility::Visible);
+	TestEqual(TEXT("인벤토리는 용병 판 내부 페이지로 열린다"),
+		InventoryPage->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("인벤토리 페이지에서는 용병 상세를 숨긴다"),
+		DetailSection->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("내부 인벤토리에 현재 골드를 표시한다"),
+		InventoryGold->GetText().ToString(), FText::AsNumber(Meta.mGold).ToString());
+	TestEqual(TEXT("내부 인벤토리에 첫 아티팩트를 표시한다"),
+		InventoryArtifact0->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("내부 인벤토리 아티팩트 그림"),
+		InventoryArtifact0->GetBrush().GetResourceObject(),
+		static_cast<UObject*>(Meta.mArtifacts[0].mIcon.Get()));
+	TestTrue(TEXT("처음 열면 첫 아티팩트 설명"),
+		InventoryDescription->GetText().ToString().Contains(TEXT("첫 효과 설명")));
+	InventoryArtifactButton1->OnClicked.Broadcast();
+	TestTrue(TEXT("둘째 슬롯을 누르면 선택 정보도 갱신"),
+		InventoryDescription->GetText().ToString().Contains(TEXT("둘째 효과 설명")));
+	TestTrue(TEXT("아티팩트 슬롯을 누르면 기존 상세 WBP가 열린다"),
+		HUD->IsDetailOverlayShown());
+	PartyButton->OnClicked.Broadcast();
+	TestEqual(TEXT("용병 줄을 누르면 인벤토리에서 상세로 돌아간다"),
+		InventoryPage->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("용병 상세 구역을 다시 보인다"),
+		DetailSection->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	return true;
 }
 

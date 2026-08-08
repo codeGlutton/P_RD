@@ -136,20 +136,42 @@ namespace RewardSettlementWidgetBuilder
 	}
 
 	void AddPreviewRow(UWidgetBlueprint* Blueprint, UVerticalBox* Box, const FName Name,
-		const FText& Label, float Height, const FLinearColor& Color)
+		const FText& Label, float Height, const FLinearColor& Color,
+		UTexture2D* Icon = nullptr, UTexture2D* IconFrame = nullptr)
 	{
 		USizeBox* Size = Blueprint->WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 			FName(*(Name.ToString() + TEXT("_Size"))));
 		Size->SetHeightOverride(Height);
+		UOverlay* Overlay = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), FName(*(Name.ToString() + TEXT("_Overlay"))));
+		Size->SetContent(Overlay);
 		UBorder* Border = Blueprint->WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), Name);
 		Border->SetBrushColor(Color);
-		Border->SetPadding(FMargin(16.f, 7.f));
-		Size->SetContent(Border);
+		Border->SetPadding(FMargin(0.f));
+		Overlay->AddChildToOverlay(Border);
+		UCanvasPanel* Canvas = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), FName(*(Name.ToString() + TEXT("_Canvas"))));
+		Overlay->AddChildToOverlay(Canvas);
+		const float IconExtent = FMath::Min(Height - 18.f, 92.f);
+		if (IconFrame != nullptr)
+		{
+			AddImage(Blueprint, Canvas, FName(*(Name.ToString() + TEXT("_IconFrame"))),
+				IconFrame, nullptr, FVector2D(10.f, (Height - IconExtent) * .5f),
+				FVector2D(IconExtent, IconExtent), 1);
+		}
+		if (Icon != nullptr)
+		{
+			const float Inset = IconFrame != nullptr ? IconExtent * .15f : 0.f;
+			AddImage(Blueprint, Canvas, FName(*(Name.ToString() + TEXT("_Icon"))),
+				Icon, nullptr, FVector2D(10.f + Inset, (Height - IconExtent) * .5f + Inset),
+				FVector2D(IconExtent - Inset * 2.f, IconExtent - Inset * 2.f), 2);
+		}
 		UTextBlock* Text = Blueprint->WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
 			FName(*(Name.ToString() + TEXT("_Text"))));
 		Text->SetText(Label);
 		StyleText(Text, 22, FLinearColor(1.f, .91f, .73f, 1.f), ETextJustify::Left);
-		Border->SetContent(Text);
+		Place(Canvas, Text, FVector2D(Icon != nullptr ? 116.f : 16.f, 7.f),
+			FVector2D(Icon != nullptr ? 900.f : 1000.f, Height - 14.f), 3);
 		UVerticalBoxSlot* Slot = Box->AddChildToVerticalBox(Size);
 		Slot->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
 		Slot->SetHorizontalAlignment(HAlign_Fill);
@@ -222,6 +244,13 @@ namespace RewardSettlementWidgetBuilder
 		UTexture2D* VictoryPanel = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_VictoryPanelNeutral.T_RS_VictoryPanelNeutral"));
 		UTexture2D* ExpFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpFrame.T_RS_ExpFrame"));
 		UTexture2D* NextPlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_NextButton.T_RS_NextButton"));
+		UTexture2D* GoldIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
+		UTexture2D* ExpIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
+		UTexture2D* ArtifactIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice"));
+		UTexture2D* PortraitFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_PortraitFrame.T_RS_PortraitFrame"));
+		UTexture2D* KnightPortrait = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
+		UTexture2D* MagePortrait = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
+		UTexture2D* RangerPortrait = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"));
 
 		const FBox2f TitleUV(FVector2f(46.f / 2149.f, 127.f / 732.f), FVector2f(2119.f / 2149.f, 506.f / 732.f));
 		const FBox2f StepUV(FVector2f(34.f / 2172.f, 248.f / 724.f), FVector2f(2137.f / 2172.f, 472.f / 724.f));
@@ -260,9 +289,9 @@ namespace RewardSettlementWidgetBuilder
 			18, FLinearColor(1.f, .91f, .73f, 1.f), FVector2D(35.f, 96.f), FVector2D(290.f, 35.f), 2);
 		UVerticalBox* SummaryRows = Blueprint->WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("mSummaryRowsBox"));
 		Place(Summary, SummaryRows, FVector2D(20.f, 150.f), FVector2D(320.f, 400.f), 3);
-		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewGoldRow"), NSLOCTEXT("RewardSettlement", "PreviewGold", "골드 +120"), 88.f, FLinearColor(.11f, .05f, .015f, .78f));
-		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewExpRow"), NSLOCTEXT("RewardSettlement", "PreviewExp", "경험치 +40"), 88.f, FLinearColor(.11f, .05f, .015f, .78f));
-		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewArtifactRow"), NSLOCTEXT("RewardSettlement", "PreviewArtifact", "아티팩트 1개"), 88.f, FLinearColor(.11f, .05f, .015f, .78f));
+		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewGoldRow"), NSLOCTEXT("RewardSettlement", "PreviewGold", "골드 +120"), 88.f, FLinearColor(.11f, .05f, .015f, .78f), GoldIcon);
+		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewExpRow"), NSLOCTEXT("RewardSettlement", "PreviewExp", "경험치 +40"), 88.f, FLinearColor(.11f, .05f, .015f, .78f), ExpIcon);
+		AddPreviewRow(Blueprint, SummaryRows, TEXT("PreviewArtifactRow"), NSLOCTEXT("RewardSettlement", "PreviewArtifact", "피의 성배"), 88.f, FLinearColor(.11f, .05f, .015f, .78f), ArtifactIcon, PortraitFrame);
 
 		UCanvasPanel* Exp = AddFixedDesignRegion(Blueprint, DesignCanvas,
 			TEXT("ExpScale"), TEXT("ExpCanvas"), FVector2D(405.f, 195.f),
@@ -273,9 +302,9 @@ namespace RewardSettlementWidgetBuilder
 			40, FLinearColor(.12f, .065f, .025f, 1.f), FVector2D(260.f, 28.f), FVector2D(640.f, 58.f), 2);
 		UVerticalBox* MercenaryRows = Blueprint->WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("mMercenaryRowsBox"));
 		Place(Exp, MercenaryRows, FVector2D(55.f, 108.f), FVector2D(1050.f, 420.f), 3);
-		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary1"), NSLOCTEXT("RewardSettlement", "PreviewKnight", "기사   Lv.3       120 → 160       160 / 200       +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f));
-		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary2"), NSLOCTEXT("RewardSettlement", "PreviewMage", "마법사 Lv.2        70 → 110       110 / 150       +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f));
-		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary3"), NSLOCTEXT("RewardSettlement", "PreviewRanger", "레인저 Lv.2 → Lv.3  140 → 30       30 / 180        +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f));
+		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary1"), NSLOCTEXT("RewardSettlement", "PreviewKnight", "기사   Lv.3       120 → 160       160 / 200       +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f), KnightPortrait, PortraitFrame);
+		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary2"), NSLOCTEXT("RewardSettlement", "PreviewMage", "마법사 Lv.2        70 → 110       110 / 150       +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f), MagePortrait, PortraitFrame);
+		AddPreviewRow(Blueprint, MercenaryRows, TEXT("PreviewMercenary3"), NSLOCTEXT("RewardSettlement", "PreviewRanger", "레인저 Lv.2 → Lv.3  140 → 30       30 / 180        +40 XP"), 128.f, FLinearColor(.84f, .67f, .39f, .32f), RangerPortrait, PortraitFrame);
 		AddText(Blueprint, Exp, TEXT("SettlementFooterText"),
 			NSLOCTEXT("RewardSettlement", "Footer", "모든 용병이 경험치를 획득했습니다."),
 			22, FLinearColor(1.f, .91f, .73f, 1.f), FVector2D(250.f, 571.f),

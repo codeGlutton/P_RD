@@ -565,19 +565,6 @@ URewardUIModel* ACombatGameMode::GetRewardUIModel() const
 	return mRewardUIModel;
 }
 
-void ACombatGameMode::HandleOpenInventory()
-{
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
-		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	URDUserWidget* InventoryWidget = WorldWidgetSubsystem != nullptr
-		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::Inventory))
-		: nullptr;
-	if (InventoryWidget != nullptr)
-	{
-		InventoryWidget->OpenUI();
-	}
-}
-
 void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 {
 	if (mPendingActionEndAfterCameraReturnHandle.IsValid() == false)
