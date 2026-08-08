@@ -65,6 +65,10 @@ bool UPartyModel::RemovePlayerUnitModel(UPlayerUnitModel* ExistPlayerUnitModel)
 		if (PlayerUnitModel == ExistPlayerUnitModel)
 		{
 			SetPlayerUnitModel(PlayerIndex, nullptr);
+			if (PlayerUnitModel != nullptr)
+			{
+				PlayerUnitModel->SetOwnerParty(nullptr);
+			}
 			return true;
 		}
 	}

@@ -224,6 +224,23 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
 	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
 
+	 /* 죽음으로 인한 파티 해제 처리 */
+
+	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_ActorState_Dead, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(
+		 PlayerUnit, [PlayerUnit](const FGameplayTag Tag, int32 Count) {
+			 if (Count <= 0)
+			 {
+				 return;
+			 }
+
+			 UPartyModel* OwnerParty = PlayerUnit->GetOwnerParty();
+			 if (OwnerParty != nullptr)
+			 {
+				 OwnerParty->RemovePlayerUnitModel(PlayerUnit);
+			 }
+		 }
+	 );
+
 	 // 레벨 추적
 	 PlayerUnit->OnChangePlayerLevel.AddWeakLambda(this, [this](UPlayerUnitModel* Model, int32 PlayerLevel) {
 		 mPlayerLevel = PlayerLevel;

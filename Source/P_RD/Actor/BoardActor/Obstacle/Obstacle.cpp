@@ -57,7 +57,7 @@ void AObstacle::BindModel(UObjectModel* Model)
 	mObstacleModel = Cast<UObstacleModel>(Model);
 
 	// 연출 요청 구독
-	if (mObstacleModel.IsValid())
+	if (mObstacleModel.IsValid() == true)
 	{
 		// 위치 가져오기 구독
 		mObstacleModel->OnGetBoardActorWorldTransform.BindUObject(this, &AObstacle::GetActorTransform);
@@ -71,6 +71,12 @@ void AObstacle::BindModel(UObjectModel* Model)
 void AObstacle::UnbindModel(UObjectModel* Model)
 {
 	IActorView::UnbindModel(Model);
+
+	if (mObstacleModel.IsValid() == true)
+	{
+		mObstacleModel->OnGetBoardActorWorldTransform.Unbind();
+		mObstacleModel->OnPlaceTileTransform.RemoveAll(this);
+	}
 	mObstacleModel.Reset();
 }
 

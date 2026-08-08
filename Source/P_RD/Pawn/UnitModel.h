@@ -17,8 +17,6 @@
 
 #include "UnitModel.generated.h"
 
-class UUnitModel;
-
 class UAttributeSetComponentModel;
 class UUnitSkillComponentModel;
 class UPassiveComponentModel;

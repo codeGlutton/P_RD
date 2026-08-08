@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   PlayerUnitModel.h
  * @brief  플레이어 베이스 유닛 정의 헤더
  * @author 모호재
@@ -36,9 +36,6 @@ public:
 
 	/* UUnitModel 상속 */
 public:
-	void PostInitializeComponentModels() override;
-
-public:
 	int32 GetBoardActorLevel() const override;
 	EUnitJobType GetUnitJobType() const override;
 	int32 GetDifficulty() const override;
@@ -50,6 +47,7 @@ public:
 	void SetPlayerLevel(int32 PlayerLevel);
 
 public:
+	UPartyModel* GetOwnerParty() const;
 	int32 GetPlayerLevel() const;
 
 public:

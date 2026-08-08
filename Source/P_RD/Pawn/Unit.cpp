@@ -81,11 +81,10 @@ void AUnit::BindModel(UObjectModel* Model)
 	mUnitModel = Cast<UUnitModel>(Model);
 
 	// 연출 요청 구독
-	if (mUnitModel.IsValid())
+	if (mUnitModel.IsValid() == true)
 	{
 		// 위치 가져오기 구독
 		mUnitModel->OnGetBoardActorWorldTransform.BindUObject(this, &AUnit::GetActorTransform);
-
 		// 초기 배치 연출 요청 구독
 		mUnitModel->OnPlaceTileTransform.AddUObject(this, &AUnit::OnPlaceTileTransform);
 
@@ -102,8 +101,10 @@ void AUnit::UnbindModel(UObjectModel* Model)
 {
 	IActorView::UnbindModel(Model);
 
-	if (mUnitModel.IsValid())
+	if (mUnitModel.IsValid() == true)
 	{
+		mUnitModel->OnGetBoardActorWorldTransform.Unbind();
+		mUnitModel->OnPlaceTileTransform.RemoveAll(this);
 		mUnitModel->OnStartMovePath.RemoveAll(this);
 		mUnitModel->OnStartMoveStep.RemoveAll(this);
 		mUnitModel->OnRotate.RemoveAll(this);
