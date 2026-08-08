@@ -70,26 +70,18 @@ void USRPGMoveAction::OnBeginAction()
 void USRPGMoveAction::OnEndAction()
 {
     Super::OnEndAction();
-
-    /* 이동을 정상 완료한 경우, 사용한 이동 포인트를 이동 유닛에게 차감 통지한다 */
-
-    if (mActionResult == ESRPGActionResult::Succeeded && mPathTileIndexes.Num() >= 2)
-    {
-        // 소모 이동 포인트 = 밟은 칸 수 (경로 칸 수 - 시작 타일)
-        const int32 SpentPoint = mPathTileIndexes.Num() - 1;
-
-        // 이동력 차감
-        if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
-        {
-            AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -static_cast<float>(SpentPoint));
-        }
-    }
 }
 
 void USRPGMoveAction::StartStep(int32 StepIndex)
 {
     checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
     mCurrentStepIndex = StepIndex;
+
+    // 한 칸마다 이동력 차감
+    if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
+    {
+        AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -1.f);
+    }
 
     UTileMapModel* TileMap = GetTileMap();
 
@@ -143,12 +135,8 @@ void USRPGMoveAction::OnStepPresentationFinished()
     // 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
     CompleteStep();
 
-    // 뷰가 이번 타일에 실제로 도착하고 타일 효과까지 반영된 시점이다. 실제
-    // 이동 비용은 액션 정상 종료 때 한 번에 정산하되, UI는 완료 칸 수를 받아
-    // AP를 한 칸씩 소모한 것처럼 표시한다.
-    mInstigator->OnMoveStepArrivedUI.Broadcast(
-        mCurrentStepIndex,
-        mPathTileIndexes.Num() - 1);
+    // OnEndMoveStep을 구독하고 있던 뷰가 도착 확인 (UI 변경 등)
+    mInstigator->OnEndMoveStep.Broadcast(mInstigator->GetTileTransform(), mInstigator->GetWorldTransform());
 
     // 1) 마지막 타일이면 이동 완료.
     if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)

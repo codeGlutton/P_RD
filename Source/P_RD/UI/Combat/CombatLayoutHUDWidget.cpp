@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatLayoutHUDWidget.h"
+﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -1287,7 +1287,7 @@ void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
 {
 	const int32 Left = mUIModel != nullptr
-		? mUIModel->ResolveDisplayedMovementPoint(Unit)
+		? mUIModel->GetDisplayedMovementPoint(Unit)
 		: FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
 	const int32 Total = FMath::Max(
 		FMath::RoundToInt(Unit.mMaxMovementPoint), Left);
@@ -2128,7 +2128,7 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 {
 	const FUnitUI* TurnUnit = FindTurnUnit();
 	const int32 Left = TurnUnit != nullptr
-		? mUIModel->ResolveDisplayedMovementPoint(*TurnUnit) : 0;
+		? mUIModel->GetDisplayedMovementPoint(*TurnUnit) : 0;
 	const int32 Total = TurnUnit != nullptr
 		? FMath::Max(FMath::RoundToInt(TurnUnit->mMaxMovementPoint), Left) : 0;
 

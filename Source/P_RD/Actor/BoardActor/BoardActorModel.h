@@ -25,6 +25,7 @@ DECLARE_MULTICAST_DELEGATE(FOnRemoveTileTransform);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMoveStep, const FTileTransform& /* TileTransform */, const FTransform& /* WorldTransform */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
@@ -172,6 +173,12 @@ public:
 	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
 	 */
 	FOnStartMoveStep OnStartMoveStep;
+	/**
+	 * @brief 물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림 대리자
+	 * @details 완료 칸 수는 이동 경로 시작 타일을 제외한 절대값이라 중복 알림에도
+	 *          UI가 AP를 두 번 차감하지 않고 같은 표시값으로 맞출 수 있다.
+	 */
+	FOnEndMoveStep OnEndMoveStep;
 
 	/**
 	 * @brief 방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자
