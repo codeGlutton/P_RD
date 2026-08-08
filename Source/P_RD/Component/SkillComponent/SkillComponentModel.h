@@ -71,6 +71,7 @@ public:
 public:
 	FTileIndex mSelfTileIndex = FTileIndex::Invalid;
 	FTileIndex mAimedTileIndex = FTileIndex::Invalid;
+	TArray<FTileIndex> mTargetTileIndexes;
 	TArray<FTileIndex> mEffectTileIndexes;
 
 public:
@@ -87,8 +88,8 @@ public:
 
 	/* 페이즈 임시 데이터 */
 public:
-	TArray<FTileIndex> mTargetTileIndexes;
-	TArray<IBoardCombatTarget*> mOtherCombatTargets;
+	TArray<FTileIndex> mFinalTileIndexes;
+	TArray<IBoardCombatTarget*> mFinalCombatTargets;
 };
 
 /**
@@ -114,6 +115,7 @@ public:
 public:
 	bool IsAcquirableSkill(UStaticSkillData* SkillData) const;
 
+public:
 	const TArray<FSkillEntry>& GetSkills() const;
 	const FSkillEntry* GetSkill(int32 SkillIndex) const;
 	bool SetSkill(int32 SkillIndex, UStaticSkillData* SkillData);
@@ -167,6 +169,7 @@ public:
 public:
 	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const;
 	TArray<FTileIndex> GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
 	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
 
 public:

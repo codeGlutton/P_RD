@@ -1,4 +1,4 @@
-#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
+﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.h"
 
 #include "Actor/ActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -11,13 +11,13 @@ FSkillEffectCommitParams::FSkillEffectCommitParams(
 	TObjectPtr<UBoardCombatTargetSnapshotData> InstigatorSnapshot,
 	TArray<TScriptInterface<IBoardCombatTarget>>& Targets,
 	TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& TargetSnapshots,
-	TArray<FTileIndex>& TargetTileIndexes
+	TArray<FTileIndex>& FinalTileIndexes
 ) :
 	mInstigator(Instigator),
 	mInstigatorSnapshot(InstigatorSnapshot),
 	mTargets(Targets),
 	mTargetSnapshots(TargetSnapshots),
-	mTargetTileIndexes(TargetTileIndexes)
+	mFinalTileIndexes(FinalTileIndexes)
 {
 
 }

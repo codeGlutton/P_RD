@@ -72,7 +72,8 @@ protected:
 	 * @param NiagaraSpawnData 나이아가라 스폰 요청 정보
 	 * @param LocalDirection 방향
 	 */
-	void SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
+	void SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
+	void SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, const FTransform& Transform) const;
 	/**
 	 * @brief 모델의 애니메이션에서 카메라 줌 처리
 	 * @param EndEvent 종료시 호출될 대리자

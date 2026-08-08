@@ -25,6 +25,10 @@ class P_RD_API UVFXFunctionLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	static UNiagaraComponent* SpawnNiagaraEffect(const TSoftObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform);
+	static UNiagaraComponent* SpawnNiagaraEffect(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform);
+
+public:
 	/**
 	 * @brief FNiagaraSpawnData 기반으로 나이아가라 VFX를 스폰합니다.
 	 */
