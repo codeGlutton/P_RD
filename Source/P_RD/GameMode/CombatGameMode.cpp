@@ -436,34 +436,6 @@ void ACombatGameMode::InitializeRoom()
 		// 차감이 없으므로 원래 AP로 돌아간다.
 		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyActionResolved();
-
-		/*
-		 * 카메라가 스킬 강조에서 돌아오는 중이면 "행동 끝" 표시(카드 복귀)를
-		 * 카메라가 제자리에 온 다음으로 미룬다. 몽타쥬가 끝나도 화면은 아직
-		 * 줌인 자리라, 지금 카드를 펴면 연출 위로 카드가 튀어나온다.
-		 *
-		 * 배리어는 잡지 않는다 -- 프레임워크 진행이 카메라를 기다리면 안 된다.
-		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
-		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
-		 */
-		/*UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
-		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
-		{
-			CancelPendingActionEndAfterCameraReturn();
-			mPendingActionEndAfterCameraReturnHandle =
-				WorldCameraModel->OnMainCameraReturned.AddWeakLambda(this,
-				[this, WorldCameraModel]() {
-					WorldCameraModel->OnMainCameraReturned.Remove(
-						mPendingActionEndAfterCameraReturnHandle);
-					mPendingActionEndAfterCameraReturnHandle.Reset();
-					if (mCombatUIModel != nullptr)
-					{
-						mCombatUIModel->OnEndAnyTurnAction.Broadcast(nullptr);
-					}
-				});
-			return;
-		}
-		*/
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 

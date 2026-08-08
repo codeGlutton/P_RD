@@ -227,6 +227,19 @@ void AFrontendGameMode::InitGame(const FString& MapName, const FString& Options,
 	SetMainBGM(MainBGMSoftPtr.LoadSynchronous());
 }
 
+void AFrontendGameMode::InitializeCommonRoom()
+{
+	Super::InitializeCommonRoom();
+
+	/* 저장 */
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+
+	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate());
+	SaveGameSubsystem->SaveUserAsync(FAsyncSaveGameToSlotDelegate());
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
+}
+
 void AFrontendGameMode::BeginRoom()
 {
 	Super::BeginRoom();
@@ -252,11 +265,6 @@ void AFrontendGameMode::BeginRoom()
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
-
-	/* 유저 및 옵션 저장 */
-
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveUserAsync(FAsyncSaveGameToSlotDelegate());
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
 }
 
 bool AFrontendGameMode::RequestCharacterSelectFromTitle()
