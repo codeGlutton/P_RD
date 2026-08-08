@@ -862,10 +862,16 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Tree->FindWidget(TEXT("MercenaryInventoryGoldText")));
 		TestNotNull(TEXT("인벤토리 페이지 골드 실에셋"),
 			Tree->FindWidget(TEXT("MercenaryInventoryGoldIcon")));
-		TestNotNull(TEXT("인벤토리 설명 실에셋 판"),
-			Tree->FindWidget(TEXT("MercenaryInventoryDescriptionPlate")));
-		TestNotNull(TEXT("인벤토리 선택 설명"),
-			Tree->FindWidget(TEXT("MercenaryInventoryDescriptionText")));
+		// 0809 확정: 설명 띠는 접어 둔다 -- 상세는 칸 클릭 팝업으로 본다.
+		for (const TCHAR* Retired : { TEXT("MercenaryInventoryDescriptionPlate"),
+			TEXT("MercenaryInventoryDescriptionText") })
+		{
+			if (UWidget* Widget = Tree->FindWidget(FName(Retired)))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 는 접혀 있다"), Retired),
+					Widget->GetVisibility(), ESlateVisibility::Collapsed);
+			}
+		}
 		for (int32 Index = 0; Index < 8; ++Index)
 		{
 			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 프레임 %d"), Index),
@@ -995,8 +1001,6 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TEXT("MercenaryInventoryArtifactIcon_0")));
 	UButton* InventoryArtifactButton1 = Cast<UButton>(HUD->WidgetTree->FindWidget(
 		TEXT("MercenaryInventoryArtifactButton_1")));
-	UTextBlock* InventoryDescription = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
-		TEXT("MercenaryInventoryDescriptionText")));
 	UImage* RuntimeShell = Cast<UImage>(
 		HUD->WidgetTree->FindWidget(TEXT("RuntimeMercenaryRosterShell")));
 	if (!TestNotNull(TEXT("용병 메뉴"), MercenaryMenu)
@@ -1018,7 +1022,6 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("내부 인벤토리 골드"), InventoryGold)
 		|| !TestNotNull(TEXT("내부 인벤토리 첫 아티팩트"), InventoryArtifact0)
 		|| !TestNotNull(TEXT("내부 인벤토리 둘째 선택 버튼"), InventoryArtifactButton1)
-		|| !TestNotNull(TEXT("내부 인벤토리 선택 설명"), InventoryDescription)
 		|| !TestNotNull(TEXT("런타임 프리미엄 셸"), RuntimeShell))
 	{
 		return false;
@@ -1284,11 +1287,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("내부 인벤토리 아티팩트 그림"),
 		InventoryArtifact0->GetBrush().GetResourceObject(),
 		static_cast<UObject*>(Meta.mArtifacts[0].mIcon.Get()));
-	TestTrue(TEXT("처음 열면 첫 아티팩트 설명"),
-		InventoryDescription->GetText().ToString().Contains(TEXT("첫 효과 설명")));
+	/*
+	 * 0809 확정: 설명 띠는 뺐다. 아티팩트 상세는 칸을 눌러 팝업(기존 상세
+	 * WBP)으로만 본다 -- 면 안에 선택 상태나 설명을 남기지 않는다.
+	 */
 	InventoryArtifactButton1->OnClicked.Broadcast();
-	TestTrue(TEXT("둘째 슬롯을 누르면 선택 정보도 갱신"),
-		InventoryDescription->GetText().ToString().Contains(TEXT("둘째 효과 설명")));
 	TestTrue(TEXT("아티팩트 슬롯을 누르면 기존 상세 WBP가 열린다"),
 		HUD->IsDetailOverlayShown());
 	PartyButton->OnClicked.Broadcast();

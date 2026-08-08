@@ -499,12 +499,11 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		WidgetTree, TEXT("MercenaryInventoryTabPlate"));
 	mMercenaryInventoryGoldText = Find<UTextBlock>(
 		WidgetTree, TEXT("MercenaryInventoryGoldText"));
-	mMercenaryInventoryDescriptionText = Find<UTextBlock>(
-		WidgetTree, TEXT("MercenaryInventoryDescriptionText"));
+	// 설명 띠와 고름 테두리는 뺐다(0809 시안) — 아티팩트를 누르면 바로
+	// 상세 팝업이 뜨므로 면 안에 남길 상태 표시가 없다.
 	mMercenaryInventoryArtifactFrames.Reset();
 	mMercenaryInventoryArtifactIcons.Reset();
 	mMercenaryInventoryArtifactNames.Reset();
-	mMercenaryInventoryArtifactSelections.Reset();
 	mMercenaryInventoryArtifactButtons.Reset();
 	for (int32 Index = 0; ; ++Index)
 	{
@@ -514,19 +513,16 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			FString::Printf(TEXT("MercenaryInventoryArtifactIcon_%d"), Index));
 		UTextBlock* Name = Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("MercenaryInventoryArtifactName_%d"), Index));
-		UWidget* Selection = Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("MercenaryInventoryArtifactSelection_%d"), Index));
 		UButton* Button = Find<UButton>(WidgetTree,
 			FString::Printf(TEXT("MercenaryInventoryArtifactButton_%d"), Index));
 		if (Frame == nullptr && Icon == nullptr && Name == nullptr
-			&& Selection == nullptr && Button == nullptr)
+			&& Button == nullptr)
 		{
 			break;
 		}
 		mMercenaryInventoryArtifactFrames.Add(Frame);
 		mMercenaryInventoryArtifactIcons.Add(Icon);
 		mMercenaryInventoryArtifactNames.Add(Name);
-		mMercenaryInventoryArtifactSelections.Add(Selection);
 		mMercenaryInventoryArtifactButtons.Add(Button);
 	}
 	// WBP 기본값이 잘못 저장되어도 전투 진입 때는 닫힌 상태로 시작한다.
@@ -2262,19 +2258,6 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 
 	const FPlayerMetaUI& Meta = mUIModel->GetPlayerMeta();
 	SetTextIfPresent(mMercenaryInventoryGoldText, FText::AsNumber(Meta.mGold));
-	if (Meta.mArtifacts.IsValidIndex(mMercenaryInventorySelectedArtifact) == false
-		|| Meta.mArtifacts[mMercenaryInventorySelectedArtifact].mIcon == nullptr)
-	{
-		mMercenaryInventorySelectedArtifact = INDEX_NONE;
-		for (int32 Index = 0; Index < Meta.mArtifacts.Num(); ++Index)
-		{
-			if (Meta.mArtifacts[Index].mIcon != nullptr)
-			{
-				mMercenaryInventorySelectedArtifact = Index;
-				break;
-			}
-		}
-	}
 	for (int32 Index = 0; Index < mMercenaryInventoryArtifactFrames.Num(); ++Index)
 	{
 		const FCombatArtifactUI* Artifact = Meta.mArtifacts.IsValidIndex(Index)
@@ -2296,40 +2279,12 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 			// 이름 표시 여부는 WBP 디자이너 값에 맡긴다. C++은 내용만 바꾼다.
 			SetTextIfPresent(Name, bHasArtifact ? Artifact->mName : FText::GetEmpty());
 		}
-		if (mMercenaryInventoryArtifactSelections.IsValidIndex(Index))
-		{
-			SetShown(mMercenaryInventoryArtifactSelections[Index],
-				bHasArtifact && Index == mMercenaryInventorySelectedArtifact);
-		}
 		if (mMercenaryInventoryArtifactButtons.IsValidIndex(Index)
 			&& mMercenaryInventoryArtifactButtons[Index] != nullptr)
 		{
 			mMercenaryInventoryArtifactButtons[Index]->SetIsEnabled(bHasArtifact);
 		}
 	}
-
-	FText Description = NSLOCTEXT("CombatHUD", "MercenaryInventoryEmpty",
-		"보유한 아티팩트가 없습니다.");
-	if (Meta.mArtifacts.IsValidIndex(mMercenaryInventorySelectedArtifact))
-	{
-		const FCombatArtifactUI& Selected =
-			Meta.mArtifacts[mMercenaryInventorySelectedArtifact];
-		TArray<FString> EffectLines;
-		for (const FText& Effect : Selected.mEffectDescriptions)
-		{
-			if (Effect.IsEmpty() == false)
-			{
-				EffectLines.Add(Effect.ToString());
-			}
-		}
-		const FString EffectText = EffectLines.Num() > 0
-			? FString::Join(EffectLines, TEXT(" / "))
-			: NSLOCTEXT("CombatHUD", "MercenaryInventoryNoEffect",
-				"효과 설명이 없습니다.").ToString();
-		Description = FText::FromString(FString::Printf(TEXT("%s — %s"),
-			*Selected.mName.ToString(), *EffectText));
-	}
-	SetTextIfPresent(mMercenaryInventoryDescriptionText, Description);
 }
 
 void UCombatLayoutHUDWidget::SelectMercenaryInventoryArtifact(const int32 SlotIndex)
@@ -2339,8 +2294,6 @@ void UCombatLayoutHUDWidget::SelectMercenaryInventoryArtifact(const int32 SlotIn
 	{
 		return;
 	}
-	mMercenaryInventorySelectedArtifact = SlotIndex;
-	RefreshMercenaryInventory();
 	// 인벤토리 면은 조회 전용이다. 짧게 누르면 바로 기존 아티팩트 상세 WBP를
 	// 열어야 하며, 전투 HUD의 롱프레스 규칙을 여기까지 끌고 오지 않는다.
 	ShowArtifactDetailOverlay(SlotIndex);
@@ -2349,10 +2302,6 @@ void UCombatLayoutHUDWidget::SelectMercenaryInventoryArtifact(const int32 SlotIn
 void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
 {
 	mMercenaryInventoryShown = bShown;
-	if (bShown)
-	{
-		mMercenaryInventorySelectedArtifact = 0;
-	}
 	SetShown(mMercenaryInventoryPage, bShown);
 	SetShown(mMercenaryDetailSection, bShown == false);
 	SetTextIfPresent(Find<UTextBlock>(WidgetTree, TEXT("MercenaryTitleText")),

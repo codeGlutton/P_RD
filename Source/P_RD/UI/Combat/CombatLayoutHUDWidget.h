@@ -563,10 +563,7 @@ private:
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mMercenaryInventoryArtifactFrames;
 	UPROPERTY() TArray<TObjectPtr<UImage>> mMercenaryInventoryArtifactIcons;
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mMercenaryInventoryArtifactNames;
-	UPROPERTY() TArray<TObjectPtr<UWidget>> mMercenaryInventoryArtifactSelections;
 	UPROPERTY() TArray<TObjectPtr<UButton>> mMercenaryInventoryArtifactButtons;
-	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryInventoryDescriptionText;
-	int32 mMercenaryInventorySelectedArtifact = 0;
 	bool mMercenaryInventoryShown = false;
 
 	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 AP 막대. */
