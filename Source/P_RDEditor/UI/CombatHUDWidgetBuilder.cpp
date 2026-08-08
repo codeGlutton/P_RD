@@ -1,6 +1,10 @@
 #include "UI/CombatHUDWidgetBuilder.h"
+#include "UI/UIPartRects.h"
+#include "UI/UIFont.h"
 
+#include "AssetToolsModule.h"
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -22,6 +26,11 @@ namespace CombatHUDWidgetBuilder
 {
 	constexpr TCHAR AssetPath[] =
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04");
+	// 보유 용병 패널은 자기 판을 쓴다. 왜 나눴는지는 BuildMercenaryPanel 참고.
+	constexpr TCHAR MercenaryPackagePath[] = TEXT("/Game/UI/CombatLayouts");
+	constexpr TCHAR MercenaryAssetName[] = TEXT("WBP_MercenaryPanel");
+	constexpr TCHAR MercenaryAssetPath[] =
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryPanel.WBP_MercenaryPanel");
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 
 	template <typename T>
@@ -34,6 +43,59 @@ namespace CombatHUDWidgetBuilder
 		T* NewWidget = Blueprint->WidgetTree->ConstructWidget<T>(T::StaticClass(), Name);
 		Blueprint->OnVariableAdded(Name);
 		return NewWidget;
+	}
+
+	/** @brief 판이 없으면 만들고 뿌리 캔버스를 보장한다. */
+	UWidgetBlueprint* EnsureBlueprint(const TCHAR* Path, const TCHAR* PackagePath,
+		const TCHAR* AssetName)
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, Path);
+		if (Blueprint == nullptr)
+		{
+			UWidgetBlueprintFactory* Factory = NewObject<UWidgetBlueprintFactory>();
+			Factory->ParentClass = UUserWidget::StaticClass();
+			FAssetToolsModule& AssetTools =
+				FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+			Blueprint = Cast<UWidgetBlueprint>(AssetTools.Get().CreateAsset(
+				AssetName, PackagePath, UWidgetBlueprint::StaticClass(), Factory));
+		}
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			return nullptr;
+		}
+		if (Cast<UCanvasPanel>(Blueprint->WidgetTree->RootWidget) == nullptr)
+		{
+			UCanvasPanel* Canvas = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(), TEXT("MercenaryRootCanvas"));
+			Blueprint->WidgetTree->RootWidget = Canvas;
+		}
+		return Blueprint;
+	}
+
+	/** @brief 이번 배치에 없는 옛 이름의 변수 GUID 를 걷는다. */
+	void PruneStaleVariables(UWidgetBlueprint* Blueprint)
+	{
+		TSet<FName> Live;
+		Blueprint->WidgetTree->ForEachWidget([&Live](UWidget* Widget)
+		{
+			if (Widget != nullptr)
+			{
+				Live.Add(Widget->GetFName());
+			}
+		});
+		TArray<FName> Stale;
+		for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
+		{
+			if (Live.Contains(Entry.Key) == false)
+			{
+				Stale.Add(Entry.Key);
+			}
+		}
+		for (const FName& Name : Stale)
+		{
+			Blueprint->WidgetVariableNameToGuidMap.Remove(Name);
+			Blueprint->OnVariableRemoved(Name);
+		}
 	}
 
 	void EnsureParent(UPanelWidget* Parent, UWidget* Child)
@@ -65,8 +127,7 @@ namespace CombatHUDWidgetBuilder
 
 	void SetReadableFont(UTextBlock* Text, const FSlateFontInfo& Source, const int32 Size)
 	{
-		FSlateFontInfo Font = Source;
-		Font.Size = Size;
+		FSlateFontInfo Font = UIFont::Make(Source, Size);
 		Font.OutlineSettings.OutlineSize = 2;
 		Font.OutlineSettings.OutlineColor = FLinearColor(0.f, 0.f, 0.f, 0.9f);
 		Text->SetFont(Font);
@@ -324,6 +385,19 @@ namespace CombatHUDWidgetBuilder
 		SetReadableFont(Hint, BaseFont, 25);
 	}
 
+	/**
+	 * @brief 보유 용병 패널. **자기 판(WBP_MercenaryPanel)에 짓는다.**
+	 *
+	 * @details
+	 * 전에는 전투 HUD 판 안에 있었다. 화면 전체를 덮는 것이 셋(용병 패널 ·
+	 * 커맨드 겹 · 파티 겹) 포개져 있어서, UMG 디자이너에서는 늘 맨 위 것만
+	 * 잡히고 아래 것은 계층 목록으로만 고칠 수 있었다. 용병 판 하나만 51개
+	 * 위젯이라 그 안을 손보려면 사실상 마우스를 못 썼다.
+	 *
+	 * 배선은 안 끊긴다 -- ``CombatLayoutHUDWidget`` 의 조회는 ``FindDeep`` 이라
+	 * 자식 UserWidget 의 트리까지 훑는다. 다만 **비재귀** 조회를 쓰는 곳은
+	 * 같이 고쳐야 한다(CombatLayoutCaptureTests).
+	 */
 	void BuildMercenaryPanel(UWidgetBlueprint* Blueprint, const FSlateFontInfo& BaseFont,
 		UTexture2D* ShellTexture, UTexture2D* NormalCardTexture,
 		UTexture2D* SelectedCardTexture, UTexture2D* BackButtonTexture,
@@ -424,6 +498,22 @@ namespace CombatHUDWidgetBuilder
 		UImage* BackArt = FindOrCreate<UImage>(Blueprint, TEXT("MercenaryBackArt"));
 		PlaceCanvas(Board, BackArt, FVector2D(1600.f, 36.f), FVector2D(270.f, 112.f), 5);
 		BackArt->SetBrushFromTexture(BackButtonTexture, false);
+		if (BackButtonTexture != nullptr)
+		{
+			// 270x112 로 늘려 쓴다. 통짜로 늘리면 금 모서리까지 늘어나므로
+			// 9-slice 로 그린다. 여백은 실측 35px + 잘라낼 때 남긴 8px 이다.
+			// GetSizeX() 는 갓 LoadObject 한 텍스처에서 0 을 준다(플랫폼 데이터가
+			// 아직 없다). 0 으로 나눠 마진이 inf 가 됐다 -- 실제로 그렇게 나왔다.
+			// GetImportedSize() 는 원본 크기라 언제나 옳다.
+			const FIntPoint Imported = BackButtonTexture->GetImportedSize();
+			const FVector2D Texel(Imported.X, Imported.Y);
+			FSlateBrush BackBrush = BackArt->GetBrush();
+			BackBrush.DrawAs = ESlateBrushDrawType::Box;
+			BackBrush.Margin = FMargin(
+				(8.f + 44.f) / Texel.X, (8.f + 35.f) / Texel.Y,
+				(8.f + 44.f) / Texel.X, (8.f + 35.f) / Texel.Y);
+			BackArt->SetBrush(BackBrush);
+		}
 		BackArt->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 		UTextBlock* CloseText = FindOrCreate<UTextBlock>(Blueprint,
@@ -439,7 +529,7 @@ namespace CombatHUDWidgetBuilder
 
 		const FVector2D LocalCardSize(350.f, 190.f);
 		const FVector2D CardPositions[] = {
-			FVector2D(18.f, 205.f), FVector2D(18.f, 470.f), FVector2D(18.f, 735.f)
+			FVector2D(18.f, 196.f), FVector2D(18.f, 464.f), FVector2D(18.f, 732.f)
 		};
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
@@ -533,7 +623,7 @@ namespace CombatHUDWidgetBuilder
 		UImage* Hero = FindOrCreate<UImage>(Blueprint, TEXT("MercenaryHeroPortrait"));
 		// The new hero illustrations are 1:1.  Show them as a large square rather
 		// than turning a still image into a fake, stretched 3D standing model.
-		PlaceCanvas(Board, Hero, FVector2D(482.f, 248.f), FVector2D(548.f, 548.f), 5);
+		PlaceCanvas(Board, Hero, FVector2D(468.f, 236.f), FVector2D(616.f, 616.f), 5);
 		Hero->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		if (UTexture2D* PreviewHero = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight")))
@@ -549,11 +639,15 @@ namespace CombatHUDWidgetBuilder
 			const TCHAR* Preview;
 			int32 FontSize;
 		};
+		/*
+		 * 이름만 글자로 두고 수치 셋은 **칩**으로 옮긴다.
+		 *
+		 * "HP 100 / 100" 을 세 줄로 쌓아 놓으니 오른쪽 위가 글자 벽이 됐고,
+		 * 정작 아래 스킬 칸과 결이 달랐다. 상세창·몬스터탭이 이미 칩을 쓰므로
+		 * 같은 물건으로 맞춘다 -- 같은 값은 같은 모양으로 보여야 한다.
+		 */
 		const FDetailText Details[] = {
-			{ TEXT("MercenaryDetailName"), FVector2D(1110.f, 235.f), FVector2D(700.f, 88.f), TEXT("용병"), 52 },
-			{ TEXT("MercenaryDetailHP"), FVector2D(1110.f, 365.f), FVector2D(620.f, 68.f), TEXT("HP  100 / 100"), 38 },
-			{ TEXT("MercenaryDetailAP"), FVector2D(1110.f, 465.f), FVector2D(620.f, 68.f), TEXT("AP  10 / 10"), 38 },
-			{ TEXT("MercenaryDetailSpeed"), FVector2D(1110.f, 565.f), FVector2D(620.f, 68.f), TEXT("속도  5"), 38 },
+			{ TEXT("MercenaryDetailName"), FVector2D(1110.f, 214.f), FVector2D(700.f, 92.f), TEXT("용병"), 54 },
 		};
 		for (const FDetailText& Detail : Details)
 		{
@@ -564,9 +658,50 @@ namespace CombatHUDWidgetBuilder
 			Text->SetJustification(ETextJustify::Left);
 		}
 
+		// 수치 칩 셋. 이름 바로 밑에 가로로 놓는다.
+		UTexture2D* ChipRing = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring"));
+		const TCHAR* const ChipValueNames[3] = {
+			TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
+			TEXT("MercenaryDetailSpeed") };
+		const TCHAR* const ChipLabels[3] = { TEXT("HP"), TEXT("AP"), TEXT("속도") };
+		const float ChipRoom = 700.f / 3.f;
+		const float ChipSide = 176.f;
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			const FVector2D ChipPos(
+				1110.f + ChipRoom * Index + (ChipRoom - ChipSide) * 0.5f, 318.f);
+			const FVector2D ChipSize(ChipSide, ChipSide);
+			UImage* Ring = FindOrCreate<UImage>(Blueprint, FName(*FString::Printf(
+				TEXT("MercenaryChip%dFrame"), Index)));
+			PlaceCanvas(Board, Ring, ChipPos, ChipSize, 8);
+			if (ChipRing != nullptr)
+			{
+				Ring->SetBrushFromTexture(ChipRing, false);
+			}
+			Ring->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			// 글자는 링 안쪽 구멍에만 넣는다.
+			const FBox2D Hole = UIPartRects::Inner(TEXT("T_KitA_StatChip_Ring"),
+				ChipPos, ChipSize, false);
+			const FVector2D HoleSpan = Hole.GetSize();
+			UTextBlock* Label = FindOrCreate<UTextBlock>(Blueprint, FName(*FString::Printf(
+				TEXT("MercenaryChip%dLabel"), Index)));
+			PlaceCanvas(Board, Label, Hole.Min,
+				FVector2D(HoleSpan.X, HoleSpan.Y * 0.38f), 9);
+			Label->SetText(FText::FromString(ChipLabels[Index]));
+			SetReadableFont(Label, BaseFont, FMath::RoundToInt(HoleSpan.Y * 0.26f));
+
+			UTextBlock* Value = FindOrCreate<UTextBlock>(Blueprint, FName(ChipValueNames[Index]));
+			PlaceCanvas(Board, Value, Hole.Min + FVector2D(0.f, HoleSpan.Y * 0.38f),
+				FVector2D(HoleSpan.X, HoleSpan.Y * 0.62f), 9);
+			Value->SetText(FText::FromString(TEXT("-")));
+			SetReadableFont(Value, BaseFont, FMath::RoundToInt(HoleSpan.Y * 0.40f));
+		}
+
 		UTextBlock* SkillHeading = FindOrCreate<UTextBlock>(Blueprint,
 			TEXT("MercenarySkillHeading"));
-		PlaceCanvas(Board, SkillHeading, FVector2D(1110.f, 642.f),
+		PlaceCanvas(Board, SkillHeading, FVector2D(1110.f, 546.f),
 			FVector2D(620.f, 52.f), 8);
 		SkillHeading->SetText(NSLOCTEXT("CombatHUD", "MercenarySkills", "스킬"));
 		SetReadableFont(SkillHeading, BaseFont, 32);
@@ -574,33 +709,38 @@ namespace CombatHUDWidgetBuilder
 
 		for (int32 Index = 0; Index < 6; ++Index)
 		{
-			const float X = 1110.f + 205.f * (Index % 3);
-			const float Y = 690.f + 160.f * (Index / 3);
+			const float X = 1110.f + 232.f * (Index % 3);
+			const float Y = 606.f + 210.f * (Index / 3);
 			UImage* Frame = FindOrCreate<UImage>(Blueprint, FName(*FString::Printf(
 				TEXT("MercenarySkillFrame_%d"), Index)));
-			PlaceCanvas(Board, Frame, FVector2D(X, Y), FVector2D(156.f, 156.f), 8);
+			PlaceCanvas(Board, Frame, FVector2D(X, Y), FVector2D(186.f, 186.f), 8);
 			Frame->SetBrushFromTexture(SkillFrameTexture, false);
 			Frame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
+			// 그림 자리는 칸 그림에서 **잰 구멍**이다. (39,32)+108 은 눈대중이라
+			// 아이콘이 칸 안에서 위로 치우쳐 있었다.
+			const FBox2D CellInner = UIPartRects::Inner(TEXT("T_KitA_Cell_Normal"),
+				FVector2D(X, Y), FVector2D(186.f, 186.f), false);
 			UImage* Icon = FindOrCreate<UImage>(Blueprint, FName(*FString::Printf(
 				TEXT("MercenarySkillIcon_%d"), Index)));
-			PlaceCanvas(Board, Icon, FVector2D(X + 33.f, Y + 27.f),
-				FVector2D(90.f, 90.f), 9);
+			PlaceCanvas(Board, Icon, CellInner.Min, CellInner.GetSize(), 9);
 			Icon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint, FName(*FString::Printf(
 				TEXT("MercenarySkillName_%d"), Index)));
-			PlaceCanvas(Board, Name, FVector2D(X + 8.f, Y + 108.f),
-				FVector2D(140.f, 38.f), 10);
+			// 그림이 있으면 칸은 그림으로 말한다(런타임이 정한다). 이름은
+			// 그림이 없을 때만 뜨므로 칸 밖이 아니라 칸 **안**에 겹쳐 둔다.
+			PlaceCanvas(Board, Name, CellInner.Min, CellInner.GetSize(), 10);
 			Name->SetText(Index == 0
 				? NSLOCTEXT("CombatHUD", "MercenaryMovePreview", "이동")
 				: FText::FromString(FString::Printf(TEXT("스킬 %d"), Index)));
-			SetReadableFont(Name, BaseFont, 22);
+			SetReadableFont(Name, BaseFont, 25);
 
 			UTextBlock* Cost = FindOrCreate<UTextBlock>(Blueprint, FName(*FString::Printf(
 				TEXT("MercenarySkillCost_%d"), Index)));
-			PlaceCanvas(Board, Cost, FVector2D(X + 112.f, Y + 8.f),
-				FVector2D(38.f, 38.f), 11);
+			PlaceCanvas(Board, Cost,
+				FVector2D(CellInner.Max.X - 44.f, CellInner.Min.Y - 6.f),
+				FVector2D(44.f, 44.f), 11);
 			Cost->SetText(FText::AsNumber(Index == 0 ? 1 : 0));
 			SetReadableFont(Cost, BaseFont, 20);
 		}
@@ -640,15 +780,17 @@ namespace CombatHUDWidgetBuilder
 		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
 		UTexture2D* MercenaryShellTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MercenaryRoster_Shell.T_MercenaryRoster_Shell"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* MercenaryCardNormalTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* MercenaryCardSelectedTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
+		// 뒤로 단추와 스킬 칸을 공용 KitA 부품으로 모은다. 같은 기능인데 화면마다
+		// 다른 그림을 쓰고 있었다(0804 검수).
 		UTexture2D* BackButtonTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireBackButton.T_MB_HireBackButton"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		UTexture2D* MercenarySkillFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireSkillButtonFrame.T_MB_HireSkillButtonFrame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		UTexture2D* EnemyPanelTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/T_MB_GenericDetailPanel.T_MB_GenericDetailPanel"));
 		UTexture2D* StatusSlotTexture = LoadObject<UTexture2D>(nullptr,
@@ -676,9 +818,51 @@ namespace CombatHUDWidgetBuilder
 			TurnPlate->SetVisibility(ESlateVisibility::Collapsed);
 		}
 
-		BuildMercenaryPanel(Blueprint, BaseFont, MercenaryShellTexture,
-			MercenaryCardNormalTexture, MercenaryCardSelectedTexture, BackButtonTexture,
-			MercenarySkillFrameTexture);
+		/*
+		 * 용병 패널은 자기 판에 짓고, HUD 에는 그 판을 **하나 얹기만** 한다.
+		 * HUD 판에 그대로 두면 화면 전체짜리가 셋 포개져 UMG 에서 못 고친다.
+		 */
+		if (UWidgetBlueprint* MercenaryBlueprint = EnsureBlueprint(
+			MercenaryAssetPath, MercenaryPackagePath, MercenaryAssetName))
+		{
+			MercenaryBlueprint->Modify();
+			MercenaryBlueprint->WidgetTree->Modify();
+			BuildMercenaryPanel(MercenaryBlueprint, BaseFont, MercenaryShellTexture,
+				MercenaryCardNormalTexture, MercenaryCardSelectedTexture,
+				BackButtonTexture, MercenarySkillFrameTexture);
+			PruneStaleVariables(MercenaryBlueprint);
+			FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(MercenaryBlueprint);
+			FKismetEditorUtilities::CompileBlueprint(MercenaryBlueprint);
+			UPackage::SavePackage(MercenaryBlueprint->GetPackage(), MercenaryBlueprint,
+				*FPackageName::LongPackageNameToFilename(
+					MercenaryBlueprint->GetOutermost()->GetName(),
+					FPackageName::GetAssetPackageExtension()),
+				FSavePackageArgs());
+
+			// HUD 에는 그 판을 얹는다. 입력은 안 먹고, 안의 MercenaryPanel 캔버스가
+			// 접혀 있다가 런타임에 펴진다.
+			if (UClass* PanelClass = MercenaryBlueprint->GeneratedClass)
+			{
+				UUserWidget* Host = Cast<UUserWidget>(
+					Blueprint->WidgetTree->FindWidget(TEXT("MercenaryPanelHost")));
+				if (Host == nullptr)
+				{
+					Host = Blueprint->WidgetTree->ConstructWidget<UUserWidget>(
+						PanelClass, TEXT("MercenaryPanelHost"));
+					Blueprint->OnVariableAdded(TEXT("MercenaryPanelHost"));
+				}
+				UCanvasPanel* HudRoot =
+					CastChecked<UCanvasPanel>(Blueprint->WidgetTree->RootWidget);
+				PlaceCanvas(HudRoot, Host, FVector2D::ZeroVector,
+					FVector2D(1920.f, 1080.f), 10000);
+				if (UCanvasPanelSlot* HostSlot = Cast<UCanvasPanelSlot>(Host->Slot))
+				{
+					HostSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+					HostSlot->SetOffsets(FMargin(0.f));
+				}
+				Host->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+		}
 		BuildEnemySummary(Blueprint, BaseFont, EnemyPanelTexture,
 			ArtifactSlotTexture, StatusSlotTexture, SpeedTexture);
 		BuildAllySummary(Blueprint, BaseFont, EnemyPanelTexture,

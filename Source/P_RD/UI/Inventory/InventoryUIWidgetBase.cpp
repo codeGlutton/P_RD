@@ -106,7 +106,7 @@ UInventoryUIWidgetBase::UInventoryUIWidgetBase(const FObjectInitializer& ObjectI
 	}
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> CardFrameFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/T_CombatHUD_SkillSlotFrame.T_CombatHUD_SkillSlotFrame"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 	if (CardFrameFinder.Succeeded())
 	{
 		mArtifactCardFrame = CardFrameFinder.Object;

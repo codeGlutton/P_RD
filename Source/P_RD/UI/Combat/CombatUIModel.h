@@ -28,7 +28,10 @@ enum class ECombatInputType : uint8
 	// payload = SkillIndex. **지금 상세창에 뜬 유닛의** 스킬 상세를 청한다.
 	// LongPressSkill과 다른 것은 기준 유닛이다 -- 그쪽은 카드 레일(조종 중인 아군),
 	// 이쪽은 길게 눌러 들여다보는 중인 유닛이라 적 스킬일 수도 있다.
-	InspectUnitSkill
+	InspectUnitSkill,
+	// payload = UnitId. 그 유닛이 화면 정중앙에 오도록 카메라를 옮긴다.
+	// 스킬 단추처럼 "누가 쓰는 스킬인지" 를 보여 줘야 하는 자리에서 쓴다.
+	FocusUnit
 };
 
 class UTexture2D;
@@ -159,6 +162,24 @@ public:
 	 * @param SkillIndex FUnitDetailSkillUI.mSkillIndex 를 그대로 되돌려 보낸다
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnitSkill(int32 SkillIndex);
+
+	/**
+	 * @brief 그 유닛을 화면 정중앙으로 가져오라고 청한다.
+	 *
+	 * @details 스킬 단추를 누르면 "누가 쓰는 스킬인지" 를 판에서 바로 보여
+	 * 줘야 한다. 카메라를 옮기는 일은 게임플레이 몫이라 화면은 청하기만 한다.
+	 * @param UnitId 가운데로 데려올 유닛
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnit(int32 UnitId);
+	/**
+	 * @brief 초점 유닛이 놓일 화면 자리(0~1 비율). RequestFocusUnit 전에 세운다.
+	 *
+	 * @details "가운데" 는 화면 한가운데가 아니라 **스킬 카드들이 둘러싼
+	 * 자리**다(0807 합의). 카드가 화면 어디에 있는지는 UI 만 알므로 UI 가
+	 * 비율로 알려 주고, 카메라를 옮기는 게임플레이는 이 값을 읽기만 한다.
+	 */
+	void SetFocusScreenAnchor(const FVector2D& AnchorFraction) { mFocusScreenAnchor = AnchorFraction; }
+	const FVector2D& GetFocusScreenAnchor() const { return mFocusScreenAnchor; }
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
@@ -270,6 +291,9 @@ private:
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
+
+	/** @brief 초점 유닛이 놓일 화면 자리(0~1 비율). 기본은 한가운데. */
+	UPROPERTY(Transient) FVector2D mFocusScreenAnchor = FVector2D(0.5f, 0.5f);
 
 	/** @brief 찜해 둔 대상 유닛. 없으면 INDEX_NONE. */
 	UPROPERTY(Transient) FCombatTargetUI mTarget;

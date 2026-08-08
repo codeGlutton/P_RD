@@ -226,8 +226,27 @@ namespace CombatLayoutCapture
 		// 되돌린다. 변형 상태는 Construct가 끝난 뒤 세워야 캡처에 남는다.
 		if (bShowMercenaryPanel && Layout->WidgetTree != nullptr)
 		{
-			if (UWidget* MercenaryPanel =
-				Layout->WidgetTree->FindWidget(TEXT("MercenaryPanel")))
+			// 용병 패널은 자기 판(WBP_MercenaryPanel)으로 나갔다. HUD 트리에서
+			// 바로 찾으면 안 나오므로 자식 UserWidget 안까지 훑는다.
+			UWidget* MercenaryPanel = Layout->WidgetTree->FindWidget(TEXT("MercenaryPanel"));
+			if (MercenaryPanel == nullptr)
+			{
+				Layout->WidgetTree->ForEachWidget([&MercenaryPanel](UWidget* Candidate)
+				{
+					if (MercenaryPanel != nullptr)
+					{
+						return;
+					}
+					if (const UUserWidget* Nested = Cast<UUserWidget>(Candidate))
+					{
+						if (Nested->WidgetTree != nullptr)
+						{
+							MercenaryPanel = Nested->WidgetTree->FindWidget(TEXT("MercenaryPanel"));
+						}
+					}
+				});
+			}
+			if (MercenaryPanel != nullptr)
 			{
 				MercenaryPanel->SetVisibility(ESlateVisibility::Visible);
 			}

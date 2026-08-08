@@ -19,16 +19,22 @@
 namespace
 {
 	/** @brief 상점 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
-	// [갭] 용병/회복 전용 아이콘은 아직 없어 골드 아이콘으로 대체 표시한다(이미지 확보 후 교체 예정).
+	// 종류 구분은 거래 파이프라인(#490)의 것을 따르고, 경로는 실재하는
+	// SVN 에셋으로 건다 -- 옛 InSideAsset 경로 3종은 프로젝트에서 지워져
+	// 아이콘이 빈칸으로 나왔다(0807 감사).
 	const TCHAR* ShopKindIconPath(EShopItemKind Kind)
 	{
 		switch (Kind)
 		{
-		case EShopItemKind::Skill:     return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Magic.T_Reward_Magic");
-		case EShopItemKind::Artifact:  return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
-		case EShopItemKind::Mercenary:
+		case EShopItemKind::Skill:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind");
+		case EShopItemKind::Artifact:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
 		case EShopItemKind::Heal:
-		default:                       return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Gold.T_Reward_Gold");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_skill_meditation_heal_icon.T_skill_meditation_heal_icon");
+		case EShopItemKind::Mercenary:   // 용병 전용 그림이 아직 없다 -- 골드로
+		default:
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_gold_icon.T_gold_icon");
 		}
 	}
 

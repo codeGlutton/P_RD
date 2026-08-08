@@ -26,6 +26,12 @@ void UCombatUIModel::RequestInspectUnitSkill(int32 SkillIndex)
 	OnCombatCommand.Broadcast(ECombatInputType::InspectUnitSkill, SkillIndex);
 }
 
+/** @brief 그 유닛을 화면 가운데로 데려오라고 청한다. */
+void UCombatUIModel::RequestFocusUnit(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::FocusUnit, UnitId);
+}
+
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {

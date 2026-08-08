@@ -787,6 +787,108 @@ void UCameraMovementComponent::MoveToWorldPosition_Instant(FVector WorldPosition
 	MoveToViewportPosition_Instant(ViewPort);
 }
 
+/**
+ * @brief 화면(UI)이 청하는 "이 자리를 화면의 저 자리에 보여 줘". 연출 없이 바로.
+ *
+ * @details 내부 이동 함수는 조작 흐름에 묶여 private 이라, 화면이 부를 수 있는
+ * 문 하나만 밖에 낸다. 강조(Emphasis)와 달리 카메라를 잠그지 않는다 --
+ * 옮겨 준 뒤 손으로 계속 판을 볼 수 있어야 한다.
+ *
+ * 좌표 높이를 여기서 만지지 않는다. "목표 화면점과 앵커 화면점을 둘 다
+ * 카메라 판으로 되쏘아 그 간격만큼 옮기는" 방식이라, 직교 카메라에서는
+ * 어떤 높이의 점이든 정확히 앵커 자리에 온다. 어디를 보여 줄지(발밑이
+ * 아니라 몸통 가운데)는 부르는 쪽 몫이다.
+ */
+void UCameraMovementComponent::JumpToWorldPositionAtScreen(FVector WorldPosition,
+	FVector2D ScreenAnchor)
+{
+	if (mCameraComponent.IsValid() == false)
+	{
+		return;
+	}
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController == nullptr)
+	{
+		return;
+	}
+
+	FVector2D TargetScreen = FVector2D::ZeroVector;
+	if (PlayerController->ProjectWorldLocationToScreen(WorldPosition, OUT TargetScreen) == false)
+	{
+		return;
+	}
+
+	FHitResult TargetHit;
+	FHitResult AnchorHit;
+	if (GetScreenRayHitPoint(TargetScreen, OUT TargetHit) == false
+		|| GetScreenRayHitPoint(ScreenAnchor, OUT AnchorHit) == false)
+	{
+		return;
+	}
+
+	// 목표가 지금 화면 어디에 있든, 앵커 자리와의 판 위 간격만큼만 옮기면
+	// 목표가 정확히 앵커에 온다. Z 축은 판 위 이동이 아니므로 버린다.
+	FVector Offset = TargetHit.ImpactPoint - AnchorHit.ImpactPoint;
+	Offset.Z = 0.f;
+
+	/*
+	 * "카메라가 보는 자리"(mTargetLookAtCameraLocation)를 같이 못 옮기면
+	 * 점프하지 않는다 -- 몸만 옮기면 다음 틱 스무딩이 옛 자리로 도로
+	 * 끌어가 화면이 슬금슬금 되감긴다(0807 감사).
+	 */
+	FHitResult CenterHit;
+	if (GetCameraRayHitPoint(OUT CenterHit) == false)
+	{
+		return;
+	}
+	mTargetLookAtCameraLocation = FVector2D(CenterHit.ImpactPoint + Offset);
+	GetOwner()->AddActorWorldOffset(Offset);
+
+	// 검증 로그: 옮긴 직후 목표가 실제 화면 어디에 왔는지. 앵커와 어긋나면
+	// 이 수치가 원인 추적의 출발점이다(0806 "딱 중앙이 아님").
+	FVector2D AfterScreen = FVector2D::ZeroVector;
+	if (PlayerController->ProjectWorldLocationToScreen(WorldPosition, OUT AfterScreen))
+	{
+		UE_LOG(LogTemp, Log,
+			TEXT("[카메라] 점프 검증: 목표 화면 (%.0f, %.0f) / 앵커 (%.0f, %.0f)"),
+			AfterScreen.X, AfterScreen.Y, ScreenAnchor.X, ScreenAnchor.Y);
+	}
+}
+
+/**
+ * @brief 화면 픽셀 좌표에서 카메라 판(CameraMove 채널)으로 Ray 를 쏜다.
+ */
+bool UCameraMovementComponent::GetScreenRayHitPoint(FVector2D ScreenPosition,
+	OUT FHitResult& HitResult)
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController == nullptr)
+	{
+		return false;
+	}
+
+	FVector WorldLocation = FVector::ZeroVector;
+	FVector WorldDirection = FVector::ZeroVector;
+	if (PlayerController->DeprojectScreenPositionToWorld(
+		ScreenPosition.X, ScreenPosition.Y,
+		OUT WorldLocation, OUT WorldDirection) == false)
+	{
+		return false;
+	}
+
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_GameTraceChannel3);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(GetOwner());
+
+	return GetWorld()->LineTraceSingleByObjectType(
+		OUT HitResult,
+		WorldLocation,
+		WorldLocation + WorldDirection * 100000.0f,
+		ObjectParams,
+		QueryParams);
+}
+
 void UCameraMovementComponent::MoveToViewportPosition_Smooth(FVector2D ViewPortPos)
 {
 	checkf(mCameraComponent.IsValid(), TEXT("카메라가 유효하지 않습니다"));

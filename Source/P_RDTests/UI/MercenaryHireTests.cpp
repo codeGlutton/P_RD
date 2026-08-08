@@ -127,9 +127,12 @@ bool FMercenaryHireChooseTest::RunTest(const FString& Parameters)
 		EMercenaryCardState::Chosen);
 	TestEqual(TEXT("한 명 정해짐"), Board->GetChosenIndices().Num(), 1);
 
-	// 정해진 것을 또 누르면 풀린다.
+	// 정해진 것을 또 눌러도 풀리지 않는다(0807) -- 상세만 갈린다.
+	// 빼기는 파티 칸이 맡는다(PartySlotRemove 시험).
 	Board->ClickCard(2);
-	TestEqual(TEXT("또 누르면 풀린다"), Board->GetChosenIndices().Num(), 0);
+	TestEqual(TEXT("또 눌러도 그대로"), Board->GetChosenIndices().Num(), 1);
+	TestEqual(TEXT("여전히 뽑혀 있다"), Board->StateOf(2),
+		EMercenaryCardState::Chosen);
 	return true;
 }
 
@@ -149,23 +152,18 @@ bool FMercenaryHirePartyLimitTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("누른 차례가 파티 칸 순서"),
 		Board->GetChosenIndices()[1], 3);
 
-	// 자리가 찼는데 새 후보를 누르면 마지막 자리를 내준다.
+	// 자리가 찼으면 새 후보를 눌러도 편성이 안 바뀐다(0807) -- 상세만
+	// 보인다. 바꾸려면 파티 칸에서 먼저 빼야 한다(PartySlotRemove 시험).
 	TestEqual(TEXT("고르기 전 마지막 자리는 5"),
 		Board->GetChosenIndices()[2], 5);
 	Choose(*Board, 1);
 	TestEqual(TEXT("여전히 셋"), Board->GetChosenIndices().Num(), 3);
-	TestEqual(TEXT("마지막 자리가 새 후보로"),
-		Board->GetChosenIndices()[2], 1);
-	TestFalse(TEXT("내준 후보는 빠져 있다"),
-		Board->GetChosenIndices().Contains(5));
-	TestEqual(TEXT("먼저 고른 둘은 그대로"),
+	TestEqual(TEXT("마지막 자리 그대로 5"),
+		Board->GetChosenIndices()[2], 5);
+	TestFalse(TEXT("새 후보는 안 들어온다"),
+		Board->GetChosenIndices().Contains(1));
+	TestEqual(TEXT("먼저 고른 둘도 그대로"),
 		Board->GetChosenIndices()[0], 0);
-
-	// 내준 자리는 다시 고를 수 있다. 이번엔 방금 들어온 1 이 밀려난다.
-	Choose(*Board, 5);
-	TestEqual(TEXT("바뀐 뒤에도 셋"), Board->GetChosenIndices().Num(), 3);
-	TestTrue(TEXT("다시 고른 후보가 들어와 있다"),
-		Board->GetChosenIndices().Contains(5));
 	return true;
 }
 
@@ -669,8 +667,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	if (UTextBlock* BackText =
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryCloseText"))))
 	{
-		TestEqual(TEXT("용병 패널 뒤로 문구"),
-			BackText->GetText().ToString(), FString(TEXT("뒤로")));
+		// 확정 시안: 보유 용병 조회 탭이라 "뒤로" 대신 "닫기"다.
+		TestEqual(TEXT("용병 패널 닫기 문구"),
+			BackText->GetText().ToString(), FString(TEXT("닫기")));
 	}
 	else
 	{
@@ -704,8 +703,17 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (TestNotNull(*ScaleName, Scale)
 			&& TestNotNull(*CardName, Card))
 		{
-			TestEqual(*FString::Printf(TEXT("%s 는 용병 판 안"), *ScaleName),
-				Scale->GetParent(), MercenaryBoard);
+			// 카드들은 편집 편의를 위해 로스터 구역(MercRosterSection)으로
+			// 묶였다. 구역이 판 안에 있고, 카드가 구역 안에 있으면 된다.
+			UPanelWidget* Roster = Cast<UPanelWidget>(
+				Tree->FindWidget(TEXT("MercRosterSection")));
+			TestEqual(*FString::Printf(TEXT("%s 는 로스터 구역 안"), *ScaleName),
+				Scale->GetParent(), Roster != nullptr ? Roster : MercenaryBoard);
+			if (Roster != nullptr)
+			{
+				TestEqual(TEXT("로스터 구역은 용병 판 안"),
+					Roster->GetParent(), MercenaryBoard);
+			}
 			TestEqual(*FString::Printf(TEXT("%s 는 크기 래퍼 안"), *CardName),
 				Card->GetParent(), Scale);
 		}
@@ -774,8 +782,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (UTextBlock* BackText =
 			Cast<UTextBlock>(MonsterTree->FindWidget(TEXT("MonsterBackText"))))
 		{
-			TestEqual(TEXT("몬스터 탭 뒤로 문구"),
-				BackText->GetText().ToString(), FString(TEXT("뒤로")));
+			// 확정 시안: 몬스터 탭도 "뒤로" 대신 "닫기"다.
+			TestEqual(TEXT("몬스터 탭 닫기 문구"),
+				BackText->GetText().ToString(), FString(TEXT("닫기")));
 		}
 		else
 		{
@@ -1013,18 +1022,21 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	Model->SetUnitUIs({ PartyUnit });
 	MercenaryMenu->OnClicked.Broadcast();
 	PartyButton->OnClicked.Broadcast();
-	TestEqual(TEXT("용병을 고르면 목록이 닫힌다"),
-		Panel->GetVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("용병 카드는 InspectUnit 요청을 보낸다"),
-		DetailResponder->mLastType, ECombatInputType::InspectUnit);
-	TestEqual(TEXT("카드의 실제 UnitId를 보낸다"),
-		DetailResponder->mLastPayload, PartyUnit.mUnitId);
-	TestEqual(TEXT("몬스터와 용병 InspectUnit은 각각 한 번 요청된다"),
-		DetailResponder->mInspectRequestCount, 2);
-	TestEqual(TEXT("상세 응답도 같은 UnitId다"),
-		Model->GetUnitDetail().mUnitId, PartyUnit.mUnitId);
-	TestTrue(TEXT("동기 상세 응답 뒤 PR457 오버레이가 열린다"),
-		HUD->IsDetailOverlayShown());
+	/*
+	 * 0806 확정: 목록에서 고르면 **패널 안에서** 오른쪽 상세만 갈린다.
+	 *
+	 * 전에는 목록을 닫고 상세 겹을 따로 띄웠는데, 같은 내용을 두 판으로
+	 * 두 번 보여 주고 목록이 사라지는 흐름이었다.
+	 */
+	TestEqual(TEXT("용병을 골라도 목록은 열려 있다"),
+		Panel->GetVisibility(), ESlateVisibility::Visible);
+	TestFalse(TEXT("따로 뜨는 상세 겹은 없다"), HUD->IsDetailOverlayShown());
+	if (UTextBlock* DetailName = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("MercenaryDetailName"))))
+	{
+		TestEqual(TEXT("오른쪽 상세가 고른 용병으로 갈린다"),
+			DetailName->GetText().ToString(), PartyUnit.mName.ToString());
+	}
 	return true;
 }
 
@@ -1203,6 +1215,12 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		Unit.mSpeedPoint = 10.f + Index;
 		Turn.mTurnOrderUnitIds.Add(Unit.mUnitId);
 	}
+	// 새 계약(0806): mTurnOrderUnitIds = 이번 라운드 잔여분,
+	// mNextRoundUnitIds = 다음 라운드 미리보기. 표기는 거기까지만.
+	for (const FUnitUI& Unit : Units)
+	{
+		Turn.mNextRoundUnitIds.Add(Unit.mUnitId);
+	}
 	Turn.mCurrentUnitId = Units[0].mUnitId;
 	Turn.mRound = 3;
 	Turn.mCurrentRoundRemainingTurnCount = 12;
@@ -1324,6 +1342,8 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		Right->GetVisibility(), ESlateVisibility::Visible);
 
 	// 턴이 바뀌면 페이지가 0으로 돌아간 뒤 같은 갱신 프레임에 다시 그려진다.
+	// 턴 목록은 소비형이다 -- 지나간 턴은 잔여 배열에서 빠진다.
+	Turn.mTurnOrderUnitIds.RemoveAt(0);
 	Turn.mCurrentUnitId = Units[1].mUnitId;
 	Turn.mCurrentRoundRemainingTurnCount = 11;
 	Model->SetTurnUI(Turn);
@@ -1391,24 +1411,39 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("아군 칸 버튼에 무언가 묶여 있다"),
 		PartyButton->OnClicked.IsBound());
 
+	// 새 계약(0807)은 모델이 있어야 굴러간다 -- 시험이 직접 구성한다.
+	UCombatUIModel* Model = NewObject<UCombatUIModel>(HUD);
+	HUD->BindUIModel(Model);
+	FUnitUI PlayerUnit;
+	PlayerUnit.mUnitId = 101;
+	PlayerUnit.mIsPlayer = true;
+	Model->SetUnitUIs({ PlayerUnit });
+	FTurnUI PlayerTurn;
+	PlayerTurn.mCurrentUnitId = PlayerUnit.mUnitId;
+	PlayerTurn.mTurnOrderUnitIds.Add(PlayerUnit.mUnitId);
+	Model->SetTurnUI(PlayerTurn);
+	Model->OnBeginAnyTurn.Broadcast(nullptr);
+
 	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	if (!TestNotNull(TEXT("명령 카드"), Card))
 	{
 		return false;
 	}
 
-	// 아군 칸은 뒤집기가 아니다.
+	// 아군 칸은 뒤집기가 아니라 여는 손이다.
 	//
-	// 전에는 누를 때마다 카드를 접었다 폈다 했다. 지금은 "누구의 스킬을 볼지"
-	// 고르는 자리이고, 접고 펴는 것은 판 탭이 맡는다. 그래서 몇 번을 눌러도
-	// 카드는 펴져 있어야 한다 -- 스킬을 보러 눌렀는데 접히면 아무 일도 안
-	// 일어난 것처럼 보인다.
+	// 차례가 와도 카드는 저절로 안 열린다(0807). 아군 칸을 누르면 그 용병의
+	// 카드가 펴지고, 몇 번을 눌러도 접히지 않는다 -- 스킬을 보러 눌렀는데
+	// 접히면 아무 일도 안 일어난 것처럼 보인다.
+	TestEqual(TEXT("누르기 전에는 접혀 있다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("누르면 카드가 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("다시 눌러도 접히지 않는다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
+	Model->OnEndAnyTurn.Broadcast(nullptr);
 	return true;
 }
 
@@ -1476,13 +1511,20 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
 
 	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
+	UButton* SkillButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("SkillToggleButton")));
 	if (!TestNotNull(TEXT("전투 UI 모델"), Model)
-		|| !TestNotNull(TEXT("명령 카드"), Card))
+		|| !TestNotNull(TEXT("명령 카드"), Card)
+		|| !TestNotNull(TEXT("스킬 단추"), SkillButton))
 	{
 		return false;
 	}
 
-	TestEqual(TEXT("플레이어 턴에는 카드가 보인다"), Card->GetVisibility(),
+	// 새 계약(0807): 차례가 와도 카드는 저절로 안 열린다. 스킬 단추가 정문.
+	TestEqual(TEXT("플레이어 턴에도 저절로 펴지지 않는다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("스킬 단추로 편다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnEndAnyTurn.Broadcast(nullptr);
@@ -1490,7 +1532,10 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		ESlateVisibility::Collapsed);
 
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
-	TestEqual(TEXT("다음 플레이어 턴 시작에 다시 보인다"), Card->GetVisibility(),
+	TestEqual(TEXT("다음 턴 시작에도 저절로 펴지지 않는다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("스킬 단추로 다시 편다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
