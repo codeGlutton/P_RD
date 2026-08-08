@@ -434,6 +434,10 @@ void URunPersistData::MakeCaches()
 	{
 		mRunPersistDataCache.mEffectVFXs.Add(EffectVFXPair.Value.mNiagaraSystem.LoadSynchronous());
 	}
+
+	const FSoftNiagaraSpawnData& CombatTargetDissolveVFX = GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX;
+	mRunPersistDataCache.mEffectVFXs.Add(CombatTargetDissolveVFX.mNiagaraSystem.LoadSynchronous());
+	mRunPersistDataCache.mEffectCurves.Add(GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveCurve.LoadSynchronous());
 }
 
 void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)

@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Component/SkillAnimationComponent/SkeletonSkillAnimationComponent.h"
+#include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
 
 #include "Algo/BinarySearch.h"
 
@@ -29,6 +30,7 @@ AUnit::AUnit()
 	mMovementComp = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
 	mSkillAnimationComp = CreateDefaultSubobject<USkeletonSkillAnimationComponent>(TEXT("SkillAnimationComp"));
+	mDissolveVFXTimelineComp = CreateDefaultSubobject<UDissolveVFXTimelineComponent>(TEXT("DissolveVFXTimelineComp"));
 
 	if (mCapsuleComp != nullptr)
 	{
@@ -127,6 +129,11 @@ UObjectModel* AUnit::GetModel_Internal() const
 USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
 {
 	return mSkillAnimationComp;
+}
+
+UDissolveVFXTimelineComponent* AUnit::GetDissolveVFXTimelineComponent() const
+{
+	return mDissolveVFXTimelineComp;
 }
 
 UPrimitiveComponent* AUnit::GetTargetMeshComponent() const

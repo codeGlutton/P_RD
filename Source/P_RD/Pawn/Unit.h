@@ -63,6 +63,7 @@ protected:
 	/* IBoardCombatTargetView 상속 */
 public:
 	USkillAnimationComponent* GetSkillAnimationComponent() const override;
+	UDissolveVFXTimelineComponent* GetDissolveVFXTimelineComponent() const override;
 	UPrimitiveComponent* GetTargetMeshComponent() const override;
 
 public:
@@ -207,6 +208,8 @@ private:
 
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DissolveVFXTimelineComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UDissolveVFXTimelineComponent> mDissolveVFXTimelineComp;
 
 protected:
 	TWeakObjectPtr<UUnitModel> mUnitModel;

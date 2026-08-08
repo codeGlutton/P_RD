@@ -213,7 +213,7 @@ public:
 
 	/* 정적 변수 */
 private:
-	static constexpr float BOARD_ACTOR_DESTROY_DELAY_TIME = 3.f;
+	static constexpr float BOARD_ACTOR_DESTROY_DELAY_TIME = 7.f;
 
 	/* 대리자들 */
 public:
