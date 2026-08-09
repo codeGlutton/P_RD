@@ -90,6 +90,8 @@ DerivedDataCache/*
 /Content/**/S_*.uasset
 # 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
 !/Content/UI/Art/RunFlow/T_*.uasset
+# 승리/패배 결과판은 이 프로젝트 전용 생성 파츠이므로 WBP와 함께 배포한다.
+!/Content/UI/ResultBoards/Art/T_*.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
@@ -123,3 +125,6 @@ __MACOSX/
 
 # UI 작업용 로컬 도구(목업 편집기·반영 스크립트·메모) -- git 에는 안 올린다 (0808)
 Tools/UI/
+
+# 로컬 확인용 설정 (개인 스위치)
+Config/UserEngine.ini

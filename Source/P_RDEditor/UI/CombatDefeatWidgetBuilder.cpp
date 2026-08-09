@@ -1,6 +1,7 @@
 #include "UI/CombatDefeatWidgetBuilder.h"
 
 #include "AssetToolsModule.h"
+#include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -17,16 +18,36 @@
 #include "HAL/IConsoleManager.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "UI/UIFont.h"
 #include "UI/CombatResultOverlayWidget.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintEditorUtils.h"
 
 namespace CombatDefeatWidgetBuilder
 {
 	constexpr TCHAR PackagePath[] = TEXT("/Game/UI/CombatResult");
 	constexpr TCHAR AssetName[] = TEXT("WBP_CombatDefeat");
 	constexpr TCHAR AssetPath[] = TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat");
+	constexpr int32 DefeatButtonFontSize = 30;
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+
+	const FLinearColor DefeatTextColor = FLinearColor::White;
+
+	FIntPoint NativeTextureSize(UTexture2D* Source)
+	{
+		if (Source == nullptr)
+		{
+			return FIntPoint::ZeroValue;
+		}
+
+		const FIntPoint ImportedSize = Source->GetImportedSize();
+		if (ImportedSize.X > 0 && ImportedSize.Y > 0)
+		{
+			return ImportedSize;
+		}
+		return FIntPoint(Source->GetSizeX(), Source->GetSizeY());
+	}
 
 	UTexture2D* Texture(const TCHAR* Path)
 	{
@@ -41,8 +62,9 @@ namespace CombatDefeatWidgetBuilder
 		Brush.SetResourceObject(Source);
 		Brush.DrawAs = bBox ? ESlateBrushDrawType::Box : ESlateBrushDrawType::Image;
 		Brush.Margin = bBox ? FMargin(.16f) : FMargin(0.f);
-		Brush.ImageSize = Source != nullptr
-			? FVector2D(Source->GetSizeX(), Source->GetSizeY()) : FVector2D::ZeroVector;
+		const FIntPoint NativeSize = NativeTextureSize(Source);
+		Brush.ImageSize = NativeSize.X > 0 && NativeSize.Y > 0
+			? FVector2D(NativeSize) : FVector2D::ZeroVector;
 		Brush.SetUVRegion(UV);
 		return Brush;
 	}
@@ -50,8 +72,7 @@ namespace CombatDefeatWidgetBuilder
 	void StyleText(UTextBlock* Text, int32 Size, const FLinearColor& Color,
 		ETextJustify::Type Justification = ETextJustify::Center)
 	{
-		FSlateFontInfo Font = Text->GetFont();
-		Font.Size = Size;
+		FSlateFontInfo Font = UIFont::MakeProjectExact(Text->GetFont(), Size);
 		Font.OutlineSettings.OutlineSize = Size >= 26 ? 1 : 0;
 		Font.OutlineSettings.OutlineColor = FLinearColor(0.03f, 0.015f, 0.005f, 1.f);
 		Text->SetFont(Font);
@@ -85,16 +106,61 @@ namespace CombatDefeatWidgetBuilder
 		return Image;
 	}
 
+	FVector2D AspectFitSize(UTexture2D* Source, const FVector2D Bounds)
+	{
+		const FIntPoint TextureSize = NativeTextureSize(Source);
+		if (TextureSize.X <= 0 || TextureSize.Y <= 0)
+		{
+			return Bounds;
+		}
+		const FVector2D NativeSize(TextureSize);
+		const double UniformScale = FMath::Min(Bounds.X / NativeSize.X, Bounds.Y / NativeSize.Y);
+		return NativeSize * UniformScale;
+	}
+
+	UImage* AddAspectImage(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent, const FName Name,
+		UTexture2D* Source, const FBox2f& UV, const FVector2D BoundsPosition,
+		const FVector2D BoundsSize, int32 ZOrder)
+	{
+		const FVector2D FittedSize = AspectFitSize(Source, BoundsSize);
+		const FVector2D FittedPosition = BoundsPosition + (BoundsSize - FittedSize) * 0.5f;
+		return AddImage(Blueprint, Parent, Name, Source, UV, FittedPosition, FittedSize, ZOrder);
+	}
+
 	UTextBlock* AddText(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent, const FName Name,
 		const FText& Value, int32 FontSize, const FLinearColor& Color,
 		const FVector2D Position, const FVector2D Size, int32 ZOrder,
 		ETextJustify::Type Justification = ETextJustify::Center)
 	{
+		// UTextBlock does not expose a vertical justification option. Giving the text
+		// the full Canvas slot therefore leaves glyphs top-aligned inside taller rows.
+		// A dedicated overlay keeps the semantic TextBlock name intact while centering
+		// its desired height inside the exact design rectangle at every ScaleBox size.
+		const FName MountName(*FString::Printf(TEXT("%s_CenterMount"), *Name.ToString()));
+		UOverlay* Mount = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), MountName);
+		Mount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Place(Parent, Mount, Position, Size, ZOrder);
+
 		UTextBlock* Text = Blueprint->WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), Name);
 		Text->SetText(Value);
 		StyleText(Text, FontSize, Color, Justification);
-		Place(Parent, Text, Position, Size, ZOrder);
+		Mount->AddChildToOverlay(Text);
+		UOverlaySlot* TextSlot = CastChecked<UOverlaySlot>(Text->Slot);
+		TextSlot->SetHorizontalAlignment(HAlign_Fill);
+		TextSlot->SetVerticalAlignment(VAlign_Center);
 		return Text;
+	}
+
+	UBorder* AddRule(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent, const FName Name,
+		const FVector2D Position, const FVector2D Size, int32 ZOrder)
+	{
+		UBorder* Rule = Blueprint->WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), Name);
+		Rule->SetBrushColor(FLinearColor(.31f, .15f, .045f, .5f));
+		Rule->SetPadding(FMargin(0.f));
+		Rule->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Place(Parent, Rule, Position, Size, ZOrder);
+		return Rule;
 	}
 
 	UButton* AddTransparentButton(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent,
@@ -130,6 +196,16 @@ namespace CombatDefeatWidgetBuilder
 
 	void Build()
 	{
+		// Resolve every new hard dependency before touching the existing WidgetTree.
+		// A missing import must fail without leaving the currently open asset empty.
+		UTexture2D* OuterFrame = Texture(TEXT("/Game/UI/ResultBoards/Art/T_DF_BoardBlank_0809.T_DF_BoardBlank_0809"));
+		UTexture2D* TitleBanner = Texture(TEXT("/Game/UI/ResultBoards/Art/T_DF_RibbonBlank_0809.T_DF_RibbonBlank_0809"));
+		UTexture2D* MercenaryCard = Texture(TEXT("/Game/UI/ResultBoards/Art/T_DF_PortraitCardBlank_0809.T_DF_PortraitCardBlank_0809"));
+		UTexture2D* Secondary = Texture(TEXT("/Game/UI/ResultBoards/Art/T_UI_ButtonSecondaryBlank_0809.T_UI_ButtonSecondaryBlank_0809"));
+		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
+		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
+		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
+
 		UWidgetBlueprint* Blueprint = FindOrCreateBlueprint();
 		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
 		{
@@ -139,6 +215,20 @@ namespace CombatDefeatWidgetBuilder
 
 		Blueprint->Modify();
 		Blueprint->WidgetTree->Modify();
+		// The 0809 board changes some legacy mount classes. Removing the old root
+		// releases all prior widget objects before names are reused by another class.
+		// DeleteWidgets structurally compiles immediately, so use the neutral UUserWidget
+		// parent during that one transient compile to avoid false BindWidget errors.
+		if (UWidget* PreviousRoot = Blueprint->WidgetTree->RootWidget)
+		{
+			Blueprint->ParentClass = UUserWidget::StaticClass();
+			TSet<UWidget*> PreviousWidgets;
+			PreviousWidgets.Add(PreviousRoot);
+			FWidgetBlueprintEditorUtils::DeleteWidgets(
+				Blueprint,
+				MoveTemp(PreviousWidgets),
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
 		Blueprint->ParentClass = UCombatResultOverlayWidget::StaticClass();
 
 		UOverlay* Root = Blueprint->WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("DefeatViewportRoot"));
@@ -165,94 +255,130 @@ namespace CombatDefeatWidgetBuilder
 		UCanvasPanel* Canvas = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("DefeatDesignCanvas"));
 		DesignSize->SetContent(Canvas);
 
-		UTexture2D* OuterFrame = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_OuterFrame.T_MB_Defeat_OuterFrame"));
-		UTexture2D* TitleBanner = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_TitleBanner.T_MB_Defeat_TitleBanner"));
-		UTexture2D* MercenaryCard = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_MercenaryCard.T_MB_Defeat_MercenaryCard"));
-		// 옛 전투 기록 판은 지웠다. 공용 KitA 틀로 바꾼다 -- 9-slice 라 크기를 안 탄다.
-		UTexture2D* Summary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
-		UTexture2D* Secondary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonSecondary.T_MB_Defeat_ButtonSecondary"));
-		UTexture2D* Primary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/T_MB_Defeat_ButtonPrimary.T_MB_Defeat_ButtonPrimary"));
-		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
-		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
-		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
-
-		const FBox2f OuterUV(FVector2f(.089319f, .064227f), FVector2f(.909761f, .928867f));
-		const FBox2f TitleUV(FVector2f(.033298f, .282840f), FVector2f(.968851f, .665089f));
-		const FBox2f CardUV(FVector2f(.146168f, .141227f), FVector2f(.852941f, .855920f));
-		const FBox2f SummaryUV(FVector2f(.087919f, .190223f), FVector2f(.912081f, .809777f));
-		const FBox2f SecondaryUV(FVector2f(.076722f, .203410f), FVector2f(.922756f, .799026f));
-		const FBox2f PrimaryUV(FVector2f(.069193f, .232639f), FVector2f(.930807f, .769676f));
 		const FBox2f FullUV(FVector2f::ZeroVector, FVector2f(1.f, 1.f));
 
-		AddImage(Blueprint, Canvas, TEXT("DefeatOuterFrame"), OuterFrame, OuterUV,
-			FVector2D(284.f, 18.f), FVector2D(968.f, 828.f), 0, true);
-		AddImage(Blueprint, Canvas, TEXT("DefeatTitleBanner"), TitleBanner, TitleUV,
-			FVector2D(398.f, 18.f), FVector2D(740.f, 137.f), 3);
-		AddText(Blueprint, Canvas, TEXT("DefeatTitleText"), NSLOCTEXT("CombatDefeat", "Title", "원정 실패"),
-			50, FLinearColor(1.f, .91f, .72f, 1.f), FVector2D(448.f, 42.f), FVector2D(640.f, 68.f), 4);
-		AddText(Blueprint, Canvas, TEXT("DefeatSubtitleText"), NSLOCTEXT("CombatDefeat", "Subtitle", "용병단이 전투에서 패배했습니다"),
-			23, FLinearColor(.16f, .075f, .025f, 1.f), FVector2D(420.f, 142.f), FVector2D(696.f, 38.f), 4);
+		// 0809 확정 시안은 한 장의 나무/양피지 보드를 그대로 사용한다. 생성 원본은
+		// 이미 투명 여백까지 정리됐으므로 atlas UV crop이나 9-slice를 적용하지 않는다.
+		AddAspectImage(Blueprint, Canvas, TEXT("DefeatOuterFrame"), OuterFrame, FullUV,
+			FVector2D(284.f, 24.f), FVector2D(968.f, 760.f), 0);
+		AddAspectImage(Blueprint, Canvas, TEXT("DefeatTitleBanner"), TitleBanner, FullUV,
+			FVector2D(520.f, 0.f), FVector2D(496.f, 148.f), 3);
+		AddText(Blueprint, Canvas, TEXT("DefeatTitleText"), NSLOCTEXT("CombatDefeat", "Title", "패배"),
+			50, DefeatTextColor, FVector2D(520.f, 0.f), FVector2D(496.f, 148.f), 4);
+		UTextBlock* SubtitleText = AddText(Blueprint, Canvas, TEXT("DefeatSubtitleText"),
+			NSLOCTEXT("CombatDefeat", "Subtitle", "용병단이 전투에서 패배했습니다"),
+			23, DefeatTextColor, FVector2D(420.f, 112.f), FVector2D(696.f, 34.f), 4);
+		// 이름은 기존 자동화/디자이너 호환을 위해 유지하되, 확정 시안에는 부제가 없다.
+		SubtitleText->SetVisibility(ESlateVisibility::Collapsed);
 
 		UTexture2D* PreviewPortraits[] = { Knight, Rogue, Mage };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
-			const float X = 432.f + Index * 224.f;
-			AddImage(Blueprint, Canvas, FName(*FString::Printf(TEXT("DefeatCardFrame_%d"), Index)),
-				MercenaryCard, CardUV, FVector2D(X, 188.f), FVector2D(220.f, 260.f), 1);
-			UImage* Portrait = AddImage(Blueprint, Canvas,
+			const float X = 449.f + Index * 213.f;
+			UCanvasPanel* CardMount = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(),
+				FName(*FString::Printf(TEXT("DefeatCardFrame_%dMount"), Index)));
+			CardMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			Place(Canvas, CardMount, FVector2D(X, 155.f), FVector2D(212.f, 250.f), 1);
+
+			const FVector2D CardBounds(212.f, 250.f);
+			const FVector2D CardArtSize = AspectFitSize(MercenaryCard, CardBounds);
+			const FVector2D CardArtOffset = (CardBounds - CardArtSize) * 0.5f;
+			AddImage(Blueprint, CardMount, FName(*FString::Printf(TEXT("DefeatCardFrame_%d"), Index)),
+				MercenaryCard, FullUV, CardArtOffset, CardArtSize, 0);
+			UImage* Portrait = AddAspectImage(Blueprint, CardMount,
 				FName(*FString::Printf(TEXT("mPartyPortrait%d"), Index)), PreviewPortraits[Index], FullUV,
-				FVector2D(X + 31.f, 215.f), FVector2D(158.f, 154.f), 2);
+				CardArtOffset + FVector2D(38.f, 29.f), FVector2D(136.f, 136.f), 1);
 			Portrait->SetColorAndOpacity(FLinearColor(.82f, .82f, .82f, 1.f));
 			Blueprint->OnVariableAdded(Portrait->GetFName());
-			AddText(Blueprint, Canvas, FName(*FString::Printf(TEXT("DefeatStatusText_%d"), Index)),
-				NSLOCTEXT("CombatDefeat", "Incapacitated", "전투 불능"), 21,
-				FLinearColor(.93f, .12f, .06f, 1.f), FVector2D(X + 24.f, 387.f), FVector2D(172.f, 42.f), 4);
+			UTextBlock* StatusText = AddText(Blueprint, CardMount,
+				FName(*FString::Printf(TEXT("DefeatStatusText_%d"), Index)),
+				NSLOCTEXT("CombatDefeat", "Incapacitated", "전투 불능"), 20,
+				DefeatTextColor, CardArtOffset + FVector2D(17.f, 194.f),
+				FVector2D(178.f, 36.f), 2);
+			// 레퍼런스 카드에는 상태 문구가 없다. 이름은 기존 테스트/디자이너
+			// 호환을 위해 남기되, 카드 위에 임의 문구를 추가로 노출하지 않는다.
+			StatusText->SetVisibility(ESlateVisibility::Collapsed);
 		}
 
-		AddImage(Blueprint, Canvas, TEXT("DefeatSummaryPanel"), Summary, SummaryUV,
-			FVector2D(405.f, 458.f), FVector2D(726.f, 225.f), 1, true);
-		const FLinearColor Ink(.17f, .08f, .025f, 1.f);
+		// 예전 Summary 이미지를 다시 그리면 보드 안에 양피지가 한 겹 더 생긴다. 기존
+		// 위젯 이름만 무그림 마운트로 보존하고, 정보는 보드 양피지에 직접 놓는다.
+		UImage* SummaryPanel = Blueprint->WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), TEXT("DefeatSummaryPanel"));
+		FSlateBrush EmptySummaryBrush;
+		EmptySummaryBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+		SummaryPanel->SetBrush(EmptySummaryBrush);
+		SummaryPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Place(Canvas, SummaryPanel, FVector2D(432.f, 418.f), FVector2D(672.f, 188.f), 1);
+
 		UTextBlock* LocationText = AddText(Blueprint, Canvas, TEXT("mLocationText"),
-			NSLOCTEXT("CombatDefeat", "LocationPreview", "도달 지점    현재 전투 지역"), 21, Ink,
-			FVector2D(458.f, 476.f), FVector2D(620.f, 34.f), 3, ETextJustify::Left);
+			NSLOCTEXT("CombatDefeat", "LocationPreview", "현재 전투 지역 · 2 라운드"), 21, DefeatTextColor,
+			FVector2D(449.f, 424.f), FVector2D(638.f, 34.f), 3);
+		AddRule(Blueprint, Canvas, TEXT("DefeatSummaryTopRule"),
+			FVector2D(449.f, 462.f), FVector2D(638.f, 2.f), 2);
+
+		AddText(Blueprint, Canvas, TEXT("DefeatEnemyLabel"),
+			NSLOCTEXT("CombatDefeat", "EnemyLabel", "처치"), 20, DefeatTextColor,
+			FVector2D(449.f, 480.f), FVector2D(212.f, 30.f), 3);
+		AddText(Blueprint, Canvas, TEXT("DefeatGoldLabel"),
+			NSLOCTEXT("CombatDefeat", "GoldLabel", "획득 골드"), 20, DefeatTextColor,
+			FVector2D(662.f, 480.f), FVector2D(212.f, 30.f), 3);
+		AddText(Blueprint, Canvas, TEXT("DefeatSurvivorLabel"),
+			NSLOCTEXT("CombatDefeat", "SurvivorLabel", "생존"), 20, DefeatTextColor,
+			FVector2D(875.f, 480.f), FVector2D(212.f, 30.f), 3);
+		AddRule(Blueprint, Canvas, TEXT("DefeatSummaryLeftDivider"),
+			FVector2D(661.f, 479.f), FVector2D(1.f, 84.f), 2);
+		AddRule(Blueprint, Canvas, TEXT("DefeatSummaryRightDivider"),
+			FVector2D(874.f, 479.f), FVector2D(1.f, 84.f), 2);
+
 		UTextBlock* RoundText = AddText(Blueprint, Canvas, TEXT("mRoundText"),
-			NSLOCTEXT("CombatDefeat", "RoundPreview", "진행 라운드    7 라운드"), 21, Ink,
-			FVector2D(458.f, 515.f), FVector2D(620.f, 34.f), 3, ETextJustify::Left);
+			NSLOCTEXT("CombatDefeat", "RoundPreview", "2 라운드"), 21, DefeatTextColor,
+			FVector2D(449.f, 424.f), FVector2D(638.f, 34.f), 3);
 		UTextBlock* EnemyText = AddText(Blueprint, Canvas, TEXT("mEnemyText"),
-			NSLOCTEXT("CombatDefeat", "EnemyPreview", "처치한 몬스터    12"), 21, Ink,
-			FVector2D(458.f, 554.f), FVector2D(620.f, 34.f), 3, ETextJustify::Left);
+			NSLOCTEXT("CombatDefeat", "EnemyPreview", "12"), 34, DefeatTextColor,
+			FVector2D(449.f, 517.f), FVector2D(212.f, 46.f), 3);
 		UTextBlock* GoldText = AddText(Blueprint, Canvas, TEXT("mGoldText"),
-			NSLOCTEXT("CombatDefeat", "GoldPreview", "획득 골드    0"), 21, Ink,
-			FVector2D(458.f, 593.f), FVector2D(620.f, 34.f), 3, ETextJustify::Left);
+			NSLOCTEXT("CombatDefeat", "GoldPreview", "0"), 34, DefeatTextColor,
+			FVector2D(662.f, 517.f), FVector2D(212.f, 46.f), 3);
+		AddText(Blueprint, Canvas, TEXT("DefeatSurvivorValue"),
+			NSLOCTEXT("CombatDefeat", "SurvivorPreview", "0 / 3"), 34, DefeatTextColor,
+			FVector2D(875.f, 517.f), FVector2D(212.f, 46.f), 3);
+		AddRule(Blueprint, Canvas, TEXT("DefeatSummaryBottomRule"),
+			FVector2D(449.f, 575.f), FVector2D(638.f, 2.f), 2);
+
 		UTextBlock* ExpText = AddText(Blueprint, Canvas, TEXT("mExpText"),
-			NSLOCTEXT("CombatDefeat", "ExpPreview", "획득 경험치    +0"), 21, Ink,
-			FVector2D(458.f, 632.f), FVector2D(620.f, 34.f), 3, ETextJustify::Left);
+			NSLOCTEXT("CombatDefeat", "ExpPreview", "+0"), 21, DefeatTextColor,
+			FVector2D(449.f, 580.f), FVector2D(638.f, 34.f), 3);
+		RoundText->SetVisibility(ESlateVisibility::Collapsed);
+		ExpText->SetVisibility(ESlateVisibility::Collapsed);
 		Blueprint->OnVariableAdded(LocationText->GetFName());
 		Blueprint->OnVariableAdded(RoundText->GetFName());
 		Blueprint->OnVariableAdded(EnemyText->GetFName());
 		Blueprint->OnVariableAdded(GoldText->GetFName());
 		Blueprint->OnVariableAdded(ExpText->GetFName());
 
-		AddImage(Blueprint, Canvas, TEXT("mTitleButtonArt"), Secondary, SecondaryUV,
-			FVector2D(390.f, 708.f), FVector2D(360.f, 112.f), 2);
+		// Defeat is terminal for this roguelike run. Keep a single, unambiguous CTA
+		// centered below the board; the art is center-fitted at native ratio while
+		// the text and transparent hit target share the full, generous rectangle.
+		const FVector2D TitleButtonPosition(558.f, 704.f);
+		const FVector2D TitleButtonBounds(420.f, 160.f);
+		AddAspectImage(Blueprint, Canvas, TEXT("mTitleButtonArt"), Secondary, FullUV,
+			TitleButtonPosition, TitleButtonBounds, 4);
 		AddText(Blueprint, Canvas, TEXT("mTitleButtonText"), NSLOCTEXT("CombatDefeat", "BackToTitle", "타이틀로 돌아가기"),
-			30, FLinearColor(1.f, .91f, .72f, 1.f), FVector2D(420.f, 738.f), FVector2D(300.f, 50.f), 3);
+			DefeatButtonFontSize, DefeatTextColor,
+			TitleButtonPosition, TitleButtonBounds, 5);
 		AddTransparentButton(Blueprint, Canvas, TEXT("mTitleButton"),
-			FVector2D(390.f, 708.f), FVector2D(360.f, 112.f), 5);
+			TitleButtonPosition, TitleButtonBounds, 6);
 
-		AddImage(Blueprint, Canvas, TEXT("mRetryButtonArt"), Primary, PrimaryUV,
-			FVector2D(786.f, 708.f), FVector2D(360.f, 112.f), 2);
-		AddText(Blueprint, Canvas, TEXT("mRetryButtonText"), NSLOCTEXT("CombatDefeat", "Retry", "재도전"),
-			34, FLinearColor::White, FVector2D(816.f, 736.f), FVector2D(300.f, 54.f), 3);
-		AddTransparentButton(Blueprint, Canvas, TEXT("mRetryButton"),
-			FVector2D(786.f, 708.f), FVector2D(360.f, 112.f), 5);
-
-		// UE 5.7 expects every designer-created widget to have a stable variable GUID,
-		// including decorative widgets that are not exposed through BindWidget.
+		// UE 5.7 expects every live widget to have a stable variable GUID. Previous
+		// widget GUIDs are removed by DeleteWidgets without touching animation GUIDs.
 		Blueprint->WidgetTree->ForEachWidget([Blueprint](UWidget* Widget)
 		{
-			if (Widget != nullptr
-				&& Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()) == false)
+			if (Widget == nullptr)
+			{
+				return;
+			}
+			if (Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()) == false)
 			{
 				Blueprint->OnVariableAdded(Widget->GetFName());
 			}
