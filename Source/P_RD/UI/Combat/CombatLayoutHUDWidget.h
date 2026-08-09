@@ -780,6 +780,7 @@ private:
 	 * 닫힌다.
 	 */
 	bool EnsureDetailOverlayWidget();
+	void ShowUnitInspection();
 	void ShowUnitDetailOverlay();
 	void ShowSkillDetailOverlay();
 

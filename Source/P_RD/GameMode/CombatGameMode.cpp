@@ -58,6 +58,14 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	/** @brief 확인용: 1이면 전투에 등록되는 모든 유닛(아군·적)의 HP를 1로 시작한다.
+	 * 승리/패배/보상 화면을 빨리 보려는 개발 스위치다. UserEngine.ini 나
+	 * 콘솔에서 rd.Debug.ForceCombatHPOne 으로 켜고 끈다. */
+	int32 GForceCombatHPOne = 0;
+	FAutoConsoleVariableRef CForceCombatHPOne(
+		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
+		TEXT("1이면 전투 유닛 전원이 HP 1로 시작한다 (결과 화면 확인용)."));
+
 	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
 	{
 		return UnitModel != nullptr
@@ -1010,6 +1018,12 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 	const int32 UnitId = Unit->GetModelId();
+
+	if (GForceCombatHPOne != 0)
+	{
+		AttributeSetComponentModel->SetAttributeBaseValue(
+			UUnitAttributeSet::GetHPAttribute(), 1.f);
+	}
 
 	Unit->OnMoveStepArrivedUI.AddWeakLambda(
 		this,

@@ -123,3 +123,6 @@ __MACOSX/
 
 # UI 작업용 로컬 도구(목업 편집기·반영 스크립트·메모) -- git 에는 안 올린다 (0808)
 Tools/UI/
+
+# 로컬 확인용 설정 (개인 스위치)
+Config/UserEngine.ini

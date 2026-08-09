@@ -1353,7 +1353,7 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		}
 		else
 		{
-			ShowUnitDetailOverlay();
+			ShowUnitInspection();
 		}
 	}
 	if (Domain == ECombatUIDomain::SkillDetail)
@@ -3968,24 +3968,13 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		}
 	}
 
-	// 상태이상 두 칸: 실제 걸린 상태만 이름+스택으로 보여 주고 남는 칸은 접는다.
+	// 상태이상 칸은 뺐다(0809) -- 이 탭은 도감이다. 지금 걸린 상태는
+	// 요약판(버프/디버프 띠)이 이미 보여 준다.
 	for (int32 Index = 0; Index < 2; ++Index)
 	{
-		UTextBlock* StatusText = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("MonsterStatusText_%d"), Index))));
-		if (StatusText == nullptr)
-		{
-			continue;
-		}
-		if (Monster.mStatusEffects.IsValidIndex(Index) == true)
-		{
-			const FStatusEffectUI& Status = Monster.mStatusEffects[Index];
-			StatusText->SetText(FText::FromString(Status.mStackCount > 1
-				? FString::Printf(TEXT("%s x%d"), *StatusDisplayName(Status.mTag), Status.mStackCount)
-				: StatusDisplayName(Status.mTag)));
-			StatusText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		}
-		else
+		if (UTextBlock* StatusText = Cast<UTextBlock>(
+			mMonsterTabWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("MonsterStatusText_%d"), Index)))))
 		{
 			StatusText->SetVisibility(ESlateVisibility::Collapsed);
 		}
@@ -4567,6 +4556,58 @@ void UCombatLayoutHUDWidget::HandleDetailSkillClicked_5() { HandleDetailSkillCli
  * 라이브 스탯(HP·방어)은 상세 스냅샷에 없다 -- 진실원본 이원화를 막으려고
  * mUnitId 로 유닛 목록에서 읽는 것이 계약이다(FUnitDetailUI 주석).
  */
+/**
+ * @brief (0809) 유닛 상세 겹은 뺐다. 적이면 몬스터탭(도감)을 그 몬스터로 연다.
+ *
+ * @details 아군 상세는 용병탭이 맡으므로 여기서는 아무것도 안 띄운다.
+ * 몬스터탭 WBP가 없는 환경(시험 픽스처)만 예전 상세 겹으로 보여 준다.
+ */
+void UCombatLayoutHUDWidget::ShowUnitInspection()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	const FUnitDetailUI& Detail = mUIModel->GetUnitDetail();
+	if (Detail.mUnitId == INDEX_NONE)
+	{
+		return;
+	}
+	const FUnitUI* Unit = nullptr;
+	int32 EnemyRow = INDEX_NONE;
+	int32 AliveEnemyCount = 0;
+	for (const FUnitUI& Candidate : mUIModel->GetUnitUIs())
+	{
+		const bool bAliveEnemy = Candidate.mIsPlayer == false && Candidate.mHP > 0.f;
+		if (Candidate.mUnitId == Detail.mUnitId)
+		{
+			Unit = &Candidate;
+			if (bAliveEnemy == true && AliveEnemyCount < 3)
+			{
+				EnemyRow = AliveEnemyCount;
+			}
+		}
+		if (bAliveEnemy == true)
+		{
+			++AliveEnemyCount;
+		}
+	}
+	if (Unit == nullptr || Unit->mIsPlayer == true)
+	{
+		return;
+	}
+	if (mMonsterTabWidgetClass == nullptr)
+	{
+		ShowUnitDetailOverlay();
+		return;
+	}
+	if (EnemyRow != INDEX_NONE)
+	{
+		mMonsterTabSelectedRow = EnemyRow;
+	}
+	SetMonsterTabShown(true);
+}
+
 void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 {
 	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
