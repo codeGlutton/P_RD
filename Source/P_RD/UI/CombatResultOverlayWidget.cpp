@@ -135,16 +135,30 @@ void UCombatResultOverlayWidget::RefreshWidget()
 			FText::AsNumber(mCombatResult.mExpGained)));
 	}
 
+	// 파티에 없는 자리는 카드째로 접는다 -- WBP에 구워진 기본 초상(디자이너
+	// 견본)이 실제 파티처럼 새어 나오던 문제(0809).
 	UImage* PortraitImages[] = { mPartyPortrait0, mPartyPortrait1, mPartyPortrait2 };
 	for (int32 Index = 0; Index < UE_ARRAY_COUNT(PortraitImages); ++Index)
 	{
+		UTexture2D* Portrait = mCombatResult.mPartyPortraits.IsValidIndex(Index)
+			? mCombatResult.mPartyPortraits[Index] : nullptr;
+		const bool bHasMember = Portrait != nullptr;
+		if (UWidget* CardMount = GetWidgetFromName(FName(*FString::Printf(
+			TEXT("DefeatCardFrame_%dMount"), Index))))
+		{
+			CardMount->SetVisibility(bHasMember
+				? ESlateVisibility::SelfHitTestInvisible
+				: ESlateVisibility::Collapsed);
+		}
 		UImage* PortraitImage = PortraitImages[Index];
-		if (PortraitImage == nullptr || mCombatResult.mPartyPortraits.IsValidIndex(Index) == false)
+		if (PortraitImage == nullptr)
 		{
 			continue;
 		}
-
-		if (UTexture2D* Portrait = mCombatResult.mPartyPortraits[Index])
+		PortraitImage->SetVisibility(bHasMember
+			? ESlateVisibility::SelfHitTestInvisible
+			: ESlateVisibility::Collapsed);
+		if (bHasMember == true)
 		{
 			PortraitImage->SetBrushFromTexture(Portrait, false);
 		}
