@@ -1,12 +1,7 @@
 ﻿#include "SRPGFramework/SRPGMoveAction.h"
 
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
-#include "Singleton/WorldSubsystem/PresentationBarrier.h"
-
 #include "Pawn/UnitModel.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
-#include "AttributeSet/UnitAttributeSet.h"
-#include "Actor/TileMap/TileMapModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
 {
@@ -49,114 +44,28 @@ void USRPGMoveAction::OnBeginAction()
         return;
     }
 
-    // 코너링에 진입/진출 타일 정보가 필요하므로 전체 경로를 전달
-    {
-        UTileMapModel* TileMap = GetTileMap();
-        TArray<FVector> PathWorldLocations;
-        PathWorldLocations.Reserve(mPathTileIndexes.Num());
-        for (const FTileIndex& TileIndex : mPathTileIndexes)
-        {
-            PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
-        }
-        mInstigator->OnStartMovePath.Broadcast(PathWorldLocations);
-    }
+    // 실제 이동은 컴포넌트 모델이 처리, 액션은 완료를 기다렸다가 턴 시스템에 보고
+    // 액션이 먼저 파괴될 수 있으므로 WeakLambda로 보호.
+    UBoardMovementComponentModel* MovementCompModel = mInstigator->GetBoardMovementComponentModel();
+    checkf(MovementCompModel != nullptr, TEXT("이동 컴포넌트 모델 nullptr"));
 
-    // 1번 타일로 이동하는 것부터 시작 (0번은 현재 타일).
-    // 해당 타일로 이동이 완료되면, 베리어가 끝나고 다시 다음 스텝으로 가는 걸 마지막 타일까지 반복.
-    // 시뮬레이션모드에서는 베리어가 없으므로 즉각 다음 스텝으로 진행하므로 문제 없음
-    StartStep(1);
+    const bool Started = MovementCompModel->MoveAlongPath(
+        mPathTileIndexes,
+        FOnBoardMoveFinished::CreateWeakLambda(this, [this]() {
+            MarkActionCompleted(ESRPGActionResult::Succeeded);
+            }));
+    checkf(Started == true, TEXT("이동 시작 실패 (이미 이동 중이거나 경로 오류)"));
 }
 
 void USRPGMoveAction::OnEndAction()
 {
     Super::OnEndAction();
-}
 
-void USRPGMoveAction::StartStep(int32 StepIndex)
-{
-    checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
-    mCurrentStepIndex = StepIndex;
-
-    // 한 칸마다 이동력 차감
-    if (UAttributeSetComponentModel* AttrComp = mInstigator->GetAttributeComponentModel())
+    // 이동이 진행 중인 채로 액션이 끝나면(중단) 컴포넌트 모델도 정지
+    UBoardMovementComponentModel* MovementCompModel = mInstigator.IsValid() ? mInstigator->GetBoardMovementComponentModel() : nullptr;
+    if (MovementCompModel != nullptr && MovementCompModel->IsMoving() == true)
     {
-        AttrComp->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, -1.f);
-    }
-
-    UTileMapModel* TileMap = GetTileMap();
-
-    // 직전 타일에서 이번 타일을 바라볼때의 방향 계산
-    // 직전->현재와 현재->다음 방향을 보간해서 자연스럽게 코너링 할 계획
-    const ETileActorDirection Direction = UTileMapModel::TileDeltaToDirection(
-        mPathTileIndexes[StepIndex - 1],
-        mPathTileIndexes[StepIndex],
-        mInstigator->GetTileTransform().mDirection);
-
-    // 다음 타일로 이동 (모델의 논리적 위치 변경)
-    // 점유는 즉시 하고, 도착 오버랩 통지는 CompleteStep가 함
-    const FTileTransform NextTransform(mPathTileIndexes[StepIndex], Direction);
-    TileMap->StartActorMovement(NextTransform, mInstigator.Get());
-
-    // 이동 후 받을 베리어 생성
-    // 액션이 먼저 파괴될 수 있으므로 WeakLambda로 보호.
-    TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
-        FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-            OnStepPresentationFinished();
-            }));
-
-    // 이번 스텝 도착 후 최종 목적지까지 남은 경로 거리 계산
-    // -> 제동거리에 들어가면 감속할 때 사용
-    float RemainingPathDistance = 0.0f;
-    for (int32 i = StepIndex; i < mPathTileIndexes.Num() - 1; ++i)
-    {
-        RemainingPathDistance += FVector::Dist(
-            TileMap->TileToWorldLocation(mPathTileIndexes[i]),
-            TileMap->TileToWorldLocation(mPathTileIndexes[i + 1]));
-    }
-
-    // OnStartMoveStep을 구독하고 있던 뷰가 이동 시작 (뷰의 물리적 위치 변경)
-    mInstigator->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier, RemainingPathDistance);
-}
-
-void USRPGMoveAction::CompleteStep()
-{
-    // 현재(도착) 타일의 오버랩 통지 — 함정/장판 등 타일 효과가 여기서 발동
-    GetTileMap()->CompleteActorMovement(mInstigator.Get());
-}
-
-void USRPGMoveAction::OnStepPresentationFinished()
-{
-    // ActionPlay 상태가 아니면 중단됐다고 보고 바로 리턴
-    if (mActionPhase != ESRPGActionPhase::ActionPlay)
-    {
-        return;
-    }
-
-    // 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
-    CompleteStep();
-
-    // OnEndMoveStep을 구독하고 있던 뷰가 도착 확인 (UI 변경 등)
-    mInstigator->OnEndMoveStep.Broadcast(mInstigator->GetTileTransform(), mInstigator->GetWorldTransform());
-
-    // 1) 마지막 타일이면 이동 완료.
-    if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)
-    {
-        MarkActionCompleted(ESRPGActionResult::Succeeded);
-    }
-    // 2) 마지막 타일이 아니면 다음 타일로 이동
-    else
-    {
-        StartStep(mCurrentStepIndex + 1);
+        MovementCompModel->CancelMove();
     }
 }
 
-UTileMapModel* USRPGMoveAction::GetTileMap() const
-{
-    // 전투 모델을 월드 서브시스템에서 바로 받아 타일 맵을 꺼낸다 (턴 컨텍스트 체인 의존 제거)
-    USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-    checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-    UTileMapModel* TileMap = CombatModel->GetTileMap();
-    checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-    return TileMap;
-}
