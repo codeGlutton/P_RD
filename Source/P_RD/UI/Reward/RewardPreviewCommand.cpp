@@ -168,10 +168,28 @@ namespace RewardPreview
 			TEXT("RD.RewardPreview: 저장 데이터 변경 없이 보상 화면을 열었습니다."));
 	}
 
+	void ShowChoiceStep(UWorld* World)
+	{
+		Show(World);
+		if (ShownWidget.IsValid() == false)
+		{
+			return;
+		}
+
+		ShownWidget->ContinueToNext();
+		UE_LOG(LogRD, Display,
+			TEXT("RD.RewardChoicePreview: 선택 카드 단계를 열었습니다."));
+	}
+
 	FAutoConsoleCommandWithWorld ShowCommand(
 		TEXT("RD.RewardPreview"),
 		TEXT("저장 데이터 변경 없이 골드/용병 EXP/스킬/장비 보상 화면을 연다."),
 		FConsoleCommandWithWorldDelegate::CreateStatic(&Show));
+
+	FAutoConsoleCommandWithWorld ShowChoiceCommand(
+		TEXT("RD.RewardChoicePreview"),
+		TEXT("저장 데이터 변경 없이 보상 선택 카드 단계를 바로 연다."),
+		FConsoleCommandWithWorldDelegate::CreateStatic(&ShowChoiceStep));
 }
 
 #endif

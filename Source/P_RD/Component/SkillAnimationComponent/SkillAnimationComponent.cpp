@@ -15,8 +15,17 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
+#include "GameFramework/PlayerController.h"
 
 #include "FunctionLibrary/VFXFunctionLibrary.h"
+#include "GameMode/RDGameModeBase.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
+
+bool RDSkillAnimation::ShouldStartCameraShake(const UOptionPersistData* OptionData)
+{
+	// 옵션 시스템이 없는 프리뷰/테스트 월드에서는 기존 연출을 유지한다.
+	return OptionData == nullptr || OptionData->IsCameraShakeEnabled();
+}
 
 USkillAnimationComponent::USkillAnimationComponent()
 {
@@ -207,6 +216,12 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 
 void USkillAnimationComponent::OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
+	// 애님 노티파이 경로에서 먼저 거르고, ShakeCamera에서도 직접 호출 경로를 다시 보호한다.
+	if (!IsCameraShakeEnabled())
+	{
+		return;
+	}
+
 	const FCameraShakeEventTriggerPayload* CameraShakePayload = StaticCast<const FCameraShakeEventTriggerPayload*>(Payload);
 
 	ShakeCamera(CameraShakePayload->mCameraShakeClass);
@@ -353,11 +368,29 @@ void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent
 
 void USkillAnimationComponent::ShakeCamera(TSubclassOf<UCameraShakeBase> CameraShakeClass) const
 {
-	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+	UWorld* World = GetWorld();
+	if (World == nullptr || !IsCameraShakeEnabled())
+	{
+		return;
+	}
+
+	APlayerController* PlayerController = World->GetFirstPlayerController();
+	ACombatCameraPawn* CameraPawn = PlayerController != nullptr
+		? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
 	if (CameraPawn != nullptr)
 	{
 		CameraPawn->GetCameraMovementComponent()->StartCameraShake(CameraShakeClass);
 	}
+}
+
+bool USkillAnimationComponent::IsCameraShakeEnabled() const
+{
+	UWorld* World = GetWorld();
+	const ARDGameModeBase* GameMode = World != nullptr
+		? World->GetAuthGameMode<ARDGameModeBase>() : nullptr;
+	const UOptionPersistData* OptionData = GameMode != nullptr
+		? GameMode->GetOptionPersistData() : nullptr;
+	return RDSkillAnimation::ShouldStartCameraShake(OptionData);
 }
 
 void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const

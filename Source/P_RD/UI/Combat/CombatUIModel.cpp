@@ -94,9 +94,19 @@ void UCombatUIModel::RequestAbandonRun()
 	OnAbandonRun.Broadcast();
 }
 
-void UCombatUIModel::RequestRetryCombat()
+void UCombatUIModel::RequestSaveAndExitRun()
 {
-	OnRetryCombat.Broadcast();
+	OnSaveAndExitRun.Broadcast();
+}
+
+void UCombatUIModel::NotifySaveAndExitCompleted(const bool bSuccess)
+{
+	OnSaveAndExitCompleted.Broadcast(bSuccess);
+}
+
+void UCombatUIModel::NotifyAbandonRunCompleted(const bool bSuccess)
+{
+	OnAbandonRunCompleted.Broadcast(bSuccess);
 }
 
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
@@ -173,7 +183,7 @@ void UCombatUIModel::SetPendingAction(const FCombatPendingActionUI& PendingActio
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
 }
 
-/** @brief 실제 AP와 타일별 이동 연출 AP 중 현재 화면에 쓸 값을 고른다. */
+/** @brief 현재 유닛 스냅샷의 실제 이동 AP를 화면용 정수로 정규화한다. */
 int32 UCombatUIModel::GetDisplayedMovementPoint(const FUnitUI& Unit) const
 {
 	return FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);

@@ -3,6 +3,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 
@@ -45,27 +46,55 @@ namespace
 
 void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
 {
-	// 패널 프레임 골드 톤과 맞춘 선택 색. WBP에 선택 전용 위젯이 생기면 이 함수는 그것으로 대체한다.
-	const FSlateColor SelectedColor(FLinearColor(1.0f, 0.78f, 0.30f));
-	const FSlateColor UnselectedColor(FLinearColor::White);
+	// Text stays white by design. Selection is communicated by the plate itself so
+	// accessibility styling never reintroduces the old brown text tint.
+	const FSlateColor WhiteText(FLinearColor::White);
+	const FLinearColor SelectedPlate(1.0f, 0.82f, 0.34f, 1.0f);
+	const FLinearColor UnselectedPlate(0.56f, 0.56f, 0.56f, 1.0f);
 
-	const auto SetButtonLabelColor = [&SelectedColor, &UnselectedColor](UButton* Button, bool bSelected)
+	const auto SetSegmentState = [this, &WhiteText, &SelectedPlate, &UnselectedPlate](
+		UButton* Button, const FName LabelName, const FName PlateName, bool bSelected)
 	{
-		if (Button == nullptr)
+		if (Button == nullptr || WidgetTree == nullptr)
 		{
 			return;
 		}
-		if (UTextBlock* Label = FindFirstTextBlockIn(Button))
+		UTextBlock* Label = Cast<UTextBlock>(WidgetTree->FindWidget(LabelName));
+		if (Label == nullptr)
 		{
-			Label->SetColorAndOpacity(bSelected ? SelectedColor : UnselectedColor);
+			Label = FindFirstTextBlockIn(Button);
+		}
+		if (Label != nullptr)
+		{
+			Label->SetColorAndOpacity(WhiteText);
+		}
+		if (UImage* Plate = Cast<UImage>(WidgetTree->FindWidget(PlateName)))
+		{
+			Plate->SetColorAndOpacity(bSelected ? SelectedPlate : UnselectedPlate);
 		}
 	};
 
-	SetButtonLabelColor(LowQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Low);
-	SetButtonLabelColor(MediumQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::Medium);
-	SetButtonLabelColor(HighQualityButton, mValueModel.mQualityLevel == ESettingsQualityLevel::High);
-	SetButtonLabelColor(FpsThirtyButton, mValueModel.mFpsLimit == 30);
-	SetButtonLabelColor(FpsSixtyButton, mValueModel.mFpsLimit == 60);
+	SetSegmentState(LowQualityButton, FName(TEXT("LowQualityButtonText")),
+		FName(TEXT("LowQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::Low);
+	SetSegmentState(MediumQualityButton, FName(TEXT("MediumQualityButtonText")),
+		FName(TEXT("MediumQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::Medium);
+	SetSegmentState(HighQualityButton, FName(TEXT("HighQualityButtonText")),
+		FName(TEXT("HighQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::High);
+	SetSegmentState(FpsThirtyButton, FName(TEXT("FpsThirtyButtonText")),
+		FName(TEXT("FpsThirtyButtonPlate")),
+		mValueModel.mFpsLimit == 30);
+	SetSegmentState(FpsSixtyButton, FName(TEXT("FpsSixtyButtonText")),
+		FName(TEXT("FpsSixtyButtonPlate")),
+		mValueModel.mFpsLimit == 60);
+	SetSegmentState(LanguageKoreanButton, FName(TEXT("LanguageKoreanButtonText")),
+		FName(TEXT("LanguageKoreanButtonPlate")),
+		mValueModel.mUseKoreanLanguage);
+	SetSegmentState(LanguageEnglishButton, FName(TEXT("LanguageEnglishButtonText")),
+		FName(TEXT("LanguageEnglishButtonPlate")),
+		mValueModel.mUseKoreanLanguage == false);
 }
 
 /**
@@ -147,16 +176,23 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("Set_sec_volume_text"), LOCTEXT("Volume", "Volume"));
 	SetNamedText(TEXT("Set_sec_gameplay_text"), LOCTEXT("Gameplay", "Gameplay"));
 	SetNamedText(TEXT("Set_row_fps_label"), LOCTEXT("FPS", "FPS"));
+	SetNamedText(TEXT("FpsRow_Label"), LOCTEXT("FPS", "FPS"));
 	SetNamedText(TEXT("FpsThirtyButton"), LOCTEXT("30", "30"));
 	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
 	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
 	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
-	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
-	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
+	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "LOW"));
+	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "MID"));
+	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "HIGH"));
+	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "LOW"));
+	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "MID"));
+	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "HIGH"));
+	SetNamedText(TEXT("LowQualityButtonText"),
+		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("낮음") : TEXT("LOW")));
+	SetNamedText(TEXT("MediumQualityButtonText"),
+		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("중간") : TEXT("MID")));
+	SetNamedText(TEXT("HighQualityButtonText"),
+		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("높음") : TEXT("HIGH")));
 	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
@@ -167,6 +203,8 @@ void USettingsPanelWidget::SyncText() const
 	// 언어 이름은 번역하지 않는다 — 각 언어를 그 언어 자체 이름으로 보여줘야 사용자가 자기 언어를 알아본다.
 	SetNamedText(TEXT("LanguageKoreanButton"), FText::FromString(TEXT("한국어")));
 	SetNamedText(TEXT("LanguageEnglishButton"), FText::FromString(TEXT("English")));
+	SetNamedText(TEXT("LanguageKoreanButtonText"), FText::FromString(TEXT("한국어")));
+	SetNamedText(TEXT("LanguageEnglishButtonText"), FText::FromString(TEXT("English")));
 	SetNamedText(TEXT("Set_row_master_label"), LOCTEXT("Master", "Master"));
 	SetNamedText(TEXT("MasterVolumeRow_Label"), LOCTEXT("Master", "Master"));
 	SetNamedText(TEXT("Set_row_bgm_label"), LOCTEXT("BGM", "BGM"));
@@ -175,6 +213,8 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("SFXVolumeRow_Label"), LOCTEXT("SFX", "SFX"));
 	SetNamedText(TEXT("Set_row_ui_label"), LOCTEXT("UI", "UI"));
 	SetNamedText(TEXT("UIVolumeRow_Label"), LOCTEXT("UI", "UI"));
+	SetNamedText(TEXT("FpsThirtyButtonText"), FText::AsNumber(30));
+	SetNamedText(TEXT("FpsSixtyButtonText"), FText::AsNumber(60));
 	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "Back"));
 	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "Save and Exit"));
 	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "Abandon Run"));
@@ -273,31 +313,39 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(LOCTEXT("LOW", "LOW"));
+		LowQualityButtonText->SetText(FText::FromString(
+			mValueModel.mUseKoreanLanguage ? TEXT("낮음") : TEXT("LOW")));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(LOCTEXT("MID", "MID"));
+		MediumQualityButtonText->SetText(FText::FromString(
+			mValueModel.mUseKoreanLanguage ? TEXT("중간") : TEXT("MID")));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(LOCTEXT("HIGH", "HIGH"));
+		HighQualityButtonText->SetText(FText::FromString(
+			mValueModel.mUseKoreanLanguage ? TEXT("높음") : TEXT("HIGH")));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{
-		AbandonConfirmTitleText->SetText(LOCTEXT("Abandon this run?", "Abandon this run?"));
+		AbandonConfirmTitleText->SetText(FText::FromString(mValueModel.mUseKoreanLanguage
+			? TEXT("런을 포기하시겠습니까?") : TEXT("Abandon this run?")));
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
-		AbandonConfirmBodyText->SetText(LOCTEXT("Abandoning resets the current run and returns to the title.", "Abandoning resets the current run and returns to the title."));
+		AbandonConfirmBodyText->SetText(FText::FromString(mValueModel.mUseKoreanLanguage
+			? TEXT("현재 진행 상황을 삭제하고 타이틀로 돌아갑니다.")
+			: TEXT("Current progress will be deleted and you will return to the title.")));
 	}
 	if (ConfirmAbandonButtonText != nullptr)
 	{
-		ConfirmAbandonButtonText->SetText(LOCTEXT("Abandon", "Abandon"));
+		ConfirmAbandonButtonText->SetText(FText::FromString(
+			mValueModel.mUseKoreanLanguage ? TEXT("포기") : TEXT("Abandon")));
 	}
 	if (CancelAbandonButtonText != nullptr)
 	{
-		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
+		CancelAbandonButtonText->SetText(FText::FromString(
+			mValueModel.mUseKoreanLanguage ? TEXT("취소") : TEXT("Cancel")));
 	}
 }
 

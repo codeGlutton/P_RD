@@ -188,12 +188,16 @@ private:
 	void RefreshCommands();
 	void RefreshEnemy();
 	void RefreshMeta();
+	void RefreshMercenaryInventory();
+	void SelectMercenaryInventoryArtifact(int32 SlotIndex);
 
 	/** @brief 프리미엄 용병 셸을 패널 최하단에 한 번 만들고 구식 판을 숨긴다. */
 	void EnsureMercenaryRosterShell();
 
 	/** @brief 전투 HUD의 용병 메뉴에서 보유 용병 패널을 펴거나 접는다. */
 	void SetMercenaryPanelShown(bool bShown);
+	/** @brief 용병 상세와 같은 판 안에서 인벤토리 페이지를 전환한다. */
+	void SetMercenaryInventoryShown(bool bShown);
 
 	/** @brief 보유 용병 패널이 지금 열려 있는가. */
 	bool IsMercenaryPanelShown() const;
@@ -211,6 +215,14 @@ private:
 	UFUNCTION() void HandleSettingsMenuClicked();
 	/** @brief 설정 패널의 Back 요청을 받아 패널을 닫는다. */
 	UFUNCTION() void HandleSettingsPanelBackRequested();
+	/** @brief 설정 패널의 저장 후 종료 요청을 UIModel로 전달한다. */
+	UFUNCTION() void HandleSettingsPanelSaveAndExitRequested();
+	/** @brief 확인을 마친 런 포기 요청을 기존 전투 UIModel 경로로 전달한다. */
+	UFUNCTION() void HandleSettingsPanelAbandonRunConfirmed();
+	/** @brief 저장 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
+	UFUNCTION() void HandleSaveAndExitCompleted(bool bSuccess);
+	/** @brief 런 포기 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
+	UFUNCTION() void HandleAbandonRunCompleted(bool bSuccess);
 
 	/* ── 아티팩트 상세 ──────────────────────────────────────────────────
 	 *
@@ -384,6 +396,19 @@ private:
 	UFUNCTION() void HandlePartyClicked_1();
 	UFUNCTION() void HandlePartyClicked_2();
 	void HandlePartyClicked(int32 SlotIndex);
+	/** @brief 용병 3인 목록 아래 WBP 인벤토리 탭을 눌렀다. */
+	UFUNCTION() void HandleInventoryClicked();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_0();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_1();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_2();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_3();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_4();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_5();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_6();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_7();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_8();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_9();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_10();
 
 	/** @brief 상단 용병 메뉴를 눌러 보유 용병 패널을 토글한다. */
 	UFUNCTION() void HandleMercenaryMenuClicked();
@@ -537,6 +562,17 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailHP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailAP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailSpeed;
+	UPROPERTY() TObjectPtr<UWidget> mMercenaryDetailSection;
+
+	/** @brief 네 번째 로스터 탭이 여는 용병 패널 내부 인벤토리 페이지. */
+	UPROPERTY() TObjectPtr<UWidget> mMercenaryInventoryPage;
+	UPROPERTY() TObjectPtr<UImage> mMercenaryInventoryPlate;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryInventoryGoldText;
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mMercenaryInventoryArtifactFrames;
+	UPROPERTY() TArray<TObjectPtr<UImage>> mMercenaryInventoryArtifactIcons;
+	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mMercenaryInventoryArtifactNames;
+	UPROPERTY() TArray<TObjectPtr<UButton>> mMercenaryInventoryArtifactButtons;
+	bool mMercenaryInventoryShown = false;
 
 	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 AP 막대. */
 	UPROPERTY() TObjectPtr<class UScaleBox> mCommandLayer;
@@ -556,9 +592,13 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mEndTurnLabel;
 
 	/** @brief 가운데 AP 막대. 지금 차례인 유닛 것을 그린다. */
+	UPROPERTY() TObjectPtr<UWidget> mTurnAPRoot;
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnAPText;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPips;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
+
+	/** @brief WBP_MercenaryPanel의 3인 목록 아래 인벤토리 탭. */
+	UPROPERTY() TObjectPtr<UButton> mMercenaryInventoryButton;
 
 	/** @brief 좌하단 AP 위의 파티 공용 아티팩트 그림. 별도 프레임은 쓰지 않는다. */
 	UPROPERTY() TArray<TObjectPtr<UImage>> mArtifactIcons;
@@ -598,7 +638,6 @@ private:
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
 	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
-	UFUNCTION() void HandleCombatResultRetryConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
@@ -748,6 +787,7 @@ private:
 	 * 닫힌다.
 	 */
 	bool EnsureDetailOverlayWidget();
+	void ShowUnitInspection();
 	void ShowUnitDetailOverlay();
 	void ShowSkillDetailOverlay();
 
@@ -1143,6 +1183,9 @@ private:
 	TObjectPtr<UTextBlock> mEnemyForecastText;
 	TObjectPtr<UWidget> mEnemyNextSkillFrame;
 	TObjectPtr<UImage> mEnemyNextSkillIcon;
+	/** @brief 적 요약판의 채운/쓴 AP 보석. 둘 중 하나만 보인다. */
+	TArray<TObjectPtr<UWidget>> mEnemyAPPips;
+	TArray<TObjectPtr<UWidget>> mEnemyAPPipsUsed;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
