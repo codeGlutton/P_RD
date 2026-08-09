@@ -10,6 +10,7 @@
 #include "Actor/TileMap/TileMapModel.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
 #include "SRPGFramework/SRPGMoveAction.h"
@@ -61,6 +62,16 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
 
         UPlayerUnitModel* PlayerUnitModel = Cast<UPlayerUnitModel>(mInstigator);
         checkf(PlayerUnitModel != nullptr, TEXT("플레이어 유닛 모델 nullptr"));
+
+        // 속박 등으로 이동 불가면 빌드에 진입하지 않고 취소
+        UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(PlayerUnitModel->GetBoardMovementComponentModel());
+        if (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGMoveBuildPhase::None);
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+        }
+
         UAttributeSetComponentModel* AttributeSetComponentModel = PlayerUnitModel->GetAttributeComponentModel();
         checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 모델 nullptr"));
         mMovePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetActionPointAttribute());

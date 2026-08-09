@@ -10,11 +10,17 @@
 #include "Pawn/UnitModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "GameplayTagType.h"
 
 bool UUnitMovementComponentModel::IsMoveable() const
 {
-	// 이동불가 상태이상 태그 검사 자리 (태그 작업에서 구현)
-	return true;
+	// 속박 태그 보유 중엔 이동 불가 (저장값 없이 매번 태그에서 계산)
+	UAttributeSetComponentModel* AttrComp = GetOwnerModel<UUnitModel>()->GetAttributeComponentModel();
+	if (AttrComp == nullptr)
+	{
+		return true;
+	}
+	return AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root) == false;
 }
 
 void UUnitMovementComponentModel::OnStartStep(int32 StepIndex)
