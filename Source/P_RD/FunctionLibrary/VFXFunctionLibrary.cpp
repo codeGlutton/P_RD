@@ -4,6 +4,30 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 
+UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TSoftObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform)
+{
+	return SpawnNiagaraEffect(TObjectPtr<UNiagaraSystem>(NiagaraSystem.LoadSynchronous()), WorldContextObject, Transform);
+}
+
+UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform)
+{
+	if (WorldContextObject == nullptr || NiagaraSystem == nullptr)
+	{
+		return nullptr;
+	}
+
+	// 나이아가라 이펙트 소환
+	UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		WorldContextObject,
+		NiagaraSystem,
+		Transform.GetLocation(),
+		Transform.Rotator(),
+		Transform.GetScale3D()
+	);
+
+	return NiagaraComponent;
+}
+
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const FSoftNiagaraSpawnData& NiagaraSpawnData, const AActor* TargetActor)
 {
 	return SpawnNiagaraEffectWithDirection(NiagaraSpawnData, TargetActor, ETileActorDirection::Forward);
@@ -108,3 +132,4 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection_Internal
 
 	return NiagaraComponent;
 }
+

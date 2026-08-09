@@ -192,7 +192,6 @@ void USRPGCombatModel::InitBoardActorModels(UStaticCombatRoomSpawnData* RoomSpaw
 	{
 		TransformIndexes.Add(PlayerIndex);
 	}
-
 	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
 	URandomStreamFunctionLibrary::ShuffleArray(RandomStream, TransformIndexes);
 
