@@ -339,7 +339,6 @@ void ACombatGameMode::InitializeRoom()
 	mGoldRewardClaimed = false;
 	mExpRewardClaimed = false;
 	mClaimedRewardChoiceIndices.Reset();
-	mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -390,13 +389,11 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		mCombatUIModel->OnBeginCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
@@ -405,7 +402,6 @@ void ACombatGameMode::InitializeRoom()
 		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
 		// 무엇을 조종하는 중인지 알 수 없다.
 		mInspectedUnitId = INDEX_NONE;
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -413,18 +409,16 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
-		PushTurnUIData();   // 배너 숫자용 mRound 갱신
+		PushTurnUIData();
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
@@ -436,9 +430,6 @@ void ACombatGameMode::InitializeRoom()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
-		// 성공 이동은 실제 최종 AP와 같은 값으로 유지되고, 취소 이동은 실제
-		// 차감이 없으므로 원래 AP로 돌아간다.
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
@@ -996,13 +987,6 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 	const int32 UnitId = Unit->GetModelId();
 
-	Unit->OnMoveStepArrivedUI.AddWeakLambda(
-		this,
-		[this, UnitId](const int32 CompletedStepCount, const int32 /*TotalStepCount*/)
-		{
-			mCombatUIModel->SetMoveAPStepPresentation(UnitId, CompletedStepCount);
-		});
-
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -1033,8 +1017,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	Unit->OnMoveStepArrivedUI.RemoveAll(this);
-	mCombatUIModel->ClearMoveAPStepPresentation(Unit->GetModelId());
+	Unit->OnEndMoveStep.RemoveAll(this);
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);
