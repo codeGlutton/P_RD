@@ -81,6 +81,7 @@ namespace
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
 		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
 		Skill->mRequiredActionPoint = 0;	// 시전 비용 없음 (플래너 AP 판정용)
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
