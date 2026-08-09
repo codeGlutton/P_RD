@@ -235,33 +235,19 @@ AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 	return PlayerStartActor;
 }
 
-/**
- * @brief 실제 방 공통 초기화에서 플레이어 유닛을 복원한다.
- *
- * @details
- * RoomGameModeBase 계열 방은 이미 생성된 RunPersistData를 기준으로 실제 플레이 방을 구성한다.
- * 따라서 공통 방 초기화가 끝난 뒤 PlayerUnitRestorationSubsystem을 통해 플레이어 유닛을 스폰/등록한다.
- */
 void ARoomGameModeBase::InitializeCommonRoom()
 {
 	Super::InitializeCommonRoom();
 
 	// 플레이어 복원
 	RestorePlayerUnit();
+	// 방 전환 즉시 저장
+	SaveRunWithUIAsync();
 }
 
-/**
- * @brief 실제 방에 들어오면 현재 Run 저장을 시작한다.
- *
- * @details
- * 방 공통 팝업(WorldMap/Settings/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
- */
 void ARoomGameModeBase::BeginRoom()
 {
 	Super::BeginRoom();
-
-	// 방 전환 즉시 저장
-	SaveRunWithUIAsync();
 
 	/* 터치 세팅 */
 
@@ -279,16 +265,6 @@ void ARoomGameModeBase::BeginRoom()
 	PlayerController->SetInputMode(InputMode);
 }
 
-/**
- * @brief 월드맵에서 다음 방 후보를 선택한다.
- *
- * @details
- * 선택 가능한 방인지 GameMode 기준으로 다시 검사한 뒤, ENTER 버튼이 사용할 선택 좌표만 저장한다.
- *
- * 왜 UI 클릭만 믿지 않는가:
- * 지도 UI가 버튼 비활성화를 해도 런 상태는 전환 중이거나 이미 다른 방을 선택한 뒤일 수 있다.
- * GameMode가 최종 선택 가능 여부를 확인해야 런 데이터와 화면 입력이 어긋나도 잘못된 전환을 막을 수 있다.
- */
 bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
 {
 	if (mWasNextRoomPreloadRequested == true)
@@ -308,16 +284,6 @@ bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
 	return true;
 }
 
-/**
- * @brief 현재 선택된 다음 방으로 입장을 요청한다.
- *
- * @details
- * 선택 자체는 SelectNextRoom()에서 처리하고, 이 함수는 이미 선택된 방에 대한 프리로드/전환만 시작한다.
- *
- * 왜 선택과 입장을 나누는가:
- * 지도에서 노드를 눌러 미리 선택해보고, ENTER 버튼으로 확정하는 UX를 만들기 위해서다.
- * 두 단계를 나누면 잘못 눌렀을 때 바로 전환되지 않고, UI가 선택 상태를 먼저 보여줄 수 있다.
- */
 bool ARoomGameModeBase::EnterSelectedRoom()
 {
 	if (mWasNextRoomPreloadRequested == true)
@@ -331,13 +297,6 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 	return IsTransitionStarted;
 }
 
-/**
- * @brief 방 안에서 활성 Run을 포기하고 프론트엔드 방으로 돌아간다.
- *
- * @details
- * RoomGameModeBase는 실제 방 안에 있는 상태이므로, 런 포기 후에는 RunPersistData를 비우고
- * PreloadAndTransitionFrontendRoomAsync()를 통해 타이틀/캐릭터 선택 흐름이 있는 프론트엔드 방으로 전환한다.
- */
 bool ARoomGameModeBase::AbandonRunFromRoom()
 {
 	if (mWasNextRoomPreloadRequested == true)
@@ -353,16 +312,6 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 	return IsTransitionStarted;
 }
 
-/**
- * @brief 현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.
- *
- * @details
- * FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FMapRoomView로 내려준다.
- *
- * 왜 View DTO로 내보내는가:
- * UI가 런 데이터 구조를 직접 알면 Stage 생성 규칙이 바뀔 때마다 위젯 코드도 같이 흔들린다.
- * GameMode가 표시용 데이터로 변환하면 월드맵은 그래프를 그리는 역할에 집중할 수 있다.
- */
 bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 {
 	OutRooms.Reset();
@@ -423,14 +372,6 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 	return OutRooms.IsEmpty() == false;
 }
 
-/**
- * @brief WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
- *
- * @details
- * 위젯이 URunPersistData를 직접 읽지 않도록,
- * 현재 row/column, 플레이어 레벨, 난이도, Stage 시작 지점 여부, 포기 가능 여부를 FRunControlView로 모아 내려준다.
- * 즉 UI는 이 값만 보고 제목/요약/버튼 상태를 표시하고, 실제 Run 규칙 해석은 GameMode에 남긴다.
- */
 bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 {
 	/*
@@ -455,13 +396,6 @@ bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 	return true;
 }
 
-/**
- * @brief 구조체 대신 개별 값으로 현재 Run 상태를 받아야 하는 호출부용 호환 API다.
- *
- * @details
- * 표시 데이터 계산 기준은 GetRunControlView() 하나로 유지한다.
- * 오래된 BP/WBP 또는 구조체를 바로 쓰기 어려운 호출부가 있으면 이 함수가 FRunControlView를 풀어서 전달한다.
- */
 bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const
 {
 	/*
@@ -491,14 +425,6 @@ FText ARoomGameModeBase::GetCurrentRoomDisplayName() const
 	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
 }
 
-/**
- * @brief 선택된 다음 방 좌표를 실제 프리로드/전환 요청으로 확정한다.
- *
- * @details
- * 월드맵에서 저장된 선택 좌표가 아직 유효한지 다시 확인한 뒤,
- * 기존 방 전환 공통 흐름인 PreloadAndTransitionRoomAsync(row, column)으로 넘긴다.
- * 선택 시점과 입장 확정 시점 사이에 Run 상태가 바뀔 수 있으므로 여기서 최종 검증을 한 번 더 수행한다.
- */
 bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 {
 	/*
@@ -529,15 +455,6 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 	return IsTransitionStarted;
 }
 
-/**
- * @brief 방 진입 직후 현재 Run을 저장한다.
- *
- * @details
- * 저장 자체는 SaveGameSubsystem->SaveRunAsync()가 수행하고,
- * 저장 성공 여부 검증은 비동기 저장 완료 콜백에서 처리한다.
- * 저장 진행을 보여주던 SaveNotify 보조 UI는 옛 HUD와 함께 삭제됐다.
- * 알림 UI가 다시 생기면 여기서 열고 닫는 흐름을 붙인다.
- */
 void ARoomGameModeBase::SaveRunWithUIAsync() const
 {
 	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
@@ -545,13 +462,6 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 		}));
 }
 
-/**
- * @brief RunPersistData 기준으로 방 안에서 사용할 플레이어 유닛을 스폰/등록한다.
- *
- * @details
- * 실제 스폰과 데이터 복원은 PlayerUnitRestorationSubsystem이 담당한다.
- * RoomGameModeBase는 복원된 유닛 포인터를 mPlayerUnit에 보관해 방 내부 시스템이 현재 플레이어 유닛을 조회할 수 있게 한다.
- */
 void ARoomGameModeBase::RestorePlayerUnit()
 {
 	UPartyRestorationSubsystem* PartyRestorationSubsystem = GetGameInstance()->GetSubsystem<UPartyRestorationSubsystem>();
@@ -563,35 +473,17 @@ void ARoomGameModeBase::RestorePlayerUnit()
 	mPartyModel = PartyModel;
 }
 
-/**
- * @brief 월드맵에서 저장해둔 다음 방 선택 좌표를 초기화한다.
- *
- * @details
- * 선택 좌표는 "노드를 눌러 임시 선택한 값"이므로,
- * 선택 취소나 지도 상태 재계산이 필요한 시점에는 INDEX_NONE으로 되돌려 선택된 방이 없음을 명확히 한다.
- */
 void ARoomGameModeBase::ClearSelectedRoom()
 {
 	mSelectedRoomRow = INDEX_NONE;
 	mSelectedRoomColumn = INDEX_NONE;
 }
 
-/**
- * @brief 월드맵에서 확정 대기 중인 다음 방 선택 좌표가 있는지 확인한다.
- */
 bool ARoomGameModeBase::HasSelectedRoom() const
 {
 	return mSelectedRoomRow != INDEX_NONE && mSelectedRoomColumn != INDEX_NONE;
 }
 
-/**
- * @brief 지정 방이 현재 방에서 실제로 이동 가능한 다음 방인지 검증한다.
- *
- * @details
- * 방 좌표가 Stage 안에 존재하는지 먼저 확인하고,
- * 현재 방의 mNextRoomColumns 기준으로 바로 다음 행에 연결된 방인지 검사한다.
- * UI에서 Ready 상태로 보이는 방이라도 전환 직전 GameMode가 다시 확인해 잘못된 방 입장을 막는다.
- */
 bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 {
 	const URunPersistData* RunPersistData = GetRunPersistData();
@@ -644,13 +536,6 @@ void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 	mSelectedRoomSpawnSettingName = Name;
 }
 
-/**
- * @brief 파티 공용 인벤토리의 골드와 아티팩트를 만든다.
- *
- * @details
- * 파티 골드는 파티 AttributeSet에서, 아티팩트는 파티 공용 아티팩트 컴포넌트에서
- * 읽는다. 용병 성장/스킬/장비는 각 용병 화면의 책임이므로 이 View에 넣지 않는다.
- */
 bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
 {
 	OutView = FInventoryView();

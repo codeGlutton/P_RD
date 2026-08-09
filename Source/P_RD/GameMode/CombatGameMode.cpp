@@ -347,7 +347,6 @@ void ACombatGameMode::InitializeRoom()
 	mGoldRewardClaimed = false;
 	mExpRewardClaimed = false;
 	mClaimedRewardChoiceIndices.Reset();
-	mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -398,13 +397,11 @@ void ACombatGameMode::InitializeRoom()
 		});
 
 	CombatModel->OnBeginCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier) {
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		mCombatUIModel->OnBeginCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
@@ -413,7 +410,6 @@ void ACombatGameMode::InitializeRoom()
 		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
 		// 무엇을 조종하는 중인지 알 수 없다.
 		mInspectedUnitId = INDEX_NONE;
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -421,18 +417,16 @@ void ACombatGameMode::InitializeRoom()
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
-		PushTurnUIData();   // 배너 숫자용 mRound 갱신
+		PushTurnUIData();
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
@@ -444,38 +438,7 @@ void ACombatGameMode::InitializeRoom()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
-		// 성공 이동은 실제 최종 AP와 같은 값으로 유지되고, 취소 이동은 실제
-		// 차감이 없으므로 원래 AP로 돌아간다.
-		mCombatUIModel->ClearMoveAPStepPresentation(INDEX_NONE);
 		mCombatUIModel->NotifyActionResolved();
-
-		/*
-		 * 카메라가 스킬 강조에서 돌아오는 중이면 "행동 끝" 표시(카드 복귀)를
-		 * 카메라가 제자리에 온 다음으로 미룬다. 몽타쥬가 끝나도 화면은 아직
-		 * 줌인 자리라, 지금 카드를 펴면 연출 위로 카드가 튀어나온다.
-		 *
-		 * 배리어는 잡지 않는다 -- 프레임워크 진행이 카메라를 기다리면 안 된다.
-		 * HUD 는 이 알림의 배리어를 쓰지 않으므로 늦은 알림은 빈 배리어로 보낸다.
-		 * 그 사이 다음 액션/턴이 시작되면 위쪽 콜백이 이 대기를 직접 취소한다.
-		 */
-		/*UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
-		if (WorldCameraModel != nullptr && WorldCameraModel->IsMainCameraEmphasized() == true)
-		{
-			CancelPendingActionEndAfterCameraReturn();
-			mPendingActionEndAfterCameraReturnHandle =
-				WorldCameraModel->OnMainCameraReturned.AddWeakLambda(this,
-				[this, WorldCameraModel]() {
-					WorldCameraModel->OnMainCameraReturned.Remove(
-						mPendingActionEndAfterCameraReturnHandle);
-					mPendingActionEndAfterCameraReturnHandle.Reset();
-					if (mCombatUIModel != nullptr)
-					{
-						mCombatUIModel->OnEndAnyTurnAction.Broadcast(nullptr);
-					}
-				});
-			return;
-		}
-		*/
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
 
@@ -1017,20 +980,12 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-	const int32 UnitId = Unit->GetModelId();
 
 	if (GForceCombatHPOne != 0)
 	{
 		AttributeSetComponentModel->SetAttributeBaseValue(
 			UUnitAttributeSet::GetHPAttribute(), 1.f);
 	}
-
-	Unit->OnMoveStepArrivedUI.AddWeakLambda(
-		this,
-		[this, UnitId](const int32 CompletedStepCount, const int32 /*TotalStepCount*/)
-		{
-			mCombatUIModel->SetMoveAPStepPresentation(UnitId, CompletedStepCount);
-		});
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -1062,8 +1017,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	Unit->OnMoveStepArrivedUI.RemoveAll(this);
-	mCombatUIModel->ClearMoveAPStepPresentation(Unit->GetModelId());
+	Unit->OnEndMoveStep.RemoveAll(this);
 
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).RemoveAll(this);

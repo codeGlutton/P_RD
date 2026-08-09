@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatLayoutHUDWidget.h"
+﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Actor/TileMap/TileLayer.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
@@ -1757,7 +1757,7 @@ void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 	const FPartySlotWidgets& Widgets, const FUnitUI& Unit) const
 {
 	const int32 Left = mUIModel != nullptr
-		? mUIModel->ResolveDisplayedMovementPoint(Unit)
+		? mUIModel->GetDisplayedMovementPoint(Unit)
 		: FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
 	const int32 Total = FMath::Max(
 		FMath::RoundToInt(Unit.mMaxMovementPoint), Left);
@@ -2142,7 +2142,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
 	const int32 EnemyAPLeft = mUIModel != nullptr
-		? mUIModel->ResolveDisplayedMovementPoint(*Shown)
+		? mUIModel->GetDisplayedMovementPoint(*Shown)
 		: FMath::Max(Shown->mActionPoints, 0);
 	const int32 EnemyAPTotal = FMath::Max(
 		FMath::RoundToInt(Shown->mMaxMovementPoint),
@@ -2150,7 +2150,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	SetTextIfPresent(mEnemyAPText, FText::FromString(
 		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
 	// 고정 10칸을 항상 그린다. 현재 AP만 채운 보석이고 나머지는 빈 보석이다.
-	// 이동 연출 단계 또는 스킬 소비로 AP가 줄면 같은 자리에서 즉시 교체된다.
+	// 이동 스텝 또는 스킬 소비로 실제 AP가 줄면 같은 자리에서 즉시 교체된다.
 	for (int32 Index = 0; Index < mEnemyAPPips.Num(); ++Index)
 	{
 		const bool bFilled = Index < EnemyAPLeft;
@@ -2781,7 +2781,7 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 		return;
 	}
 	const int32 Left = TurnUnit != nullptr
-		? mUIModel->ResolveDisplayedMovementPoint(*TurnUnit) : 0;
+		? mUIModel->GetDisplayedMovementPoint(*TurnUnit) : 0;
 	const int32 Total = TurnUnit != nullptr
 		? FMath::Max(FMath::RoundToInt(TurnUnit->mMaxMovementPoint), Left) : 0;
 

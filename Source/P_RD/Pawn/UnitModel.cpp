@@ -298,8 +298,8 @@ void UUnitModel::OnStartApplyingEffects(const FActiveSkillContext& Context, int3
 	PassiveContext.mOwnerSnapshot = Snapshot;
 
 	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
-	OtherSnapshots.Reserve(Context.mOtherCombatTargets.Num());
-	for (IBoardCombatTarget* OtherCombatTarget : Context.mOtherCombatTargets)
+	OtherSnapshots.Reserve(Context.mFinalCombatTargets.Num());
+	for (IBoardCombatTarget* OtherCombatTarget : Context.mFinalCombatTargets)
 	{
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 		checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
@@ -333,8 +333,8 @@ void UUnitModel::OnEndApplyingEffects(const FActiveSkillContext& Context, int32 
 	PassiveContext.mOwnerSnapshot = Snapshot;
 
 	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
-	OtherSnapshots.Reserve(Context.mOtherCombatTargets.Num());
-	for (IBoardCombatTarget* OtherCombatTarget : Context.mOtherCombatTargets)
+	OtherSnapshots.Reserve(Context.mFinalCombatTargets.Num());
+	for (IBoardCombatTarget* OtherCombatTarget : Context.mFinalCombatTargets)
 	{
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 		checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));

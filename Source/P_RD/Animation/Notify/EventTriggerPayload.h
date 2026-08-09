@@ -15,7 +15,6 @@ class UCameraShakeBase;
 
 DECLARE_DELEGATE(FOnEndDurationEventTrigger);
 
-
 UENUM(BlueprintType)
 enum class ECameraZoomTargetType : uint8
 {
@@ -151,6 +150,14 @@ public:
     FGameplayTag mAnimationTag;
 };
 
+UENUM(BlueprintType)
+enum class EApplyNiagaraTargetType : uint8
+{
+    Actor,
+    EffectTile,
+    TargetTile,
+};
+
 /**
  * @brief  적용 VFX 이벤트 호출 애님 노티파이의 추가 데이터
  */
@@ -171,6 +178,9 @@ public:
     }
 
 public:
+    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetType"))
+    EApplyNiagaraTargetType mTargetType = EApplyNiagaraTargetType::Actor;
+
     UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
     TArray<FNiagaraSpawnData> mNiagaraSpawnDatas;
 };

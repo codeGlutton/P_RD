@@ -1,4 +1,4 @@
-#include "Misc/AutomationTest.h"
+﻿#include "Misc/AutomationTest.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
@@ -55,6 +55,8 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	FUnitUI PlayerUnit;
 	PlayerUnit.mUnitId = 101;
 	PlayerUnit.mIsPlayer = true;
+	PlayerUnit.mActionPoints = 5;
+	PlayerUnit.mMaxActionPoints = 5;
 	PlayerUnit.mMovementPoint = 5.f;
 	PlayerUnit.mMaxMovementPoint = 5.f;
 	Model->SetUnitUIs({ PlayerUnit });
@@ -159,11 +161,11 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	{
 		const FString ExpectedText = FString::Printf(TEXT("%d/5"), ExpectedLeft);
 		TestEqual(
-			*FString::Printf(TEXT("%d칸 도착 후 중앙 AP 숫자"), CompletedSteps),
+			*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 중앙 AP 숫자"), CompletedSteps),
 			TurnAPText->GetText().ToString(),
 			ExpectedText);
 		TestEqual(
-			*FString::Printf(TEXT("%d칸 도착 후 파티 AP 숫자"), CompletedSteps),
+			*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 파티 AP 숫자"), CompletedSteps),
 			PartyAPText->GetText().ToString(),
 			ExpectedText);
 
@@ -180,76 +182,38 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 
 			const bool bExpectedActive = PipIndex < ExpectedLeft;
 			TestEqual(
-				*FString::Printf(TEXT("%d칸 도착 후 활성 AP 칸 %d"), CompletedSteps, PipIndex),
+				*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 활성 AP 칸 %d"), CompletedSteps, PipIndex),
 				IsShown(ActivePip),
 				bExpectedActive);
 			TestEqual(
-				*FString::Printf(TEXT("%d칸 도착 후 사용 AP 칸 %d"), CompletedSteps, PipIndex),
+				*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 사용 AP 칸 %d"), CompletedSteps, PipIndex),
 				IsShown(UsedPip),
 				!bExpectedActive);
 
 			if (bExpectedActive)
 			{
 				TestEqual(
-					*FString::Printf(TEXT("%d칸 도착 후 중앙 AP 강조 잔류 없음 %d"), CompletedSteps, PipIndex),
+					*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 중앙 AP 강조 잔류 없음 %d"), CompletedSteps, PipIndex),
 					ActivePip->GetRenderOpacity(),
 					1.f);
 			}
 		}
 	};
 
-	// 실제 Movement는 아직 5인 채로, 물리적으로 타일에 도착할 때마다 표시만
-	// 4 -> 3 -> 2로 내려간다.
-	for (int32 CompletedSteps = 1; CompletedSteps <= 3; ++CompletedSteps)
+	// 이동 액션이 스텝을 시작할 때 실제 AP를 1씩 차감한다. 새 유닛 스냅샷이
+	// 들어올 때마다 중앙·파티 숫자와 보석도 4 -> 3 -> 2로 함께 갱신되어야 한다.
+	for (int32 StepIndex = 1; StepIndex <= 3; ++StepIndex)
 	{
-		Model->SetMoveAPStepPresentation(PlayerUnit.mUnitId, CompletedSteps);
-		const int32 ExpectedLeft = 5 - CompletedSteps;
+		const int32 ExpectedLeft = 5 - StepIndex;
+		PlayerUnit.mActionPoints = ExpectedLeft;
+		PlayerUnit.mMovementPoint = static_cast<float>(ExpectedLeft);
+		Model->SetUnitUIs({ PlayerUnit });
 		TestEqual(
-			*FString::Printf(TEXT("%d칸 도착 후 표시 AP"), CompletedSteps),
-			Model->ResolveDisplayedMovementPoint(PlayerUnit),
+			*FString::Printf(TEXT("%d번째 이동 스텝 시작 후 표시 AP"), StepIndex),
+			Model->GetDisplayedMovementPoint(PlayerUnit),
 			ExpectedLeft);
-		VerifyStepPresentation(CompletedSteps, ExpectedLeft);
+		VerifyStepPresentation(StepIndex, ExpectedLeft);
 	}
-
-	// 이동 중 HP/상태 등의 이유로 실제 유닛 스냅샷이 다시 와도 AP 연출은
-	// 완료 칸 수를 유지한다.
-	Model->SetUnitUIs({ PlayerUnit });
-	TestEqual(TEXT("이동 중 실제 스냅샷 재수신 후 표시 AP 유지"),
-		Model->ResolveDisplayedMovementPoint(PlayerUnit), 2);
-	VerifyStepPresentation(3, 2);
-
-	// 중단/취소되면 실제 AP를 내지 않았으므로 즉시 5로 복구한다.
-	Model->ClearMoveAPStepPresentation(INDEX_NONE);
-	TestEqual(TEXT("이동 취소 후 실제 AP 복구"),
-		Model->ResolveDisplayedMovementPoint(PlayerUnit), 5);
-	VerifyStepPresentation(0, 5);
-
-	// 타일 효과가 Movement를 1 줄인 경우에도 다음 도착 표시는
-	// 실제 4 - 이동 완료 2칸 = 2로 다시 맞춘다.
-	Model->SetMoveAPStepPresentation(PlayerUnit.mUnitId, 1);
-	PlayerUnit.mMovementPoint = 4.f;
-	Model->SetUnitUIs({ PlayerUnit });
-	Model->SetMoveAPStepPresentation(PlayerUnit.mUnitId, 2);
-	TestEqual(TEXT("타일 효과 AP 변경 후 이동 표시 재계산"),
-		Model->ResolveDisplayedMovementPoint(PlayerUnit), 2);
-	VerifyStepPresentation(2, 2);
-	Model->ClearMoveAPStepPresentation(INDEX_NONE);
-	TestEqual(TEXT("타일 효과 후 취소 시 실제 AP 유지"),
-		Model->ResolveDisplayedMovementPoint(PlayerUnit), 4);
-
-	PlayerUnit.mMovementPoint = 5.f;
-	Model->SetUnitUIs({ PlayerUnit });
-
-	// 정상 종료에서는 실제 AP 2가 먼저 들어온 뒤 override를 해제하므로 화면이
-	// 2에서 튀지 않는다.
-	Model->SetMoveAPStepPresentation(PlayerUnit.mUnitId, 3);
-	PlayerUnit.mMovementPoint = 2.f;
-	Model->SetUnitUIs({ PlayerUnit });
-	VerifyStepPresentation(3, 2);
-	Model->ClearMoveAPStepPresentation(INDEX_NONE);
-	TestEqual(TEXT("정상 종료 후 실제 AP와 표시 AP 일치"),
-		Model->ResolveDisplayedMovementPoint(PlayerUnit), 2);
-	VerifyStepPresentation(3, 2);
 
 	return true;
 }

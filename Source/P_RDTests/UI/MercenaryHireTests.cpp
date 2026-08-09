@@ -1141,18 +1141,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 					: ESlateVisibility::Collapsed);
 		}
 	}
-	Model->SetMoveAPStepPresentation(MonsterUnit.mUnitId, 1);
-	TestEqual(TEXT("몬스터 이동 한 칸 연출 때 AP 숫자가 즉시 줄어든다"),
-		EnemyAPText->GetText().ToString(), FString(TEXT("AP 2/5")));
-	if (UWidget* MovingSpentPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipUsed_2")))
-	{
-		TestEqual(TEXT("몬스터 이동 연출 때 보석이 빈 칸으로 바뀐다"),
-			MovingSpentPip->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-	}
-	Model->ClearMoveAPStepPresentation(MonsterUnit.mUnitId);
 	MonsterUnit.mActionPoints = 2;
 	MonsterUnit.mMovementPoint = 2.f;
 	Model->SetUnitUIs({ MonsterUnit });
+	TestEqual(TEXT("몬스터의 실제 AP가 한 칸 줄면 숫자가 즉시 갱신된다"),
+		EnemyAPText->GetText().ToString(), FString(TEXT("AP 2/5")));
 	if (UWidget* SpentPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPip_2")))
 	{
 		TestEqual(TEXT("몬스터가 AP를 쓰면 보석 하나가 사라진다"),
@@ -1160,7 +1153,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	}
 	if (UWidget* EmptyPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipUsed_2")))
 	{
-		TestEqual(TEXT("몬스터가 스킬 AP를 쓰면 빈 보석이 남는다"),
+		TestEqual(TEXT("몬스터의 실제 AP가 줄면 빈 보석이 남는다"),
 			EmptyPip->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	}
 	MonsterMenu->OnClicked.Broadcast();

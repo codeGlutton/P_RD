@@ -61,6 +61,7 @@ void FActiveSkillContext::Clear()
 	mMapModel = nullptr;
 	mSelfTileIndex = FTileIndex::Invalid;
 	mAimedTileIndex = FTileIndex::Invalid;
+	mTargetTileIndexes.Reset();
 	mEffectTileIndexes.Reset();
 
 	mMotionLocalDir = ETileActorDirection::Forward;
@@ -72,8 +73,8 @@ void FActiveSkillContext::Clear()
 
 	mEndCallback.Clear();
 
-	mTargetTileIndexes.Reset();
-	mOtherCombatTargets.Reset();
+	mFinalTileIndexes.Reset();
+	mFinalCombatTargets.Reset();
 }
 
 bool FActiveSkillContext::IsValid() const
@@ -256,7 +257,8 @@ void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32
 		mActiveSkillContext.mMapModel = MapModel;
 		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
 		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
-		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, AimedTileIndex);
+		mActiveSkillContext.mTargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, mActiveSkillContext.mTargetTileIndexes);
 		mActiveSkillContext.mSkillEndBarrier = SkillEndBarrier;
 		mActiveSkillContext.mSkillIndex = SkillIndex;
 		mActiveSkillContext.mAnimationIndex = 0;
@@ -383,8 +385,8 @@ void USkillComponentModel::PreparePhaseLayer()
 
 	/* 활성화 페이즈 데이터 채우기 */
 
-	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
-	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
+	mActiveSkillContext.mFinalTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
+	mActiveSkillContext.mFinalCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mFinalTileIndexes);
 
 	/* 페이즈 시작 시 대리자 호출 */
 
@@ -440,7 +442,7 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 	{
 		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
 		{
 			OtherCombatTarget->OnStartReceivingEffects(OwnerSnapshot, mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 		}
@@ -451,10 +453,10 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 	{
 		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 		TArray<TScriptInterface<IBoardCombatTarget>> OtherCombatTargets;
-		OtherCombatTargets.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
+		OtherCombatTargets.Reserve(mActiveSkillContext.mFinalCombatTargets.Num());
 		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>> OtherSnapshots;
-		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		OtherSnapshots.Reserve(mActiveSkillContext.mFinalCombatTargets.Num());
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
@@ -468,7 +470,7 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 			OwnerSnapshot, 
 			OtherCombatTargets, 
 			OtherSnapshots, 
-			mActiveSkillContext.mTargetTileIndexes
+			mActiveSkillContext.mFinalTileIndexes
 		);
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
@@ -482,7 +484,7 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 	{
 		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
 		{
 			OtherCombatTarget->OnEndReceivingEffects(OwnerSnapshot, mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 		}
@@ -588,10 +590,9 @@ TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel,
 	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
-	
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
@@ -599,20 +600,26 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	const int32 EffectRange = StaticSkillData->mEffectArea;
 	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mEffectBlockerMask);
 
-	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
-	const TArray<FTileIndex> TargetTiles = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
-
 	// 각 타겟 타일에서 영향 범위로 확산, 겹치는 타일은 한 번만 포함
-	TArray<FTileIndex> EffectTiles;
-	for (const FTileIndex& TargetTile : TargetTiles)
+	TArray<FTileIndex> AllEffectTiles;
+	for (const FTileIndex& TargetTileIndex : TargetTileIndexes)
 	{
-		for (const FTileIndex& EffectTile : MapModel->GetEffectTiles(TargetTile, Pattern, EffectRange, BlockerLayers))
+		const TArray<FTileIndex> EffectTileIndexes = MapModel->GetEffectTiles(TargetTileIndex, Pattern, EffectRange, BlockerLayers);
+		for (const FTileIndex& EffectTileIndex : EffectTileIndexes)
 		{
-			EffectTiles.AddUnique(EffectTile);
+			AllEffectTiles.AddUnique(EffectTileIndex);
 		}
 	}
+	return AllEffectTiles;
+}
 
-	return EffectTiles;
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+{
+	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
+	const TArray<FTileIndex> TargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+
+	// 타겟 범위로 영향 범위의 타일들을 수집
+	return GetEffectTiles(MapModel, SkillIndex, TargetTileIndexes);
 }
 
 bool USkillComponentModel::IsCooldown(int32 SkillIndex) const
