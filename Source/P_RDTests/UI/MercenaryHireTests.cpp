@@ -872,7 +872,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 					Widget->GetVisibility(), ESlateVisibility::Collapsed);
 			}
 		}
-		for (int32 Index = 0; Index < 8; ++Index)
+		// 0809 시안: 격자 4x2 = 골드 + 아티팩트 7칸. 고름 테두리는 없다.
+		for (int32 Index = 0; Index < 7; ++Index)
 		{
 			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 프레임 %d"), Index),
 				Tree->FindWidget(FName(*FString::Printf(
@@ -880,13 +881,12 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 아이콘 %d"), Index),
 				Tree->FindWidget(FName(*FString::Printf(
 					TEXT("MercenaryInventoryArtifactIcon_%d"), Index))));
-			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 선택판 %d"), Index),
-				Tree->FindWidget(FName(*FString::Printf(
-					TEXT("MercenaryInventoryArtifactSelection_%d"), Index))));
 			TestNotNull(*FString::Printf(TEXT("인벤토리 아티팩트 버튼 %d"), Index),
 				Tree->FindWidget(FName(*FString::Printf(
 					TEXT("MercenaryInventoryArtifactButton_%d"), Index))));
 		}
+		TestNull(TEXT("고름 테두리는 뺐다(0809)"),
+			Tree->FindWidget(TEXT("MercenaryInventoryArtifactSelection_0")));
 	}
 
 	UPanelWidget* TurnAPScale =
@@ -1039,10 +1039,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 			ShellSlot->GetZOrder(), -100);
 		TestEqual(TEXT("프리미엄 셸 왼쪽 위 앵커"),
 			ShellSlot->GetAnchors().Minimum, FVector2D::ZeroVector);
-		TestEqual(TEXT("프리미엄 셸은 1920 기준 고정 배치다"),
-			ShellSlot->GetAnchors().Maximum, FVector2D::ZeroVector);
-		TestEqual(TEXT("프리미엄 셸은 전투 HUD가 둘레에 보이는 모달 여백을 둔다"),
-			ShellSlot->GetOffsets(), FMargin(90.f, 70.f, 1740.f, 960.f));
+		// 0809 시안: 용병 판은 화면을 가득 채우는 전면 판이다 (모달 여백 없음).
+		TestEqual(TEXT("프리미엄 셸은 화면 전체로 늘어난다"),
+			ShellSlot->GetAnchors().Maximum, FVector2D(1.f, 1.f));
+		TestEqual(TEXT("프리미엄 셸은 가장자리에 붙는다"),
+			ShellSlot->GetOffsets(), FMargin(0.f, 0.f, 0.f, 0.f));
 	}
 	else
 	{
