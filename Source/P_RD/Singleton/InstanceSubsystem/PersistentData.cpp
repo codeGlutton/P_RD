@@ -424,6 +424,33 @@ void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPl
 		});
 }
 
+void URunPersistData::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	if (Ar.IsSaveGame() == true)
+	{
+		if (Ar.IsSaving() == true)
+		{
+			int32 CurrnetStageSeed = mStageBuildStream.GetCurrentSeed();
+			Ar << CurrnetStageSeed;
+
+			int32 CurrnetEventSeed = mEventStream.GetCurrentSeed();
+			Ar << CurrnetEventSeed;
+		}
+		else if (Ar.IsLoading() == true)
+		{
+			int32 CurrnetStageSeed = INDEX_NONE;
+			Ar << OUT CurrnetStageSeed;
+			mStageBuildStream.Initialize(CurrnetStageSeed);
+
+			int32 CurrnetEventSeed = INDEX_NONE;
+			Ar << OUT CurrnetEventSeed;
+			mEventStream.Initialize(CurrnetEventSeed);
+		}
+	}
+}
+
 void URunPersistData::MakeCaches()
 {
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
@@ -434,6 +461,10 @@ void URunPersistData::MakeCaches()
 	{
 		mRunPersistDataCache.mEffectVFXs.Add(EffectVFXPair.Value.mNiagaraSystem.LoadSynchronous());
 	}
+
+	const FSoftNiagaraSpawnData& CombatTargetDissolveVFX = GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX;
+	mRunPersistDataCache.mEffectVFXs.Add(CombatTargetDissolveVFX.mNiagaraSystem.LoadSynchronous());
+	mRunPersistDataCache.mEffectCurves.Add(GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveCurve.LoadSynchronous());
 }
 
 void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)

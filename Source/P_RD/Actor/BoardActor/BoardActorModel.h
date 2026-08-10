@@ -21,10 +21,11 @@ struct FBoardActorAnimationContext;
 DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
+DECLARE_MULTICAST_DELEGATE(FOnRemoveTileTransform);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
-
 DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMoveStep, const FTileTransform& /* TileTransform */, const FTransform& /* WorldTransform */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
@@ -153,22 +154,31 @@ public:
 	FOnGetBoardActorWorldTransform OnGetBoardActorWorldTransform;
 
 	/**
-	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
+	 * @brief 타일에 배치되었을 때, 뷰에게 전달하는 대리자
 	 */
 	FOnPlaceTileTransform OnPlaceTileTransform;
+	/**
+	 * @brief 타일에서 떨어졌을 때, 뷰에게 전달하는 대리자
+	 */
+	FOnRemoveTileTransform OnRemoveTileTransform;
 
 	/**
 	 * @brief 이동 시작 시 전체 경로 전달
 	 * @details 코너링에 베지어곡선을 사용하려면 진입/진출 타일의 정보가 필요하므로 미리 전체 경로 정보 전달
 	 */
 	FOnStartMovePath OnStartMovePath;
-
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자
 	 * @details 뷰는 배리어를 잡고 애니메이션 연출, 끝나면 다음 스텝 진행을 알림.
 	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
 	 */
 	FOnStartMoveStep OnStartMoveStep;
+	/**
+	 * @brief 물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림 대리자
+	 * @details 완료 칸 수는 이동 경로 시작 타일을 제외한 절대값이라 중복 알림에도
+	 *          UI가 AP를 두 번 차감하지 않고 같은 표시값으로 맞출 수 있다.
+	 */
+	FOnEndMoveStep OnEndMoveStep;
 
 	/**
 	 * @brief 방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자

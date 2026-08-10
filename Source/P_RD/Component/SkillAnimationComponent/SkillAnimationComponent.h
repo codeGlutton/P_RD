@@ -72,7 +72,8 @@ protected:
 	 * @param NiagaraSpawnData 나이아가라 스폰 요청 정보
 	 * @param LocalDirection 방향
 	 */
-	void SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
+	void SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const;
+	void SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, const FTransform& Transform) const;
 	/**
 	 * @brief 모델의 애니메이션에서 카메라 줌 처리
 	 * @param EndEvent 종료시 호출될 대리자
@@ -101,7 +102,7 @@ protected:
 	 * @param BlendSpeed 시간 블렌딩 스케일
 	 * @param Duration 유지 시간
 	 */
-	void RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration) const;
+	void RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const;
 
 protected:
 	// @brief 소유 모델 객체

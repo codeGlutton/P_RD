@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_ActionPoint.h
  * @brief  ActionPoint 이펙트 정의 헤더
  * @author 이문환, 모호재
@@ -55,3 +55,11 @@ public:
 	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
 
+/**
+ * @brief ActionPoint 충전 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_RechargeActionPoint : public UTacticalEffect_GetActionPoint
+{
+	GENERATED_BODY()
+};

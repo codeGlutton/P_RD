@@ -50,6 +50,7 @@ public:
 	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 protected:
+	void InitializeCommonRoom() override;
 	void BeginRoom() override;
 
 	/* UI 진입점 */

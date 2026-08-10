@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_SpeedPoint.h
  * @brief  SpeedPoint 이펙트 정의 헤더
  * @author 모호재
@@ -55,3 +55,11 @@ public:
 	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
 
+/**
+ * @brief SpeedPoint 충전 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_RechargeSpeedPoint : public UTacticalEffect_GetSpeedPoint
+{
+	GENERATED_BODY()
+};

@@ -104,7 +104,9 @@ URewardSettlementWidgetBase::URewardSettlementWidgetBase(const FObjectInitialize
 	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
 	RD_SETTLEMENT_TEX(mExpIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon");
 	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
-	RD_SETTLEMENT_TEX(mSkillIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_CombatHUD_SkillIcon_Basic.T_CombatHUD_SkillIcon_Basic");
+	// 스킬 아이콘 그림은 지웠다(새 그림 예정). 투명 그림 하나를 세워 두는 대신
+	// 아예 비워 둔다 -- 자리를 채우려고 만든 자산이 또 다른 지울 것이 된다.
+	// 쓰는 쪽은 이미 nullptr 을 검사하고 그리지 않는다.
 #undef RD_SETTLEMENT_TEX
 }
 

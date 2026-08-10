@@ -183,6 +183,8 @@ struct FRunPersistDataCache
 public:
 	UPROPERTY()
 	TArray<TObjectPtr<UNiagaraSystem>> mEffectVFXs;
+	UPROPERTY()
+	TArray<TObjectPtr<UCurveBase>> mEffectCurves;
 };
 
 /**
@@ -192,6 +194,10 @@ UCLASS()
 class P_RD_API URunPersistData : public UPartyPersistData
 {
 	GENERATED_BODY()
+
+	/* UObject 상속 */
+public:
+	void Serialize(FArchive& Ar) override;
 
 public:
 	void MakeCaches();

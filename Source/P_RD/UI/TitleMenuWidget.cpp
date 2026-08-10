@@ -86,7 +86,6 @@ UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTINGS"))
 	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
-	, mLastLoggedTitleLayoutViewportSize(FVector2D::ZeroVector)
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
@@ -125,7 +124,6 @@ void UTitleMenuWidget::NativeConstruct()
 	SyncMainText();
 	AlignMainMenuTextBlocks();
 	RefreshMainMenuState();
-	RefreshResponsiveTitleLayout(GetCachedGeometry().GetLocalSize());
 	SetStatusText(FText::GetEmpty());
 }
 
@@ -138,8 +136,12 @@ void UTitleMenuWidget::NativeConstruct()
 void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+	// 배경 영상만 화면비에 맞춘다.
+	//
+	// 레이아웃은 ScaleBox 가 알아서 줄인다. 전에는 여기서 매 틱 화면비를 재
+	// 다섯 벌 중 하나를 골랐는데, 재 보니 그 다섯이 서로 30~44px 밖에 안 달라
+	// 한 벌로 줄였다. 고를 것이 없으면 고르는 코드도 없어야 한다.
 	FitTitleBackgroundVideoToViewport();
-	RefreshResponsiveTitleLayout(MyGeometry.GetLocalSize());
 }
 
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
@@ -202,161 +204,6 @@ void UTitleMenuWidget::SyncMainText()
 }
 
 /** @brief 화면비에 따라 WBP 안의 프로필별 레이아웃 캔버스 중 하나만 활성화한다. */
-void UTitleMenuWidget::RefreshResponsiveTitleLayout(const FVector2D& ViewportSize)
-{
-	if (TitleLayoutSwitcher == nullptr)
-	{
-		return;
-	}
-
-	const FName DesiredProfileName = SelectTitleLayoutProfile(ViewportSize);
-	if (DesiredProfileName.IsNone() || DesiredProfileName == mActiveTitleLayoutProfileName)
-	{
-		const bool bViewportChangedEnoughForLog =
-			FMath::Abs(ViewportSize.X - mLastLoggedTitleLayoutViewportSize.X) >= TitleLayoutLogViewportThreshold ||
-			FMath::Abs(ViewportSize.Y - mLastLoggedTitleLayoutViewportSize.Y) >= TitleLayoutLogViewportThreshold;
-		const bool bProfileChangedForLog = DesiredProfileName != mLastLoggedTitleLayoutProfileName;
-		if (DesiredProfileName.IsNone() || (bViewportChangedEnoughForLog == false && bProfileChangedForLog == false))
-		{
-			return;
-		}
-
-		LogResponsiveTitleLayoutMetrics(
-			ViewportSize,
-			DesiredProfileName,
-			TitleLayoutSwitcher->GetActiveWidget(),
-			TitleLayoutSwitcher->GetActiveWidgetIndex());
-		mLastLoggedTitleLayoutProfileName = DesiredProfileName;
-		mLastLoggedTitleLayoutViewportSize = ViewportSize;
-		return;
-	}
-
-	const FName DesiredScaleBoxWidgetName(*FString::Printf(TEXT("TitleLayoutScaleBox_%s"), *DesiredProfileName.ToString()));
-	const FName LegacyLayoutWidgetName(*FString::Printf(TEXT("TitleLayout_%s"), *DesiredProfileName.ToString()));
-	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
-	{
-		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
-		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == DesiredScaleBoxWidgetName)
-		{
-			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
-			mActiveTitleLayoutProfileName = DesiredProfileName;
-			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
-			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
-			mLastLoggedTitleLayoutViewportSize = ViewportSize;
-			return;
-		}
-	}
-
-	for (int32 WidgetIndex = 0; WidgetIndex < TitleLayoutSwitcher->GetNumWidgets(); ++WidgetIndex)
-	{
-		const UWidget* LayoutWidget = TitleLayoutSwitcher->GetWidgetAtIndex(WidgetIndex);
-		if (LayoutWidget != nullptr && LayoutWidget->GetFName() == LegacyLayoutWidgetName)
-		{
-			TitleLayoutSwitcher->SetActiveWidgetIndex(WidgetIndex);
-			mActiveTitleLayoutProfileName = DesiredProfileName;
-			LogResponsiveTitleLayoutMetrics(ViewportSize, DesiredProfileName, LayoutWidget, WidgetIndex);
-			mLastLoggedTitleLayoutProfileName = DesiredProfileName;
-			mLastLoggedTitleLayoutViewportSize = ViewportSize;
-			return;
-		}
-	}
-
-	UE_LOG(
-		LogRD,
-		Warning,
-		TEXT("TitleMenuWidget LayoutMetrics: no layout widget for profile=%s viewport=%s aspect=%.3f expected=%s legacy=%s switcherChildren=%d"),
-		*DesiredProfileName.ToString(),
-		*FormatVec2(ViewportSize),
-		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
-		*DesiredScaleBoxWidgetName.ToString(),
-		*LegacyLayoutWidgetName.ToString(),
-		TitleLayoutSwitcher->GetNumWidgets());
-}
-
-/** @brief 타이틀 반응형 레이아웃의 실제 선택/스케일/위젯 위치를 비교 가능한 로그로 남긴다. */
-void UTitleMenuWidget::LogResponsiveTitleLayoutMetrics(const FVector2D& ViewportSize, const FName ProfileName, const UWidget* ActiveLayoutWidget, const int32 ActiveWidgetIndex) const
-{
-	const FString ProfileString = ProfileName.ToString();
-	const UWidget* MutableSizeBoxWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutSizeBox_%s"), *ProfileString)));
-	const USizeBox* ProfileSizeBox = Cast<USizeBox>(MutableSizeBoxWidget);
-	const UWidget* ProfileCanvas = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(FName(*FString::Printf(TEXT("TitleLayoutCanvas_%s"), *ProfileString)));
-	const UWidget* LogoWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("TitleLogoImage"), ProfileName));
-	const UWidget* StartButtonWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"), ProfileName));
-	const UWidget* VersionTextWidget = const_cast<UTitleMenuWidget*>(this)->GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName));
-
-	FVector2D DesignSize = FVector2D::ZeroVector;
-	if (ProfileSizeBox != nullptr)
-	{
-		DesignSize.X = ProfileSizeBox->IsWidthOverride() ? ProfileSizeBox->GetWidthOverride() : ProfileSizeBox->GetDesiredSize().X;
-		DesignSize.Y = ProfileSizeBox->IsHeightOverride() ? ProfileSizeBox->GetHeightOverride() : ProfileSizeBox->GetDesiredSize().Y;
-	}
-
-	float CalculatedScale = 0.0f;
-	FVector2D FittedSize = FVector2D::ZeroVector;
-	FVector2D LetterboxInset = FVector2D::ZeroVector;
-	if (ViewportSize.X > 0.0f && ViewportSize.Y > 0.0f && DesignSize.X > 0.0f && DesignSize.Y > 0.0f)
-	{
-		CalculatedScale = FMath::Min(ViewportSize.X / DesignSize.X, ViewportSize.Y / DesignSize.Y);
-		FittedSize = DesignSize * CalculatedScale;
-		LetterboxInset = (ViewportSize - FittedSize) * 0.5f;
-	}
-
-	UE_LOG(
-		LogRD,
-		Display,
-		TEXT("TitleMenuWidget LayoutMetrics: viewport=%s aspect=%.3f profile=%s activeIndex=%d active=%s design=%s scale=%.4f fitted=%s inset=%s switcher=%s activeGeom=%s sizeBox=%s canvas=%s"),
-		*FormatVec2(ViewportSize),
-		ViewportSize.Y > 0.0f ? ViewportSize.X / ViewportSize.Y : 0.0f,
-		*ProfileString,
-		ActiveWidgetIndex,
-		ActiveLayoutWidget != nullptr ? *ActiveLayoutWidget->GetName() : TEXT("missing"),
-		*FormatVec2(DesignSize),
-		CalculatedScale,
-		*FormatVec2(FittedSize),
-		*FormatVec2(LetterboxInset),
-		*DescribeWidgetGeometry(TitleLayoutSwitcher),
-		*DescribeWidgetGeometry(ActiveLayoutWidget),
-		*DescribeWidgetGeometry(ProfileSizeBox),
-		*DescribeWidgetGeometry(ProfileCanvas));
-
-	UE_LOG(
-		LogRD,
-		Display,
-		TEXT("TitleMenuWidget LayoutMetrics Widgets: profile=%s logo={%s} startButton={%s} versionText={%s}"),
-		*ProfileString,
-		*DescribeWidgetGeometry(LogoWidget),
-		*DescribeWidgetGeometry(StartButtonWidget),
-		*DescribeWidgetGeometry(VersionTextWidget));
-}
-
-/** @brief 현재 화면비를 타이틀 전용 레이아웃 프로필로 분류한다. */
-FName UTitleMenuWidget::SelectTitleLayoutProfile(const FVector2D& ViewportSize) const
-{
-	if (ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
-	{
-		return NAME_None;
-	}
-
-	const float AspectRatio = ViewportSize.X / ViewportSize.Y;
-	// 모바일은 landscape 고정이다. 1.35 경계에서 fold(2184x1968)와 tablet(1920x1200)이
-	// 바뀌면 거의 같은 창 크기에서도 전체 ScaleBox 배율이 약 39% 튄다. 좁은 가로 화면도
-	// tablet 프로필을 사용해 로고와 버튼의 최소 물리 크기를 유지한다.
-	if (AspectRatio <= 1.70f)
-	{
-		return TitleLayoutProfileTablet16x10;
-	}
-	if (AspectRatio <= 1.95f)
-	{
-		return TitleLayoutProfileBase16x9;
-	}
-	if (AspectRatio <= 2.25f)
-	{
-		return TitleLayoutProfilePhoneWide;
-	}
-
-	return TitleLayoutProfilePhoneUltraWide;
-}
-
 /** @brief 레거시 단일 버튼과 프로필별 버튼을 같은 입력 핸들러에 연결한다. */
 void UTitleMenuWidget::BindMainMenuButtons()
 {
@@ -525,12 +372,11 @@ void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
 // NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
 void UTitleMenuWidget::ValidateDesignerBindings() const
 {
-	if (TitleLayoutSwitcher == nullptr)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: TitleLayoutSwitcher is not connected. Legacy single title layout will be used if available."));
-	}
-
-	const bool bUsesProfileLayouts = TitleLayoutSwitcher != nullptr;
+	// 프로필 위젯(StartButton__base_16_9 …)을 쓰는 판인지 본다. 쓰면 접미사
+	// 없는 레거시 단추가 비어 있어도 정상이다.
+	const bool bUsesProfileLayouts =
+		GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButton"),
+			TitleLayoutProfileBase16x9)) != nullptr;
 	if (bUsesProfileLayouts == false && StartButton == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: StartButton is not connected."));

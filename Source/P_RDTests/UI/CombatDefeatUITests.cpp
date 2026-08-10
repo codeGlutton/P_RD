@@ -76,7 +76,7 @@ bool FCombatDefeatWBPStructureTest::RunTest(const FString& Parameters)
 
 	for (const TCHAR* AssetName : {
 		TEXT("T_MB_Defeat_OuterFrame"), TEXT("T_MB_Defeat_TitleBanner"),
-		TEXT("T_MB_Defeat_MercenaryCard"), TEXT("T_MB_Defeat_BattleSummary"),
+		TEXT("T_MB_Defeat_MercenaryCard"),
 		TEXT("T_MB_Defeat_ButtonSecondary"), TEXT("T_MB_Defeat_ButtonPrimary") })
 	{
 		const FString Path = FString::Printf(

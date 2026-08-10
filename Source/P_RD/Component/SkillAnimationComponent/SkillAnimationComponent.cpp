@@ -117,7 +117,7 @@ void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimat
 
 	const UBoardActorModel* OwnerActorModel = OwnerSkillComp->GetOwnerModel<UBoardActorModel>();
 	const FActiveSkillContext& ActiveSkillContext = OwnerSkillComp->GetActiveSkillContext();
-	for (IBoardCombatTarget* OtherCombatTarget : ActiveSkillContext.mOtherCombatTargets)
+	for (IBoardCombatTarget* OtherCombatTarget : ActiveSkillContext.mFinalCombatTargets)
 	{
 		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 		if (OtherActorModel == nullptr || OwnerActorModel == OtherActorModel)
@@ -153,27 +153,55 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 
 	const UBoardActorModel* OwnerActorModel = OwnerSkillComp->GetOwnerModel<UBoardActorModel>();
 	const FActiveSkillContext& ActiveSkillContext = OwnerSkillComp->GetActiveSkillContext();
-	for (IBoardCombatTarget* OtherCombatTarget : ActiveSkillContext.mOtherCombatTargets)
+
+	switch (NiagaraPayload->mTargetType)
 	{
-		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-		if (OtherActorModel == nullptr)
+	case EApplyNiagaraTargetType::Actor:
+	{
+		for (IBoardCombatTarget* OtherCombatTarget : ActiveSkillContext.mFinalCombatTargets)
 		{
-			continue;
-		}
+			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
+			if (OtherActorModel == nullptr)
+			{
+				continue;
+			}
 
-		IBoardCombatTargetView* OtherActorView = OtherActorModel->GetView<IBoardCombatTargetView>();
-		if (OtherActorView == nullptr)
+			IBoardCombatTargetView* OtherActorView = OtherActorModel->GetView<IBoardCombatTargetView>();
+			if (OtherActorView == nullptr)
+			{
+				continue;
+			}
+
+			const ETileActorDirection OtherVFXDir = ConvertOtherLocalTileMapDirection(
+				Context.mMontageDir,
+				OwnerActorModel->GetTileTransform().mDirection,
+				OtherActorModel->GetTileTransform().mDirection
+			);
+			const USkillAnimationComponent* OtherSkillAnimComp = OtherActorView->GetSkillAnimationComponent();
+			OtherSkillAnimComp->SpawnHitVFXOnSelf(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, OtherVFXDir);
+		}
+		break;
+	}
+	case EApplyNiagaraTargetType::EffectTile:
+	{
+		for (const FTileIndex& EffectTileIndex : ActiveSkillContext.mEffectTileIndexes)
 		{
-			continue;
+			const FTileTransform EffectTileTransform(EffectTileIndex, Context.mMontageDir);
+			const FTransform EffectTransform = ActiveSkillContext.mMapModel->TileToWorldTransform(EffectTileTransform);
+			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, EffectTransform);
 		}
-
-		const ETileActorDirection OtherVFXDir = ConvertOtherLocalTileMapDirection(
-			Context.mMontageDir,
-			OwnerActorModel->GetTileTransform().mDirection,
-			OtherActorModel->GetTileTransform().mDirection
-		);
-		const USkillAnimationComponent* OtherSkillAnimComp = OtherActorView->GetSkillAnimationComponent();
-		OtherSkillAnimComp->SpawnHitVFX(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, OtherVFXDir);
+		break;
+	}
+	case EApplyNiagaraTargetType::TargetTile:
+	{
+		for (const FTileIndex& TargetTileIndex : ActiveSkillContext.mTargetTileIndexes)
+		{
+			const FTileTransform TargetTileTransform(TargetTileIndex, Context.mMontageDir);
+			const FTransform TargetTransform = ActiveSkillContext.mMapModel->TileToWorldTransform(TargetTileTransform);
+			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, TargetTransform);
+		}
+		break;
+	}
 	}
 }
 
@@ -265,7 +293,7 @@ void USkillAnimationComponent::OnHandleTimeScaleEvent(const FBoardActorAnimation
 {
 	const FTimeScaleEventTriggerPayload* TimeScalePayload = StaticCast<const FTimeScaleEventTriggerPayload*>(Payload);
 
-	RequestTimeScale(TimeScalePayload->OnEndDurationEventTrigger, this, TimeScalePayload->mTimeScale, TimeScalePayload->mPriority, TimeScalePayload->mBlendSpeed, -1);
+	RequestTimeScale(TimeScalePayload->OnEndDurationEventTrigger, this, TimeScalePayload->mTimeScale, TimeScalePayload->mBlendSpeed, -1);
 }
 
 void USkillAnimationComponent::PlayApplyAnimation(const FBoardActorAnimationContext& Context)
@@ -276,9 +304,9 @@ void USkillAnimationComponent::PlayHitAnimation(TSharedPtr<FPresentationBarrier>
 {
 }
 
-void USkillAnimationComponent::SpawnHitVFX(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const
+void USkillAnimationComponent::SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const
 {
-	// 대상
+	// 자기 자신
 	UPrimitiveComponent* TargetMeshComponent = GetOwner<IBoardCombatTargetView>()->GetTargetMeshComponent();
 	if (TargetMeshComponent == nullptr)
 	{
@@ -291,6 +319,13 @@ void USkillAnimationComponent::SpawnHitVFX(TSharedPtr<FPresentationBarrier> Skil
 	}
 }
 
+void USkillAnimationComponent::SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, const FTransform& Transform) const
+{
+	for (const FNiagaraSpawnData& NiagaraSpawnData : NiagaraSpawnDatas)
+	{
+		UVFXFunctionLibrary::SpawnNiagaraEffect(NiagaraSpawnData.mNiagaraSystem, GetWorld(), Transform);
+	}
+}
 
 void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, FVector WorldPosition) const
 {
@@ -325,12 +360,12 @@ void USkillAnimationComponent::ShakeCamera(TSubclassOf<UCameraShakeBase> CameraS
 	}
 }
 
-void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, int32 Priority, float BlendSpeed, float Duration) const
+void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const
 {
 	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
 	if (CameraPawn != nullptr)
 	{
-		FTimeScaleHandle Handle = CameraPawn->GetTimeScaleComponent()->RequestTimeScale(Requester, TargetTimeScale, Priority, BlendSpeed, Duration);
+		FTimeScaleHandle Handle = CameraPawn->GetTimeScaleComponent()->RequestTimeScale(Requester, TargetTimeScale, BlendSpeed, Duration);
 		EndEvent.BindWeakLambda(CameraPawn, [CameraPawn, Handle]() {
 			CameraPawn->GetTimeScaleComponent()->ReleaseTimeScale(Handle);
 			});

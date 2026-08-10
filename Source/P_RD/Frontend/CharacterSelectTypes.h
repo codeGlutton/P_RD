@@ -62,6 +62,11 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	TArray<FText> mSkillNames;
 
+	// 스킬 아이콘(mSkillNames와 같은 순서). 상세의 스킬 칸이 그림으로 걸고,
+	// 비어 있는 칸은 이름 글자로 대신 보여준다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<TSoftObjectPtr<UTexture2D>> mSkillIcons;
+
 	// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mMaxHP = 0;
