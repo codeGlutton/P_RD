@@ -49,8 +49,10 @@ void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
 	// Text stays white by design. Selection is communicated by the plate itself so
 	// accessibility styling never reintroduces the old brown text tint.
 	const FSlateColor WhiteText(FLinearColor::White);
-	const FLinearColor SelectedPlate(1.0f, 0.82f, 0.34f, 1.0f);
-	const FLinearColor UnselectedPlate(0.56f, 0.56f, 0.56f, 1.0f);
+	// 선택/비선택 대비를 세게 간다(0811 점검). 전에는 금 0.82 vs 회색 0.56 이라
+	// 갈색 판 위에서 차이가 묻혀 "뭐가 켜져 있는지 안 보인다" 는 제보를 받았다.
+	const FLinearColor SelectedPlate(1.3f, 1.02f, 0.38f, 1.0f);
+	const FLinearColor UnselectedPlate(0.30f, 0.28f, 0.26f, 1.0f);
 
 	const auto SetSegmentState = [this, &WhiteText, &SelectedPlate, &UnselectedPlate](
 		UButton* Button, const FName LabelName, const FName PlateName, bool bSelected)
