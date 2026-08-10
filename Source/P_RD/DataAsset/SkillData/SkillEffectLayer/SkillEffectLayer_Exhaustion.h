@@ -11,7 +11,7 @@
 #include "SkillEffectLayer_Exhaustion.generated.h"
 
  /**
-  * @brief  하나의 스킬 모션 내에서 적용하는 신속 버프 효과 단위
+  * @brief  하나의 스킬 모션 내에서 적용하는 탈진 디버프 효과 단위
   */
 USTRUCT(BlueprintType)
 struct P_RD_API FSkillEffectLayer_Exhaustion : public FSkillEffectLayer_TagBase
