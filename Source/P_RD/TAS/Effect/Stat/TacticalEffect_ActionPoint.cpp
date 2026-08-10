@@ -55,9 +55,9 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	UBoardCombatTargetSnapshotData* TargetSnapshotData = ExecutionParams.GetOwningSpec().GetTargetSnapshotData();
 	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
 
-	// 민첩성
-	const bool IsTargetAgility = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
-	const float TargetAgilityRatio = IsTargetAgility == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility] : 1.f;
+	// 활력
+	const bool IsTargetVigor = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor);
+	const float TargetVigorRatio = IsTargetVigor == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor] : 1.f;
 
 	// 탈진
 	const bool IsTargetExhaustion = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion);
@@ -67,7 +67,7 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	const float TotalMove = 
 		ExecutionParams.GetOwningSpec().GetStackCount() * 
 		ExecutionParams.GetOwningSpec().mDynamicMagnitude * 
-		TargetAgilityRatio *
+		TargetVigorRatio *
 		TargetExhaustionRatio * 
 		SourceSnapshotData->mAttributes[UUnitAttributeSet::GetActionPointFactorAttribute()];
 	const float MoveDiff = FMath::Floor(TotalMove);

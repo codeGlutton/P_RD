@@ -100,7 +100,7 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,							"GameplayEffect.StatusEffect.Infinite");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration,						"GameplayEffect.StatusEffect.TurnDuration");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff,					"GameplayEffect.StatusEffect.TurnDuration.Buff");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Agility,			"GameplayEffect.StatusEffect.TurnDuration.Buff.Agility");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor,			"GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification,		"GameplayEffect.StatusEffect.TurnDuration.Buff.Fortification");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff,					"GameplayEffect.StatusEffect.TurnDuration.Debuff");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness,		"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness");
