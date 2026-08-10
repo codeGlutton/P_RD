@@ -3,8 +3,8 @@
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
-#include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
+#include "Component/PassiveComponent/PassiveComponentModel.h"
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
 
@@ -23,8 +23,8 @@ UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 	mSkillCompModel = CreateDefaultSubobject<UUnitSkillComponentModel>(TEXT("UnitSkillComponentModel"));
-	mPassiveCompModel = CreateDefaultSubobject<UPassiveComponentModel>(TEXT("PassiveComponentModel"));
 	mMovementCompModel = CreateDefaultSubobject<UUnitMovementComponentModel>(TEXT("UnitMovementComponentModel"));
+	mPassiveCompModel = CreateDefaultSubobject<UPassiveComponentModel>(TEXT("PassiveComponentModel"));
 
 	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit);
 	mBlockLayerFlags = StaticCast<int32>(ETileLayerFlag::Unit | ETileLayerFlag::Obstacle);
@@ -225,6 +225,11 @@ UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const
 USkillComponentModel* UUnitModel::GetSkillComponentModel() const
 {
 	return mSkillCompModel;
+}
+
+UBoardMovementComponentModel* UUnitModel::GetBoardMovementComponentModel() const
+{
+	return mMovementCompModel;
 }
 
 void UUnitModel::SetGenericTeamId(const FGenericTeamId& TeamID)

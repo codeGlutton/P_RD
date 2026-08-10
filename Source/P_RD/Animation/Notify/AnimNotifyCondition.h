@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   AnimNotifyCondition.h
  * @brief  애니메이션 노티파이 실행 조건 정의 헤더
  * @author 모호재
@@ -45,3 +45,16 @@ struct P_RD_API FAnimNotifyCondition_EffectOption : public FAnimNotifyCondition
 public:
 	virtual bool EvaluateCondition(const USkeletalMeshComponent* MeshComp) const override;
 };
+
+/**
+ * @brief 카메라 활성화 옵션을 검증하는 조건 구조체
+ */
+USTRUCT(BlueprintType, meta = (DisplayName = "Camera Option Condition"))
+struct P_RD_API FAnimNotifyCondition_CameraOption : public FAnimNotifyCondition
+{
+	GENERATED_BODY()
+
+public:
+	virtual bool EvaluateCondition(const USkeletalMeshComponent* MeshComp) const override;
+};
+

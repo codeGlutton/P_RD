@@ -55,12 +55,12 @@
 			"Enabled": true
 		},
 		{
-			"Name": "ActorSequence",
-			"Enabled": false
-		},
-		{
 			"Name": "RelativeIKOp",
 			"Enabled": true
+		},
+		{
+			"Name": "ActorSequence",
+			"Enabled": false
 		}
 	]
 }

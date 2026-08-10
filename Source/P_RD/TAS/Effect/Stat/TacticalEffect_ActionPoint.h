@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Stat/TacticalEffect_Unit.h"
 #include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 #include "TacticalEffect_ActionPoint.generated.h"
 
@@ -15,14 +15,14 @@
  * @brief ActionPoint 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPoint : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
 public:
 	UTacticalEffect_ActionPoint();
 
-	/* UTacticalEffect 상속 */
+	/* UTacticalEffect_Unit 상속 */
 public:
 	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
 };
@@ -43,14 +43,14 @@ public:
  * @brief ActionPoint 습득 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetActionPoint : public UTacticalEffect
+class P_RD_API UTacticalEffect_GetActionPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
 public:
 	UTacticalEffect_GetActionPoint();
 
-	/* UTacticalEffect 상속 */
+	/* UTacticalEffect_Unit 상속 */
 public:
 	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

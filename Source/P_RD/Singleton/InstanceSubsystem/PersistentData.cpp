@@ -224,6 +224,23 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 	 USkillComponentModel* SkillComponentModel = PlayerUnit->GetSkillComponentModel();
 	 checkf(SkillComponentModel != nullptr, TEXT("플레이어 스킬 컴포넌트 nullptr"));
 
+	 /* 죽음으로 인한 파티 해제 처리 */
+
+	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_ActorState_Dead, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(
+		 PlayerUnit, [PlayerUnit](const FGameplayTag Tag, int32 Count) {
+			 if (Count <= 0)
+			 {
+				 return;
+			 }
+
+			 UPartyModel* OwnerParty = PlayerUnit->GetOwnerParty();
+			 if (OwnerParty != nullptr)
+			 {
+				 OwnerParty->RemovePlayerUnitModel(PlayerUnit);
+			 }
+		 }
+	 );
+
 	 // 레벨 추적
 	 PlayerUnit->OnChangePlayerLevel.AddWeakLambda(this, [this](UPlayerUnitModel* Model, int32 PlayerLevel) {
 		 mPlayerLevel = PlayerLevel;
@@ -459,12 +476,20 @@ void URunPersistData::MakeCaches()
 	mRunPersistDataCache.mEffectVFXs.Reserve(EffectVFXMapping.Num());
 	for (auto& EffectVFXPair : EffectVFXMapping)
 	{
-		mRunPersistDataCache.mEffectVFXs.Add(EffectVFXPair.Value.mNiagaraSystem.LoadSynchronous());
+		for (const FSoftNiagaraSpawnData& NiagaraSpawnData : EffectVFXPair.Value.mNiagaraSpawnDatas)
+		{
+			mRunPersistDataCache.mEffectVFXs.Add(NiagaraSpawnData.mNiagaraSystem.LoadSynchronous());
+		}
+	}
+	for (const FSoftNiagaraSpawnData& NiagaraSpawnData : GamePlaySettings->mCombatTargetRemoveVFX.mNiagaraSpawnDatas)
+	{
+		mRunPersistDataCache.mEffectVFXs.Add(NiagaraSpawnData.mNiagaraSystem.LoadSynchronous());
 	}
 
-	const FSoftNiagaraSpawnData& CombatTargetDissolveVFX = GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX;
-	mRunPersistDataCache.mEffectVFXs.Add(CombatTargetDissolveVFX.mNiagaraSystem.LoadSynchronous());
-	mRunPersistDataCache.mEffectCurves.Add(GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveCurve.LoadSynchronous());
+	for (const FCombatTargetVFXTimelineSetting& TimelineSetting : GamePlaySettings->mCombatTargetVFXTimelineSettings)
+	{
+		mRunPersistDataCache.mEffectCurves.Add(TimelineSetting.mTimelineCurve.LoadSynchronous());
+	}
 }
 
 void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)
@@ -822,6 +847,7 @@ void UOptionPersistData::SetOverallQuality(EOverallQualityType QualityType)
 	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
 
 	mOverallQuality = QualityType;
+
 	GameUserSettings->SetOverallScalabilityLevel(StaticCast<int32>(QualityType));
 	GameUserSettings->ApplySettings(false);
 	ApplyScreenPercentage();

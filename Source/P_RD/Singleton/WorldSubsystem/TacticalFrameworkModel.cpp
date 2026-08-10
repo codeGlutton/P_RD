@@ -7,12 +7,6 @@
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Setting/GameBalanceSettings.h"
-#include "Setting/GamePlaySettings.h"
-#include "FunctionLibrary/VFXFunctionLibrary.h"
-
-#include "Actor/ActorModel.h"
-#include "ObjectView.h"
-#include "Actor/BoardActor/BoardCombatTargetView.h"
 
 #if WITH_EDITOR
 #include "Editor.h"
@@ -119,27 +113,7 @@ UTacticalEffectContext* UTacticalFrameworkModel::AllocTacticalEffectContext() co
 
 void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model)
 {
-	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	checkf(GamePlaySettings != nullptr, TEXT("게임 플레이 세팅 nullptr 오류"));
-
-	/* VFX 생성 */
-
-	const FSoftNiagaraSpawnData* SpawnData = GamePlaySettings->mGlobalStatusEffectVFXSetting.mEffectVFXs.Find(Spec.mEffectClass->GetClass());
-
-	const UActorModel* Instigator = Model->GetOwnerModel();
-	const AActor* ActorView = Instigator->GetView<AActor>();
-	if (ActorView != nullptr && SpawnData != nullptr && SpawnData->mNiagaraSystem.IsNull() == false)
-	{
-		const IBoardCombatTargetView* CombatTargetView = Instigator->GetView<IBoardCombatTargetView>();
-		if (CombatTargetView != nullptr)
-		{
-			UVFXFunctionLibrary::SpawnNiagaraEffect(*SpawnData, CombatTargetView->GetTargetMeshComponent());
-		}
-		else
-		{
-			UVFXFunctionLibrary::SpawnNiagaraEffect(*SpawnData, ActorView);
-		}
-	}
+	OnPreTacticalEffectSpecApplyUI.Broadcast(Spec, Model);
 }
 
 void UTacticalFrameworkModel::PushCurrentAppliedTE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)

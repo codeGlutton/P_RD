@@ -162,14 +162,14 @@ enum class EApplyNiagaraTargetType : uint8
  * @brief  적용 VFX 이벤트 호출 애님 노티파이의 추가 데이터
  */
 USTRUCT(BlueprintType)
-struct FApplyNiagaraEventTriggerPayload : public FEventTriggerPayload
+struct FApplyVFXEventTriggerPayload : public FEventTriggerPayload
 {
     GENERATED_BODY()
 
 public:
     UScriptStruct* GetScriptStruct() const override
     {
-        return FApplyNiagaraEventTriggerPayload::StaticStruct();
+        return FApplyVFXEventTriggerPayload::StaticStruct();
     }
 
     FLinearColor GetEditorColor() const override
@@ -181,8 +181,8 @@ public:
     UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetType"))
     EApplyNiagaraTargetType mTargetType = EApplyNiagaraTargetType::Actor;
 
-    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
-    TArray<FNiagaraSpawnData> mNiagaraSpawnDatas;
+    UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "VFXSpawnData"))
+    FVFXSpawnData mVFXSpawnData;
 };
 
 /**

@@ -35,10 +35,6 @@ public:
 	UEquipmentComponentModel* GetEquipmentComponentModel() const;
 
 public:
-	/**
-	 * @brief 스폰 전 난이도 대입 함수
-	 * @param Difficulty 난이도
-	 */
 	void SetDifficulty(int32 Difficulty);
 	void AddRechargeSpeedPointOffset(int32 Offset);
 

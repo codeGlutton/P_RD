@@ -15,6 +15,8 @@
 
 class UAttributeSetComponentModel;
 class USkillComponentModel;
+class UBoardMovementComponentModel;
+
 struct FActiveSkillContext;
 class UBoardCombatTargetSnapshotData;
 
@@ -79,6 +81,11 @@ public:
 	 * @return 보유한 스킬 컴포넌트
 	 */
 	virtual USkillComponentModel* GetSkillComponentModel() const = 0;
+	/**
+	 * 움직임 컴포넌트를 반환하는 함수
+	 * @return 보유한 움직임 컴포넌트
+	 */
+	virtual UBoardMovementComponentModel* GetBoardMovementComponentModel() const = 0;
 	/**
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터

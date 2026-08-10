@@ -11,7 +11,6 @@
 AObstacle::AObstacle()
 {
 	mCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
-	mMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
 
 	if (mCapsuleComp != nullptr)
@@ -24,21 +23,6 @@ AObstacle::AObstacle()
 		mCapsuleComp->SetCanEverAffectNavigation(false);
 		mCapsuleComp->bDynamicObstacle = true;
 		RootComponent = mCapsuleComp;
-	}
-
-	if (mMeshComp != nullptr)
-	{
-		mMeshComp->AlwaysLoadOnClient = true;
-		mMeshComp->AlwaysLoadOnServer = true;
-		mMeshComp->bOwnerNoSee = false;
-		mMeshComp->bCastDynamicShadow = true;
-		mMeshComp->bAffectDynamicIndirectLighting = true;
-		mMeshComp->PrimaryComponentTick.TickGroup = TG_PrePhysics;
-		mMeshComp->SetupAttachment(mCapsuleComp);
-		mMeshComp->SetGenerateOverlapEvents(false);
-		mMeshComp->SetCanEverAffectNavigation(false);
-		mMeshComp->SetCollisionProfileName(RDCollisionProfiles::BoardActor);
-		mMeshComp->SetRelativeRotation(FRotator(0., -90., 0.));
 	}
 
 	if (mArrowComp != nullptr)
@@ -57,20 +41,24 @@ void AObstacle::BindModel(UObjectModel* Model)
 	mObstacleModel = Cast<UObstacleModel>(Model);
 
 	// 연출 요청 구독
-	if (mObstacleModel.IsValid())
+	if (mObstacleModel.IsValid() == true)
 	{
 		// 위치 가져오기 구독
 		mObstacleModel->OnGetBoardActorWorldTransform.BindUObject(this, &AObstacle::GetActorTransform);
-
 		// 초기 배치 연출 요청 구독
 		mObstacleModel->OnPlaceTileTransform.AddUObject(this, &AObstacle::OnPlaceTileTransform);
 	}
-
 }
 
 void AObstacle::UnbindModel(UObjectModel* Model)
 {
 	IActorView::UnbindModel(Model);
+
+	if (mObstacleModel.IsValid() == true)
+	{
+		mObstacleModel->OnGetBoardActorWorldTransform.Unbind();
+		mObstacleModel->OnPlaceTileTransform.RemoveAll(this);
+	}
 	mObstacleModel.Reset();
 }
 
@@ -81,11 +69,11 @@ UObjectModel* AObstacle::GetModel_Internal() const
 
 void AObstacle::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
 {
-	FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	FTransform UnitTransform = Transform;
-	UnitTransform.SetLocation(UnitLocation);
+	FVector ObstacleLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FTransform ObstacleTransform = Transform;
+	ObstacleTransform.SetLocation(ObstacleLocation);
 
-	SetActorTransform(UnitTransform);
+	SetActorTransform(ObstacleTransform);
 }
 
 UCapsuleComponent* AObstacle::GetCapsuleComponent() const
@@ -93,12 +81,58 @@ UCapsuleComponent* AObstacle::GetCapsuleComponent() const
 	return mCapsuleComp;
 }
 
-UStaticMeshComponent* AObstacle::GetMesh() const
+UArrowComponent* AObstacle::GetArrowComponent() const
+{
+	return mArrowComp;
+}
+
+AStaticMeshObstacle::AStaticMeshObstacle()
+{
+	mMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+
+	if (mMeshComp != nullptr)
+	{
+		mMeshComp->AlwaysLoadOnClient = true;
+		mMeshComp->AlwaysLoadOnServer = true;
+		mMeshComp->bOwnerNoSee = false;
+		mMeshComp->bCastDynamicShadow = true;
+		mMeshComp->bAffectDynamicIndirectLighting = true;
+		mMeshComp->PrimaryComponentTick.TickGroup = TG_PrePhysics;
+		mMeshComp->SetupAttachment(GetCapsuleComponent());
+		mMeshComp->SetGenerateOverlapEvents(false);
+		mMeshComp->SetCanEverAffectNavigation(false);
+		mMeshComp->SetCollisionProfileName(RDCollisionProfiles::BoardActor);
+		mMeshComp->SetRelativeRotation(FRotator(0., -90., 0.));
+	}
+}
+
+UStaticMeshComponent* AStaticMeshObstacle::GetMesh() const
 {
 	return mMeshComp;
 }
 
-UArrowComponent* AObstacle::GetArrowComponent() const
+ASkeletonObstacle::ASkeletonObstacle()
 {
-	return mArrowComp;
+	mMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
+
+	if (mMeshComp != nullptr)
+	{
+		mMeshComp->AlwaysLoadOnClient = true;
+		mMeshComp->AlwaysLoadOnServer = true;
+		mMeshComp->bOwnerNoSee = false;
+		mMeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
+		mMeshComp->bCastDynamicShadow = true;
+		mMeshComp->bAffectDynamicIndirectLighting = true;
+		mMeshComp->PrimaryComponentTick.TickGroup = TG_PrePhysics;
+		mMeshComp->SetupAttachment(GetCapsuleComponent());
+		mMeshComp->SetGenerateOverlapEvents(false);
+		mMeshComp->SetCanEverAffectNavigation(false);
+		mMeshComp->SetCollisionProfileName(RDCollisionProfiles::BoardActor);
+		mMeshComp->SetRelativeRotation(FRotator(0., -90., 0.));
+	}
+}
+
+USkeletalMeshComponent* ASkeletonObstacle::GetMesh() const
+{
+	return mMeshComp;
 }

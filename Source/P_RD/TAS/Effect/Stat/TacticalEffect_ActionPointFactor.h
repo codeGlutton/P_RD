@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_ActionPointFactor.h
  * @brief  ActionPointFactor 이펙트 정의 헤더
  * @author 모호재
@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Stat/TacticalEffect_Unit.h"
 #include "TacticalEffect_ActionPointFactor.generated.h"
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_AddBase : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_AddBase : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -20,7 +20,7 @@ public:
 };
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_AddFinal : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_AddFinal : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -29,7 +29,7 @@ public:
 };
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_DivideAdditive : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_DivideAdditive : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
 };
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_MultiplyAdditive : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_MultiplyAdditive : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -47,7 +47,7 @@ public:
 };
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_MultiplyCompound : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_MultiplyCompound : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -56,7 +56,7 @@ public:
 };
 
 UCLASS()
-class P_RD_API UTacticalEffect_ActionPointFactor_Override : public UTacticalEffect
+class P_RD_API UTacticalEffect_ActionPointFactor_Override : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 

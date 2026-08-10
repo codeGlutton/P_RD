@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Stat/TacticalEffect_Unit.h"
 #include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 #include "TacticalEffect_SpeedPoint.generated.h"
 
@@ -15,7 +15,7 @@
  * @brief SpeedPoint 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_SpeedPoint : public UTacticalEffect
+class P_RD_API UTacticalEffect_SpeedPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 
@@ -43,7 +43,7 @@ public:
  * @brief SpeedPoint 습득 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetSpeedPoint : public UTacticalEffect
+class P_RD_API UTacticalEffect_GetSpeedPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
 

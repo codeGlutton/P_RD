@@ -54,7 +54,7 @@ public:
     template <typename T>
     const T* GetAttributeSet() const
     {
-        return StaticCast<T*>(GetAttributeSet_Internal(T::StaticClass()));
+        return StaticCast<const T*>(GetAttributeSet_Internal(T::StaticClass()));
     }
     /**
      * @brief 지정 타입 T의 AttributeSet을 조회하고, 없으면 새로 생성하여 반환한다.
@@ -64,7 +64,7 @@ public:
     template <typename T>
     const T* AddAttributeSet()
     {
-        return StaticCast<T*>(GetOrCreateAttributeSet_Internal(T::StaticClass()));
+        return StaticCast<const T*>(GetOrCreateAttributeSet_Internal(T::StaticClass()));
     }
 
     const TArray<UTacticalAttributeSet*>& GetSpawnedAttributes() const;

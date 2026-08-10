@@ -1,12 +1,11 @@
-#include "Pawn/Player/PlayerUnitModel.h"
+﻿#include "Pawn/Player/PlayerUnitModel.h"
 #include "Actor/Party/PartyModel.h"
 #include "Setting/GameTeamType.h"
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
-
-#include "AttributeSet/UnitAttributeSet.h"
 
 #include "Component/ArtifactComponent/ArtifactComponentModel.h"
 
@@ -18,29 +17,6 @@ UPlayerUnitModel::UPlayerUnitModel()
 
     // 아티펙트 컴포넌트 모델 등록
     mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
-}
-
-void UPlayerUnitModel::PostInitializeComponentModels()
-{
-    Super::PostInitializeComponentModels();
-
-    /* 죽음으로 인한 파티 해제 처리 */
-
-    GetAttributeComponentModel()->RegisterTacticalTagEvent(EffectTags::GameplayEffect_ActorState_Dead, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(
-        this, [this](const FGameplayTag Tag, int32 Count) {
-            if (Count <= 0)
-            {
-                return;
-            }
-
-            UPartyModel* OwnerParty = mOwnerParty.Get();
-            if (OwnerParty != nullptr)
-            {
-                OwnerParty->RemovePlayerUnitModel(this);
-                mOwnerParty = nullptr;
-            }
-        }
-    );
 }
 
 int32 UPlayerUnitModel::GetBoardActorLevel() const
@@ -75,17 +51,24 @@ bool UPlayerUnitModel::IsPlayerUnitModel() const
 void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
 {
     mOwnerParty = PartyModel;
+    if (mOwnerParty != nullptr)
+    {
+        UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+        checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
-    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-    checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
-
-    TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+        TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+    }
 }
 
 void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
 {
     mPlayerLevel = PlayerLevel;
     OnChangePlayerLevel.Broadcast(this, mPlayerLevel);
+}
+
+UPartyModel* UPlayerUnitModel::GetOwnerParty() const
+{
+    return mOwnerParty.Get();
 }
 
 int32 UPlayerUnitModel::GetPlayerLevel() const

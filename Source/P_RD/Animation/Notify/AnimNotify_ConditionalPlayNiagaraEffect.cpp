@@ -1,4 +1,5 @@
 ﻿#include "Animation/Notify/AnimNotify_ConditionalPlayNiagaraEffect.h"
+#include "FunctionLibrary/VFXFunctionLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotify_ConditionalPlayNiagaraEffect)
 
@@ -38,6 +39,11 @@ bool UAnimNotify_ConditionalPlayNiagaraEffect::ShouldPlayNotify(const USkeletalM
 		}
 	}
 #endif // WITH_EDITORONLY_DATA
+
+	if (UVFXFunctionLibrary::IsVFXPossible(MeshComp->GetWorld()) == false)
+	{
+		return false;
+	}
 
 	/* 모든 등록된 조건 검사 */
 	for (const TInstancedStruct<FAnimNotifyCondition>& Condition : mConditions)

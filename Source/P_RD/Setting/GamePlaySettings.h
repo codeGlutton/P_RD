@@ -110,8 +110,12 @@ public:
 public:
     UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectVFXSetting", ToolTip = "상태이상 연출 시 사용되는 전역 VFX 설정 값"))
     FGlobalStatusEffectVFXSetting mGlobalStatusEffectVFXSetting;
+
+public:
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetRemoveVFX", ToolTip = "전투 대상에서 타일 맵에서 제거될 때 호출되는 VFX 설정 값"))
+    FSoftVFXSpawnData mCombatTargetRemoveVFX;
     
-    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetDissolveVFXSetting", ToolTip = "전투 대상이 타일맵에서 사라질 때 사용되는 설정 값"))
-    FCombatTargetDissolveVFXSetting mCombatTargetDissolveVFXSetting;
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineSettings", ToolTip = "전투 대상에서 활용되는 타임 라인 설정 값들"))
+    TArray<FCombatTargetVFXTimelineSetting> mCombatTargetVFXTimelineSettings;
 };
 

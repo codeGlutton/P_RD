@@ -99,3 +99,9 @@ void FVFXTimelineTrackEvent::Trigger(const FLinearColor& Value, const TArray<TWe
 		}
 	}
 }
+
+void FVFXTimelineEventTarget::Clear()
+{
+	mMeshComps.Empty();
+	mNiagaraComps.Empty();
+}

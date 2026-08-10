@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   BoardMovementPresentationComponent.h
  * @brief  보드 액터 이동 연출 컴포넌트 정의 헤더
  * @author 이문환
@@ -46,9 +46,6 @@ public:
 
 	/* 연출 요청 수신 */
 public:
-	// @brief 배치 요청을 수신
-	virtual void OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform);
-
 	/**
 	 * @brief 이동 시작 시 전체 경로를 받아서, 코너링 곡선을 포함한 폴리라인 정보 생성
 	 * @details

@@ -8,10 +8,11 @@
 #pragma once
 
 #include "RDMinimal.h"
-#include "Setting/GamePlayType.h"
 #include "VFXTimelineTrackEvent.generated.h"
 
-UENUM(BlueprintType)
+class UNiagaraComponent;
+
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EVFXTimelineSyncTarget : uint8
 {
 	None = 0							UMETA(Hidden),
@@ -47,3 +48,17 @@ public:
 	UPROPERTY(Category = "CPD", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CPDIndex"))
 	int32 mCPDIndex = INDEX_NONE;
 };
+
+USTRUCT(BlueprintType)
+struct FVFXTimelineEventTarget
+{
+	GENERATED_BODY()
+
+public:
+	void Clear();
+
+public:
+	TArray<TWeakObjectPtr<UPrimitiveComponent>> mMeshComps;
+	TArray<TWeakObjectPtr<UNiagaraComponent>> mNiagaraComps;
+};
+

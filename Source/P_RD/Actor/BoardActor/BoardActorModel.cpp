@@ -1,6 +1,5 @@
 ﻿#include "Actor/BoardActor/BoardActorModel.h"
 #include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
-#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 
 void UBoardActorModel::SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData)
 {
@@ -66,11 +65,6 @@ UTexture2D* UBoardActorModel::GetBoardActorPortrait() const
 		return nullptr;
 	}
 	return mStaticSpawnData->mPortrait.LoadSynchronous();
-}
-
-UBoardMovementComponentModel* UBoardActorModel::GetBoardMovementComponentModel() const
-{
-	return mMovementCompModel;
 }
 
 const FTransform& UBoardActorModel::GetWorldTransform() const

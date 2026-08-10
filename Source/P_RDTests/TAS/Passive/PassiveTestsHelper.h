@@ -18,8 +18,9 @@
 #include "GenericTeamAgentInterface.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
-#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
 #include "TAS/Effect/TacticalEffect.h"
@@ -43,6 +44,7 @@ public:
 		// 실제 속성 컴포넌트 + 유닛 속성셋을 기본 서브오브젝트로 생성
 		mAttributeComponentModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
 		mSkillComponentModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComponentModel"));
+		mBoardMovementComponentModel = CreateDefaultSubobject<UBoardMovementComponentModel>(TEXT("BoardMovementComponentModel"));
 		mUnitAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("UnitAttributeSet"));
 	}
 
@@ -53,6 +55,7 @@ public:
 	// IBoardCombatTarget 구현
 	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const override { return mAttributeComponentModel; }
 	virtual USkillComponentModel* GetSkillComponentModel() const override { return mSkillComponentModel; }
+	virtual UBoardMovementComponentModel* GetBoardMovementComponentModel() const override { return mBoardMovementComponentModel; }
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override {}
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId::NoTeam; }
 
@@ -62,6 +65,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<USkillComponentModel> mSkillComponentModel;
+
+	UPROPERTY()
+	TObjectPtr<UBoardMovementComponentModel> mBoardMovementComponentModel;
 
 	UPROPERTY()
 	TObjectPtr<UCombatTargetAttributeSet> mUnitAttributeSet;

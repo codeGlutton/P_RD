@@ -22,6 +22,8 @@ struct FTacticalAggregator;
 // Tactical Framework 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTacticalFramework, Log, All)
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPreTacticalEffectSpecApplyUI, const FTacticalEffectSpec& /*Spec*/, const UAttributeSetComponentModel* /*Model*/)
+
 struct FScopeCurrentTacticalEffectBeingApplied
 {
 public:
@@ -90,6 +92,10 @@ public:
 
 private:
 	void CheckEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+
+	/* 대리자 */
+public:
+	FOnPreTacticalEffectSpecApplyUI OnPreTacticalEffectSpecApplyUI;
 
 	/* 초기 구성 데이터 */
 protected:

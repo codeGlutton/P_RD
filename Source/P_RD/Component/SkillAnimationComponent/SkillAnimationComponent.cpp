@@ -12,20 +12,14 @@
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Animation/SkillAnimationMetaData.h"
 
+#include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
+
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
-#include "GameFramework/PlayerController.h"
 
 #include "FunctionLibrary/VFXFunctionLibrary.h"
-#include "GameMode/RDGameModeBase.h"
-#include "Singleton/InstanceSubsystem/PersistentData.h"
-
-bool RDSkillAnimation::ShouldStartCameraShake(const UOptionPersistData* OptionData)
-{
-	// 옵션 시스템이 없는 프리뷰/테스트 월드에서는 기존 연출을 유지한다.
-	return OptionData == nullptr || OptionData->IsCameraShakeEnabled();
-}
+#include "FunctionLibrary/CameraFunctionLibrary.h"
 
 USkillAnimationComponent::USkillAnimationComponent()
 {
@@ -152,7 +146,7 @@ void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimat
 
 void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
-	const FApplyNiagaraEventTriggerPayload* NiagaraPayload = StaticCast<const FApplyNiagaraEventTriggerPayload*>(Payload);
+	const FApplyVFXEventTriggerPayload* VFXPayload = StaticCast<const FApplyVFXEventTriggerPayload*>(Payload);
 
 	const USkillComponentModel* OwnerSkillComp = Context.mMetaData.Get<FSkillAnimationMetaData>().mInstigator.Get();
 	if (OwnerSkillComp == nullptr)
@@ -163,7 +157,7 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 	const UBoardActorModel* OwnerActorModel = OwnerSkillComp->GetOwnerModel<UBoardActorModel>();
 	const FActiveSkillContext& ActiveSkillContext = OwnerSkillComp->GetActiveSkillContext();
 
-	switch (NiagaraPayload->mTargetType)
+	switch (VFXPayload->mTargetType)
 	{
 	case EApplyNiagaraTargetType::Actor:
 	{
@@ -187,7 +181,7 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 				OtherActorModel->GetTileTransform().mDirection
 			);
 			const USkillAnimationComponent* OtherSkillAnimComp = OtherActorView->GetSkillAnimationComponent();
-			OtherSkillAnimComp->SpawnHitVFXOnSelf(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, OtherVFXDir);
+			OtherSkillAnimComp->SpawnHitVFXOnSelf(ActiveSkillContext.mSkillEndBarrier, VFXPayload->mVFXSpawnData, OtherVFXDir);
 		}
 		break;
 	}
@@ -197,7 +191,7 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 		{
 			const FTileTransform EffectTileTransform(EffectTileIndex, Context.mMontageDir);
 			const FTransform EffectTransform = ActiveSkillContext.mMapModel->TileToWorldTransform(EffectTileTransform);
-			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, EffectTransform);
+			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, VFXPayload->mVFXSpawnData, EffectTransform);
 		}
 		break;
 	}
@@ -207,7 +201,7 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 		{
 			const FTileTransform TargetTileTransform(TargetTileIndex, Context.mMontageDir);
 			const FTransform TargetTransform = ActiveSkillContext.mMapModel->TileToWorldTransform(TargetTileTransform);
-			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, NiagaraPayload->mNiagaraSpawnDatas, TargetTransform);
+			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, VFXPayload->mVFXSpawnData, TargetTransform);
 		}
 		break;
 	}
@@ -216,12 +210,6 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 
 void USkillAnimationComponent::OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
-	// 애님 노티파이 경로에서 먼저 거르고, ShakeCamera에서도 직접 호출 경로를 다시 보호한다.
-	if (!IsCameraShakeEnabled())
-	{
-		return;
-	}
-
 	const FCameraShakeEventTriggerPayload* CameraShakePayload = StaticCast<const FCameraShakeEventTriggerPayload*>(Payload);
 
 	ShakeCamera(CameraShakePayload->mCameraShakeClass);
@@ -319,24 +307,43 @@ void USkillAnimationComponent::PlayHitAnimation(TSharedPtr<FPresentationBarrier>
 {
 }
 
-void USkillAnimationComponent::SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, ETileActorDirection LocalDirection) const
+void USkillAnimationComponent::SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const FVFXSpawnData& VFXSpawnData, ETileActorDirection LocalDirection) const
 {
-	// 자기 자신
-	UPrimitiveComponent* TargetMeshComponent = GetOwner<IBoardCombatTargetView>()->GetTargetMeshComponent();
+	IBoardCombatTargetView* OwnerView = GetOwner<IBoardCombatTargetView>();
+	if (OwnerView == nullptr)
+	{
+		return;
+	}
+
+	UPrimitiveComponent* TargetMeshComponent = OwnerView->GetTargetMeshComponent();
 	if (TargetMeshComponent == nullptr)
 	{
 		return;
 	}
 
-	for (const FNiagaraSpawnData& NiagaraSpawnData : NiagaraSpawnDatas)
+	UCombatTargetVFXTimelineComponent* TimelineComponent = OwnerView->GetCombatTargetVFXTimelineComponent();
+	if (TimelineComponent == nullptr)
 	{
-		UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(NiagaraSpawnData, TargetMeshComponent, LocalDirection);
+		return;
 	}
+
+	FVFXTimelineEventTarget EventTarget;
+	for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComponent->GetAttachChildren())
+	{
+		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
+		if (ChildMeshComp != nullptr)
+		{
+			EventTarget.mMeshComps.Add(ChildMeshComp);
+		}
+	}
+	EventTarget.mMeshComps.Add(TargetMeshComponent);
+
+	UVFXFunctionLibrary::SpawnAndExecuteVFX(VFXSpawnData, TargetMeshComponent, TimelineComponent, EventTarget, LocalDirection);
 }
 
-void USkillAnimationComponent::SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const TArray<FNiagaraSpawnData>& NiagaraSpawnDatas, const FTransform& Transform) const
+void USkillAnimationComponent::SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier> SkillEndBarrier, const FVFXSpawnData& VFXSpawnData, const FTransform& Transform) const
 {
-	for (const FNiagaraSpawnData& NiagaraSpawnData : NiagaraSpawnDatas)
+	for (const FNiagaraSpawnData& NiagaraSpawnData : VFXSpawnData.mNiagaraSpawnDatas)
 	{
 		UVFXFunctionLibrary::SpawnNiagaraEffect(NiagaraSpawnData.mNiagaraSystem, GetWorld(), Transform);
 	}
@@ -344,7 +351,7 @@ void USkillAnimationComponent::SpawnHitVFXOnTile(TSharedPtr<FPresentationBarrier
 
 void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, FVector WorldPosition) const
 {
-	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+	ACombatCameraPawn* CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
 	if (CameraPawn != nullptr)
 	{
 		CameraPawn->GetCameraMovementComponent()->StartEmphasisToWorldPositionWithZoom(TargetZoom, WorldPosition);
@@ -356,7 +363,7 @@ void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent
 
 void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent, float TargetZoom, AActor* EmphasisActor) const
 {
-	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+	ACombatCameraPawn* CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
 	if (CameraPawn != nullptr)
 	{
 		CameraPawn->GetCameraMovementComponent()->StartEmphasisToActorWithZoom(TargetZoom, EmphasisActor);
@@ -368,34 +375,16 @@ void USkillAnimationComponent::ZoomInCamera(FOnEndDurationEventTrigger& EndEvent
 
 void USkillAnimationComponent::ShakeCamera(TSubclassOf<UCameraShakeBase> CameraShakeClass) const
 {
-	UWorld* World = GetWorld();
-	if (World == nullptr || !IsCameraShakeEnabled())
-	{
-		return;
-	}
-
-	APlayerController* PlayerController = World->GetFirstPlayerController();
-	ACombatCameraPawn* CameraPawn = PlayerController != nullptr
-		? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
+	ACombatCameraPawn* CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
 	if (CameraPawn != nullptr)
 	{
 		CameraPawn->GetCameraMovementComponent()->StartCameraShake(CameraShakeClass);
 	}
 }
 
-bool USkillAnimationComponent::IsCameraShakeEnabled() const
-{
-	UWorld* World = GetWorld();
-	const ARDGameModeBase* GameMode = World != nullptr
-		? World->GetAuthGameMode<ARDGameModeBase>() : nullptr;
-	const UOptionPersistData* OptionData = GameMode != nullptr
-		? GameMode->GetOptionPersistData() : nullptr;
-	return RDSkillAnimation::ShouldStartCameraShake(OptionData);
-}
-
 void USkillAnimationComponent::RequestTimeScale(FOnEndDurationEventTrigger& EndEvent, UObject* Requester, float TargetTimeScale, float BlendSpeed, float Duration) const
 {
-	ACombatCameraPawn* CameraPawn = GetWorld()->GetFirstPlayerController()->GetPawn<ACombatCameraPawn>();
+	ACombatCameraPawn* CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
 	if (CameraPawn != nullptr)
 	{
 		FTimeScaleHandle Handle = CameraPawn->GetTimeScaleComponent()->RequestTimeScale(Requester, TargetTimeScale, BlendSpeed, Duration);

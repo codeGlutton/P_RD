@@ -17,15 +17,25 @@ class UPrimitiveComponent;
 class UNiagaraComponent;
 
 class UBoardActorModel;
+class IBoardCombatTargetView;
 
-DECLARE_DELEGATE_TwoParams(FOnVFXTimelineFloatStatic, const FVFXTimelineTrackEvent&, float);
-DECLARE_DELEGATE_TwoParams(FOnVFXTimelineVectorStatic, const FVFXTimelineTrackEvent& , FVector);
-DECLARE_DELEGATE_TwoParams(FOnVFXTimelineLinearColorStatic, const FVFXTimelineTrackEvent&, FLinearColor);
+USTRUCT(BlueprintType)
+struct FTimelineEntry
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FName mKeyName;
+
+	UPROPERTY()
+	FTimeline mTimeline;
+};
 
 /**
  * @brief 메시 CPD와 Niagara 파라미터를 타임라인에 커플링하여 실행해주는 컴포넌트
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (VFXTimeline), meta = (BlueprintSpawnableComponent))
 class P_RD_API UVFXTimelineComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -40,128 +50,102 @@ public:
 	void Deactivate() override;
 	bool IsReadyForOwnerToAutoDestroy() const override;
 	bool IsPostLoadThreadSafe() const override;
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/* 타임라인 조정 */
 public:
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void Play();
+	bool Play(const FName& KeyName, FVFXTimelineEventTarget Target);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void PlayFromStart();
+	bool PlayFromStart(const FName& KeyName, FVFXTimelineEventTarget Target);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void Reverse();
+	bool Reverse(const FName& KeyName, FVFXTimelineEventTarget Target);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void ReverseFromEnd();
+	bool ReverseFromEnd(const FName& KeyName, FVFXTimelineEventTarget Target);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void Stop();
+	int32 StopAll();
+	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
+	bool Stop(const FName& KeyName);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	bool IsPlaying() const;
+	bool IsAnyPlaying() const;
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	bool IsReversing() const;
+	bool IsPlaying(const FName& KeyName) const;
+	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
+	bool IsReversing(const FName& KeyName) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline", meta = (AdvancedDisplay = "FireUpdate"))
-	void SetPlaybackPosition(float NewPosition, bool FireEvents, bool FireUpdate = true);
+	bool SetPlaybackPosition(const FName& KeyName, float NewPosition, bool FireEvents, bool FireUpdate = true);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	float GetPlaybackPosition() const;
+	float GetPlaybackPosition(const FName& KeyName) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetLooping(bool NewLooping);
+	bool SetLooping(const FName& KeyName, bool NewLooping);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	bool IsLooping() const;
+	bool IsLooping(const FName& KeyName) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetPlayRate(float NewRate);
+	bool SetPlayRate(const FName& KeyName, float NewRate);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	float GetPlayRate() const;
+	float GetPlayRate(const FName& KeyName) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetNewTime(float NewTime);
+	bool SetNewTime(const FName& KeyName, float NewTime);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	float GetTimelineLength() const;
+	float GetTimelineLength(const FName& KeyName) const;
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	float GetScaledTimelineLength() const;
+	float GetScaledTimelineLength(const FName& KeyName) const;
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetTimelineLength(float NewLength);
+	bool SetTimelineLength(const FName& KeyName, float NewLength);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetTimelineLengthMode(ETimelineLengthMode NewLengthMode);
+	bool SetTimelineLengthMode(const FName& KeyName, ETimelineLengthMode NewLengthMode);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
 	void SetIgnoreTimeDilation(bool NewIgnoreTimeDilation);
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
 	bool GetIgnoreTimeDilation() const;
 
-	/* 커브 데이터 수정 */
+	/* 커브 등록 */
 public:
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetFloatCurve(UCurveFloat* NewFloatCurve, FName FloatTrackName);
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetVectorCurve(UCurveVector* NewVectorCurve, FName VectorTrackName);
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetLinearColorCurve(UCurveLinearColor* NewLinearColorCurve, FName LinearColorTrackName);
+	void AddInterpFloat(const FName& KeyName, UCurveFloat* FloatCurve, FVFXTimelineTrackEvent Event);
+	void AddInterpVector(const FName& KeyName, UCurveVector* VectorCurve, FVFXTimelineTrackEvent Event);
+	void AddInterpLinearColor(const FName& KeyName, UCurveLinearColor* LinearColorCurve, FVFXTimelineTrackEvent Event);
 
-public:
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void AddEvent(float Time, FOnTimelineEvent EventFunc);
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void AddInterpFloat(UCurveFloat* FloatCurve, FOnTimelineFloat InterpFunc, FName PropertyName = NAME_None, FName TrackName = NAME_None);
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void AddInterpVector(UCurveVector* VectorCurve, FOnTimelineVector InterpFunc, FName PropertyName = NAME_None, FName TrackName = NAME_None);
-	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void AddInterpLinearColor(UCurveLinearColor* LinearColorCurve, FOnTimelineLinearColor InterpFunc, FName PropertyName = NAME_None, FName TrackName = NAME_None);
-
-	void AddInterpFloat(UCurveFloat* FloatCurve, FOnTimelineFloatStatic InterpFunc);
-	void AddInterpVector(UCurveVector* VectorCurve, FOnTimelineVectorStatic InterpFunc);
-	void AddInterpLinearColor(UCurveLinearColor* LinearColorCurve, FOnTimelineLinearColorStatic InterpFunc);
-
-	void AddVFXInterpFloat(UCurveFloat* FloatCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineFloatStatic VFXInterpFunc);
-	void AddVFXInterpVector(UCurveVector* VectorCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineVectorStatic VFXInterpFunc);
-	void AddVFXInterpLinearColor(UCurveLinearColor* LinearColorCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineLinearColorStatic VFXInterpFunc);
-
-	void SetPropertySetObject(UObject* NewPropertySetObject);
+	bool SetPropertySetObject(const FName& KeyName, UObject* NewPropertySetObject);
 
 	/* 대리자 등록 */
 public:
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetTimelinePostUpdateFunc(FOnTimelineEvent NewTimelinePostUpdateFunc);
+	bool SetTimelinePostUpdateFunc(const FName& KeyName, FOnTimelineEvent NewTimelinePostUpdateFunc);
 
 	UFUNCTION(BlueprintCallable, Category = "Components|VFXTimeline")
-	void SetTimelineFinishedFunc(FOnTimelineEvent NewTimelineFinishedFunc);
-	void SetTimelineFinishedFunc(FOnTimelineEventStatic NewTimelineFinishedFunc);
+	bool SetTimelineFinishedFunc(const FName& KeyName, FOnTimelineEvent NewTimelineFinishedFunc);
+	bool SetTimelineFinishedFunc(const FName& KeyName, FOnTimelineEventStatic NewTimelineFinishedFunc);
 
-	void SetDirectionPropertyName(FName DirectionPropertyName);
+	bool SetDirectionPropertyName(const FName& KeyName, FName DirectionPropertyName);
 
-	/* 멀티 복제 */
-public:
-	UFUNCTION()
-	void OnRep_Timeline(FTimeline& OldTimeline);
-
-	/* 리플렉션 */
-public:
-	static UFunction* GetTimelineEventSignature();
-	static UFunction* GetTimelineFloatSignature();
-	static UFunction* GetTimelineVectorSignature();
-	static UFunction* GetTimelineLinearColorSignature();
-
-	static ETimelineSigType GetTimelineSignatureForFunction(const UFunction* InFunc);
+protected:
+	FTimelineEntry* AddTimelineEntry(const FName& KeyName);
+	FTimelineEntry* FindTimelineEntry(const FName& KeyName);
+	const FTimelineEntry* FindTimelineEntry(const FName& KeyName) const;
 
 private:
-	UPROPERTY(ReplicatedUsing = OnRep_Timeline)
-	FTimeline mTimeline;
+	UPROPERTY()
+	TArray<FTimelineEntry> mTimelineEntries;
+	TMap<FName, FVFXTimelineEventTarget> mTimelineTargets;
 
 	UPROPERTY()
 	uint32 mIgnoreTimeDilation : 1;
 };
 
 /**
- * @brief 메시 CPD와 Niagara 파라미터를 타임라인에 커플링하여 실행해주는 컴포넌트
+ * @brief 전투 대상 VFX 이펙트를 실행해주는 컴포넌트
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class P_RD_API UDissolveVFXTimelineComponent : public UVFXTimelineComponent, public IComponentView
+UCLASS(ClassGroup = (VFXTimeline), meta = (BlueprintSpawnableComponent))
+class P_RD_API UCombatTargetVFXTimelineComponent : public UVFXTimelineComponent, public IComponentView
 {
 	GENERATED_BODY()
 
@@ -170,21 +154,11 @@ public:
 	void BindOwnerModel(UObjectModel* Model) override;
 	void UnbindOwnerModel(UObjectModel* Model) override;
 
-public:
-	void Dissolve();
-
-private:
-	void OnUpdateDissolveVFX(const FVFXTimelineTrackEvent& Event, float Value) const;
-
-private:
-	static const FName DISSOLVE_PARAM_NAME;
-	static const int32 DISSOLVE_PARAM_INDEX;
+protected:
+	void PlayRemoveVFX();
 
 protected:
 	// @brief 소유 모델 객체
 	TWeakObjectPtr<UBoardActorModel> mOwnerModel = nullptr;
-
-	// @brief VFX 캐시
-	TArray<TWeakObjectPtr<UPrimitiveComponent>> mDissolveMeshCompCaches;
-	TArray<TWeakObjectPtr<UNiagaraComponent>> mDissolveNiagaraCompCaches;
 };
+
