@@ -72,7 +72,6 @@ namespace CombatDefeatPreview
 		}
 
 		Widget->ShowDefeatResult(Result,
-			FSimpleDelegate::CreateStatic(&CloseShownWidget),
 			FSimpleDelegate::CreateStatic(&CloseShownWidget));
 		Widget->OpenUI();
 		ShownWidget = Widget;

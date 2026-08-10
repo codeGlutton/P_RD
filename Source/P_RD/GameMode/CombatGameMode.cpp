@@ -1,6 +1,7 @@
 ﻿#include "GameMode/CombatGameMode.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -58,6 +59,14 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
+	/** @brief 확인용: 1이면 전투에 등록되는 모든 유닛(아군·적)의 HP를 1로 시작한다.
+	 * 승리/패배/보상 화면을 빨리 보려는 개발 스위치다. UserEngine.ini 나
+	 * 콘솔에서 rd.Debug.ForceCombatHPOne 으로 켜고 끈다. */
+	int32 GForceCombatHPOne = 0;
+	FAutoConsoleVariableRef CForceCombatHPOne(
+		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
+		TEXT("1이면 전투 유닛 전원이 HP 1로 시작한다 (결과 화면 확인용)."));
+
 	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
 	{
 		return UnitModel != nullptr
@@ -155,6 +164,31 @@ namespace
 		}
 		return LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
+	}
+
+	/** @brief 결과판용 용병 초상화를 기존 우선순위대로 해상한다. */
+	UTexture2D* ResolveCombatPartyPortrait(const UPlayerUnitModel* PlayerUnitModel)
+	{
+		if (PlayerUnitModel == nullptr)
+		{
+			return nullptr;
+		}
+
+		UTexture2D* Portrait = ResolveMarchboundMercenaryPortrait(
+			PlayerUnitModel, false);
+		if (Portrait == nullptr)
+		{
+			Portrait = PlayerUnitModel->GetBoardActorIcon();
+		}
+		if (Portrait == nullptr)
+		{
+			Portrait = PlayerUnitModel->GetBoardActorPortrait();
+		}
+		if (Portrait == nullptr)
+		{
+			Portrait = ResolveTurnPortraitFallback(PlayerUnitModel);
+		}
+		return Portrait;
 	}
 
 	FLinearColor GetRarityColor(ERarityType RarityType)
@@ -466,7 +500,7 @@ void ACombatGameMode::InitializeRoom()
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
 	mCombatUIModel->OnAbandonRun.AddUniqueDynamic(this, &ACombatGameMode::HandleAbandonRun);
-	mCombatUIModel->OnRetryCombat.AddUniqueDynamic(this, &ACombatGameMode::HandleRetryCombat);
+	mCombatUIModel->OnSaveAndExitRun.AddUniqueDynamic(this, &ACombatGameMode::HandleSaveAndExitRun);
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
@@ -484,6 +518,23 @@ void ACombatGameMode::InitializeRoom()
 	if (SettingPointActor != nullptr)
 	{
 		SpawnPointTransform = SettingPointActor->GetActorTransform();
+	}
+
+	// 사망 태그는 용병을 PartyModel에서 즉시 제거한다. 결과 데이터를 전투가
+	// 끝난 뒤 조립해도 참가자 초상화가 남도록, 전투 진입 전에 따로 보존한다.
+	mCombatStartPartyPortraits.Reset();
+	mCombatStartPartyPortraits.Reserve(3);
+	for (const UPlayerUnitModel* PlayerUnitModel : GetPlayerUnitModels())
+	{
+		if (PlayerUnitModel == nullptr)
+		{
+			continue;
+		}
+		mCombatStartPartyPortraits.Add(ResolveCombatPartyPortrait(PlayerUnitModel));
+		if (mCombatStartPartyPortraits.Num() >= 3)
+		{
+			break;
+		}
 	}
 	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mClearData);
 }
@@ -526,19 +577,6 @@ UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
 URewardUIModel* ACombatGameMode::GetRewardUIModel() const
 {
 	return mRewardUIModel;
-}
-
-void ACombatGameMode::HandleOpenInventory()
-{
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
-		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	URDUserWidget* InventoryWidget = WorldWidgetSubsystem != nullptr
-		? Cast<URDUserWidget>(WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::Inventory))
-		: nullptr;
-	if (InventoryWidget != nullptr)
-	{
-		InventoryWidget->OpenUI();
-	}
 }
 
 void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
@@ -864,25 +902,89 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 
 void ACombatGameMode::HandleAbandonRun()
 {
-	AbandonRunFromRoom();
-}
-
-void ACombatGameMode::HandleRetryCombat()
-{
-	const URunPersistData* RunData = GetRunPersistData();
-	if (RunData == nullptr || RunData->IsActive() == false)
+	if (mSettingsRunActionPending)
 	{
-		UE_LOG(LogCombatGameMode, Warning, TEXT("Retry combat ignored because no active run exists."));
+		// A second click does not represent a failed operation. Keep the first
+		// asynchronous request authoritative and leave the UI locked until it ends.
 		return;
 	}
 
-	const FRoom& CurrentRoom = RunData->GetCurrentRoom();
-	const bool bTransitionStarted = PreloadAndTransitionRoomAsync(CurrentRoom.mRow, CurrentRoom.mColumn);
-	if (bTransitionStarted == false)
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (SaveGameSubsystem == nullptr)
 	{
-		UE_LOG(LogCombatGameMode, Warning, TEXT("Retry combat failed to preload current room (%d, %d)."),
-			CurrentRoom.mRow, CurrentRoom.mColumn);
+		if (mCombatUIModel != nullptr)
+		{
+			mCombatUIModel->NotifyAbandonRunCompleted(false);
+		}
+		return;
 	}
+
+	mSettingsRunActionPending = true;
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
+		this,
+		[this](const FString& SlotName, const int32 UserIndex, const bool bSaveSucceeded)
+		{
+			const bool bAbandonStarted = bSaveSucceeded && AbandonRunFromRoom();
+			if (!bAbandonStarted)
+			{
+				mSettingsRunActionPending = false;
+			}
+			if (mCombatUIModel != nullptr)
+			{
+				mCombatUIModel->NotifyAbandonRunCompleted(bAbandonStarted);
+			}
+		}));
+}
+
+void ACombatGameMode::HandleSaveAndExitRun()
+{
+	if (mSettingsRunActionPending)
+	{
+		// Do not publish a false completion for a duplicate click: that would unlock
+		// the settings buttons while the original save/transition is still running.
+		return;
+	}
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (SaveGameSubsystem == nullptr)
+	{
+		if (mCombatUIModel != nullptr)
+		{
+			mCombatUIModel->NotifySaveAndExitCompleted(false);
+		}
+		return;
+	}
+
+	mSettingsRunActionPending = true;
+	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
+		this,
+		[this](const FString& SlotName, const int32 UserIndex, const bool bSaveSucceeded)
+		{
+			if (!bSaveSucceeded)
+			{
+				mSettingsRunActionPending = false;
+				if (mCombatUIModel != nullptr)
+				{
+					mCombatUIModel->NotifySaveAndExitCompleted(false);
+				}
+				return;
+			}
+
+			SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete::CreateWeakLambda(
+				this, [this](const bool bSuccess)
+				{
+					if (!bSuccess)
+					{
+						mSettingsRunActionPending = false;
+					}
+					if (mCombatUIModel != nullptr)
+					{
+						mCombatUIModel->NotifySaveAndExitCompleted(bSuccess);
+					}
+				}));
+		}));
 }
 
 bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
@@ -985,7 +1087,12 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 {
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-	const int32 UnitId = Unit->GetModelId();
+
+	if (GForceCombatHPOne != 0)
+	{
+		AttributeSetComponentModel->SetAttributeBaseValue(
+			UUnitAttributeSet::GetHPAttribute(), 1.f);
+	}
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
@@ -1044,25 +1151,7 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 	CombatResultUIData.mDefeatedMonsterCount = mDefeatedMonsterCount;
 	CombatResultUIData.mGoldGained = 0;
 	CombatResultUIData.mExpGained = 0;
-	for (const UPlayerUnitModel* PlayerUnitModel : GetPlayerUnitModels())
-	{
-		if (PlayerUnitModel == nullptr || CombatResultUIData.mPartyPortraits.Num() >= 3)
-		{
-			continue;
-		}
-
-		UTexture2D* Portrait = ResolveMarchboundMercenaryPortrait(
-			PlayerUnitModel, false);
-		if (Portrait == nullptr)
-		{
-			Portrait = PlayerUnitModel->GetBoardActorIcon();
-		}
-		if (Portrait == nullptr)
-		{
-			Portrait = PlayerUnitModel->GetBoardActorPortrait();
-		}
-		CombatResultUIData.mPartyPortraits.Add(Portrait);
-	}
+	CombatResultUIData.mPartyPortraits = mCombatStartPartyPortraits;
 	mCombatUIModel->SetCombatResultUI(CombatResultUIData);
 }
 

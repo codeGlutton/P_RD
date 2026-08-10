@@ -8,6 +8,7 @@
 #include "SRPGFramework/SRPGEnemyTurnPlanner.h"
 
 #include "SRPGFramework/SRPGMoveAction.h"
+#include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
 #include "SRPGFramework/SRPGSkillAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
@@ -218,9 +219,16 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
 
+	// 속박 등으로 이동 불가면 이동 예산을 0으로 -> 도달 범위가 제자리로 줄어 제자리 스킬만 계획
+	// (스킬 비용 판정은 별도로 ActionPoint를 쓰므로 영향 없음)
+	const UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(Enemy->GetBoardMovementComponentModel());
+	const int32 MoveBudget = (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
+		? 0
+		: ActionPoint;
+
 	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
 	FTacticalTileTable Table;
-	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, ActionPoint);
+	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, MoveBudget);
 
 	// 목적지 이동비용 조회 (판단근거 로그용)
 	auto GetTableMoveCost = [&Table](const FTileIndex& Tile)
