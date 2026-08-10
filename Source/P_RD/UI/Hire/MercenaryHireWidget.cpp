@@ -561,6 +561,19 @@ void UMercenaryHireWidget::ClickPartySlot(const int32 SlotIndex)
 {
 	if (!mChosen.IsValidIndex(SlotIndex))
 	{
+		/*
+		 * 빈 + 칸이다. 보고 있는 용병을 여기에 넣는다(0811 점검).
+		 *
+		 * 전에는 아무 일도 안 해서 "+ 를 눌렀는데 안 눌린다" 로 읽혔다 --
+		 * 실제 추가 손(목록 재클릭)은 발견이 어렵다. + 칸은 목록 재클릭과
+		 * 같은 결과를 낸다. 이미 편성됐거나 자리가 없으면 그대로 둔다.
+		 */
+		if (mCrew.IsValidIndex(mReviewing) && !mChosen.Contains(mReviewing)
+			&& mChosen.Num() < mPartySize)
+		{
+			mChosen.Add(mReviewing);
+			Refresh();
+		}
 		return;
 	}
 

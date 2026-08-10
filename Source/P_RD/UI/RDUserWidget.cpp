@@ -223,10 +223,32 @@ void URDUserWidget::SetupCommonButtonFeedback()
 			}
 
 			// 클릭 사운드: 스타일의 PressedSlateSound에만 주입한다. 브러시/색은 그대로 둬 디자이너 스킨을 보존한다.
-			if (PressSound != nullptr)
 			{
 				FButtonStyle Style = Button->GetStyle();
-				Style.PressedSlateSound.SetResourceObject(PressSound);
+				if (PressSound != nullptr)
+				{
+					Style.PressedSlateSound.SetResourceObject(PressSound);
+				}
+
+				/*
+				 * 호버 피드백(0811 점검). 마우스를 올려도 아무 변화가 없어
+				 * "반응이 없다" 로 읽혔다 -- 모든 화면 공통으로, 호버 브러시가
+				 * 비어 있는(투명) 버튼에만 옅은 밝김을 얹는다. 디자이너가 호버
+				 * 그림을 그려 둔 버튼은 그대로 두고, 터치(모바일)에는 호버가
+				 * 없으므로 자연히 무효과다.
+				 */
+				const FSlateBrush& Hovered = Style.Hovered;
+				const bool bHoverInvisible =
+					Hovered.DrawAs == ESlateBrushDrawType::NoDrawType
+					|| (Hovered.GetResourceObject() == nullptr
+						&& Hovered.TintColor.GetSpecifiedColor().A <= 0.01f);
+				if (bHoverInvisible)
+				{
+					FSlateBrush HoverBrush;
+					HoverBrush.TintColor = FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.12f));
+					Style.SetHovered(HoverBrush);
+				}
+
 				Button->SetStyle(Style);
 			}
 
