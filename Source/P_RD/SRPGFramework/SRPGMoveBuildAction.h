@@ -55,6 +55,9 @@ public:
 	USRPGMoveBuildAction();
 	/** @brief 현재 선택한 전체 경로가 소비할 AP. 이동 한 칸당 1을 사용한다. */
 	int32 GetPlannedMoveCost() const;
+	// @brief 마지막 경유지 좌표 (부분경로가 없으면 유닛 현재 위치). 확정 단추가
+	//        "그 칸 재탭"을 흉내 낼 때 쓴다.
+	FTileIndex GetLastWaypoint() const;
 
 	/* FSRPGAction 상속 */
 protected:
@@ -86,8 +89,6 @@ private:
 	UTileMapModel* GetTileMap() const;
 	// @brief 마지막 경유지 기준, 남은 이동 포인트로 도달 범위를 재계산하고 강조 갱신
 	void RefreshReachableTiles();
-	// @brief 마지막 경유지 좌표 (부분경로가 없으면 유닛 현재 위치)
-	FTileIndex GetLastWaypoint() const;
 	// @brief 남은 이동 포인트 (보유 포인트 - 부분경로들이 사용할 포인트 합)
 	int32 GetRemainMovePoint() const;
 	// @brief 경로들의 집합을 하나의 경로로 이어붙여서 전체 경로를 표시

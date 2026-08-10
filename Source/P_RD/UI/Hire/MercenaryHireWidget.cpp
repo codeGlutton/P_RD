@@ -289,7 +289,16 @@ void UMercenaryHireWidget::EnsureMarchboundPreviewCrew()
 
 void UMercenaryHireWidget::ApplyResponsiveLayout(const FVector2D& ViewportSize)
 {
-	const bool bPortrait = ViewportSize.X / ViewportSize.Y < 1.15f;
+	/*
+	 * 비율에 따른 세로형 재배치는 쓰지 않는다(0811 결정).
+	 *
+	 * 1.15 경계로 목록이 좌측 세로 ↔ 하단 그리드로 갈아타는 구조였는데, 창
+	 * 비율이 바뀔 때마다 화면 구조가 통째로 바뀌어 "맘대로 바뀐다"고 읽혔고
+	 * 세로형에서는 출발 단추가 스탯 줄과 겹치기까지 했다. 구조는 가로형
+	 * 하나로 고정한다 -- 좁은 화면에서는 각 구역 ScaleBox 가 구조를 그대로
+	 * 둔 채 줄어든다. 세로형이 다시 필요하면 이 함수 이력을 되살릴 것.
+	 */
+	const bool bPortrait = false;
 	if (mHasAppliedResponsiveLayout && bPortrait == mIsPortraitLayout)
 	{
 		return;
@@ -333,9 +342,13 @@ void UMercenaryHireWidget::ApplyResponsiveLayout(const FVector2D& ViewportSize)
 		// 세로 화면에서는 세로 목록을 억지로 축소하지 않고 2x3 터치 그리드로
 		// 재배치한다. 중앙 영웅은 위쪽, 파티는 우상단, 후보는 하단을 차지한다.
 		SetAnchors(TEXT("HireCenterScale"), FAnchors(0.02f, 0.0f, 0.98f, 0.68f));
-		SetAnchors(TEXT("HireRightScale"), FAnchors(0.53f, 0.04f, 0.98f, 0.61f));
+		// 파티 열은 아래로 더 내려 잡는다. 0.61 에서 끊으면 그 안의 출발
+		// 단추가 중앙 스탯 줄 높이에 걸려, 스탯 판이 출발을 반쯤 덮었다(0811).
+		SetAnchors(TEXT("HireRightScale"), FAnchors(0.53f, 0.06f, 0.98f, 0.68f));
 		SetAnchors(TEXT("HireLeftScale"), FAnchors(0.0f, 0.63f, 1.0f, 1.0f));
 		SetDesignSize(TEXT("HireLeftSize"), FVector2D(1080.0f, 500.0f));
+		// 출발도 프레임 아래로 더 내려 스탯 줄과 세로로 분리한다.
+		SetRect(TEXT("DepartHolder"), FVector2D(100.0f, 890.0f), FVector2D(340.0f, 160.0f));
 		MercenaryHireDetail::SetShown(WidgetTree->FindWidget(TEXT("HireListFrameArt")), false);
 		for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 		{
@@ -351,6 +364,8 @@ void UMercenaryHireWidget::ApplyResponsiveLayout(const FVector2D& ViewportSize)
 		SetAnchors(TEXT("HireCenterScale"), FAnchors(0.27f, 0.0f, 0.73f, 1.0f));
 		SetAnchors(TEXT("HireRightScale"), FAnchors(0.70f, 0.0f, 1.0f, 1.0f));
 		SetDesignSize(TEXT("HireLeftSize"), FVector2D(555.0f, 1080.0f));
+		// 가로형 원래 자리로 되돌린다 -- 세로형에서 내려 둔 값이 남으면 안 된다.
+		SetRect(TEXT("DepartHolder"), FVector2D(80.0f, 824.0f), FVector2D(340.0f, 160.0f));
 		MercenaryHireDetail::SetShown(WidgetTree->FindWidget(TEXT("HireListFrameArt")), true);
 		for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 		{

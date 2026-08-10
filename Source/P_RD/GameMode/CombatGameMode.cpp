@@ -606,6 +606,10 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		PushSelectedSkillUIData(SkillIndex);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnChangeSkillBuildPhase.AddWeakLambda(this, [this](const USRPGSkillBuildAction* Action, ESRPGSkillBuildPhase Phase) {
+		// 확정 단추가 재탭할 겨냥 칸. Preview 를 벗어나면 비워, 낡은 칸을
+		// 재탭해 경로/겨냥만 무르는 일이 없게 한다.
+		mPendingConfirmTile = (Phase == ESRPGSkillBuildPhase::Preview && Action != nullptr)
+			? Action->GetTargetIndex() : FTileIndex::Invalid;
 		PushSkillBuildUIData(Phase);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
@@ -626,6 +630,10 @@ bool ACombatGameMode::SelectMove()
 	TInstancedStruct<FSRPGCommand> MoveSelectCommand;
 	MoveSelectCommand.InitializeAs<FSRPGMoveSelectCommand>();
 	MoveSelectCommand.GetMutable<FSRPGMoveSelectCommand>().OnChangeMoveBuildPhase.AddWeakLambda(this, [this](const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) {
+		// 확정 단추가 재탭할 경로 목적지. UI Target(살펴보기)과 별개로 여기서
+		// 챙긴다 -- 빈 칸에 경로를 그으면 Target 은 갱신되지 않는다(0810).
+		mPendingConfirmTile = (Phase == ESRPGMoveBuildPhase::Preview && Action != nullptr)
+			? Action->GetLastWaypoint() : FTileIndex::Invalid;
 		PushMoveBuildUIData(Action, Phase);
 		});
 
@@ -755,9 +763,17 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
  */
 void ACombatGameMode::ConfirmTargetTile()
 {
-	if (mCombatUIModel == nullptr || mCombatUIModel->GetTarget().mIsValid == false)
+	// 재탭할 칸은 빌드 프리뷰가 챙겨 둔 칸이 우선이다. UI Target(살펴보기
+	// 대상)은 빈 칸으로 경로를 그으면 갱신되지 않아, 그걸 재탭하면 확정이
+	// 아니라 무르기가 된다(0810).
+	FTileIndex ConfirmTile = mPendingConfirmTile;
+	if (ConfirmTile == FTileIndex::Invalid)
 	{
-		return;
+		if (mCombatUIModel == nullptr || mCombatUIModel->GetTarget().mIsValid == false)
+		{
+			return;
+		}
+		ConfirmTile = mCombatUIModel->GetTarget().mTile;
 	}
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -769,7 +785,7 @@ void ACombatGameMode::ConfirmTargetTile()
 	}
 
 	FVector2D ScreenPosition = FVector2D::ZeroVector;
-	const FVector World = TileMap->TileToWorldLocation(mCombatUIModel->GetTarget().mTile);
+	const FVector World = TileMap->TileToWorldLocation(ConfirmTile);
 	if (Controller->ProjectWorldLocationToScreen(World, OUT ScreenPosition) == false)
 	{
 		return;

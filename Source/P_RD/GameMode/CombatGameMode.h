@@ -197,6 +197,15 @@ protected:
 	 */
 	int32 mInspectedUnitId = INDEX_NONE;
 
+	/**
+	 * @brief 확정 단추가 재탭할 칸. 이동 경로 프리뷰의 목적지 또는 스킬 겨냥 칸.
+	 *
+	 * UI의 Target(살펴보기 대상)과는 별개다 -- 빈 칸으로 이동 경로를 그으면
+	 * Target 은 갱신되지 않아, 확정이 엉뚱한 칸을 재탭해 경로만 물렀다(0810).
+	 * 빌드 단계 콜백에서 Preview 진입 시 채우고 벗어나면 비운다.
+	 */
+	FTileIndex mPendingConfirmTile = FTileIndex::Invalid;
+
 	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
 	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
 

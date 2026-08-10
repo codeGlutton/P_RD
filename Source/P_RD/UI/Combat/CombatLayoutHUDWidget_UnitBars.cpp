@@ -115,16 +115,36 @@ void UCombatLayoutHUDWidget::SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar)
 	}
 
 	UCanvasPanelSlot* FillSlot = Cast<UCanvasPanelSlot>(Bar.mFillImage->Slot);
-	if (FillSlot == nullptr)
+	if (FillSlot != nullptr)
 	{
+		// 좌상단(0,0) 기준으로 두면, 폭을 줄일 때 왼쪽은 고정되고 오른쪽부터 비어 HP 드레인처럼 보인다.
+		FillSlot->SetAlignment(FVector2D(0.0f, 0.0f));
+		FillSlot->SetAutoSize(false);
+		Bar.mFillFullWidth = FillSlot->GetSize().X;
+		Bar.mFillClipSlot = FillSlot;   // Update에서 폭을 % 만큼 조절할 대상(채움 이미지 자체 슬롯).
 		return;
 	}
 
-	// 좌상단(0,0) 기준으로 두면, 폭을 줄일 때 왼쪽은 고정되고 오른쪽부터 비어 HP 드레인처럼 보인다.
-	FillSlot->SetAlignment(FVector2D(0.0f, 0.0f));
-	FillSlot->SetAutoSize(false);
-	Bar.mFillFullWidth = FillSlot->GetSize().X;
-	Bar.mFillClipSlot = FillSlot;   // Update에서 폭을 % 만큼 조절할 대상(채움 이미지 자체 슬롯).
+	/*
+	 * 채움이 Overlay(HpFillImageMount)에 감싸진 WBP.
+	 *
+	 * 감싼 뒤로 채움의 Slot 이 OverlaySlot 이라 위 캔버스 경로가 조용히
+	 * 죽었다 -- 드레인이 한 번도 안 걸려 숫자만 줄고 바는 가득이었다(0811
+	 * 제보). 왼쪽 정렬로 두고 희망 크기(DesiredSizeOverride)로 폭을 줄인다.
+	 * 원본 크기는 감싼 판이 쥔 캔버스 슬롯에서 읽는다.
+	 */
+	if (UOverlaySlot* FillOverlaySlot = Cast<UOverlaySlot>(Bar.mFillImage->Slot))
+	{
+		FillOverlaySlot->SetHorizontalAlignment(HAlign_Left);
+		FillOverlaySlot->SetVerticalAlignment(VAlign_Fill);
+		FillOverlaySlot->SetPadding(FMargin(0.0f));
+		if (UCanvasPanelSlot* MountSlot = FindCanvasSlotUp(Bar.mFillImage))
+		{
+			Bar.mFillFullWidth = MountSlot->GetSize().X;
+			Bar.mFillFullHeight = MountSlot->GetSize().Y;
+			Bar.mFillUsesDesiredSize = true;
+		}
+	}
 }
 
 /**
@@ -271,6 +291,51 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 		{
 			if (UCanvasPanel* BarCanvas = Cast<UCanvasPanel>(BarTree->RootWidget))
 			{
+				// 프레임 글로우: 판 뒤(ZOrder 음수)에 흰 글로우를 깔고 런타임에
+				// 금/보라로 물들인다. 정적 표시 -- 깜빡이지 않는다(0806 조사).
+				if (mUnitHpGlowTexture != nullptr)
+				{
+					if (UImage* Glow = BarTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("FrameGlowImage")))
+					{
+						Glow->SetBrushFromTexture(mUnitHpGlowTexture, false);
+						Glow->SetVisibility(ESlateVisibility::Collapsed);
+						if (UCanvasPanelSlot* GlowSlot = BarCanvas->AddChildToCanvas(Glow))
+						{
+							// 글로우는 백플레이트 실루엣(1958x370)에 32px 헤일로를
+							// 두른 텍스처(2022x434)다. 판(360x68)과 같은 배율로 놓으면
+							// 판 가장자리에서 실루엣 모양 그대로 빛이 배어 나온다.
+							// (헤일로 폭은 모바일 가시성 피드백으로 한 번 키웠다 -- 0811)
+							GlowSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+							GlowSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+							GlowSlot->SetPosition(FVector2D(
+								UnitHpBarPlateWidth * 0.5f, UnitHpBarPlateHeight * 0.5f));
+							GlowSlot->SetSize(FVector2D(372.0f, 80.0f));
+							GlowSlot->SetAutoSize(false);
+							GlowSlot->SetZOrder(-1);
+						}
+						NewBar.mFrameGlowImage = Glow;
+					}
+				}
+
+				// 빈 칸 트랙: 채움이 빠진 자리로 뒤(전장)가 그대로 비쳐 보였다
+				// (0811 제보 -- 백플레이트가 FrameOnly 라 개구가 뚫려 있다).
+				// 채움 영역과 같은 자리에 어두운 바닥을 깔아 "빈 HP" 로 읽힌다.
+				if (UCanvasPanelSlot* MountSlot = FindCanvasSlotUp(NewBar.mFillImage))
+				{
+					if (UImage* Track = BarTree->ConstructWidget<UImage>(
+						UImage::StaticClass(), TEXT("HpFillTrack")))
+					{
+						Track->SetColorAndOpacity(FLinearColor(0.05f, 0.04f, 0.05f, 0.92f));
+						Track->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+						if (UCanvasPanelSlot* TrackSlot = BarCanvas->AddChildToCanvas(Track))
+						{
+							TrackSlot->SetPosition(MountSlot->GetPosition());
+							TrackSlot->SetSize(MountSlot->GetSize());
+							TrackSlot->SetAutoSize(false);
+							TrackSlot->SetZOrder(MountSlot->GetZOrder() - 1);
+						}
+					}
+				}
 				if (mUnitDefenseIconTexture != nullptr)
 				{
 					if (UImage* DefenseIcon = BarTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DefenseIcon")))
@@ -420,6 +485,13 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 			FillSize.X = Bar.mFillFullWidth * Percent;
 			Bar.mFillClipSlot->SetSize(FillSize);
 		}
+		else if (Bar.mFillUsesDesiredSize == true && Bar.mFillImage != nullptr
+			&& Bar.mFillFullWidth > 0.0f)
+		{
+			// Overlay 로 감싸진 채움: 왼쪽 정렬 + 희망 크기로 같은 드레인을 낸다.
+			Bar.mFillImage->SetDesiredSizeOverride(FVector2D(
+				Bar.mFillFullWidth * Percent, Bar.mFillFullHeight));
+		}
 
 		// HP 숫자: 모바일에서 현재치만 보면 최대치와 피해 비율을 다시
 		// 추론해야 한다. 바 안에 현재/최대를 같이 크게 표시한다.
@@ -484,8 +556,10 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, 
 	 * 아이콘으로 맡고, 여기서는 좋은 것/나쁜 것만 색으로 구분한다.
 	 * 둘 다 걸리면 두 색을 섞는다 -- 하나만 골라 보이면 나머지가 숨는다.
 	 */
-	const FLinearColor BuffTint(0.42f, 1.00f, 0.55f, 1.0f);    // 이로운 것
-	const FLinearColor DebuffTint(1.00f, 0.42f, 0.42f, 1.0f);  // 해로운 것
+	// 글로우와 같은 금/보라 계열로 맞춘다 -- 프레임은 초록/빨강, 글로우는
+	// 금/보라로 갈리면 한 유닛에 색 신호가 둘 겹쳐 읽기 어렵다(0811 피드백).
+	const FLinearColor BuffTint(1.00f, 0.86f, 0.50f, 1.0f);    // 이로운 것(금)
+	const FLinearColor DebuffTint(0.78f, 0.50f, 1.00f, 1.0f);  // 해로운 것(보라)
 	bool bHasBuff = false;
 	bool bHasDebuff = false;
 	for (const FStatusEffectUI& Status : Unit.mStatusEffects)
@@ -515,51 +589,44 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, 
 	}
 
 	/*
-	 * HP바 밑 상태 띠.
+	 * 프레임 글로우(0811 결정). 버프=금, 디버프=보라, 둘 다면 섞는다.
 	 *
-	 * 종류를 **자리로** 가른다 -- 왼쪽이 이로운 것, 오른쪽이 해로운 것.
-	 * 하나만 걸렸으면 그 띠가 폭을 다 쓰고, 둘 다면 반씩 나눠 가진다.
-	 * 색만으로 뜻을 나르면 색을 못 가리는 사람에게는 아무 표시도 아니다.
+	 * 색은 상태 띠(초록/빨강)와 일부러 다르게 간다 -- 띠는 "종류를 자리로"
+	 * 가르는 접근성 장치고, 글로우는 멀리서도 "뭔가 걸렸다" 가 보이는 광량
+	 * 장치다. 정적으로만 켠다: 깜빡임은 0806 조사에서 폐기했다.
 	 */
-	const float RailInset = 20.0f;   // 판 테두리 안쪽(채움과 같은 여백)
-	const float RailWidth = UnitHpBarPlateWidth - RailInset * 2.0f;
-	const float RailTop = UnitHpBarPlateHeight - 2.0f;
-	const float RailHeight = 9.0f;
-	const bool bBothRails = bHasBuff && bHasDebuff;
-	const float HalfWidth = (RailWidth - 4.0f) * 0.5f;
-
-	if (Bar.mStatusRailBuff != nullptr)
+	if (Bar.mFrameGlowImage != nullptr)
 	{
-		Bar.mStatusRailBuff->SetVisibility(bHasBuff
+		const bool bGlowShown = bHasBuff || bHasDebuff;
+		Bar.mFrameGlowImage->SetVisibility(bGlowShown
 			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (bHasBuff == true)
+		if (bGlowShown == true)
 		{
-			if (UCanvasPanelSlot* RailSlot =
-				Cast<UCanvasPanelSlot>(Bar.mStatusRailBuff->Slot))
+			const FLinearColor BuffGlow(1.00f, 0.82f, 0.35f, 0.95f);    // 금
+			const FLinearColor DebuffGlow(0.72f, 0.38f, 1.00f, 0.95f);  // 보라
+			FLinearColor GlowTint = BuffGlow;
+			if (bHasBuff && bHasDebuff)
 			{
-				RailSlot->SetPosition(FVector2D(RailInset, RailTop));
-				RailSlot->SetSize(FVector2D(
-					bBothRails ? HalfWidth : RailWidth, RailHeight));
+				GlowTint = (BuffGlow + DebuffGlow) * 0.5f;
+				GlowTint.A = 0.95f;
 			}
-			Bar.mStatusRailBuff->SetColorAndOpacity(BuffTint);
+			else if (bHasDebuff)
+			{
+				GlowTint = DebuffGlow;
+			}
+			Bar.mFrameGlowImage->SetColorAndOpacity(GlowTint);
 		}
 	}
-	if (Bar.mStatusRailDebuff != nullptr)
+
+	/*
+	 * HP바 밑 상태 띠는 폐기했다(0811 피드백) -- 프레임 글로우가 "뭔가
+	 * 걸렸다" 를 맡으면서 띠는 군더더기가 됐다. WBP 에 남은 위젯은 늘 접는다.
+	 */
+	for (UImage* Rail : { Bar.mStatusRailBuff.Get(), Bar.mStatusRailDebuff.Get() })
 	{
-		Bar.mStatusRailDebuff->SetVisibility(bHasDebuff
-			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (bHasDebuff == true)
+		if (Rail != nullptr)
 		{
-			if (UCanvasPanelSlot* RailSlot =
-				Cast<UCanvasPanelSlot>(Bar.mStatusRailDebuff->Slot))
-			{
-				// 둘 다면 오른쪽 반, 아니면 띠 전체를 쓴다.
-				RailSlot->SetPosition(FVector2D(
-					bBothRails ? RailInset + HalfWidth + 4.0f : RailInset, RailTop));
-				RailSlot->SetSize(FVector2D(
-					bBothRails ? HalfWidth : RailWidth, RailHeight));
-			}
-			Bar.mStatusRailDebuff->SetColorAndOpacity(DebuffTint);
+			Rail->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
