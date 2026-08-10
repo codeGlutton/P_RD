@@ -3,6 +3,7 @@
 
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
 
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TSoftObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform)
 {
@@ -74,6 +75,169 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(const FN
 		return nullptr;
 	}
 	return SpawnNiagaraEffectWithDirection_Internal(NiagaraSpawnData.mNiagaraSystem, TargetComponent->GetOwner(), TargetComponent, NiagaraSpawnData.mSocketName, NiagaraSpawnData.mRelativeTransform, NiagaraSpawnData.mAttached, Direction);
+}
+
+bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp, const FVFXTimelineExecutionData& TimelineExecutionData, FVFXTimelineEventTarget EventTarget)
+{
+	if (TimelineComp != nullptr)
+	{
+		if (TimelineExecutionData.mDirection == ETimelineDirection::Forward)
+		{
+			if (TimelineExecutionData.mIsPlayFromStart == true)
+			{
+				return TimelineComp->PlayFromStart(TimelineExecutionData.mKeyName, EventTarget);
+			}
+			else
+			{
+				return TimelineComp->Play(TimelineExecutionData.mKeyName, EventTarget);
+			}
+		}
+		else
+		{
+			if (TimelineExecutionData.mIsPlayFromStart == true)
+			{
+				return TimelineComp->ReverseFromEnd(TimelineExecutionData.mKeyName, EventTarget);
+			}
+			else
+			{
+				return TimelineComp->Reverse(TimelineExecutionData.mKeyName, EventTarget);
+			}
+		}
+	}
+	return false;
+}
+
+bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp, const FVFXTimelineExecutionData& TimelineExecutionData, TArray<TWeakObjectPtr<UPrimitiveComponent>>& TargetMeshes, TArray<TWeakObjectPtr<UNiagaraComponent>>& TargetNiagaras)
+{
+	FVFXTimelineEventTarget EventTarget;
+	EventTarget.mMeshComps = TargetMeshes;
+	EventTarget.mNiagaraComps = TargetNiagaras;
+
+	return ExecuteVFXTimeline(TimelineComp, TimelineExecutionData, EventTarget);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FVFXSpawnData& VFXSpawnData, const AActor* TargetActor, UVFXTimelineComponent* TimelineComp, TArray<TWeakObjectPtr<UPrimitiveComponent>>& TargetMeshes, TArray<TWeakObjectPtr<UNiagaraComponent>>& TargetNiagaras, ETileActorDirection Direction)
+{
+	FVFXTimelineEventTarget EventTarget;
+	EventTarget.mMeshComps = TargetMeshes;
+	EventTarget.mNiagaraComps = TargetNiagaras;
+
+	return SpawnAndExecuteVFX(VFXSpawnData, TargetActor, TimelineComp, EventTarget, Direction);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FSoftVFXSpawnData& VFXSpawnData, const AActor* TargetActor, UVFXTimelineComponent* TimelineComp, TArray<TWeakObjectPtr<UPrimitiveComponent>>& TargetMeshes, TArray<TWeakObjectPtr<UNiagaraComponent>>& TargetNiagaras, ETileActorDirection Direction)
+{
+	return SpawnAndExecuteVFX(VFXSpawnData.LoadSynchronous(), TargetActor, TimelineComp, TargetMeshes, TargetNiagaras, Direction);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FVFXSpawnData& VFXSpawnData, UPrimitiveComponent* TargetComponent, UVFXTimelineComponent* TimelineComp, TArray<TWeakObjectPtr<UPrimitiveComponent>>& TargetMeshes, TArray<TWeakObjectPtr<UNiagaraComponent>>& TargetNiagaras, ETileActorDirection Direction)
+{
+	FVFXTimelineEventTarget EventTarget;
+	EventTarget.mMeshComps = TargetMeshes;
+	EventTarget.mNiagaraComps = TargetNiagaras;
+
+	return SpawnAndExecuteVFX(VFXSpawnData, TargetComponent, TimelineComp, EventTarget, Direction);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FSoftVFXSpawnData& VFXSpawnData, UPrimitiveComponent* TargetComponent, UVFXTimelineComponent* TimelineComp, TArray<TWeakObjectPtr<UPrimitiveComponent>>& TargetMeshes, TArray<TWeakObjectPtr<UNiagaraComponent>>& TargetNiagaras, ETileActorDirection Direction)
+{
+	return SpawnAndExecuteVFX(VFXSpawnData.LoadSynchronous(), TargetComponent, TimelineComp, TargetMeshes, TargetNiagaras, Direction);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FVFXSpawnData& VFXSpawnData, const AActor* TargetActor, UVFXTimelineComponent* TimelineComp, FVFXTimelineEventTarget EventTarget, ETileActorDirection Direction)
+{
+	TArray<TObjectPtr<UNiagaraComponent>> SpawnedNiagaras;
+	if (TargetActor == nullptr)
+	{
+		return SpawnedNiagaras;
+	}
+
+	/* 나이아가라 이펙트 스폰 */
+	SpawnedNiagaras.Reserve(VFXSpawnData.mNiagaraSpawnDatas.Num());
+	for (const FNiagaraSpawnData& NiagaraSpawnData : VFXSpawnData.mNiagaraSpawnDatas)
+	{
+		UNiagaraComponent* NiagaraComp = SpawnNiagaraEffectWithDirection(NiagaraSpawnData, TargetActor, Direction);
+		if (NiagaraComp != nullptr)
+		{
+			SpawnedNiagaras.Add(NiagaraComp);
+		}
+	}
+
+	/* 타임라인 타겟 설정 및 나이아가라 컴포넌트 추가 옵션 반영 */
+	if (VFXSpawnData.mIncludeSpawnedNiagaraInTimeline == true)
+	{
+		for (UNiagaraComponent* SpawnedNiagara : SpawnedNiagaras)
+		{
+			if (SpawnedNiagara != nullptr)
+			{
+				EventTarget.mNiagaraComps.Add(SpawnedNiagara);
+			}
+		}
+	}
+
+	/* 타임라인 실행 */
+	if (TimelineComp != nullptr)
+	{
+		for (const FVFXTimelineExecutionData& TimelineExecutionData : VFXSpawnData.mTimelineExecutionDatas)
+		{
+			ExecuteVFXTimeline(TimelineComp, TimelineExecutionData, EventTarget);
+		}
+	}
+
+	return SpawnedNiagaras;
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FSoftVFXSpawnData& VFXSpawnData, const AActor* TargetActor, UVFXTimelineComponent* TimelineComp, FVFXTimelineEventTarget EventTarget, ETileActorDirection Direction)
+{
+	return SpawnAndExecuteVFX(VFXSpawnData.LoadSynchronous(), TargetActor, TimelineComp, EventTarget, Direction);
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FVFXSpawnData& VFXSpawnData, UPrimitiveComponent* TargetComponent, UVFXTimelineComponent* TimelineComp, FVFXTimelineEventTarget EventTarget, ETileActorDirection Direction)
+{
+	TArray<TObjectPtr<UNiagaraComponent>> SpawnedNiagaras;
+	if (TargetComponent == nullptr)
+	{
+		return SpawnedNiagaras;
+	}
+
+	/* 나이아가라 이펙트 스폰 */
+	SpawnedNiagaras.Reserve(VFXSpawnData.mNiagaraSpawnDatas.Num());
+	for (const FNiagaraSpawnData& NiagaraSpawnData : VFXSpawnData.mNiagaraSpawnDatas)
+	{
+		UNiagaraComponent* NiagaraComp = SpawnNiagaraEffectWithDirection(NiagaraSpawnData, TargetComponent, Direction);
+		if (NiagaraComp != nullptr)
+		{
+			SpawnedNiagaras.Add(NiagaraComp);
+		}
+	}
+
+	/* 타임라인 타겟 설정 및 나이아가라 컴포넌트 추가 옵션 반영 */
+	if (VFXSpawnData.mIncludeSpawnedNiagaraInTimeline == true)
+	{
+		for (UNiagaraComponent* SpawnedNiagara : SpawnedNiagaras)
+		{
+			if (SpawnedNiagara != nullptr)
+			{
+				EventTarget.mNiagaraComps.Add(SpawnedNiagara);
+			}
+		}
+	}
+
+	/* 타임라인 실행 */
+	if (TimelineComp != nullptr)
+	{
+		for (const FVFXTimelineExecutionData& TimelineExecutionData : VFXSpawnData.mTimelineExecutionDatas)
+		{
+			ExecuteVFXTimeline(TimelineComp, TimelineExecutionData, EventTarget);
+		}
+	}
+
+	return SpawnedNiagaras;
+}
+
+TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(const FSoftVFXSpawnData& VFXSpawnData, UPrimitiveComponent* TargetComponent, UVFXTimelineComponent* TimelineComp, FVFXTimelineEventTarget EventTarget, ETileActorDirection Direction)
+{
+	return SpawnAndExecuteVFX(VFXSpawnData.LoadSynchronous(), TargetComponent, TimelineComp, EventTarget, Direction);
 }
 
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection_Internal(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, const AActor* TargetActor, UPrimitiveComponent* TargetComponent, const FName& SocketName, const FTransform& RelativeTransform, bool Attached, ETileActorDirection Direction)

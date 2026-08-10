@@ -17,7 +17,7 @@
 class UCombatTargetObstacleModel;
 
 class UStaticMeshSkillAnimationComponent;
-class UDissolveVFXTimelineComponent;
+class USkeletonSkillAnimationComponent;
 
 /**
  * @brief  전투 가능한 장애물 액터
@@ -38,7 +38,7 @@ public:
 	/* IBoardCombatTargetView 상속 */
 public:
 	USkillAnimationComponent* GetSkillAnimationComponent() const override;
-	UDissolveVFXTimelineComponent* GetDissolveVFXTimelineComponent() const override;
+	UCombatTargetVFXTimelineComponent* GetCombatTargetVFXTimelineComponent() const override;
 
 	UPrimitiveComponent* GetTargetMeshComponent() const override;
 
@@ -47,11 +47,62 @@ public:
 	bool IsSelectable() const override;
 
 protected:
-	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshSkillAnimationComponent> mSkillAnimationComp;
-	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "DissolveVFXTimelineComp", AllowPrivateAccess = "true"))
-	TObjectPtr<UDissolveVFXTimelineComponent> mDissolveVFXTimelineComp;
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UCombatTargetVFXTimelineComponent> mCombatTargetVFXTimelineComp;
 
 protected:
 	TWeakObjectPtr<UCombatTargetObstacleModel> mCombatTargetObstacleModel;
 };
+
+/**
+ * @brief  스태틱 메시 기반 전투가능한 장애물 액터
+ */
+UCLASS(abstract)
+class P_RD_API AStaticMeshCombatTargetObstacle : public ACombatTargetObstacle
+{
+	GENERATED_BODY()
+
+public:
+	AStaticMeshCombatTargetObstacle();
+
+	/* ACombatTargetObstacle 상속 */
+public:
+	USkillAnimationComponent* GetSkillAnimationComponent() const override;
+	UPrimitiveComponent* GetTargetMeshComponent() const override;
+
+public:
+	UStaticMeshComponent* GetMesh() const;
+
+private:
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshSkillAnimationComponent> mSkillAnimationComp;
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> mMeshComp;
+};
+
+/**
+ * @brief  스켈렡톤 메시 기반 전투가능한 장애물 액터
+ */
+UCLASS(abstract)
+class P_RD_API ASkeletonCombatTargetObstacle : public ACombatTargetObstacle
+{
+	GENERATED_BODY()
+
+public:
+	ASkeletonCombatTargetObstacle();
+
+	/* ACombatTargetObstacle 상속 */
+public:
+	USkillAnimationComponent* GetSkillAnimationComponent() const override;
+	UPrimitiveComponent* GetTargetMeshComponent() const override;
+
+public:
+	USkeletalMeshComponent* GetMesh() const;
+
+private:
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletalMeshComponent> mMeshComp;
+};
+

@@ -12,7 +12,7 @@
 #include "BoardCombatTargetView.generated.h"
 
 class USkillAnimationComponent;
-class UDissolveVFXTimelineComponent;
+class UCombatTargetVFXTimelineComponent;
 
 UINTERFACE(MinimalAPI)
 class UBoardCombatTargetView : public UInterface
@@ -29,6 +29,6 @@ class P_RD_API IBoardCombatTargetView
 
 public:
 	virtual USkillAnimationComponent* GetSkillAnimationComponent() const = 0;
-	virtual UDissolveVFXTimelineComponent* GetDissolveVFXTimelineComponent() const = 0;
+	virtual UCombatTargetVFXTimelineComponent* GetCombatTargetVFXTimelineComponent() const = 0;
 	virtual UPrimitiveComponent* GetTargetMeshComponent() const = 0;
 };

@@ -14,6 +14,9 @@
 
 class UTacticalFrameworkModel;
 
+struct FTacticalEffectSpec;
+class UAttributeSetComponentModel;
+
 /**
  * @brief  TAS의 글로벌 서브시스템
  */
@@ -29,6 +32,9 @@ public:
 
 protected:
 	UObjectModel* GetModel_Internal() const override;
+
+protected:
+	void ApplyGlobalVFXEffect(const FTacticalEffectSpec& Spec, const UAttributeSetComponentModel* Model) const;
 
 protected:
 	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrameworkModel"))

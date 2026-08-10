@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "GameplayTagContainer.h"
 #include "NiagaraSystem.h"
+#include "Component/VFXTimelineComponent/VFXTimelineTrackEvent.h"
 #include "GamePlayType.generated.h"
 
 class UTacticalEffect;
@@ -62,6 +63,64 @@ public:
 };
 
 /**
+ * @brief VFX 타임라인 실행 데이터 구조체
+ */
+USTRUCT(BlueprintType)
+struct FVFXTimelineExecutionData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "KeyName"))
+	FName mKeyName;
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "Direction"))
+	TEnumAsByte<ETimelineDirection::Type> mDirection = ETimelineDirection::Forward;
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IsPlayFromStart"))
+	bool mIsPlayFromStart = true;
+};
+
+/**
+ * @brief VFX 스폰 데이터 구조체
+ */
+USTRUCT(BlueprintType)
+struct FVFXSpawnData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
+	TArray<FNiagaraSpawnData> mNiagaraSpawnDatas;
+
+public:
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimelineExecutionDatas"))
+	TArray<FVFXTimelineExecutionData> mTimelineExecutionDatas;
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IncludeSpawnedNiagaraInTimeline"))
+	bool mIncludeSpawnedNiagaraInTimeline = true;
+};
+
+/**
+ * @brief VFX 스폰 데이터 구조체
+ */
+USTRUCT(BlueprintType)
+struct FSoftVFXSpawnData
+{
+	GENERATED_BODY()
+
+public:
+	FVFXSpawnData LoadSynchronous() const;
+
+public:
+	UPROPERTY(Category = "Niagara", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "NiagaraSpawnDatas"))
+	TArray<FSoftNiagaraSpawnData> mNiagaraSpawnDatas;
+
+public:
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimelineExecutionDatas"))
+	TArray<FVFXTimelineExecutionData> mTimelineExecutionDatas;
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IncludeSpawnedNiagaraInTimeline"))
+	bool mIncludeSpawnedNiagaraInTimeline = true;
+};
+
+/**
  * @brief 전역 상태 이상 VFX 설정 값 객체
  */
 USTRUCT(BlueprintType)
@@ -72,22 +131,26 @@ struct FGlobalStatusEffectVFXSetting
 public:
 	// @brief 상태이상에 따른 VFX 매핑 정보
 	UPROPERTY(Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EffectVFXs"))
-	TMap<TSoftClassPtr<UTacticalEffect>, FSoftNiagaraSpawnData> mEffectVFXs;
+	TMap<TSoftClassPtr<UTacticalEffect>, FSoftVFXSpawnData> mEffectVFXs;
 };
 
 /**
- * @brief 전투 대상 디졸브 VFX 설정 값 객체
+ * @brief 전투 대상 VFX 설정 값 객체
  */
 USTRUCT(BlueprintType)
-struct FCombatTargetDissolveVFXSetting
+struct FCombatTargetVFXTimelineSetting
 {
 	GENERATED_BODY()
 
 public:
-	// @brief 전투 대상이 타일맵에서 사라질 때 사용되는 전역 VFX 설정 값
-	UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetDissolveVFX", ToolTip = "전투 대상이 타일맵에서 사라질 때 사용되는 전역 VFX 설정 값"))
-	FSoftNiagaraSpawnData mCombatTargetDissolveVFX;
-	// @brief 전투 대상이 타일맵에서 사라질 때 사용되는 커브 데이터
-	UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetDissolveCurve", ToolTip = "전투 대상이 타일맵에서 사라질 때 사용되는 커브 데이터"))
-	TSoftObjectPtr<UCurveFloat> mCombatTargetDissolveCurve;
+	// @brief 활용될 타임라인의 키 네임
+	UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimelineKeyName", ToolTip = "활용될 타임라인의 키 네임"))
+	FName mTimelineKeyName;
+	// @brief 활용될 타임라인의 커브 데이터
+	UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimelineCurve", ToolTip = "활용될 타임라인의 커브 데이터"))
+	TSoftObjectPtr<UCurveBase> mTimelineCurve;
+	// @brief 활용될 타임라인의 이벤트 데이터
+	UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimelineEvent", ToolTip = "활용될 타임라인의 이벤트 데이터"))
+	FVFXTimelineTrackEvent mTimelineEvent;
 };
+

@@ -476,12 +476,20 @@ void URunPersistData::MakeCaches()
 	mRunPersistDataCache.mEffectVFXs.Reserve(EffectVFXMapping.Num());
 	for (auto& EffectVFXPair : EffectVFXMapping)
 	{
-		mRunPersistDataCache.mEffectVFXs.Add(EffectVFXPair.Value.mNiagaraSystem.LoadSynchronous());
+		for (const FSoftNiagaraSpawnData& NiagaraSpawnData : EffectVFXPair.Value.mNiagaraSpawnDatas)
+		{
+			mRunPersistDataCache.mEffectVFXs.Add(NiagaraSpawnData.mNiagaraSystem.LoadSynchronous());
+		}
+	}
+	for (const FSoftNiagaraSpawnData& NiagaraSpawnData : GamePlaySettings->mCombatTargetRemoveVFX.mNiagaraSpawnDatas)
+	{
+		mRunPersistDataCache.mEffectVFXs.Add(NiagaraSpawnData.mNiagaraSystem.LoadSynchronous());
 	}
 
-	const FSoftNiagaraSpawnData& CombatTargetDissolveVFX = GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX;
-	mRunPersistDataCache.mEffectVFXs.Add(CombatTargetDissolveVFX.mNiagaraSystem.LoadSynchronous());
-	mRunPersistDataCache.mEffectCurves.Add(GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveCurve.LoadSynchronous());
+	for (const FCombatTargetVFXTimelineSetting& TimelineSetting : GamePlaySettings->mCombatTargetVFXTimelineSettings)
+	{
+		mRunPersistDataCache.mEffectCurves.Add(TimelineSetting.mTimelineCurve.LoadSynchronous());
+	}
 }
 
 void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty)

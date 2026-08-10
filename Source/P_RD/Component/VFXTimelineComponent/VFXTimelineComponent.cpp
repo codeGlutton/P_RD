@@ -6,6 +6,7 @@
 
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTargetView.h"
+#include "Animation/BoardActorAnimType.h"
 
 #include "NiagaraComponent.h"
 #include "FunctionLibrary/VFXFunctionLibrary.h"
@@ -35,11 +36,20 @@ void UVFXTimelineComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		}
 	}
 
-	mTimeline.TickTimeline(DeltaTime);
+	bool IsAnyTimelineActive = false;
+	for (FTimelineEntry& TimelineEntry: mTimelineEntries)
+	{
+		TimelineEntry.mTimeline.TickTimeline(DeltaTime);
+
+		if (TimelineEntry.mTimeline.IsPlaying() == true)
+		{
+			IsAnyTimelineActive = true;
+		}
+	}
 
 	if (IsNetSimulating() == false)
 	{
-		if (mTimeline.IsPlaying() == false)
+		if (IsAnyTimelineActive == false)
 		{
 			Deactivate();
 		}
@@ -60,7 +70,7 @@ void UVFXTimelineComponent::Deactivate()
 
 bool UVFXTimelineComponent::IsReadyForOwnerToAutoDestroy() const
 {
-	return IsPlaying() == false;
+	return IsAnyPlaying() == false;
 }
 
 bool UVFXTimelineComponent::IsPostLoadThreadSafe() const
@@ -68,104 +78,243 @@ bool UVFXTimelineComponent::IsPostLoadThreadSafe() const
 	return true;
 }
 
-void UVFXTimelineComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+bool UVFXTimelineComponent::Play(const FName& KeyName, FVFXTimelineEventTarget Target)
 {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UVFXTimelineComponent, mTimeline);
-}
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
 
-void UVFXTimelineComponent::Play()
-{
 	Activate();
-	mTimeline.Play();
+	
+	mTimelineTargets.Remove(KeyName);
+	mTimelineTargets.Add(KeyName, MoveTemp(Target));
+	TimelineEntry->mTimeline.Play();
+	return true;
 }
 
-void UVFXTimelineComponent::PlayFromStart()
+bool UVFXTimelineComponent::PlayFromStart(const FName& KeyName, FVFXTimelineEventTarget Target)
 {
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+
 	Activate();
-	mTimeline.PlayFromStart();
+
+	mTimelineTargets.Remove(KeyName);
+	mTimelineTargets.Add(KeyName, MoveTemp(Target));
+	TimelineEntry->mTimeline.PlayFromStart();
+	return true;
 }
 
-void UVFXTimelineComponent::Reverse()
+bool UVFXTimelineComponent::Reverse(const FName& KeyName, FVFXTimelineEventTarget Target)
 {
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+
 	Activate();
-	mTimeline.Reverse();
+
+	mTimelineTargets.Remove(KeyName);
+	mTimelineTargets.Add(KeyName, MoveTemp(Target));
+	TimelineEntry->mTimeline.Reverse();
+	return true;
 }
 
-void UVFXTimelineComponent::ReverseFromEnd()
+bool UVFXTimelineComponent::ReverseFromEnd(const FName& KeyName, FVFXTimelineEventTarget Target)
 {
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+
 	Activate();
-	mTimeline.ReverseFromEnd();
+
+	mTimelineTargets.Remove(KeyName);
+	mTimelineTargets.Add(KeyName, MoveTemp(Target));
+	TimelineEntry->mTimeline.ReverseFromEnd();
+	return true;
 }
 
-void UVFXTimelineComponent::Stop()
+int32 UVFXTimelineComponent::StopAll()
 {
-	mTimeline.Stop();
+	int32 Count = 0;
+	for (FTimelineEntry& TimelineEntry : mTimelineEntries)
+	{
+		if (TimelineEntry.mTimeline.IsPlaying() == true)
+		{
+			TimelineEntry.mTimeline.Stop();
+			++Count;
+		}
+	}
+	return Count;
 }
 
-bool UVFXTimelineComponent::IsPlaying() const
+bool UVFXTimelineComponent::Stop(const FName& KeyName)
 {
-	return mTimeline.IsPlaying();
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+
+	TimelineEntry->mTimeline.Stop();
+	return true;
 }
 
-bool UVFXTimelineComponent::IsReversing() const
+bool UVFXTimelineComponent::IsAnyPlaying() const
 {
-	return mTimeline.IsReversing();
+	bool IsAnyTimelineActive = false;
+	for (const FTimelineEntry& TimelineEntry : mTimelineEntries)
+	{
+		if (TimelineEntry.mTimeline.IsPlaying() == true)
+		{
+			IsAnyTimelineActive = true;
+		}
+	}
+	return IsAnyTimelineActive;
 }
 
-void UVFXTimelineComponent::SetPlaybackPosition(float NewPosition, bool FireEvents, bool FireUpdate)
+bool UVFXTimelineComponent::IsPlaying(const FName& KeyName) const
 {
-	mTimeline.SetPlaybackPosition(NewPosition, FireEvents, FireUpdate);
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	return TimelineEntry->mTimeline.IsPlaying();
 }
 
-float UVFXTimelineComponent::GetPlaybackPosition() const
+bool UVFXTimelineComponent::IsReversing(const FName& KeyName) const
 {
-	return mTimeline.GetPlaybackPosition();
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	return TimelineEntry->mTimeline.IsReversing();
 }
 
-void UVFXTimelineComponent::SetLooping(bool NewLooping)
+bool UVFXTimelineComponent::SetPlaybackPosition(const FName& KeyName, float NewPosition, bool FireEvents, bool FireUpdate)
 {
-	mTimeline.SetLooping(NewLooping);
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetPlaybackPosition(NewPosition, FireEvents, FireUpdate);
+	return true;
 }
 
-bool UVFXTimelineComponent::IsLooping() const
+float UVFXTimelineComponent::GetPlaybackPosition(const FName& KeyName) const
 {
-	return mTimeline.IsLooping();
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return 0.f;
+	}
+	return TimelineEntry->mTimeline.GetPlaybackPosition();
 }
 
-void UVFXTimelineComponent::SetPlayRate(float NewRate)
+bool UVFXTimelineComponent::SetLooping(const FName& KeyName, bool NewLooping)
 {
-	mTimeline.SetPlayRate(NewRate);
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetLooping(NewLooping);
+	return true;
 }
 
-float UVFXTimelineComponent::GetPlayRate() const
+bool UVFXTimelineComponent::IsLooping(const FName& KeyName) const
 {
-	return mTimeline.GetPlayRate();
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	return TimelineEntry->mTimeline.IsLooping();
 }
 
-void UVFXTimelineComponent::SetNewTime(float NewTime)
+bool UVFXTimelineComponent::SetPlayRate(const FName& KeyName, float NewRate)
 {
-	mTimeline.SetNewTime(NewTime);
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetPlayRate(NewRate);
+	return true;
 }
 
-float UVFXTimelineComponent::GetTimelineLength() const
+float UVFXTimelineComponent::GetPlayRate(const FName& KeyName) const
 {
-	return mTimeline.GetTimelineLength();
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return 0.f;
+	}
+	return TimelineEntry->mTimeline.GetPlayRate();
 }
 
-float UVFXTimelineComponent::GetScaledTimelineLength() const
+bool UVFXTimelineComponent::SetNewTime(const FName& KeyName, float NewTime)
 {
-	return mTimeline.GetScaledTimelineLength();
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetNewTime(NewTime);
+	return true;
 }
 
-void UVFXTimelineComponent::SetTimelineLength(float NewLength)
+float UVFXTimelineComponent::GetTimelineLength(const FName& KeyName) const
 {
-	return mTimeline.SetTimelineLength(NewLength);
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return 0.f;
+	}
+	return TimelineEntry->mTimeline.GetTimelineLength();
 }
 
-void UVFXTimelineComponent::SetTimelineLengthMode(ETimelineLengthMode NewLengthMode)
+float UVFXTimelineComponent::GetScaledTimelineLength(const FName& KeyName) const
 {
-	mTimeline.SetTimelineLengthMode(NewLengthMode);
+	const FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return 0.f;
+	}
+	return TimelineEntry->mTimeline.GetScaledTimelineLength();
+}
+
+bool UVFXTimelineComponent::SetTimelineLength(const FName& KeyName, float NewLength)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetTimelineLength(NewLength);
+	return true;
+}
+
+bool UVFXTimelineComponent::SetTimelineLengthMode(const FName& KeyName, ETimelineLengthMode NewLengthMode)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetTimelineLengthMode(NewLengthMode);
+	return true;
 }
 
 void UVFXTimelineComponent::SetIgnoreTimeDilation(bool NewIgnoreTimeDilation)
@@ -178,176 +327,140 @@ bool UVFXTimelineComponent::GetIgnoreTimeDilation() const
 	return mIgnoreTimeDilation;
 }
 
-void UVFXTimelineComponent::SetFloatCurve(UCurveFloat* NewFloatCurve, FName FloatTrackName)
+void UVFXTimelineComponent::AddInterpFloat(const FName& KeyName, UCurveFloat* FloatCurve, FVFXTimelineTrackEvent Event)
 {
-	mTimeline.SetFloatCurve(NewFloatCurve, FloatTrackName);
-}
-
-void UVFXTimelineComponent::SetVectorCurve(UCurveVector* NewVectorCurve, FName VectorTrackName)
-{
-	mTimeline.SetVectorCurve(NewVectorCurve, VectorTrackName);
-}
-
-void UVFXTimelineComponent::SetLinearColorCurve(UCurveLinearColor* NewLinearColorCurve, FName LinearColorTrackName)
-{
-	mTimeline.SetLinearColorCurve(NewLinearColorCurve, LinearColorTrackName);
-}
-
-void UVFXTimelineComponent::AddEvent(float Time, FOnTimelineEvent Event)
-{
-	mTimeline.AddEvent(Time, Event);
-}
-
-void UVFXTimelineComponent::AddInterpFloat(UCurveFloat* FloatCurve, FOnTimelineFloat InterpFunc, FName PropertyName, FName TrackName)
-{
-	mTimeline.AddInterpFloat(FloatCurve, InterpFunc, PropertyName, TrackName);
-}
-
-void UVFXTimelineComponent::AddInterpVector(UCurveVector* VectorCurve, FOnTimelineVector InterpFunc, FName PropertyName, FName TrackName)
-{
-	mTimeline.AddInterpVector(VectorCurve, InterpFunc, PropertyName, TrackName);
-}
-
-void UVFXTimelineComponent::AddInterpLinearColor(UCurveLinearColor* LinearColorCurve, FOnTimelineLinearColor InterpFunc, FName PropertyName, FName TrackName)
-{
-	mTimeline.AddInterpLinearColor(LinearColorCurve, InterpFunc, PropertyName, TrackName);
-}
-
-void UVFXTimelineComponent::AddInterpFloat(UCurveFloat* FloatCurve, const FOnTimelineFloatStatic InterpFunc)
-{
-	mTimeline.AddInterpFloat(FloatCurve, InterpFunc);
-}
-
-void UVFXTimelineComponent::AddInterpVector(UCurveVector* VectorCurve, const FOnTimelineVectorStatic InterpFunc)
-{
-	mTimeline.AddInterpVector(VectorCurve, InterpFunc);
-}
-
-void UVFXTimelineComponent::AddInterpLinearColor(UCurveLinearColor* LinearColorCurve, const FOnTimelineLinearColorStatic InterpFunc)
-{
-	mTimeline.AddInterpLinearColor(LinearColorCurve, InterpFunc);
-}
-
-void UVFXTimelineComponent::AddVFXInterpFloat(UCurveFloat* FloatCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineFloatStatic VFXInterpFunc)
-{
-	FOnTimelineFloatStatic OnTimelineStatic;
-	OnTimelineStatic.BindLambda([MovedEvent = MoveTemp(Event), MovedFunc = MoveTemp(VFXInterpFunc)](float Value) {
-		MovedFunc.ExecuteIfBound(MovedEvent, Value);
-		});
-
-	AddInterpFloat(FloatCurve, MoveTemp(OnTimelineStatic));
-}
-
-void UVFXTimelineComponent::AddVFXInterpVector(UCurveVector* VectorCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineVectorStatic VFXInterpFunc)
-{
-	FOnTimelineVectorStatic OnTimelineStatic;
-	OnTimelineStatic.BindLambda([MovedEvent = MoveTemp(Event), MovedFunc = MoveTemp(VFXInterpFunc)](FVector Value) {
-		MovedFunc.ExecuteIfBound(MovedEvent, Value);
-		});
-
-	AddInterpVector(VectorCurve, MoveTemp(OnTimelineStatic));
-}
-
-void UVFXTimelineComponent::AddVFXInterpLinearColor(UCurveLinearColor* LinearColorCurve, FVFXTimelineTrackEvent Event, FOnVFXTimelineLinearColorStatic VFXInterpFunc)
-{
-	FOnTimelineLinearColorStatic OnTimelineStatic;
-	OnTimelineStatic.BindLambda([MovedEvent = MoveTemp(Event), MovedFunc = MoveTemp(VFXInterpFunc)](FLinearColor Value) {
-		MovedFunc.ExecuteIfBound(MovedEvent, Value);
-		});
-
-	AddInterpLinearColor(LinearColorCurve, MoveTemp(OnTimelineStatic));
-}
-
-void UVFXTimelineComponent::SetPropertySetObject(UObject* NewPropertySetObject)
-{
-	mTimeline.SetPropertySetObject(NewPropertySetObject);
-}
-
-void UVFXTimelineComponent::SetTimelinePostUpdateFunc(FOnTimelineEvent NewTimelinePostUpdateFunc)
-{
-	mTimeline.SetTimelinePostUpdateFunc(NewTimelinePostUpdateFunc);
-}
-
-void UVFXTimelineComponent::SetTimelineFinishedFunc(FOnTimelineEvent NewTimelineFinishedFunc)
-{
-	mTimeline.SetTimelineFinishedFunc(NewTimelineFinishedFunc);
-}
-
-void UVFXTimelineComponent::SetTimelineFinishedFunc(FOnTimelineEventStatic NewTimelineFinishedFunc)
-{
-	mTimeline.SetTimelineFinishedFunc(NewTimelineFinishedFunc);
-}
-
-void UVFXTimelineComponent::SetDirectionPropertyName(FName DirectionPropertyName)
-{
-	mTimeline.SetDirectionPropertyName(DirectionPropertyName);
-}
-
-void UVFXTimelineComponent::OnRep_Timeline(FTimeline& OldTimeline)
-{
-	if (mTimeline.IsPlaying() == false && OldTimeline.GetPlaybackPosition() != mTimeline.GetPlaybackPosition())
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
 	{
-		mTimeline.SetPlaybackPosition(mTimeline.GetPlaybackPosition(), false, true);
-	}
-}
-
-UFunction* UVFXTimelineComponent::GetTimelineEventSignature()
-{
-	UFunction* TimelineEventSig = FindObject<UFunction>(FindPackage(nullptr, TEXT("/Script/Engine")), TEXT("OnTimelineEvent__DelegateSignature"));
-	check(TimelineEventSig != NULL);
-	return TimelineEventSig;
-}
-
-UFunction* UVFXTimelineComponent::GetTimelineFloatSignature()
-{
-	UFunction* TimelineFloatSig = FindObject<UFunction>(FindPackage(nullptr, TEXT("/Script/Engine")), TEXT("OnTimelineFloat__DelegateSignature"));
-	check(TimelineFloatSig != NULL);
-	return TimelineFloatSig;
-}
-
-UFunction* UVFXTimelineComponent::GetTimelineVectorSignature()
-{
-	UFunction* TimelineVectorSig = FindObject<UFunction>(FindPackage(nullptr, TEXT("/Script/Engine")), TEXT("OnTimelineVector__DelegateSignature"));
-	check(TimelineVectorSig != NULL);
-	return TimelineVectorSig;
-}
-
-UFunction* UVFXTimelineComponent::GetTimelineLinearColorSignature()
-{
-	UFunction* TimelineVectorSig = FindObject<UFunction>(FindPackage(nullptr, TEXT("/Script/Engine")), TEXT("OnTimelineLinearColor__DelegateSignature"));
-	check(TimelineVectorSig != NULL);
-	return TimelineVectorSig;
-}
-
-ETimelineSigType UVFXTimelineComponent::GetTimelineSignatureForFunction(const UFunction* Func)
-{
-	if (Func != NULL)
-	{
-		if (Func->IsSignatureCompatibleWith(GetTimelineEventSignature()))
-		{
-			return ETS_EventSignature;
-		}
-		else if (Func->IsSignatureCompatibleWith(GetTimelineFloatSignature()))
-		{
-			return ETS_FloatSignature;
-		}
-		else if (Func->IsSignatureCompatibleWith(GetTimelineVectorSignature()))
-		{
-			return ETS_VectorSignature;
-		}
-		else if (Func->IsSignatureCompatibleWith(GetTimelineLinearColorSignature()))
-		{
-			return ETS_LinearColorSignature;
-		}
+		TimelineEntry = AddTimelineEntry(KeyName);
 	}
 
-	return ETS_InvalidSignature;
+	FOnTimelineFloatStatic InterpFunc;
+	InterpFunc.BindWeakLambda(this, [this, KeyName, MovedEvent = MoveTemp(Event)](float Value) {
+		MovedEvent.Trigger(Value, mTimelineTargets[KeyName].mMeshComps, mTimelineTargets[KeyName].mNiagaraComps);
+		});
+	TimelineEntry->mTimeline.AddInterpFloat(FloatCurve, InterpFunc);
 }
 
-const FName UDissolveVFXTimelineComponent::DISSOLVE_PARAM_NAME = TEXT("User.Dissolve");
-const int32 UDissolveVFXTimelineComponent::DISSOLVE_PARAM_INDEX = 0;
+void UVFXTimelineComponent::AddInterpVector(const FName& KeyName, UCurveVector* VectorCurve, FVFXTimelineTrackEvent Event)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		TimelineEntry = AddTimelineEntry(KeyName);
+	}
 
-void UDissolveVFXTimelineComponent::BindOwnerModel(UObjectModel* Model)
+	FOnTimelineVectorStatic InterpFunc;
+	InterpFunc.BindWeakLambda(this, [this, KeyName, MovedEvent = MoveTemp(Event)](FVector Value) {
+		MovedEvent.Trigger(Value, mTimelineTargets[KeyName].mMeshComps, mTimelineTargets[KeyName].mNiagaraComps);
+		});
+	TimelineEntry->mTimeline.AddInterpVector(VectorCurve, InterpFunc);
+}
+
+void UVFXTimelineComponent::AddInterpLinearColor(const FName& KeyName, UCurveLinearColor* LinearColorCurve, FVFXTimelineTrackEvent Event)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		TimelineEntry = AddTimelineEntry(KeyName);
+	}
+
+	FOnTimelineLinearColorStatic InterpFunc;
+	InterpFunc.BindWeakLambda(this, [this, KeyName, MovedEvent = MoveTemp(Event)](FLinearColor Value) {
+		MovedEvent.Trigger(Value, mTimelineTargets[KeyName].mMeshComps, mTimelineTargets[KeyName].mNiagaraComps);
+		});
+	TimelineEntry->mTimeline.AddInterpLinearColor(LinearColorCurve, InterpFunc);
+}
+
+bool UVFXTimelineComponent::SetPropertySetObject(const FName& KeyName, UObject* NewPropertySetObject)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetPropertySetObject(NewPropertySetObject);
+	return true;
+}
+
+bool UVFXTimelineComponent::SetTimelinePostUpdateFunc(const FName& KeyName, FOnTimelineEvent NewTimelinePostUpdateFunc)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetTimelinePostUpdateFunc(NewTimelinePostUpdateFunc);
+	return true;
+}
+
+bool UVFXTimelineComponent::SetTimelineFinishedFunc(const FName& KeyName, FOnTimelineEvent NewTimelineFinishedFunc)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetTimelineFinishedFunc(NewTimelineFinishedFunc);
+	return true;
+}
+
+bool UVFXTimelineComponent::SetTimelineFinishedFunc(const FName& KeyName, FOnTimelineEventStatic NewTimelineFinishedFunc)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetTimelineFinishedFunc(NewTimelineFinishedFunc);
+	return true;
+}
+
+bool UVFXTimelineComponent::SetDirectionPropertyName(const FName& KeyName, FName DirectionPropertyName)
+{
+	FTimelineEntry* TimelineEntry = FindTimelineEntry(KeyName);
+	if (TimelineEntry == nullptr)
+	{
+		return false;
+	}
+	TimelineEntry->mTimeline.SetDirectionPropertyName(DirectionPropertyName);
+	return true;
+}
+
+FTimelineEntry* UVFXTimelineComponent::AddTimelineEntry(const FName& KeyName)
+{
+	FTimelineEntry Entry;
+	Entry.mKeyName = KeyName;
+
+	mTimelineEntries.Add(MoveTemp(Entry));
+	return &mTimelineEntries.Last();
+}
+
+FTimelineEntry* UVFXTimelineComponent::FindTimelineEntry(const FName& KeyName)
+{
+	for (FTimelineEntry& TimelineEntry : mTimelineEntries)
+	{
+		if (TimelineEntry.mKeyName == KeyName)
+		{
+			return &TimelineEntry;
+		}
+	}
+	return nullptr;
+}
+
+const FTimelineEntry* UVFXTimelineComponent::FindTimelineEntry(const FName& KeyName) const
+{
+	for (const FTimelineEntry& TimelineEntry : mTimelineEntries)
+	{
+		if (TimelineEntry.mKeyName == KeyName)
+		{
+			return &TimelineEntry;
+		}
+	}
+	return nullptr;
+}
+
+void UCombatTargetVFXTimelineComponent::BindOwnerModel(UObjectModel* Model)
 {
 	UBoardActorModel* BoardActorModel = Cast<UBoardActorModel>(Model);
 	if (BoardActorModel == nullptr)
@@ -357,51 +470,54 @@ void UDissolveVFXTimelineComponent::BindOwnerModel(UObjectModel* Model)
 
 	mOwnerModel = BoardActorModel;
 
-	/* 디졸브 연출 요청 대리자 구독 */
-
-	FVFXTimelineTrackEvent TrackEvent;
-	TrackEvent.mSyncTarget = StaticCast<int32>(EVFXTimelineSyncTarget::PrimitiveData | EVFXTimelineSyncTarget::NiagaraUserParameter);
-	TrackEvent.mParameterName = DISSOLVE_PARAM_NAME;
-	TrackEvent.mCPDIndex = DISSOLVE_PARAM_INDEX;
-
-	FOnVFXTimelineFloatStatic InterpFunc;
-	InterpFunc.BindUObject(this, &UDissolveVFXTimelineComponent::OnUpdateDissolveVFX);
+	/* 연출 커브 추가 */
 
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	AddVFXInterpFloat(GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveCurve.LoadSynchronous(), MoveTemp(TrackEvent), InterpFunc);
+	for (const FCombatTargetVFXTimelineSetting& CombatTargetVFXTimelineSetting : GamePlaySettings->mCombatTargetVFXTimelineSettings)
+	{
+		UCurveBase* Curve = CombatTargetVFXTimelineSetting.mTimelineCurve.LoadSynchronous();
+		if (UCurveFloat* FloatCurve = Cast<UCurveFloat>(Curve))
+		{
+			AddInterpFloat(CombatTargetVFXTimelineSetting.mTimelineKeyName, FloatCurve, CombatTargetVFXTimelineSetting.mTimelineEvent);
+		}
+		else if (UCurveVector* VectorCurve = Cast<UCurveVector>(Curve))
+		{
+			AddInterpVector(CombatTargetVFXTimelineSetting.mTimelineKeyName, VectorCurve, CombatTargetVFXTimelineSetting.mTimelineEvent);
+		}
+		else if (UCurveLinearColor* ColorCurve = Cast<UCurveLinearColor>(Curve))
+		{
+			AddInterpLinearColor(CombatTargetVFXTimelineSetting.mTimelineKeyName, ColorCurve, CombatTargetVFXTimelineSetting.mTimelineEvent);
+		}
+	}
+
+	/* Remove VFX 연결 */
 
 	if (mOwnerModel.IsValid() == true)
 	{
-		mOwnerModel->OnRemoveTileTransform.AddUObject(this, &UDissolveVFXTimelineComponent::Dissolve);
+		mOwnerModel->OnRemoveTileTransform.AddUObject(this, &UCombatTargetVFXTimelineComponent::PlayRemoveVFX);
 	}
 }
 
-void UDissolveVFXTimelineComponent::UnbindOwnerModel(UObjectModel* Model)
+void UCombatTargetVFXTimelineComponent::UnbindOwnerModel(UObjectModel* Model)
 {
+	if (mOwnerModel.IsValid() == true)
+	{
+		mOwnerModel->OnRemoveTileTransform.RemoveAll(this);
+	}
 }
 
-void UDissolveVFXTimelineComponent::Dissolve()
+void UCombatTargetVFXTimelineComponent::PlayRemoveVFX()
 {
 	IBoardCombatTargetView* BoardCombatTargetView = Cast<IBoardCombatTargetView>(GetOwner());
 	if (BoardCombatTargetView == nullptr)
 	{
 		return;
 	}
-
-	mDissolveMeshCompCaches.Empty(1);
-	mDissolveNiagaraCompCaches.Empty(1);
-
-	/* 나이아가라 컴포넌트 등록 */
-
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	UNiagaraComponent* SpawnedNiagaraComp = UVFXFunctionLibrary::SpawnNiagaraEffect(
-		GamePlaySettings->mCombatTargetDissolveVFXSetting.mCombatTargetDissolveVFX, 
-		BoardCombatTargetView->GetTargetMeshComponent()
-	);
 
-	mDissolveNiagaraCompCaches.Add(SpawnedNiagaraComp);
+	/* 타겟 메시 채우기 */
 
-	/* 메시 컴포넌트 등록 */
+	FVFXTimelineEventTarget EventTarget;
 
 	UPrimitiveComponent* TargetMeshComp = BoardCombatTargetView->GetTargetMeshComponent();
 	for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComp->GetAttachChildren())
@@ -409,16 +525,13 @@ void UDissolveVFXTimelineComponent::Dissolve()
 		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
 		if (ChildMeshComp != nullptr)
 		{
-			mDissolveMeshCompCaches.Add(ChildMeshComp);
+			EventTarget.mMeshComps.Add(ChildMeshComp);
 		}
 	}
+	EventTarget.mMeshComps.Add(TargetMeshComp);
 
-	mDissolveMeshCompCaches.Add(BoardCombatTargetView->GetTargetMeshComponent());
+	/* 실행 */
 
-	PlayFromStart();
+	UVFXFunctionLibrary::SpawnAndExecuteVFX(GamePlaySettings->mCombatTargetRemoveVFX, TargetMeshComp, this, EventTarget);
 }
 
-void UDissolveVFXTimelineComponent::OnUpdateDissolveVFX(const FVFXTimelineTrackEvent& Event, float Value) const
-{
-	Event.Trigger(Value, mDissolveMeshCompCaches, mDissolveNiagaraCompCaches);
-}

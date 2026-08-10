@@ -30,7 +30,7 @@ AUnit::AUnit()
 	mMovementComp = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
 	mSkillAnimationComp = CreateDefaultSubobject<USkeletonSkillAnimationComponent>(TEXT("SkillAnimationComp"));
-	mDissolveVFXTimelineComp = CreateDefaultSubobject<UDissolveVFXTimelineComponent>(TEXT("DissolveVFXTimelineComp"));
+	mCombatTargetVFXTimelineComp = CreateDefaultSubobject<UCombatTargetVFXTimelineComponent>(TEXT("CombatTargetVFXTimelineComp"));
 
 	if (mCapsuleComp != nullptr)
 	{
@@ -132,9 +132,9 @@ USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
 	return mSkillAnimationComp;
 }
 
-UDissolveVFXTimelineComponent* AUnit::GetDissolveVFXTimelineComponent() const
+UCombatTargetVFXTimelineComponent* AUnit::GetCombatTargetVFXTimelineComponent() const
 {
-	return mDissolveVFXTimelineComp;
+	return mCombatTargetVFXTimelineComp;
 }
 
 UPrimitiveComponent* AUnit::GetTargetMeshComponent() const
