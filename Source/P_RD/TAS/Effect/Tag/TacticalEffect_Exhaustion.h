@@ -27,7 +27,7 @@ public:
  * @brief Exhaustion(탈진) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetExhaustion : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_GetExhaustion : public UTacticalEffect_GetStatusTag
 {
 	GENERATED_BODY()
 

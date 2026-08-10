@@ -27,7 +27,7 @@ public:
  * @brief Slow(둔화) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetSlow : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_GetSlow : public UTacticalEffect_GetStatusTag
 {
 	GENERATED_BODY()
 
