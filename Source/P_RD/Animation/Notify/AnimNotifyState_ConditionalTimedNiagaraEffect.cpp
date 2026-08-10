@@ -1,4 +1,5 @@
 ﻿#include "Animation/Notify/AnimNotifyState_ConditionalTimedNiagaraEffect.h"
+#include "FunctionLibrary/VFXFunctionLibrary.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotifyState_ConditionalTimedNiagaraEffect)
 
@@ -38,6 +39,11 @@ bool UAnimNotifyState_ConditionalTimedNiagaraEffect::ShouldPlayNotify(const USke
 		}
 	}
 #endif // WITH_EDITORONLY_DATA
+
+	if (UVFXFunctionLibrary::IsVFXPossible(MeshComp->GetWorld()) == false)
+	{
+		return false;
+	}
 
 	/* 모든 등록된 조건 검사 */
 	for (const TInstancedStruct<FAnimNotifyCondition>& Condition : mConditions)

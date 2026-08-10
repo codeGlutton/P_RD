@@ -6,6 +6,7 @@
 #include "Pawn/Camera/CombatCameraPlane.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Pawn/Camera/OrthographicCameraShakePattern.h"
+#include "FunctionLibrary/CameraFunctionLibrary.h"
 
 // Sets default values for this component's properties
 UCameraMovementComponent::UCameraMovementComponent()
@@ -673,6 +674,11 @@ void UCameraMovementComponent::StartCameraShake(TSubclassOf<class UCameraShakeBa
 	checkf(FirstPlayerController != nullptr, TEXT("PlayerController가 없습니다"));
 
 	if (!ensureMsgf(CameraShakeClass != nullptr, TEXT("Camera Shake Class가 존재하지 않습니다.")))
+	{
+		return;
+	}
+
+	if (UCameraFunctionLibrary::IsCameraShakePossible(this) == false)
 	{
 		return;
 	}

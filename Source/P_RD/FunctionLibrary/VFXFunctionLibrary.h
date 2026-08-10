@@ -27,6 +27,9 @@ class P_RD_API UVFXFunctionLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	static bool IsVFXPossible(UObject* WorldContextObject);
+
+public:
 	static UNiagaraComponent* SpawnNiagaraEffect(const TSoftObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform);
 	static UNiagaraComponent* SpawnNiagaraEffect(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform);
 

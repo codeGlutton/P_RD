@@ -5,6 +5,43 @@
 #include "NiagaraComponent.h"
 #include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
 
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
+
+bool UVFXFunctionLibrary::IsVFXPossible(UObject* WorldContextObject)
+{
+	if (WorldContextObject == nullptr)
+	{
+		return false;
+	}
+
+	const UWorld* World = WorldContextObject->GetWorld();
+	if (World == nullptr)
+	{
+		return false;
+	}
+
+	const UGameInstance* GameInstance = World->GetGameInstance();
+	if (GameInstance == nullptr)
+	{
+		return false;
+	}
+
+	const UPersistentDataSubsystem* PersistentSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>();
+	if (PersistentSubsystem == nullptr)
+	{
+		return false;
+	}
+
+	const UOptionPersistData* OptionData = PersistentSubsystem->GetOptionPersistData();
+	if (OptionData == nullptr)
+	{
+		return false;
+	}
+
+	return OptionData->IsEffectVFXEnabled();
+}
+
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TSoftObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform)
 {
 	return SpawnNiagaraEffect(TObjectPtr<UNiagaraSystem>(NiagaraSystem.LoadSynchronous()), WorldContextObject, Transform);
@@ -12,7 +49,7 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TSoftObjectPtr<
 
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffect(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, UObject* WorldContextObject, const FTransform& Transform)
 {
-	if (WorldContextObject == nullptr || NiagaraSystem == nullptr)
+	if (WorldContextObject == nullptr || NiagaraSystem == nullptr || IsVFXPossible(WorldContextObject) == false)
 	{
 		return nullptr;
 	}
@@ -79,7 +116,7 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(const FN
 
 bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp, const FVFXTimelineExecutionData& TimelineExecutionData, FVFXTimelineEventTarget EventTarget)
 {
-	if (TimelineComp != nullptr)
+	if (TimelineComp != nullptr || IsVFXPossible(TimelineComp) == true)
 	{
 		if (TimelineExecutionData.mDirection == ETimelineDirection::Forward)
 		{
@@ -242,7 +279,7 @@ TArray<TObjectPtr<UNiagaraComponent>> UVFXFunctionLibrary::SpawnAndExecuteVFX(co
 
 UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection_Internal(const TObjectPtr<UNiagaraSystem>& NiagaraSystem, const AActor* TargetActor, UPrimitiveComponent* TargetComponent, const FName& SocketName, const FTransform& RelativeTransform, bool Attached, ETileActorDirection Direction)
 {
-	if (TargetActor == nullptr || NiagaraSystem == nullptr)
+	if (TargetActor == nullptr || NiagaraSystem == nullptr || IsVFXPossible(TargetActor->GetWorld()) == false)
 	{
 		return nullptr;
 	}

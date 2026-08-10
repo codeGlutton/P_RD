@@ -847,6 +847,7 @@ void UOptionPersistData::SetOverallQuality(EOverallQualityType QualityType)
 	checkf(GameUserSettings != nullptr, TEXT("게임 유저 세팅 nullptr"));
 
 	mOverallQuality = QualityType;
+
 	GameUserSettings->SetOverallScalabilityLevel(StaticCast<int32>(QualityType));
 	GameUserSettings->ApplySettings(false);
 	ApplyScreenPercentage();
