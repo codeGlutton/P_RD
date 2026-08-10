@@ -199,6 +199,8 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailSpeed = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mHeroIllustration = nullptr;
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mDetailSkills;
+	// 스킬 칸 그림. 아이콘이 있으면 그림을, 없으면 글자(mDetailSkills)를 보인다.
+	UPROPERTY() TArray<TObjectPtr<UImage>> mDetailSkillIcons;
 
 	/** @brief 신규 Marchbound 레이아웃에서만 추가 표시 규칙을 사용한다. */
 	bool mIsMarchboundLayout = false;

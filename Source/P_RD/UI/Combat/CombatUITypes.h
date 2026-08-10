@@ -83,7 +83,7 @@ enum class EFloatingLogIconType : uint8
 	Weakness,			// 약화 (디버프)
 	Vulnerability,		// 취약 (디버프)
 	Fortification,		// 요새화 (버프)
-	Agility,			// 신속 (버프)
+	Vigor,				// 활력 (버프)
 
 	Poison,				// 독
 	Fire,				// 화염
@@ -214,13 +214,11 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mTurnPortrait;
 	// 파티 카드가 3명의 이름을 동시에 보여줘야 해서 유닛 목록 쪽에도 필요하다.
 	// mName은 FUnitDetailUI에도 있지만 그쪽은 한 번에 한 유닛(롱프레스 상세)이다.
-	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
 	// 행동력. 이동과 스킬이 함께 쓰는 단일 자원이라 유닛 단위로 표시해야 한다.
 	// 원본은 SkillComponentModel의 mActionPoints / mMaxActionPoints.
-	// @TODO 게임플레이: PushUnitUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
 	UPROPERTY(BlueprintReadOnly) int32 mActionPoints = 0;
 	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
 	/** @brief 턴 순서 칩 아래에 표시할 현재 속도. */
@@ -231,6 +229,15 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) float mMaxMovementPoint = 0.f;   // STEP으로 확보한 이동 가능 총량(현재/최대 표시용)
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	// 적 요약판의 "다음 스킬" 소켓용 아이콘. 장착 스킬 중 첫 유효 슬롯을 대표로 건다
+	// (플래너의 실제 계획은 적 턴에야 나오므로, 상시 표시는 대표 스킬로 한다).
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mNextSkillIcon;
+	// 위 아이콘이 스킬 배열 몇 번째인지 -- 소켓 클릭 시 상세 요청에 쓴다.
+	UPROPERTY(BlueprintReadOnly) int32 mNextSkillIndex = INDEX_NONE;
+
+	// 몬스터 탭 목록 줄의 "Lv N" 배지용. 상세 응답을 기다리지 않고 목록에서 바로 쓴다.
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 
 	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 어댑터가 채우고 UI는 투영만 한다.
 	// (스냅샷 — 뷰 액터가 없을 때의 폴백. 이동 중 갱신 안 됨)
@@ -315,7 +322,7 @@ enum class ECombatSkillHitShapeUI : uint8
 // 조준 단계에서 "사거리 N / 십자 범위" 같은 안내와 가이드 형태를 그리기 위한 값이다.
 // 주의: 실제 조준 가능 타일의 색칠은 여기서 하지 않는다 — 그건 ATileMap 쿼리 결과(타일맵 파트(ATileMap) 하이라이트)다.
 //       이 struct는 "스킬 스펙 안내/예비 형태"만 담고, 확정 조준 타일은 게임플레이가 계산해 타일 하이라이트로 내려준다.
-// [합의필요] 최종 소스 = StaticSkillData(SelectType/SelectRange/HitType/HitRange/Ratio/IsIndirect/IsPenetration).
+// 소스 = StaticSkillData(AimPattern/AimRange/EffectPattern/EffectArea/AimBlockerMask/EffectBlockerMask).
 USTRUCT(BlueprintType)
 struct FSkillTargetingUI
 {
@@ -325,8 +332,19 @@ struct FSkillTargetingUI
 	UPROPERTY(BlueprintReadOnly) float mSelectRange = 0.f;        // 기본 사정거리
 	UPROPERTY(BlueprintReadOnly) ECombatSkillHitShapeUI mHitShape = ECombatSkillHitShapeUI::None;
 	UPROPERTY(BlueprintReadOnly) float mHitRange = 0.f;           // 기본 타격 범위
-	UPROPERTY(BlueprintReadOnly) bool mIsIndirect = false;        // 곡사(장애물/유닛 너머 타겟 가능)
-	UPROPERTY(BlueprintReadOnly) bool mIsPenetration = false;     // 관통(막히지 않고 투사체가 뚫음)
+	/**
+	 * @brief 조준/영향을 막는 레이어. ETileLayerFlag 비트마스크 그대로다.
+	 *
+	 * @details
+	 * 곡사(mIsIndirect)/관통(mIsPenetration) bool 두 개를 대신한다. 그 둘로는
+	 * "장애물만 막힘" 과 "유닛만 막힘" 을 구분할 수 없어서, 세 경우가 전부
+	 * 같은 값으로 뭉개졌다.
+	 *
+	 * 0 이면 아무것도 막지 않는다(= 옛 곡사/관통). INDEX_NONE 은 "게임플레이가
+	 * 아직 안 채웠다" 는 뜻이라 화면은 값을 지어내지 말고 비워 둬야 한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
 };
 
 /**
@@ -381,7 +399,6 @@ struct FSkillUI
 	// 새 전투 규칙: 이동과 스킬이 행동력 하나를 나눠 쓰고, 스킬은 턴 쿨타임을
 	// 가지며, 피해는 min~max에 크리티컬이 max의 1.5배다. 스킬 카드가 이 넷을
 	// 모두 보여줘야 플레이어가 무엇을 고를지 판단할 수 있다.
-	// @TODO 게임플레이: PushSkillUIData에서 채워주세요. 지금은 MockCombatDriver만 채운다.
 	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
 	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
 	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
@@ -486,6 +503,20 @@ struct FCombatArtifactUI
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+
+	/**
+	 * @brief 아티팩트를 꾹 눌렀을 때 보여 줄 값들.
+	 *
+	 * @details 이름과 그림만으로는 "이게 무슨 효과인지" 를 알 수 없어 아이콘을
+	 * 눌러도 볼 것이 없었다. 설명은 유닛 패시브와 같은 방식으로 붙인 패시브의
+	 * mDescription 을 모아 만든다 -- 아티팩트가 따로 설명 글을 갖지 않는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<FText> mEffectDescriptions;
+	UPROPERTY(BlueprintReadOnly) FText mRarityName;
+	UPROPERTY(BlueprintReadOnly) int32 mPrice = 0;
+
+	/** @brief 희귀도 등급(0=일반, 1=희귀, 2=영웅). 상세창 보석 줄이 이 값을 켠다. */
+	UPROPERTY(BlueprintReadOnly) int32 mRarityLevel = 0;
 };
 
 /** @brief 플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨). */
@@ -524,12 +555,29 @@ struct FTurnUI
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mRound = 0;
 	UPROPERTY(BlueprintReadOnly) ECombatBuildPhaseUI mPhase = ECombatBuildPhaseUI::None;
+	/**
+	 * @brief 이번 라운드에 **남은** 턴 순서(현재 턴이 [0]).
+	 *
+	 * @details 턴 개편(속도제) 후 모델의 턴 목록은 소비형이다 -- 지나간 턴은
+	 *          빠진다. 그래서 이 배열은 한 바퀴 전체가 아니라 잔여분이다.
+	 *          지나간 순서를 다시 그리려고 감아 돌리면 안 된다.
+	 */
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
 	/**
-	 * @brief mTurnOrderUnitIds 앞에서부터 이번 라운드에 남은 원소 수(현재 턴 포함).
+	 * @brief 다음 라운드 순서 미리보기(속도 기준 재계산).
 	 *
-	 * @details 그 다음 원소부터는 원형 턴 순서가 한 번 감겨 다음 라운드다.
-	 *          0은 전투 시작 전 또는 경계 메타를 제공하지 않는 구형 목업을 뜻한다.
+	 * @details 표기는 다음 라운드까지만 하기로 했다(0806 합의). 속도가 모자라
+	 *          다음 라운드에 턴을 못 받는 유닛은 여기 없다.
 	 */
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mNextRoundUnitIds;
+	/** @brief mTurnOrderUnitIds 원소 수와 같다(전부 이번 라운드 잔여분). */
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentRoundRemainingTurnCount = 0;
+	/**
+	 * @brief 다음 턴이 실제로 서는 라운드까지의 거리(라운드 수).
+	 *
+	 * @details 충전 5·비용 10이면 턴은 두 라운드에 한 번 서고, 사이의 빈
+	 *          라운드는 모델이 즉시 건너뛴다. 그래서 "다음" 이 mRound+1이
+	 *          아닐 수 있다 -- 표기는 이 거리를 더한 라운드 번호로 한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mNextRoundOffset = 1;
 };

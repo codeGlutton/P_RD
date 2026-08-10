@@ -128,12 +128,14 @@ bool FFrontendMapScrollBackgroundBTest::RunTest(const FString& Parameters)
 	// 원근은 이미지에 굽지 않는다 — 본문은 평평한 지도, 눕힘은 리테이너
 	// 머티리얼(M_MapPerspective)이 화면에서 건다.
 	// 아트 원본은 SVN(Content/SVN 정션)이 정본이다. git 폴더에는 두지 않는다.
+	// 0804: 지도만 옛 RunFlow 그림을 쓰고 있어 다른 화면과 결이 달랐다.
+	// Marchbound 양피지로 옮겼다. 스크롤 구조와 노드 계산은 그대로다.
 	TestEqual(TEXT("평평한 지도 텍스처 경로"), Texture->GetPathName(),
-		FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/"
-			"T_StageMap_Scroll_Flat.T_StageMap_Scroll_Flat")));
+		FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Map/"
+			"T_StageMap_Background_Parchment.T_StageMap_Background_Parchment")));
 	const FIntPoint ImportedSize = Texture->GetImportedSize();
-	TestEqual(TEXT("지도 폭"), ImportedSize.X, 1024);
-	TestEqual(TEXT("지도 높이"), ImportedSize.Y, 3072);
+	TestEqual(TEXT("지도 폭"), ImportedSize.X, 941);
+	TestEqual(TEXT("지도 높이"), ImportedSize.Y, 1672);
 	TestEqual(TEXT("UI 텍스처 그룹"), Texture->LODGroup,
 		TEnumAsByte<TextureGroup>(TEXTUREGROUP_UI));
 	TestEqual(TEXT("밉 없음"), Texture->MipGenSettings,

@@ -93,8 +93,12 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Foe.mHP = Foes[i].HP; Foe.mMaxHP = Foes[i].MaxHP;
 			Foe.mActionPoints = 4; Foe.mMaxActionPoints = 4;
 			Foe.mSpeedPoint = 3.f + i;
+			Foe.mLevel = 1;   // 몬스터 탭 목록의 Lv 배지 검수용
 			Foe.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
 				Foes[i].TurnPortraitPath);
+			// 적 요약판의 "다음 스킬" 소켓도 목업에서 바로 검수한다.
+			Foe.mNextSkillIcon = LoadObject<UTexture2D>(nullptr,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_BeastClaw.T_SkillIcon_BeastClaw"));
 			Foe.mMovementPoint = 4.f; Foe.mMaxMovementPoint = 4.f;
 			Foe.mDamagePoint = 4.f; Foe.mDefensePoint = 0.f;
 			Foe.mTile = FTileIndex(3 + i, 3);
@@ -132,13 +136,9 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			{ TEXT("돌파 베기"), 2, 3, 3, 12, 18, false },
 			{ TEXT("반격 태세"), 1, 1, 0,  0,  0, true  },
 		};
-		const TCHAR* SkillIconPaths[] = {
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_upper__action_icon.KK_HUD04_action_left_upper__action_icon"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_upper__action_icon.KK_HUD04_action_right_upper__action_icon"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_left_lower__action_icon.KK_HUD04_action_left_lower__action_icon"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_right_lower__action_icon.KK_HUD04_action_right_lower__action_icon"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_action_bottom__action_icon.KK_HUD04_action_bottom__action_icon"),
-		};
+		// 옛 HUD04 아이콘 다섯 장은 지웠다(새 그림으로 갈 예정). 미리보기용이라
+		// 그림이 없어도 이름·수치는 그대로 나온다. 새 아이콘이 오면 여기 채운다.
+		const TCHAR* SkillIconPaths[] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 		for (int32 i = 0; i < UE_ARRAY_COUNT(Table); ++i)
 		{
 			FSkillUI Skill;
@@ -163,6 +163,14 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 	PendingAction.mType = ECombatPendingActionType::Skill;
 	PendingAction.mActionPointCost = Skills[1].mActionPointCost;
 	mUIModel->SetPendingAction(PendingAction);
+
+	// 첫 적(독수리)을 짚어 둔다 — 적 요약판(다음 스킬 소켓 포함)이 미리보기와
+	// 찍는 시험에 나오게 하기 위해서다. 안 짚으면 요약판이 안 떠서 검수를 못 한다.
+	FCombatTargetUI Target;
+	Target.mIsValid = true;
+	Target.mUnitId = 100;
+	Target.mTile = FTileIndex(3, 3);
+	mUIModel->SetTarget(Target);
 
 	// 가짜 턴
 	FTurnUI Turn;

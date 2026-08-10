@@ -7,6 +7,7 @@
 #include "RewardSettlementWidgetBase.generated.h"
 
 class UButton;
+class UCanvasPanel;
 class UTextBlock;
 class UTexture2D;
 class UVerticalBox;
@@ -18,8 +19,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardSettlementClosed);
  * @brief 신규 전투 보상 정산 WBP 전용 런타임 클래스.
  *
  * @details 구형 WBP_Reward의 동적 행/배경 보정 코드와 완전히 분리한다.
- * WBP는 반응형 영역과 이름 붙은 컨테이너만 소유하고, 실제 보상/용병 행은
- * RewardUIModel의 현재 데이터를 읽어 이 클래스가 생성한다.
+ * WBP가 최대 3개의 경험치 행과 최대 3개의 선택 카드를 실제 위젯으로 소유한다.
+ * 런타임은 RewardUIModel의 현재 데이터를 읽어 값/브러시/표시 여부만 갱신한다.
+ * 따라서 디자이너에서 조정한 파츠의 위치와 크기가 그대로 인게임에 반영된다.
  */
 UCLASS(Abstract)
 class P_RD_API URewardSettlementWidgetBase : public URDUserWidget
@@ -51,13 +53,19 @@ private:
 	UFUNCTION() void HandleUIChanged();
 	UFUNCTION() void HandleChoicesChanged();
 	UFUNCTION() void HandleNextClicked();
+	UFUNCTION() void HandleChoiceClicked_0();
+	UFUNCTION() void HandleChoiceClicked_1();
+	UFUNCTION() void HandleChoiceClicked_2();
 
 	void UnbindUIModel();
 	void RefreshView();
-	void RebuildSummaryRows();
-	void RebuildMercenaryRows();
-	void AddSummaryRow(const FText& MainText, const FText& SubText, UTexture2D* Icon);
-	void AddMercenaryRow(int32 RowIndex, const FRewardMercenaryExpUI& Mercenary, int32 ExpGained);
+	void RebuildStep();
+	void BuildResultStep();
+	void BuildChoiceStep();
+	void RefreshMercenaryRow(int32 RowIndex,
+		const FRewardMercenaryExpUI& Mercenary, int32 ExpGained);
+	void SelectChoice(int32 ChoiceSlot);
+	void RefreshStepCoins();
 
 protected:
 	UPROPERTY(meta = (BindWidget)) TObjectPtr<UVerticalBox> mSummaryRowsBox;
@@ -69,16 +77,12 @@ protected:
 
 private:
 	UPROPERTY(Transient) TObjectPtr<URewardUIModel> mUIModel;
-	UPROPERTY() TObjectPtr<UTexture2D> mMercenaryRowTexture;
-	UPROPERTY() TObjectPtr<UTexture2D> mPortraitFrameTexture;
-	UPROPERTY() TObjectPtr<UTexture2D> mXPBadgeTexture;
-	UPROPERTY() TObjectPtr<UTexture2D> mExpTrackTexture;
-	UPROPERTY() TObjectPtr<UTexture2D> mExpFillTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mGoldIconTexture;
-	UPROPERTY() TObjectPtr<UTexture2D> mExpIconTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mEquipmentIconTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mSkillIconTexture;
 
 	bool mContinueCommitted = false;
-	int32 mDynamicBuildGeneration = 0;
+	/** @brief 1 = 경험치·골드 정산, 2 = 아티팩트 3중 1택. */
+	int32 mCurrentStep = 1;
+	int32 mSelectedChoice = INDEX_NONE;
 };

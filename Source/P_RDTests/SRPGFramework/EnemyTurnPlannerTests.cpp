@@ -26,6 +26,7 @@
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
+#include "GameplayTagType.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 
@@ -81,6 +82,7 @@ namespace
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
 	{
 		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
 		Skill->mRequiredActionPoint = 0;	// 시전 비용 없음 (플래너 AP 판정용)
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
@@ -115,7 +117,8 @@ namespace
 		EAimPattern AimPattern = EAimPattern::Square,
 		int32 SecondSkillAimRange = 0,
 		FTileIndex BlockerIndex = FTileIndex::Invalid,
-		FTileIndex SecondPlayerIndex = FTileIndex::Invalid)
+		FTileIndex SecondPlayerIndex = FTileIndex::Invalid,
+		bool Rooted = false)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -132,6 +135,12 @@ namespace
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
 		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, MoveRange);
+
+		// 속박 옵션: 이동불가 상태의 계획 검증용
+		if (Rooted == true)
+		{
+			Enemy->GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root, 1);
+		}
 
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
@@ -524,6 +533,50 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			/*BlockerIndex*/FTileIndex::Invalid,
 			/*SecondPlayerIndex*/FTileIndex(0, 1));
 		CheckApproachNoCast(*this, Commands, TEXT("Case5-4"), FTileIndex(2, 1));
+	}
+
+	/**
+	 * Case6-1: 속박 / 제자리 조준 가능
+	 *   -> 이동커맨드 없이 제자리에서 시전만
+	 * 맵 (8x2): E(2,1) P(1,0), 원거리 성향이라 평소라면 물러났을 상황
+	 */
+	AddInfo(TEXT("=== Case6-1: 속박 / 제자리 조준 가능 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			6, 3, 8, 2,
+			FTileIndex(2, 1),
+			FTileIndex(1, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/true);
+		CheckTail(*this, Commands, TEXT("Case6-1"));
+		TestTrue(TEXT("[Case6-1] 이동커맨드 없음(속박)"), FindMoveCommand(Commands) == nullptr);
+		TestTrue(TEXT("[Case6-1] 스킬커맨드 존재(제자리 시전)"), FindCast(Commands) != nullptr);
+	}
+
+	/**
+	 * Case6-2: 속박 / 사거리 밖
+	 *   -> 접근도 시전도 못 하고 턴 종료만
+	 * 맵 (8x2): E(6,1) P(0,0), 근접 성향 + 사거리 1이라 평소라면 접근했을 상황
+	 */
+	AddInfo(TEXT("=== Case6-2: 속박 / 사거리 밖 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			6, 1, 8, 2,
+			FTileIndex(6, 1),
+			FTileIndex(0, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/true);
+		CheckTail(*this, Commands, TEXT("Case6-2"));
+		TestTrue(TEXT("[Case6-2] 이동커맨드 없음(속박)"), FindMoveCommand(Commands) == nullptr);
+		TestTrue(TEXT("[Case6-2] 스킬커맨드 없음(사거리 밖)"), FindCast(Commands) == nullptr);
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상

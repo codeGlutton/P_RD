@@ -28,7 +28,10 @@ enum class ECombatInputType : uint8
 	// payload = SkillIndex. **지금 상세창에 뜬 유닛의** 스킬 상세를 청한다.
 	// LongPressSkill과 다른 것은 기준 유닛이다 -- 그쪽은 카드 레일(조종 중인 아군),
 	// 이쪽은 길게 눌러 들여다보는 중인 유닛이라 적 스킬일 수도 있다.
-	InspectUnitSkill
+	InspectUnitSkill,
+	// payload = UnitId. 그 유닛이 화면 정중앙에 오도록 카메라를 옮긴다.
+	// 스킬 단추처럼 "누가 쓰는 스킬인지" 를 보여 줘야 하는 자리에서 쓴다.
+	FocusUnit
 };
 
 class UTexture2D;
@@ -44,7 +47,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbandonRun);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRetryCombat);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSaveAndExitRun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveAndExitCompleted, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbandonRunCompleted, bool, bSuccess);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
@@ -84,6 +89,14 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatResultOpenRequested OnCombatResultOpenRequested;
 
+	/** @brief 저장 후 타이틀 이동 요청의 완료 결과. 실패 시 HUD가 입력을 복구한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnSaveAndExitCompleted OnSaveAndExitCompleted;
+
+	/** @brief 런 포기 및 프론트엔드 전환 시작 결과. 실패 시 HUD가 입력을 복구한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnAbandonRunCompleted OnAbandonRunCompleted;
+
 public:
 	FOnBeginCombatPresentation OnBeginCombat;
 	FOnBeginCombatPresentation OnEndCombat;
@@ -107,8 +120,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnAbandonRun OnAbandonRun;
 
-	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
-	FOnRetryCombat OnRetryCombat;
+	/** @brief 현재 런을 저장한 뒤 프론트엔드로 이동하라는 UI 의도. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnSaveAndExitRun OnSaveAndExitRun;
 
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
@@ -159,11 +173,34 @@ public:
 	 * @param SkillIndex FUnitDetailSkillUI.mSkillIndex 를 그대로 되돌려 보낸다
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestInspectUnitSkill(int32 SkillIndex);
+
+	/**
+	 * @brief 그 유닛을 화면 정중앙으로 가져오라고 청한다.
+	 *
+	 * @details 스킬 단추를 누르면 "누가 쓰는 스킬인지" 를 판에서 바로 보여
+	 * 줘야 한다. 카메라를 옮기는 일은 게임플레이 몫이라 화면은 청하기만 한다.
+	 * @param UnitId 가운데로 데려올 유닛
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnit(int32 UnitId);
+	/**
+	 * @brief 초점 유닛이 놓일 화면 자리(0~1 비율). RequestFocusUnit 전에 세운다.
+	 *
+	 * @details "가운데" 는 화면 한가운데가 아니라 **스킬 카드들이 둘러싼
+	 * 자리**다(0807 합의). 카드가 화면 어디에 있는지는 UI 만 알므로 UI 가
+	 * 비율로 알려 주고, 카메라를 옮기는 게임플레이는 이 값을 읽기만 한다.
+	 */
+	void SetFocusScreenAnchor(const FVector2D& AnchorFraction) { mFocusScreenAnchor = AnchorFraction; }
+	const FVector2D& GetFocusScreenAnchor() const { return mFocusScreenAnchor; }
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestRetryCombat();
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSaveAndExitRun();
+
+	/** @brief 게임플레이가 저장 및 전환 요청 결과를 HUD에 되돌린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifySaveAndExitCompleted(bool bSuccess);
+	/** @brief 게임플레이가 런 포기 및 전환 요청 결과를 HUD에 되돌린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyAbandonRunCompleted(bool bSuccess);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
@@ -200,14 +237,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetBuildPhase(ECombatBuildPhaseUI Phase);
 	/** @brief 확정 전 행동 종류와 AP 예정 소모량을 갱신한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPendingAction(const FCombatPendingActionUI& PendingAction);
-	/**
-	 * @brief 이동 연출의 완료 칸 수를 표시 AP에 반영한다.
-	 * @details 타일 효과가 반영된 현재 실제 AP에서 절대 완료 칸 수를 빼서 계산한다.
-	 *          실제 FUnitUI 스냅샷은 수정하지 않는다.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetMoveAPStepPresentation(int32 UnitId, int32 CompletedStepCount);
-	/** @brief 이동 연출용 AP 표시값을 해제한다. UnitId가 INDEX_NONE이면 대상을 가리지 않는다. */
-	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ClearMoveAPStepPresentation(int32 UnitId);
 	/** @brief 장비 슬롯(아이콘/이름/장착/희귀도). [합의필요] 장비 데이터 소스 미정, 현재 임시. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEquipmentUIs(const TArray<FEquipmentUI>& Equipment);
 	/** @brief 장비 롱프레스 상세 스냅샷을 교체한다(GameMode의 PushEquipmentDetailUIData가 채워 밀어넣는다). */
@@ -253,8 +282,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatPendingActionUI& GetPendingAction() const { return mPendingAction; }
-	/** @brief 실제 AP 또는 현재 이동 연출 단계에 맞춘 표시 AP를 반환한다. */
-	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 ResolveDisplayedMovementPoint(const FUnitUI& Unit) const;
+	/** @brief 현재 유닛 스냅샷의 실제 이동 AP를 화면용 정수로 반환한다. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetDisplayedMovementPoint(const FUnitUI& Unit) const;
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
@@ -271,6 +300,9 @@ private:
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
 
+	/** @brief 초점 유닛이 놓일 화면 자리(0~1 비율). 기본은 한가운데. */
+	UPROPERTY(Transient) FVector2D mFocusScreenAnchor = FVector2D(0.5f, 0.5f);
+
 	/** @brief 찜해 둔 대상 유닛. 없으면 INDEX_NONE. */
 	UPROPERTY(Transient) FCombatTargetUI mTarget;
 	/** @brief 마지막 스킬 상세 스냅샷. */
@@ -281,12 +313,6 @@ private:
 	UPROPERTY(Transient) FTurnUI mTurnUI;
 	/** @brief 현재 선택 중인 이동 경로 또는 스킬의 AP 예정 소모. */
 	UPROPERTY(Transient) FCombatPendingActionUI mPendingAction;
-	/** @brief 타일별 이동 연출 중 표시 AP를 덮어쓸 유닛. 비활성은 INDEX_NONE. */
-	UPROPERTY(Transient) int32 mMoveAPPresentationUnitId = INDEX_NONE;
-	/** @brief 현재 완료 칸 수까지 반영한 화면용 AP. */
-	UPROPERTY(Transient) int32 mMoveAPPresentationDisplayed = 0;
-	/** @brief 현재까지 물리적으로 도착한 타일 수. */
-	UPROPERTY(Transient) int32 mMoveAPPresentationCompletedSteps = 0;
 	/** @brief 장비 슬롯 표시 스냅샷. */
 	UPROPERTY(Transient) TArray<FEquipmentUI> mEquipmentUIs;
 	UPROPERTY(Transient) FEquipmentDetailUI mEquipmentDetail;

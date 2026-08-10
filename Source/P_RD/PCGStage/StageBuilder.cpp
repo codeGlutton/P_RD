@@ -390,10 +390,17 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
 
+		// 개봉 보상 골드 선정
+		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mTreasureRewardMoney);
+
+		// 개봉 보상 아티팩트 선정 (해당 희귀도 에셋이 없으면 골드만 지급)
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
-		
+		if (ArtifactIdArray.IsEmpty() == false)
+		{
+			NewRoom.mRewardArtifactDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray));
+		}
+
 		NewRoomPtr = &NewRoom;
 		break;
 	}

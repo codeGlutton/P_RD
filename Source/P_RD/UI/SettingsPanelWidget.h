@@ -289,6 +289,7 @@ private:
 	TWeakObjectPtr<class UProgressBar> mMasterFillBar;
 	TWeakObjectPtr<class UProgressBar> mBgmFillBar;
 	TWeakObjectPtr<class UProgressBar> mSfxFillBar;
+	TWeakObjectPtr<class UProgressBar> mUiFillBar;
 	bool mFillBarsResolved = false;
 
 	/** @brief 채움 바를 각 슬라이더 값과 동기한다(매 틱, 위젯 없으면 no-op). */
@@ -319,7 +320,7 @@ private:
 	 * @brief 품질(360p/720p/1080p)·FPS(30/60) 버튼 라벨 색으로 현재 선택 상태를 표시한다.
 	 *
 	 * @details
-	 * WBP에 선택 상태 전용 위젯이 없어 라벨 색(선택=골드, 비선택=흰색)으로 표시한다.
+	 * WBP에 선택 상태 전용 위젯이 없어 라벨 색(선택=골드, 비선택=버튼 크림)으로 표시한다.
 	 * 값 모델이 바뀌는 모든 경로(버튼 클릭, 패널 열 때 저장값 복원)에서 호출해 표시를 값과 일치시킨다.
 	 */
 	void UpdateGraphicsSelectionIndicators() const;

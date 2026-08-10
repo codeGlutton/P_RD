@@ -23,6 +23,7 @@ class IBoardSelectionTargetView;
 class UCombatUIModel;
 class URewardUIModel;
 class UPlayerUnitModel;
+class UTexture2D;
 class USkillComponentModel;
 class UStaticSkillData;
 struct FSkillDetailUI;
@@ -87,11 +88,7 @@ public:
 	void HandleAbandonRun();
 
 	UFUNCTION()
-	void HandleRetryCombat();
-
-	/** @brief 전투 HUD 상단 가방 버튼에서 공용 인벤토리 패널을 연다. */
-	UFUNCTION()
-	void HandleOpenInventory();
+	void HandleSaveAndExitRun();
 
 protected:
 	/**
@@ -150,6 +147,13 @@ protected:
 	int32 mDefeatedMonsterCount = 0;
 
 	/**
+	 * @brief 전투 시작 시점의 파티 초상화. 사망 처리로 파티 모델에서 용병이
+	 * 제거된 뒤에도 패배 결과판에는 이번 전투에 참가한 파티를 보여 준다.
+	 */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyPortraits;
+
+	/**
 	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
 	 *
 	 * @details
@@ -196,6 +200,9 @@ protected:
 	/** @brief 파티에서 이 id 의 유닛을 찾는다. 없으면 nullptr. */
 	UPlayerUnitModel* FindPartyUnitModel(int32 UnitId) const;
 
+	/** @brief 아군/적 가리지 않고 id 로 유닛 모델을 찾는다. 없으면 nullptr. */
+	class UUnitModel* FindUnitModelById(int32 UnitId) const;
+
 	/**
 	 * @brief 지금 차례인 아군.
 	 *
@@ -207,6 +214,15 @@ protected:
 	 * @return 지금 차례인 아군, 적 차례거나 없으면 nullptr
 	 */
 	UPlayerUnitModel* GetTurnPlayerUnitModel() const;
+
+	/**
+	 * @brief 그 유닛이 화면 가운데 오도록 카메라를 부드럽게 옮긴다.
+	 *
+	 * @details 강조(Emphasis)는 쓰지 않는다 -- 그건 끝날 때까지 카메라 조작을
+	 * 막아서, 스킬을 훑어보며 판을 움직이려는 손을 잠근다. 자리만 옮긴다.
+	 * @param UnitId 가운데로 데려올 유닛. 못 찾으면 아무것도 안 한다
+	 */
+	void FocusCameraOnUnit(int32 UnitId) const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 
@@ -242,4 +258,7 @@ private:
 	bool mGoldRewardClaimed = false;
 	bool mExpRewardClaimed = false;
 	TSet<int32> mClaimedRewardChoiceIndices;
+
+	/** @brief 옵션 커밋부터 방 전환까지 이어지는 설정판 런 액션의 중복 요청 방지. */
+	bool mSettingsRunActionPending = false;
 };

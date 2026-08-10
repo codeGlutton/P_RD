@@ -44,10 +44,18 @@ namespace
 		{
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightNameText", "기사");
+		// Archer -> Ranger 개명(#487) 반영. 옛 "도적" 표기는 진짜 도적(Rogue)과
+		// 부딪혀서 잠금 카드가 거짓말을 했다(0807 감사).
 		case EUnitJobType::Ranger:
-			return NSLOCTEXT("FrontendGameMode", "ArcherNameText", "도적");
+			return NSLOCTEXT("FrontendGameMode", "RangerNameText", "레인저");
 		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageNameText", "마법사");
+		case EUnitJobType::Barbarian:
+			return NSLOCTEXT("FrontendGameMode", "BarbarianNameText", "야만전사");
+		case EUnitJobType::Rogue:
+			return NSLOCTEXT("FrontendGameMode", "RogueNameText", "도적");
+		case EUnitJobType::Druid:
+			return NSLOCTEXT("FrontendGameMode", "DruidNameText", "드루이드");
 		default:
 			return NSLOCTEXT("FrontendGameMode", "UnknownNameText", "알 수 없음");
 		}
@@ -61,9 +69,15 @@ namespace
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightRoleText", "방패 탱커 · 근접");
 		case EUnitJobType::Ranger:
-			return NSLOCTEXT("FrontendGameMode", "ArcherRoleText", "기습 암살자 · 민첩");
+			return NSLOCTEXT("FrontendGameMode", "RangerRoleText", "명사수 · 원거리");
 		case EUnitJobType::Mage:
 			return NSLOCTEXT("FrontendGameMode", "MageRoleText", "주문 술사 · 원거리");
+		case EUnitJobType::Barbarian:
+			return NSLOCTEXT("FrontendGameMode", "BarbarianRoleText", "광전사 · 근접");
+		case EUnitJobType::Rogue:
+			return NSLOCTEXT("FrontendGameMode", "RogueRoleText", "기습 암살자 · 근접");
+		case EUnitJobType::Druid:
+			return NSLOCTEXT("FrontendGameMode", "DruidRoleText", "자연 술사 · 지원");
 		default:
 			return FText::GetEmpty();
 		}
@@ -77,9 +91,11 @@ namespace
 		case EUnitJobType::Knight:
 			return NSLOCTEXT("FrontendGameMode", "KnightDesc", "두꺼운 갑옷과 방패로 전열을 지키는 근접 수호자.\n높은 체력으로 적의 공격을 버틴다.");
 		case EUnitJobType::Ranger:
-			return NSLOCTEXT("FrontendGameMode", "ArcherDesc", "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다.");
+			return NSLOCTEXT("FrontendGameMode", "RangerDesc", "먼 거리에서 활로 적을 솎아내는 명사수.\n가까이 붙기 전에 승부를 낸다.");
 		case EUnitJobType::Mage:
-			return NSLOCTEXT("FrontendGameMode", "MageDesc", "주사위 마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다.");
+			return NSLOCTEXT("FrontendGameMode", "MageDesc", "마법으로 광역 피해를 주는 원거리 술사.\n강력하지만 체력이 낮다.");
+		case EUnitJobType::Rogue:
+			return NSLOCTEXT("FrontendGameMode", "RogueDesc", "그림자에서 기습하는 민첩한 암살자.\n빠른 연속 공격으로 적을 무너뜨린다.");
 		default:
 			return FText::GetEmpty();
 		}

@@ -1,18 +1,12 @@
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 
-#include "Blueprint/WidgetTree.h"
-#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
-#include "Components/Overlay.h"
-#include "Components/OverlaySlot.h"
-#include "Components/ProgressBar.h"
-#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
-#include "Components/VerticalBoxSlot.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
 #include "UI/ViewportZOrderType.h"
 #include "UI/Reward/RewardUIModel.h"
@@ -21,18 +15,30 @@
 
 namespace
 {
-	const FLinearColor Ink(0.12f, 0.065f, 0.025f, 1.0f);
-	const FLinearColor Cream(1.0f, 0.93f, 0.78f, 1.0f);
-	const FLinearColor Blue(0.02f, 0.35f, 0.78f, 1.0f);
+	FIntPoint NativeTextureSize(UTexture2D* Texture)
+	{
+		if (Texture == nullptr)
+		{
+			return FIntPoint::ZeroValue;
+		}
+
+		const FIntPoint ImportedSize = Texture->GetImportedSize();
+		if (ImportedSize.X > 0 && ImportedSize.Y > 0)
+		{
+			return ImportedSize;
+		}
+		return FIntPoint(Texture->GetSizeX(), Texture->GetSizeY());
+	}
 
 	FSlateBrush TextureBrush(UTexture2D* Texture, const FBox2f* UV = nullptr)
 	{
 		FSlateBrush Brush;
 		Brush.DrawAs = ESlateBrushDrawType::Image;
 		Brush.SetResourceObject(Texture);
-		if (Texture != nullptr)
+		const FIntPoint NativeSize = NativeTextureSize(Texture);
+		if (NativeSize.X > 0 && NativeSize.Y > 0)
 		{
-			Brush.ImageSize = FVector2D(Texture->GetSizeX(), Texture->GetSizeY());
+			Brush.ImageSize = FVector2D(NativeSize);
 		}
 		if (UV != nullptr)
 		{
@@ -41,37 +47,30 @@ namespace
 		return Brush;
 	}
 
-	void StyleText(UTextBlock* Text, int32 Size, const FLinearColor& Color,
-		ETextJustify::Type Justification = ETextJustify::Left)
+	void SetImageTexture(UImage* Image, UTexture2D* Texture)
 	{
-		if (Text == nullptr)
+		if (Image == nullptr)
 		{
 			return;
 		}
-		FSlateFontInfo Font = Text->GetFont();
-		Font.Size = Size;
-		Font.OutlineSettings.OutlineSize = Size >= 27 ? 1 : 0;
-		Font.OutlineSettings.OutlineColor = FLinearColor::Black;
-		Text->SetFont(Font);
-		Text->SetColorAndOpacity(FSlateColor(Color));
-		Text->SetShadowOffset(FVector2D(1.0f, 1.0f));
-		Text->SetShadowColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.55f));
-		Text->SetJustification(Justification);
-		Text->SetAutoWrapText(false);
-		Text->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Image->SetBrush(TextureBrush(Texture));
+		Image->SetVisibility(Texture != nullptr
+			? ESlateVisibility::SelfHitTestInvisible
+			: ESlateVisibility::Collapsed);
 	}
 
-	UCanvasPanelSlot* Place(UCanvasPanel* Canvas, UWidget* Widget,
-		const FVector2D Position, const FVector2D Size, int32 ZOrder)
+	FName IndexedWidgetName(const TCHAR* Prefix, const int32 Index)
 	{
-		UCanvasPanelSlot* Slot = Canvas->AddChildToCanvas(Widget);
-		Slot->SetAnchors(FAnchors(0.0f));
-		Slot->SetAlignment(FVector2D::ZeroVector);
-		Slot->SetAutoSize(false);
-		Slot->SetPosition(Position);
-		Slot->SetSize(Size);
-		Slot->SetZOrder(ZOrder);
-		return Slot;
+		return FName(*FString::Printf(TEXT("%s_%d"), Prefix, Index));
+	}
+
+	template <typename WidgetType>
+	WidgetType* FindIndexedWidget(const URewardSettlementWidgetBase* Owner,
+		const TCHAR* Prefix, const int32 Index)
+	{
+		return Owner != nullptr
+			? Cast<WidgetType>(Owner->GetWidgetFromName(IndexedWidgetName(Prefix, Index)))
+			: nullptr;
 	}
 
 	FText ChoiceFallback(const FRewardChoiceUI& Choice)
@@ -96,21 +95,19 @@ URewardSettlementWidgetBase::URewardSettlementWidgetBase(const FObjectInitialize
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
 #define RD_SETTLEMENT_TEX(Member, Path) Member = LoadObject<UTexture2D>(nullptr, TEXT(Path))
-	RD_SETTLEMENT_TEX(mMercenaryRowTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_MercenaryRow.T_RS_MercenaryRow");
-	RD_SETTLEMENT_TEX(mPortraitFrameTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_PortraitFrame.T_RS_PortraitFrame");
-	RD_SETTLEMENT_TEX(mXPBadgeTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_XPBadge.T_RS_XPBadge");
-	RD_SETTLEMENT_TEX(mExpTrackTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpTrack.T_RS_ExpTrack");
-	RD_SETTLEMENT_TEX(mExpFillTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RewardSettlement/T_RS_ExpFill.T_RS_ExpFill");
 	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
-	RD_SETTLEMENT_TEX(mExpIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon");
 	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
-	RD_SETTLEMENT_TEX(mSkillIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_CombatHUD_SkillIcon_Basic.T_CombatHUD_SkillIcon_Basic");
+	// 스킬 아이콘 그림은 지웠다(새 그림 예정). 투명 그림 하나를 세워 두는 대신
+	// 아예 비워 둔다 -- 자리를 채우려고 만든 자산이 또 다른 지울 것이 된다.
+	// 쓰는 쪽은 이미 nullptr 을 검사하고 그리지 않는다.
 #undef RD_SETTLEMENT_TEX
 }
 
 void URewardSettlementWidgetBase::OpenUI(FOnEndUIOpenAnimation Callback)
 {
 	mContinueCommitted = false;
+	mCurrentStep = 1;
+	mSelectedChoice = INDEX_NONE;
 	StopAllAnimations();
 	Super::OpenUI(MoveTemp(Callback));
 	StopAllAnimations();
@@ -142,6 +139,21 @@ void URewardSettlementWidgetBase::NativeConstruct()
 	{
 		mNextButton->OnClicked.AddUniqueDynamic(this, &URewardSettlementWidgetBase::HandleNextClicked);
 		mNextButton->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (UButton* ChoiceButton = FindIndexedWidget<UButton>(this, TEXT("SettlementChoiceButton"), 0))
+	{
+		ChoiceButton->OnClicked.AddUniqueDynamic(this,
+			&URewardSettlementWidgetBase::HandleChoiceClicked_0);
+	}
+	if (UButton* ChoiceButton = FindIndexedWidget<UButton>(this, TEXT("SettlementChoiceButton"), 1))
+	{
+		ChoiceButton->OnClicked.AddUniqueDynamic(this,
+			&URewardSettlementWidgetBase::HandleChoiceClicked_1);
+	}
+	if (UButton* ChoiceButton = FindIndexedWidget<UButton>(this, TEXT("SettlementChoiceButton"), 2))
+	{
+		ChoiceButton->OnClicked.AddUniqueDynamic(this,
+			&URewardSettlementWidgetBase::HandleChoiceClicked_2);
 	}
 	RefreshView();
 }
@@ -200,12 +212,11 @@ void URewardSettlementWidgetBase::ContinueToNext()
 	{
 		return;
 	}
-	mContinueCommitted = true;
 
-	if (mUIModel != nullptr)
+	// 단계① -> 경험치·골드를 받고, 아티팩트가 걸려 있으면 단계②로 넘어간다.
+	if (mCurrentStep == 1 && mUIModel != nullptr)
 	{
 		const FRewardUI Reward = mUIModel->GetReward();
-		const TArray<FRewardChoiceUI> Choices = mUIModel->GetRewardChoices();
 		if (Reward.mGoldGained > 0)
 		{
 			mUIModel->RequestClaimReward(ERewardClaimKind::Gold);
@@ -214,13 +225,31 @@ void URewardSettlementWidgetBase::ContinueToNext()
 		{
 			mUIModel->RequestClaimReward(ERewardClaimKind::Exp);
 		}
-		for (const FRewardChoiceUI& Choice : Choices)
+		if (mUIModel->GetRewardChoices().Num() > 0)
 		{
-			mUIModel->RequestClaimReward(ERewardClaimKind::Choice, Choice.mChoiceIndex);
+			mCurrentStep = 2;
+			mSelectedChoice = INDEX_NONE;
+			RebuildStep();
+			return;
 		}
-		mUIModel->RequestClaim();
 	}
 
+	// 단계② -> 고른 것 하나만 받는다. (고르기 전에는 단추가 잠겨 있다)
+	if (mCurrentStep == 2 && mUIModel != nullptr)
+	{
+		const TArray<FRewardChoiceUI> Choices = mUIModel->GetRewardChoices();
+		if (Choices.IsValidIndex(mSelectedChoice))
+		{
+			mUIModel->RequestClaimReward(ERewardClaimKind::Choice,
+				Choices[mSelectedChoice].mChoiceIndex);
+		}
+	}
+
+	mContinueCommitted = true;
+	if (mUIModel != nullptr)
+	{
+		mUIModel->RequestClaim();
+	}
 	OnClosed.Broadcast();
 	CloseUI();
 }
@@ -233,224 +262,256 @@ void URewardSettlementWidgetBase::RefreshView()
 			? mUIModel->GetReward().mTitle
 			: LOCTEXT("DefaultTitle", "전투 보상"));
 	}
-	if (mNextButtonText != nullptr)
+	// 좌측 요약 기둥과 세로 상자 줄은 확정 시안(0809)에서 뺐다.
+	if (mSummaryRowsBox != nullptr)
 	{
-		mNextButtonText->SetText(LOCTEXT("Next", "다음"));
+		mSummaryRowsBox->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (mMercenaryRowsBox != nullptr)
+	{
+		mMercenaryRowsBox->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	if (mGoldBalanceText != nullptr)
 	{
-		const int32 Gold = mUIModel != nullptr ? mUIModel->GetReward().mGoldBalance : 0;
-		mGoldBalanceText->SetText(FText::Format(LOCTEXT("GoldBalance", "보유 골드 {0}"), FText::AsNumber(Gold)));
+		mGoldBalanceText->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	RebuildSummaryRows();
-	RebuildMercenaryRows();
+	RebuildStep();
 }
 
-void URewardSettlementWidgetBase::RebuildSummaryRows()
+void URewardSettlementWidgetBase::RefreshStepCoins()
 {
-	if (mSummaryRowsBox == nullptr)
+	const FLinearColor Lit(1.0f, 1.0f, 1.0f, 1.0f);
+	const FLinearColor Dim(0.45f, 0.42f, 0.38f, 1.0f);
+	if (UImage* Coin1 = Cast<UImage>(GetWidgetFromName(TEXT("StepCoinArt_1"))))
+	{
+		Coin1->SetColorAndOpacity(mCurrentStep == 1 ? Lit : Dim);
+	}
+	if (UImage* Coin2 = Cast<UImage>(GetWidgetFromName(TEXT("StepCoinArt_2"))))
+	{
+		Coin2->SetColorAndOpacity(mCurrentStep == 2 ? Lit : Dim);
+	}
+	if (UTextBlock* Number1 = Cast<UTextBlock>(GetWidgetFromName(TEXT("StepCoinNumber_1"))))
+	{
+		Number1->SetRenderOpacity(mCurrentStep == 1 ? 1.0f : 0.58f);
+	}
+	if (UTextBlock* Number2 = Cast<UTextBlock>(GetWidgetFromName(TEXT("StepCoinNumber_2"))))
+	{
+		Number2->SetRenderOpacity(mCurrentStep == 2 ? 1.0f : 0.58f);
+	}
+}
+
+void URewardSettlementWidgetBase::RebuildStep()
+{
+	RefreshStepCoins();
+
+	const int32 ChoiceCount = mUIModel != nullptr ? mUIModel->GetRewardChoices().Num() : 0;
+	const int32 VisibleChoiceCount = FMath::Min(ChoiceCount, 3);
+	if (mCurrentStep == 2
+		&& (mSelectedChoice < 0 || mSelectedChoice >= VisibleChoiceCount))
+	{
+		mSelectedChoice = INDEX_NONE;
+	}
+	if (mCurrentStep == 1)
+	{
+		BuildResultStep();
+	}
+	else
+	{
+		BuildChoiceStep();
+	}
+	if (mNextButtonText != nullptr)
+	{
+		mNextButtonText->SetText(mCurrentStep == 1 && ChoiceCount > 0
+			? LOCTEXT("Next", "다음") : LOCTEXT("Take", "받기"));
+	}
+	if (mNextButton != nullptr)
+	{
+		// 3중 1택은 고르기 전에는 못 넘어간다 (0801 확정).
+		mNextButton->SetIsEnabled(mCurrentStep == 1 || mSelectedChoice != INDEX_NONE);
+	}
+}
+
+void URewardSettlementWidgetBase::BuildResultStep()
+{
+	if (UWidgetSwitcher* StepSwitcher = Cast<UWidgetSwitcher>(
+		GetWidgetFromName(TEXT("SettlementStepSwitcher"))))
+	{
+		StepSwitcher->SetActiveWidgetIndex(0);
+	}
+	else
+	{
+		if (UWidget* ResultStep = GetWidgetFromName(TEXT("SettlementResultStep")))
+		{
+			ResultStep->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+		if (UWidget* ChoiceStep = GetWidgetFromName(TEXT("SettlementChoiceStep")))
+		{
+			ChoiceStep->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	const FRewardUI* Reward = mUIModel != nullptr ? &mUIModel->GetReward() : nullptr;
+	if (UImage* Coin = Cast<UImage>(GetWidgetFromName(TEXT("SettlementGoldCoin"))))
+	{
+		Coin->SetVisibility(Reward != nullptr
+			? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+	}
+	if (UTextBlock* GoldText = Cast<UTextBlock>(GetWidgetFromName(TEXT("SettlementGoldGain"))))
+	{
+		GoldText->SetText(Reward != nullptr
+			? FText::Format(LOCTEXT("GoldGain", "+{0}"),
+				FText::AsNumber(Reward->mGoldGained))
+			: FText::GetEmpty());
+		GoldText->SetVisibility(Reward != nullptr
+			? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+	}
+
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		if (Reward != nullptr && Reward->mMercenaryExp.IsValidIndex(Index))
+		{
+			RefreshMercenaryRow(Index, Reward->mMercenaryExp[Index], Reward->mExpGained);
+		}
+		else if (UWidget* Row = FindIndexedWidget<UWidget>(this, TEXT("SettlementExpRow"), Index))
+		{
+			Row->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+}
+
+void URewardSettlementWidgetBase::RefreshMercenaryRow(const int32 RowIndex,
+	const FRewardMercenaryExpUI& Mercenary, const int32 ExpGained)
+{
+	UWidget* Row = FindIndexedWidget<UWidget>(this, TEXT("SettlementExpRow"), RowIndex);
+	if (Row == nullptr)
 	{
 		return;
 	}
-	mSummaryRowsBox->ClearChildren();
-	if (mUIModel == nullptr)
+	Row->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+	SetImageTexture(FindIndexedWidget<UImage>(this, TEXT("SettlementPortrait"), RowIndex),
+		Mercenary.mPortrait.Get());
+	if (UTextBlock* Level = FindIndexedWidget<UTextBlock>(
+		this, TEXT("SettlementMercenaryLevel"), RowIndex))
 	{
-		return;
+		Level->SetText(FText::Format(LOCTEXT("Level", "Lv.{0}"),
+			FText::AsNumber(Mercenary.mLevel)));
 	}
 
-	const FRewardUI& Reward = mUIModel->GetReward();
-	if (Reward.mGoldGained > 0)
+	const float Percent = Mercenary.mMaxExp > 0.0f
+		? FMath::Clamp(Mercenary.mExpAfter / Mercenary.mMaxExp, 0.0f, 1.0f) : 0.0f;
+	UCanvasPanel* FillClip = FindIndexedWidget<UCanvasPanel>(
+		this, TEXT("SettlementMercenaryBarClip"), RowIndex);
+	UImage* Fill = FindIndexedWidget<UImage>(this, TEXT("SettlementMercenaryBar"), RowIndex);
+	UCanvasPanelSlot* ClipSlot = FillClip != nullptr
+		? Cast<UCanvasPanelSlot>(FillClip->Slot) : nullptr;
+	const UCanvasPanelSlot* FullFillSlot = Fill != nullptr
+		? Cast<UCanvasPanelSlot>(Fill->Slot) : nullptr;
+	if (ClipSlot != nullptr && FullFillSlot != nullptr)
 	{
-		AddSummaryRow(
-			FText::Format(LOCTEXT("GoldGain", "골드 +{0}"), FText::AsNumber(Reward.mGoldGained)),
-			FText::Format(LOCTEXT("GoldAfter", "보유 골드 {0}"), FText::AsNumber(Reward.mGoldBalance)),
-			mGoldIconTexture);
-	}
-	if (Reward.mExpGained > 0)
-	{
-		AddSummaryRow(
-			FText::Format(LOCTEXT("ExpGain", "경험치 +{0}"), FText::AsNumber(Reward.mExpGained)),
-			FText::Format(LOCTEXT("ExpTargets", "용병 {0}명 정산"), FText::AsNumber(Reward.mMercenaryExp.Num())),
-			mExpIconTexture);
+		FVector2D ClipSize = ClipSlot->GetSize();
+		ClipSize.X = FullFillSlot->GetSize().X * Percent;
+		ClipSlot->SetSize(ClipSize);
 	}
 
-	for (const FRewardChoiceUI& Choice : mUIModel->GetRewardChoices())
+	if (UTextBlock* BarText = FindIndexedWidget<UTextBlock>(
+		this, TEXT("SettlementMercenaryBarText"), RowIndex))
 	{
-		UTexture2D* Fallback = Choice.mKind == ERewardChoiceKind::Skill
-			? mSkillIconTexture.Get() : mEquipmentIconTexture.Get();
-		AddSummaryRow(ChoiceFallback(Choice), Choice.mDescription,
-			Choice.mIcon != nullptr ? Choice.mIcon.Get() : Fallback);
+		BarText->SetText(FText::Format(LOCTEXT("ExpBar", "{0} / {1}"),
+			FText::AsNumber(FMath::RoundToInt(Mercenary.mExpAfter)),
+			FText::AsNumber(FMath::RoundToInt(Mercenary.mMaxExp))));
+	}
+	if (UTextBlock* XP = FindIndexedWidget<UTextBlock>(
+		this, TEXT("SettlementXPText"), RowIndex))
+	{
+		XP->SetText(FText::Format(LOCTEXT("XPBadge", "+{0} XP"),
+			FText::AsNumber(ExpGained)));
 	}
 }
 
-void URewardSettlementWidgetBase::AddSummaryRow(
-	const FText& MainText, const FText& SubText, UTexture2D* Icon)
+void URewardSettlementWidgetBase::BuildChoiceStep()
 {
-	const FString Suffix = FString::Printf(TEXT("%d_%d"), mDynamicBuildGeneration,
-		mSummaryRowsBox->GetChildrenCount());
-	USizeBox* Size = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummarySize_%s"), *Suffix));
-	Size->SetWidthOverride(320.0f);
-	Size->SetHeightOverride(88.0f);
-
-	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummaryOverlay_%s"), *Suffix));
-	Size->SetContent(Overlay);
-
-	UBorder* Background = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummaryBackground_%s"), *Suffix));
-	Background->SetBrushColor(FLinearColor(0.05f, 0.025f, 0.012f, 0.72f));
-	Background->SetPadding(FMargin(0.0f));
-	Overlay->AddChildToOverlay(Background);
-
-	UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummaryCanvas_%s"), *Suffix));
-	Overlay->AddChildToOverlay(Canvas);
-
-	UImage* IconImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummaryIcon_%s"), *Suffix));
-	IconImage->SetBrush(TextureBrush(Icon));
-	IconImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, IconImage, FVector2D(13.0f, 12.0f), FVector2D(64.0f, 64.0f), 1);
-
-	UTextBlock* Main = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummaryMain_%s"), *Suffix));
-	Main->SetText(MainText);
-	StyleText(Main, 25, Cream);
-	Place(Canvas, Main, FVector2D(88.0f, 10.0f), FVector2D(218.0f, 38.0f), 2);
-
-	UTextBlock* Sub = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementSummarySub_%s"), *Suffix));
-	Sub->SetText(SubText);
-	StyleText(Sub, 16, FLinearColor(0.78f, 0.72f, 0.62f, 1.0f));
-	Place(Canvas, Sub, FVector2D(88.0f, 48.0f), FVector2D(218.0f, 28.0f), 2);
-
-	if (UVerticalBoxSlot* RowSlot = mSummaryRowsBox->AddChildToVerticalBox(Size))
+	if (UWidgetSwitcher* StepSwitcher = Cast<UWidgetSwitcher>(
+		GetWidgetFromName(TEXT("SettlementStepSwitcher"))))
 	{
-		RowSlot->SetHorizontalAlignment(HAlign_Center);
-		RowSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 9.0f));
+		StepSwitcher->SetActiveWidgetIndex(1);
 	}
+	else
+	{
+		if (UWidget* ResultStep = GetWidgetFromName(TEXT("SettlementResultStep")))
+		{
+			ResultStep->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (UWidget* ChoiceStep = GetWidgetFromName(TEXT("SettlementChoiceStep")))
+		{
+			ChoiceStep->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		}
+	}
+
+	const TArray<FRewardChoiceUI> Choices = mUIModel != nullptr
+		? mUIModel->GetRewardChoices() : TArray<FRewardChoiceUI>();
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		UWidget* Mount = FindIndexedWidget<UWidget>(this, TEXT("SettlementChoiceMount"), Index);
+		if (Mount == nullptr)
+		{
+			continue;
+		}
+		if (Choices.IsValidIndex(Index) == false)
+		{
+			Mount->SetVisibility(ESlateVisibility::Collapsed);
+			continue;
+		}
+		Mount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		const FRewardChoiceUI& Choice = Choices[Index];
+		UTexture2D* Icon = Choice.mIcon.Get();
+		if (Icon == nullptr)
+		{
+			switch (Choice.mKind)
+			{
+			case ERewardChoiceKind::Skill: Icon = mSkillIconTexture.Get(); break;
+			case ERewardChoiceKind::Gold: Icon = mGoldIconTexture.Get(); break;
+			default: Icon = mEquipmentIconTexture.Get(); break;
+			}
+		}
+		SetImageTexture(FindIndexedWidget<UImage>(this, TEXT("SettlementChoiceIcon"), Index), Icon);
+		if (UTextBlock* Name = FindIndexedWidget<UTextBlock>(
+			this, TEXT("SettlementChoiceName"), Index))
+		{
+			Name->SetText(ChoiceFallback(Choice));
+		}
+		if (UButton* PickButton = FindIndexedWidget<UButton>(
+			this, TEXT("SettlementChoiceButton"), Index))
+		{
+			PickButton->SetIsEnabled(true);
+		}
+	}
+	SelectChoice(mSelectedChoice);
 }
 
-void URewardSettlementWidgetBase::RebuildMercenaryRows()
+void URewardSettlementWidgetBase::SelectChoice(const int32 ChoiceSlot)
 {
-	if (mMercenaryRowsBox == nullptr)
+	const int32 ChoiceCount = mUIModel != nullptr
+		? FMath::Min(mUIModel->GetRewardChoices().Num(), 3) : 0;
+	mSelectedChoice = ChoiceSlot >= 0 && ChoiceSlot < ChoiceCount
+		? ChoiceSlot : INDEX_NONE;
+	for (int32 Card = 0; Card < 3; ++Card)
 	{
-		return;
+		const bool bPicked = mSelectedChoice == INDEX_NONE || Card == mSelectedChoice;
+		if (UWidget* Mount = FindIndexedWidget<UWidget>(
+			this, TEXT("SettlementChoiceMount"), Card))
+		{
+			Mount->SetRenderOpacity(bPicked ? 1.0f : 0.55f);
+		}
 	}
-	mMercenaryRowsBox->ClearChildren();
-	++mDynamicBuildGeneration;
-	if (mUIModel == nullptr)
+	if (mNextButton != nullptr)
 	{
-		return;
-	}
-
-	const FRewardUI& Reward = mUIModel->GetReward();
-	for (int32 Index = 0; Index < Reward.mMercenaryExp.Num(); ++Index)
-	{
-		AddMercenaryRow(Index, Reward.mMercenaryExp[Index], Reward.mExpGained);
-	}
-}
-
-void URewardSettlementWidgetBase::AddMercenaryRow(
-	int32 RowIndex, const FRewardMercenaryExpUI& Mercenary, int32 ExpGained)
-{
-	const FString Suffix = FString::Printf(TEXT("%d_%d"), mDynamicBuildGeneration, RowIndex);
-	USizeBox* Size = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenarySize_%s"), *Suffix));
-	Size->SetWidthOverride(1050.0f);
-	Size->SetHeightOverride(128.0f);
-	UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryCanvas_%s"), *Suffix));
-	Size->SetContent(Canvas);
-
-	const FBox2f RowUV(FVector2f(42.0f / 1923.0f, 198.0f / 817.0f),
-		FVector2f(1880.0f / 1923.0f, 619.0f / 817.0f));
-	UImage* RowBackground = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryBackground_%s"), *Suffix));
-	RowBackground->SetBrush(TextureBrush(mMercenaryRowTexture, &RowUV));
-	RowBackground->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, RowBackground, FVector2D::ZeroVector, FVector2D(1050.0f, 128.0f), 0);
-
-	const FBox2f FrameUV(FVector2f(148.0f / 1254.0f, 133.0f / 1254.0f),
-		FVector2f(1106.0f / 1254.0f, 1110.0f / 1254.0f));
-	UImage* PortraitFrame = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
-		*FString::Printf(TEXT("SettlementPortraitPlate_%s"), *Suffix));
-	PortraitFrame->SetBrush(TextureBrush(mPortraitFrameTexture, &FrameUV));
-	PortraitFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, PortraitFrame, FVector2D(13.0f, 9.0f), FVector2D(110.0f, 110.0f), 1);
-
-	UImage* Portrait = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
-		*FString::Printf(TEXT("SettlementPortrait_%s"), *Suffix));
-	Portrait->SetBrush(TextureBrush(Mercenary.mPortrait.Get()));
-	Portrait->SetVisibility(Mercenary.mPortrait != nullptr
-		? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
-	// 프레임 중앙이 불투명한 원본이므로 초상을 프레임보다 위에, 금색 테두리 안쪽에 둔다.
-	Place(Canvas, Portrait, FVector2D(25.0f, 21.0f), FVector2D(86.0f, 86.0f), 2);
-
-	UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryName_%s"), *Suffix));
-	Name->SetText(Mercenary.mName);
-	StyleText(Name, 27, Ink);
-	Place(Canvas, Name, FVector2D(140.0f, 14.0f), FVector2D(200.0f, 40.0f), 3);
-
-	UTextBlock* Level = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryLevel_%s"), *Suffix));
-	Level->SetText(FText::Format(LOCTEXT("Level", "Lv.{0}"), FText::AsNumber(Mercenary.mLevel)));
-	StyleText(Level, 22, Blue);
-	Place(Canvas, Level, FVector2D(140.0f, 57.0f), FVector2D(200.0f, 36.0f), 3);
-
-	UTextBlock* Transition = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryTransition_%s"), *Suffix));
-	Transition->SetText(FText::Format(LOCTEXT("ExpTransition", "{0}  →  {1}"),
-		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpBefore)),
-		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpAfter))));
-	StyleText(Transition, 24, Ink, ETextJustify::Center);
-	Place(Canvas, Transition, FVector2D(350.0f, 12.0f), FVector2D(390.0f, 40.0f), 3);
-
-	UProgressBar* Bar = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryBar_%s"), *Suffix));
-	const FBox2f TrackUV(FVector2f(36.0f / 1974.0f, 288.0f / 797.0f),
-		FVector2f(1937.0f / 1974.0f, 509.0f / 797.0f));
-	const FBox2f FillUV(FVector2f(117.0f / 2172.0f, 254.0f / 724.0f),
-		FVector2f(2054.0f / 2172.0f, 470.0f / 724.0f));
-	FProgressBarStyle BarStyle;
-	BarStyle.SetBackgroundImage(TextureBrush(mExpTrackTexture, &TrackUV));
-	BarStyle.SetFillImage(TextureBrush(mExpFillTexture, &FillUV));
-	BarStyle.SetMarqueeImage(TextureBrush(nullptr));
-	Bar->SetWidgetStyle(BarStyle);
-	Bar->SetPercent(Mercenary.mMaxExp > 0.0f
-		? FMath::Clamp(Mercenary.mExpAfter / Mercenary.mMaxExp, 0.0f, 1.0f) : 0.0f);
-	Bar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, Bar, FVector2D(350.0f, 61.0f), FVector2D(400.0f, 45.0f), 3);
-
-	UTextBlock* BarText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementMercenaryBarText_%s"), *Suffix));
-	BarText->SetText(FText::Format(LOCTEXT("ExpBar", "{0} / {1}"),
-		FText::AsNumber(FMath::RoundToInt(Mercenary.mExpAfter)),
-		FText::AsNumber(FMath::RoundToInt(Mercenary.mMaxExp))));
-	StyleText(BarText, 21, FLinearColor::White, ETextJustify::Center);
-	Place(Canvas, BarText, FVector2D(350.0f, 66.0f), FVector2D(400.0f, 34.0f), 4);
-
-	const FBox2f BadgeUV(FVector2f(158.0f / 1649.0f, 197.0f / 954.0f),
-		FVector2f(1488.0f / 1649.0f, 733.0f / 954.0f));
-	UImage* Badge = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
-		*FString::Printf(TEXT("SettlementXPBadge_%s"), *Suffix));
-	Badge->SetBrush(TextureBrush(mXPBadgeTexture, &BadgeUV));
-	Badge->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	Place(Canvas, Badge, FVector2D(820.0f, 28.0f), FVector2D(190.0f, 72.0f), 3);
-
-	UTextBlock* XP = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-		*FString::Printf(TEXT("SettlementXPText_%s"), *Suffix));
-	XP->SetText(FText::Format(LOCTEXT("XPBadge", "+{0} XP"), FText::AsNumber(ExpGained)));
-	StyleText(XP, 24, FLinearColor::White, ETextJustify::Center);
-	Place(Canvas, XP, FVector2D(820.0f, 41.0f), FVector2D(190.0f, 42.0f), 4);
-
-	if (UVerticalBoxSlot* RowSlot = mMercenaryRowsBox->AddChildToVerticalBox(Size))
-	{
-		RowSlot->SetHorizontalAlignment(HAlign_Center);
-		RowSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
+		mNextButton->SetIsEnabled(mCurrentStep == 1 || mSelectedChoice != INDEX_NONE);
 	}
 }
+
+void URewardSettlementWidgetBase::HandleChoiceClicked_0() { SelectChoice(0); }
+void URewardSettlementWidgetBase::HandleChoiceClicked_1() { SelectChoice(1); }
+void URewardSettlementWidgetBase::HandleChoiceClicked_2() { SelectChoice(2); }
 
 #undef LOCTEXT_NAMESPACE

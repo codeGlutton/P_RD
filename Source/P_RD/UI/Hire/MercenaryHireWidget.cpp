@@ -7,6 +7,9 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+#include "Engine/AssetManager.h"
 #include "Engine/Texture2D.h"
 
 #define LOCTEXT_NAMESPACE "MercenaryHire"
@@ -150,6 +153,19 @@ void UMercenaryHireWidget::EnsureMarchboundPreviewCrew()
 		{ TEXT("분쇄"), TEXT("도발"), TEXT("광전사"), TEXT("대지강타") },
 		{ TEXT("가시덩굴"), TEXT("치유"), TEXT("참나무갑옷"), TEXT("자연의 분노") }
 	};
+	// 스킬 아이콘(위 표와 같은 순서). 아직 그림이 없는 스킬은 nullptr 로 두면
+	// 상세 칸이 이름 글자로 대신 보여준다 -- 검수 데이터라 있는 것만 건다.
+	static const TCHAR* SkillIconPaths[MercenaryHireDetail::CardCount][4] = {
+		{ TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_HeavySmash.T_SkillIcon_HeavySmash"),
+		  TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Barrier.T_SkillIcon_Barrier"),
+		  TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Charge.T_SkillIcon_Charge"),
+		  TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind") },
+		{ nullptr, nullptr, nullptr, nullptr },
+		{ nullptr, nullptr, nullptr, nullptr },
+		{ nullptr, nullptr, nullptr, nullptr },
+		{ nullptr, nullptr, nullptr, nullptr },
+		{ nullptr, nullptr, nullptr, nullptr }
+	};
 
 	FPrimaryAssetId PreviewUnitId;
 	for (const FFrontendCharacterOption& Existing : mCrew)
@@ -169,36 +185,104 @@ void UMercenaryHireWidget::EnsureMarchboundPreviewCrew()
 		mCrew.SetNum(MercenaryHireDetail::CardCount);
 	}
 
-	// 현재 용병 선택은 실제 데이터가 기사 한 명뿐인 UI/UX 검수 단계다.
-	// 프론트엔드의 잠금 placeholder를 그대로 쓰면 Mage와 Archer가 눌리지 않고,
-	// Archer의 옛 한글명 "도적"이 Ranger 행에 남는다. 여섯 행의 표시값과
-	// 선택 가능 여부를 확정된 용병 순서로 정규화한다. 실제 id가 없는 후보만
-	// 현재 유효한 기사 id를 공유해 선택/해제/출발 흐름까지 검수한다.
+	/*
+	 * 실데이터 우선(0807). 직업 DA 6종이 들어와 프론트엔드가 한글 직업명·DA
+	 * 스탯·실제 id 를 다 내려주므로, 그 값은 **건드리지 않는다** -- 전에는
+	 * 검수용 하드코딩 표가 전부 덮어써서 DA 스탯이 화면에 안 나왔다.
+	 * 표는 아직 DA 가 없는 빈 칸을 채우는 폴백으로만 남긴다.
+	 *
+	 * 표는 기사·마법사·레인저·도적·야만전사·드루이드 순서다. 실데이터 줄은
+	 * 정렬이 달라질 수 있어 index 가 아니라 직업으로 표를 찾는다.
+	 */
+	const auto TableIndexForJob = [](const EUnitJobType JobType) -> int32
+	{
+		switch (JobType)
+		{
+		case EUnitJobType::Knight:    return 0;
+		case EUnitJobType::Mage:      return 1;
+		case EUnitJobType::Ranger:    return 2;
+		case EUnitJobType::Rogue:     return 3;
+		case EUnitJobType::Barbarian: return 4;
+		case EUnitJobType::Druid:     return 5;
+		default:                      return INDEX_NONE;
+		}
+	};
 	for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
 	{
 		FFrontendCharacterOption& Option = mCrew[Index];
 		Option.mIndex = Index;
-		Option.mDisplayName = FText::FromString(Names[Index]);
-		Option.mRoleText = FText::FromString(Roles[Index]);
-		Option.mRoleShort = FText::FromString(RoleShorts[Index]);
-		Option.mDescription = FText::FromString(Roles[Index]);
-		Option.mMaxHP = HP[Index];
-		Option.mMaxAP = AP[Index];
-		Option.mSpeed = Speed[Index];
-		Option.mSelectable = true;
-		Option.mDisabledReason = FText::GetEmpty();
-		Option.mPortrait = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-			MercenaryHireDetail::HeroPaths[Index]));
-		Option.mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-			MercenaryHireDetail::IconPaths[Index]));
-		if (!Option.mPlayerUnitId.IsValid())
+		const int32 JobTable = TableIndexForJob(Option.mJobType);
+		const int32 Fallback = JobTable != INDEX_NONE ? JobTable : Index;
+
+		if (Option.mPlayerUnitId.IsValid() == false)
 		{
+			// DA 없는 빈 칸: 견본 값으로 채우고 기사 id 를 빌려 흐름만 검수.
+			Option.mDisplayName = FText::FromString(Names[Fallback]);
+			Option.mRoleText = FText::FromString(Roles[Fallback]);
+			Option.mDescription = FText::FromString(Roles[Fallback]);
+			Option.mMaxHP = HP[Fallback];
+			Option.mMaxAP = AP[Fallback];
+			Option.mSpeed = Speed[Fallback];
+			Option.mSelectable = true;
+			Option.mDisabledReason = FText::GetEmpty();
 			Option.mPlayerUnitId = PreviewUnitId;
 		}
-		Option.mSkillNames.Reset();
-		for (const TCHAR* Skill : Skills[Index])
+		if (Option.mRoleShort.IsEmpty() == true)
 		{
-			Option.mSkillNames.Add(FText::FromString(Skill));
+			Option.mRoleShort = FText::FromString(RoleShorts[Fallback]);
+		}
+		// 화면 아트(대갈치기 초상·아이콘)는 화면 사정이라 직업 기준으로 건다.
+		Option.mPortrait = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+			MercenaryHireDetail::HeroPaths[Fallback]));
+		Option.mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
+			MercenaryHireDetail::IconPaths[Fallback]));
+		if (Option.mSkillNames.IsEmpty() == true)
+		{
+			for (int32 SkillIndex = 0; SkillIndex < 4; ++SkillIndex)
+			{
+				Option.mSkillNames.Add(
+					FText::FromString(Skills[Fallback][SkillIndex]));
+				const TCHAR* IconPath = SkillIconPaths[Fallback][SkillIndex];
+				Option.mSkillIcons.Add(IconPath != nullptr
+					? TSoftObjectPtr<UTexture2D>(FSoftObjectPath(IconPath))
+					: TSoftObjectPtr<UTexture2D>());
+			}
+		}
+
+		// 스킬 이름·아이콘은 **전투와 같은 출처**(유닛 스폰데이터의 스킬 DA)로
+		// 덮어쓴다. 위 하드코딩 표는 스폰데이터를 못 찾는 검수 카드용 대비다.
+		// 여기서 안 맞추면 용병 선택과 전투 카드가 서로 딴 그림을 보여준다.
+		if (Option.mPlayerUnitId.IsValid())
+		{
+			const FSoftObjectPath UnitPath =
+				UAssetManager::Get().GetPrimaryAssetPath(Option.mPlayerUnitId);
+			if (const UStaticUnitSpawnData* SpawnData =
+				Cast<UStaticUnitSpawnData>(UnitPath.TryLoad()))
+			{
+				TArray<FText> RealNames;
+				TArray<TSoftObjectPtr<UTexture2D>> RealIcons;
+				for (const TSoftObjectPtr<UStaticSkillData>& SkillPtr : SpawnData->mSkillDatas)
+				{
+					const UStaticSkillData* Skill = SkillPtr.LoadSynchronous();
+					if (Skill == nullptr)
+					{
+						continue;
+					}
+					RealNames.Add(Skill->mName);
+					RealIcons.Add(Skill->mIcon);
+					// 상세 줄이 여섯 칸이다. DA 목록(베기·이동·강타…)을
+					// 그대로 걸면 전투 카드와 낱낱이 일치한다.
+					if (RealNames.Num() >= 6)
+					{
+						break;
+					}
+				}
+				if (!RealNames.IsEmpty())
+				{
+					Option.mSkillNames = MoveTemp(RealNames);
+					Option.mSkillIcons = MoveTemp(RealIcons);
+				}
+			}
 		}
 	}
 }
@@ -341,10 +425,13 @@ void UMercenaryHireWidget::CacheWidgets()
 	mDetailSpeed = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailSpeed"));
 	mHeroIllustration = MercenaryHireDetail::Find<UImage>(WidgetTree, TEXT("Backdrop_Art"));
 	mDetailSkills.Reset();
+	mDetailSkillIcons.Reset();
 	for (int32 Index = 0; Index < 6; ++Index)
 	{
 		mDetailSkills.Add(MercenaryHireDetail::Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("HireDetailSkillText_%d"), Index)));
+		mDetailSkillIcons.Add(MercenaryHireDetail::Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("HireDetailSkillIcon_%d"), Index)));
 	}
 
 	// 슬롯별 핸들러를 따로 두는 이유: 동적 델리게이트는 페이로드를 못 받고
@@ -469,26 +556,21 @@ void UMercenaryHireWidget::ClickPartySlot(const int32 SlotIndex)
 }
 
 /**
- * @brief 고르거나 뺀다. 자리가 찼으면 마지막에 고른 자리를 내준다.
+ * @brief 빈 자리가 있을 때만 고른다.
  *
  * @details
- * 자리가 찼을 때 아무 일도 안 일어나게 두면, 넷째를 넣으려면 먼저 하나를
- * 빼야 한다는 것을 눌러 보고 알아내야 한다 -- 눌렀는데 화면이 안 움직이면
- * 잠긴 것인지 못 누른 것인지 구별이 안 된다.
- *
- * 내주는 자리를 **마지막에 고른 것**으로 한 이유: 처음 고른 사람일수록 마음이
- * 굳은 쪽이다. 뒤로 갈수록 견주다 고른 자리이므로 그쪽을 내주는 편이 덜 아깝다.
+ * 목록 쪽에서는 **빼지도, 바꿔치지도 않는다**(0807 검수 2회). 뽑는 손과
+ * 빼는 손이 같은 줄에 겹치면 상세를 보려던 손이 편성을 건드린다. 자리가
+ * 찼을 때 마지막 자리를 내주던 것도 같은 이유로 걷었다 -- 상세를 보려고
+ * 눌렀는데 파티가 바뀌면 더 놀란다. 빼기는 오른쪽 파티 칸이 맡는다
+ * (ClickPartySlot). 목록 클릭은 상세 보기 + 빈 자리 채우기, 둘뿐이다.
  * @param CardIndex 누른 이력서
  */
 void UMercenaryHireWidget::ToggleChoice(const int32 CardIndex)
 {
-	if (mChosen.Remove(CardIndex) > 0)
+	if (mChosen.Contains(CardIndex) || mChosen.Num() >= mPartySize)
 	{
-		return;
-	}
-	if (mChosen.Num() >= mPartySize)
-	{
-		mChosen.Pop();
+		return;   // 상세만 갈리고 편성은 그대로.
 	}
 	mChosen.Add(CardIndex);
 }
@@ -634,18 +716,55 @@ void UMercenaryHireWidget::RefreshDetail()
 		LOCTEXT("BasicAttack", "평타"),
 		LOCTEXT("Move", "이동")
 	};
+	// 유닛 DA 목록이 다섯 이상이면(베기·이동·강타… 이동까지 스킬로 들어
+	// 있다) 여섯 칸에 **그 목록을 그대로** 건다 -- 전투 카드와 같은 출처,
+	// 같은 순서, 같은 그림이다. 평타/이동 고정 칸은 DA 를 못 찾은 검수
+	// 카드에서만 쓴다.
+	const bool bRealKit = Option.mSkillNames.Num() >= 5;
 	for (int32 Index = 0; Index < mDetailSkills.Num(); ++Index)
 	{
-		if (Index < 2)
+		// 그림이 있으면 그림으로, 없으면 이름 글자로 -- 전투 요약 칸과 같은 규칙.
+		UTexture2D* IconTexture = nullptr;
+		if (bRealKit)
+		{
+			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
+				Option.mSkillNames.IsValidIndex(Index)
+					? Option.mSkillNames[Index] : FText::GetEmpty());
+			if (Option.mSkillIcons.IsValidIndex(Index))
+			{
+				IconTexture = Option.mSkillIcons[Index].LoadSynchronous();
+			}
+		}
+		else if (Index < 2)
 		{
 			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index], CoreActions[Index]);
-			continue;
 		}
-		const int32 SkillIndex = Index - 2;
-		MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
-			Option.mSkillNames.IsValidIndex(SkillIndex)
-				? Option.mSkillNames[SkillIndex]
-				: FText::FromString(FString::Printf(TEXT("스킬 %d"), SkillIndex + 1)));
+		else
+		{
+			const int32 SkillIndex = Index - 2;
+			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
+				Option.mSkillNames.IsValidIndex(SkillIndex)
+					? Option.mSkillNames[SkillIndex]
+					: FText::FromString(FString::Printf(TEXT("스킬 %d"), SkillIndex + 1)));
+			if (Option.mSkillIcons.IsValidIndex(SkillIndex))
+			{
+				IconTexture = Option.mSkillIcons[SkillIndex].LoadSynchronous();
+			}
+		}
+
+		UImage* IconImage = mDetailSkillIcons.IsValidIndex(Index)
+			? mDetailSkillIcons[Index].Get() : nullptr;
+		if (IconImage != nullptr && IconTexture != nullptr)
+		{
+			IconImage->SetBrushFromTexture(IconTexture, false);
+			// 판이 빈 칸 흰 사각을 막느라 NoDraw 로 두었을 수 있다. 그림을
+			// 넣을 때 Image 로 되돌리지 않으면 영영 안 그려진다(전투 카드 실측).
+			FSlateBrush IconBrush = IconImage->GetBrush();
+			IconBrush.DrawAs = ESlateBrushDrawType::Image;
+			IconImage->SetBrush(IconBrush);
+		}
+		MercenaryHireDetail::SetShown(IconImage, IconTexture != nullptr);
+		MercenaryHireDetail::SetShown(mDetailSkills[Index], IconTexture == nullptr);
 	}
 }
 

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @brief 배치안 평가용 전투 HUD.
@@ -51,6 +51,23 @@ struct FCombatUnitHpBarWidget
 	/** @brief 방어도 아이콘과 수치. 0 이면 감춘다. */
 	UPROPERTY(Transient) TObjectPtr<class UImage> mDefenseIcon;
 	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mDefenseText;
+	/**
+	 * @brief 바 테두리(백플레이트). 걸린 상태에 따라 색을 물들인다.
+	 *
+	 * 월드 위 상태 아이콘은 유닛과 타일을 가려서 껐다. 대신 테두리 색으로
+	 * "좋은 것/나쁜 것이 걸렸다" 만 알린다 -- 무엇인지는 요약판이 맡는다.
+	 */
+	UPROPERTY(Transient) TObjectPtr<class UImage> mBackplateImage;
+	/**
+	 * @brief HP바 밑에 붙는 상태 띠. 왼쪽이 이로운 것, 오른쪽이 해로운 것.
+	 *
+	 * @details 처음에는 바 뒤에서 숨쉬듯 밝아지는 빛으로 했는데, 깜빡이는
+	 * 표시는 시선을 뺏고(접근성 지침도 금한다) 유닛이 여럿이면 화면이
+	 * 소란해진다는 조사 결과가 나왔다(0806). 대신 얇은 띠를 깔고 **자리로**
+	 * 종류를 가른다 -- 색만으로 뜻을 나르지 않는다. 둘 다 걸리면 반씩 나눈다.
+	 */
+	UPROPERTY(Transient) TObjectPtr<class UImage> mStatusRailBuff;
+	UPROPERTY(Transient) TObjectPtr<class UImage> mStatusRailDebuff;
 	/** @brief 다 찼을 때의 폭. 자를 기준이 된다. */
 	float mFillFullWidth = 0.0f;
 
@@ -171,18 +188,63 @@ private:
 	void RefreshCommands();
 	void RefreshEnemy();
 	void RefreshMeta();
+	void RefreshMercenaryInventory();
+	void SelectMercenaryInventoryArtifact(int32 SlotIndex);
 
 	/** @brief 프리미엄 용병 셸을 패널 최하단에 한 번 만들고 구식 판을 숨긴다. */
 	void EnsureMercenaryRosterShell();
 
 	/** @brief 전투 HUD의 용병 메뉴에서 보유 용병 패널을 펴거나 접는다. */
 	void SetMercenaryPanelShown(bool bShown);
+	/** @brief 용병 상세와 같은 판 안에서 인벤토리 페이지를 전환한다. */
+	void SetMercenaryInventoryShown(bool bShown);
 
 	/** @brief 보유 용병 패널이 지금 열려 있는가. */
 	bool IsMercenaryPanelShown() const;
 
 	/** @brief 전투 HUD의 몬스터 메뉴에서 몬스터 탭(WBP_MonsterTab_Marchbound)을 펴거나 접는다. */
 	void SetMonsterTabShown(bool bShown);
+
+	/**
+	 * @brief 상단 레일 넷째 버튼(톱니)으로 공용 설정 팝업을 연다.
+	 *
+	 * @details 설정은 전투 HUD 의 하위 화면이 아니라 타이틀과 함께 쓰는 월드
+	 * 위젯(InGameSettings)이다. 그래서 여기서 만들지 않고 서브시스템이 준비한
+	 * 것을 열기만 한다 -- 타이틀과 인게임이 다른 인스턴스를 쓰면 설정이 갈린다.
+	 */
+	UFUNCTION() void HandleSettingsMenuClicked();
+	/** @brief 설정 패널의 Back 요청을 받아 패널을 닫는다. */
+	UFUNCTION() void HandleSettingsPanelBackRequested();
+	/** @brief 설정 패널의 저장 후 종료 요청을 UIModel로 전달한다. */
+	UFUNCTION() void HandleSettingsPanelSaveAndExitRequested();
+	/** @brief 확인을 마친 런 포기 요청을 기존 전투 UIModel 경로로 전달한다. */
+	UFUNCTION() void HandleSettingsPanelAbandonRunConfirmed();
+	/** @brief 저장 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
+	UFUNCTION() void HandleSaveAndExitCompleted(bool bSuccess);
+	/** @brief 런 포기 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
+	UFUNCTION() void HandleAbandonRunCompleted(bool bSuccess);
+
+	/* ── 아티팩트 상세 ──────────────────────────────────────────────────
+	 *
+	 * 아티팩트 칸은 그림만 있고 누를 수가 없었다. 이름과 그림만 봐서는 무슨
+	 * 효과인지 알 길이 없어서, 꾹 누르면 상세 겹을 스킬/유닛과 같은 판으로
+	 * 띄운다. 값은 이미 내려와 있는 PlayerMeta.mArtifacts 를 그대로 읽는다 --
+	 * 따로 청하지 않으므로 왕복이 없다.
+	 */
+	void ShowArtifactDetailOverlay(int32 SlotIndex);
+	void HandleArtifactLongPress(int32 SlotIndex);
+	UFUNCTION() void HandleArtifactPressed_0();
+	UFUNCTION() void HandleArtifactPressed_1();
+	UFUNCTION() void HandleArtifactPressed_2();
+	UFUNCTION() void HandleArtifactPressed_3();
+	UFUNCTION() void HandleArtifactPressed_4();
+	UFUNCTION() void HandleArtifactPressed_5();
+	UFUNCTION() void HandleArtifactReleased();
+	void BeginArtifactPress(int32 SlotIndex);
+
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mArtifactButtons;
+	FTimerHandle mArtifactLongPressTimerHandle;
+	int32 mArtifactPressedSlot = INDEX_NONE;
 
 	/**
 	 * @brief 명령 카드를 펴거나 접는다.
@@ -327,11 +389,26 @@ private:
 	UFUNCTION() void HandleCommandClicked_4();
 	UFUNCTION() void HandleCommandClicked_5();
 	UFUNCTION() void HandleEndTurnClicked();
+	/** @brief 스킬 단추 -- 차례 유닛의 카드를 펴고 접는 정문(0807). */
+	UFUNCTION() void HandleSkillToggleClicked();
 
 	UFUNCTION() void HandlePartyClicked_0();
 	UFUNCTION() void HandlePartyClicked_1();
 	UFUNCTION() void HandlePartyClicked_2();
 	void HandlePartyClicked(int32 SlotIndex);
+	/** @brief 용병 3인 목록 아래 WBP 인벤토리 탭을 눌렀다. */
+	UFUNCTION() void HandleInventoryClicked();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_0();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_1();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_2();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_3();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_4();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_5();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_6();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_7();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_8();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_9();
+	UFUNCTION() void HandleMercenaryInventoryArtifactClicked_10();
 
 	/** @brief 상단 용병 메뉴를 눌러 보유 용병 패널을 토글한다. */
 	UFUNCTION() void HandleMercenaryMenuClicked();
@@ -366,9 +443,6 @@ private:
 	 * RefreshCommandVisibility() 를 보라.
 	 */
 	bool mCommandsShown = true;
-
-	/** @brief 직전에 찜해 둔 대상. 바뀌면 카드를 편다. */
-	int32 mLastTargetUnitId = INDEX_NONE;
 
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
@@ -488,6 +562,17 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailHP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailAP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailSpeed;
+	UPROPERTY() TObjectPtr<UWidget> mMercenaryDetailSection;
+
+	/** @brief 네 번째 로스터 탭이 여는 용병 패널 내부 인벤토리 페이지. */
+	UPROPERTY() TObjectPtr<UWidget> mMercenaryInventoryPage;
+	UPROPERTY() TObjectPtr<UImage> mMercenaryInventoryPlate;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryInventoryGoldText;
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mMercenaryInventoryArtifactFrames;
+	UPROPERTY() TArray<TObjectPtr<UImage>> mMercenaryInventoryArtifactIcons;
+	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mMercenaryInventoryArtifactNames;
+	UPROPERTY() TArray<TObjectPtr<UButton>> mMercenaryInventoryArtifactButtons;
+	bool mMercenaryInventoryShown = false;
 
 	/** @brief 함께 커지는 겹. 스킬 카드 여섯과 AP 막대. */
 	UPROPERTY() TObjectPtr<class UScaleBox> mCommandLayer;
@@ -507,9 +592,13 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mEndTurnLabel;
 
 	/** @brief 가운데 AP 막대. 지금 차례인 유닛 것을 그린다. */
+	UPROPERTY() TObjectPtr<UWidget> mTurnAPRoot;
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnAPText;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPips;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
+
+	/** @brief WBP_MercenaryPanel의 3인 목록 아래 인벤토리 탭. */
+	UPROPERTY() TObjectPtr<UButton> mMercenaryInventoryButton;
 
 	/** @brief 좌하단 AP 위의 파티 공용 아티팩트 그림. 별도 프레임은 쓰지 않는다. */
 	UPROPERTY() TArray<TObjectPtr<UImage>> mArtifactIcons;
@@ -549,7 +638,6 @@ private:
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
 	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
-	UFUNCTION() void HandleCombatResultRetryConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
 	void SetCombatResultViewActive(bool bActive, bool bRestoreCombatControls = true);
 	FString GetCombatResultVideoPath(bool IsPlayerWin) const;
@@ -661,7 +749,6 @@ private:
 	void SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar);
 	void CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& Bar) const;
 	void UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
-	UTexture2D* ResolveStatusIcon(const FGameplayTag& StatusTag) const;
 
 	UPROPERTY(Transient) TArray<FCombatUnitHpBarWidget> mUnitHpBars;
 	UPROPERTY(Transient) TObjectPtr<class UCanvasPanel> mRootCanvas;
@@ -672,11 +759,19 @@ private:
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitStatusSlotTexture;
 
 	/** @brief 상태이상 딱지 그림. 전용 그림이 없는 태그는 빈 칸으로 둔다. */
+	/**
+	 * @brief 이동 커맨드 그림.
+	 *
+	 * 이동은 스킬 표에 없어서 아이콘이 늘 비어 있었고, 그 칸이 흰 사각으로
+	 * 떠 있었다. 런타임에는 그림을 못 불러오므로(PR#300) 여기서 잡아 둔다.
+	 */
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mCommandMoveIconTexture;
+
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpDamage;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpRecovery;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetMove;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetDefense;
-	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconAgility;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVigor;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
@@ -692,6 +787,7 @@ private:
 	 * 닫힌다.
 	 */
 	bool EnsureDetailOverlayWidget();
+	void ShowUnitInspection();
 	void ShowUnitDetailOverlay();
 	void ShowSkillDetailOverlay();
 
@@ -711,6 +807,88 @@ private:
 	 *        턴 전환처럼 게임플레이가 스스로 걷는 자리에서는 거짓으로 닫는다.
 	 */
 	void HideDetailOverlay(bool bNotifyGameplay);
+
+	/**
+	 * @brief 요약판의 상태 아이콘을 누르면 뜨는 상태이상 상세.
+	 *
+	 * 스킬 상세와 같은 판을 쓴다: 제목 띠에 상태 이름, 소켓에 상태 아이콘,
+	 * 설명 칸에 효과 글. 격자·칩은 걷는다.
+	 */
+	void ShowStatusDetailOverlay(const FGameplayTag& StatusTag, int32 StackCount);
+	void HandleStatusClicked(bool bAlly, int32 SlotIndex);
+	UFUNCTION() void HandleAllyStatusClicked_0();
+	UFUNCTION() void HandleAllyStatusClicked_1();
+	UFUNCTION() void HandleAllyStatusClicked_2();
+	UFUNCTION() void HandleEnemyStatusClicked_0();
+	UFUNCTION() void HandleEnemyStatusClicked_1();
+	UFUNCTION() void HandleEnemyStatusClicked_2();
+
+	/** @brief 상세 판 아무 데나 눌러 닫는 받이. */
+	UFUNCTION() void HandleDetailCloseCatchClicked();
+
+	/** @brief 스킬을 보는 동안 그 스킬 주인을 화면 가운데로 데려온다. */
+	void FocusCameraOnTurnUnit();
+
+	/** @brief 카드 고리 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳. */
+	FVector2D ComputeCommandRingAnchor() const;
+
+	/**
+	 * @brief 이 유닛을 화면 가운데로 데려오라고 청한다.
+	 * @param bWithCommandRing 스킬 카드가 함께 뜨는 경우 true -- 그때만 카드
+	 *        고리 가운데로 세부조정한다. 카드가 안 뜨면 화면 한가운데(0807).
+	 */
+	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing);
+
+	/**
+	 * @brief 다음 유닛 상세 응답으로는 상세창을 띄우지 않는다.
+	 *
+	 * @details 카드를 그 용병 것으로 갈아 끼우려면 InspectUnit 을 청해야 하는데,
+	 * 그 응답이 상세창까지 함께 연다. 판에서 아군을 누르거나 턴 칸을 누른
+	 * 손은 카드만 원한 손이다 -- 상세창은 길게 눌러 살펴볼 때만 뜬다(0806).
+	 */
+	bool mSuppressNextUnitDetailOverlay = false;
+
+	/**
+	 * @brief 턴 칸을 눌렀다. 그 유닛을 화면 가운데로 잡고, 아군이면 카드도 편다.
+	 *
+	 * @details 판 위의 유닛은 작고 매 턴 자리가 바뀐다. 턴 칸은 늘 같은 자리에
+	 * 있어 "이 사람 것을 보겠다" 는 손이 여기서 나온다(0806 합의).
+	 */
+	void HandleTurnTokenClicked(int32 SlotIndex);
+	UFUNCTION() void HandleTurnTokenClicked_0();
+	UFUNCTION() void HandleTurnTokenClicked_1();
+	UFUNCTION() void HandleTurnTokenClicked_2();
+	UFUNCTION() void HandleTurnTokenClicked_3();
+	UFUNCTION() void HandleTurnTokenClicked_4();
+	UFUNCTION() void HandleTurnTokenClicked_5();
+	UFUNCTION() void HandleTurnTokenClicked_6();
+	UFUNCTION() void HandleTurnTokenClicked_7();
+	UFUNCTION() void HandleTurnTokenClicked_8();
+	UFUNCTION() void HandleTurnTokenClicked_9();
+
+	/** @brief 턴 칸마다 지금 누구를 그리고 있는지. 칸 클릭이 이걸 읽는다. */
+	TArray<int32> mTurnSlotUnitIds;
+
+	/** @brief 적 요약판의 다음 스킬 소켓 클릭 → 그 스킬 상세. */
+	UFUNCTION() void HandleEnemyNextSkillClicked();
+	int32 mEnemyShownUnitId = INDEX_NONE;
+	int32 mEnemyShownNextSkillIndex = INDEX_NONE;
+
+	/** @brief 용병탭 스킬 소켓 클릭 → 스킬 상세 (0번은 이동 상세). */
+	void HandleMercenarySkillClicked(int32 SlotIndex);
+	UFUNCTION() void HandleMercenarySkillClicked_0();
+	UFUNCTION() void HandleMercenarySkillClicked_1();
+	UFUNCTION() void HandleMercenarySkillClicked_2();
+	UFUNCTION() void HandleMercenarySkillClicked_3();
+	UFUNCTION() void HandleMercenarySkillClicked_4();
+	UFUNCTION() void HandleMercenarySkillClicked_5();
+
+	/** @brief 용병 목록에서 고른 줄. INDEX_NONE 이면 지금 차례인 용병을 본다. */
+	int32 mMercenarySelectedSlot = INDEX_NONE;
+
+	// 상태 아이콘 클릭이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
+	TArray<FStatusEffectUI> mAllyShownStatuses;
+	TArray<FStatusEffectUI> mEnemyShownStatuses;
 
 	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
@@ -739,6 +917,66 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailBodyText;
 
+	/* ── 상세창 수치 칩과 범위 그림 ──────────────────────────────────────
+	 *
+	 * 예전에는 "AP 1 · 쿨타임 2턴 · 피해 6~10" 을 부제 한 줄에 이어 붙였다.
+	 * 눈이 구분자를 세어야 했고, 사거리는 글자로만 적혀 있어 십자가 어느 칸까지
+	 * 인지 머릿속으로 그려야 했다. 칩으로 끊고 칸으로 그린다.
+	 *
+	 * 값은 전부 UI 모델(FSkillUI/FSkillTargetingUI/FUnitUI)에서 읽는다.
+	 * 게임모드를 직접 보지 않는다 -- PR#426 의 UI-GameMode 분리 규칙이다.
+	 */
+	static constexpr int32 DetailChipCount = 5;
+	static constexpr int32 DetailGridExtent = 5;   // 5x5. 가운데가 시전자.
+
+	void BindDetailExtras();
+	void SetDetailChip(int32 ChipSlot, const FText& Label, const FText& Value);
+	void ClearDetailChips();
+	/** @brief 형태·거리로 칸을 칠한다. 게임플레이가 내려준 스킬 스펙 그대로 그린다. */
+	void PaintSelectGrid(const FSkillTargetingUI& Targeting);
+	void PaintHitGrid(const FSkillTargetingUI& Targeting);
+	void ClearDetailGrids();
+
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailChipLabels;
+	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailChipValues;
+	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailSelectCells;
+	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailHitCells;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailAimBlockerText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailEffectBlockerText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSelectCaptionText;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailHitCaptionText;
+
+	/* ── 오른쪽 열의 세 덩어리 ─────────────────────────────────────────
+	 *
+	 * 사거리 칸은 스킬 상세만, 스킬 칸은 유닛 상세만, 효과·조작 글은 아티팩트와
+	 * 이동만 쓴다. 셋은 절대 같이 뜨지 않으므로 한 자리를 나눠 쓰고 덩어리째
+	 * 껐다 켠다. 값만 비우면 빈 칸 50개가 그대로 남아 화면이 지저분해진다.
+	 */
+	/** @brief 세 덩어리 중 하나만 켠다. 나머지는 끈다. */
+	void ShowDetailRightBlock(const UWidget* Wanted);
+	/** @brief 상세 종류에 맞춰 3열 또는 아티팩트 전용 2열로 실제 열을 재배치한다. */
+	void ApplyDetailColumnLayout(bool bArtifactTwoColumn);
+
+	/** @brief 수치 칩 묶음. 아티팩트에는 칩이 없어 통째로 끈다. */
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailStatBlock;
+
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailTargetBlock;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailSkillBlock;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailExtraBlock;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailExtraHeading;
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailExtraText;
+
+	/* 프레임 안의 실제 열. 화면 비율이 달라도 같은 비율로 늘어나도록
+	 * Canvas anchor 로 배치하며, 아티팩트에서는 가운데 열과 두 번째 기둥을
+	 * 접고 나머지 두 열을 다시 펼친다. */
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailIdentityColumn;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailStatColumn;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailRightColumn;
+	/** @brief 가운데+오른쪽을 이어 붙인 열. 칩이 없는 화면(아티팩트·이동)만 쓴다. */
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailWideColumn;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider0;
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider1;
+
 	/* ── 상세창 스킬 칸 ─────────────────────────────────────────────────
 	 *
 	 * 유닛 상세창 아래에 그 유닛의 스킬을 늘어놓고, 탭하면 그 스킬 상세로
@@ -763,7 +1001,11 @@ private:
 	UFUNCTION() void HandleDetailSkillClicked_4();
 	UFUNCTION() void HandleDetailSkillClicked_5();
 
-	UPROPERTY(Transient) TObjectPtr<class UHorizontalBox> mDetailSkillRow;
+	/**
+	 * @brief 스킬 칸을 담은 것. 판이 칸을 미리 만들어 뒀으면 그 호스트 캔버스이고,
+	 *        옛 판이면 여기서 만든 가로 상자다. 통째로 껐다 켜는 데만 쓴다.
+	 */
+	UPROPERTY(Transient) TObjectPtr<class UWidget> mDetailSkillRow;
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mDetailSkillButtons;
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailSkillIcons;
 	/** @brief 그림이 없는 스킬은 이름을 적어 준다. 몬스터 스킬은 아이콘이 없는 것이 많다. */
@@ -939,6 +1181,11 @@ private:
 	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
 	TObjectPtr<UTextBlock> mEnemyForecastText;
+	TObjectPtr<UWidget> mEnemyNextSkillFrame;
+	TObjectPtr<UImage> mEnemyNextSkillIcon;
+	/** @brief 적 요약판의 채운/쓴 AP 보석. 둘 중 하나만 보인다. */
+	TArray<TObjectPtr<UWidget>> mEnemyAPPips;
+	TArray<TObjectPtr<UWidget>> mEnemyAPPipsUsed;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
@@ -956,6 +1203,9 @@ private:
 	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
 	TObjectPtr<UButton> mEndTurnButton;
+	TObjectPtr<UButton> mSkillToggleButton;
+	TObjectPtr<UWidget> mSkillTogglePlate;
+	TObjectPtr<UWidget> mSkillToggleLabel;
 
 	/** @brief 미리보기용 가짜 전투 드라이버. 실제 전투에서는 null이다. */
 	UPROPERTY(Transient) TObjectPtr<UMockCombatDriver> mPreviewDriver;

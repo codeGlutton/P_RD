@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatLayoutHUDWidget.h"
+﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -100,7 +100,7 @@ UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType 
 		return ColorType == EFloatingLogColorType::Heal ? mLogIconHpRecovery : mLogIconHpDamage;
 	case EFloatingLogIconType::GetMove:       return mLogIconGetMove;
 	case EFloatingLogIconType::GetDefense:    return mLogIconGetDefense;
-	case EFloatingLogIconType::Agility:       return mLogIconAgility;
+	case EFloatingLogIconType::Vigor:			return mLogIconVigor;
 	case EFloatingLogIconType::Fortification: return mLogIconFortification;
 	case EFloatingLogIconType::Vulnerability: return mLogIconVulnerability;
 	case EFloatingLogIconType::Weakness:      return mLogIconWeakness;

@@ -7,6 +7,9 @@
 #include "UI/RewardSettlementWidgetBuilder.h"
 #include "UI/CombatDefeatWidgetBuilder.h"
 #include "UI/MonsterTabWidgetBuilder.h"
+#include "UI/SettingsPanelWidgetBuilder.h"
+#include "UI/WidgetVariableCleanup.h"
+#include "UI/WidgetTexturePurge.h"
 
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
@@ -17,6 +20,9 @@ void FP_RDEditorModule::StartupModule()
 	RegisterRewardSettlementWidgetBuilderCommands();
 	RegisterCombatDefeatWidgetBuilderCommands();
 	RegisterMonsterTabWidgetBuilderCommands();
+	RegisterSettingsPanelWidgetBuilderCommands();
+	RegisterWidgetVariableCleanupCommands();
+	RegisterWidgetTexturePurgeCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 */
 
@@ -37,6 +43,9 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterRewardSettlementWidgetBuilderCommands();
 	UnregisterCombatDefeatWidgetBuilderCommands();
 	UnregisterMonsterTabWidgetBuilderCommands();
+	UnregisterSettingsPanelWidgetBuilderCommands();
+	UnregisterWidgetVariableCleanupCommands();
+	UnregisterWidgetTexturePurgeCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 해제 */
 

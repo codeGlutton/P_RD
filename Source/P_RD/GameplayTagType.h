@@ -163,12 +163,18 @@ namespace EffectTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration);
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Agility);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Haste);
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Slow);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail);
+	// @brief 속박 - 보유 중엔 이동 불가 (IsMoveable이 매번 계산)
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Root);
 }
 
 /**

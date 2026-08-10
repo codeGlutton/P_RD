@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   UnitPolyLineTests.cpp
- * @brief  AUnit::BakePolyLinePoints (코너링 폴리라인 베이크) 유닛테스트
+ * @brief  UBoardMovementPresentationComponent::BakePolyLinePoints (코너링 폴리라인 베이크) 유닛테스트
  * @details
  * 정확 비교: 수학적으로 유도 가능한 지점(시작/끝점, 컷 지점 P1/P2, 베지어 t=0.5, 텐션별 통과점)
  * 성질 검증: 누적거리/마커 단조 증가, 곡선 길이 범위, 코너 삼각형 내부 유지, 텐션 증가 시 코너 중점 접근
@@ -11,7 +11,7 @@
 #include "P_RDTests.h"
 #include "Misc/AutomationTest.h"
 
-#include "Pawn/Unit.h"
+#include "Component/BoardMovementComponent/BoardMovementPresentationComponent.h"
 
 namespace
 {
@@ -52,7 +52,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 			FVector(0.0, 0.0, 0.0),
 			FVector(TileSize, 0.0, 0.0),
 			FVector(TileSize, TileSize, 0.0) };
-		AUnit::BakePolyLinePoints(Path, 0.0f, 1.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.0f, 1.0f, OutPoints, OutDistances, OutMarkers);
 
 		TestEqual(TEXT("컷0: 점 개수 = 원본 경로 개수"), OutPoints.Num(), Path.Num());
 		for (int32 i = 0; i < FMath::Min(OutPoints.Num(), Path.Num()); ++i)
@@ -69,7 +69,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 			FVector(0.0, 0.0, 0.0),
 			FVector(TileSize, 0.0, 0.0),
 			FVector(TileSize * 2.0f, 0.0, 0.0) };
-		AUnit::BakePolyLinePoints(Path, 0.35f, 1.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.35f, 1.0f, OutPoints, OutDistances, OutMarkers);
 
 		TestEqual(TEXT("직진: 점 개수 = 원본 경로 개수"), OutPoints.Num(), Path.Num());
 		for (int32 i = 0; i < FMath::Min(OutPoints.Num(), Path.Num()); ++i)
@@ -86,7 +86,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 			FVector(TileSize, 0.0, 0.0),
 			FVector(TileSize, TileSize, 0.0) };
 		constexpr float CutRatio = 0.25f;
-		AUnit::BakePolyLinePoints(Path, CutRatio, 1.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, CutRatio, 1.0f, OutPoints, OutDistances, OutMarkers);
 
 		// 컷 거리 = 300 x 0.25 = 75
 		const FVector CurveStart(TileSize - TileSize * CutRatio, 0.0, 0.0);   // P1 = (225, 0)
@@ -150,7 +150,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 			FVector(0.0, 0.0, 0.0),
 			FVector(TileSize, 0.0, 0.0),
 			FVector(0.0, 0.0, 0.0) };
-		AUnit::BakePolyLinePoints(Path, 0.25f, 1.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.25f, 1.0f, OutPoints, OutDistances, OutMarkers);
 
 		TestTrue(TEXT("반전: 시작점 일치"), OutPoints[0].Equals(Path[0], Tolerance));
 		TestTrue(TEXT("반전: 끝점 일치"), OutPoints.Last().Equals(Path.Last(), Tolerance));
@@ -162,7 +162,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 	/* [케이스 5] 경로 2칸 미만: 폴리라인 불성립 (빈 출력) */
 	{
 		const TArray<FVector> Path = { FVector(0.0, 0.0, 0.0) };
-		AUnit::BakePolyLinePoints(Path, 0.25f, 1.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.25f, 1.0f, OutPoints, OutDistances, OutMarkers);
 
 		TestEqual(TEXT("1칸: 점 없음"), OutPoints.Num(), 0);
 		TestEqual(TEXT("1칸: 마커 없음"), OutMarkers.Num(), 0);
@@ -177,7 +177,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 		const FVector CornerPoint = Path[1];
 
 		// 텐션 2: 곡선의 t=0.5 지점이 정확히 코너 중점을 통과 (해석값)
-		AUnit::BakePolyLinePoints(Path, 0.5f, 2.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.5f, 2.0f, OutPoints, OutDistances, OutMarkers);
 		bool ContainsCornerPoint = false;
 		for (const FVector& Point : OutPoints)
 		{
@@ -190,7 +190,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("텐션2: 곡선이 코너 중점 통과"), ContainsCornerPoint);
 
 		// 텐션 0: 커브 구간이 P1~P2 직선 (대각선 직진) -> 곡선 길이 = 직선 구간 + 현의 길이
-		AUnit::BakePolyLinePoints(Path, 0.5f, 0.0f, OutPoints, OutDistances, OutMarkers);
+		UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.5f, 0.0f, OutPoints, OutDistances, OutMarkers);
 		const FVector CurveStart(TileSize * 0.5f, 0.0, 0.0);
 		const FVector CurveEnd(TileSize, TileSize * 0.5f, 0.0);
 		const float ExpectedLength = TileSize + FVector::Dist(CurveStart, CurveEnd);   // 직선 150x2 + 현
@@ -201,7 +201,7 @@ bool FUnitBakePolyLinePointsTests::RunTest(const FString& Parameters)
 		const float Tensions[3] = { 0.0f, 1.0f, 2.0f };
 		for (int32 i = 0; i < 3; ++i)
 		{
-			AUnit::BakePolyLinePoints(Path, 0.5f, Tensions[i], OutPoints, OutDistances, OutMarkers);
+			UBoardMovementPresentationComponent::BakePolyLinePoints(Path, 0.5f, Tensions[i], OutPoints, OutDistances, OutMarkers);
 			// 곡선 점들 중 코너 중점과 가장 가까운 거리
 			float MinDistance = TNumericLimits<float>::Max();
 			for (const FVector& Point : OutPoints)
