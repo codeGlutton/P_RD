@@ -272,6 +272,7 @@ void USettingsPanelWidget::SyncSliderFillBars()
 		mMasterFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_master")));
 		mBgmFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_bgm")));
 		mSfxFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_sfx")));
+		mUiFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_ui")));
 		mFillBarsResolved = true;
 	}
 	// 시안 채움 텍스처(ProgressBar)를 슬라이더 현재 값에 맞춘다 — UMG Slider 스타일엔 채움 슬롯이 없어 오버레이로 구현.
@@ -286,6 +287,10 @@ void USettingsPanelWidget::SyncSliderFillBars()
 	if (mSfxFillBar.IsValid() && SfxVolumeSlider != nullptr)
 	{
 		mSfxFillBar->SetPercent(SfxVolumeSlider->GetValue());
+	}
+	if (mUiFillBar.IsValid() && UiVolumeSlider != nullptr)
+	{
+		mUiFillBar->SetPercent(UiVolumeSlider->GetValue());
 	}
 }
 

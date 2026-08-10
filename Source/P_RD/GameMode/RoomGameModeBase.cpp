@@ -179,7 +179,6 @@ ARoomGameModeBase::ARoomGameModeBase()
 		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::Inventory,
 	};
 
 	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
@@ -300,7 +299,7 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 
 bool ARoomGameModeBase::AbandonRunFromRoom()
 {
-	if (mWasNextRoomPreloadRequested == true)
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
 		return false;
@@ -311,6 +310,39 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 	checkf(IsTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
 
 	return IsTransitionStarted;
+}
+
+void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(
+	FOnRoomSaveAndExitComplete Completion)
+{
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested || !HasActiveRun())
+	{
+		Completion.ExecuteIfBound(false);
+		return;
+	}
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (SaveGameSubsystem == nullptr)
+	{
+		Completion.ExecuteIfBound(false);
+		return;
+	}
+
+	mSaveAndExitPending = true;
+	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
+		this,
+		[this, MovedCompletion = MoveTemp(Completion)](
+			const FString& SlotName, int32 UserIndex, bool bSaveSucceeded) mutable
+		{
+			const bool bTransitionStarted = bSaveSucceeded
+				&& PreloadAndTransitionFrontendRoomAsync();
+			if (!bTransitionStarted)
+			{
+				mSaveAndExitPending = false;
+			}
+			MovedCompletion.ExecuteIfBound(bTransitionStarted);
+		}));
 }
 
 bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const

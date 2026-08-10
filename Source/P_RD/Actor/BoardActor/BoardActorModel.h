@@ -183,8 +183,7 @@ public:
 	FOnStartMoveStep OnStartMoveStep;
 	/**
 	 * @brief 물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림 대리자
-	 * @details 완료 칸 수는 이동 경로 시작 타일을 제외한 절대값이라 중복 알림에도
-	 *          UI가 AP를 두 번 차감하지 않고 같은 표시값으로 맞출 수 있다.
+	 * @details 도착한 타일과 월드 변환만 전달하며 AP 정산은 유닛 이동 컴포넌트 모델이 담당한다.
 	 */
 	FOnEndMoveStep OnEndMoveStep;
 

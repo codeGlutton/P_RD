@@ -205,6 +205,13 @@ namespace MonsterTabWidgetBuilder
 		Blueprint->Modify();
 		Blueprint->WidgetTree->Modify();
 		Blueprint->ParentClass = UUserWidget::StaticClass();
+		// 이 빌더는 부분 갱신이 아니라 트리를 통째로 다시 만든다. 이전 Root를
+		// 단순 교체하면 옛 Divider 자식이 WidgetTree 안에 고아로 남아 GUID
+		// ensure를 낸다. 루트와 변수 표를 먼저 비우고 필요한 이름만 다시 노출한다.
+		if (UWidget* PreviousRoot = Blueprint->WidgetTree->RootWidget)
+		{
+			Blueprint->WidgetTree->RemoveWidget(PreviousRoot);
+		}
 
 		UOverlay* Root = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
 			UOverlay::StaticClass(), TEXT("MonsterTabViewportRoot"));
@@ -236,29 +243,15 @@ namespace MonsterTabWidgetBuilder
 			UCanvasPanel::StaticClass(), TEXT("MonsterTabCanvas"));
 		DesignSize->SetContent(Canvas);
 
-		/*
-		 * 세 칸의 자리. 프레임이 조립식이 되면서 이 값이 **원인**이 됐다 --
-		 * 전에는 그림에 그려진 분할선을 따라 맞추는 결과였지만, 이제는 이 값이
-		 * 기둥을 어디 세울지 정한다. 열 비율을 바꾸려면 여기만 고치면 된다.
-		 */
-		// 칸 자리는 **틀 그림에서 잰 구멍**에서 나온다. 전에는 (58,150) 처럼
-		// 손으로 적어 두었는데, 잰 구멍은 x70 부터라 칸이 12px 씩 나무 밑으로
-		// 들어가 있었다. 재 놓은 값이 있는데 짐작할 이유가 없다.
-		const FBox2D Window = UIPartRects::Inner(TEXT("T_KitA_Frame_Outer"),
-			FVector2D::ZeroVector, FVector2D(1920.f, 1080.f));
-		const float DividerWidth = 58.0f;
-		const float HeadRoom = 70.f;          // 제목 명패가 먹는 위쪽
-		const float ColumnTop = Window.Min.Y + HeadRoom;
-		const float ColumnHeight = Window.Max.Y - ColumnTop;
-		const float Usable = Window.GetSize().X - DividerWidth * 2.f;
-		// 열 비율. 상세창(frame_registry.SCREEN_COLUMNS)과 같은 값이다.
-		const FVector2D LeftCell(Window.Min.X, ColumnTop);
-		const FVector2D LeftSize(Usable * 0.24f, ColumnHeight);
-		const FVector2D MidCell(LeftCell.X + LeftSize.X + DividerWidth, ColumnTop);
-		const FVector2D MidSize(Usable * 0.29f, ColumnHeight);
-		const FVector2D RightCell(MidCell.X + MidSize.X + DividerWidth, ColumnTop);
-		const FVector2D RightSize(Usable * 0.47f, ColumnHeight);
-		// 열 안 여백. 나무 두께는 위에서 이미 뺐으므로 숨통만 준다.
+		// 용병탭과 같은 한 장짜리 구성: 왼쪽 선택 카드, 가운데 초상화,
+		// 오른쪽 상세. 옛 3열 기둥은 별도 화면처럼 보이고 좁은 화면에서
+		// 글자와 초상화를 동시에 눌렀으므로 사용하지 않는다.
+		const FVector2D LeftCell(150.f, 190.f);
+		const FVector2D LeftSize(390.f, 760.f);
+		const FVector2D MidCell(590.f, 190.f);
+		const FVector2D MidSize(450.f, 760.f);
+		const FVector2D RightCell(1080.f, 170.f);
+		const FVector2D RightSize(690.f, 790.f);
 		const float Gutter = 14.f;
 
 		// 옛 통짜 3열 프레임은 지웠다. 열 경계가 그림에 박혀 있어
@@ -266,36 +259,25 @@ namespace MonsterTabWidgetBuilder
 		// 이제 바깥 틀 한 장 + 기둥 두 개를 코드가 놓는다.
 		UTexture2D* BaseFrame = Texture(
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
-		UTexture2D* FrameDivider = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Divider.T_KitA_Frame_Divider"));
 		UTexture2D* RowNormal = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowNormal.T_MT_RowNormal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* RowSelected = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowSelected.T_MT_RowSelected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
 		// 같은 기능인데 지도·탭·설정이 서로 다른 단추를 쓰고 있었다(0804 검수).
 		// 공용 KitA 단추 하나로 모은다.
 		UTexture2D* BackButtonTexture = Texture(
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		// 바깥 틀은 9-slice 로 편다. 모서리 장식이 x91 · y98 까지라 그 안쪽만 늘어난다
 		// (Saved/UIKit/_slice_margins.txt 실측).
+		AddDarkWell(Blueprint, Canvas, TEXT("MonsterTabContentWell"),
+			FVector2D(112.f, 176.f), FVector2D(1696.f, 760.f), -2);
 		AddSlicedImage(Blueprint, Canvas, TEXT("MonsterTabBaseFrame"), BaseFrame,
 			FVector2D::ZeroVector, FVector2D(1920.0f, 1080.0f), 0,
 			FVector2D(91.0f, 98.0f), 0.f);
-		// 기둥은 칸과 칸 사이에 놓는다. 열 좌표를 바꾸면 여기 두 줄만 따라 옮기면 된다.
-		const float DividerGaps[] = {
-			(LeftCell.X + LeftSize.X + MidCell.X - DividerWidth) * 0.5f,
-			(MidCell.X + MidSize.X + RightCell.X - DividerWidth) * 0.5f };
-		for (int32 Index = 0; Index < UE_ARRAY_COUNT(DividerGaps); ++Index)
-		{
-			AddSlicedImage(Blueprint, Canvas,
-				FName(*FString::Printf(TEXT("MonsterTabDivider_%d"), Index)), FrameDivider,
-				FVector2D(DividerGaps[Index], 73.0f),
-				FVector2D(DividerWidth, 939.0f), 1, FVector2D(0.0f, 94.0f), 0.f);
-		}
 
 		UTextBlock* Title = AddText(Blueprint, Canvas, TEXT("MonsterTabTitleText"),
 			NSLOCTEXT("MarchboundMonsterTab", "Title", "몬스터"), 62,
-			FVector2D(340.0f, 69.0f), FVector2D(640.0f, 104.0f), 10,
+			FVector2D(689.0f, 45.0f), FVector2D(542.0f, 102.0f), 10,
 			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
 		Title->SetShadowOffset(FVector2D(3.0f, 3.0f));
 
@@ -305,15 +287,15 @@ namespace MonsterTabWidgetBuilder
 		const FLinearColor Accent(0.95f, 0.78f, 0.42f, 1.0f);
 		const FLinearColor Ink(0.12f, 0.065f, 0.025f, 1.0f);
 
-		// 뒤로는 그림의 위쪽 장식 띠(y<130)에 둔다. 칸을 침범하지 않는 자리다.
+		// 용병판과 같은 하단 닫기 동선.
 		AddSlicedImage(Blueprint, Canvas, TEXT("MonsterBackArt"), BackButtonTexture,
-			FVector2D(1650.0f, 40.0f), FVector2D(190.0f, 76.0f), 30, FVector2D(44.0f, 35.0f));
+			FVector2D(825.0f, 944.0f), FVector2D(270.0f, 96.0f), 30, FVector2D(44.0f, 35.0f));
 		AddText(Blueprint, Canvas, TEXT("MonsterBackText"),
-			NSLOCTEXT("MarchboundMonsterTab", "Back", "뒤로"), 29,
-			FVector2D(1650.0f, 56.0f), FVector2D(190.0f, 52.0f), 31,
+			NSLOCTEXT("MarchboundMonsterTab", "Back", "닫기"), 34,
+			FVector2D(825.0f, 956.0f), FVector2D(270.0f, 68.0f), 31,
 			FLinearColor(1.0f, 0.93f, 0.78f, 1.0f));
 		AddTransparentButton(Blueprint, Canvas, TEXT("MonsterBackButton"),
-			FVector2D(1650.0f, 40.0f), FVector2D(190.0f, 76.0f), 32);
+			FVector2D(825.0f, 944.0f), FVector2D(270.0f, 96.0f), 32);
 
 		// ── 왼쪽 칸: 나온 순서대로 채우는 몬스터 명단 ──────────────────
 		AddText(Blueprint, Canvas, TEXT("MonsterListHeading"),
@@ -327,17 +309,15 @@ namespace MonsterTabWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2"),
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2")
 		};
-		// 행 그림은 1903x681(2.79:1)이다. 폭을 칸에 맞추고 높이를 비율로 얻어야
-		// 테두리가 늘어지지 않는다.
-		const float RowWidth = LeftSize.X - Gutter * 2.f;
-		const float RowHeight = RowWidth / 2.794f;
+		const float RowWidth = 350.f;
+		const float RowHeight = 190.f;
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			UCanvasPanel* Row = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 				UCanvasPanel::StaticClass(),
 				FName(*FString::Printf(TEXT("MonsterRow_%d"), Index)));
 			Place(Canvas, Row,
-				FVector2D(LeftCell.X + Gutter, LeftCell.Y + 70.0f + (RowHeight + 18.0f) * Index),
+				FVector2D(LeftCell.X + Gutter, LeftCell.Y + 62.0f + (RowHeight + 26.0f) * Index),
 				FVector2D(RowWidth, RowHeight), 20);
 			Expose(Blueprint, Row);
 
@@ -351,23 +331,15 @@ namespace MonsterTabWidgetBuilder
 				? ESlateVisibility::SelfHitTestInvisible
 				: ESlateVisibility::Collapsed);
 
-			// 줄 그림은 통짜(Image)로 그린다 -- 원본 비율 그대로 놓았으므로
-			// 테두리도 같은 배율로 줄어든다. 그래서 안쪽 자리는 비율로 구한다.
-			const FBox2D RowInner = UIPartRects::Inner(TEXT("T_MT_RowNormal"),
-				FVector2D::ZeroVector, FVector2D(RowWidth, RowHeight), false);
-			const FVector2D RowSpan = RowInner.GetSize();
-			const float PortraitExtent = RowSpan.Y;
 			UImage* Portrait = AddImage(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowPortrait_%d"), Index)),
-				Texture(HeadPaths[Index]), RowInner.Min,
-				FVector2D(PortraitExtent, PortraitExtent), 6, true);
+				Texture(HeadPaths[Index]), FVector2D(21.f, 24.f),
+				FVector2D(142.f, 142.f), 6, true);
 			Portrait->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 			AddText(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowName_%d"), Index)),
 				FText::FromString(MonsterNames[Index]), 32,
-				FVector2D(RowInner.Min.X + PortraitExtent + 16.f,
-					RowInner.Min.Y + RowSpan.Y * 0.28f),
-				FVector2D(RowSpan.X - PortraitExtent - 16.f, RowSpan.Y * 0.48f), 8,
+				FVector2D(171.f, 54.f), FVector2D(153.f, 64.f), 8,
 				Ink, ETextJustify::Left);
 			AddTransparentButton(Blueprint, Row,
 				FName(*FString::Printf(TEXT("MonsterRowButton_%d"), Index)),
@@ -375,13 +347,18 @@ namespace MonsterTabWidgetBuilder
 		}
 
 		// ── 가운데 칸: 고른 몬스터의 모습과 이름 ────────────────────────
+		UTexture2D* PortraitCell = Texture(
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+		AddImage(Blueprint, Canvas, TEXT("MonsterPortraitFrame"), PortraitCell,
+			FVector2D(MidCell.X + Gutter, MidCell.Y + 70.0f),
+			FVector2D(MidSize.X - Gutter * 2.f, MidSize.X - Gutter * 2.f), 14, true);
 		UScaleBox* PortraitScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
 			UScaleBox::StaticClass(), TEXT("MonsterDetailPortraitScale"));
 		PortraitScale->SetStretch(EStretch::ScaleToFit);
 		PortraitScale->SetStretchDirection(EStretchDirection::Both);
 		PortraitScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-		Place(Canvas, PortraitScale, FVector2D(MidCell.X + Gutter, MidCell.Y + 46.0f),
-			FVector2D(MidSize.X - Gutter * 2.f, 618.0f), 15);
+		Place(Canvas, PortraitScale, FVector2D(MidCell.X + Gutter, MidCell.Y + 70.0f),
+			FVector2D(MidSize.X - Gutter * 2.f, MidSize.X - Gutter * 2.f), 15);
 		UImage* DetailPortrait = Blueprint->WidgetTree->ConstructWidget<UImage>(
 			UImage::StaticClass(), TEXT("MonsterDetailPortrait"));
 		DetailPortrait->SetBrushFromTexture(Texture(
@@ -392,11 +369,11 @@ namespace MonsterTabWidgetBuilder
 
 		AddText(Blueprint, Canvas, TEXT("MonsterCenterNameText"),
 			NSLOCTEXT("MarchboundMonsterTab", "CenterWerewolf", "늑대인간"), 44,
-			FVector2D(MidCell.X + Gutter, MidCell.Y + 684.0f),
+			FVector2D(MidCell.X + Gutter, MidCell.Y + 520.0f),
 			FVector2D(MidSize.X - Gutter * 2.f, 76.0f), 20);
 		AddText(Blueprint, Canvas, TEXT("MonsterDetailTypeText"),
 			NSLOCTEXT("MarchboundMonsterTab", "DetailType", "야수 · 근접"), 28,
-			FVector2D(MidCell.X + Gutter, MidCell.Y + 766.0f),
+			FVector2D(MidCell.X + Gutter, MidCell.Y + 600.0f),
 			FVector2D(MidSize.X - Gutter * 2.f, 48.0f), 20);
 
 		/*
@@ -542,7 +519,7 @@ namespace MonsterTabWidgetBuilder
 		}
 
 		UE_LOG(LogTemp, Display,
-			TEXT("RD_MONSTER_TAB_BUILD success asset=%s rows=3 skills=4 design=1920x1080 layout=mobile-v2"),
+			TEXT("RD_MONSTER_TAB_BUILD success asset=%s rows=3 skills=4 design=1920x1080 layout=mercenary-shell-v3"),
 			AssetPath);
 	}
 }

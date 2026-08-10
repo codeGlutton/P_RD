@@ -426,6 +426,20 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
+	mEnemyAPPips.Reset();
+	mEnemyAPPipsUsed.Reset();
+	for (int32 Index = 0; ; ++Index)
+	{
+		UWidget* Pip = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("EnemyAPPip_%d"), Index));
+		if (Pip == nullptr)
+		{
+			break;
+		}
+		mEnemyAPPips.Add(Pip);
+		mEnemyAPPipsUsed.Add(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("EnemyAPPipUsed_%d"), Index)));
+	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
@@ -476,6 +490,41 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mMercenaryDetailHP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailHP"));
 	mMercenaryDetailAP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailAP"));
 	mMercenaryDetailSpeed = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailSpeed"));
+	mMercenaryDetailSection = Find<UWidget>(WidgetTree, TEXT("MercDetailSection"));
+	mMercenaryInventoryButton = Find<UButton>(
+		WidgetTree, TEXT("MercenaryInventoryButton"));
+	mMercenaryInventoryPage = Find<UWidget>(
+		WidgetTree, TEXT("MercenaryInventoryPage"));
+	mMercenaryInventoryPlate = Find<UImage>(
+		WidgetTree, TEXT("MercenaryInventoryTabPlate"));
+	mMercenaryInventoryGoldText = Find<UTextBlock>(
+		WidgetTree, TEXT("MercenaryInventoryGoldText"));
+	// 설명 띠와 고름 테두리는 뺐다(0809 시안) — 아티팩트를 누르면 바로
+	// 상세 팝업이 뜨므로 면 안에 남길 상태 표시가 없다.
+	mMercenaryInventoryArtifactFrames.Reset();
+	mMercenaryInventoryArtifactIcons.Reset();
+	mMercenaryInventoryArtifactNames.Reset();
+	mMercenaryInventoryArtifactButtons.Reset();
+	for (int32 Index = 0; ; ++Index)
+	{
+		UWidget* Frame = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("MercenaryInventoryArtifactFrame_%d"), Index));
+		UImage* Icon = Find<UImage>(WidgetTree,
+			FString::Printf(TEXT("MercenaryInventoryArtifactIcon_%d"), Index));
+		UTextBlock* Name = Find<UTextBlock>(WidgetTree,
+			FString::Printf(TEXT("MercenaryInventoryArtifactName_%d"), Index));
+		UButton* Button = Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("MercenaryInventoryArtifactButton_%d"), Index));
+		if (Frame == nullptr && Icon == nullptr && Name == nullptr
+			&& Button == nullptr)
+		{
+			break;
+		}
+		mMercenaryInventoryArtifactFrames.Add(Frame);
+		mMercenaryInventoryArtifactIcons.Add(Icon);
+		mMercenaryInventoryArtifactNames.Add(Name);
+		mMercenaryInventoryArtifactButtons.Add(Button);
+	}
 	// WBP 기본값이 잘못 저장되어도 전투 진입 때는 닫힌 상태로 시작한다.
 	// 이후 도메인 갱신에서도 CacheAuthoredWidgets가 다시 불린다. 그때까지
 	// 접으면, 골드가 갱신되는 순간 사용자가 열어 둔 탭이 닫혀 버린다.
@@ -486,6 +535,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
+	mTurnAPRoot = Find<UWidget>(WidgetTree, TEXT("TurnAPScale"));
 	mTurnAPText = Find<UTextBlock>(WidgetTree, TEXT("TurnAPText"));
 	mTurnAPPips.Reset();
 	mTurnAPPipsUsed.Reset();
@@ -517,6 +567,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			FString::Printf(TEXT("ArtifactFrame_%d"), Index));
 		SetShown(mArtifactFrames[Index], false);
 	}
+	SetShown(Find<UWidget>(WidgetTree, TEXT("ArtifactStrip")), false);
 	SetShown(Find<UWidget>(WidgetTree, TEXT("ArtifactStripPlate")), false);
 	SetShown(Find<UWidget>(WidgetTree, TEXT("ArtifactStripLabel")), false);
 
@@ -746,6 +797,49 @@ void UCombatLayoutHUDWidget::WireCommands()
 		mMenuButtons[3]->SetIsEnabled(true);
 		mMenuButtons[3]->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleSettingsMenuClicked);
+	}
+	if (mMercenaryInventoryButton != nullptr)
+	{
+		mMercenaryInventoryButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleInventoryClicked);
+		BindPressFeedback(mMercenaryInventoryButton, mMercenaryInventoryButton);
+	}
+	{
+		using FInventoryClickHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FInventoryClickHandler ClickHandlers[11] = {
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_0,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_1,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_2,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_3,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_4,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_5,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_6,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_7,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_8,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_9,
+			&UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_10 };
+		static const TCHAR* const ClickNames[11] = {
+			TEXT("HandleMercenaryInventoryArtifactClicked_0"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_1"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_2"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_3"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_4"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_5"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_6"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_7"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_8"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_9"),
+			TEXT("HandleMercenaryInventoryArtifactClicked_10") };
+		for (int32 Index = 0;
+			Index < FMath::Min(mMercenaryInventoryArtifactButtons.Num(), 11); ++Index)
+		{
+			if (UButton* Button = mMercenaryInventoryArtifactButtons[Index])
+			{
+				Button->OnClicked.__Internal_AddUniqueDynamic(
+					this, ClickHandlers[Index], ClickNames[Index]);
+				BindPressFeedback(Button, Button);
+			}
+		}
 	}
 	// 아티팩트 칸은 꾹 눌러야 상세가 뜬다. 짧게 누르면 아무 일도 없다 --
 	// 전투 중에 잘못 눌러 화면이 덮이면 곤란하다.
@@ -1205,6 +1299,10 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		// 프레임 동안 이전 마지막 페이지가 남는다.
 		RefreshTurnOrder();
 		RefreshParty();
+		// 적 차례가 시작되면 선택 대상 갱신 없이도 현재 적의 요약판/AP가
+		// 즉시 갈려야 한다. Unit 갱신에만 맡기면 WBP 기본 AP가 한 프레임이
+		// 아니라 턴 내내 남을 수 있다.
+		RefreshEnemy();
 
 		// 조준에 들었거나 조준이 끝났을 수 있다. 카드가 비켜 있을지 여기서
 		// 다시 정한다 -- 조준 단계는 Turn 으로 실려 온다.
@@ -1255,7 +1353,7 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		}
 		else
 		{
-			ShowUnitDetailOverlay();
+			ShowUnitInspection();
 		}
 	}
 	if (Domain == ECombatUIDomain::SkillDetail)
@@ -1270,6 +1368,15 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	const int32 CurrentUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
 	UTexture2D* NormalCard = mMercenaryCardNormalTexture.LoadSynchronous();
 	UTexture2D* SelectedCard = mMercenaryCardSelectedTexture.LoadSynchronous();
+	if (mMercenaryInventoryPlate != nullptr)
+	{
+		UTexture2D* InventoryTexture = mMercenaryInventoryShown
+			? SelectedCard : NormalCard;
+		if (InventoryTexture != nullptr)
+		{
+			mMercenaryInventoryPlate->SetBrushFromTexture(InventoryTexture, false);
+		}
+	}
 	/*
 	 * 오른쪽 상세가 누구를 보여 줄지.
 	 *
@@ -1319,9 +1426,10 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		if (Widgets.Plate != nullptr)
 		{
 			// 고른 줄이 있으면 그 줄이, 없으면 지금 차례인 용병이 밝은 판이다.
-			const bool bHighlighted = mMercenarySelectedSlot != INDEX_NONE
+			const bool bHighlighted = mMercenaryInventoryShown == false && (
+				mMercenarySelectedSlot != INDEX_NONE
 				? SlotIndex == mMercenarySelectedSlot
-				: Unit.mUnitId == CurrentUnitId;
+				: Unit.mUnitId == CurrentUnitId);
 			UTexture2D* CardTexture = bHighlighted ? SelectedCard : NormalCard;
 			if (CardTexture != nullptr)
 			{
@@ -1398,11 +1506,13 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	}
 
 	const bool bHasFocus = FocusUnit != nullptr;
-	SetShown(mMercenaryHeroPortrait, bHasFocus);
-	SetShown(mMercenaryDetailName, bHasFocus);
-	SetShown(mMercenaryDetailHP, bHasFocus);
-	SetShown(mMercenaryDetailAP, bHasFocus);
-	SetShown(mMercenaryDetailSpeed, bHasFocus);
+	const bool bShowMercenaryDetail = bHasFocus && mMercenaryInventoryShown == false;
+	SetShown(mMercenaryDetailSection, bShowMercenaryDetail);
+	SetShown(mMercenaryHeroPortrait, bShowMercenaryDetail);
+	SetShown(mMercenaryDetailName, bShowMercenaryDetail);
+	SetShown(mMercenaryDetailHP, bShowMercenaryDetail);
+	SetShown(mMercenaryDetailAP, bShowMercenaryDetail);
+	SetShown(mMercenaryDetailSpeed, bShowMercenaryDetail);
 	if (bHasFocus)
 	{
 		// 확정 시안(0806): 큰 일러스트 대신 정사각 대갈치기를 건다.
@@ -1439,9 +1549,9 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		UTextBlock* Cost = Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("MercenarySkillCost_%d"), Index));
 
-		const bool bHasCommand = bHasFocus
+		const bool bHasCommand = bShowMercenaryDetail
 			&& (Index == 0 || Skills.IsValidIndex(Index - 1));
-		SetShown(Frame, bHasFocus);
+		SetShown(Frame, bShowMercenaryDetail);
 		SetShown(Icon, bHasCommand);
 		SetShown(Name, bHasCommand);
 		SetShown(Cost, bHasCommand);
@@ -1487,6 +1597,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		// 그림이 있으면 칸은 그림으로 말한다. 없을 때만 이름을 띄운다.
 		SetShown(Name, CommandIcon == nullptr);
 	}
+	RefreshMercenaryInventory();
 }
 
 /**
@@ -1934,34 +2045,22 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		? Units.FindByPredicate([TargetId](const FUnitUI& Unit)
 			{ return Unit.mUnitId == TargetId && Unit.mHP > 0.f; })
 		: nullptr;
-	const FUnitUI* AllyShown = TargetUnit != nullptr && TargetUnit->mIsPlayer
-		? TargetUnit : nullptr;
-	/*
-	 * 조준 중에는 아군 요약판을 **행동하는 유닛**으로 붙들어 둔다.
-	 *
-	 * 사거리에서 자리를 짚으면 겨냥이 그 타일(유닛 없음)로 갈려서 판이
-	 * 내려갔다(0807 검수). 스킬을 고른 사람이 누구인지는 조준 내내 보여야
-	 * 하는 정보다.
-	 */
-	if (AllyShown == nullptr
-		&& mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
+	const FUnitUI* TurnUnit = FindTurnUnit();
+	const FUnitUI* AllyShown = nullptr;
+	const FUnitUI* Shown = nullptr;
+
+	// 요약판 둘은 같은 자리를 쓴다. 짚은 유닛이 있으면 그 유닛의 판 하나만,
+	// 없으면 현재 턴 유닛의 판 하나만 편다. 내 차례 기본 화면에는 용병이
+	// 보이고, 적을 클릭한 순간에는 적 요약으로 정확히 교체된다.
+	if (TargetUnit != nullptr)
 	{
-		const FUnitUI* TurnUnit = FindTurnUnit();
-		if (TurnUnit != nullptr && TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
-		{
-			AllyShown = TurnUnit;
-		}
+		AllyShown = TargetUnit->mIsPlayer ? TargetUnit : nullptr;
+		Shown = TargetUnit->mIsPlayer ? nullptr : TargetUnit;
 	}
-	const FUnitUI* Shown = TargetUnit != nullptr && !TargetUnit->mIsPlayer
-		? TargetUnit : nullptr;
-	if (Shown == nullptr)
+	else if (TurnUnit != nullptr && TurnUnit->mHP > 0.f)
 	{
-		const FUnitUI* TurnUnit = FindTurnUnit();
-		if (TargetUnit == nullptr && TurnUnit != nullptr
-			&& !TurnUnit->mIsPlayer && TurnUnit->mHP > 0.f)
-		{
-			Shown = TurnUnit;
-		}
+		AllyShown = TurnUnit->mIsPlayer ? TurnUnit : nullptr;
+		Shown = TurnUnit->mIsPlayer ? nullptr : TurnUnit;
 	}
 
 	SetShown(mAllyPanel, AllyShown != nullptr);
@@ -2042,9 +2141,25 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	// 확정 시안 표기: "100/100" · "AP 0/5" · 속도는 아이콘 옆 숫자만.
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
-	SetTextIfPresent(mEnemyAPText, FText::FromString(Shown->mMaxActionPoints > 0
-		? FString::Printf(TEXT("AP %d/%d"), Shown->mActionPoints, Shown->mMaxActionPoints)
-		: FString::Printf(TEXT("AP %d"), Shown->mActionPoints)));
+	const int32 EnemyAPLeft = mUIModel != nullptr
+		? mUIModel->GetDisplayedMovementPoint(*Shown)
+		: FMath::Max(Shown->mActionPoints, 0);
+	const int32 EnemyAPTotal = FMath::Max(
+		FMath::RoundToInt(Shown->mMaxMovementPoint),
+		FMath::Max(Shown->mMaxActionPoints, EnemyAPLeft));
+	SetTextIfPresent(mEnemyAPText, FText::FromString(
+		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
+	// 고정 10칸을 항상 그린다. 현재 AP만 채운 보석이고 나머지는 빈 보석이다.
+	// 이동 스텝 또는 스킬 소비로 실제 AP가 줄면 같은 자리에서 즉시 교체된다.
+	for (int32 Index = 0; Index < mEnemyAPPips.Num(); ++Index)
+	{
+		const bool bFilled = Index < EnemyAPLeft;
+		SetShown(mEnemyAPPips[Index], bFilled);
+		if (mEnemyAPPipsUsed.IsValidIndex(Index))
+		{
+			SetShown(mEnemyAPPipsUsed[Index], bFilled == false);
+		}
+	}
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
 
@@ -2112,22 +2227,117 @@ void UCombatLayoutHUDWidget::RefreshMeta()
 	SetTextIfPresent(mMercenaryGoldText,
 		FText::AsNumber(mUIModel->GetPlayerMeta().mGold));
 
-	const TArray<FCombatArtifactUI>& Artifacts =
-		mUIModel->GetPlayerMeta().mArtifacts;
+	// 아티팩트는 용병 패널의 인벤토리 면에서만 보여 준다. 전투 화면의
+	// 좌하단 ArtifactStrip은 기존 WBP 호환을 위해 남겨도 항상 접는다.
 	for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
 	{
-		const FCombatArtifactUI* Artifact =
-			Artifacts.IsValidIndex(Index) ? &Artifacts[Index] : nullptr;
 		UImage* Icon = mArtifactIcons.IsValidIndex(Index)
 			? mArtifactIcons[Index].Get() : nullptr;
 		UWidget* Frame = mArtifactFrames.IsValidIndex(Index)
 			? mArtifactFrames[Index].Get() : nullptr;
+		SetShown(Icon, false);
+		SetShown(Frame, false);
+	}
+	RefreshMercenaryInventory();
+}
+
+void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
+{
+	SetShown(mMercenaryInventoryPage, mMercenaryInventoryShown);
+	// HandleInventoryClicked() 뒤에는 메타 갱신이 연달아 들어온다. 제목도 이
+	// 최종 새로고침에서 다시 확정해, 디자이너 기본값(용병)이 런타임 제목을
+	// 덮어쓴 채 캡처되거나 표시되지 않게 한다.
+	SetTextIfPresent(Find<UTextBlock>(WidgetTree, TEXT("MercenaryTitleText")),
+		mMercenaryInventoryShown
+			? NSLOCTEXT("CombatHUD", "MercenaryInventoryPageTitle", "인벤토리")
+			: NSLOCTEXT("CombatHUD", "MercenaryPageTitle", "용병"));
+	if (mMercenaryInventoryShown == false || mUIModel == nullptr)
+	{
+		return;
+	}
+
+	const FPlayerMetaUI& Meta = mUIModel->GetPlayerMeta();
+	SetTextIfPresent(mMercenaryInventoryGoldText, FText::AsNumber(Meta.mGold));
+	for (int32 Index = 0; Index < mMercenaryInventoryArtifactFrames.Num(); ++Index)
+	{
+		const FCombatArtifactUI* Artifact = Meta.mArtifacts.IsValidIndex(Index)
+			? &Meta.mArtifacts[Index] : nullptr;
 		const bool bHasArtifact = Artifact != nullptr && Artifact->mIcon != nullptr;
-		SetShown(Icon, bHasArtifact);
-		SetShown(Frame, bHasArtifact);
-		if (bHasArtifact)
+		SetShown(mMercenaryInventoryArtifactFrames[Index], true);
+		if (mMercenaryInventoryArtifactIcons.IsValidIndex(Index))
 		{
-			Icon->SetBrushFromTexture(Artifact->mIcon);
+			UImage* Icon = mMercenaryInventoryArtifactIcons[Index];
+			SetShown(Icon, bHasArtifact);
+			if (Icon != nullptr && bHasArtifact)
+			{
+				Icon->SetBrushFromTexture(Artifact->mIcon.Get(), false);
+			}
+		}
+		if (mMercenaryInventoryArtifactNames.IsValidIndex(Index))
+		{
+			UTextBlock* Name = mMercenaryInventoryArtifactNames[Index];
+			// 이름 표시 여부는 WBP 디자이너 값에 맡긴다. C++은 내용만 바꾼다.
+			SetTextIfPresent(Name, bHasArtifact ? Artifact->mName : FText::GetEmpty());
+		}
+		if (mMercenaryInventoryArtifactButtons.IsValidIndex(Index)
+			&& mMercenaryInventoryArtifactButtons[Index] != nullptr)
+		{
+			mMercenaryInventoryArtifactButtons[Index]->SetIsEnabled(bHasArtifact);
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::SelectMercenaryInventoryArtifact(const int32 SlotIndex)
+{
+	if (mUIModel == nullptr
+		|| mUIModel->GetPlayerMeta().mArtifacts.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	// 인벤토리 면은 조회 전용이다. 짧게 누르면 바로 기존 아티팩트 상세 WBP를
+	// 열어야 하며, 전투 HUD의 롱프레스 규칙을 여기까지 끌고 오지 않는다.
+	ShowArtifactDetailOverlay(SlotIndex);
+}
+
+void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
+{
+	mMercenaryInventoryShown = bShown;
+	SetShown(mMercenaryInventoryPage, bShown);
+	SetShown(mMercenaryDetailSection, bShown == false);
+	SetTextIfPresent(Find<UTextBlock>(WidgetTree, TEXT("MercenaryTitleText")),
+		bShown
+			? NSLOCTEXT("CombatHUD", "MercenaryInventoryPageTitle", "인벤토리")
+			: NSLOCTEXT("CombatHUD", "MercenaryPageTitle", "용병"));
+
+	// 이전 WBP의 상세 부품 중 일부는 MercDetailSection 밖에 직접 놓여 있었다.
+	// 페이지 Canvas만 올리면 그 초상화 틀과 수치 칩이 인벤토리 뒤에 유령처럼
+	// 남는다. 이름으로 한 번에 접어 같은 용병판의 두 얼굴을 완전히 분리한다.
+	static const TCHAR* const DetailWidgetNames[] = {
+		TEXT("MercenaryHeroPortrait"), TEXT("MercenaryPortraitFrame"),
+		TEXT("MercenaryNamePlate"), TEXT("MercenaryDetailName"),
+		TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
+		TEXT("MercenaryDetailSpeed"), TEXT("MercenaryCritPlate"),
+		TEXT("MercenaryCritLabel"), TEXT("MercenaryCritValue"),
+		TEXT("MercenarySkillHeading"), TEXT("MercenarySkillDivider") };
+	for (const TCHAR* WidgetName : DetailWidgetNames)
+	{
+		SetShown(Find<UWidget>(WidgetTree, WidgetName), bShown == false);
+	}
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("MercenaryChip%dFrame"), Index)), bShown == false);
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("MercenaryChip%dLabel"), Index)), bShown == false);
+	}
+	for (int32 Index = 0; Index < 6; ++Index)
+	{
+		for (const TCHAR* Prefix : { TEXT("MercenarySkillFrame"),
+			TEXT("MercenarySkillIcon"), TEXT("MercenarySkillName"),
+			TEXT("MercenarySkillCost"), TEXT("MercenarySkillButton") })
+		{
+			SetShown(Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("%s_%d"), Prefix, Index)), bShown == false);
 		}
 	}
 }
@@ -2147,6 +2357,7 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 		// 열 때는 지금 차례인 용병부터 보여 준다. 지난번에 고른 줄이
 		// 남아 있으면 누구를 보는지 알 수 없다.
 		mMercenarySelectedSlot = INDEX_NONE;
+		SetMercenaryInventoryShown(false);
 	}
 
 	// 먼저 패널을 세워 둔다. RequestCancel 이 즉시 UI 갱신을 쏘더라도 그
@@ -2386,6 +2597,10 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			});
 		mUIModel->OnCombatResultOpenRequested.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
+		mUIModel->OnSaveAndExitCompleted.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleSaveAndExitCompleted);
+		mUIModel->OnAbandonRunCompleted.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleAbandonRunCompleted);
 
 		// 맞은 자리 위로 뜨는 피해 숫자.
 		mUIModel->OnCombatFloatingLog.AddUniqueDynamic(
@@ -2451,6 +2666,10 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
 		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
+		mUIModel->OnSaveAndExitCompleted.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleSaveAndExitCompleted);
+		mUIModel->OnAbandonRunCompleted.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleAbandonRunCompleted);
 		mUIModel->OnCombatFloatingLog.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLog);
 		mUIModel->OnCombatFloatingLogMotionFinished.RemoveDynamic(
@@ -2561,6 +2780,14 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 {
 	const FUnitUI* TurnUnit = FindTurnUnit();
+	const bool bShowPlayerActionPoints = TurnUnit != nullptr && TurnUnit->mIsPlayer;
+	SetShown(mTurnAPRoot, bShowPlayerActionPoints);
+	if (bShowPlayerActionPoints == false)
+	{
+		mShownAPLeft = 0;
+		mPendingAPCost = 0;
+		return;
+	}
 	const int32 Left = TurnUnit != nullptr
 		? mUIModel->GetDisplayedMovementPoint(*TurnUnit) : 0;
 	const int32 Total = TurnUnit != nullptr
@@ -3034,6 +3261,7 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 	 * 것이 다른 판으로 한 번 더 뜨고 목록이 사라졌다(0806 검수: "용병 상세탭
 	 * 필요 없다"). 고른 줄만 기억하고 다시 그린다.
 	 */
+	SetMercenaryInventoryShown(false);
 	mMercenarySelectedSlot = SlotIndex;
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	RefreshParty();
@@ -3058,6 +3286,68 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 void UCombatLayoutHUDWidget::HandlePartyClicked_0() { HandlePartyClicked(0); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_1() { HandlePartyClicked(1); }
 void UCombatLayoutHUDWidget::HandlePartyClicked_2() { HandlePartyClicked(2); }
+
+void UCombatLayoutHUDWidget::HandleInventoryClicked()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+
+	// 네 번째 로스터 줄은 같은 용병 WBP 안의 인벤토리 페이지를 연다.
+	// 별도 월드 위젯을 띄우지 않으므로 왼쪽 네 탭과 닫기 흐름이 그대로 남는다.
+	mMercenarySelectedSlot = INDEX_NONE;
+	SetMercenaryInventoryShown(true);
+	HideDetailOverlay(/*bNotifyGameplay=*/false);
+	RefreshParty();
+	RefreshMeta();
+}
+
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_0()
+{
+	SelectMercenaryInventoryArtifact(0);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_1()
+{
+	SelectMercenaryInventoryArtifact(1);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_2()
+{
+	SelectMercenaryInventoryArtifact(2);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_3()
+{
+	SelectMercenaryInventoryArtifact(3);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_4()
+{
+	SelectMercenaryInventoryArtifact(4);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_5()
+{
+	SelectMercenaryInventoryArtifact(5);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_6()
+{
+	SelectMercenaryInventoryArtifact(6);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_7()
+{
+	SelectMercenaryInventoryArtifact(7);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_8()
+{
+	SelectMercenaryInventoryArtifact(8);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_9()
+{
+	SelectMercenaryInventoryArtifact(9);
+}
+void UCombatLayoutHUDWidget::HandleMercenaryInventoryArtifactClicked_10()
+{
+	SelectMercenaryInventoryArtifact(10);
+}
+
 void UCombatLayoutHUDWidget::HandleMercenaryMenuClicked()
 {
 	SetMercenaryPanelShown(IsMercenaryPanelShown() == false);
@@ -3121,6 +3411,10 @@ void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
 	// 이 줄이 없어서 Back 이 아무 일도 안 했다.
 	Settings->OnBackRequested.AddUniqueDynamic(
 		this, &UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested);
+	Settings->OnSaveAndExitRequested.AddUniqueDynamic(
+		this, &UCombatLayoutHUDWidget::HandleSettingsPanelSaveAndExitRequested);
+	Settings->OnAbandonRunConfirmed.AddUniqueDynamic(
+		this, &UCombatLayoutHUDWidget::HandleSettingsPanelAbandonRunConfirmed);
 	Settings->SetPanelMode(ESettingsPanelMode::InGame);
 	// 전투 중에는 런을 저장하거나 포기할 수 있다. 타이틀에서 열 때와 다른 점이다.
 	Settings->RefreshPanelState(true, true);
@@ -3143,6 +3437,106 @@ void UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested()
 		EWorldWidgetType::InGameSettings))
 	{
 		Settings->CloseUI();
+	}
+}
+
+/** @brief 런 액션을 잠그고 저장 후 종료 의도를 게임플레이에 전달한다. */
+void UCombatLayoutHUDWidget::HandleSettingsPanelSaveAndExitRequested()
+{
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	USettingsPanelWidget* Settings = WorldWidgetSubsystem != nullptr
+		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+			EWorldWidgetType::InGameSettings)
+		: nullptr;
+	if (Settings != nullptr)
+	{
+		Settings->SetRunActionsEnabled(false);
+		Settings->SetStatusText(LOCTEXT("SavingRun", "저장 중..."));
+	}
+
+	if (mUIModel != nullptr)
+	{
+		mUIModel->RequestSaveAndExitRun();
+		return;
+	}
+	HandleSaveAndExitCompleted(false);
+}
+
+/** @brief 확인이 끝난 런 포기 요청을 기존 UIModel -> CombatGameMode 경로로 보낸다. */
+void UCombatLayoutHUDWidget::HandleSettingsPanelAbandonRunConfirmed()
+{
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	USettingsPanelWidget* Settings = WorldWidgetSubsystem != nullptr
+		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+			EWorldWidgetType::InGameSettings)
+		: nullptr;
+	if (Settings != nullptr)
+	{
+		Settings->HideAbandonConfirm();
+		Settings->SetRunActionsEnabled(false);
+		Settings->SetStatusText(FText::GetEmpty());
+	}
+
+	if (mUIModel != nullptr)
+	{
+		mUIModel->RequestAbandonRun();
+		return;
+	}
+	if (Settings != nullptr)
+	{
+		HandleAbandonRunCompleted(false);
+	}
+}
+
+/** @brief 저장/전환 실패만 현재 화면에서 복구한다. 성공 시 방 전환이 이어진다. */
+void UCombatLayoutHUDWidget::HandleSaveAndExitCompleted(const bool bSuccess)
+{
+	if (bSuccess)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+	if (USettingsPanelWidget* Settings =
+		WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+			EWorldWidgetType::InGameSettings))
+	{
+		Settings->SetRunActionsEnabled(true);
+		Settings->SetStatusText(LOCTEXT("SaveAndExitFailed", "저장 후 종료에 실패했습니다."));
+	}
+}
+
+/** @brief 포기/전환 실패만 현재 화면에서 복구한다. 성공 시 방 전환이 이어진다. */
+void UCombatLayoutHUDWidget::HandleAbandonRunCompleted(const bool bSuccess)
+{
+	if (bSuccess)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		return;
+	}
+	if (USettingsPanelWidget* Settings =
+		WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
+			EWorldWidgetType::InGameSettings))
+	{
+		Settings->SetRunActionsEnabled(true);
+		Settings->SetStatusText(LOCTEXT("AbandonRunFailed", "런 포기 요청에 실패했습니다."));
 	}
 }
 
@@ -3686,24 +4080,13 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		}
 	}
 
-	// 상태이상 두 칸: 실제 걸린 상태만 이름+스택으로 보여 주고 남는 칸은 접는다.
+	// 상태이상 칸은 뺐다(0809) -- 이 탭은 도감이다. 지금 걸린 상태는
+	// 요약판(버프/디버프 띠)이 이미 보여 준다.
 	for (int32 Index = 0; Index < 2; ++Index)
 	{
-		UTextBlock* StatusText = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("MonsterStatusText_%d"), Index))));
-		if (StatusText == nullptr)
-		{
-			continue;
-		}
-		if (Monster.mStatusEffects.IsValidIndex(Index) == true)
-		{
-			const FStatusEffectUI& Status = Monster.mStatusEffects[Index];
-			StatusText->SetText(FText::FromString(Status.mStackCount > 1
-				? FString::Printf(TEXT("%s x%d"), *StatusDisplayName(Status.mTag), Status.mStackCount)
-				: StatusDisplayName(Status.mTag)));
-			StatusText->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		}
-		else
+		if (UTextBlock* StatusText = Cast<UTextBlock>(
+			mMonsterTabWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("MonsterStatusText_%d"), Index)))))
 		{
 			StatusText->SetVisibility(ESlateVisibility::Collapsed);
 		}
@@ -4285,6 +4668,58 @@ void UCombatLayoutHUDWidget::HandleDetailSkillClicked_5() { HandleDetailSkillCli
  * 라이브 스탯(HP·방어)은 상세 스냅샷에 없다 -- 진실원본 이원화를 막으려고
  * mUnitId 로 유닛 목록에서 읽는 것이 계약이다(FUnitDetailUI 주석).
  */
+/**
+ * @brief (0809) 유닛 상세 겹은 뺐다. 적이면 몬스터탭(도감)을 그 몬스터로 연다.
+ *
+ * @details 아군 상세는 용병탭이 맡으므로 여기서는 아무것도 안 띄운다.
+ * 몬스터탭 WBP가 없는 환경(시험 픽스처)만 예전 상세 겹으로 보여 준다.
+ */
+void UCombatLayoutHUDWidget::ShowUnitInspection()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	const FUnitDetailUI& Detail = mUIModel->GetUnitDetail();
+	if (Detail.mUnitId == INDEX_NONE)
+	{
+		return;
+	}
+	const FUnitUI* Unit = nullptr;
+	int32 EnemyRow = INDEX_NONE;
+	int32 AliveEnemyCount = 0;
+	for (const FUnitUI& Candidate : mUIModel->GetUnitUIs())
+	{
+		const bool bAliveEnemy = Candidate.mIsPlayer == false && Candidate.mHP > 0.f;
+		if (Candidate.mUnitId == Detail.mUnitId)
+		{
+			Unit = &Candidate;
+			if (bAliveEnemy == true && AliveEnemyCount < 3)
+			{
+				EnemyRow = AliveEnemyCount;
+			}
+		}
+		if (bAliveEnemy == true)
+		{
+			++AliveEnemyCount;
+		}
+	}
+	if (Unit == nullptr || Unit->mIsPlayer == true)
+	{
+		return;
+	}
+	if (mMonsterTabWidgetClass == nullptr)
+	{
+		ShowUnitDetailOverlay();
+		return;
+	}
+	if (EnemyRow != INDEX_NONE)
+	{
+		mMonsterTabSelectedRow = EnemyRow;
+	}
+	SetMonsterTabShown(true);
+}
+
 void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 {
 	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)

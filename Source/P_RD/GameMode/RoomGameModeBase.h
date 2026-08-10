@@ -18,6 +18,8 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 class UPartyModel;
 class UPlayerUnitModel;
 
+DECLARE_DELEGATE_OneParam(FOnRoomSaveAndExitComplete, bool /*bSuccess*/);
+
 /**
  * @brief  방에 대한 베이스 GameMode
  */
@@ -62,6 +64,9 @@ public:
 	 */
 	UFUNCTION(Category = Room, BlueprintCallable)
 	bool AbandonRunFromRoom();
+
+	/** @brief 현재 런 저장 성공 뒤에만 Frontend 전환을 시작한다. */
+	void SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete Completion);
 
 public:
 	/**
@@ -140,4 +145,5 @@ protected:
 
 private:
 	FName mSelectedRoomSpawnSettingName = NAME_None;
+	bool mSaveAndExitPending = false;
 };

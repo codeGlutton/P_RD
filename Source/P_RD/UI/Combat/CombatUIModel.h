@@ -47,7 +47,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbandonRun);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRetryCombat);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSaveAndExitRun);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveAndExitCompleted, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbandonRunCompleted, bool, bSuccess);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
@@ -87,6 +89,14 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatResultOpenRequested OnCombatResultOpenRequested;
 
+	/** @brief 저장 후 타이틀 이동 요청의 완료 결과. 실패 시 HUD가 입력을 복구한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnSaveAndExitCompleted OnSaveAndExitCompleted;
+
+	/** @brief 런 포기 및 프론트엔드 전환 시작 결과. 실패 시 HUD가 입력을 복구한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnAbandonRunCompleted OnAbandonRunCompleted;
+
 public:
 	FOnBeginCombatPresentation OnBeginCombat;
 	FOnBeginCombatPresentation OnEndCombat;
@@ -110,8 +120,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnAbandonRun OnAbandonRun;
 
-	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
-	FOnRetryCombat OnRetryCombat;
+	/** @brief 현재 런을 저장한 뒤 프론트엔드로 이동하라는 UI 의도. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnSaveAndExitRun OnSaveAndExitRun;
 
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
@@ -184,7 +195,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAbandonRun();
-	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestRetryCombat();
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestSaveAndExitRun();
+
+	/** @brief 게임플레이가 저장 및 전환 요청 결과를 HUD에 되돌린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifySaveAndExitCompleted(bool bSuccess);
+	/** @brief 게임플레이가 런 포기 및 전환 요청 결과를 HUD에 되돌린다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyAbandonRunCompleted(bool bSuccess);
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ─────────
 	   각 Set*()은 UI가 그리려면 게임플레이가 반드시 공급해야 하는 값이다(UI는 못 만듦).
@@ -266,7 +282,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FCombatQueueNode>& GetActionQueue() const { return mActionQueue; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FTurnUI& GetTurnUI() const { return mTurnUI; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatPendingActionUI& GetPendingAction() const { return mPendingAction; }
-	/** @brief 실제 AP 또는 현재 이동 연출 단계에 맞춘 표시 AP를 반환한다. */
+	/** @brief 현재 유닛 스냅샷의 실제 이동 AP를 화면용 정수로 반환한다. */
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetDisplayedMovementPoint(const FUnitUI& Unit) const;
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }

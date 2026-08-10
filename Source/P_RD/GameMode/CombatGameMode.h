@@ -23,6 +23,7 @@ class IBoardSelectionTargetView;
 class UCombatUIModel;
 class URewardUIModel;
 class UPlayerUnitModel;
+class UTexture2D;
 class USkillComponentModel;
 class UStaticSkillData;
 struct FSkillDetailUI;
@@ -87,11 +88,7 @@ public:
 	void HandleAbandonRun();
 
 	UFUNCTION()
-	void HandleRetryCombat();
-
-	/** @brief 전투 HUD 상단 가방 버튼에서 공용 인벤토리 패널을 연다. */
-	UFUNCTION()
-	void HandleOpenInventory();
+	void HandleSaveAndExitRun();
 
 protected:
 	/**
@@ -148,6 +145,13 @@ protected:
 
 	/** @brief 이번 전투에서 제거된 적 수. 패배 결과판의 전투 요약에 사용한다. */
 	int32 mDefeatedMonsterCount = 0;
+
+	/**
+	 * @brief 전투 시작 시점의 파티 초상화. 사망 처리로 파티 모델에서 용병이
+	 * 제거된 뒤에도 패배 결과판에는 이번 전투에 참가한 파티를 보여 준다.
+	 */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyPortraits;
 
 	/**
 	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
@@ -254,4 +258,7 @@ private:
 	bool mGoldRewardClaimed = false;
 	bool mExpRewardClaimed = false;
 	TSet<int32> mClaimedRewardChoiceIndices;
+
+	/** @brief 옵션 커밋부터 방 전환까지 이어지는 설정판 런 액션의 중복 요청 방지. */
+	bool mSettingsRunActionPending = false;
 };
