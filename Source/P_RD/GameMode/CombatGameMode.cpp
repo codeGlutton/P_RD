@@ -302,9 +302,9 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGTagEffectEventLog& TagLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Agility))
+		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor))
 		{
-			IconType = EFloatingLogIconType::Agility;
+			IconType = EFloatingLogIconType::Vigor;
 			ColorType = EFloatingLogColorType::Buff;
 		}
 		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification))

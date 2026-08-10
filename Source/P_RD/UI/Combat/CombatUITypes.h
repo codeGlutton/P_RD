@@ -83,7 +83,7 @@ enum class EFloatingLogIconType : uint8
 	Weakness,			// 약화 (디버프)
 	Vulnerability,		// 취약 (디버프)
 	Fortification,		// 요새화 (버프)
-	Agility,			// 신속 (버프)
+	Vigor,				// 활력 (버프)
 
 	Poison,				// 독
 	Fire,				// 화염

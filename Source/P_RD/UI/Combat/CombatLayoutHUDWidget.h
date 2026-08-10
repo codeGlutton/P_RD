@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @brief 배치안 평가용 전투 HUD.
@@ -771,7 +771,7 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconHpRecovery;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetMove;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconGetDefense;
-	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconAgility;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVigor;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;

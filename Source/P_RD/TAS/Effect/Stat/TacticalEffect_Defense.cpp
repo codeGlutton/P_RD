@@ -59,10 +59,15 @@ void UTacticalEffectExecutionCalculation_GetDefense::Execute(const FTacticalEffe
 	const bool IsTargetFortification = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
 	const float TargetFortificationRatio = IsTargetFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification] : 1.f;
 
+	// 손상
+	const bool IsTargetFrail = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail);
+	const float TargetFrailRatio = IsTargetFrail == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail] : 1.f;
+
 	const float TotalDefense =
 		ExecutionParams.GetOwningSpec().GetStackCount() *
 		ExecutionParams.GetOwningSpec().mDynamicMagnitude *
 		TargetFortificationRatio *
+		TargetFrailRatio *
 		SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetDefenseFactorAttribute()];
 	const float DefenseDiff = FMath::Floor(TotalDefense);
 
