@@ -19,6 +19,7 @@
 #include "Components/Image.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ImageUtils.h"
@@ -200,7 +201,8 @@ namespace CombatLayoutCapture
 	 * @param bShowMercenaryPanel 참이면 전투 기본 HUD 대신 보유 용병 탭을 찍는다.
 	 */
 	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError,
-		const bool bShowMercenaryPanel = false)
+		const bool bShowMercenaryPanel = false,
+		const bool bShowInventoryPage = false)
 	{
 		UClass* LayoutClass = LoadClass<UUserWidget>(nullptr, ClassPath);
 		if (LayoutClass == nullptr)
@@ -226,14 +228,16 @@ namespace CombatLayoutCapture
 		// 되돌린다. 변형 상태는 Construct가 끝난 뒤 세워야 캡처에 남는다.
 		if (bShowMercenaryPanel && Layout->WidgetTree != nullptr)
 		{
-			// 용병 패널은 자기 판(WBP_MercenaryPanel)으로 나갔다. HUD 트리에서
-			// 바로 찾으면 안 나오므로 자식 UserWidget 안까지 훑는다.
-			UWidget* MercenaryPanel = Layout->WidgetTree->FindWidget(TEXT("MercenaryPanel"));
-			if (MercenaryPanel == nullptr)
+			auto FindDeep = [Layout](const FName Name) -> UWidget*
 			{
-				Layout->WidgetTree->ForEachWidget([&MercenaryPanel](UWidget* Candidate)
+				if (UWidget* Direct = Layout->WidgetTree->FindWidget(Name))
 				{
-					if (MercenaryPanel != nullptr)
+					return Direct;
+				}
+				UWidget* Found = nullptr;
+				Layout->WidgetTree->ForEachWidget([&Found, Name](UWidget* Candidate)
+				{
+					if (Found != nullptr)
 					{
 						return;
 					}
@@ -241,14 +245,47 @@ namespace CombatLayoutCapture
 					{
 						if (Nested->WidgetTree != nullptr)
 						{
-							MercenaryPanel = Nested->WidgetTree->FindWidget(TEXT("MercenaryPanel"));
+							Found = Nested->WidgetTree->FindWidget(Name);
 						}
 					}
 				});
-			}
+				return Found;
+			};
+			// 용병 패널은 자기 판(WBP_MercenaryPanel)으로 나갔다. HUD 트리에서
+			// 바로 찾으면 안 나오므로 자식 UserWidget 안까지 훑는다.
+			UWidget* MercenaryPanel = FindDeep(TEXT("MercenaryPanel"));
 			if (MercenaryPanel != nullptr)
 			{
 				MercenaryPanel->SetVisibility(ESlateVisibility::Visible);
+			}
+			UWidgetTree* MercenaryTree = MercenaryPanel != nullptr
+				? MercenaryPanel->GetTypedOuter<UWidgetTree>() : nullptr;
+			if (bShowInventoryPage)
+			{
+				// 캡처는 버튼 클릭을 거치지 않고 페이지 가시성만 직접 바꾼다.
+				// 런타임과 같은 최종 화면을 남기도록 제목도 함께 전환한다.
+				if (UTextBlock* Title = Cast<UTextBlock>(MercenaryTree != nullptr
+					? MercenaryTree->FindWidget(TEXT("MercenaryTitleText")) : nullptr))
+				{
+					Title->SetText(NSLOCTEXT("CombatLayoutCapture",
+						"MercenaryInventoryPageTitle", "인벤토리"));
+				}
+				for (const TCHAR* Name : {
+					TEXT("MercDetailSection"), TEXT("MercenaryHeroPortrait"),
+					TEXT("MercenaryDetailName"), TEXT("MercenaryDetailHP"),
+					TEXT("MercenaryDetailAP"), TEXT("MercenaryDetailSpeed") })
+				{
+					if (UWidget* Detail = MercenaryTree != nullptr
+						? MercenaryTree->FindWidget(FName(Name)) : nullptr)
+					{
+						Detail->SetVisibility(ESlateVisibility::Collapsed);
+					}
+				}
+				if (UWidget* Inventory = MercenaryTree != nullptr
+					? MercenaryTree->FindWidget(TEXT("MercenaryInventoryPage")) : nullptr)
+				{
+					Inventory->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				}
 			}
 		}
 		Layout->ForceLayoutPrepass();
@@ -405,7 +442,8 @@ namespace CombatLayoutCapture
 		Stem.RemoveFromEnd(TEXT("_C"));
 		const FString OutputPath = FPaths::Combine(
 			OutputDirectory(), FString::Printf(TEXT("%s%s.png"), *Stem,
-				bShowMercenaryPanel ? TEXT("_Mercenaries") : TEXT("")));
+				bShowInventoryPage ? TEXT("_Inventory")
+					: (bShowMercenaryPanel ? TEXT("_Mercenaries") : TEXT(""))));
 
 		TArray64<uint8> PngData;
 		FImageUtils::PNGCompressImageArray(CaptureWidth, CaptureHeight, Pixels, PngData);
@@ -626,6 +664,11 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 		if (!CaptureLayout(*World, ClassPath, Error, true))
 		{
 			AddError(FString::Printf(TEXT("%s 용병 탭: %s"), ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error, true, true))
+		{
+			AddError(FString::Printf(TEXT("%s 인벤토리 탭: %s"), ClassPath, *Error));
 		}
 	}
 	return true;

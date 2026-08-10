@@ -328,6 +328,7 @@ void USettingsPanelWidget::HandleLanguageKoreanButtonClicked()
 		}
 		SyncText();
 	}
+	UpdateGraphicsSelectionIndicators();
 }
 
 /** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
@@ -343,6 +344,7 @@ void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
 		}
 		SyncText();
 	}
+	UpdateGraphicsSelectionIndicators();
 }
 
 /** @brief 전투 이펙트 표시 체크 상태를 이벤트로 올린다(수신 VFX 시스템 미구현 - 값 전달만). */

@@ -138,8 +138,7 @@ void UCombatLayoutHUDWidget::HandleCombatResultOpenRequested()
 
 	mCombatResultOverlayWidget->ShowDefeatResult(
 		mUIModel->GetCombatResultUI(),
-		FSimpleDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::HandleCombatResultContinueConfirmed),
-		FSimpleDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::HandleCombatResultRetryConfirmed));
+		FSimpleDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::HandleCombatResultContinueConfirmed));
 	mCombatResultOverlayWidget->OpenUI();
 }
 
@@ -185,20 +184,6 @@ void UCombatLayoutHUDWidget::HandleCombatResultContinueConfirmed()
 			mUIModel->RequestAbandonRun();
 		}
 	}));
-}
-
-void UCombatLayoutHUDWidget::HandleCombatResultRetryConfirmed()
-{
-	if (mCombatResultOverlayWidget != nullptr)
-	{
-		mCombatResultOverlayWidget->CloseUI();
-	}
-
-	SetCombatResultViewActive(false, false);
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestRetryCombat();
-	}
 }
 
 void UCombatLayoutHUDWidget::CloseCombatResultCinematic(FSimpleDelegate Callback)

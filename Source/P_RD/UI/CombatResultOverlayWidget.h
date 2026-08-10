@@ -31,8 +31,7 @@ public:
 	void ShowVictoryReward(const FRewardUI& Reward, FSimpleDelegate ConfirmCallback);
 	void ShowDefeatResult(
 		const FCombatResultUI& Result,
-		FSimpleDelegate TitleCallback,
-		FSimpleDelegate RetryCallback);
+		FSimpleDelegate TitleCallback);
 
 protected:
 	virtual void NativeConstruct() override;
@@ -40,7 +39,6 @@ protected:
 
 private:
 	UFUNCTION() void HandleTitleClicked();
-	UFUNCTION() void HandleRetryClicked();
 	void BindButtons();
 	void RefreshWidget();
 
@@ -49,10 +47,8 @@ private:
 	FRewardUI mReward;
 	FCombatResultUI mCombatResult;
 	FSimpleDelegate mTitleCallback;
-	FSimpleDelegate mRetryCallback;
 
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> mTitleButton;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> mRetryButton;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mLocationText;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mRoundText;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mEnemyText;
