@@ -15,7 +15,6 @@
 
 struct FTile;
 class UStaticObstacleSpawnData;
-class UBoardMovementComponentModel;
 struct FPresentationBarrier;
 struct FBoardActorAnimationContext;
 
@@ -69,13 +68,6 @@ public:
 	virtual int32 GetBoardActorLevel() const;
 	UTexture2D* GetBoardActorIcon() const;
 	UTexture2D* GetBoardActorPortrait() const;
-
-public:
-	/**
-	 * @brief 이동 컴포넌트 모델 반환
-	 * @return 이동 컴포넌트 모델 (파생 클래스가 생성 — 미생성이면 nullptr)
-	 */
-	UBoardMovementComponentModel* GetBoardMovementComponentModel() const;
 
 public:
 	/**
@@ -222,10 +214,6 @@ private:
 	FTileTransform mTileTransform = FTileTransform::Invalid;
 
 protected:
-	// @brief 이동 컴포넌트 모델 (유닛/장애물 파생 생성자가 구체 타입으로 생성)
-	UPROPERTY(Category = "BoardActor", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementCompModel"))
-	TObjectPtr<UBoardMovementComponentModel> mMovementCompModel;
-
 	// @brief 초기 스폰 데이터
 	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "StaticSpawnData"))
 	TObjectPtr<UStaticObstacleSpawnData> mStaticSpawnData;

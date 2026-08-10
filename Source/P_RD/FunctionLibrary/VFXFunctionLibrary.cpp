@@ -1,4 +1,4 @@
-﻿#include "FunctionLibrary/VFXFunctionLibrary.h"
+#include "FunctionLibrary/VFXFunctionLibrary.h"
 #include "Components/PrimitiveComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
@@ -116,7 +116,7 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(const FN
 
 bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp, const FVFXTimelineExecutionData& TimelineExecutionData, FVFXTimelineEventTarget EventTarget)
 {
-	if (TimelineComp != nullptr || IsVFXPossible(TimelineComp) == true)
+	if (TimelineComp != nullptr && IsVFXPossible(TimelineComp) == true)
 	{
 		if (TimelineExecutionData.mDirection == ETimelineDirection::Forward)
 		{
@@ -311,11 +311,11 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection_Internal
 		NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			NiagaraSystem,
 			FinalTargetComponent,
-			NAME_None,
-			FinalLocalTransform.GetLocation(),
-			FinalLocalTransform.Rotator(),
-			FinalLocalTransform.GetScale3D(),
-			EAttachLocation::KeepRelativeOffset,
+			SocketName,
+			FinalWorldTransform.GetLocation(),
+			FinalWorldTransform.Rotator(),
+			FinalWorldTransform.GetScale3D(),
+			EAttachLocation::KeepWorldPosition,
 			true,
 			ENCPoolMethod::None
 		);

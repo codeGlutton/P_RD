@@ -24,8 +24,8 @@ struct FPresentationBarrier;
 class USkeletalMeshComponent;
 class UCapsuleComponent;
 class UArrowComponent;
+
 class USkeletonSkillAnimationComponent;
-class UBoardMovementPresentationComponent;
 
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스
@@ -57,18 +57,19 @@ public:
 
 protected:
 	UObjectModel* GetModel_Internal() const override;
+	virtual void OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform);
 
 	/* IBoardCombatTargetView 상속 */
 public:
 	USkillAnimationComponent* GetSkillAnimationComponent() const override;
 	UCombatTargetVFXTimelineComponent* GetCombatTargetVFXTimelineComponent() const override;
+	UBoardMovementPresentationComponent* GetBoardMovementPresentationComponent() const override;
 	UPrimitiveComponent* GetTargetMeshComponent() const override;
 
 public:
 	UCapsuleComponent* GetCapsuleComponent() const;
 	USkeletalMeshComponent* GetMesh() const;
 	UArrowComponent* GetArrowComponent() const;
-	UBoardMovementPresentationComponent* GetBoardMovementPresentationComponent() const;
 
 private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CapsuleComp", AllowPrivateAccess = "true"))
@@ -77,9 +78,6 @@ private:
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> mMeshComp;
 
-	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementPresentationComp", AllowPrivateAccess = "true"))
-	TObjectPtr<UBoardMovementPresentationComponent> mMovementPresentationComp;
-
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ArrowComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UArrowComponent> mArrowComp;
 
@@ -87,6 +85,8 @@ private:
 	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
 	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UCombatTargetVFXTimelineComponent> mCombatTargetVFXTimelineComp;
+	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementPresentationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UBoardMovementPresentationComponent> mMovementPresentationComp;
 
 protected:
 	TWeakObjectPtr<UUnitModel> mUnitModel;

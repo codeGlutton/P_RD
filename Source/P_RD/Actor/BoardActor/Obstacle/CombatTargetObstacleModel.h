@@ -15,6 +15,7 @@
 
 class UAttributeSetComponentModel;
 class USkillComponentModel;
+class UBoardMovementComponentModel;
 
 class UCombatTargetAttributeSet;
 
@@ -40,6 +41,7 @@ public:
 public:
 	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
 	USkillComponentModel* GetSkillComponentModel() const override;
+	UBoardMovementComponentModel* GetBoardMovementComponentModel() const override;
 
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
@@ -57,6 +59,9 @@ private:
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillCompModel"))
 	TObjectPtr<USkillComponentModel> mSkillCompModel;
+
+	UPROPERTY(Category = Movement, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "MovementCompModel"))
+	TObjectPtr<UBoardMovementComponentModel> mMovementCompModel;
 
 private:
 	/** @brief 난이도 스케일 AttributeSet */

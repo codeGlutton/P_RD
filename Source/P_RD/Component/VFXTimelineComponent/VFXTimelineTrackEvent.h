@@ -12,7 +12,7 @@
 
 class UNiagaraComponent;
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EVFXTimelineSyncTarget : uint8
 {
 	None = 0							UMETA(Hidden),

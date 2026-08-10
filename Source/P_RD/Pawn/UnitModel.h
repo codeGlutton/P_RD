@@ -19,6 +19,7 @@
 
 class UAttributeSetComponentModel;
 class UUnitSkillComponentModel;
+class UUnitMovementComponentModel;
 class UPassiveComponentModel;
 
 /**
@@ -50,6 +51,7 @@ public:
 public:
 	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
 	USkillComponentModel* GetSkillComponentModel() const override;
+	UBoardMovementComponentModel* GetBoardMovementComponentModel() const override;
 
 public:
 	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
@@ -81,6 +83,8 @@ private:
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillCompModel"))
 	TObjectPtr<UUnitSkillComponentModel> mSkillCompModel;
 
+	UPROPERTY(Category = Movement, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "MovementCompModel"))
+	TObjectPtr<UUnitMovementComponentModel> mMovementCompModel;
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
 	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
 

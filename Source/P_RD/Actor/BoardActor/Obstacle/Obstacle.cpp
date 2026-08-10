@@ -45,7 +45,6 @@ void AObstacle::BindModel(UObjectModel* Model)
 	{
 		// 위치 가져오기 구독
 		mObstacleModel->OnGetBoardActorWorldTransform.BindUObject(this, &AObstacle::GetActorTransform);
-
 		// 초기 배치 연출 요청 구독
 		mObstacleModel->OnPlaceTileTransform.AddUObject(this, &AObstacle::OnPlaceTileTransform);
 	}
@@ -70,11 +69,11 @@ UObjectModel* AObstacle::GetModel_Internal() const
 
 void AObstacle::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
 {
-	FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
-	FTransform UnitTransform = Transform;
-	UnitTransform.SetLocation(UnitLocation);
+	FVector ObstacleLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FTransform ObstacleTransform = Transform;
+	ObstacleTransform.SetLocation(ObstacleLocation);
 
-	SetActorTransform(UnitTransform);
+	SetActorTransform(ObstacleTransform);
 }
 
 UCapsuleComponent* AObstacle::GetCapsuleComponent() const

@@ -39,6 +39,7 @@ public:
 public:
 	USkillAnimationComponent* GetSkillAnimationComponent() const override;
 	UCombatTargetVFXTimelineComponent* GetCombatTargetVFXTimelineComponent() const override;
+	UBoardMovementPresentationComponent* GetBoardMovementPresentationComponent() const override;
 
 	UPrimitiveComponent* GetTargetMeshComponent() const override;
 
@@ -47,8 +48,10 @@ public:
 	bool IsSelectable() const override;
 
 protected:
-	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineComp", AllowPrivateAccess = "true"))
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UCombatTargetVFXTimelineComponent> mCombatTargetVFXTimelineComp;
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MovementPresentationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UBoardMovementPresentationComponent> mMovementPresentationComp;
 
 protected:
 	TWeakObjectPtr<UCombatTargetObstacleModel> mCombatTargetObstacleModel;
@@ -74,10 +77,11 @@ public:
 	UStaticMeshComponent* GetMesh() const;
 
 private:
-	UPROPERTY(Category = Unit, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
-	TObjectPtr<UStaticMeshSkillAnimationComponent> mSkillAnimationComp;
 	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> mMeshComp;
+
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshSkillAnimationComponent> mSkillAnimationComp;
 };
 
 /**
@@ -100,9 +104,10 @@ public:
 	USkeletalMeshComponent* GetMesh() const;
 
 private:
-	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
-	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
 	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MeshComp", AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> mMeshComp;
+
+	UPROPERTY(Category = Obstacle, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillAnimationComp", AllowPrivateAccess = "true"))
+	TObjectPtr<USkeletonSkillAnimationComponent> mSkillAnimationComp;
 };
 

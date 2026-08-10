@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   BoardMovementPresentationComponent.cpp
  * @brief  보드 액터 이동 연출 컴포넌트 구현 파일
  * @author 이문환
@@ -28,9 +28,6 @@ void UBoardMovementPresentationComponent::BindOwnerModel(UObjectModel* Model)
 		return;
 	}
 
-	// 초기 배치 연출 요청 구독
-	mBoardActorModel->OnPlaceTileTransform.AddUObject(this, &UBoardMovementPresentationComponent::OnPlaceTileTransform);
-
 	// 이동 경로 통지 구독 (코너링을 포함한 폴리라인 생성용)
 	mBoardActorModel->OnStartMovePath.AddUObject(this, &UBoardMovementPresentationComponent::OnStartMovePath);
 	// 이동 연출 요청 구독
@@ -43,7 +40,6 @@ void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
 {
 	if (mBoardActorModel.IsValid())
 	{
-		mBoardActorModel->OnPlaceTileTransform.RemoveAll(this);
 		mBoardActorModel->OnStartMovePath.RemoveAll(this);
 		mBoardActorModel->OnStartMoveStep.RemoveAll(this);
 		mBoardActorModel->OnRotate.RemoveAll(this);
@@ -59,22 +55,6 @@ void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
 	mCurrentMoveVelocity = FVector::ZeroVector;
 	// 이동 중 해제될 수 있으므로 폴리라인 이동상태도 초기화
 	ResetPolyLineState();
-}
-
-void UBoardMovementPresentationComponent::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
-{
-	AActor* Owner = GetOwner();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	// 타일 트랜스폼은 바닥 기준이므로 액터 중심을 바닥 오프셋만큼 올려서 세움
-	FVector OwnerLocation = Transform.GetLocation() + FVector(0.f, 0.f, mGroundZOffset);
-	FTransform OwnerTransform = Transform;
-	OwnerTransform.SetLocation(OwnerLocation);
-
-	Owner->SetActorTransform(OwnerTransform);
 }
 
 void UBoardMovementPresentationComponent::OnStartMovePath(const TArray<FVector>& PathWorldLocations)

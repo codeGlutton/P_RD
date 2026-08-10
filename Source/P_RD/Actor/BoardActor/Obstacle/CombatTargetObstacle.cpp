@@ -8,10 +8,12 @@
 #include "Component/SkillAnimationComponent/StaticMeshSkillAnimationComponent.h"
 #include "Component/SkillAnimationComponent/SkeletonSkillAnimationComponent.h"
 #include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
+#include "Component/BoardMovementComponent/BoardMovementPresentationComponent.h"
 
 ACombatTargetObstacle::ACombatTargetObstacle()
 {
 	mCombatTargetVFXTimelineComp = CreateDefaultSubobject<UCombatTargetVFXTimelineComponent>(TEXT("CombatTargetVFXTimelineComp"));
+	mMovementPresentationComp = CreateDefaultSubobject<UBoardMovementPresentationComponent>(TEXT("MovementPresentationComp"));
 }
 
 void ACombatTargetObstacle::BindModel(UObjectModel* Model)
@@ -34,6 +36,11 @@ USkillAnimationComponent* ACombatTargetObstacle::GetSkillAnimationComponent() co
 UCombatTargetVFXTimelineComponent* ACombatTargetObstacle::GetCombatTargetVFXTimelineComponent() const
 {
 	return mCombatTargetVFXTimelineComp;
+}
+
+UBoardMovementPresentationComponent* ACombatTargetObstacle::GetBoardMovementPresentationComponent() const
+{
+	return mMovementPresentationComp;
 }
 
 UPrimitiveComponent* ACombatTargetObstacle::GetTargetMeshComponent() const

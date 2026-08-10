@@ -20,10 +20,10 @@ AUnit::AUnit()
 
 	mCapsuleComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComp"));
 	mMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
-	mMovementPresentationComp = CreateDefaultSubobject<UBoardMovementPresentationComponent>(TEXT("MovementPresentationComp"));
 	mArrowComp = CreateDefaultSubobject<UArrowComponent>(TEXT("ArrowComp"));
 	mSkillAnimationComp = CreateDefaultSubobject<USkeletonSkillAnimationComponent>(TEXT("SkillAnimationComp"));
 	mCombatTargetVFXTimelineComp = CreateDefaultSubobject<UCombatTargetVFXTimelineComponent>(TEXT("CombatTargetVFXTimelineComp"));
+	mMovementPresentationComp = CreateDefaultSubobject<UBoardMovementPresentationComponent>(TEXT("MovementPresentationComp"));
 
 	if (mCapsuleComp != nullptr)
 	{
@@ -84,6 +84,8 @@ void AUnit::BindModel(UObjectModel* Model)
 	{
 		// 위치 가져오기 구독
 		mUnitModel->OnGetBoardActorWorldTransform.BindUObject(this, &AUnit::GetActorTransform);
+		// 초기 배치 연출 요청 구독
+		mUnitModel->OnPlaceTileTransform.AddUObject(this, &AUnit::OnPlaceTileTransform);
 	}
 }
 
@@ -105,6 +107,15 @@ UObjectModel* AUnit::GetModel_Internal() const
 	return mUnitModel.Get();
 }
 
+void AUnit::OnPlaceTileTransform(const FTileTransform& TileTransform, const FTransform& Transform)
+{
+	FVector UnitLocation = Transform.GetLocation() + FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
+	FTransform UnitTransform = Transform;
+	UnitTransform.SetLocation(UnitLocation);
+
+	SetActorTransform(UnitTransform);
+}
+
 USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
 {
 	return mSkillAnimationComp;
@@ -113,6 +124,11 @@ USkillAnimationComponent* AUnit::GetSkillAnimationComponent() const
 UCombatTargetVFXTimelineComponent* AUnit::GetCombatTargetVFXTimelineComponent() const
 {
 	return mCombatTargetVFXTimelineComp;
+}
+
+UBoardMovementPresentationComponent* AUnit::GetBoardMovementPresentationComponent() const
+{
+	return mMovementPresentationComp;
 }
 
 UPrimitiveComponent* AUnit::GetTargetMeshComponent() const
@@ -143,7 +159,4 @@ UArrowComponent* AUnit::GetArrowComponent() const
 	return mArrowComp;
 }
 
-UBoardMovementPresentationComponent* AUnit::GetBoardMovementPresentationComponent() const
-{
-	return mMovementPresentationComp;
-}
+

@@ -3,6 +3,7 @@
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
@@ -11,8 +12,9 @@
 
 UCombatTargetObstacleModel::UCombatTargetObstacleModel() : mTeamId(EGameTeamType::AllNeutral)
 {
-	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeCompModel"));
-	mSkillCompModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillCompModel"));
+	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
+	mSkillCompModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComponentModel"));
+	mMovementCompModel = CreateDefaultSubobject<UBoardMovementComponentModel>(TEXT("BoardMovementComponentModel"));
 	mCombatTargetAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("CombatTargetAttributeSet"));
 
 	mTileLayerFlags = StaticCast<int32>(ETileLayerFlag::Obstacle);
@@ -56,6 +58,11 @@ UAttributeSetComponentModel* UCombatTargetObstacleModel::GetAttributeComponentMo
 USkillComponentModel* UCombatTargetObstacleModel::GetSkillComponentModel() const
 {
 	return mSkillCompModel;
+}
+
+UBoardMovementComponentModel* UCombatTargetObstacleModel::GetBoardMovementComponentModel() const
+{
+	return mMovementCompModel;
 }
 
 void UCombatTargetObstacleModel::SetGenericTeamId(const FGenericTeamId& TeamID)
