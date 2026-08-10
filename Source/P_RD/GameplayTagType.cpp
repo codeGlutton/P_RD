@@ -106,6 +106,7 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness,		"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion,		"GameplayEffect.StatusEffect.TurnDuration.Debuff.Exhaustion");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Slow,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Slow");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Root,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Root");
 }
 
