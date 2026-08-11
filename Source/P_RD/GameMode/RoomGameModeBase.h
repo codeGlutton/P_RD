@@ -35,6 +35,7 @@ public:
 public:
 	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 
 protected:
 	void InitializeCommonRoom() override;

@@ -51,6 +51,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSaveAndExitRun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveAndExitCompleted, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbandonRunCompleted, bool, bSuccess);
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeFocusScreenAnchor, const FVector2D& /*ScreenRatio*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
@@ -124,6 +125,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
 	FOnSaveAndExitRun OnSaveAndExitRun;
 
+	FOnChangeFocusScreenAnchor OnChangeFocusScreenAnchor;
+
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
 	/** @brief SkillIndex를 그대로 게임플레이에 전달한다. UI는 스킬 객체를 직접 들고 있지 않는다. */
@@ -189,8 +192,8 @@ public:
 	 * 자리**다(0807 합의). 카드가 화면 어디에 있는지는 UI 만 알므로 UI 가
 	 * 비율로 알려 주고, 카메라를 옮기는 게임플레이는 이 값을 읽기만 한다.
 	 */
-	void SetFocusScreenAnchor(const FVector2D& AnchorFraction) { mFocusScreenAnchor = AnchorFraction; }
-	const FVector2D& GetFocusScreenAnchor() const { return mFocusScreenAnchor; }
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void SetFocusScreenAnchor(FVector2D AnchorFraction);
+	
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
 
