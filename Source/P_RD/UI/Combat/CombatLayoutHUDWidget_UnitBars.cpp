@@ -36,14 +36,9 @@ namespace
 	constexpr float UnitHpBarPlateWidth = 360.0f;
 	constexpr float UnitHpBarPlateHeight = 68.0f;
 
-	// HP 숫자 줄 시작(채움 묶음 위에서부터, px).
-	// 백플레이트 개구는 세로 15..53(그어 둔 칸 실측), 38pt 숫자 잉크는 37px에
-	// 윗공백 9.6px — 가운데 정렬은 줄 상자(57px)가 개구보다 커서 못 쓰고,
-	// 위 정렬에 이 여백을 줘 잉크를 개구 한가운데(34) 에 놓는다.
-	constexpr float UnitHpBarValueTextPadTop = -2.0f;
-
-	// HP 숫자 폰트 크기(WBP 디자인 좌표 기준 — 렌더 스케일이 곱해져 화면에 보임). 크게 해서 바를 꽉 채운다.
-	constexpr float UnitHpBarValueFontSize = 38.0f;
+	// HP 숫자 폰트 크기(WBP 디자인 좌표 기준 — 렌더 스케일이 곱해져 화면에 보임).
+	// 38pt는 숫자 줄의 하단이 백플레이트 개구 밖으로 잘려 32pt로 낮춘다.
+	constexpr float UnitHpBarValueFontSize = 32.0f;
 
 	// 모바일에서는 한 유닛당 세 개를 크게 보여 주고 나머지는 +N으로 압축한다.
 	// 활성 개수에 맞춰 매 프레임 가운데 정렬하므로 상태 하나가 HP바 왼쪽에 떨어지지 않는다.
@@ -275,12 +270,12 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 				// 글자가 Overlay로 감싸져 캔버스 슬롯이 없다. 감싼 판이 이미
 				// 채움 바 자리를 쥐고 있으니, 사이 여백만 지워 같은 결과를 낸다.
 				SpreadTextInWrappers(NewBar.mValueText);
-				// 세로는 가운데 정렬 대신 위 정렬 + 실측 여백. 38pt 줄 상자가
-				// 묶음(53px)보다 커서 가운데 정렬은 조용히 위에 붙고 바닥이 잘렸다.
+				// 숫자 줄은 채움 바 영역 안에서 세로 중앙을 사용한다. 이전 위 정렬
+				// 보정은 글자가 HP바의 정중앙보다 위로 붙는 원인이 됐다.
 				if (UOverlaySlot* ValueTextSlot = Cast<UOverlaySlot>(NewBar.mValueText->Slot))
 				{
-					ValueTextSlot->SetVerticalAlignment(VAlign_Top);
-					ValueTextSlot->SetPadding(FMargin(0.0f, UnitHpBarValueTextPadTop, 0.0f, 0.0f));
+					ValueTextSlot->SetVerticalAlignment(VAlign_Center);
+					ValueTextSlot->SetPadding(FMargin(0.0f));
 				}
 			}
 		}
@@ -304,12 +299,12 @@ void UCombatLayoutHUDWidget::RebuildUnitHpBars()
 							// 글로우는 백플레이트 실루엣(1958x370)에 32px 헤일로를
 							// 두른 텍스처(2022x434)다. 판(360x68)과 같은 배율로 놓으면
 							// 판 가장자리에서 실루엣 모양 그대로 빛이 배어 나온다.
-							// (헤일로 폭은 모바일 가시성 피드백으로 한 번 키웠다 -- 0811)
+							// 버프/디버프 효과가 읽히되 HP바 실루엣을 과하게 넘지 않게 둔다.
 							GlowSlot->SetAnchors(FAnchors(0.0f, 0.0f));
 							GlowSlot->SetAlignment(FVector2D(0.5f, 0.5f));
 							GlowSlot->SetPosition(FVector2D(
 								UnitHpBarPlateWidth * 0.5f, UnitHpBarPlateHeight * 0.5f));
-							GlowSlot->SetSize(FVector2D(372.0f, 80.0f));
+							GlowSlot->SetSize(FVector2D(396.0f, 88.0f));
 							GlowSlot->SetAutoSize(false);
 							GlowSlot->SetZOrder(-1);
 						}
