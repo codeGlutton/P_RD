@@ -233,14 +233,6 @@ void UFrontendMapNodeWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	// WBP의 구형 사각 NodeFrame은 텍스트형 노드용 배경이다. 현재 노드는
-	// 타입 아이콘과 상태 링이 전체 외형을 담당하므로 이 프레임을 남기면
-	// 투명 아이콘 뒤로 회색 사각형이 비친다.
-	if (UWidget* LegacyNodeFrame = GetWidgetFromName(TEXT("NodeFrame")))
-	{
-		LegacyNodeFrame->SetVisibility(ESlateVisibility::Collapsed);
-	}
-
 	if (NodeButton != nullptr)
 	{
 		// 타입 아이콘과 상태 링 자체가 노드의 전체 외형이다. UButton 기본

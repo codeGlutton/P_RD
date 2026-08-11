@@ -24,10 +24,46 @@
 #include "Misc/Paths.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintEditorUtils.h"
 
 namespace SettingsPanelWidgetBuilder
 {
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+
+	void RemoveWidget(UWidgetBlueprint* Blueprint, const FName Name)
+	{
+		if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(Name))
+		{
+			FWidgetBlueprintEditorUtils::DeleteWidgets(
+				Blueprint, { Widget },
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
+	}
+
+	void PruneStaleVariables(UWidgetBlueprint* Blueprint)
+	{
+		TSet<FName> LiveNames;
+		Blueprint->WidgetTree->ForEachWidget([&LiveNames](UWidget* Widget)
+		{
+			if (Widget != nullptr)
+			{
+				LiveNames.Add(Widget->GetFName());
+			}
+		});
+
+		TArray<FName> StaleNames;
+		for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
+		{
+			if (!LiveNames.Contains(Entry.Key))
+			{
+				StaleNames.Add(Entry.Key);
+			}
+		}
+		for (const FName Name : StaleNames)
+		{
+			Blueprint->OnVariableRemoved(Name);
+		}
+	}
 
 	void LogPhase(const TCHAR* Phase)
 	{
@@ -675,14 +711,18 @@ namespace SettingsPanelWidgetBuilder
 			FVector2D(665.f, 700.f), FVector2D(600.f, 70.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 
-		// The retired mockup-only rows stay in the tree for compatibility but cannot
-		// accidentally reappear in the functional settings composition.
-		for (const TCHAR* Name : { TEXT("BrightnessRow_Label_Center"),
-			TEXT("FastModeRow_Label_Center"), TEXT("SkipAnimationRow_Label_Center"),
-			TEXT("AutoEndTurnRow_Label_Center"), TEXT("CreditsOpenButtonText_Center"),
-			TEXT("LicenseOpenButtonText_Center") })
+		for (const TCHAR* Name : {
+			TEXT("BrightnessRow_Label"), TEXT("BrightnessRow_Label_Center"),
+			TEXT("FastModeRow_Label"), TEXT("FastModeRow_Label_Center"),
+			TEXT("SkipAnimationRow_Label"), TEXT("SkipAnimationRow_Label_Center"),
+			TEXT("AutoEndTurnRow_Label"), TEXT("AutoEndTurnRow_Label_Center"),
+			TEXT("InfoSectionHeader"), TEXT("InfoSectionHeader_Center"),
+			TEXT("CreditsRow_Label"), TEXT("CreditsRow_Label_Center"),
+			TEXT("LicenseRow_Label"), TEXT("LicenseRow_Label_Center"),
+			TEXT("CreditsOpenButtonText"), TEXT("CreditsOpenButtonText_Center"),
+			TEXT("LicenseOpenButtonText"), TEXT("LicenseOpenButtonText_Center") })
 		{
-			CollapseNamed(Blueprint, Name);
+			RemoveWidget(Blueprint, Name);
 		}
 
 		struct FTextFitSpec
@@ -938,6 +978,7 @@ namespace SettingsPanelWidgetBuilder
 		});
 		LogPhase(TEXT("guids"));
 
+		PruneStaleVariables(Blueprint);
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
 		LogPhase(TEXT("compile-begin"));
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);

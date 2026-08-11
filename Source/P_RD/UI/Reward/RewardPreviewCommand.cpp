@@ -9,7 +9,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/IConsoleManager.h"
-#include "UI/Reward/MockRewardDriver.h"
+#include "UI/Reward/RewardPreviewResponder.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUITypes.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
@@ -23,7 +23,7 @@ namespace RewardPreview
 		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C");
 
 	TWeakObjectPtr<URewardSettlementWidgetBase> ShownWidget;
-	TStrongObjectPtr<UMockRewardDriver> PreviewDriver;
+	TStrongObjectPtr<URewardPreviewResponder> PreviewDriver;
 
 	void ReleasePreviewDriver()
 	{
@@ -155,8 +155,8 @@ namespace RewardPreview
 
 		// 저장/PartyModel을 건드리지 않고 눌린 행을 즉시 성공 처리해
 		// 실제 claim 완료 상태와 닫기 버튼까지 프리뷰할 수 있게 한다.
-		PreviewDriver.Reset(NewObject<UMockRewardDriver>(GetTransientPackage()));
-		PreviewDriver->BindAutoConfirm(Model);
+		PreviewDriver.Reset(NewObject<URewardPreviewResponder>(GetTransientPackage()));
+		PreviewDriver->Bind(Model);
 		PreviewDriver->SetOnPreviewClosed(
 			FSimpleDelegate::CreateStatic(&ReleasePreviewDriver));
 

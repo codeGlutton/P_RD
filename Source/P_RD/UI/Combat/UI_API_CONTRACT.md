@@ -1,14 +1,13 @@
 # 전투 UI ↔ 게임플레이 API 계약
 
-> 작성: 박용수(UI) · 기준 코드: `UCombatUIModel` / `CombatUITypes.h`
-> 회의(2026-06-15) 합의 = **데이터/비주얼 분리 + MVVM**. UI는 게임플레이 객체(`UUnitData`/`ATileMap`…)를 **직접 알지 않고**, 이 문서의 뷰 타입과 `UCombatUIModel` 계약만으로 동작한다.
+> 기준 코드: `UCombatUIModel` / `CombatUITypes.h`
 
 전투 UI와 게임플레이는 **`UCombatUIModel` 한 곳**에서만 만난다. 권장 소유 위치는 `USRPGCombatSubsystem`(전투 수명)이며, 실제 HUD 배선은 후속 PR에서 붙인다.
 
 원칙 3줄:
 - **UI는 상태·RNG가 없다.** 진실은 게임플레이. UI는 VM의 캐시를 읽어 그리기만.
 - **UI는 행동을 실행하지 않는다.** 탭/터치는 "의도"만 보내고(`Request*`), 게임플레이가 입력 델리게이트를 구독해 실제 처리.
-- **게임플레이가 리팩토링돼도 이 계약만 지키면 UI는 무수정.** 게임플레이 미연결 시 `MockCombatDriver`가 같은 `Set*`로 가짜 데이터를 밀어 UI 선개발 가능.
+- **게임플레이가 리팩토링돼도 이 계약만 지키면 UI는 무수정.** 프리뷰와 테스트도 별도 자동 Mock 없이 같은 `Set*` 계약으로 필요한 상태를 명시적으로 넣는다.
 
 ---
 
@@ -45,13 +44,13 @@
 | 스킬 선택 | `RequestSelectSkill(SkillIndex)` | `OnCombatCommand(SelectSkill, idx)` | SkillIndex |
 | 이동 모드 | `RequestMove()` | `OnCombatCommand(Move, INDEX_NONE)` | 없음 |
 | 턴 종료 | `RequestEndTurn()` | `OnCombatCommand(EndTurn, INDEX_NONE)` | 없음 |
-| 취소(딴 데 탭) | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
+| 명시적 취소 버튼 | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
 | 스킬 상세 | `RequestLongPressSkill(SkillIndex)` | `OnCombatCommand(LongPressSkill, idx)` | SkillIndex |
 | 적 정보 | `RequestLongPressUnit(UnitId)` | `OnCombatCommand(LongPressUnit, id)` | UnitId |
 | 장비 상세 | `RequestLongPressEquip(SlotIndex)` | `OnCombatCommand(LongPressEquip, idx)` | SlotIndex |
-| **월드 터치**(타일/유닛/취소) | `RequestWorldTouch(ScreenPos, bLongPress)` | `OnCombatWorldTouch(ScreenPos, bLongPress)` | 스크린 좌표 + 롱프레스 여부 |
+| **월드 터치**(타일/유닛) | `RequestWorldTouch(ScreenPos, bLongPress)` | `OnCombatWorldTouch(ScreenPos, bLongPress)` | 스크린 좌표 + 롱프레스 여부 |
 
-> 월드 터치 해석(스크린→타일)은 게임플레이가 수행: `DeprojectScreenPositionToWorld` → 타일맵 평면 교차 → `ATileMap::WorldToTileIndex` + `IsValidIndex`(맵 밖이면 취소). UI는 스크린 좌표만 넘긴다.
+> 월드 터치 해석(스크린→타일)은 게임플레이가 수행한다. 유효하지 않은 타일을 눌러도 현재 스킬 선택은 유지하며, 취소는 명시적 취소 입력에서만 처리한다.
 
 ---
 
@@ -62,7 +61,7 @@
 
 ---
 
-## D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지
+## D. 게임플레이 연결 지점 — 무엇을 어디에 물릴지
 현재는 비GAS **임시 어댑터**(`UCombatUIAdapter`)가 A의 `Set*`를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:
 
 - **유닛/메타/턴 값**(A) ← `UUnitData`(GAS 폐기 후 일반 런타임 데이터)·`URunPersistData`. 현재 HP/Gold는 플레이스홀더.

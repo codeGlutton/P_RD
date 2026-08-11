@@ -167,10 +167,9 @@ protected:
 	virtual bool ShouldRemoveFromParentOnClose() const;
 
 	/**
-	 * @brief 이 위젯의 버튼에 공용 누름 효과(어둡게+축소)를 적용할지 여부. 기본 false.
-	 * @details 전역으로 켜면 전투 HUD처럼 버튼의 렌더 스케일/배경색을 스스로 애니메이션하는
-	 *          화면과 충돌한다. 그래서 기본 off로 두고, 타이틀/클래스 선택 같은
-	 *          프론트엔드 화면만 override로 켠다.
+	 * @brief 이 위젯의 버튼에 공용 누름 효과(어둡게+축소)를 적용할지 여부. 기본 true.
+	 * @details 모든 화면에서 동일한 눌림 피드백을 보장한다. 특수 화면만 필요하면
+	 *          override로 끌 수 있다.
 	 */
 	virtual bool ShouldApplyButtonFeedback() const;
 
@@ -185,9 +184,8 @@ private:
 
 	/**
 	 * @brief 버튼과 짝지어진 "보이는" 동반 위젯(프레임 이미지/텍스트)을 이름 규칙으로 찾는다.
-	 * @details 타이틀처럼 버튼이 투명 히트영역이고 실제 시각요소가 같은 위치의 형제 위젯인 경우를 위해서다.
-	 *          규칙: 버튼명 "<Base>__<Profile>" 에 대해, 같은 트리에서 "<Base>...__<Profile>"로 시작/끝나는 Image/Text 형제.
-	 *          접미사(__프로필)가 없으면 버튼명으로 시작하는 Image/Text를 짝으로 본다. 없으면 빈 배열(무해).
+	 * @details 투명 히트영역과 실제 프레임이 형제인 경우를 위해서다.
+	 *          규칙: "<Base>Button<Suffix>"에 대해 "<Base>...<Suffix>" Image/Text를 짝으로 본다.
 	 */
 	void CollectButtonCompanions(const UButton* Button, TArray<UWidget*>& OutCompanions) const;
 

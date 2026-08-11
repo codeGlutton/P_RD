@@ -4,6 +4,7 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
+#include "Brushes/SlateColorBrush.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
 #include "UObject/ConstructorHelpers.h"
@@ -188,15 +189,16 @@ bool URDUserWidget::ShouldRemoveFromParentOnClose() const
 
 bool URDUserWidget::ShouldApplyButtonFeedback() const
 {
-	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투 HUD에는 걸지 않는다).
-	return false;
+	// 모든 화면에서 눌렀다는 감각을 동일하게 준다. 전투 HUD가 별도 대상으로
+	// 거는 피드백과도 같은 배율 계열이라, 버튼과 외형이 나뉜 경우 서로 보완한다.
+	return true;
 }
 
 void URDUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
+	// 클릭 사운드와 시각 피드백을 모든 화면의 모든 버튼에 공통 적용한다.
 	SetupCommonButtonFeedback();
 }
 
@@ -244,15 +246,37 @@ void URDUserWidget::SetupCommonButtonFeedback()
 						&& Hovered.TintColor.GetSpecifiedColor().A <= 0.01f);
 				if (bHoverInvisible)
 				{
-					FSlateBrush HoverBrush;
-					HoverBrush.TintColor = FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.12f));
-					Style.SetHovered(HoverBrush);
+					// 리소스 없는 일반 FSlateBrush는 Tint만 줘도 안 그려질 수 있다.
+					// 색 브러시를 써서 설정 아이콘 같은 투명 히트영역도 확실히 밝힌다.
+					Style.SetHovered(FSlateColorBrush(
+						FLinearColor(1.0f, 0.94f, 0.72f, 0.18f)));
+				}
+
+				const FSlateBrush& PressedBrush = Style.Pressed;
+				const bool bPressedInvisible =
+					PressedBrush.DrawAs == ESlateBrushDrawType::NoDrawType
+					|| (PressedBrush.GetResourceObject() == nullptr
+						&& PressedBrush.TintColor.GetSpecifiedColor().A <= 0.01f);
+				if (bPressedInvisible)
+				{
+					Style.SetPressed(FSlateColorBrush(
+						FLinearColor(0.03f, 0.015f, 0.005f, 0.30f)));
+				}
+				else
+				{
+					FSlateBrush DarkPressed = PressedBrush;
+					FLinearColor Tint = DarkPressed.TintColor.GetSpecifiedColor();
+					Tint.R *= 0.72f;
+					Tint.G *= 0.72f;
+					Tint.B *= 0.72f;
+					DarkPressed.TintColor = FSlateColor(Tint);
+					Style.SetPressed(DarkPressed);
 				}
 
 				Button->SetStyle(Style);
 			}
 
-			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투 HUD에는 걸지 않는다.
+			// 누름 시각 피드백은 기본적으로 전 화면에 적용한다.
 			if (bApplyPressVisual == false)
 			{
 				return;
@@ -276,7 +300,8 @@ void URDUserWidget::CollectButtonCompanions(const UButton* Button, TArray<UWidge
 		return;
 	}
 
-	// 버튼명을 "<Base>__<Profile>"로 보고 Base/접미사를 분리한다(접미사 없으면 Base=전체, 접미사="").
+	// 버튼명을 "<Base>Button<Suffix>"로 보고 외형 형제의 공통 Base/Suffix를
+	// 얻는다. PartySlotButton_0 → PartySlot..._0 같은 구조도 함께 잡힌다.
 	const FString FullName = Button->GetName();
 	FString Base = FullName;
 	FString Suffix;
@@ -285,6 +310,12 @@ void URDUserWidget::CollectButtonCompanions(const UButton* Button, TArray<UWidge
 	{
 		Base = FullName.Left(ProfileSep);       // 예: "StartButton"
 		Suffix = FullName.Mid(ProfileSep);      // 예: "__base_16_9"
+	}
+	const int32 ButtonWord = Base.Find(TEXT("Button"), ESearchCase::CaseSensitive);
+	if (ButtonWord != INDEX_NONE)
+	{
+		Suffix = Base.Mid(ButtonWord + 6) + Suffix;
+		Base = Base.Left(ButtonWord);
 	}
 
 	// 같은 트리에서 Base로 시작 + 같은 접미사로 끝나는 Image/Text 형제를 짝으로 모은다.

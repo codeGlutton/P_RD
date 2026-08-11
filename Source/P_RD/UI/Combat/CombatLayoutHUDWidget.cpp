@@ -18,7 +18,6 @@
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/SettingsPanelWidget.h"
-#include "UI/Combat/MockCombatDriver.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UI/Reward/RewardUIModel.h"
@@ -301,7 +300,6 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 
 	CacheAuthoredWidgets();
 	WireCommands();
-	StartPreviewIfUnbound();
 	// 실제 전투에서는 모델이 이미 채워진 뒤에 붙으므로, 붙자마자 한 번 그린다.
 	// BindUIModel의 All 갱신은 위젯을 찾기 전에 올 수도 있다.
 	NativeOnUIRefreshed(ECombatUIDomain::All);
@@ -405,6 +403,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		FTurnSlotWidgets& Widgets = mTurnSlots[Index];
 		const FString Suffix = FString::Printf(TEXT("_%d"), Index);
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("TurnToken") + Suffix);
+		Widgets.Button = Find<UButton>(WidgetTree, TEXT("TurnTokenButton") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("TurnPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("TurnName") + Suffix);
 		Widgets.SpeedIcon = Find<UWidget>(WidgetTree, TEXT("TurnSpeedIcon") + Suffix);
@@ -442,12 +441,15 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			FString::Printf(TEXT("EnemyAPPipUsed_%d"), Index)));
 	}
 	mEnemyStatusFrames.Reset();
+	mEnemyStatusButtons.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		mEnemyStatusFrames.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("EnemyStatusFrame_%d"), Index)));
+		mEnemyStatusButtons.Add(Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusButton_%d"), Index)));
 		mEnemyStatusIcons.Add(Find<UImage>(WidgetTree,
 			FString::Printf(TEXT("EnemyStatusIcon_%d"), Index)));
 		mEnemyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
@@ -462,12 +464,15 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	mAllyStatusFrames.Reset();
+	mAllyStatusButtons.Reset();
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		mAllyStatusFrames.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("AllyStatusFrame_%d"), Index)));
+		mAllyStatusButtons.Add(Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusButton_%d"), Index)));
 		mAllyStatusIcons.Add(Find<UImage>(WidgetTree,
 			FString::Printf(TEXT("AllyStatusIcon_%d"), Index)));
 		mAllyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
@@ -536,7 +541,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
-	mTurnAPRoot = Find<UWidget>(WidgetTree, TEXT("TurnAPScale"));
+	mTurnAPRoot = Find<UWidget>(WidgetTree, TEXT("TurnAPPanel"));
 	mTurnAPText = Find<UTextBlock>(WidgetTree, TEXT("TurnAPText"));
 	mTurnAPPips.Reset();
 	mTurnAPPipsUsed.Reset();
@@ -630,54 +635,6 @@ void UCombatLayoutHUDWidget::EnsureMercenaryRosterShell()
 		mMercenaryRosterShellImage->SetBrushFromTexture(Texture, false);
 	}
 
-	// 새 셸에 이미 구워진 판들만 걷는다. 실제 정보/입력 위젯은 남겨 둔다.
-	static const TCHAR* const LegacyPlateNames[] = {
-		TEXT("MercenaryScrim"),
-		TEXT("MercenaryHeaderPlate"),
-		TEXT("MercenaryBoardPlate"),
-		TEXT("MercenaryBoardShadow"),
-		TEXT("MercenaryBoardInner"),
-		TEXT("MercenaryClosePlate"),
-	};
-	for (const TCHAR* Name : LegacyPlateNames)
-	{
-		SetShown(Find<UWidget>(WidgetTree, Name), false);
-	}
-}
-
-/**
- * @brief 붙은 뷰모델이 없으면 미리보기 장면을 세운다.
- *
- * @details
- * **여기서 게임모드를 찾지 않는다.** UI 는 게임 규칙도 게임모드도 직접
- * 참조하지 않는다(#426). 실제 전투 모델은 게임모드가 HUD 를 열면서 직접
- * 건네준다 -- ACombatGameMode::InitCombat 이 OpenUI() 옆에서 BindUIModel() 을
- * 부른다.
- *
- * 그래서 여기까지 왔다는 것은 붙여 줄 사람이 없다는 뜻이다. 편집기에서 WBP 를
- * 열었거나 찍는 시험이 도는 자리다. 그때만 가짜 장면을 세운다.
- *
- * 그 UIModel 과 드라이버는 위젯이 소유하고 화면과 수명을 같이 한다.
- */
-void UCombatLayoutHUDWidget::StartPreviewIfUnbound()
-{
-	if (mUIModel != nullptr)
-	{
-		return;
-	}
-
-	if (!mUsePreviewData)
-	{
-		return;
-	}
-	UCombatUIModel* PreviewModel = NewObject<UCombatUIModel>(this);
-	mPreviewDriver = NewObject<UMockCombatDriver>(this);
-	BindUIModel(PreviewModel);
-	// 편집기/캡처용 가짜 전투에는 실제 TurnContext가 없어 시작 알림이 오지
-	// 않는다. 미리보기만 명시적으로 열린 턴으로 두어 작성한 HUD가 빈 화면이
-	// 되지 않게 한다.
-	mIsTurnActive = true;
-	mPreviewDriver->Start(PreviewModel);
 }
 
 void UCombatLayoutHUDWidget::WireCommands()
@@ -764,6 +721,9 @@ void UCombatLayoutHUDWidget::WireCommands()
 	}
 
 	// 상단 메뉴 넷. 1번은 보유 용병, 2번은 생존 몬스터 정보를 연다.
+	static const TCHAR* const MenuIconNames[] = {
+		TEXT("MenuMapIcon"), TEXT("MenuMercenaryIcon"),
+		TEXT("MenuMonsterIcon"), TEXT("MenuSettingsIcon") };
 	mMenuButtons.Reset();
 	for (int32 Index = 0; ; ++Index)
 	{
@@ -773,7 +733,9 @@ void UCombatLayoutHUDWidget::WireCommands()
 		{
 			break;
 		}
-		BindPressFeedback(Button, Button);
+		UWidget* FeedbackTarget = Index < UE_ARRAY_COUNT(MenuIconNames)
+			? Find<UWidget>(WidgetTree, MenuIconNames[Index]) : Button;
+		BindPressFeedback(Button, FeedbackTarget != nullptr ? FeedbackTarget : Button);
 		mMenuButtons.Add(Button);
 	}
 	if (mMenuButtons.IsValidIndex(1))
@@ -894,13 +856,14 @@ void UCombatLayoutHUDWidget::WireCommands()
 			  TEXT("HandleAllyStatusClicked_2") },
 			{ TEXT("HandleEnemyStatusClicked_0"), TEXT("HandleEnemyStatusClicked_1"),
 			  TEXT("HandleEnemyStatusClicked_2") } };
-		const TCHAR* const Sides[2] = { TEXT("Ally"), TEXT("Enemy") };
 		for (int32 Side = 0; Side < 2; ++Side)
 		{
 			for (int32 Index = 0; Index < 3; ++Index)
 			{
-				UButton* Button = Find<UButton>(WidgetTree, FString::Printf(
-					TEXT("%sStatusButton_%d"), Sides[Side], Index));
+				const TArray<TObjectPtr<UButton>>& Buttons = Side == 0
+					? mAllyStatusButtons : mEnemyStatusButtons;
+				UButton* Button = Buttons.IsValidIndex(Index)
+					? Buttons[Index].Get() : nullptr;
 				if (Button != nullptr)
 				{
 					Button->OnClicked.__Internal_AddUniqueDynamic(
@@ -933,8 +896,8 @@ void UCombatLayoutHUDWidget::WireCommands()
 			TEXT("HandleTurnTokenClicked_8"), TEXT("HandleTurnTokenClicked_9") };
 		for (int32 Index = 0; Index < TurnSlotCount; ++Index)
 		{
-			UButton* Button = Find<UButton>(WidgetTree,
-				FString::Printf(TEXT("TurnTokenButton_%d"), Index));
+			UButton* Button = mTurnSlots.IsValidIndex(Index)
+				? mTurnSlots[Index].Button.Get() : nullptr;
 			if (Button != nullptr)
 			{
 				Button->OnClicked.__Internal_AddUniqueDynamic(
@@ -1062,11 +1025,6 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 	mSwallowNextCommandClick = true;
 	UE_LOG(LogRD, Log, TEXT("[탭진단] 카드 %d 긴 누름 발화 — 상세 요청, 다음 클릭 삼킴 예약"), SlotIndex);
 
-	// 상세를 여는 김에 그 스킬을 쓸 유닛을 화면 가운데로 데려온다.
-	// 스킬 칸은 판 아래에 따로 있어서, 누른 스킬이 누구 것인지 판을 봐야
-	// 안다 -- 카메라가 그 유닛을 잡아 주면 그 왕복이 없어진다(0806 합의).
-	FocusCameraOnTurnUnit();
-
 	// 0번은 이동이다. 스킬이 아니라 게임플레이에 청할 것이 없으므로 화면이
 	// 이미 받아 둔 값으로 바로 조립한다.
 	if (SlotIndex == 0)
@@ -1075,137 +1033,6 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
 		return;
 	}
 	mUIModel->RequestLongPressSkill(SlotIndex - 1);
-}
-
-/**
- * @brief 카드 고리의 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳이다.
- *
- * @details "가운데" 는 화면 한가운데가 아니라 스킬 카드 여섯 장이 둘러싼
- * 자리다(0807 합의). 카드 자리는 WBP 캔버스에 고정돼 있으므로 슬롯
- * 좌표의 평균을 판 크기로 나눠 비율로 만든다 -- 해상도가 바뀌어도 맞는다.
- */
-FVector2D UCombatLayoutHUDWidget::ComputeCommandRingAnchor() const
-{
-	/*
-	 * 슬롯의 캔버스 좌표를 쓰면 안 된다 -- 카드마다 앵커 기준이 달라서(가운데
-	 * 앵커는 좌표가 음수) 평균이 쓰레기가 된다(0807 검증 로그: 앵커 (-1,67)).
-	 * 대신 **실제 그려진 지오메트리**로 잰다. 카드 자리는 고정이라, 지금
-	 * 접혀 있어도 마지막으로 그려진 값이 그대로 맞다.
-	 */
-	FVector2D Sum = FVector2D::ZeroVector;
-	int32 Count = 0;
-	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
-	{
-		if (Widgets.Root == nullptr)
-		{
-			continue;
-		}
-		const FGeometry& Geometry = Widgets.Root->GetCachedGeometry();
-		if (Geometry.GetAbsoluteSize().X <= 0.f)
-		{
-			continue;   // 아직 한 번도 안 그려진 칸
-		}
-		Sum += FVector2D(Geometry.GetAbsolutePosition())
-			+ FVector2D(Geometry.GetAbsoluteSize()) * 0.5f;
-		++Count;
-	}
-	const FGeometry& RootGeometry = GetCachedGeometry();
-	if (Count > 0)
-	{
-		const FVector2D RootSize = FVector2D(RootGeometry.GetAbsoluteSize());
-		if (RootSize.X > 0.f && RootSize.Y > 0.f)
-		{
-			// 같은 절대(데스크톱) 좌표계에서 판 원점을 빼고 크기로 나눠 비율로.
-			const FVector2D Anchor =
-				(Sum / Count - FVector2D(RootGeometry.GetAbsolutePosition()))
-				/ RootSize;
-			if (Anchor.X >= 0.f && Anchor.X <= 1.f
-				&& Anchor.Y >= 0.f && Anchor.Y <= 1.f)
-			{
-				return Anchor;
-			}
-		}
-	}
-
-	/*
-	 * 아직 카드가 한 번도 안 그려졌다(전투 들어와서 첫 클릭 -- 카드는 이제
-	 * 저절로 안 펴지니 흔한 일이다). 그려진 자국 대신 **슬롯 레이아웃**으로
-	 * 같은 값을 계산한다(0807 검수: 첫 클릭만 세부조정이 빠짐).
-	 */
-	const FVector2D RootLocal = RootGeometry.GetLocalSize();
-	if (RootLocal.X <= 0.f || RootLocal.Y <= 0.f)
-	{
-		return FVector2D(0.5f, 0.5f);
-	}
-	Sum = FVector2D::ZeroVector;
-	Count = 0;
-	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
-	{
-		const UCanvasPanelSlot* CardSlot = Widgets.Root != nullptr
-			? Cast<UCanvasPanelSlot>(Widgets.Root->Slot) : nullptr;
-		if (CardSlot == nullptr)
-		{
-			continue;
-		}
-		const FAnchors Anchors = CardSlot->GetAnchors();
-		if (Anchors.Minimum != Anchors.Maximum)
-		{
-			continue;   // 늘어나는 앵커는 여기서 계산할 일이 없다
-		}
-		// 점 앵커 배치 공식 그대로: 앵커점 + 오프셋 - 정렬*크기 = 왼쪽 위.
-		const FVector2D Size = CardSlot->GetSize();
-		const FVector2D TopLeft = RootLocal * Anchors.Minimum
-			+ CardSlot->GetPosition() - CardSlot->GetAlignment() * Size;
-		Sum += TopLeft + Size * 0.5f;
-		++Count;
-	}
-	if (Count == 0)
-	{
-		return FVector2D(0.5f, 0.5f);
-	}
-	const FVector2D Anchor = (Sum / Count) / RootLocal;
-	if (Anchor.X < 0.f || Anchor.X > 1.f || Anchor.Y < 0.f || Anchor.Y > 1.f)
-	{
-		return FVector2D(0.5f, 0.5f);
-	}
-	return Anchor;
-}
-
-/** @brief 이 유닛을 화면 가운데로 데려오라고 청한다. */
-void UCombatLayoutHUDWidget::RequestCameraFocus(const int32 UnitId,
-	const bool bWithCommandRing)
-{
-	if (mUIModel == nullptr || UnitId == INDEX_NONE)
-	{
-		return;
-	}
-	// 카드 고리 세부조정은 카드가 실제로 뜰 때만 한다(0807). 카드 없이
-	// 고리 자리로 내리면 화면 가운데를 비워 둔 채 유닛만 아래로 처진다.
-	mUIModel->SetFocusScreenAnchor(bWithCommandRing == true
-		? ComputeCommandRingAnchor() : FVector2D(0.5f, 0.5f));
-	mUIModel->RequestFocusUnit(UnitId);
-}
-
-/** @brief 지금 조종 중인 유닛을 화면 가운데로. 누구 스킬인지 판에서 보여 준다. */
-void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
-{
-	if (mUIModel == nullptr)
-	{
-		return;
-	}
-	// 용병 탭에서 골라 둔 용병이 있으면 그 쪽이 기준이다. 없으면 차례인 유닛.
-	int32 FocusUnitId = INDEX_NONE;
-	if (mMercenarySelectedSlot != INDEX_NONE)
-	{
-		FocusUnitId = PartyUnitIdAt(mMercenarySelectedSlot);
-	}
-	if (FocusUnitId == INDEX_NONE)
-	{
-		FocusUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
-	}
-	// 용병 패널이 덮고 있으면 카드는 안 보인다 -- 그때는 한가운데로.
-	RequestCameraFocus(FocusUnitId,
-		/*bWithCommandRing=*/IsMercenaryPanelShown() == false);
 }
 
 /** @brief 왼쪽 넘김칸을 눌러 직전 열 칸 페이지로 간다. */
@@ -1795,7 +1622,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 
 	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("R%d"), Turn.mRound)));
+		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
 	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
@@ -1825,6 +1652,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		if (ProjectedIndex >= Total)
 		{
 			SetShown(Widgets.Root, false);
+			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
 			SetShown(Widgets.SpeedIcon, false);
@@ -1844,6 +1672,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			 */
 			mTurnSlotUnitIds[Index] = INDEX_NONE;
 			SetShown(Widgets.Root, true);
+			SetInteractiveShown(Widgets.Button, false);
 			if (Widgets.Root != nullptr)
 			{
 				Widgets.Root->SetRenderOpacity(0.45f);
@@ -1870,6 +1699,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		if (Unit == nullptr)
 		{
 			SetShown(Widgets.Root, false);
+			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
 			SetShown(Widgets.SpeedIcon, false);
@@ -1885,6 +1715,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 
 		mTurnSlotUnitIds[Index] = UnitId;
 		SetShown(Widgets.Root, true);
+		SetInteractiveShown(Widgets.Button, true);
 		SetShown(Widgets.SpeedIcon, true);
 		SetShown(Widgets.Speed, true);
 		SetTextIfPresent(Widgets.Speed,
@@ -2098,6 +1929,10 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		{
 			const bool bHasStatus = AllyShown->mStatusEffects.IsValidIndex(Index);
 			SetShown(mAllyStatusFrames[Index], bHasStatus);
+			if (mAllyStatusButtons.IsValidIndex(Index))
+			{
+				SetInteractiveShown(mAllyStatusButtons[Index], bHasStatus);
+			}
 			UImage* Icon = mAllyStatusIcons.IsValidIndex(Index)
 				? mAllyStatusIcons[Index].Get() : nullptr;
 			UTextBlock* Count = mAllyStatusCounts.IsValidIndex(Index)
@@ -2172,6 +2007,10 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	{
 		const bool bHasStatus = Shown->mStatusEffects.IsValidIndex(Index);
 		SetShown(mEnemyStatusFrames[Index], bHasStatus);
+		if (mEnemyStatusButtons.IsValidIndex(Index))
+		{
+			SetInteractiveShown(mEnemyStatusButtons[Index], bHasStatus);
+		}
 
 		UImage* Icon = mEnemyStatusIcons.IsValidIndex(Index)
 			? mEnemyStatusIcons[Index].Get() : nullptr;
@@ -3166,11 +3005,6 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 				{ return Candidate.mUnitId == TappedId; });
 			const bool bIsAlly = Tapped != nullptr && Tapped->mIsPlayer;
 
-			// 짚은 유닛을 화면 가운데로 -- 판에서 직접 누른 손도 턴 칸을
-			// 누른 손과 같은 대접을 받는다(0806). 카드 고리 세부조정은
-			// 카드가 뜨는 아군일 때만(0807).
-			RequestCameraFocus(TappedId, /*bWithCommandRing=*/bIsAlly);
-
 			if (bIsAlly == true)
 			{
 				// 카드만 갈아 끼운다. 상세 겹은 안 띄운다.
@@ -3274,7 +3108,6 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 	// 하나다. 용병 패널이 열려 있으면 목록 고르기일 뿐이라 안 편다.
 	if (IsMercenaryPanelShown() == false)
 	{
-		RequestCameraFocus(UnitId, /*bWithCommandRing=*/true);
 		SetCommandsShown(true);
 	}
 }
@@ -3745,8 +3578,6 @@ void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_2() { HandleStatusClicked(
 /** @brief 용병탭 스킬 소켓 클릭. 0번은 이동, 나머지는 전투 레일과 같은 스킬 번호. */
 void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
 {
-	// 스킬 칸은 초상과 따로 있다. 누른 스킬의 주인을 화면 가운데로 데려온다.
-	FocusCameraOnTurnUnit();
 	if (SlotIndex == 0)
 	{
 		ShowMoveDetailOverlay();
@@ -3761,8 +3592,7 @@ void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
 /**
  * @brief 턴 칸을 눌렀다.
  *
- * @details 아군이면 그 용병의 스킬 카드를 펴고, 적이면 카메라만 옮긴다 --
- * 적 스킬은 카드 레일이 아니라 요약판/상세가 맡는다(0806 합의).
+ * @details 아군이면 그 용병의 스킬 카드를 펴고, 적이면 요약판에서 짚어 준다.
  */
 void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 {
@@ -3786,18 +3616,13 @@ void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 		return;
 	}
 
-	// 떠 있던 상세를 **먼저** 닫는다. 카메라를 잡은 뒤에 닫으면 닫기가 방금
-	// 잡은 것을 도로 놓아 버려 화면이 안 움직였다(0806 검수).
+	// 떠 있던 상세를 먼저 닫는다.
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FUnitUI* Unit = Units.FindByPredicate(
 		[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 	const bool bIsAlly = Unit != nullptr && Unit->mIsPlayer;
-
-	// 누른 유닛을 화면 가운데로. 카드 고리 세부조정은 카드가 뜨는
-	// 아군일 때만 한다(0807).
-	RequestCameraFocus(UnitId, /*bWithCommandRing=*/bIsAlly);
 
 	if (bIsAlly == false)
 	{
@@ -4209,7 +4034,6 @@ void UCombatLayoutHUDWidget::HandleSkillToggleClicked()
 	// 다른 용병을 살펴보던 중이었어도 카드는 차례 유닛 것으로 되돌린다.
 	mSuppressNextUnitDetailOverlay = true;
 	mUIModel->RequestInspectUnit(TurnUnitId);
-	RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
 	SetCommandsShown(true);
 }
 

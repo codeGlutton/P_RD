@@ -80,12 +80,10 @@ namespace
  */
 UTitleMenuWidget::UTitleMenuWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, mTitleText(NSLOCTEXT("TitleMenuWidget", "TitleText", "Rogue The Dice"))
 	, mStartButtonText(NSLOCTEXT("TitleMenuWidget", "StartText", "START"))
 	, mNewStartButtonText(NSLOCTEXT("TitleMenuWidget", "NewStartText", "NEW START"))
 	, mContinueButtonText(NSLOCTEXT("TitleMenuWidget", "ContinueText", "CONTINUE"))
 	, mSettingsButtonText(NSLOCTEXT("TitleMenuWidget", "SettingsText", "SETTINGS"))
-	, mMainOnlyStatusText(NSLOCTEXT("TitleMenuWidget", "MainOnlyStatusText", "Title main screen only"))
 {
 	/*
 	 * 타이틀 HUD는 방 진입 직후 바로 보이는 메인 UI다.
@@ -124,7 +122,6 @@ void UTitleMenuWidget::NativeConstruct()
 	SyncMainText();
 	AlignMainMenuTextBlocks();
 	RefreshMainMenuState();
-	SetStatusText(FText::GetEmpty());
 }
 
 /**
@@ -166,13 +163,6 @@ void UTitleMenuWidget::NativeDestruct()
 // 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
 void UTitleMenuWidget::SyncMainText()
 {
-	// 타이틀 문구는 생성자에서 NSLOCTEXT로 초기화되어 현재 컬처(en/ko)에 맞춰 자동 번역된다.
-	// 여기서는 그 문구를 실제 WBP TextBlock에 밀어넣기만 하며, 언어 판별/스위치는 로컬라이제이션 시스템이 담당한다.
-	if (TitleText != nullptr)
-	{
-		TitleText->SetText(mTitleText);
-	}
-
 	if (StartButtonText != nullptr)
 	{
 		StartButtonText->SetText(mStartButtonText);
@@ -355,18 +345,6 @@ void UTitleMenuWidget::AlignMenuTextBlock(UTextBlock* TextBlock)
 	}
 }
 
-/** @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다. */
-// 새 타이틀 WBP는 별도 상태 텍스트를 사용하지 않는다.
-// 기존 C++ 호출부 호환을 위해 함수는 남겨두지만, 어떤 텍스트가 들어와도 화면에는 표시하지 않는다.
-void UTitleMenuWidget::SetStatusText(const FText& /*InText*/) const
-{
-	if (StatusText != nullptr)
-	{
-		StatusText->SetText(FText::GetEmpty());
-		StatusText->SetVisibility(ESlateVisibility::Collapsed);
-	}
-}
-
 /** @brief BindWidget으로 들어와야 할 WBP 하위 위젯/버튼/텍스트가 모두 연결됐는지 검증하고 경고 로그를 남긴다. */
 // WBP 디자이너에서 위젯 이름을 잘못 바꾸거나 배치를 빠뜨리면 nullptr가 되므로,
 // NativeConstruct 초기에 각 바인딩을 점검해 어떤 위젯이 누락됐는지 명시적으로 로깅한다(배경 영상은 누락 시 스킵).
@@ -417,5 +395,4 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: InGameSettings world widget is not configured."));
 	}
 
-	SetStatusText(FText::GetEmpty());
 }

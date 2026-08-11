@@ -21,6 +21,7 @@
 #include "Setting/GamePlaySettings.h"
 #include "HAL/IConsoleManager.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
 #include "UI/RDUserWidget.h"
@@ -458,6 +459,16 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			FText::AsNumber(NewOption.mGold));
 		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
+		for (const TSoftObjectPtr<UStaticSkillData>& SkillPtr : LoadedPlayerUnitData->mSkillDatas)
+		{
+			const UStaticSkillData* Skill = SkillPtr.LoadSynchronous();
+			if (Skill == nullptr)
+			{
+				continue;
+			}
+			NewOption.mSkillNames.Add(Skill->mName);
+			NewOption.mSkillIcons.Add(Skill->mIcon);
+		}
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
 		// 선택 가능 여부는 로드 상태와 실제 Pawn Class 설정을 동시에 본다. UI는 이 bool을 재해석하지 않는다.
 		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mViewClass.IsNull();

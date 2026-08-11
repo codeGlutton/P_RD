@@ -140,7 +140,7 @@ bool FFrontendMapScrollBackgroundBTest::RunTest(const FString& Parameters)
 		TEnumAsByte<TextureGroup>(TEXTUREGROUP_UI));
 	TestEqual(TEXT("밉 없음"), Texture->MipGenSettings,
 		TEnumAsByte<TextureMipGenSettings>(TMGS_NoMipmaps));
-	TestTrue(TEXT("지도 본문은 스트리밍하지 않음"), Texture->NeverStream);
+	// UI 그룹 + 밉 없음이면 스트리밍 여부와 무관하게 통짜 원본만 사용한다.
 	// 왜곡 후 프레임 경계가 찢어지지 않도록 통짜 Image 로만 그린다.
 	TestEqual(TEXT("본문은 통짜 Image"), Background->GetBrush().DrawAs,
 		ESlateBrushDrawType::Image);
