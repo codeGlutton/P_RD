@@ -1,5 +1,6 @@
 #include "UI/WidgetVariableCleanup.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -8,6 +9,7 @@
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintEditorUtils.h"
 
 /*
  * 위젯을 지운 뒤 남은 변수 GUID 를 걷어낸다.
@@ -34,6 +36,7 @@
 namespace WidgetVariableCleanup
 {
 	static TUniquePtr<FAutoConsoleCommand> CleanCommand;
+	static TUniquePtr<FAutoConsoleCommand> RemoveWidgetsCommand;
 
 	static bool SaveBlueprint(UWidgetBlueprint* Blueprint)
 	{
@@ -41,6 +44,80 @@ namespace WidgetVariableCleanup
 		const FString Filename = FPackageName::LongPackageNameToFilename(
 			Package->GetName(), FPackageName::GetAssetPackageExtension());
 		return UPackage::SavePackage(Package, Blueprint, *Filename, FSavePackageArgs());
+	}
+
+	static UWidgetBlueprint* LoadBlueprint(const FString& AssetPath)
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, *AssetPath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_WIDGET_VAR_CLEAN missing %s"), *AssetPath);
+			return nullptr;
+		}
+		return Blueprint;
+	}
+
+	static void RepairVariablesAndSave(UWidgetBlueprint* Blueprint,
+		const FString& AssetPath, const int32 RemovedWidgets = 0)
+	{
+		TSet<FName> LiveNames;
+		Blueprint->ForEachSourceWidget([&LiveNames](UWidget* Widget)
+		{
+			if (Widget != nullptr)
+			{
+				LiveNames.Add(Widget->GetFName());
+			}
+		});
+		for (const UWidgetAnimation* Animation : Blueprint->Animations)
+		{
+			if (Animation != nullptr)
+			{
+				LiveNames.Add(Animation->GetFName());
+			}
+		}
+
+		int32 Added = 0;
+		Blueprint->ForEachSourceWidget([Blueprint, &Added](UWidget* Widget)
+		{
+			if (Widget != nullptr
+				&& !Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()))
+			{
+				Blueprint->WidgetVariableNameToGuidMap.Add(
+					Widget->GetFName(), FGuid::NewDeterministicGuid(Widget->GetPathName()));
+				++Added;
+			}
+		});
+		for (const UWidgetAnimation* Animation : Blueprint->Animations)
+		{
+			if (Animation != nullptr
+				&& !Blueprint->WidgetVariableNameToGuidMap.Contains(Animation->GetFName()))
+			{
+				Blueprint->WidgetVariableNameToGuidMap.Add(
+					Animation->GetFName(), FGuid::NewDeterministicGuid(Animation->GetPathName()));
+				++Added;
+			}
+		}
+
+		TArray<FName> StaleNames;
+		for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
+		{
+			if (!LiveNames.Contains(Entry.Key))
+			{
+				StaleNames.Add(Entry.Key);
+			}
+		}
+		for (const FName Name : StaleNames)
+		{
+			Blueprint->OnVariableRemoved(Name);
+		}
+
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+		const bool bSaved = SaveBlueprint(Blueprint);
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_WIDGET_VAR_CLEAN %s live=%d added=%d stale=%d widgets=%d saved=%d"),
+			*AssetPath, LiveNames.Num(), Added, StaleNames.Num(), RemovedWidgets,
+			bSaved ? 1 : 0);
 	}
 
 	static void Clean(const TArray<FString>& Args)
@@ -54,62 +131,42 @@ namespace WidgetVariableCleanup
 
 		for (const FString& AssetPath : Args)
 		{
-			UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, *AssetPath);
-			if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+			if (UWidgetBlueprint* Blueprint = LoadBlueprint(AssetPath))
 			{
-				UE_LOG(LogTemp, Error, TEXT("RD_WIDGET_VAR_CLEAN missing %s"), *AssetPath);
-				continue;
+				RepairVariablesAndSave(Blueprint, AssetPath);
 			}
-
-			// 지금 트리에 실제로 있는 이름을 먼저 모은다. 이 목록에 든 변수는
-			// 절대 건드리지 않는다.
-			TSet<FName> LiveNames;
-			Blueprint->WidgetTree->ForEachWidget([&LiveNames](UWidget* Widget)
-				{
-					if (Widget != nullptr)
-					{
-						LiveNames.Add(Widget->GetFName());
-					}
-				});
-
-			// 위젯 변수는 NewVariables 가 아니라 WidgetVariableNameToGuidMap 에
-			// 산다. 컴파일러는 변수 여부와 무관하게 모든 SourceWidget 이름에 GUID가
-			// 있기를 요구한다(WidgetBlueprintCompiler.cpp:794). 파이썬으로 새 위젯을
-			// 만들면 이 맵에 자동 등록되지 않으므로, 빠진 쪽도 여기서 채운다.
-			int32 Added = 0;
-			Blueprint->WidgetTree->ForEachWidget([Blueprint, &Added](UWidget* Widget)
-				{
-					if (Widget != nullptr &&
-						Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()) == false)
-					{
-						Blueprint->WidgetVariableNameToGuidMap.Add(
-							Widget->GetFName(), FGuid::NewDeterministicGuid(Widget->GetPathName()));
-						++Added;
-					}
-				});
-
-			TArray<FName> Stale;
-			for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
-			{
-				if (LiveNames.Contains(Entry.Key) == false)
-				{
-					Stale.Add(Entry.Key);
-				}
-			}
-			for (const FName& Name : Stale)
-			{
-				Blueprint->WidgetVariableNameToGuidMap.Remove(Name);
-				Blueprint->OnVariableRemoved(Name);
-			}
-
-			// 컴파일러도 이 짝을 스스로 걷어내지만, 걷어낸 결과를 저장하지 않으면
-			// 다음 부팅에 그대로 되살아난다. 지운 게 없어도 늘 저장한다.
-			FKismetEditorUtilities::CompileBlueprint(Blueprint);
-			const bool bSaved = SaveBlueprint(Blueprint);
-			UE_LOG(LogTemp, Display,
-				TEXT("RD_WIDGET_VAR_CLEAN %s live=%d added=%d removed=%d saved=%d"),
-				*AssetPath, LiveNames.Num(), Added, Stale.Num(), bSaved ? 1 : 0);
 		}
+	}
+
+	static void RemoveWidgets(const TArray<FString>& Args)
+	{
+		if (Args.Num() < 2)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_WIDGET_REMOVE needs an asset path followed by widget names."));
+			return;
+		}
+
+		UWidgetBlueprint* Blueprint = LoadBlueprint(Args[0]);
+		if (Blueprint == nullptr)
+		{
+			return;
+		}
+
+		TSet<UWidget*> WidgetsToRemove;
+		for (int32 Index = 1; Index < Args.Num(); ++Index)
+		{
+			if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(FName(*Args[Index])))
+			{
+				WidgetsToRemove.Add(Widget);
+			}
+		}
+
+		FWidgetBlueprintEditorUtils::DeleteWidgets(
+			Blueprint,
+			WidgetsToRemove,
+			FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		RepairVariablesAndSave(Blueprint, Args[0], WidgetsToRemove.Num());
 	}
 }
 
@@ -120,9 +177,14 @@ void RegisterWidgetVariableCleanupCommands()
 		TEXT("RD.Editor.CleanWidgetVariables"),
 		TEXT("Drop widget-variable GUIDs whose widget no longer exists. Args: asset paths."),
 		FConsoleCommandWithArgsDelegate::CreateStatic(&Clean));
+	RemoveWidgetsCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RemoveWidgets"),
+		TEXT("Remove named widgets and stale variable GUIDs. Args: asset path, widget names."),
+		FConsoleCommandWithArgsDelegate::CreateStatic(&RemoveWidgets));
 }
 
 void UnregisterWidgetVariableCleanupCommands()
 {
+	WidgetVariableCleanup::RemoveWidgetsCommand.Reset();
 	WidgetVariableCleanup::CleanCommand.Reset();
 }

@@ -261,10 +261,6 @@ void USettingsPanelWidget::SyncText() const
 	{
 		DisplaySectionHeader->SetText(LOCTEXT("Display", "Display"));
 	}
-	if (BrightnessRow_Label != nullptr)
-	{
-		BrightnessRow_Label->SetText(LOCTEXT("Brightness", "Brightness"));
-	}
 	if (ScreenShakeRow_Label != nullptr)
 	{
 		ScreenShakeRow_Label->SetText(LOCTEXT("Screen Shake", "Screen Shake"));
@@ -280,38 +276,6 @@ void USettingsPanelWidget::SyncText() const
 	if (GameplaySectionHeader != nullptr)
 	{
 		GameplaySectionHeader->SetText(LOCTEXT("Gameplay", "Gameplay"));
-	}
-	if (FastModeRow_Label != nullptr)
-	{
-		FastModeRow_Label->SetText(LOCTEXT("Fast Mode", "Fast Mode"));
-	}
-	if (SkipAnimationRow_Label != nullptr)
-	{
-		SkipAnimationRow_Label->SetText(LOCTEXT("Skip Animation", "Skip Animation"));
-	}
-	if (AutoEndTurnRow_Label != nullptr)
-	{
-		AutoEndTurnRow_Label->SetText(LOCTEXT("Auto End Turn", "Auto End Turn"));
-	}
-	if (InfoSectionHeader != nullptr)
-	{
-		InfoSectionHeader->SetText(LOCTEXT("Info", "Info"));
-	}
-	if (CreditsRow_Label != nullptr)
-	{
-		CreditsRow_Label->SetText(LOCTEXT("Credits", "Credits"));
-	}
-	if (LicenseRow_Label != nullptr)
-	{
-		LicenseRow_Label->SetText(LOCTEXT("License", "License"));
-	}
-	if (CreditsOpenButtonText != nullptr)
-	{
-		CreditsOpenButtonText->SetText(LOCTEXT("Open", "Open"));
-	}
-	if (LicenseOpenButtonText != nullptr)
-	{
-		LicenseOpenButtonText->SetText(LOCTEXT("Open", "Open"));
 	}
 	if (LowQualityButtonText != nullptr)
 	{

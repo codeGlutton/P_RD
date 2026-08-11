@@ -96,7 +96,6 @@ struct FCombatUnitHpBarWidget
 enum class ERewardClaimKind : uint8;
 
 class UButton;
-class UMockCombatDriver;
 class UImage;
 class UProgressBar;
 class URewardUIModel;
@@ -167,23 +166,6 @@ public:
 	}
 #endif
 
-public:
-	/**
-	 * @brief 게임플레이가 안 붙었을 때 가짜 전투 상태로 그린다.
-	 *
-	 * @details
-	 * 배치안 10개는 서로 비교하려고 만드는 것이라 같은 전투 장면을 그려야 한다.
-	 * 실제 전투를 띄우면 진행 상황에 따라 화면이 달라져 비교가 안 되고, 아직
-	 * 게임플레이가 UIModel을 채우지도 않는다. 그래서 위젯이 스스로 UIModel과
-	 * UMockCombatDriver를 만들어 고정된 장면을 세운다.
-	 *
-	 * 실제 전투에 연결되는 순간(BindUIModel이 먼저 불린 경우) 이 경로는 건너뛴다.
-	 * 편집기에서 WBP 를 열었을 때와 찍는 시험이 이것으로 화면을 채운다 --
-	 * 게임모드가 없는 자리라 이걸 끄면 빈 HUD 가 나온다.
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Layout")
-	bool mUsePreviewData = true;
-
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnUIRefreshed(ECombatUIDomain Domain) override;
@@ -196,9 +178,6 @@ private:
 
 	/** @brief 버튼 클릭을 UIModel의 Request*로 연결한다. */
 	void WireCommands();
-
-	/** @brief 붙은 UIModel이 없을 때 미리보기 전투 장면을 세운다. */
-	void StartPreviewIfUnbound();
 
 	void RefreshParty();
 	void RefreshTurnOrder();
@@ -840,19 +819,6 @@ private:
 	/** @brief 상세 판 아무 데나 눌러 닫는 받이. */
 	UFUNCTION() void HandleDetailCloseCatchClicked();
 
-	/** @brief 스킬을 보는 동안 그 스킬 주인을 화면 가운데로 데려온다. */
-	void FocusCameraOnTurnUnit();
-
-	/** @brief 카드 고리 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳. */
-	FVector2D ComputeCommandRingAnchor() const;
-
-	/**
-	 * @brief 이 유닛을 화면 가운데로 데려오라고 청한다.
-	 * @param bWithCommandRing 스킬 카드가 함께 뜨는 경우 true -- 그때만 카드
-	 *        고리 가운데로 세부조정한다. 카드가 안 뜨면 화면 한가운데(0807).
-	 */
-	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing);
-
 	/**
 	 * @brief 다음 유닛 상세 응답으로는 상세창을 띄우지 않는다.
 	 *
@@ -1166,6 +1132,8 @@ private:
 	struct FTurnSlotWidgets
 	{
 		TObjectPtr<UWidget> Root;
+		/** @brief 토큰 위의 투명 클릭 영역. 빈 칸에서는 함께 접는다. */
+		TObjectPtr<UButton> Button;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
 		TObjectPtr<UWidget> SpeedIcon;
@@ -1201,6 +1169,7 @@ private:
 	TArray<TObjectPtr<UWidget>> mEnemyAPPips;
 	TArray<TObjectPtr<UWidget>> mEnemyAPPipsUsed;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
+	TArray<TObjectPtr<UButton>> mEnemyStatusButtons;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
 
@@ -1213,6 +1182,7 @@ private:
 	TObjectPtr<UTextBlock> mAllySpeedText;
 	TObjectPtr<UTextBlock> mAllyStatusText;
 	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;
+	TArray<TObjectPtr<UButton>> mAllyStatusButtons;
 	TArray<TObjectPtr<UImage>> mAllyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
@@ -1220,9 +1190,6 @@ private:
 	TObjectPtr<UButton> mSkillToggleButton;
 	TObjectPtr<UWidget> mSkillTogglePlate;
 	TObjectPtr<UWidget> mSkillToggleLabel;
-
-	/** @brief 미리보기용 가짜 전투 드라이버. 실제 전투에서는 null이다. */
-	UPROPERTY(Transient) TObjectPtr<UMockCombatDriver> mPreviewDriver;
 
 	/** @brief 캐시가 끝났는지. NativeConstruct에서 한 번만 돈다. */
 	bool mCached = false;

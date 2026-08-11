@@ -498,10 +498,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> DisplaySectionHeader;
 
-	/** @brief 밝기 설정 행 라벨. 현재는 표시만 하고 값 변경 이벤트는 별도 구현 대상이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> BrightnessRow_Label;
-
 	/** @brief 화면 흔들림 설정 행 라벨 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> ScreenShakeRow_Label;
@@ -517,38 +513,6 @@ private:
 	/** @brief 게임 플레이 설정 섹션 제목 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> GameplaySectionHeader;
-
-	/** @brief 빠른 진행 모드 행 라벨. 현재는 WBP 레이아웃 보존용 표시 항목이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> FastModeRow_Label;
-
-	/** @brief 연출 스킵 행 라벨. 현재는 WBP 레이아웃 보존용 표시 항목이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> SkipAnimationRow_Label;
-
-	/** @brief 자동 턴 종료 행 라벨. 현재는 WBP 레이아웃 보존용 표시 항목이다. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> AutoEndTurnRow_Label;
-
-	/** @brief 정보 섹션 제목 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> InfoSectionHeader;
-
-	/** @brief 크레딧 행 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> CreditsRow_Label;
-
-	/** @brief 라이선스 행 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> LicenseRow_Label;
-
-	/** @brief 크레딧 열기 버튼 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> CreditsOpenButtonText;
-
-	/** @brief 라이선스 열기 버튼 라벨 */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> LicenseOpenButtonText;
 
 	/** @brief 낮음 품질 선택 버튼. 클릭 시 OnQualityRequested(0)을 발생시킨다. */
 	UPROPERTY(meta = (BindWidgetOptional))

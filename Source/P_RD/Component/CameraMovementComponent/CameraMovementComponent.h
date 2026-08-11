@@ -371,19 +371,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
 
-	/*
-	* @brief 카메라를 **바로** 옮겨 WorldPosition 이 화면의 ScreenAnchor 자리에 오게 한다.
-	* @details 화면(UI)에서 "이 유닛을 보여 줘" 할 때 쓴다. 부드럽게 따라가면
-	*          판이 흐르듯 움직여 어지럽다는 검수가 있었다(0806).
-	*          강조와 달리 카메라를 잠그지 않는다 -- 옮긴 뒤 손으로 계속 본다.
-	*          앵커를 받는 이유: "가운데" 가 화면 한가운데가 아니라 스킬
-	*          카드들이 둘러싼 자리이기 때문(0807). 그 자리는 UI 가 안다.
-	* @param WorldPosition 이 자리가 ScreenAnchor 에 오게 옮긴다
-	* @param ScreenAnchor 화면 픽셀 좌표(뷰포트 기준)
-	*/
-	UFUNCTION(BlueprintCallable)
-	void JumpToWorldPositionAtScreen(FVector WorldPosition, FVector2D ScreenAnchor);
-
 	/* 카메라 셰이크*/
 public:
 	UFUNCTION(BlueprintCallable)

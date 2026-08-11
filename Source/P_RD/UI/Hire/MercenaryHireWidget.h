@@ -69,7 +69,6 @@ struct FMercenaryCardWidgets
 	UPROPERTY() TObjectPtr<UButton> mButton = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mPortrait = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mName = nullptr;
-	UPROPERTY() TObjectPtr<UTextBlock> mRole = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mHP = nullptr;
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mSkills;
 	UPROPERTY() TObjectPtr<UTextBlock> mBadge = nullptr;
@@ -126,6 +125,9 @@ public:
 	 */
 	void ClickCard(int32 CardIndex);
 
+	/** @brief 현재 검토 중인 용병을 명시적으로 파티에 추가한다. */
+	void ClickAdd();
+
 	/** @brief 채워진 파티 슬롯을 눌러 그 용병을 파티에서 뺀다. */
 	void ClickPartySlot(int32 SlotIndex);
 
@@ -159,9 +161,9 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-private:
+	private:
 	void CacheWidgets();
-	void EnsureMarchboundPreviewCrew();
+	void ApplyMarchboundPortraits();
 	void ApplyResponsiveLayout(const FVector2D& ViewportSize);
 	void Refresh();
 	void RefreshCard(int32 CardIndex);
@@ -179,6 +181,7 @@ private:
 	UFUNCTION() void HandlePartySlotClicked_0();
 	UFUNCTION() void HandlePartySlotClicked_1();
 	UFUNCTION() void HandlePartySlotClicked_2();
+	UFUNCTION() void HandleAddClicked();
 	UFUNCTION() void HandleDepartClicked();
 	UFUNCTION() void HandleBackClicked();
 
@@ -189,7 +192,8 @@ private:
 	UPROPERTY() TArray<FMercenarySlotWidgets> mSlots;
 
 	UPROPERTY() TObjectPtr<UTextBlock> mPartyCountText = nullptr;
-	UPROPERTY() TObjectPtr<UTextBlock> mNoticeText = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mAddButton = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mAddLabel = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mDepartButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDepartLabel = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;

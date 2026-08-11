@@ -107,10 +107,11 @@ namespace
 		return Board;
 	}
 
-	/** @brief 하나를 정한다. 한 번이면 된다. */
+	/** @brief 하나를 검토한 뒤 명시적으로 추가한다. */
 	void Choose(UMercenaryHireWidget& Board, const int32 CardIndex)
 	{
 		Board.ClickCard(CardIndex);
+		Board.ClickAdd();
 	}
 }
 
@@ -122,9 +123,13 @@ bool FMercenaryHireChooseTest::RunTest(const FString& Parameters)
 {
 	UMercenaryHireWidget* Board = MakeBoard();
 
-	// 한 번 누르면 정해진다.
+	// 목록 클릭은 상세 검토만 바꾸고, 추가 버튼이 편성을 확정한다.
 	Board->ClickCard(2);
-	TestEqual(TEXT("한 번 누르면 정해짐"), Board->StateOf(2),
+	TestEqual(TEXT("목록 클릭은 검토 상태"), Board->StateOf(2),
+		EMercenaryCardState::Reviewing);
+	TestEqual(TEXT("목록 클릭만으로는 편성되지 않음"), Board->GetChosenIndices().Num(), 0);
+	Board->ClickAdd();
+	TestEqual(TEXT("추가 버튼으로 정해짐"), Board->StateOf(2),
 		EMercenaryCardState::Chosen);
 	TestEqual(TEXT("한 명 정해짐"), Board->GetChosenIndices().Num(), 1);
 
@@ -331,64 +336,20 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	KnightOnly.Add(MakeOption(0, TEXT("기사"), true));
 	Board->SetCharacterOptions(KnightOnly, 3);
 	Board->ClickCard(5);
-	TestTrue(TEXT("실데이터가 없어도 여섯째 드루이드를 검수 선택할 수 있다"),
+	Board->ClickAdd();
+	TestFalse(TEXT("서버가 주지 않은 가짜 여섯째 후보는 선택되지 않는다"),
 		Board->GetChosenIndices().Contains(5));
-
-	UImage* Hero = Cast<UImage>(Board->WidgetTree->FindWidget(TEXT("Backdrop_Art")));
-	if (TestNotNull(TEXT("선택 영웅 일러스트"), Hero))
-	{
-		TestEqual(TEXT("드루이드 선택은 드루이드 일러스트를 건다"),
-			Hero->GetBrush().GetResourceObject()->GetPathName(),
-			FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/"
-				"T_MB_HireHero_Druid.T_MB_HireHero_Druid")));
-	}
-
-	Board->ClickCard(1);
-	Board->ClickCard(2);
-	UTextBlock* RangerName = Cast<UTextBlock>(
-		Board->WidgetTree->FindWidget(TEXT("HireName_2")));
-	if (TestNotNull(TEXT("세 번째 행 이름"), RangerName))
-	{
-		TestEqual(TEXT("Archer placeholder의 옛 도적명이 아닌 레인저 표시"),
-			RangerName->GetText().ToString(), FString(TEXT("레인저")));
-	}
-	TestTrue(TEXT("실데이터가 없는 마법사도 검수 선택 가능"),
-		Board->GetChosenIndices().Contains(1));
-	TestTrue(TEXT("Archer placeholder 대신 레인저도 검수 선택 가능"),
-		Board->GetChosenIndices().Contains(2));
-
-	UWidget* MageReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_1"));
-	UWidget* RangerReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_2"));
-	UWidget* DruidReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_5"));
-	if (TestNotNull(TEXT("마법사 파란 검토 테두리"), MageReviewFrame)
-		&& TestNotNull(TEXT("레인저 파란 검토 테두리"), RangerReviewFrame)
-		&& TestNotNull(TEXT("드루이드 파란 검토 테두리"), DruidReviewFrame))
-	{
-		TestEqual(TEXT("현재 보고 있는 레인저만 파란 테두리"),
-			RangerReviewFrame->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("파티원이어도 현재 보지 않는 마법사는 파란 테두리 없음"),
-			MageReviewFrame->GetVisibility(), ESlateVisibility::Collapsed);
-		TestEqual(TEXT("파티원이어도 현재 보지 않는 드루이드는 파란 테두리 없음"),
-			DruidReviewFrame->GetVisibility(), ESlateVisibility::Collapsed);
-	}
-
-	UWidget* MagePartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_1"));
-	UWidget* RangerPartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_2"));
-	UWidget* DruidPartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_5"));
-	if (TestNotNull(TEXT("마법사 빨간 파티 인장"), MagePartySeal)
-		&& TestNotNull(TEXT("레인저 빨간 파티 인장"), RangerPartySeal)
-		&& TestNotNull(TEXT("드루이드 빨간 파티 인장"), DruidPartySeal))
-	{
-		TestEqual(TEXT("마법사 파티 인장 유지"),
-			MagePartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("레인저 파티 인장 유지"),
-			RangerPartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("드루이드 파티 인장 유지"),
-			DruidPartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-	}
+	TestEqual(TEXT("실제 후보 배열은 UI에서 임의로 늘리지 않는다"),
+		Board->GetChosenIndices().Num(), 0);
 
 	UButton* PartySlotButton = Cast<UButton>(
 		Board->WidgetTree->FindWidget(TEXT("PartySlotButton_1")));
+	UButton* AddButton = Cast<UButton>(
+		Board->WidgetTree->FindWidget(TEXT("HireAddButton")));
+	if (TestNotNull(TEXT("상세 아래 추가 버튼"), AddButton))
+	{
+		TestTrue(TEXT("추가 버튼 동작이 묶여 있다"), AddButton->OnClicked.IsBound());
+	}
 	if (TestNotNull(TEXT("파티 슬롯 해제 버튼"), PartySlotButton))
 	{
 		TestTrue(TEXT("파티 슬롯 해제 동작이 묶여 있다"),
@@ -408,16 +369,18 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		? Cast<UCanvasPanelSlot>(Card1->Slot) : nullptr;
 	UCanvasPanelSlot* Card2Slot = Card2 != nullptr
 		? Cast<UCanvasPanelSlot>(Card2->Slot) : nullptr;
-	if (TestNotNull(TEXT("세로 카드 0 슬롯"), Card0Slot)
-		&& TestNotNull(TEXT("세로 카드 1 슬롯"), Card1Slot)
-		&& TestNotNull(TEXT("세로 카드 2 슬롯"), Card2Slot))
+	if (TestNotNull(TEXT("고정 레이아웃 카드 0 슬롯"), Card0Slot)
+		&& TestNotNull(TEXT("고정 레이아웃 카드 1 슬롯"), Card1Slot)
+		&& TestNotNull(TEXT("고정 레이아웃 카드 2 슬롯"), Card2Slot))
 	{
-		TestEqual(TEXT("세로에서 0·1번은 같은 행"),
-			Card0Slot->GetPosition().Y, Card1Slot->GetPosition().Y);
-		TestTrue(TEXT("세로에서 1번은 0번 오른쪽"),
-			Card1Slot->GetPosition().X > Card0Slot->GetPosition().X);
-		TestTrue(TEXT("세로에서 2번은 다음 행"),
-			Card2Slot->GetPosition().Y > Card0Slot->GetPosition().Y);
+		// 창 비율이 바뀌어도 좌측 목록·중앙 상세·우측 파티 구조는
+		// 고정한다. 세로형에서 카드가 2열로 바뀌던 과거 계약은 폐기했다.
+		TestEqual(TEXT("세로 비율에서도 후보는 같은 열"),
+			Card0Slot->GetPosition().X, Card1Slot->GetPosition().X);
+		TestTrue(TEXT("세로 비율에서도 1번은 0번 아래"),
+			Card1Slot->GetPosition().Y > Card0Slot->GetPosition().Y);
+		TestTrue(TEXT("세로 비율에서도 2번은 1번 아래"),
+			Card2Slot->GetPosition().Y > Card1Slot->GetPosition().Y);
 	}
 
 	Board->ApplyResponsiveLayoutForTest(FVector2D(1920.0f, 1080.0f));
@@ -609,12 +572,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	for (const TCHAR* Name : {
 		TEXT("MenuMercenaryMaskLabel"), TEXT("MenuEmptyMaskLabel") })
 	{
-		UWidget* Label = Tree->FindWidget(FName(Name));
-		if (TestNotNull(*FString::Printf(TEXT("%s 유지"), Name), Label))
-		{
-			TestEqual(*FString::Printf(TEXT("%s 텍스트 숨김"), Name),
-				Label->GetVisibility(), ESlateVisibility::Collapsed);
-		}
+		TestNull(*FString::Printf(TEXT("%s 제거"), Name),
+			Tree->FindWidget(FName(Name)));
 	}
 
 	// 전장 유닛 탭은 상세창을 열지 않고 같은 크기의 요약판 두 종류로 읽는다.
@@ -672,11 +631,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	{
 		TestNotNull(TEXT("몬스터 AP 보석 행은 배경 없는 Canvas"),
 			Cast<UCanvasPanel>(EnemyAPPipRow));
-		if (UWidget* LegacyAPBar = Tree->FindWidget(TEXT("EnemyCritPlate")))
-		{
-			TestEqual(TEXT("몬스터 AP 보석 뒤 구식 막대는 숨김"),
-				LegacyAPBar->GetVisibility(), ESlateVisibility::Collapsed);
-		}
+		TestNull(TEXT("몬스터 AP 보석 뒤 구식 막대는 제거됨"),
+			Tree->FindWidget(TEXT("EnemyCritPlate")));
 		for (int32 Index = 0; Index < 10; ++Index)
 		{
 			UImage* Pip = Cast<UImage>(Tree->FindWidget(FName(*FString::Printf(
@@ -734,16 +690,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("용병 패널 WBP 기본값은 닫힘"),
 			MercenaryPanel->GetVisibility(), ESlateVisibility::Collapsed);
 	}
-	if (UWidget* MercenaryScrim =
-		Tree->FindWidget(TEXT("MercenaryScrim")))
-	{
-		TestEqual(TEXT("새 용병 셸을 덮던 구식 암막은 WBP에서 숨김"),
-			MercenaryScrim->GetVisibility(), ESlateVisibility::Collapsed);
-	}
-	else
-	{
-		AddError(TEXT("MercenaryScrim을 찾을 수 없다"));
-	}
+	TestNull(TEXT("새 용병 셸을 덮던 구식 암막은 제거됨"),
+		Tree->FindWidget(TEXT("MercenaryScrim")));
 
 	for (int32 Index = 0;
 		Index < UCombatLayoutHUDWidget::PartySlotCount; ++Index)
@@ -889,15 +837,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Tree->FindWidget(TEXT("MercenaryInventoryArtifactSelection_0")));
 	}
 
-	UPanelWidget* TurnAPScale =
-		Cast<UPanelWidget>(Tree->FindWidget(TEXT("TurnAPScale")));
 	UWidget* TurnAPPanel = Tree->FindWidget(TEXT("TurnAPPanel"));
-	if (TestNotNull(TEXT("좌하단 AP 크기 래퍼"), TurnAPScale)
-		&& TestNotNull(TEXT("좌하단 AP 판"), TurnAPPanel))
-	{
-		TestEqual(TEXT("AP 판은 크기 래퍼 안"),
-			TurnAPPanel->GetParent(), TurnAPScale);
-	}
+	TestNotNull(TEXT("좌하단 AP 루트"), TurnAPPanel);
 
 	TestNull(TEXT("전투 화면 독립 아티팩트 WBP 줄 제거"),
 		Tree->FindWidget(TEXT("ArtifactStrip")));
@@ -985,7 +926,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("PartyButton_0")));
 	UButton* InventoryButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("MercenaryInventoryButton")));
-	UWidget* TurnAPScale = HUD->WidgetTree->FindWidget(TEXT("TurnAPScale"));
+	UWidget* TurnAPRoot = HUD->WidgetTree->FindWidget(TEXT("TurnAPPanel"));
 	UWidget* EnemyPanel = HUD->WidgetTree->FindWidget(TEXT("EnemyPanel"));
 	UTextBlock* EnemyAPText = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("EnemyAPText")));
@@ -1012,7 +953,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("닫기"), Close)
 		|| !TestNotNull(TEXT("첫 용병"), PartyButton)
 		|| !TestNotNull(TEXT("인벤토리 탭 단추"), InventoryButton)
-		|| !TestNotNull(TEXT("공용 AP 막대"), TurnAPScale)
+		|| !TestNotNull(TEXT("공용 AP 막대"), TurnAPRoot)
 		|| !TestNotNull(TEXT("몬스터 요약판"), EnemyPanel)
 		|| !TestNotNull(TEXT("몬스터 요약판 AP"), EnemyAPText)
 		|| !TestNotNull(TEXT("용병 요약판"), AllyPanel)
@@ -1055,11 +996,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TEXT("MercenaryBoardShadow"), TEXT("MercenaryBoardInner"),
 		TEXT("MercenaryClosePlate") })
 	{
-		if (UWidget* LegacyPlate = HUD->WidgetTree->FindWidget(FName(Name)))
-		{
-			TestEqual(*FString::Printf(TEXT("%s 구식 판은 숨김"), Name),
-				LegacyPlate->GetVisibility(), ESlateVisibility::Collapsed);
-		}
+		TestNull(*FString::Printf(TEXT("%s 구식 판은 제거됨"), Name),
+			HUD->WidgetTree->FindWidget(FName(Name)));
 	}
 	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::PartySlotCount; ++Index)
 	{
@@ -1112,7 +1050,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	MonsterTurn.mTurnOrderUnitIds.Add(MonsterUnit.mUnitId);
 	Model->SetTurnUI(MonsterTurn);
 	TestEqual(TEXT("몬스터 차례에는 공용 AP 막대를 접는다"),
-		TurnAPScale->GetVisibility(), ESlateVisibility::Collapsed);
+		TurnAPRoot->GetVisibility(), ESlateVisibility::Collapsed);
 	TestEqual(TEXT("몬스터 차례에는 몬스터 요약판을 보인다"),
 		EnemyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("몬스터 차례에는 겹친 용병 요약판을 접는다"),
@@ -1240,7 +1178,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	PlayerTurn.mTurnOrderUnitIds.Add(PartyUnit.mUnitId);
 	Model->SetTurnUI(PlayerTurn);
 	TestEqual(TEXT("플레이어 차례에는 공용 AP 막대를 보인다"),
-		TurnAPScale->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		TurnAPRoot->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("플레이어 차례라도 적을 클릭하면 적 요약판을 보인다"),
 		EnemyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("선택한 적 요약판과 용병 요약판은 겹치지 않는다"),

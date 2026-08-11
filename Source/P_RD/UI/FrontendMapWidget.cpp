@@ -959,7 +959,10 @@ void UFrontendMapWidget::InstallMapPerspectiveRetainer()
 	}
 
 	// 같은 자리(형제 순서 유지)에 리테이너를 넣고 스크롤 박스를 그 안으로 옮긴다.
-	if (!ParentPanel->ReplaceChild(MapScrollBox, Retainer))
+	const int32 ChildIndex = ParentPanel->GetChildIndex(MapScrollBox);
+	UPanelSlot* SlotTemplate = MapScrollBox->Slot;
+	if (ChildIndex == INDEX_NONE || !ParentPanel->RemoveChildAt(ChildIndex)
+		|| ParentPanel->InsertChildAt(ChildIndex, Retainer, SlotTemplate) == nullptr)
 	{
 		return;
 	}

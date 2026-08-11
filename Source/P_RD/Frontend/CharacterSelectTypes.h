@@ -40,11 +40,6 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mRoleText;
 
-	// 역할 한 낱말. 용병 선택 화면의 역할 알약처럼 좁은 자리에 건다.
-	// mRoleText 를 줄여 쓰면 화면마다 다르게 줄여서 결국 다 달라진다.
-	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	FText mRoleShort;
-
 	// 화면 아트 선택용 직업 키. 게임 로직 enum 이름과 표시 이름이 달라도 UI는 이 값으로 이미지를 고른다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	EUnitJobType mJobType = EUnitJobType::None;

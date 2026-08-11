@@ -21,6 +21,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "UObject/SavePackage.h"
+#include "WidgetBlueprintEditorUtils.h"
 
 namespace CombatHUDWidgetBuilder
 {
@@ -44,6 +45,16 @@ namespace CombatHUDWidgetBuilder
 		T* NewWidget = Blueprint->WidgetTree->ConstructWidget<T>(T::StaticClass(), Name);
 		Blueprint->OnVariableAdded(Name);
 		return NewWidget;
+	}
+
+	void RemoveWidget(UWidgetBlueprint* Blueprint, const FName Name)
+	{
+		if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(Name))
+		{
+			FWidgetBlueprintEditorUtils::DeleteWidgets(
+				Blueprint, { Widget },
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
 	}
 
 	/** @brief 판이 없으면 만들고 뿌리 캔버스를 보장한다. */
@@ -94,7 +105,6 @@ namespace CombatHUDWidgetBuilder
 		}
 		for (const FName& Name : Stale)
 		{
-			Blueprint->WidgetVariableNameToGuidMap.Remove(Name);
 			Blueprint->OnVariableRemoved(Name);
 		}
 	}
@@ -265,10 +275,7 @@ namespace CombatHUDWidgetBuilder
 		Forecast->SetText(NSLOCTEXT("CombatHUD", "EnemyForecastPreview", "예상 피해  8~14"));
 		SetReadableFont(Forecast, BaseFont, 27);
 
-		if (UWidget* LegacyDefense = Blueprint->WidgetTree->FindWidget(TEXT("EnemyDefense")))
-		{
-			LegacyDefense->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		RemoveWidget(Blueprint, TEXT("EnemyDefense"));
 	}
 
 	void BuildAllySummary(UWidgetBlueprint* Blueprint, const FSlateFontInfo& BaseFont,
@@ -674,24 +681,20 @@ namespace CombatHUDWidgetBuilder
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPPip_0")));
 		UImage* EmptyTemplatePip = Cast<UImage>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPPipUsed_0")));
-		UWidget* Anchor = Blueprint->WidgetTree->FindWidget(TEXT("EnemyCritPlate"));
-		UCanvasPanelSlot* AnchorSlot = Anchor != nullptr
-			? Cast<UCanvasPanelSlot>(Anchor->Slot) : nullptr;
 		UCanvasPanel* ExistingRow = Cast<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("EnemyAPPipRow")));
 		UCanvasPanelSlot* ExistingRowSlot = ExistingRow != nullptr
 			? Cast<UCanvasPanelSlot>(ExistingRow->Slot) : nullptr;
 		if (EnemyPanel == nullptr || TemplatePip == nullptr
 			|| EmptyTemplatePip == nullptr
-			|| (ExistingRowSlot == nullptr && AnchorSlot == nullptr))
+			|| ExistingRowSlot == nullptr)
 		{
 			UE_LOG(LogTemp, Error,
 				TEXT("RD_COMBAT_HUD_INVENTORY_BUILD missing enemy AP anchor"));
 			return;
 		}
 		// 디자이너에서 옮긴 행 위치는 보존한다. 칸 구성만 30x30 열 칸으로 고친다.
-		const FVector2D RowPosition = ExistingRowSlot != nullptr
-			? ExistingRowSlot->GetPosition() : AnchorSlot->GetPosition();
+		const FVector2D RowPosition = ExistingRowSlot->GetPosition();
 		constexpr int32 PipCount = 10;
 		constexpr float PipSize = 30.f;
 		constexpr float PipGap = 4.f;
@@ -700,10 +703,7 @@ namespace CombatHUDWidgetBuilder
 		for (const TCHAR* Legacy : {
 			TEXT("EnemyCritPlate"), TEXT("EnemyCritIcon"), TEXT("EnemyCritText") })
 		{
-			if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(FName(Legacy)))
-			{
-				Widget->SetVisibility(ESlateVisibility::Collapsed);
-			}
+			RemoveWidget(Blueprint, Legacy);
 		}
 		// WBP 자체를 열거나 오프스크린으로 찍을 때도 아래 미리보기 적(4 AP)과
 		// 숫자가 어긋나지 않게 한다. 실게임에서는 RefreshEnemy가 같은
@@ -912,19 +912,11 @@ namespace CombatHUDWidgetBuilder
 			FVector2D(1920.f, 1080.f), 3);
 
 		for (const TCHAR* LegacyName : {
-			TEXT("MercenaryHeaderPlate"), TEXT("MercenaryBoardPlate"),
+			TEXT("MercenaryScrim"), TEXT("MercenaryHeaderPlate"), TEXT("MercenaryBoardPlate"),
 			TEXT("MercenaryBoardShadow"), TEXT("MercenaryBoardInner"),
 			TEXT("MercenaryClosePlate") })
 		{
-			UWidget* Legacy = Blueprint->WidgetTree->FindWidget(FName(LegacyName));
-			if (Legacy == nullptr)
-			{
-				Legacy = Blueprint->WidgetTree->ConstructWidget<UImage>(
-					UImage::StaticClass(), FName(LegacyName));
-				Blueprint->OnVariableAdded(FName(LegacyName));
-			}
-			PlaceCanvas(Board, Legacy, FVector2D::ZeroVector, FVector2D(1.f, 1.f), -50);
-			Legacy->SetVisibility(ESlateVisibility::Collapsed);
+			RemoveWidget(Blueprint, LegacyName);
 		}
 		if (UTexture2D* TitlePlateTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Title_Plate.T_KitA_Title_Plate")))
@@ -1407,21 +1399,10 @@ namespace CombatHUDWidgetBuilder
 		SettingsIcon->SetBrushFromTexture(SettingsTexture, false);
 		SettingsIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
-		UTextBlock* MercenaryLabel = CastChecked<UTextBlock>(
-			Blueprint->WidgetTree->FindWidget(TEXT("MenuMercenaryMaskLabel")));
-		MercenaryLabel->SetVisibility(ESlateVisibility::Collapsed);
-
-		UTextBlock* MonsterLabel = CastChecked<UTextBlock>(
-			Blueprint->WidgetTree->FindWidget(TEXT("MenuEmptyMaskLabel")));
-		MonsterLabel->SetVisibility(ESlateVisibility::Collapsed);
-		if (UWidget* MercenaryMask = Blueprint->WidgetTree->FindWidget(TEXT("MenuMercenaryMask")))
-		{
-			MercenaryMask->SetVisibility(ESlateVisibility::Collapsed);
-		}
-		if (UWidget* EmptyMask = Blueprint->WidgetTree->FindWidget(TEXT("MenuEmptyMask")))
-		{
-			EmptyMask->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		RemoveWidget(Blueprint, TEXT("MenuMercenaryMaskLabel"));
+		RemoveWidget(Blueprint, TEXT("MenuEmptyMaskLabel"));
+		RemoveWidget(Blueprint, TEXT("MenuMercenaryMask"));
+		RemoveWidget(Blueprint, TEXT("MenuEmptyMask"));
 
 		if (UButton* MonsterButton = Cast<UButton>(
 			Blueprint->WidgetTree->FindWidget(TEXT("MenuButton_2"))))

@@ -17,8 +17,6 @@
 
 #include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
-#include "Pawn/Camera/CombatCameraPawn.h"
-#include "Component/CameraMovementComponent/CameraMovementComponent.h"
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
@@ -693,10 +691,6 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		mInspectedUnitId = IntPayload;
 		PushSkillUIData();
 		PushBoardActorDetailUIData(FindUnitModelById(IntPayload));
-		break;
-	case ECombatInputType::FocusUnit:
-		// 스킬 단추를 눌렀다. 그 스킬을 쓰는 유닛을 화면 가운데로 데려온다.
-		FocusCameraOnUnit(IntPayload);
 		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
@@ -1574,58 +1568,6 @@ UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
 		}
 	}
 	return nullptr;
-}
-
-void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
-{
-	APlayerController* PlayerController = GetWorld() != nullptr
-		? GetWorld()->GetFirstPlayerController() : nullptr;
-	ACombatCameraPawn* CameraPawn = PlayerController != nullptr
-		? PlayerController->GetPawn<ACombatCameraPawn>() : nullptr;
-	UCameraMovementComponent* CameraMovement = CameraPawn != nullptr
-		? CameraPawn->GetCameraMovementComponent() : nullptr;
-	if (CameraMovement == nullptr)
-	{
-		return;
-	}
-
-	// INDEX_NONE 은 "그만 봐도 된다" 는 뜻이다. 바로 옮기는 방식이라
-	// 되돌릴 것이 없다 -- 카메라는 사람이 마지막으로 본 자리에 그대로 둔다.
-	if (UnitId == INDEX_NONE)
-	{
-		return;
-	}
-
-	UUnitModel* UnitModel = FindUnitModelById(UnitId);
-	AActor* ViewActor = UnitModel != nullptr
-		? UnitModel->GetView<AActor>() : nullptr;
-	if (ViewActor == nullptr)
-	{
-		return;
-	}
-	/*
-	 * 연출 없이 바로 옮긴다. 부드럽게 따라가면 판이 흐르듯 움직여 어지럽다는
-	 * 검수가 있었다(0806). 강조로 잡으면 카메라 조작까지 잠겨서 안 쓴다.
-	 *
-	 * 액터 피벗(발밑)이 아니라 **몸통 가운데**를 넘긴다. 기운 카메라에서
-	 * 발을 가운데 두면 몸은 화면 위로 밀려 "가운데가 아니다"로 읽힌다
-	 * (0806 검수). 충돌 바운즈 중심이 치비 몸통의 가운데다.
-	 *
-	 * 놓을 화면 자리는 UI 가 세워 둔 앵커(0~1 비율)를 쓴다 -- "가운데" 는
-	 * 화면 한가운데가 아니라 스킬 카드들이 둘러싼 자리다(0807 합의).
-	 */
-	FVector BoundsOrigin = ViewActor->GetActorLocation();
-	FVector BoundsExtent = FVector::ZeroVector;
-	ViewActor->GetActorBounds(/*bOnlyCollidingComponents=*/true,
-		OUT BoundsOrigin, OUT BoundsExtent);
-
-	int32 ViewX = 0;
-	int32 ViewY = 0;
-	PlayerController->GetViewportSize(OUT ViewX, OUT ViewY);
-	const FVector2D AnchorFraction = mCombatUIModel != nullptr
-		? mCombatUIModel->GetFocusScreenAnchor() : FVector2D(0.5f, 0.5f);
-	CameraMovement->JumpToWorldPositionAtScreen(BoundsOrigin,
-		FVector2D(AnchorFraction.X * ViewX, AnchorFraction.Y * ViewY));
 }
 
 void ACombatGameMode::PushSkillUIData() const

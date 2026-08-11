@@ -124,7 +124,7 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel();
 	if (TitleSettingsPanel == nullptr)
 	{
-		SetStatusText(mMainOnlyStatusText);
+		UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: settings panel is unavailable."));
 		return;
 	}
 
@@ -136,7 +136,6 @@ void UTitleMenuWidget::OpenSettingsPanel()
 	TitleSettingsPanel->SetStatusText(FText::GetEmpty());
 
 	TitleSettingsPanel->OpenUI();
-	SetStatusText(FText::GetEmpty());
 }
 
 /** @brief 현재 활성 Run 여부에 따라 START/NEW START/CONTINUE 버튼 상태를 갱신한다. */
@@ -294,7 +293,7 @@ void UTitleMenuWidget::HandleContinueButtonClicked()
 		}
 	}
 
-	SetStatusText(mMainOnlyStatusText);
+	UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: continue request failed."));
 }
 
 /** @brief SETTING 버튼 입력으로 공용 설정 패널을 연다. */
@@ -312,5 +311,4 @@ void UTitleMenuWidget::HandleSettingsPanelBackRequested()
 		TitleSettingsPanel->CloseUI();
 	}
 
-	SetStatusText(FText::GetEmpty());
 }

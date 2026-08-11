@@ -46,7 +46,6 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	HUD->mUsePreviewData = false;
 	HUD->TakeWidget();
 
 	UCombatUIModel* Model = NewObject<UCombatUIModel>(HUD);

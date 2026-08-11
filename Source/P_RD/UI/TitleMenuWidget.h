@@ -115,12 +115,6 @@ private:
 	// 그래야 모든 설정 패널이 OpenUI()/CloseUI() 흐름을 타고 AddToViewport, ZOrder, 닫기 이벤트 규칙을 공유한다.
 	USettingsPanelWidget* GetTitleSettingsPanel() const;
 
-	/** @brief 타이틀 WBP에 남아 있는 하단 상태 문구를 숨김 */
-	// 현재 타이틀 화면에서는 Ready, Settings 같은 하단 상태 문구를 사용하지 않으므로,
-	// WBP에 StatusText가 아직 남아 있어도 비워 두고 Collapsed 상태로 만든다.
-	// @param InText 기존 호출부와의 호환을 위해 받지만 화면에는 표시하지 않는다.
-	void SetStatusText(const FText& InText) const;
-
 	/** @brief 타이틀 배경 영상 재생을 시작한다. */
 	// 정적 비주얼(로고/버튼/레이아웃)은 WBP_TitleMenu가 책임진다.
 	// C++은 표시용 Image(WBP의 TitleBackgroundImage)에 MediaTexture를 물려 영상만 재생한다.
@@ -209,10 +203,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SettingsButton;
 
-	/** @brief (레거시) 게임 타이틀명 TextBlock. 이제 WBP의 TitleLogoImage가 타이틀을 대체하므로 Optional. */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> TitleText;
-
 	/** @brief START 버튼 안에 표시할 라벨 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> StartButtonText;
@@ -224,16 +214,6 @@ private:
 	/** @brief SETTING 버튼 안에 표시할 라벨 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> SettingsButtonText;
-
-	/** @brief 현재 타이틀 화면에서는 숨기는 하단 상태 문구 */
-	// 지금 UI에서는 READY 같은 하단 문구를 표시하지 않는다.
-	// 기존 WBP에 같은 이름의 TextBlock이 남아 있더라도 NativeConstruct()에서 숨긴다.
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UTextBlock> StatusText;
-
-	/** @brief 게임 타이틀명 기본 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mTitleText;
 
 	/** @brief START 버튼 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
@@ -250,10 +230,6 @@ private:
 	/** @brief SETTING 버튼 기본 문구 */
 	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FText mSettingsButtonText;
-
-	/** @brief 아직 실제 기능이 연결되지 않은 메뉴를 눌렀을 때 보여줄 문구 */
-	UPROPERTY(Category = "Title Menu|Text", EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
-	FText mMainOnlyStatusText;
 
 	/** @brief WBP가 제공하는 배경 영상 표시용 Image (BindWidgetOptional) */
 	// 위치/레이아웃은 WBP가 잡고, C++은 여기에 MediaTexture를 물려 영상만 재생한다.
