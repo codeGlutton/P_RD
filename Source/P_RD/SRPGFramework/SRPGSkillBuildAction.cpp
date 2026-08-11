@@ -164,6 +164,10 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 SetBuildPhase(ESRPGSkillBuildPhase::Preview);
             }
 
+            /* 보드 안의 빈/유효하지 않은 칸은 조준 상태를 유지한다. */
+
+            // 빈 타일이나 사거리 밖 칸을 잘못 눌러도 선택한 스킬을 취소하지
+            // 않는다. 사용자가 다시 조준 가능한 칸을 고를 수 있게 그대로 둔다.
             Result = ESRPGCommandResult::Handled;
             break;
         }
@@ -171,31 +175,21 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
     }
     else
     {
-        /* 한단계 취소작업 (보드 밖 탭) */
+        /* 조준 중 유효하지 않은 월드 탭은 상태를 유지한다. */
 
         switch (mSkillBuildPhase)
         {
         case ESRPGSkillBuildPhase::Preview:
         {
-            /* 프리뷰 단계에서 한단계 취소 시, 조준 대상 취소 처리 */
-
-            ResetTargetTile();
-            RefreshAimableTileHighlights();
-            SetBuildPhase(ESRPGSkillBuildPhase::AimSelection);
-
+            // 유효한 타깃을 잡은 뒤 빈 타일/보드 바깥을 눌러도 프리뷰를
+            // 풀지 않는다. 확정 또는 명시적인 취소 입력만 상태를 바꾼다.
             Result = ESRPGCommandResult::Handled;
             break;
         }
         case ESRPGSkillBuildPhase::AimSelection:
         {
-            /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
-
-            ClearAllTileHighlights();
-            ResetTargetTile();
-            ResetSkill();
-
-            MarkActionCompleted(ESRPGActionResult::Cancelled);
-            SetBuildPhase(ESRPGSkillBuildPhase::None);
+            // 빈 타일/보드 바깥을 눌러도 선택한 스킬을 취소하지 않는다.
+            // 조준 가능한 타일을 다시 고를 수 있게 현재 상태를 유지한다.
             Result = ESRPGCommandResult::Handled;
             break;
         }
