@@ -58,6 +58,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
 	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
 	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
+	RD_LOAD_TEX(mUnitHpGlowTexture,        "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_FrameGlow.T_CombatHUD_UnitHpBar_FrameGlow");
 	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
 	RD_LOAD_TEX(mCommandMoveIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
 	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
@@ -585,7 +586,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	for (const TCHAR* Name : { TEXT("RoundPanel"), TEXT("TurnPanel"),
 		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("AllyPanel"), TEXT("EndTurnPanel"),
 		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2"),
-		TEXT("MercenaryPanel") })
+		TEXT("MercenaryPanel"), TEXT("ConfirmPanel") })
 	{
 		if (UWidget* Found = Find<UWidget>(WidgetTree, Name))
 		{
@@ -2728,33 +2729,20 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 
 void UCombatLayoutHUDWidget::RefreshScreenScale()
 {
-	const UWorld* World = GetWorld();
-	if (World == nullptr || World->GetGameViewport() == nullptr)
-	{
-		return;
-	}
-	FVector2D Viewport = FVector2D::ZeroVector;
-	World->GetGameViewport()->GetViewportSize(OUT Viewport);
-	if (Viewport.X <= 0.f || Viewport.Y <= 0.f || Viewport.Equals(mLastViewport))
-	{
-		return;
-	}
-	mLastViewport = Viewport;
-
-	// 16:9 보다 좁아진 만큼 키운다. 넓어져도 줄이지는 않는다 -- 넓은 화면에서
-	// 작아 보이는 것은 문제가 아니라 판이 넓게 보이는 것이다.
-	const float Wide = 16.f / 9.f;
-	const float Ratio = Viewport.X / Viewport.Y;
-	const float Scale = FMath::Clamp(Wide / Ratio, 1.f, MaxScreenScale);
-
-	// 배치 배율로 준다. 렌더 변환으로 주면 글자가 지글거린다 -- 그쪽은 이미
-	// 그려 놓은 것을 늘리는 것이라 글리프 그림째로 늘어난다. 배치 배율은
-	// 안쪽을 그 크기로 다시 배치하고 글자도 다시 그린다.
+	/*
+	 * 좁은 화면 배율 보정은 전역 DPI 룰(RDHUDScalingRule)이 맡는다.
+	 *
+	 * 이 함수는 예전 ShortestSide DPI 시절에 "좁은 화면에서 카드가 잘린다"를
+	 * 카드/파티 레이어만 키워서 메꾸던 장치였다. 전역 룰이 모자란 축에 맞춰
+	 * 전체를 줄이는 방식(Custom)으로 바뀐 뒤에도 남아, 좁은 창에서 카드만
+	 * 도로 커지는 이중 보정이 됐다 -- 카드는 원본 크기, 나머지는 축소라
+	 * 배율이 제각각으로 보였다(0811). 이제 배율은 전역 룰 한 곳만 만진다.
+	 */
 	for (UScaleBox* Layer : { mCommandLayer.Get(), mPartyLayer.Get() })
 	{
 		if (Layer != nullptr)
 		{
-			Layer->SetUserSpecifiedScale(Scale);
+			Layer->SetUserSpecifiedScale(1.f);
 		}
 	}
 }
@@ -2765,6 +2753,12 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 		? mUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
 
 	SetShown(mConfirmPanel, Phase == ECombatBuildPhaseUI::Preview);
+	// 판은 장식이라 SelfHitTestInvisible 로 두지만, 그 안의 확정 단추는
+	// 실제로 눌려야 한다. 에셋 기본값이 무엇이든 여기서 히트를 살린다 --
+	// 안 살리면 눌림이 뿌리로 새어 판 탭(무르기)이 되어, 확정을 눌렀는데
+	// 경로만 사라진다.
+	SetInteractiveShown(mConfirmButton, Phase == ECombatBuildPhaseUI::Preview);
+	SetInteractiveShown(mEndTurnButton, true);
 	SetTextIfPresent(mEndTurnLabel, Phase == ECombatBuildPhaseUI::None
 		? LOCTEXT("EndTurn", "턴 종료") : LOCTEXT("CancelAim", "취소"));
 
@@ -2801,9 +2795,10 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 	mPendingAPCost = FMath::Clamp(GetPendingActionCost(), 0, Left);
 
 	/*
-	 * 칸보다 AP 가 많으면 **칸 수에서 멈춘다**(0806 합의). 전에는 넘치면
-	 * 아이콘을 전부 접었는데, 그러면 12/12 인데 빈 막대만 남아 "AP 없음"
-	 * 으로 읽혔다. 정확한 수는 옆의 숫자가 말하고, 아이콘은 감이다.
+	 * 칸보다 AP 가 많으면 **칸 수에서 멈춘다**(0806 합의, 0811 재확인).
+	 * 칸은 10개까지만 보여 주고 넘치는 몫은 옆의 숫자가 말한다 -- 전에는
+	 * 넘치면 아이콘을 전부 접었는데, 그러면 12/12 인데 빈 막대만 남아
+	 * "AP 없음" 으로 읽혔다.
 	 */
 	const int32 Room = mTurnAPPips.Num();
 	const int32 ShownTotal = FMath::Min(Total, Room);
@@ -3086,6 +3081,7 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 	{
 		return;
 	}
+
 
 	// 용병 패널은 모달이다. 패널 바깥으로 새어 온 눌림도 전장 명령이나
 	// 커맨드 토글로 해석하지 않는다.

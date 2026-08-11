@@ -52,6 +52,9 @@ class USRPGSkillBuildAction : public USRPGAction
 
 public:
 	USRPGSkillBuildAction();
+	// @brief 겨냥해 둔 타일 (겨냥 전이면 Invalid). 확정 단추가 "그 칸 재탭"을
+	//        흉내 낼 때 쓴다.
+	const FTileIndex& GetTargetIndex() const { return mTargetIndex; }
 
 	/* FSRPGAction 상속 */
 protected:

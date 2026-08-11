@@ -47,6 +47,15 @@ struct FCombatUnitHpBarWidget
 	UPROPERTY(Transient) TObjectPtr<class UImage> mFillImage;
 	/** @brief 채움을 비율만큼 잘라 내려고 폭을 줄이는 칸. */
 	UPROPERTY(Transient) TObjectPtr<class UCanvasPanelSlot> mFillClipSlot;
+	/**
+	 * @brief 채움이 Overlay(HpFillImageMount)에 감싸진 WBP 용 드레인 경로.
+	 *
+	 * 감싼 뒤로 채움의 Slot 이 OverlaySlot 이 되어 위의 캔버스 슬롯 방식이
+	 * 조용히 죽었다 -- 숫자만 줄고 바는 가득이었다(0811 제보). 이때는 왼쪽
+	 * 정렬 + 희망 크기(DesiredSizeOverride)로 폭을 줄인다.
+	 */
+	UPROPERTY(Transient) bool mFillUsesDesiredSize = false;
+	UPROPERTY(Transient) float mFillFullHeight = 0.0f;
 	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mValueText;
 	/** @brief 방어도 아이콘과 수치. 0 이면 감춘다. */
 	UPROPERTY(Transient) TObjectPtr<class UImage> mDefenseIcon;
@@ -68,6 +77,14 @@ struct FCombatUnitHpBarWidget
 	 */
 	UPROPERTY(Transient) TObjectPtr<class UImage> mStatusRailBuff;
 	UPROPERTY(Transient) TObjectPtr<class UImage> mStatusRailDebuff;
+	/**
+	 * @brief 프레임 글로우. 버프=금, 디버프=보라로 판 뒤에서 은은하게 빛난다.
+	 *
+	 * 0806 조사에서 "숨쉬는(깜빡이는) 빛" 은 시선을 뺏어 폐기했으므로,
+	 * 이 글로우는 **정적**이다 -- 켜짐/꺼짐과 색만 바뀐다(0811 결정).
+	 * 종류 구분의 접근성은 아래 상태 띠(자리로 가름)가 계속 맡는다.
+	 */
+	UPROPERTY(Transient) TObjectPtr<class UImage> mFrameGlowImage;
 	/** @brief 다 찼을 때의 폭. 자를 기준이 된다. */
 	float mFillFullWidth = 0.0f;
 
@@ -578,11 +595,6 @@ private:
 	UPROPERTY() TObjectPtr<class UScaleBox> mCommandLayer;
 	UPROPERTY() TObjectPtr<class UScaleBox> mPartyLayer;
 
-	/** @brief 직전에 잰 화면 크기. 바뀔 때만 다시 잰다. */
-	FVector2D mLastViewport = FVector2D::ZeroVector;
-
-	/** @brief 아무리 좁아도 이보다는 안 키운다. 넘으면 판을 덮는다. */
-	static constexpr float MaxScreenScale = 1.6f;
 
 	/** @brief 확정 단추 묶음. 공격 범위가 뜬 그때만 편다. */
 	UPROPERTY() TObjectPtr<UWidget> mConfirmPanel;
@@ -757,6 +769,8 @@ private:
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpFillGreenTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitDefenseIconTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitStatusSlotTexture;
+	/** @brief 버프/디버프 프레임 글로우(흰색 원본, 런타임에 금/보라로 물들인다). */
+	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpGlowTexture;
 
 	/** @brief 상태이상 딱지 그림. 전용 그림이 없는 태그는 빈 칸으로 둔다. */
 	/**
