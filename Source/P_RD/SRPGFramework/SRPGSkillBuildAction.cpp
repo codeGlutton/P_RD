@@ -77,7 +77,12 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
         {
             /* 같으면 취소 */
 
-            CancelBuild();
+            ClearAllTileHighlights();
+            ResetTargetTile();
+            ResetSkill();
+
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
         }
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -157,18 +162,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 SetTargetTile(TargetTileIndex);
                 RefreshEffectTileHighlights();
                 SetBuildPhase(ESRPGSkillBuildPhase::Preview);
-
-                Result = ESRPGCommandResult::Handled;
-                break;
             }
 
-            /* 사거리 밖 칸 클릭 시, 판 밖을 누른 것과 같게 취소 */
-
-            // 조준 중에 못 닿는 칸을 누르는 손짓은 "저기로 바꿔줘" 가 아니라
-            // "그만" 이다. 아무 일도 안 일어나게 두면 사거리만 칠해진 채로
-            // 갇힌다 -- 판이 화면을 거의 다 덮고 있어서 판 밖을 누를 자리가
-            // 거의 없다.
-            CancelBuild();
             Result = ESRPGCommandResult::Handled;
             break;
         }
@@ -195,23 +190,18 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
         {
             /* 조준 대상 설정 단계에서 한단계 취소 시, 빌드 자체 종료 */
 
-            CancelBuild();
+            ClearAllTileHighlights();
+            ResetTargetTile();
+            ResetSkill();
+
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            SetBuildPhase(ESRPGSkillBuildPhase::None);
             Result = ESRPGCommandResult::Handled;
             break;
         }
         }
     }
     return Result;
-}
-
-void USRPGSkillBuildAction::CancelBuild()
-{
-    ClearAllTileHighlights();
-    ResetTargetTile();
-    ResetSkill();
-
-    MarkActionCompleted(ESRPGActionResult::Cancelled);
-    SetBuildPhase(ESRPGSkillBuildPhase::None);
 }
 
 void USRPGSkillBuildAction::SetSkill(int32 SkillIndex)
@@ -245,17 +235,15 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
 {
     checkf(mSkillBuildPhase == ESRPGSkillBuildPhase::AimSelection, TEXT("스킬 빌드 순서 오류"));
 
-    mTargetIndex = TargetIndex;
-
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-    TArray<TObjectPtr<UBoardActorModel>> AllEffectActors;
-    for (const FTileIndex& EffectTileIndex : mEffectTileIndexes)
-    {
-        TArray<UBoardActorModel*> EffectActors = TileMap->GetActorsOnTile(EffectTileIndex);
-        AllEffectActors.Append(EffectActors);
-    }
+    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
+    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
+
+    mSelectedTileIndex = TargetIndex;
+    mTargetTileIndexes = SkillCompModel->GetTargetTiles(TileMap, mSelectedSkillIndex, mSelectedTileIndex);
+    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetTileIndexes);
 
     USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
     checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 모델 nullptr"));
@@ -263,7 +251,7 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mSelectedTileIndex;
 
     TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->SimulateUntilNextAction(MoveTemp(SkillCastCommand));
     OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
@@ -279,7 +267,7 @@ void USRPGSkillBuildAction::BuildSkill()
     TInstancedStruct<FSRPGCommand> SkillCastCommand;
     SkillCastCommand.InitializeAs<FSRPGSkillCastCommand>();
     SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
-    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mTargetIndex;
+    SkillCastCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mSelectedTileIndex;
 
     CommandRouterModel->SummitCommand(SkillCastCommand);
 }
@@ -295,7 +283,8 @@ void USRPGSkillBuildAction::ResetSkill()
 void USRPGSkillBuildAction::ResetTargetTile()
 {
     mEffectTileIndexes.Empty();
-    mTargetIndex = FTileIndex::Invalid;
+    mTargetTileIndexes.Empty();
+    mSelectedTileIndex = FTileIndex::Invalid;
 }
 
 void USRPGSkillBuildAction::ClearAllTileHighlights()
@@ -323,10 +312,7 @@ void USRPGSkillBuildAction::RefreshEffectTileHighlights()
     UTileMapModel* TileMap = GetTileMap();
     checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-    USkillComponentModel* SkillCompModel = mInstigator->GetSkillComponentModel();
-    checkf(SkillCompModel != nullptr, TEXT("스킬 컴포넌트 모델 nullptr"));
-
-    mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetIndex);
+    TileMap->SetTileHighlight(mTargetTileIndexes, ETileHighlightFlag::Select);
     TileMap->SetTileHighlight(mEffectTileIndexes, ETileHighlightFlag::Effect);
 }
 
@@ -337,7 +323,7 @@ bool USRPGSkillBuildAction::CanSelectTargetTile(const FTileIndex& Index) const
 
 bool USRPGSkillBuildAction::CanConfirmTargetTile(const FTileIndex& Index) const
 {
-    return mTargetIndex != FTileIndex::Invalid && mTargetIndex == Index;
+    return mSelectedTileIndex != FTileIndex::Invalid && mSelectedTileIndex == Index;
 }
 
 bool USRPGSkillBuildAction::CanBuildSkill() const
@@ -362,6 +348,11 @@ void USRPGSkillBuildAction::SetBuildPhase(ESRPGSkillBuildPhase BuildPhase)
 
     mSkillBuildPhase = BuildPhase;
     OnChangeSkillBuildPhase.Broadcast(this, BuildPhase);
+}
+
+const FTileIndex& USRPGSkillBuildAction::GetSelectedTileIndex() const
+{
+    return mSelectedTileIndex;
 }
 
 UTileMapModel* USRPGSkillBuildAction::GetTileMap() const
