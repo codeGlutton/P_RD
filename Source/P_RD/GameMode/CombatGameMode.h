@@ -52,6 +52,9 @@ protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;
 
+private:
+	void InitializeCombat();
+
 public:
 	UCombatUIModel* GetCombatUIModel() const;
 	URewardUIModel* GetRewardUIModel() const;
@@ -89,6 +92,8 @@ public:
 
 	UFUNCTION()
 	void HandleSaveAndExitRun();
+
+	void HandleChangeFocusScreenAnchor(const FVector2D& ScreenRatio);
 
 protected:
 	/**

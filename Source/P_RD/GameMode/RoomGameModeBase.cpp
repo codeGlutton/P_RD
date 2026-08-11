@@ -235,6 +235,15 @@ AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 	return PlayerStartActor;
 }
 
+APawn* ARoomGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
+{
+	FRotator StartRotation = StartSpot->GetActorRotation();
+	FVector StartLocation = StartSpot->GetActorLocation();
+
+	FTransform Transform = FTransform(StartRotation, StartLocation);
+	return SpawnDefaultPawnAtTransform(NewPlayer, Transform);
+}
+
 void ARoomGameModeBase::InitializeCommonRoom()
 {
 	Super::InitializeCommonRoom();
@@ -243,6 +252,9 @@ void ARoomGameModeBase::InitializeCommonRoom()
 	RestorePlayerUnit();
 	// 방 전환 즉시 저장
 	SaveRunWithUIAsync();
+
+	// 카메라를 갱신하여 ProjMat을 갱신해줍니다.
+	GetWorld()->GetFirstPlayerController()->PlayerCameraManager->UpdateCamera(0.0f);
 }
 
 void ARoomGameModeBase::BeginRoom()

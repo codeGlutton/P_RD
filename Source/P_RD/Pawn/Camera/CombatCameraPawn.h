@@ -48,7 +48,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:
+private:
 	UPROPERTY(Category = Default, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SceneComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> mSceneComponent;
 
@@ -64,6 +64,7 @@ public:
 	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimeScaleComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UTimeScaleComponent> mTimeScaleComponent;
 
+public:
 	// ========================================
 	// Touch 상태 관련 변수
 

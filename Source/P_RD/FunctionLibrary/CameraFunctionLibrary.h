@@ -25,5 +25,12 @@ public:
 	static bool IsCameraShakePossible(const UObject* WorldContextObject);
 
 public:
+	static FIntVector2 GetMainViewportSize(const UObject* WorldContextObject);
+	static FVector2D GetSizeOnMainViewport(const UObject* WorldContextObject, const FVector2D& SizeRatio);
+
+public:
 	static ACombatCameraPawn* GetMainCameraPawn(const UObject* WorldContextObject);
+
+private:
+	static APlayerController* GetMainController(const UObject* WorldContextObject);
 };

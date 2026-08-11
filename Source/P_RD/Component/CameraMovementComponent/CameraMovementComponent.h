@@ -51,17 +51,15 @@ class P_RD_API UCameraMovementComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
 	UCameraMovementComponent();
 
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	void InitializeComponent() override;
+	void BeginPlay() override;
+	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 protected:
 	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraComponent", AllowPrivateAccess = "true"))
@@ -70,12 +68,8 @@ protected:
 	/*
 	* @breif 카메라 조작을 위한 카메라판 입니다.
 	*/
-	UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadWrite, meta = (DisplayName = "CameraPlane", AllowPrivateAccess = "true"))
-	TWeakObjectPtr<ACombatCameraPlane> mCameraPlane;
-
-	//UPROPERTY(Category = Camera, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SpringArmComponent", AllowPrivateAccess = "true"))
-	//TObjectPtr<USpringArmComponent> mSpringArmComponent;
-
+	UPROPERTY(Category = Camera, VisibleAnywhere, meta = (DisplayName = "GroundPlane", AllowPrivateAccess = "true"))
+	FPlane mGroundPlane;
 
 protected:
 	/*
@@ -162,6 +156,13 @@ protected:
 	*/
 	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TargetLookAtCameraLocation", AllowPrivateAccess = "true"))
 	FVector2D mTargetLookAtCameraLocation;
+
+	/*
+	* @brief 뷰포트 좌표 오프셋 (정규화 비율)
+	* @details (0.5, 0.5)가 화면 중앙이며, (0.3, 0.5) 설정 시 주시 대상이 화면 좌측 30% 지점에 배치됩니다.
+	*/
+	UPROPERTY(Category = CameraMove, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ViewportOffset", AllowPrivateAccess = "true"))
+	FVector2D mViewportOffset = FVector2D(0.5f, 0.5f);
 	
 
 protected:
@@ -207,31 +208,55 @@ private:
 	*/
 	bool mInitCameraLocation = false;
 
-	/* 기타 내부 함수*/
+	/* 초기화 함수*/
 private:
+	/*
+	* @brief mGroundPlane을 초기화합니다.
+	*/
+	void InitializeCameraGround();
+
 	/*
 	* @brief mTargetLocation을 초기화합니다.
 	* @details Plane 생성 후 현재 위치에서 Ray를 쏘아 mTargetLocation을 초기화합니다.
 	*/
 	void InitializeCameraTargetLocation();
 
+	/* 계산 헬퍼 함수*/
+private:
 	/*
-	* @brief 카메라가 있는 위치를 기준으로 Ray를 쏘고 결과를 받습니다.
-	* @param HitResult 결과를 반환합니다.
+	* @brief 주어진 값을 기준으로 Plane 충돌 검사 결과를 받습니다.
+	* @param StartTrace 시작 지점
+	* @param EndTrace 끝 지점
+	* @param ImpactPoint 결과를 반환합니다.
 	* @return 성공 여부를 반환합니다.
 	*/
-	bool GetCameraRayHitPoint(OUT FHitResult& HitResult);
+	bool GetCameraGroundImpactPoint(const FVector& StartTrace, const FVector& EndTrace, OUT FVector& ImpactPoint);
+	/*
+	* @brief 카메라가 있는 위치를 기준으로 Plane 충돌 검사 결과를 받습니다.
+	* @param ImpactPoint 결과를 반환합니다.
+	* @return 성공 여부를 반환합니다.
+	*/
+	bool GetCameraRayImpactPoint(OUT FVector& ImpactPoint);
 
 	/*
-	* @brief 화면 픽셀 좌표에서 카메라 판으로 Ray를 쏘고 결과를 받습니다.
-	* @param ScreenPosition 화면 픽셀 좌표
-	* @param HitResult 결과를 반환합니다.
+	* @brief mViewportOffset 위치에서 카메라 판으로 Plane 충돌 검사 결과를 받습니다.
+	* @param ImpactPoint 결과를 반환합니다.
 	* @return 성공 여부를 반환합니다.
 	*/
-	bool GetScreenRayHitPoint(FVector2D ScreenPosition, OUT FHitResult& HitResult);
+	bool GetCameraRayImpactPointWithOffset(OUT FVector& ImpactPoint);
+
+	/*
+	* @brief 화면 픽셀 좌표에서 카메라 판으로 Plane 충돌 검사 결과를 받습니다.
+	* @param ScreenPosition 화면 픽셀 좌표
+	* @param ImpactPoint 결과를 반환합니다.
+	* @return 성공 여부를 반환합니다.
+	*/
+	bool GetScreenRayImpactPoint(FVector2D ScreenPosition, OUT FVector& ImpactPoint);
 
 	FVector ClampLocationWithinRotatedBox(const FVector& WorldLocation);
 
+	/* 틱 마다 업데이트 함수*/
+private:
 	/*
 	* @brief 카메라의 위치와 OrthoWidth의 크기를 범위에서 벗어나지 못하게 합니다.
 	*/
@@ -259,6 +284,13 @@ private:
 	* 현재 활성화된 CameraShake에서 OrthoWidthValue를 가져와 Zoom을 흔듭니다.
 	*/
 	void ShakeZoom();
+
+	/*
+	* @brief 강조 상태에서 EmphasisActor가 존재한다면 TargetLocation을 조정합니다.
+	* @details
+	* 틱에서 호출되며 유닛의 위치를 매 틱마다 따라갈 수 있도록 TargetLocation을 조정하는 함수입니다.
+	*/
+	void FollowActor();
 
 	/*Get, Set*/
 public:
@@ -289,6 +321,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetEmphasisZoom(float EmphasisZoom);
 
+	UFUNCTION(BlueprintCallable)
+	void SetViewportOffset(FVector2D ViewportOffset);
+
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetViewportOffset() const;
+
+
 
 	/* 터치로 카메라 조작*/
 public:
@@ -312,6 +351,21 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void DragMoveToViewportPosition_Instant(FVector2D PreViewPortPos, FVector2D CurViewPortPos);
+
+	/* 단순 이동 기능*/
+public:
+	/*
+	* @brief WorldPosition로 카메라의 시선을 옮긴다.
+	* @param WorldPosition 위치로 카메라의 시선을 천천히 옮깁니다.
+	* @param IsInstantMove 즉시 이동 여부
+	*/
+	UFUNCTION(BlueprintCallable)
+	void MoveToWorldPosition(FVector WorldPosition, bool IsInstantMove);
+
+	UFUNCTION(BlueprintCallable)
+	void StartFollowingActor(AActor* FollowingActor);
+	UFUNCTION(BlueprintCallable)
+	void EndFollowingActor();
 
 	/* 강조 기능*/
 public:
@@ -370,19 +424,6 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void EndEmphasis();
-
-	/*
-	* @brief 카메라를 **바로** 옮겨 WorldPosition 이 화면의 ScreenAnchor 자리에 오게 한다.
-	* @details 화면(UI)에서 "이 유닛을 보여 줘" 할 때 쓴다. 부드럽게 따라가면
-	*          판이 흐르듯 움직여 어지럽다는 검수가 있었다(0806).
-	*          강조와 달리 카메라를 잠그지 않는다 -- 옮긴 뒤 손으로 계속 본다.
-	*          앵커를 받는 이유: "가운데" 가 화면 한가운데가 아니라 스킬
-	*          카드들이 둘러싼 자리이기 때문(0807). 그 자리는 UI 가 안다.
-	* @param WorldPosition 이 자리가 ScreenAnchor 에 오게 옮긴다
-	* @param ScreenAnchor 화면 픽셀 좌표(뷰포트 기준)
-	*/
-	UFUNCTION(BlueprintCallable)
-	void JumpToWorldPositionAtScreen(FVector WorldPosition, FVector2D ScreenAnchor);
 
 	/* 카메라 셰이크*/
 public:
@@ -464,15 +505,4 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void MoveToDeltaPosition_Instant(FVector DeltaPosition);
-
-private:
-	/* 강조 기능 : private */
-
-	/*
-	* @brief 강조 상태에서 EmphasisActor가 존재한다면 TargetLocation을 조정합니다.
-	* @details
-	* 틱에서 호출되며 유닛의 위치를 매 틱마다 따라갈 수 있도록 TargetLocation을 조정하는 함수입니다.
-	*/
-	void FollowActor();
-
 };

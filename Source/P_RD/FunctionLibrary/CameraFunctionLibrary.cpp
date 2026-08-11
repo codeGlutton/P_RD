@@ -1,4 +1,4 @@
-﻿#include "FunctionLibrary/CameraFunctionLibrary.h"
+#include "FunctionLibrary/CameraFunctionLibrary.h"
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -37,7 +37,42 @@ bool UCameraFunctionLibrary::IsCameraShakePossible(const UObject* WorldContextOb
 	return OptionData->IsCameraShakeEnabled();
 }
 
+FIntVector2 UCameraFunctionLibrary::GetMainViewportSize(const UObject* WorldContextObject)
+{
+	FIntVector2 ViewportSize = FIntVector2::ZeroValue;
+
+	const APlayerController* PlayerController = GetMainController(WorldContextObject);
+	if (PlayerController == nullptr)
+	{
+		return ViewportSize;
+	}
+
+	PlayerController->GetViewportSize(OUT ViewportSize.X, OUT ViewportSize.Y);
+	return ViewportSize;
+}
+
+FVector2D UCameraFunctionLibrary::GetSizeOnMainViewport(const UObject* WorldContextObject, const FVector2D& SizeRatio)
+{
+	FIntVector2 ViewportSize = GetMainViewportSize(WorldContextObject);
+	return FVector2D(ViewportSize.X * SizeRatio.X, ViewportSize.Y * SizeRatio.Y);
+}
+
 ACombatCameraPawn* UCameraFunctionLibrary::GetMainCameraPawn(const UObject* WorldContextObject)
+{
+	const APlayerController* PlayerController = GetMainController(WorldContextObject);
+	if (PlayerController != nullptr)
+	{
+		ACombatCameraPawn* CameraPawn = PlayerController->GetPawn<ACombatCameraPawn>();
+		if (CameraPawn != nullptr)
+		{
+			return CameraPawn;
+		}
+	}
+
+	return nullptr;
+}
+
+APlayerController* UCameraFunctionLibrary::GetMainController(const UObject* WorldContextObject)
 {
 	if (WorldContextObject == nullptr)
 	{
@@ -50,15 +85,5 @@ ACombatCameraPawn* UCameraFunctionLibrary::GetMainCameraPawn(const UObject* Worl
 		return nullptr;
 	}
 
-	const APlayerController* PlayerController = World->GetFirstPlayerController();
-	if (PlayerController != nullptr)
-	{
-		ACombatCameraPawn* CameraPawn = PlayerController->GetPawn<ACombatCameraPawn>();
-		if (CameraPawn != nullptr)
-		{
-			return CameraPawn;
-		}
-	}
-
-	return nullptr;
+	return World->GetFirstPlayerController();
 }

@@ -29,20 +29,26 @@ ACombatCameraPawn::ACombatCameraPawn()
 	//mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	//mSpringArmComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 
-	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
-	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
-	mCameraComponent->OrthoWidth = 2000.0f;
-	mCameraComponent->bAutoCalculateOrthoPlanes = false;
-	mCameraComponent->OrthoNearClipPlane = -2000.f;
-	mCameraComponent->OrthoFarClipPlane = 20000.f;
-	//mCameraComponent->bCameraMeshHiddenInGame = false;
-	mCameraComponent->SetupAttachment(mSceneComponent);
+	{
+		mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+		mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
+		mCameraComponent->OrthoWidth = 2000.0f;
+		mCameraComponent->bAutoCalculateOrthoPlanes = false;
+		mCameraComponent->OrthoNearClipPlane = -2000.f;
+		mCameraComponent->OrthoFarClipPlane = 20000.f;
+		//mCameraComponent->bCameraMeshHiddenInGame = false;
+		mCameraComponent->SetupAttachment(mSceneComponent);
+	}
 
-	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
-	mCameraMovementComponent->SetCameraComponent(mCameraComponent);
-	//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
+	{
+		mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
+		mCameraMovementComponent->SetCameraComponent(mCameraComponent);
+		//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
+	}
 
-	mTimeScaleComponent = CreateDefaultSubobject<UTimeScaleComponent>("TimeScaleComponent");
+	{
+		mTimeScaleComponent = CreateDefaultSubobject<UTimeScaleComponent>("TimeScaleComponent");
+	}
 
 	// 카메라 회전은 컨트롤러 회전을 그대로 따라감
 	bUseControllerRotationPitch = true;

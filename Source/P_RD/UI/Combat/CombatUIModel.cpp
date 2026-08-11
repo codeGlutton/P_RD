@@ -84,6 +84,11 @@ void UCombatUIModel::SetTarget(const FCombatTargetUI& Target)
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
+void UCombatUIModel::SetFocusScreenAnchor(FVector2D AnchorFraction)
+{
+	OnChangeFocusScreenAnchor.Broadcast(AnchorFraction);
+}
+
 void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
