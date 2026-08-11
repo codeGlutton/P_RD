@@ -2,6 +2,7 @@
 #include "UI/UIPartRects.h"
 #include "UI/UIFont.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "AssetToolsModule.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
@@ -22,6 +23,7 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintEditorUtils.h"
 #include "WidgetBlueprintFactory.h"
 
 namespace MonsterTabWidgetBuilder
@@ -206,11 +208,13 @@ namespace MonsterTabWidgetBuilder
 		Blueprint->WidgetTree->Modify();
 		Blueprint->ParentClass = UUserWidget::StaticClass();
 		// 이 빌더는 부분 갱신이 아니라 트리를 통째로 다시 만든다. 이전 Root를
-		// 단순 교체하면 옛 Divider 자식이 WidgetTree 안에 고아로 남아 GUID
-		// ensure를 낸다. 루트와 변수 표를 먼저 비우고 필요한 이름만 다시 노출한다.
+		// 단순 교체하면 자식 UObject가 WidgetTree 안에 고아로 남아 GUID ensure를
+		// 낸다. 에디터 삭제 경로로 자식까지 transient package로 옮긴다.
 		if (UWidget* PreviousRoot = Blueprint->WidgetTree->RootWidget)
 		{
-			Blueprint->WidgetTree->RemoveWidget(PreviousRoot);
+			FWidgetBlueprintEditorUtils::DeleteWidgets(
+				Blueprint, { PreviousRoot },
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
 		}
 
 		UOverlay* Root = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
@@ -258,7 +262,7 @@ namespace MonsterTabWidgetBuilder
 		// 열 비율을 못 바꾸고, 16:9 가 아닌 폰에서 나무가 늘어났다.
 		// 이제 바깥 틀 한 장 + 기둥 두 개를 코드가 놓는다.
 		UTexture2D* BaseFrame = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* RowNormal = Texture(
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* RowSelected = Texture(
@@ -266,7 +270,7 @@ namespace MonsterTabWidgetBuilder
 		// 같은 기능인데 지도·탭·설정이 서로 다른 단추를 쓰고 있었다(0804 검수).
 		// 공용 KitA 단추 하나로 모은다.
 		UTexture2D* BackButtonTexture = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		// 바깥 틀은 9-slice 로 편다. 모서리 장식이 x91 · y98 까지라 그 안쪽만 늘어난다
 		// (Saved/UIKit/_slice_margins.txt 실측).
 		AddDarkWell(Blueprint, Canvas, TEXT("MonsterTabContentWell"),
@@ -348,7 +352,7 @@ namespace MonsterTabWidgetBuilder
 
 		// ── 가운데 칸: 고른 몬스터의 모습과 이름 ────────────────────────
 		UTexture2D* PortraitCell = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		AddImage(Blueprint, Canvas, TEXT("MonsterPortraitFrame"), PortraitCell,
 			FVector2D(MidCell.X + Gutter, MidCell.Y + 70.0f),
 			FVector2D(MidSize.X - Gutter * 2.f, MidSize.X - Gutter * 2.f), 14, true);
@@ -399,7 +403,7 @@ namespace MonsterTabWidgetBuilder
 		Cursor += 96.f;
 
 		UTexture2D* ChipRing = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring"));
 		const TCHAR* const ChipValueNames[4] = {
 			TEXT("MonsterDetailHPText"), TEXT("MonsterDetailAPText"),
 			TEXT("MonsterDetailDefenseText"), TEXT("MonsterDetailSpeedText") };
@@ -445,7 +449,7 @@ namespace MonsterTabWidgetBuilder
 
 		// 스킬은 아이콘 한 줄. 이름은 아이콘이 없을 때만 런타임이 켠다.
 		UTexture2D* SkillSlotFrame = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		const float SkillRoom = RightInner / 4.f;
 		const float SkillSide = FMath::Min(SkillRoom - 14.f, 168.f);
 		for (int32 Index = 0; Index < 4; ++Index)
@@ -479,19 +483,38 @@ namespace MonsterTabWidgetBuilder
 		}
 
 		/*
-		 * 트리를 통째로 다시 만드는 빌더라, 지난 배치에만 있던 이름은 변수
-		 * GUID 만 남는다. 그대로 두면 컴파일마다 "was deleted but still has a
-		 * GUID" ensure 가 뜬다. 살아 있는 이름을 모아 두고 나머지를 걷는다.
+		 * 트리를 통째로 다시 만드는 빌더라 삭제한 이름의 GUID는 걷고, 새로 만든
+		 * 비노출 위젯에도 GUID를 채운다. 컴파일러는 bIsVariable 여부와 무관하게
+		 * 모든 source widget의 GUID를 검증한다.
 		 */
 		{
 			TSet<FName> Live;
-			Blueprint->WidgetTree->ForEachWidget([&Live](UWidget* Widget)
+			Blueprint->ForEachSourceWidget([Blueprint, &Live](UWidget* Widget)
 			{
 				if (Widget != nullptr)
 				{
-					Live.Add(Widget->GetFName());
+					const FName Name = Widget->GetFName();
+					Live.Add(Name);
+					if (!Blueprint->WidgetVariableNameToGuidMap.Contains(Name))
+					{
+						Blueprint->WidgetVariableNameToGuidMap.Add(
+							Name, FGuid::NewDeterministicGuid(Widget->GetPathName()));
+					}
 				}
 			});
+			for (const UWidgetAnimation* Animation : Blueprint->Animations)
+			{
+				if (Animation != nullptr)
+				{
+					const FName Name = Animation->GetFName();
+					Live.Add(Name);
+					if (!Blueprint->WidgetVariableNameToGuidMap.Contains(Name))
+					{
+						Blueprint->WidgetVariableNameToGuidMap.Add(
+							Name, FGuid::NewDeterministicGuid(Animation->GetPathName()));
+					}
+				}
+			}
 			TArray<FName> Stale;
 			for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
 			{
@@ -502,7 +525,6 @@ namespace MonsterTabWidgetBuilder
 			}
 			for (const FName& Name : Stale)
 			{
-				Blueprint->WidgetVariableNameToGuidMap.Remove(Name);
 				Blueprint->OnVariableRemoved(Name);
 			}
 		}

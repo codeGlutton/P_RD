@@ -819,6 +819,19 @@ private:
 	/** @brief 상세 판 아무 데나 눌러 닫는 받이. */
 	UFUNCTION() void HandleDetailCloseCatchClicked();
 
+	/** @brief 스킬을 보는 동안 그 스킬 주인을 화면 가운데로 데려온다. */
+	void FocusCameraOnTurnUnit();
+
+	/** @brief 카드 고리 가운데 자리(0~1 비율). 카메라 초점이 놓일 곳. */
+	FVector2D ComputeCommandRingAnchor() const;
+
+	/**
+	 * @brief 이 유닛을 화면 가운데로 데려오라고 청한다.
+	 * @param bWithCommandRing 스킬 카드가 함께 뜨는 경우 true -- 그때만 카드
+	 *        고리 가운데로 세부조정한다. 카드가 안 뜨면 화면 한가운데(0807).
+	 */
+	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing);
+
 	/**
 	 * @brief 다음 유닛 상세 응답으로는 상세창을 띄우지 않는다.
 	 *

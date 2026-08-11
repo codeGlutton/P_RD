@@ -334,7 +334,15 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	Board->TakeWidget();
 	TArray<FFrontendCharacterOption> KnightOnly;
 	KnightOnly.Add(MakeOption(0, TEXT("기사"), true));
+	KnightOnly[0].mRoleText = FText::FromString(TEXT("방패 탱커 · 근접"));
 	Board->SetCharacterOptions(KnightOnly, 3);
+	UTextBlock* KnightRole = Cast<UTextBlock>(
+		Board->WidgetTree->FindWidget(TEXT("HireRole_0")));
+	if (TestNotNull(TEXT("기사 역할 부연설명"), KnightRole))
+	{
+		TestEqual(TEXT("역할 문구는 실제 후보 데이터를 표시한다"),
+			KnightRole->GetText().ToString(), FString(TEXT("방패 탱커 · 근접")));
+	}
 	Board->ClickCard(5);
 	Board->ClickAdd();
 	TestFalse(TEXT("서버가 주지 않은 가짜 여섯째 후보는 선택되지 않는다"),

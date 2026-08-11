@@ -10,6 +10,7 @@
 #include "UI/SettingsPanelWidgetBuilder.h"
 #include "UI/WidgetVariableCleanup.h"
 #include "UI/WidgetTexturePurge.h"
+#include "UI/WorldMapLandscapeWidgetBuilder.h"
 
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
@@ -23,6 +24,7 @@ void FP_RDEditorModule::StartupModule()
 	RegisterSettingsPanelWidgetBuilderCommands();
 	RegisterWidgetVariableCleanupCommands();
 	RegisterWidgetTexturePurgeCommands();
+	RegisterWorldMapLandscapeWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 */
 
@@ -46,6 +48,7 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterSettingsPanelWidgetBuilderCommands();
 	UnregisterWidgetVariableCleanupCommands();
 	UnregisterWidgetTexturePurgeCommands();
+	UnregisterWorldMapLandscapeWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 해제 */
 

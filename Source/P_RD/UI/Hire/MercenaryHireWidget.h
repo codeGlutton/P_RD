@@ -69,6 +69,8 @@ struct FMercenaryCardWidgets
 	UPROPERTY() TObjectPtr<UButton> mButton = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mPortrait = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mName = nullptr;
+	/** @brief 이름 아래에 표시하는 전투 역할 요약. */
+	UPROPERTY() TObjectPtr<UTextBlock> mRole = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mHP = nullptr;
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mSkills;
 	UPROPERTY() TObjectPtr<UTextBlock> mBadge = nullptr;

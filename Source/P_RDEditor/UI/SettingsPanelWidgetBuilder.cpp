@@ -6,6 +6,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ButtonSlot.h"
+#include "Components/CheckBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
@@ -15,6 +16,7 @@
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
 #include "Components/SizeBox.h"
+#include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "HAL/IConsoleManager.h"
@@ -29,6 +31,42 @@
 namespace SettingsPanelWidgetBuilder
 {
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+
+	constexpr const TCHAR* SettingsLedgerAssetRoot =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger");
+
+	UTexture2D* LoadSettingsLedgerTexture(const TCHAR* PartName)
+	{
+		const FString AssetName = FString::Printf(
+			TEXT("T_MB_SettingsLedger_%s"), PartName);
+		const FString ObjectPath = FString::Printf(TEXT("%s/%s.%s"),
+			SettingsLedgerAssetRoot, *AssetName, *AssetName);
+		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *ObjectPath);
+		if (Texture == nullptr)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("RD_SETTINGS_LEDGER missing texture %s"), *ObjectPath);
+		}
+		return Texture;
+	}
+
+	struct FSettingsLedgerTextures
+	{
+		UTexture2D* BookBase = LoadSettingsLedgerTexture(TEXT("BookBase"));
+		UTexture2D* SectionRibbon = LoadSettingsLedgerTexture(TEXT("SectionRibbon"));
+		UTexture2D* RowLabel = LoadSettingsLedgerTexture(TEXT("RowLabel"));
+		UTexture2D* ChoiceButton = LoadSettingsLedgerTexture(TEXT("ChoiceButton"));
+		UTexture2D* ChoiceButtonSelected =
+			LoadSettingsLedgerTexture(TEXT("ChoiceButton_Selected"));
+		UTexture2D* ActionButton = LoadSettingsLedgerTexture(TEXT("ActionButton"));
+		UTexture2D* ActionButtonDanger =
+			LoadSettingsLedgerTexture(TEXT("ActionButton_Danger"));
+		UTexture2D* ToggleOff = LoadSettingsLedgerTexture(TEXT("ToggleOff"));
+		UTexture2D* ToggleOn = LoadSettingsLedgerTexture(TEXT("ToggleOn"));
+		UTexture2D* SliderThumb = LoadSettingsLedgerTexture(TEXT("SliderThumb"));
+		UTexture2D* SliderTrack = LoadSettingsLedgerTexture(TEXT("SliderTrack"));
+		UTexture2D* SliderFill = LoadSettingsLedgerTexture(TEXT("SliderFill"));
+	};
 
 	void RemoveWidget(UWidgetBlueprint* Blueprint, const FName Name)
 	{
@@ -88,6 +126,132 @@ namespace SettingsPanelWidgetBuilder
 			return FVector2D(ImportedSize.X, ImportedSize.Y);
 		}
 		return FVector2D(Texture->GetSizeX(), Texture->GetSizeY());
+	}
+
+	FSlateBrush MakeTextureBrush(UTexture2D* Texture, const FVector2D ImageSize,
+		const FLinearColor Tint = FLinearColor::White)
+	{
+		FSlateBrush Brush;
+		Brush.SetResourceObject(Texture);
+		Brush.DrawAs = Texture != nullptr
+			? ESlateBrushDrawType::Image : ESlateBrushDrawType::NoDrawType;
+		Brush.Margin = FMargin(0.f);
+		Brush.SetImageSize(ImageSize);
+		Brush.TintColor = FSlateColor(Tint);
+		return Brush;
+	}
+
+	void PlaceWidgetInSettingsCanvas(UCanvasPanel* ContentCanvas, UWidget* Widget,
+		const FVector2D Position, const FVector2D Size,
+		int32 ZOrder, ESlateVisibility Visibility);
+
+	void ApplyTextureToImage(UWidgetBlueprint* Blueprint, const TCHAR* ImageName,
+		UTexture2D* Texture)
+	{
+		UImage* Image = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(FName(ImageName)));
+		if (Image == nullptr || Texture == nullptr)
+		{
+			return;
+		}
+
+		Image->SetBrush(MakeTextureBrush(Texture, TextureNativeSize(Texture)));
+		Image->SetColorAndOpacity(FLinearColor::White);
+	}
+
+	UImage* EnsureLedgerImage(UWidgetBlueprint* Blueprint, UCanvasPanel* Canvas,
+		const FName Name, UTexture2D* Texture, const FVector2D Position,
+		const FVector2D Size, const int32 ZOrder)
+	{
+		if (Canvas == nullptr || Texture == nullptr)
+		{
+			return nullptr;
+		}
+
+		UImage* Image = Cast<UImage>(Blueprint->WidgetTree->FindWidget(Name));
+		if (Image == nullptr)
+		{
+			Image = Blueprint->WidgetTree->ConstructWidget<UImage>(
+				UImage::StaticClass(), Name);
+		}
+		Image->SetBrush(MakeTextureBrush(Texture, TextureNativeSize(Texture)));
+		Image->SetColorAndOpacity(FLinearColor::White);
+		PlaceWidgetInSettingsCanvas(Canvas, Image, Position, Size, ZOrder,
+			ESlateVisibility::SelfHitTestInvisible);
+		return Image;
+	}
+
+	void ApplyLedgerCheckBoxStyle(UWidgetBlueprint* Blueprint,
+		const TCHAR* CheckBoxName, UTexture2D* ToggleOff, UTexture2D* ToggleOn)
+	{
+		UCheckBox* CheckBox = Cast<UCheckBox>(
+			Blueprint->WidgetTree->FindWidget(FName(CheckBoxName)));
+		if (CheckBox == nullptr || ToggleOff == nullptr || ToggleOn == nullptr)
+		{
+			return;
+		}
+
+		const FVector2D ToggleSize(120.f, 60.f);
+		const FSlateBrush Off = MakeTextureBrush(ToggleOff, ToggleSize);
+		const FSlateBrush OffHovered = MakeTextureBrush(ToggleOff, ToggleSize,
+			FLinearColor(1.18f, 1.18f, 1.18f, 1.f));
+		const FSlateBrush OffPressed = MakeTextureBrush(ToggleOff, ToggleSize,
+			FLinearColor(.82f, .82f, .82f, 1.f));
+		const FSlateBrush On = MakeTextureBrush(ToggleOn, ToggleSize);
+		const FSlateBrush OnHovered = MakeTextureBrush(ToggleOn, ToggleSize,
+			FLinearColor(1.18f, 1.18f, 1.18f, 1.f));
+		const FSlateBrush OnPressed = MakeTextureBrush(ToggleOn, ToggleSize,
+			FLinearColor(.82f, .82f, .82f, 1.f));
+		FSlateBrush NoDraw;
+		NoDraw.DrawAs = ESlateBrushDrawType::NoDrawType;
+
+		FCheckBoxStyle Style = CheckBox->GetWidgetStyle();
+		Style.SetCheckBoxType(ESlateCheckBoxType::CheckBox)
+			.SetUncheckedImage(Off)
+			.SetUncheckedHoveredImage(OffHovered)
+			.SetUncheckedPressedImage(OffPressed)
+			.SetCheckedImage(On)
+			.SetCheckedHoveredImage(OnHovered)
+			.SetCheckedPressedImage(OnPressed)
+			.SetUndeterminedImage(Off)
+			.SetUndeterminedHoveredImage(OffHovered)
+			.SetUndeterminedPressedImage(OffPressed)
+			.SetPadding(FMargin(0.f))
+			.SetBackgroundImage(NoDraw)
+			.SetBackgroundHoveredImage(NoDraw)
+			.SetBackgroundPressedImage(NoDraw);
+		CheckBox->SetWidgetStyle(Style);
+	}
+
+	void ApplyLedgerSliderStyle(UWidgetBlueprint* Blueprint,
+		const TCHAR* SliderName, UTexture2D* SliderThumb)
+	{
+		USlider* Slider = Cast<USlider>(
+			Blueprint->WidgetTree->FindWidget(FName(SliderName)));
+		if (Slider == nullptr || SliderThumb == nullptr)
+		{
+			return;
+		}
+
+		FSlateBrush NoDraw;
+		NoDraw.DrawAs = ESlateBrushDrawType::NoDrawType;
+		const FVector2D ThumbSize(62.f, 62.f);
+		const FSlateBrush Thumb = MakeTextureBrush(SliderThumb, ThumbSize);
+		const FSlateBrush ThumbHovered = MakeTextureBrush(SliderThumb, ThumbSize,
+			FLinearColor(1.18f, 1.18f, 1.18f, 1.f));
+		const FSlateBrush ThumbDisabled = MakeTextureBrush(SliderThumb, ThumbSize,
+			FLinearColor(.48f, .48f, .48f, .72f));
+
+		FSliderStyle Style = Slider->GetWidgetStyle();
+		Style.SetNormalBarImage(NoDraw)
+			.SetHoveredBarImage(NoDraw)
+			.SetDisabledBarImage(NoDraw)
+			.SetNormalThumbImage(Thumb)
+			.SetHoveredThumbImage(ThumbHovered)
+			.SetDisabledThumbImage(ThumbDisabled)
+			.SetBarThickness(1.f);
+		Slider->SetWidgetStyle(Style);
+		Slider->SetIndentHandle(false);
 	}
 
 	FVector2D AspectFitSize(const FVector2D NativeSize, const FVector2D Bounds)
@@ -363,7 +527,9 @@ namespace SettingsPanelWidgetBuilder
 				UBorder::StaticClass(), Name);
 		}
 		Surface->SetPadding(FMargin(0.f));
-		Surface->SetBrushColor(FLinearColor(0.16f, 0.07f, 0.02f, 0.16f));
+		// A very light umber wash separates each control group without covering the
+		// parchment grain that is already painted into the fixed book illustration.
+		Surface->SetBrushColor(FLinearColor(0.20f, 0.075f, 0.018f, 0.065f));
 		PlaceWidgetInSettingsCanvas(Canvas, Surface, Position, Size, 0,
 			ESlateVisibility::SelfHitTestInvisible);
 	}
@@ -515,19 +681,44 @@ namespace SettingsPanelWidgetBuilder
 			TextSlot->SetHorizontalAlignment(HAlign_Center);
 			TextSlot->SetVerticalAlignment(VAlign_Center);
 		}
+		// The legacy mockup stores per-label render offsets and text margins. Those
+		// survive reparenting and can make a mathematically centered ScaleBox still
+		// draw its glyphs off-center. Normalize the label itself as part of the button
+		// contract; the caller's padding is the sole source of optical adjustment.
+		Text->SetJustification(ETextJustify::Center);
+		Text->SetMargin(FMargin(0.f));
+		Text->SetRenderTransform(FWidgetTransform());
+		Text->SetRenderTransformPivot(FVector2D(.5f, .5f));
 		Text->SetAutoWrapText(false);
 		Text->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 
 	void LayoutSettingsContent(UWidgetBlueprint* Blueprint)
 	{
+		const FSettingsLedgerTextures Art;
 		UCanvasPanel* DesignCanvas = EnsureSettingsDesignCanvas(Blueprint);
 		if (DesignCanvas == nullptr)
 		{
 			return;
 		}
+
+		// The book is a fixed composition: page edges, title plaque and center spine
+		// must all keep the authored proportions. It nearly fills the 16:9 design
+		// canvas and leaves a small amount of the in-game scene visible around it.
+		ApplyTextureToImage(Blueprint, TEXT("Set_panel_body"), Art.BookBase);
+		if (UImage* BookImage = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("Set_panel_body"))))
+		{
+			BookImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			if (UOverlaySlot* BookSlot = Cast<UOverlaySlot>(BookImage->Slot))
+			{
+				BookSlot->SetPadding(FMargin(0.f));
+				BookSlot->SetHorizontalAlignment(HAlign_Fill);
+				BookSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+		}
 		PlaceInSettingsCanvas(Blueprint, DesignCanvas, TEXT("Set_panel_bodyMount"),
-			FVector2D(300.f, 140.f), FVector2D(1320.f, 800.f), 10,
+			FVector2D(175.f, 28.f), FVector2D(1570.f, 1001.f), 10,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, DesignCanvas, TEXT("AbandonConfirmPanel"),
 			FVector2D::ZeroVector, FVector2D(1920.f, 1080.f), 100,
@@ -539,21 +730,49 @@ namespace SettingsPanelWidgetBuilder
 			return;
 		}
 
-		constexpr float LeftX = 55.f;
-		constexpr float RightX = 685.f;
-		constexpr float RowWidth = 580.f;
-		constexpr float RowHeight = 62.f;
-		constexpr float RowPitch = 70.f;
-		constexpr float RowStartY = 160.f;
+		// The previous WBP still contains some first-pass grid and segment art. Keep
+		// those widgets (old captures and diagnostics reference their names), but stop
+		// drawing them under the new self-contained ledger composition.
+		for (const TCHAR* Name : {
+			TEXT("Set_panel_frame"), TEXT("Set_grid_base"), TEXT("Set_grid_fold"),
+			TEXT("Set_sec_graphics_banner"), TEXT("Set_sec_display_banner"),
+			TEXT("Set_sec_audio_banner"), TEXT("Set_sec_volume_banner"),
+			TEXT("Set_sec_gameplay_banner"), TEXT("Set_seg_fps"),
+			TEXT("Set_seg_quality"), TEXT("Set_seg_language"), TEXT("Set_btn_close"),
+			TEXT("Set_sec_graphics_text"), TEXT("Set_sec_display_text"),
+			TEXT("Set_sec_audio_text"), TEXT("Set_sec_volume_text"),
+			TEXT("Set_sec_gameplay_text"), TEXT("Set_row_fps_label"),
+			TEXT("Set_row_quality_label"), TEXT("Set_row_language_label"),
+			TEXT("Set_row_master_label"), TEXT("Set_row_bgm_label"),
+			TEXT("Set_row_sfx_label"), TEXT("Set_row_ui_label"),
+			TEXT("Set_row_screen_shake_label"), TEXT("Set_row_effects_label") })
+		{
+			CollapseNamed(Blueprint, Name);
+		}
+
+		EnsureLedgerImage(Blueprint, Canvas, TEXT("SettingsAudioRibbonArt"),
+			Art.SectionRibbon, FVector2D(188.f, 150.f), FVector2D(450.f, 112.f), 1);
+		EnsureLedgerImage(Blueprint, Canvas, TEXT("SettingsDisplayRibbonArt"),
+			Art.SectionRibbon, FVector2D(928.f, 145.f), FVector2D(450.f, 112.f), 1);
+		EnsureLedgerImage(Blueprint, Canvas, TEXT("SettingsGameplayRibbonArt"),
+			Art.SectionRibbon, FVector2D(928.f, 602.f), FVector2D(450.f, 112.f), 1);
+		// Keep a serialized hard reference so the selected-state texture is gathered
+		// for cooked builds; runtime swaps the existing plate brush to this resource.
+		if (UImage* SelectedCookReference = EnsureLedgerImage(Blueprint, Canvas,
+			TEXT("SettingsChoiceSelectedCookReference"), Art.ChoiceButtonSelected,
+			FVector2D::ZeroVector, FVector2D(1.f, 1.f), -10))
+		{
+			SelectedCookReference->SetVisibility(ESlateVisibility::Collapsed);
+		}
 
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("SettingsTitleText_Center"),
-			FVector2D(440.f, 24.f), FVector2D(440.f, 72.f), 5,
+			FVector2D(515.f, 34.f), FVector2D(540.f, 76.f), 5,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("AudioSectionHeader_Center"),
-			FVector2D(LeftX, 108.f), FVector2D(RowWidth, 44.f), 4,
+			FVector2D(258.f, 168.f), FVector2D(310.f, 58.f), 4,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("DisplaySectionHeader_Center"),
-			FVector2D(RightX, 108.f), FVector2D(RowWidth, 44.f), 4,
+			FVector2D(998.f, 163.f), FVector2D(310.f, 58.f), 4,
 			ESlateVisibility::SelfHitTestInvisible);
 
 		struct FSliderRow
@@ -578,33 +797,37 @@ namespace SettingsPanelWidgetBuilder
 				TEXT("Set_slider_track_ui"), TEXT("UIVolumeSlider"),
 				TEXT("Set_slider_fill_ui") },
 		};
-		UTexture2D* SliderFillTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/"
-				"T_KitA_Slider_Fill.T_KitA_Slider_Fill"));
+		constexpr float AudioRowX = 125.f;
+		constexpr float AudioRowWidth = 595.f;
+		constexpr float AudioRowHeight = 78.f;
+		constexpr float AudioRowStartY = 266.f;
+		constexpr float AudioRowPitch = 93.f;
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(SliderRows); ++Index)
 		{
-			const float Y = RowStartY + Index * RowPitch;
+			const float Y = AudioRowStartY + Index * AudioRowPitch;
 			const FSliderRow& Row = SliderRows[Index];
 			EnsureRowSurface(Blueprint, Canvas,
 				FName(*(FString(Row.Plate) + TEXT("_Surface"))),
-				FVector2D(LeftX, Y), FVector2D(RowWidth, RowHeight));
+				FVector2D(AudioRowX, Y), FVector2D(AudioRowWidth, AudioRowHeight));
+			ApplyTextureToImage(Blueprint, Row.Plate, Art.RowLabel);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Plate,
-				FVector2D(LeftX, Y), FVector2D(RowWidth, RowHeight), 0,
-				ESlateVisibility::Collapsed);
+				FVector2D(140.f, Y + 4.f), FVector2D(190.f, 71.f), 1,
+				ESlateVisibility::SelfHitTestInvisible);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Label,
-				FVector2D(LeftX + 18.f, Y + 6.f), FVector2D(185.f, 50.f), 3,
+				FVector2D(157.f, Y + 14.f), FVector2D(156.f, 50.f), 3,
 				ESlateVisibility::SelfHitTestInvisible);
+			ApplyTextureToImage(Blueprint, Row.Track, Art.SliderTrack);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Track,
-				FVector2D(LeftX + 220.f, Y + 6.64f), FVector2D(330.f, 48.72f), 1,
+				FVector2D(338.f, Y + 12.4f), FVector2D(360.f, 53.15f), 1,
 				ESlateVisibility::SelfHitTestInvisible);
-			if (SliderFillTexture != nullptr)
+			if (Art.SliderFill != nullptr)
 			{
-				EnsureSliderFill(Blueprint, Canvas, Row.Fill, SliderFillTexture,
-					FVector2D(LeftX + 232.f, Y + 15.57f),
-					FVector2D(306.f, 30.86f));
+				EnsureSliderFill(Blueprint, Canvas, Row.Fill, Art.SliderFill,
+					FVector2D(352.f, Y + 24.f), FVector2D(332.f, 29.f));
 			}
+			ApplyLedgerSliderStyle(Blueprint, Row.Slider, Art.SliderThumb);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Slider,
-				FVector2D(LeftX + 220.f, Y + 4.f), FVector2D(330.f, 54.f), 3,
+				FVector2D(338.f, Y + 7.f), FVector2D(360.f, 64.f), 3,
 				ESlateVisibility::Visible);
 		}
 
@@ -620,21 +843,29 @@ namespace SettingsPanelWidgetBuilder
 			{ TEXT("Set_row_effects_plate"), TEXT("EffectsRow_Label_Center"),
 				TEXT("EffectsCheckBox") },
 		};
+		constexpr float DisplayRowX = 848.f;
+		constexpr float DisplayRowWidth = 575.f;
+		constexpr float DisplayRowHeight = 74.f;
+		constexpr float DisplayRowStartY = 260.f;
+		constexpr float DisplayRowPitch = 86.f;
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(ToggleRows); ++Index)
 		{
-			const float Y = RowStartY + Index * RowPitch;
+			const float Y = DisplayRowStartY + Index * DisplayRowPitch;
 			const FToggleRow& Row = ToggleRows[Index];
 			EnsureRowSurface(Blueprint, Canvas,
 				FName(*(FString(Row.Plate) + TEXT("_Surface"))),
-				FVector2D(RightX, Y), FVector2D(RowWidth, RowHeight));
+				FVector2D(DisplayRowX, Y), FVector2D(DisplayRowWidth, DisplayRowHeight));
+			ApplyTextureToImage(Blueprint, Row.Plate, Art.RowLabel);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Plate,
-				FVector2D(RightX, Y), FVector2D(RowWidth, RowHeight), 0,
-				ESlateVisibility::Collapsed);
-			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Label,
-				FVector2D(RightX + 18.f, Y + 6.f), FVector2D(380.f, 50.f), 3,
+				FVector2D(864.f, Y + 3.f), FVector2D(238.f, 68.f), 1,
 				ESlateVisibility::SelfHitTestInvisible);
+			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Label,
+				FVector2D(882.f, Y + 12.f), FVector2D(202.f, 50.f), 3,
+				ESlateVisibility::SelfHitTestInvisible);
+			ApplyLedgerCheckBoxStyle(Blueprint, Row.CheckBox,
+				Art.ToggleOff, Art.ToggleOn);
 			PlaceScaledControl(Blueprint, Canvas, Row.CheckBox,
-				FVector2D(RightX + 512.f, Y + 6.f), FVector2D(50.f, 50.f), 2);
+				FVector2D(1288.f, Y + 7.f), FVector2D(120.f, 60.f), 3);
 		}
 
 		// Vibration has no persistence or platform implementation yet. Keep its
@@ -645,70 +876,99 @@ namespace SettingsPanelWidgetBuilder
 			CollapseNamed(Blueprint, Name);
 		}
 
-		const float QualityY = RowStartY + 2.f * RowPitch;
+		const float QualityY = 432.f;
 		EnsureRowSurface(Blueprint, Canvas, TEXT("SettingsQualityRowSurface"),
-			FVector2D(RightX, QualityY), FVector2D(RowWidth, RowHeight));
+			FVector2D(DisplayRowX, QualityY),
+			FVector2D(DisplayRowWidth, DisplayRowHeight));
+		ApplyTextureToImage(Blueprint, TEXT("Set_row_quality_plate"), Art.RowLabel);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_quality_plate"),
-			FVector2D(RightX, QualityY), FVector2D(RowWidth, RowHeight), 0,
-			ESlateVisibility::Collapsed);
+			FVector2D(864.f, QualityY + 3.f), FVector2D(180.f, 68.f), 1,
+			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("QualityRow_Label_Center"),
-			FVector2D(RightX + 18.f, QualityY + 6.f), FVector2D(165.f, 50.f), 3,
+			FVector2D(882.f, QualityY + 12.f), FVector2D(144.f, 50.f), 3,
 			ESlateVisibility::SelfHitTestInvisible);
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const TCHAR* MountNames[] = { TEXT("LowQualityButtonPlateMount"),
 				TEXT("MediumQualityButtonPlateMount"), TEXT("HighQualityButtonPlateMount") };
 			PlaceInSettingsCanvas(Blueprint, Canvas, MountNames[Index],
-				FVector2D(RightX + 190.f + Index * 128.f, QualityY + 3.f),
-				FVector2D(120.f, 56.f), 2, ESlateVisibility::SelfHitTestInvisible);
+				FVector2D(1058.f + Index * 120.f, QualityY + 8.f),
+				FVector2D(112.f, 56.f), 2, ESlateVisibility::SelfHitTestInvisible);
 		}
 
-		const float FpsY = RowStartY + 3.f * RowPitch;
+		const float FpsY = 516.f;
 		EnsureRowSurface(Blueprint, Canvas, TEXT("SettingsFpsRowSurface"),
-			FVector2D(RightX, FpsY), FVector2D(RowWidth, RowHeight));
+			FVector2D(DisplayRowX, FpsY),
+			FVector2D(DisplayRowWidth, DisplayRowHeight));
+		ApplyTextureToImage(Blueprint, TEXT("Set_row_fps_plate"), Art.RowLabel);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_fps_plate"),
-			FVector2D(RightX, FpsY), FVector2D(RowWidth, RowHeight), 0,
-			ESlateVisibility::Collapsed);
+			FVector2D(864.f, FpsY + 3.f), FVector2D(180.f, 68.f), 1,
+			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("FpsRow_Label_Center"),
-			FVector2D(RightX + 18.f, FpsY + 6.f), FVector2D(190.f, 50.f), 3,
+			FVector2D(882.f, FpsY + 12.f), FVector2D(144.f, 50.f), 3,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("FpsThirtyButtonPlateMount"),
-			FVector2D(RightX + 238.f, FpsY + 3.f), FVector2D(155.f, 56.f), 2,
+			FVector2D(1080.f, FpsY + 7.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("FpsSixtyButtonPlateMount"),
-			FVector2D(RightX + 405.f, FpsY + 3.f), FVector2D(155.f, 56.f), 2,
+			FVector2D(1245.f, FpsY + 7.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("GameplaySectionHeader_Center"),
-			FVector2D(LeftX, 448.f), FVector2D(RowWidth, 44.f), 4,
+			FVector2D(998.f, 620.f), FVector2D(310.f, 58.f), 4,
 			ESlateVisibility::SelfHitTestInvisible);
 		EnsureRowSurface(Blueprint, Canvas, TEXT("SettingsLanguageRowSurface"),
-			FVector2D(LeftX, 500.f), FVector2D(RowWidth, RowHeight));
+			FVector2D(DisplayRowX, 714.f),
+			FVector2D(DisplayRowWidth, DisplayRowHeight));
+		ApplyTextureToImage(Blueprint, TEXT("Set_row_language_plate"), Art.RowLabel);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_language_plate"),
-			FVector2D(LeftX, 500.f), FVector2D(RowWidth, RowHeight), 0,
-			ESlateVisibility::Collapsed);
+			FVector2D(864.f, 717.f), FVector2D(190.f, 68.f), 1,
+			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("LanguageRow_Label_Center"),
-			FVector2D(LeftX + 18.f, 506.f), FVector2D(180.f, 50.f), 3,
+			FVector2D(882.f, 726.f), FVector2D(154.f, 50.f), 3,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("LanguageKoreanButtonPlateMount"),
-			FVector2D(LeftX + 210.f, 503.f), FVector2D(170.f, 56.f), 2,
+			FVector2D(1080.f, 721.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("LanguageEnglishButtonPlateMount"),
-			FVector2D(LeftX + 392.f, 503.f), FVector2D(170.f, 56.f), 2,
+			FVector2D(1245.f, 721.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 
+		// Every functional button keeps its existing transparent hit target; only the
+		// plate resource changes. Runtime selection tinting still targets these exact
+		// plate names.
+		for (const TCHAR* Name : {
+			TEXT("LowQualityButtonPlate"), TEXT("MediumQualityButtonPlate"),
+			TEXT("HighQualityButtonPlate"), TEXT("FpsThirtyButtonPlate"),
+			TEXT("FpsSixtyButtonPlate"), TEXT("LanguageKoreanButtonPlate"),
+			TEXT("LanguageEnglishButtonPlate") })
+		{
+			ApplyTextureToImage(Blueprint, Name, Art.ChoiceButton);
+		}
+		for (const TCHAR* Name : {
+			TEXT("BackButtonPlate"), TEXT("ResetButtonPlate"),
+			TEXT("SaveAndExitButtonPlate"), TEXT("CancelAbandonButtonPlate") })
+		{
+			ApplyTextureToImage(Blueprint, Name, Art.ActionButton);
+		}
+		for (const TCHAR* Name : {
+			TEXT("AbandonRunButtonPlate"), TEXT("ConfirmAbandonButtonPlate") })
+		{
+			ApplyTextureToImage(Blueprint, Name, Art.ActionButtonDanger);
+		}
+
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("StatusText_Center"),
-			FVector2D(360.f, 628.f), FVector2D(600.f, 38.f), 4,
+			FVector2D(335.f, 798.f), FVector2D(900.f, 34.f), 4,
 			ESlateVisibility::SelfHitTestInvisible);
 
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("BackButtonPlateMount"),
-			FVector2D(55.f, 700.f), FVector2D(220.f, 70.f), 2,
+			FVector2D(90.f, 842.f), FVector2D(300.f, 118.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("ResetButtonPlateMount"),
-			FVector2D(285.f, 700.f), FVector2D(220.f, 70.f), 2,
+			FVector2D(400.f, 842.f), FVector2D(300.f, 118.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("RunActionsPanel"),
-			FVector2D(665.f, 700.f), FVector2D(600.f, 70.f), 2,
+			FVector2D(805.f, 842.f), FVector2D(620.f, 118.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 
 		for (const TCHAR* Name : {
@@ -729,25 +989,32 @@ namespace SettingsPanelWidgetBuilder
 		{
 			const TCHAR* Text;
 			const TCHAR* Container;
+			FMargin Padding;
 		};
+		// Action-button art has a hanging ribbon below its wooden face. Extra bottom
+		// padding centers the label on the clickable wooden face instead of the full
+		// transparent texture rectangle. Segment buttons are vertically symmetric.
+		const FMargin SegmentTextPadding(8.f, 2.f);
+		const FMargin ActionTextPadding(14.f, 2.f, 14.f, 32.f);
+		const FMargin CompactActionTextPadding(12.f, 2.f, 12.f, 22.f);
 		const FTextFitSpec TextFits[] = {
-			{ TEXT("BackButtonText"), TEXT("BackButtonText_Center") },
-			{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center") },
-			{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center") },
-			{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center") },
-			{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center") },
-			{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center") },
-			{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center") },
-			{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center") },
-			{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center") },
-			{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton") },
-			{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton") },
-			{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center") },
-			{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center") },
+			{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), ActionTextPadding },
+			{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), ActionTextPadding },
+			{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), SegmentTextPadding },
+			{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), SegmentTextPadding },
+			{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), SegmentTextPadding },
+			{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), SegmentTextPadding },
+			{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), SegmentTextPadding },
+			{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), SegmentTextPadding },
+			{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), SegmentTextPadding },
+			{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), ActionTextPadding },
+			{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), ActionTextPadding },
+			{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), CompactActionTextPadding },
+			{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), CompactActionTextPadding },
 		};
 		for (const FTextFitSpec& Fit : TextFits)
 		{
-			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container);
+			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, Fit.Padding);
 		}
 	}
 
@@ -823,16 +1090,29 @@ namespace SettingsPanelWidgetBuilder
 		const FString Name = Text->GetName();
 		const int32 Size = ExactFontSize(Name);
 		FSlateFontInfo Font = UIFont::MakeProjectExact(Text->GetFont(), Size);
-		Font.OutlineSettings.OutlineSize = Size >= 28 ? 1 : 0;
-		Font.OutlineSettings.OutlineColor =
-			FLinearColor(0.03f, 0.015f, 0.005f, 1.f);
+		const bool bParchmentInk = Name.Contains(TEXT("SettingsTitle"))
+			|| Name.Contains(TEXT("Row_Label"))
+			|| Name.Contains(TEXT("StatusText"));
+		Font.OutlineSettings.OutlineSize = bParchmentInk ? 0 : (Size >= 28 ? 1 : 0);
+		Font.OutlineSettings.OutlineColor = FLinearColor(0.025f, 0.012f, 0.004f, 1.f);
 		Text->SetFont(Font);
 
-		// Keep every settings label pure white. Selection state remains functional,
-		// but is not communicated by changing the text tint.
-		Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-		Text->SetShadowOffset(FVector2D(1.5f, 1.5f));
-		Text->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .62f));
+		if (bParchmentInk)
+		{
+			Text->SetColorAndOpacity(FSlateColor(
+				FLinearColor(0.19f, 0.065f, 0.014f, 1.f)));
+			Text->SetShadowOffset(FVector2D(.8f, .8f));
+			Text->SetShadowColorAndOpacity(FLinearColor(.55f, .31f, .10f, .24f));
+		}
+		else
+		{
+			// Ribbons and wood/brass buttons use warm ivory ink. Runtime selection
+			// changes only the plate tint, so localization never changes readability.
+			Text->SetColorAndOpacity(FSlateColor(
+				FLinearColor(1.f, .90f, .68f, 1.f)));
+			Text->SetShadowOffset(FVector2D(1.5f, 1.5f));
+			Text->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .68f));
+		}
 		CenterTextInOwnCell(Text);
 	}
 
@@ -900,8 +1180,8 @@ namespace SettingsPanelWidgetBuilder
 		LayoutSettingsContent(Blueprint);
 		LogPhase(TEXT("laid-out"));
 
-		// RunActionsPanel is 600x70. Its two children and the actual transparent
-		// buttons fill equal 300x70 functional targets.
+		// RunActionsPanel is 620x118. Its two children and the actual transparent
+		// buttons fill equal 310x118 functional targets.
 		FillRunActionSlot(Blueprint, TEXT("Set_run_SaveAndExitButton"),
 			TEXT("SaveAndExitButton"));
 		FillRunActionSlot(Blueprint, TEXT("Set_run_AbandonRunButton"),
@@ -933,9 +1213,9 @@ namespace SettingsPanelWidgetBuilder
 				CanvasMountSize(Blueprint, Plate.MountName));
 		}
 
-		// RunActionsPanel is a 600x70 HorizontalBox. Each Fill child owns half, while
-		// the actual buttons still fill that full 300x70 hit area.
-		const FVector2D RunActionBounds(300.0f, 70.0f);
+		// RunActionsPanel is a 620x118 HorizontalBox. Each Fill child owns half,
+		// while the actual buttons still fill that full 310x118 hit area.
+		const FVector2D RunActionBounds(310.0f, 118.0f);
 		AspectFitButtonPlate(Blueprint, TEXT("SaveAndExitButtonPlate"), RunActionBounds);
 		AspectFitButtonPlate(Blueprint, TEXT("AbandonRunButtonPlate"), RunActionBounds);
 		LogPhase(TEXT("buttons"));
@@ -943,17 +1223,19 @@ namespace SettingsPanelWidgetBuilder
 		// These are intentionally resizable surfaces. 9-slice is the only stretching
 		// allowed: corner pixels retain their source proportions while the center tiles
 		// cover the functional panel/row/slider bounds.
-		for (const TCHAR* Name : {
-			TEXT("Set_panel_body"), TEXT("Set_confirm_plate"),
-			TEXT("Set_row_master_plate"), TEXT("Set_row_bgm_plate"),
-			TEXT("Set_row_sfx_plate"), TEXT("Set_row_ui_plate"),
-			TEXT("Set_row_shake_plate"), TEXT("Set_row_vibration_plate"),
-			TEXT("Set_row_effects_plate"), TEXT("Set_row_quality_plate"),
-			TEXT("Set_row_fps_plate"), TEXT("Set_row_language_plate") })
+		for (const TCHAR* Name : { TEXT("Set_confirm_plate") })
 		{
 			NormalizeNineSlice(Blueprint, Name);
 		}
-		for (const TCHAR* Name : { TEXT("Set_slider_track_master"),
+		// Book/spine and generated labels are authored fixed illustrations. Turning
+		// any of them into a 9-slice would bend the spine or duplicate brass rivets.
+		for (const TCHAR* Name : {
+			TEXT("Set_panel_body"), TEXT("Set_row_master_plate"),
+			TEXT("Set_row_bgm_plate"), TEXT("Set_row_sfx_plate"),
+			TEXT("Set_row_ui_plate"), TEXT("Set_row_shake_plate"),
+			TEXT("Set_row_vibration_plate"), TEXT("Set_row_effects_plate"),
+			TEXT("Set_row_quality_plate"), TEXT("Set_row_fps_plate"),
+			TEXT("Set_row_language_plate"), TEXT("Set_slider_track_master"),
 			TEXT("Set_slider_track_bgm"), TEXT("Set_slider_track_sfx"),
 			TEXT("Set_slider_track_ui") })
 		{
@@ -1002,7 +1284,7 @@ void RegisterSettingsPanelWidgetBuilderCommands()
 	using namespace SettingsPanelWidgetBuilder;
 	BuildCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.BuildSettingsReadability"),
-		TEXT("Apply the project composite font, standard colors and centered text to WBP_SettingsPanel."),
+		TEXT("Build the Settings Ledger art, layout and project typography into WBP_SettingsPanel."),
 		FConsoleCommandDelegate::CreateStatic(&Build));
 }
 

@@ -264,6 +264,7 @@ void UMercenaryHireWidget::CacheWidgets()
 		Card.mButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("HireButton") + Tail);
 		Card.mPortrait = MercenaryHireDetail::Find<UImage>(WidgetTree, TEXT("HirePortrait") + Tail);
 		Card.mName = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireName") + Tail);
+		Card.mRole = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireRole") + Tail);
 		Card.mHP = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireHP") + Tail);
 		// 신규 목록 행은 상태 배지 대신 선택 프레임과 우측 인장을 쓴다.
 		Card.mBadge = mIsMarchboundLayout ? nullptr
@@ -507,6 +508,7 @@ void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)
 
 	const FFrontendCharacterOption& Option = mCrew[CardIndex];
 	MercenaryHireDetail::SetTextIfPresent(Card.mName, Option.mDisplayName);
+	MercenaryHireDetail::SetTextIfPresent(Card.mRole, Option.mRoleText);
 	MercenaryHireDetail::SetTextIfPresent(Card.mHP, FText::FromString(
 		FString::Printf(TEXT("HP %d"), Option.mMaxHP)));
 	// 특성 자리에는 설명 문구가 들어간다. 왜 데려가는지 한 줄로 말해 주는

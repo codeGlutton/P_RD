@@ -2,6 +2,7 @@
 #include "UI/UIPartRects.h"
 #include "UI/UIFont.h"
 
+#include "Animation/WidgetAnimation.h"
 #include "AssetToolsModule.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
@@ -43,7 +44,10 @@ namespace CombatHUDWidgetBuilder
 			return CastChecked<T>(Existing);
 		}
 		T* NewWidget = Blueprint->WidgetTree->ConstructWidget<T>(T::StaticClass(), Name);
-		Blueprint->OnVariableAdded(Name);
+		if (!Blueprint->WidgetVariableNameToGuidMap.Contains(Name))
+		{
+			Blueprint->OnVariableAdded(Name);
+		}
 		return NewWidget;
 	}
 
@@ -84,17 +88,36 @@ namespace CombatHUDWidgetBuilder
 		return Blueprint;
 	}
 
-	/** @brief 이번 배치에 없는 옛 이름의 변수 GUID 를 걷는다. */
+	/** @brief source widget GUID를 채우고 이번 배치에 없는 옛 이름을 걷는다. */
 	void PruneStaleVariables(UWidgetBlueprint* Blueprint)
 	{
 		TSet<FName> Live;
-		Blueprint->WidgetTree->ForEachWidget([&Live](UWidget* Widget)
+		Blueprint->ForEachSourceWidget([Blueprint, &Live](UWidget* Widget)
 		{
 			if (Widget != nullptr)
 			{
-				Live.Add(Widget->GetFName());
+				const FName Name = Widget->GetFName();
+				Live.Add(Name);
+				if (!Blueprint->WidgetVariableNameToGuidMap.Contains(Name))
+				{
+					Blueprint->WidgetVariableNameToGuidMap.Add(
+						Name, FGuid::NewDeterministicGuid(Widget->GetPathName()));
+				}
 			}
 		});
+		for (const UWidgetAnimation* Animation : Blueprint->Animations)
+		{
+			if (Animation != nullptr)
+			{
+				const FName Name = Animation->GetFName();
+				Live.Add(Name);
+				if (!Blueprint->WidgetVariableNameToGuidMap.Contains(Name))
+				{
+					Blueprint->WidgetVariableNameToGuidMap.Add(
+						Name, FGuid::NewDeterministicGuid(Animation->GetPathName()));
+				}
+			}
+		}
 		TArray<FName> Stale;
 		for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
 		{
@@ -579,7 +602,7 @@ namespace CombatHUDWidgetBuilder
 		static const TCHAR* const PreviewArtifactNames[6] = {
 			TEXT("피의 성배"), TEXT("야수의 송곳니"), TEXT("행운의 주화"),
 			TEXT("가시 문장"), TEXT("여행자의 지도"), TEXT("낡은 방패 장식") };
-		for (int32 Index = 0; Index < 11; ++Index)
+		for (int32 Index = 0; Index < 7; ++Index)
 		{
 			const int32 VisualIndex = Index + 1;
 			const int32 Column = VisualIndex % 4;
@@ -587,15 +610,10 @@ namespace CombatHUDWidgetBuilder
 			const FVector2D CellOrigin = GridOrigin + FVector2D(
 				Column * ColumnPitch, Row * RowPitch);
 
-			UBorder* Selection = FindOrCreate<UBorder>(Blueprint,
-				FName(*FString::Printf(
-					TEXT("MercenaryInventoryArtifactSelection_%d"), Index)));
-			PlaceCanvas(Page, Selection, CellOrigin - FVector2D(6.f, 6.f),
-				FVector2D(FrameSize + 12.f, FrameSize + 12.f), 1);
-			Selection->SetBrushColor(FLinearColor(.11f, .75f, 1.f, 1.f));
-			Selection->SetVisibility(Index == 0
-				? ESlateVisibility::SelfHitTestInvisible
-				: ESlateVisibility::Collapsed);
+			// 0809 확정: 클릭 즉시 상세 팝업으로 넘어가므로 칸 안에는
+			// 별도 선택 상태를 남기지 않는다. 과거 빌더가 만든 테두리도 걷는다.
+			RemoveWidget(Blueprint, FName(*FString::Printf(
+				TEXT("MercenaryInventoryArtifactSelection_%d"), Index)));
 
 			UImage* Frame = FindOrCreate<UImage>(Blueprint,
 				FName(*FString::Printf(TEXT("MercenaryInventoryArtifactFrame_%d"), Index)));
@@ -640,18 +658,15 @@ namespace CombatHUDWidgetBuilder
 			PlaceCanvas(Page, Button, CellOrigin, FVector2D(FrameSize, FrameSize), 5);
 			SetInvisibleButtonChrome(Button);
 		}
-		// 과거 빌드가 더 많은 칸을 남겼다면 현재 4x3 계약 밖의 것만 걷는다.
+		// 과거 빌드가 더 많은 칸을 남겼다면 현재 4x2 계약 밖의 것만 걷는다.
 		for (const TCHAR* Prefix : { TEXT("MercenaryInventoryArtifactSelection"),
 			TEXT("MercenaryInventoryArtifactFrame"), TEXT("MercenaryInventoryArtifactIcon"),
 			TEXT("MercenaryInventoryArtifactName"), TEXT("MercenaryInventoryArtifactButton") })
 		{
-			for (int32 Index = 11; Index < 16; ++Index)
+			for (int32 Index = 7; Index < 16; ++Index)
 			{
-				if (UWidget* Stale = Blueprint->WidgetTree->FindWidget(
-					FName(*FString::Printf(TEXT("%s_%d"), Prefix, Index))))
-				{
-					Blueprint->WidgetTree->RemoveWidget(Stale);
-				}
+				RemoveWidget(Blueprint,
+					FName(*FString::Printf(TEXT("%s_%d"), Prefix, Index)));
 			}
 		}
 
@@ -766,13 +781,13 @@ namespace CombatHUDWidgetBuilder
 		UWidgetBlueprint* MercenaryBlueprint =
 			LoadObject<UWidgetBlueprint>(nullptr, MercenaryAssetPath);
 		UTexture2D* InventoryIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/UI/KayKit/KK_Icon_Inventory.KK_Icon_Inventory"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
 		UTexture2D* GoldIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Reward/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* DescriptionPlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Row_Plate.T_KitA_Row_Plate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Row_Plate.T_KitA_Row_Plate"));
 		UTexture2D* ArtifactSlotTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		if (HudBlueprint == nullptr || MercenaryBlueprint == nullptr
 			|| InventoryIconTexture == nullptr || GoldIconTexture == nullptr
 			|| DescriptionPlateTexture == nullptr || ArtifactSlotTexture == nullptr)
@@ -825,7 +840,7 @@ namespace CombatHUDWidgetBuilder
 		if (UWidget* ArtifactStrip =
 			HudBlueprint->WidgetTree->FindWidget(TEXT("ArtifactStrip")))
 		{
-			HudBlueprint->WidgetTree->RemoveWidget(ArtifactStrip);
+			RemoveWidget(HudBlueprint, ArtifactStrip->GetFName());
 		}
 		BuildEnemyAPPips(HudBlueprint);
 		PruneStaleVariables(HudBlueprint);
@@ -863,7 +878,15 @@ namespace CombatHUDWidgetBuilder
 		Panel->SetVisibility(ESlateVisibility::Collapsed);
 
 		UImage* Shell = FindOrCreate<UImage>(Blueprint, TEXT("RuntimeMercenaryRosterShell"));
-		PlaceCanvas(Panel, Shell, FVector2D(90.f, 70.f), FVector2D(1740.f, 960.f), -100);
+		PlaceCanvas(Panel, Shell, FVector2D::ZeroVector,
+			FVector2D(1920.f, 1080.f), -100);
+		if (UCanvasPanelSlot* ShellSlot = Cast<UCanvasPanelSlot>(Shell->Slot))
+		{
+			// 0809 확정: 셸은 모달 여백 없이 화면 가장자리까지 채운다.
+			ShellSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			ShellSlot->SetOffsets(FMargin(0.f));
+			ShellSlot->SetAlignment(FVector2D::ZeroVector);
+		}
 		Shell->SetBrushFromTexture(ShellTexture, false);
 		Shell->SetVisibility(ESlateVisibility::HitTestInvisible);
 
@@ -919,7 +942,7 @@ namespace CombatHUDWidgetBuilder
 			RemoveWidget(Blueprint, LegacyName);
 		}
 		if (UTexture2D* TitlePlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Title_Plate.T_KitA_Title_Plate")))
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Title_Plate.T_KitA_Title_Plate")))
 		{
 			UImage* HeaderPlate = FindOrCreate<UImage>(Blueprint,
 				TEXT("MercenaryTitlePlate"));
@@ -1254,7 +1277,7 @@ namespace CombatHUDWidgetBuilder
 		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
 		UTexture2D* MercenaryShellTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* MercenaryCardNormalTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* MercenaryCardSelectedTexture = LoadObject<UTexture2D>(nullptr,
@@ -1262,15 +1285,17 @@ namespace CombatHUDWidgetBuilder
 		// 뒤로 단추와 스킬 칸을 공용 KitA 부품으로 모은다. 같은 기능인데 화면마다
 		// 다른 그림을 쓰고 있었다(0804 검수).
 		UTexture2D* BackButtonTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		UTexture2D* MercenarySkillFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		UTexture2D* InventoryIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/UI/KayKit/KK_Icon_Inventory.KK_Icon_Inventory"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
 		UTexture2D* MercenaryGoldIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Reward/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* MercenaryDescriptionPlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Row_Plate.T_KitA_Row_Plate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Row_Plate.T_KitA_Row_Plate"));
+		UTexture2D* CombatActionButtonTexture = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
 		UTexture2D* EnemyPanelTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/T_MB_GenericDetailPanel.T_MB_GenericDetailPanel"));
 		UTexture2D* StatusSlotTexture = LoadObject<UTexture2D>(nullptr,
@@ -1286,6 +1311,7 @@ namespace CombatHUDWidgetBuilder
 			|| InventoryIconTexture == nullptr
 			|| MercenaryGoldIconTexture == nullptr
 			|| MercenaryDescriptionPlateTexture == nullptr
+			|| CombatActionButtonTexture == nullptr
 			|| EnemyPanelTexture == nullptr || StatusSlotTexture == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_BUILD HUD textures missing"));
@@ -1299,6 +1325,23 @@ namespace CombatHUDWidgetBuilder
 		if (UWidget* TurnPlate = Blueprint->WidgetTree->FindWidget(TEXT("TurnPlate")))
 		{
 			TurnPlate->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+		// 로컬에서만 생성된 전투 확인 단추 그림을 공용 KitA 판으로 교체한다.
+		// 저장 시 누락된 /Game/UI/CombatLayouts 텍스처 참조도 함께 제거된다.
+		if (UImage* ConfirmPlate = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("ConfirmPlate"))))
+		{
+			const FIntPoint Imported = CombatActionButtonTexture->GetImportedSize();
+			FSlateBrush Brush = ConfirmPlate->GetBrush();
+			Brush.SetResourceObject(CombatActionButtonTexture);
+			Brush.ImageSize = FVector2D(Imported.X, Imported.Y);
+			Brush.DrawAs = ESlateBrushDrawType::Box;
+			Brush.Margin = FMargin(
+				(8.f + 45.f) / Imported.X, (8.f + 44.f) / Imported.Y,
+				(8.f + 45.f) / Imported.X, (8.f + 44.f) / Imported.Y);
+			ConfirmPlate->SetBrush(Brush);
+			ConfirmPlate->SetColorAndOpacity(FLinearColor::White);
 		}
 
 		/*
@@ -1426,7 +1469,7 @@ namespace CombatHUDWidgetBuilder
 		if (UWidget* ArtifactTrayFrame =
 			Blueprint->WidgetTree->FindWidget(TEXT("ArtifactTrayFrame")))
 		{
-			Blueprint->WidgetTree->RemoveWidget(ArtifactTrayFrame);
+			RemoveWidget(Blueprint, ArtifactTrayFrame->GetFName());
 		}
 		if (UCanvasPanel* ArtifactStrip = Cast<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("ArtifactStrip"))))
@@ -1455,7 +1498,7 @@ namespace CombatHUDWidgetBuilder
 				}
 			}
 			// 전투 화면의 독립 아티팩트 줄은 더 이상 사용하지 않는다.
-			Blueprint->WidgetTree->RemoveWidget(ArtifactStrip);
+			RemoveWidget(Blueprint, ArtifactStrip->GetFName());
 		}
 
 		for (int32 Index = 0; Index < 10; ++Index)

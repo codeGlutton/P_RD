@@ -265,7 +265,7 @@ namespace RewardSettlementWidgetBuilder
 		UTexture2D* ProgressFill = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_ProgressFill_0809.T_VR_ProgressFill_0809"));
 		UTexture2D* XPTicket = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_XPTicketBlank_0809.T_VR_XPTicketBlank_0809"));
 		UTexture2D* ChoiceCard = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_RewardCardBlank_0809.T_VR_RewardCardBlank_0809"));
-		UTexture2D* GoldCoin = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Reward/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+		UTexture2D* GoldCoin = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* EquipmentIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
 		UTexture2D* ExpIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
 		UTexture2D* ChoiceGoldIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
