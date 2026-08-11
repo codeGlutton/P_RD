@@ -609,7 +609,7 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		// 확정 단추가 재탭할 겨냥 칸. Preview 를 벗어나면 비워, 낡은 칸을
 		// 재탭해 경로/겨냥만 무르는 일이 없게 한다.
 		mPendingConfirmTile = (Phase == ESRPGSkillBuildPhase::Preview && Action != nullptr)
-			? Action->GetTargetIndex() : FTileIndex::Invalid;
+			? Action->GetSelectedTileIndex() : FTileIndex::Invalid;
 		PushSkillBuildUIData(Phase);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
