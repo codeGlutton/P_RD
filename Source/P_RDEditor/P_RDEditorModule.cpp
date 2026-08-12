@@ -12,6 +12,7 @@
 #include "UI/WidgetTexturePurge.h"
 #include "UI/ShopWidgetBuilder.h"
 #include "UI/ShopFullGeneratedWidgetBuilder.h"
+#include "UI/WorldMapLandscapeWidgetBuilder.h"
 
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
@@ -27,6 +28,7 @@ void FP_RDEditorModule::StartupModule()
 	RegisterWidgetTexturePurgeCommands();
 	RegisterShopWidgetBuilderCommands();
 	RegisterShopFullGeneratedWidgetBuilderCommands();
+	RegisterWorldMapLandscapeWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 */
 
@@ -52,6 +54,7 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterWidgetTexturePurgeCommands();
 	UnregisterShopWidgetBuilderCommands();
 	UnregisterShopFullGeneratedWidgetBuilderCommands();
+	UnregisterWorldMapLandscapeWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 해제 */
 

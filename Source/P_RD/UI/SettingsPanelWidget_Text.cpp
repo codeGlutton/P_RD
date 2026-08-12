@@ -6,6 +6,7 @@
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 
 #define LOCTEXT_NAMESPACE "SettingsPanelWidget_Text"
 
@@ -46,15 +47,18 @@ namespace
 
 void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
 {
-	// Text stays white by design. Selection is communicated by the plate itself so
-	// accessibility styling never reintroduces the old brown text tint.
-	const FSlateColor WhiteText(FLinearColor::White);
-	// 선택/비선택 대비를 세게 간다(0811 점검). 전에는 금 0.82 vs 회색 0.56 이라
-	// 갈색 판 위에서 차이가 묻혀 "뭐가 켜져 있는지 안 보인다" 는 제보를 받았다.
-	const FLinearColor SelectedPlate(1.3f, 1.02f, 0.38f, 1.0f);
-	const FLinearColor UnselectedPlate(0.30f, 0.28f, 0.26f, 1.0f);
+	// Keep gold trim intact by switching the whole plate resource. Multiplicative tint
+	// turned brown wood green, while the authored selected texture recolors only its face.
+	const FSlateColor IvoryText(FLinearColor(1.f, .90f, .68f, 1.f));
+	UTexture2D* NormalPlate = LoadObject<UTexture2D>(nullptr,
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+			"T_MB_SettingsLedger_ChoiceButton.T_MB_SettingsLedger_ChoiceButton"));
+	UTexture2D* SelectedPlate = LoadObject<UTexture2D>(nullptr,
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+			"T_MB_SettingsLedger_ChoiceButton_Selected."
+			"T_MB_SettingsLedger_ChoiceButton_Selected"));
 
-	const auto SetSegmentState = [this, &WhiteText, &SelectedPlate, &UnselectedPlate](
+	const auto SetSegmentState = [this, &IvoryText, NormalPlate, SelectedPlate](
 		UButton* Button, const FName LabelName, const FName PlateName, bool bSelected)
 	{
 		if (Button == nullptr || WidgetTree == nullptr)
@@ -68,11 +72,17 @@ void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
 		}
 		if (Label != nullptr)
 		{
-			Label->SetColorAndOpacity(WhiteText);
+			Label->SetColorAndOpacity(IvoryText);
 		}
 		if (UImage* Plate = Cast<UImage>(WidgetTree->FindWidget(PlateName)))
 		{
-			Plate->SetColorAndOpacity(bSelected ? SelectedPlate : UnselectedPlate);
+			if (UTexture2D* TargetTexture = bSelected ? SelectedPlate : NormalPlate)
+			{
+				FSlateBrush Brush = Plate->GetBrush();
+				Brush.SetResourceObject(TargetTexture);
+				Plate->SetBrush(Brush);
+			}
+			Plate->SetColorAndOpacity(FLinearColor::White);
 		}
 	};
 
@@ -167,11 +177,21 @@ void USettingsPanelWidget::SyncText() const
 		}
 	};
 
+	const FText SettingsLedgerTitle = FText::FromString(
+		mValueModel.mUseKoreanLanguage ? TEXT("설정 장부") : TEXT("SETTINGS LEDGER"));
+	const FText BackLabel = FText::FromString(
+		mValueModel.mUseKoreanLanguage ? TEXT("뒤로") : TEXT("Back"));
+	const FText SaveAndExitLabel = FText::FromString(
+		mValueModel.mUseKoreanLanguage ? TEXT("저장 후 종료") : TEXT("Save and Exit"));
+	const FText AbandonRunLabel = FText::FromString(
+		mValueModel.mUseKoreanLanguage ? TEXT("런 포기") : TEXT("Abandon Run"));
+	const FText ResetLabel = FText::FromString(
+		mValueModel.mUseKoreanLanguage ? TEXT("초기화") : TEXT("Reset"));
 	if (SettingsTitleText != nullptr)
 	{
-		SettingsTitleText->SetText(LOCTEXT("Settings", "Settings"));
+		SettingsTitleText->SetText(SettingsLedgerTitle);
 	}
-	SetNamedText(TEXT("SettingsTitleText"), LOCTEXT("Settings", "Settings"));
+	SetNamedText(TEXT("SettingsTitleText"), SettingsLedgerTitle);
 	SetNamedText(TEXT("Set_sec_graphics_text"), LOCTEXT("Graphics", "Graphics"));
 	SetNamedText(TEXT("Set_sec_display_text"), LOCTEXT("Graphics", "Graphics"));
 	SetNamedText(TEXT("Set_sec_audio_text"), LOCTEXT("Volume", "Volume"));
@@ -217,25 +237,25 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("UIVolumeRow_Label"), LOCTEXT("UI", "UI"));
 	SetNamedText(TEXT("FpsThirtyButtonText"), FText::AsNumber(30));
 	SetNamedText(TEXT("FpsSixtyButtonText"), FText::AsNumber(60));
-	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "Back"));
-	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "Save and Exit"));
-	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "Abandon Run"));
-	SetNamedText(TEXT("ResetButton"), LOCTEXT("Reset", "Reset"));
+	SetNamedText(TEXT("BackButton"), BackLabel);
+	SetNamedText(TEXT("SaveAndExitButton"), SaveAndExitLabel);
+	SetNamedText(TEXT("AbandonRunButton"), AbandonRunLabel);
+	SetNamedText(TEXT("ResetButton"), ResetLabel);
 	if (BackButtonText != nullptr)
 	{
-		BackButtonText->SetText(LOCTEXT("Back", "Back"));
+		BackButtonText->SetText(BackLabel);
 	}
 	if (SaveAndExitButtonText != nullptr)
 	{
-		SaveAndExitButtonText->SetText(LOCTEXT("Save and Exit", "Save and Exit"));
+		SaveAndExitButtonText->SetText(SaveAndExitLabel);
 	}
 	if (AbandonRunButtonText != nullptr)
 	{
-		AbandonRunButtonText->SetText(LOCTEXT("Abandon Run", "Abandon Run"));
+		AbandonRunButtonText->SetText(AbandonRunLabel);
 	}
 	if (ResetButtonText != nullptr)
 	{
-		ResetButtonText->SetText(LOCTEXT("Reset", "Reset"));
+		ResetButtonText->SetText(ResetLabel);
 	}
 	if (AudioSectionHeader != nullptr)
 	{
