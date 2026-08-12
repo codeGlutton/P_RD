@@ -95,19 +95,19 @@ float UFrontendMapLineWidget::GetLineThickness() const
 UFrontendMapNodeWidget::UFrontendMapNodeWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	static ConstructorHelpers::FObjectFinder<UTexture2D> TreasureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> TreasureFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Treasure.T_MapNode_Treasure"));
 	if (TreasureFinder.Succeeded()) mFallbackIconTreasure = TreasureFinder.Object;
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> ShopFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Shop.T_MapNode_Shop"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> ShopFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Shop.T_MapNode_Shop"));
 	if (ShopFinder.Succeeded()) mFallbackIconShop = ShopFinder.Object;
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> MonsterFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Monster.T_MapNode_Monster"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> MonsterFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Monster.T_MapNode_Monster"));
 	if (MonsterFinder.Succeeded()) mFallbackIconMonster = MonsterFinder.Object;
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> EliteFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Elite.T_MapNode_Elite"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> EliteFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Elite.T_MapNode_Elite"));
 	if (EliteFinder.Succeeded()) mFallbackIconElite = EliteFinder.Object;
 
-	static ConstructorHelpers::FObjectFinder<UTexture2D> BossFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Boss.T_MapNode_Boss"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> BossFinder(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Boss.T_MapNode_Boss"));
 	if (BossFinder.Succeeded()) mFallbackIconBoss = BossFinder.Object;
 }
 

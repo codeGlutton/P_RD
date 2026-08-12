@@ -297,18 +297,18 @@ namespace WorldMapLandscapeWidgetBuilder
 		Expose(Blueprint, Legend);
 
 		UImage* Frame = AddImage(Blueprint, Legend, TEXT("LandscapeLegendFrame"),
-			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Panels/"
 				"T_WorldMap_LegendPanel_Gen_20260812.T_WorldMap_LegendPanel_Gen_20260812")),
 			FVector2D::ZeroVector, FVector2D(240.f, 448.f), 0);
 		Frame->SetColorAndOpacity(FLinearColor::White);
 
 		struct FLegendItem { const TCHAR* Label; const TCHAR* TexturePath; };
 		const FLegendItem Items[] = {
-			{ TEXT("전투"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Battle_Gen_20260812.T_WorldMap_Node_Battle_Gen_20260812") },
-			{ TEXT("엘리트"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Elite_Gen_20260812.T_WorldMap_Node_Elite_Gen_20260812") },
-			{ TEXT("보스"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Boss_Gen_20260812.T_WorldMap_Node_Boss_Gen_20260812") },
-			{ TEXT("상점"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Shop_Gen_20260812.T_WorldMap_Node_Shop_Gen_20260812") },
-			{ TEXT("보물"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Treasure_Gen_20260812.T_WorldMap_Node_Treasure_Gen_20260812") },
+			{ TEXT("전투"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_WorldMap_Node_Battle_Gen_20260812.T_WorldMap_Node_Battle_Gen_20260812") },
+			{ TEXT("엘리트"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_WorldMap_Node_Elite_Gen_20260812.T_WorldMap_Node_Elite_Gen_20260812") },
+			{ TEXT("보스"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_WorldMap_Node_Boss_Gen_20260812.T_WorldMap_Node_Boss_Gen_20260812") },
+			{ TEXT("상점"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_WorldMap_Node_Shop_Gen_20260812.T_WorldMap_Node_Shop_Gen_20260812") },
+			{ TEXT("보물"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_WorldMap_Node_Treasure_Gen_20260812.T_WorldMap_Node_Treasure_Gen_20260812") },
 		};
 
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(Items); ++Index)
@@ -342,16 +342,16 @@ namespace WorldMapLandscapeWidgetBuilder
 			&& NodeWidgetClass->IsChildOf(UFrontendMapLandscapeNodeWidget::StaticClass()));
 
 		UTexture2D* Background = Texture(TEXT(
-			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Backgrounds/"
 			"T_WorldMapLandscape_Base_20260811.T_WorldMapLandscape_Base_20260811"));
 		UTexture2D* ButtonPlate = Texture(TEXT(
-			"/Game/SVN/OutSideAsset/AICreation/UI/HUD04/"
+			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/"
 			"KK_HUD04_bottom_right_button.KK_HUD04_bottom_right_button"));
 		UTexture2D* CurrentMarker = Texture(TEXT(
-			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 			"T_WorldMap_Node_CurrentParty_Gen_20260812.T_WorldMap_Node_CurrentParty_Gen_20260812"));
 		UTexture2D* SelectGlow = Texture(TEXT(
-			"/Game/SVN/OutSideAsset/AICreation/UI/WorldMap/"
+			"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Markers/"
 			"T_wm_marker_next_highlight.T_wm_marker_next_highlight"));
 
 		UWidgetBlueprint* Blueprint = EnsureBlueprint(MainAssetPath, MainAssetName,

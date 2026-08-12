@@ -17,10 +17,10 @@ UFrontendMapLandscapeLineWidget::UFrontendMapLandscapeLineWidget(
 	: Super(ObjectInitializer)
 {
 	static ConstructorHelpers::FObjectFinder<UTexture2D> SolidFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Paths/"
 			"T_WorldMap_Path_Gold_Gen_20260812.T_WorldMap_Path_Gold_Gen_20260812"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> DashedFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/"
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Paths/"
 			"T_MapPath_Locked_V2.T_MapPath_Locked_V2"));
 	SetLineTexturesForLayout(
 		SolidFinder.Succeeded() ? SolidFinder.Object : nullptr,
@@ -44,19 +44,19 @@ UFrontendMapLandscapeNodeWidget::UFrontendMapLandscapeNodeWidget(
 	};
 
 	mLandscapeMonster = LoadTexture(TEXT(
-		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 		"T_WorldMap_Node_Battle_Gen_20260812.T_WorldMap_Node_Battle_Gen_20260812"));
 	mLandscapeElite = LoadTexture(TEXT(
-		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 		"T_WorldMap_Node_Elite_Gen_20260812.T_WorldMap_Node_Elite_Gen_20260812"));
 	mLandscapeBoss = LoadTexture(TEXT(
-		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 		"T_WorldMap_Node_Boss_Gen_20260812.T_WorldMap_Node_Boss_Gen_20260812"));
 	mLandscapeShop = LoadTexture(TEXT(
-		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 		"T_WorldMap_Node_Shop_Gen_20260812.T_WorldMap_Node_Shop_Gen_20260812"));
 	mLandscapeTreasure = LoadTexture(TEXT(
-		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
+		"/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/"
 		"T_WorldMap_Node_Treasure_Gen_20260812.T_WorldMap_Node_Treasure_Gen_20260812"));
 }
 

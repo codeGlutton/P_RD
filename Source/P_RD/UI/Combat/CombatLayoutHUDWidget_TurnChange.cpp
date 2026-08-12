@@ -23,7 +23,7 @@ namespace
 	constexpr int32 TurnChangeFrameStep = 2;
 	constexpr int32 TurnChangeUsedFrameCount = (TurnChangeFrameCount + TurnChangeFrameStep - 1) / TurnChangeFrameStep;
 	const FVector2D TurnChangeFrameNativeSize(832.0f, 448.0f);
-	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/TurnChange/FramesBiRefNet");
+	const TCHAR* const TurnChangeFrameAssetDirectory = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/TurnChange/Frames");
 
 	int32 GetClampedFrameIndex(float ElapsedSeconds)
 	{

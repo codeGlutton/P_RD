@@ -262,15 +262,15 @@ namespace MonsterTabWidgetBuilder
 		// 열 비율을 못 바꾸고, 16:9 가 아닌 폰에서 나무가 늘어났다.
 		// 이제 바깥 틀 한 장 + 기둥 두 개를 코드가 놓는다.
 		UTexture2D* BaseFrame = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* RowNormal = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* RowSelected = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
 		// 같은 기능인데 지도·탭·설정이 서로 다른 단추를 쓰고 있었다(0804 검수).
 		// 공용 KitA 단추 하나로 모은다.
 		UTexture2D* BackButtonTexture = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Controls/Buttons/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		// 바깥 틀은 9-slice 로 편다. 모서리 장식이 x91 · y98 까지라 그 안쪽만 늘어난다
 		// (Saved/UIKit/_slice_margins.txt 실측).
 		AddDarkWell(Blueprint, Canvas, TEXT("MonsterTabContentWell"),
@@ -309,9 +309,9 @@ namespace MonsterTabWidgetBuilder
 
 		const TCHAR* MonsterNames[3] = { TEXT("독수리"), TEXT("늑대인간"), TEXT("골렘") };
 		const TCHAR* HeadPaths[3] = {
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2")
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2")
 		};
 		const float RowWidth = 350.f;
 		const float RowHeight = 190.f;
@@ -352,7 +352,7 @@ namespace MonsterTabWidgetBuilder
 
 		// ── 가운데 칸: 고른 몬스터의 모습과 이름 ────────────────────────
 		UTexture2D* PortraitCell = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		AddImage(Blueprint, Canvas, TEXT("MonsterPortraitFrame"), PortraitCell,
 			FVector2D(MidCell.X + Gutter, MidCell.Y + 70.0f),
 			FVector2D(MidSize.X - Gutter * 2.f, MidSize.X - Gutter * 2.f), 14, true);
@@ -366,7 +366,7 @@ namespace MonsterTabWidgetBuilder
 		UImage* DetailPortrait = Blueprint->WidgetTree->ConstructWidget<UImage>(
 			UImage::StaticClass(), TEXT("MonsterDetailPortrait"));
 		DetailPortrait->SetBrushFromTexture(Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_ActionV3.KK_Face_Enemy_Werewolf_ActionV3")), false);
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Werewolf_ActionV3.KK_Face_Enemy_Werewolf_ActionV3")), false);
 		DetailPortrait->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		PortraitScale->AddChild(DetailPortrait);
 		Expose(Blueprint, DetailPortrait);
@@ -403,7 +403,7 @@ namespace MonsterTabWidgetBuilder
 		Cursor += 96.f;
 
 		UTexture2D* ChipRing = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring"));
 		const TCHAR* const ChipValueNames[4] = {
 			TEXT("MonsterDetailHPText"), TEXT("MonsterDetailAPText"),
 			TEXT("MonsterDetailDefenseText"), TEXT("MonsterDetailSpeedText") };
@@ -449,7 +449,7 @@ namespace MonsterTabWidgetBuilder
 
 		// 스킬은 아이콘 한 줄. 이름은 아이콘이 없을 때만 런타임이 켠다.
 		UTexture2D* SkillSlotFrame = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		const float SkillRoom = RightInner / 4.f;
 		const float SkillSide = FMath::Min(SkillRoom - 14.f, 168.f);
 		for (int32 Index = 0; Index < 4; ++Index)

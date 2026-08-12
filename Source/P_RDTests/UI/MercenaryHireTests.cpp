@@ -295,7 +295,7 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		for (const TCHAR* Kind : { TEXT("Icon"), TEXT("Hero") })
 		{
 			const FString Path = FString::Printf(
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_Hire%s_%s.T_MB_Hire%s_%s"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_Hire%s_%s.T_MB_Hire%s_%s"),
 				Kind, Name, Kind, Name);
 			UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path);
 			if (TestNotNull(*Path, Texture))
