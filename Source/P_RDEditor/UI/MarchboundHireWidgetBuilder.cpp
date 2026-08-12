@@ -26,6 +26,15 @@ namespace MarchboundHireWidgetBuilder
 		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound");
 	// Each screen region owns its own mobile-responsive scale box.
 	const FVector2D DesignSize(1920.0f, 1080.0f);
+	// LINESeedKR의 line box와 실제 글리프 중심 차이를 용도별로 보정한다.
+	constexpr float TitleOpticalOffsetY = -31.5f;
+	constexpr float ListNameOpticalOffsetY = -18.125f;
+	constexpr float ListRoleOpticalOffsetY = -2.25f;
+	constexpr float DetailNameOpticalOffsetY = -13.5f;
+	constexpr float SkillLabelOpticalOffsetY = -2.5f;
+	constexpr float ButtonLabelOpticalOffsetY = -20.0f;
+	constexpr float PartyCountOpticalOffsetY = -26.5f;
+	constexpr float PartySlotNameOpticalOffsetY = -16.25f;
 
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 
@@ -70,6 +79,26 @@ namespace MarchboundHireWidgetBuilder
 		Slot->SetPosition(Position);
 		Slot->SetSize(Size);
 		Slot->SetZOrder(ZOrder);
+	}
+
+	void PlaceCenteredText(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent,
+		UTextBlock* Text, const FVector2D Position, const FVector2D Size,
+		const int32 ZOrder)
+	{
+		const FName CenterName(*FString::Printf(TEXT("%s_Center"), *Text->GetName()));
+		UOverlay* Center = FindOrCreate<UOverlay>(Blueprint, CenterName);
+		PlaceCanvas(Parent, Center, Position, Size, ZOrder);
+		EnsureParent(Center, Text);
+		UOverlaySlot* TextSlot = CastChecked<UOverlaySlot>(Text->Slot);
+		TextSlot->SetHorizontalAlignment(HAlign_Fill);
+		TextSlot->SetVerticalAlignment(VAlign_Center);
+		Text->SetJustification(ETextJustify::Center);
+	}
+
+	void ApplyTextOpticalCenter(UTextBlock* Text, const float OffsetY)
+	{
+		check(Text != nullptr);
+		Text->SetRenderTranslation(FVector2D(0.0f, OffsetY));
 	}
 
 	void StretchCanvas(UCanvasPanel* Parent, UWidget* Child,
@@ -147,7 +176,7 @@ namespace MarchboundHireWidgetBuilder
 		const int32 ZOrder, const ETextJustify::Type Justify = ETextJustify::Center)
 	{
 		UTextBlock* Result = FindOrCreate<UTextBlock>(Blueprint, Name);
-		PlaceCanvas(Parent, Result, Position, Size, ZOrder);
+		PlaceCenteredText(Blueprint, Parent, Result, Position, Size, ZOrder);
 		Result->SetText(Value);
 		Result->SetJustification(Justify);
 		SetFont(Result, Font, FontSize);
@@ -302,6 +331,7 @@ namespace MarchboundHireWidgetBuilder
 			NSLOCTEXT("MarchboundHire", "Title", "용병 선택"), Font, 42,
 			FVector2D(30.0f, 20.0f), FVector2D(370.0f, 64.0f), 10);
 		SetLightFont(TitleText, Font, 42);
+		ApplyTextOpticalCenter(TitleText, TitleOpticalOffsetY);
 
 		const FVector2D CardSize(420.0f, 116.0f);
 		const TCHAR* DefaultNames[6] = {
@@ -309,8 +339,8 @@ namespace MarchboundHireWidgetBuilder
 			TEXT("도적"), TEXT("야만전사"), TEXT("드루이드")
 		};
 		const TCHAR* DefaultRoles[6] = {
-			TEXT("근접"), TEXT("마법"), TEXT("원거리"),
-			TEXT("근접"), TEXT("근접"), TEXT("지원")
+			TEXT("방패 탱커 · 근접"), TEXT("주문 술사 · 원거리"), TEXT("명사수 · 원거리"),
+			TEXT("기습 암살자 · 근접"), TEXT("광전사 · 근접"), TEXT("자연 술사 · 지원")
 		};
 		const TCHAR* PortraitPaths[6] = {
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
@@ -360,21 +390,23 @@ namespace MarchboundHireWidgetBuilder
 
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("HireName_%d"), Index)));
-			PlaceCanvas(Card, Name,
-				CardInner.Min + FVector2D(FaceExtent + 14.f, CardSpan.Y * 0.06f),
-				FVector2D(CardSpan.X - FaceExtent - 14.f, CardSpan.Y * 0.46f), 15);
+			PlaceCenteredText(Blueprint, Card, Name,
+				CardInner.Min + FVector2D(FaceExtent + 14.f, 0.f),
+				FVector2D(CardSpan.X - FaceExtent - 14.f, CardSpan.Y * 0.62f), 15);
 			Name->SetText(FText::FromString(DefaultNames[Index]));
-			Name->SetJustification(ETextJustify::Left);
+			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 29);
+			ApplyTextOpticalCenter(Name, ListNameOpticalOffsetY);
 
 			UTextBlock* Role = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("HireRole_%d"), Index)));
-			PlaceCanvas(Card, Role,
-				CardInner.Min + FVector2D(FaceExtent + 14.f, CardSpan.Y * 0.54f),
+			PlaceCenteredText(Blueprint, Card, Role,
+				CardInner.Min + FVector2D(FaceExtent + 14.f, CardSpan.Y * 0.58f),
 				FVector2D(CardSpan.X - FaceExtent - 14.f, CardSpan.Y * 0.38f), 15);
 			Role->SetText(FText::FromString(DefaultRoles[Index]));
-			Role->SetJustification(ETextJustify::Left);
-			SetFont(Role, Font, 20);
+			Role->SetJustification(ETextJustify::Center);
+			SetFont(Role, Font, 16);
+			ApplyTextOpticalCenter(Role, ListRoleOpticalOffsetY);
 
 			for (const TCHAR* Prefix : {TEXT("HireHP"), TEXT("HireBadge"), TEXT("HireTrait")})
 			{
@@ -401,16 +433,18 @@ namespace MarchboundHireWidgetBuilder
 		}
 
 		UCanvasPanel* NamePanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailNamePanel"));
-		PlaceCanvas(CenterRegion, NamePanel, FVector2D(180.0f, 628.0f), FVector2D(520.0f, 120.0f), 20);
+		PlaceCanvas(CenterRegion, NamePanel, FVector2D(180.0f, 590.0f), FVector2D(520.0f, 120.0f), 20);
 		AddImage(Blueprint, NamePanel, TEXT("HireDetailNameArt"), NamePlate,
 			FVector2D::ZeroVector, FVector2D(520.0f, 120.0f), 0);
 		const FBox2D NameInner = UIPartRects::Inner(TEXT("T_MB_HireNamePlate"),
 			FVector2D::ZeroVector, FVector2D(520.0f, 120.0f), false);
-		AddText(Blueprint, NamePanel, TEXT("HireDetailName"), NSLOCTEXT("MarchboundHire", "Knight", "기사"),
-			Font, 38, NameInner.Min, NameInner.GetSize(), 10);
+		UTextBlock* DetailName = AddText(Blueprint, NamePanel, TEXT("HireDetailName"),
+			NSLOCTEXT("MarchboundHire", "Knight", "기사"), Font, 38,
+			NameInner.Min, NameInner.GetSize(), 10);
+		ApplyTextOpticalCenter(DetailName, DetailNameOpticalOffsetY);
 
 		UCanvasPanel* StatsPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailStatsPanel"));
-		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(95.0f, 746.0f), FVector2D(690.0f, 96.0f), 20);
+		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(95.0f, 710.0f), FVector2D(690.0f, 96.0f), 20);
 		AddImage(Blueprint, StatsPanel, TEXT("HireDetailStatsArt"), StatsStrip,
 			FVector2D::ZeroVector, FVector2D(690.0f, 96.0f), 0);
 		// 이 띠에는 세로 칸막이가 둘 그려져 있다. 셋으로 나눠 쓴다.
@@ -421,7 +455,7 @@ namespace MarchboundHireWidgetBuilder
 			TEXT("HireDetailHP"), TEXT("HireDetailAP"), TEXT("HireDetailSpeed") };
 		const FText StatDefaults[3] = {
 			FText::FromString(TEXT("HP 100")), FText::FromString(TEXT("AP 7")),
-			NSLOCTEXT("MarchboundHire", "SpeedDefault", "속도 3") };
+			NSLOCTEXT("MarchboundHire", "SpeedDefault", "SPEED 3") };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const FBox2D StatCell = UIPartRects::Cell(TEXT("T_MB_HireStatsStrip"),
@@ -438,7 +472,7 @@ namespace MarchboundHireWidgetBuilder
 		{
 			UCanvasPanel* SkillPanel = FindOrCreate<UCanvasPanel>(Blueprint,
 				FName(*FString::Printf(TEXT("HireDetailSkill_%d"), Index)));
-			PlaceCanvas(CenterRegion, SkillPanel, FVector2D(53.0f + 126.0f * Index, 858.0f),
+			PlaceCanvas(CenterRegion, SkillPanel, FVector2D(53.0f + 126.0f * Index, 820.0f),
 				FVector2D(116.0f, 116.0f), 20);
 			AddImage(Blueprint, SkillPanel,
 				FName(*FString::Printf(TEXT("HireDetailSkillArt_%d"), Index)), SkillFrame,
@@ -450,6 +484,7 @@ namespace MarchboundHireWidgetBuilder
 				FText::FromString(DefaultSkillLabels[Index]), Font, 18,
 				SkillInner.Min, SkillInner.GetSize(), 10);
 			SetLightFont(SkillText, Font, 18);
+			ApplyTextOpticalCenter(SkillText, SkillLabelOpticalOffsetY);
 			UButton* SkillButton = FindOrCreate<UButton>(Blueprint,
 				FName(*FString::Printf(TEXT("HireDetailSkillButton_%d"), Index)));
 			PlaceCanvas(SkillPanel, SkillButton, FVector2D::ZeroVector,
@@ -457,25 +492,41 @@ namespace MarchboundHireWidgetBuilder
 			SetTransparentButton(SkillButton);
 		}
 
+		// 목록은 상세만 바꾸고, 이 버튼만 현재 후보를 파티에 넣는다.
+		UCanvasPanel* Add = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireAddHolder"));
+		PlaceCanvas(CenterRegion, Add, FVector2D(287.5f, 962.0f), FVector2D(270.0f, 106.0f), 30);
+		AddImage(Blueprint, Add, TEXT("HireAddArt"), BackPlate,
+			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 0);
+		UTextBlock* AddLabel = AddText(Blueprint, Add, TEXT("HireAddLabel"),
+			NSLOCTEXT("MarchboundHire", "Add", "추가"), Font, 32,
+			FVector2D(25.0f, 24.0f), FVector2D(220.0f, 58.0f), 15);
+		SetLightFont(AddLabel, Font, 32);
+		ApplyTextOpticalCenter(AddLabel, ButtonLabelOpticalOffsetY);
+		UButton* AddButton = FindOrCreate<UButton>(Blueprint, TEXT("HireAddButton"));
+		PlaceCanvas(Add, AddButton, FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 30);
+		SetTransparentButton(AddButton);
+
 		UCanvasPanel* PartyPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireBottomBar"));
-		PlaceCanvas(RightRegion, PartyPanel, FVector2D(40.0f, 145.0f), FVector2D(420.0f, 660.0f), 20);
+		const FVector2D PartySize(420.0f, 627.0f);
+		PlaceCanvas(RightRegion, PartyPanel, FVector2D(40.0f, 145.0f), PartySize, 20);
 		UImage* PartyFrameArt = FindOrCreate<UImage>(Blueprint, TEXT("HireBottomBar_Art"));
-		PlaceCanvas(PartyPanel, PartyFrameArt, FVector2D::ZeroVector, FVector2D(420.0f, 660.0f), 0);
+		PlaceCanvas(PartyPanel, PartyFrameArt, FVector2D::ZeroVector, PartySize, 0);
 		SetImage(PartyFrameArt, PartyFrame);
 
 		// 이 틀 그림에는 칸이 둘이다 -- 사람이 맞춰 둔 몸통(0)과 머리칸(1).
 		// 인원수는 머리칸에, 자리들은 몸통에 넣는다.
-		const FVector2D PartySize(420.0f, 660.0f);
 		const FBox2D PartyBody = UIPartRects::Inner(TEXT("T_MB_HirePartyFrame"),
 			FVector2D::ZeroVector, PartySize, false, 0);
 		const FBox2D PartyHead = UIPartRects::Inner(TEXT("T_MB_HirePartyFrame"),
 			FVector2D::ZeroVector, PartySize, false, 1);
 
 		UTextBlock* PartyCount = FindOrCreate<UTextBlock>(Blueprint, TEXT("PartyCountText"));
-		PlaceCanvas(PartyPanel, PartyCount, PartyHead.Min, PartyHead.GetSize(), 15);
+		PlaceCenteredText(Blueprint, PartyPanel, PartyCount,
+			PartyHead.Min, PartyHead.GetSize(), 15);
 		PartyCount->SetText(NSLOCTEXT("MarchboundHire", "PartyDefault", "파티 0/3"));
 		PartyCount->SetJustification(ETextJustify::Center);
 		SetLightFont(PartyCount, Font, 32);
+		ApplyTextOpticalCenter(PartyCount, PartyCountOpticalOffsetY);
 
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
@@ -484,10 +535,12 @@ namespace MarchboundHireWidgetBuilder
 			// 자리 셋을 몸통 칸에 고르게 나눠 넣는다. 40,112 · 150 간격은
 			// 눈대중이었고, 그 값들은 틀 그림이 바뀌면 같이 안 따라왔다.
 			const FVector2D BodySpan = PartyBody.GetSize();
-			const float SlotPitch = BodySpan.Y / 3.f;
-			const FVector2D SlotSize(BodySpan.X, SlotPitch - 10.f);
+			const float SlotHeight = BodySpan.X * (420.0f / 1024.0f);
+			const float SlotGap = (BodySpan.Y - SlotHeight * 3.0f) / 4.0f;
+			const FVector2D SlotSize(BodySpan.X, SlotHeight);
 			PlaceCanvas(PartyPanel, SlotPanel,
-				PartyBody.Min + FVector2D(0.f, SlotPitch * Index),
+				PartyBody.Min + FVector2D(0.f,
+					SlotGap + (SlotHeight + SlotGap) * Index),
 				SlotSize, 10);
 
 			AddImage(Blueprint, SlotPanel,
@@ -510,11 +563,12 @@ namespace MarchboundHireWidgetBuilder
 
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotName_%d"), Index)));
-			PlaceCanvas(SlotPanel, Name,
+			PlaceCenteredText(Blueprint, SlotPanel, Name,
 				SlotInner.Min + FVector2D(SlotFace + 12.f, SlotSpan.Y * 0.28f),
 				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.44f), 12);
 			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 26);
+			ApplyTextOpticalCenter(Name, PartySlotNameOpticalOffsetY);
 			Name->SetVisibility(ESlateVisibility::Collapsed);
 
 			UButton* SlotButton = FindOrCreate<UButton>(Blueprint,
@@ -523,37 +577,36 @@ namespace MarchboundHireWidgetBuilder
 			SetTransparentButton(SlotButton);
 		}
 
-		UTextBlock* Notice = FindOrCreate<UTextBlock>(Blueprint, TEXT("NoticeText"));
-		PlaceCanvas(PartyPanel, Notice,
-			FVector2D(PartyBody.Min.X, PartyBody.Max.Y - 46.f),
-			FVector2D(PartyBody.GetSize().X, 46.f), 15);
-		Notice->SetText(NSLOCTEXT("MarchboundHire", "NoticeDefault", "1명 이상 선택하면 출발 가능"));
-		Notice->SetJustification(ETextJustify::Center);
-		SetLightFont(Notice, Font, 20);
+		// 옛 안내 문구는 삭제하지 않고 숨겨 이전 WBP 구조를 보존한다.
+		FindOrCreate<UTextBlock>(Blueprint, TEXT("NoticeText"))->SetVisibility(
+			ESlateVisibility::Collapsed);
 
 		UCanvasPanel* Depart = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("DepartHolder"));
-		PlaceCanvas(RightRegion, Depart, FVector2D(80.0f, 824.0f), FVector2D(340.0f, 160.0f), 30);
+		PlaceCanvas(RightRegion, Depart, FVector2D(148.0f, 962.0f), FVector2D(224.0f, 106.0f), 30);
 		AddImage(Blueprint, Depart, TEXT("DepartArt"), DepartPlate,
-			FVector2D::ZeroVector, FVector2D(340.0f, 160.0f), 0);
+			FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), 0);
 		UTextBlock* DepartLabel = FindOrCreate<UTextBlock>(Blueprint, TEXT("DepartLabel"));
 		const FBox2D DepartInner = UIPartRects::Inner(TEXT("T_MB_HireDepartButton"),
-			FVector2D::ZeroVector, FVector2D(340.0f, 160.0f), false);
-		PlaceCanvas(Depart, DepartLabel, DepartInner.Min, DepartInner.GetSize(), 15);
+			FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), false);
+		PlaceCenteredText(Blueprint, Depart, DepartLabel,
+			DepartInner.Min, DepartInner.GetSize(), 15);
 		DepartLabel->SetText(NSLOCTEXT("MarchboundHire", "Depart", "출발"));
 		DepartLabel->SetJustification(ETextJustify::Center);
-		SetLightFont(DepartLabel, Font, 44);
+		SetLightFont(DepartLabel, Font, 32);
+		ApplyTextOpticalCenter(DepartLabel, ButtonLabelOpticalOffsetY);
 		UButton* DepartButton = FindOrCreate<UButton>(Blueprint, TEXT("DepartButton"));
-		PlaceCanvas(Depart, DepartButton, FVector2D::ZeroVector, FVector2D(340.0f, 160.0f), 30);
+		PlaceCanvas(Depart, DepartButton, FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), 30);
 		SetTransparentButton(DepartButton);
 
 		UCanvasPanel* Back = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireBackHolder"));
-		PlaceCanvas(LeftRegion, Back, FVector2D(70.0f, 952.0f), FVector2D(270.0f, 106.0f), 30);
+		PlaceCanvas(LeftRegion, Back, FVector2D(70.0f, 962.0f), FVector2D(270.0f, 106.0f), 30);
 		AddImage(Blueprint, Back, TEXT("HireBackArt"), BackPlate,
 			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 0);
 		UTextBlock* BackLabel = AddText(Blueprint, Back, TEXT("HireBackLabel"),
 			NSLOCTEXT("MarchboundHire", "Back", "뒤로"), Font, 32,
 			FVector2D(25.0f, 24.0f), FVector2D(220.0f, 58.0f), 15);
 		SetLightFont(BackLabel, Font, 32);
+		ApplyTextOpticalCenter(BackLabel, ButtonLabelOpticalOffsetY);
 		UButton* BackButton = FindOrCreate<UButton>(Blueprint, TEXT("HireBackButton"));
 		PlaceCanvas(Back, BackButton, FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 30);
 		SetTransparentButton(BackButton);

@@ -21,6 +21,7 @@
 #include "Setting/GamePlaySettings.h"
 #include "HAL/IConsoleManager.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
 #include "UI/RDUserWidget.h"
@@ -458,6 +459,18 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			FText::AsNumber(NewOption.mGold));
 		NewOption.mPortrait = LoadedPlayerUnitData->mPortrait;
 		NewOption.mIcon = LoadedPlayerUnitData->mIcon;
+		// 용병 선택과 전투 카드가 같은 스킬 DA 이름·아이콘을 보여 주도록
+		// 게임모드가 실제 후보 데이터에 함께 실어 보낸다.
+		for (const TSoftObjectPtr<UStaticSkillData>& SkillPtr : LoadedPlayerUnitData->mSkillDatas)
+		{
+			const UStaticSkillData* Skill = SkillPtr.LoadSynchronous();
+			if (Skill == nullptr)
+			{
+				continue;
+			}
+			NewOption.mSkillNames.Add(Skill->mName);
+			NewOption.mSkillIcons.Add(Skill->mIcon);
+		}
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
 		// 선택 가능 여부는 로드 상태와 실제 Pawn Class 설정을 동시에 본다. UI는 이 bool을 재해석하지 않는다.
 		NewOption.mSelectable = PlayerUnitData.IsValid() && !LoadedPlayerUnitData->mViewClass.IsNull();
