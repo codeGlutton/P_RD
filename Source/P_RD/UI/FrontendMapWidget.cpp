@@ -402,7 +402,7 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 
 	// 원근은 이미지에 굽지 않는다 — 평평한 지도 + 리테이너 머티리얼이 정본.
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapParchmentFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Backgrounds/T_StageMap_Background_Parchment.T_StageMap_Background_Parchment"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Map/T_StageMap_Background_Parchment.T_StageMap_Background_Parchment"));
 	if (MapParchmentFinder.Succeeded())
 	{
 		mMapParchmentTexture = MapParchmentFinder.Object;
@@ -416,14 +416,14 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	 */
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapButtonPlateFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Controls/Buttons/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
 	if (MapButtonPlateFinder.Succeeded())
 	{
 		mMapButtonPlateTexture = MapButtonPlateFinder.Object;
 	}
 
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MapPerspectiveFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Materials/M_MapPerspective.M_MapPerspective"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/RunFlow/M_MapPerspective.M_MapPerspective"));
 	if (MapPerspectiveFinder.Succeeded())
 	{
 		mMapPerspectiveMaterial = MapPerspectiveFinder.Object;
@@ -432,13 +432,13 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	// 범례 아이콘 v2 교체용. 키워드는 옛 텍스처 경로에서 종류를 찾을 때 쓴다.
 	// monster 는 corruptedmonster 와도 겹치므로 마지막에 검사한다(ApplyLegendIconsV2).
 	static const struct { const TCHAR* Keyword; const TCHAR* Path; } IconV2Entries[] = {
-		{ TEXT("elite"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Elite_V2.T_MapNode_Elite_V2") },
-		{ TEXT("boss"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Boss_V2.T_MapNode_Boss_V2") },
-		{ TEXT("shop"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Shop_V2.T_MapNode_Shop_V2") },
-		{ TEXT("treasure"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Treasure_V2.T_MapNode_Treasure_V2") },
-		{ TEXT("rest"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
-		{ TEXT("camp"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
-		{ TEXT("monster"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Monster_V2.T_MapNode_Monster_V2") },
+		{ TEXT("elite"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Elite_V2.T_MapNode_Elite_V2") },
+		{ TEXT("boss"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Boss_V2.T_MapNode_Boss_V2") },
+		{ TEXT("shop"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Shop_V2.T_MapNode_Shop_V2") },
+		{ TEXT("treasure"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Treasure_V2.T_MapNode_Treasure_V2") },
+		{ TEXT("rest"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
+		{ TEXT("camp"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Rest_V2.T_MapNode_Rest_V2") },
+		{ TEXT("monster"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_MapNode_Monster_V2.T_MapNode_Monster_V2") },
 	};
 	for (const auto& Entry : IconV2Entries)
 	{

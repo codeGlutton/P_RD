@@ -80,10 +80,10 @@ public:
     FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatVictoryVideoPath"))
-    FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Victory_01.mp4");
+    FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatDefeatVideoPath"))
-    FString mCombatDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Defeat_01.mp4");
+    FString mCombatDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
     /* 룸 별 게임모드 세팅 */
 public:

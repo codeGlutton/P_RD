@@ -146,7 +146,7 @@ bool FFrontendMapLandscapeStructureTest::RunTest(const FString& Parameters)
 		return false;
 	}
 	TestEqual(TEXT("가로 지도 배경 경로"), Texture->GetPathName(),
-		FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Backgrounds/"
+		FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/"
 			"T_WorldMapLandscape_Base_20260811.T_WorldMapLandscape_Base_20260811")));
 	const FIntPoint ImportedSize = Texture->GetImportedSize();
 	TestEqual(TEXT("배경 원본 폭"), ImportedSize.X, 1672);

@@ -20,8 +20,8 @@
 
 namespace
 {
-	const TCHAR* const FallbackVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Victory_01.mp4");
-	const TCHAR* const FallbackDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Defeat_01.mp4");
+	const TCHAR* const FallbackVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
+	const TCHAR* const FallbackDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 	constexpr int32 CombatResultVideoZOrder = -20;
 	/** @brief 패배 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
 	constexpr float CombatResultStartDelaySeconds = 1.2f;

@@ -658,7 +658,7 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		const UObject* BookTexture = BookImage->GetBrush().GetResourceObject();
 		TestTrue(TEXT("장부 전용 BookBase 텍스처"),
 			BookTexture != nullptr && BookTexture->GetPathName().Contains(
-				TEXT("/P_RD/Frontend/Settings/T_MB_SettingsLedger_BookBase")));
+				TEXT("SettingsLedger/T_MB_SettingsLedger_BookBase")));
 	}
 	if (TestNotNull(TEXT("설정 기능 컨텐츠 캔버스"), ContentCanvas))
 	{
@@ -719,7 +719,7 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			const UObject* Resource = Plate->GetBrush().GetResourceObject();
 			TestTrue(*FString::Printf(TEXT("%s 전용 RowLabel"), LedgerRowName),
 				Resource != nullptr && Resource->GetPathName().Contains(
-					TEXT("/P_RD/Frontend/Settings/T_MB_SettingsLedger_RowLabel")));
+					TEXT("SettingsLedger/T_MB_SettingsLedger_RowLabel")));
 		}
 	}
 
@@ -982,7 +982,7 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			const UObject* Resource = Ribbon->GetBrush().GetResourceObject();
 			TestTrue(*FString::Printf(TEXT("%s 전용 텍스처"), RibbonName),
 				Resource != nullptr && Resource->GetPathName().Contains(
-					TEXT("/P_RD/Frontend/Settings/T_MB_SettingsLedger_SectionRibbon")));
+					TEXT("SettingsLedger/T_MB_SettingsLedger_SectionRibbon")));
 		}
 	}
 	UImage* SelectedReference = Cast<UImage>(
@@ -994,7 +994,7 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			SelectedReference->GetVisibility(), ESlateVisibility::Collapsed);
 		TestTrue(TEXT("선택 파츠 전용 텍스처"),
 			Resource != nullptr && Resource->GetPathName().Contains(
-				TEXT("/P_RD/Frontend/Settings/T_MB_SettingsLedger_ChoiceButton_Selected")));
+				TEXT("SettingsLedger/T_MB_SettingsLedger_ChoiceButton_Selected")));
 	}
 
 	for (const TCHAR* TrackName : { TEXT("Set_slider_track_master"),

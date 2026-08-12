@@ -42,9 +42,9 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	// 확정 시안(0806): 목록 줄은 고용 화면과 같은 양피지 줄판을 쓴다.
 	// 옛 남색 카드(T_MB_MercenaryCard_*)는 세로 카드용이라 가로 줄에 안 맞았다.
 	mMercenaryCardNormalTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/Hire/T_MB_HireRowNormal.T_MB_HireRowNormal")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowNormal.T_MB_HireRowNormal")));
 	mMercenaryCardSelectedTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/Hire/T_MB_HireRowSelected.T_MB_HireRowSelected")));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireRowSelected.T_MB_HireRowSelected")));
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> UnitHpBarClassFinder(
 		TEXT("/Game/UI/CombatHUD/UnitHpBar/WBP_CombatUnitHpBar"));
@@ -54,20 +54,20 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	}
 
 #define RD_LOAD_TEX(Member, Path) 	{ static ConstructorHelpers::FObjectFinder<UTexture2D> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
-	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
-	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
-	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
-	RD_LOAD_TEX(mUnitHpGlowTexture,        "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/UnitHpBar/T_CombatHUD_UnitHpBar_FrameGlow.T_CombatHUD_UnitHpBar_FrameGlow");
-	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
-	RD_LOAD_TEX(mCommandMoveIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_GetMove.T_Status_GetMove");
-	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_HP_Damage.T_Status_HP_Damage");
-	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_HP_Recovery.T_Status_HP_Recovery");
-	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_GetMove.T_Status_GetMove");
-	RD_LOAD_TEX(mLogIconGetDefense,    "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_GetDefense.T_Status_GetDefense");
-	RD_LOAD_TEX(mLogIconVigor,       "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_Agility.T_Status_Agility");
-	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_Fortification.T_Status_Fortification");
-	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_Vulnerability.T_Status_Vulnerability");
-	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/T_Status_Weakness.T_Status_Weakness");
+	RD_LOAD_TEX(mUnitHpFillRedTexture,     "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Red.T_CombatHUD_UnitHpBar_Fill_Red");
+	RD_LOAD_TEX(mUnitHpFillGreenTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_Fill_Green.T_CombatHUD_UnitHpBar_Fill_Green");
+	RD_LOAD_TEX(mUnitDefenseIconTexture,   "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_UnitHpBar_Defense_Icon.T_UnitHpBar_Defense_Icon");
+	RD_LOAD_TEX(mUnitHpGlowTexture,        "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/UnitHpBar/T_CombatHUD_UnitHpBar_FrameGlow.T_CombatHUD_UnitHpBar_FrameGlow");
+	RD_LOAD_TEX(mUnitStatusSlotTexture,    "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame");
+	RD_LOAD_TEX(mCommandMoveIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
+	RD_LOAD_TEX(mLogIconHpDamage,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Damage.T_Status_HP_Damage");
+	RD_LOAD_TEX(mLogIconHpRecovery,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_HP_Recovery.T_Status_HP_Recovery");
+	RD_LOAD_TEX(mLogIconGetMove,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetMove.T_Status_GetMove");
+	RD_LOAD_TEX(mLogIconGetDefense,    "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_GetDefense.T_Status_GetDefense");
+	RD_LOAD_TEX(mLogIconVigor,       "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Agility.T_Status_Agility");
+	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
+	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
+	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
 #undef RD_LOAD_TEX
 
 	static ConstructorHelpers::FClassFinder<URewardSettlementWidgetBase> RewardWidgetClassFinder(
@@ -1658,7 +1658,7 @@ UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 	static TArray<FStatusArt> Loaded;
 	if (Loaded.IsEmpty())
 	{
-		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Status/");
+		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
 		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Agility") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },

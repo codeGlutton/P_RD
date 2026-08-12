@@ -593,12 +593,12 @@ namespace CombatHUDWidgetBuilder
 		SetReadableFont(GoldText, BaseFont, 28);
 		GoldText->SetJustification(ETextJustify::Center);
 		static const TCHAR* const PreviewArtifactPaths[6] = {
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_FangAmulet.T_Artifact_FangAmulet"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_LuckyCoin.T_Artifact_LuckyCoin"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_ThornCrest.T_Artifact_ThornCrest"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_TravelersMap.T_Artifact_TravelersMap"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_WornShieldOrnament.T_Artifact_WornShieldOrnament") };
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_FangAmulet.T_Artifact_FangAmulet"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_LuckyCoin.T_Artifact_LuckyCoin"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_ThornCrest.T_Artifact_ThornCrest"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_TravelersMap.T_Artifact_TravelersMap"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_WornShieldOrnament.T_Artifact_WornShieldOrnament") };
 		static const TCHAR* const PreviewArtifactNames[6] = {
 			TEXT("피의 성배"), TEXT("야수의 송곳니"), TEXT("행운의 주화"),
 			TEXT("가시 문장"), TEXT("여행자의 지도"), TEXT("낡은 방패 장식") };
@@ -781,13 +781,13 @@ namespace CombatHUDWidgetBuilder
 		UWidgetBlueprint* MercenaryBlueprint =
 			LoadObject<UWidgetBlueprint>(nullptr, MercenaryAssetPath);
 		UTexture2D* InventoryIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
 		UTexture2D* GoldIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* DescriptionPlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Row_Plate.T_KitA_Row_Plate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Row_Plate.T_KitA_Row_Plate"));
 		UTexture2D* ArtifactSlotTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		if (HudBlueprint == nullptr || MercenaryBlueprint == nullptr
 			|| InventoryIconTexture == nullptr || GoldIconTexture == nullptr
 			|| DescriptionPlateTexture == nullptr || ArtifactSlotTexture == nullptr)
@@ -942,7 +942,7 @@ namespace CombatHUDWidgetBuilder
 			RemoveWidget(Blueprint, LegacyName);
 		}
 		if (UTexture2D* TitlePlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Title_Plate.T_KitA_Title_Plate")))
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Title_Plate.T_KitA_Title_Plate")))
 		{
 			UImage* HeaderPlate = FindOrCreate<UImage>(Blueprint,
 				TEXT("MercenaryTitlePlate"));
@@ -1118,7 +1118,7 @@ namespace CombatHUDWidgetBuilder
 		PlaceCanvas(DetailSection, Hero, FVector2D(680.f, 322.f), FVector2D(300.f, 300.f), 5);
 		Hero->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		if (UTexture2D* PreviewHero = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight")))
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight")))
 		{
 			Hero->SetBrushFromTexture(PreviewHero, false);
 		}
@@ -1259,47 +1259,47 @@ namespace CombatHUDWidgetBuilder
 		const FSlateFontInfo BaseFont = RoundText->GetFont();
 
 		UTexture2D* MercenaryTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph"));
 		UTexture2D* MonsterTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph"));
 		UTexture2D* SpeedTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_Icon_Speed.T_MB_Icon_Speed"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_Icon_Speed.T_MB_Icon_Speed"));
 		UTexture2D* TurnTokenFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
 		UTexture2D* OptionsRailFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame"));
 		UTexture2D* MapTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_OptionsIcon_Map.T_MB_OptionsIcon_Map"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_Map.T_MB_OptionsIcon_Map"));
 		UTexture2D* SettingsTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_OptionsIcon_Settings.T_MB_OptionsIcon_Settings"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_Settings.T_MB_OptionsIcon_Settings"));
 		UTexture2D* ArtifactSlotTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_ArtifactSlot_Frame.T_MB_ArtifactSlot_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_ArtifactSlot_Frame.T_MB_ArtifactSlot_Frame"));
 		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
 		UTexture2D* MercenaryShellTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* MercenaryCardNormalTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Normal.T_MB_MercenaryCard_Normal"));
 		UTexture2D* MercenaryCardSelectedTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_MercenaryCard_Selected.T_MB_MercenaryCard_Selected"));
 		// 뒤로 단추와 스킬 칸을 공용 KitA 부품으로 모은다. 같은 기능인데 화면마다
 		// 다른 그림을 쓰고 있었다(0804 검수).
 		UTexture2D* BackButtonTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Controls/Buttons/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		UTexture2D* MercenarySkillFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
 		UTexture2D* InventoryIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/KK_Icon_Inventory.KK_Icon_Inventory"));
 		UTexture2D* MercenaryGoldIconTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* MercenaryDescriptionPlateTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Frames/T_KitA_Row_Plate.T_KitA_Row_Plate"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Row_Plate.T_KitA_Row_Plate"));
 		UTexture2D* CombatActionButtonTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Controls/Buttons/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
 		UTexture2D* EnemyPanelTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Detail/T_MB_GenericDetailPanel.T_MB_GenericDetailPanel"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/T_MB_GenericDetailPanel.T_MB_GenericDetailPanel"));
 		UTexture2D* StatusSlotTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/HUD/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"));
 		if (MercenaryTexture == nullptr || MonsterTexture == nullptr
 			|| SpeedTexture == nullptr || TurnTokenFrameTexture == nullptr
 			|| OptionsRailFrameTexture == nullptr || MapTexture == nullptr

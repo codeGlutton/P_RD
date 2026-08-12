@@ -33,7 +33,7 @@ namespace SettingsPanelWidgetBuilder
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 
 	constexpr const TCHAR* SettingsLedgerAssetRoot =
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Frontend/Settings");
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger");
 
 	UTexture2D* LoadSettingsLedgerTexture(const TCHAR* PartName)
 	{

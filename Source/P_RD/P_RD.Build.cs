@@ -55,8 +55,8 @@ public class P_RD : ModuleRules
         // Content/SVN 전체를 패키징하면 SVN 원본/시안/.svn 메타데이터까지 들어가 APK가 크게 불어난다.
         StageContentMedia(Target, "mTitleBackgroundVideoPath", "SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
         StageContentMedia(Target, "mIntroCinematicVideoPath", "SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
-        StageContentMedia(Target, "mCombatVictoryVideoPath", "SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Victory_01.mp4");
-        StageContentMedia(Target, "mCombatDefeatVideoPath", "SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Media/MS_CombatResult_Defeat_01.mp4");
+        StageContentMedia(Target, "mCombatVictoryVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
+        StageContentMedia(Target, "mCombatDefeatVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
         if (Target.bBuildEditor == true)
         {

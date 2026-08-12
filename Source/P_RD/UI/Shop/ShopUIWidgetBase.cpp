@@ -27,14 +27,14 @@ namespace
 		switch (Kind)
 		{
 		case EShopItemKind::Skill:
-			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Skills/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind");
 		case EShopItemKind::Artifact:
-			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
 		case EShopItemKind::Heal:
-			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Skills/T_skill_meditation_heal_icon.T_skill_meditation_heal_icon");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_skill_meditation_heal_icon.T_skill_meditation_heal_icon");
 		case EShopItemKind::Mercenary:   // 용병 전용 그림이 아직 없다 -- 골드로
 		default:
-			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/T_gold_icon.T_gold_icon");
+			return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_gold_icon.T_gold_icon");
 		}
 	}
 

@@ -116,7 +116,7 @@ namespace
 				const FString AssetName = FString::Printf(TEXT("T_MB_Hire%s_%s"),
 					bHeroIllustration ? TEXT("Hero") : TEXT("Icon"), Rule.AssetStem);
 				const FString AssetPath = FString::Printf(
-					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/%s.%s"),
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
 					*AssetName, *AssetName);
 				return LoadObject<UTexture2D>(nullptr, *AssetPath);
 			}
@@ -143,19 +143,19 @@ namespace
 			const TCHAR* Path;
 		};
 		static const FPortraitRule Rules[] = {
-			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
-			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
-			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
-			{ TEXT("Leshy"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Leshy_HeadV2.KK_Face_Enemy_Leshy_HeadV2") },
-			{ TEXT("Mushroom"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Mushroom_HeadV2.KK_Face_Enemy_Mushroom_HeadV2") },
-			{ TEXT("Necromancer"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Necromancer_HeadV2.KK_Face_Enemy_Necromancer_HeadV2") },
-			{ TEXT("SkeletonGolem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_SkeletonGolem_HeadV2.KK_Face_Enemy_SkeletonGolem_HeadV2") },
-			{ TEXT("SkeletonMinionRanged"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_SkeletonMinionRanged_HeadV2.KK_Face_Enemy_SkeletonMinionRanged_HeadV2") },
-			{ TEXT("SkeletonMinionMelee"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_SkeletonMinionMelee_HeadV2.KK_Face_Enemy_SkeletonMinionMelee_HeadV2") },
-			{ TEXT("SkeletonMinion"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_SkeletonMinion_HeadV2.KK_Face_Enemy_SkeletonMinion_HeadV2") },
-			{ TEXT("Slime"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Slime_HeadV2.KK_Face_Enemy_Slime_HeadV2") },
-			{ TEXT("Spider"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Spider_HeadV2.KK_Face_Enemy_Spider_HeadV2") },
-			{ TEXT("Golem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2") },
+			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
+			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
+			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
+			{ TEXT("Leshy"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Leshy_HeadV2.KK_Face_Enemy_Leshy_HeadV2") },
+			{ TEXT("Mushroom"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Mushroom_HeadV2.KK_Face_Enemy_Mushroom_HeadV2") },
+			{ TEXT("Necromancer"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Necromancer_HeadV2.KK_Face_Enemy_Necromancer_HeadV2") },
+			{ TEXT("SkeletonGolem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonGolem_HeadV2.KK_Face_Enemy_SkeletonGolem_HeadV2") },
+			{ TEXT("SkeletonMinionRanged"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionRanged_HeadV2.KK_Face_Enemy_SkeletonMinionRanged_HeadV2") },
+			{ TEXT("SkeletonMinionMelee"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionMelee_HeadV2.KK_Face_Enemy_SkeletonMinionMelee_HeadV2") },
+			{ TEXT("SkeletonMinion"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinion_HeadV2.KK_Face_Enemy_SkeletonMinion_HeadV2") },
+			{ TEXT("Slime"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Slime_HeadV2.KK_Face_Enemy_Slime_HeadV2") },
+			{ TEXT("Spider"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Spider_HeadV2.KK_Face_Enemy_Spider_HeadV2") },
+			{ TEXT("Golem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2") },
 		};
 		for (const FPortraitRule& Rule : Rules)
 		{
@@ -165,7 +165,7 @@ namespace
 			}
 		}
 		return LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Enemies/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
 	}
 
 	/** @brief 결과판용 용병 초상화를 기존 우선순위대로 해상한다. */
@@ -2089,13 +2089,13 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 		};
 		static const FPreviewArtifact PreviewArtifacts[] = {
 			{ TEXT("정찰의 나침반"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_Treasure.T_MapNode_Treasure"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"),
 				FLinearColor(0.86f, 0.98f, 0.94f, 1.f) },
 			{ TEXT("푸른 깃털"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_RareTreasure.T_MapNode_RareTreasure"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_RareTreasure.T_MapNode_RareTreasure"),
 				FLinearColor(0.55f, 0.72f, 1.f, 1.f) },
 			{ TEXT("왕의 부적"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Run/WorldMap/Nodes/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure"),
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure"),
 				FLinearColor(0.82f, 0.58f, 1.f, 1.f) },
 		};
 		for (const FPreviewArtifact& Preview : PreviewArtifacts)

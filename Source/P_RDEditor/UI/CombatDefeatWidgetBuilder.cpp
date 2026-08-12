@@ -202,9 +202,9 @@ namespace CombatDefeatWidgetBuilder
 		UTexture2D* TitleBanner = Texture(TEXT("/Game/UI/ResultBoards/Art/T_DF_RibbonBlank_0809.T_DF_RibbonBlank_0809"));
 		UTexture2D* MercenaryCard = Texture(TEXT("/Game/UI/ResultBoards/Art/T_DF_PortraitCardBlank_0809.T_DF_PortraitCardBlank_0809"));
 		UTexture2D* Secondary = Texture(TEXT("/Game/UI/ResultBoards/Art/T_UI_ButtonSecondaryBlank_0809.T_UI_ButtonSecondaryBlank_0809"));
-		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
-		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
-		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
+		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
+		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
+		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
 
 		UWidgetBlueprint* Blueprint = FindOrCreateBlueprint();
 		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
