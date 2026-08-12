@@ -23,6 +23,8 @@ struct FEventTriggerPayloadBase;
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnChangeSkillUI, int32 /*SkillIndex*/, const UStaticSkillData* /*PreSkillData*/, const UStaticSkillData* /*NewSkillData*/);
 
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPrePlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/, TSharedPtr<FPresentationBarrier> /*SkillPlayBarrier*/);
+
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlaySkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/, TSharedPtr<FPresentationBarrier> /*SkillEndBarrier*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayPhaseLayerUI, const FActiveSkillContext& /*Context*/, int32 /*PhaseIndex*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndPhaseLayerUI, int32 /*PhaseIndex*/);
@@ -141,21 +143,23 @@ public:
 	* @param MapModel 참고할 맵 모델
 	* @param SkillIndex 사용할 스킬의 인덱스
 	* @param AimedTileIndex 조준 타일
+	* @return 실패 여부
 	*/
-	bool ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
+	bool TryToActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
 	void ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback = FOnEndSkillUI());
 
 protected:
 	virtual bool IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const;
 	virtual bool CanActiveSkill_Internal(int32 SkillIndex) const;
 	virtual void ConsumeResources_Internal(int32 SkillIndex);
-	virtual void ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback);
 
 protected:
 	void PlaySkillAnimation();
 	void EndSkillAnimation();
 
 protected:
+	void ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback);
+
 	void PreparePhaseLayer();
 	void TriggerPhaseLayer(const FEventTriggerPayloadBase* Payload);
 	void FlushRemainingPhaseLayers();
@@ -184,6 +188,11 @@ public:
 	 * @brief 스킬 변경 시 호출되는 대리자
 	 */
 	FOnChangeSkillUI OnChangeSkillUI;
+
+	/**
+	 * @brief 스킬 실행 전 호출되는 대리자
+	 */
+	FOnPrePlaySkillUI OnPrePlaySkillUI;
 
 	/**
 	 * @brief 스킬 실행 시 호출되는 대리자

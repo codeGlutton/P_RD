@@ -177,7 +177,7 @@ bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
 	return CanActiveSkill_Internal(SkillIndex);
 }
 
-bool USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
+bool USkillComponentModel::TryToActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	if (CanActiveSkill_Internal(SkillIndex) == false)
 	{
@@ -185,14 +185,14 @@ bool USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillInd
 	}
 
 	ConsumeResources_Internal(SkillIndex);
-	ActivateSkill_Internal(MapModel, SkillIndex, AimedTileIndex, Callback);
+	ActivateSkill(MapModel, SkillIndex, AimedTileIndex, Callback);
 	return true;
 }
 
 void USkillComponentModel::ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
 {
 	ConsumeResources_Internal(SkillIndex);
-	ActivateSkill_Internal(MapModel, SkillIndex, AimedTileIndex, Callback);
+	ActivateSkill(MapModel, SkillIndex, AimedTileIndex, Callback);
 }
 
 bool USkillComponentModel::IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const
@@ -228,81 +228,6 @@ void USkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Cooldown::StaticClass(), EffectContext);
 		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
 		SkillEntry.mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-	}
-}
-
-void USkillComponentModel::ActivateSkill_Internal(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
-{
-	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
-
-	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
-	const UStaticSkillData* SkillData = SkillEntry.mData;
-
-	UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
-	checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
-
-	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
-	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
-
-	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
-	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-	/* 활성화 스킬 데이터 채우기 */
-
-	auto SkillEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		DeactivateSkill();
-		}));
-	{
-		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
-		mActiveSkillContext.mMapModel = MapModel;
-		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
-		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
-		mActiveSkillContext.mTargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
-		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, mActiveSkillContext.mTargetTileIndexes);
-		mActiveSkillContext.mSkillEndBarrier = SkillEndBarrier;
-		mActiveSkillContext.mSkillIndex = SkillIndex;
-		mActiveSkillContext.mAnimationIndex = 0;
-		mActiveSkillContext.mPhaseIndex = 0;
-		mActiveSkillContext.mEndCallback = MoveTemp(Callback);
-	}
-
-	/* 스킬 실행 콜백 */
-
-	OnPlaySkillUI.Broadcast(mActiveSkillContext, SkillData, SkillEndBarrier);
-	OwnerCombatTarget->OnStartUsingSkill(mActiveSkillContext, SkillIndex);
-
-	/* 스킬 페이즈 시작 */
-
-	PreparePhaseLayer();
-
-	/* 애니메이션 시작 */
-
-	const ETileActorDirection MotionTileMapDir = MapModel->TileDeltaToDirection(
-		mActiveSkillContext.mSelfTileIndex,
-		mActiveSkillContext.mAimedTileIndex,
-		OwnerBoardActorModel->GetTileTransform().mDirection
-	);
-
-	if (SkillData->mSkillAnimationSet.mAutoRotateTowardTarget == true)
-	{
-		// 자동 회전
-
-		TSharedPtr<FPresentationBarrier> RotateBarrier = FPresentationBarrier::Make(
-			FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-				// 회전 완료 후 로컬 정면방향으로 실행
-				mActiveSkillContext.mMotionLocalDir = ETileActorDirection::Forward;
-				PlaySkillAnimation();
-				}));
-
-		// 타일맵의 절대적 방향으로 회전
-		mActiveSkillContext.mMapModel->RotateActor(MotionTileMapDir, OwnerBoardActorModel, RotateBarrier);
-	}
-	else
-	{
-		// 자동 회전 안 함
-
-		mActiveSkillContext.mMotionLocalDir = TileMapToLocalDirection(MotionTileMapDir, OwnerBoardActorModel->GetTileTransform().mDirection);
-		PlaySkillAnimation();
 	}
 }
 
@@ -368,6 +293,97 @@ void USkillComponentModel::EndSkillAnimation()
 
 		PlaySkillAnimation();
 	}
+}
+
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+
+	UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+	checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	/* 활성화 스킬 데이터 채우기 */
+
+	auto SkillEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		DeactivateSkill();
+		}));
+	{
+		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
+		mActiveSkillContext.mMapModel = MapModel;
+		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
+		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
+		mActiveSkillContext.mTargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, mActiveSkillContext.mTargetTileIndexes);
+		mActiveSkillContext.mSkillEndBarrier = SkillEndBarrier;
+		mActiveSkillContext.mSkillIndex = SkillIndex;
+		mActiveSkillContext.mAnimationIndex = 0;
+		mActiveSkillContext.mPhaseIndex = 0;
+		mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+	}
+
+	auto SkillPlayerBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+
+		checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+		FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+		const UStaticSkillData* SkillData = SkillEntry.mData;
+		checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+		UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+		checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+		IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+		checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+		/* 스킬 실행 콜백 */
+
+		OnPlaySkillUI.Broadcast(mActiveSkillContext, SkillData, mActiveSkillContext.mSkillEndBarrier);
+		OwnerCombatTarget->OnStartUsingSkill(mActiveSkillContext, mActiveSkillContext.mSkillIndex);
+
+		/* 스킬 페이즈 시작 */
+
+		PreparePhaseLayer();
+
+		/* 애니메이션 시작 */
+
+		const ETileActorDirection MotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
+			mActiveSkillContext.mSelfTileIndex,
+			mActiveSkillContext.mAimedTileIndex,
+			OwnerBoardActorModel->GetTileTransform().mDirection
+		);
+
+		if (SkillData->mSkillAnimationSet.mAutoRotateTowardTarget == true)
+		{
+			// 자동 회전
+
+			TSharedPtr<FPresentationBarrier> RotateBarrier = FPresentationBarrier::Make(
+				FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+					// 회전 완료 후 로컬 정면방향으로 실행
+					mActiveSkillContext.mMotionLocalDir = ETileActorDirection::Forward;
+					PlaySkillAnimation();
+					}));
+
+			// 타일맵의 절대적 방향으로 회전
+			mActiveSkillContext.mMapModel->RotateActor(MotionTileMapDir, OwnerBoardActorModel, RotateBarrier);
+		}
+		else
+		{
+			// 자동 회전 안 함
+
+			mActiveSkillContext.mMotionLocalDir = TileMapToLocalDirection(MotionTileMapDir, OwnerBoardActorModel->GetTileTransform().mDirection);
+			PlaySkillAnimation();
+		}
+		}));
+	OnPrePlaySkillUI.Broadcast(mActiveSkillContext, SkillData, SkillPlayerBarrier);
 }
 
 void USkillComponentModel::PreparePhaseLayer()

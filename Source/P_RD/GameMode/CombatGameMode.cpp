@@ -1155,6 +1155,15 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		PushUnitUIData();
 		});
 
+	USkillComponentModel* SkillComponentModel = Unit->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	SkillComponentModel->OnPrePlaySkillUI.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData, TSharedPtr<FPresentationBarrier> SkillPlayBarrier) {
+		// 여기서 연출하시면 됩니다.
+		// SkillPlayBarrier를 들고 있을 때까지 동기처리됩니다. 
+		// 이 스마트 포인터를 강제로 Reset하거나 버리면 스킬이 비동기 실행됩니다.
+		});
+
 	PushTurnUIData();
 	PushUnitUIData();
 }
@@ -1172,6 +1181,11 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
+
+	USkillComponentModel* SkillComponentModel = Unit->GetSkillComponentModel();
+	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+	SkillComponentModel->OnPrePlaySkillUI.RemoveAll(this);
 
 	if (Unit->IsPlayerUnitModel() == false)
 	{
