@@ -103,11 +103,11 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Foe.mDamagePoint = 4.f; Foe.mDefensePoint = 0.f;
 			Foe.mTile = FTileIndex(3 + i, 3);
 			// 적 머리 위 바도 상태 슬롯을 반드시 검증한다. 첫 적은 취약,
-			// 둘째 적은 민첩을 넣어 아군/적 공통 표시 계약을 고정한다.
+			// 둘째 적은 활력을 넣어 아군/적 공통 표시 계약을 고정한다.
 			FStatusEffectUI Status;
 			Status.mTag = FGameplayTag::RequestGameplayTag(i == 0
 				? TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability")
-				: TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff.Agility"));
+				: TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor"));
 			Status.mStackCount = i == 0 ? 2 : 1;
 			Foe.mStatusEffects.Add(Status);
 			Units.Add(Foe);
