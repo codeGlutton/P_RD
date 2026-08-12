@@ -37,6 +37,9 @@ class UTacticalEffectExecutionCalculation_GetSpeedPoint : public UTacticalEffect
 
 public:
 	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+protected:
+	virtual void OnGetSpeedPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const;
 };
 
 /**
@@ -56,10 +59,25 @@ public:
 };
 
 /**
+ * @brief SpeedPoint 충전 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_RechargeSpeedPoint : public UTacticalEffectExecutionCalculation_GetSpeedPoint
+{
+	GENERATED_BODY()
+
+protected:
+	void OnGetSpeedPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const override;
+};
+
+/**
  * @brief SpeedPoint 충전 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_RechargeSpeedPoint : public UTacticalEffect_GetSpeedPoint
+class P_RD_API UTacticalEffect_RechargeSpeedPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
+
+public:
+	UTacticalEffect_RechargeSpeedPoint();
 };

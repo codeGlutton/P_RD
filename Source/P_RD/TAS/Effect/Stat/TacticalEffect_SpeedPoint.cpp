@@ -76,7 +76,8 @@ void UTacticalEffectExecutionCalculation_GetSpeedPoint::Execute(const FTacticalE
 	{
 		/* 속도 포인트 증가 적용 */
 		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetSpeedPointAttribute(), ETacticalModOp::AddBase, SpeedDiff));
-	
+		OnGetSpeedPoint(ExecutionParams, OutExecutionOutput, SpeedDiff);
+
 		/* 로그 적용 */
 		FSRPGAttributeEffectEventLog Log;
 		Log.mEffectAttribute = UUnitAttributeSet::GetSpeedPointAttribute();
@@ -89,6 +90,10 @@ void UTacticalEffectExecutionCalculation_GetSpeedPoint::Execute(const FTacticalE
 
 	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
 	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+void UTacticalEffectExecutionCalculation_GetSpeedPoint::OnGetSpeedPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+{
 }
 
 UTacticalEffect_GetSpeedPoint::UTacticalEffect_GetSpeedPoint()
@@ -124,3 +129,20 @@ bool UTacticalEffect_GetSpeedPoint::CanApply(const FActiveTacticalEffectsContain
 	return true;
 }
 
+void UTacticalEffectExecutionCalculation_RechargeSpeedPoint::OnGetSpeedPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+{
+	Super::OnGetSpeedPoint(ExecutionParams, OutExecutionOutput, SpeedPoint);
+
+	OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute(), ETacticalModOp::Override, SpeedPoint));
+}
+
+UTacticalEffect_RechargeSpeedPoint::UTacticalEffect_RechargeSpeedPoint()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_RechargeSpeedPoint::StaticClass();
+	mExecutions.Add(Definition);
+}

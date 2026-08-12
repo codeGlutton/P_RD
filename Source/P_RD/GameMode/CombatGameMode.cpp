@@ -1226,83 +1226,20 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
-	TurnUI.mCurrentRoundRemainingTurnCount =
-		CombatModel->GetTurnContextCount();
+	TurnUI.mCurrentRoundRemainingTurnCount = CombatModel->GetTurnContextCount();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	/*
-	 * 다음 라운드 미리보기.
-	 *
-	 * 모델의 후보 계산(GetOrderedTurnCandidates)은 **지금** 속도로 판정한다 --
-	 * 라운드 교대 시점(충전 직후)에 쓰는 함수라 그렇다. 라운드 중반에 그대로
-	 * 부르면 이번 턴에 속도를 이미 쓴 유닛이 전부 탈락해 미리보기가 빈다
-	 * (0806 검수: 다음 라운드가 안 뜸). 그래서 여기서는 라운드가 넘어갈 때
-	 * 받을 충전량을 더한 값으로 내다본다. 동률 무작위까지는 흉내 내지 않는다
-	 * -- 이건 예고지 약속이 아니다.
-	 */
-	struct FNextRoundPreview
+	TArray<FSRPGTurnCandidate> ValidTurnCandidates;
+	int32 ValidRoundOffset = INDEX_NONE;
+	CombatModel->GetValidRoundAndOrderedTurnCandidates(OUT ValidTurnCandidates, OUT ValidRoundOffset);
+	for (const FSRPGTurnCandidate& ValidTurnCandidate : ValidTurnCandidates)
 	{
-		int32 mUnitId = INDEX_NONE;
-		int32 mProjectedSpeed = 0;
-	};
-	TArray<FNextRoundPreview> Previews;
-	const int32 RequiredSpeed =
-		GetDefault<UGameBalanceSettings>()->mRequiredSpeedPointForTurn;
-
-	/*
-	 * 아무도 못 차는 빈 라운드는 모델이 즉시 건너뛴다(충전 5 · 비용 10이면
-	 * 턴은 두 라운드에 한 번). 그래서 충전을 한 라운드씩 쌓아 보며 누군가
-	 * 처음 차는 라운드를 찾고, 그 라운드를 "다음"으로 표기한다 -- 한 라운드
-	 * 뒤만 보면 미리보기가 늘 비어 있었다(0806 검수).
-	 */
-	int32 RoundsAhead = 1;
-	constexpr int32 MaxRoundsToScan = 20;
-	for (; RoundsAhead <= MaxRoundsToScan && Previews.IsEmpty(); ++RoundsAhead)
-	{
-		for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
-		{
-			UAttributeSetComponentModel* Attributes = UnitModel != nullptr
-				? UnitModel->GetAttributeComponentModel() : nullptr;
-			if (Attributes == nullptr)
-			{
-				continue;
-			}
-			// 죽은 유닛은 다음 라운드에 없다. 모델에서 빠지는 것은 턴이
-			// 끝날 때라, 그 사이 미리보기에 끼는 것을 막는다(0807 감사).
-			if (Attributes->GetAttributeCurrentValue(
-				UUnitAttributeSet::GetHPAttribute()) <= 0.f)
-			{
-				continue;
-			}
-			const int32 ProjectedSpeed = StaticCast<int32>(FMath::Floor(
-				Attributes->GetAttributeCurrentValue(
-					UUnitAttributeSet::GetSpeedPointAttribute())
-				+ Attributes->GetAttributeCurrentValue(
-					UUnitAttributeSet::GetRechargeSpeedPointAttribute())
-					* RoundsAhead));
-			if (ProjectedSpeed < RequiredSpeed)
-			{
-				continue;
-			}
-			Previews.Add({ UnitModel->GetModelId(), ProjectedSpeed });
-		}
-		if (Previews.IsEmpty() == false)
-		{
-			break;
-		}
+		TurnUI.mNextRoundUnitIds.Add(ValidTurnCandidate.mOwner->GetModelId());
 	}
-	// 동률 무작위까지는 흉내 내지 않는다 -- 이건 예고지 약속이 아니다.
-	Previews.StableSort(
-		[](const FNextRoundPreview& Lhs, const FNextRoundPreview& Rhs)
-		{ return Lhs.mProjectedSpeed > Rhs.mProjectedSpeed; });
-	for (const FNextRoundPreview& Preview : Previews)
-	{
-		TurnUI.mNextRoundUnitIds.Add(Preview.mUnitId);
-	}
-	TurnUI.mNextRoundOffset = FMath::Max(RoundsAhead, 1);
+	TurnUI.mNextRoundOffset = ValidRoundOffset + 1;
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 

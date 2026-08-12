@@ -137,6 +137,8 @@ void USRPGCombatModel::BeginCombat()
 		else
 		{
 			// 턴 시작
+
+			mNextRoundRandomSeed = URandomStreamFunctionLibrary::GetEventStream(this).GetCurrentSeed();
 			AdvanceTurn();
 		}
 		}));
@@ -318,11 +320,13 @@ void USRPGCombatModel::AdvanceRoundIfNeeded(TSharedPtr<FPresentationBarrier> Rou
 		
 		/* 새로운 턴 채우기 */
 
+		int32 ResultRoundOffset = INDEX_NONE;
 		TArray<FSRPGTurnCandidate> Candidates;
+		int32 NextRoundRandomSeed = INDEX_NONE;
 
-		const bool IsValid = CheckOrderedTurnCandidates(OUT Candidates);
+		const bool IsValid = CheckOrderedTurnCandidates(0, OUT ResultRoundOffset, OUT Candidates, OUT NextRoundRandomSeed);
 		checkf(IsValid == true, TEXT("라운드에 관계없이 영구적으로 턴이 생성될 수 없음"));
-		ApplyOrderedTurnCandidates(Candidates);
+		ApplyOrderedTurnCandidates(Candidates, NextRoundRandomSeed);
 
 		/* 재평가 */
 
@@ -579,55 +583,113 @@ bool USRPGCombatModel::UnregisterTurn(UUnitModel* Owner, bool IgnoreCurTurn)
 	return true;
 }
 
-bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates) const
+bool USRPGCombatModel::CheckOrderedTurnCandidates(int32 RoundOffset, OUT int32& ResultRoundOffset, OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const
 {
 	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
 	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
 
-	const FRandomStream CopiedRandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
-
-	bool IsValid = false;
+	ResultRoundOffset = 0;
 	Candidates.Empty();
+	NextRoundRandomSeed = INDEX_NONE;
+
+	/* 유효한 라운드까지 검사 옵션 확인 */
+
+	const bool NeedToCheckValidRound = RoundOffset < 0;
+	if (NeedToCheckValidRound == true)
+	{
+		RoundOffset = TNumericLimits<int32>::Max();
+	}
+
+	/* 현재 스피드 수집 */
+
+	TArray<FSRPGTurnCandidate> CurTurnCandidates;
 	for (const TObjectPtr<UUnitModel>& UnitModel : mUnitModels)
 	{
-		int32 SpeedPoint = StaticCast<int32>(FMath::Floor(
+		const int32 SpeedPoint = StaticCast<int32>(FMath::Floor(
 			UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute())
 		));
 
+		FSRPGTurnCandidate CurTurnCandidate;
+		CurTurnCandidate.mOwner = UnitModel;
+		CurTurnCandidate.mRemainSpeedPoint = SpeedPoint;
+		CurTurnCandidate.mRechargedSpeedPoint = StaticCast<int32>(FMath::Floor(
+			UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute())
+		));
+
+#if !UE_BUILD_SHIPPING
 		/* 영구 라운드 진행 방지 체크 */
 
-		if (IsValid == false)
+		if (CurTurnCandidate.mRechargedSpeedPoint <= 0)
 		{
-			const float RechargeActionPoint = UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
-			IsValid = StaticCast<int32>(FMath::Floor(RechargeActionPoint)) > 0;
+			return false;
+		}
+#endif
+
+		CurTurnCandidates.Add(CurTurnCandidate);
+	}
+
+	/* 오프셋 만큼 턴 진행 */
+
+	for (ResultRoundOffset = 0; ResultRoundOffset < RoundOffset; ++ResultRoundOffset)
+	{
+		if (NeedToCheckValidRound == true)
+		{
+			bool IsValidRound = false;
+			for (FSRPGTurnCandidate& CurTurnCandidate : CurTurnCandidates)
+			{
+				if (CurTurnCandidate.mRemainSpeedPoint >= GameBalanceSettings->mRequiredSpeedPointForTurn)
+				{
+					IsValidRound = true;
+					break;
+				}
+			}
+
+			if (IsValidRound == true)
+			{
+				break;
+			}
 		}
 
-		/* 후보 추가 */
-
-		if (SpeedPoint < GameBalanceSettings->mRequiredSpeedPointForTurn)
+		for (FSRPGTurnCandidate& CurTurnCandidate : CurTurnCandidates)
 		{
-			continue;
+			if (CurTurnCandidate.mRemainSpeedPoint >= GameBalanceSettings->mRequiredSpeedPointForTurn)
+			{
+				CurTurnCandidate.mRemainSpeedPoint -= GameBalanceSettings->mRequiredSpeedPointForTurn;
+			}
+
+			CurTurnCandidate.mRemainSpeedPoint += CurTurnCandidate.mRechargedSpeedPoint;
 		}
+	}
 
-		FSRPGTurnCandidate Candidate;
-		Candidate.mOwner = UnitModel;
-		Candidate.mRemainSpeedPoint = SpeedPoint - GameBalanceSettings->mRequiredSpeedPointForTurn;
-		Candidate.mRandomTieBreaker = CopiedRandomStream.RandRange(
-			TNumericLimits<int32>::Min(),
-			TNumericLimits<int32>::Max()
-		);
+	/* 후보 추가 */
 
-		Candidates.Add(Candidate);
+	const FRandomStream RandomStream(mNextRoundRandomSeed);
+	for (FSRPGTurnCandidate& CurTurnCandidate : CurTurnCandidates)
+	{
+		if (CurTurnCandidate.mRemainSpeedPoint >= GameBalanceSettings->mRequiredSpeedPointForTurn)
+		{
+			/* 후보 추가 */
+
+			FSRPGTurnCandidate FixedTurnCandidate = CurTurnCandidate;
+			FixedTurnCandidate.mRemainSpeedPoint -= GameBalanceSettings->mRequiredSpeedPointForTurn;
+			FixedTurnCandidate.mRandomTieBreaker = RandomStream.FRand();
+
+			Candidates.Add(FixedTurnCandidate);
+		}
 	}
 
 	Candidates.Sort(TGreater<FSRPGTurnCandidate>());
-	return IsValid;
+	NextRoundRandomSeed = RandomStream.GetCurrentSeed();
+
+	return true;
 }
 
-void USRPGCombatModel::ApplyOrderedTurnCandidates(const TArray<FSRPGTurnCandidate>& Candidates)
+void USRPGCombatModel::ApplyOrderedTurnCandidates(const TArray<FSRPGTurnCandidate>& Candidates, int32 NextRoundRandomSeed)
 {
 	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
 	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	mNextRoundRandomSeed = NextRoundRandomSeed;
 
 	for (const FSRPGTurnCandidate& Candidate : Candidates)
 	{
@@ -924,12 +986,22 @@ TArray<TObjectPtr<USRPGTurnContext>> USRPGCombatModel::GetOrderedTurnContexts() 
 	return Contexts;
 }
 
-TArray<FSRPGTurnCandidate> USRPGCombatModel::GetOrderedTurnCandidates() const
+TArray<FSRPGTurnCandidate> USRPGCombatModel::GetOrderedTurnCandidates(uint32 RoundOffset) const
 {
+	int32 ResultRoundOffset = INDEX_NONE;
 	TArray<FSRPGTurnCandidate> Candidates;
-	CheckOrderedTurnCandidates(OUT Candidates);
+	int32 NextRoundRandomSeed = INDEX_NONE;
+
+	CheckOrderedTurnCandidates(RoundOffset, OUT ResultRoundOffset, OUT Candidates, OUT NextRoundRandomSeed);
 
 	return Candidates;
+}
+
+void USRPGCombatModel::GetValidRoundAndOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& RoundOffset) const
+{
+	int32 NextRoundRandomSeed = INDEX_NONE;
+
+	CheckOrderedTurnCandidates(-1, OUT RoundOffset, OUT Candidates, OUT NextRoundRandomSeed);
 }
 
 UTileMapModel* USRPGCombatModel::GetTileMap() const

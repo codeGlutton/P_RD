@@ -34,6 +34,8 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeActionPoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeSpeedPoint)
 
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, LastRechargedSpeedPoint)
+
 	/* Instant로 즉각 적용되는 Attribute 값 */
 protected:
 	// @brief 이번 턴 동안 유지되는 행동력 스택 
@@ -60,6 +62,11 @@ protected:
 	// @brief 자신의 턴마다 회복하는 행동력
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData RechargeSpeedPoint;
+
+	/* 캐시 스텟들 */
+protected:
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData LastRechargedSpeedPoint;
 };
 
 /**
