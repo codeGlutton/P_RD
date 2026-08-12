@@ -28,9 +28,9 @@ namespace
 	{
 		switch (Kind)
 		{
-		case ETreasureItemKind::Artifact: return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
+		case ETreasureItemKind::Artifact: return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Equipment.T_Reward_Equipment");
 		case ETreasureItemKind::Gold:
-		default:                          return TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1");
+		default:                          return TEXT("/Game/SVN/InSideAsset/UI/Tex/Icons/T_Reward_Gold.T_Reward_Gold");
 		}
 	}
 
