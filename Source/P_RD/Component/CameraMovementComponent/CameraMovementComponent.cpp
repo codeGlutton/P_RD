@@ -135,7 +135,6 @@ void UCameraMovementComponent::InitializeCameraGround()
 void UCameraMovementComponent::InitializeCameraTargetLocation()
 {
 	FVector CameraCenterRayCastImpactPoint;
-	FVector CameraOffsetRayCastImpactPoint;
 
 	bool bCameraHit = GetCameraRayImpactPoint(CameraCenterRayCastImpactPoint);
 
@@ -145,15 +144,7 @@ void UCameraMovementComponent::InitializeCameraTargetLocation()
 		return;
 	}
 
-	bCameraHit = GetCameraRayImpactPointWithOffset(CameraOffsetRayCastImpactPoint);
-
-	// 카메라의 오프셋에서 Ray가 적중하지 않았다면 이동시키지 않는다.
-	if (!ensureMsgf(bCameraHit, TEXT("카메라에서 쏜 Ray가 CameraPlane과 닿지 않았습니다.")))
-	{
-		return;
-	}
-
-	FVector2D CurLocation = FVector2D(CameraOffsetRayCastImpactPoint);
+	FVector2D CurLocation = FVector2D(CameraCenterRayCastImpactPoint);
 
 	mTargetLookAtCameraLocation = CurLocation;
 	mInitCameraLocation = true;
@@ -252,7 +243,7 @@ void UCameraMovementComponent::ClampingCamera()
 
 	// 카메라의 시선 위치를 구합니다.
 	FVector CameraCenterRayCastImpactPoint;
-	bool bCameraHit = GetCameraRayImpactPointWithOffset(CameraCenterRayCastImpactPoint);
+	bool bCameraHit = GetCameraRayImpactPoint(CameraCenterRayCastImpactPoint);
 
 	// 카메라의 중심에서 Ray가 적중하지 않았다면 이동시키지 않는다.
 	if (!ensureMsgf(bCameraHit, TEXT("카메라에서 쏜 Ray가 CameraPlane과 닿지 않았습니다.")))
