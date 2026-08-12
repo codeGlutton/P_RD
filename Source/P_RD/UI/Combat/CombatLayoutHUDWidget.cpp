@@ -104,7 +104,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> WorldMapClassFinder(
-		TEXT("/Game/UI/WBP_FrontendMap"));
+		TEXT("/Game/UI/WorldMapLandscape/WBP_FrontendMapLandscape"));
 	if (WorldMapClassFinder.Succeeded())
 	{
 		mWorldMapWidgetClass = WorldMapClassFinder.Class;

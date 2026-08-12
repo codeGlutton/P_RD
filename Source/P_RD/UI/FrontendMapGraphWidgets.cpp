@@ -43,10 +43,13 @@ void UFrontendMapLineWidget::SetLineColor(const FLinearColor& InColor)
 	}
 }
 
-void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
+void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath, bool bIsTraversed)
 {
-	// 틴트도 시안(WBP 클래스 디폴트)이 정본 — C++ 하드코딩 금지.
-	const FLinearColor Tint = bIsOpenPath ? mOpenTint : mLockedTint;
+	// 지나온 길은 가장 밝게, 지금 갈 수 있는 길은 금색, 잠긴 길은 어두운 황동색으로 읽힌다.
+	const FLinearColor Tint = bIsOpenPath
+		? (bIsTraversed ? mTraversedTint : mOpenTint)
+		: mLockedTint;
+	const FLinearColor GlowTint = bIsOpenPath ? mOpenGlowTint : mLockedGlowTint;
 	UTexture2D* PathTexture = bIsOpenPath ? mSolidTexture.Get() : mDashedTexture.Get();
 	if (LineImage != nullptr && PathTexture != nullptr)
 	{
@@ -59,6 +62,12 @@ void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
 		LineImage->SetBrush(LineBrush);
 		LineImage->SetColorAndOpacity(Tint);
 		LineImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (LineGlowImage != nullptr)
+		{
+			LineGlowImage->SetBrush(LineBrush);
+			LineGlowImage->SetColorAndOpacity(GlowTint);
+			LineGlowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
 		if (LinePanel != nullptr)
 		{
 			LinePanel->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
@@ -70,6 +79,10 @@ void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
 	if (LineImage != nullptr)
 	{
 		LineImage->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (LineGlowImage != nullptr)
+	{
+		LineGlowImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	SetLineColor(Tint);
 }
@@ -129,6 +142,12 @@ UTexture2D* UFrontendMapNodeWidget::GetStateRingTexture(EMapRoomState RoomState,
 	}
 }
 
+float UFrontendMapNodeWidget::GetVisualScale(
+	ERoomType RoomType, EMapRoomState RoomState, bool bIsCurrentRoom) const
+{
+	return 1.f;
+}
+
 void UFrontendMapNodeWidget::SetNodeVisual(
 	int32 InRowIndex,
 	int32 InColumnIndex,
@@ -144,6 +163,12 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 {
 	mRowIndex = InRowIndex;
 	mColumnIndex = InColumnIndex;
+
+	FWidgetTransform VisualTransform = GetRenderTransform();
+	const float VisualScale = GetVisualScale(RoomType, RoomState, bIsCurrentRoom);
+	VisualTransform.Scale = FVector2D(VisualScale, VisualScale);
+	SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	SetRenderTransform(VisualTransform);
 
 	// 아이콘 위주 노드: 타입 아이콘이 주인공. 상태는 링 텍스처(시안)가 1순위, 없으면 상태색 프레임 폴백.
 	bool bHasIcon = false;

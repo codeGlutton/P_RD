@@ -95,7 +95,16 @@ public:
 	 * FMapRoomView 배열을 화면에 배치하는 표시 전용 함수다.
 	 */
 	UFUNCTION(Category = UI, BlueprintCallable)
-	bool RefreshMap();
+	virtual bool RefreshMap();
+
+	/**
+	 * @brief 비Shipping 오프스크린 캡처에서 GameMode 전환 없이 복구된 런 View를 그린다.
+	 *
+	 * 실제 게임 화면은 계속 RoomGameMode의 View만 사용한다. 이 오버라이드는 개발 캡처 명령이
+	 * 격리 세이브의 Stage를 읽어 동일한 노드/선 렌더러를 검증할 때만 설정한다.
+	 */
+	void SetPreviewRoomsForDebug(const TArray<FMapRoomView>& InRooms, bool bInAtStageStart);
+	void ClearPreviewRoomsForDebug();
 
 	/**
 	 * @brief 승리 후 지도처럼 다음 방 선택이 허용되는 상황에서만 true로 둔다.
@@ -125,6 +134,30 @@ public:
 
 	/* UUserWidget 상속 */
 protected:
+	/** @brief 새 가로형 지도 WBP가 기존 세로 지도와 같은 진행 흐름만 공유할 때 true다. */
+	virtual bool IsLandscapeLayout() const { return false; }
+
+	/** @brief 파생 지도 클래스가 자신 전용 노드/선 WBP를 지정한다. */
+	void SetMapGraphWidgetClasses(
+		TSubclassOf<UFrontendMapLineWidget> InLineWidgetClass,
+		TSubclassOf<UFrontendMapNodeWidget> InNodeWidgetClass)
+	{
+		MapLineWidgetClass = InLineWidgetClass;
+		MapNodeWidgetClass = InNodeWidgetClass;
+	}
+
+	/** @brief 파생 지도 클래스가 직렬화된 연결선 WBP 기본값을 검증할 때 사용한다. */
+	TSubclassOf<UFrontendMapLineWidget> GetMapLineWidgetClass() const
+	{
+		return MapLineWidgetClass;
+	}
+
+	/** @brief 파생 지도 클래스가 직렬화된 노드 WBP 기본값을 검증할 때 사용한다. */
+	TSubclassOf<UFrontendMapNodeWidget> GetMapNodeWidgetClass() const
+	{
+		return MapNodeWidgetClass;
+	}
+
 	/**
 	 * @brief WBP 바인딩과 버튼 이벤트를 연결한 뒤 현재 지도 데이터를 그린다.
 	 */
@@ -259,7 +292,7 @@ private:
 	float GetMapNodeDesignSize() const;
 
 	/** @brief 이번 갱신의 노드 크기와 행 간격을 확정한다(겹침 방지 + 적은 층 세로 채움). */
-	void ResolveNodeMetrics(int32 MaxColumn);
+	void ResolveNodeMetrics(const TArray<FMapRoomView>& Rooms);
 
 	/** @brief 행 간격(시안 마커 Map_NodeMetrics 높이, 폴백 176) — 그래프 높이의 정본. */
 	float GetMapRowPitch() const;
@@ -528,6 +561,10 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_CurrentMarker;
 
+	/** @brief 가로형 지도에서 현재 파티 초상 뒤에 까는 청색 오라. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> Map_CurrentAura;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> Map_SelectGlow;
 
@@ -586,6 +623,13 @@ private:
 
 	UPROPERTY(Transient)
 	TArray<FFrontendMapNodePoolEntry> mMapNodePool;
+
+	/** @brief RD.MapPreview.Data가 공급한 격리 캡처용 View. 일반 게임에서는 비어 있다. */
+	UPROPERTY(Transient)
+	TArray<FMapRoomView> mDebugPreviewRooms;
+
+	bool mUseDebugPreviewRooms = false;
+	bool mDebugPreviewAtStageStart = false;
 
 	/**
 	 * @brief 방 입장 요청 이후 중복 입력을 막기 위한 상태
