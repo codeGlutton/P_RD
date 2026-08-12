@@ -95,8 +95,8 @@ URewardSettlementWidgetBase::URewardSettlementWidgetBase(const FObjectInitialize
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::PopUp);
 
 #define RD_SETTLEMENT_TEX(Member, Path) Member = LoadObject<UTexture2D>(nullptr, TEXT(Path))
-	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
-	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
+	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Rewards/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
+	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Equipment/T_equip_weapon_common.T_equip_weapon_common");
 	// 스킬 아이콘 그림은 지웠다(새 그림 예정). 투명 그림 하나를 세워 두는 대신
 	// 아예 비워 둔다 -- 자리를 채우려고 만든 자산이 또 다른 지울 것이 된다.
 	// 쓰는 쪽은 이미 nullptr 을 검사하고 그리지 않는다.

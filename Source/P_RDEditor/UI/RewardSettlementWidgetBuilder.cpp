@@ -265,13 +265,13 @@ namespace RewardSettlementWidgetBuilder
 		UTexture2D* ProgressFill = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_ProgressFill_0809.T_VR_ProgressFill_0809"));
 		UTexture2D* XPTicket = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_XPTicketBlank_0809.T_VR_XPTicketBlank_0809"));
 		UTexture2D* ChoiceCard = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_RewardCardBlank_0809.T_VR_RewardCardBlank_0809"));
-		UTexture2D* GoldCoin = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
-		UTexture2D* EquipmentIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
-		UTexture2D* ExpIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
-		UTexture2D* ChoiceGoldIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
-		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
-		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
-		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
+		UTexture2D* GoldCoin = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/Icons/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
+		UTexture2D* EquipmentIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Items/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
+		UTexture2D* ExpIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Rewards/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
+		UTexture2D* ChoiceGoldIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Combat/Result/Rewards/T_reward_v4_gold_icon.T_reward_v4_gold_icon"));
+		UTexture2D* Knight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"));
+		UTexture2D* Mage = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"));
+		UTexture2D* Rogue = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Characters/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"));
 		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_BUILD dependencies-ready"));
 
 		UWidgetBlueprint* Blueprint = FindOrCreateBlueprint();

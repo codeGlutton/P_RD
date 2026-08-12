@@ -51,10 +51,10 @@ void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
 	// turned brown wood green, while the authored selected texture recolors only its face.
 	const FSlateColor IvoryText(FLinearColor(1.f, .90f, .68f, 1.f));
 	UTexture2D* NormalPlate = LoadObject<UTexture2D>(nullptr,
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Frontend/Settings/"
 			"T_MB_SettingsLedger_ChoiceButton.T_MB_SettingsLedger_ChoiceButton"));
 	UTexture2D* SelectedPlate = LoadObject<UTexture2D>(nullptr,
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Frontend/Settings/"
 			"T_MB_SettingsLedger_ChoiceButton_Selected."
 			"T_MB_SettingsLedger_ChoiceButton_Selected"));
 
