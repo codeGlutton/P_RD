@@ -13,9 +13,8 @@
  * 같은 것을 담는 그릇을 하나 더 두면 둘이 어긋나는 날이 오고, 그날 어느
  * 쪽이 맞는지 아무도 모른다.
  *
- * 고르는 것은 두 단계다. 다른 이력서를 처음 누르면 검토 대상이 되고, 같은
- * 것을 다시 누르면 정해지거나 풀린다. 한 번에 정해지면 잘못 누른 것을
- * 되돌리기 번거롭다.
+ * 후보를 누르면 상세만 바뀌고, 별도의 추가 버튼으로 파티에 넣는다. 상세를
+ * 둘러보는 입력과 편성 입력을 분리해 실수로 파티가 바뀌지 않게 한다.
  *
  * 값을 치르는 개념은 없다. 처음 시작할 때는 그냥 셋을 고른다 -- 돈으로 사는
  * 것은 나중에 상점에서 들어온다.
@@ -126,6 +125,9 @@ public:
 	 */
 	void ClickCard(int32 CardIndex);
 
+	/** @brief 현재 검토 중인 용병을 명시적으로 파티에 추가한다. */
+	void ClickAdd();
+
 	/** @brief 채워진 파티 슬롯을 눌러 그 용병을 파티에서 뺀다. */
 	void ClickPartySlot(int32 SlotIndex);
 
@@ -161,7 +163,7 @@ protected:
 
 private:
 	void CacheWidgets();
-	void EnsureMarchboundPreviewCrew();
+	void ApplyMarchboundPortraits();
 	void ApplyResponsiveLayout(const FVector2D& ViewportSize);
 	void Refresh();
 	void RefreshCard(int32 CardIndex);
@@ -179,6 +181,7 @@ private:
 	UFUNCTION() void HandlePartySlotClicked_0();
 	UFUNCTION() void HandlePartySlotClicked_1();
 	UFUNCTION() void HandlePartySlotClicked_2();
+	UFUNCTION() void HandleAddClicked();
 	UFUNCTION() void HandleDepartClicked();
 	UFUNCTION() void HandleBackClicked();
 
@@ -189,7 +192,8 @@ private:
 	UPROPERTY() TArray<FMercenarySlotWidgets> mSlots;
 
 	UPROPERTY() TObjectPtr<UTextBlock> mPartyCountText = nullptr;
-	UPROPERTY() TObjectPtr<UTextBlock> mNoticeText = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mAddButton = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mAddLabel = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mDepartButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDepartLabel = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;
