@@ -22,4 +22,3 @@ protected:
 	virtual UTexture2D* ResolveOwnedArtifactPlate() const override;
 	virtual UTexture2D* ResolveTabPlate(bool bSelected) const override;
 };
-
