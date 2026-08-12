@@ -26,6 +26,7 @@
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
@@ -286,6 +287,63 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		WidgetClass->GetPathName(),
 		FString(TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound."
 			"WBP_MercenaryHire_Marchbound_C")));
+
+	UWidgetBlueprintGeneratedClass* HireGenerated =
+		Cast<UWidgetBlueprintGeneratedClass>(WidgetClass);
+	UWidgetTree* HireTree = HireGenerated != nullptr
+		? HireGenerated->GetWidgetTreeArchetype() : nullptr;
+	if (!TestNotNull(TEXT("Marchbound 용병 선택 WBP 나무"), HireTree))
+	{
+		return false;
+	}
+	for (int32 Index = 0; Index < 6; ++Index)
+	{
+		const FString Tail = FString::Printf(TEXT("_%d"), Index);
+		UCanvasPanel* SkillPanel = Cast<UCanvasPanel>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkill")) + Tail))));
+		UScaleBox* SkillFit = Cast<UScaleBox>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillText")) + Tail + TEXT("_Fit")))));
+		UTextBlock* SkillText = Cast<UTextBlock>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillText")) + Tail))));
+		UImage* SkillIcon = Cast<UImage>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillIcon")) + Tail))));
+		UPanelWidget* SkillIconMount = Cast<UPanelWidget>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillIconMount")) + Tail))));
+		if (!TestNotNull(*FString::Printf(TEXT("스킬 %d 패널"), Index), SkillPanel)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 텍스트 축소 래퍼"), Index), SkillFit)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 텍스트"), Index), SkillText)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 아이콘"), Index), SkillIcon)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 아이콘 래퍼"), Index), SkillIconMount))
+		{
+			return false;
+		}
+
+		TestEqual(*FString::Printf(TEXT("스킬 %d 패널 경계 클립"), Index),
+			SkillPanel->GetClipping(), EWidgetClipping::ClipToBoundsAlways);
+		TestTrue(*FString::Printf(TEXT("스킬 %d 텍스트는 ScaleBox 자식"), Index),
+			SkillText->GetParent() == SkillFit);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 넘침 시에만 축소"), Index),
+			SkillFit->GetStretchDirection(), EStretchDirection::DownOnly);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 축소 래퍼 경계 클립"), Index),
+			SkillFit->GetClipping(), EWidgetClipping::ClipToBoundsAlways);
+		if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(SkillText->Slot))
+		{
+			TestEqual(*FString::Printf(TEXT("스킬 %d 텍스트 가로 중앙"), Index),
+				TextSlot->GetHorizontalAlignment(), HAlign_Center);
+			TestEqual(*FString::Printf(TEXT("스킬 %d 텍스트 세로 중앙"), Index),
+				TextSlot->GetVerticalAlignment(), VAlign_Center);
+		}
+		else
+		{
+			AddError(FString::Printf(TEXT("스킬 %d 텍스트 슬롯은 ScaleBoxSlot이어야 함"), Index));
+		}
+		TestEqual(*FString::Printf(TEXT("스킬 %d 의도한 광학 보정만 유지"), Index),
+			SkillText->GetRenderTransform().Translation, FVector2D(0.0f, -2.5f));
+		TestTrue(*FString::Printf(TEXT("스킬 %d 아이콘은 전용 래퍼 자식"), Index),
+			SkillIcon->GetParent() == SkillIconMount);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 기본 아이콘은 숨김"), Index),
+			SkillIcon->GetVisibility(), ESlateVisibility::Collapsed);
+	}
 
 	static const TCHAR* MercenaryNames[6] = {
 		TEXT("Knight"), TEXT("Mage"), TEXT("Ranger"),

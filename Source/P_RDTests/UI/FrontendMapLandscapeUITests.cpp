@@ -25,6 +25,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	"P_RD.UI.FrontendMap.LandscapeStructure",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FFrontendMapConnectionLineModeTest,
+	"P_RD.UI.FrontendMap.ConnectionLineModes",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
 bool FFrontendMapLandscapeStructureTest::RunTest(const FString& Parameters)
 {
 	UClass* MapClass = LoadClass<UFrontendMapLandscapeWidget>(nullptr,
@@ -203,6 +208,94 @@ bool FFrontendMapLandscapeStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 	TestEqual(TEXT("희소 열 방 수와 표시 노드 수"), VisibleNodeCount, SparseRooms.Num());
+	return true;
+}
+
+bool FFrontendMapConnectionLineModeTest::RunTest(const FString& Parameters)
+{
+	UClass* MapClass = LoadClass<UFrontendMapLandscapeWidget>(nullptr,
+		TEXT("/Game/UI/WorldMapLandscape/WBP_FrontendMapLandscape."
+			"WBP_FrontendMapLandscape_C"));
+	if (!TestNotNull(TEXT("가로형 월드맵 WBP 클래스"), MapClass))
+	{
+		return false;
+	}
+
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드"), World))
+	{
+		return false;
+	}
+
+	UFrontendMapLandscapeWidget* Map = CreateWidget<UFrontendMapLandscapeWidget>(World, MapClass);
+	if (!TestNotNull(TEXT("가로형 월드맵 인스턴스"), Map))
+	{
+		return false;
+	}
+	Map->TakeWidget();
+
+	UCanvasPanel* GraphCanvas = Map->WidgetTree != nullptr
+		? Cast<UCanvasPanel>(Map->WidgetTree->FindWidget(TEXT("MapGraphCanvas"))) : nullptr;
+	if (!TestNotNull(TEXT("가로 그래프 Canvas"), GraphCanvas))
+	{
+		return false;
+	}
+
+	// 0 -> 1은 실제 지나온 길, 1 -> 2는 현재 방에서 갈 수 있는 다음 후보 길이다.
+	TArray<FMapRoomView> Rooms;
+	for (int32 Row = 0; Row < 3; ++Row)
+	{
+		FMapRoomView& Room = Rooms.AddDefaulted_GetRef();
+		Room.mRow = Row;
+		Room.mColumn = 0;
+		Room.mType = ERoomType::Monster;
+		Room.mState = Row < 2 ? EMapRoomState::Cleared : EMapRoomState::Ready;
+		Room.mVisited = Row < 2;
+		Room.mSelectable = Row == 2;
+		if (Row < 2)
+		{
+			Room.mNextRoomColumns.Add(0);
+		}
+	}
+	Map->SetPreviewRoomsForDebug(Rooms, false);
+
+	auto CollectVisibleLines = [GraphCanvas]()
+	{
+		TArray<UFrontendMapLineWidget*> Lines;
+		for (int32 Index = 0; Index < GraphCanvas->GetChildrenCount(); ++Index)
+		{
+			UFrontendMapLineWidget* Line =
+				Cast<UFrontendMapLineWidget>(GraphCanvas->GetChildAt(Index));
+			if (Line != nullptr && Line->GetVisibility() != ESlateVisibility::Collapsed)
+			{
+				Lines.Add(Line);
+			}
+		}
+		return Lines;
+	};
+
+	Map->SetRoomSelectionEnabled(false);
+	TestTrue(TEXT("전투 중 조회 지도 갱신"), Map->RefreshMap());
+	TArray<UFrontendMapLineWidget*> Lines = CollectVisibleLines();
+	if (!TestEqual(TEXT("조회 지도 연결선 수"), Lines.Num(), 2))
+	{
+		return false;
+	}
+	TestTrue(TEXT("조회 지도에서도 지나온 길은 밝음"), Lines[0]->IsOpenPath());
+	TestTrue(TEXT("첫 연결은 지나온 길"), Lines[0]->IsTraversedPath());
+	TestFalse(TEXT("전투 중에는 다음 후보 길을 밝히지 않음"), Lines[1]->IsOpenPath());
+	TestFalse(TEXT("다음 후보 길은 지나온 길이 아님"), Lines[1]->IsTraversedPath());
+
+	Map->SetRoomSelectionEnabled(true);
+	TestTrue(TEXT("클리어 후 선택 지도 갱신"), Map->RefreshMap());
+	Lines = CollectVisibleLines();
+	if (!TestEqual(TEXT("선택 지도 연결선 수"), Lines.Num(), 2))
+	{
+		return false;
+	}
+	TestTrue(TEXT("클리어 후에는 다음 후보 길을 밝힘"), Lines[1]->IsOpenPath());
+	TestFalse(TEXT("밝힌 다음 후보 길은 아직 지나온 길이 아님"), Lines[1]->IsTraversedPath());
 	return true;
 }
 

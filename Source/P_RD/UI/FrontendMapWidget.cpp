@@ -1591,10 +1591,24 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
-			// 실선=열린 길 / 점선=잠긴 길 — 텍스처/틴트 모두 시안(WBP 클래스 디폴트) 소유.
+			/*
+			 * 실제로 지나온 길은 양쪽 방이 모두 Cleared일 때만 밝힌다.
+			 * 현재 방에서 다음 후보로 뻗는 길은 승리 후 방 선택 모드에서만 연다.
+			 * 따라서 전투 중 MAP 조회에서는 Ready 노드가 보여도 다음 길은 잠긴 점선으로 남는다.
+			 */
+			const bool bIsTraversedPath =
+				Room.mState == EMapRoomState::Cleared
+				&& NextRoom->mState == EMapRoomState::Cleared;
+			const bool bIsCurrentRoom =
+				FIntPoint(Room.mRow, Room.mColumn) == CurrentCoord;
+			const bool bIsNextRoomCandidate =
+				NextRoom->mState == EMapRoomState::Ready
+				|| NextRoom->mState == EMapRoomState::Selected;
+			const bool bIsOpenNextPath =
+				mRoomSelectionEnabled && bIsCurrentRoom && bIsNextRoomCandidate;
 			ConnectionLine->SetLineStyle(
-				Room.mState != EMapRoomState::Locked,
-				Room.mState == EMapRoomState::Cleared);
+				bIsTraversedPath || bIsOpenNextPath,
+				bIsTraversedPath);
 
 			FWidgetTransform LineTransform;
 			LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));

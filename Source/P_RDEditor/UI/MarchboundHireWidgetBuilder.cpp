@@ -12,6 +12,7 @@
 #include "Components/OverlaySlot.h"
 #include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
@@ -90,9 +91,47 @@ namespace MarchboundHireWidgetBuilder
 		PlaceCanvas(Parent, Center, Position, Size, ZOrder);
 		EnsureParent(Center, Text);
 		UOverlaySlot* TextSlot = CastChecked<UOverlaySlot>(Text->Slot);
+		TextSlot->SetPadding(FMargin(0.0f));
 		TextSlot->SetHorizontalAlignment(HAlign_Fill);
 		TextSlot->SetVerticalAlignment(VAlign_Center);
 		Text->SetJustification(ETextJustify::Center);
+		// 이 빌더는 기존 WBP를 재사용한다. 옛 시안에서 넣은 여백과 렌더
+		// 이동을 초기화하지 않으면 재빌드할 때마다 수학적 중앙과 글리프가
+		// 서로 다른 위치에 남는다. 아래 optical offset만 유일한 보정값이다.
+		Text->SetMargin(FMargin(0.0f));
+		Text->SetRenderTransform(FWidgetTransform());
+		Text->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	}
+
+	void PlaceFittedCenteredText(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent,
+		UTextBlock* Text, const FVector2D Position, const FVector2D Size,
+		const int32 ZOrder)
+	{
+		const FName CenterName(*FString::Printf(TEXT("%s_Center"), *Text->GetName()));
+		UOverlay* Center = FindOrCreate<UOverlay>(Blueprint, CenterName);
+		PlaceCanvas(Parent, Center, Position, Size, ZOrder);
+		Center->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+
+		const FName FitName(*FString::Printf(TEXT("%s_Fit"), *Text->GetName()));
+		UScaleBox* Fit = FindOrCreate<UScaleBox>(Blueprint, FitName);
+		Fit->SetStretch(EStretch::ScaleToFit);
+		Fit->SetStretchDirection(EStretchDirection::DownOnly);
+		Fit->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Fit->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		EnsureParent(Center, Fit);
+		UOverlaySlot* FitSlot = CastChecked<UOverlaySlot>(Fit->Slot);
+		FitSlot->SetPadding(FMargin(0.0f));
+		FitSlot->SetHorizontalAlignment(HAlign_Fill);
+		FitSlot->SetVerticalAlignment(VAlign_Fill);
+
+		EnsureParent(Fit, Text);
+		UScaleBoxSlot* TextSlot = CastChecked<UScaleBoxSlot>(Text->Slot);
+		TextSlot->SetHorizontalAlignment(HAlign_Center);
+		TextSlot->SetVerticalAlignment(VAlign_Center);
+		Text->SetJustification(ETextJustify::Center);
+		Text->SetMargin(FMargin(0.0f));
+		Text->SetRenderTransform(FWidgetTransform());
+		Text->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 	}
 
 	void ApplyTextOpticalCenter(UTextBlock* Text, const float OffsetY)
@@ -474,15 +513,44 @@ namespace MarchboundHireWidgetBuilder
 				FName(*FString::Printf(TEXT("HireDetailSkill_%d"), Index)));
 			PlaceCanvas(CenterRegion, SkillPanel, FVector2D(53.0f + 126.0f * Index, 820.0f),
 				FVector2D(116.0f, 116.0f), 20);
+			SkillPanel->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 			AddImage(Blueprint, SkillPanel,
 				FName(*FString::Printf(TEXT("HireDetailSkillArt_%d"), Index)), SkillFrame,
 				FVector2D::ZeroVector, FVector2D(116.0f, 116.0f), 0);
+
+			// 런타임 UMercenaryHireWidget이 이 이름으로 실제 스킬 DA 아이콘을
+			// 찾는다. 기존 자산에 우연히 남은 위젯에 의존하지 않고 빌더가 구조를
+			// 완전히 소유해야 새 WBP에서도 같은 결과가 나온다.
+			UOverlay* IconMount = FindOrCreate<UOverlay>(Blueprint,
+				FName(*FString::Printf(TEXT("HireDetailSkillIconMount_%d"), Index)));
+			PlaceCanvas(SkillPanel, IconMount, FVector2D::ZeroVector,
+				FVector2D(116.0f, 116.0f), 5);
+			IconMount->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			if (UWidget* LegacyIconMount = Blueprint->WidgetTree->FindWidget(
+				FName(*FString::Printf(TEXT("HireDetailSkillArt_%dMount"), Index))))
+			{
+				LegacyIconMount->SetVisibility(ESlateVisibility::Collapsed);
+			}
+			UImage* SkillIcon = FindOrCreate<UImage>(Blueprint,
+				FName(*FString::Printf(TEXT("HireDetailSkillIcon_%d"), Index)));
+			EnsureParent(IconMount, SkillIcon);
+			UOverlaySlot* IconSlot = CastChecked<UOverlaySlot>(SkillIcon->Slot);
+			IconSlot->SetPadding(FMargin(22.0f));
+			IconSlot->SetHorizontalAlignment(HAlign_Fill);
+			IconSlot->SetVerticalAlignment(VAlign_Fill);
+			FSlateBrush EmptyIconBrush;
+			EmptyIconBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+			SkillIcon->SetBrush(EmptyIconBrush);
+			SkillIcon->SetColorAndOpacity(FLinearColor::White);
+			SkillIcon->SetVisibility(ESlateVisibility::Collapsed);
+
 			const FBox2D SkillInner = UIPartRects::Inner(TEXT("T_MB_HireSkillButtonFrame"),
 				FVector2D::ZeroVector, FVector2D(116.0f, 116.0f), false);
-			UTextBlock* SkillText = AddText(Blueprint, SkillPanel,
-				FName(*FString::Printf(TEXT("HireDetailSkillText_%d"), Index)),
-				FText::FromString(DefaultSkillLabels[Index]), Font, 18,
+			UTextBlock* SkillText = FindOrCreate<UTextBlock>(Blueprint,
+				FName(*FString::Printf(TEXT("HireDetailSkillText_%d"), Index)));
+			PlaceFittedCenteredText(Blueprint, SkillPanel, SkillText,
 				SkillInner.Min, SkillInner.GetSize(), 10);
+			SkillText->SetText(FText::FromString(DefaultSkillLabels[Index]));
 			SetLightFont(SkillText, Font, 18);
 			ApplyTextOpticalCenter(SkillText, SkillLabelOpticalOffsetY);
 			UButton* SkillButton = FindOrCreate<UButton>(Blueprint,

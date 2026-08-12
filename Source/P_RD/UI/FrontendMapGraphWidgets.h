@@ -81,6 +81,12 @@ public:
 	 */
 	void SetLineStyle(bool bIsOpenPath, bool bIsTraversed = false);
 
+	/** @brief 마지막으로 적용된 연결선이 열린 경로인지 반환한다. */
+	bool IsOpenPath() const { return mIsOpenPath; }
+
+	/** @brief 마지막으로 적용된 연결선이 실제로 지나온 경로인지 반환한다. */
+	bool IsTraversedPath() const { return mIsTraversedPath; }
+
 	/** @brief 시안이 정한 선 두께. 부모가 CanvasPanelSlot 높이로 쓴다. */
 	float GetLineThickness() const;
 
@@ -152,6 +158,10 @@ private:
 
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	FLinearColor mLockedGlowTint = FLinearColor(0.55f, 0.40f, 0.18f, 0.12f);
+
+	/** @brief 현재 표시 중인 선 스타일. 지도 갱신 회귀 테스트와 상태 확인에 사용한다. */
+	bool mIsOpenPath = false;
+	bool mIsTraversedPath = false;
 };
 
 /**

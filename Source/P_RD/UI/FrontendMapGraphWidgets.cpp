@@ -45,6 +45,9 @@ void UFrontendMapLineWidget::SetLineColor(const FLinearColor& InColor)
 
 void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath, bool bIsTraversed)
 {
+	mIsOpenPath = bIsOpenPath;
+	mIsTraversedPath = bIsOpenPath && bIsTraversed;
+
 	// 지나온 길은 가장 밝게, 지금 갈 수 있는 길은 금색, 잠긴 길은 어두운 황동색으로 읽힌다.
 	const FLinearColor Tint = bIsOpenPath
 		? (bIsTraversed ? mTraversedTint : mOpenTint)
@@ -64,9 +67,17 @@ void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath, bool bIsTraversed)
 		LineImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (LineGlowImage != nullptr)
 		{
-			LineGlowImage->SetBrush(LineBrush);
-			LineGlowImage->SetColorAndOpacity(GlowTint);
-			LineGlowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (bIsOpenPath)
+			{
+				LineGlowImage->SetBrush(LineBrush);
+				LineGlowImage->SetColorAndOpacity(GlowTint);
+				LineGlowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else
+			{
+				// 잠긴 길은 점선만 남긴다. 조회 모드에서 다음 방이 열린 것처럼 보이지 않아야 한다.
+				LineGlowImage->SetVisibility(ESlateVisibility::Collapsed);
+			}
 		}
 		if (LinePanel != nullptr)
 		{
