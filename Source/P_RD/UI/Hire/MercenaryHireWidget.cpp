@@ -7,7 +7,13 @@
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/Texture2D.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+#include "Actor/TileMap/TileLayer.h"
+#include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "MercenaryHire"
 
@@ -28,13 +34,24 @@ namespace MercenaryHireDetail
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Druid.T_MB_HireIcon_Druid")
 	};
 
-	const TCHAR* HeroPaths[CardCount] = {
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight"),
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Mage.T_MB_HireHero_Mage"),
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Ranger.T_MB_HireHero_Ranger"),
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Rogue.T_MB_HireHero_Rogue"),
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Barbarian.T_MB_HireHero_Barbarian"),
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Druid.T_MB_HireHero_Druid")
+	/** 배경을 제거한 전경 전용 원화. 뒤에는 직업별 생성 배경을 따로 그린다. */
+	const TCHAR* HeroCutoutPaths[CardCount] = {
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Knight_v1.T_HireHeroCutout_Knight_v1"),
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Mage_v1.T_HireHeroCutout_Mage_v1"),
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Ranger_v1.T_HireHeroCutout_Ranger_v1"),
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Rogue_v1.T_HireHeroCutout_Rogue_v1"),
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Barbarian_v1.T_HireHeroCutout_Barbarian_v1"),
+		TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Druid_v1.T_HireHeroCutout_Druid_v1")
+	};
+
+	/** 각 직업의 전경과 독립적으로 제작한 초광폭 색상 배경. */
+	const TCHAR* GeneratedBackgroundPaths[CardCount] = {
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Knight_v1.T_HireGeneratedBG_Knight_v1"),
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Mage_v1.T_HireGeneratedBG_Mage_v1"),
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Ranger_v1.T_HireGeneratedBG_Ranger_v1"),
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Rogue_v1.T_HireGeneratedBG_Rogue_v1"),
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Barbarian_v1.T_HireGeneratedBG_Barbarian_v1"),
+		TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Druid_v1.T_HireGeneratedBG_Druid_v1")
 	};
 
 	UTexture2D* LoadTexture(const TCHAR* const* Paths, const int32 Index)
@@ -79,6 +96,19 @@ namespace MercenaryHireDetail
 
 }
 
+UMercenaryHireWidget::UMercenaryHireWidget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	// 문자열 로드만 두면 Android cook에서 상세 WBP가 빠질 수 있어 생성자 하드
+	// 레퍼런스로 잡는다. 전투 HUD가 같은 자산에 쓰는 방식과 같다.
+	static ConstructorHelpers::FClassFinder<UUserWidget> DetailOverlayClassFinder(
+		TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay"));
+	if (DetailOverlayClassFinder.Succeeded())
+	{
+		mSkillDetailOverlayClass = DetailOverlayClassFinder.Class;
+	}
+}
+
 void UMercenaryHireWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -91,6 +121,24 @@ void UMercenaryHireWidget::NativeConstruct()
 		mReviewing = 0;
 	}
 	Refresh();
+}
+
+void UMercenaryHireWidget::NativeDestruct()
+{
+	CancelSkillPress();
+	if (mSkillDetailOverlay != nullptr)
+	{
+		mSkillDetailOverlay->RemoveFromParent();
+		mSkillDetailOverlay = nullptr;
+	}
+	Super::NativeDestruct();
+}
+
+void UMercenaryHireWidget::ApplyCloseUI()
+{
+	CancelSkillPress();
+	HideSkillDetailOverlay();
+	Super::ApplyCloseUI();
 }
 
 void UMercenaryHireWidget::NativeTick(const FGeometry& MyGeometry, const float InDeltaTime)
@@ -113,6 +161,8 @@ void UMercenaryHireWidget::NativeTick(const FGeometry& MyGeometry, const float I
 void UMercenaryHireWidget::SetCharacterOptions(
 	const TArray<FFrontendCharacterOption>& Options, const int32 PartySize)
 {
+	CancelSkillPress();
+	HideSkillDetailOverlay();
 	mCrew = Options;
 	ApplyMarchboundPortraits();
 	mPartySize = FMath::Max(1, PartySize);
@@ -151,8 +201,6 @@ void UMercenaryHireWidget::ApplyMarchboundPortraits()
 			continue;
 		}
 
-		Option.mPortrait = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
-			MercenaryHireDetail::HeroPaths[ArtIndex]));
 		Option.mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
 			MercenaryHireDetail::IconPaths[ArtIndex]));
 	}
@@ -254,6 +302,12 @@ void UMercenaryHireWidget::CacheWidgets()
 	// 하나 어긋날 때 컴파일이 깨지고, 그러면 다시 굽는 것조차 못 한다.
 	mIsMarchboundLayout = WidgetTree != nullptr
 		&& WidgetTree->FindWidget(TEXT("HireListFrameArt")) != nullptr;
+	// 중앙 일러스트를 가리던 중복 제목/클래스명 판은 전체를 걷는다. 빌더가
+	// 구운 기본값도 숨기지만, 이전 WBP가 들어와도 런타임 계약은 유지한다.
+	MercenaryHireDetail::SetShown(WidgetTree != nullptr
+		? WidgetTree->FindWidget(TEXT("HireTitlePanel")) : nullptr, false);
+	MercenaryHireDetail::SetShown(WidgetTree != nullptr
+		? WidgetTree->FindWidget(TEXT("HireDetailNamePanel")) : nullptr, false);
 	mCards.Reset();
 	mCards.SetNum(MercenaryHireDetail::CardCount);
 	for (int32 Index = 0; Index < MercenaryHireDetail::CardCount; ++Index)
@@ -312,14 +366,19 @@ void UMercenaryHireWidget::CacheWidgets()
 	mDetailAP = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailAP"));
 	mDetailSpeed = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailSpeed"));
 	mHeroIllustration = MercenaryHireDetail::Find<UImage>(WidgetTree, TEXT("Backdrop_Art"));
+	mHeroGeneratedBackground = MercenaryHireDetail::Find<UImage>(
+		WidgetTree, TEXT("HireGeneratedBackgroundArt"));
 	mDetailSkills.Reset();
 	mDetailSkillIcons.Reset();
+	mDetailSkillButtons.Reset();
 	for (int32 Index = 0; Index < 6; ++Index)
 	{
 		mDetailSkills.Add(MercenaryHireDetail::Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("HireDetailSkillText_%d"), Index)));
 		mDetailSkillIcons.Add(MercenaryHireDetail::Find<UImage>(WidgetTree,
 			FString::Printf(TEXT("HireDetailSkillIcon_%d"), Index)));
+		mDetailSkillButtons.Add(MercenaryHireDetail::Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("HireDetailSkillButton_%d"), Index)));
 	}
 
 	// 슬롯별 핸들러를 따로 두는 이유: 동적 델리게이트는 페이로드를 못 받고
@@ -343,6 +402,41 @@ void UMercenaryHireWidget::CacheWidgets()
 		{
 			Button->OnClicked.__Internal_AddUniqueDynamic(
 				this, Handlers[Index].Function, Handlers[Index].Name);
+		}
+	}
+	struct FSkillPressHandler
+	{
+		void (UMercenaryHireWidget::*Function)();
+		const TCHAR* Name;
+	};
+	static const FSkillPressHandler SkillPressHandlers[6] = {
+		{ &UMercenaryHireWidget::HandleSkillPressed_0, TEXT("HandleSkillPressed_0") },
+		{ &UMercenaryHireWidget::HandleSkillPressed_1, TEXT("HandleSkillPressed_1") },
+		{ &UMercenaryHireWidget::HandleSkillPressed_2, TEXT("HandleSkillPressed_2") },
+		{ &UMercenaryHireWidget::HandleSkillPressed_3, TEXT("HandleSkillPressed_3") },
+		{ &UMercenaryHireWidget::HandleSkillPressed_4, TEXT("HandleSkillPressed_4") },
+		{ &UMercenaryHireWidget::HandleSkillPressed_5, TEXT("HandleSkillPressed_5") },
+	};
+	static const FSkillPressHandler SkillReleaseHandlers[6] = {
+		{ &UMercenaryHireWidget::HandleSkillReleased_0, TEXT("HandleSkillReleased_0") },
+		{ &UMercenaryHireWidget::HandleSkillReleased_1, TEXT("HandleSkillReleased_1") },
+		{ &UMercenaryHireWidget::HandleSkillReleased_2, TEXT("HandleSkillReleased_2") },
+		{ &UMercenaryHireWidget::HandleSkillReleased_3, TEXT("HandleSkillReleased_3") },
+		{ &UMercenaryHireWidget::HandleSkillReleased_4, TEXT("HandleSkillReleased_4") },
+		{ &UMercenaryHireWidget::HandleSkillReleased_5, TEXT("HandleSkillReleased_5") },
+	};
+	for (int32 Index = 0; Index < mDetailSkillButtons.Num(); ++Index)
+	{
+		if (UButton* Button = mDetailSkillButtons[Index])
+		{
+			// 손가락이 스크롤/드래그로 빠지면 눌림을 취소해 엉뚱한 상세가
+			// 열리지 않게 한다. 정상 탭에는 클릭 동작이 없으므로 부작용이 없다.
+			Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+			Button->OnPressed.__Internal_AddUniqueDynamic(this,
+				SkillPressHandlers[Index].Function, SkillPressHandlers[Index].Name);
+			Button->OnReleased.__Internal_AddUniqueDynamic(this,
+				SkillReleaseHandlers[Index].Function, SkillReleaseHandlers[Index].Name);
 		}
 	}
 	struct FPartySlotHandler
@@ -427,6 +521,8 @@ void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
 
 	// 목록은 상세 검토만 바꾼다. 파티 편성은 중앙 하단의 추가 버튼 한 곳에서
 	// 명시적으로 수행해, 후보를 둘러보다가 파티가 바뀌는 일을 막는다.
+	CancelSkillPress();
+	HideSkillDetailOverlay();
 	mReviewing = CardIndex;
 	Refresh();
 }
@@ -590,12 +686,26 @@ void UMercenaryHireWidget::RefreshDetail()
 	}
 
 	const FFrontendCharacterOption& Option = mCrew[DetailIndex];
+	const int32 ArtIndex = Option.mJobType == EUnitJobType::Knight ? 0
+		: Option.mJobType == EUnitJobType::Mage ? 1
+		: Option.mJobType == EUnitJobType::Ranger ? 2
+		: Option.mJobType == EUnitJobType::Rogue ? 3
+		: Option.mJobType == EUnitJobType::Barbarian ? 4
+		: Option.mJobType == EUnitJobType::Druid ? 5 : DetailIndex;
 	if (mHeroIllustration != nullptr)
 	{
 		if (UTexture2D* Hero = MercenaryHireDetail::LoadTexture(
-			MercenaryHireDetail::HeroPaths, DetailIndex))
+			MercenaryHireDetail::HeroCutoutPaths, ArtIndex))
 		{
 			mHeroIllustration->SetBrushFromTexture(Hero, false);
+		}
+	}
+	if (mHeroGeneratedBackground != nullptr)
+	{
+		if (UTexture2D* Background = MercenaryHireDetail::LoadTexture(
+			MercenaryHireDetail::GeneratedBackgroundPaths, ArtIndex))
+		{
+			mHeroGeneratedBackground->SetBrushFromTexture(Background, false);
 		}
 	}
 	MercenaryHireDetail::SetTextIfPresent(mDetailName, Option.mDisplayName);
@@ -610,10 +720,9 @@ void UMercenaryHireWidget::RefreshDetail()
 		LOCTEXT("BasicAttack", "평타"),
 		LOCTEXT("Move", "이동")
 	};
-	// 유닛 DA 목록이 다섯 이상이면(베기·이동·강타… 이동까지 스킬로 들어
-	// 있다) 여섯 칸에 **그 목록을 그대로** 건다 -- 전투 카드와 같은 출처,
-	// 같은 순서, 같은 그림이다. 평타/이동 고정 칸은 DA 를 못 찾은 검수
-	// 카드에서만 쓴다.
+	// 실제 플레이어 유닛 DA에는 평타를 포함한 스킬 다섯 개만 있고 이동은
+	// 별도 커맨드다. 전투 HUD와 똑같이 0번 이동 + 1~5번 DA 스킬로 놓는다.
+	// 구형/검수 데이터의 두 고정 칸 규칙은 작은 목록에만 그대로 남긴다.
 	const bool bRealKit = Option.mSkillNames.Num() >= 5;
 	for (int32 Index = 0; Index < mDetailSkills.Num(); ++Index)
 	{
@@ -621,12 +730,14 @@ void UMercenaryHireWidget::RefreshDetail()
 		UTexture2D* IconTexture = nullptr;
 		if (bRealKit)
 		{
-			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
-				Option.mSkillNames.IsValidIndex(Index)
-					? Option.mSkillNames[Index] : FText::GetEmpty());
-			if (Option.mSkillIcons.IsValidIndex(Index))
+			const int32 SkillIndex = Index - 1;
+			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index], Index == 0
+				? CoreActions[1]
+				: (Option.mSkillNames.IsValidIndex(SkillIndex)
+					? Option.mSkillNames[SkillIndex] : FText::GetEmpty()));
+			if (Index > 0 && Option.mSkillIcons.IsValidIndex(SkillIndex))
 			{
-				IconTexture = Option.mSkillIcons[Index].LoadSynchronous();
+				IconTexture = Option.mSkillIcons[SkillIndex].LoadSynchronous();
 			}
 		}
 		else if (Index < 2)
@@ -661,6 +772,414 @@ void UMercenaryHireWidget::RefreshDetail()
 		MercenaryHireDetail::SetShown(mDetailSkills[Index], IconTexture == nullptr);
 	}
 }
+
+int32 UMercenaryHireWidget::GetSkillDataIndexForSlot(
+	const FFrontendCharacterOption& Option, const int32 SlotIndex) const
+{
+	if (SlotIndex < 0 || SlotIndex >= 6)
+	{
+		return INDEX_NONE;
+	}
+	// 실제 전투 kit는 0번 이동 + DA 스킬 다섯 개다. 이동에는 대응하는
+	// FFrontendSkillOption이 없고, 1~5번만 0~4번 상세에 정확히 대응한다.
+	// 구형/검수 데이터는 앞의 평타·이동 두 칸을 가상으로 유지한다.
+	const bool bRealKit = Option.mSkillNames.Num() >= 5;
+	const int32 DataIndex = bRealKit ? SlotIndex - 1 : SlotIndex - 2;
+	return Option.mSkillDetails.IsValidIndex(DataIndex) ? DataIndex : INDEX_NONE;
+}
+
+void UMercenaryHireWidget::BeginSkillPress(const int32 SlotIndex)
+{
+	CancelSkillPress();
+	if (!mCrew.IsValidIndex(mReviewing)
+		|| GetSkillDataIndexForSlot(mCrew[mReviewing], SlotIndex) == INDEX_NONE)
+	{
+		return;
+	}
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+	mPressedSkillSlot = SlotIndex;
+	mPressedReviewingIndex = mReviewing;
+	World->GetTimerManager().SetTimer(mSkillLongPressTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this,
+			[this, SlotIndex, ReviewingIndex = mReviewing]()
+			{
+				HandleSkillLongPress(SlotIndex, ReviewingIndex);
+			}), SkillLongPressSeconds, false);
+}
+
+void UMercenaryHireWidget::EndSkillPress(const int32 SlotIndex)
+{
+	// 다른 손가락이 새 스킬을 누른 뒤 먼저 댄 손가락의 Released가 늦게
+	// 도착할 수 있다. 그 오래된 release로 현재 롱프레스를 취소하지 않는다.
+	if (mPressedSkillSlot == SlotIndex)
+	{
+		CancelSkillPress();
+	}
+}
+
+void UMercenaryHireWidget::CancelSkillPress()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mSkillLongPressTimerHandle);
+	}
+	mPressedSkillSlot = INDEX_NONE;
+	mPressedReviewingIndex = INDEX_NONE;
+}
+
+void UMercenaryHireWidget::HandleSkillLongPress(
+	const int32 SlotIndex, const int32 ReviewingIndex)
+{
+	// 누르기 시작 뒤 후보가 바뀌었거나 다른 누름이 들어왔으면 오래된 타이머다.
+	if (ReviewingIndex != mReviewing || SlotIndex != mPressedSkillSlot
+		|| ReviewingIndex != mPressedReviewingIndex
+		|| !mCrew.IsValidIndex(ReviewingIndex))
+	{
+		return;
+	}
+	const FFrontendCharacterOption& Option = mCrew[ReviewingIndex];
+	const int32 DataIndex = GetSkillDataIndexForSlot(Option, SlotIndex);
+	if (!Option.mSkillDetails.IsValidIndex(DataIndex))
+	{
+		return;
+	}
+	ShowSkillDetailOverlay(Option.mSkillDetails[DataIndex]);
+}
+
+bool UMercenaryHireWidget::EnsureSkillDetailOverlay()
+{
+	if (mSkillDetailOverlay != nullptr)
+	{
+		return true;
+	}
+	if (mSkillDetailOverlayClass == nullptr)
+	{
+		return false;
+	}
+	if (APlayerController* OwningPlayer = GetOwningPlayer())
+	{
+		mSkillDetailOverlay = CreateWidget<UUserWidget>(
+			OwningPlayer, mSkillDetailOverlayClass);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		mSkillDetailOverlay = CreateWidget<UUserWidget>(World, mSkillDetailOverlayClass);
+	}
+	if (mSkillDetailOverlay == nullptr)
+	{
+		return false;
+	}
+	mSkillDetailOverlay->AddToViewport(/*ZOrder=*/60);
+	mSkillDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
+
+	// 상세판 장식은 입력을 먹지 않고, WBP의 화면 전체 받이와 닫기 단추만
+	// 닫기 입력을 받는다. 전투 HUD와 같은 위젯/동작 계약이다.
+	static const TCHAR* const DecorativeNames[] = {
+		TEXT("DetailScrimImage"), TEXT("DetailFrameImage"), TEXT("DetailIconImage"),
+		TEXT("DetailTitleText"), TEXT("DetailSubtitleText"), TEXT("DetailBodyText") };
+	for (const TCHAR* Name : DecorativeNames)
+	{
+		if (UWidget* Decoration = mSkillDetailOverlay->GetWidgetFromName(Name))
+		{
+			Decoration->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+	}
+	if (UWidget* PanelRoot =
+		mSkillDetailOverlay->GetWidgetFromName(TEXT("DetailPanelRoot")))
+	{
+		PanelRoot->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	}
+	for (const TCHAR* Name : { TEXT("DetailCloseCatch"), TEXT("DetailCloseButton") })
+	{
+		if (UButton* Button = Cast<UButton>(mSkillDetailOverlay->GetWidgetFromName(Name)))
+		{
+			Button->OnClicked.AddUniqueDynamic(
+				this, &UMercenaryHireWidget::HandleSkillDetailCloseClicked);
+		}
+	}
+	return true;
+}
+
+namespace MercenaryHireDetail
+{
+	const TCHAR* AimShapeName(const EAimPattern Pattern)
+	{
+		switch (Pattern)
+		{
+		case EAimPattern::Single: return TEXT("단일");
+		case EAimPattern::Cross:  return TEXT("십자");
+		case EAimPattern::Star:   return TEXT("대각");
+		case EAimPattern::Square: return TEXT("사각");
+		default:                  return TEXT("");
+		}
+	}
+
+	const TCHAR* EffectShapeName(const EEffectPattern Pattern)
+	{
+		switch (Pattern)
+		{
+		case EEffectPattern::Single: return TEXT("단일");
+		case EEffectPattern::Cross:
+		case EEffectPattern::Star:   return TEXT("십자");
+		case EEffectPattern::Square: return TEXT("원형");
+		default:                     return TEXT("");
+		}
+	}
+
+	FString DescribeBlocker(const int32 Mask)
+	{
+		if (Mask == INDEX_NONE)
+		{
+			return FString();
+		}
+		if (Mask == 0)
+		{
+			return TEXT("없음");
+		}
+		TArray<FString> Layers;
+		if ((Mask & static_cast<int32>(ETileLayerFlag::Obstacle)) != 0)
+		{
+			Layers.Add(TEXT("장애물"));
+		}
+		if ((Mask & static_cast<int32>(ETileLayerFlag::Unit)) != 0)
+		{
+			Layers.Add(TEXT("유닛"));
+		}
+		return Layers.IsEmpty() ? TEXT("없음") : FString::Join(Layers, TEXT("·"));
+	}
+
+	bool AimCovers(const EAimPattern Pattern, const int32 Range,
+		const int32 DeltaRow, const int32 DeltaColumn)
+	{
+		const int32 Manhattan = FMath::Abs(DeltaRow) + FMath::Abs(DeltaColumn);
+		const int32 Chebyshev = FMath::Max(FMath::Abs(DeltaRow), FMath::Abs(DeltaColumn));
+		switch (Pattern)
+		{
+		case EAimPattern::Single: return Manhattan == 0;
+		case EAimPattern::Cross:  return (DeltaRow == 0 || DeltaColumn == 0) && Manhattan <= Range;
+		case EAimPattern::Star:
+		case EAimPattern::Square: return Chebyshev <= Range;
+		default:                  return false;
+		}
+	}
+
+	bool EffectCovers(const EEffectPattern Pattern, const int32 Range,
+		const int32 DeltaRow, const int32 DeltaColumn)
+	{
+		const int32 Manhattan = FMath::Abs(DeltaRow) + FMath::Abs(DeltaColumn);
+		const int32 Chebyshev = FMath::Max(FMath::Abs(DeltaRow), FMath::Abs(DeltaColumn));
+		switch (Pattern)
+		{
+		case EEffectPattern::Single: return Manhattan == 0;
+		case EEffectPattern::Cross:
+		case EEffectPattern::Star:   return (DeltaRow == 0 || DeltaColumn == 0) && Manhattan <= Range;
+		case EEffectPattern::Square: return Chebyshev <= Range;
+		default:                     return false;
+		}
+	}
+}
+
+void UMercenaryHireWidget::ShowSkillDetailOverlay(const FFrontendSkillOption& Skill)
+{
+	if (!EnsureSkillDetailOverlay())
+	{
+		return;
+	}
+	auto FindWidget = [this](const TCHAR* Name) -> UWidget*
+	{
+		return mSkillDetailOverlay != nullptr
+			? mSkillDetailOverlay->GetWidgetFromName(FName(Name)) : nullptr;
+	};
+	auto SetOverlayText = [&FindWidget](const TCHAR* Name, const FText& Text)
+	{
+		MercenaryHireDetail::SetTextIfPresent(
+			Cast<UTextBlock>(FindWidget(Name)), Text);
+	};
+
+	SetOverlayText(TEXT("DetailTitleText"), Skill.mName);
+	FString Subtitle = FString::Printf(TEXT("AP %d"), Skill.mActionPointCost);
+	if (Skill.mActionPointGain > 0)
+	{
+		Subtitle += FString::Printf(TEXT("  ·  AP 회복 %d"), Skill.mActionPointGain);
+	}
+	if (Skill.mCooldownTurns > 0)
+	{
+		Subtitle += FString::Printf(TEXT("  ·  쿨타임 %d턴"), Skill.mCooldownTurns);
+	}
+	if (Skill.mDamageMax > 0)
+	{
+		Subtitle += Skill.mDamageMin == Skill.mDamageMax
+			? FString::Printf(TEXT("  ·  피해 %d"), Skill.mDamageMax)
+			: FString::Printf(TEXT("  ·  피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax);
+	}
+	Subtitle += FString::Printf(TEXT("  ·  사거리 %d"), Skill.mAimRange);
+	if (Skill.mCriticalDamage > 0)
+	{
+		Subtitle += FString::Printf(TEXT("  ·  치명타피해 %d"), Skill.mCriticalDamage);
+	}
+	SetOverlayText(TEXT("DetailSubtitleText"), FText::FromString(Subtitle));
+
+	const FString AimBlocker = MercenaryHireDetail::DescribeBlocker(Skill.mAimBlockerMask);
+	const FString EffectBlocker = MercenaryHireDetail::DescribeBlocker(Skill.mEffectBlockerMask);
+	const FString Targeting = FString::Printf(
+		TEXT("사거리 %d (%s)  ·  타격 %s %d%s%s"),
+		Skill.mAimRange, MercenaryHireDetail::AimShapeName(Skill.mAimPattern),
+		MercenaryHireDetail::EffectShapeName(Skill.mEffectPattern), Skill.mEffectArea,
+		AimBlocker.IsEmpty() ? TEXT("") : *FString::Printf(TEXT("  ·  조준 차단 %s"), *AimBlocker),
+		EffectBlocker.IsEmpty() ? TEXT("") : *FString::Printf(TEXT("  ·  영향 차단 %s"), *EffectBlocker));
+	FString Body = Skill.mDescription.ToString();
+	if (!Targeting.IsEmpty())
+	{
+		if (!Body.IsEmpty())
+		{
+			Body += TEXT("\n\n");
+		}
+		Body += Targeting;
+	}
+	SetOverlayText(TEXT("DetailBodyText"), FText::FromString(Body));
+
+	if (UImage* Icon = Cast<UImage>(FindWidget(TEXT("DetailIconImage"))))
+	{
+		if (UTexture2D* Texture = Skill.mIcon.LoadSynchronous())
+		{
+			Icon->SetBrushFromTexture(Texture, false);
+			FSlateBrush Brush = Icon->GetBrush();
+			Brush.DrawAs = ESlateBrushDrawType::Image;
+			Icon->SetBrush(Brush);
+		}
+	}
+
+	const FText ChipLabels[5] = {
+		LOCTEXT("SkillDetailAP", "AP"), LOCTEXT("SkillDetailDamage", "피해"),
+		LOCTEXT("SkillDetailCooldown", "쿨타임"), LOCTEXT("SkillDetailRange", "사거리"),
+		LOCTEXT("SkillDetailCritical", "치명") };
+	const FText ChipValues[5] = {
+		FText::AsNumber(Skill.mActionPointCost),
+		Skill.mDamageMax <= 0 ? FText::FromString(TEXT("-"))
+			: (Skill.mDamageMin == Skill.mDamageMax ? FText::AsNumber(Skill.mDamageMax)
+				: FText::FromString(FString::Printf(TEXT("%d~%d"), Skill.mDamageMin, Skill.mDamageMax))),
+		Skill.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
+			: FText::FromString(FString::Printf(TEXT("%d턴"), Skill.mCooldownTurns)),
+		FText::AsNumber(Skill.mAimRange),
+		Skill.mCriticalDamage <= 0 ? FText::FromString(TEXT("-"))
+			: FText::AsNumber(Skill.mCriticalDamage) };
+	for (int32 Index = 0; Index < 5; ++Index)
+	{
+		SetOverlayText(*FString::Printf(TEXT("DetailChip%dLabel"), Index), ChipLabels[Index]);
+		SetOverlayText(*FString::Printf(TEXT("DetailChip%dValue"), Index), ChipValues[Index]);
+	}
+	SetOverlayText(TEXT("DetailSelectCaptionText"), FText::FromString(FString::Printf(
+		TEXT("%s · 거리 %d"), MercenaryHireDetail::AimShapeName(Skill.mAimPattern), Skill.mAimRange)));
+	SetOverlayText(TEXT("DetailHitCaptionText"), FText::FromString(FString::Printf(
+		TEXT("%s · 범위 %d"), MercenaryHireDetail::EffectShapeName(Skill.mEffectPattern), Skill.mEffectArea)));
+	SetOverlayText(TEXT("DetailAimBlockerText"), FText::FromString(AimBlocker));
+	SetOverlayText(TEXT("DetailEffectBlockerText"), FText::FromString(EffectBlocker));
+
+	const FLinearColor Empty(0.10f, 0.085f, 0.065f, 0.55f);
+	const FLinearColor Select(0.28f, 0.60f, 0.95f, 0.95f);
+	const FLinearColor Hit(0.90f, 0.32f, 0.30f, 0.95f);
+	const FLinearColor Caster(0.98f, 0.80f, 0.35f, 0.95f);
+	for (int32 Row = 0; Row < 5; ++Row)
+	{
+		for (int32 Column = 0; Column < 5; ++Column)
+		{
+			const int32 DeltaRow = Row - 2;
+			const int32 DeltaColumn = Column - 2;
+			const bool bCaster = DeltaRow == 0 && DeltaColumn == 0;
+			if (UImage* Cell = Cast<UImage>(FindWidget(*FString::Printf(
+				TEXT("DetailSelectCell_R%dC%d"), Row, Column))))
+			{
+				Cell->SetColorAndOpacity(bCaster ? Caster
+					: (MercenaryHireDetail::AimCovers(Skill.mAimPattern,
+						Skill.mAimRange, DeltaRow, DeltaColumn) ? Select : Empty));
+			}
+			if (UImage* Cell = Cast<UImage>(FindWidget(*FString::Printf(
+				TEXT("DetailHitCell_R%dC%d"), Row, Column))))
+			{
+				Cell->SetColorAndOpacity(bCaster ? Caster
+					: (MercenaryHireDetail::EffectCovers(Skill.mEffectPattern,
+						Skill.mEffectArea, DeltaRow, DeltaColumn) ? Hit : Empty));
+			}
+		}
+	}
+
+	// 유닛/아티팩트 상세에서 켜 둔 부품이 재사용 시 남지 않게 스킬 보기 상태로
+	// 명시적으로 되돌린다.
+	for (const TCHAR* Name : { TEXT("DetailIdentityColumn"), TEXT("DetailStatColumn"),
+		TEXT("DetailRightColumn"), TEXT("DetailStatBlock"), TEXT("DetailTargetBlock"),
+		TEXT("DetailDivider_0"), TEXT("DetailDivider_1"), TEXT("DetailBodyText") })
+	{
+		MercenaryHireDetail::SetShown(FindWidget(Name), true);
+	}
+	for (const TCHAR* Name : { TEXT("DetailWideColumn"), TEXT("DetailSkillBlock"),
+		TEXT("DetailExtraBlock"), TEXT("DetailSkillRowHost") })
+	{
+		MercenaryHireDetail::SetShown(FindWidget(Name), false);
+	}
+	if (UWidget* FreePlate = FindWidget(TEXT("DetailFreePlate")))
+	{
+		FreePlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	for (int32 Index = 0; Index < 5; ++Index)
+	{
+		MercenaryHireDetail::SetShown(FindWidget(*FString::Printf(
+			TEXT("DetailRarityGem_%d"), Index)), false);
+	}
+	mSkillDetailOverlay->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void UMercenaryHireWidget::HideSkillDetailOverlay()
+{
+	if (mSkillDetailOverlay != nullptr)
+	{
+		mSkillDetailOverlay->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMercenaryHireWidget::HandleSkillDetailCloseClicked()
+{
+	HideSkillDetailOverlay();
+}
+
+void UMercenaryHireWidget::HandleSkillPressed_0() { BeginSkillPress(0); }
+void UMercenaryHireWidget::HandleSkillPressed_1() { BeginSkillPress(1); }
+void UMercenaryHireWidget::HandleSkillPressed_2() { BeginSkillPress(2); }
+void UMercenaryHireWidget::HandleSkillPressed_3() { BeginSkillPress(3); }
+void UMercenaryHireWidget::HandleSkillPressed_4() { BeginSkillPress(4); }
+void UMercenaryHireWidget::HandleSkillPressed_5() { BeginSkillPress(5); }
+void UMercenaryHireWidget::HandleSkillReleased_0() { EndSkillPress(0); }
+void UMercenaryHireWidget::HandleSkillReleased_1() { EndSkillPress(1); }
+void UMercenaryHireWidget::HandleSkillReleased_2() { EndSkillPress(2); }
+void UMercenaryHireWidget::HandleSkillReleased_3() { EndSkillPress(3); }
+void UMercenaryHireWidget::HandleSkillReleased_4() { EndSkillPress(4); }
+void UMercenaryHireWidget::HandleSkillReleased_5() { EndSkillPress(5); }
+
+#if WITH_DEV_AUTOMATION_TESTS
+void UMercenaryHireWidget::TriggerSkillLongPressForTest(const int32 SlotIndex)
+{
+	mPressedSkillSlot = SlotIndex;
+	mPressedReviewingIndex = mReviewing;
+	HandleSkillLongPress(SlotIndex, mReviewing);
+}
+
+bool UMercenaryHireWidget::IsSkillLongPressPendingForTest() const
+{
+	const UWorld* World = GetWorld();
+	return World != nullptr
+		&& World->GetTimerManager().IsTimerActive(mSkillLongPressTimerHandle);
+}
+
+int32 UMercenaryHireWidget::GetSkillDataIndexForSlotForTest(
+	const int32 SlotIndex) const
+{
+	return mCrew.IsValidIndex(mReviewing)
+		? GetSkillDataIndexForSlot(mCrew[mReviewing], SlotIndex) : INDEX_NONE;
+}
+#endif
 
 void UMercenaryHireWidget::RefreshBottomBar()
 {
@@ -723,6 +1242,8 @@ void UMercenaryHireWidget::RefreshBottomBar()
 
 void UMercenaryHireWidget::HandleBackClicked()
 {
+	CancelSkillPress();
+	HideSkillDetailOverlay();
 	if (mOnBackRequested.IsBound())
 	{
 		mOnBackRequested.Broadcast();

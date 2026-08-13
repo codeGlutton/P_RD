@@ -22,6 +22,9 @@
 #include "HAL/IConsoleManager.h"
 #include "DataAsset/RoomSpawnData/StaticFrontendRoomSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetActionPoint.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
 #include "UI/RDUserWidget.h"
@@ -470,6 +473,44 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			}
 			NewOption.mSkillNames.Add(Skill->mName);
 			NewOption.mSkillIcons.Add(Skill->mIcon);
+
+			// 용병 선택에서도 전투 HUD와 같은 롱프레스 상세를 열 수 있게, 이미
+			// 로드한 DA의 정적 스펙을 UI 전용 값으로 함께 내려준다. 전투 중에만
+			// 생기는 남은 쿨타임/사용 가능 여부는 여기서 만들지 않는다.
+			FFrontendSkillOption& SkillOption = NewOption.mSkillDetails.AddDefaulted_GetRef();
+			SkillOption.mName = Skill->mName;
+			SkillOption.mDescription = Skill->mDescription;
+			SkillOption.mIcon = Skill->mIcon;
+			SkillOption.mCooldownTurns = FMath::Max(Skill->mCooldownDuration, 0);
+			SkillOption.mAimPattern = Skill->mAimPattern;
+			SkillOption.mAimRange = Skill->mAimRange;
+			SkillOption.mEffectPattern = Skill->mEffectPattern;
+			SkillOption.mEffectArea = Skill->mEffectArea;
+			SkillOption.mAimBlockerMask = Skill->mAimBlockerMask;
+			SkillOption.mEffectBlockerMask = Skill->mEffectBlockerMask;
+			if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(Skill))
+			{
+				SkillOption.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);
+			}
+			for (const FSkillPhaseLayer& MotionLayer : Skill->mSkillPhaseLayers)
+			{
+				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+				{
+					if (const FSkillEffectLayer_Attack* Attack =
+						EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+					{
+						SkillOption.mDamageMin += Attack->mMinDamage;
+						SkillOption.mDamageMax += Attack->mMaxDamage;
+					}
+					if (const FSkillEffectLayer_GetActionPoint* Gain =
+						EffectLayer.GetPtr<FSkillEffectLayer_GetActionPoint>())
+					{
+						SkillOption.mActionPointGain += Gain->mActionPointGain;
+					}
+				}
+			}
+			SkillOption.mCriticalDamage = FMath::RoundToInt(
+				SkillOption.mDamageMax * 1.5f);
 		}
 		NewOption.mPlayerUnitId = LoadedPlayerUnitData->GetPrimaryAssetId();
 		// 선택 가능 여부는 로드 상태와 실제 Pawn Class 설정을 동시에 본다. UI는 이 bool을 재해석하지 않는다.

@@ -52,6 +52,13 @@ GEMINI.md
 # Precompiled Assets
 SourceArt/**/*.png
 SourceArt/**/*.tga
+# 용병 선택 전용 생성 배경은 소스 PNG도 재현/수정 가능하도록 PR에 포함한다.
+!SourceArt/UI/MercenaryHire/
+!SourceArt/UI/MercenaryHire/GeneratedBackgrounds/
+!SourceArt/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_*.png
+# 배경 제거가 끝난 최종 전경 PNG만 보관한다. Originals/의 export 원본은 작업용이다.
+!SourceArt/UI/MercenaryHire/HeroCutouts/
+!SourceArt/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_*_v1.png
 
 # Binary Files
 Binaries/*
@@ -92,6 +99,10 @@ DerivedDataCache/*
 !/Content/UI/Art/RunFlow/T_*.uasset
 # 승리/패배 결과판은 이 프로젝트 전용 생성 파츠이므로 WBP와 함께 배포한다.
 !/Content/UI/ResultBoards/Art/T_*.uasset
+# 외부 SVN 자산이 아닌, 이 프로젝트에서 생성한 직업별 용병 선택 배경.
+!/Content/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_*.uasset
+# 외부 SVN 원화에서 배경을 분리한 프로젝트 전용 전경 컷아웃.
+!/Content/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_*_v1.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
