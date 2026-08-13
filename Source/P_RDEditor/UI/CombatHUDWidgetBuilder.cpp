@@ -11,6 +11,8 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/PanelWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/ScaleBox.h"
@@ -26,6 +28,12 @@ namespace CombatHUDWidgetBuilder
 {
 	constexpr TCHAR AssetPath[] =
 		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04");
+	constexpr TCHAR ActionButtonTexturePath[] =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/T_Combat_Button_Wood_SkillConfirm_20260811_v3.T_Combat_Button_Wood_SkillConfirm_20260811_v3");
+	constexpr TCHAR OptionsRailFrameTexturePath[] =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame");
+	constexpr TCHAR MercenaryPortraitFrameTexturePath[] =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Portrait_Frame.T_KitA_Portrait_Frame");
 	// 보유 용병 패널은 자기 판을 쓴다. 왜 나눴는지는 BuildMercenaryPanel 참고.
 	constexpr TCHAR MercenaryPackagePath[] = TEXT("/Game/UI/CombatLayouts");
 	constexpr TCHAR MercenaryAssetName[] = TEXT("WBP_MercenaryPanel");
@@ -33,6 +41,10 @@ namespace CombatHUDWidgetBuilder
 		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryPanel.WBP_MercenaryPanel");
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 	TUniquePtr<FAutoConsoleCommand> InventoryBuildCommand;
+	TUniquePtr<FAutoConsoleCommand> RoundTurnRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> ActionButtonArtRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> RightHUDRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> MercenaryPortraitFrameRepairCommand;
 
 	template <typename T>
 	T* FindOrCreate(UWidgetBlueprint* Blueprint, const FName Name)
@@ -145,6 +157,507 @@ namespace CombatHUDWidgetBuilder
 		Style.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
 		Style.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
 		Button->SetStyle(Style);
+	}
+
+	/**
+	 * @brief 0811에서 확정한 ROUND 배지와 턴 카드 줄을 WBP에 다시 굽는다.
+	 *
+	 * @details
+	 * ROUND는 별도 HUD 구석 장식이 아니라 턴 카드 줄의 첫 칸이다. 둘을 같은
+	 * 좌상단 기준으로 연달아 놓고, 카드 안의 중앙정렬 래퍼도 그대로 보존한다.
+	 * 전체 빌더와 전용 복구 명령이 반드시 이 함수 하나를 써야 좌표가 다시
+	 * 갈라지지 않는다.
+	 */
+	void RepairAuthoredRoundTurnLayout(UWidgetBlueprint* Blueprint,
+		UTexture2D* RoundBadgeTexture, UTexture2D* TurnTokenFrameTexture,
+		UTexture2D* SpeedTexture)
+	{
+		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
+		check(RoundBadgeTexture != nullptr && TurnTokenFrameTexture != nullptr
+			&& SpeedTexture != nullptr);
+
+		UCanvasPanel* Root = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->RootWidget);
+		UCanvasPanel* RoundPanel = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RoundPanel")));
+		PlaceCanvas(Root, RoundPanel, FVector2D(8.f, 8.f),
+			FVector2D(218.f, 166.f), 100);
+		RoundPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		UOverlay* RoundPlateMount = CastChecked<UOverlay>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RoundPlateMount")));
+		PlaceCanvas(RoundPanel, RoundPlateMount, FVector2D::ZeroVector,
+			FVector2D(218.f, 68.f), 5);
+		RoundPlateMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		UImage* RoundPlate = CastChecked<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RoundPlate")));
+		EnsureParent(RoundPlateMount, RoundPlate);
+		FSlateBrush RoundPlateBrush = RoundPlate->GetBrush();
+		RoundPlateBrush.SetResourceObject(RoundBadgeTexture);
+		RoundPlateBrush.DrawAs = ESlateBrushDrawType::Image;
+		RoundPlateBrush.Margin = FMargin(0.f);
+		RoundPlate->SetBrush(RoundPlateBrush);
+		RoundPlate->SetColorAndOpacity(FLinearColor::White);
+		RoundPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(RoundPlate->Slot))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+			Slot->SetPadding(FMargin(0.f));
+		}
+
+		UOverlay* RoundTextCenter = CastChecked<UOverlay>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RoundText_Center")));
+		EnsureParent(RoundPlateMount, RoundTextCenter);
+		RoundTextCenter->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(RoundTextCenter->Slot))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+			Slot->SetPadding(FMargin(22.f, 8.f, 22.f, 8.f));
+		}
+
+		UTextBlock* RoundText = CastChecked<UTextBlock>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RoundText")));
+		EnsureParent(RoundTextCenter, RoundText);
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(RoundText->Slot))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Center);
+			Slot->SetVerticalAlignment(VAlign_Center);
+			Slot->SetPadding(FMargin(0.f, -5.f, 0.f, 0.f));
+		}
+		FSlateFontInfo RoundFont = UIFont::MakeProjectExact(RoundText->GetFont(), 30);
+		RoundFont.LetterSpacing = 0;
+		RoundFont.OutlineSettings.OutlineSize = 2;
+		RoundFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+		RoundText->SetFont(RoundFont);
+		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND 1"));
+		RoundText->SetJustification(ETextJustify::Center);
+		RoundText->SetColorAndOpacity(FSlateColor(
+			FLinearColor(.973f, .973f, .953f, 1.f)));
+		RoundText->SetShadowOffset(FVector2D(2.f, 3.f));
+		RoundText->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .55f));
+		RoundText->SetAutoWrapText(false);
+		RoundText->SetMinDesiredWidth(0.f);
+		RoundText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		// 6f 자산에만 남은 구형 임무 문구다. 런타임 이름 계약은 유지하되,
+		// canonical 0811에는 없는 행이므로 ROUND 배지 아래에서 그리지 않는다.
+		if (UWidget* ObjectiveTextCenter = Blueprint->WidgetTree->FindWidget(
+			TEXT("ObjectiveText_Center")))
+		{
+			ObjectiveTextCenter->SetVisibility(ESlateVisibility::Collapsed);
+		}
+
+		UCanvasPanel* TurnPanel = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->FindWidget(TEXT("TurnPanel")));
+		PlaceCanvas(Root, TurnPanel, FVector2D(236.f, 8.f),
+			FVector2D(1090.f, 174.f), 90);
+		TurnPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		for (int32 Index = 0; Index < 10; ++Index)
+		{
+			const float X = 5.f + 109.f * Index;
+			const FString Tail = FString::Printf(TEXT("_%d"), Index);
+
+			UCanvasPanel* Token = CastChecked<UCanvasPanel>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnToken") + Tail)));
+			PlaceCanvas(TurnPanel, Token, FVector2D(X, 30.f),
+				FVector2D(108.f, 144.f), 10);
+			Token->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			Token->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			// 현재 런타임은 버튼을 RefreshTurnOrder에서 다시 켜지 않는다. donor의
+			// 저장 Collapsed를 복제하면 카드 선택만 조용히 죽으므로 Visible을 보존한다.
+			if (UButton* Button = Cast<UButton>(Blueprint->WidgetTree->FindWidget(
+				FName(TEXT("TurnTokenButton") + Tail))))
+			{
+				PlaceCanvas(TurnPanel, Button, FVector2D(X, 30.f),
+					FVector2D(108.f, 144.f), 40);
+				Button->SetVisibility(ESlateVisibility::Visible);
+			}
+
+			UImage* Frame = FindOrCreate<UImage>(Blueprint,
+				FName(TEXT("TurnFrame") + Tail));
+			PlaceCanvas(Token, Frame, FVector2D::ZeroVector,
+				FVector2D(108.f, 144.f), 5);
+			Frame->SetBrushFromTexture(TurnTokenFrameTexture, false);
+			Frame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UScaleBox* Crop = CastChecked<UScaleBox>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnPortraitCrop") + Tail)));
+			PlaceCanvas(Token, Crop, FVector2D(18.f, 21.f),
+				FVector2D(72.f, 72.f), 10);
+			Crop->SetStretch(EStretch::ScaleToFill);
+			Crop->SetStretchDirection(EStretchDirection::Both);
+			Crop->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			Crop->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UImage* Current = CastChecked<UImage>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnCurrent") + Tail)));
+			PlaceCanvas(Token, Current, FVector2D(11.25f, 15.f),
+				FVector2D(85.f, 85.75f), 40);
+			Current->SetVisibility(ESlateVisibility::Collapsed);
+
+			UBorder* SpeedPlate = FindOrCreate<UBorder>(Blueprint,
+				FName(TEXT("TurnSpeedPlate") + Tail));
+			PlaceCanvas(Token, SpeedPlate, FVector2D(4.f, 73.f),
+				FVector2D(70.f, 31.f), 20);
+			SpeedPlate->SetBrushColor(FLinearColor(.055f, .04f, .025f, .92f));
+			SpeedPlate->SetVisibility(ESlateVisibility::Collapsed);
+
+			UImage* SpeedIcon = FindOrCreate<UImage>(Blueprint,
+				FName(TEXT("TurnSpeedIcon") + Tail));
+			PlaceCanvas(Token, SpeedIcon, FVector2D(20.f, 99.f),
+				FVector2D(22.8f, 22.8f), 22);
+			SpeedIcon->SetBrushFromTexture(SpeedTexture, false);
+			SpeedIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UOverlay* SpeedCenter = CastChecked<UOverlay>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnSpeed") + Tail
+					+ TEXT("_Center"))));
+			PlaceCanvas(Token, SpeedCenter, FVector2D(40.f, 96.f),
+				FVector2D(51.625301f, 30.299999f), 22);
+			SpeedCenter->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UTextBlock* Speed = CastChecked<UTextBlock>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnSpeed") + Tail)));
+			EnsureParent(SpeedCenter, Speed);
+			if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Speed->Slot))
+			{
+				Slot->SetHorizontalAlignment(HAlign_Center);
+				Slot->SetVerticalAlignment(VAlign_Fill);
+				Slot->SetPadding(FMargin(0.f, -1.613333f, 0.f, 0.f));
+			}
+			FSlateFontInfo SpeedFont = UIFont::MakeProjectExact(Speed->GetFont(), 16);
+			SpeedFont.LetterSpacing = 0;
+			SpeedFont.OutlineSettings.OutlineSize = 2;
+			SpeedFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+			Speed->SetFont(SpeedFont);
+			Speed->SetText(FText::FromString(TEXT("0")));
+			Speed->SetJustification(ETextJustify::Left);
+			Speed->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			Speed->SetShadowOffset(FVector2D(1.f, 1.f));
+			Speed->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, 0.f));
+			Speed->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UOverlay* DividerMount = CastChecked<UOverlay>(
+				Blueprint->WidgetTree->FindWidget(FName(
+					TEXT("TurnRoundDivider") + Tail + TEXT("Mount"))));
+			PlaceCanvas(TurnPanel, DividerMount, FVector2D(X, 0.f),
+				FVector2D(108.f, 34.f), 30);
+			DividerMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+			UBorder* Divider = CastChecked<UBorder>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnRoundDivider") + Tail)));
+			EnsureParent(DividerMount, Divider);
+			FSlateBrush DividerBrush = Divider->Background;
+			DividerBrush.SetResourceObject(RoundBadgeTexture);
+			DividerBrush.DrawAs = ESlateBrushDrawType::Image;
+			DividerBrush.Margin = FMargin(0.f);
+			Divider->SetBrush(DividerBrush);
+			Divider->SetBrushColor(FLinearColor::White);
+			Divider->SetVisibility(ESlateVisibility::Collapsed);
+			if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Divider->Slot))
+			{
+				Slot->SetHorizontalAlignment(HAlign_Fill);
+				Slot->SetVerticalAlignment(VAlign_Fill);
+				Slot->SetPadding(FMargin(0.f));
+			}
+
+			UOverlay* LabelCenter = CastChecked<UOverlay>(
+				Blueprint->WidgetTree->FindWidget(FName(
+					TEXT("TurnRoundLabel") + Tail + TEXT("_Center"))));
+			EnsureParent(DividerMount, LabelCenter);
+			LabelCenter->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(LabelCenter->Slot))
+			{
+				Slot->SetHorizontalAlignment(HAlign_Fill);
+				Slot->SetVerticalAlignment(VAlign_Fill);
+				Slot->SetPadding(FMargin(0.f, 2.f, 0.f, 2.f));
+			}
+
+			UTextBlock* Label = CastChecked<UTextBlock>(
+				Blueprint->WidgetTree->FindWidget(FName(TEXT("TurnRoundLabel") + Tail)));
+			EnsureParent(LabelCenter, Label);
+			if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Label->Slot))
+			{
+				Slot->SetHorizontalAlignment(HAlign_Fill);
+				Slot->SetVerticalAlignment(VAlign_Top);
+				Slot->SetPadding(FMargin(0.f, -6.5f, 0.f, 0.f));
+			}
+			FSlateFontInfo LabelFont = UIFont::MakeProjectExact(Label->GetFont(), 19);
+			LabelFont.LetterSpacing = 0;
+			LabelFont.OutlineSettings.OutlineSize = 2;
+			LabelFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+			Label->SetFont(LabelFont);
+			Label->SetText(FText::FromString(FString::Printf(TEXT("R%d"), Index + 1)));
+			Label->SetJustification(ETextJustify::Center);
+			Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+			Label->SetShadowOffset(FVector2D(1.f, 1.f));
+			Label->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .9f));
+			Label->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	/** @brief #519의 스킬/턴 종료 공용 목재 버튼 그림만 다시 연결한다. */
+	void RepairAuthoredActionButtonArt(UWidgetBlueprint* Blueprint,
+		UTexture2D* ActionButtonTexture)
+	{
+		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
+		check(ActionButtonTexture != nullptr);
+
+		const FName PlateNames[] = {
+			TEXT("SkillTogglePlate"), TEXT("EndTurnPlate")
+		};
+		for (const FName& PlateName : PlateNames)
+		{
+			UImage* Plate = CastChecked<UImage>(
+				Blueprint->WidgetTree->FindWidget(PlateName));
+			FSlateBrush Brush = Plate->GetBrush();
+			Brush.SetResourceObject(ActionButtonTexture);
+			Brush.DrawAs = ESlateBrushDrawType::Image;
+			Brush.Margin = FMargin(0.f);
+			Plate->SetBrush(Brush);
+			Plate->SetColorAndOpacity(FLinearColor::White);
+		}
+	}
+
+	/**
+	 * @brief 0811 확정본의 우측 메뉴, 요약판, 행동 단추 배치만 복구한다.
+	 *
+	 * @details ROUND/턴바와 용병 판은 이 함수에서 이름조차 찾지 않는다. 요약판
+	 * 내부 역시 디자이너 자산을 그대로 두고, 화면에 붙는 루트 슬롯만 복구한다.
+	 */
+	void RepairAuthoredRightHUDLayout(UWidgetBlueprint* Blueprint,
+		UTexture2D* OptionsRailFrameTexture)
+	{
+		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
+		check(OptionsRailFrameTexture != nullptr);
+
+		UCanvasPanel* Root = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->RootWidget);
+		auto SetOverlaySlot = [](UWidget* Widget, const FMargin Padding,
+			const EHorizontalAlignment Horizontal,
+			const EVerticalAlignment Vertical)
+		{
+			UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Widget->Slot);
+			Slot->SetPadding(Padding);
+			Slot->SetHorizontalAlignment(Horizontal);
+			Slot->SetVerticalAlignment(Vertical);
+		};
+		auto ResetVisualTransform = [](UWidget* Widget, const FVector2D Pivot)
+		{
+			Widget->SetRenderTransform(FWidgetTransform());
+			Widget->SetRenderTransformPivot(Pivot);
+			Widget->SetRenderOpacity(1.f);
+			Widget->SetClipping(EWidgetClipping::Inherit);
+		};
+
+		// 우상단 설정 바. 0~2번 단추는 donor의 Overlay 여백을 쓰고,
+		// 3번 단추만 ObjectivePanel의 Canvas 자식인 구조도 그대로 보존한다.
+		UCanvasPanel* Objective = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->FindWidget(TEXT("ObjectivePanel")));
+		PlaceCanvas(Root, Objective, FVector2D(-470.f, 4.f),
+			FVector2D(470.f, 173.f), 90);
+		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Objective->Slot))
+		{
+			Slot->SetAnchors(FAnchors(1.f, 0.f));
+			Slot->SetAlignment(FVector2D::ZeroVector);
+		}
+		Objective->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		FWidgetTransform ObjectiveTransform;
+		ObjectiveTransform.Scale = FVector2D(.75f, .75f);
+		Objective->SetRenderTransform(ObjectiveTransform);
+		Objective->SetRenderTransformPivot(FVector2D(1.f, 0.f));
+		Objective->SetRenderOpacity(1.f);
+		Objective->SetClipping(EWidgetClipping::Inherit);
+		// 0811 donor에는 없는 구형 임무 장식이다. 그래프/런타임 이름 호환을
+		// 위해 객체는 남기되 우측 설정 바와 겹치지 않도록 항상 접어 둔다.
+		for (const FName RetiredName : { FName(TEXT("ObjectivePlate")),
+			FName(TEXT("ObjectiveText_Center")), FName(TEXT("ObjectiveText")) })
+		{
+			if (UWidget* Retired = Blueprint->WidgetTree->FindWidget(RetiredName))
+			{
+				Retired->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
+
+		UOverlay* OptionsMount = FindOrCreate<UOverlay>(Blueprint,
+			TEXT("OptionsRailFrameMount"));
+		PlaceCanvas(Objective, OptionsMount, FVector2D::ZeroVector,
+			FVector2D(470.f, 173.f), 1);
+		OptionsMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		ResetVisualTransform(OptionsMount, FVector2D(.5f, .5f));
+
+		UImage* OptionsFrame = FindOrCreate<UImage>(Blueprint,
+			TEXT("OptionsRailFrame"));
+		EnsureParent(OptionsMount, OptionsFrame);
+		OptionsFrame->SetBrushFromTexture(OptionsRailFrameTexture, false);
+		OptionsFrame->SetColorAndOpacity(FLinearColor::White);
+		OptionsFrame->SetVisibility(ESlateVisibility::HitTestInvisible);
+		SetOverlaySlot(OptionsFrame, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+
+		const FMargin MenuButtonPaddings[] = {
+			FMargin(37.f, 31.f, 339.f, 30.f),
+			FMargin(138.f, 31.f, 238.f, 30.f),
+			FMargin(242.f, 31.f, 140.f, 30.f),
+		};
+		for (int32 Index = 0; Index < UE_ARRAY_COUNT(MenuButtonPaddings); ++Index)
+		{
+			UButton* Button = CastChecked<UButton>(Blueprint->WidgetTree->FindWidget(
+				FName(*FString::Printf(TEXT("MenuButton_%d"), Index))));
+			EnsureParent(OptionsMount, Button);
+			SetOverlaySlot(Button, MenuButtonPaddings[Index], HAlign_Fill, VAlign_Fill);
+			Button->SetVisibility(ESlateVisibility::Visible);
+		}
+		UButton* SettingsButton = CastChecked<UButton>(
+			Blueprint->WidgetTree->FindWidget(TEXT("MenuButton_3")));
+		PlaceCanvas(Objective, SettingsButton, FVector2D(344.f, 36.f),
+			FVector2D(83.5f, 102.000008f), 0);
+		SettingsButton->SetVisibility(ESlateVisibility::Visible);
+
+		struct FIconLayout
+		{
+			FName Name;
+			FVector2D Position;
+			FVector2D Size;
+		};
+		const FIconLayout IconLayouts[] = {
+			{ TEXT("MenuMapIcon"), FVector2D(45.f, 44.f), FVector2D(80.f, 81.f) },
+			{ TEXT("MenuMercenaryIcon"), FVector2D(154.f, 36.f), FVector2D(63.f, 96.f) },
+			{ TEXT("MenuMonsterIcon"), FVector2D(248.f, 48.f), FVector2D(77.f, 83.f) },
+			{ TEXT("MenuSettingsIcon"), FVector2D(348.f, 48.f), FVector2D(77.f, 80.f) },
+		};
+		for (const FIconLayout& Layout : IconLayouts)
+		{
+			UImage* Icon = CastChecked<UImage>(
+				Blueprint->WidgetTree->FindWidget(Layout.Name));
+			PlaceCanvas(Objective, Icon, Layout.Position, Layout.Size, 31);
+			Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+
+		// 양 진영은 같은 우상단 요약판 자리를 번갈아 쓴다. 내부 authored
+		// 위젯은 보존하고 루트 슬롯/피벗/저장 visibility만 canonical로 맞춘다.
+		for (const FName PanelName : { FName(TEXT("EnemyPanel")),
+			FName(TEXT("AllyPanel")) })
+		{
+			UCanvasPanel* Panel = CastChecked<UCanvasPanel>(
+				Blueprint->WidgetTree->FindWidget(PanelName));
+			PlaceCanvas(Root, Panel, FVector2D(0.f, 140.f),
+				FVector2D(600.f, 430.f), 60);
+			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Panel->Slot))
+			{
+				Slot->SetAnchors(FAnchors(1.f, 0.f));
+				Slot->SetAlignment(FVector2D(1.f, 0.f));
+			}
+			Panel->SetVisibility(ESlateVisibility::Collapsed);
+			ResetVisualTransform(Panel, FVector2D(1.f, 0.f));
+			for (int32 Index = 0; Index < 3; ++Index)
+			{
+				if (UWidget* StatusButton = Blueprint->WidgetTree->FindWidget(FName(
+					*FString::Printf(TEXT("%sStatusButton_%d"),
+						*PanelName.ToString().LeftChop(5), Index))))
+				{
+					StatusButton->SetVisibility(ESlateVisibility::Collapsed);
+				}
+			}
+		}
+
+		const FVector2D ActionSize(396.172241f, 181.435410f);
+		auto PlaceActionPanel = [&](const FName PanelName,
+			const FName MountName, const FVector2D Position)
+		{
+			UCanvasPanel* Panel = FindOrCreate<UCanvasPanel>(Blueprint, PanelName);
+			PlaceCanvas(Root, Panel, Position, ActionSize, 60);
+			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Panel->Slot))
+			{
+				Slot->SetAnchors(FAnchors(1.f, 1.f));
+				Slot->SetAlignment(FVector2D(1.f, 1.f));
+			}
+			Panel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			ResetVisualTransform(Panel, FVector2D(.5f, .5f));
+
+			UOverlay* Mount = FindOrCreate<UOverlay>(Blueprint, MountName);
+			PlaceCanvas(Panel, Mount, FVector2D::ZeroVector, ActionSize, 0);
+			Mount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			ResetVisualTransform(Mount, FVector2D(.5f, .5f));
+			return Mount;
+		};
+
+		UOverlay* SkillMount = PlaceActionPanel(TEXT("SkillTogglePanel"),
+			TEXT("SkillTogglePlateMount"), FVector2D(-10.334961f, -209.789490f));
+		UImage* SkillPlate = CastChecked<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("SkillTogglePlate")));
+		EnsureParent(SkillMount, SkillPlate);
+		SkillPlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+		SetOverlaySlot(SkillPlate, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+
+		UOverlay* SkillLabelCenter = FindOrCreate<UOverlay>(Blueprint,
+			TEXT("SkillToggleLabel_Center"));
+		EnsureParent(SkillMount, SkillLabelCenter);
+		SkillLabelCenter->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		SetOverlaySlot(SkillLabelCenter, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+		UTextBlock* SkillLabel = CastChecked<UTextBlock>(
+			Blueprint->WidgetTree->FindWidget(TEXT("SkillToggleLabel")));
+		EnsureParent(SkillLabelCenter, SkillLabel);
+		SetOverlaySlot(SkillLabel, FMargin(0.f), HAlign_Center, VAlign_Center);
+		FSlateFontInfo SkillFont = UIFont::MakeProjectExact(SkillLabel->GetFont(), 40);
+		SkillFont.LetterSpacing = 0;
+		SkillFont.OutlineSettings.OutlineSize = 2;
+		SkillFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+		SkillLabel->SetFont(SkillFont);
+		SkillLabel->SetText(NSLOCTEXT("CombatHUD", "SkillToggleLabel", "스킬"));
+		SkillLabel->SetJustification(ETextJustify::Center);
+		SkillLabel->SetColorAndOpacity(FSlateColor(
+			FLinearColor(1.f, .921582f, .723055f, 1.f)));
+		SkillLabel->SetShadowOffset(FVector2D(1.f, 1.f));
+		SkillLabel->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, 0.f));
+		SkillLabel->SetAutoWrapText(false);
+		SkillLabel->SetMinDesiredWidth(0.f);
+		SkillLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
+		UButton* SkillButton = CastChecked<UButton>(
+			Blueprint->WidgetTree->FindWidget(TEXT("SkillToggleButton")));
+		EnsureParent(SkillMount, SkillButton);
+		SetOverlaySlot(SkillButton, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+		SkillButton->SetVisibility(ESlateVisibility::Visible);
+
+		UOverlay* EndMount = PlaceActionPanel(TEXT("EndTurnPanel"),
+			TEXT("EndTurnPlateMount"), FVector2D(-10.334961f, -14.354064f));
+		UImage* EndPlate = CastChecked<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnPlate")));
+		EnsureParent(EndMount, EndPlate);
+		EndPlate->SetVisibility(ESlateVisibility::Visible);
+		SetOverlaySlot(EndPlate, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+
+		UOverlay* EndLabelCenter = CastChecked<UOverlay>(
+			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnLabel_Center")));
+		EnsureParent(EndMount, EndLabelCenter);
+		EndLabelCenter->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		SetOverlaySlot(EndLabelCenter, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+		UTextBlock* EndLabel = CastChecked<UTextBlock>(
+			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnLabel")));
+		EnsureParent(EndLabelCenter, EndLabel);
+		SetOverlaySlot(EndLabel, FMargin(0.f), HAlign_Center, VAlign_Center);
+		FSlateFontInfo EndFont = UIFont::MakeProjectExact(EndLabel->GetFont(), 40);
+		EndFont.LetterSpacing = 0;
+		EndFont.OutlineSettings.OutlineSize = 2;
+		EndFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+		EndLabel->SetFont(EndFont);
+		EndLabel->SetText(NSLOCTEXT("CombatHUD", "EndTurnLabel", "턴 종료"));
+		EndLabel->SetJustification(ETextJustify::Center);
+		EndLabel->SetColorAndOpacity(FSlateColor(
+			FLinearColor(.973f, .973f, .953f, 1.f)));
+		EndLabel->SetShadowOffset(FVector2D(2.f, 3.f));
+		EndLabel->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .55f));
+		EndLabel->SetAutoWrapText(false);
+		EndLabel->SetMinDesiredWidth(0.f);
+		EndLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
+		UButton* EndButton = CastChecked<UButton>(
+			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnButton")));
+		EnsureParent(EndMount, EndButton);
+		SetOverlaySlot(EndButton, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+		EndButton->SetVisibility(ESlateVisibility::Visible);
 	}
 
 	void BuildEnemySummary(UWidgetBlueprint* Blueprint, const FSlateFontInfo& BaseFont,
@@ -753,6 +1266,80 @@ namespace CombatHUDWidgetBuilder
 			FSavePackageArgs());
 	}
 
+	bool RepairMercenaryPortraitFrame(UWidgetBlueprint* Blueprint,
+		UTexture2D* PortraitFrameTexture)
+	{
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr
+			|| PortraitFrameTexture == nullptr)
+		{
+			return false;
+		}
+		UImage* PortraitFrame = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("MercenaryPortraitFrame")));
+		if (PortraitFrame == nullptr)
+		{
+			return false;
+		}
+		FSlateBrush Brush = PortraitFrame->GetBrush();
+		Brush.SetResourceObject(PortraitFrameTexture);
+		Brush.DrawAs = ESlateBrushDrawType::Image;
+		Brush.Margin = FMargin(0.f);
+		PortraitFrame->SetBrush(Brush);
+		PortraitFrame->SetColorAndOpacity(FLinearColor::White);
+		PortraitFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		if (UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(PortraitFrame->Slot))
+		{
+			if (UWidget* Hero = Blueprint->WidgetTree->FindWidget(
+				TEXT("MercenaryHeroPortrait")))
+			{
+				if (UCanvasPanelSlot* HeroSlot = Cast<UCanvasPanelSlot>(Hero->Slot))
+				{
+					// The frame contains the brass border and must be painted after the
+					// inset portrait. This mirrors a real portrait mat: image below,
+					// decorative frame above, so the edge can never be covered.
+					FrameSlot->SetZOrder(FMath::Max(FrameSlot->GetZOrder(),
+						HeroSlot->GetZOrder() + 1));
+				}
+			}
+		}
+		return true;
+	}
+
+	void RepairMercenaryPortraitFrameOnly()
+	{
+		UWidgetBlueprint* HudBlueprint =
+			LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		UWidgetBlueprint* MercenaryBlueprint =
+			LoadObject<UWidgetBlueprint>(nullptr, MercenaryAssetPath);
+		UTexture2D* PortraitFrameTexture = LoadObject<UTexture2D>(
+			nullptr, MercenaryPortraitFrameTexturePath);
+		if (HudBlueprint == nullptr || MercenaryBlueprint == nullptr
+			|| PortraitFrameTexture == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_MERC_FRAME_REPAIR missing WBP or texture"));
+			return;
+		}
+
+		bool bAllSaved = true;
+		for (UWidgetBlueprint* Blueprint : { HudBlueprint, MercenaryBlueprint })
+		{
+			Blueprint->Modify();
+			Blueprint->WidgetTree->Modify();
+			bAllSaved = RepairMercenaryPortraitFrame(
+				Blueprint, PortraitFrameTexture)
+				&& SaveCompiledBlueprint(Blueprint) && bAllSaved;
+		}
+		if (bAllSaved == false)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_MERC_FRAME_REPAIR failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_MERC_FRAME_REPAIR success assets=inline,modular texture=T_KitA_Portrait_Frame"));
+	}
+
 	/**
 	 * @brief 최신 전투 HUD 배치를 보존하고 인벤토리 탭만 WBP에 굽는다.
 	 *
@@ -773,9 +1360,12 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Row_Plate.T_KitA_Row_Plate"));
 		UTexture2D* ArtifactSlotTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+		UTexture2D* PortraitFrameTexture = LoadObject<UTexture2D>(nullptr,
+			MercenaryPortraitFrameTexturePath);
 		if (HudBlueprint == nullptr || MercenaryBlueprint == nullptr
 			|| InventoryIconTexture == nullptr || GoldIconTexture == nullptr
-			|| DescriptionPlateTexture == nullptr || ArtifactSlotTexture == nullptr)
+			|| DescriptionPlateTexture == nullptr || ArtifactSlotTexture == nullptr
+			|| PortraitFrameTexture == nullptr)
 		{
 			UE_LOG(LogTemp, Error,
 				TEXT("RD_COMBAT_HUD_INVENTORY_BUILD missing WBP or texture"));
@@ -805,22 +1395,7 @@ namespace CombatHUDWidgetBuilder
 			BuildMercenaryInventoryTab(Target.Key, Target.Value, BaseFont,
 				InventoryIconTexture, GoldIconTexture, DescriptionPlateTexture,
 				ArtifactSlotTexture);
-			if (UImage* PortraitFrame = Cast<UImage>(
-				Target.Key->WidgetTree->FindWidget(TEXT("MercenaryPortraitFrame"))))
-			{
-				PortraitFrame->SetBrushFromTexture(ArtifactSlotTexture, false);
-				if (UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(PortraitFrame->Slot))
-				{
-					if (UWidget* Hero = Target.Key->WidgetTree->FindWidget(
-						TEXT("MercenaryHeroPortrait")))
-					{
-						if (UCanvasPanelSlot* HeroSlot = Cast<UCanvasPanelSlot>(Hero->Slot))
-						{
-							HeroSlot->SetZOrder(FrameSlot->GetZOrder() + 1);
-						}
-					}
-				}
-			}
+			RepairMercenaryPortraitFrame(Target.Key, PortraitFrameTexture);
 		}
 		if (UWidget* ArtifactStrip =
 			HudBlueprint->WidgetTree->FindWidget(TEXT("ArtifactStrip")))
@@ -842,10 +1417,103 @@ namespace CombatHUDWidgetBuilder
 			TEXT("RD_COMBAT_HUD_INVENTORY_BUILD success assets=2"));
 	}
 
+	/** @brief 다른 HUD 구역은 건드리지 않고 0811 ROUND+턴바만 복구한다. */
+	void RepairRoundTurnOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
+		UTexture2D* TurnTokenFrameTexture = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
+		UTexture2D* SpeedTexture = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_Icon_Speed.T_MB_Icon_Speed"));
+		UTexture2D* ActionButtonTexture = LoadObject<UTexture2D>(nullptr,
+			ActionButtonTexturePath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr
+			|| RoundBadgeTexture == nullptr || TurnTokenFrameTexture == nullptr
+			|| SpeedTexture == nullptr || ActionButtonTexture == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_ROUND_TURN_REPAIR missing WBP or texture"));
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		RepairAuthoredRoundTurnLayout(Blueprint, RoundBadgeTexture,
+			TurnTokenFrameTexture, SpeedTexture);
+		RepairAuthoredActionButtonArt(Blueprint, ActionButtonTexture);
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_ROUND_TURN_REPAIR save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_ROUND_TURN_REPAIR success"));
+	}
+
+	/** @brief ROUND/용병 배치는 유지하고 #519 버튼 그림만 복구한다. */
+	void RepairActionButtonArtOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		UTexture2D* ActionButtonTexture = LoadObject<UTexture2D>(nullptr,
+			ActionButtonTexturePath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr
+			|| ActionButtonTexture == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_ACTION_BUTTON_ART_REPAIR missing WBP or texture"));
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		RepairAuthoredActionButtonArt(Blueprint, ActionButtonTexture);
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_ACTION_BUTTON_ART_REPAIR save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_ACTION_BUTTON_ART_REPAIR success plates=2"));
+	}
+
+	/** @brief ROUND/턴바/용병 판을 보존하고 0811 우측 HUD만 복구한다. */
+	void RepairRightHUDOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		UTexture2D* OptionsRailFrameTexture = LoadObject<UTexture2D>(nullptr,
+			OptionsRailFrameTexturePath);
+		UTexture2D* ActionButtonTexture = LoadObject<UTexture2D>(nullptr,
+			ActionButtonTexturePath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr
+			|| OptionsRailFrameTexture == nullptr || ActionButtonTexture == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_RIGHT_REPAIR missing WBP or texture"));
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		RepairAuthoredRightHUDLayout(Blueprint, OptionsRailFrameTexture);
+		RepairAuthoredActionButtonArt(Blueprint, ActionButtonTexture);
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_RIGHT_REPAIR save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_RIGHT_REPAIR success protected=round,turn,mercenary"));
+	}
+
 	void BuildMercenaryPanel(UWidgetBlueprint* Blueprint, const FSlateFontInfo& BaseFont,
 		UTexture2D* ShellTexture, UTexture2D* NormalCardTexture,
 		UTexture2D* SelectedCardTexture, UTexture2D* BackButtonTexture,
-		UTexture2D* SkillFrameTexture, UTexture2D* InventoryIconTexture,
+		UTexture2D* SkillFrameTexture, UTexture2D* PortraitFrameTexture,
+		UTexture2D* InventoryIconTexture,
 		UTexture2D* GoldIconTexture, UTexture2D* DescriptionPlateTexture)
 	{
 		UCanvasPanel* Root = CastChecked<UCanvasPanel>(Blueprint->WidgetTree->RootWidget);
@@ -867,12 +1535,14 @@ namespace CombatHUDWidgetBuilder
 		Shell->SetBrushFromTexture(ShellTexture, false);
 		Shell->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-		UBorder* ContentWell = FindOrCreate<UBorder>(Blueprint,
-			TEXT("MercenaryContentWell"));
-		PlaceCanvas(Panel, ContentWell, FVector2D(128.f, 178.f),
-			FVector2D(1664.f, 710.f), -95);
-		ContentWell->SetBrushColor(FLinearColor(.025f, .028f, .028f, .98f));
-		ContentWell->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		// 외곽 셸 자체가 배경을 제공한다. 별도의 불투명 검정 Well은 좁은
+		// 화면에서 아래 16:9 Board와 서로 다른 배율을 받아 내용만 가렸다.
+		// 예전 빌더가 만든 잔재도 지워 재빌드가 Photo1 회귀를 만들지 않게 한다.
+		if (UWidget* ContentWell = Blueprint->WidgetTree->FindWidget(
+			TEXT("MercenaryContentWell")))
+		{
+			Blueprint->WidgetTree->RemoveWidget(ContentWell);
+		}
 
 		UBorder* Scrim = FindOrCreate<UBorder>(Blueprint, TEXT("MercenaryScrim"));
 		PlaceCanvas(Panel, Scrim, FVector2D::ZeroVector, FVector2D(1920.f, 1080.f), -90);
@@ -1093,8 +1763,8 @@ namespace CombatHUDWidgetBuilder
 		UImage* PortraitFrame = FindOrCreate<UImage>(Blueprint,
 			TEXT("MercenaryPortraitFrame"));
 		PlaceCanvas(DetailSection, PortraitFrame, FVector2D(650.f, 292.f),
-			FVector2D(360.f, 360.f), 4);
-		PortraitFrame->SetBrushFromTexture(SkillFrameTexture, false);
+			FVector2D(360.f, 360.f), 6);
+		PortraitFrame->SetBrushFromTexture(PortraitFrameTexture, false);
 		PortraitFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 		UImage* Hero = FindOrCreate<UImage>(Blueprint, TEXT("MercenaryHeroPortrait"));
@@ -1236,6 +1906,8 @@ namespace CombatHUDWidgetBuilder
 			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_BUILD missing asset %s"), AssetPath);
 			return;
 		}
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
 
 		UCanvasPanel* Objective = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("ObjectivePanel")));
@@ -1252,7 +1924,7 @@ namespace CombatHUDWidgetBuilder
 		UTexture2D* TurnTokenFrameTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_TurnToken_Frame.T_MB_TurnToken_Frame"));
 		UTexture2D* OptionsRailFrameTexture = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsRail_Frame.T_MB_OptionsRail_Frame"));
+			OptionsRailFrameTexturePath);
 		UTexture2D* MapTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_Map.T_MB_OptionsIcon_Map"));
 		UTexture2D* SettingsTexture = LoadObject<UTexture2D>(nullptr,
@@ -1261,6 +1933,8 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_ArtifactSlot_Frame.T_MB_ArtifactSlot_Frame"));
 		UTexture2D* RoundBadgeTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
+		UTexture2D* ActionButtonTexture = LoadObject<UTexture2D>(nullptr,
+			ActionButtonTexturePath);
 		UTexture2D* MercenaryShellTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Frame_Outer.T_KitA_Frame_Outer"));
 		UTexture2D* MercenaryCardNormalTexture = LoadObject<UTexture2D>(nullptr,
@@ -1273,6 +1947,8 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Small_Normal.T_KitA_Button_Small_Normal"));
 		UTexture2D* MercenarySkillFrameTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+		UTexture2D* MercenaryPortraitFrameTexture = LoadObject<UTexture2D>(nullptr,
+			MercenaryPortraitFrameTexturePath);
 		UTexture2D* InventoryIconTexture = LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/UI/KayKit/KK_Icon_Inventory.KK_Icon_Inventory"));
 		UTexture2D* MercenaryGoldIconTexture = LoadObject<UTexture2D>(nullptr,
@@ -1287,10 +1963,12 @@ namespace CombatHUDWidgetBuilder
 			|| SpeedTexture == nullptr || TurnTokenFrameTexture == nullptr
 			|| OptionsRailFrameTexture == nullptr || MapTexture == nullptr
 			|| SettingsTexture == nullptr || ArtifactSlotTexture == nullptr
-			|| RoundBadgeTexture == nullptr || MercenaryShellTexture == nullptr
+			|| RoundBadgeTexture == nullptr || ActionButtonTexture == nullptr
+			|| MercenaryShellTexture == nullptr
 			|| MercenaryCardNormalTexture == nullptr
 			|| MercenaryCardSelectedTexture == nullptr || BackButtonTexture == nullptr
 			|| MercenarySkillFrameTexture == nullptr
+			|| MercenaryPortraitFrameTexture == nullptr
 			|| InventoryIconTexture == nullptr
 			|| MercenaryGoldIconTexture == nullptr
 			|| MercenaryDescriptionPlateTexture == nullptr
@@ -1308,7 +1986,6 @@ namespace CombatHUDWidgetBuilder
 		{
 			TurnPlate->SetVisibility(ESlateVisibility::Collapsed);
 		}
-
 		/*
 		 * 용병 패널은 자기 판에 짓고, HUD 에는 그 판을 **하나 얹기만** 한다.
 		 * HUD 판에 그대로 두면 화면 전체짜리가 셋 포개져 UMG 에서 못 고친다.
@@ -1321,6 +1998,7 @@ namespace CombatHUDWidgetBuilder
 			BuildMercenaryPanel(MercenaryBlueprint, BaseFont, MercenaryShellTexture,
 				MercenaryCardNormalTexture, MercenaryCardSelectedTexture,
 				BackButtonTexture, MercenarySkillFrameTexture,
+				MercenaryPortraitFrameTexture,
 				InventoryIconTexture, MercenaryGoldIconTexture,
 				MercenaryDescriptionPlateTexture);
 			PruneStaleVariables(MercenaryBlueprint);
@@ -1356,29 +2034,28 @@ namespace CombatHUDWidgetBuilder
 				Host->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			}
 		}
-		// 현재 런타임은 HUD 트리의 인라인 MercenaryPanel을 이름으로 바인딩한다.
-		// 별도 WBP만 새로 지으면 화면에는 옛 수치 줄과 옛 초상화가 계속 남는다.
-		// 실제로 쓰는 HUD 쪽도 같은 함수로 통째로 갱신해 두 자산의 구조를 맞춘다.
-		BuildMercenaryPanel(Blueprint, BaseFont, MercenaryShellTexture,
-			MercenaryCardNormalTexture, MercenaryCardSelectedTexture,
-			BackButtonTexture, MercenarySkillFrameTexture,
-			InventoryIconTexture, MercenaryGoldIconTexture,
-			MercenaryDescriptionPlateTexture);
+		// 인라인 판은 디자이너가 손으로 정렬한 최종본이다. 전체 빌더의 옛
+		// 좌표로 다시 굽지 않는다. 판 자체가 없는 새 자산에서만 초기 생성한다.
+		if (Blueprint->WidgetTree->FindWidget(TEXT("MercenaryPanel")) == nullptr)
+		{
+			BuildMercenaryPanel(Blueprint, BaseFont, MercenaryShellTexture,
+				MercenaryCardNormalTexture, MercenaryCardSelectedTexture,
+				BackButtonTexture, MercenarySkillFrameTexture,
+				MercenaryPortraitFrameTexture,
+				InventoryIconTexture, MercenaryGoldIconTexture,
+				MercenaryDescriptionPlateTexture);
+		}
 		if (UWidget* Host = Blueprint->WidgetTree->FindWidget(TEXT("MercenaryPanelHost")))
 		{
 			// 중첩 WBP는 디자이너 비교용으로만 남기고 런타임에서는 인라인 판 하나만 쓴다.
 			Host->SetVisibility(ESlateVisibility::Collapsed);
 		}
+		RepairAuthoredRoundTurnLayout(Blueprint, RoundBadgeTexture,
+			TurnTokenFrameTexture, SpeedTexture);
+		RepairAuthoredActionButtonArt(Blueprint, ActionButtonTexture);
 		// EnemyPanel/AllyPanel은 현재 WBP에서 디자이너가 직접 관리한다. 이 함수의
 		// Build*Summary 정의는 과거 배치라 실행하면 최신 요약판을 되돌린다.
 		// 전체 빌더에서도 기존 WBP 속성을 보존한다.
-		UCanvasPanel* TurnPanel = CastChecked<UCanvasPanel>(
-			Blueprint->WidgetTree->FindWidget(TEXT("TurnPanel")));
-		if (UCanvasPanelSlot* TurnPanelSlot = Cast<UCanvasPanelSlot>(TurnPanel->Slot))
-		{
-			TurnPanelSlot->SetPosition(FVector2D(-580.f, 8.f));
-			TurnPanelSlot->SetSize(FVector2D(1090.f, 174.f));
-		}
 
 		UImage* OptionsRailFrame = FindOrCreate<UImage>(Blueprint, TEXT("OptionsRailFrame"));
 		PlaceCanvas(Objective, OptionsRailFrame, FVector2D::ZeroVector,
@@ -1441,6 +2118,9 @@ namespace CombatHUDWidgetBuilder
 					FVector2D(94.f, 112.f), 40);
 			}
 		}
+		// 위의 옛 생성 블록이 Overlay 계보를 평탄화하므로 전체 빌드의 마지막
+		// 값은 반드시 전용 surgical helper가 확정한다.
+		RepairAuthoredRightHUDLayout(Blueprint, OptionsRailFrameTexture);
 
 		if (UWidget* ArtifactTrayFrame =
 			Blueprint->WidgetTree->FindWidget(TEXT("ArtifactTrayFrame")))
@@ -1477,65 +2157,6 @@ namespace CombatHUDWidgetBuilder
 			Blueprint->WidgetTree->RemoveWidget(ArtifactStrip);
 		}
 
-		for (int32 Index = 0; Index < 10; ++Index)
-		{
-			UCanvasPanel* Token = CastChecked<UCanvasPanel>(Blueprint->WidgetTree->FindWidget(
-				FName(*FString::Printf(TEXT("TurnToken_%d"), Index))));
-			PlaceCanvas(TurnPanel, Token, FVector2D(5.f + 109.f * Index, 30.f),
-				FVector2D(108.f, 144.f), 10);
-			Token->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-
-			UImage* TurnFrame = FindOrCreate<UImage>(Blueprint,
-				FName(*FString::Printf(TEXT("TurnFrame_%d"), Index)));
-			PlaceCanvas(Token, TurnFrame, FVector2D::ZeroVector, FVector2D(108.f, 144.f), 5);
-			TurnFrame->SetBrushFromTexture(TurnTokenFrameTexture, false);
-			TurnFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-
-			UScaleBox* Crop = CastChecked<UScaleBox>(Blueprint->WidgetTree->FindWidget(
-				FName(*FString::Printf(TEXT("TurnPortraitCrop_%d"), Index))));
-			PlaceCanvas(Token, Crop, FVector2D(14.f, 17.f), FVector2D(80.f, 86.f), 10);
-			Crop->SetStretch(EStretch::ScaleToFill);
-			Crop->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-
-			UImage* Current = CastChecked<UImage>(Blueprint->WidgetTree->FindWidget(
-				FName(*FString::Printf(TEXT("TurnCurrent_%d"), Index))));
-			PlaceCanvas(Token, Current, FVector2D(9.f, 11.f), FVector2D(90.f, 97.f), 40);
-
-			UBorder* SpeedPlate = FindOrCreate<UBorder>(Blueprint,
-				FName(*FString::Printf(TEXT("TurnSpeedPlate_%d"), Index)));
-			SpeedPlate->SetVisibility(ESlateVisibility::Collapsed);
-
-			UImage* SpeedIcon = FindOrCreate<UImage>(Blueprint,
-				FName(*FString::Printf(TEXT("TurnSpeedIcon_%d"), Index)));
-			PlaceCanvas(Token, SpeedIcon, FVector2D(13.f, 103.f), FVector2D(36.f, 36.f), 21);
-			SpeedIcon->SetBrushFromTexture(SpeedTexture, false);
-			SpeedIcon->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-
-			UTextBlock* Speed = FindOrCreate<UTextBlock>(Blueprint,
-				FName(*FString::Printf(TEXT("TurnSpeed_%d"), Index)));
-			PlaceCanvas(Token, Speed, FVector2D(52.f, 103.f), FVector2D(42.f, 34.f), 22);
-			Speed->SetText(NSLOCTEXT("CombatHUD", "SpeedPreview", "0"));
-			SetReadableFont(Speed, BaseFont, 22);
-
-			UBorder* RoundBadge = CastChecked<UBorder>(Blueprint->WidgetTree->FindWidget(
-				FName(*FString::Printf(TEXT("TurnRoundDivider_%d"), Index))));
-			PlaceCanvas(TurnPanel, RoundBadge, FVector2D(5.f + 109.f * Index, 0.f),
-				FVector2D(108.f, 34.f), 30);
-			FSlateBrush RoundBadgeBrush;
-			RoundBadgeBrush.SetResourceObject(RoundBadgeTexture);
-			RoundBadgeBrush.ImageSize = FVector2D(108.f, 34.f);
-			RoundBadge->SetBrush(RoundBadgeBrush);
-			RoundBadge->SetBrushColor(FLinearColor::White);
-			RoundBadge->SetVisibility(ESlateVisibility::Collapsed);
-
-			UTextBlock* RoundLabel = CastChecked<UTextBlock>(Blueprint->WidgetTree->FindWidget(
-				FName(*FString::Printf(TEXT("TurnRoundLabel_%d"), Index))));
-			PlaceCanvas(TurnPanel, RoundLabel, FVector2D(5.f + 109.f * Index, 2.f),
-				FVector2D(108.f, 30.f), 31);
-			SetReadableFont(RoundLabel, BaseFont, 19);
-			RoundLabel->SetVisibility(ESlateVisibility::Collapsed);
-		}
-
 		PruneStaleVariables(Blueprint);
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);
@@ -1563,10 +2184,30 @@ void RegisterCombatHUDWidgetBuilderCommands()
 		TEXT("RD.Editor.BuildCombatHUDInventoryTab"),
 		TEXT("Add only the WBP-authored inventory tab below the mercenary roster."),
 		FConsoleCommandDelegate::CreateStatic(&BuildInventoryTabOnly));
+	RoundTurnRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDRoundTurn"),
+		TEXT("Restore the authored 0811 ROUND/turn bar and #519 action button art."),
+		FConsoleCommandDelegate::CreateStatic(&RepairRoundTurnOnly));
+	ActionButtonArtRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDActionButtonArt"),
+		TEXT("Restore only the #519 Skill and End Turn button texture references."),
+		FConsoleCommandDelegate::CreateStatic(&RepairActionButtonArtOnly));
+	RightHUDRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDRightLayout"),
+		TEXT("Restore only the authored 0811 options, summaries, and action buttons."),
+		FConsoleCommandDelegate::CreateStatic(&RepairRightHUDOnly));
+	MercenaryPortraitFrameRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDMercenaryPortraitFrame"),
+		TEXT("Restore only the exact KitA portrait frame in inline and modular mercenary panels."),
+		FConsoleCommandDelegate::CreateStatic(&RepairMercenaryPortraitFrameOnly));
 }
 
 void UnregisterCombatHUDWidgetBuilderCommands()
 {
 	CombatHUDWidgetBuilder::BuildCommand.Reset();
 	CombatHUDWidgetBuilder::InventoryBuildCommand.Reset();
+	CombatHUDWidgetBuilder::RoundTurnRepairCommand.Reset();
+	CombatHUDWidgetBuilder::ActionButtonArtRepairCommand.Reset();
+	CombatHUDWidgetBuilder::RightHUDRepairCommand.Reset();
+	CombatHUDWidgetBuilder::MercenaryPortraitFrameRepairCommand.Reset();
 }

@@ -33,23 +33,33 @@ void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentat
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
 
-	// 승리와 패배 모두 결과 영상을 사용하지 않는다. 결과 위젯을 먼저 준비한 뒤
-	// 배리어를 놓으면 전투 모델이 같은 호출 흐름에서 결과 데이터를 밀고
-	// OpenRequested를 방송한다. 패배는 짧은 징글만 재생한다.
+	// 승리와 패배 모두 결과 영상을 사용하지 않는다. 활성 결과 경로에서
+	// 검증된 승리 징글만 한 번 재생하고, 패배는 잘못 연결됐던
+	// 승리곡이 나오지 않도록 무음을 유지한다.
+	if (USoundBase* ResultJingle = SelectCombatResultJingle(IsPlayerWin))
+	{
+		UGameplayStatics::PlaySound2D(this, ResultJingle);
+	}
+
+	// 결과 위젯을 먼저 준비한 뒤 배리어를 놓으면 전투 모델이
+	// 같은 호출 흐름에서 결과 데이터를 밀고 OpenRequested를 방송한다.
 	EnsureCombatResultWidgets();
 	SetCombatResultViewActive(true);
-	if (mIsPlayerWin == false && mDefeatJingleSound != nullptr)
-	{
-		UGameplayStatics::PlaySound2D(this, mDefeatJingleSound);
-	}
 	mCombatResultBarrier.Reset();
+}
+
+USoundBase* UCombatLayoutHUDWidget::SelectCombatResultJingle(const bool bPlayerWin) const
+{
+	// 이름이 Defeat였던 기존 파일은 원본 출처상 승리용 곡이다. 패배에는
+	// 아무 음원도 고르지 않아 오재생을 원천 차단한다.
+	return bPlayerWin == true ? mVictoryJingleSound.Get() : nullptr;
 }
 
 /** @brief 텀(딜레이) 후 실제 결과 연출 시작 — 징글 재생 + 결과 영상 오픈. */
 void UCombatLayoutHUDWidget::StartCombatResultCinematic()
 {
-	// 결과 징글: 승리/패배에 맞는 짧은 음악을 결과 연출 시작과 동시에 1회 재생한다.
-	USoundBase* ResultJingle = mIsPlayerWin == true ? mVictoryJingleSound.Get() : mDefeatJingleSound.Get();
+	// 현재 검증된 결과 징글은 승리용만 있다. 패배이면 선택 함수가 nullptr을 준다.
+	USoundBase* ResultJingle = SelectCombatResultJingle(mIsPlayerWin);
 	if (ResultJingle != nullptr)
 	{
 		UGameplayStatics::PlaySound2D(this, ResultJingle);
