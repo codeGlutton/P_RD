@@ -106,7 +106,7 @@ bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 				{
 					bFinished = true;
 				}));
-			Unit->OnStartMoveStep.Broadcast(FTileTransform(), FTransform::Identity, Barrier, 0.0f);
+			Unit->OnStartMoveStep.Broadcast(FTileTransform(), FTransform::Identity, Barrier, 0.0f, EBoardMoveMode::Normal);
 
 			TestFalse(TEXT("배리어 참조가 남아있으면 미완료"), bFinished);
 		}
@@ -121,7 +121,7 @@ bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 		// 뷰 역할의 구독자 (Barrier를 보관하고 있어서 참조가 0이 안 되게 유지)
 		TSharedPtr<FPresentationBarrier> HeldBarrier;
 		Unit->OnStartMoveStep.AddLambda(
-			[&HeldBarrier](const FTileTransform&, const FTransform&, TSharedPtr<FPresentationBarrier> Barrier, float) {
+			[&HeldBarrier](const FTileTransform&, const FTransform&, TSharedPtr<FPresentationBarrier> Barrier, float, EBoardMoveMode) {
 				HeldBarrier = Barrier;
 			});
 
@@ -132,7 +132,7 @@ bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 				{
 					bFinished = true;
 				}));
-			Unit->OnStartMoveStep.Broadcast(FTileTransform(), FTransform::Identity, Barrier, 0.0f);
+			Unit->OnStartMoveStep.Broadcast(FTileTransform(), FTransform::Identity, Barrier, 0.0f, EBoardMoveMode::Normal);
 		}
 
 		TestTrue(TEXT("구독자가 배리어 수신"), HeldBarrier.IsValid());

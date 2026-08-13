@@ -11,6 +11,7 @@
 #include "Actor/ActorModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileLayer.h"
+#include "Component/BoardMovementComponent/BoardMovementType.h"
 #include "BoardActorModel.generated.h"
 
 struct FTile;
@@ -23,8 +24,8 @@ DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
 DECLARE_MULTICAST_DELEGATE(FOnRemoveTileTransform);
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */, EBoardMoveMode /* MoveMode */);
+DECLARE_MULTICAST_DELEGATE_FiveParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */, EBoardMoveMode /* MoveMode */);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMoveStep, const FTileTransform& /* TileTransform */, const FTransform& /* WorldTransform */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
