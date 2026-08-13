@@ -26,6 +26,7 @@
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
@@ -107,10 +108,11 @@ namespace
 		return Board;
 	}
 
-	/** @brief 하나를 정한다. 한 번이면 된다. */
+	/** @brief 하나를 검토한 뒤 명시적으로 추가한다. */
 	void Choose(UMercenaryHireWidget& Board, const int32 CardIndex)
 	{
 		Board.ClickCard(CardIndex);
+		Board.ClickAdd();
 	}
 }
 
@@ -122,9 +124,14 @@ bool FMercenaryHireChooseTest::RunTest(const FString& Parameters)
 {
 	UMercenaryHireWidget* Board = MakeBoard();
 
-	// 한 번 누르면 정해진다.
+	// 목록 클릭은 상세 검토만 바꾸고, 추가 버튼이 편성을 확정한다.
 	Board->ClickCard(2);
-	TestEqual(TEXT("한 번 누르면 정해짐"), Board->StateOf(2),
+	TestEqual(TEXT("목록 클릭은 검토 상태"), Board->StateOf(2),
+		EMercenaryCardState::Reviewing);
+	TestEqual(TEXT("목록 클릭만으로는 편성되지 않음"),
+		Board->GetChosenIndices().Num(), 0);
+	Board->ClickAdd();
+	TestEqual(TEXT("추가 버튼으로 정해짐"), Board->StateOf(2),
 		EMercenaryCardState::Chosen);
 	TestEqual(TEXT("한 명 정해짐"), Board->GetChosenIndices().Num(), 1);
 
@@ -281,6 +288,63 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		FString(TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound."
 			"WBP_MercenaryHire_Marchbound_C")));
 
+	UWidgetBlueprintGeneratedClass* HireGenerated =
+		Cast<UWidgetBlueprintGeneratedClass>(WidgetClass);
+	UWidgetTree* HireTree = HireGenerated != nullptr
+		? HireGenerated->GetWidgetTreeArchetype() : nullptr;
+	if (!TestNotNull(TEXT("Marchbound 용병 선택 WBP 나무"), HireTree))
+	{
+		return false;
+	}
+	for (int32 Index = 0; Index < 6; ++Index)
+	{
+		const FString Tail = FString::Printf(TEXT("_%d"), Index);
+		UCanvasPanel* SkillPanel = Cast<UCanvasPanel>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkill")) + Tail))));
+		UScaleBox* SkillFit = Cast<UScaleBox>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillText")) + Tail + TEXT("_Fit")))));
+		UTextBlock* SkillText = Cast<UTextBlock>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillText")) + Tail))));
+		UImage* SkillIcon = Cast<UImage>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillIcon")) + Tail))));
+		UPanelWidget* SkillIconMount = Cast<UPanelWidget>(
+			HireTree->FindWidget(FName(*(FString(TEXT("HireDetailSkillIconMount")) + Tail))));
+		if (!TestNotNull(*FString::Printf(TEXT("스킬 %d 패널"), Index), SkillPanel)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 텍스트 축소 래퍼"), Index), SkillFit)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 텍스트"), Index), SkillText)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 아이콘"), Index), SkillIcon)
+			|| !TestNotNull(*FString::Printf(TEXT("스킬 %d 아이콘 래퍼"), Index), SkillIconMount))
+		{
+			return false;
+		}
+
+		TestEqual(*FString::Printf(TEXT("스킬 %d 패널 경계 클립"), Index),
+			SkillPanel->GetClipping(), EWidgetClipping::ClipToBoundsAlways);
+		TestTrue(*FString::Printf(TEXT("스킬 %d 텍스트는 ScaleBox 자식"), Index),
+			SkillText->GetParent() == SkillFit);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 넘침 시에만 축소"), Index),
+			SkillFit->GetStretchDirection(), EStretchDirection::DownOnly);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 축소 래퍼 경계 클립"), Index),
+			SkillFit->GetClipping(), EWidgetClipping::ClipToBoundsAlways);
+		if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(SkillText->Slot))
+		{
+			TestEqual(*FString::Printf(TEXT("스킬 %d 텍스트 가로 중앙"), Index),
+				TextSlot->GetHorizontalAlignment(), HAlign_Center);
+			TestEqual(*FString::Printf(TEXT("스킬 %d 텍스트 세로 중앙"), Index),
+				TextSlot->GetVerticalAlignment(), VAlign_Center);
+		}
+		else
+		{
+			AddError(FString::Printf(TEXT("스킬 %d 텍스트 슬롯은 ScaleBoxSlot이어야 함"), Index));
+		}
+		TestEqual(*FString::Printf(TEXT("스킬 %d 의도한 광학 보정만 유지"), Index),
+			SkillText->GetRenderTransform().Translation, FVector2D(0.0f, -2.5f));
+		TestTrue(*FString::Printf(TEXT("스킬 %d 아이콘은 전용 래퍼 자식"), Index),
+			SkillIcon->GetParent() == SkillIconMount);
+		TestEqual(*FString::Printf(TEXT("스킬 %d 기본 아이콘은 숨김"), Index),
+			SkillIcon->GetVisibility(), ESlateVisibility::Collapsed);
+	}
+
 	static const TCHAR* MercenaryNames[6] = {
 		TEXT("Knight"), TEXT("Mage"), TEXT("Ranger"),
 		TEXT("Rogue"), TEXT("Barbarian"), TEXT("Druid")
@@ -329,73 +393,42 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	Board->TakeWidget();
 	TArray<FFrontendCharacterOption> KnightOnly;
 	KnightOnly.Add(MakeOption(0, TEXT("기사"), true));
+	KnightOnly[0].mRoleText = FText::FromString(TEXT("방패 탱커 · 근접"));
 	Board->SetCharacterOptions(KnightOnly, 3);
+	UTextBlock* KnightRole = Cast<UTextBlock>(
+		Board->WidgetTree->FindWidget(TEXT("HireRole_0")));
+	if (TestNotNull(TEXT("기사 역할 부연설명"), KnightRole))
+	{
+		TestEqual(TEXT("역할 문구는 실제 후보 데이터를 표시한다"),
+			KnightRole->GetText().ToString(), FString(TEXT("방패 탱커 · 근접")));
+	}
+
+	Board->ClickCard(0);
+	Board->ClickAdd();
+	TestTrue(TEXT("실제 후보는 추가 버튼으로 편성된다"),
+		Board->GetChosenIndices().Contains(0));
 	Board->ClickCard(5);
-	TestTrue(TEXT("실데이터가 없어도 여섯째 드루이드를 검수 선택할 수 있다"),
+	Board->ClickAdd();
+	TestFalse(TEXT("서버가 주지 않은 가짜 여섯째 후보는 선택되지 않는다"),
 		Board->GetChosenIndices().Contains(5));
-
-	UImage* Hero = Cast<UImage>(Board->WidgetTree->FindWidget(TEXT("Backdrop_Art")));
-	if (TestNotNull(TEXT("선택 영웅 일러스트"), Hero))
-	{
-		TestEqual(TEXT("드루이드 선택은 드루이드 일러스트를 건다"),
-			Hero->GetBrush().GetResourceObject()->GetPathName(),
-			FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/"
-				"T_MB_HireHero_Druid.T_MB_HireHero_Druid")));
-	}
-
-	Board->ClickCard(1);
-	Board->ClickCard(2);
-	UTextBlock* RangerName = Cast<UTextBlock>(
-		Board->WidgetTree->FindWidget(TEXT("HireName_2")));
-	if (TestNotNull(TEXT("세 번째 행 이름"), RangerName))
-	{
-		TestEqual(TEXT("Archer placeholder의 옛 도적명이 아닌 레인저 표시"),
-			RangerName->GetText().ToString(), FString(TEXT("레인저")));
-	}
-	TestTrue(TEXT("실데이터가 없는 마법사도 검수 선택 가능"),
-		Board->GetChosenIndices().Contains(1));
-	TestTrue(TEXT("Archer placeholder 대신 레인저도 검수 선택 가능"),
-		Board->GetChosenIndices().Contains(2));
-
-	UWidget* MageReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_1"));
-	UWidget* RangerReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_2"));
-	UWidget* DruidReviewFrame = Board->WidgetTree->FindWidget(TEXT("HireSelected_5"));
-	if (TestNotNull(TEXT("마법사 파란 검토 테두리"), MageReviewFrame)
-		&& TestNotNull(TEXT("레인저 파란 검토 테두리"), RangerReviewFrame)
-		&& TestNotNull(TEXT("드루이드 파란 검토 테두리"), DruidReviewFrame))
-	{
-		TestEqual(TEXT("현재 보고 있는 레인저만 파란 테두리"),
-			RangerReviewFrame->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("파티원이어도 현재 보지 않는 마법사는 파란 테두리 없음"),
-			MageReviewFrame->GetVisibility(), ESlateVisibility::Collapsed);
-		TestEqual(TEXT("파티원이어도 현재 보지 않는 드루이드는 파란 테두리 없음"),
-			DruidReviewFrame->GetVisibility(), ESlateVisibility::Collapsed);
-	}
-
-	UWidget* MagePartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_1"));
-	UWidget* RangerPartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_2"));
-	UWidget* DruidPartySeal = Board->WidgetTree->FindWidget(TEXT("HireSeal_5"));
-	if (TestNotNull(TEXT("마법사 빨간 파티 인장"), MagePartySeal)
-		&& TestNotNull(TEXT("레인저 빨간 파티 인장"), RangerPartySeal)
-		&& TestNotNull(TEXT("드루이드 빨간 파티 인장"), DruidPartySeal))
-	{
-		TestEqual(TEXT("마법사 파티 인장 유지"),
-			MagePartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("레인저 파티 인장 유지"),
-			RangerPartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-		TestEqual(TEXT("드루이드 파티 인장 유지"),
-			DruidPartySeal->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-	}
+	TestEqual(TEXT("실제 후보 배열은 UI에서 임의로 늘리지 않는다"),
+		Board->GetChosenIndices().Num(), 1);
 
 	UButton* PartySlotButton = Cast<UButton>(
-		Board->WidgetTree->FindWidget(TEXT("PartySlotButton_1")));
+		Board->WidgetTree->FindWidget(TEXT("PartySlotButton_0")));
+	UButton* AddButton = Cast<UButton>(
+		Board->WidgetTree->FindWidget(TEXT("HireAddButton")));
+	if (TestNotNull(TEXT("상세 아래 추가 버튼"), AddButton))
+	{
+		TestTrue(TEXT("추가 버튼 동작이 묶여 있다"), AddButton->OnClicked.IsBound());
+	}
 	if (TestNotNull(TEXT("파티 슬롯 해제 버튼"), PartySlotButton))
 	{
 		TestTrue(TEXT("파티 슬롯 해제 동작이 묶여 있다"),
 			PartySlotButton->OnClicked.IsBound());
 		PartySlotButton->OnClicked.Broadcast();
 		TestFalse(TEXT("파티 슬롯을 누르면 해당 용병이 빠진다"),
-			Board->GetChosenIndices().Contains(1));
+			Board->GetChosenIndices().Contains(0));
 	}
 
 	Board->ApplyResponsiveLayoutForTest(FVector2D(900.0f, 1600.0f));
@@ -408,16 +441,16 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		? Cast<UCanvasPanelSlot>(Card1->Slot) : nullptr;
 	UCanvasPanelSlot* Card2Slot = Card2 != nullptr
 		? Cast<UCanvasPanelSlot>(Card2->Slot) : nullptr;
-	if (TestNotNull(TEXT("세로 카드 0 슬롯"), Card0Slot)
-		&& TestNotNull(TEXT("세로 카드 1 슬롯"), Card1Slot)
-		&& TestNotNull(TEXT("세로 카드 2 슬롯"), Card2Slot))
+	if (TestNotNull(TEXT("고정 레이아웃 카드 0 슬롯"), Card0Slot)
+		&& TestNotNull(TEXT("고정 레이아웃 카드 1 슬롯"), Card1Slot)
+		&& TestNotNull(TEXT("고정 레이아웃 카드 2 슬롯"), Card2Slot))
 	{
-		TestEqual(TEXT("세로에서 0·1번은 같은 행"),
-			Card0Slot->GetPosition().Y, Card1Slot->GetPosition().Y);
-		TestTrue(TEXT("세로에서 1번은 0번 오른쪽"),
-			Card1Slot->GetPosition().X > Card0Slot->GetPosition().X);
-		TestTrue(TEXT("세로에서 2번은 다음 행"),
-			Card2Slot->GetPosition().Y > Card0Slot->GetPosition().Y);
+		TestEqual(TEXT("세로 비율에서도 후보는 같은 열"),
+			Card0Slot->GetPosition().X, Card1Slot->GetPosition().X);
+		TestTrue(TEXT("세로 비율에서도 1번은 0번 아래"),
+			Card1Slot->GetPosition().Y > Card0Slot->GetPosition().Y);
+		TestTrue(TEXT("세로 비율에서도 2번은 1번 아래"),
+			Card2Slot->GetPosition().Y > Card1Slot->GetPosition().Y);
 	}
 
 	Board->ApplyResponsiveLayoutForTest(FVector2D(1920.0f, 1080.0f));

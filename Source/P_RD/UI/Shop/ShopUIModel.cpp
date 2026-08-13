@@ -24,6 +24,12 @@ void UShopUIModel::RequestDiscardSkill(int32 UnitIndex, int32 SlotIndex)
 	OnDiscardSkillRequested.Broadcast(UnitIndex, SlotIndex);
 }
 
+/** @details 휴식 의도만 중계한다. 가격 차감과 회복은 ShopGameMode가 처리한다. */
+void UShopUIModel::RequestRest()
+{
+	OnRestRequested.Broadcast();
+}
+
 /** @details 상점 나가기 의도만 전달한다. 실제 화면 전환은 게임플레이가 결정한다. */
 void UShopUIModel::RequestLeave()
 {

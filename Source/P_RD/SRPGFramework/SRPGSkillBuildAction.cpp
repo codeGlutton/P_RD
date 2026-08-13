@@ -164,6 +164,10 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
                 SetBuildPhase(ESRPGSkillBuildPhase::Preview);
             }
 
+            /* 보드 안의 빈/유효하지 않은 칸은 조준 상태를 유지한다. */
+
+            // 빈 타일이나 사거리 밖 칸을 잘못 눌러도 선택한 스킬을 취소하지
+            // 않는다. 사용자가 다시 조준 가능한 칸을 고를 수 있게 그대로 둔다.
             Result = ESRPGCommandResult::Handled;
             break;
         }

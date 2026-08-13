@@ -104,7 +104,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> WorldMapClassFinder(
-		TEXT("/Game/UI/WBP_FrontendMap"));
+		TEXT("/Game/UI/WorldMapLandscape/WBP_FrontendMapLandscape"));
 	if (WorldMapClassFinder.Succeeded())
 	{
 		mWorldMapWidgetClass = WorldMapClassFinder.Class;
@@ -1697,7 +1697,9 @@ UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 	{
 		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
 		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Vigor") },
+			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
+			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Agility") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
