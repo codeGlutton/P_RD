@@ -101,7 +101,7 @@ void USettingsPanelWidget::SetButtonEnabled(UButton* Button, bool bEnabled) cons
  */
 void USettingsPanelWidget::HandleSaveAndExitButtonClicked()
 {
-	OnSaveAndExitRequested.Broadcast();
+	ShowSaveAndExitConfirm();
 }
 
 /**

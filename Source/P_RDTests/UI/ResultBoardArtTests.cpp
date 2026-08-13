@@ -9,10 +9,12 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Engine.h"
@@ -643,6 +645,52 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("디자인 캔버스는 SizeBox 자식"),
 			ModalCanvas->GetParent() == SettingsSize);
 	}
+	UWidget* ConfirmViewportLayer = Tree->FindWidget(TEXT("RunConfirmViewportLayer"));
+	UBorder* ConfirmViewportDim = Cast<UBorder>(
+		Tree->FindWidget(TEXT("RunConfirmViewportDim")));
+	UScaleBox* ConfirmScale = Cast<UScaleBox>(
+		Tree->FindWidget(TEXT("RunConfirmScale")));
+	USizeBox* ConfirmDesignSize = Cast<USizeBox>(
+		Tree->FindWidget(TEXT("RunConfirmDesignSize")));
+	UWidget* ConfirmPanelForTree = Tree->FindWidget(TEXT("AbandonConfirmPanel"));
+	if (TestNotNull(TEXT("확인창 viewport 루트 레이어"), ConfirmViewportLayer))
+	{
+		TestTrue(TEXT("확인창 레이어는 Settings 루트 직계 자식"),
+			ConfirmViewportLayer->GetParent() == Tree->RootWidget);
+		UCanvasPanelSlot* LayerSlot = Cast<UCanvasPanelSlot>(ConfirmViewportLayer->Slot);
+		if (TestNotNull(TEXT("확인창 viewport Canvas 슬롯"), LayerSlot))
+		{
+			TestTrue(TEXT("확인창 레이어 full anchors"),
+				LayerSlot->GetAnchors().Minimum.Equals(FVector2D::ZeroVector, .001f)
+				&& LayerSlot->GetAnchors().Maximum.Equals(FVector2D(1.f), .001f));
+			TestEqual(TEXT("확인창 레이어 zero offsets"),
+				LayerSlot->GetOffsets(), FMargin(0.f));
+			TestTrue(TEXT("확인창 레이어는 설정 장부보다 앞"),
+				LayerSlot->GetZOrder() > 10);
+		}
+	}
+	if (TestNotNull(TEXT("확인창 viewport dim"), ConfirmViewportDim))
+	{
+		TestTrue(TEXT("dim은 root overlay 자식"),
+			ConfirmViewportDim->GetParent() == ConfirmViewportLayer);
+		TestTrue(TEXT("dim은 실제 검정 반투명"),
+			ConfirmViewportDim->GetBrushColor().A > .5f);
+	}
+	if (TestNotNull(TEXT("확인창 독립 ScaleBox"), ConfirmScale))
+	{
+		TestTrue(TEXT("확인창 ScaleBox는 dim과 같은 root overlay 자식"),
+			ConfirmScale->GetParent() == ConfirmViewportLayer);
+		TestEqual(TEXT("확인창만 16:9 ScaleToFit"),
+			ConfirmScale->GetStretch(), EStretch::ScaleToFit);
+	}
+	if (TestNotNull(TEXT("확인창 1920x1080 design size"), ConfirmDesignSize))
+	{
+		TestEqual(TEXT("확인창 design 폭"), ConfirmDesignSize->GetWidthOverride(), 1920.f);
+		TestEqual(TEXT("확인창 design 높이"), ConfirmDesignSize->GetHeightOverride(), 1080.f);
+		TestTrue(TEXT("확인 패널은 aspect-fit design size 자식"),
+			ConfirmPanelForTree != nullptr
+			&& ConfirmPanelForTree->GetParent() == ConfirmDesignSize);
+	}
 	UWidget* BodyMount = Tree->FindWidget(TEXT("Set_panel_bodyMount"));
 	UCanvasPanelSlot* BodyMountSlot = BodyMount != nullptr
 		? Cast<UCanvasPanelSlot>(BodyMount->Slot) : nullptr;
@@ -673,6 +721,31 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			TestTrue(*FString::Printf(TEXT("%s 기능 캔버스 자식"), WidgetName),
 				Widget != nullptr && Widget->GetParent() == ContentCanvas);
 		}
+	}
+	UOverlay* BackMount = Cast<UOverlay>(Tree->FindWidget(TEXT("BackButtonPlateMount")));
+	UButton* BackButton = Cast<UButton>(Tree->FindWidget(TEXT("BackButton")));
+	if (TestNotNull(TEXT("Back 명패 마운트"), BackMount)
+		&& TestNotNull(TEXT("Back 실제 입력 버튼"), BackButton))
+	{
+		TestTrue(TEXT("Back 입력 영역이 보이는 명패 안에 있음"),
+			BackButton->GetParent() == BackMount);
+		UOverlaySlot* BackSlot = Cast<UOverlaySlot>(BackButton->Slot);
+		if (TestNotNull(TEXT("Back 입력 Overlay 슬롯"), BackSlot))
+		{
+			TestEqual(TEXT("Back 입력 가로 Fill"),
+				BackSlot->GetHorizontalAlignment(), HAlign_Fill);
+			TestEqual(TEXT("Back 입력 세로 Fill"),
+				BackSlot->GetVerticalAlignment(), VAlign_Fill);
+			const FMargin BackPadding = BackSlot->GetPadding();
+			TestTrue(TEXT("Back 입력 패딩 없음"),
+				FMath::IsNearlyZero(BackPadding.Left)
+				&& FMath::IsNearlyZero(BackPadding.Top)
+				&& FMath::IsNearlyZero(BackPadding.Right)
+				&& FMath::IsNearlyZero(BackPadding.Bottom));
+		}
+		TestTrue(TEXT("Back 입력 활성"), BackButton->GetIsEnabled());
+		TestEqual(TEXT("Back 입력 표시"), BackButton->GetVisibility(),
+			ESlateVisibility::Visible);
 	}
 
 	struct FExpectedSurface
@@ -936,8 +1009,7 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 	TestAspectFitPlate(TEXT("SaveAndExitButtonPlate"), FVector2D(310.0, 118.0));
 	TestAspectFitPlate(TEXT("AbandonRunButtonPlate"), FVector2D(310.0, 118.0));
 
-	// The generated ledger is fixed illustration art: the center spine, rivets and
-	// parchment labels must never be 9-sliced. Only the confirmation panel remains a box.
+	// The generated ledger and confirmation modal are fixed illustration art.
 	for (const TCHAR* ImageName : {
 		TEXT("Set_panel_body"),
 		TEXT("Set_row_master_plate"), TEXT("Set_row_bgm_plate"),
@@ -967,10 +1039,56 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			Brush.GetMargin() == FMargin(0.f));
 	}
 
-	if (UImage* ConfirmPlate = Cast<UImage>(Tree->FindWidget(TEXT("Set_confirm_plate"))))
+	UImage* ConfirmPlate = Cast<UImage>(Tree->FindWidget(TEXT("Set_confirm_plate")));
+	if (TestNotNull(TEXT("공용 런 액션 확인 모달 판"), ConfirmPlate))
 	{
-		TestEqual(TEXT("확인 모달만 9-slice"), ConfirmPlate->GetBrush().DrawAs,
-			ESlateBrushDrawType::Box);
+		const FSlateBrush& Brush = ConfirmPlate->GetBrush();
+		TestEqual(TEXT("확인 모달 고정 이미지"), Brush.DrawAs,
+			ESlateBrushDrawType::Image);
+		UTexture2D* Texture = Cast<UTexture2D>(Brush.GetResourceObject());
+		if (TestNotNull(TEXT("확인 모달 Marchbound 텍스처"), Texture))
+		{
+			TestEqual(TEXT("확인 모달 canonical 텍스처 경로"),
+				Texture->GetPathName(),
+				FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/"
+					"T_MB_GenericDetailPanel.T_MB_GenericDetailPanel")));
+			TestTrue(TEXT("확인 모달 브러시 원본 크기"),
+				Brush.GetImageSize().Equals(FVector2D(Texture->GetImportedSize()), 0.001));
+		}
+		TestTrue(TEXT("확인 모달 비변형 margin"), Brush.GetMargin() == FMargin(0.f));
+	}
+	if (UWidget* ConfirmPanel = Tree->FindWidget(TEXT("AbandonConfirmPanel")))
+	{
+		TestEqual(TEXT("확인 모달 전체 화면 클립"), ConfirmPanel->GetClipping(),
+			EWidgetClipping::ClipToBoundsAlways);
+		TestTrue(TEXT("확인 모달은 viewport scale의 design child"),
+			ConfirmPanel->GetParent() == Tree->FindWidget(TEXT("RunConfirmDesignSize")));
+	}
+	for (const TCHAR* LegacyDimName : { TEXT("AbandonConfirmDim"),
+		TEXT("Set_confirm_dim") })
+	{
+		if (UWidget* LegacyDim = Tree->FindWidget(FName(LegacyDimName)))
+		{
+			TestEqual(*FString::Printf(TEXT("%s legacy letterbox dim 비활성"),
+				LegacyDimName), LegacyDim->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	}
+	UTextBlock* ConfirmHeader = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("RunConfirmHeaderText")));
+	if (TestNotNull(TEXT("확인 모달 상단 명패 텍스트"), ConfirmHeader))
+	{
+		UCanvasPanelSlot* HeaderSlot = Cast<UCanvasPanelSlot>(ConfirmHeader->Slot);
+		if (TestNotNull(TEXT("확인 명패 디자인 캔버스 슬롯"), HeaderSlot))
+		{
+			TestTrue(TEXT("확인 명패 위치"),
+				HeaderSlot->GetPosition().Equals(FVector2D(670.f, 210.f), 0.01));
+			TestTrue(TEXT("확인 명패 580x76"),
+				HeaderSlot->GetSize().Equals(FVector2D(580.f, 76.f), 0.01));
+			TestTrue(TEXT("확인 명패가 모달 내부 장식보다 앞"),
+				HeaderSlot->GetZOrder() > 2);
+		}
+		TestEqual(TEXT("확인 명패 경계 클립"), ConfirmHeader->GetClipping(),
+			EWidgetClipping::ClipToBoundsAlways);
 	}
 
 	for (const TCHAR* RibbonName : { TEXT("SettingsAudioRibbonArt"),
