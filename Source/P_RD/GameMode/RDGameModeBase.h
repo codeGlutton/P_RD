@@ -216,6 +216,13 @@ public:
 
 protected:
 	void SetMainBGM(USoundBase* BGM, bool IsOverride = true);
+	/**
+	 * @brief 화면 전환 없이 현재 방 BGM만 조용히 끝낸다.
+	 *
+	 * 전투 결과처럼 같은 맵 위에 별도 화면을 띄울 때 결과 음향과 방 BGM이
+	 * 겹치지 않도록 쓰는 작은 명시 API다. 0 이하이면 즉시 정지한다.
+	 */
+	void FadeOutMainBGM(float FadeOutDurationSeconds) const;
 
 protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))

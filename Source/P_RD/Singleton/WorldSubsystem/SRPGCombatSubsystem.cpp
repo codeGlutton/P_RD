@@ -50,6 +50,18 @@ UObjectModel* USRPGCombatSubsystem::GetModel_Internal() const
 
 void USRPGCombatSubsystem::MoveCameraOnBeginTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext)
 {
+	if (TurnContext == nullptr || TurnContext->GetOwner() == nullptr)
+	{
+		return;
+	}
+
+	// 아군 턴은 HUD가 펼쳐진 스킬 카드 고리의 화면 앵커까지 포함해 한 번만
+	// 초점을 요청한다. 여기서도 이동하면 같은 턴에 카메라 트윈이 겹친다.
+	if (TurnContext->GetOwner()->IsPlayerUnitModel() == true)
+	{
+		return;
+	}
+
 	AActor* UnitActor = GetTurnOwnerView(TurnContext);
 	if (UnitActor == nullptr)
 	{
@@ -68,7 +80,9 @@ void USRPGCombatSubsystem::MoveCameraOnBeginTurn(TSharedPtr<FPresentationBarrier
 		return;
 	}
 
-	// 카메라를 단순 유닛 위치로 이동 (고정하지 않음)
+	// 직전 아군 턴의 카드 고리 오프셋을 적 턴까지 물려주지 않는다.
+	CameraMovement->SetViewportOffset(FVector2D(0.5f, 0.5f));
+	// 적 턴은 카메라를 단순 유닛 위치로 이동한다(고정하지 않음).
 	CameraMovement->MoveToWorldPosition(UnitActor->GetActorLocation(), false);
 }
 
