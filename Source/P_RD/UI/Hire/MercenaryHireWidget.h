@@ -32,6 +32,7 @@
 class UButton;
 class UImage;
 class UTextBlock;
+class UUserWidget;
 class UWidget;
 
 /** @brief 이력서 한 장이 지금 어떤 상태인가. */
@@ -103,6 +104,8 @@ class P_RD_API UMercenaryHireWidget : public URDUserWidget
 	GENERATED_BODY()
 
 public:
+	UMercenaryHireWidget(const FObjectInitializer& ObjectInitializer);
+
 	/**
 	 * @brief 게시판에 걸 후보를 넣는다.
 	 *
@@ -155,11 +158,21 @@ public:
 	{
 		ApplyResponsiveLayout(ViewportSize);
 	}
+	/** @brief 타이머를 기다리지 않고 같은 상세 발화 경로를 검증한다. */
+	void TriggerSkillLongPressForTest(int32 SlotIndex);
+	void BeginSkillPressForTest(int32 SlotIndex) { BeginSkillPress(SlotIndex); }
+	void ReleaseSkillPressForTest(int32 SlotIndex) { EndSkillPress(SlotIndex); }
+	bool IsSkillLongPressPendingForTest() const;
+	int32 GetPressedSkillSlotForTest() const { return mPressedSkillSlot; }
+	int32 GetSkillDataIndexForSlotForTest(int32 SlotIndex) const;
+	UUserWidget* GetSkillDetailOverlayForTest() const { return mSkillDetailOverlay; }
 #endif
 
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	virtual void NativeDestruct() override;
+	virtual void ApplyCloseUI() override;
 
 private:
 	void CacheWidgets();
@@ -169,6 +182,15 @@ private:
 	void RefreshCard(int32 CardIndex);
 	void RefreshBottomBar();
 	void RefreshDetail();
+	int32 GetSkillDataIndexForSlot(const FFrontendCharacterOption& Option,
+		int32 SlotIndex) const;
+	void BeginSkillPress(int32 SlotIndex);
+	void EndSkillPress(int32 SlotIndex);
+	void CancelSkillPress();
+	void HandleSkillLongPress(int32 SlotIndex, int32 ReviewingIndex);
+	bool EnsureSkillDetailOverlay();
+	void ShowSkillDetailOverlay(const FFrontendSkillOption& Skill);
+	void HideSkillDetailOverlay();
 
 	void ToggleChoice(int32 CardIndex);
 
@@ -184,6 +206,19 @@ private:
 	UFUNCTION() void HandleAddClicked();
 	UFUNCTION() void HandleDepartClicked();
 	UFUNCTION() void HandleBackClicked();
+	UFUNCTION() void HandleSkillPressed_0();
+	UFUNCTION() void HandleSkillPressed_1();
+	UFUNCTION() void HandleSkillPressed_2();
+	UFUNCTION() void HandleSkillPressed_3();
+	UFUNCTION() void HandleSkillPressed_4();
+	UFUNCTION() void HandleSkillPressed_5();
+	UFUNCTION() void HandleSkillReleased_0();
+	UFUNCTION() void HandleSkillReleased_1();
+	UFUNCTION() void HandleSkillReleased_2();
+	UFUNCTION() void HandleSkillReleased_3();
+	UFUNCTION() void HandleSkillReleased_4();
+	UFUNCTION() void HandleSkillReleased_5();
+	UFUNCTION() void HandleSkillDetailCloseClicked();
 
 	/** @brief 화면에 걸린 후보들. 비어 있으면 시안 값이 그대로 남는다. */
 	UPROPERTY() TArray<FFrontendCharacterOption> mCrew;
@@ -202,9 +237,20 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailAP = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailSpeed = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mHeroIllustration = nullptr;
+	/** 현재 영웅의 전용 생성 색상 배경. 전경 원화와 별개로 화면 전체를 채운다. */
+	UPROPERTY() TObjectPtr<UImage> mHeroGeneratedBackground = nullptr;
 	UPROPERTY() TArray<TObjectPtr<UTextBlock>> mDetailSkills;
 	// 스킬 칸 그림. 아이콘이 있으면 그림을, 없으면 글자(mDetailSkills)를 보인다.
 	UPROPERTY() TArray<TObjectPtr<UImage>> mDetailSkillIcons;
+	UPROPERTY() TArray<TObjectPtr<UButton>> mDetailSkillButtons;
+
+	/** @brief 전투 HUD와 같은 상세판. 별도 viewport 겹으로 띄운다. */
+	UPROPERTY() TSubclassOf<UUserWidget> mSkillDetailOverlayClass;
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mSkillDetailOverlay = nullptr;
+	FTimerHandle mSkillLongPressTimerHandle;
+	int32 mPressedSkillSlot = INDEX_NONE;
+	int32 mPressedReviewingIndex = INDEX_NONE;
+	static constexpr float SkillLongPressSeconds = 0.5f;
 
 	/** @brief 신규 Marchbound 레이아웃에서만 추가 표시 규칙을 사용한다. */
 	bool mIsMarchboundLayout = false;
