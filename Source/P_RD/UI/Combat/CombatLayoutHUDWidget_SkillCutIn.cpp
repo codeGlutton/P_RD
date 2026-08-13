@@ -19,36 +19,9 @@ namespace
 	TSoftObjectPtr<UTexture2D> ResolveRosterCasterPlate(
 		const FCombatSkillCutInRequest& Request)
 	{
-		struct FCasterPlateRule
+		if (Request.ShortCut.IsNull() == false)
 		{
-			const TCHAR* IdentityNeedle;
-			const TCHAR* ObjectPath;
-		};
-		static const FCasterPlateRule PlayerRules[] = {
-			{ TEXT("Barbarian"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Mercenary_Barbarian_v1.T_SkillCutIn_Roster_Mercenary_Barbarian_v1") },
-			{ TEXT("Druid"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Mercenary_Druid_v1.T_SkillCutIn_Roster_Mercenary_Druid_v1") },
-			{ TEXT("Mage"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Mercenary_Mage_v1.T_SkillCutIn_Roster_Mercenary_Mage_v1") },
-			{ TEXT("Ranger"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Mercenary_Ranger_v1.T_SkillCutIn_Roster_Mercenary_Ranger_v1") },
-			{ TEXT("Rogue"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Mercenary_Rogue_v1.T_SkillCutIn_Roster_Mercenary_Rogue_v1") },
-		};
-		static const FCasterPlateRule MonsterRules[] = {
-			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Monster_Eagle_v1.T_SkillCutIn_Roster_Monster_Eagle_v1") },
-			{ TEXT("Golem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Monster_Golem_v1.T_SkillCutIn_Roster_Monster_Golem_v1") },
-			{ TEXT("Leshy"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Monster_Leshy_v1.T_SkillCutIn_Roster_Monster_Leshy_v1") },
-			{ TEXT("Mushroom"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Monster_Mushroom_v1.T_SkillCutIn_Roster_Monster_Mushroom_v1") },
-			{ TEXT("Spider"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Roster_Monster_Spider_v1.T_SkillCutIn_Roster_Monster_Spider_v1") },
-		};
-
-		const FCasterPlateRule* Rules = Request.bIsPlayerCaster ? PlayerRules : MonsterRules;
-		const int32 RuleCount = Request.bIsPlayerCaster
-			? UE_ARRAY_COUNT(PlayerRules) : UE_ARRAY_COUNT(MonsterRules);
-		for (int32 RuleIndex = 0; RuleIndex < RuleCount; ++RuleIndex)
-		{
-			if (Request.CasterIdentity.Contains(
-				Rules[RuleIndex].IdentityNeedle, ESearchCase::IgnoreCase))
-			{
-				return MakeSkillCutInTexture(Rules[RuleIndex].ObjectPath);
-			}
+			return Request.ShortCut;
 		}
 
 		// Knight and Slime are the already approved faction defaults.
@@ -68,7 +41,7 @@ namespace
 			// background, moving speed layer, caster stack and fixed impact are kept
 			// in separate widget transforms so they cannot drift as one plate.
 			Presentation.BackgroundTexture = MakeSkillCutInTexture(
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_MasterDuelSingle_FixedBG_v3.T_SkillCutIn_MasterDuelSingle_FixedBG_v3"));
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Mercenary_BrushBG_v5.T_SkillCutIn_Mercenary_BrushBG_v5"));
 			Presentation.SpeedLinesTexture = MakeSkillCutInTexture(
 				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_MasterDuelSingle_SpeedFX_v3.T_SkillCutIn_MasterDuelSingle_SpeedFX_v3"));
 			Presentation.BodyTexture = ResolveRosterCasterPlate(Request);
@@ -86,7 +59,7 @@ namespace
 			// mirrored onto the right half. Background and effects remain on fixed
 			// canvases while the generated caster plate moves independently.
 			Presentation.BackgroundTexture = MakeSkillCutInTexture(
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_MasterDuelMonster_FixedBG_v1.T_SkillCutIn_MasterDuelMonster_FixedBG_v1"));
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_Monster_BrushBG_v5.T_SkillCutIn_Monster_BrushBG_v5"));
 			Presentation.SpeedLinesTexture = MakeSkillCutInTexture(
 				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/SkillCutIn/Generated/T_SkillCutIn_MasterDuelMonster_SpeedFX_v1.T_SkillCutIn_MasterDuelMonster_SpeedFX_v1"));
 			Presentation.BodyTexture = ResolveRosterCasterPlate(Request);

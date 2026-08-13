@@ -44,7 +44,7 @@ struct FCombatSkillCutInRequest
 	bool bIsPlayerCaster = false;
 	int32 UnitId = INDEX_NONE;
 	int32 SkillIndex = INDEX_NONE;
-	FString CasterIdentity;
+	TSoftObjectPtr<UTexture2D> ShortCut;
 	TWeakObjectPtr<UTexture2D> Portrait;
 	TWeakObjectPtr<AActor> ViewActor;
 };

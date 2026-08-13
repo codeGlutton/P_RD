@@ -13,6 +13,9 @@ namespace
 	constexpr float EnterEnd = 0.20f;
 	constexpr float SettleEnd = 0.34f;
 	constexpr float ExitStart = 0.70f;
+	constexpr float CutInAspectRatio = 1672.0f / 941.0f;
+	constexpr float CutInViewportWidthFraction = 0.50f;
+	constexpr float CutInViewportMaxHeightFraction = 0.50f;
 
 	float Smooth01(const float Value)
 	{
@@ -99,8 +102,8 @@ void USkillCutInWidget::EnsureNativeWidgetTree()
 	PanelCanvas->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 	if (UCanvasPanelSlot* PanelSlot = RootCanvas->AddChildToCanvas(PanelCanvas))
 	{
-		// Exactly 50% x 50%: one quarter of the screen area. The 16:9 source
-		// canvas keeps its aspect ratio on a 16:9 viewport without distortion.
+		// Bootstrap placement only. ApplyPresentation/ApplyMotion replace this
+		// with a DPI-aware 1672:941 absolute layout for the active viewport.
 		PanelSlot->SetAnchors(FAnchors(0.50f, 0.25f, 1.00f, 0.75f));
 		PanelSlot->SetAlignment(FVector2D::ZeroVector);
 		PanelSlot->SetOffsets(FMargin(0.0f));
@@ -246,23 +249,9 @@ void USkillCutInWidget::SetLayerUVRegion(
 void USkillCutInWidget::ApplyPresentation(const FSkillCutInPresentationData& Presentation)
 {
 	const bool bSingleImageRig = Presentation.LayerRig == ESkillCutInLayerRig::MasterDuelSingle;
-	const bool bPlayerSide = Presentation.LayerRig == ESkillCutInLayerRig::MercenaryBlade
-		|| (bSingleImageRig && Presentation.bMirror);
-	const FAnchors PanelAnchors = bPlayerSide
-		? FAnchors(0.0f, 0.25f, 0.50f, 0.75f)
-		: FAnchors(0.50f, 0.25f, 1.0f, 0.75f);
-	if (UCanvasPanelSlot* PanelSlot = Cast<UCanvasPanelSlot>(PanelCanvas->Slot))
-	{
-		PanelSlot->SetAnchors(PanelAnchors);
-	}
-	if (UCanvasPanelSlot* FixedBackgroundSlot = Cast<UCanvasPanelSlot>(FixedBackgroundCanvas->Slot))
-	{
-		FixedBackgroundSlot->SetAnchors(PanelAnchors);
-	}
-	if (UCanvasPanelSlot* FixedFrontSlot = Cast<UCanvasPanelSlot>(FixedFrontFXCanvas->Slot))
-	{
-		FixedFrontSlot->SetAnchors(PanelAnchors);
-	}
+	const float ViewportScale = FMath::Max(
+		KINDA_SMALL_NUMBER, UWidgetLayoutLibrary::GetViewportScale(this));
+	UpdatePanelLayoutForViewport(UWidgetLayoutLibrary::GetViewportSize(this) / ViewportScale);
 	SetLayerTexture(BackgroundLayer, Presentation.BackgroundTexture,
 		bSingleImageRig ? FLinearColor::Transparent : FLinearColor(0.04f, 0.0f, 0.07f, 1.0f));
 	SetLayerTexture(SpeedLinesLayer, Presentation.SpeedLinesTexture,
@@ -327,7 +316,7 @@ void USkillCutInWidget::ApplyPresentation(const FSkillCutInPresentationData& Pre
 	SetLayerTexture(FlashLayer, Presentation.FlashTexture, FLinearColor::Transparent);
 
 	PanelFallback->SetBrushColor(bSingleImageRig
-		? FLinearColor(0.008f, 0.025f, 0.085f, 1.0f)
+		? FLinearColor::Transparent
 		: Presentation.AccentColor * FLinearColor(0.10f, 0.05f, 0.13f, 1.0f));
 	AccentWedgeBack->SetBrushColor(bSingleImageRig
 		? FLinearColor(0.02f, 0.22f, 0.65f, 0.62f)
@@ -413,7 +402,12 @@ void USkillCutInWidget::ApplyMotion(const float NormalizedTime)
 {
 	const float T = FMath::Clamp(NormalizedTime, 0.0f, 1.0f);
 	const float Direction = ActivePresentation.bMirror ? -1.0f : 1.0f;
-	const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+	const float ViewportScale = FMath::Max(
+		KINDA_SMALL_NUMBER, UWidgetLayoutLibrary::GetViewportScale(this));
+	// Canvas offsets and render transforms are Slate units, while GetViewportSize
+	// returns physical pixels. Normalize by DPI so the 16:9 panel stays correct.
+	const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this) / ViewportScale;
+	UpdatePanelLayoutForViewport(ViewportSize);
 	const float OffscreenTravel = FMath::Max(1100.0f, ViewportSize.X * 0.65f);
 	const bool bSingleImageRig = ActivePresentation.LayerRig == ESkillCutInLayerRig::MasterDuelSingle;
 	const float ActiveEnterEnd = bSingleImageRig ? 0.22f : EnterEnd;
@@ -493,22 +487,20 @@ void USkillCutInWidget::ApplyMotion(const float NormalizedTime)
 		// afterimage and one very brief close-up. The fixed background and impact
 		// never inherit these transforms; exit is an in-place fade with no rewind.
 		const float Reveal = Smooth01(FMath::Clamp((T - 0.12f) / 0.17f, 0.0f, 1.0f));
-		const float HeroImpact = TrianglePulse(T, 0.35f, 0.12f);
-		const float ExitFade = 1.0f - Smooth01(FMath::Clamp(
-			(T - ActiveExitStart) / (1.0f - ActiveExitStart), 0.0f, 1.0f));
+		const float ImpactArrival = Smooth01(FMath::Clamp((T - 0.23f) / 0.12f, 0.0f, 1.0f));
 		const FVector2D HeroTranslation(
 			Direction * FMath::Lerp(160.0f, -7.0f, Reveal),
-			-7.0f * HeroImpact);
+			-7.0f * ImpactArrival);
 		const float HeroAngle = Direction * (
-			FMath::Lerp(-4.5f, 0.0f, Reveal) + 1.25f * HeroImpact);
+			FMath::Lerp(-4.5f, 0.0f, Reveal) + 1.25f * ImpactArrival);
 		const FVector2D HeroScale(
-			FMath::Lerp(0.90f, 1.0f, Reveal) + 0.045f * HeroImpact,
-			FMath::Lerp(1.05f, 1.0f, Reveal) + 0.045f * HeroImpact);
+			FMath::Lerp(0.90f, 1.0f, Reveal) + 0.045f * ImpactArrival,
+			FMath::Lerp(1.05f, 1.0f, Reveal) + 0.045f * ImpactArrival);
 
 		BodyLayer->SetRenderTranslation(HeroTranslation);
 		BodyLayer->SetRenderScale(HeroScale);
 		BodyLayer->SetRenderTransformAngle(HeroAngle);
-		BodyLayer->SetRenderOpacity(Reveal * ExitFade);
+		BodyLayer->SetRenderOpacity(Reveal);
 
 		SingleGhostCyanLayer->SetColorAndOpacity(ActivePresentation.bMirror
 			? FLinearColor(0.08f, 0.72f, 1.0f, 1.0f)
@@ -519,10 +511,12 @@ void USkillCutInWidget::ApplyMotion(const float NormalizedTime)
 		SingleGhostGoldLayer->SetRenderScale(HeroScale);
 		SingleGhostCyanLayer->SetRenderTransformAngle(HeroAngle);
 		SingleGhostGoldLayer->SetRenderTransformAngle(HeroAngle);
-		SingleGhostCyanLayer->SetRenderOpacity(0.30f * Reveal * (1.0f - Smooth01(T / 0.50f)) * ExitFade);
+		// The approved frame is the hold composition: keep one readable faction
+		// afterimage behind the caster until the entire cut-in fades together.
+		SingleGhostCyanLayer->SetRenderOpacity(0.26f * Reveal);
 		SingleGhostGoldLayer->SetRenderOpacity(0.0f);
 
-		const float FaceCut = TrianglePulse(T, 0.095f, 0.07f) * ExitFade;
+		const float FaceCut = TrianglePulse(T, 0.095f, 0.07f);
 		SingleFaceCropLayer->SetRenderTranslation(FVector2D(
 			Direction * FMath::Lerp(120.0f, -12.0f, EaseOutCubic(FMath::Clamp(T / 0.15f, 0.0f, 1.0f))), 0.0f));
 		SingleFaceCropLayer->SetRenderScale(FVector2D(1.12f, 1.12f));
@@ -537,12 +531,13 @@ void USkillCutInWidget::ApplyMotion(const float NormalizedTime)
 
 		BackgroundLayer->SetRenderTranslation(FVector2D::ZeroVector);
 		BackgroundLayer->SetRenderScale(FVector2D(1.0f, 1.0f));
-		SpeedLinesLayer->SetRenderTranslation(FVector2D(-Direction * 410.0f * T, 0.0f));
-		SpeedLinesLayer->SetRenderOpacity((1.0f - Smooth01(FMath::Clamp((T - 0.34f) / 0.24f, 0.0f, 1.0f)))
-			* 0.62f * ExitFade);
+		// This is a world/screen-space effect layer. It stays pinned to the panel;
+		// only the caster and its ghost receive the impact translation.
+		SpeedLinesLayer->SetRenderTranslation(FVector2D::ZeroVector);
+		SpeedLinesLayer->SetRenderOpacity(0.62f * Reveal);
 		ForegroundLayer->SetRenderTranslation(FVector2D::ZeroVector);
-		ForegroundLayer->SetRenderScale(FVector2D(0.90f + 0.12f * HeroImpact));
-		ForegroundLayer->SetRenderOpacity(HeroImpact * 0.92f * ExitFade);
+		ForegroundLayer->SetRenderScale(FVector2D(0.90f + 0.12f * ImpactArrival));
+		ForegroundLayer->SetRenderOpacity(ImpactArrival * 0.92f);
 	}
 	else if (bMercenaryRig)
 	{
@@ -710,6 +705,38 @@ void USkillCutInWidget::ResetLayerTransforms()
 		if (SingleImageLayer != nullptr)
 		{
 			SingleImageLayer->SetRenderOpacity(0.0f);
+		}
+	}
+}
+
+void USkillCutInWidget::UpdatePanelLayoutForViewport(const FVector2D& ViewportSize)
+{
+	if (ViewportSize.X <= 1.0f || ViewportSize.Y <= 1.0f)
+	{
+		return;
+	}
+
+	const bool bPlayerSide = ActivePresentation.LayerRig == ESkillCutInLayerRig::MercenaryBlade
+		|| (ActivePresentation.LayerRig == ESkillCutInLayerRig::MasterDuelSingle
+			&& ActivePresentation.bMirror);
+	const float DesiredWidth = ViewportSize.X * CutInViewportWidthFraction;
+	const float DesiredHeight = DesiredWidth / CutInAspectRatio;
+	const float MaxHeight = ViewportSize.Y * CutInViewportMaxHeightFraction;
+	const float PanelHeight = FMath::Min(DesiredHeight, MaxHeight);
+	const float PanelWidth = PanelHeight * CutInAspectRatio;
+	const float Left = bPlayerSide ? 0.0f : ViewportSize.X - PanelWidth;
+	const float Top = (ViewportSize.Y - PanelHeight) * 0.5f;
+	const FMargin PanelOffsets(Left, Top, PanelWidth, PanelHeight);
+
+	for (UCanvasPanel* Canvas : {
+		FixedBackgroundCanvas.Get(), PanelCanvas.Get(), FixedFrontFXCanvas.Get() })
+	{
+		if (UCanvasPanelSlot* CanvasSlot = Canvas != nullptr
+			? Cast<UCanvasPanelSlot>(Canvas->Slot) : nullptr)
+		{
+			CanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+			CanvasSlot->SetAlignment(FVector2D::ZeroVector);
+			CanvasSlot->SetOffsets(PanelOffsets);
 		}
 	}
 }

@@ -158,6 +158,7 @@ private:
 	void ApplyMotion(float NormalizedTime);
 	void FinishCutIn();
 	void ResetLayerTransforms();
+	void UpdatePanelLayoutForViewport(const FVector2D& ViewportSize);
 
 	UImage* MakeImageLayer(UCanvasPanel* Parent, FName Name, int32 ZOrder);
 	void SetLayerTexture(UImage* Layer, const TSoftObjectPtr<UTexture2D>& Texture,

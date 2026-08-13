@@ -1172,10 +1172,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		{
 			Request.bIsPlayerCaster = CasterUnit->IsPlayerUnitModel();
 			Request.UnitId = CasterUnit->GetModelId();
-			Request.CasterIdentity = FString::Printf(TEXT("%s %s %s"),
-				*CasterUnit->GetBoardActorKeyName().ToString(),
-				*CasterUnit->GetBoardActorAssetId().ToString(),
-				*CasterUnit->GetBoardActorDisplayName().ToString());
+			Request.ShortCut = CasterUnit->GetBoardActorShortCut();
 			Request.Portrait = CasterUnit->GetBoardActorPortrait();
 			Request.ViewActor = CasterUnit->GetView<AActor>();
 		}
