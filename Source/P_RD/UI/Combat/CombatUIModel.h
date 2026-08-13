@@ -34,8 +34,20 @@ enum class ECombatInputType : uint8
 	FocusUnit
 };
 
+class AActor;
 class UTexture2D;
 struct FPresentationBarrier;
+
+/** 스킬 본 실행 직전에 UI가 재생할 컷인용 최소 스냅샷. */
+struct FCombatSkillCutInRequest
+{
+	bool bIsPlayerCaster = false;
+	int32 UnitId = INDEX_NONE;
+	int32 SkillIndex = INDEX_NONE;
+	FString CasterIdentity;
+	TWeakObjectPtr<UTexture2D> Portrait;
+	TWeakObjectPtr<AActor> ViewActor;
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatUIChanged, ECombatUIDomain, Domain);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatQueueNodeResolved, FCombatQueueNode, Node);
@@ -53,6 +65,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbandonRunCompleted, bool, bSucce
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeFocusScreenAnchor, const FVector2D& /*ScreenRatio*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPrePlaySkillCutIn, const FCombatSkillCutInRequest& /*Request*/, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 
 /** @brief 전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다. */
 UCLASS(BlueprintType)
@@ -106,6 +119,7 @@ public:
 	FOnBeginCombatPresentation OnEndAnyTurn;
 	FOnBeginCombatPresentation OnBeginAnyTurnAction;
 	FOnBeginCombatPresentation OnEndAnyTurnAction;
+	FOnPrePlaySkillCutIn OnPrePlaySkillCutIn;
 
 	/* ───────── 게임플레이가 구독하는 입력(의도) ───────── */
 	// UI는 Request*()로 의도만 보낸다. 게임플레이가 아래 델리게이트를 구독해 실제 처리해야 한다.
@@ -270,6 +284,11 @@ public:
 
 	/** @brief 전투 보상 오버레이 열기를 요청한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatResultOpenRequested();
+
+	/** TSharedPtr 배리어는 UHT에 노출하지 않고 네이티브 HUD로만 전달한다. */
+	void NotifyPrePlaySkillCutIn(
+		const FCombatSkillCutInRequest& Request,
+		TSharedPtr<FPresentationBarrier> Barrier);
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
