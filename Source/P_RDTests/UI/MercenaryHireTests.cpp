@@ -2968,7 +2968,7 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("아군 턴 시작에는 카드가 자동으로 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("아군 턴 시작은 현재 용병 포커스를 요청한다"),
-		Responder->mLastType, ECombatInputType::FocusUnit);
+		Responder->mLastType, ECombatInputType::FocusUnitInstant);
 	TestEqual(TEXT("아군 턴 포커스 대상은 현재 용병이다"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("아군 턴 시작은 화면 앵커를 한 번만 보낸다"),
@@ -3078,7 +3078,7 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("플레이어 턴 시작에 카드가 자동으로 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("플레이어 턴 시작은 현재 용병 포커스를 요청한다"),
-		Responder->mLastType, ECombatInputType::FocusUnit);
+		Responder->mLastType, ECombatInputType::FocusUnitInstant);
 	TestEqual(TEXT("플레이어 턴 포커스 대상"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("플레이어 턴 시작은 화면 앵커를 한 번만 보낸다"),
@@ -3101,6 +3101,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
 	TestEqual(TEXT("다음 플레이어 턴 시작에도 다시 편다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("다음 플레이어 턴은 기존 부드러운 포커스를 유지한다"),
+		Responder->mLastType, ECombatInputType::FocusUnit);
 
 	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
 	TestEqual(TEXT("행동 시작부터 카드를 감춘다"), Card->GetVisibility(),

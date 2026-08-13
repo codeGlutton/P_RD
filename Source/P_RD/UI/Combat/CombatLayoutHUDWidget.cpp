@@ -307,6 +307,7 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	mHasFocusedPlayerTurnCamera = false;
 	CacheAuthoredWidgets();
 	WireCommands();
 	StartPreviewIfUnbound();
@@ -1231,7 +1232,7 @@ FVector2D UCombatLayoutHUDWidget::ComputeCommandRingAnchor() const
 
 /** @brief 이 유닛을 화면 가운데로 데려오라고 청한다. */
 void UCombatLayoutHUDWidget::RequestCameraFocus(const int32 UnitId,
-	const bool bWithCommandRing)
+	const bool bWithCommandRing, const bool bInstantMove)
 {
 	if (mUIModel == nullptr || UnitId == INDEX_NONE)
 	{
@@ -1241,7 +1242,14 @@ void UCombatLayoutHUDWidget::RequestCameraFocus(const int32 UnitId,
 	// 고리 자리로 내리면 화면 가운데를 비워 둔 채 유닛만 아래로 처진다.
 	mUIModel->SetFocusScreenAnchor(bWithCommandRing == true
 		? ComputeCommandRingAnchor() : FVector2D(0.5f, 0.5f));
-	mUIModel->RequestFocusUnit(UnitId);
+	if (bInstantMove)
+	{
+		mUIModel->RequestFocusUnitInstant(UnitId);
+	}
+	else
+	{
+		mUIModel->RequestFocusUnit(UnitId);
+	}
 }
 
 /** @brief 지금 조종 중인 유닛을 화면 가운데로. 누구 스킬인지 판에서 보여 준다. */
@@ -2611,7 +2619,12 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationBegin(
 	if (bPlayerTurn == true && mUIModel != nullptr)
 	{
 		const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
-		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
+		// 첫 플레이어 턴은 카드와 동시에 시작되므로 즉시 맞춘다. 이후 턴과
+		// 수동 포커스는 기존 보간을 유지한다.
+		const bool bInstantMove = mHasFocusedPlayerTurnCamera == false;
+		mHasFocusedPlayerTurnCamera = true;
+		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true,
+			bInstantMove);
 	}
 }
 
@@ -2799,6 +2812,7 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 	++mActionPresentationSerial;
 	mIsTurnActive = false;
 	mIsActionPlaying = false;
+	mHasFocusedPlayerTurnCamera = false;
 	mTurnBeginHandle.Reset();
 	mTurnEndHandle.Reset();
 	mActionBeginHandle.Reset();

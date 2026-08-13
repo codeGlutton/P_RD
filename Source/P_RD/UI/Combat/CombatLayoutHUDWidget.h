@@ -897,7 +897,9 @@ private:
 	 * @param bWithCommandRing 스킬 카드가 함께 뜨는 경우 true -- 그때만 카드
 	 *        고리 가운데로 세부조정한다. 카드가 안 뜨면 화면 한가운데(0807).
 	 */
-	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing);
+	void RequestCameraFocus(int32 UnitId, bool bWithCommandRing,
+		bool bInstantMove = false);
+	bool mHasFocusedPlayerTurnCamera = false;
 
 	/**
 	 * @brief 다음 유닛 상세 응답으로는 상세창을 띄우지 않는다.

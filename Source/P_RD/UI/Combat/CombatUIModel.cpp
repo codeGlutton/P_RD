@@ -32,6 +32,11 @@ void UCombatUIModel::RequestFocusUnit(int32 UnitId)
 	OnCombatCommand.Broadcast(ECombatInputType::FocusUnit, UnitId);
 }
 
+void UCombatUIModel::RequestFocusUnitInstant(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::FocusUnitInstant, UnitId);
+}
+
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {

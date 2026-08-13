@@ -31,7 +31,9 @@ enum class ECombatInputType : uint8
 	InspectUnitSkill,
 	// payload = UnitId. 그 유닛이 화면 정중앙에 오도록 카메라를 옮긴다.
 	// 스킬 단추처럼 "누가 쓰는 스킬인지" 를 보여 줘야 하는 자리에서 쓴다.
-	FocusUnit
+	FocusUnit,
+	// payload = UnitId. 턴 시작 시 대상 위치를 즉시 맞춘다.
+	FocusUnitInstant
 };
 
 class UTexture2D;
@@ -185,6 +187,7 @@ public:
 	 * @param UnitId 가운데로 데려올 유닛
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnit(int32 UnitId);
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnitInstant(int32 UnitId);
 	/**
 	 * @brief 초점 유닛이 놓일 화면 자리(0~1 비율). RequestFocusUnit 전에 세운다.
 	 *

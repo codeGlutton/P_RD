@@ -705,6 +705,9 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// 스킬 단추를 눌렀다. 그 스킬을 쓰는 유닛을 화면 가운데로 데려온다.
 		FocusCameraOnUnit(IntPayload);
 		break;
+	case ECombatInputType::FocusUnitInstant:
+		FocusCameraOnUnit(IntPayload, true);
+		break;
 	case ECombatInputType::Confirm:
 		// 겨냥해 둔 칸을 그대로 다시 누른다. 판에서 두 번째 탭이 확정인데,
 		// 화면 단추로도 되게 하려면 그 탭을 여기서 대신 놓아 준다 -- 확정
@@ -1537,7 +1540,8 @@ UPlayerUnitModel* ACombatGameMode::FindPartyUnitModel(int32 UnitId) const
 	return nullptr;
 }
 
-void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
+void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId,
+	const bool bInstantMove) const
 {
 	if (UnitId == INDEX_NONE)
 	{
@@ -1562,7 +1566,8 @@ void ACombatGameMode::FocusCameraOnUnit(const int32 UnitId) const
 		return;
 	}
 
-	CameraMovement->MoveToWorldPosition(ViewActor->GetActorLocation(), false);
+	CameraMovement->MoveToWorldPosition(
+		ViewActor->GetActorLocation(), bInstantMove);
 }
 
 void ACombatGameMode::PushSkillUIData() const

@@ -236,7 +236,7 @@ protected:
 	 * 막아서, 스킬을 훑어보며 판을 움직이려는 손을 잠근다. 자리만 옮긴다.
 	 * @param UnitId 가운데로 데려올 유닛. 못 찾으면 아무것도 안 한다
 	 */
-	void FocusCameraOnUnit(int32 UnitId) const;
+	void FocusCameraOnUnit(int32 UnitId, bool bInstantMove = false) const;
 
 	void PushSkillDetailUIData(int32 SkillIndex) const;
 
