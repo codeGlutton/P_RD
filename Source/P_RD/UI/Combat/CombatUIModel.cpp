@@ -303,3 +303,11 @@ void UCombatUIModel::NotifyCombatResultOpenRequested()
 {
 	OnCombatResultOpenRequested.Broadcast();
 }
+
+void UCombatUIModel::NotifyPrePlaySkillCutIn(
+	const FCombatSkillCutInRequest& Request,
+	TSharedPtr<FPresentationBarrier> Barrier)
+{
+	// HUD가 보관하지 않으면 이 함수 반환 시 배리어가 자연 해제되어 fail-open한다.
+	OnPrePlaySkillCutIn.Broadcast(Request, MoveTemp(Barrier));
+}

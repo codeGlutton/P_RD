@@ -17,6 +17,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/SkillCutInWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/Combat/MockCombatDriver.h"
 #include "TimerManager.h"
@@ -2697,6 +2698,8 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationBegin);
 		mActionEndHandle = mUIModel->OnEndAnyTurnAction.AddUObject(
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationEnd);
+		mSkillCutInHandle = mUIModel->OnPrePlaySkillCutIn.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandlePrePlaySkillCutIn);
 
 		// 전투가 끝나면 결과 연출을 맡는다. 배리어를 넘겨받아 붙잡는다.
 		mVictoryWorldMapLocked = false;
@@ -2781,6 +2784,7 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 		mUIModel->OnEndAnyTurn.Remove(mTurnEndHandle);
 		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
 		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
+		mUIModel->OnPrePlaySkillCutIn.Remove(mSkillCutInHandle);
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
 		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
@@ -2803,7 +2807,30 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 	mTurnEndHandle.Reset();
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
+	mSkillCutInHandle.Reset();
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mSkillCutInSafetyTimerHandle);
+	}
+	mSkillCutInPlaying = false;
+	if (IsValid(mSkillCutInWidget))
+	{
+		mSkillCutInWidget->StopCutIn(/*bNotifyCompletion=*/false);
+		mSkillCutInWidget->RemoveFromParent();
+		mSkillCutInWidget = nullptr;
+	}
 	Super::UnbindUIModel();
+
+	// Reset으로 스킬이 동기 재개될 수 있으므로 Unbind의 마지막 작업이다.
+	TSharedPtr<FPresentationBarrier> PrimaryBarrier = MoveTemp(mSkillCutInBarrier);
+	TArray<TSharedPtr<FPresentationBarrier>> OverlappingBarriers = MoveTemp(mOverlappingSkillCutInBarriers);
+	mOverlappingSkillCutInBarriers.Reset();
+	PrimaryBarrier.Reset();
+	for (TSharedPtr<FPresentationBarrier>& OverlappingBarrier : OverlappingBarriers)
+	{
+		OverlappingBarrier.Reset();
+	}
 }
 
 bool UCombatLayoutHUDWidget::IsAiming() const
