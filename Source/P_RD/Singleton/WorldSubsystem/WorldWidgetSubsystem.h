@@ -48,6 +48,21 @@ public:
 	}
 	UUserWidget* GetWorldWidget(EWorldWidgetType Type) const;
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/**
+	 * @brief 실제 월드 위젯 조회 경로를 유지한 채 UI 입력 계약을 검사할 때 쓸 테스트 주입점.
+	 *
+	 * @details
+	 * 에디터 커맨드렛 월드에는 PlayerController가 없어 InitWorldWidget()이 UMG를
+	 * 생성할 수 없다. 테스트가 준비한 위젯을 같은 레지스트리 칸에 넣으면 전투
+	 * HUD의 톱니 버튼은 제품 코드와 똑같이 GetWorldWidget()으로 설정창을 찾는다.
+	 */
+	void SetWorldWidgetForTest(EWorldWidgetType Type, UUserWidget* Widget)
+	{
+		mWorldWidgets[StaticCast<uint8>(Type)] = Widget;
+	}
+#endif
+
 protected:
 	UPROPERTY(Category = UI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "HUD"))
 	TObjectPtr<UUserWidget> mHUD;
