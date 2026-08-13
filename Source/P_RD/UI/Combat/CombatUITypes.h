@@ -425,6 +425,14 @@ struct FSkillDetailUI
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	// 상세 응답을 요청한 유닛의 정적 스킬 수치다. 스킬 index는 유닛별
+	// 슬롯이라 플레이어 카드 레일의 같은 index를 다시 조회하면 안 된다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCriticalDamage = 0;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
 

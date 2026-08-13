@@ -564,6 +564,22 @@ USoundBase* ARDGameModeBase::GetMainBGM() const
 	return mMainBGM;
 }
 
+void ARDGameModeBase::FadeOutMainBGM(const float FadeOutDurationSeconds) const
+{
+	if (IsValid(mBgmComponent.Get()) == false || mBgmComponent->IsPlaying() == false)
+	{
+		return;
+	}
+
+	if (FadeOutDurationSeconds <= KINDA_SMALL_NUMBER)
+	{
+		mBgmComponent->Stop();
+		return;
+	}
+
+	mBgmComponent->FadeOut(FadeOutDurationSeconds, 0.f);
+}
+
 void ARDGameModeBase::SetMainBGM(USoundBase* BGM, bool IsOverride)
 {
 	if (mMainBGM == nullptr || IsOverride == true)
