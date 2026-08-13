@@ -24,6 +24,7 @@
 
 #include "UI/RDUserWidget.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatUIDebugFixture.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
 #include "UI/Reward/RewardUIModel.h"
@@ -61,13 +62,8 @@ DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
 namespace
 {
-	/** @brief 확인용: 1이면 전투에 등록되는 모든 유닛(아군·적)의 HP를 1로 시작한다.
-	 * 승리/패배/보상 화면을 빨리 보려는 개발 스위치다. UserEngine.ini 나
-	 * 콘솔에서 rd.Debug.ForceCombatHPOne 으로 켜고 끈다. */
-	int32 GForceCombatHPOne = 0;
-	FAutoConsoleVariableRef CForceCombatHPOne(
-		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
-		TEXT("1이면 전투 유닛 전원이 HP 1로 시작한다 (결과 화면 확인용)."));
+	/** @brief 결과 판이 열릴 때 전투 방 음악이 짧게 정리되는 시간. */
+	constexpr float CombatResultBGMFadeOutSeconds = 0.35f;
 
 	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
 	{
@@ -435,6 +431,9 @@ void ACombatGameMode::InitializeCombat()
 		});
 	CombatModel->OnEndCombatUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, ESRPGCombatResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
+		// 승리와 패배 모두 결과 화면에 들어가기 전에 방 음악을 정리한다.
+		// 화면 전환용 StartFadeOutUI와 달리 결과 UI는 같은 전투 맵 위에 뜬다.
+		FadeOutMainBGM(CombatResultBGMFadeOutSeconds);
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
@@ -1128,7 +1127,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	if (GForceCombatHPOne != 0)
+	if (CombatUIDebugFixture::ShouldMutateActualHPOne())
 	{
 		AttributeSetComponentModel->SetAttributeBaseValue(
 			UUnitAttributeSet::GetHPAttribute(), 1.f);
@@ -1226,83 +1225,20 @@ void ACombatGameMode::PushTurnUIData() const
 	TurnUI.mCurrentUnitId = TurnContexts[0]->GetOwner()->GetModelId();
 	TurnUI.mPhase = mCombatUIModel->GetTurnUI().mPhase;
 	TurnUI.mRound = CombatModel->GetRoundCount();
-	TurnUI.mCurrentRoundRemainingTurnCount =
-		CombatModel->GetTurnContextCount();
+	TurnUI.mCurrentRoundRemainingTurnCount = CombatModel->GetTurnContextCount();
 	for (const TObjectPtr<USRPGTurnContext>& TurnContext : TurnContexts)
 	{
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	/*
-	 * 다음 라운드 미리보기.
-	 *
-	 * 모델의 후보 계산(GetOrderedTurnCandidates)은 **지금** 속도로 판정한다 --
-	 * 라운드 교대 시점(충전 직후)에 쓰는 함수라 그렇다. 라운드 중반에 그대로
-	 * 부르면 이번 턴에 속도를 이미 쓴 유닛이 전부 탈락해 미리보기가 빈다
-	 * (0806 검수: 다음 라운드가 안 뜸). 그래서 여기서는 라운드가 넘어갈 때
-	 * 받을 충전량을 더한 값으로 내다본다. 동률 무작위까지는 흉내 내지 않는다
-	 * -- 이건 예고지 약속이 아니다.
-	 */
-	struct FNextRoundPreview
+	TArray<FSRPGTurnCandidate> ValidTurnCandidates;
+	int32 ValidRoundOffset = INDEX_NONE;
+	CombatModel->GetValidRoundAndOrderedTurnCandidates(OUT ValidTurnCandidates, OUT ValidRoundOffset);
+	for (const FSRPGTurnCandidate& ValidTurnCandidate : ValidTurnCandidates)
 	{
-		int32 mUnitId = INDEX_NONE;
-		int32 mProjectedSpeed = 0;
-	};
-	TArray<FNextRoundPreview> Previews;
-	const int32 RequiredSpeed =
-		GetDefault<UGameBalanceSettings>()->mRequiredSpeedPointForTurn;
-
-	/*
-	 * 아무도 못 차는 빈 라운드는 모델이 즉시 건너뛴다(충전 5 · 비용 10이면
-	 * 턴은 두 라운드에 한 번). 그래서 충전을 한 라운드씩 쌓아 보며 누군가
-	 * 처음 차는 라운드를 찾고, 그 라운드를 "다음"으로 표기한다 -- 한 라운드
-	 * 뒤만 보면 미리보기가 늘 비어 있었다(0806 검수).
-	 */
-	int32 RoundsAhead = 1;
-	constexpr int32 MaxRoundsToScan = 20;
-	for (; RoundsAhead <= MaxRoundsToScan && Previews.IsEmpty(); ++RoundsAhead)
-	{
-		for (const TObjectPtr<UUnitModel>& UnitModel : CombatModel->GetUnits())
-		{
-			UAttributeSetComponentModel* Attributes = UnitModel != nullptr
-				? UnitModel->GetAttributeComponentModel() : nullptr;
-			if (Attributes == nullptr)
-			{
-				continue;
-			}
-			// 죽은 유닛은 다음 라운드에 없다. 모델에서 빠지는 것은 턴이
-			// 끝날 때라, 그 사이 미리보기에 끼는 것을 막는다(0807 감사).
-			if (Attributes->GetAttributeCurrentValue(
-				UUnitAttributeSet::GetHPAttribute()) <= 0.f)
-			{
-				continue;
-			}
-			const int32 ProjectedSpeed = StaticCast<int32>(FMath::Floor(
-				Attributes->GetAttributeCurrentValue(
-					UUnitAttributeSet::GetSpeedPointAttribute())
-				+ Attributes->GetAttributeCurrentValue(
-					UUnitAttributeSet::GetRechargeSpeedPointAttribute())
-					* RoundsAhead));
-			if (ProjectedSpeed < RequiredSpeed)
-			{
-				continue;
-			}
-			Previews.Add({ UnitModel->GetModelId(), ProjectedSpeed });
-		}
-		if (Previews.IsEmpty() == false)
-		{
-			break;
-		}
+		TurnUI.mNextRoundUnitIds.Add(ValidTurnCandidate.mOwner->GetModelId());
 	}
-	// 동률 무작위까지는 흉내 내지 않는다 -- 이건 예고지 약속이 아니다.
-	Previews.StableSort(
-		[](const FNextRoundPreview& Lhs, const FNextRoundPreview& Rhs)
-		{ return Lhs.mProjectedSpeed > Rhs.mProjectedSpeed; });
-	for (const FNextRoundPreview& Preview : Previews)
-	{
-		TurnUI.mNextRoundUnitIds.Add(Preview.mUnitId);
-	}
-	TurnUI.mNextRoundOffset = FMath::Max(RoundsAhead, 1);
+	TurnUI.mNextRoundOffset = ValidRoundOffset + 1;
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 
@@ -1371,6 +1307,8 @@ void ACombatGameMode::PushUnitUIData() const
 	TArray<FUnitUI> UnitUIDatas;
 	UnitUIDatas.Init(FUnitUI(), UnitModelNum);
 
+	int32 PlayerFixtureIndex = 0;
+	int32 EnemyFixtureIndex = 0;
 	for (int32 i = 0; i < UnitModelNum; ++i)
 	{
 		const TObjectPtr<UUnitModel>& UnitModel = UnitModels[i];
@@ -1409,6 +1347,9 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mLevel = UnitModel->GetBoardActorLevel();
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
 		UnitUIData.mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetMaxHPAttribute());
+		// Android 실기 UI 검수용 HP=1은 DTO에만 적용한다. 실제 Attribute와
+		// 이를 추적하는 RunPersistData는 건드리지 않아 전투/세이브 결과가 바뀌지 않는다.
+		CombatUIDebugFixture::ApplyDisplayHPOne(UnitModel->IsDead() == false, OUT UnitUIData);
 		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
 		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
 		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
@@ -1442,28 +1383,10 @@ void ACombatGameMode::PushUnitUIData() const
 			UnitUIData.mStatusEffects.Add(StatusEffect);
 		}
 
-#if WITH_EDITOR
-		// 에디터 Standalone/PIE에서 전투 HUD의 큰 상태 슬롯을 바로 검수한다.
-		// 실제 태그가 없는 첫 아군과 첫 적에만 DTO 표시용 fixture를 보탠다.
-		if (UnitUIData.mStatusEffects.IsEmpty())
-		{
-			const bool bFirstPlayer = UnitUIData.mIsPlayer && i == 0;
-			const bool bFirstEnemy = !UnitUIData.mIsPlayer
-				&& !UnitUIDatas.ContainsByPredicate([](const FUnitUI& Existing)
-				{
-					return !Existing.mIsPlayer && !Existing.mStatusEffects.IsEmpty();
-				});
-			if (bFirstPlayer || bFirstEnemy)
-			{
-				FStatusEffectUI PreviewStatus;
-				PreviewStatus.mTag = bFirstPlayer
-					? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification
-					: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
-				PreviewStatus.mStackCount = bFirstPlayer ? 1 : 2;
-				UnitUIData.mStatusEffects.Add(PreviewStatus);
-			}
-		}
-#endif
+		const int32 FixtureSideIndex = UnitUIData.mIsPlayer
+			? PlayerFixtureIndex++ : EnemyFixtureIndex++;
+		CombatUIDebugFixture::AppendStatuses(UnitUIData.mIsPlayer, FixtureSideIndex,
+			OUT UnitUIData.mStatusEffects);
 
 		// 적 요약판의 "다음 스킬" 소켓: 장착 스킬 중 첫 유효 슬롯 아이콘을 대표로 건다.
 		if (UnitUIData.mIsPlayer == false)
@@ -2001,6 +1924,34 @@ void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponent
 	OutDetail.mName = StaticSkillData->mName;
 	OutDetail.mDescription = StaticSkillData->mDescription;
 	OutDetail.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+	// 이 상세는 플레이어 카드 레일뿐 아니라 임의 유닛(몬스터 포함)의 스킬에도
+	// 쓰인다. 유닛별 슬롯 index만 넘기면 HUD에서 다른 유닛의 같은 슬롯과
+	// 구분할 수 없으므로, 표시할 정적 수치를 응답 DTO에 함께 싣는다.
+	if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(StaticSkillData))
+	{
+		OutDetail.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);
+	}
+	OutDetail.mCooldownTurns = FMath::Max(
+		SkillComponentModel->GetStaticCooldownDuration(SkillIndex), 0);
+	for (const FSkillPhaseLayer& MotionLayer : StaticSkillData->mSkillPhaseLayers)
+	{
+		for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer :
+			MotionLayer.mSkillEffectLayers)
+		{
+			if (const FSkillEffectLayer_Attack* Attack =
+				EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+			{
+				OutDetail.mDamageMin += Attack->mMinDamage;
+				OutDetail.mDamageMax += Attack->mMaxDamage;
+			}
+			if (const FSkillEffectLayer_GetActionPoint* Gain =
+				EffectLayer.GetPtr<FSkillEffectLayer_GetActionPoint>())
+			{
+				OutDetail.mActionPointGain += Gain->mActionPointGain;
+			}
+		}
+	}
+	OutDetail.mCriticalDamage = FMath::RoundToInt(OutDetail.mDamageMax * 1.5f);
 	OutDetail.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
 	OutDetail.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
 	OutDetail.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);

@@ -416,7 +416,7 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 	 */
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> MapButtonPlateFinder(
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/Common/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
 	if (MapButtonPlateFinder.Succeeded())
 	{
 		mMapButtonPlateTexture = MapButtonPlateFinder.Object;
@@ -458,6 +458,18 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 void UFrontendMapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if (IsLandscapeLayout())
+	{
+		EnsureCloseButton();
+		ValidateDesignerBindings();
+		BindEvents();
+		ConfigureMapGraphLayout();
+		RefreshLocalizedTextCache();
+		HideUnusedMapTextSurfaces();
+		RefreshMap();
+		return;
+	}
+
 	EnsureCloseButton();
 	ValidateDesignerBindings();
 	BindEvents();
@@ -958,9 +970,19 @@ void UFrontendMapWidget::InstallMapPerspectiveRetainer()
 		return;
 	}
 
-	// 같은 자리(형제 순서 유지)에 리테이너를 넣고 스크롤 박스를 그 안으로 옮긴다.
-	if (!ParentPanel->ReplaceChild(MapScrollBox, Retainer))
+	// ReplaceChild는 WITH_EDITOR 전용 API다. 패키지 빌드에서도 같은 위치와
+	// 슬롯 레이아웃을 보존하도록 런타임 지원 Remove/Insert 경로를 사용한다.
+	const int32 ChildIndex = ParentPanel->GetChildIndex(MapScrollBox);
+	UPanelSlot* SlotTemplate = MapScrollBox->Slot;
+	if (ChildIndex == INDEX_NONE || SlotTemplate == nullptr
+		|| !ParentPanel->RemoveChildAt(ChildIndex))
 	{
+		return;
+	}
+	if (ParentPanel->InsertChildAt(ChildIndex, Retainer, SlotTemplate) == nullptr)
+	{
+		// 삽입 실패 시 원래 위젯을 복구해 빈 지도 컨테이너가 남지 않게 한다.
+		ParentPanel->InsertChildAt(ChildIndex, MapScrollBox, SlotTemplate);
 		return;
 	}
 	Retainer->AddChild(MapScrollBox);
@@ -1228,7 +1250,7 @@ void UFrontendMapWidget::ValidateDesignerBindings() const
 	{
 		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: MapGraphSize is not connected. WBP_FrontendMap should own the graph size box."));
 	}
-	if (MapScrollBox == nullptr)
+	if (MapScrollBox == nullptr && !IsLandscapeLayout())
 	{
 		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: MapScrollBox is not connected. WBP_FrontendMap should own the scroll box."));
 	}
@@ -1451,7 +1473,13 @@ bool UFrontendMapWidget::RefreshMap()
 	TArray<FMapRoomView> Rooms;
 	bool bHasRooms = false;
 	bool bShouldScrollToStart = false;
-	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
+	if (mUseDebugPreviewRooms)
+	{
+		Rooms = mDebugPreviewRooms;
+		bHasRooms = Rooms.IsEmpty() == false;
+		bShouldScrollToStart = mDebugPreviewAtStageStart;
+	}
+	else if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
 	{
 		bHasRooms = RoomGameMode->GetMapRoomViews(Rooms);
 
@@ -1460,7 +1488,15 @@ bool UFrontendMapWidget::RefreshMap()
 	}
 	else
 	{
-		UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. WorldMap data must be provided by RoomGameMode."));
+		const bool bGameWorld = GetWorld() != nullptr && GetWorld()->IsGameWorld();
+		if (bGameWorld)
+		{
+			UE_LOG(LogRD, Warning, TEXT("FrontendMapWidget: RoomGameMode is not available. WorldMap data must be provided by RoomGameMode."));
+		}
+		else
+		{
+			UE_LOG(LogRD, Verbose, TEXT("FrontendMapWidget: editor preview has no RoomGameMode."));
+		}
 	}
 
 	// 진단(0807): 빈 지도가 보고됐는데 경고 로그가 하나도 없었다. 성공 경로도
@@ -1478,12 +1514,7 @@ bool UFrontendMapWidget::RefreshMap()
 
 	// 노드 크기는 열 간격에서 파생하므로 레이아웃보다 먼저 확정한다
 	// (그래프 높이 계산이 노드 크기를 쓴다).
-	int32 MaxColumnIndex = 0;
-	for (const FMapRoomView& Room : Rooms)
-	{
-		MaxColumnIndex = FMath::Max(MaxColumnIndex, Room.mColumn);
-	}
-	ResolveNodeMetrics(MaxColumnIndex);
+	ResolveNodeMetrics(Rooms);
 
 	ConfigureMapGraphLayout();
 
@@ -1570,8 +1601,24 @@ bool UFrontendMapWidget::RefreshMap()
 			}
 
 			UFrontendMapLineWidget* ConnectionLine = LineEntry->mLineWidget;
-			// 실선=열린 길 / 점선=잠긴 길 — 텍스처/틴트 모두 시안(WBP 클래스 디폴트) 소유.
-			ConnectionLine->SetLineStyle(Room.mState != EMapRoomState::Locked);
+			/*
+			 * 실제로 지나온 길은 양쪽 방이 모두 Cleared일 때만 밝힌다.
+			 * 현재 방에서 다음 후보로 뻗는 길은 승리 후 방 선택 모드에서만 연다.
+			 * 따라서 전투 중 MAP 조회에서는 Ready 노드가 보여도 다음 길은 잠긴 점선으로 남는다.
+			 */
+			const bool bIsTraversedPath =
+				Room.mState == EMapRoomState::Cleared
+				&& NextRoom->mState == EMapRoomState::Cleared;
+			const bool bIsCurrentRoom =
+				FIntPoint(Room.mRow, Room.mColumn) == CurrentCoord;
+			const bool bIsNextRoomCandidate =
+				NextRoom->mState == EMapRoomState::Ready
+				|| NextRoom->mState == EMapRoomState::Selected;
+			const bool bIsOpenNextPath =
+				mRoomSelectionEnabled && bIsCurrentRoom && bIsNextRoomCandidate;
+			ConnectionLine->SetLineStyle(
+				bIsTraversedPath || bIsOpenNextPath,
+				bIsTraversedPath);
 
 			FWidgetTransform LineTransform;
 			LineTransform.Angle = FMath::RadiansToDegrees(FMath::Atan2(Delta.Y, Delta.X));
@@ -1643,7 +1690,8 @@ bool UFrontendMapWidget::RefreshMap()
 		{
 			NodeSlot->SetSize(NodeSize);
 			NodeSlot->SetPosition(Center - NodeSize * 0.5f);
-			NodeSlot->SetZOrder(1);
+			const bool bCurrentNode = FIntPoint(Room.mRow, Room.mColumn) == CurrentCoord;
+			NodeSlot->SetZOrder(Room.mType == ERoomType::BossMonster ? 3 : (bCurrentNode ? 4 : 1));
 		}
 	}
 
@@ -1663,8 +1711,9 @@ bool UFrontendMapWidget::RefreshMap()
 	if (EnterRoomButton != nullptr)
 	{
 		const bool bNavigationEnabled = IsFrontendMapNavigationEnabled();
-		SetEnterButtonVisible(bNavigationEnabled);
-		EnterRoomButton->SetIsEnabled(bNavigationEnabled && bHasSelectedRoom && !mEnterRequested);
+		const bool bCanConfirmNextRoom = bNavigationEnabled && bHasSelectedRoom;
+		SetEnterButtonVisible(bCanConfirmNextRoom);
+		EnterRoomButton->SetIsEnabled(bCanConfirmNextRoom && !mEnterRequested);
 	}
 
 	SetEnterButtonText(mEnterText);
@@ -1683,6 +1732,21 @@ bool UFrontendMapWidget::RefreshMap()
 		}
 	}
 	return true;
+}
+
+void UFrontendMapWidget::SetPreviewRoomsForDebug(
+	const TArray<FMapRoomView>& InRooms, bool bInAtStageStart)
+{
+	mDebugPreviewRooms = InRooms;
+	mUseDebugPreviewRooms = true;
+	mDebugPreviewAtStageStart = bInAtStageStart;
+}
+
+void UFrontendMapWidget::ClearPreviewRoomsForDebug()
+{
+	mDebugPreviewRooms.Reset();
+	mUseDebugPreviewRooms = false;
+	mDebugPreviewAtStageStart = false;
 }
 
 /**
@@ -1786,6 +1850,8 @@ void UFrontendMapWidget::SetEnterButtonText(const FText& InText) const
 
 void UFrontendMapWidget::SetEnterButtonVisible(bool bVisible) const
 {
+	// 조회용 지도에서는 액션 판을 남기지 않는다. 다음 방 선택 흐름에서 실제 선택이
+	// 확정된 순간에만 버튼과 라벨을 함께 노출한다.
 	const ESlateVisibility ButtonVisibility = bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
 	const ESlateVisibility TextVisibility = bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed;
 	if (EnterRoomButton != nullptr)
@@ -1893,6 +1959,15 @@ bool UFrontendMapWidget::IsFrontendMapNavigationEnabled() const
 
 FVector2D UFrontendMapWidget::GetMapGraphContentSize() const
 {
+	if (IsLandscapeLayout())
+	{
+		const float Width = MapGraphSize != nullptr && MapGraphSize->GetWidthOverride() > 1.f
+			? MapGraphSize->GetWidthOverride() : 1672.f;
+		const float Height = MapGraphSize != nullptr && MapGraphSize->GetHeightOverride() > 1.f
+			? MapGraphSize->GetHeightOverride() : 941.f;
+		return FVector2D(Width, Height);
+	}
+
 	float GraphWidth = 0.f;
 	if (MapScrollBox != nullptr)
 	{
@@ -1967,12 +2042,56 @@ float UFrontendMapWidget::GetMapNodeDesignSize() const
 	const float Size = (Map_NodeMetrics != nullptr && Map_NodeMetrics->GetWidthOverride() > 1.f)
 		? Map_NodeMetrics->GetWidthOverride()
 		: MapNodeFallbackSize;
+	if (IsLandscapeLayout())
+	{
+		return Size;
+	}
 	// 간격(행/열 피치)은 배율을 곱하지 않는다 — 아이콘만 상대적으로 커져야 한다.
 	return Size * FMath::Max(0.1f, mMapNodeSizeScale);
 }
 
-void UFrontendMapWidget::ResolveNodeMetrics(int32 MaxColumn)
+void UFrontendMapWidget::ResolveNodeMetrics(const TArray<FMapRoomView>& Rooms)
 {
+	int32 MaxColumn = 0;
+	TArray<int32> UsedColumns;
+	for (const FMapRoomView& Room : Rooms)
+	{
+		MaxColumn = FMath::Max(MaxColumn, Room.mColumn);
+		UsedColumns.AddUnique(Room.mColumn);
+	}
+	UsedColumns.Sort();
+
+	if (IsLandscapeLayout())
+	{
+		mResolvedNodeSize = 0.f;
+		mResolvedRowPitch = 0.f;
+		const float DesignSize = GetMapNodeDesignSize();
+		const FVector2D GraphSize = GetMapGraphContentSize();
+		float LeftFrac = 0.f;
+		float RightFrac = 0.f;
+		float TopPx = 0.f;
+		float BottomPx = 0.f;
+		GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx, GraphSize.X);
+		const float UsableWidth = FMath::Max(1.f, (RightFrac - LeftFrac) * GraphSize.X);
+		const float UsableHeight = FMath::Max(1.f, GraphSize.Y - TopPx - BottomPx);
+		const float RowPitch = mCachedRowCount > 1
+			? UsableWidth / StaticCast<float>(mCachedRowCount - 1)
+			: UsableWidth;
+		/*
+		 * Stage 열 번호는 0,3,6처럼 듬성듬성할 수 있다. 최댓값을 열 개수로 쓰면
+		 * 실제 다섯 레인을 열세 레인으로 오인해 노드를 48px까지 줄인다.
+		 * 가로형 지도는 실제 사용 중인 레인 수로만 크기를 계산한다.
+		 */
+		const float ColumnPitch = UsedColumns.Num() > 1
+			? UsableHeight / StaticCast<float>(UsedColumns.Num() - 1)
+			: UsableHeight;
+		mResolvedRowPitch = RowPitch;
+		mResolvedNodeSize = FMath::Clamp(
+			FMath::Min3(DesignSize, RowPitch * 0.78f, ColumnPitch * 0.72f),
+			48.f, DesignSize);
+		return;
+	}
+
 	/*
 	 * 아이콘 크기를 "한 칸"에서 파생시키고, 행 간격은 화면 높이에 맞춰 편다.
 	 *
@@ -2052,6 +2171,28 @@ float UFrontendMapWidget::GetMapColPitchMax() const
 
 void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFrac, float& OutTopPx, float& OutBottomPx, float InGraphWidth) const
 {
+	if (IsLandscapeLayout())
+	{
+		OutLeftFrac = 0.19f;
+		OutRightFrac = 0.91f;
+		OutTopPx = 180.f;
+		OutBottomPx = 115.f;
+		if (const UCanvasPanelSlot* AreaSlot = Map_NodeArea != nullptr
+			? Cast<UCanvasPanelSlot>(Map_NodeArea->Slot) : nullptr)
+		{
+			const FAnchors Anchors = AreaSlot->GetAnchors();
+			if (Anchors.Maximum.X > Anchors.Minimum.X)
+			{
+				OutLeftFrac = Anchors.Minimum.X;
+				OutRightFrac = Anchors.Maximum.X;
+			}
+			const FMargin Offsets = AreaSlot->GetOffsets();
+			OutTopPx = FMath::Max(0.f, Offsets.Top);
+			OutBottomPx = FMath::Max(0.f, Offsets.Bottom);
+		}
+		return;
+	}
+
 	// 시안 마커: 앵커 X 분수 = 좌우 경계, 오프셋 Top/Bottom = 상하 여백(px). 에디터에서 박스를 옮기면 여기로 반영된다.
 	OutLeftFrac = MapNodeAreaLeftFracFallback;
 	OutRightFrac = MapNodeAreaRightFracFallback;
@@ -2139,6 +2280,52 @@ void UFrontendMapWidget::GetNodeAreaLayout(float& OutLeftFrac, float& OutRightFr
 
 FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& Rooms, const FMapRoomView& Room, const FVector2D& GraphSize) const
 {
+	if (IsLandscapeLayout())
+	{
+		int32 MaxRow = 0;
+		TArray<int32> UsedColumns;
+		for (const FMapRoomView& Candidate : Rooms)
+		{
+			MaxRow = FMath::Max(MaxRow, Candidate.mRow);
+			UsedColumns.AddUnique(Candidate.mColumn);
+		}
+		UsedColumns.Sort();
+
+		float LeftFrac = 0.f;
+		float RightFrac = 0.f;
+		float TopPx = 0.f;
+		float BottomPx = 0.f;
+		GetNodeAreaLayout(OUT LeftFrac, OUT RightFrac, OUT TopPx, OUT BottomPx, GraphSize.X);
+		const FVector2D NodeSize = GetMapNodeSize();
+		const float Half = NodeSize.X * 0.5f;
+		const float MinX = GraphSize.X * LeftFrac + Half;
+		const float MaxX = GraphSize.X * RightFrac - Half;
+		const float MinY = TopPx + Half;
+		const float MaxY = GraphSize.Y - BottomPx - Half;
+		const float XAlpha = MaxRow > 0
+			? StaticCast<float>(Room.mRow) / StaticCast<float>(MaxRow) : 0.f;
+		const float X = FMath::Lerp(MinX, MaxX, XAlpha);
+		const int32 LaneIndex = UsedColumns.IndexOfByKey(Room.mColumn);
+		float Y = UsedColumns.Num() > 1 && LaneIndex != INDEX_NONE
+			? FMath::Lerp(MinY, MaxY,
+				StaticCast<float>(LaneIndex) / StaticCast<float>(UsedColumns.Num() - 1))
+			: (MinY + MaxY) * 0.5f;
+
+		// 우하단 입장 버튼 영역으로 들어가는 마지막 하단 경로만 위로 휘어 시안처럼 버튼 위에서 합류시킨다.
+		constexpr float ActionReserveStartX = 1150.f;
+		constexpr float ActionReserveTargetY = 620.f;
+		if (X > ActionReserveStartX && Y > ActionReserveTargetY && MaxX > ActionReserveStartX)
+		{
+			const float ReserveAlpha = FMath::Clamp(
+				(X - ActionReserveStartX) / (MaxX - ActionReserveStartX), 0.f, 1.f);
+			Y = FMath::Lerp(Y, ActionReserveTargetY, ReserveAlpha);
+		}
+		const float Jitter = FMath::Min(8.f, NodeSize.X * 0.08f);
+		return FVector2D(
+			FMath::Clamp(X + Room.mPositionOffsetRate.X * Jitter, MinX, MaxX),
+			FMath::Clamp(Y + Room.mPositionOffsetRate.Y * Jitter, MinY, MaxY));
+	}
+
 	/*
 	 * Stage row/column -> 캔버스 좌표. 배치 경계/간격의 정본은 시안 마커다:
 	 * - X: Map_NodeArea 좌우 분수 안에서 열을 분배하되, 열 간격이 Map_ColPitch 상한을 넘지 않게 중앙으로 모은다(간격 과대 방지).
@@ -2206,6 +2393,22 @@ FVector2D UFrontendMapWidget::GetMapRoomNodeCenter(const TArray<FMapRoomView>& R
 
 void UFrontendMapWidget::ConfigureMapGraphLayout() const
 {
+	if (IsLandscapeLayout())
+	{
+		const FVector2D GraphSize = GetMapGraphContentSize();
+		if (MapGraphSize != nullptr)
+		{
+			MapGraphSize->SetWidthOverride(GraphSize.X);
+			MapGraphSize->SetHeightOverride(GraphSize.Y);
+		}
+		UpdateGraphDecorLayout(GraphSize);
+		if (MapGraphCanvas != nullptr)
+		{
+			MapGraphCanvas->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		}
+		return;
+	}
+
 	/*
 	 * 지도 그래프는 ScrollBox 안의 세로 긴 Canvas로 다룬다.
 	 * 가로는 현재 ScrollBox/Viewport 폭에 맞추고, 높이만 길게 잡아 위아래 스크롤로 탐색한다.
@@ -2370,18 +2573,38 @@ void UFrontendMapWidget::UpdateGraphDecorLayout(const FVector2D& GraphSize) cons
 
 void UFrontendMapWidget::UpdateOverlayMarkers(const TMap<FIntPoint, FVector2D>& NodeCenters, const FIntPoint& CurrentCoord, const FIntPoint& SelectedCoord) const
 {
-	// 현재 위치 마커: 시안 크기(슬롯) 유지, 현재 노드 머리 위에 얹는다.
+	const FVector2D* CurrentCenter = NodeCenters.Find(CurrentCoord);
+
+	// 가로형 지도는 현재 파티 초상을 노드 중심에 겹치고, 별도 청색 오라로 위치를 강조한다.
+	if (Map_CurrentAura != nullptr)
+	{
+		UCanvasPanelSlot* AuraSlot = Cast<UCanvasPanelSlot>(Map_CurrentAura->Slot);
+		if (CurrentCenter != nullptr && AuraSlot != nullptr)
+		{
+			const FVector2D AuraSize = AuraSlot->GetSize();
+			AuraSlot->SetPosition(*CurrentCenter - AuraSize * 0.5f);
+			AuraSlot->SetZOrder(2);
+			Map_CurrentAura->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		else
+		{
+			Map_CurrentAura->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	// 기존 세로형은 화살표를 머리 위에, 가로형은 초상을 노드 중심에 배치한다.
 	if (Map_CurrentMarker != nullptr)
 	{
-		const FVector2D* CurrentCenter = NodeCenters.Find(CurrentCoord);
 		UCanvasPanelSlot* MarkerSlot = Cast<UCanvasPanelSlot>(Map_CurrentMarker->Slot);
 		if (CurrentCenter != nullptr && MarkerSlot != nullptr)
 		{
 			const FVector2D MarkerSize = MarkerSlot->GetSize();
-			MarkerSlot->SetPosition(FVector2D(
-				CurrentCenter->X - MarkerSize.X * 0.5f,
-				CurrentCenter->Y - GetMapNodeSize().Y * 0.5f - MarkerSize.Y));
-			MarkerSlot->SetZOrder(6);
+			MarkerSlot->SetPosition(IsLandscapeLayout()
+				? *CurrentCenter - MarkerSize * 0.5f
+				: FVector2D(
+					CurrentCenter->X - MarkerSize.X * 0.5f,
+					CurrentCenter->Y - GetMapNodeSize().Y * 0.5f - MarkerSize.Y));
+			MarkerSlot->SetZOrder(7);
 			Map_CurrentMarker->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
 		else

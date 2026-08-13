@@ -9,9 +9,12 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/ProgressBar.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Engine.h"
@@ -587,17 +590,29 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	const FLinearColor White = FLinearColor::White;
+	const FLinearColor ParchmentInk(0.19f, 0.065f, 0.014f, 1.f);
 	for (const TCHAR* TextName : { TEXT("SettingsTitleText"),
 		TEXT("MasterVolumeRow_Label"), TEXT("QualityRow_Label"),
-		TEXT("BackButtonText"),
-		TEXT("LowQualityButtonText"), TEXT("MediumQualityButtonText"),
-		TEXT("HighQualityButtonText") })
+		TEXT("StatusText") })
 	{
 		if (UTextBlock* Text = Cast<UTextBlock>(Tree->FindWidget(FName(TextName))))
 		{
-			TestTrue(*FString::Printf(TEXT("%s 순백색"), TextName),
-				Text->GetColorAndOpacity().GetSpecifiedColor().Equals(White, 0.001f));
+			TestTrue(*FString::Printf(TEXT("%s 양피지 잉크색"), TextName),
+				Text->GetColorAndOpacity().GetSpecifiedColor().Equals(
+					ParchmentInk, 0.001f));
+		}
+	}
+
+	const FLinearColor IvoryInk(1.f, .90f, .68f, 1.f);
+	for (const TCHAR* TextName : { TEXT("AudioSectionHeader"),
+		TEXT("BackButtonText"), TEXT("LowQualityButtonText"),
+		TEXT("MediumQualityButtonText"), TEXT("HighQualityButtonText") })
+	{
+		if (UTextBlock* Text = Cast<UTextBlock>(Tree->FindWidget(FName(TextName))))
+		{
+			TestTrue(*FString::Printf(TEXT("%s 아이보리 잉크색"), TextName),
+				Text->GetColorAndOpacity().GetSpecifiedColor().Equals(
+					IvoryInk, 0.001f));
 		}
 	}
 
@@ -630,6 +645,69 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("디자인 캔버스는 SizeBox 자식"),
 			ModalCanvas->GetParent() == SettingsSize);
 	}
+	UWidget* ConfirmViewportLayer = Tree->FindWidget(TEXT("RunConfirmViewportLayer"));
+	UBorder* ConfirmViewportDim = Cast<UBorder>(
+		Tree->FindWidget(TEXT("RunConfirmViewportDim")));
+	UScaleBox* ConfirmScale = Cast<UScaleBox>(
+		Tree->FindWidget(TEXT("RunConfirmScale")));
+	USizeBox* ConfirmDesignSize = Cast<USizeBox>(
+		Tree->FindWidget(TEXT("RunConfirmDesignSize")));
+	UWidget* ConfirmPanelForTree = Tree->FindWidget(TEXT("AbandonConfirmPanel"));
+	if (TestNotNull(TEXT("확인창 viewport 루트 레이어"), ConfirmViewportLayer))
+	{
+		TestTrue(TEXT("확인창 레이어는 Settings 루트 직계 자식"),
+			ConfirmViewportLayer->GetParent() == Tree->RootWidget);
+		UCanvasPanelSlot* LayerSlot = Cast<UCanvasPanelSlot>(ConfirmViewportLayer->Slot);
+		if (TestNotNull(TEXT("확인창 viewport Canvas 슬롯"), LayerSlot))
+		{
+			TestTrue(TEXT("확인창 레이어 full anchors"),
+				LayerSlot->GetAnchors().Minimum.Equals(FVector2D::ZeroVector, .001f)
+				&& LayerSlot->GetAnchors().Maximum.Equals(FVector2D(1.f), .001f));
+			TestEqual(TEXT("확인창 레이어 zero offsets"),
+				LayerSlot->GetOffsets(), FMargin(0.f));
+			TestTrue(TEXT("확인창 레이어는 설정 장부보다 앞"),
+				LayerSlot->GetZOrder() > 10);
+		}
+	}
+	if (TestNotNull(TEXT("확인창 viewport dim"), ConfirmViewportDim))
+	{
+		TestTrue(TEXT("dim은 root overlay 자식"),
+			ConfirmViewportDim->GetParent() == ConfirmViewportLayer);
+		TestTrue(TEXT("dim은 실제 검정 반투명"),
+			ConfirmViewportDim->GetBrushColor().A > .5f);
+	}
+	if (TestNotNull(TEXT("확인창 독립 ScaleBox"), ConfirmScale))
+	{
+		TestTrue(TEXT("확인창 ScaleBox는 dim과 같은 root overlay 자식"),
+			ConfirmScale->GetParent() == ConfirmViewportLayer);
+		TestEqual(TEXT("확인창만 16:9 ScaleToFit"),
+			ConfirmScale->GetStretch(), EStretch::ScaleToFit);
+	}
+	if (TestNotNull(TEXT("확인창 1920x1080 design size"), ConfirmDesignSize))
+	{
+		TestEqual(TEXT("확인창 design 폭"), ConfirmDesignSize->GetWidthOverride(), 1920.f);
+		TestEqual(TEXT("확인창 design 높이"), ConfirmDesignSize->GetHeightOverride(), 1080.f);
+		TestTrue(TEXT("확인 패널은 aspect-fit design size 자식"),
+			ConfirmPanelForTree != nullptr
+			&& ConfirmPanelForTree->GetParent() == ConfirmDesignSize);
+	}
+	UWidget* BodyMount = Tree->FindWidget(TEXT("Set_panel_bodyMount"));
+	UCanvasPanelSlot* BodyMountSlot = BodyMount != nullptr
+		? Cast<UCanvasPanelSlot>(BodyMount->Slot) : nullptr;
+	if (TestNotNull(TEXT("장부 본체 마운트"), BodyMountSlot))
+	{
+		TestTrue(TEXT("장부 본체 위치"),
+			BodyMountSlot->GetPosition().Equals(FVector2D(175.f, 28.f), 0.01));
+		TestTrue(TEXT("장부 본체 1570x1001"),
+			BodyMountSlot->GetSize().Equals(FVector2D(1570.f, 1001.f), 0.01));
+	}
+	if (UImage* BookImage = Cast<UImage>(Tree->FindWidget(TEXT("Set_panel_body"))))
+	{
+		const UObject* BookTexture = BookImage->GetBrush().GetResourceObject();
+		TestTrue(TEXT("장부 전용 BookBase 텍스처"),
+			BookTexture != nullptr && BookTexture->GetPathName().Contains(
+				TEXT("SettingsLedger/T_MB_SettingsLedger_BookBase")));
+	}
 	if (TestNotNull(TEXT("설정 기능 컨텐츠 캔버스"), ContentCanvas))
 	{
 		for (const TCHAR* WidgetName : {
@@ -644,37 +722,77 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				Widget != nullptr && Widget->GetParent() == ContentCanvas);
 		}
 	}
-
-	for (const TCHAR* SurfaceName : {
-		TEXT("Set_row_master_plate_Surface"), TEXT("Set_row_bgm_plate_Surface"),
-		TEXT("Set_row_sfx_plate_Surface"), TEXT("Set_row_ui_plate_Surface"),
-		TEXT("Set_row_shake_plate_Surface"), TEXT("Set_row_effects_plate_Surface"),
-		TEXT("SettingsQualityRowSurface"), TEXT("SettingsFpsRowSurface"),
-		TEXT("SettingsLanguageRowSurface") })
+	UOverlay* BackMount = Cast<UOverlay>(Tree->FindWidget(TEXT("BackButtonPlateMount")));
+	UButton* BackButton = Cast<UButton>(Tree->FindWidget(TEXT("BackButton")));
+	if (TestNotNull(TEXT("Back 명패 마운트"), BackMount)
+		&& TestNotNull(TEXT("Back 실제 입력 버튼"), BackButton))
 	{
-		UBorder* Surface = Cast<UBorder>(Tree->FindWidget(FName(SurfaceName)));
+		TestTrue(TEXT("Back 입력 영역이 보이는 명패 안에 있음"),
+			BackButton->GetParent() == BackMount);
+		UOverlaySlot* BackSlot = Cast<UOverlaySlot>(BackButton->Slot);
+		if (TestNotNull(TEXT("Back 입력 Overlay 슬롯"), BackSlot))
+		{
+			TestEqual(TEXT("Back 입력 가로 Fill"),
+				BackSlot->GetHorizontalAlignment(), HAlign_Fill);
+			TestEqual(TEXT("Back 입력 세로 Fill"),
+				BackSlot->GetVerticalAlignment(), VAlign_Fill);
+			const FMargin BackPadding = BackSlot->GetPadding();
+			TestTrue(TEXT("Back 입력 패딩 없음"),
+				FMath::IsNearlyZero(BackPadding.Left)
+				&& FMath::IsNearlyZero(BackPadding.Top)
+				&& FMath::IsNearlyZero(BackPadding.Right)
+				&& FMath::IsNearlyZero(BackPadding.Bottom));
+		}
+		TestTrue(TEXT("Back 입력 활성"), BackButton->GetIsEnabled());
+		TestEqual(TEXT("Back 입력 표시"), BackButton->GetVisibility(),
+			ESlateVisibility::Visible);
+	}
+
+	struct FExpectedSurface
+	{
+		const TCHAR* Name;
+		FVector2D Size;
+	};
+	const FExpectedSurface ExpectedSurfaces[] = {
+		{ TEXT("Set_row_master_plate_Surface"), FVector2D(595.f, 78.f) },
+		{ TEXT("Set_row_bgm_plate_Surface"), FVector2D(595.f, 78.f) },
+		{ TEXT("Set_row_sfx_plate_Surface"), FVector2D(595.f, 78.f) },
+		{ TEXT("Set_row_ui_plate_Surface"), FVector2D(595.f, 78.f) },
+		{ TEXT("Set_row_shake_plate_Surface"), FVector2D(575.f, 74.f) },
+		{ TEXT("Set_row_effects_plate_Surface"), FVector2D(575.f, 74.f) },
+		{ TEXT("SettingsQualityRowSurface"), FVector2D(575.f, 74.f) },
+		{ TEXT("SettingsFpsRowSurface"), FVector2D(575.f, 74.f) },
+		{ TEXT("SettingsLanguageRowSurface"), FVector2D(575.f, 74.f) },
+	};
+	for (const FExpectedSurface& Expected : ExpectedSurfaces)
+	{
+		UBorder* Surface = Cast<UBorder>(Tree->FindWidget(FName(Expected.Name)));
 		UCanvasPanelSlot* Slot = Surface != nullptr
 			? Cast<UCanvasPanelSlot>(Surface->Slot) : nullptr;
-		if (TestNotNull(*FString::Printf(TEXT("%s 기능 행 표면"), SurfaceName), Surface)
-			&& TestNotNull(*FString::Printf(TEXT("%s 캔버스 슬롯"), SurfaceName), Slot))
+		if (TestNotNull(*FString::Printf(TEXT("%s 기능 행 표면"), Expected.Name), Surface)
+			&& TestNotNull(*FString::Printf(TEXT("%s 캔버스 슬롯"), Expected.Name), Slot))
 		{
-			TestTrue(*FString::Printf(TEXT("%s 580x62"), SurfaceName),
-				Slot->GetSize().Equals(FVector2D(580.f, 62.f), 0.01));
+			TestTrue(*FString::Printf(TEXT("%s 장부 행 크기"), Expected.Name),
+				Slot->GetSize().Equals(Expected.Size, 0.01));
 		}
 	}
 
-	for (const TCHAR* RetiredPlateName : {
+	for (const TCHAR* LedgerRowName : {
 		TEXT("Set_row_master_plate"), TEXT("Set_row_bgm_plate"),
 		TEXT("Set_row_sfx_plate"), TEXT("Set_row_ui_plate"),
-		TEXT("Set_row_shake_plate"), TEXT("Set_row_vibration_plate"),
+		TEXT("Set_row_shake_plate"),
 		TEXT("Set_row_effects_plate"), TEXT("Set_row_quality_plate"),
 		TEXT("Set_row_fps_plate"), TEXT("Set_row_language_plate") })
 	{
-		UWidget* Plate = Tree->FindWidget(FName(RetiredPlateName));
-		if (TestNotNull(*FString::Printf(TEXT("%s 호환 파츠"), RetiredPlateName), Plate))
+		UImage* Plate = Cast<UImage>(Tree->FindWidget(FName(LedgerRowName)));
+		if (TestNotNull(*FString::Printf(TEXT("%s 장부 라벨 파츠"), LedgerRowName), Plate))
 		{
-			TestEqual(*FString::Printf(TEXT("%s 왜곡 방지 숨김"), RetiredPlateName),
-				Plate->GetVisibility(), ESlateVisibility::Collapsed);
+			TestEqual(*FString::Printf(TEXT("%s 표시"), LedgerRowName),
+				Plate->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+			const UObject* Resource = Plate->GetBrush().GetResourceObject();
+			TestTrue(*FString::Printf(TEXT("%s 전용 RowLabel"), LedgerRowName),
+				Resource != nullptr && Resource->GetPathName().Contains(
+					TEXT("SettingsLedger/T_MB_SettingsLedger_RowLabel")));
 		}
 	}
 
@@ -688,8 +806,8 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		if (TestNotNull(*FString::Printf(TEXT("%s 실제 채움"), FillName), Fill)
 			&& TestNotNull(*FString::Printf(TEXT("%s 캔버스 슬롯"), FillName), Slot))
 		{
-			TestTrue(*FString::Printf(TEXT("%s 원본비 채움 영역"), FillName),
-				Slot->GetSize().Equals(FVector2D(306.f, 30.86f), 0.02));
+			TestTrue(*FString::Printf(TEXT("%s 장부 채움 영역"), FillName),
+				Slot->GetSize().Equals(FVector2D(332.f, 29.f), 0.02));
 		}
 	}
 	if (UWidget* UiSlider = Tree->FindWidget(TEXT("UIVolumeSlider")))
@@ -712,8 +830,8 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		? Cast<UCanvasPanelSlot>(RunActions->Slot) : nullptr;
 	if (TestNotNull(TEXT("런 액션 캔버스 슬롯"), RunActionsSlot))
 	{
-		TestTrue(TEXT("런 액션 600x70"),
-			RunActionsSlot->GetSize().Equals(FVector2D(600.0, 70.0), 0.01));
+		TestTrue(TEXT("런 액션 620x118"),
+			RunActionsSlot->GetSize().Equals(FVector2D(620.0, 118.0), 0.01));
 	}
 	for (const TCHAR* ContainerName : {
 		TEXT("Set_run_SaveAndExitButton"), TEXT("Set_run_AbandonRunButton") })
@@ -751,8 +869,8 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		{
 			continue;
 		}
-		TestTrue(*FString::Printf(TEXT("%s 120x56"), MountName),
-			Slot->GetSize().Equals(FVector2D(120.0, 56.0), 0.01));
+		TestTrue(*FString::Printf(TEXT("%s 112x56"), MountName),
+			Slot->GetSize().Equals(FVector2D(112.0, 56.0), 0.01));
 		TestTrue(*FString::Printf(TEXT("%s 이전 버튼과 비중첩"), MountName),
 			Slot->GetPosition().X >= PreviousRight - 0.01);
 		PreviousRight = Slot->GetPosition().X + Slot->GetSize().X;
@@ -762,19 +880,25 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 	{
 		const TCHAR* TextName;
 		const TCHAR* ContainerName;
+		FMargin Padding;
 	};
+	const FMargin SegmentTextPadding(8.f, 2.f);
+	const FMargin ActionTextPadding(14.f, 2.f, 14.f, 32.f);
+	const FMargin CompactActionTextPadding(12.f, 2.f, 12.f, 22.f);
 	const FExpectedTextFit ExpectedTextFits[] = {
-		{ TEXT("BackButtonText"), TEXT("BackButtonText_Center") },
-		{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center") },
-		{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center") },
-		{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center") },
-		{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center") },
-		{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center") },
-		{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center") },
-		{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center") },
-		{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center") },
-		{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton") },
-		{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton") },
+		{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), ActionTextPadding },
+		{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), ActionTextPadding },
+		{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), SegmentTextPadding },
+		{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), SegmentTextPadding },
+		{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), SegmentTextPadding },
+		{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), SegmentTextPadding },
+		{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), SegmentTextPadding },
+		{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), SegmentTextPadding },
+		{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), SegmentTextPadding },
+		{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), ActionTextPadding },
+		{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), ActionTextPadding },
+		{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), CompactActionTextPadding },
+		{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), CompactActionTextPadding },
 	};
 	for (const FExpectedTextFit& Expected : ExpectedTextFits)
 	{
@@ -794,6 +918,30 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				Scale->GetStretchDirection(), EStretchDirection::DownOnly);
 			TestEqual(*FString::Printf(TEXT("%s 경계 클립"), Expected.TextName),
 				Scale->GetClipping(), EWidgetClipping::ClipToBoundsAlways);
+			UOverlaySlot* ScaleSlot = Cast<UOverlaySlot>(Scale->Slot);
+			if (TestNotNull(*FString::Printf(TEXT("%s 중앙 슬롯"), Expected.TextName),
+				ScaleSlot))
+			{
+				const FMargin ActualPadding = ScaleSlot->GetPadding();
+				TestTrue(*FString::Printf(TEXT("%s 버튼 면 중앙 패딩"), Expected.TextName),
+					FMath::IsNearlyEqual(ActualPadding.Left, Expected.Padding.Left)
+					&& FMath::IsNearlyEqual(ActualPadding.Top, Expected.Padding.Top)
+					&& FMath::IsNearlyEqual(ActualPadding.Right, Expected.Padding.Right)
+					&& FMath::IsNearlyEqual(ActualPadding.Bottom, Expected.Padding.Bottom));
+				TestEqual(*FString::Printf(TEXT("%s 가로 Fill"), Expected.TextName),
+					ScaleSlot->GetHorizontalAlignment(), HAlign_Fill);
+				TestEqual(*FString::Printf(TEXT("%s 세로 Fill"), Expected.TextName),
+					ScaleSlot->GetVerticalAlignment(), VAlign_Fill);
+			}
+			if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(Text->Slot))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 글자 가로 중앙"), Expected.TextName),
+					TextSlot->GetHorizontalAlignment(), HAlign_Center);
+				TestEqual(*FString::Printf(TEXT("%s 글자 세로 중앙"), Expected.TextName),
+					TextSlot->GetVerticalAlignment(), VAlign_Center);
+			}
+			TestTrue(*FString::Printf(TEXT("%s 레거시 렌더 오프셋 제거"), Expected.TextName),
+				Text->GetRenderTransform() == FWidgetTransform());
 		}
 	}
 
@@ -858,21 +1006,20 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 	{
 		TestAspectFitPlate(PlateName);
 	}
-	TestAspectFitPlate(TEXT("SaveAndExitButtonPlate"), FVector2D(300.0, 70.0));
-	TestAspectFitPlate(TEXT("AbandonRunButtonPlate"), FVector2D(300.0, 70.0));
+	TestAspectFitPlate(TEXT("SaveAndExitButtonPlate"), FVector2D(310.0, 118.0));
+	TestAspectFitPlate(TEXT("AbandonRunButtonPlate"), FVector2D(310.0, 118.0));
 
-	// Large panels, rows and slider rails are intentionally resizable. They may change
-	// outer aspect only through a 9-slice whose basis remains the native texture size.
+	// The generated ledger and confirmation modal are fixed illustration art.
 	for (const TCHAR* ImageName : {
-		TEXT("Set_panel_body"), TEXT("Set_confirm_plate"),
+		TEXT("Set_panel_body"),
 		TEXT("Set_row_master_plate"), TEXT("Set_row_bgm_plate"),
 		TEXT("Set_row_sfx_plate"), TEXT("Set_row_ui_plate"),
-		TEXT("Set_row_shake_plate"), TEXT("Set_row_vibration_plate"),
+		TEXT("Set_row_shake_plate"),
 		TEXT("Set_row_effects_plate"), TEXT("Set_row_quality_plate"),
 		TEXT("Set_row_fps_plate"), TEXT("Set_row_language_plate") })
 	{
 		UImage* Image = Cast<UImage>(Tree->FindWidget(FName(ImageName)));
-		if (!TestNotNull(*FString::Printf(TEXT("%s 9-slice 이미지"), ImageName), Image))
+		if (!TestNotNull(*FString::Printf(TEXT("%s 고정 이미지"), ImageName), Image))
 		{
 			continue;
 		}
@@ -884,16 +1031,88 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		}
 		const FIntPoint NativeSize = Texture->GetImportedSize();
 		const FVector2D BasisSize = Brush.GetImageSize();
-		TestTrue(*FString::Printf(TEXT("%s Box 브러시"), ImageName),
-			Brush.DrawAs == ESlateBrushDrawType::Box);
-		TestTrue(*FString::Printf(TEXT("%s 네이티브 9-slice 기준"), ImageName),
+		TestTrue(*FString::Printf(TEXT("%s Image 브러시"), ImageName),
+			Brush.DrawAs == ESlateBrushDrawType::Image);
+		TestTrue(*FString::Printf(TEXT("%s 네이티브 이미지 기준"), ImageName),
 			BasisSize.Equals(FVector2D(NativeSize.X, NativeSize.Y), 0.01));
-		const FMargin& Margin = Brush.GetMargin();
-		TestTrue(*FString::Printf(TEXT("%s 유효한 9-slice 마진"), ImageName),
-			Margin.Left > 0.0 && Margin.Top > 0.0
-			&& Margin.Right > 0.0 && Margin.Bottom > 0.0
-			&& Margin.Left + Margin.Right < 1.0
-			&& Margin.Top + Margin.Bottom < 1.0);
+		TestTrue(*FString::Printf(TEXT("%s 9-slice 없음"), ImageName),
+			Brush.GetMargin() == FMargin(0.f));
+	}
+
+	UImage* ConfirmPlate = Cast<UImage>(Tree->FindWidget(TEXT("Set_confirm_plate")));
+	if (TestNotNull(TEXT("공용 런 액션 확인 모달 판"), ConfirmPlate))
+	{
+		const FSlateBrush& Brush = ConfirmPlate->GetBrush();
+		TestEqual(TEXT("확인 모달 고정 이미지"), Brush.DrawAs,
+			ESlateBrushDrawType::Image);
+		UTexture2D* Texture = Cast<UTexture2D>(Brush.GetResourceObject());
+		if (TestNotNull(TEXT("확인 모달 Marchbound 텍스처"), Texture))
+		{
+			TestEqual(TEXT("확인 모달 canonical 텍스처 경로"),
+				Texture->GetPathName(),
+				FString(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/"
+					"T_MB_GenericDetailPanel.T_MB_GenericDetailPanel")));
+			TestTrue(TEXT("확인 모달 브러시 원본 크기"),
+				Brush.GetImageSize().Equals(FVector2D(Texture->GetImportedSize()), 0.001));
+		}
+		TestTrue(TEXT("확인 모달 비변형 margin"), Brush.GetMargin() == FMargin(0.f));
+	}
+	if (UWidget* ConfirmPanel = Tree->FindWidget(TEXT("AbandonConfirmPanel")))
+	{
+		TestEqual(TEXT("확인 모달 전체 화면 클립"), ConfirmPanel->GetClipping(),
+			EWidgetClipping::ClipToBoundsAlways);
+		TestTrue(TEXT("확인 모달은 viewport scale의 design child"),
+			ConfirmPanel->GetParent() == Tree->FindWidget(TEXT("RunConfirmDesignSize")));
+	}
+	for (const TCHAR* LegacyDimName : { TEXT("AbandonConfirmDim"),
+		TEXT("Set_confirm_dim") })
+	{
+		if (UWidget* LegacyDim = Tree->FindWidget(FName(LegacyDimName)))
+		{
+			TestEqual(*FString::Printf(TEXT("%s legacy letterbox dim 비활성"),
+				LegacyDimName), LegacyDim->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	}
+	UTextBlock* ConfirmHeader = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("RunConfirmHeaderText")));
+	if (TestNotNull(TEXT("확인 모달 상단 명패 텍스트"), ConfirmHeader))
+	{
+		UCanvasPanelSlot* HeaderSlot = Cast<UCanvasPanelSlot>(ConfirmHeader->Slot);
+		if (TestNotNull(TEXT("확인 명패 디자인 캔버스 슬롯"), HeaderSlot))
+		{
+			TestTrue(TEXT("확인 명패 위치"),
+				HeaderSlot->GetPosition().Equals(FVector2D(670.f, 210.f), 0.01));
+			TestTrue(TEXT("확인 명패 580x76"),
+				HeaderSlot->GetSize().Equals(FVector2D(580.f, 76.f), 0.01));
+			TestTrue(TEXT("확인 명패가 모달 내부 장식보다 앞"),
+				HeaderSlot->GetZOrder() > 2);
+		}
+		TestEqual(TEXT("확인 명패 경계 클립"), ConfirmHeader->GetClipping(),
+			EWidgetClipping::ClipToBoundsAlways);
+	}
+
+	for (const TCHAR* RibbonName : { TEXT("SettingsAudioRibbonArt"),
+		TEXT("SettingsDisplayRibbonArt"), TEXT("SettingsGameplayRibbonArt") })
+	{
+		UImage* Ribbon = Cast<UImage>(Tree->FindWidget(FName(RibbonName)));
+		if (TestNotNull(*FString::Printf(TEXT("%s 장부 리본"), RibbonName), Ribbon))
+		{
+			const UObject* Resource = Ribbon->GetBrush().GetResourceObject();
+			TestTrue(*FString::Printf(TEXT("%s 전용 텍스처"), RibbonName),
+				Resource != nullptr && Resource->GetPathName().Contains(
+					TEXT("SettingsLedger/T_MB_SettingsLedger_SectionRibbon")));
+		}
+	}
+	UImage* SelectedReference = Cast<UImage>(
+		Tree->FindWidget(TEXT("SettingsChoiceSelectedCookReference")));
+	if (TestNotNull(TEXT("선택 파츠 cook 참조"), SelectedReference))
+	{
+		const UObject* Resource = SelectedReference->GetBrush().GetResourceObject();
+		TestEqual(TEXT("선택 파츠 cook 참조 숨김"),
+			SelectedReference->GetVisibility(), ESlateVisibility::Collapsed);
+		TestTrue(TEXT("선택 파츠 전용 텍스처"),
+			Resource != nullptr && Resource->GetPathName().Contains(
+				TEXT("SettingsLedger/T_MB_SettingsLedger_ChoiceButton_Selected")));
 	}
 
 	for (const TCHAR* TrackName : { TEXT("Set_slider_track_master"),

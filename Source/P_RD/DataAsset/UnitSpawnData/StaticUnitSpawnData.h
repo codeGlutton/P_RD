@@ -22,6 +22,10 @@ class P_RD_API UStaticUnitSpawnData : public UStaticObstacleSpawnData
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ShortCut", AssetBundles = "UI"))
+	TSoftObjectPtr<UTexture2D> mShortCut;
+
+public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillDatas", AllowedClasses = "/Script/P_RD.StaticUnitSkillData", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticSkillData>> mSkillDatas;
 };

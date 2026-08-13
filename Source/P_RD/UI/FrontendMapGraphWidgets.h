@@ -79,13 +79,40 @@ public:
 	 * @details
 	 * 텍스처는 WBP Class Defaults(시안 빌더가 주입)가 소유한다. 텍스처가 없으면 기존 색상 Border로 폴백한다.
 	 */
-	void SetLineStyle(bool bIsOpenPath);
+	void SetLineStyle(bool bIsOpenPath, bool bIsTraversed = false);
+
+	/** @brief 마지막으로 적용된 연결선이 열린 경로인지 반환한다. */
+	bool IsOpenPath() const { return mIsOpenPath; }
+
+	/** @brief 마지막으로 적용된 연결선이 실제로 지나온 경로인지 반환한다. */
+	bool IsTraversedPath() const { return mIsTraversedPath; }
 
 	/** @brief 시안이 정한 선 두께. 부모가 CanvasPanelSlot 높이로 쓴다. */
 	float GetLineThickness() const;
 
 protected:
 	void NativeConstruct() override;
+
+	/** @brief 파생 레이아웃이 기존 선 표시 로직에 전용 텍스처를 공급한다. */
+	void SetLineTexturesForLayout(UTexture2D* InSolid, UTexture2D* InDashed)
+	{
+		mSolidTexture = InSolid;
+		mDashedTexture = InDashed;
+	}
+	void SetLineThicknessForLayout(float InThickness) { mLineThickness = InThickness; }
+	void SetLinePaletteForLayout(
+		const FLinearColor& InOpenTint,
+		const FLinearColor& InTraversedTint,
+		const FLinearColor& InLockedTint,
+		const FLinearColor& InOpenGlowTint,
+		const FLinearColor& InLockedGlowTint)
+	{
+		mOpenTint = InOpenTint;
+		mTraversedTint = InTraversedTint;
+		mLockedTint = InLockedTint;
+		mOpenGlowTint = InOpenGlowTint;
+		mLockedGlowTint = InLockedGlowTint;
+	}
 
 private:
 	/** @brief WBP 안에서 실제 선 색상을 받는 Border(텍스처 미지정 시 폴백) */
@@ -95,6 +122,10 @@ private:
 	/** @brief 경로 텍스처를 그리는 Image(시안 빌더가 WBP에 생성) */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> LineImage;
+
+	/** @brief 중심선 아래에 깔리는 넓은 발광선. 없는 기존 WBP는 종전처럼 중심선만 그린다. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> LineGlowImage;
 
 	/* 아래 스타일 값들은 concept 시안이 정본이며 빌더가 WBP Class Defaults로 주입한다. C++ 하드코딩 금지. */
 
@@ -114,9 +145,23 @@ private:
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	FLinearColor mOpenTint = FLinearColor(1.f, 1.f, 1.f, 0.95f);
 
+	/** @brief 이미 지나온 길의 밝은 금색. */
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mTraversedTint = FLinearColor(1.f, 1.f, 1.f, 0.95f);
+
 	/** @brief 잠긴 길 틴트(시안 mLockedTint) */
 	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
 	FLinearColor mLockedTint = FLinearColor(1.f, 1.f, 1.f, 0.55f);
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mOpenGlowTint = FLinearColor(1.f, 0.55f, 0.08f, 0.42f);
+
+	UPROPERTY(Category = "Frontend Map|Style", EditDefaultsOnly, meta = (AllowPrivateAccess = true))
+	FLinearColor mLockedGlowTint = FLinearColor(0.55f, 0.40f, 0.18f, 0.12f);
+
+	/** @brief 현재 표시 중인 선 스타일. 지도 갱신 회귀 테스트와 상태 확인에 사용한다. */
+	bool mIsOpenPath = false;
+	bool mIsTraversedPath = false;
 };
 
 /**
@@ -161,15 +206,18 @@ protected:
 	void NativeConstruct() override;
 	void NativeDestruct() override;
 
+	/** @brief 지도 스킨별 방 아이콘 선택 지점. */
+	virtual UTexture2D* GetTypeIconTexture(ERoomType RoomType) const;
+
+	/** @brief 지도 스킨별 상태 링 선택 지점. */
+	virtual UTexture2D* GetStateRingTexture(EMapRoomState RoomState, bool bIsCurrentRoom) const;
+
+	/** @brief 레이아웃 스킨별 노드 위계 크기. Canvas 클릭 슬롯은 유지하고 보이는 노드만 확대한다. */
+	virtual float GetVisualScale(ERoomType RoomType, EMapRoomState RoomState, bool bIsCurrentRoom) const;
+
 private:
 	UFUNCTION()
 	void HandleNodeButtonClicked();
-
-	/** @brief 타입 아이콘: 클래스 디폴트(시안) 우선, 없으면 기존 경로 폴백. */
-	UTexture2D* GetTypeIconTexture(ERoomType RoomType) const;
-
-	/** @brief 상태별 링 텍스처(현재 위치가 최우선). */
-	UTexture2D* GetStateRingTexture(EMapRoomState RoomState, bool bIsCurrentRoom) const;
 
 private:
 	UPROPERTY(meta = (BindWidgetOptional))

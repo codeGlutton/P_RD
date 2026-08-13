@@ -6,10 +6,40 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/UnitSpawnData/UnitJobType.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 
 #include "CharacterSelectTypes.generated.h"
 
 class UTexture2D;
+
+/**
+ * @brief 캐릭터 선택 화면에서 한 스킬의 상세를 그릴 정적 표시 데이터.
+ *
+ * @details 선택 화면은 아직 전투 인스턴스가 없으므로 남은 쿨타임/사용 가능
+ * 여부가 아니라 DataAsset의 원래 스펙만 보여 준다. Widget이 DataAsset 구조를
+ * 직접 알지 않도록 FrontendGameMode가 이 값으로 변환해 내려준다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FFrontendSkillOption
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) FText mName;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) FText mDescription;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) TSoftObjectPtr<UTexture2D> mIcon;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mCriticalDamage = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) EAimPattern mAimPattern = EAimPattern::Single;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mAimRange = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) EEffectPattern mEffectPattern = EEffectPattern::Single;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectArea = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
+};
 
 /** @brief 캐릭터 선택 UI가 표시할 플레이어 유닛 카드 데이터 */
 // 이 타입은 캐릭터 선택 화면에 필요한 표시 데이터를 한 곳에 모은다.
@@ -66,6 +96,10 @@ struct P_RD_API FFrontendCharacterOption
 	// 비어 있는 칸은 이름 글자로 대신 보여준다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	TArray<TSoftObjectPtr<UTexture2D>> mSkillIcons;
+
+	// 스킬 상세 겹용 정적 스펙(mSkillNames/mSkillIcons와 같은 순서).
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<FFrontendSkillOption> mSkillDetails;
 
 	// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)

@@ -41,6 +41,7 @@ public class P_RDTests : ModuleRules
             "SlateCore",
             "RenderCore",
             "RHI",
+            "ImageCore",
         });
 
         // 캡처 테스트는 에디터 월드에서만 돈다.

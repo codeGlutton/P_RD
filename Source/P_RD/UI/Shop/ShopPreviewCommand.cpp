@@ -19,8 +19,11 @@ namespace ShopPreview
 {
 	const TCHAR* ShopWidgetPath =
 		TEXT("/Game/UI/Shop/WBP_Shop.WBP_Shop_C");
+	const TCHAR* FullGeneratedShopWidgetPath =
+		TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated.WBP_Shop_FullGenerated_C");
 
 	TWeakObjectPtr<UShopUIWidgetBase> ShownWidget;
+	TWeakObjectPtr<UShopUIWidgetBase> ShownFullGeneratedWidget;
 
 	/**
 	 * @brief 현재 월드가 상점방일 때 게임모드의 실제 뷰모델을 반환
@@ -96,6 +99,54 @@ namespace ShopPreview
 		TEXT("RD.ShopPreview"),
 		TEXT("현재 상점방의 실제 뷰모델에 상점 화면(WBP_Shop)을 붙여 연다."),
 		FConsoleCommandWithWorldDelegate::CreateStatic(&Show));
+
+	/** @brief 실제 HUD를 교체하지 않고 생성 이미지 전용 상점 WBP를 시험한다. */
+	void ShowFullGenerated(UWorld* World)
+	{
+		if (ShownFullGeneratedWidget.IsValid())
+		{
+			ShownFullGeneratedWidget->RemoveFromParent();
+			ShownFullGeneratedWidget.Reset();
+		}
+
+		UShopUIModel* Model = FindLiveModel(World);
+		if (Model == nullptr)
+		{
+			return;
+		}
+
+		UClass* WidgetClass = LoadClass<UShopUIWidgetBase>(
+			nullptr, FullGeneratedShopWidgetPath);
+		if (WidgetClass == nullptr)
+		{
+			UE_LOG(LogRD, Warning,
+				TEXT("RD.ShopPreviewFullGenerated: %s 클래스를 찾지 못했습니다."),
+				FullGeneratedShopWidgetPath);
+			return;
+		}
+
+		APlayerController* Controller = World->GetFirstPlayerController();
+		UShopUIWidgetBase* Widget = Controller != nullptr
+			? CreateWidget<UShopUIWidgetBase>(Controller, WidgetClass)
+			: CreateWidget<UShopUIWidgetBase>(World, WidgetClass);
+		if (Widget == nullptr)
+		{
+			UE_LOG(LogRD, Warning,
+				TEXT("RD.ShopPreviewFullGenerated: 위젯 생성에 실패했습니다."));
+			return;
+		}
+
+		Widget->BindUIModel(Model);
+		Widget->OpenUI();
+		ShownFullGeneratedWidget = Widget;
+		UE_LOG(LogRD, Display,
+			TEXT("RD.ShopPreviewFullGenerated: 생성 이미지 전용 상점을 열었습니다."));
+	}
+
+	FAutoConsoleCommandWithWorld ShowFullGeneratedCommand(
+		TEXT("RD.ShopPreviewFullGenerated"),
+		TEXT("현재 상점방 모델로 WBP_Shop_FullGenerated를 프리뷰한다."),
+		FConsoleCommandWithWorldDelegate::CreateStatic(&ShowFullGenerated));
 
 	/**
 	 * @brief 콘솔 인자에서 정수 하나를 읽음

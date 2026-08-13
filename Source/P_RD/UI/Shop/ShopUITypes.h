@@ -59,6 +59,8 @@ struct FShopItemUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) EShopItemKind mKind = EShopItemKind::Skill;
+	/** @brief 스킬 구매 대상 직업. Common은 모든 용병에게 표시한다. */
+	UPROPERTY(BlueprintReadOnly) EUnitJobType mRequiredJobType = EUnitJobType::Common;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;
@@ -121,6 +123,32 @@ struct FShopOwnedUnitUI
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedSkillSlotUI> mSkillSlots;
 };
 
+/** @brief 휴식 화면의 파티원 한 줄을 그리기 위한 현재값/회복 후 값입니다. */
+USTRUCT(BlueprintType)
+struct FShopRestUnitUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mUnitIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) EUnitJobType mJobType = EUnitJobType::None;
+	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mAP = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mMaxAP = 0.f;
+};
+
+/** @brief 상점방 휴식 서비스의 표시값입니다. 실제 가격/회복/1회 제한 판정은 ShopGameMode가 소유합니다. */
+USTRUCT(BlueprintType)
+struct FShopRestUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mPrice = 100;
+	UPROPERTY(BlueprintReadOnly) bool mIsAffordable = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsUsed = false;
+	UPROPERTY(BlueprintReadOnly) TArray<FShopRestUnitUI> mUnits;
+};
+
 /** @brief 상점 화면 전체 표시값입니다. */
 // UI 필요값:
 // - mGold: 상단 보유 골드(구매 가능 여부 갱신 기준).
@@ -136,4 +164,5 @@ struct FShopUI
 	UPROPERTY(BlueprintReadOnly) TArray<FShopItemUI> mItems;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedArtifactUI> mOwnedArtifacts;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedUnitUI> mOwnedUnits;
+	UPROPERTY(BlueprintReadOnly) FShopRestUI mRest;
 };
