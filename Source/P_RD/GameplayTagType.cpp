@@ -19,11 +19,22 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_GetDeBuff,							"Animation.Montage.Skill.ETC.GetDeBuff");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_Spawn,								"Animation.Montage.Skill.ETC.Spawn");
 
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_NormalSlash,			"Animation.Montage.Skill.Mercenary.Knight.NormalSlash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_SwordSmash,				"Animation.Montage.Skill.Mercenary.Knight.SwordSmash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Protection,				"Animation.Montage.Skill.Mercenary.Knight.Protection");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Blade,					"Animation.Montage.Skill.Mercenary.Knight.Blade");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_PushAttack,				"Animation.Montage.Skill.Mercenary.Knight.PushAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_NormalSlash,			"Animation.Montage.Skill.Mercenary.Knight.NormalSlash")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HeavyStrike,			"Animation.Montage.Skill.Mercenary.Knight.HeavyStrike")	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Protection,				"Animation.Montage.Skill.Mercenary.Knight.Protection")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_BladeWave,				"Animation.Montage.Skill.Mercenary.Knight.BladeWave")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Consecration,			"Animation.Montage.Skill.Mercenary.Knight.Consecration")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_PushAttack,				"Animation.Montage.Skill.Mercenary.Knight.PushAttack")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Judgment,				"Animation.Montage.Skill.Mercenary.Knight.Judgment")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_SpinAttack,				"Animation.Montage.Skill.Mercenary.Knight.SpinAttack")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_ShieldBash,				"Animation.Montage.Skill.Mercenary.Knight.ShieldBash")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_IronWall,				"Animation.Montage.Skill.Mercenary.Knight.IronWall")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Block,					"Animation.Montage.Skill.Mercenary.Knight.Block")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Fortress,				"Animation.Montage.Skill.Mercenary.Knight.Fortress")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HolyStrike_Strength,	"Animation.Montage.Skill.Mercenary.Knight.HolyStrike.Strength")			
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HolyStrike_Agility,		"Animation.Montage.Skill.Mercenary.Knight.HolyStrike.Agility")		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_BlessedShield_Vigor,	"Animation.Montage.Skill.Mercenary.Knight.BlessedShield.Vigor")			
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Blessing,				"Animation.Montage.Skill.Mercenary.Knight.Blessing")
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_NormalShot,				"Animation.Montage.Skill.Mercenary.Ranger.NormalShot");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_PiercingShot,			"Animation.Montage.Skill.Mercenary.Ranger.PiercingShot");
