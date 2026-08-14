@@ -27,6 +27,7 @@
 #include "CombatLayoutHUDWidget.generated.h"
 
 struct FPresentationBarrier;
+struct FCombatSkillCutInRequest;
 
 /**
  * @brief 유닛 머리 위 HP 바 한 개가 들고 있는 위젯들.
@@ -542,6 +543,7 @@ private:
 	FDelegateHandle mActionEndHandle;
 	FDelegateHandle mEndCombatHandle;
 	FDelegateHandle mBeginRoundHandle;
+	FDelegateHandle mSkillCutInHandle;
 
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
@@ -784,6 +786,20 @@ private:
 	FTimerHandle mTurnChangeSafetyTimerHandle;
 	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
 	int32 mLastShownTurnRound = 0;
+
+	/* ── 스킬 실행 직전 컷인 ────────────────────── */
+	void HandlePrePlaySkillCutIn(
+		const FCombatSkillCutInRequest& Request,
+		TSharedPtr<FPresentationBarrier> Barrier);
+	bool EnsureSkillCutInWidget();
+	void FinishSkillCutIn();
+
+	UPROPERTY(Transient)
+	TObjectPtr<class USkillCutInWidget> mSkillCutInWidget;
+	TSharedPtr<FPresentationBarrier> mSkillCutInBarrier;
+	TArray<TSharedPtr<FPresentationBarrier>> mOverlappingSkillCutInBarriers;
+	FTimerHandle mSkillCutInSafetyTimerHandle;
+	bool mSkillCutInPlaying = false;
 
 	/* ── 유닛 머리 위 HP 바 (옛 HUD 에서 옮김) ────────────────────────────
 	 *

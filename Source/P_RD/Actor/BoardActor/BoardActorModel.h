@@ -69,6 +69,7 @@ public:
 	virtual int32 GetBoardActorLevel() const;
 	UTexture2D* GetBoardActorIcon() const;
 	UTexture2D* GetBoardActorPortrait() const;
+	TSoftObjectPtr<UTexture2D> GetBoardActorShortCut() const;
 
 public:
 	/**

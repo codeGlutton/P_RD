@@ -1158,9 +1158,26 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
 	SkillComponentModel->OnPrePlaySkillUI.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* SkillData, TSharedPtr<FPresentationBarrier> SkillPlayBarrier) {
-		// 여기서 연출하시면 됩니다.
-		// SkillPlayBarrier를 들고 있을 때까지 동기처리됩니다. 
-		// 이 스마트 포인터를 강제로 Reset하거나 버리면 스킬이 비동기 실행됩니다.
+		if (mCombatUIModel == nullptr)
+		{
+			UE_LOG(LogCombatGameMode, Warning,
+				TEXT("Pre-skill cut-in skipped because CombatUIModel is unavailable."));
+			SkillPlayBarrier.Reset();
+			return;
+		}
+
+		FCombatSkillCutInRequest Request;
+		Request.SkillIndex = Context.mSkillIndex;
+		if (UUnitModel* CasterUnit = Cast<UUnitModel>(Context.mInstigator.GetObject()))
+		{
+			Request.bIsPlayerCaster = CasterUnit->IsPlayerUnitModel();
+			Request.UnitId = CasterUnit->GetModelId();
+			Request.ShortCut = CasterUnit->GetBoardActorShortCut();
+			Request.Portrait = CasterUnit->GetBoardActorPortrait();
+			Request.ViewActor = CasterUnit->GetView<AActor>();
+		}
+
+		mCombatUIModel->NotifyPrePlaySkillCutIn(Request, MoveTemp(SkillPlayBarrier));
 		});
 
 	PushTurnUIData();
