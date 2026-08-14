@@ -11,9 +11,12 @@
 
 class UButton;
 class UHorizontalBox;
+class UImage;
 class UTextBlock;
+class UWidget;
 class UWrapBox;
 class UShopUIModel;
+class UTexture2D;
 
 /** @brief 상점 화면 WBP 베이스. WBP(create_shop_wbp.py 생성) 위젯 이름은 아래 BindWidget 멤버명과 일치해야 한다. */
 // 이 베이스를 상속한 WBP는:
@@ -56,6 +59,18 @@ protected:
 	/** @brief 화면 이탈 시 UIModel 델리게이트 구독을 정리한다. */
 	virtual void NativeDestruct() override;
 
+	/**
+	 * Presentation-only texture hooks. The default implementation preserves the
+	 * legacy shop artwork; alternate WBP parents can replace chrome without
+	 * changing the transaction model or the existing WBP asset.
+	 */
+	virtual UTexture2D* ResolveItemIcon(const FShopItemUI& Item) const;
+	virtual UTexture2D* ResolveUnitIcon(EUnitJobType JobType) const;
+	virtual UTexture2D* ResolveUnitSelectionPlate(bool bSelected) const;
+	virtual UTexture2D* ResolveSkillSelectionPlate(bool bSelected) const;
+	virtual UTexture2D* ResolveOwnedArtifactPlate() const;
+	virtual UTexture2D* ResolveTabPlate(bool bSelected) const;
+
 private:
 	/** @brief 나가기 버튼 클릭 → Leave 의도 전달 후 화면을 닫는다. */
 	UFUNCTION() void HandleCloseClicked();
@@ -63,11 +78,56 @@ private:
 	/** @brief UIModel 변경 알림을 받아 BindWidget 위젯에 값을 채운다. 거래 도메인 알림만 처리한다. */
 	UFUNCTION() void HandleUIChanged(EShopUIDomain Domain);
 
+	UFUNCTION() void HandleArtifactTabClicked();
+	UFUNCTION() void HandleSkillTabClicked();
+	UFUNCTION() void HandleRestTabClicked();
+	UFUNCTION() void HandleRestClicked();
+	UFUNCTION() void HandleInventoryClicked();
+	UFUNCTION() void HandleArtifactInventoryCloseClicked();
+	UFUNCTION() void HandlePreviousClicked();
+	UFUNCTION() void HandleNextClicked();
+	UFUNCTION() void HandleBuyClicked();
+	UFUNCTION() void HandleRailClicked0();
+	UFUNCTION() void HandleRailClicked1();
+	UFUNCTION() void HandleRailClicked2();
+	UFUNCTION() void HandleRailClicked3();
+	UFUNCTION() void HandleRailClicked4();
+	UFUNCTION() void HandleUnitClicked0();
+	UFUNCTION() void HandleUnitClicked1();
+	UFUNCTION() void HandleUnitClicked2();
+	UFUNCTION() void HandleSkillSlotClicked0();
+	UFUNCTION() void HandleSkillSlotClicked1();
+	UFUNCTION() void HandleSkillSlotClicked2();
+	UFUNCTION() void HandleSkillSlotClicked3();
+
 	/** @brief 현재 UIModel 구독을 해제하고 참조를 비운다. */
 	void UnbindUIModel();
 
 	/** @brief 현재 모델의 골드/판매 슬롯을 BindWidget 위젯에 반영한다. */
 	void RefreshView();
+
+	/** @brief 확정된 가로형 상점 WBP가 있는지 확인한다. */
+	bool HasFinalShopLayout() const;
+
+	/** @brief 확정 WBP의 반복 슬롯을 이름으로 찾아 입력을 연결한다. */
+	void CacheFinalShopWidgets();
+	void BindFinalShopInputs();
+
+	/** @brief 확정 가로형 레일/상세/스킬 대상 선택기를 현재 스냅샷으로 갱신한다. */
+	void RefreshFinalShopView(const FShopUI& Shop);
+	void RefreshRailView(const FShopUI& Shop);
+	void RefreshSelectedItemView(const FShopUI& Shop);
+	void RefreshSkillTargetView(const FShopUI& Shop);
+	void RefreshRestView(const FShopUI& Shop);
+	void RebuildFilteredItems(const FShopUI& Shop);
+	void SetArtifactInventoryOpen(bool bOpen);
+
+	/** @brief 확정 레이아웃의 로컬 선택 상태를 바꾼다. */
+	void SetActiveItemKind(EShopItemKind Kind);
+	void SelectRailSlot(int32 RailSlotIndex);
+	void SelectUnitSlot(int32 UnitViewIndex);
+	void SelectSkillSlot(int32 SkillSlotIndex);
+	const FShopItemUI* GetSelectedItem(const FShopUI& Shop) const;
 
 	/** @brief 소지 아티펙트(파티 소유)와 파티 유닛 카드를 소지 박스에 반영한다. */
 	void RefreshOwnedView(const FShopUI& Shop);
@@ -104,6 +164,178 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mCloseButtonText;
+
+	// ---- 확정 가로형 상점 WBP ----
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mArtifactTabButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mSkillTabButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mRestTabButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mArtifactTabText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mSkillTabText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mRestTabText;
+
+	/** Optional presentation plates cached by agreed source-widget names. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mArtifactTabPlate;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mSkillTabPlate;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mRestTabPlate;
+
+	/** @brief 스킬 상세 카드에서 현재 교체 슬롯을 가리키는 포인터. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mSkillSelectionPointer;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mPreviousButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mNextButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mBuyButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mBuyButtonText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mRestButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mRestButtonText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> RestCostText;
+
+	/** @brief 아티팩트 탭에서 파티 보유품을 여는 읽기 전용 인벤토리. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mInventoryButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mInventoryButtonText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> mArtifactInventoryPanel;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mArtifactInventoryCloseButton;
+
+	/** @brief 공용 구매/이전/다음 버튼의 장식까지 모드 전환 시 함께 숨길 Holder. */
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mPreviousHolder;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mNextHolder;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mBuyHolder;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> mArtifactShopPanel;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> mSkillShopPanel;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> mRestShopPanel;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UImage> mSelectedItemIcon;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mSelectedItemNameText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mSelectedItemDescriptionText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mSelectedItemPriceText;
+
+	/** @brief ShopRail*/
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> mRailButtons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRailPlates;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRailIcons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mRailPriceTexts;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> mUnitSelectButtons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mUnitSelectPlates;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mUnitSelectIcons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UButton>> mSkillSlotButtons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mSkillSlotPlates;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mSkillSlotIcons;
+
+	/** @brief 휴식 화면의 3인 전/후 HP/AP 표시. 이름은 RestUnit<Field>_0..2 계약을 따른다. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UWidget>> mRestUnitRowHolders;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitPlates;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitIcons;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mRestUnitHPBeforeTexts;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mRestUnitHPAfterTexts;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mRestUnitAPBeforeTexts;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mRestUnitAPAfterTexts;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitHPBeforeFills;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitHPAfterFills;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitAPBeforeFills;
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UImage>> mRestUnitAPAfterFills;
+
+	/** @brief 활성 탭에서 Shop.mItems로 돌아가기 위한 인덱스와 레일 배치. */
+	TArray<int32> mFilteredShopItemIndices;
+	TArray<int32> mRailShopItemIndices;
+	EShopItemKind mActiveItemKind = EShopItemKind::Artifact;
+	int32 mSelectedFilteredIndex = 0;
+	int32 mSelectedUnitViewIndex = 0;
+	int32 mSelectedSkillSlotIndex = 0;
+	bool mIsArtifactInventoryOpen = false;
 
 	/** @brief 현재 바인딩된 상점 상태 소유자; 위젯은 이 객체를 소유하지 않고 구독만 한다. */
 	UPROPERTY(BlueprintReadOnly, Category = "Shop|UI", meta = (AllowPrivateAccess = "true"))

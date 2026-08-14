@@ -13,6 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopBuyRequested, int32, SlotInde
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnShopBuySkillRequested, int32, SlotIndex, int32, UnitIndex, int32, SkillSlotIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShopDiscardArtifactRequested, int32, ArtifactIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnShopDiscardSkillRequested, int32, UnitIndex, int32, SlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShopRestRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnShopLeaveRequested);
 
 /** @brief 상점 화면 뷰모델. 상점방 진입 시 게임플레이가 하나 만들어 위젯에 물린다. */
@@ -59,6 +60,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
 	FOnShopDiscardSkillRequested OnDiscardSkillRequested;
 
+	/** @brief 위젯이 파티 전체 휴식을 요청함. 가격/1회 제한/회복은 게임플레이가 검증한다. */
+	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
+	FOnShopRestRequested OnRestRequested;
+
 	/** @brief 위젯이 상점을 나가려 함(다음 화면으로). */
 	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
 	FOnShopLeaveRequested OnLeaveRequested;
@@ -76,6 +81,9 @@ public:
 
 	/** @brief 유닛 스킬 슬롯 버리기 의도를 전달 (버리기 확인은 화면/팝업이 먼저 처리) */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestDiscardSkill(int32 UnitIndex, int32 SlotIndex);
+
+	/** @brief 파티 전체 휴식 의도만 전달한다. */
+	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestRest();
 
 	/** @brief 상점 나가기 의도를 전달한다. */
 	UFUNCTION(BlueprintCallable, Category = "Shop|Input") void RequestLeave();

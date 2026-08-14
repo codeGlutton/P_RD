@@ -705,4 +705,45 @@ bool FMercenaryHireLayoutCaptureTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FMonsterTabLayoutCaptureTest,
+	"P_RD.UI.MonsterTab.Capture",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FMonsterTabLayoutCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+
+	if (GUsingNullRHI == true)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 몬스터 탭 캡처 생략"));
+		return true;
+	}
+
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드가 있어야 몬스터 탭 WBP를 만들 수 있다"), World))
+	{
+		return false;
+	}
+
+	FString Error;
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound_C"),
+		Error))
+	{
+		AddError(Error);
+	}
+	else
+	{
+		const FString CapturePath = FPaths::Combine(OutputDirectory(),
+			TEXT("WBP_MonsterTab_Marchbound.png"));
+		TestTrue(TEXT("현대식 몬스터 탭 PNG가 생성됨"),
+			IFileManager::Get().FileExists(*CapturePath));
+		TestTrue(TEXT("몬스터 탭 캡처가 빈 파일이 아님"),
+			IFileManager::Get().FileSize(*CapturePath) > 100000);
+	}
+	return true;
+}
+
 #endif // WITH_EDITOR

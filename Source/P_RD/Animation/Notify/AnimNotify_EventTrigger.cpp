@@ -68,6 +68,8 @@ void UAnimNotify_EventTrigger::ValidateAssociatedAssets()
 	}
 }
 
+#endif
+
 void UAnimNotify_EventTrigger::TriggerEvent(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	if (MeshComp != nullptr)
@@ -79,6 +81,4 @@ void UAnimNotify_EventTrigger::TriggerEvent(USkeletalMeshComponent* MeshComp, UA
 		}
 	}
 }
-
-#endif
 

@@ -92,6 +92,10 @@ DerivedDataCache/*
 !/Content/UI/Art/RunFlow/T_*.uasset
 # 승리/패배 결과판은 이 프로젝트 전용 생성 파츠이므로 WBP와 함께 배포한다.
 !/Content/UI/ResultBoards/Art/T_*.uasset
+# 외부 SVN 자산이 아닌, 이 프로젝트에서 생성한 직업별 용병 선택 배경.
+!/Content/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_*.uasset
+# 외부 SVN 원화에서 배경을 분리한 프로젝트 전용 전경 컷아웃.
+!/Content/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_*_v1.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output

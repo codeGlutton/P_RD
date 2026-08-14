@@ -185,6 +185,13 @@ public:
 	 */
 	static FTileIndex TileDeltaToStep(const FTileIndex& From, const FTileIndex& To);
 
+	/**
+	 * @brief 방향 enum을 타일 한 칸 스텝으로 변환
+	 * @details 함정처럼 미는 쪽과 밀리는 쪽이 같은 타일이면 델타 벡터로 방향을 계산할 수 없으므로,
+	 *          고정 방향 enum에서 스텝을 얻을 때 사용
+	 */
+	static FTileIndex DirectionToTileStep(ETileActorDirection Direction);
+
 	/* 좌표 변환 (뷰 질의) */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환 — 뷰에 질의
@@ -442,6 +449,18 @@ public:
 	TArray<FTileIndex> GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
 
 	/**
+	 * @brief 고정 방향 밀치기 경로 계산 (함정/기믹처럼 미는 유닛 없이 방향만 있는 경우)
+	 * @details
+	 * - 함정은 밀리는 유닛과 같은 타일이라 시야(LOS) 검사 없음
+	 * - 막히는 규칙은 기존 GetPushPath와 동일 (뒤가 막히면 직전까지, 맵 밖으로는 안 밀림)
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] Direction 밀치는 방향 (함정 데이터의 고정 방향)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
+	 */
+	TArray<FTileIndex> GetPushPath(const FTileIndex& Pushed, ETileActorDirection Direction, int32 MaxDistance) const;
+
+	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
 	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스
@@ -564,6 +583,17 @@ protected:
 	TArray<FTile> mTiles;
 
 private:
+	/**
+	 * @brief 밀치기 전진 루프 공용부 (두 GetPushPath가 공유)
+	 * @details Pushed에서 Step 방향으로 막힐 때까지 전진하며 지나간 칸을 기록.
+	 *          방향 결정과 시야(LOS) 검사는 각 GetPushPath 책임
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] Step 한 칸 전진 스텝 (8방향 양자화 또는 방향 enum 변환 결과)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
+	 */
+	TArray<FTileIndex> BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const;
+
 	/**
 	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
 	 * @param TileIndex 검사할 타일 인덱스

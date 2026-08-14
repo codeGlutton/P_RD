@@ -17,6 +17,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/SkillCutInWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/Combat/MockCombatDriver.h"
 #include "TimerManager.h"
@@ -104,7 +105,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	}
 
 	static ConstructorHelpers::FClassFinder<UUserWidget> WorldMapClassFinder(
-		TEXT("/Game/UI/WBP_FrontendMap"));
+		TEXT("/Game/UI/WorldMapLandscape/WBP_FrontendMapLandscape"));
 	if (WorldMapClassFinder.Succeeded())
 	{
 		mWorldMapWidgetClass = WorldMapClassFinder.Class;
@@ -112,7 +113,6 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 
 #define RD_LOAD_SOUND(Member, Path) 	{ static ConstructorHelpers::FObjectFinder<USoundBase> Finder(TEXT(Path)); if (Finder.Succeeded()) { Member = Finder.Object; } }
 	RD_LOAD_SOUND(mVictoryJingleSound, "/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Victory_Fupi_CC0.BGM_Jingle_Victory_Fupi_CC0");
-	RD_LOAD_SOUND(mDefeatJingleSound,  "/Game/SVN/OutSideAsset/Music/OpenGameArt/Jingle/BGM_Jingle_Defeat_Spuispuin_CCBY4.BGM_Jingle_Defeat_Spuispuin_CCBY4");
 	RD_LOAD_SOUND(mExpGainSound,       "/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_XPGain_OGA_CC0_Rise03.SFX_XPGain_OGA_CC0_Rise03");
 #undef RD_LOAD_SOUND
 }
@@ -283,8 +283,17 @@ namespace
 		static const TMap<FString, FString> Korean = {
 			{ TEXT("Weakness"),      TEXT("약화") },
 			{ TEXT("Vulnerability"), TEXT("취약") },
-			{ TEXT("Agility"),       TEXT("민첩") },
+			{ TEXT("Vigor"),         TEXT("활력") },
 			{ TEXT("Fortification"), TEXT("강화") },
+			{ TEXT("Haste"),         TEXT("신속") },
+			{ TEXT("Exhaustion"),    TEXT("탈진") },
+			{ TEXT("Slow"),          TEXT("둔화") },
+			{ TEXT("Frail"),         TEXT("쇠약") },
+			{ TEXT("Root"),          TEXT("속박") },
+			{ TEXT("Poison"),        TEXT("중독") },
+			{ TEXT("Bleed"),         TEXT("출혈") },
+			{ TEXT("Stun"),          TEXT("기절") },
+			{ TEXT("Stealth"),       TEXT("은신") },
 			{ TEXT("Dead"),          TEXT("전투불능") },
 		};
 		if (const FString* Found = Korean.Find(Leaf))
@@ -305,6 +314,29 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 	// 실제 전투에서는 모델이 이미 채워진 뒤에 붙으므로, 붙자마자 한 번 그린다.
 	// BindUIModel의 All 갱신은 위젯을 찾기 전에 올 수도 있다.
 	NativeOnUIRefreshed(ECombatUIDomain::All);
+}
+
+void UCombatLayoutHUDWidget::NativeDestruct()
+{
+	// 화면이 바뀐 뒤 0.5초 타이머가 살아서 닫힌 HUD 위에 상세를 여는 일을 막는다.
+	CancelStatusPress();
+	CancelMonsterSkillPress();
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mCommandLongPressTimerHandle);
+		World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+	}
+	if (mDetailOverlayWidget != nullptr)
+	{
+		mDetailOverlayWidget->RemoveFromParent();
+		mDetailOverlayWidget = nullptr;
+	}
+	if (mMonsterTabWidget != nullptr)
+	{
+		mMonsterTabWidget->RemoveFromParent();
+		mMonsterTabWidget = nullptr;
+	}
+	Super::NativeDestruct();
 }
 
 /**
@@ -328,6 +360,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mCached = true;
 
+	mRoundPanel = Find<UWidget>(WidgetTree, TEXT("RoundPanel"));
 	mRoundText = Find<UTextBlock>(WidgetTree, TEXT("RoundText"));
 	mObjectiveText = Find<UTextBlock>(WidgetTree, TEXT("ObjectiveText"));
 
@@ -405,6 +438,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		FTurnSlotWidgets& Widgets = mTurnSlots[Index];
 		const FString Suffix = FString::Printf(TEXT("_%d"), Index);
 		Widgets.Root = Find<UWidget>(WidgetTree, TEXT("TurnToken") + Suffix);
+		Widgets.Button = Find<UButton>(WidgetTree, TEXT("TurnTokenButton") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("TurnPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("TurnName") + Suffix);
 		Widgets.SpeedIcon = Find<UWidget>(WidgetTree, TEXT("TurnSpeedIcon") + Suffix);
@@ -444,6 +478,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
+	mEnemyStatusButtons.Reset();
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		mEnemyStatusFrames.Add(Find<UWidget>(WidgetTree,
@@ -452,6 +487,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			FString::Printf(TEXT("EnemyStatusIcon_%d"), Index)));
 		mEnemyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("EnemyStatusCount_%d"), Index)));
+		mEnemyStatusButtons.Add(Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("EnemyStatusButton_%d"), Index)));
 	}
 	mAllyPanel = Find<UWidget>(WidgetTree, TEXT("AllyPanel"));
 	mAllyPortrait = Find<UImage>(WidgetTree, TEXT("AllyPortrait"));
@@ -464,6 +501,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyStatusFrames.Reset();
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
+	mAllyStatusButtons.Reset();
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		mAllyStatusFrames.Add(Find<UWidget>(WidgetTree,
@@ -472,6 +510,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			FString::Printf(TEXT("AllyStatusIcon_%d"), Index)));
 		mAllyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("AllyStatusCount_%d"), Index)));
+		mAllyStatusButtons.Add(Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("AllyStatusButton_%d"), Index)));
 	}
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
@@ -879,33 +919,52 @@ void UCombatLayoutHUDWidget::WireCommands()
 		BindPressFeedback(mMercenaryCloseButton, mMercenaryCloseButton);
 	}
 
-	// 요약판 상태 아이콘 클릭 → 상태 상세. 판이 소켓 위에 투명 단추를 깔아 둔다.
+	// 요약판 상태 아이콘 긴 누름 → 상태 상세. 판이 소켓 위에 투명 단추를
+	// 깔아 둔다. 단순 탭은 아무 일도 하지 않으며, 0.5초를 채운 한 번만 연다.
 	{
-		using FClickHandler = void (UCombatLayoutHUDWidget::*)();
-		static const FClickHandler StatusHandlers[2][3] = {
-			{ &UCombatLayoutHUDWidget::HandleAllyStatusClicked_0,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusClicked_1,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusClicked_2 },
-			{ &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_0,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_1,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusClicked_2 } };
-		static const TCHAR* const StatusHandlerNames[2][3] = {
-			{ TEXT("HandleAllyStatusClicked_0"), TEXT("HandleAllyStatusClicked_1"),
-			  TEXT("HandleAllyStatusClicked_2") },
-			{ TEXT("HandleEnemyStatusClicked_0"), TEXT("HandleEnemyStatusClicked_1"),
-			  TEXT("HandleEnemyStatusClicked_2") } };
-		const TCHAR* const Sides[2] = { TEXT("Ally"), TEXT("Enemy") };
+		using FStatusHandler = void (UCombatLayoutHUDWidget::*)();
+		static const FStatusHandler PressHandlers[2][3] = {
+			{ &UCombatLayoutHUDWidget::HandleAllyStatusPressed_0,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusPressed_1,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusPressed_2 },
+			{ &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_0,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_1,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_2 } };
+		static const FStatusHandler ReleaseHandlers[2][3] = {
+			{ &UCombatLayoutHUDWidget::HandleAllyStatusReleased_0,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusReleased_1,
+			  &UCombatLayoutHUDWidget::HandleAllyStatusReleased_2 },
+			{ &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_0,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_1,
+			  &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_2 } };
+		static const TCHAR* const PressHandlerNames[2][3] = {
+			{ TEXT("HandleAllyStatusPressed_0"), TEXT("HandleAllyStatusPressed_1"),
+			  TEXT("HandleAllyStatusPressed_2") },
+			{ TEXT("HandleEnemyStatusPressed_0"), TEXT("HandleEnemyStatusPressed_1"),
+			  TEXT("HandleEnemyStatusPressed_2") } };
+		static const TCHAR* const ReleaseHandlerNames[2][3] = {
+			{ TEXT("HandleAllyStatusReleased_0"), TEXT("HandleAllyStatusReleased_1"),
+			  TEXT("HandleAllyStatusReleased_2") },
+			{ TEXT("HandleEnemyStatusReleased_0"), TEXT("HandleEnemyStatusReleased_1"),
+			  TEXT("HandleEnemyStatusReleased_2") } };
+		const TArray<TObjectPtr<UButton>>* Buttons[2] = {
+			&mAllyStatusButtons, &mEnemyStatusButtons };
 		for (int32 Side = 0; Side < 2; ++Side)
 		{
 			for (int32 Index = 0; Index < 3; ++Index)
 			{
-				UButton* Button = Find<UButton>(WidgetTree, FString::Printf(
-					TEXT("%sStatusButton_%d"), Sides[Side], Index));
+				UButton* Button = Buttons[Side]->IsValidIndex(Index)
+					? (*Buttons[Side])[Index].Get() : nullptr;
 				if (Button != nullptr)
 				{
-					Button->OnClicked.__Internal_AddUniqueDynamic(
-						this, StatusHandlers[Side][Index],
-						StatusHandlerNames[Side][Index]);
+					// 손가락이 요약판 밖으로 드래그되면 눌림을 즉시 풀어,
+					// 떠난 아이콘의 상세가 0.5초 뒤 열리지 않게 한다.
+					Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+					Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+					Button->OnPressed.__Internal_AddUniqueDynamic(
+						this, PressHandlers[Side][Index], PressHandlerNames[Side][Index]);
+					Button->OnReleased.__Internal_AddUniqueDynamic(
+						this, ReleaseHandlers[Side][Index], ReleaseHandlerNames[Side][Index]);
 				}
 			}
 		}
@@ -1285,10 +1344,17 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		{
 			mLastTurnUnitId = TurnUnitId;
 			mLastTurnBarRound = TurnRound;
-			// 차례가 와도 카드를 자동으로 펴지 않는다(0807) -- 판을 먼저
-			// 봐야 하는데 카드 여섯 장이 시야를 덮는다. 카드는 스킬 단추나
-			// 유닛 탭으로만 편다. 지난 차례 카드가 남아 있으면 접는다.
-			SetCommandsShown(false);
+			// 이전 턴에 수동으로 살펴보던 다른 용병을 놓는다. 그렇지 않으면
+			// 스킬은 새 턴 유닛 것으로 바뀌어도 용병 강조/후속 롱프레스 초점은
+			// 지난 선택을 계속 가리켜 한 화면에서 두 용병이 현재처럼 보인다.
+			mMercenarySelectedSlot = INDEX_NONE;
+			// 아군 차례가 오면 조종할 용병과 그 명령을 한 번에 보여 준다.
+			// 적 차례에는 지난 아군 카드가 남지 않게 즉시 접는다.
+			const bool bPlayerTurn = IsPlayerTurn();
+			SetCommandsShown(bPlayerTurn);
+			// 카메라 이동은 이어지는 OnBeginAnyTurn 프레젠테이션에서 한 번만
+			// 요청한다. SetTurnUI 알림에서도 움직이면 같은 턴에 트윈이 두 번
+			// 시작돼 폴더블 기기에서 짧게 튀는 현상이 생긴다.
 			// 줄 자체가 한 칸 밀렸다. 옮겨 둔 창을 그대로 두면 다음 턴에
 			// 엉뚱한 곳을 보고 있다.
 			mTurnWindowStart = 0;
@@ -1359,6 +1425,8 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 	if (Domain == ECombatUIDomain::SkillDetail)
 	{
+		// 몬스터 탭의 스킬 슬롯도 이 공용 겹을 쓴다. 겹은 viewport Z=70으로
+		// 탭(55) 위에 오며, 탭 자체는 뒤에 유지돼 닫으면 같은 몬스터로 돌아간다.
 		ShowSkillDetailOverlay();
 	}
 }
@@ -1697,7 +1765,9 @@ UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 	{
 		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
 		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Vigor") },
+			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
+			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
+			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Agility") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
 			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
@@ -1794,8 +1864,11 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	const FTurnUI& Turn = mUIModel->GetTurnUI();
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 
+	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
+	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
+	SetShown(mRoundPanel, true);
 	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("R%d"), Turn.mRound)));
+		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
 	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
@@ -1825,6 +1898,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		if (ProjectedIndex >= Total)
 		{
 			SetShown(Widgets.Root, false);
+			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
 			SetShown(Widgets.SpeedIcon, false);
@@ -1844,6 +1918,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			 */
 			mTurnSlotUnitIds[Index] = INDEX_NONE;
 			SetShown(Widgets.Root, true);
+			SetInteractiveShown(Widgets.Button, false);
 			if (Widgets.Root != nullptr)
 			{
 				Widgets.Root->SetRenderOpacity(0.45f);
@@ -1870,6 +1945,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		if (Unit == nullptr)
 		{
 			SetShown(Widgets.Root, false);
+			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
 			SetShown(Widgets.SpeedIcon, false);
@@ -1880,11 +1956,17 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		// 빈 라운드는 건너뛰므로 "다음" 이 mRound+1이 아닐 수 있다.
 		const int32 RoundOffset = bNextRound
 			? FMath::Max(Turn.mNextRoundOffset, 1) : 0;
-		const bool bStartsShownRound = ProjectedIndex == 0
-			|| ProjectedIndex == RemainingThisRound + EmptyRounds;
+		// 현재 라운드는 왼쪽의 독립 RoundPanel이 맡는다. 첫 턴 카드에도 R#을
+		// 다시 달면 같은 정보가 두 번 보이고 초상 위에 배지가 얹힌다.
+		// 슬롯 배지는 다음 라운드가 시작되는 경계에만 표시한다.
+		const bool bStartsShownRound = bNextRound
+			&& ProjectedIndex == RemainingThisRound + EmptyRounds;
 
 		mTurnSlotUnitIds[Index] = UnitId;
 		SetShown(Widgets.Root, true);
+		// 클릭 받이는 TurnToken의 자식이 아니라 TurnPanel의 직계 형제다.
+		// 토큰만 켜서는 donor에 저장된 Collapsed 버튼이 되살아나지 않는다.
+		SetInteractiveShown(Widgets.Button, true);
 		SetShown(Widgets.SpeedIcon, true);
 		SetShown(Widgets.Speed, true);
 		SetTextIfPresent(Widgets.Speed,
@@ -2034,6 +2116,10 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 
 void UCombatLayoutHUDWidget::RefreshEnemy()
 {
+	// 눌러 둔 0.5초 사이에 대상/턴이 바뀌면 같은 슬롯 번호가 다른 상태를
+	// 가리킬 수 있다. 스냅샷을 갈기 전에 그 누름부터 무른다.
+	CancelStatusPress();
+
 	// 안내판은 두 경우에만 뜬다. **짚은 적**이 있거나, **적 차례**거나.
 	//
 	// 전에는 아무것도 안 짚었으면 살아 있는 첫 적으로 떨어졌다. 그래서 내
@@ -2065,6 +2151,14 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	}
 
 	SetShown(mAllyPanel, AllyShown != nullptr);
+	if (AllyShown == nullptr)
+	{
+		mAllyShownStatuses.Reset();
+		for (const TObjectPtr<UButton>& Button : mAllyStatusButtons)
+		{
+			SetInteractiveShown(Button.Get(), false);
+		}
+	}
 	if (AllyShown != nullptr)
 	{
 		SetTextIfPresent(mAllyName, AllyShown->mName);
@@ -2098,6 +2192,10 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		{
 			const bool bHasStatus = AllyShown->mStatusEffects.IsValidIndex(Index);
 			SetShown(mAllyStatusFrames[Index], bHasStatus);
+			if (mAllyStatusButtons.IsValidIndex(Index))
+			{
+				SetInteractiveShown(mAllyStatusButtons[Index].Get(), bHasStatus);
+			}
 			UImage* Icon = mAllyStatusIcons.IsValidIndex(Index)
 				? mAllyStatusIcons[Index].Get() : nullptr;
 			UTextBlock* Count = mAllyStatusCounts.IsValidIndex(Index)
@@ -2122,6 +2220,11 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	SetShown(mEnemyPanel, Shown != nullptr);
 	if (Shown == nullptr)
 	{
+		mEnemyShownStatuses.Reset();
+		for (const TObjectPtr<UButton>& Button : mEnemyStatusButtons)
+		{
+			SetInteractiveShown(Button.Get(), false);
+		}
 		return;
 	}
 
@@ -2172,6 +2275,10 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	{
 		const bool bHasStatus = Shown->mStatusEffects.IsValidIndex(Index);
 		SetShown(mEnemyStatusFrames[Index], bHasStatus);
+		if (mEnemyStatusButtons.IsValidIndex(Index))
+		{
+			SetInteractiveShown(mEnemyStatusButtons[Index].Get(), bHasStatus);
+		}
 
 		UImage* Icon = mEnemyStatusIcons.IsValidIndex(Index)
 			? mEnemyStatusIcons[Index].Get() : nullptr;
@@ -2354,6 +2461,7 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 	// TurnPanel 접힘 결정이 이 함수 것으로 남는다.
 	if (bShown == true)
 	{
+		CancelStatusPress();
 		SetMonsterTabShown(false);
 		// 열 때는 지금 차례인 용병부터 보여 준다. 지난번에 고른 줄이
 		// 남아 있으면 누구를 보는지 알 수 없다.
@@ -2495,7 +2603,17 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationBegin(
 	++mActionPresentationSerial;
 	mIsActionPlaying = false;
 	mIsTurnActive = true;
-	RefreshCommandVisibility();
+
+	// SetTurnUI와 턴 시작 프레젠테이션은 별도 알림이다. 로딩/재바인딩으로
+	// Turn 도메인 갱신을 먼저 놓쳤더라도 실제 아군 입력 구간이 열리는 이
+	// 지점에서 카드와 카메라 초점을 반드시 복구한다.
+	const bool bPlayerTurn = IsPlayerTurn();
+	SetCommandsShown(bPlayerTurn);
+	if (bPlayerTurn == true && mUIModel != nullptr)
+	{
+		const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
+		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
@@ -2580,6 +2698,8 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationBegin);
 		mActionEndHandle = mUIModel->OnEndAnyTurnAction.AddUObject(
 			this, &UCombatLayoutHUDWidget::HandleActionPresentationEnd);
+		mSkillCutInHandle = mUIModel->OnPrePlaySkillCutIn.AddUObject(
+			this, &UCombatLayoutHUDWidget::HandlePrePlaySkillCutIn);
 
 		// 전투가 끝나면 결과 연출을 맡는다. 배리어를 넘겨받아 붙잡는다.
 		mVictoryWorldMapLocked = false;
@@ -2664,6 +2784,7 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 		mUIModel->OnEndAnyTurn.Remove(mTurnEndHandle);
 		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
 		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
+		mUIModel->OnPrePlaySkillCutIn.Remove(mSkillCutInHandle);
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
 		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
@@ -2686,7 +2807,30 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 	mTurnEndHandle.Reset();
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
+	mSkillCutInHandle.Reset();
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mSkillCutInSafetyTimerHandle);
+	}
+	mSkillCutInPlaying = false;
+	if (IsValid(mSkillCutInWidget))
+	{
+		mSkillCutInWidget->StopCutIn(/*bNotifyCompletion=*/false);
+		mSkillCutInWidget->RemoveFromParent();
+		mSkillCutInWidget = nullptr;
+	}
 	Super::UnbindUIModel();
+
+	// Reset으로 스킬이 동기 재개될 수 있으므로 Unbind의 마지막 작업이다.
+	TSharedPtr<FPresentationBarrier> PrimaryBarrier = MoveTemp(mSkillCutInBarrier);
+	TArray<TSharedPtr<FPresentationBarrier>> OverlappingBarriers = MoveTemp(mOverlappingSkillCutInBarriers);
+	mOverlappingSkillCutInBarriers.Reset();
+	PrimaryBarrier.Reset();
+	for (TSharedPtr<FPresentationBarrier>& OverlappingBarrier : OverlappingBarriers)
+	{
+		OverlappingBarrier.Reset();
+	}
 }
 
 bool UCombatLayoutHUDWidget::IsAiming() const
@@ -3108,9 +3252,9 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 		return;
 	}
 
-	// 조준 중이면 이 탭은 게임플레이 것이다. 사거리 안이면 그리로 쏘고
-	// 밖이면 무른다 -- 어느 쪽인지는 스킬 조준만 안다. 무르고 나면 카드는
-	// 저절로 돌아오므로 여기서 펴 줄 필요가 없다.
+	// 조준 중이면 이 탭은 게임플레이 것이다. 조준 가능한 타일이면 그리로
+	// 겨냥하고, 진짜 보드 밖이면 빌드 단계를 하나 무른다. 보드 안의 빈 타일이나
+	// 사거리 밖 타일은 현재 단계를 유지한다. 어느 경우인지는 스킬 조준만 안다.
 	if (IsAiming() == true)
 	{
 		mUIModel->RequestWorldTouch(ScreenPosition, false);
@@ -3402,9 +3546,9 @@ void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
 	{
 		return;
 	}
-	// 이 패널은 스스로 닫지 않는다. Back 을 누르면 OnBackRequested 만 알릴 뿐이고,
-	// 닫는 일은 연 쪽의 몫이다(타이틀도 같은 규칙이다). 전에는 열기만 하고
-	// 이 줄이 없어서 Back 이 아무 일도 안 했다.
+	// SettingsPanel은 Back에서 자기 팝업을 먼저 닫고 이 이벤트를 알린다.
+	// 연 쪽도 멱등 CloseUI를 유지해 오래된 WBP/Blueprint 호출 경로가 직접
+	// OnBackRequested만 보내더라도 사용자가 설정 화면에 갇히지 않게 한다.
 	Settings->OnBackRequested.AddUniqueDynamic(
 		this, &UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested);
 	Settings->OnSaveAndExitRequested.AddUniqueDynamic(
@@ -3416,6 +3560,7 @@ void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
 	Settings->RefreshPanelState(true, true);
 	Settings->HideAbandonConfirm();
 	Settings->SetStatusText(FText::GetEmpty());
+	CancelStatusPress();
 	Settings->OpenUI();
 }
 
@@ -3693,7 +3838,12 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 		{ TEXT("Fortification"), TEXT("받는 피해가 줄어든다.") },
 		{ TEXT("Vulnerability"), TEXT("받는 피해가 늘어난다.") },
 		{ TEXT("Weakness"),      TEXT("주는 피해가 줄어든다.") },
-		{ TEXT("Agility"),       TEXT("속도가 올라간다.") },
+		{ TEXT("Vigor"),         TEXT("행동력 효율이 올라간다.") },
+		{ TEXT("Haste"),         TEXT("속도가 올라간다.") },
+		{ TEXT("Exhaustion"),    TEXT("행동력 효율이 내려간다.") },
+		{ TEXT("Slow"),          TEXT("속도가 내려간다.") },
+		{ TEXT("Frail"),         TEXT("방어력이 내려간다.") },
+		{ TEXT("Root"),          TEXT("이동할 수 없다.") },
 		{ TEXT("Poison"),        TEXT("턴마다 피해를 입는다.") },
 		{ TEXT("Bleed"),         TEXT("턴마다 피해를 입는다.") },
 		{ TEXT("Stun"),          TEXT("턴을 진행할 수 없다.") },
@@ -3735,12 +3885,110 @@ void UCombatLayoutHUDWidget::HandleStatusClicked(const bool bAlly, const int32 S
 		Statuses[SlotIndex].mStackCount);
 }
 
-void UCombatLayoutHUDWidget::HandleAllyStatusClicked_0() { HandleStatusClicked(true, 0); }
-void UCombatLayoutHUDWidget::HandleAllyStatusClicked_1() { HandleStatusClicked(true, 1); }
-void UCombatLayoutHUDWidget::HandleAllyStatusClicked_2() { HandleStatusClicked(true, 2); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_0() { HandleStatusClicked(false, 0); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_1() { HandleStatusClicked(false, 1); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusClicked_2() { HandleStatusClicked(false, 2); }
+/** @brief 상태 소켓의 0.5초 긴 누름을 시작한다. */
+void UCombatLayoutHUDWidget::BeginStatusPress(const bool bAlly, const int32 SlotIndex)
+{
+	// 둘째 손가락/마우스 합성 입력이 오면 먼저 잡은 상태를 발화시키지 않는다.
+	// 새로 실제 눌린 소켓 하나만 긴 누름 후보가 된다.
+	CancelStatusPress();
+
+	const TArray<FStatusEffectUI>& Statuses = bAlly
+		? mAllyShownStatuses : mEnemyShownStatuses;
+	if (Statuses.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+	mStatusPressedAlly = bAlly;
+	mStatusPressedSlot = SlotIndex;
+	mStatusPressActive = true;
+	World->GetTimerManager().SetTimer(mStatusLongPressTimerHandle,
+		FTimerDelegate::CreateWeakLambda(this, [this, bAlly, SlotIndex]()
+		{
+			HandleStatusLongPress(bAlly, SlotIndex);
+		}), LongPressSeconds, false);
+}
+
+/** @brief 같은 소켓에서 손을 뗐을 때 아직 발화하지 않은 긴 누름만 취소한다. */
+void UCombatLayoutHUDWidget::EndStatusPress(const bool bAlly, const int32 SlotIndex)
+{
+	// 첫 손가락 뒤에 둘째 소켓을 눌렀다면 첫 손가락의 늦은 Release가 둘째
+	// 타이머를 취소하면 안 된다. 현재 후보와 정확히 같은 Release만 받는다.
+	if (mStatusPressActive == true && mStatusPressedAlly == bAlly
+		&& mStatusPressedSlot == SlotIndex)
+	{
+		CancelStatusPress();
+	}
+}
+
+/** @brief 누름이 같은 소켓에서 0.5초 유지됐을 때 상세를 한 번만 연다. */
+void UCombatLayoutHUDWidget::HandleStatusLongPress(
+	const bool bAlly, const int32 SlotIndex)
+{
+	if (mStatusPressActive == false || mStatusPressedAlly != bAlly
+		|| mStatusPressedSlot != SlotIndex)
+	{
+		return;
+	}
+
+	// 상세를 열기 전에 후보와 타이머를 소비한다. 테스트가 0.5초 전에 강제로
+	// 발화한 경우에도 예약된 콜백이 뒤늦게 한 번 더 남지 않는다.
+	CancelStatusPress();
+	HandleStatusClicked(bAlly, SlotIndex);
+}
+
+/** @brief 대상 교체/패널 종료/손 뗌에서 남은 상태 긴 누름을 전부 무른다. */
+void UCombatLayoutHUDWidget::CancelStatusPress()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mStatusLongPressTimerHandle);
+	}
+	mStatusLongPressTimerHandle.Invalidate();
+	mStatusPressActive = false;
+	mStatusPressedSlot = INDEX_NONE;
+	mStatusPressedAlly = false;
+}
+
+#if WITH_DEV_AUTOMATION_TESTS
+void UCombatLayoutHUDWidget::TriggerStatusLongPressForTest(
+	const bool bAlly, const int32 SlotIndex)
+{
+	HandleStatusLongPress(bAlly, SlotIndex);
+}
+
+bool UCombatLayoutHUDWidget::IsStatusLongPressPendingForTest() const
+{
+	const UWorld* World = GetWorld();
+	return mStatusPressActive == true && World != nullptr
+		&& World->GetTimerManager().IsTimerActive(mStatusLongPressTimerHandle);
+}
+
+bool UCombatLayoutHUDWidget::IsStatusPressActiveForTest(
+	const bool bAlly, const int32 SlotIndex) const
+{
+	return mStatusPressActive == true && mStatusPressedAlly == bAlly
+		&& mStatusPressedSlot == SlotIndex;
+}
+#endif
+
+void UCombatLayoutHUDWidget::HandleAllyStatusPressed_0() { BeginStatusPress(true, 0); }
+void UCombatLayoutHUDWidget::HandleAllyStatusPressed_1() { BeginStatusPress(true, 1); }
+void UCombatLayoutHUDWidget::HandleAllyStatusPressed_2() { BeginStatusPress(true, 2); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_0() { BeginStatusPress(false, 0); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_1() { BeginStatusPress(false, 1); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_2() { BeginStatusPress(false, 2); }
+void UCombatLayoutHUDWidget::HandleAllyStatusReleased_0() { EndStatusPress(true, 0); }
+void UCombatLayoutHUDWidget::HandleAllyStatusReleased_1() { EndStatusPress(true, 1); }
+void UCombatLayoutHUDWidget::HandleAllyStatusReleased_2() { EndStatusPress(true, 2); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_0() { EndStatusPress(false, 0); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_1() { EndStatusPress(false, 1); }
+void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_2() { EndStatusPress(false, 2); }
 
 /** @brief 용병탭 스킬 소켓 클릭. 0번은 이동, 나머지는 전투 레일과 같은 스킬 번호. */
 void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
@@ -3843,12 +4091,83 @@ void UCombatLayoutHUDWidget::HandleMonsterTabBackClicked()
 	SetMonsterTabShown(false);
 }
 
+void UCombatLayoutHUDWidget::HandleMonsterSkillPressed_0() { BeginMonsterSkillPress(0); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillPressed_1() { BeginMonsterSkillPress(1); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillPressed_2() { BeginMonsterSkillPress(2); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillPressed_3() { BeginMonsterSkillPress(3); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_0() { EndMonsterSkillPress(0); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_1() { EndMonsterSkillPress(1); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_2() { EndMonsterSkillPress(2); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_3() { EndMonsterSkillPress(3); }
+
+/** @brief 몬스터 도감의 스킬 슬롯 누름을 롱프레스 후보로 잡는다. */
+void UCombatLayoutHUDWidget::BeginMonsterSkillPress(const int32 SlotIndex)
+{
+	CancelMonsterSkillPress();
+	if (IsMonsterTabShown() == false || IsDetailOverlayShown() == true
+		|| mMonsterTabSkillIndices.IsValidIndex(SlotIndex) == false
+		|| mMonsterTabSkillIndices[SlotIndex] == INDEX_NONE)
+	{
+		return;
+	}
+	mMonsterSkillPressActive = true;
+	mMonsterSkillPressedSlot = SlotIndex;
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimer(mMonsterSkillLongPressTimerHandle,
+			FTimerDelegate::CreateWeakLambda(this, [this, SlotIndex]()
+			{
+				HandleMonsterSkillLongPress(SlotIndex);
+			}), LongPressSeconds, false);
+	}
+}
+
+/** @brief 짧게 뗀 손은 상세를 열지 않고 후보만 무른다. */
+void UCombatLayoutHUDWidget::EndMonsterSkillPress(const int32 SlotIndex)
+{
+	if (mMonsterSkillPressActive == true && mMonsterSkillPressedSlot == SlotIndex)
+	{
+		CancelMonsterSkillPress();
+	}
+}
+
+/** @brief 슬롯 DTO의 실제 스킬 index로 게임플레이에 상세를 청한다. */
+void UCombatLayoutHUDWidget::HandleMonsterSkillLongPress(const int32 SlotIndex)
+{
+	if (mMonsterSkillPressActive == false || mMonsterSkillPressedSlot != SlotIndex
+		|| mUIModel == nullptr || IsMonsterTabShown() == false
+		|| IsDetailOverlayShown() == true
+		|| mMonsterTabSkillIndices.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	const int32 SkillIndex = mMonsterTabSkillIndices[SlotIndex];
+	CancelMonsterSkillPress();
+	if (SkillIndex != INDEX_NONE)
+	{
+		mUIModel->RequestInspectUnitSkill(SkillIndex);
+	}
+}
+
+void UCombatLayoutHUDWidget::CancelMonsterSkillPress()
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(mMonsterSkillLongPressTimerHandle);
+	}
+	mMonsterSkillLongPressTimerHandle.Invalidate();
+	mMonsterSkillPressedSlot = INDEX_NONE;
+	mMonsterSkillPressActive = false;
+}
+
 void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked(const int32 RowIndex)
 {
 	if (mMonsterTabUnitIds.IsValidIndex(RowIndex) == false)
 	{
 		return;
 	}
+	CancelMonsterSkillPress();
+	HideDetailOverlay(/*bNotifyGameplay=*/true);
 	mMonsterTabSelectedRow = RowIndex;
 	RefreshMonsterTab();
 }
@@ -3866,6 +4185,8 @@ void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
 
 	if (bShown == true)
 	{
+		CancelStatusPress();
+		CancelMonsterSkillPress();
 		// 다른 모달·상세·조준을 먼저 걷는다. 용병 패널 접기가 TurnPanel을
 		// 되살리므로, 이 함수의 TurnPanel 접힘이 마지막 결정이 되게 한다.
 		SetMercenaryPanelShown(false);
@@ -3888,6 +4209,9 @@ void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
 	}
 	else
 	{
+		CancelMonsterSkillPress();
+		// 아래에서 탭 조사 종료 신호를 한 번 보낸다. 겹은 여기서 표시만 걷는다.
+		HideDetailOverlay(/*bNotifyGameplay=*/false);
 		// 상세 요청으로 칠렸을 수 있는 위협 범위를 걷으라는 신호. INDEX_NONE = "닫았다".
 		if (mUIModel != nullptr && mMonsterTabInspectedUnitId != INDEX_NONE)
 		{
@@ -3933,8 +4257,8 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	{
 		return false;
 	}
-	// 상세 겹(50)보다 위. 탭이 떠 있는 동안 아래 HUD·판 눌림은 딤이 삼킨다.
-	mMonsterTabWidget->AddToViewport(/*ZOrder=*/55);
+	// 평상시에는 HUD보다 위. 몬스터 스킬 상세(70)는 이 탭보다 위에 놓인다.
+	mMonsterTabWidget->AddToViewport(MonsterTabViewportZOrder);
 	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	// AddDynamic은 함수 이름을 문자열로 찍는 매크로라 포인터 배열로 돌릴 수 없다.
@@ -3955,6 +4279,36 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	{
 		BackButton->OnClicked.AddDynamic(
 			this, &UCombatLayoutHUDWidget::HandleMonsterTabBackClicked);
+	}
+	using FMonsterSkillHandler = void (UCombatLayoutHUDWidget::*)();
+	static const FMonsterSkillHandler PressHandlers[4] = {
+		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_0,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_1,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_2,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_3 };
+	static const FMonsterSkillHandler ReleaseHandlers[4] = {
+		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_0,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_1,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_2,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_3 };
+	static const TCHAR* const PressNames[4] = {
+		TEXT("HandleMonsterSkillPressed_0"), TEXT("HandleMonsterSkillPressed_1"),
+		TEXT("HandleMonsterSkillPressed_2"), TEXT("HandleMonsterSkillPressed_3") };
+	static const TCHAR* const ReleaseNames[4] = {
+		TEXT("HandleMonsterSkillReleased_0"), TEXT("HandleMonsterSkillReleased_1"),
+		TEXT("HandleMonsterSkillReleased_2"), TEXT("HandleMonsterSkillReleased_3") };
+	for (int32 Index = 0; Index < 4; ++Index)
+	{
+		if (UButton* Button = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillButton_%d"), Index)))))
+		{
+			Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+			Button->OnPressed.__Internal_AddUniqueDynamic(
+				this, PressHandlers[Index], PressNames[Index]);
+			Button->OnReleased.__Internal_AddUniqueDynamic(
+				this, ReleaseHandlers[Index], ReleaseNames[Index]);
+		}
 	}
 	return true;
 }
@@ -4115,6 +4469,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 	const bool bHasDetail = Detail.mUnitId != INDEX_NONE
 		&& Detail.mUnitId == mMonsterTabInspectedUnitId;
 	const int32 SkillCount = bHasDetail ? Detail.mSkills.Num() : 0;
+	mMonsterTabSkillIndices.Init(INDEX_NONE, 4);
 
 	// 레벨은 목록 줄의 Lv 배지가 맡는다(0806 확정 시안). 이름판 밑 TypeText 는
 	// 목록 갱신이 접은 그대로 둔다.
@@ -4130,6 +4485,10 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 		UTextBlock* SkillName = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
 			FName(*FString::Printf(TEXT("MonsterSkillName_%d"), Index))));
 		const bool bHasSkill = Index < SkillCount;
+		if (bHasSkill == true)
+		{
+			mMonsterTabSkillIndices[Index] = Detail.mSkills[Index].mSkillIndex;
+		}
 		if (SkillName != nullptr)
 		{
 			if (bHasSkill == true)
@@ -4157,6 +4516,12 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 		{
 			SkillSlot->SetVisibility(bHasSkill
 				? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		}
+		if (UButton* SkillButton = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("MonsterSkillButton_%d"), Index)))))
+		{
+			SkillButton->SetVisibility(bHasSkill
+				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		}
 	}
 	if (Detail.mPortrait != nullptr)
@@ -4353,7 +4718,8 @@ bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 	{
 		return false;
 	}
-	mDetailOverlayWidget->AddToViewport(/*ZOrder=*/50);
+	// 몬스터 도감(55)에서 스킬을 오래 눌러도 상세는 반드시 그 위에 온다.
+	mDetailOverlayWidget->AddToViewport(DetailOverlayViewportZOrder);
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	mDetailIconImage = Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIconImage")));
@@ -4812,6 +5178,35 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
 
+#if WITH_DEV_AUTOMATION_TESTS
+void UCombatLayoutHUDWidget::TriggerMonsterSkillLongPressForTest(const int32 SlotIndex)
+{
+	HandleMonsterSkillLongPress(SlotIndex);
+}
+
+bool UCombatLayoutHUDWidget::IsMonsterSkillLongPressPendingForTest() const
+{
+	const UWorld* World = GetWorld();
+	return mMonsterSkillPressActive == true && World != nullptr
+		&& World->GetTimerManager().IsTimerActive(mMonsterSkillLongPressTimerHandle);
+}
+
+bool UCombatLayoutHUDWidget::IsMonsterSkillPressActiveForTest(const int32 SlotIndex) const
+{
+	return mMonsterSkillPressActive == true && mMonsterSkillPressedSlot == SlotIndex;
+}
+
+int32 UCombatLayoutHUDWidget::GetMonsterTabViewportZOrderForTest() const
+{
+	return MonsterTabViewportZOrder;
+}
+
+int32 UCombatLayoutHUDWidget::GetDetailOverlayViewportZOrderForTest() const
+{
+	return DetailOverlayViewportZOrder;
+}
+#endif
+
 /**
  * @brief 상세창의 수치 칩과 범위 칸을 이름으로 찾아 둔다.
  *
@@ -5061,7 +5456,7 @@ void UCombatLayoutHUDWidget::ClearDetailGrids()
 	SetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
 }
 
-/** @brief 스킬 상세를 패널에 채워 띄운다. 비용/쿨타임은 카드 레일 스냅샷에서 읽는다. */
+/** @brief 스킬 상세를 패널에 채워 띄운다. 수치는 요청한 유닛의 상세 DTO에서 읽는다. */
 void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 {
 	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
@@ -5073,36 +5468,36 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	{
 		return;
 	}
+	#if WITH_DEV_AUTOMATION_TESTS
+	// WBP 없이 도는 자동화에서도 실제 렌더 함수가 어느 DTO를 소비했는지 남긴다.
+	mRenderedSkillDetailForTest = Detail;
+	#endif
 	ApplyDetailColumnLayout(false);
 
 	SetTextIfPresent(mDetailTitleText, Detail.mName);
 
-	FString Subtitle;
-	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
-	// 칩과 범위 칸은 모델 값 그대로 채운다. 값이 없으면 "-" 로 두고 지어내지 않는다.
+	// 스킬 index는 유닛마다 0부터 다시 시작한다. 몬스터 상세에서 받은 index로
+	// 플레이어 카드 레일을 조회하면 같은 슬롯의 전혀 다른 수치가 섞인다. 이름,
+	// 설명과 함께 왕복한 상세 DTO를 이 화면의 단일 출처로 쓴다.
 	ClearDetailChips();
-	if (Skills.IsValidIndex(Detail.mSkillIndex) == true)
-	{
-		const FSkillUI& Chip = Skills[Detail.mSkillIndex];
-		SetDetailChip(0, LOCTEXT("DetailChipCost", "AP"),
-			FText::AsNumber(Chip.mActionPointCost));
-		SetDetailChip(1, LOCTEXT("DetailChipDamage", "피해"),
-			Chip.mDamageMax <= 0 ? FText::FromString(TEXT("-"))
-			: (Chip.mDamageMin == Chip.mDamageMax
-				? FText::AsNumber(Chip.mDamageMax)
+	SetDetailChip(0, LOCTEXT("DetailChipCost", "AP"),
+		FText::AsNumber(Detail.mActionPointCost));
+	SetDetailChip(1, LOCTEXT("DetailChipDamage", "피해"),
+		Detail.mDamageMax <= 0 ? FText::FromString(TEXT("-"))
+			: (Detail.mDamageMin == Detail.mDamageMax
+				? FText::AsNumber(Detail.mDamageMax)
 				: FText::FromString(FString::Printf(TEXT("%d~%d"),
-					Chip.mDamageMin, Chip.mDamageMax))));
-		SetDetailChip(2, LOCTEXT("DetailChipCooldown", "쿨타임"),
-			Chip.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
-			: FText::FromString(FString::Printf(TEXT("%d턴"), Chip.mCooldownTurns)));
-		// 타수는 칩으로 두지 않는다. 2타 이상일 때 설명 문장에 적기로 합의돼
-		// 있어(0802), 칩까지 두면 같은 정보가 두 군데 나온다.
-		SetDetailChip(3, LOCTEXT("DetailChipRange", "사거리"),
-			FText::AsNumber(FMath::RoundToInt(Chip.mTargeting.mSelectRange)));
-		SetDetailChip(4, LOCTEXT("DetailChipCritical", "치명"),
-			Chip.mCriticalDamage <= 0 ? FText::FromString(TEXT("-"))
-			: FText::AsNumber(Chip.mCriticalDamage));
-	}
+					Detail.mDamageMin, Detail.mDamageMax))));
+	SetDetailChip(2, LOCTEXT("DetailChipCooldown", "쿨타임"),
+		Detail.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
+			: FText::FromString(FString::Printf(TEXT("%d턴"), Detail.mCooldownTurns)));
+	// 타수는 칩으로 두지 않는다. 2타 이상일 때 설명 문장에 적기로 합의돼
+	// 있어(0802), 칩까지 두면 같은 정보가 두 군데 나온다.
+	SetDetailChip(3, LOCTEXT("DetailChipRange", "사거리"),
+		FText::AsNumber(FMath::RoundToInt(Detail.mTargeting.mSelectRange)));
+	SetDetailChip(4, LOCTEXT("DetailChipCritical", "치명"),
+		Detail.mCriticalDamage <= 0 ? FText::FromString(TEXT("-"))
+			: FText::AsNumber(Detail.mCriticalDamage));
 	SetShown(mDetailStatBlock, true);
 	ShowDetailRightBlock(mDetailTargetBlock);
 	PaintSelectGrid(Detail.mTargeting);
@@ -5118,28 +5513,28 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 		TEXT("%s · 범위 %.0f"), HitShapeName(Detail.mTargeting.mHitShape),
 		Detail.mTargeting.mHitRange)));
 
-	if (Skills.IsValidIndex(Detail.mSkillIndex) == true)
+	FString Subtitle = FString::Printf(TEXT("AP %d"), Detail.mActionPointCost);
+	if (Detail.mActionPointGain > 0)
 	{
-		const FSkillUI& Skill = Skills[Detail.mSkillIndex];
-		Subtitle = FString::Printf(TEXT("AP %d"), Skill.mActionPointCost);
-		if (Skill.mCooldownTurns > 0)
-		{
-			Subtitle += FString::Printf(TEXT("  ·  쿨타임 %d턴"), Skill.mCooldownTurns);
-		}
-		if (Skill.mDamageMax > 0)
-		{
-			Subtitle += Skill.mDamageMin == Skill.mDamageMax
-				? FString::Printf(TEXT("  ·  피해 %d"), Skill.mDamageMax)
-				: FString::Printf(TEXT("  ·  피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax);
-		}
-		// 수치 칩 기둥을 걷었으니(확정 시안) 사거리·치명도 이 줄에 싣는다.
-		Subtitle += FString::Printf(TEXT("  ·  사거리 %.0f"),
-			Skill.mTargeting.mSelectRange);
-		if (Skill.mCriticalDamage > 0)
-		{
-			// "치명"만 쓰면 확률인지 피해인지 못 읽는다(0806 검수). 이 값은 피해다.
-			Subtitle += FString::Printf(TEXT("  ·  치명타피해 %d"), Skill.mCriticalDamage);
-		}
+		Subtitle += FString::Printf(TEXT("  ·  AP 회복 %d"), Detail.mActionPointGain);
+	}
+	if (Detail.mCooldownTurns > 0)
+	{
+		Subtitle += FString::Printf(TEXT("  ·  쿨타임 %d턴"), Detail.mCooldownTurns);
+	}
+	if (Detail.mDamageMax > 0)
+	{
+		Subtitle += Detail.mDamageMin == Detail.mDamageMax
+			? FString::Printf(TEXT("  ·  피해 %d"), Detail.mDamageMax)
+			: FString::Printf(TEXT("  ·  피해 %d~%d"), Detail.mDamageMin, Detail.mDamageMax);
+	}
+	// 수치 칩 기둥을 걷었으니(확정 시안) 사거리·치명도 이 줄에 싣는다.
+	Subtitle += FString::Printf(TEXT("  ·  사거리 %.0f"),
+		Detail.mTargeting.mSelectRange);
+	if (Detail.mCriticalDamage > 0)
+	{
+		// "치명"만 쓰면 확률인지 피해인지 못 읽는다(0806 검수). 이 값은 피해다.
+		Subtitle += FString::Printf(TEXT("  ·  치명타피해 %d"), Detail.mCriticalDamage);
 	}
 	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
 
@@ -5160,6 +5555,21 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	SetDetailSkillRowShown(false);
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+FString UCombatLayoutHUDWidget::GetDetailChipValueForTest(const int32 ChipIndex) const
+{
+	return mDetailChipValues.IsValidIndex(ChipIndex)
+		&& mDetailChipValues[ChipIndex] != nullptr
+		? mDetailChipValues[ChipIndex]->GetText().ToString() : FString();
+}
+
+FString UCombatLayoutHUDWidget::GetDetailSubtitleForTest() const
+{
+	return mDetailSubtitleText != nullptr
+		? mDetailSubtitleText->GetText().ToString() : FString();
+}
+#endif
 
 /**
  * @brief 이동 카드의 상세를 띄운다.

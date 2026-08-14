@@ -8,6 +8,7 @@
 #include "Setting/RDWorldSettings.h"
 #include "Actor/Party/PartyModel.h"
 #include "AttributeSet/PartyAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/SkillComponent/SkillComponentModel.h"
@@ -19,9 +20,14 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Shop/ShopUIWidgetBase.h"
+#include "UI/FrontendMapWidget.h"
 
 namespace
 {
+	constexpr int32 ShopRestPrice = 100;
+	constexpr int32 ReplaceableSkillStartIndex = 2;
+	constexpr int32 ReplaceableSkillSlotCount = 4;
+
 	// TODO: 희귀도 색상 임시값 (인벤토리 GetInventoryRarityColor와 동일) -> 나중에 확정판에서 용수님의 UI 값으로 수정
 	FLinearColor GetShopRarityColor(ERarityType RarityType)
 	{
@@ -72,6 +78,8 @@ void AShopGameMode::InitializeRoom()
 			this, &AShopGameMode::HandleDiscardArtifactRequested);
 		mShopUIModel->OnDiscardSkillRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleDiscardSkillRequested);
+		mShopUIModel->OnRestRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleRestRequested);
 		mShopUIModel->OnLeaveRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleLeaveRequested);
 	}
@@ -120,6 +128,10 @@ void AShopGameMode::PushShopUIData()
 
 	FShopUI ShopUIData;
 	ShopUIData.mGold = GetPartyGold();
+	ShopUIData.mRest.mPrice = ShopRestPrice;
+	ShopUIData.mRest.mIsUsed = mRestUsed;
+	ShopUIData.mRest.mIsAffordable = !mRestUsed
+		&& ShopRestPrice <= ShopUIData.mGold;
 
 	// 소지품(버리기 대상)은 방 데이터와 무관하게 항상 채운다.
 	FillOwnedItems(ShopUIData);
@@ -178,10 +190,14 @@ void AShopGameMode::PushShopUIData()
 							Item.mName = Data->mName;
 						}
 						Item.mIcon = Data->mIcon.LoadSynchronous();
+						Item.mDescription = Data->mDescription;
 						// 가격은 유닛 스킬 파생 타입(UStaticUnitSkillData)에 있다
 						if (const UStaticUnitSkillData* UnitSkillData = Cast<UStaticUnitSkillData>(Data))
 						{
 							Item.mPrice = UnitSkillData->mPrice;
+							Item.mRequiredJobType = UnitSkillData->mJobType;
+							Item.mRarityColor = GetShopRarityColor(
+								UnitSkillData->mRarityType);
 						}
 					}
 				}
@@ -198,6 +214,20 @@ void AShopGameMode::PushShopUIData()
 						}
 						Item.mIcon = Data->mIcon.LoadSynchronous();
 						Item.mPrice = Data->mPrice;
+						Item.mRarityColor = GetShopRarityColor(Data->mRarityType);
+						// 아티팩트 자체에는 설명 필드가 없으므로 첫 패시브의 UI 설명을
+						// 상점 상세 카드에 사용한다. 설명 없는 순수 스탯 아티팩트는
+						// 위젯의 종류별 기본 문구로 폴백한다.
+						for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
+							: Data->mStaticPassiveData)
+						{
+							if (const UStaticPassiveData* Passive = PassiveSoft.LoadSynchronous();
+								Passive != nullptr && !Passive->mDescription.IsEmpty())
+							{
+								Item.mDescription = Passive->mDescription;
+								break;
+							}
+						}
 					}
 				}
 
@@ -269,6 +299,23 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 		OwnedUnit.mUnitIndex = UnitIndex;
 		OwnedUnit.mJobType = UnitModel->GetUnitJobType();
 		OwnedUnit.mLevel = UnitModel->GetPlayerLevel();
+
+		if (const UAttributeSetComponentModel* Attributes =
+			UnitModel->GetAttributeComponentModel())
+		{
+			FShopRestUnitUI RestUnit;
+			RestUnit.mUnitIndex = UnitIndex;
+			RestUnit.mJobType = OwnedUnit.mJobType;
+			RestUnit.mHP = Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetHPAttribute());
+			RestUnit.mMaxHP = Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetMaxHPAttribute());
+			RestUnit.mAP = Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetActionPointAttribute());
+			RestUnit.mMaxAP = Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetRechargeActionPointAttribute());
+			ShopUIData.mRest.mUnits.Add(RestUnit);
+		}
 
 		// 빈 슬롯도 담아 배열 위치 = 스킬 슬롯 index 유지 (구매/교체 대상 지정용)
 		if (const USkillComponentModel* SkillModel = UnitModel->GetSkillComponentModel())
@@ -393,9 +440,13 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, in
 
 	// 지정 슬롯 검사. 빈 슬롯이면 장착, 찬 슬롯이면 교체
 	const TArray<FSkillEntry>& Skills = SkillModel->GetSkills();
-	if (Skills.IsValidIndex(SkillSlotIndex) == false)
+	const bool bReplaceableSkillSlot = SkillSlotIndex >= ReplaceableSkillStartIndex
+		&& SkillSlotIndex < ReplaceableSkillStartIndex + ReplaceableSkillSlotCount;
+	if (!bReplaceableSkillSlot || Skills.IsValidIndex(SkillSlotIndex) == false)
 	{
-		UE_LOG(LogRD, Log, TEXT("스킬 구매 거절: 스킬 슬롯 범위 밖 (Unit=%d, SkillSlot=%d)"), UnitIndex, SkillSlotIndex);
+		UE_LOG(LogRD, Log,
+			TEXT("스킬 구매 거절: 교체 가능한 스킬 슬롯 범위 밖 (Unit=%d, SkillSlot=%d)"),
+			UnitIndex, SkillSlotIndex);
 		return;
 	}
 	const bool bIsReplace = Skills[SkillSlotIndex].mData != nullptr;
@@ -486,11 +537,103 @@ void AShopGameMode::HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex
 	PushShopUIData();
 }
 
-/** @brief 나간다. 다음 방을 고르는 것은 지도가 한다. */
+/**
+ * @brief 100G를 소비해 현재 파티 전원의 HP와 AP를 완전히 회복한다.
+ * @details UI 스냅샷 값은 신뢰하지 않고 현재 골드와 파티 모델을 다시 검증한다.
+ * HP 변경은 UPlayerUnitPersistData가 구독 중인 기존 Attribute 델리게이트를 통해 즉시 저장값에 반영된다.
+ */
+void AShopGameMode::HandleRestRequested()
+{
+	if (mRestUsed || GetPartyGold() < ShopRestPrice)
+	{
+		return;
+	}
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	TArray<UAttributeSetComponentModel*> UnitAttributes;
+	for (const TObjectPtr<UPlayerUnitModel>& UnitModelPtr
+		: PartyModel->GetPlayerUnitModels())
+	{
+		UPlayerUnitModel* UnitModel = UnitModelPtr.Get();
+		if (UnitModel == nullptr)
+		{
+			continue;
+		}
+
+		UAttributeSetComponentModel* Attributes = UnitModel->GetAttributeComponentModel();
+		if (Attributes == nullptr)
+		{
+			// 일부만 회복하고 과금하는 상태를 만들지 않는다.
+			return;
+		}
+		UnitAttributes.Add(Attributes);
+	}
+
+	if (UnitAttributes.IsEmpty())
+	{
+		return;
+	}
+
+	for (UAttributeSetComponentModel* Attributes : UnitAttributes)
+	{
+		const float MaxHP = Attributes->GetAttributeCurrentValue(
+			UPlayerUnitAttributeSet::GetMaxHPAttribute());
+		const float MaxAP = Attributes->GetAttributeCurrentValue(
+			UUnitAttributeSet::GetRechargeActionPointAttribute());
+		Attributes->ApplyModToAttribute(
+			UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, MaxHP);
+		Attributes->ApplyModToAttribute(
+			UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, MaxAP);
+	}
+
+	SpendPartyGold(ShopRestPrice);
+	mRestUsed = true;
+	PushShopUIData();
+}
+
+/** @brief 상점 HUD를 닫은 뒤 다음 방을 고르는 공용 월드맵을 연다. */
 void AShopGameMode::HandleLeaveRequested()
 {
-	// [합의필요] 상점을 나가면 바로 지도인가, 방 안에 서 있다가 나가는가.
-	// 지금은 지도를 여는 길이 방 HUD 에만 있어 여기서 할 일이 없다.
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("상점 나가기 실패: WorldWidgetSubsystem 없음"));
+		return;
+	}
+
+	UFrontendMapWidget* MapWidget =
+		WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(
+			EWorldWidgetType::WorldMap);
+	if (MapWidget == nullptr)
+	{
+		WorldWidgetSubsystem->InitWorldWidget(EWorldWidgetType::WorldMap);
+		MapWidget = WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(
+			EWorldWidgetType::WorldMap);
+	}
+	if (MapWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("상점 나가기 실패: WorldMap 위젯 미설정"));
+		return;
+	}
+
+	MapWidget->SetRoomSelectionEnabled(true);
+	MapWidget->ClearMapStatusOverride();
+	MapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(
+		MapWidget, [](UUserWidget* OpenedWidget)
+		{
+			if (UFrontendMapWidget* OpenedMapWidget =
+				Cast<UFrontendMapWidget>(OpenedWidget))
+			{
+				OpenedMapWidget->RefreshMap();
+			}
+		}));
+	MapWidget->RefreshMap();
 }
 
 /** @brief 파티 골드 소비. 0 이하 가격은 무시한다. */

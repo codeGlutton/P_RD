@@ -85,6 +85,9 @@ private:
 	 */
 	UFUNCTION() void HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex);
 
+	/** @brief 파티 전원의 HP/AP를 완전히 회복하고 이 상점의 휴식을 소진한다. */
+	UFUNCTION() void HandleRestRequested();
+
 	/** @brief 나간다. 지도를 열어 다음 방을 고르게 한다. */
 	UFUNCTION() void HandleLeaveRequested();
 
@@ -112,6 +115,9 @@ private:
 	 * 원본이 보존되므로 구매 무르기(환불) 규칙이 나중에 생겨도 대응할 수 있다.
 	 */
 	TSet<int32> mSoldSlots;
+
+	/** @brief 현재 상점방 인스턴스에서 휴식 서비스를 이미 사용했는지 여부. */
+	bool mRestUsed = false;
 
 	/**
 	 * @brief 판매 슬롯 번호가 가리키는 실제 상품
