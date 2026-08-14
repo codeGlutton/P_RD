@@ -55,6 +55,12 @@ bool UBoardActorAnimInstance::PlayMontageUsingTag_Internal(FBoardActorAnimationC
 		return false;
 	}
 
+	if (IsPlayingMontageUsingTag() == true && GetPlayingMontageSetUsingTag()->mPlayPriority > mTagAnimMontageSets[Context.mMontageTag].mPlayPriority)
+	{
+		// 우선순위가 낮은 몽타쥬
+		return false;
+	}
+
 	if (Montage_Play(TargetAnimMontage) <= 0.f)
 	{
 		// 애님 몽타쥬 실행 시간이 0초 이하
@@ -179,7 +185,27 @@ bool UBoardActorAnimInstance::IsPlayingMontageUsingTag() const
 
 UAnimMontage* UBoardActorAnimInstance::GetPlayingMontageUsingTag() const
 {
+	if (IsPlayingMontageUsingTag() == false)
+	{
+		return nullptr;
+	}
+
+	if (mTagAnimMontageSets.Contains(mActiveAnimationContext.mMontageTag) == false)
+	{
+		return nullptr;
+	}
+
 	return mTagAnimMontageSets[mActiveAnimationContext.mMontageTag].mAnimMontages[StaticCast<int32>(mActiveAnimationContext.mMontageDir)];
+}
+
+const FTagMontageAnimationSet* UBoardActorAnimInstance::GetPlayingMontageSetUsingTag() const
+{
+	if (IsPlayingMontageUsingTag() == false)
+	{
+		return nullptr;
+	}
+
+	return mTagAnimMontageSets.Find(mActiveAnimationContext.mMontageTag);
 }
 
 void UCombatTargetAnimInstance::NativeUpdateAnimation(float DeltaSeconds)

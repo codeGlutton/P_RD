@@ -249,7 +249,7 @@ void USkillComponentModel::PlaySkillAnimation()
 
 	FBoardActorAnimationEvent ApplyEvent;
 	ApplyEvent.mIsOneTimeEvent = false;
-	ApplyEvent.OnTriggerAnimationEvent.AddWeakLambda(this, [this](const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload) {
+	ApplyEvent.OnTriggerAnimationEvent.AddWeakLambda(this, [this](const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload) {
 		TriggerPhaseLayer(Payload);
 		});
 	const FGameplayTag& ApplyMotionTag = SkillAnimationSet.mApplyMotionTags[mActiveSkillContext.mAnimationIndex];

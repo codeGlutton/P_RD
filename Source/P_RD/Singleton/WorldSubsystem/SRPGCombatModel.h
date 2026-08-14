@@ -105,6 +105,7 @@ public:
 
 protected:
 	void InitBoardActorModels(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits);
+	void RegisterRoundEvents(UStaticCombatRoomSpawnData* RoomSpawnData);
 	void RestoreBoardActorModels(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FRoomClearData& ClearData);
 
 	/* 전투 진행 함수 */
@@ -113,7 +114,15 @@ protected:
 	void AdvanceRoundIfNeeded(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
 
 	void BeginRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
-	void EndRound();
+	void EndRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
+
+	/* 이벤트 등록 함수 */
+public:
+	void AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
+	void AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
+
+protected:
+	void TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex);
 
 	/* 전투 상태 평가 */
 public:
@@ -340,6 +349,14 @@ protected:
 	// @brief 모든 타격 가능 객체들 캐싱
 	UPROPERTY(Category = BoardActor, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetObstacleModels"))
 	TArray<TScriptInterface<IBoardCombatTarget>> mCombatTargetObstacleModels;
+
+protected:
+	// @brief 등록된 라운드 시작 이벤트
+	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents"))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
+	// @brief 등록된 라운드 종료 이벤트
+	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents"))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
 
 protected:
 	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지

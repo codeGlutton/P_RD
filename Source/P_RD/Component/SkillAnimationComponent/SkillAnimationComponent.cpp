@@ -61,7 +61,7 @@ void USkillAnimationComponent::HandleToPlayAnimation(TSharedPtr<FPresentationBar
 
 	/* 연출 대기 */
 	{
-		PlayAnimContext.mMontageEndEvent.AddLambda([MotionEndBarrier](const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, bool IsInterrupted) {
+		PlayAnimContext.mMontageEndEvent.AddLambda([MotionEndBarrier](const FBoardActorAnimationContext& Context, UObject* EndAnim, bool IsInterrupted) {
 			});
 	}
 
@@ -108,7 +108,7 @@ void USkillAnimationComponent::HandleToPlayAnimation(TSharedPtr<FPresentationBar
 	PlayApplyAnimation(PlayAnimContext);
 }
 
-void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
+void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
 	const FApplyAnimationEventTriggerPayload* AnimationPayload = StaticCast<const FApplyAnimationEventTriggerPayload*>(Payload);
 
@@ -144,7 +144,7 @@ void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimat
 	}
 }
 
-void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
+void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
 	const FApplyVFXEventTriggerPayload* VFXPayload = StaticCast<const FApplyVFXEventTriggerPayload*>(Payload);
 
@@ -208,14 +208,14 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 	}
 }
 
-void USkillAnimationComponent::OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
+void USkillAnimationComponent::OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
 	const FCameraShakeEventTriggerPayload* CameraShakePayload = StaticCast<const FCameraShakeEventTriggerPayload*>(Payload);
 
 	ShakeCamera(CameraShakePayload->mCameraShakeClass);
 }
 
-void USkillAnimationComponent::OnHandleCameraZoomEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
+void USkillAnimationComponent::OnHandleCameraZoomEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
 	const FCameraZoomEventTriggerPayload* CameraZoomPayload = StaticCast<const FCameraZoomEventTriggerPayload*>(Payload);
 
@@ -292,7 +292,7 @@ void USkillAnimationComponent::OnHandleCameraZoomEvent(const FBoardActorAnimatio
 	}
 }
 
-void USkillAnimationComponent::OnHandleTimeScaleEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload)
+void USkillAnimationComponent::OnHandleTimeScaleEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload)
 {
 	const FTimeScaleEventTriggerPayload* TimeScalePayload = StaticCast<const FTimeScaleEventTriggerPayload*>(Payload);
 
