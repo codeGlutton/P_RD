@@ -26,10 +26,25 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_PushAttack,				"Animation.Montage.Skill.Mercenary.Knight.PushAttack");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_NormalShot,				"Animation.Montage.Skill.Mercenary.Ranger.NormalShot");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_PiercingShot,			"Animation.Montage.Skill.Mercenary.Ranger.PiercingShot");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_SnipeShot,				"Animation.Montage.Skill.Mercenary.Ranger.SnipeShot");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_InDirectShot,			"Animation.Montage.Skill.Mercenary.Ranger.InDirectShot");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_Acceleration,			"Animation.Montage.Skill.Mercenary.Ranger.Acceleration");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_PiercingShot,			"Animation.Montage.Skill.Mercenary.Ranger.PiercingShot");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_SnipeShot,				"Animation.Montage.Skill.Mercenary.Ranger.SnipeShot");	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_InDirectShot,			"Animation.Montage.Skill.Mercenary.Ranger.InDirectShot");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_WarmUp,					"Animation.Montage.Skill.Mercenary.Ranger.WarmUp");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_HasteDance,				"Animation.Montage.Skill.Mercenary.Ranger.HasteDance");	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_Disarm,					"Animation.Montage.Skill.Mercenary.Ranger.Disarm");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_RapidFire,				"Animation.Montage.Skill.Mercenary.Ranger.RapidFire");	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_RainOfArrows,			"Animation.Montage.Skill.Mercenary.Ranger.RainOfArrows");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_PiercingVolley,			"Animation.Montage.Skill.Mercenary.Ranger.PiercingVolley");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_Fracture,				"Animation.Montage.Skill.Mercenary.Ranger.Fracture");	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_RoundhouseKick,			"Animation.Montage.Skill.Mercenary.Ranger.RoundhouseKick");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_HurricaneKick,			"Animation.Montage.Skill.Mercenary.Ranger.HurricaneKick");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_AP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.AP");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_SP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.SP");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_StunningKick,			"Animation.Montage.Skill.Mercenary.Ranger.StunningKick");		
+
+
+
+
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_NormalEnergyBall,			"Animation.Montage.Skill.Mercenary.Mage.NormalEnergyBall");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_Blizarrd,					"Animation.Montage.Skill.Mercenary.Mage.Blizarrd");
