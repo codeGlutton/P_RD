@@ -28,5 +28,5 @@ public:
 
 protected:
 	// @brief 스텝 시작마다 AP 1 차감
-	void OnStartStep(int32 StepIndex) override;
+	void OnStartStep(int32 StepIndex, EBoardMoveMode MoveMode) override;
 };

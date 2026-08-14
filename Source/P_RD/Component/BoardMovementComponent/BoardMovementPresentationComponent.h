@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Component/ComponentView.h"
+#include "Component/BoardMovementComponent/BoardMovementType.h"
 #include "BoardMovementPresentationComponent.generated.h"
 
 class UBoardActorModel;
@@ -53,14 +54,15 @@ public:
 	 * - 부드러운 코너링을 하려면 베지어곡선이 필요한데 이때는 진입, 중간, 진출 타일 정보가 필요함
 	 * - 전체 이동경로가 기존 타일 중점들의 집합 -> 베지어곡선 부분을 포함한 모든 점들의 집합(폴리라인)으로 변경
 	 */
-	virtual void OnStartMovePath(const TArray<FVector>& PathWorldLocations);
+	virtual void OnStartMovePath(const TArray<FVector>& PathWorldLocations, EBoardMoveMode MoveMode);
 
 	// @brief 이동 시작 요청을 수신해서 이동 시작
 	virtual void OnStartMoveStep(
 		const FTileTransform& NextTileTransform,
 		const FTransform& TargetWorldTransform,
 		TSharedPtr<FPresentationBarrier> Barrier,
-		float RemainingPathDistance);
+		float RemainingPathDistance,
+		EBoardMoveMode MoveMode);
 
 	// @brief 방향 전환 요청을 수신해서 제자리 회전 시작
 	virtual void OnRotate(
