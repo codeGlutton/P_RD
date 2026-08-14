@@ -11,6 +11,9 @@ UCLASS()
 class UMercenaryDetailTestWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+protected:
+	bool Initialize() override;
 };
 
 /**
@@ -27,6 +30,7 @@ class UMercenaryDetailTestResponder : public UObject
 
 public:
 	void Bind(UCombatUIModel* UIModel);
+	void ConfigureUnitSkillResponse(const FSkillDetailUI& SkillDetail);
 
 	UFUNCTION()
 	void HandleCombatCommand(ECombatInputType Type, int32 IntPayload);
@@ -34,8 +38,11 @@ public:
 	ECombatInputType mLastType = ECombatInputType::Cancel;
 	int32 mLastPayload = INDEX_NONE;
 	int32 mInspectRequestCount = 0;
+	int32 mInspectSkillRequestCount = 0;
 
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<UCombatUIModel> mUIModel;
+	UPROPERTY(Transient)
+	FSkillDetailUI mResponseSkillDetail;
 };

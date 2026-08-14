@@ -369,6 +369,10 @@ void USettingsPanelWidget::SyncText() const
 		CancelAbandonButtonText->SetText(FText::FromString(
 			mValueModel.mUseKoreanLanguage ? TEXT("취소") : TEXT("Cancel")));
 	}
+	if (mRunConfirmAction != ERunConfirmAction::None)
+	{
+		SyncRunConfirmText();
+	}
 }
 
 /**

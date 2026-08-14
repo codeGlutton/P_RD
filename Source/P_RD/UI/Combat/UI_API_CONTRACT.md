@@ -21,7 +21,7 @@
 | Unit | `SetUnitUIs(TArray<FUnitUI>)` | `FUnitUI` | `mUnitId, mIsPlayer, mHP/mMaxHP, mMovementPoint/mMaxMovementPoint, mTile`(ATileMap 점유 거울값 — 권위는 타일맵 파트.mOccupantUnitId), `mWorldLocation`(머리위 HP바 투영용), `mStatusTags`(버프/디버프, enum 아닌 태그) |
 | Unit(상세) | `SetUnitDetail(FUnitDetailUI)` | `FUnitDetailUI` | 롱프레스 시 `mName, mLevel, mPortrait, mPassiveDescriptions`만(HP/스탯은 중복 보관 X — UI가 `mUnitId`로 FUnitUI에서 읽음) |
 | Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
-| Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 `mDescription, mTargeting`(풀스펙 사거리/타격범위/곡사·관통) 등 |
+| Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 요청한 유닛 스킬의 `mDescription, mActionPointCost/mActionPointGain, mCooldownTurns, mDamageMin/mDamageMax, mCriticalDamage, mTargeting`(풀스펙 사거리/타격범위/곡사·관통). 스킬 index는 유닛별 슬롯이므로 플레이어 `FSkillUI`를 재조회하지 않음 |
 | Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/Preview는 develop `ESRPGSkillBuildPhase`와 매핑), `mTurnOrderUnitIds` |
 | Equipment | `SetEquipmentUIs(TArray<FEquipmentUI>)` | `FEquipmentUI` | `mSlotIndex, mItemId, mName, mIcon, mIsEquipped, mRarityColor` |
 | Meta | `SetPlayerMeta(FPlayerMetaUI)` | `FPlayerMetaUI` | `mGold, mLevel, mExp/mMaxExp` (상단 상태바·보상) |
@@ -45,13 +45,13 @@
 | 스킬 선택 | `RequestSelectSkill(SkillIndex)` | `OnCombatCommand(SelectSkill, idx)` | SkillIndex |
 | 이동 모드 | `RequestMove()` | `OnCombatCommand(Move, INDEX_NONE)` | 없음 |
 | 턴 종료 | `RequestEndTurn()` | `OnCombatCommand(EndTurn, INDEX_NONE)` | 없음 |
-| 취소(딴 데 탭) | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
+| 명시적 전체 취소(취소 버튼·모달 전환) | `RequestCancel()` | `OnCombatCommand(Cancel, INDEX_NONE)` | 없음 |
 | 스킬 상세 | `RequestLongPressSkill(SkillIndex)` | `OnCombatCommand(LongPressSkill, idx)` | SkillIndex |
 | 적 정보 | `RequestLongPressUnit(UnitId)` | `OnCombatCommand(LongPressUnit, id)` | UnitId |
 | 장비 상세 | `RequestLongPressEquip(SlotIndex)` | `OnCombatCommand(LongPressEquip, idx)` | SlotIndex |
 | **월드 터치**(타일/유닛/취소) | `RequestWorldTouch(ScreenPos, bLongPress)` | `OnCombatWorldTouch(ScreenPos, bLongPress)` | 스크린 좌표 + 롱프레스 여부 |
 
-> 월드 터치 해석(스크린→타일)은 게임플레이가 수행: `DeprojectScreenPositionToWorld` → 타일맵 평면 교차 → `ATileMap::WorldToTileIndex` + `IsValidIndex`(맵 밖이면 취소). UI는 스크린 좌표만 넘긴다.
+> 월드 터치 해석(스크린→타일)은 게임플레이가 수행: `DeprojectScreenPositionToWorld` → 타일맵 평면 교차 → `ATileMap::WorldToTileIndex` + `IsValidIndex`. 보드 안의 빈/사거리 밖 타일은 현재 조준 단계를 유지하고, 실제 보드 밖 탭은 `Preview → AimSelection → None` 순서로 한 단계씩 취소한다. UI는 스크린 좌표만 넘긴다.
 
 ---
 

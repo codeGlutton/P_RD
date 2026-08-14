@@ -5,6 +5,7 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Button.h"
 #include "Components/ButtonSlot.h"
 #include "Components/CheckBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -33,6 +34,9 @@ namespace SettingsPanelWidgetBuilder
 
 	constexpr const TCHAR* SettingsLedgerAssetRoot =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger");
+	constexpr const TCHAR* SettingsConfirmPanelTexturePath =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Common/"
+			"T_MB_GenericDetailPanel.T_MB_GenericDetailPanel");
 
 	UTexture2D* LoadSettingsLedgerTexture(const TCHAR* PartName)
 	{
@@ -45,6 +49,19 @@ namespace SettingsPanelWidgetBuilder
 		{
 			UE_LOG(LogTemp, Warning,
 				TEXT("RD_SETTINGS_LEDGER missing texture %s"), *ObjectPath);
+		}
+		return Texture;
+	}
+
+	UTexture2D* LoadSettingsConfirmPanelTexture()
+	{
+		UTexture2D* Texture = LoadObject<UTexture2D>(
+			nullptr, SettingsConfirmPanelTexturePath);
+		if (Texture == nullptr)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("RD_SETTINGS_LEDGER missing confirm panel texture %s"),
+				SettingsConfirmPanelTexturePath);
 		}
 		return Texture;
 	}
@@ -65,6 +82,7 @@ namespace SettingsPanelWidgetBuilder
 		UTexture2D* SliderThumb = LoadSettingsLedgerTexture(TEXT("SliderThumb"));
 		UTexture2D* SliderTrack = LoadSettingsLedgerTexture(TEXT("SliderTrack"));
 		UTexture2D* SliderFill = LoadSettingsLedgerTexture(TEXT("SliderFill"));
+		UTexture2D* ConfirmPanel = LoadSettingsConfirmPanelTexture();
 	};
 
 	void LogPhase(const TCHAR* Phase)
@@ -120,6 +138,25 @@ namespace SettingsPanelWidgetBuilder
 		}
 
 		Image->SetBrush(MakeTextureBrush(Texture, TextureNativeSize(Texture)));
+		Image->SetColorAndOpacity(FLinearColor::White);
+	}
+
+	/** The Marchbound detail panel is a complete authored modal, not a 9-slice. */
+	void ApplyConfirmPanelTexture(UWidgetBlueprint* Blueprint, UTexture2D* Texture)
+	{
+		UImage* Image = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("Set_confirm_plate")));
+		if (Image == nullptr || Texture == nullptr)
+		{
+			return;
+		}
+
+		FSlateBrush Brush = Image->GetBrush();
+		Brush.SetResourceObject(Texture);
+		Brush.SetImageSize(TextureNativeSize(Texture));
+		Brush.DrawAs = ESlateBrushDrawType::Image;
+		Brush.Margin = FMargin(0.f);
+		Image->SetBrush(Brush);
 		Image->SetColorAndOpacity(FLinearColor::White);
 	}
 
@@ -437,6 +474,127 @@ namespace SettingsPanelWidgetBuilder
 		return DesignCanvas;
 	}
 
+	/**
+	 * Keep the dimmer in viewport space and only aspect-fit the authored dialog.
+	 * A 1920x1080 dimmer below SettingsScaleBox can never cover the letterbox bands
+	 * of a fold-sized viewport, which is why the old modal left bright strips visible.
+	 */
+	UCanvasPanel* EnsureRunConfirmViewportLayer(UWidgetBlueprint* Blueprint,
+		UCanvasPanel* Root, UWidget* ConfirmPanel)
+	{
+		if (Blueprint == nullptr || Root == nullptr || ConfirmPanel == nullptr)
+		{
+			return nullptr;
+		}
+
+		UOverlay* Layer = Cast<UOverlay>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RunConfirmViewportLayer")));
+		if (Layer == nullptr)
+		{
+			Layer = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+				UOverlay::StaticClass(), TEXT("RunConfirmViewportLayer"));
+		}
+		if (Layer->GetParent() != Root)
+		{
+			if (UPanelWidget* PreviousParent = Layer->GetParent())
+			{
+				PreviousParent->RemoveChild(Layer);
+			}
+			Root->AddChildToCanvas(Layer);
+		}
+		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Layer->Slot))
+		{
+			Slot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			Slot->SetAlignment(FVector2D::ZeroVector);
+			Slot->SetAutoSize(false);
+			Slot->SetOffsets(FMargin(0.f));
+			Slot->SetZOrder(1000);
+		}
+		Layer->SetClipping(EWidgetClipping::Inherit);
+		Layer->SetVisibility(ESlateVisibility::Collapsed);
+
+		UBorder* Dim = Cast<UBorder>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RunConfirmViewportDim")));
+		if (Dim == nullptr)
+		{
+			Dim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
+				UBorder::StaticClass(), TEXT("RunConfirmViewportDim"));
+		}
+		if (Dim->GetParent() != Layer)
+		{
+			if (UPanelWidget* PreviousParent = Dim->GetParent())
+			{
+				PreviousParent->RemoveChild(Dim);
+			}
+			Layer->AddChildToOverlay(Dim);
+		}
+		Dim->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, .78f));
+		Dim->SetVisibility(ESlateVisibility::Visible);
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Dim->Slot))
+		{
+			Slot->SetPadding(FMargin(0.f));
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+		}
+
+		UScaleBox* Scale = Cast<UScaleBox>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RunConfirmScale")));
+		if (Scale == nullptr)
+		{
+			Scale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
+				UScaleBox::StaticClass(), TEXT("RunConfirmScale"));
+		}
+		if (Scale->GetParent() != Layer)
+		{
+			if (UPanelWidget* PreviousParent = Scale->GetParent())
+			{
+				PreviousParent->RemoveChild(Scale);
+			}
+			Layer->AddChildToOverlay(Scale);
+		}
+		Scale->SetStretch(EStretch::ScaleToFit);
+		Scale->SetStretchDirection(EStretchDirection::Both);
+		Scale->SetClipping(EWidgetClipping::Inherit);
+		Scale->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Scale->Slot))
+		{
+			Slot->SetPadding(FMargin(0.f));
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+		}
+
+		USizeBox* DesignSize = Cast<USizeBox>(
+			Blueprint->WidgetTree->FindWidget(TEXT("RunConfirmDesignSize")));
+		if (DesignSize == nullptr)
+		{
+			DesignSize = Blueprint->WidgetTree->ConstructWidget<USizeBox>(
+				USizeBox::StaticClass(), TEXT("RunConfirmDesignSize"));
+		}
+		if (DesignSize->GetParent() != Scale)
+		{
+			if (UPanelWidget* PreviousParent = DesignSize->GetParent())
+			{
+				PreviousParent->RemoveChild(DesignSize);
+			}
+			Scale->SetContent(DesignSize);
+		}
+		DesignSize->SetWidthOverride(1920.f);
+		DesignSize->SetHeightOverride(1080.f);
+		DesignSize->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		if (ConfirmPanel->GetParent() != DesignSize)
+		{
+			if (UPanelWidget* PreviousParent = ConfirmPanel->GetParent())
+			{
+				PreviousParent->RemoveChild(ConfirmPanel);
+			}
+			DesignSize->SetContent(ConfirmPanel);
+		}
+		ConfirmPanel->SetVisibility(ESlateVisibility::Visible);
+		ConfirmPanel->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		return Root;
+	}
+
 	void PlaceWidgetInSettingsCanvas(UCanvasPanel* ContentCanvas, UWidget* Widget,
 		const FVector2D Position, const FVector2D Size,
 		const int32 ZOrder, const ESlateVisibility Visibility)
@@ -684,9 +842,51 @@ namespace SettingsPanelWidgetBuilder
 		PlaceInSettingsCanvas(Blueprint, DesignCanvas, TEXT("Set_panel_bodyMount"),
 			FVector2D(175.f, 28.f), FVector2D(1570.f, 1001.f), 10,
 			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, DesignCanvas, TEXT("AbandonConfirmPanel"),
-			FVector2D::ZeroVector, FVector2D(1920.f, 1080.f), 100,
-			ESlateVisibility::Collapsed);
+		UWidget* ConfirmPanel = Blueprint->WidgetTree->FindWidget(
+			TEXT("AbandonConfirmPanel"));
+		UCanvasPanel* Root = Cast<UCanvasPanel>(Blueprint->WidgetTree->RootWidget);
+		if (EnsureRunConfirmViewportLayer(Blueprint, Root, ConfirmPanel) == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_SETTINGS_READABILITY_BUILD failed to create viewport confirm layer"));
+			return;
+		}
+		// Keep all modal children inside the 1920x1080 confirmation canvas and give
+		// the authored panel enough breathing room for localized copy.
+		// Legacy dims live inside the aspect-fitted dialog and therefore cannot cover
+		// non-16:9 letterbox bands. The root-level RunConfirmViewportDim owns dimming.
+		CollapseNamed(Blueprint, TEXT("AbandonConfirmDim"));
+		SetExistingCanvasRect(Blueprint, TEXT("Set_confirm_dim"),
+			FVector2D::ZeroVector, FVector2D(1920.f, 1080.f), 0);
+		CollapseNamed(Blueprint, TEXT("Set_confirm_dim"));
+		SetExistingCanvasRect(Blueprint, TEXT("Set_confirm_plateMount"),
+			FVector2D(420.f, 180.f), FVector2D(1080.f, 720.f), 1);
+		SetExistingCanvasRect(Blueprint, TEXT("AbandonConfirmSize"),
+			FVector2D(420.f, 180.f), FVector2D(1080.f, 720.f), 2);
+		SetExistingCanvasRect(Blueprint, TEXT("Set_confirm_canvas"),
+			FVector2D(420.f, 180.f), FVector2D(1080.f, 720.f), 2);
+		UTextBlock* Header = Cast<UTextBlock>(Blueprint->WidgetTree->FindWidget(
+			TEXT("RunConfirmHeaderText")));
+		if (Header == nullptr)
+		{
+			Header = Blueprint->WidgetTree->ConstructWidget<UTextBlock>(
+				UTextBlock::StaticClass(), TEXT("RunConfirmHeaderText"));
+		}
+		FSlateFontInfo HeaderFont = UIFont::MakeProjectExact(Header->GetFont(), 34);
+		HeaderFont.OutlineSettings.OutlineSize = 1;
+		HeaderFont.OutlineSettings.OutlineColor = FLinearColor(.025f, .012f, .004f, 1.f);
+		Header->SetFont(HeaderFont);
+		Header->SetText(FText::FromString(TEXT("런 포기")));
+		Header->SetJustification(ETextJustify::Center);
+		Header->SetColorAndOpacity(FSlateColor(FLinearColor(1.f, .90f, .68f, 1.f)));
+		Header->SetShadowOffset(FVector2D(1.5f, 1.5f));
+		Header->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .68f));
+		Header->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		UCanvasPanel* ConfirmCanvas = Cast<UCanvasPanel>(
+			Blueprint->WidgetTree->FindWidget(TEXT("Set_confirm_canvas")));
+		PlaceWidgetInSettingsCanvas(ConfirmCanvas, Header,
+			FVector2D(670.f, 210.f), FVector2D(580.f, 76.f), 103,
+			ESlateVisibility::SelfHitTestInvisible);
 
 		UCanvasPanel* Canvas = EnsureSettingsContentCanvas(Blueprint);
 		if (Canvas == nullptr)
@@ -920,6 +1120,7 @@ namespace SettingsPanelWidgetBuilder
 		{
 			ApplyTextureToImage(Blueprint, Name, Art.ActionButtonDanger);
 		}
+		ApplyConfirmPanelTexture(Blueprint, Art.ConfirmPanel);
 
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("StatusText_Center"),
 			FVector2D(335.f, 798.f), FVector2D(900.f, 34.f), 4,
@@ -1099,6 +1300,52 @@ namespace SettingsPanelWidgetBuilder
 		}
 	}
 
+	/**
+	 * Keep the functional transparent button in the same overlay as its visible
+	 * plate. Moving only the plate mount leaves the old button at its legacy canvas
+	 * coordinates: the art looks tappable, but the hit target is somewhere else.
+	 */
+	void FillButtonPlateMount(UWidgetBlueprint* Blueprint, const TCHAR* MountName,
+		const TCHAR* ButtonName)
+	{
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			return;
+		}
+
+		UOverlay* Mount = Cast<UOverlay>(
+			Blueprint->WidgetTree->FindWidget(FName(MountName)));
+		UButton* Button = Cast<UButton>(
+			Blueprint->WidgetTree->FindWidget(FName(ButtonName)));
+		if (Mount == nullptr || Button == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_SETTINGS_READABILITY_BUILD missing button mount %s/%s"),
+				MountName, ButtonName);
+			return;
+		}
+
+		if (Button->GetParent() != Mount)
+		{
+			if (UPanelWidget* PreviousParent = Button->GetParent())
+			{
+				PreviousParent->RemoveChild(Button);
+			}
+			Mount->AddChildToOverlay(Button);
+		}
+
+		if (UOverlaySlot* Slot = CastChecked<UOverlaySlot>(Button->Slot))
+		{
+			Slot->SetPadding(FMargin(0.f));
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+		}
+		Button->SetVisibility(ESlateVisibility::Visible);
+		Button->SetIsEnabled(true);
+		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+	}
+
 	void Build()
 	{
 		LogPhase(TEXT("begin"));
@@ -1146,6 +1393,12 @@ namespace SettingsPanelWidgetBuilder
 			TEXT("SaveAndExitButton"));
 		FillRunActionSlot(Blueprint, TEXT("Set_run_AbandonRunButton"),
 			TEXT("AbandonRunButton"));
+		// The ledger redesign moves these visible mounts. Move the real hit targets
+		// with them so both mouse and Android touch land on the rendered buttons.
+		FillButtonPlateMount(Blueprint, TEXT("BackButtonPlateMount"),
+			TEXT("BackButton"));
+		FillButtonPlateMount(Blueprint, TEXT("ResetButtonPlateMount"),
+			TEXT("ResetButton"));
 
 		// Visible button plates use their texture aspect. Their mounts/buttons keep the
 		// existing functional size, so the extra space becomes transparent padding.
@@ -1180,13 +1433,7 @@ namespace SettingsPanelWidgetBuilder
 		AspectFitButtonPlate(Blueprint, TEXT("AbandonRunButtonPlate"), RunActionBounds);
 		LogPhase(TEXT("buttons"));
 
-		// These are intentionally resizable surfaces. 9-slice is the only stretching
-		// allowed: corner pixels retain their source proportions while the center tiles
-		// cover the functional panel/row/slider bounds.
-		for (const TCHAR* Name : { TEXT("Set_confirm_plate") })
-		{
-			NormalizeNineSlice(Blueprint, Name);
-		}
+		// Confirmation now uses the authored Marchbound detail panel at a fixed aspect.
 		// Book/spine and generated labels are authored fixed illustrations. Turning
 		// any of them into a 9-slice would bend the spine or duplicate brass rivets.
 		for (const TCHAR* Name : {

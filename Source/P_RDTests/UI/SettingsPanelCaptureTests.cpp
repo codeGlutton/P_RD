@@ -37,8 +37,8 @@
 
 namespace SettingsPanelCapture
 {
-	constexpr int32 CaptureWidth = 1672;
-	constexpr int32 CaptureHeight = 941;
+	constexpr int32 LandscapeCaptureWidth = 1672;
+	constexpr int32 LandscapeCaptureHeight = 941;
 	constexpr TCHAR SettingsClassPath[] =
 		TEXT("/Game/UI/WBP_SettingsPanel.WBP_SettingsPanel_C");
 
@@ -135,7 +135,11 @@ namespace SettingsPanelCapture
 	}
 
 	bool CaptureMode(UWorld& World, const ESettingsPanelMode Mode,
-		const TCHAR* ModeName, FString& OutError)
+		const TCHAR* ModeName, FString& OutError,
+		const bool bShowAbandonConfirm = false,
+		const bool bShowSaveAndExitConfirm = false,
+		const int32 CaptureWidth = LandscapeCaptureWidth,
+		const int32 CaptureHeight = LandscapeCaptureHeight)
 	{
 		UClass* SettingsClass = LoadClass<USettingsPanelWidget>(nullptr, SettingsClassPath);
 		if (SettingsClass == nullptr)
@@ -158,6 +162,14 @@ namespace SettingsPanelCapture
 		Panel->RefreshPanelState(Mode == ESettingsPanelMode::InGame,
 			Mode == ESettingsPanelMode::InGame);
 		ApplyCaptureValues(*Panel);
+		if (bShowAbandonConfirm)
+		{
+			Panel->ShowAbandonConfirm();
+		}
+		else if (bShowSaveAndExitConfirm)
+		{
+			Panel->ShowSaveAndExitConfirm();
+		}
 		Panel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 		UWidget* RunActions = Panel->WidgetTree->FindWidget(TEXT("RunActionsPanel"));
@@ -172,6 +184,22 @@ namespace SettingsPanelCapture
 		{
 			OutError = FString::Printf(
 				TEXT("%s 모드의 RunActionsPanel 가시성이 반대임"), ModeName);
+			return false;
+		}
+		UWidget* AbandonConfirm = Panel->WidgetTree->FindWidget(
+			TEXT("AbandonConfirmPanel"));
+		if (AbandonConfirm == nullptr)
+		{
+			OutError = TEXT("AbandonConfirmPanel 바인딩이 없어 확인창을 검증할 수 없음");
+			return false;
+		}
+		const ESlateVisibility ExpectedConfirmVisibility =
+			(bShowAbandonConfirm || bShowSaveAndExitConfirm)
+			? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
+		if (AbandonConfirm->GetVisibility() != ExpectedConfirmVisibility)
+		{
+			OutError = FString::Printf(
+				TEXT("%s 캡처의 AbandonConfirmPanel 가시성이 반대임"), ModeName);
 			return false;
 		}
 
@@ -211,7 +239,8 @@ namespace SettingsPanelCapture
 		if (!RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, ReadFlags)
 			|| Pixels.Num() != CaptureWidth * CaptureHeight)
 		{
-			OutError = TEXT("1672x941 렌더 결과를 읽지 못함");
+			OutError = FString::Printf(TEXT("%dx%d 렌더 결과를 읽지 못함"),
+				CaptureWidth, CaptureHeight);
 			return false;
 		}
 
@@ -287,6 +316,49 @@ bool FSettingsPanelCaptureTest::RunTest(const FString& Parameters)
 		{
 			AddError(FString::Printf(TEXT("%s: %s"), Mode.Value, *Error));
 		}
+	}
+	FString AbandonConfirmError;
+	if (!CaptureMode(*World, ESettingsPanelMode::InGame,
+		TEXT("InGame_AbandonConfirm"), AbandonConfirmError, true))
+	{
+		AddError(FString::Printf(TEXT("InGame_AbandonConfirm: %s"),
+			*AbandonConfirmError));
+	}
+	FString SaveAndExitConfirmError;
+	if (!CaptureMode(*World, ESettingsPanelMode::InGame,
+		TEXT("InGame_SaveAndExitConfirm"), SaveAndExitConfirmError, false, true))
+	{
+		AddError(FString::Printf(TEXT("InGame_SaveAndExitConfirm: %s"),
+			*SaveAndExitConfirmError));
+	}
+	// Galaxy Fold capture from the report: the viewport-space dim must cover the
+	// full 2176x1812 canvas while the dialog itself remains aspect-fitted.
+	FString FoldAbandonConfirmError;
+	if (!CaptureMode(*World, ESettingsPanelMode::InGame,
+		TEXT("Fold2176x1812_AbandonConfirm"), FoldAbandonConfirmError,
+		true, false, 2176, 1812))
+	{
+		AddError(FString::Printf(TEXT("Fold2176x1812_AbandonConfirm: %s"),
+			*FoldAbandonConfirmError));
+	}
+	FString FoldSaveConfirmError;
+	if (!CaptureMode(*World, ESettingsPanelMode::InGame,
+		TEXT("Fold2176x1812_SaveAndExitConfirm"), FoldSaveConfirmError,
+		false, true, 2176, 1812))
+	{
+		AddError(FString::Printf(TEXT("Fold2176x1812_SaveAndExitConfirm: %s"),
+			*FoldSaveConfirmError));
+	}
+	for (const TCHAR* FoldCaptureName : {
+		TEXT("WBP_SettingsPanel_Fold2176x1812_AbandonConfirm.png"),
+		TEXT("WBP_SettingsPanel_Fold2176x1812_SaveAndExitConfirm.png") })
+	{
+		const FString FoldCapturePath = FPaths::Combine(
+			OutputDirectory(), FoldCaptureName);
+		TestTrue(*FString::Printf(TEXT("%s 생성됨"), FoldCaptureName),
+			IFileManager::Get().FileExists(*FoldCapturePath));
+		TestTrue(*FString::Printf(TEXT("%s 는 빈 파일이 아님"), FoldCaptureName),
+			IFileManager::Get().FileSize(*FoldCapturePath) > 100000);
 	}
 	FInternationalization::Get().SetCurrentCulture(OriginalCulture);
 	return true;

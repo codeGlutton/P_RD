@@ -27,6 +27,7 @@
 #include "CombatLayoutHUDWidget.generated.h"
 
 struct FPresentationBarrier;
+struct FCombatSkillCutInRequest;
 
 /**
  * @brief 유닛 머리 위 HP 바 한 개가 들고 있는 위젯들.
@@ -165,6 +166,40 @@ public:
 	{
 		return mMonsterTabWidget;
 	}
+	UUserWidget* GetDetailOverlayWidgetForTest() const
+	{
+		return mDetailOverlayWidget;
+	}
+	const FSkillDetailUI& GetRenderedSkillDetailForTest() const
+	{
+		return mRenderedSkillDetailForTest;
+	}
+	FString GetDetailChipValueForTest(int32 ChipIndex) const;
+	FString GetDetailSubtitleForTest() const;
+
+	/** @brief 상태 소켓 타이머를 기다리지 않고 발화시켜 상세 왕복을 검증한다. */
+	void TriggerStatusLongPressForTest(bool bAlly, int32 SlotIndex);
+	/** @brief 상태 소켓 긴 누름 타이머가 실제로 대기 중인지. */
+	bool IsStatusLongPressPendingForTest() const;
+	/** @brief 멀티터치/늦은 Release 검증용 현재 후보 식별자. */
+	bool IsStatusPressActiveForTest(bool bAlly, int32 SlotIndex) const;
+
+	/** @brief 몬스터 스킬 롱프레스를 타이머 대기 없이 발화한다. */
+	void TriggerMonsterSkillLongPressForTest(int32 SlotIndex);
+	/** @brief 몬스터 스킬 후보 타이머/식별자를 자동화에서 확인한다. */
+	bool IsMonsterSkillLongPressPendingForTest() const;
+	bool IsMonsterSkillPressActiveForTest(int32 SlotIndex) const;
+	/** @brief 두 독립 viewport 모달의 실제 Z-order 계약. */
+	int32 GetMonsterTabViewportZOrderForTest() const;
+	int32 GetDetailOverlayViewportZOrderForTest() const;
+	void CloseDetailOverlayForTest() { HideDetailOverlay(false); }
+	/** @brief 자동 턴 초점이 실제 카드 고리 앵커를 보냈는지 검증한다. */
+	FVector2D GetCommandRingAnchorForTest() const { return ComputeCommandRingAnchor(); }
+	/** @brief 패배에 승리 징글이 연결되지 않는 결과 음향 선택 계약. */
+	USoundBase* SelectCombatResultJingleForTest(bool bPlayerWin) const
+	{
+		return SelectCombatResultJingle(bPlayerWin);
+	}
 #endif
 
 public:
@@ -186,6 +221,7 @@ public:
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	virtual void NativeOnUIRefreshed(ECombatUIDomain Domain) override;
 
 
@@ -507,6 +543,7 @@ private:
 	FDelegateHandle mActionEndHandle;
 	FDelegateHandle mEndCombatHandle;
 	FDelegateHandle mBeginRoundHandle;
+	FDelegateHandle mSkillCutInHandle;
 
 	/** @brief 커맨드 칸 하나를 눌렀을 때. 0번은 이동, 나머지는 스킬. */
 	void RequestCommand(int32 SlotIndex);
@@ -643,6 +680,7 @@ private:
 	 * 이쪽부터 옮겨야 했다. 안 옮기고 지웠으면 이겨도 아무 일이 안 일어난다.
 	 */
 	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin);
+	USoundBase* SelectCombatResultJingle(bool bPlayerWin) const;
 	void StartCombatResultCinematic();
 	void EnsureCombatResultWidgets();
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
@@ -749,6 +787,20 @@ private:
 	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
 	int32 mLastShownTurnRound = 0;
 
+	/* ── 스킬 실행 직전 컷인 ────────────────────── */
+	void HandlePrePlaySkillCutIn(
+		const FCombatSkillCutInRequest& Request,
+		TSharedPtr<FPresentationBarrier> Barrier);
+	bool EnsureSkillCutInWidget();
+	void FinishSkillCutIn();
+
+	UPROPERTY(Transient)
+	TObjectPtr<class USkillCutInWidget> mSkillCutInWidget;
+	TSharedPtr<FPresentationBarrier> mSkillCutInBarrier;
+	TArray<TSharedPtr<FPresentationBarrier>> mOverlappingSkillCutInBarriers;
+	FTimerHandle mSkillCutInSafetyTimerHandle;
+	bool mSkillCutInPlaying = false;
+
 	/* ── 유닛 머리 위 HP 바 (옛 HUD 에서 옮김) ────────────────────────────
 	 *
 	 * 아군 칸에는 파티 셋의 체력이 뜨지만 **적 체력은 볼 자리가 없다.** 머리
@@ -823,19 +875,29 @@ private:
 	void HideDetailOverlay(bool bNotifyGameplay);
 
 	/**
-	 * @brief 요약판의 상태 아이콘을 누르면 뜨는 상태이상 상세.
+	 * @brief 요약판의 상태 아이콘을 오래 누르면 뜨는 상태이상 상세.
 	 *
 	 * 스킬 상세와 같은 판을 쓴다: 제목 띠에 상태 이름, 소켓에 상태 아이콘,
 	 * 설명 칸에 효과 글. 격자·칩은 걷는다.
 	 */
 	void ShowStatusDetailOverlay(const FGameplayTag& StatusTag, int32 StackCount);
 	void HandleStatusClicked(bool bAlly, int32 SlotIndex);
-	UFUNCTION() void HandleAllyStatusClicked_0();
-	UFUNCTION() void HandleAllyStatusClicked_1();
-	UFUNCTION() void HandleAllyStatusClicked_2();
-	UFUNCTION() void HandleEnemyStatusClicked_0();
-	UFUNCTION() void HandleEnemyStatusClicked_1();
-	UFUNCTION() void HandleEnemyStatusClicked_2();
+	void BeginStatusPress(bool bAlly, int32 SlotIndex);
+	void EndStatusPress(bool bAlly, int32 SlotIndex);
+	void HandleStatusLongPress(bool bAlly, int32 SlotIndex);
+	void CancelStatusPress();
+	UFUNCTION() void HandleAllyStatusPressed_0();
+	UFUNCTION() void HandleAllyStatusPressed_1();
+	UFUNCTION() void HandleAllyStatusPressed_2();
+	UFUNCTION() void HandleEnemyStatusPressed_0();
+	UFUNCTION() void HandleEnemyStatusPressed_1();
+	UFUNCTION() void HandleEnemyStatusPressed_2();
+	UFUNCTION() void HandleAllyStatusReleased_0();
+	UFUNCTION() void HandleAllyStatusReleased_1();
+	UFUNCTION() void HandleAllyStatusReleased_2();
+	UFUNCTION() void HandleEnemyStatusReleased_0();
+	UFUNCTION() void HandleEnemyStatusReleased_1();
+	UFUNCTION() void HandleEnemyStatusReleased_2();
 
 	/** @brief 상세 판 아무 데나 눌러 닫는 받이. */
 	UFUNCTION() void HandleDetailCloseCatchClicked();
@@ -900,9 +962,15 @@ private:
 	/** @brief 용병 목록에서 고른 줄. INDEX_NONE 이면 지금 차례인 용병을 본다. */
 	int32 mMercenarySelectedSlot = INDEX_NONE;
 
-	// 상태 아이콘 클릭이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
+	// 상태 아이콘 긴 누름이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
 	TArray<FStatusEffectUI> mAllyShownStatuses;
 	TArray<FStatusEffectUI> mEnemyShownStatuses;
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mAllyStatusButtons;
+	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mEnemyStatusButtons;
+	FTimerHandle mStatusLongPressTimerHandle;
+	int32 mStatusPressedSlot = INDEX_NONE;
+	bool mStatusPressedAlly = false;
+	bool mStatusPressActive = false;
 
 	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
@@ -919,6 +987,20 @@ private:
 	bool EnsureMonsterTabWidget();
 	void RefreshMonsterTab();
 	void RefreshMonsterTabDetail();
+	void BeginMonsterSkillPress(int32 SlotIndex);
+	void EndMonsterSkillPress(int32 SlotIndex);
+	void HandleMonsterSkillLongPress(int32 SlotIndex);
+	void CancelMonsterSkillPress();
+	UFUNCTION() void HandleMonsterSkillPressed_0();
+	UFUNCTION() void HandleMonsterSkillPressed_1();
+	UFUNCTION() void HandleMonsterSkillPressed_2();
+	UFUNCTION() void HandleMonsterSkillPressed_3();
+	UFUNCTION() void HandleMonsterSkillReleased_0();
+	UFUNCTION() void HandleMonsterSkillReleased_1();
+	UFUNCTION() void HandleMonsterSkillReleased_2();
+	UFUNCTION() void HandleMonsterSkillReleased_3();
+	static constexpr int32 MonsterTabViewportZOrder = 55;
+	static constexpr int32 DetailOverlayViewportZOrder = 70;
 	UPROPERTY() TSubclassOf<UUserWidget> mMonsterTabWidgetClass;
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> mMonsterTabWidget;
 	/** @brief 행 순서대로 담은 표시 대상 적 id. 클릭 행→유닛 매핑의 단일 출처. */
@@ -926,10 +1008,18 @@ private:
 	int32 mMonsterTabSelectedRow = 0;
 	/** @brief 마지막으로 상세를 청한 몬스터 id. 유닛 갱신마다 재요청하지 않기 위한 가드. */
 	int32 mMonsterTabInspectedUnitId = INDEX_NONE;
+	/** @brief 보이는 슬롯→FUnitDetailSkillUI::mSkillIndex 왕복 식별자. */
+	TArray<int32> mMonsterTabSkillIndices;
+	FTimerHandle mMonsterSkillLongPressTimerHandle;
+	int32 mMonsterSkillPressedSlot = INDEX_NONE;
+	bool mMonsterSkillPressActive = false;
 	UPROPERTY(Transient) TObjectPtr<UImage> mDetailIconImage;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailTitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailBodyText;
+	#if WITH_DEV_AUTOMATION_TESTS
+	FSkillDetailUI mRenderedSkillDetailForTest;
+	#endif
 
 	/* ── 상세창 수치 칩과 범위 그림 ──────────────────────────────────────
 	 *
@@ -1080,11 +1170,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
 	TObjectPtr<USoundBase> mExpGainSound;
 
-	/** @brief 승리·패배 징글. 없으면 소리 없이 지나간다. */
+	/** @brief 검증된 승리 징글. 패배 음원은 검증된 자산이 생길 때까지 재생하지 않는다. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
 	TObjectPtr<USoundBase> mVictoryJingleSound;
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
-	TObjectPtr<USoundBase> mDefeatJingleSound;
 
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();
@@ -1166,6 +1254,8 @@ private:
 	struct FTurnSlotWidgets
 	{
 		TObjectPtr<UWidget> Root;
+		/** @brief TurnPanel의 직계 형제인 투명 클릭 받이. */
+		TObjectPtr<UButton> Button;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
 		TObjectPtr<UWidget> SpeedIcon;
@@ -1183,6 +1273,8 @@ private:
 	TArray<FCommandSlotWidgets> mCommandSlots;
 	TArray<FTurnSlotWidgets> mTurnSlots;
 
+	/** @brief 현재 라운드를 카드와 분리해 표시하는 왼쪽 상단 패널. */
+	TObjectPtr<UWidget> mRoundPanel;
 	TObjectPtr<UTextBlock> mRoundText;
 	TObjectPtr<UTextBlock> mObjectiveText;
 

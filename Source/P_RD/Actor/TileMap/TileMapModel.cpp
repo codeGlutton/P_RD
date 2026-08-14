@@ -193,6 +193,25 @@ FTileIndex UTileMapModel::TileDeltaToStep(const FTileIndex& From, const FTileInd
 	return Steps[Octant];
 }
 
+FTileIndex UTileMapModel::DirectionToTileStep(ETileActorDirection Direction)
+{
+	// TileDeltaToDirection의 방향 결정과 짝을 맞춘 매핑
+	switch (Direction)
+	{
+	case ETileActorDirection::Forward:
+		return FTileIndex(1, 0);
+	case ETileActorDirection::Backward:
+		return FTileIndex(-1, 0);
+	case ETileActorDirection::Right:
+		return FTileIndex(0, 1);
+	case ETileActorDirection::Left:
+		return FTileIndex(0, -1);
+	default:
+		checkNoEntry();
+		return FTileIndex::Zero;
+	}
+}
+
 FTransform UTileMapModel::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 항등 변환 (Invalid 값이 따로 없으니까)
@@ -1051,6 +1070,30 @@ TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pusher, const FT
 	// 같은 칸이라 방향이 없으면 밀 수 없음
 	if (Step == FTileIndex::Zero)
 		return Path;
+
+	// 밀리는 칸에서부터 한 칸씩 전진 (공용 루프)
+	return BuildPushPath(Pushed, Step, MaxDistance);
+}
+
+TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pushed, ETileActorDirection Direction, int32 MaxDistance) const
+{
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
+
+	// 밀리는 칸이 맵 밖이거나 밀칠 거리가 없으면 그대로 둔다
+	if (!IsValidIndex(Pushed) || MaxDistance <= 0)
+		return Path;
+
+	// 함정은 밀리는 유닛과 같은 타일이므로 시야 검사 없이 고정 방향으로 민다
+	return BuildPushPath(Pushed, DirectionToTileStep(Direction), MaxDistance);
+}
+
+TArray<FTileIndex> UTileMapModel::BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const
+{
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
 
 	// 밀리는 칸에서부터 한 칸씩 전진하며 지나가는 칸을 기록
 	FTileIndex Current = Pushed;

@@ -158,6 +158,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
 	void ShowAbandonConfirm() const;
 
+	/** @brief 저장 후 종료 전에 같은 확인 패널을 저장 안내 문구로 연다. */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ShowSaveAndExitConfirm() const;
+
 	/**
 	 * @brief 런 포기 확인 패널을 숨긴다.
 	 *
@@ -173,7 +177,8 @@ public:
 	 *
 	 * @details
 	 * 타이틀에서는 타이틀 메뉴로, 인게임에서는 상단 메뉴나 이전 팝업 상태로 돌아갈 수 있다.
-	 * 이 위젯은 자신이 어느 화면 스택에 올라와 있는지 모르므로 복귀 처리를 직접 하지 않는다.
+	 * 이 위젯은 자신의 팝업만 닫고, 어느 상위 화면으로 복귀할지는 외부 수신자에게 맡긴다.
+	 * 수신자가 없는 RD.SettingsPreview에서도 팝업은 정상적으로 닫힌다.
 	 */
 	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
 	FSettingsPanelEvent OnBackRequested;
@@ -353,7 +358,7 @@ private:
 	 */
 	void SetButtonEnabled(UButton* Button, bool bEnabled) const;
 
-	/** @brief BackButton 클릭을 OnBackRequested 이벤트로 변환한다. */
+	/** @brief BackButton 클릭 시 이 팝업을 닫고 OnBackRequested 이벤트를 알린다. */
 	UFUNCTION()
 	void HandleBackButtonClicked();
 
@@ -372,6 +377,17 @@ private:
 	/** @brief CancelAbandonButton 클릭 시 확인 패널만 닫는다. */
 	UFUNCTION()
 	void HandleCancelAbandonButtonClicked();
+
+	/** @brief 공용 확인 패널이 현재 확정할 런 액션. */
+	enum class ERunConfirmAction : uint8
+	{
+		None,
+		SaveAndExit,
+		Abandon
+	};
+
+	/** @brief 확인창의 제목/본문/확정 버튼 문구를 현재 액션과 언어에 맞춘다. */
+	void SyncRunConfirmText() const;
 
 	/** @brief ResetButton 클릭을 설정 초기화 요청 이벤트로 변환한다. */
 	UFUNCTION()
@@ -626,9 +642,17 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> AbandonConfirmPanel;
 
+	/** @brief 화면 종횡비와 무관하게 전체 뷰포트를 덮는 런 액션 확인 레이어 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> RunConfirmViewportLayer;
+
 	/** @brief 런 포기 확인 패널 제목 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> AbandonConfirmTitleText;
+
+	/** @brief 공용 런 액션 확인창 상단 명패의 짧은 액션명 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> RunConfirmHeaderText;
 
 	/** @brief 런 포기 확인 설명 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -664,6 +688,9 @@ private:
 	 */
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FSettingsPanelValueModel mValueModel;
+
+	/** @brief 저장 후 종료/포기하기가 공유하는 확인창의 현재 액션. */
+	mutable ERunConfirmAction mRunConfirmAction = ERunConfirmAction::None;
 
 	/** @brief 외부 값 적용 중 위젯 콜백이 다시 외부 이벤트로 나가지 않게 막는 플래그 */
 	bool mIsApplyingValueModel = false;

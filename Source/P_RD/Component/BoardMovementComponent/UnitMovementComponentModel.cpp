@@ -23,9 +23,15 @@ bool UUnitMovementComponentModel::IsMoveable() const
 	return AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root) == false;
 }
 
-void UUnitMovementComponentModel::OnStartStep(int32 StepIndex)
+void UUnitMovementComponentModel::OnStartStep(int32 StepIndex, EBoardMoveMode MoveMode)
 {
-	Super::OnStartStep(StepIndex);
+	Super::OnStartStep(StepIndex, MoveMode);
+
+	// 밀려나는 이동은 행동력 미차감 (강제 이동은 자원 소모 없음)
+	if (MoveMode != EBoardMoveMode::Normal)
+	{
+		return;
+	}
 
 	// 한 칸마다 이동력 차감
 	if (UAttributeSetComponentModel* AttrComp = GetOwnerModel<UUnitModel>()->GetAttributeComponentModel())

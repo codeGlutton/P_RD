@@ -423,3 +423,99 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelDirectionToTileStepTests,
+	"P_RD.TileMap.DirectionToTileStep",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+/**
+ * @brief 방향 enum -> 타일 스텝 매핑 검증 (TileDeltaToDirection과 왕복 일치)
+ */
+bool FTileMapModelDirectionToTileStepTests::RunTest(const FString& Parameters)
+{
+	// 4방향 매핑
+	TestTrue(TEXT("Forward는 +X"), UTileMapModel::DirectionToTileStep(ETileActorDirection::Forward) == FTileIndex(1, 0));
+	TestTrue(TEXT("Backward는 -X"), UTileMapModel::DirectionToTileStep(ETileActorDirection::Backward) == FTileIndex(-1, 0));
+	TestTrue(TEXT("Right는 +Y"), UTileMapModel::DirectionToTileStep(ETileActorDirection::Right) == FTileIndex(0, 1));
+	TestTrue(TEXT("Left는 -Y"), UTileMapModel::DirectionToTileStep(ETileActorDirection::Left) == FTileIndex(0, -1));
+
+	// 왕복 일치: 방향 -> 스텝 -> 다시 방향
+	const FTileIndex Origin(3, 3);
+	for (const ETileActorDirection Direction : { ETileActorDirection::Forward, ETileActorDirection::Backward, ETileActorDirection::Right, ETileActorDirection::Left })
+	{
+		const FTileIndex Stepped = Origin + UTileMapModel::DirectionToTileStep(Direction);
+		TestTrue(TEXT("스텝 후 바라보는 방향이 원래 방향과 일치"), UTileMapModel::TileDeltaToDirection(Origin, Stepped, ETileActorDirection::Forward) == Direction);
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FTileMapModelPushPathByDirectionTests,
+	"P_RD.TileMap.PushPathByDirection",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+/**
+ * @brief 방향 기반 GetPushPath 오버로드 검증 (함정용)
+ *  빈 맵 전진 / 점유 칸 막힘 / 테두리 막힘 / 거리 0 / 기존 Pusher 버전과 동일 결과
+ */
+bool FTileMapModelPushPathByDirectionTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForTileMapTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	TileMap->SetDimensions(8, 8);
+
+	/* Case1: 빈 맵에서 방향대로 끝까지 밀림 */
+	AddInfo(TEXT("=== Case1: 빈 맵 -> MaxDistance만큼 전진 ==="));
+	{
+		const TArray<FTileIndex> Path = TileMap->GetPushPath(FTileIndex(2, 2), ETileActorDirection::Right, 3);
+		TestTrue(TEXT("[Case1] {(2,2),(2,3),(2,4),(2,5)}"),
+			Path == (TArray<FTileIndex>{ FTileIndex(2, 2), FTileIndex(2, 3), FTileIndex(2, 4), FTileIndex(2, 5) }));
+	}
+
+	/* Case2: 뒤가 점유되면 직전 칸에서 막힘 */
+	AddInfo(TEXT("=== Case2: 점유 칸에 막힘 ==="));
+	{
+		// (2,4)에 차단 유닛 배치 (레이어만 필요하니 플레이어 Mock 재사용)
+		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 4)), Blocker);
+
+		const TArray<FTileIndex> Path = TileMap->GetPushPath(FTileIndex(2, 2), ETileActorDirection::Right, 3);
+		TestTrue(TEXT("[Case2] {(2,2),(2,3)} 직전까지"),
+			Path == (TArray<FTileIndex>{ FTileIndex(2, 2), FTileIndex(2, 3) }));
+
+		// 기존 Pusher 버전과 동일 상황 동일 결과 ((2,1)에서 +Y로 미는 것과 같음)
+		const TArray<FTileIndex> PusherPath = TileMap->GetPushPath(FTileIndex(2, 1), FTileIndex(2, 2), 3);
+		TestTrue(TEXT("[Case2] Pusher 버전과 동일 결과"), Path == PusherPath);
+
+		TileMap->RemoveActor(Blocker);
+	}
+
+	/* Case3: 테두리에서 바깥 방향 -> 밀리지 않음 (시작 타일 1개) */
+	AddInfo(TEXT("=== Case3: 테두리에 막힘 ==="));
+	{
+		const TArray<FTileIndex> Path = TileMap->GetPushPath(FTileIndex(0, 0), ETileActorDirection::Backward, 3);
+		TestTrue(TEXT("[Case3] {(0,0)} 한 개"), Path == TArray<FTileIndex>{ FTileIndex(0, 0) });
+	}
+
+	/* Case4: 거리 0 -> 밀리지 않음 */
+	AddInfo(TEXT("=== Case4: MaxDistance 0 ==="));
+	{
+		const TArray<FTileIndex> Path = TileMap->GetPushPath(FTileIndex(2, 2), ETileActorDirection::Right, 0);
+		TestTrue(TEXT("[Case4] {(2,2)} 한 개"), Path == TArray<FTileIndex>{ FTileIndex(2, 2) });
+	}
+
+	return true;
+}

@@ -4,6 +4,7 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -19,6 +20,8 @@
 #include "HAL/IConsoleManager.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "WidgetBlueprintEditorUtils.h"
+#include "Brushes/SlateColorBrush.h"
 #include "UObject/SavePackage.h"
 
 namespace MarchboundHireWidgetBuilder
@@ -67,6 +70,43 @@ namespace MarchboundHireWidgetBuilder
 			OldParent->RemoveChild(Child);
 		}
 		Parent->AddChild(Child);
+	}
+
+	void DeleteWidgetIfPresent(UWidgetBlueprint* Blueprint, const FName Name)
+	{
+		if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(Name))
+		{
+			TSet<UWidget*> Widgets;
+			Widgets.Add(Widget);
+			FWidgetBlueprintEditorUtils::DeleteWidgets(Blueprint, MoveTemp(Widgets),
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
+	}
+
+	/** 삭제한 옛 배경 위젯의 변수 GUID가 컴파일러 맵에 남지 않게 정리한다. */
+	void PruneStaleVariables(UWidgetBlueprint* Blueprint)
+	{
+		TSet<FName> LiveNames;
+		Blueprint->WidgetTree->ForEachWidget([&LiveNames](UWidget* Widget)
+		{
+			if (Widget != nullptr)
+			{
+				LiveNames.Add(Widget->GetFName());
+			}
+		});
+		TArray<FName> StaleNames;
+		for (const TPair<FName, FGuid>& Entry : Blueprint->WidgetVariableNameToGuidMap)
+		{
+			if (!LiveNames.Contains(Entry.Key))
+			{
+				StaleNames.Add(Entry.Key);
+			}
+		}
+		for (const FName& StaleName : StaleNames)
+		{
+			Blueprint->WidgetVariableNameToGuidMap.Remove(StaleName);
+			Blueprint->OnVariableRemoved(StaleName);
+		}
 	}
 
 	void PlaceCanvas(UPanelWidget* Parent, UWidget* Child,
@@ -245,8 +285,10 @@ namespace MarchboundHireWidgetBuilder
 			return;
 		}
 
-		// 배경은 모든 화면비를 채우며 중앙 크롭한다. UI는 한 장짜리 1920x1080
-		// 프레임으로 고정하지 않고 좌/중/우 영역이 각자 화면 폭에 맞춰 줄어든다.
+		// 배경을 제거한 전경 일러스트는 전신이 잘리지 않도록 화면 높이에 맞춘다.
+		// 초광폭 화면의 좌우는 직업마다 따로 제작한 색상 배경으로 채운다.
+		// UI는 한 장짜리 1920x1080 프레임으로 고정하지 않고 좌/중/우 영역이
+		// 각자 화면 폭에 맞춰 줄어든다.
 		UOverlay* ViewportRoot = FindOrCreate<UOverlay>(Blueprint, TEXT("HireViewportRoot"));
 		if (UWidget* LegacyUIScale = Blueprint->WidgetTree->FindWidget(TEXT("HireUIScale")))
 		{
@@ -262,8 +304,10 @@ namespace MarchboundHireWidgetBuilder
 		UTextBlock* FontSource = FindOrCreate<UTextBlock>(Blueprint, TEXT("HireName_0"));
 		const FSlateFontInfo Font = FontSource->GetFont();
 
-		UTexture2D* KnightBackground = Texture(
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireHero_Knight.T_MB_HireHero_Knight"));
+		UTexture2D* KnightHeroCutout = Texture(
+			TEXT("/Game/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_Knight_v1.T_HireHeroCutout_Knight_v1"));
+		UTexture2D* KnightGeneratedBackground = Texture(
+			TEXT("/Game/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_Knight_v1.T_HireGeneratedBG_Knight_v1"));
 		UTexture2D* ListFrame = Texture(
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireListFrame.T_MB_HireListFrame"));
 		UTexture2D* RowNormal = Texture(
@@ -295,23 +339,66 @@ namespace MarchboundHireWidgetBuilder
 		{
 			LegacyBoard->SetVisibility(ESlateVisibility::Collapsed);
 		}
+		// 텍스처가 아직 없거나 로드에 실패한 한두 프레임에만 보이는 안전색.
+		// 정상 경로에서는 아래의 전용 생성 배경이 화면 전체를 덮는다.
+		const FLinearColor MissingArtFallbackColor(0.008f, 0.016f, 0.027f, 1.0f);
+		UBorder* BackgroundFill = FindOrCreate<UBorder>(
+			Blueprint, TEXT("HireBackgroundLetterboxFill"));
+		BackgroundFill->SetBrush(FSlateColorBrush(MissingArtFallbackColor));
+		BackgroundFill->SetBrushColor(FLinearColor::White);
+		BackgroundFill->SetPadding(FMargin(0.0f));
+		BackgroundFill->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		// 이전의 같은 원화 확대/단계 페더 레이어는 삭제한다. 숨기기만 하면 옛
+		// 하위 위젯과 하드 레퍼런스가 WBP에 남아 다시 cook될 수 있다.
+		DeleteWidgetIfPresent(Blueprint, TEXT("HireBackgroundAmbientScale"));
+		DeleteWidgetIfPresent(Blueprint, TEXT("HireBackgroundEdgeFade"));
+		UScaleBox* GeneratedScale = FindOrCreate<UScaleBox>(
+			Blueprint, TEXT("HireGeneratedBackgroundScale"));
+		GeneratedScale->SetStretch(EStretch::ScaleToFill);
+		GeneratedScale->SetStretchDirection(EStretchDirection::Both);
+		GeneratedScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		UImage* GeneratedArt = FindOrCreate<UImage>(
+			Blueprint, TEXT("HireGeneratedBackgroundArt"));
+		EnsureParent(GeneratedScale, GeneratedArt);
+		SetImage(GeneratedArt, KnightGeneratedBackground);
+
 		UScaleBox* BackgroundScale = FindOrCreate<UScaleBox>(Blueprint, TEXT("HireBackgroundScale"));
-		BackgroundScale->SetStretch(EStretch::ScaleToFill);
+		BackgroundScale->SetStretch(EStretch::ScaleToFit);
 		BackgroundScale->SetStretchDirection(EStretchDirection::Both);
 		BackgroundScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		UImage* BackgroundArt = FindOrCreate<UImage>(Blueprint, TEXT("Backdrop_Art"));
 		EnsureParent(BackgroundScale, BackgroundArt);
-		SetImage(BackgroundArt, KnightBackground);
-
+		SetImage(BackgroundArt, KnightHeroCutout);
 		// Overlay의 자식 순서가 곧 그리기 순서다. 배경을 먼저, 반응형 UI 캔버스를
 		// 나중에 다시 넣어 재빌드해도 항상 같은 계층과 Z 순서를 보장한다.
+		if (UPanelWidget* Parent = BackgroundFill->GetParent())
+		{
+			Parent->RemoveChild(BackgroundFill);
+		}
 		if (UPanelWidget* Parent = BackgroundScale->GetParent())
 		{
 			Parent->RemoveChild(BackgroundScale);
 		}
+		if (UPanelWidget* Parent = GeneratedScale->GetParent())
+		{
+			Parent->RemoveChild(GeneratedScale);
+		}
 		if (UPanelWidget* Parent = Root->GetParent())
 		{
 			Parent->RemoveChild(Root);
+		}
+		ViewportRoot->AddChild(BackgroundFill);
+		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(BackgroundFill->Slot))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
+		}
+		ViewportRoot->AddChild(GeneratedScale);
+		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(GeneratedScale->Slot))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Fill);
+			Slot->SetVerticalAlignment(VAlign_Fill);
 		}
 		ViewportRoot->AddChild(BackgroundScale);
 		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(BackgroundScale->Slot))
@@ -371,6 +458,9 @@ namespace MarchboundHireWidgetBuilder
 			FVector2D(30.0f, 20.0f), FVector2D(370.0f, 64.0f), 10);
 		SetLightFont(TitleText, Font, 42);
 		ApplyTextOpticalCenter(TitleText, TitleOpticalOffsetY);
+		// 화면의 용도가 좌우 후보/파티로 이미 분명하고, 이 판은 영웅 머리만
+		// 가린다. 자식 계약은 보존하되 패널 전체를 표시하지 않는다.
+		TitlePanel->SetVisibility(ESlateVisibility::Collapsed);
 
 		const FVector2D CardSize(420.0f, 116.0f);
 		const TCHAR* DefaultNames[6] = {
@@ -481,15 +571,17 @@ namespace MarchboundHireWidgetBuilder
 			NSLOCTEXT("MarchboundHire", "Knight", "기사"), Font, 38,
 			NameInner.Min, NameInner.GetSize(), 10);
 		ApplyTextOpticalCenter(DetailName, DetailNameOpticalOffsetY);
+		// 후보 목록에 클래스명이 이미 있으므로 중앙에서 반복하지 않는다.
+		NamePanel->SetVisibility(ESlateVisibility::Collapsed);
 
 		UCanvasPanel* StatsPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailStatsPanel"));
-		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(95.0f, 710.0f), FVector2D(690.0f, 96.0f), 20);
+		const FVector2D StatsSize(600.0f, 84.0f);
+		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(122.5f, 728.0f), StatsSize, 20);
 		AddImage(Blueprint, StatsPanel, TEXT("HireDetailStatsArt"), StatsStrip,
-			FVector2D::ZeroVector, FVector2D(690.0f, 96.0f), 0);
+			FVector2D::ZeroVector, StatsSize, 0);
 		// 이 띠에는 세로 칸막이가 둘 그려져 있다. 셋으로 나눠 쓴다.
 		// 칸을 셋 그어 두면 그 셋을 그대로 쓰고, 하나만 그어져 있으면 그
 		// 하나를 셋으로 나눈다 -- 어느 쪽이든 배치는 안 고쳐도 된다.
-		const FVector2D StatsSize(690.0f, 96.0f);
 		const TCHAR* const StatNames[3] = {
 			TEXT("HireDetailHP"), TEXT("HireDetailAP"), TEXT("HireDetailSpeed") };
 		const FText StatDefaults[3] = {
@@ -500,7 +592,7 @@ namespace MarchboundHireWidgetBuilder
 			const FBox2D StatCell = UIPartRects::Cell(TEXT("T_MB_HireStatsStrip"),
 				FVector2D::ZeroVector, StatsSize, false, Index, 3);
 			AddText(Blueprint, StatsPanel, StatNames[Index], StatDefaults[Index],
-				Font, 28, StatCell.Min, StatCell.GetSize(), 10);
+				Font, 24, StatCell.Min, StatCell.GetSize(), 10);
 		}
 
 		const TCHAR* DefaultSkillLabels[6] = {
@@ -679,6 +771,7 @@ namespace MarchboundHireWidgetBuilder
 		PlaceCanvas(Back, BackButton, FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 30);
 		SetTransparentButton(BackButton);
 
+		PruneStaleVariables(Blueprint);
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);
 		if (!UPackage::SavePackage(Blueprint->GetPackage(), Blueprint,

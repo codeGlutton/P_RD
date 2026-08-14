@@ -970,9 +970,19 @@ void UFrontendMapWidget::InstallMapPerspectiveRetainer()
 		return;
 	}
 
-	// 같은 자리(형제 순서 유지)에 리테이너를 넣고 스크롤 박스를 그 안으로 옮긴다.
-	if (!ParentPanel->ReplaceChild(MapScrollBox, Retainer))
+	// ReplaceChild는 WITH_EDITOR 전용 API다. 패키지 빌드에서도 같은 위치와
+	// 슬롯 레이아웃을 보존하도록 런타임 지원 Remove/Insert 경로를 사용한다.
+	const int32 ChildIndex = ParentPanel->GetChildIndex(MapScrollBox);
+	UPanelSlot* SlotTemplate = MapScrollBox->Slot;
+	if (ChildIndex == INDEX_NONE || SlotTemplate == nullptr
+		|| !ParentPanel->RemoveChildAt(ChildIndex))
 	{
+		return;
+	}
+	if (ParentPanel->InsertChildAt(ChildIndex, Retainer, SlotTemplate) == nullptr)
+	{
+		// 삽입 실패 시 원래 위젯을 복구해 빈 지도 컨테이너가 남지 않게 한다.
+		ParentPanel->InsertChildAt(ChildIndex, MapScrollBox, SlotTemplate);
 		return;
 	}
 	Retainer->AddChild(MapScrollBox);

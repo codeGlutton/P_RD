@@ -48,7 +48,7 @@ void USettingsPanelWidget::NativeConstruct()
 
 	ValidateDesignerBindings();
 
-	/* 화면 복귀와 런 액션 버튼은 클릭을 외부 요청 이벤트로만 변환한다. */
+	/* Back은 자기 팝업을 닫은 뒤 복귀 이벤트를 알리고, 런 액션은 외부 요청으로 변환한다. */
 
 	if (BackButton != nullptr)
 	{
@@ -499,16 +499,22 @@ void USettingsPanelWidget::NativeDestruct()
  * @brief Back 버튼 입력을 외부 복귀 요청 이벤트로 전달한다.
  *
  * @details
- * 이 함수는 화면을 닫지 않고 OnBackRequested만 Broadcast한다.
- * 타이틀에서는 타이틀 메뉴로 돌아가고, 인게임에서는 상단 메뉴 흐름으로 돌아가는 식으로 수신자마다 복귀 방식이 다르기 때문이다.
+ * 패널 자체는 먼저 닫고 OnBackRequested를 Broadcast한다. 외부 수신자는 타이틀
+ * 메뉴나 전투 HUD 같은 상위 흐름만 복원한다. 이렇게 해야 개발 프리뷰처럼
+ * 외부 수신자가 없는 진입점에서도 Back이 사용자를 열린 설정창에 가두지 않는다.
  */
 void USettingsPanelWidget::HandleBackButtonClicked()
 {
 	// 패널이 닫히는 시점이 옵션 커밋 지점이다. SaveOptionAsync는 존재했지만 호출처가 없어
 	// 옵션(볼륨/언어)이 세션 안에서만 유지되던 문제를 보완한다. 구독자가 패널을 닫기 전에 저장을 건다.
-	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+	UWorld* World = GetWorld();
+	if (ARDGameModeBase* GameModeBase = World != nullptr
+		? World->GetAuthGameMode<ARDGameModeBase>()
+		: nullptr)
 	{
 		GameModeBase->BackFromOptionPanel();
 	}
+	HideAbandonConfirm();
+	CloseUI();
 	OnBackRequested.Broadcast();
 }
