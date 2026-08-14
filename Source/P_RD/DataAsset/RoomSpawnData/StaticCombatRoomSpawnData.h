@@ -86,9 +86,9 @@ public:
 	TArray<FObstaclePlacementData> mObstaclePlacementDatas;
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents"))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents", ExcludeBaseStruct))
 	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents"))
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents", ExcludeBaseStruct))
 	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
 };
 
