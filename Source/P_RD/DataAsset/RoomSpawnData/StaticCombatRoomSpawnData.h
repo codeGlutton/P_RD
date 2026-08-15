@@ -12,6 +12,7 @@
 
 class UStaticObstacleSpawnData;
 class UStaticEnemyUnitSpawnData;
+struct FSRPGCombatRoundEvent;
 
 /**
  * @brief 타일 맵 상에 장애물의 배치 정보 구조체
@@ -83,6 +84,12 @@ public:
 
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ObstaclePlacementDatas"))
 	TArray<FObstaclePlacementData> mObstaclePlacementDatas;
+
+public:
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents", ExcludeBaseStruct))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents", ExcludeBaseStruct))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
 };
 
 UCLASS()

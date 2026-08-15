@@ -96,6 +96,8 @@ void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, con
 	{
 		// 액터들 초기 데이터로 등록
 		InitBoardActorModels(RoomSpawnData, PlayerUnits);
+		// 이벤트 초기 데이터로 등록
+		RegisterRoundEvents(RoomSpawnData);
 	}
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("SRPG 전투 초기화 완료"));
@@ -226,6 +228,18 @@ void USRPGCombatModel::InitBoardActorModels(UStaticCombatRoomSpawnData* RoomSpaw
 	}
 }
 
+void USRPGCombatModel::RegisterRoundEvents(UStaticCombatRoomSpawnData* RoomSpawnData)
+{
+	for (const TInstancedStruct<FSRPGCombatRoundEvent>& RoundStartEvent : RoomSpawnData->mRoundStartEvents)
+	{
+		AddRoundStartEvent(RoundStartEvent);
+	}
+	for (const TInstancedStruct<FSRPGCombatRoundEvent>& RoundEndEvent : RoomSpawnData->mRoundEndEvents)
+	{
+		AddRoundEndEvent(RoundEndEvent);
+	}
+}
+
 void USRPGCombatModel::RestoreBoardActorModels(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FRoomClearData& ClearData)
 {
 	mIsClearCombat = ClearData.mIsCleared;
@@ -310,13 +324,7 @@ void USRPGCombatModel::AdvanceRoundIfNeeded(TSharedPtr<FPresentationBarrier> Rou
 
 	/* 라운드 진행 */
 
-	const bool IsFirstRound = mRoundCount == 0;
-	if (IsFirstRound == false)
-	{
-		EndRound();
-	}
-
-	auto NewRoundPresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, RoundPresentationBarrier]() {
+	auto NewRoundBeginPresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, RoundPresentationBarrier]() {
 		
 		/* 새로운 턴 채우기 */
 
@@ -333,7 +341,15 @@ void USRPGCombatModel::AdvanceRoundIfNeeded(TSharedPtr<FPresentationBarrier> Rou
 		AdvanceRoundIfNeeded(RoundPresentationBarrier);
 		}));
 
-	BeginRound(NewRoundPresentationBarrier);
+	auto PreRoundEndPresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, NewRoundBeginPresentationBarrier]() {
+		BeginRound(NewRoundBeginPresentationBarrier);
+		}));
+
+	const bool IsFirstRound = mRoundCount == 0;
+	if (IsFirstRound == false)
+	{
+		EndRound(PreRoundEndPresentationBarrier);
+	}
 }
 
 void USRPGCombatModel::BeginRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
@@ -343,19 +359,23 @@ void USRPGCombatModel::BeginRound(TSharedPtr<FPresentationBarrier> RoundPresenta
 	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 	TacticalFrameworkModel->AdvanceRoundDuration(mRoundCount);
 
-	for (const TObjectPtr<UUnitModel>& Unit : mUnitModels)
-	{
-		Unit->OnBeginRound(mRoundCount);
-	}
-	for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacleModels)
-	{
-		Obstacle->OnBeginRound(mRoundCount);
-	}
+	auto RoundStartPresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this, RoundPresentationBarrier]() {
+		for (const TObjectPtr<UUnitModel>& Unit : mUnitModels)
+		{
+			Unit->OnBeginRound(mRoundCount);
+		}
+		for (const TObjectPtr<UBoardActorModel>& Obstacle : mObstacleModels)
+		{
+			Obstacle->OnBeginRound(mRoundCount);
+		}
 
-	OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
+		OnBeginAnyRoundUI.Broadcast(RoundPresentationBarrier, mRoundCount);
+		}));
+
+	TriggerRoundEvents(RoundStartPresentationBarrier, mRoundStartEvents, 0);
 }
 
-void USRPGCombatModel::EndRound()
+void USRPGCombatModel::EndRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier)
 {
 	for (const TObjectPtr<UUnitModel>& Unit : mUnitModels)
 	{
@@ -365,6 +385,40 @@ void USRPGCombatModel::EndRound()
 	{
 		Obstacle->OnEndRound(mRoundCount);
 	}
+
+	TriggerRoundEvents(RoundPresentationBarrier, mRoundEndEvents, 0);
+}
+
+void USRPGCombatModel::AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
+{
+	mRoundStartEvents.Add(MoveTemp(Event));
+}
+
+void USRPGCombatModel::AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
+{
+	mRoundEndEvents.Add(MoveTemp(Event));
+}
+
+void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex)
+{
+	if (mRoundEndEvents.IsValidIndex(EventIndex) == false)
+	{
+		return;
+	}
+
+	auto RoundEventBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateLambda([this, RoundPresentationBarrier, &RoundEvents, EventIndex]() {
+		if (mRoundEndEvents[EventIndex].GetMutable().IsActivated() == false)
+		{
+			mRoundEndEvents.RemoveAt(EventIndex);
+			TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex);
+		}
+		else
+		{
+			TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex + 1);
+		}
+		}));
+
+	mRoundEndEvents[EventIndex].GetMutable().TryToTrigger(RoundEventBarrier.ToSharedRef(), this);
 }
 
 void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult)

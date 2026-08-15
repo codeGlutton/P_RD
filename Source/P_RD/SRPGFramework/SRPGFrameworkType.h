@@ -10,6 +10,9 @@
 #include "RDMinimal.h"
 #include "SRPGFrameworkType.generated.h"
 
+class USRPGCombatModel;
+struct FPresentationBarrier;
+
 /**
  * @brief 타일 내에서 바라보는 방향
  */
@@ -379,4 +382,74 @@ inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPG
     }
     return Rhs;
 }
+
+UENUM(BlueprintType)
+enum class ESRPGCombatRoundEventResult : uint8
+{
+    Ongoing,
+    End
+};
+
+/**
+ * @brief 특정 라운드 호출 이벤트
+ */
+USTRUCT(BlueprintType)
+struct FSRPGCombatRoundEvent
+{
+    GENERATED_BODY()
+
+public:
+    virtual ~FSRPGCombatRoundEvent() = default;
+
+public:
+    bool IsActivated() const;
+    void TryToTrigger(TSharedRef<FPresentationBarrier> RoundBarrier, USRPGCombatModel* Model);
+
+private:
+    /**
+     * @brief 트리거 시기를 결정하는 함수
+     * @param Model 전투 모델 객체
+     * @return 트리거 여부
+     */
+    virtual bool CanTrigger_Internal(USRPGCombatModel* Model) const
+    {
+        return true;
+    }
+
+    /**
+     * @brief 트리거 이전에 계속해서 라운드마다 호출되는 함수로, 원하는 타이밍에 경고 표기 가능
+     * @param Model 전투 모델 객체
+     */
+    virtual void Warning_Internal(USRPGCombatModel* Model) const 
+    {
+    }
+
+    /**
+     * @brief 트리거 라운드에 도달 이후부터, 호출되는 함수
+     * @param Model 전투 모델 객체
+     * @return 종료 여부
+     */
+    virtual ESRPGCombatRoundEventResult Trigger_Internal(TSharedPtr<FPresentationBarrier> RoundBarrier, USRPGCombatModel* Model)
+    { 
+        return ESRPGCombatRoundEventResult::End; 
+    }
+
+    /**
+    * @brief 트리거 종료 후 루프되는 이벤트에서 호출되는 함수
+    * @param Model 전투 모델 객체
+    */
+    virtual void Reset_Internal(USRPGCombatModel* Model)
+    {
+    }
+
+protected:
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLoop"))
+    bool mIsLoop = false;
+
+private:
+    UPROPERTY()
+    bool mIsTriggered = false;
+    UPROPERTY()
+    bool mIsActivated = true;
+};
 

@@ -1,4 +1,4 @@
-﻿using UnrealBuildTool;
+using UnrealBuildTool;
 
 using System.IO;
 
@@ -28,6 +28,9 @@ public class P_RD : ModuleRules
 
             /* Media Modules */
             "MediaAssets",
+            "LevelSequence",
+            "MovieScene",
+            "MovieSceneTracks",
 
             /* Native SWidget Modules */
             "UMG",

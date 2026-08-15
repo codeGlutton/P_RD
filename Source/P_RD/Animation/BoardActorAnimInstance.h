@@ -56,6 +56,7 @@ public:
 public:
 	bool IsPlayingMontageUsingTag() const;
 	UAnimMontage* GetPlayingMontageUsingTag() const;
+	const FTagMontageAnimationSet* GetPlayingMontageSetUsingTag() const;
 
 	/* 애니메이션 등록 */
 protected:

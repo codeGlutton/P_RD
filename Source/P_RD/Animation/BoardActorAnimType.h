@@ -11,10 +11,11 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "BoardActorAnimType.generated.h"
 
+class ULevelSequence;
 struct FEventTriggerPayloadBase;
 
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UAnimMontage* /*EndAnim*/, const FEventTriggerPayloadBase* /*Payload*/);
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerEndAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UAnimMontage* /*EndAnim*/, bool /*IsInterrupted*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UObject* /*EndAnim*/, const FEventTriggerPayloadBase* /*Payload*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTriggerEndAnimationEvent, const FBoardActorAnimationContext& /*Context*/, UObject* /*EndAnim*/, bool /*IsInterrupted*/);
 
 /**
  * @brief 방향 별 애님 몽타쥬 묶음
@@ -30,6 +31,27 @@ public:
 
 	UPROPERTY(Category = "Montage", EditAnywhere, meta = (DisplayName = "IsAdditive"))
 	bool mIsAdditive = false;
+
+public:
+	UPROPERTY(Category = "Montage", EditAnywhere, meta = (DisplayName = "PlayPriority"))
+	int32 mPlayPriority = 0;
+};
+
+/**
+ * @brief 방향 별 레벨 시퀀스 묶음
+ */
+USTRUCT(BlueprintType)
+struct FTagLevelSequenceSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = "Sequence", EditAnywhere, meta = (DisplayName = "LevelSequences", ArraySizeEnum = "ETileActorDirection"))
+	TObjectPtr<ULevelSequence> mLevelSequences[static_cast<uint8>(ETileActorDirection::Count)];
+
+public:
+	UPROPERTY(Category = "Sequence", EditAnywhere, meta = (DisplayName = "PlayPriority"))
+	int32 mPlayPriority = 0;
 };
 
 /**

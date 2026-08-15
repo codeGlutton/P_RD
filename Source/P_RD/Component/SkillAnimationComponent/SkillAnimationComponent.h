@@ -47,11 +47,11 @@ protected:
 	void HandleToPlayAnimation(TSharedPtr<FPresentationBarrier> MotionEndBarrier, const FBoardActorAnimationContext& Context);
 	
 private:
-	void OnHandleHitAnimationEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload);
-	void OnHandleHitVFXEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload);
-	void OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload);
-	void OnHandleCameraZoomEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload);
-	void OnHandleTimeScaleEvent(const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, const FEventTriggerPayloadBase* Payload);
+	void OnHandleHitAnimationEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload);
+	void OnHandleHitVFXEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload);
+	void OnHandleCameraShakeEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload);
+	void OnHandleCameraZoomEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload);
+	void OnHandleTimeScaleEvent(const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload);
 
 	/* 파생 객체 구현 함수 */
 protected:

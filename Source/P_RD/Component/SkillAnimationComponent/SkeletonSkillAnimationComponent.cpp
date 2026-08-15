@@ -31,7 +31,7 @@ void USkeletonSkillAnimationComponent::PlayHitAnimation(TSharedPtr<FPresentation
 	
 	/* 연출 대기 */
 	{
-		Context.mMontageEndEvent.AddLambda([SkillEndBarrier](const FBoardActorAnimationContext& Context, UAnimMontage* EndAnim, bool IsInterrupted) {
+		Context.mMontageEndEvent.AddLambda([SkillEndBarrier](const FBoardActorAnimationContext& Context, UObject* EndAnim, bool IsInterrupted) {
 			});
 	}
 
