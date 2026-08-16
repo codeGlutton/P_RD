@@ -18,6 +18,7 @@
 #include "TileMap.generated.h"
 
 class UInstancedStaticMeshComponent;
+class UBoxComponent;
 class UStaticMesh;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
@@ -394,6 +395,12 @@ protected:
 	 */
 	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
+
+	/**
+	 * @brief 타일 사이 틈 터치를 받기 위한 콜리전 전용 박스 (렌더링 없음, 타일맵 전체 크기)
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Picking Box Component"))
+	TObjectPtr<UBoxComponent> mPickingBoxComponent;
 
 	/**
 	 * @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
