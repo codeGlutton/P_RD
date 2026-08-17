@@ -2,6 +2,7 @@
 #include "RDCollision.h"
 #include "Components/SceneComponent.h"
 #include "Components/InstancedStaticMeshComponent.h"
+#include "Components/BoxComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -42,8 +43,17 @@ ATileMap::ATileMap()
 	mTileMeshComponent->SetupAttachment(RootComponent);
 	// 타일 인스턴스는 OnConstruction에서 매번 재생성되므로 저장 불필요 — RF_Transient 설정
 	mTileMeshComponent->SetFlags(RF_Transient);
-	// 터치 판정(타일 선택/정보 확인 트레이스)을 받기 위해 타일맵 프로파일 적용 (QueryOnly)
-	mTileMeshComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
+	// 터치 판정은 아래 박스가 대신 받으므로 타일 인스턴스별 콜리전은 끔
+	mTileMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// 타일 사이 틈 터치를 받기 위한 콜리전 전용 박스 생성, 타일 좌표 변환과 같은 좌표계를 쓰도록 타일 메시 컴포넌트에 부착
+	mPickingBoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("PickingBox"));
+	mPickingBoxComponent->SetupAttachment(mTileMeshComponent);
+	// 크기는 타일 그리드 재생성 시 매번 갱신되므로 저장 불필요 — RF_Transient 설정
+	mPickingBoxComponent->SetFlags(RF_Transient);
+	// 렌더링 없이 터치 판정(타일 선택/정보 확인 트레이스)만 받도록 숨김 처리 후 타일맵 프로파일 적용 (QueryOnly)
+	mPickingBoxComponent->SetHiddenInGame(true);
+	mPickingBoxComponent->SetCollisionProfileName(RDCollisionProfiles::TileMap);
 
 	// 기본 타일 메시로 엔진 기본 Plane(100x100cm, +Z 향) 지정
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMeshFinder(TEXT("/Engine/BasicShapes/Plane.Plane"));
@@ -450,9 +460,10 @@ void ATileMap::RefreshTileVisuals()
 	// 기존 인스턴스 모두 제거 후 재생성
 	mTileMeshComponent->ClearInstances();
 
-	// 메시가 없거나 크기가 비정상이면 빈 그리드로 둠
+	// 메시가 없거나 크기가 비정상이면 빈 그리드로 둠 (박스도 크기 0)
 	if (mTileMesh == nullptr || mModel->GetWidth() <= 0 || mModel->GetHeight() <= 0 || mTileSize <= 0.0f)
 	{
+		mPickingBoxComponent->SetBoxExtent(FVector::ZeroVector);
 		return;
 	}
 
@@ -471,6 +482,23 @@ void ATileMap::RefreshTileVisuals()
 			mTileMeshComponent->AddInstance(InstanceTransform, /*bWorldSpace=*/false);
 		}
 	}
+
+	// 픽킹 박스를 타일 그리드 전체 크기로 갱신
+	// 중심: 그리드 중앙 (타일 중심 0..W-1 의 가운데), Z는 두께만큼 아래로 내려 상면이 타일 상면과 일치
+	// 반크기: 그리드 절반에서 아주 조금 축소
+	//   그리드 가장자리 좌표는 타일 크기로 나누면 정확히 x.5 가 되어 반올림 시 존재하지 않는 인덱스로 올라감
+	//   예) 타일 100, 3칸: 가장자리 250 → 250/100 = 2.5 → 반올림 3 (인덱스는 0~2 뿐)
+	//   박스를 아주 조금 줄이면 가장자리 히트 자체가 안 생겨 이 경우를 피함
+	const float BoxHalfThickness = 0.5f;
+	const float BoxEpsilon = 0.1f;
+	const float HalfWidth = mModel->GetWidth() * mTileSize * 0.5f - BoxEpsilon;
+	const float HalfHeight = mModel->GetHeight() * mTileSize * 0.5f - BoxEpsilon;
+	const FVector BoxCenter(
+		(mModel->GetWidth() - 1) * mTileSize * 0.5f,
+		(mModel->GetHeight() - 1) * mTileSize * 0.5f,
+		-BoxHalfThickness);
+	mPickingBoxComponent->SetRelativeLocation(BoxCenter);
+	mPickingBoxComponent->SetBoxExtent(FVector(HalfWidth, HalfHeight, BoxHalfThickness));
 
 	// 크기가 다르면 레벨 로드 직후 등 초기화가 안 된 상태이므로 초기화 처리
 	if (mHighlights.Num() != mModel->GetWidth() * mModel->GetHeight())
