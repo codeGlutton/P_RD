@@ -14,6 +14,9 @@
 #include "UI/ShopFullGeneratedWidgetBuilder.h"
 #include "UI/WorldMapLandscapeWidgetBuilder.h"
 
+#include "ISequencerModule.h"
+#include "Animation/Track/BoardEventTrackEditor.h"
+
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
 void FP_RDEditorModule::StartupModule()
@@ -40,6 +43,16 @@ void FP_RDEditorModule::StartupModule()
 			FOnGetDetailCustomizationInstance::CreateStatic(&FStaticSkillDataPropertyCustomization::MakeInstance)
 		);
 	}
+
+	/* 보드 이벤트 트랙 등록 */
+
+	ISequencerModule& SequencerModule = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer");
+	if (FModuleManager::Get().IsModuleLoaded("Sequencer") == true)
+	{
+		mBoardEventTrackEditorHandle = SequencerModule.RegisterTrackEditor(
+			FOnCreateTrackEditor::CreateStatic(&FBoardEventTrackEditor::CreateTrackEditor)
+		);
+	}
 }
 
 void FP_RDEditorModule::ShutdownModule()
@@ -62,5 +75,15 @@ void FP_RDEditorModule::ShutdownModule()
 	{
 		FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyModule.UnregisterCustomClassLayout(UStaticSkillData::StaticClass()->GetFName());
+	}
+
+	/* 보드 이벤트 트랙 등록 해제 */
+
+	ISequencerModule& SequencerModule = FModuleManager::LoadModuleChecked<ISequencerModule>("Sequencer");
+	if (FModuleManager::Get().IsModuleLoaded("Sequencer") == true)
+	{
+		SequencerModule.UnRegisterTrackEditor(
+			mBoardEventTrackEditorHandle
+		);
 	}
 }
