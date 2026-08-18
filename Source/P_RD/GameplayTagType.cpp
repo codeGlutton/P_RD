@@ -79,6 +79,15 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Whirlwind,			"Animation.Montage.Skill.Mercenary.Barbarian.Whirlwind");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Meditation,			"Animation.Montage.Skill.Mercenary.Barbarian.Meditation");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Rage,				"Animation.Montage.Skill.Mercenary.Barbarian.Rage");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Willpower,			"Animation.Montage.Skill.Mercenary.Barbarian.Willpower");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Fear,				"Animation.Montage.Skill.Mercenary.Barbarian.Fear");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_SpartanKick,			"Animation.Montage.Skill.Mercenary.Barbarian.SpartanKick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_RecklessAttack,		"Animation.Montage.Skill.Mercenary.Barbarian.RecklessAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_LimitBreak,			"Animation.Montage.Skill.Mercenary.Barbarian.LimitBreak");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Offering,			"Animation.Montage.Skill.Mercenary.Barbarian.Offering");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Sacrifice,			"Animation.Montage.Skill.Mercenary.Barbarian.Sacrifice");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_BloodWall,			"Animation.Montage.Skill.Mercenary.Barbarian.BloodWall");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_VampiricBite,		"Animation.Montage.Skill.Mercenary.Barbarian.VampiricBite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Taunt,				"Animation.Montage.Skill.Mercenary.Barbarian.Taunt");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_NormalSlash,				"Animation.Montage.Skill.Mercenary.Rogue.NormalSlash");
