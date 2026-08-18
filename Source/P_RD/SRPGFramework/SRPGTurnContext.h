@@ -21,8 +21,6 @@ struct FSRPGCommand;
 
 class UUnitModel;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAtTurnStartUI, const USRPGTurnContext* /*TurnContext*/);
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/);

@@ -85,8 +85,7 @@ enum class EWorldWidgetType : uint8
 	 * 상점이나 보상과 달리 특정 방의 화면이 아니다. 전투 중에도 상점에서도
 	 * 같은 것을 열어 본다 -- 방 HUD 에 두면 방마다 한 벌씩 만들어야 한다.
 	 *
-	 * 값은 ARoomGameModeBase::GetInventoryView() 로 꺼내 간다. 밀지 않는
-	 * 것은 가방이 열려 있을 때만 보면 되기 때문이다.
+	 * 구현 위젯은 아직 없다. 슬롯 index 보존을 위해 enum 값만 남겨 둔다.
 	 */
 	Inventory,
 

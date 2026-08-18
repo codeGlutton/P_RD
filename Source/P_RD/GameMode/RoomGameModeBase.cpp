@@ -16,10 +16,6 @@
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
-#include "DataAsset/ArtifactData/StaticArtifactData.h"
-#include "AttributeSet/PartyAttributeSet.h"
-#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
-#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -148,20 +144,6 @@ namespace
 			NSLOCTEXT("RoomGameModeBase", "StartPointDescription", "Routes: {0}"),
 			FText::AsNumber(Room.mNextRoomColumns.Num())
 		);
-	}
-
-	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
-	{
-		switch (RarityType)
-		{
-		case ERarityType::Rare:
-			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
-		case ERarityType::Epic:
-			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
-		case ERarityType::Common:
-		default:
-			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
-		}
 	}
 
 }
@@ -581,46 +563,3 @@ void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 	mSelectedRoomSpawnSettingName = Name;
 }
 
-bool ARoomGameModeBase::GetInventoryView(FInventoryView& OutView) const
-{
-	OutView = FInventoryView();
-
-	UPartyModel* PartyModel = GetPartyModel();
-	UAttributeSetComponentModel* PartyAttributes = PartyModel != nullptr
-		? PartyModel->GetAttributeComponentModel() : nullptr;
-	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
-		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
-	if (PartyModel == nullptr || PartyAttributes == nullptr || PartyArtifacts == nullptr)
-	{
-		return false;
-	}
-
-	OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
-		UPartyAttributeSet::GetMoneyAttribute()));
-
-	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
-		PartyArtifacts->GetPartyArtifacts();
-	OutView.mArtifacts.Reserve(Artifacts.Num());
-	for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
-	{
-		const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
-		if (Artifact == nullptr)
-		{
-			continue;
-		}
-
-		FInventoryArtifactView& Row = OutView.mArtifacts.AddDefaulted_GetRef();
-		Row.mArtifactIndex = ArtifactIndex;
-		Row.mName = Artifact->mName.IsEmpty() == false
-			? Artifact->mName
-			: FText::Format(
-				NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
-				FText::AsNumber(ArtifactIndex + 1));
-		Row.mIcon = Artifact->mIcon.LoadSynchronous();
-		Row.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
-		Row.mDetail = NSLOCTEXT(
-			"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
-	}
-
-	return true;
-}

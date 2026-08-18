@@ -87,18 +87,6 @@ public:
 	bool GetRunControlView(FRunControlView& OutView) const;
 
 	/**
-	 * @brief 파티 공용 인벤토리의 골드와 아티팩트를 조회한다.
-	 *
-	 * @details
-	 * 지도와 같은 규칙이다 -- 밀지 않고 물어보게 둔다. 가방은 열려 있을 때만
-	 * 보면 되므로, 매번 밀어 두면 안 볼 값을 계속 만드는 셈이 된다.
-	 * @param[out] OutView 채워 줄 판
-	 * @return 채웠으면 참
-	 */
-	UFUNCTION(Category = UI, BlueprintPure)
-	bool GetInventoryView(FInventoryView& OutView) const;
-
-	/**
 	 * @brief 세팅 화면용 현재 런 상태를 조회한다.
 	 * @param RowIndex 현재 룸 행 index
 	 * @param ColumnIndex 현재 룸 열 index

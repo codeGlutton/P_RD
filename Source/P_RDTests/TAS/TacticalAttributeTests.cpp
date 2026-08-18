@@ -153,7 +153,7 @@ bool FTacticalAttributeTests::RunTest(const FString& Parameters)
     // ----------------------------------------------------
     AddInfo(TEXT("=== 테스트 케이스 4: Loose 태그 추가 및 제거 검증 ==="));
     // 테스트에 사용할 태그 등록
-    FGameplayTag TestTagA = AbilityTags::GameplayAbility_LevelUp;
+    FGameplayTag TestTagA = AbilityTags::GameplayAbility_Passive_OnStartRoom;
 
     TestFalse(TEXT("초기에는 TestTagA를 가지고 있지 않아야 합니다."), CompModel->HasMatchingGameplayTag(TestTagA));
 
