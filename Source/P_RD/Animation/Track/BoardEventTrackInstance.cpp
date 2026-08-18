@@ -137,14 +137,6 @@ void UBoardEventTrackInstance::TriggerBoardEvent(const FBoardSceneEvent& Event, 
 
 void UBoardEventTrackInstance::TriggerBoardEventEnd(const FBoardSceneEvent& Event, UE::MovieScene::FInstanceHandle Handle)
 {
-	UBoardActorSequencePlayer* BoardActorSequencePlayer = GetBoardActorSequencePlayer(Handle);
-	if (BoardActorSequencePlayer == nullptr)
-	{
-		return;
-	}
-
-	if (Event.mEventTag.IsValid() == true)
-	{
-		BoardActorSequencePlayer->TriggerMontageTagEvent(Event.mEventTag, Event.mEventPayload.GetPtr());
-	}
+	const FDurationEventTriggerPayload& Payload = Event.mEventPayload.Get<FDurationEventTriggerPayload>();
+	Payload.OnEndDurationEventTrigger.ExecuteIfBound();
 }
