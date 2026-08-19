@@ -91,7 +91,14 @@ void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardArtifactDataId);
+	if (mRewardArtifactDataIds.IsEmpty())
+	{
+		AdditionalAssetIds.Add(mRewardArtifactDataId);
+	}
+	else
+	{
+		AdditionalAssetIds.Append(mRewardArtifactDataIds);
+	}
 }
 
 FBossMonsterRoom::FBossMonsterRoom()
@@ -108,7 +115,14 @@ void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<F
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardArtifactDataId);
+	if (mRewardArtifactDataIds.IsEmpty())
+	{
+		AdditionalAssetIds.Add(mRewardArtifactDataId);
+	}
+	else
+	{
+		AdditionalAssetIds.Append(mRewardArtifactDataIds);
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

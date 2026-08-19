@@ -85,6 +85,19 @@ namespace SettingsPanelWidgetBuilder
 		UTexture2D* ConfirmPanel = LoadSettingsConfirmPanelTexture();
 	};
 
+	/** 원본 PNG에서 장식/투명 여백을 제외하고 실제 글자가 들어갈 면. */
+	struct FTextureContentRect
+	{
+		float Left;
+		float Top;
+		float Right;
+		float Bottom;
+	};
+	constexpr FTextureContentRect RowLabelContent{ .06f, .18f, .94f, .82f };
+	constexpr FTextureContentRect RibbonContent{ .14f, .18f, .86f, .76f };
+	constexpr FTextureContentRect ChoiceContent{ .10f, .20f, .90f, .78f };
+	constexpr FTextureContentRect ActionContent{ .19f, .12f, .81f, .58f };
+
 	void LogPhase(const TCHAR* Phase)
 	{
 		const FString MarkerPath = FPaths::ProjectSavedDir()
@@ -266,6 +279,27 @@ namespace SettingsPanelWidgetBuilder
 		const double UniformScale = FMath::Min(
 			Bounds.X / NativeSize.X, Bounds.Y / NativeSize.Y);
 		return NativeSize * UniformScale;
+	}
+
+	FBox2D TextureContentBox(const FVector2D& Position, const FVector2D& Size,
+		const FTextureContentRect& Content)
+	{
+		return FBox2D(
+			Position + FVector2D(Size.X * Content.Left, Size.Y * Content.Top),
+			Position + FVector2D(Size.X * Content.Right, Size.Y * Content.Bottom));
+	}
+
+	/** AspectFit 된 실제 그림 면을 기준으로 Overlay 안쪽 여백을 계산한다. */
+	FMargin TextureContentPadding(const UTexture2D* Texture,
+		const FVector2D& Bounds, const FTextureContentRect& Content)
+	{
+		const FVector2D Fitted = AspectFitSize(TextureNativeSize(Texture), Bounds);
+		const FVector2D Offset = (Bounds - Fitted) * .5f;
+		return FMargin(
+			Offset.X + Fitted.X * Content.Left,
+			Offset.Y + Fitted.Y * Content.Top,
+			Offset.X + Fitted.X * (1.f - Content.Right),
+			Offset.Y + Fitted.Y * (1.f - Content.Bottom));
 	}
 
 	FVector2D CanvasMountSize(UWidgetBlueprint* Blueprint, const TCHAR* MountName)
@@ -631,6 +665,16 @@ namespace SettingsPanelWidgetBuilder
 			ZOrder, Visibility);
 	}
 
+	void PlaceInTextureContent(UWidgetBlueprint* Blueprint,
+		UCanvasPanel* ContentCanvas, const TCHAR* Name,
+		const FVector2D& TexturePosition, const FVector2D& TextureSize,
+		const FTextureContentRect& Content, const int32 ZOrder)
+	{
+		const FBox2D Box = TextureContentBox(TexturePosition, TextureSize, Content);
+		PlaceInSettingsCanvas(Blueprint, ContentCanvas, Name, Box.Min, Box.GetSize(),
+			ZOrder, ESlateVisibility::SelfHitTestInvisible);
+	}
+
 	void CollapseNamed(UWidgetBlueprint* Blueprint, const TCHAR* Name)
 	{
 		if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(FName(Name)))
@@ -932,12 +976,10 @@ namespace SettingsPanelWidgetBuilder
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("SettingsTitleText_Center"),
 			FVector2D(515.f, 34.f), FVector2D(540.f, 76.f), 5,
 			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("AudioSectionHeader_Center"),
-			FVector2D(258.f, 168.f), FVector2D(310.f, 58.f), 4,
-			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("DisplaySectionHeader_Center"),
-			FVector2D(998.f, 163.f), FVector2D(310.f, 58.f), 4,
-			ESlateVisibility::SelfHitTestInvisible);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("AudioSectionHeader_Center"),
+			FVector2D(188.f, 150.f), FVector2D(450.f, 112.f), RibbonContent, 4);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("DisplaySectionHeader_Center"),
+			FVector2D(928.f, 145.f), FVector2D(450.f, 112.f), RibbonContent, 4);
 
 		struct FSliderRow
 		{
@@ -977,9 +1019,9 @@ namespace SettingsPanelWidgetBuilder
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Plate,
 				FVector2D(140.f, Y + 4.f), FVector2D(190.f, 71.f), 1,
 				ESlateVisibility::SelfHitTestInvisible);
-			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Label,
-				FVector2D(157.f, Y + 14.f), FVector2D(156.f, 50.f), 3,
-				ESlateVisibility::SelfHitTestInvisible);
+			PlaceInTextureContent(Blueprint, Canvas, Row.Label,
+				FVector2D(140.f, Y + 4.f), FVector2D(190.f, 71.f),
+				RowLabelContent, 3);
 			ApplyTextureToImage(Blueprint, Row.Track, Art.SliderTrack);
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Track,
 				FVector2D(338.f, Y + 12.4f), FVector2D(360.f, 53.15f), 1,
@@ -1023,9 +1065,9 @@ namespace SettingsPanelWidgetBuilder
 			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Plate,
 				FVector2D(864.f, Y + 3.f), FVector2D(238.f, 68.f), 1,
 				ESlateVisibility::SelfHitTestInvisible);
-			PlaceInSettingsCanvas(Blueprint, Canvas, Row.Label,
-				FVector2D(882.f, Y + 12.f), FVector2D(202.f, 50.f), 3,
-				ESlateVisibility::SelfHitTestInvisible);
+			PlaceInTextureContent(Blueprint, Canvas, Row.Label,
+				FVector2D(864.f, Y + 3.f), FVector2D(238.f, 68.f),
+				RowLabelContent, 3);
 			ApplyLedgerCheckBoxStyle(Blueprint, Row.CheckBox,
 				Art.ToggleOff, Art.ToggleOn);
 			PlaceScaledControl(Blueprint, Canvas, Row.CheckBox,
@@ -1048,9 +1090,9 @@ namespace SettingsPanelWidgetBuilder
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_quality_plate"),
 			FVector2D(864.f, QualityY + 3.f), FVector2D(180.f, 68.f), 1,
 			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("QualityRow_Label_Center"),
-			FVector2D(882.f, QualityY + 12.f), FVector2D(144.f, 50.f), 3,
-			ESlateVisibility::SelfHitTestInvisible);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("QualityRow_Label_Center"),
+			FVector2D(864.f, QualityY + 3.f), FVector2D(180.f, 68.f),
+			RowLabelContent, 3);
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const TCHAR* MountNames[] = { TEXT("LowQualityButtonPlateMount"),
@@ -1068,9 +1110,9 @@ namespace SettingsPanelWidgetBuilder
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_fps_plate"),
 			FVector2D(864.f, FpsY + 3.f), FVector2D(180.f, 68.f), 1,
 			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("FpsRow_Label_Center"),
-			FVector2D(882.f, FpsY + 12.f), FVector2D(144.f, 50.f), 3,
-			ESlateVisibility::SelfHitTestInvisible);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("FpsRow_Label_Center"),
+			FVector2D(864.f, FpsY + 3.f), FVector2D(180.f, 68.f),
+			RowLabelContent, 3);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("FpsThirtyButtonPlateMount"),
 			FVector2D(1080.f, FpsY + 7.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
@@ -1078,9 +1120,8 @@ namespace SettingsPanelWidgetBuilder
 			FVector2D(1245.f, FpsY + 7.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
 
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("GameplaySectionHeader_Center"),
-			FVector2D(998.f, 620.f), FVector2D(310.f, 58.f), 4,
-			ESlateVisibility::SelfHitTestInvisible);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("GameplaySectionHeader_Center"),
+			FVector2D(928.f, 602.f), FVector2D(450.f, 112.f), RibbonContent, 4);
 		EnsureRowSurface(Blueprint, Canvas, TEXT("SettingsLanguageRowSurface"),
 			FVector2D(DisplayRowX, 714.f),
 			FVector2D(DisplayRowWidth, DisplayRowHeight));
@@ -1088,9 +1129,9 @@ namespace SettingsPanelWidgetBuilder
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("Set_row_language_plate"),
 			FVector2D(864.f, 717.f), FVector2D(190.f, 68.f), 1,
 			ESlateVisibility::SelfHitTestInvisible);
-		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("LanguageRow_Label_Center"),
-			FVector2D(882.f, 726.f), FVector2D(154.f, 50.f), 3,
-			ESlateVisibility::SelfHitTestInvisible);
+		PlaceInTextureContent(Blueprint, Canvas, TEXT("LanguageRow_Label_Center"),
+			FVector2D(864.f, 717.f), FVector2D(190.f, 68.f),
+			RowLabelContent, 3);
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("LanguageKoreanButtonPlateMount"),
 			FVector2D(1080.f, 721.f), FVector2D(148.f, 58.f), 2,
 			ESlateVisibility::SelfHitTestInvisible);
@@ -1150,32 +1191,41 @@ namespace SettingsPanelWidgetBuilder
 		{
 			const TCHAR* Text;
 			const TCHAR* Container;
-			FMargin Padding;
+			UTexture2D* Texture;
+			FVector2D Bounds;
+			FTextureContentRect Content;
 		};
-		// Action-button art has a hanging ribbon below its wooden face. Extra bottom
-		// padding centers the label on the clickable wooden face instead of the full
-		// transparent texture rectangle. Segment buttons are vertically symmetric.
-		const FMargin SegmentTextPadding(8.f, 2.f);
-		const FMargin ActionTextPadding(14.f, 2.f, 14.f, 32.f);
-		const FMargin CompactActionTextPadding(12.f, 2.f, 12.f, 22.f);
+		const FVector2D ConfirmBounds = [&Blueprint](const TCHAR* Mount)
+		{
+			const FVector2D Found = CanvasMountSize(Blueprint, Mount);
+			return Found.X > 0.f && Found.Y > 0.f
+				? Found : FVector2D(300.f, 100.f);
+		}(TEXT("ConfirmAbandonButtonPlateMount"));
+		const FVector2D CancelBounds = [&Blueprint](const TCHAR* Mount)
+		{
+			const FVector2D Found = CanvasMountSize(Blueprint, Mount);
+			return Found.X > 0.f && Found.Y > 0.f
+				? Found : FVector2D(300.f, 100.f);
+		}(TEXT("CancelAbandonButtonPlateMount"));
 		const FTextFitSpec TextFits[] = {
-			{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), ActionTextPadding },
-			{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), ActionTextPadding },
-			{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), SegmentTextPadding },
-			{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), SegmentTextPadding },
-			{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), SegmentTextPadding },
-			{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), SegmentTextPadding },
-			{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), SegmentTextPadding },
-			{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), SegmentTextPadding },
-			{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), SegmentTextPadding },
-			{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), ActionTextPadding },
-			{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), ActionTextPadding },
-			{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), CompactActionTextPadding },
-			{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), CompactActionTextPadding },
+			{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), Art.ActionButton, FVector2D(300.f, 118.f), ActionContent },
+			{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), Art.ActionButton, FVector2D(300.f, 118.f), ActionContent },
+			{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), Art.ChoiceButton, FVector2D(148.f, 58.f), ChoiceContent },
+			{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), Art.ChoiceButton, FVector2D(148.f, 58.f), ChoiceContent },
+			{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), Art.ChoiceButton, FVector2D(112.f, 56.f), ChoiceContent },
+			{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), Art.ChoiceButton, FVector2D(112.f, 56.f), ChoiceContent },
+			{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), Art.ChoiceButton, FVector2D(112.f, 56.f), ChoiceContent },
+			{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), Art.ChoiceButton, FVector2D(148.f, 58.f), ChoiceContent },
+			{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), Art.ChoiceButton, FVector2D(148.f, 58.f), ChoiceContent },
+			{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), Art.ActionButton, FVector2D(310.f, 118.f), ActionContent },
+			{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), Art.ActionButtonDanger, FVector2D(310.f, 118.f), ActionContent },
+			{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), Art.ActionButtonDanger, ConfirmBounds, ActionContent },
+			{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), Art.ActionButton, CancelBounds, ActionContent },
 		};
 		for (const FTextFitSpec& Fit : TextFits)
 		{
-			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, Fit.Padding);
+			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container,
+				TextureContentPadding(Fit.Texture, Fit.Bounds, Fit.Content));
 		}
 	}
 

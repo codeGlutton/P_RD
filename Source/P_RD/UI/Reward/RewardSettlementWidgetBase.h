@@ -3,11 +3,13 @@
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
 #include "UI/Reward/RewardUITypes.h"
+#include "TimerManager.h"
 
 #include "RewardSettlementWidgetBase.generated.h"
 
 class UButton;
 class UCanvasPanel;
+class UImage;
 class UTextBlock;
 class UTexture2D;
 class UVerticalBox;
@@ -40,6 +42,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Reward|Settlement")
 	void ContinueToNext();
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/** Drives the chest sequence synchronously and stops on the independent gold step. */
+	void CompleteChestRevealForTest();
+	/** Advances the gold step to the optional artifact step and completes its reveal. */
+	void AdvanceGoldToArtifactForTest();
+#endif
+
 	UPROPERTY(BlueprintAssignable, Category = "Reward|Settlement")
 	FOnRewardSettlementClosed OnClosed;
 
@@ -56,12 +65,22 @@ private:
 	UFUNCTION() void HandleChoiceClicked_0();
 	UFUNCTION() void HandleChoiceClicked_1();
 	UFUNCTION() void HandleChoiceClicked_2();
+	UFUNCTION() void HandleChestClicked();
 
 	void UnbindUIModel();
 	void RefreshView();
 	void RebuildStep();
 	void BuildResultStep();
+	void BuildChestStep();
+	void BuildGoldStep();
 	void BuildChoiceStep();
+	void ResetChestPresentation();
+	void TickChestReveal();
+	void AdvanceChestToOpen();
+	void FinishChestReveal();
+	void BeginChoiceReveal();
+	void TickChoiceReveal();
+	void FinishChoiceReveal();
 	void RefreshMercenaryRow(int32 RowIndex,
 		const FRewardMercenaryExpUI& Mercenary, int32 ExpGained);
 	void SelectChoice(int32 ChoiceSlot);
@@ -80,9 +99,25 @@ private:
 	UPROPERTY() TObjectPtr<UTexture2D> mGoldIconTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mEquipmentIconTexture;
 	UPROPERTY() TObjectPtr<UTexture2D> mSkillIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChestClosedTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChestHalfOpenTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChestOpenTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChestRevealAuraTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChoiceCardNormalTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mChoiceCardSelectedTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mStepCoinActiveTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mStepCoinInactiveTexture;
 
 	bool mContinueCommitted = false;
-	/** @brief 1 = 경험치·골드 정산, 2 = 아티팩트 3중 1택. */
+	bool mChestOpening = false;
+	bool mRewardRevealPlaying = false;
+	/** @brief 1 = 경험치, 2 = 상자, 3 = 골드, 4 = 아티팩트 3중 1택(있을 때만). */
 	int32 mCurrentStep = 1;
 	int32 mSelectedChoice = INDEX_NONE;
+	FTimerHandle mChestOpenTimer;
+	FTimerHandle mChestRevealTimer;
+	FTimerHandle mChestAnimationTimer;
+	FTimerHandle mChoiceAnimationTimer;
+	float mChestAnimationElapsed = 0.f;
+	float mChoiceAnimationElapsed = 0.f;
 };

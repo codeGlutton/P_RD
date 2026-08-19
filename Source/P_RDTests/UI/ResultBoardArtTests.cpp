@@ -62,11 +62,7 @@ namespace
 
 	constexpr FExpectedResultBoardPlacement ExpectedPlacements[] =
 	{
-		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"), TEXT("HeaderBlankArt") },
-		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"), TEXT("MainPanelArt") },
-		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"), TEXT("StepCoinArt_1") },
-		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"), TEXT("StepCoinArt_2") },
-		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"), TEXT("NextButtonArt") },
+		{ TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"), TEXT("SettlementModalOuterFrameArt") },
 		{ TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C"), TEXT("DefeatOuterFrame") },
 		{ TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C"), TEXT("DefeatTitleBanner") },
 		{ TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C"), TEXT("DefeatCardFrame_0") },
@@ -209,11 +205,11 @@ bool FResultBoardVisualContractTest::RunTest(const FString& Parameters)
 	}
 
 	for (const TCHAR* ClassPath : {
-		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"),
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"),
 		TEXT("/Game/UI/CombatResult/WBP_CombatDefeat.WBP_CombatDefeat_C") })
 	{
 		const bool bRewardSettlement = FCString::Strcmp(ClassPath,
-			TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C")) == 0;
+			TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C")) == 0;
 		UWidgetTree* Tree = LoadWidgetTreeArchetype(ClassPath);
 		if (Tree == nullptr)
 		{
@@ -260,7 +256,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRewardSettlementDesignerPartsContractTest,
 bool FRewardSettlementDesignerPartsContractTest::RunTest(const FString& Parameters)
 {
 	UWidgetTree* Tree = LoadWidgetTreeArchetype(
-		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"));
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"));
 	if (!TestNotNull(TEXT("승리 결과판 위젯 트리"), Tree))
 	{
 		return false;
@@ -271,21 +267,64 @@ bool FRewardSettlementDesignerPartsContractTest::RunTest(const FString& Paramete
 		Tree->FindWidget(TEXT("SettlementStepSwitcher")));
 	bAllValid &= TestNotNull(TEXT("디자이너 단계 전환기"), Switcher);
 	UCanvasPanel* ResultStep = Cast<UCanvasPanel>(Tree->FindWidget(TEXT("SettlementResultStep")));
+	UCanvasPanel* ChestStep = Cast<UCanvasPanel>(Tree->FindWidget(TEXT("SettlementChestStep")));
+	UCanvasPanel* GoldStep = Cast<UCanvasPanel>(Tree->FindWidget(TEXT("SettlementGoldStep")));
 	UCanvasPanel* ChoiceStep = Cast<UCanvasPanel>(Tree->FindWidget(TEXT("SettlementChoiceStep")));
-	bAllValid &= TestNotNull(TEXT("EXP/골드 단계"), ResultStep);
+	bAllValid &= TestNotNull(TEXT("EXP 단계"), ResultStep);
+	bAllValid &= TestNotNull(TEXT("상자 단계"), ChestStep);
+	bAllValid &= TestNotNull(TEXT("골드 전용 단계"), GoldStep);
 	bAllValid &= TestNotNull(TEXT("3중 선택 단계"), ChoiceStep);
 	if (Switcher != nullptr)
 	{
+		bAllValid &= TestEqual(TEXT("4개 독립 단계"), Switcher->GetChildrenCount(), 4);
 		bAllValid &= TestTrue(TEXT("EXP 단계가 switcher 자식"),
 			ResultStep != nullptr && ResultStep->GetParent() == Switcher);
 		bAllValid &= TestTrue(TEXT("선택 단계가 switcher 자식"),
 			ChoiceStep != nullptr && ChoiceStep->GetParent() == Switcher);
+		bAllValid &= TestTrue(TEXT("상자 단계가 switcher 자식"),
+			ChestStep != nullptr && ChestStep->GetParent() == Switcher);
+		bAllValid &= TestTrue(TEXT("골드 단계가 switcher 자식"),
+			GoldStep != nullptr && GoldStep->GetParent() == Switcher);
 	}
+	bAllValid &= TestNotNull(TEXT("상자 비율 박스"),
+		Cast<UScaleBox>(Tree->FindWidget(TEXT("SettlementChestFit"))));
+	bAllValid &= TestNotNull(TEXT("상자 이미지"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementChestArt"))));
+	bAllValid &= TestNotNull(TEXT("상자 공개 광선"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementChestBurst"))));
+	bAllValid &= TestNotNull(TEXT("상자 공개 광륜"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementChestAura"))));
+	bAllValid &= TestNotNull(TEXT("V9 모달 독립 배경"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementModalBackgroundArt"))));
+	bAllValid &= TestNotNull(TEXT("V9 모달 독립 외곽 프레임"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementModalOuterFrameArt"))));
+	bAllValid &= TestNotNull(TEXT("V10 본문 독립 배경"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementBodyBackgroundArt"))));
+	bAllValid &= TestNotNull(TEXT("V10 본문 독립 프레임"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementBodyFrameArt"))));
+	bAllValid &= TestNull(TEXT("V8 모달 합성 파츠 제거"),
+		Tree->FindWidget(TEXT("SettlementFrameArt")));
+	bAllValid &= TestNull(TEXT("V8 본문 합성 파츠 제거"),
+		Tree->FindWidget(TEXT("SettlementContentPanelArt")));
+	bAllValid &= TestNotNull(TEXT("문자형 단계 표시"),
+		Cast<UTextBlock>(Tree->FindWidget(TEXT("SettlementStepText"))));
+	bAllValid &= TestNull(TEXT("구형 원형 단계 표시 제거"),
+		Tree->FindWidget(TEXT("StepCoinArt_1")));
+	bAllValid &= TestNotNull(TEXT("상자 터치 버튼"),
+		Cast<UButton>(Tree->FindWidget(TEXT("SettlementChestButton"))));
 
 	bAllValid &= TestNotNull(TEXT("고정 골드 아이콘"),
 		Cast<UImage>(Tree->FindWidget(TEXT("SettlementGoldCoin"))));
 	bAllValid &= TestNotNull(TEXT("고정 골드 텍스트"),
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("SettlementGoldGain"))));
+	bAllValid &= TestNotNull(TEXT("골드 연속 바탕판"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementGoldPanelPlateArt"))));
+	bAllValid &= TestNotNull(TEXT("골드 코인 링"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementGoldCoinRingArt"))));
+	bAllValid &= TestNotNull(TEXT("골드 수치 창"),
+		Cast<UImage>(Tree->FindWidget(TEXT("SettlementGoldAmountWindowArt"))));
+	bAllValid &= TestNull(TEXT("골드 합성 패널 제거"),
+		Tree->FindWidget(TEXT("SettlementGuaranteedGoldPanelArt")));
 
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
@@ -295,8 +334,17 @@ bool FRewardSettlementDesignerPartsContractTest::RunTest(const FString& Paramete
 		};
 		UCanvasPanel* Row = Cast<UCanvasPanel>(Tree->FindWidget(Name(TEXT("SettlementExpRow"))));
 		bAllValid &= TestNotNull(*FString::Printf(TEXT("EXP 행 %d"), Index), Row);
-		bAllValid &= TestNotNull(*FString::Printf(TEXT("초상 프레임 %d"), Index),
-			Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementPortraitPlate")))));
+		for (const TCHAR* Prefix : {
+			TEXT("SettlementExpRowPlate"), TEXT("SettlementExpPortraitRing"),
+			TEXT("SettlementExpLevelWindow"), TEXT("SettlementExpProgressTrack"),
+			TEXT("SettlementExpXpBadge") })
+		{
+			bAllValid &= TestNotNull(
+				*FString::Printf(TEXT("EXP 원자 파츠 %s %d"), Prefix, Index),
+				Cast<UImage>(Tree->FindWidget(Name(Prefix))));
+		}
+		bAllValid &= TestNull(*FString::Printf(TEXT("EXP 합성 행 제거 %d"), Index),
+			Tree->FindWidget(Name(TEXT("SettlementExpRowArt"))));
 		UScaleBox* PortraitFit = Cast<UScaleBox>(
 			Tree->FindWidget(Name(TEXT("SettlementPortraitFit"))));
 		UImage* Portrait = Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementPortrait"))));
@@ -311,8 +359,6 @@ bool FRewardSettlementDesignerPartsContractTest::RunTest(const FString& Paramete
 		}
 		bAllValid &= TestNotNull(*FString::Printf(TEXT("레벨 텍스트 %d"), Index),
 			Cast<UTextBlock>(Tree->FindWidget(Name(TEXT("SettlementMercenaryLevel")))));
-		bAllValid &= TestNotNull(*FString::Printf(TEXT("EXP 트랙 %d"), Index),
-			Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementMercenaryTrack")))));
 		UCanvasPanel* FillClip = Cast<UCanvasPanel>(
 			Tree->FindWidget(Name(TEXT("SettlementMercenaryBarClip"))));
 		UImage* Fill = Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementMercenaryBar"))));
@@ -325,16 +371,22 @@ bool FRewardSettlementDesignerPartsContractTest::RunTest(const FString& Paramete
 		}
 		bAllValid &= TestNotNull(*FString::Printf(TEXT("EXP 수치 %d"), Index),
 			Cast<UTextBlock>(Tree->FindWidget(Name(TEXT("SettlementMercenaryBarText")))));
-		bAllValid &= TestNotNull(*FString::Printf(TEXT("XP 티켓 %d"), Index),
-			Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementXPRibbon")))));
 		bAllValid &= TestNotNull(*FString::Printf(TEXT("XP 텍스트 %d"), Index),
 			Cast<UTextBlock>(Tree->FindWidget(Name(TEXT("SettlementXPText")))));
 
 		UCanvasPanel* ChoiceMount = Cast<UCanvasPanel>(
 			Tree->FindWidget(Name(TEXT("SettlementChoiceMount"))));
 		bAllValid &= TestNotNull(*FString::Printf(TEXT("선택 카드 mount %d"), Index), ChoiceMount);
-		bAllValid &= TestNotNull(*FString::Printf(TEXT("선택 카드 판 %d"), Index),
-			Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementChoiceCard")))));
+		for (const TCHAR* Prefix : {
+			TEXT("SettlementCardBackground"), TEXT("SettlementCardFrame"),
+			TEXT("SettlementCardNamePlate"), TEXT("SettlementCardSelectedOverlay") })
+		{
+			bAllValid &= TestNotNull(
+				*FString::Printf(TEXT("선택 카드 원자 파츠 %s %d"), Prefix, Index),
+				Cast<UImage>(Tree->FindWidget(Name(Prefix))));
+		}
+		bAllValid &= TestNull(*FString::Printf(TEXT("선택 카드 합성 판 제거 %d"), Index),
+			Tree->FindWidget(Name(TEXT("SettlementChoiceCard"))));
 		UScaleBox* IconFit = Cast<UScaleBox>(
 			Tree->FindWidget(Name(TEXT("SettlementChoiceIconFit"))));
 		UImage* Icon = Cast<UImage>(Tree->FindWidget(Name(TEXT("SettlementChoiceIcon"))));
@@ -370,7 +422,7 @@ bool FRewardSettlementDynamicAspectTest::RunTest(const FString& Parameters)
 	}
 
 	UClass* WidgetClass = LoadClass<URewardSettlementWidgetBase>(nullptr,
-		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime_C"));
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"));
 	URewardSettlementWidgetBase* Widget = WidgetClass != nullptr
 		? CreateWidget<URewardSettlementWidgetBase>(World, WidgetClass) : nullptr;
 	if (!TestNotNull(TEXT("승리 결과판 인스턴스"), Widget))
@@ -505,7 +557,23 @@ bool FRewardSettlementDynamicAspectTest::RunTest(const FString& Parameters)
 	}
 	if (StepSwitcher != nullptr)
 	{
-		TestEqual(TEXT("다음 후 선택 단계"), StepSwitcher->GetActiveWidgetIndex(), 1);
+		TestEqual(TEXT("다음 후 상자 단계"), StepSwitcher->GetActiveWidgetIndex(), 1);
+	}
+	UButton* ChestButton = Cast<UButton>(
+		Widget->GetWidgetFromName(TEXT("SettlementChestButton")));
+	if (TestNotNull(TEXT("상자 터치 버튼"), ChestButton))
+	{
+		TestTrue(TEXT("상자 터치 버튼 활성"), ChestButton->GetIsEnabled());
+	}
+	Widget->CompleteChestRevealForTest();
+	if (StepSwitcher != nullptr)
+	{
+		TestEqual(TEXT("상자 후 독립 골드 단계"), StepSwitcher->GetActiveWidgetIndex(), 2);
+	}
+	Widget->AdvanceGoldToArtifactForTest();
+	if (StepSwitcher != nullptr)
+	{
+		TestEqual(TEXT("골드 후 독립 아티팩트 단계"), StepSwitcher->GetActiveWidgetIndex(), 3);
 	}
 	TestTrue(TEXT("단계 전환이 초상 위젯을 재생성하지 않음"),
 		PortraitBeforeBind == Widget->GetWidgetFromName(TEXT("SettlementPortrait_0")));
@@ -531,6 +599,14 @@ bool FRewardSettlementDynamicAspectTest::RunTest(const FString& Parameters)
 				TestTrue(*FString::Printf(TEXT("선택 카드 opacity %d"), CardIndex),
 					FMath::IsNearlyEqual(Mount->GetRenderOpacity(),
 						CardIndex == 1 ? 1.f : .55f, .001f));
+			}
+			UImage* SelectedOverlay = Cast<UImage>(Widget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("SettlementCardSelectedOverlay_%d"), CardIndex))));
+			if (TestNotNull(*FString::Printf(TEXT("선택 발광 %d"), CardIndex), SelectedOverlay))
+			{
+				TestEqual(*FString::Printf(TEXT("선택 발광 표시 %d"), CardIndex),
+					SelectedOverlay->GetVisibility(), CardIndex == 1
+						? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 			}
 		}
 	}
@@ -880,25 +956,35 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 	{
 		const TCHAR* TextName;
 		const TCHAR* ContainerName;
-		FMargin Padding;
+		const TCHAR* PlateName;
+		FVector2D Bounds;
+		bool bActionPlate;
 	};
-	const FMargin SegmentTextPadding(8.f, 2.f);
-	const FMargin ActionTextPadding(14.f, 2.f, 14.f, 32.f);
-	const FMargin CompactActionTextPadding(12.f, 2.f, 12.f, 22.f);
+	auto CanvasMountSize = [Tree](const TCHAR* MountName, const FVector2D Fallback)
+	{
+		const UWidget* Mount = Tree->FindWidget(FName(MountName));
+		const UCanvasPanelSlot* Slot = Mount != nullptr
+			? Cast<UCanvasPanelSlot>(Mount->Slot) : nullptr;
+		return Slot != nullptr ? Slot->GetSize() : Fallback;
+	};
+	const FVector2D ConfirmBounds = CanvasMountSize(
+		TEXT("ConfirmAbandonButtonPlateMount"), FVector2D(300.f, 100.f));
+	const FVector2D CancelBounds = CanvasMountSize(
+		TEXT("CancelAbandonButtonPlateMount"), FVector2D(300.f, 100.f));
 	const FExpectedTextFit ExpectedTextFits[] = {
-		{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), ActionTextPadding },
-		{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), ActionTextPadding },
-		{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), SegmentTextPadding },
-		{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), SegmentTextPadding },
-		{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), SegmentTextPadding },
-		{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), SegmentTextPadding },
-		{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), SegmentTextPadding },
-		{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), SegmentTextPadding },
-		{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), SegmentTextPadding },
-		{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), ActionTextPadding },
-		{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), ActionTextPadding },
-		{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), CompactActionTextPadding },
-		{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), CompactActionTextPadding },
+		{ TEXT("BackButtonText"), TEXT("BackButtonText_Center"), TEXT("BackButtonPlate"), FVector2D(300.f, 118.f), true },
+		{ TEXT("ResetButtonText"), TEXT("ResetButtonText_Center"), TEXT("ResetButtonPlate"), FVector2D(300.f, 118.f), true },
+		{ TEXT("LowQualityButtonText"), TEXT("LowQualityButtonText_Center"), TEXT("LowQualityButtonPlate"), FVector2D(112.f, 56.f), false },
+		{ TEXT("MediumQualityButtonText"), TEXT("MediumQualityButtonText_Center"), TEXT("MediumQualityButtonPlate"), FVector2D(112.f, 56.f), false },
+		{ TEXT("HighQualityButtonText"), TEXT("HighQualityButtonText_Center"), TEXT("HighQualityButtonPlate"), FVector2D(112.f, 56.f), false },
+		{ TEXT("FpsThirtyButtonText"), TEXT("FpsThirtyButtonText_Center"), TEXT("FpsThirtyButtonPlate"), FVector2D(148.f, 58.f), false },
+		{ TEXT("FpsSixtyButtonText"), TEXT("FpsSixtyButtonText_Center"), TEXT("FpsSixtyButtonPlate"), FVector2D(148.f, 58.f), false },
+		{ TEXT("LanguageKoreanButtonText"), TEXT("LanguageKoreanButtonText_Center"), TEXT("LanguageKoreanButtonPlate"), FVector2D(148.f, 58.f), false },
+		{ TEXT("LanguageEnglishButtonText"), TEXT("LanguageEnglishButtonText_Center"), TEXT("LanguageEnglishButtonPlate"), FVector2D(148.f, 58.f), false },
+		{ TEXT("SaveAndExitButtonText"), TEXT("Set_run_SaveAndExitButton"), TEXT("SaveAndExitButtonPlate"), FVector2D(310.f, 118.f), true },
+		{ TEXT("AbandonRunButtonText"), TEXT("Set_run_AbandonRunButton"), TEXT("AbandonRunButtonPlate"), FVector2D(310.f, 118.f), true },
+		{ TEXT("ConfirmAbandonButtonText"), TEXT("ConfirmAbandonButtonText_Center"), TEXT("ConfirmAbandonButtonPlate"), ConfirmBounds, true },
+		{ TEXT("CancelAbandonButtonText"), TEXT("CancelAbandonButtonText_Center"), TEXT("CancelAbandonButtonPlate"), CancelBounds, true },
 	};
 	for (const FExpectedTextFit& Expected : ExpectedTextFits)
 	{
@@ -906,9 +992,11 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 		UScaleBox* Scale = Cast<UScaleBox>(Tree->FindWidget(
 			FName(*(FString(Expected.TextName) + TEXT("_FitScale")))));
 		UWidget* Container = Tree->FindWidget(FName(Expected.ContainerName));
+		UImage* Plate = Cast<UImage>(Tree->FindWidget(FName(Expected.PlateName)));
 		if (TestNotNull(*FString::Printf(TEXT("%s 안전 텍스트"), Expected.TextName), Text)
 			&& TestNotNull(*FString::Printf(TEXT("%s 축소 래퍼"), Expected.TextName), Scale)
-			&& TestNotNull(*FString::Printf(TEXT("%s 컨테이너"), Expected.TextName), Container))
+			&& TestNotNull(*FString::Printf(TEXT("%s 컨테이너"), Expected.TextName), Container)
+			&& TestNotNull(*FString::Printf(TEXT("%s 기준 이미지"), Expected.TextName), Plate))
 		{
 			TestTrue(*FString::Printf(TEXT("%s ScaleBox 자식"), Expected.TextName),
 				Text->GetParent() == Scale);
@@ -923,11 +1011,28 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				ScaleSlot))
 			{
 				const FMargin ActualPadding = ScaleSlot->GetPadding();
-				TestTrue(*FString::Printf(TEXT("%s 버튼 면 중앙 패딩"), Expected.TextName),
-					FMath::IsNearlyEqual(ActualPadding.Left, Expected.Padding.Left)
-					&& FMath::IsNearlyEqual(ActualPadding.Top, Expected.Padding.Top)
-					&& FMath::IsNearlyEqual(ActualPadding.Right, Expected.Padding.Right)
-					&& FMath::IsNearlyEqual(ActualPadding.Bottom, Expected.Padding.Bottom));
+				const FVector2D Fitted = Plate->GetBrush().GetImageSize();
+				if (TestTrue(*FString::Printf(TEXT("%s 기준 이미지 크기"), Expected.TextName),
+					Fitted.X > 0. && Fitted.Y > 0.))
+				{
+					const FVector2D Offset = (Expected.Bounds - Fitted) * .5;
+					const FVector4 Content = Expected.bActionPlate
+						? FVector4(.19, .12, .81, .58)
+						: FVector4(.10, .20, .90, .78);
+					const FMargin ExpectedPadding(
+						Offset.X + Fitted.X * Content.X,
+						Offset.Y + Fitted.Y * Content.Y,
+						Offset.X + Fitted.X * (1. - Content.Z),
+						Offset.Y + Fitted.Y * (1. - Content.W));
+					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Left"), Expected.TextName),
+						ActualPadding.Left, ExpectedPadding.Left, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Top"), Expected.TextName),
+						ActualPadding.Top, ExpectedPadding.Top, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Right"), Expected.TextName),
+						ActualPadding.Right, ExpectedPadding.Right, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Bottom"), Expected.TextName),
+						ActualPadding.Bottom, ExpectedPadding.Bottom, .02f);
+				}
 				TestEqual(*FString::Printf(TEXT("%s 가로 Fill"), Expected.TextName),
 					ScaleSlot->GetHorizontalAlignment(), HAlign_Fill);
 				TestEqual(*FString::Printf(TEXT("%s 세로 Fill"), Expected.TextName),

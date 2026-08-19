@@ -2475,12 +2475,42 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 			Choice.mSourceAssetId = EquipmentId;
 			Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
 
-			if (const UStaticEquipmentData* EquipmentData = LoadPrimaryAssetData<UStaticEquipmentData>(EquipmentId))
+			// StageBuilder rolls Artifact primary assets here. Reading them through
+			// UStaticEquipmentData silently left the reward/detail DTO with fallback
+			// names and no icon/effect data.
+			if (const UStaticArtifactData* ArtifactData =
+				LoadPrimaryAssetData<UStaticArtifactData>(EquipmentId))
 			{
-				Choice.mName = EquipmentData->mName.IsEmpty() ? Choice.mName : EquipmentData->mName;
-				Choice.mDescription = EquipmentData->mDescription;
-				Choice.mIcon = EquipmentData->mIcon.LoadSynchronous();
-				Choice.mRarityColor = GetRarityColor(EquipmentData->mRarityType);
+				Choice.mName = ArtifactData->mName.IsEmpty()
+					? Choice.mName : ArtifactData->mName;
+				Choice.mIcon = ArtifactData->mIcon.LoadSynchronous();
+				Choice.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
+				Choice.mRarityName = StaticEnum<ERarityType>() != nullptr
+					? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(
+						StaticCast<int64>(ArtifactData->mRarityType))
+					: FText::GetEmpty();
+				Choice.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
+
+				TArray<FString> EffectLines;
+				for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
+					: ArtifactData->mStaticPassiveData)
+				{
+					if (const UStaticPassiveData* Passive =
+						PassiveSoft.LoadSynchronous())
+					{
+						if (!Passive->mDescription.IsEmpty())
+						{
+							EffectLines.Add(Passive->mDescription.ToString());
+						}
+					}
+				}
+				if (EffectLines.IsEmpty() && !ArtifactData->mStatModifiers.IsEmpty())
+				{
+					EffectLines.Add(TEXT("파티 전체 능력치를 강화합니다."));
+				}
+				Choice.mDescription = EffectLines.IsEmpty()
+					? FText::FromString(TEXT("파티 전체에 적용됩니다."))
+					: FText::FromString(FString::Join(EffectLines, TEXT("\n")));
 			}
 
 			Choices.Add(Choice);
@@ -2489,10 +2519,45 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	switch (CurrentRoom.mType)
 	{
 	case ERoomType::EliteMonster:
-		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataId);
+	{
+		const FEliteMonsterRoom& EliteRoom = static_cast<const FEliteMonsterRoom&>(CurrentRoom);
+		if (EliteRoom.mRewardArtifactDataIds.IsEmpty())
+		{
+			AddEquipmentReward(EliteRoom.mRewardArtifactDataId);
+		}
+		else
+		{
+			for (const FPrimaryAssetId& ArtifactId : EliteRoom.mRewardArtifactDataIds)
+			{
+				if (Choices.Num() >= 3)
+				{
+					break;
+				}
+				AddEquipmentReward(ArtifactId);
+			}
+		}
 		break;
+	}
 	case ERoomType::BossMonster:
+	{
+		const FBossMonsterRoom& BossRoom = static_cast<const FBossMonsterRoom&>(CurrentRoom);
+		if (BossRoom.mRewardArtifactDataIds.IsEmpty())
+		{
+			AddEquipmentReward(BossRoom.mRewardArtifactDataId);
+		}
+		else
+		{
+			for (const FPrimaryAssetId& ArtifactId : BossRoom.mRewardArtifactDataIds)
+			{
+				if (Choices.Num() >= 3)
+				{
+					break;
+				}
+				AddEquipmentReward(ArtifactId);
+			}
+		}
 		break;
+	}
 	default:
 		break;
 	}

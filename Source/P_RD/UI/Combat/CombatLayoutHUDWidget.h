@@ -737,6 +737,7 @@ private:
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
 	UFUNCTION() void HandleCombatResultOpenRequested();
 	UFUNCTION() void HandleCombatResultRewardConfirmed();
+	UFUNCTION() void HandleRewardConcept03Completed(int32 ArtifactIndex);
 	UFUNCTION() void HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 	UFUNCTION() void HandleCombatResultContinueConfirmed();
 	void CloseCombatResultCinematic(FSimpleDelegate Callback);
@@ -1267,6 +1268,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result")
 	TSubclassOf<class URewardSettlementWidgetBase> mRewardWidgetClass;
 	UPROPERTY(Transient) TObjectPtr<class URewardSettlementWidgetBase> mCombatRewardWidget;
+	/** 실제 승리 플로우에서 사용하는 신규 RewardConcept03 WBP 인스턴스. */
+	UPROPERTY(Transient) TObjectPtr<class URewardConcept03Widget> mCombatRewardConceptWidget;
 	UPROPERTY(Transient) TObjectPtr<class URewardUIModel> mCombatRewardUIModel;
 
 	/** @brief 경험치가 차오를 때 나는 소리. */

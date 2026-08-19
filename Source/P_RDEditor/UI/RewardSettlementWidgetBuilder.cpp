@@ -30,8 +30,8 @@
 namespace RewardSettlementWidgetBuilder
 {
 	constexpr TCHAR PackagePath[] = TEXT("/Game/UI/RewardSettlement");
-	constexpr TCHAR AssetName[] = TEXT("WBP_RewardSettlement_Runtime");
-	constexpr TCHAR AssetPath[] = TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_Runtime.WBP_RewardSettlement_Runtime");
+	constexpr TCHAR AssetName[] = TEXT("WBP_RewardSettlement_V3");
+	constexpr TCHAR AssetPath[] = TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3");
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 	TUniquePtr<FAutoConsoleCommand> VerifyCommand;
 
@@ -138,6 +138,23 @@ namespace RewardSettlementWidgetBuilder
 	{
 		UImage* Image = Blueprint->WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), Name);
 		Image->SetBrush(TextureBrush(Source, UV));
+		Image->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Place(Parent, Image, Position, Size, ZOrder);
+		return Image;
+	}
+
+	UImage* AddColorImage(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent, const FName Name,
+		const FLinearColor& Color, ESlateBrushDrawType::Type DrawAs,
+		const FVector2D Position, const FVector2D Size, int32 ZOrder,
+		const FMargin& Margin = FMargin(0.f))
+	{
+		UImage* Image = Blueprint->WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), Name);
+		FSlateBrush Brush;
+		Brush.DrawAs = DrawAs;
+		Brush.TintColor = FSlateColor(Color);
+		Brush.ImageSize = Size;
+		Brush.Margin = Margin;
+		Image->SetBrush(Brush);
 		Image->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		Place(Parent, Image, Position, Size, ZOrder);
 		return Image;
@@ -251,7 +268,7 @@ namespace RewardSettlementWidgetBuilder
 			AssetName, PackagePath, UWidgetBlueprint::StaticClass(), Factory));
 	}
 
-	void Build()
+	void BuildLegacy()
 	{
 		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_BUILD begin"));
 		// Resolve every new hard dependency before touching the existing WidgetTree.
@@ -259,12 +276,14 @@ namespace RewardSettlementWidgetBuilder
 		UTexture2D* HeaderBlank = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_HeaderBlank_0809.T_VR_HeaderBlank_0809"));
 		UTexture2D* PanelBlank = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_PanelBlank_0809.T_VR_PanelBlank_0809"));
 		UTexture2D* TabBlank = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_TabBlank_0809.T_VR_TabBlank_0809"));
-		UTexture2D* PrimaryButtonBlank = Texture(TEXT("/Game/UI/ResultBoards/Art/T_UI_ButtonPrimaryBlank_0809.T_UI_ButtonPrimaryBlank_0809"));
+		UTexture2D* PrimaryButtonBlank = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/T_RS_Generated_PrimaryButton.T_RS_Generated_PrimaryButton"));
 		UTexture2D* PortraitFrame = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_PortraitFrame_0809.T_VR_PortraitFrame_0809"));
 		UTexture2D* ProgressTrack = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_ProgressTrack_0809.T_VR_ProgressTrack_0809"));
 		UTexture2D* ProgressFill = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_ProgressFill_0809.T_VR_ProgressFill_0809"));
 		UTexture2D* XPTicket = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_XPTicketBlank_0809.T_VR_XPTicketBlank_0809"));
-		UTexture2D* ChoiceCard = Texture(TEXT("/Game/UI/ResultBoards/Art/T_VR_RewardCardBlank_0809.T_VR_RewardCardBlank_0809"));
+		UTexture2D* ChoiceCard = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/T_RS_Generated_ArtifactCardSelected.T_RS_Generated_ArtifactCardSelected"));
+		UTexture2D* ChestClosed = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/T_RS_Generated_ChestClosed.T_RS_Generated_ChestClosed"));
+		UTexture2D* ChestRevealBurst = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/T_RS_Generated_ChestRevealBurst.T_RS_Generated_ChestRevealBurst"));
 		UTexture2D* GoldCoin = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Reward/T_Reward_GoldIcon_V1.T_Reward_GoldIcon_V1"));
 		UTexture2D* EquipmentIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
 		UTexture2D* ExpIcon = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_exp_icon.T_reward_v4_exp_icon"));
@@ -352,11 +371,16 @@ namespace RewardSettlementWidgetBuilder
 			FVector2D(704.f, 145.f), FVector2D(76.f, 76.f), 22);
 		AddAspectImage(Blueprint, DesignCanvas, TEXT("StepCoinArt_2"), TabBlank, nullptr,
 			FVector2D(792.f, 145.f), FVector2D(76.f, 76.f), 22);
+		AddAspectImage(Blueprint, DesignCanvas, TEXT("StepCoinArt_3"), TabBlank, nullptr,
+			FVector2D(880.f, 145.f), FVector2D(76.f, 76.f), 22);
 		AddText(Blueprint, DesignCanvas, TEXT("StepCoinNumber_1"), FText::AsNumber(1),
 			31, FVector2D(704.f, 151.f),
 			FVector2D(76.f, 58.f), 23);
 		AddText(Blueprint, DesignCanvas, TEXT("StepCoinNumber_2"), FText::AsNumber(2),
 			31, FVector2D(792.f, 151.f),
+			FVector2D(76.f, 58.f), 23);
+		AddText(Blueprint, DesignCanvas, TEXT("StepCoinNumber_3"), FText::AsNumber(3),
+			31, FVector2D(880.f, 151.f),
 			FVector2D(76.f, 58.f), 23);
 
 		AddAspectImage(Blueprint, DesignCanvas, TEXT("MainPanelArt"), PanelBlank, nullptr,
@@ -378,14 +402,6 @@ namespace RewardSettlementWidgetBuilder
 		ResultStep->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		StepSwitcher->AddChild(ResultStep);
 
-		// Gold occupies the centered top band. The live runtime only changes the
-		// brush/text; its position and bounds remain owned by the WBP designer.
-		AddAspectImage(Blueprint, ResultStep, TEXT("SettlementGoldCoin"), GoldCoin, nullptr,
-			FVector2D(322.f, 2.f), FVector2D(66.f, 66.f), 3);
-		AddText(Blueprint, ResultStep, TEXT("SettlementGoldGain"),
-			NSLOCTEXT("RewardSettlement", "GoldPreview", "+22"), 31,
-			FVector2D(398.f, 2.f), FVector2D(160.f, 66.f), 3);
-
 		UTexture2D* PreviewPortraits[] = { Knight, Mage, Rogue };
 		const TCHAR* PreviewLevels[] = { TEXT("Lv.1"), TEXT("Lv.2"), TEXT("Lv.3") };
 		const TCHAR* PreviewProgress[] = { TEXT("50 / 250"), TEXT("150 / 250"), TEXT("200 / 250") };
@@ -396,7 +412,7 @@ namespace RewardSettlementWidgetBuilder
 				UCanvasPanel::StaticClass(),
 				*FString::Printf(TEXT("SettlementExpRow_%d"), Index));
 			Row->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(ResultStep, Row, FVector2D(18.f, 100.f + 114.f * Index),
+			Place(ResultStep, Row, FVector2D(18.f, 44.f + 122.f * Index),
 				FVector2D(836.f, 102.f), 1);
 
 			AddAspectImage(Blueprint, Row,
@@ -450,11 +466,45 @@ namespace RewardSettlementWidgetBuilder
 				FVector2D(670.f, 20.f), FVector2D(166.f, 62.f), 4);
 		}
 
+		UCanvasPanel* ChestStep = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementChestStep"));
+		ChestStep->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		StepSwitcher->AddChild(ChestStep);
+
+		UImage* ChestBurst = AddAspectImage(Blueprint, ChestStep,
+			TEXT("SettlementChestBurst"), ChestRevealBurst, nullptr,
+			FVector2D(236.f, -8.f), FVector2D(400.f, 400.f), 1);
+		ChestBurst->SetVisibility(ESlateVisibility::Collapsed);
+		AddScaleImage(Blueprint, ChestStep, TEXT("SettlementChestFit"),
+			TEXT("SettlementChestArt"), ChestClosed,
+			FVector2D(211.f, 28.f), FVector2D(450.f, 320.f), 2);
+		AddText(Blueprint, ChestStep, TEXT("SettlementChestHint"),
+			NSLOCTEXT("RewardSettlement", "TouchChest", "상자를 터치하세요"), 31,
+			FVector2D(236.f, 354.f), FVector2D(400.f, 60.f), 3);
+		UButton* ChestButton = Blueprint->WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), TEXT("SettlementChestButton"));
+		FButtonStyle ChestButtonStyle;
+		FSlateBrush ChestButtonEmpty;
+		ChestButtonEmpty.DrawAs = ESlateBrushDrawType::NoDrawType;
+		ChestButtonStyle.SetNormal(ChestButtonEmpty);
+		ChestButtonStyle.SetHovered(ChestButtonEmpty);
+		ChestButtonStyle.SetPressed(ChestButtonEmpty);
+		ChestButtonStyle.SetDisabled(ChestButtonEmpty);
+		ChestButton->SetStyle(ChestButtonStyle);
+		Place(ChestStep, ChestButton, FVector2D(211.f, 28.f),
+			FVector2D(450.f, 380.f), 5);
+
 		UCanvasPanel* ChoiceStep = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("SettlementChoiceStep"));
 		ChoiceStep->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		StepSwitcher->AddChild(ChoiceStep);
 		StepSwitcher->SetActiveWidgetIndex(0);
+
+		AddAspectImage(Blueprint, ChoiceStep, TEXT("SettlementGoldCoin"), GoldCoin, nullptr,
+			FVector2D(322.f, -8.f), FVector2D(66.f, 66.f), 3);
+		AddText(Blueprint, ChoiceStep, TEXT("SettlementGoldGain"),
+			NSLOCTEXT("RewardSettlement", "GoldPreview", "+22"), 31,
+			FVector2D(398.f, -8.f), FVector2D(160.f, 66.f), 3);
 
 		UTexture2D* PreviewChoiceIcons[] = { EquipmentIcon, ExpIcon, ChoiceGoldIcon };
 		const FText PreviewChoiceNames[] = {
@@ -469,10 +519,10 @@ namespace RewardSettlementWidgetBuilder
 				UCanvasPanel::StaticClass(),
 				*FString::Printf(TEXT("SettlementChoiceMount_%d"), Index));
 			Mount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(ChoiceStep, Mount, FVector2D(ChoiceXs[Index], 52.f),
-				FVector2D(236.f, 338.f), 1);
+			Place(ChoiceStep, Mount, FVector2D(ChoiceXs[Index], 62.f),
+				FVector2D(236.f, 330.f), 1);
 
-			const FVector2D CardBounds(236.f, 338.f);
+			const FVector2D CardBounds(236.f, 330.f);
 			const FVector2D CardArtSize = AspectFitSize(ChoiceCard, CardBounds);
 			const FVector2D CardArtPosition = (CardBounds - CardArtSize) * .5f;
 			AddImage(Blueprint, Mount,
@@ -506,7 +556,7 @@ namespace RewardSettlementWidgetBuilder
 				Brush->DrawAs = ESlateBrushDrawType::NoDrawType;
 			}
 			PickButton->SetStyle(PickStyle);
-			Place(Mount, PickButton, FVector2D::ZeroVector, FVector2D(236.f, 338.f), 5);
+			Place(Mount, PickButton, FVector2D::ZeroVector, FVector2D(236.f, 330.f), 5);
 		}
 
 		// The native base still has mandatory BindWidget fields from the previous WBP.
@@ -569,7 +619,7 @@ namespace RewardSettlementWidgetBuilder
 		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_BUILD success asset=%s layout=0809-victory"), AssetPath);
 	}
 
-	void Verify()
+	void VerifyLegacy()
 	{
 		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
 		checkf(Blueprint != nullptr && Blueprint->WidgetTree != nullptr,
@@ -598,7 +648,7 @@ namespace RewardSettlementWidgetBuilder
 		const FName CanvasNames[] = {
 			TEXT("SettlementResponsiveCanvas"), TEXT("SettlementDesignCanvas"),
 			TEXT("HeaderCanvas"), TEXT("ExpCanvas"), TEXT("SettlementResultStep"),
-			TEXT("SettlementChoiceStep"), TEXT("NextButtonHolder")
+			TEXT("SettlementChestStep"), TEXT("SettlementChoiceStep"), TEXT("NextButtonHolder")
 		};
 		for (const FName Name : CanvasNames)
 		{
@@ -607,7 +657,8 @@ namespace RewardSettlementWidgetBuilder
 
 		const FName ImageNames[] = {
 			TEXT("HeaderBlankArt"), TEXT("MainPanelArt"),
-			TEXT("StepCoinArt_1"), TEXT("StepCoinArt_2"),
+			TEXT("StepCoinArt_1"), TEXT("StepCoinArt_2"), TEXT("StepCoinArt_3"),
+			TEXT("SettlementChestArt"), TEXT("SettlementChestBurst"),
 			TEXT("SettlementGoldCoin"), TEXT("NextButtonArt")
 		};
 		for (const FName Name : ImageNames)
@@ -616,7 +667,8 @@ namespace RewardSettlementWidgetBuilder
 		}
 
 		const FName TextNames[] = {
-			TEXT("mTitleText"), TEXT("StepCoinNumber_1"), TEXT("StepCoinNumber_2"),
+			TEXT("mTitleText"), TEXT("StepCoinNumber_1"), TEXT("StepCoinNumber_2"), TEXT("StepCoinNumber_3"),
+			TEXT("SettlementChestHint"),
 			TEXT("SettlementGoldGain"), TEXT("mGoldBalanceText"), TEXT("mNextButtonText")
 		};
 		for (const FName Name : TextNames)
@@ -627,6 +679,8 @@ namespace RewardSettlementWidgetBuilder
 		RequireClass(TEXT("mSummaryRowsBox"), UVerticalBox::StaticClass());
 		RequireClass(TEXT("mMercenaryRowsBox"), UVerticalBox::StaticClass());
 		RequireClass(TEXT("mNextButton"), UButton::StaticClass());
+		RequireClass(TEXT("SettlementChestButton"), UButton::StaticClass());
+		RequireClass(TEXT("SettlementChestFit"), UScaleBox::StaticClass());
 
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
@@ -674,15 +728,20 @@ namespace RewardSettlementWidgetBuilder
 			Blueprint->WidgetTree->FindWidget(TEXT("SettlementResultStep")));
 		UCanvasPanel* ChoiceStep = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("SettlementChoiceStep")));
+		UCanvasPanel* ChestStep = CastChecked<UCanvasPanel>(
+			Blueprint->WidgetTree->FindWidget(TEXT("SettlementChestStep")));
 		UWidgetSwitcher* StepSwitcher = CastChecked<UWidgetSwitcher>(
 			Blueprint->WidgetTree->FindWidget(TEXT("SettlementStepSwitcher")));
 		checkf(ResultStep->GetVisibility() == ESlateVisibility::SelfHitTestInvisible,
 			TEXT("Reward settlement result step must be visible by default"));
 		checkf(ChoiceStep->GetVisibility() == ESlateVisibility::SelfHitTestInvisible,
 			TEXT("Reward settlement choice step must remain designer-visible"));
+		checkf(ChestStep->GetVisibility() == ESlateVisibility::SelfHitTestInvisible,
+			TEXT("Reward settlement chest step must remain designer-visible"));
 		checkf(StepSwitcher->GetActiveWidgetIndex() == 0
 			&& StepSwitcher->GetWidgetAtIndex(0) == ResultStep
-			&& StepSwitcher->GetWidgetAtIndex(1) == ChoiceStep,
+			&& StepSwitcher->GetWidgetAtIndex(1) == ChestStep
+			&& StepSwitcher->GetWidgetAtIndex(2) == ChoiceStep,
 			TEXT("Reward settlement step switcher has the wrong child order/default"));
 		checkf(Blueprint->GeneratedClass != nullptr
 			&& Blueprint->GeneratedClass->IsChildOf(URewardSettlementWidgetBase::StaticClass()),
@@ -690,6 +749,525 @@ namespace RewardSettlementWidgetBuilder
 		UE_LOG(LogTemp, Display,
 			TEXT("RD_REWARD_SETTLEMENT_VERIFY success widgets=%d parent=%s"),
 			VerifiedWidgetCount, *Blueprint->ParentClass->GetName());
+	}
+
+	void ApplyTransparentButtonStyle(UButton* Button)
+	{
+		FButtonStyle Style;
+		FSlateBrush Empty;
+		Empty.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.SetNormal(Empty);
+		Style.SetHovered(Empty);
+		Style.SetPressed(Empty);
+		Style.SetDisabled(Empty);
+		Button->SetStyle(Style);
+	}
+
+	/**
+	 * 완전히 새로 만든 V3 보상판. 외곽/본문/행/배지/카드 상태를 독립 파츠로
+	 * 조립해 UMG가 각 내부 영역과 상태를 직접 제어한다.
+	 */
+	void Build()
+	{
+		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_V3_BUILD begin"));
+		// concept03 시안에서 직접 분해·정제한 목재/황동/철판 파츠다. 글자와
+		// 값은 이미지에 굽지 않고 UMG 위젯으로 유지한다.
+		UTexture2D* BoardInterior = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_BoardInterior.T_C03_BoardInterior"));
+		UTexture2D* RailH = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_RailH.T_C03_RailH"));
+		UTexture2D* RailVLeft = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_RailVLeft.T_C03_RailVLeft"));
+		UTexture2D* RailVRight = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_RailVRight.T_C03_RailVRight"));
+		UTexture2D* CornerTL = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CornerTL.T_C03_CornerTL"));
+		UTexture2D* CornerTR = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CornerTR.T_C03_CornerTR"));
+		UTexture2D* CornerBL = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CornerBL.T_C03_CornerBL"));
+		UTexture2D* CornerBR = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CornerBR.T_C03_CornerBR"));
+		UTexture2D* HeaderBackground = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_TitlePlate.T_C03_TitlePlate"));
+		UTexture2D* StepBackground = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StageTab.T_C03_StageTab"));
+		UTexture2D* StepTrack = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepBarTrack.T_C03_StepBarTrack"));
+		UTexture2D* StepFill = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepBarFill.T_C03_StepBarFill"));
+		UTexture2D* StepCoinActive = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepCoinActive.T_C03_StepCoinActive"));
+		UTexture2D* StepCoinInactive = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepCoinInactive.T_C03_StepCoinInactive"));
+		UTexture2D* CtaBackground = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CtaPlate.T_C03_CtaPlate"));
+		UTexture2D* ParchmentWindow = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_ParchWindow.T_C03_ParchWindow"));
+		UTexture2D* ExpProgressTrack = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_TrackPlate.T_C03_TrackPlate"));
+		UTexture2D* ProgressFill = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_TrackFill.T_C03_TrackFill"));
+		UTexture2D* ExpXpBadge = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_XpBadge.T_C03_XpBadge"));
+		UTexture2D* CardFrame = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_CardBlank.T_C03_CardBlank"));
+		UTexture2D* CardSelectedOverlay = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_SelectionGlow.T_C03_SelectionGlow"));
+		UTexture2D* ChestClosed = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/V8PartsV2/T_RS_V8_ChestClosed.T_RS_V8_ChestClosed"));
+		UTexture2D* ChestAura = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/V8PartsV2/T_RS_V8_ChestAura.T_RS_V8_ChestAura"));
+		UTexture2D* ChestBurst = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/V8PartsV2/T_RS_V8_ChestBurst.T_RS_V8_ChestBurst"));
+		UTexture2D* GoldCoin = Texture(TEXT("/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_GoldCoinVisualGenerated.T_C03_GoldCoinVisualGenerated"));
+		UTexture2D* Equipment = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common"));
+		UTexture2D* PreviewArtifacts[] = {
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice")),
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_FangAmulet.T_Artifact_FangAmulet")),
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_LuckyCoin.T_Artifact_LuckyCoin"))
+		};
+		UTexture2D* Portraits[] = {
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")),
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage")),
+			Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"))
+		};
+
+		UWidgetBlueprint* Blueprint = FindOrCreateBlueprint();
+		checkf(Blueprint != nullptr && Blueprint->WidgetTree != nullptr,
+			TEXT("Could not create V3 reward WBP"));
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		if (UWidget* PreviousRoot = Blueprint->WidgetTree->RootWidget)
+		{
+			Blueprint->ParentClass = UUserWidget::StaticClass();
+			TSet<UWidget*> PreviousWidgets;
+			PreviousWidgets.Add(PreviousRoot);
+			FWidgetBlueprintEditorUtils::DeleteWidgets(Blueprint, MoveTemp(PreviousWidgets),
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
+		Blueprint->ParentClass = URewardSettlementWidgetBase::StaticClass();
+
+		UOverlay* Root = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), TEXT("SettlementViewportRoot"));
+		Blueprint->WidgetTree->RootWidget = Root;
+		UBorder* Dimmer = Blueprint->WidgetTree->ConstructWidget<UBorder>(
+			UBorder::StaticClass(), TEXT("WorldDimmer"));
+		Dimmer->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, .58f));
+		Root->AddChildToOverlay(Dimmer);
+		CastChecked<UOverlaySlot>(Dimmer->Slot)->SetHorizontalAlignment(HAlign_Fill);
+		CastChecked<UOverlaySlot>(Dimmer->Slot)->SetVerticalAlignment(VAlign_Fill);
+
+		UCanvasPanel* Screen = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementResponsiveCanvas"));
+		Root->AddChildToOverlay(Screen);
+		CastChecked<UOverlaySlot>(Screen->Slot)->SetHorizontalAlignment(HAlign_Fill);
+		CastChecked<UOverlaySlot>(Screen->Slot)->SetVerticalAlignment(VAlign_Fill);
+		UScaleBox* Scale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
+			UScaleBox::StaticClass(), TEXT("SettlementMasterScale"));
+		Scale->SetStretch(EStretch::ScaleToFit);
+		Scale->SetStretchDirection(EStretchDirection::Both);
+		Scale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Anchor(Screen, Scale, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 1);
+		USizeBox* DesignSize = Blueprint->WidgetTree->ConstructWidget<USizeBox>(
+			USizeBox::StaticClass(), TEXT("SettlementMasterDesignSize"));
+		DesignSize->SetWidthOverride(1536.f);
+		DesignSize->SetHeightOverride(864.f);
+		Scale->AddChild(DesignSize);
+		UCanvasPanel* Design = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementDesignCanvas"));
+		DesignSize->SetContent(Design);
+
+		// concept03은 전투 화면 자체를 배경으로 쓰고 그 위에 보상판만 띄운다.
+		// WorldDimmer 아래의 실제 전투 장면은 그대로 보존하며, 셸에는 시안의
+		// 목재/황동 프레임만 조립한다.
+		UCanvasPanel* Shell = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementModalShell"));
+		Place(Design, Shell, FVector2D::ZeroVector, FVector2D(1536.f, 864.f), 0);
+		UImage* ModalBackgroundContract = AddImage(Blueprint, Shell,
+			TEXT("SettlementModalBackgroundArt"), BoardInterior, nullptr,
+			FVector2D::ZeroVector, FVector2D(1.f), 0);
+		ModalBackgroundContract->SetVisibility(ESlateVisibility::Collapsed);
+		UImage* ModalFrameContract = AddImage(Blueprint, Shell,
+			TEXT("SettlementModalOuterFrameArt"), HeaderBackground, nullptr,
+			FVector2D::ZeroVector, FVector2D(566.f, 136.f), 0);
+		ModalFrameContract->SetVisibility(ESlateVisibility::Collapsed);
+
+		UCanvasPanel* HeaderSection = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementHeaderSection"));
+		Place(Shell, HeaderSection, FVector2D(485.f, 26.f), FVector2D(566.f, 136.f), 5);
+		AddImage(Blueprint, HeaderSection, TEXT("SettlementHeaderBackgroundArt"), HeaderBackground,
+			nullptr, FVector2D::ZeroVector, FVector2D(566.f, 136.f), 0);
+		UImage* HeaderFrameArt = AddImage(Blueprint, HeaderSection,
+			TEXT("SettlementHeaderFrameArt"), HeaderBackground,
+			nullptr, FVector2D::ZeroVector, FVector2D(566.f, 136.f), 1);
+		HeaderFrameArt->SetVisibility(ESlateVisibility::Collapsed);
+		AddText(Blueprint, HeaderSection, TEXT("mTitleText"),
+			NSLOCTEXT("RewardSettlement", "TitleC03", "전투 보상"), 42,
+			FVector2D(60.f, 40.f), FVector2D(446.f, 60.f), 2);
+
+		UCanvasPanel* BodySection = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementBodySection"));
+		Place(Shell, BodySection, FVector2D(98.f, 258.f), FVector2D(1326.f, 482.f), 1);
+		AddImage(Blueprint, BodySection, TEXT("SettlementBodyBackgroundArt"), BoardInterior,
+			nullptr, FVector2D(20.f, 20.f), FVector2D(1282.f, 442.f), 0);
+		UImage* BodyFrameArt = AddImage(Blueprint, BodySection,
+			TEXT("SettlementBodyFrameArt"), BoardInterior,
+			nullptr, FVector2D::ZeroVector, FVector2D(1.f), 1);
+		BodyFrameArt->SetVisibility(ESlateVisibility::Collapsed);
+		AddImage(Blueprint, BodySection, TEXT("SettlementRailTop"), RailH, nullptr,
+			FVector2D::ZeroVector, FVector2D(1326.f, 44.f), 1);
+		AddImage(Blueprint, BodySection, TEXT("SettlementRailBottom"), RailH, nullptr,
+			FVector2D(0.f, 438.f), FVector2D(1326.f, 44.f), 1);
+		AddImage(Blueprint, BodySection, TEXT("SettlementRailLeft"), RailVLeft, nullptr,
+			FVector2D::ZeroVector, FVector2D(44.f, 482.f), 1);
+		AddImage(Blueprint, BodySection, TEXT("SettlementRailRight"), RailVRight, nullptr,
+			FVector2D(1282.f, 0.f), FVector2D(44.f, 482.f), 1);
+		AddImage(Blueprint, BodySection, TEXT("SettlementCornerTL"), CornerTL, nullptr,
+			FVector2D::ZeroVector, FVector2D(92.f, 92.f), 2);
+		AddImage(Blueprint, BodySection, TEXT("SettlementCornerTR"), CornerTR, nullptr,
+			FVector2D(1234.f, 0.f), FVector2D(92.f, 92.f), 2);
+		AddImage(Blueprint, BodySection, TEXT("SettlementCornerBL"), CornerBL, nullptr,
+			FVector2D(0.f, 390.f), FVector2D(92.f, 92.f), 2);
+		AddImage(Blueprint, BodySection, TEXT("SettlementCornerBR"), CornerBR, nullptr,
+			FVector2D(1234.f, 390.f), FVector2D(92.f, 92.f), 2);
+
+		UCanvasPanel* StepBadge = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementStepBadgeMount"));
+		Place(Shell, StepBadge, FVector2D(98.f, 276.f), FVector2D(196.f, 48.f), 6);
+		AddImage(Blueprint, StepBadge, TEXT("SettlementStepBackgroundArt"),
+			StepBackground, nullptr, FVector2D::ZeroVector, FVector2D(196.f, 48.f), 0);
+		UImage* StepFrameArt = AddImage(Blueprint, StepBadge, TEXT("SettlementStepFrameArt"),
+			StepBackground, nullptr, FVector2D::ZeroVector, FVector2D(196.f, 48.f), 1);
+		StepFrameArt->SetVisibility(ESlateVisibility::Collapsed);
+		AddText(Blueprint, StepBadge, TEXT("SettlementStepText"),
+			NSLOCTEXT("RewardSettlement", "ExpStepC03", "경험치"), 20,
+			FVector2D(10.f, 5.f), FVector2D(176.f, 38.f), 2);
+
+		AddImage(Blueprint, Shell, TEXT("SettlementStepTrackArt"), StepTrack, nullptr,
+			FVector2D(423.f, 258.f), FVector2D(690.f, 22.f), 4);
+		UCanvasPanel* StepFillClip = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementStepFillClip"));
+		StepFillClip->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Place(Shell, StepFillClip, FVector2D(430.f, 261.f), FVector2D(100.f, 16.f), 5);
+		AddImage(Blueprint, StepFillClip, TEXT("SettlementStepFillArt"), StepFill, nullptr,
+			FVector2D::ZeroVector, FVector2D(676.f, 16.f), 0);
+		const float StepCenters[] = { 530.f, 706.f, 882.f, 1058.f };
+		for (int32 Index = 0; Index < 4; ++Index)
+		{
+			const bool bActive = Index == 0;
+			const float Extent = bActive ? 92.f : 64.f;
+			const FVector2D CoinPosition(StepCenters[Index] - Extent * .5f,
+				269.f - Extent * .5f);
+			AddImage(Blueprint, Shell,
+				*FString::Printf(TEXT("SettlementStepCoin_%d"), Index),
+				bActive ? StepCoinActive : StepCoinInactive, nullptr,
+				CoinPosition, FVector2D(Extent, Extent), 7);
+			AddText(Blueprint, Shell,
+				*FString::Printf(TEXT("SettlementStepCoinText_%d"), Index),
+				FText::AsNumber(Index + 1), bActive ? 28 : 24,
+				FVector2D(StepCenters[Index] - 30.f, 245.f), FVector2D(60.f, 48.f), 8);
+		}
+
+		UCanvasPanel* Content = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("ExpCanvas"));
+		Place(BodySection, Content, FVector2D(60.f, 72.f), FVector2D(1206.f, 350.f), 3);
+		UWidgetSwitcher* Switcher = Blueprint->WidgetTree->ConstructWidget<UWidgetSwitcher>(
+			UWidgetSwitcher::StaticClass(), TEXT("SettlementStepSwitcher"));
+		Place(Content, Switcher, FVector2D::ZeroVector, FVector2D(1206.f, 350.f), 0);
+
+		UCanvasPanel* Result = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementResultStep"));
+		Result->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Switcher->AddChild(Result);
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			UCanvasPanel* Row = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(), *FString::Printf(TEXT("SettlementExpRow_%d"), Index));
+			Row->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			Place(Result, Row, FVector2D(38.f, 4.f + Index * 110.f),
+				FVector2D(620.f, 104.f), 1);
+			UImage* RowPlateContract = AddImage(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementExpRowPlate_%d"), Index), BoardInterior,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			RowPlateContract->SetVisibility(ESlateVisibility::Collapsed);
+			UImage* RingContract = AddImage(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementExpPortraitRing_%d"), Index), StepCoinInactive,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			RingContract->SetVisibility(ESlateVisibility::Collapsed);
+			UImage* LevelContract = AddImage(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementExpLevelWindow_%d"), Index), StepBackground,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			LevelContract->SetVisibility(ESlateVisibility::Collapsed);
+			AddImage(Blueprint, Row, *FString::Printf(TEXT("SettlementExpProgressTrack_%d"), Index),
+				ExpProgressTrack, nullptr, FVector2D(126.f, 30.f), FVector2D(322.f, 44.f), 1);
+			UImage* BadgeContract = AddImage(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementExpXpBadge_%d"), Index), ExpXpBadge,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			BadgeContract->SetVisibility(ESlateVisibility::Collapsed);
+			AddScaleImage(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementPortraitFit_%d"), Index),
+				*FString::Printf(TEXT("SettlementPortrait_%d"), Index), Portraits[Index],
+				FVector2D(8.f, 4.f), FVector2D(96.f, 96.f), 2);
+			AddText(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementMercenaryLevel_%d"), Index),
+				FText::FromString(FString::Printf(TEXT("Lv.%d"), Index + 1)), 18,
+				FVector2D(456.f, 12.f), FVector2D(72.f, 34.f), 3);
+			UCanvasPanel* Clip = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(),
+				*FString::Printf(TEXT("SettlementMercenaryBarClip_%d"), Index));
+			Clip->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			Clip->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			Place(Row, Clip, FVector2D(134.f, 38.f), FVector2D(300.f, 28.f), 2);
+			AddImage(Blueprint, Clip,
+				*FString::Printf(TEXT("SettlementMercenaryBar_%d"), Index),
+				ProgressFill, nullptr, FVector2D::ZeroVector, FVector2D(300.f, 28.f), 0);
+			AddText(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementMercenaryBarText_%d"), Index),
+				FText::FromString(TEXT("50 / 250")), 16,
+				FVector2D(134.f, 34.f), FVector2D(300.f, 36.f), 4);
+			AddText(Blueprint, Row,
+				*FString::Printf(TEXT("SettlementXPText_%d"), Index),
+				NSLOCTEXT("RewardSettlement", "XPPreviewC03", "+50 XP"), 18,
+				FVector2D(456.f, 52.f), FVector2D(112.f, 38.f), 4);
+		}
+		AddImage(Blueprint, Result, TEXT("SettlementXpSummaryWindow"), ParchmentWindow,
+			nullptr, FVector2D(730.f, 24.f), FVector2D(446.f, 286.f), 1);
+		AddAspectImage(Blueprint, Result, TEXT("SettlementXpSummaryBadge"), ExpXpBadge,
+			nullptr, FVector2D(865.f, 42.f), FVector2D(176.f, 150.f), 2);
+		AddText(Blueprint, Result, TEXT("SettlementXpSummaryAmount"),
+			NSLOCTEXT("RewardSettlement", "XPSummaryC03", "+50 XP"), 38,
+			FVector2D(808.f, 184.f), FVector2D(290.f, 52.f), 3);
+		AddText(Blueprint, Result, TEXT("SettlementXpSummaryLevel"),
+			NSLOCTEXT("RewardSettlement", "XPLevelC03", "Lv.5  ->  Lv.6"), 24,
+			FVector2D(808.f, 234.f), FVector2D(290.f, 42.f), 3);
+
+		UCanvasPanel* Chest = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementChestStep"));
+		Chest->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Switcher->AddChild(Chest);
+		UImage* Aura = AddAspectImage(Blueprint, Chest, TEXT("SettlementChestAura"),
+			ChestAura, nullptr, FVector2D(80.f, -28.f), FVector2D(440.f, 420.f), 0);
+		Aura->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Aura->SetRenderOpacity(.12f);
+		UImage* Burst = AddAspectImage(Blueprint, Chest, TEXT("SettlementChestBurst"),
+			ChestBurst, nullptr, FVector2D(110.f, -8.f), FVector2D(390.f, 390.f), 1);
+		Burst->SetVisibility(ESlateVisibility::Collapsed);
+		AddScaleImage(Blueprint, Chest, TEXT("SettlementChestFit"), TEXT("SettlementChestArt"),
+			ChestClosed, FVector2D(130.f, 22.f), FVector2D(350.f, 286.f), 2);
+		AddImage(Blueprint, Chest, TEXT("SettlementChestHintWindow"), ParchmentWindow,
+			nullptr, FVector2D(694.f, 32.f), FVector2D(446.f, 286.f), 1);
+		AddText(Blueprint, Chest, TEXT("SettlementChestHint"),
+			NSLOCTEXT("RewardSettlement", "TouchChestC03", "상자를 눌러 여세요"), 28,
+			FVector2D(738.f, 138.f), FVector2D(358.f, 58.f), 3);
+		UButton* ChestButton = Blueprint->WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), TEXT("SettlementChestButton"));
+		ApplyTransparentButtonStyle(ChestButton);
+		Place(Chest, ChestButton, FVector2D(92.f, 0.f), FVector2D(440.f, 330.f), 5);
+
+		// 단계 3은 골드 전용 화면이다. 아티팩트가 없는 방은 이 화면에서 끝나고,
+		// 아티팩트가 있는 방만 별도 단계 4로 넘어간다.
+		UCanvasPanel* Gold = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementGoldStep"));
+		Gold->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Switcher->AddChild(Gold);
+		UTextBlock* GoldTitle = AddText(Blueprint, Gold, TEXT("SettlementGoldRewardTitle"),
+			FText::GetEmpty(), 1, FVector2D::ZeroVector, FVector2D(1.f), 0);
+		GoldTitle->SetVisibility(ESlateVisibility::Collapsed);
+		UCanvasPanel* GoldPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementGuaranteedGoldPanel"));
+		GoldPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Place(Gold, GoldPanel, FVector2D::ZeroVector, FVector2D(1206.f, 350.f), 2);
+		UImage* GoldPanelContract = AddImage(Blueprint, GoldPanel,
+			TEXT("SettlementGoldPanelPlateArt"), BoardInterior, nullptr,
+			FVector2D::ZeroVector, FVector2D(1.f), 0);
+		GoldPanelContract->SetVisibility(ESlateVisibility::Collapsed);
+		UImage* GoldRingContract = AddImage(Blueprint, GoldPanel,
+			TEXT("SettlementGoldCoinRingArt"), StepCoinActive, nullptr,
+			FVector2D::ZeroVector, FVector2D(1.f), 0);
+		GoldRingContract->SetVisibility(ESlateVisibility::Collapsed);
+		AddImage(Blueprint, GoldPanel, TEXT("SettlementGoldAmountWindowArt"),
+			ParchmentWindow, nullptr, FVector2D(704.f, 32.f), FVector2D(446.f, 286.f), 1);
+		AddAspectImage(Blueprint, GoldPanel, TEXT("SettlementGoldCoin"), GoldCoin, nullptr,
+			FVector2D(150.f, 24.f), FVector2D(300.f, 300.f), 2);
+		AddText(Blueprint, GoldPanel, TEXT("SettlementGuaranteedGoldLabel"),
+			NSLOCTEXT("RewardSettlement", "GuaranteedGoldC03", "획득 골드"), 30,
+			FVector2D(754.f, 92.f), FVector2D(346.f, 54.f), 3);
+		AddText(Blueprint, GoldPanel, TEXT("SettlementGoldGain"),
+			NSLOCTEXT("RewardSettlement", "GoldPreviewC03", "+350 G"), 48,
+			FVector2D(754.f, 158.f), FVector2D(346.f, 76.f), 3);
+		AddText(Blueprint, Gold, TEXT("SettlementGoldContinueHint"),
+			FText::GetEmpty(), 1, FVector2D::ZeroVector, FVector2D(1.f), 0)->
+			SetVisibility(ESlateVisibility::Collapsed);
+
+		// 단계 4는 룸 데이터가 가진 아티팩트 후보만 표시한다. 골드 위젯은
+		// 부모부터 완전히 다른 switcher 자식이므로 이 화면에 섞일 수 없다.
+		UCanvasPanel* Choice = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SettlementChoiceStep"));
+		Choice->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Switcher->AddChild(Choice);
+		Switcher->SetActiveWidgetIndex(0);
+		UTextBlock* ChoiceTitle = AddText(Blueprint, Choice,
+			TEXT("SettlementArtifactChoiceTitle"), FText::GetEmpty(), 1,
+			FVector2D::ZeroVector, FVector2D(1.f), 0);
+		ChoiceTitle->SetVisibility(ESlateVisibility::Collapsed);
+		UTexture2D* ChoiceIcons[] = {
+			PreviewArtifacts[0] != nullptr ? PreviewArtifacts[0] : Equipment,
+			PreviewArtifacts[1] != nullptr ? PreviewArtifacts[1] : Equipment,
+			PreviewArtifacts[2] != nullptr ? PreviewArtifacts[2] : Equipment
+		};
+		const FText ChoiceNames[] = {
+			NSLOCTEXT("RewardSettlement", "ArtifactA_V5", "피의 성배"),
+			NSLOCTEXT("RewardSettlement", "ArtifactB_V5", "야수의 송곳니"),
+			NSLOCTEXT("RewardSettlement", "ArtifactC_V5", "행운의 주화") };
+		const float ChoiceX[] = { 98.f, 458.f, 818.f };
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			UCanvasPanel* Mount = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(), *FString::Printf(TEXT("SettlementChoiceMount_%d"), Index));
+			Mount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			Place(Choice, Mount, FVector2D(ChoiceX[Index], 10.f), FVector2D(302.f, 338.f), 1);
+			UImage* BackingContract = AddImage(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementCardBackground_%d"), Index), CardFrame,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			BackingContract->SetVisibility(ESlateVisibility::Collapsed);
+			AddImage(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementCardFrame_%d"), Index), CardFrame, nullptr,
+				FVector2D(6.f, 6.f), FVector2D(290.f, 326.f), 1);
+			AddScaleImage(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementChoiceIconFit_%d"), Index),
+				*FString::Printf(TEXT("SettlementChoiceIcon_%d"), Index), ChoiceIcons[Index],
+				FVector2D(64.f, 104.f), FVector2D(174.f, 174.f), 2);
+			UImage* NamePlateContract = AddImage(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementCardNamePlate_%d"), Index), StepBackground,
+				nullptr, FVector2D::ZeroVector, FVector2D(1.f), 0);
+			NamePlateContract->SetVisibility(ESlateVisibility::Collapsed);
+			AddText(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementChoiceName_%d"), Index), ChoiceNames[Index], 20,
+				FVector2D(30.f, 34.f), FVector2D(242.f, 52.f), 3);
+			UImage* SelectedOverlay = AddImage(Blueprint, Mount,
+				*FString::Printf(TEXT("SettlementCardSelectedOverlay_%d"), Index),
+				CardSelectedOverlay, nullptr, FVector2D::ZeroVector, FVector2D(302.f, 338.f), 4);
+			SelectedOverlay->SetVisibility(ESlateVisibility::Collapsed);
+			UButton* Pick = Blueprint->WidgetTree->ConstructWidget<UButton>(
+				UButton::StaticClass(), *FString::Printf(TEXT("SettlementChoiceButton_%d"), Index));
+			ApplyTransparentButtonStyle(Pick);
+			Place(Mount, Pick, FVector2D::ZeroVector, FVector2D(302.f, 338.f), 5);
+		}
+
+		// 기존 native BindWidget 계약은 숨은 빈 위젯으로만 유지한다.
+		UTextBlock* GoldBalance = AddText(Blueprint, Design, TEXT("mGoldBalanceText"),
+			FText::GetEmpty(), 1, FVector2D::ZeroVector, FVector2D(1.f), 0);
+		GoldBalance->SetVisibility(ESlateVisibility::Collapsed);
+		for (const FName Name : { FName(TEXT("mSummaryRowsBox")), FName(TEXT("mMercenaryRowsBox")) })
+		{
+			UVerticalBox* Box = Blueprint->WidgetTree->ConstructWidget<UVerticalBox>(
+				UVerticalBox::StaticClass(), Name);
+			Box->SetVisibility(ESlateVisibility::Collapsed);
+			Place(Design, Box, FVector2D::ZeroVector, FVector2D(1.f), 0);
+		}
+
+		UCanvasPanel* NextHolder = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("NextButtonHolder"));
+		// V9 원자 파츠 계약: CTA의 바탕과 장식 프레임도 별도 레이어다.
+		Place(Shell, NextHolder, FVector2D(568.f, 696.f), FVector2D(400.f, 94.f), 6);
+		AddImage(Blueprint, NextHolder, TEXT("NextButtonBackgroundArt"), CtaBackground, nullptr,
+			FVector2D::ZeroVector, FVector2D(400.f, 94.f), 0);
+		UImage* CtaFrameArt = AddImage(Blueprint, NextHolder, TEXT("NextButtonFrameArt"), CtaBackground,
+			nullptr, FVector2D::ZeroVector, FVector2D(400.f, 94.f), 1);
+		CtaFrameArt->SetVisibility(ESlateVisibility::Collapsed);
+		AddText(Blueprint, NextHolder, TEXT("mNextButtonText"),
+			NSLOCTEXT("RewardSettlement", "NextC03", "다음"), 30,
+			FVector2D(40.f, 18.f), FVector2D(320.f, 58.f), 2);
+		UButton* Next = Blueprint->WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), TEXT("mNextButton"));
+		ApplyTransparentButtonStyle(Next);
+		Place(NextHolder, Next, FVector2D::ZeroVector, FVector2D(400.f, 94.f), 5);
+
+		Blueprint->WidgetTree->ForEachWidget([Blueprint](UWidget* Widget)
+		{
+			if (Widget != nullptr
+				&& !Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()))
+			{
+				Blueprint->OnVariableAdded(Widget->GetFName());
+			}
+		});
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+		const FString Filename = FPackageName::LongPackageNameToFilename(
+			Blueprint->GetOutermost()->GetName(), FPackageName::GetAssetPackageExtension());
+		checkf(UPackage::SavePackage(Blueprint->GetPackage(), Blueprint, *Filename,
+			FSavePackageArgs()), TEXT("Could not save V3 reward WBP"));
+		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_V3_BUILD success asset=%s"), AssetPath);
+	}
+
+	void Verify()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		checkf(Blueprint != nullptr && Blueprint->WidgetTree != nullptr,
+			TEXT("V3 reward settlement WBP is missing"));
+		auto Require = [Blueprint](const FName Name, UClass* Expected)
+		{
+			UWidget* Widget = Blueprint->WidgetTree->FindWidget(Name);
+			checkf(Widget != nullptr && Widget->IsA(Expected),
+				TEXT("V3 reward widget %s is missing or has wrong type"), *Name.ToString());
+		};
+		Require(TEXT("SettlementModalBackgroundArt"), UImage::StaticClass());
+		Require(TEXT("SettlementModalOuterFrameArt"), UImage::StaticClass());
+		Require(TEXT("SettlementHeaderSection"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementHeaderBackgroundArt"), UImage::StaticClass());
+		Require(TEXT("SettlementHeaderFrameArt"), UImage::StaticClass());
+		Require(TEXT("SettlementBodySection"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementBodyBackgroundArt"), UImage::StaticClass());
+		Require(TEXT("SettlementBodyFrameArt"), UImage::StaticClass());
+		Require(TEXT("SettlementStepBadgeMount"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementStepBackgroundArt"), UImage::StaticClass());
+		Require(TEXT("SettlementStepFrameArt"), UImage::StaticClass());
+		Require(TEXT("SettlementStepText"), UTextBlock::StaticClass());
+		Require(TEXT("SettlementStepSwitcher"), UWidgetSwitcher::StaticClass());
+		Require(TEXT("SettlementChestAura"), UImage::StaticClass());
+		Require(TEXT("SettlementChestArt"), UImage::StaticClass());
+		Require(TEXT("SettlementChestButton"), UButton::StaticClass());
+		Require(TEXT("SettlementGoldStep"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementGoldRewardTitle"), UTextBlock::StaticClass());
+		Require(TEXT("SettlementGuaranteedGoldPanel"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementGoldPanelPlateArt"), UImage::StaticClass());
+		Require(TEXT("SettlementGoldCoinRingArt"), UImage::StaticClass());
+		Require(TEXT("SettlementGoldAmountWindowArt"), UImage::StaticClass());
+		Require(TEXT("SettlementGuaranteedGoldLabel"), UTextBlock::StaticClass());
+		Require(TEXT("SettlementGoldContinueHint"), UTextBlock::StaticClass());
+		Require(TEXT("SettlementChoiceStep"), UCanvasPanel::StaticClass());
+		Require(TEXT("SettlementArtifactChoiceTitle"), UTextBlock::StaticClass());
+		Require(TEXT("NextButtonBackgroundArt"), UImage::StaticClass());
+		Require(TEXT("NextButtonFrameArt"), UImage::StaticClass());
+		Require(TEXT("mNextButton"), UButton::StaticClass());
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			Require(*FString::Printf(TEXT("SettlementExpRowPlate_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementExpPortraitRing_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementExpLevelWindow_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementExpProgressTrack_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementExpXpBadge_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementCardBackground_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementCardFrame_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementCardNamePlate_%d"), Index), UImage::StaticClass());
+			Require(*FString::Printf(TEXT("SettlementCardSelectedOverlay_%d"), Index), UImage::StaticClass());
+		}
+		auto RequireCanvasPlacement = [Blueprint](const FName Name,
+			const FVector2D ExpectedPosition, const FVector2D ExpectedSize)
+		{
+			UWidget* Widget = Blueprint->WidgetTree->FindWidget(Name);
+			UCanvasPanelSlot* Slot = Widget != nullptr
+				? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
+			checkf(Slot != nullptr
+				&& Slot->GetPosition().Equals(ExpectedPosition, .01f)
+				&& Slot->GetSize().Equals(ExpectedSize, .01f),
+				TEXT("V10 single-master placement mismatch: %s"), *Name.ToString());
+		};
+		RequireCanvasPlacement(TEXT("SettlementHeaderSection"),
+			FVector2D(485.f, 26.f), FVector2D(566.f, 136.f));
+		RequireCanvasPlacement(TEXT("SettlementStepBadgeMount"),
+			FVector2D(98.f, 276.f), FVector2D(196.f, 48.f));
+		RequireCanvasPlacement(TEXT("SettlementBodySection"),
+			FVector2D(98.f, 258.f), FVector2D(1326.f, 482.f));
+		RequireCanvasPlacement(TEXT("NextButtonHolder"),
+			FVector2D(568.f, 696.f), FVector2D(400.f, 94.f));
+		checkf(Blueprint->WidgetTree->FindWidget(TEXT("HeaderBlankArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("MainPanelArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("StepCoinArt_1")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementFrameArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementHeaderPlateArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementContentPanelArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementStepBadgeArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementExpRowArt_0")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementGuaranteedGoldPanelArt")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("SettlementChoiceCard_0")) == nullptr
+			&& Blueprint->WidgetTree->FindWidget(TEXT("NextButtonArt")) == nullptr,
+			TEXT("V10 reward WBP still contains retired composite UI chrome"));
+		UWidgetSwitcher* Switcher = CastChecked<UWidgetSwitcher>(
+			Blueprint->WidgetTree->FindWidget(TEXT("SettlementStepSwitcher")));
+		checkf(Switcher->GetChildrenCount() == 4 && Switcher->GetActiveWidgetIndex() == 0,
+			TEXT("V3 reward switcher contract failed"));
+		checkf(Blueprint->GeneratedClass != nullptr
+			&& Blueprint->GeneratedClass->IsChildOf(URewardSettlementWidgetBase::StaticClass()),
+			TEXT("V3 reward generated class is invalid"));
+		UE_LOG(LogTemp, Display, TEXT("RD_REWARD_SETTLEMENT_V3_VERIFY success"));
 	}
 }
 
