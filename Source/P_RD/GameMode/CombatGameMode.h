@@ -26,7 +26,9 @@ class UPlayerUnitModel;
 class UTexture2D;
 class USkillComponentModel;
 class UStaticSkillData;
+struct FCombatFloatingLogRequest;
 struct FSkillDetailUI;
+struct FUnitPredictionUI;
 class USRPGMoveBuildAction;
 struct FTileIndex;
 enum class ECombatInputType : uint8;
@@ -257,8 +259,40 @@ protected:
 		int32 SkillIndex, OUT FSkillDetailUI& OutDetail) const;
 	void PushPlayerMetaUIData() const;
 
-	void PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview = true) const;
+private:
+	/**
+	 * @brief 턴 이벤트 로그를 플로팅 로그 요청 목록으로 변환한다(예측/실전 공용 빌더).
+	 *
+	 * @details 표시 경로 구분(mIsPreview)은 여기서 정하지 않는다 — 어느 모델로
+	 * 흘려보낼지는 호출자(PushSimulationPreviewUIData/PushCombatEventUIData)의 몫이다.
+	 * @param bBindMotionIndices 참이면 (턴/액션/모션) 인덱스를 요청에 실어, 모션
+	 *        종료(MotionFinished) 단위 정리가 가능하게 한다. 실전 juice 로그는
+	 *        수명으로만 사라지므로 인덱스를 묶지 않는다.
+	 */
+	void BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEventLog>& TurnEventLogs,
+		bool bBindMotionIndices, OUT TArray<FCombatFloatingLogRequest>& OutRequests) const;
 
+	/**
+	 * @brief 유닛별 예측 요약(HP 증감·사망·도착 타일)을 이벤트 로그에서 집계한다.
+	 *
+	 * @details HP 증감은 HP 속성 로그의 Magnitude 합, 사망은 점유 Exit 로그,
+	 * 도착 타일은 마지막 Move/Enter 로그다. 상태이상은 로그가 델타뿐이라 비워 둔다.
+	 */
+	TArray<FUnitPredictionUI> BuildUnitPredictions(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
+
+public:
+	/**
+	 * @brief 시뮬레이션 미리보기 결과를 미리보기 뷰모델(USimulationPreviewUIModel)로 내린다.
+	 *
+	 * @details BeginPreview로 새 세대를 열고 로그 배치·유닛 예측을 같은 세대로 넣는다.
+	 * 실전 뷰모델의 표시 상태는 건드리지 않는다.
+	 */
+	void PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
+
+	/** @brief 끝난 실전 턴의 이벤트 로그를 실전 뷰모델(UCombatUIModel)로 내린다. */
+	void PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
+
+protected:
 	void PushCombatRewardUIData() const;
 	void PushCombatRewardChoicesUIData() const;
 

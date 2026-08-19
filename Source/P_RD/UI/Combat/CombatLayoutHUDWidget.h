@@ -754,6 +754,15 @@ private:
 	UFUNCTION() void HandleCombatFloatingLog(FCombatFloatingLogRequest Request);
 	UFUNCTION() void HandleCombatFloatingLogMotionFinished(int32 MotionIndex);
 	UFUNCTION() void HandleCombatFloatingLogsCleared();
+
+	/* 미리보기 로그는 예측 전용 모델(USimulationPreviewUIModel)에서 따로 받는다.
+	 * 실전 로그와 저장 자리가 달라, 미리보기를 버릴 때 실전 표시가 같이 지워지지 않는다. */
+	/** @brief 미리보기 배치 수신. 이전 미리보기 표시를 걷고 새 배치를 즉시 스폰한다. */
+	UFUNCTION() void HandleSimulationPreviewBatch(FCombatEventBatchUI Batch);
+	/** @brief 미리보기가 통째로 버려졌다. 미리보기 표시만 걷는다(실전 로그는 그대로). */
+	UFUNCTION() void HandleSimulationPreviewCleared();
+	/** @brief 대기 큐·화면에서 mIsPreview==true 인 로그만 퇴장시킨다(전체 클리어의 미리보기판). */
+	void RetireSimulationPreviewFloatingLogs();
 	void UpdateFloatingCombatLogQueue(float InDeltaTime);
 	void UpdateFloatingCombatLogs(float InDeltaTime);
 	void SpawnFloatingCombatLogAtWorld(const FCombatFloatingLogRequest& Request);

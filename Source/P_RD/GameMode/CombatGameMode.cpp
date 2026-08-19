@@ -28,6 +28,7 @@
 #include "UI/Combat/CombatUIDebugFixture.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
+#include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Reward/RewardUIModel.h"
 
@@ -423,16 +424,20 @@ void ACombatGameMode::InitializeCombat()
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
+		// 턴이 실제로 끝났다 — 남은 미리보기는 전제부터 낡았으니 예측 쪽만 통째로 버린다.
+		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		if (USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>())
 		{
-			PushSimulationFloatingLogs(SimulationSubsystem->ConsumeGameEventLogs(), false);
+			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
 		}
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
 		CancelPendingActionEndAfterCameraReturn();
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
+		// 행동이 시작되면 그 전의 예측 전제는 낡았다 — 미리보기만 통째로 버린다.
+		// (실전 juice 로그는 수명 규칙으로 스스로 사라진다.)
+		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
@@ -595,10 +600,11 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 		PushSkillBuildUIData(Phase);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
-		PushSimulationFloatingLogs(EventLogs);
+		PushSimulationPreviewUIData(EventLogs);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
+		// 무름(취소)은 실전 표시를 건드리지 않는다 — 미리보기만 통째로 버린다.
+		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
@@ -2109,38 +2115,29 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
 
-void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>& TurnEventLogs, bool IsPreview) const
+void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEventLog>& TurnEventLogs, const bool bBindMotionIndices, OUT TArray<FCombatFloatingLogRequest>& OutRequests) const
 {
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	UTileMapModel* TileMapModel = CombatModel->GetTileMap();
 	checkf(TileMapModel != nullptr, TEXT("타일맵 모델 nullptr"));
 
-	/* 새로운 시뮬마다 이전 남은 로그 지우기 */
-
-	if (IsPreview == true)
-	{
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
-	}
-
 	/* 모션 내 이벤트 로그 마다 UI 요청서 작성 함수 */
 
-	auto AddFloatingLogs = [IsPreview](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 TurnIndex, const int32 ActionIndex, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
+	auto AddFloatingLogs = [bBindMotionIndices](const FSRPGBoardActorEventLog& EventLog, const FVector& ViewActorLocation, const int32 TurnIndex, const int32 ActionIndex, const int32 MotionIndex, OUT int32& Sequence, OUT TArray<FCombatFloatingLogRequest>& Requests) {
 
-		auto MakeLogRequest = [IsPreview, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
+		auto MakeLogRequest = [bBindMotionIndices, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
 			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
-			Request.mTurnIndex = IsPreview == true ? TurnIndex : INDEX_NONE;
-			Request.mActionIndex = IsPreview == true ? ActionIndex : INDEX_NONE;
-			Request.mMotionIndex = IsPreview == true ? MotionIndex : INDEX_NONE;
-			Request.mIsPreview = IsPreview;
+			Request.mTurnIndex = bBindMotionIndices == true ? TurnIndex : INDEX_NONE;
+			Request.mActionIndex = bBindMotionIndices == true ? ActionIndex : INDEX_NONE;
+			Request.mMotionIndex = bBindMotionIndices == true ? MotionIndex : INDEX_NONE;
+			// mIsPreview는 여기서 정하지 않는다 — 표시 경로(예측/실전)는 호출자가 정한다.
 			return Request;
 			};
 
@@ -2208,7 +2205,6 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 	/* 시뮬레이션 로그 탐색 시작 */
 
 	int32 Sequence = 0;
-	TArray<FCombatFloatingLogRequest> Requests;
 	TMap<int32, FVector> SpawnLocations;
 	const int32 TurnNum = TurnEventLogs.Num();
 	for (int32 TurnIndex = 0; TurnIndex < TurnNum; ++TurnIndex)
@@ -2238,7 +2234,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 						continue;
 					}
 
-					AddFloatingLogs(*EventLog, SpawnLocationPair.Value, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, SpawnLocationPair.Value, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT OutRequests);
 				}
 
 				// 유닛 탐색
@@ -2258,7 +2254,7 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 					}
 
 					FVector ViewActorLocation = ViewActor->GetActorLocation();
-					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT OutRequests);
 				}
 
 				// 장애물 탐색
@@ -2278,15 +2274,109 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 					}
 
 					FVector ViewActorLocation = ViewActor->GetActorLocation();
-					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT Requests);
+					AddFloatingLogs(*EventLog, ViewActorLocation, TurnIndex, ActionIndex, MotionIndex, OUT Sequence, OUT OutRequests);
+				}
+			}
+		}
+	}
+}
+
+TArray<FUnitPredictionUI> ACombatGameMode::BuildUnitPredictions(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
+{
+	// 로그에 등장한 보드 액터 id마다 요약 하나. 등장 순서를 지켜 쌓는다.
+	// (모델 조회 없이 로그만으로 집계한다 — 예측은 로그가 이미 전부를 안다.)
+	TArray<FUnitPredictionUI> Predictions;
+	TMap<int32, int32> PredictionIndexById;
+
+	for (const FSRPGTurnEventLog& TurnLog : TurnEventLogs)
+	{
+		for (const FSRPGActionEventLog& ActionLog : TurnLog.mActionEventLogs)
+		{
+			for (const FSRPGMotionEventLog& MotionLog : ActionLog.mMotionEventLogs)
+			{
+				for (const TPair<int32, FSRPGBoardActorEventLog>& EventLogPair : MotionLog.mBoardActorEventLogs)
+				{
+					int32 PredictionIndex = INDEX_NONE;
+					if (const int32* FoundIndex = PredictionIndexById.Find(EventLogPair.Key))
+					{
+						PredictionIndex = *FoundIndex;
+					}
+					else
+					{
+						FUnitPredictionUI& NewPrediction = Predictions.AddDefaulted_GetRef();
+						NewPrediction.mUnitId = EventLogPair.Key;
+						PredictionIndex = Predictions.Num() - 1;
+						PredictionIndexById.Add(EventLogPair.Key, PredictionIndex);
+					}
+					FUnitPredictionUI& Prediction = Predictions[PredictionIndex];
+
+					// HP 증감: HP 속성 로그의 Magnitude 합. 피해는 음수로 온다.
+					for (const FSRPGAttributeEffectEventLog& AttrLog : EventLogPair.Value.mAttributeEffectEventLogs)
+					{
+						if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetHPAttribute())
+						{
+							Prediction.mHPDelta += AttrLog.mMagnitude;
+						}
+					}
+
+					// 사망/도착 타일: 점유 로그에서 Exit=퇴장(사망·제거),
+					// Move/Enter=도달 타일(마지막 값이 최종 자리).
+					for (const FSRPGTileEffectEventLog& TileLog : EventLogPair.Value.mTileEffectEventLogs)
+					{
+						if (TileLog.mOccupancyState == ESRPGTileOccupancyState::Exit)
+						{
+							Prediction.mWillDie = true;
+						}
+						else if (TileLog.mOccupancyState == ESRPGTileOccupancyState::Move
+							|| TileLog.mOccupancyState == ESRPGTileOccupancyState::Enter)
+						{
+							Prediction.mPredictedTile = TileLog.mNextTileIndex;
+						}
+					}
+
+					// mPredictedStatuses는 채우지 않는다 — 태그 로그(mTagEffectEventLogs)는
+					// 증감(델타)뿐이라 절대 스택 수를 지어낼 수 없다. 절대값 공급 경로가
+					// 생기면 그때 채운다.
 				}
 			}
 		}
 	}
 
-	mCombatUIModel->SetCombatEventBatch(
-		IsPreview ? ECombatEventDataSourceUI::SimulationPreview : ECombatEventDataSourceUI::LiveCombat,
-		Requests);
+	return Predictions;
+}
+
+void ACombatGameMode::PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	USimulationPreviewUIModel* SimulationPreviewUIModel = mCombatUIModel->GetSimulationPreviewUIModel();
+	checkf(SimulationPreviewUIModel != nullptr, TEXT("시뮬레이션 미리보기 UI Model nullptr"));
+
+	// 새 미리보기 세대를 연다 — 이전 미리보기 payload는 여기서 통째로 버려진다.
+	const int32 PreviewGeneration = SimulationPreviewUIModel->BeginPreview();
+
+	TArray<FCombatFloatingLogRequest> Requests;
+	BuildCombatFloatingLogRequests(TurnEventLogs, /*bBindMotionIndices=*/true, OUT Requests);
+
+	// 미리보기 표시 규칙(수명 소멸 없음·즉시 스폰)은 이 경로가 정한다 — 빌더는 중립이다.
+	for (FCombatFloatingLogRequest& Request : Requests)
+	{
+		Request.mIsPreview = true;
+	}
+
+	SimulationPreviewUIModel->SetPreviewEventBatch(PreviewGeneration, Requests);
+	SimulationPreviewUIModel->SetPredictedUnits(PreviewGeneration, BuildUnitPredictions(TurnEventLogs));
+}
+
+void ACombatGameMode::PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	TArray<FCombatFloatingLogRequest> Requests;
+	BuildCombatFloatingLogRequests(TurnEventLogs, /*bBindMotionIndices=*/false, OUT Requests);
+
+	// 실전 juice 로그다. mIsPreview는 빌더 기본값(false) 그대로 둔다.
+	mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::LiveCombat, Requests);
 }
 
 void ACombatGameMode::ShowSkillDetailPreview(UUnitModel* UnitModel,

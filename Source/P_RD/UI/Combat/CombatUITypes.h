@@ -171,6 +171,8 @@ struct FCombatFloatingLogRequest
 };
 
 /** @brief UI에 전달된 전투 이벤트가 예측 결과인지 실제 전투 결과인지 구분한다. */
+// 라우팅은 모델이 나눠 든다(예측=USimulationPreviewUIModel, 실전=UCombatUIModel) —
+// 이 태그는 어느 경로에서 온 배치인지 기록만 한다(로그/디버그용).
 UENUM(BlueprintType)
 enum class ECombatEventDataSourceUI : uint8
 {
@@ -193,6 +195,18 @@ struct FCombatEventBatchUI
 	UPROPERTY(BlueprintReadOnly) TArray<FCombatFloatingLogRequest> mFloatingLogs;
 };
 
+/** @brief 시뮬레이션 미리보기 뷰모델에서 무엇이 바뀌었는지 도메인 구분(부분 갱신용). */
+// ECombatUIDomain의 미리보기판이다. 실전 도메인과 섞지 않는다 — 미리보기 위젯은
+// 이 값만 보고 자기 표시를 갱신하고, 실전 위젯은 이 알림을 아예 듣지 않는다.
+UENUM(BlueprintType)
+enum class ESimulationPreviewDomainUI : uint8
+{
+	All,
+	Events,
+	Units,
+	PendingAction
+};
+
 /** @brief 유닛 머리 위 HP바에 표시할 상태이상 한 칸(버프/디버프 아이콘 + 스택 수). */
 // UI 필요값:
 // - mTag: 어떤 상태이상인지(요새화/신속/약화/취약 …). UI는 태그로만 받고 게임플레이 enum에 의존하지 않는다.
@@ -205,6 +219,28 @@ struct FStatusEffectUI
 
 	UPROPERTY(BlueprintReadOnly) FGameplayTag mTag;
 	UPROPERTY(BlueprintReadOnly) int32 mStackCount = 0;
+};
+
+/** @brief 시뮬레이션 미리보기가 예고하는 유닛 한 기의 결과 요약(HP 증감·사망·도착 타일). */
+// 소스 = FSRPGTurnEventLog 집계(ACombatGameMode::BuildUnitPredictions). 실전 스냅샷
+// (FUnitUI)과 저장 자리를 나눈다 — 예측은 실제와 다를 수 있고, 무르면 실전을 건드리지
+// 않고 통째로 버려져야 한다. mPredictedHP(절대값)는 1차 구현에서 보류 — 델타만 나른다.
+// (FStatusEffectUI 정의 뒤에 두어야 해서 ESimulationPreviewDomainUI와 자리가 떨어져 있다.)
+USTRUCT(BlueprintType)
+struct FUnitPredictionUI
+{
+	GENERATED_BODY()
+
+	/** @brief FUnitUI.mUnitId와 같은 id 공간. */
+	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
+	/** @brief 예측 구간 동안의 HP 증감 합. 음수면 피해. */
+	UPROPERTY(BlueprintReadOnly) float mHPDelta = 0.f;
+	/** @brief 예측 구간 안에서 판을 떠나는가(사망/제거 Exit 로그 기준). */
+	UPROPERTY(BlueprintReadOnly) bool mWillDie = false;
+	/** @brief 예측 구간이 끝났을 때 서 있을 타일. 이동 로그가 없으면 Invalid. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mPredictedTile = FTileIndex::Invalid;
+	/** @brief 예측 상태이상. 이벤트 로그의 태그 값은 증감(델타)뿐이라 절대 스택을 지어낼 수 없어 1차에서는 비워 둔다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mPredictedStatuses;
 };
 
 /** @brief 유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치). */
