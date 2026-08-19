@@ -170,6 +170,29 @@ struct FCombatFloatingLogRequest
 	UPROPERTY(BlueprintReadWrite) bool mIsPreview = false;
 };
 
+/** @brief UI에 전달된 전투 이벤트가 예측 결과인지 실제 전투 결과인지 구분한다. */
+UENUM(BlueprintType)
+enum class ECombatEventDataSourceUI : uint8
+{
+	None,
+	SimulationPreview,
+	LiveCombat
+};
+
+/**
+ * @brief 시뮬레이션과 실제 전투가 공통으로 사용하는 UI 이벤트 모델 스냅샷.
+ * @details UI는 원본 전투 객체를 읽지 않고 이 데이터만 구독하므로 두 실행 경로를 같은 방식으로 표시할 수 있다.
+ */
+USTRUCT(BlueprintType)
+struct FCombatEventBatchUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) ECombatEventDataSourceUI mSource = ECombatEventDataSourceUI::None;
+	UPROPERTY(BlueprintReadOnly) int32 mRevision = 0;
+	UPROPERTY(BlueprintReadOnly) TArray<FCombatFloatingLogRequest> mFloatingLogs;
+};
+
 /** @brief 유닛 머리 위 HP바에 표시할 상태이상 한 칸(버프/디버프 아이콘 + 스택 수). */
 // UI 필요값:
 // - mTag: 어떤 상태이상인지(요새화/신속/약화/취약 …). UI는 태그로만 받고 게임플레이 enum에 의존하지 않는다.
@@ -315,14 +338,31 @@ enum class ECombatSkillHitShapeUI : uint8
 	None,
 	Single,     // 단일 타일
 	Cross,      // 십자형 폭발
-	Circle      // 원형
+	Circle,     // 원형
+	// 8방향(직교+대각). 게임플레이 진실은 TileMapModel::GetEffectTiles의
+	// EEffectPattern::Star -- 예전에는 Cross로 뭉개져 대각 줄이 안 그려졌다.
+	Star
+};
+
+/**
+ * @brief 영향 시점 타일을 정하는 타겟 패턴. 스킬데이터 ETargetPattern의 UI 거울.
+ *
+ * @details LineToTarget은 시전자→조준 타일 경로 전체가 영향 시점이 된다
+ * (PR #466). 모식도는 이 값으로 시전자→조준 방향의 경로 점선을 그린다.
+ */
+UENUM(BlueprintType)
+enum class ECombatSkillTargetPatternUI : uint8
+{
+	Default,        // 조준 타일 한 칸 (ETargetPattern::TargetOnly)
+	LineToTarget    // 시전자에서 조준 타일까지의 경로 전체
 };
 
 /** @brief 스킬 조준/타격 가이드 표시값(스킬데이터가 "UI 가이드라인 출력용"이라 명시한 메타). */
-// 조준 단계에서 "사거리 N / 십자 범위" 같은 안내와 가이드 형태를 그리기 위한 값이다.
-// 주의: 실제 조준 가능 타일의 색칠은 여기서 하지 않는다 — 그건 ATileMap 쿼리 결과(타일맵 파트(ATileMap) 하이라이트)다.
-//       이 struct는 "스킬 스펙 안내/예비 형태"만 담고, 확정 조준 타일은 게임플레이가 계산해 타일 하이라이트로 내려준다.
-// 소스 = StaticSkillData(AimPattern/AimRange/EffectPattern/EffectArea/AimBlockerMask/EffectBlockerMask).
+// 이 struct가 먹이는 것은 판 밖의 개략 모식도(무장애물 가정 개략도)다 — 상세창의
+// 9x9 전술판처럼 "모양과 거리"만 설명하고, 장애물/점유에 따른 실제 차단은 흉내내지 않는다.
+// 권위 있는 판 위 색칠은 여전히 타일맵 하이라이트다: 게임플레이가 ATileMap 쿼리로
+// 확정 조준/영향 타일을 계산해 내려주고, 이 값으로 판을 다시 칠하면 안 된다.
+// 소스 = StaticSkillData(AimPattern/AimRange/EffectPattern/EffectArea/AimBlockerMask/EffectBlockerMask/TargetPattern).
 USTRUCT(BlueprintType)
 struct FSkillTargetingUI
 {
@@ -345,6 +385,8 @@ struct FSkillTargetingUI
 	 */
 	UPROPERTY(BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
+	/** @brief 영향 시점 패턴. LineToTarget이면 모식도가 시전자→조준 경로를 그린다. */
+	UPROPERTY(BlueprintReadOnly) ECombatSkillTargetPatternUI mTargetPattern = ECombatSkillTargetPatternUI::Default;
 };
 
 /**

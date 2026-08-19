@@ -1,7 +1,7 @@
 # 전투 UI ↔ 게임플레이 API 계약
 
 > 작성: 박용수(UI) · 기준 코드: `UCombatUIModel` / `CombatUITypes.h`
-> 회의(2026-06-15) 합의 = **데이터/비주얼 분리 + MVVM**. UI는 게임플레이 객체(`UUnitData`/`ATileMap`…)를 **직접 알지 않고**, 이 문서의 뷰 타입과 `UCombatUIModel` 계약만으로 동작한다.
+> 회의(2026-06-15) 합의 = **데이터/비주얼 분리 + MVVM**. UI는 게임플레이 객체(`UPlayerUnitModel`/`ATileMap`…)를 **직접 알지 않고**, 이 문서의 뷰 타입과 `UCombatUIModel` 계약만으로 동작한다.
 
 전투 UI와 게임플레이는 **`UCombatUIModel` 한 곳**에서만 만난다. 권장 소유 위치는 `USRPGCombatSubsystem`(전투 수명)이며, 실제 HUD 배선은 후속 PR에서 붙인다.
 
@@ -20,8 +20,8 @@
 |---|---|---|---|
 | Unit | `SetUnitUIs(TArray<FUnitUI>)` | `FUnitUI` | `mUnitId, mIsPlayer, mHP/mMaxHP, mMovementPoint/mMaxMovementPoint, mTile`(ATileMap 점유 거울값 — 권위는 타일맵 파트.mOccupantUnitId), `mWorldLocation`(머리위 HP바 투영용), `mStatusTags`(버프/디버프, enum 아닌 태그) |
 | Unit(상세) | `SetUnitDetail(FUnitDetailUI)` | `FUnitDetailUI` | 롱프레스 시 `mName, mLevel, mPortrait, mPassiveDescriptions`만(HP/스탯은 중복 보관 X — UI가 `mUnitId`로 FUnitUI에서 읽음) |
-| Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData Select*/Hit* 미러) |
-| Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 요청한 유닛 스킬의 `mDescription, mActionPointCost/mActionPointGain, mCooldownTurns, mDamageMin/mDamageMax, mCriticalDamage, mTargeting`(풀스펙 사거리/타격범위/곡사·관통). 스킬 index는 유닛별 슬롯이므로 플레이어 `FSkillUI`를 재조회하지 않음 |
+| Skill | `SetSkillUIs(TArray<FSkillUI>)` | `FSkillUI` | `mSkillIndex, mName, mIcon, mIsUsable, mTargeting`(사거리/형태 조준 가이드 = StaticSkillData AimPattern/EffectPattern 미러, 변환은 `SkillDetailUIBuilder` 단일 표) |
+| Skill(상세) | `SetSkillDetail(FSkillDetailUI)` | `FSkillDetailUI` | 롱프레스 시 요청한 유닛 스킬의 `mDescription, mActionPointCost/mActionPointGain, mCooldownTurns, mDamageMin/mDamageMax, mCriticalDamage, mTargeting`(풀스펙 사거리/타격범위 + `mAimBlockerMask`/`mEffectBlockerMask` 차단 레이어 비트마스크 + `mTargetPattern`). 옛 곡사/관통 bool 두 개는 차단 레이어 마스크로 대체됐다. 스킬 index는 유닛별 슬롯이므로 플레이어 `FSkillUI`를 재조회하지 않음 |
 | Turn | `SetTurnUI(FTurnUI)` | `FTurnUI` | `mCurrentUnitId, mRound, mPhase`(=`ECombatBuildPhaseUI`, **UI 전용**: AimSelection/Preview는 develop `ESRPGSkillBuildPhase`와 매핑), `mTurnOrderUnitIds` |
 | Equipment | `SetEquipmentUIs(TArray<FEquipmentUI>)` | `FEquipmentUI` | `mSlotIndex, mItemId, mName, mIcon, mIsEquipped, mRarityColor` |
 | Meta | `SetPlayerMeta(FPlayerMetaUI)` | `FPlayerMetaUI` | `mGold, mLevel, mExp/mMaxExp` (상단 상태바·보상) |
@@ -62,13 +62,14 @@
 
 ---
 
-## D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지
-현재는 비GAS **임시 어댑터**(`UCombatUIAdapter`)가 A의 `Set*`를 채우고 B의 입력을 처리한다(플레이스홀더·가상 적 포함). 실제 게임플레이 연결 시 어댑터 자리를 다음으로 대체:
+## D. 게임플레이(모호재/김준형) 측 연결 지점 — 실제 배선
+어댑터 계층은 없다 — **`ACombatGameMode`가 직접** A의 `Set*`를 채우고(`PushUnitUIData`/`PushSkillUIData`/`PushSkillDetailUIData`…) B의 입력 델리게이트를 구독해 처리한다. 즉 실제 경로는 `ACombatGameMode` → `UCombatUIModel` → 위젯이다.
 
-- **유닛/메타/턴 값**(A) ← `UUnitData`(GAS 폐기 후 일반 런타임 데이터)·`URunPersistData`. 현재 HP/Gold는 플레이스홀더.
+- **유닛/메타/턴 값**(A) ← `UPlayerUnitModel`/`UUnitModel`의 AttributeSet·`URunPersistData`.
 - **스킬 빌드 페이즈**(A.Turn.mPhase, `ECombatBuildPhaseUI`=UI 전용) ← AimSelection/Preview를 develop `ESRPGSkillBuildPhase`와 매핑. `ACombatGameMode::SelectSkill`/`OnChangeSkillBuildPhase`와 연동.
-- **데미지/큐**(A.Queue) ← `UCombatCalculatorFunctionLibrary::CalculateSkillResult`의 결과 델타(`FSkillCommitResult`)를 `FCombatQueueNode`로 변환해 `SetActionQueue` → 애니 단위마다 `ResolveFrontQueueNode`.
+- **데미지/큐**(A.Queue) ← 전투 계산 결과 델타를 `FCombatQueueNode`로 변환해 `SetActionQueue` → 애니 단위마다 `ResolveFrontQueueNode`.
 - **턴 이벤트** ← develop `USRPGCombatSubsystem` Begin/EndTurn 이벤트에 턴 표시 갱신 훅.
+- **모양 변환** ← `SkillDetailUIBuilder::ToSelectShape/ToHitShape` 단일 표. 화면별 사본 금지.
 
 ---
 
@@ -76,5 +77,12 @@
 - 큐 노드 묶음 단위(한 노드+태그 vs 효과별 분리) — 회의 미확정.
 - 적 정보 표시 = 작은 팝업 ❌ → **크게 뜨는 정보 패널**(회의 합의) 로 `FUnitDetailUI` 소비.
 - `mPhase`의 AimSelection/Preview ↔ develop `ESRPGSkillBuildPhase` 매핑값 확정.
-- 스킬 `mTargeting`(SelectShape/HitShape) ↔ develop 최종 SelectType/HitType enum 매핑 확정.
+- ~~스킬 `mTargeting` 모양 매핑~~ → 확정: `EAimPattern`/`EEffectPattern` ↔ `ECombatSkillSelectShapeUI`/`ECombatSkillHitShapeUI`(Star는 8방향 보존), 곡사/관통 bool → `mAimBlockerMask`/`mEffectBlockerMask` 비트마스크. 변환은 `SkillDetailUIBuilder`가 소유.
 - **예측 1급화(후속 PR)**: `FCombatQueueNode`의 예측 vs 실제 구분 플래그와 AoE 다중대상 동시표시 — 김준형 예측 API(Mock-up 후) 일정에 맞춰 별도 처리.
+
+---
+
+## F. push vs pull — 방(비전투) 화면의 두 채널
+전투 실시간 상태는 **push**(위 A: 상태가 바뀔 때마다 게임플레이가 `Set*`로 밀고 도메인 알림)로 흐른다. 반면 방/지도의 온디맨드 뷰는 **pull**이다 — 패널이 열려 있을 때만 보면 되는 값을 매번 밀어 두면 안 볼 값을 계속 만드는 셈이라, GameMode의 조회 API로 위젯이 물어본다(codeGlutton의 4d4070f8 선례: `GetInventoryView`, 이후 `GetMapRoomViews`/`GetRunControlView`/`GetPartyRosterView`).
+
+상점 상세는 이 둘의 조합이다: 위젯이 `UShopUIModel::RequestItemDetail`/`RequestOwnedSkillDetail`로 **의도만** 보내면, `AShopGameMode`가 DTO(`FSkillDetailUI`/`FCombatArtifactUI`)를 조립해 `SetSkillDetail`/`SetArtifactDetail`로 **push**하고 위젯은 `Detail` 도메인 알림에서 그린다 — 위젯은 어느 쪽 채널에서도 GameMode를 직접 잡지 않는다.

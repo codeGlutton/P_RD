@@ -17,6 +17,9 @@
 #include "Misc/AutomationTest.h"
 
 #include "Frontend/CharacterSelectTypes.h"
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailOverlayPresenter.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "Blueprint/GameViewportSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
@@ -102,7 +105,8 @@ void UMercenaryDetailTestResponder::HandleCombatCommand(
 	{
 		return;
 	}
-	if (Type == ECombatInputType::InspectUnitSkill)
+	if (Type == ECombatInputType::InspectUnitSkill
+		|| Type == ECombatInputType::LongPressSkill)
 	{
 		++mInspectSkillRequestCount;
 		if (IntPayload == mResponseSkillDetail.mSkillIndex)
@@ -700,15 +704,36 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		if (UButton* CloseCatch = Cast<UButton>(
 			DetailOverlay->GetWidgetFromName(TEXT("DetailCloseCatch"))))
 		{
+			TestEqual(TEXT("과거 닫기 받이는 비활성화"),
+				CloseCatch->GetVisibility(), ESlateVisibility::Collapsed);
 			CloseCatch->OnClicked.Broadcast();
-			TestEqual(TEXT("상세 받이를 누르면 닫힘"), DetailOverlay->GetVisibility(),
-				ESlateVisibility::Collapsed);
+			TestEqual(TEXT("상세 받이는 입력만 삼키고 상세를 유지"),
+				DetailOverlay->GetVisibility(),
+				ESlateVisibility::SelfHitTestInvisible);
+		}
+		if (UButton* Shield = Cast<UButton>(DetailOverlay->GetWidgetFromName(
+			TEXT("RuntimeDetailModalInputShield"))))
+		{
+			TestFalse(TEXT("새 전 화면 받이에는 닫기 이벤트가 없음"),
+				Shield->OnClicked.IsBound());
+			Shield->OnClicked.Broadcast();
+			TestEqual(TEXT("새 전 화면 받이를 눌러도 상세 유지"),
+				DetailOverlay->GetVisibility(),
+				ESlateVisibility::SelfHitTestInvisible);
+		}
+		if (UButton* CloseButton = Cast<UButton>(
+			DetailOverlay->GetWidgetFromName(TEXT("DetailCloseButton"))))
+		{
+			CloseButton->OnClicked.Broadcast();
+			TestEqual(TEXT("명시적인 닫기 버튼으로만 상세 종료"),
+				DetailOverlay->GetVisibility(), ESlateVisibility::Collapsed);
 		}
 	}
 
-	// 전투 HUD가 StaticSkillData의 Star를 UI용 Diagonal/Cross로 바꾸는
-	// 현재 계약을 고용 상세도 그대로 따른다. 여기서 타일맵의 8방향 판정을
-	// 따로 재해석하면 두 상세판이 서로 다른 그림을 보여 주게 된다.
+	// 전투 HUD가 StaticSkillData의 Star를 UI용 Diagonal(조준)/Star(타격)로
+	// 바꾸는 현재 계약을 고용 상세도 그대로 따른다. 타격 Star는 예전에 Cross로
+	// 뭉개졌지만, 게임플레이(TileMapModel::GetEffectTiles)가 8방향으로 치므로
+	// 이제 UI도 8방향(Star)을 보존한다.
 	KnightOnly[0].mSkillDetails[0].mAimPattern = EAimPattern::Star;
 	KnightOnly[0].mSkillDetails[0].mAimRange = 2;
 	KnightOnly[0].mSkillDetails[0].mEffectPattern = EEffectPattern::Star;
@@ -720,44 +745,36 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		KnightOnly[0].mSkillDetails[0].mDamageMax * 1.5f);
 	Board->SetCharacterOptions(KnightOnly, 3);
 	Board->TriggerSkillLongPressForTest(1);
-	UUserWidget* ParityOverlay = Board->GetSkillDetailOverlayForTest();
-	if (TestNotNull(TEXT("전투 HUD 상세 parity 겹"), ParityOverlay))
+	/*
+	 * 고용 상세는 이제 전투 HUD와 같은 프레젠터를 그대로 쓴다. 그림을 흉내낸
+	 * 구식 5x5 격자 단언 대신, 같은 변환기(SkillDetailUIBuilder)가 같은 모양을
+	 * 내는지와 프레젠터가 같은 칩 문구를 그리는지를 본다.
+	 */
+	FSkillDetailUI ParityDetail;
+	SkillDetailUIBuilder::FillFromFrontendOption(
+		KnightOnly[0].mSkillDetails[0], ParityDetail);
+	TestEqual(TEXT("Star 조준은 HUD와 같은 Diagonal 모양"),
+		ParityDetail.mTargeting.mSelectShape, ECombatSkillSelectShapeUI::Diagonal);
+	TestEqual(TEXT("Star 타격은 게임플레이와 같은 8방향(Star) 모양"),
+		ParityDetail.mTargeting.mHitShape, ECombatSkillHitShapeUI::Star);
+	TestEqual(TEXT("치명타는 전투 HUD와 같은 MaxDamage 1.5배"),
+		ParityDetail.mCriticalDamage, 15);
+	if (USkillDetailOverlayPresenter* Presenter = Board->GetSkillDetailPresenterForTest())
 	{
-		auto CellColor = [ParityOverlay](const TCHAR* Prefix,
-			const int32 Row, const int32 Column) -> FLinearColor
+		bool bFoundCriticalChip = false;
+		for (int32 ChipIndex = 0; ChipIndex < 5; ++ChipIndex)
 		{
-			const FString Name = FString::Printf(TEXT("%s_R%dC%d"),
-				Prefix, Row, Column);
-			if (const UImage* Cell = Cast<UImage>(
-				ParityOverlay->GetWidgetFromName(FName(*Name))))
+			if (Presenter->GetChipValueString(ChipIndex).Contains(TEXT("15")))
 			{
-				return Cell->GetColorAndOpacity();
+				bFoundCriticalChip = true;
+				break;
 			}
-			return FLinearColor::Transparent;
-		};
-		const FLinearColor SelectColor(0.28f, 0.60f, 0.95f, 0.95f);
-		const FLinearColor HitColor(0.90f, 0.32f, 0.30f, 0.95f);
-		const FLinearColor EmptyColor(0.10f, 0.085f, 0.065f, 0.55f);
-		// HUD SelectCovers(Diagonal)은 Star 선택을 5x5 사각으로 칠한다.
-		TestTrue(TEXT("Star 조준 대각 밖 셀도 HUD Diagonal 계약대로 선택"),
-			CellColor(TEXT("DetailSelectCell"), 1, 2).Equals(SelectColor, .001f));
-		TestTrue(TEXT("Star 조준 모서리도 HUD Diagonal 계약대로 선택"),
-			CellColor(TEXT("DetailSelectCell"), 0, 0).Equals(SelectColor, .001f));
-		// HUD HitCovers(Cross)은 Star 타격을 직교 십자로 칠한다.
-		TestTrue(TEXT("Star 타격 직교 셀은 HUD Cross 계약대로 타격"),
-			CellColor(TEXT("DetailHitCell"), 1, 2).Equals(HitColor, .001f));
-		TestTrue(TEXT("Star 타격 대각 셀은 HUD Cross 계약대로 비움"),
-			CellColor(TEXT("DetailHitCell"), 1, 1).Equals(EmptyColor, .001f));
-		if (const UTextBlock* Subtitle = Cast<UTextBlock>(
-			ParityOverlay->GetWidgetFromName(TEXT("DetailSubtitleText"))))
-		{
-			TestTrue(TEXT("치명타는 전투 HUD와 같은 MaxDamage 1.5배"),
-				Subtitle->GetText().ToString().Contains(TEXT("치명타피해 15")));
 		}
-		else
-		{
-			AddError(TEXT("전투 HUD parity 상세 부제 없음"));
-		}
+		TestTrue(TEXT("프레젠터 칩에 치명타 15가 실린다"), bFoundCriticalChip);
+	}
+	else
+	{
+		AddError(TEXT("고용 상세 프레젠터가 만들어지지 않았다"));
 	}
 
 	Board->ClickCard(0);
@@ -773,8 +790,14 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 
 	UButton* PartySlotButton = Cast<UButton>(
 		Board->WidgetTree->FindWidget(TEXT("PartySlotButton_0")));
+	UTextBlock* PartySlotName = Cast<UTextBlock>(
+		Board->WidgetTree->FindWidget(TEXT("PartySlotName_0")));
+	UTextBlock* PartySlotLevel = Cast<UTextBlock>(
+		Board->WidgetTree->FindWidget(TEXT("PartySlotLevel_0")));
 	UButton* AddButton = Cast<UButton>(
 		Board->WidgetTree->FindWidget(TEXT("HireAddButton")));
+	TestNotNull(TEXT("파티 슬롯 이름"), PartySlotName);
+	TestNotNull(TEXT("파티 슬롯 레벨 별도 줄"), PartySlotLevel);
 	if (TestNotNull(TEXT("상세 아래 추가 버튼"), AddButton))
 	{
 		TestTrue(TEXT("추가 버튼 동작이 묶여 있다"), AddButton->OnClicked.IsBound());
@@ -1245,6 +1268,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		FVector2D Position;
 	};
 	const FVector2D ActionPanelSize(396.172241f, 181.435410f);
+	const FMargin ActionLabelContentPadding(
+		ActionPanelSize.X * .082f, ActionPanelSize.Y * .178f,
+		ActionPanelSize.X * .082f, ActionPanelSize.Y * .202f);
 	const FActionPanelContract ActionPanels[] = {
 		{ TEXT("SkillTogglePanel"), TEXT("SkillTogglePlateMount"),
 			TEXT("SkillTogglePlate"), TEXT("SkillToggleButton"),
@@ -1311,8 +1337,10 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 				TestEqual(*FString::Printf(TEXT("%s 부모"), OverlayChild.Key),
 					OverlayChild.Value->GetParent(),
 					static_cast<UPanelWidget*>(Mount));
+				const FMargin ExpectedPadding = OverlayChild.Value == LabelCenter
+					? ActionLabelContentPadding : FMargin(0.f);
 				CheckOverlayContract(FString::Printf(TEXT("%s Overlay 자식"),
-					OverlayChild.Key), OverlayChild.Value, FMargin(0.f),
+					OverlayChild.Key), OverlayChild.Value, ExpectedPadding,
 					HAlign_Fill, VAlign_Fill);
 			}
 		}
@@ -1394,8 +1422,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Cast<UCanvasPanel>(EnemyAPPipRow));
 		if (UWidget* LegacyAPBar = Tree->FindWidget(TEXT("EnemyCritPlate")))
 		{
-			TestEqual(TEXT("몬스터 AP 보석 뒤 구식 막대는 숨김"),
-				LegacyAPBar->GetVisibility(), ESlateVisibility::Collapsed);
+			TestEqual(TEXT("몬스터 치명타 프레임은 용병 요약판과 같이 표시"),
+				LegacyAPBar->GetVisibility(),
+				ESlateVisibility::SelfHitTestInvisible);
 		}
 		for (int32 Index = 0; Index < 10; ++Index)
 		{
@@ -1530,8 +1559,6 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			FVector2D(375.f, 527.33f) },
 		{ TEXT("MercenaryHeroPortrait"), FVector2D(685.55f, 300.8f),
 			FVector2D(247.9f, 266.4f) },
-		{ TEXT("MercenaryInventoryPage"), FVector2D(610.f, 180.f),
-			FVector2D(1210.f, 700.f) },
 	};
 	for (const FMercenaryCanvasRect& Expected : CanonicalRects)
 	{
@@ -1641,12 +1668,24 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		UImage* InventoryPlate = Cast<UImage>(
 			Tree->FindWidget(TEXT("MercenaryInventoryTabPlate")));
 		UImage* PartyPlate = Cast<UImage>(Tree->FindWidget(TEXT("PartyPlate_2")));
+		UButton* InventoryButton = Cast<UButton>(
+			Tree->FindWidget(TEXT("MercenaryInventoryButton")));
 		if (TestNotNull(TEXT("인벤토리 탭 카드 판"), InventoryPlate)
 			&& TestNotNull(TEXT("용병 카드 판"), PartyPlate))
 		{
 			TestEqual(TEXT("인벤토리 탭은 용병 카드와 같은 에셋"),
 				InventoryPlate->GetBrush().GetResourceObject(),
 				PartyPlate->GetBrush().GetResourceObject());
+			const UCanvasPanelSlot* InventoryPlateSlot =
+				Cast<UCanvasPanelSlot>(InventoryPlate->Slot);
+			const UCanvasPanelSlot* InventoryButtonSlot = InventoryButton != nullptr
+				? Cast<UCanvasPanelSlot>(InventoryButton->Slot) : nullptr;
+			if (TestNotNull(TEXT("인벤토리 판 슬롯"), InventoryPlateSlot)
+				&& TestNotNull(TEXT("인벤토리 버튼 슬롯"), InventoryButtonSlot))
+			{
+				TestEqual(TEXT("인벤토리 입력면은 판 전체와 동일"),
+					InventoryButtonSlot->GetSize(), InventoryPlateSlot->GetSize());
+			}
 		}
 	}
 	UPanelWidget* InventoryPage = Cast<UPanelWidget>(
@@ -1713,7 +1752,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 
 	constexpr TCHAR CanonicalPortraitFramePath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/"
-			"T_KitA_Portrait_Frame.T_KitA_Portrait_Frame");
+			"T_KitA_Cell_Normal.T_KitA_Cell_Normal");
 	auto TestPortraitFrame = [this](UWidgetTree* WidgetTree,
 		const TCHAR* TestLabel)
 	{
@@ -1723,7 +1762,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (TestNotNull(TestLabel, Frame))
 		{
 			const UObject* Resource = Frame->GetBrush().GetResourceObject();
-			TestTrue(*FString::Printf(TEXT("%s canonical KitA frame"), TestLabel),
+			TestTrue(*FString::Printf(TEXT("%s canonical KitA cell"), TestLabel),
 				Resource != nullptr
 				&& Resource->GetPathName() == CanonicalPortraitFramePath);
 			UWidget* Hero = WidgetTree->FindWidget(TEXT("MercenaryHeroPortrait"));
@@ -1735,8 +1774,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 				&& TestNotNull(*FString::Printf(TEXT("%s hero Canvas 슬롯"), TestLabel),
 					HeroSlot))
 			{
-				TestTrue(*FString::Printf(TEXT("%s 테두리는 초상보다 위"), TestLabel),
-					FrameSlot->GetZOrder() > HeroSlot->GetZOrder());
+				TestTrue(*FString::Printf(TEXT("%s 셀은 초상보다 아래"), TestLabel),
+					FrameSlot->GetZOrder() < HeroSlot->GetZOrder());
 			}
 		}
 	};
@@ -1748,6 +1787,52 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	TestPortraitFrame(ModularMercenaryGenerated != nullptr
 		? ModularMercenaryGenerated->GetWidgetTreeArchetype() : nullptr,
 		TEXT("모듈형 용병 초상화 프레임"));
+
+	// 스킬 그림만 있고 실제 Button이 빠지면 모바일 탭은 아무 이벤트도 만들지
+	// 못한다. 인라인/모듈형 두 WBP 모두 프레임과 같은 터치 영역을 가져야 한다.
+	auto TestMercenarySkillButtons = [this](UWidgetTree* WidgetTree,
+		const TCHAR* TestLabel)
+	{
+		if (WidgetTree == nullptr)
+		{
+			AddError(FString::Printf(TEXT("%s 위젯 나무가 없다"), TestLabel));
+			return;
+		}
+		for (int32 Index = 0; Index < 6; ++Index)
+		{
+			UWidget* Frame = WidgetTree->FindWidget(FName(*FString::Printf(
+				TEXT("MercenarySkillFrame_%d"), Index)));
+			UButton* Button = Cast<UButton>(WidgetTree->FindWidget(FName(*FString::Printf(
+				TEXT("MercenarySkillButton_%d"), Index))));
+			if (TestNotNull(*FString::Printf(TEXT("%s 스킬 버튼 %d"), TestLabel, Index), Button)
+				&& TestNotNull(*FString::Printf(TEXT("%s 스킬 프레임 %d"), TestLabel, Index), Frame))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 스킬 버튼 부모 %d"), TestLabel, Index),
+					Button->GetParent(), Frame->GetParent());
+				UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(Frame->Slot);
+				UCanvasPanelSlot* ButtonSlot = Cast<UCanvasPanelSlot>(Button->Slot);
+				if (FrameSlot != nullptr && ButtonSlot != nullptr)
+				{
+					TestTrue(*FString::Printf(TEXT("%s 스킬 버튼 위치 %d"), TestLabel, Index),
+						ButtonSlot->GetPosition().Equals(FrameSlot->GetPosition(), .01f));
+					TestTrue(*FString::Printf(TEXT("%s 스킬 버튼 크기 %d"), TestLabel, Index),
+						ButtonSlot->GetSize().Equals(FrameSlot->GetSize(), .01f));
+					TestTrue(*FString::Printf(TEXT("%s 스킬 버튼 ZOrder %d"), TestLabel, Index),
+						ButtonSlot->GetZOrder() > FrameSlot->GetZOrder());
+				}
+				else
+				{
+					UOverlaySlot* OverlayButtonSlot = Cast<UOverlaySlot>(Button->Slot);
+					TestNotNull(*FString::Printf(TEXT("%s Overlay 입력 슬롯 %d"),
+						TestLabel, Index), OverlayButtonSlot);
+				}
+			}
+		}
+	};
+	TestMercenarySkillButtons(Tree, TEXT("인라인 용병판"));
+	TestMercenarySkillButtons(ModularMercenaryGenerated != nullptr
+		? ModularMercenaryGenerated->GetWidgetTreeArchetype() : nullptr,
+		TEXT("모듈형 용병판"));
 
 	UClass* MonsterTabClass = LoadClass<UUserWidget>(nullptr,
 		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound_C"));
@@ -1775,7 +1860,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (TestNotNull(TEXT("몬스터 canonical 초상화 프레임"), MonsterPortraitFrame))
 		{
 			const UObject* Resource = MonsterPortraitFrame->GetBrush().GetResourceObject();
-			TestTrue(TEXT("몬스터와 용병은 같은 KitA 초상화 프레임"),
+			TestTrue(TEXT("몬스터와 용병은 같은 KitA 초상화 셀"),
 				Resource != nullptr
 				&& Resource->GetPathName() == CanonicalPortraitFramePath);
 		}
@@ -1893,6 +1978,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	UWidget* InventoryPage = HUD->WidgetTree->FindWidget(
 		TEXT("MercenaryInventoryPage"));
 	UWidget* DetailSection = HUD->WidgetTree->FindWidget(TEXT("MercDetailSection"));
+	UButton* MercenarySkillButton1 = Cast<UButton>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillButton_1")));
 	UTextBlock* InventoryGold = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("MercenaryInventoryGoldText")));
 	UImage* InventoryArtifact0 = Cast<UImage>(HUD->WidgetTree->FindWidget(
@@ -1919,6 +2006,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("용병 요약판 이름"), AllyName)
 		|| !TestNotNull(TEXT("용병 내부 인벤토리 페이지"), InventoryPage)
 		|| !TestNotNull(TEXT("용병 상세 구역"), DetailSection)
+		|| !TestNotNull(TEXT("용병 첫 스킬 탭 영역"), MercenarySkillButton1)
 		|| !TestNotNull(TEXT("내부 인벤토리 골드"), InventoryGold)
 		|| !TestNotNull(TEXT("내부 인벤토리 첫 아티팩트"), InventoryArtifact0)
 		|| !TestNotNull(TEXT("내부 인벤토리 둘째 선택 버튼"), InventoryArtifactButton1)
@@ -1988,6 +2076,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		Close->OnClicked.IsBound());
 	TestTrue(TEXT("인벤토리 탭에 열기 동작이 묶여 있다"),
 		InventoryButton->OnClicked.IsBound());
+	TestTrue(TEXT("용병 스킬 탭에 상세 동작이 묶여 있다"),
+		MercenarySkillButton1->OnClicked.IsBound());
 	TestEqual(TEXT("전투 진입 때 용병 패널은 닫힘"),
 		Panel->GetVisibility(), ESlateVisibility::Collapsed);
 
@@ -2132,42 +2222,28 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		UButton* MonsterSkillButton0 = MonsterTab != nullptr
 			? Cast<UButton>(MonsterTab->GetWidgetFromName(TEXT("MonsterSkillButton_0")))
 			: nullptr;
-		if (TestNotNull(TEXT("몬스터 첫 스킬 롱프레스 받이"), MonsterSkillButton0))
+		if (TestNotNull(TEXT("몬스터 첫 스킬 탭 받이"), MonsterSkillButton0))
 		{
 			TestEqual(TEXT("상세 viewport는 몬스터 탭보다 위"),
 				HUD->GetDetailOverlayViewportZOrderForTest()
 					> HUD->GetMonsterTabViewportZOrderForTest(), true);
 			TestEqual(TEXT("실제 몬스터 스킬은 입력 가능"),
 				MonsterSkillButton0->GetVisibility(), ESlateVisibility::Visible);
-			TestTrue(TEXT("몬스터 스킬 누름 배선"),
-				MonsterSkillButton0->OnPressed.IsBound());
-			TestTrue(TEXT("몬스터 스킬 뗌 배선"),
-				MonsterSkillButton0->OnReleased.IsBound());
+			TestTrue(TEXT("몬스터 스킬 클릭 배선"),
+				MonsterSkillButton0->OnClicked.IsBound());
 			TestEqual(TEXT("몬스터 스킬 터치는 드래그 이탈 시 취소"),
 				MonsterSkillButton0->GetTouchMethod(), EButtonTouchMethod::PreciseTap);
 
-			// 짧은 탭은 상세 요청을 보내지 않는다.
-			MonsterSkillButton0->OnPressed.Broadcast();
-			TestTrue(TEXT("몬스터 스킬 롱프레스 후보 예약"),
-				HUD->IsMonsterSkillLongPressPendingForTest());
-			TestTrue(TEXT("몬스터 첫 스킬이 현재 후보"),
-				HUD->IsMonsterSkillPressActiveForTest(0));
-			MonsterSkillButton0->OnReleased.Broadcast();
-			TestFalse(TEXT("짧게 떼면 몬스터 스킬 후보 취소"),
-				HUD->IsMonsterSkillLongPressPendingForTest());
-			TestEqual(TEXT("짧은 탭은 스킬 상세를 청하지 않음"),
-				DetailResponder->mInspectSkillRequestCount, 0);
-
-			// 0.5초 발화는 DTO의 실제 index를 보내고, 응답 상세를 탭 위에 연다.
-			MonsterSkillButton0->OnPressed.Broadcast();
-			HUD->TriggerMonsterSkillLongPressForTest(0);
-			TestEqual(TEXT("몬스터 스킬 DTO index 왕복"),
+			// 전투 용병 스킬과 동일하게 한 번 탭하면 즉시 실제 DTO index를
+			// 보내고, 응답 상세를 몬스터 탭 위에 연다.
+			MonsterSkillButton0->OnClicked.Broadcast();
+			TestEqual(TEXT("한 번 탭한 몬스터 스킬 DTO index 왕복"),
 				DetailResponder->mLastPayload, MonsterSkillIndex);
-			TestEqual(TEXT("몬스터 스킬 상세 요청 한 번"),
+			TestEqual(TEXT("한 번 탭하면 몬스터 스킬 상세 요청 한 번"),
 				DetailResponder->mInspectSkillRequestCount, 1);
-			TestTrue(TEXT("몬스터 탭을 유지한 채 상세가 열림"),
+			TestTrue(TEXT("몬스터 탭을 유지한 채 상세가 즉시 열림"),
 				HUD->IsMonsterTabShown() && HUD->IsDetailOverlayShown());
-			TestFalse(TEXT("발화 뒤 몬스터 스킬 타이머 제거"),
+			TestFalse(TEXT("일반 탭 경로에는 롱프레스 타이머가 없음"),
 				HUD->IsMonsterSkillLongPressPendingForTest());
 			if (UGameViewportSubsystem* Viewport = UGameViewportSubsystem::Get(World))
 			{
@@ -2214,11 +2290,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 				HUD->GetDetailChipValueForTest(2), FString(TEXT("7턴")));
 			TestEqual(TEXT("실제 몬스터 상세 치명 칩"),
 				HUD->GetDetailChipValueForTest(4), FString(TEXT("65")));
-			const FString Summary = HUD->GetDetailSubtitleForTest();
-			TestTrue(TEXT("실제 상세 요약은 몬스터 AP 회복을 표시"),
-				Summary.Contains(TEXT("AP 회복 4")));
-			TestFalse(TEXT("실제 상세 요약에 플레이어 레일 피해가 섞이지 않음"),
-				Summary.Contains(TEXT("피해 6~10")));
+			// 새 공용 스킬 WBP는 요약 띠를 숨기고 수치 메달과 전술 보드를 쓴다.
+			// 위의 Rendered/칩 검증이 요청한 몬스터 DTO만 소비하는 계약이다.
 			HUD->CloseDetailOverlayForTest();
 			TestFalse(TEXT("몬스터 스킬 상세를 닫을 수 있음"),
 				HUD->IsDetailOverlayShown());
@@ -2325,6 +2398,15 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("오른쪽 상세가 고른 용병으로 갈린다"),
 			DetailName->GetText().ToString(), PartyUnit.mName.ToString());
 	}
+	MercenarySkillButton1->OnClicked.Broadcast();
+	TestEqual(TEXT("용병 스킬 한 번 탭은 카드 상세 경로를 사용한다"),
+		DetailResponder->mLastType, ECombatInputType::LongPressSkill);
+	TestEqual(TEXT("용병 첫 스킬 탭 payload"), DetailResponder->mLastPayload, 0);
+	TestTrue(TEXT("용병 스킬 한 번 탭으로 상세가 열린다"),
+		HUD->IsDetailOverlayShown());
+	HUD->CloseDetailOverlayForTest();
+	TestEqual(TEXT("용병 상세 면의 스킬 탭은 실제 터치 가능 상태"),
+		MercenarySkillButton1->GetVisibility(), ESlateVisibility::Visible);
 	InventoryButton->OnClicked.Broadcast();
 	TestEqual(TEXT("인벤토리 탭을 눌러도 용병 패널은 유지된다"),
 		Panel->GetVisibility(), ESlateVisibility::Visible);
@@ -3067,9 +3149,12 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	UButton* SkillButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("SkillToggleButton")));
+	UButton* ConfirmButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("ConfirmButton")));
 	if (!TestNotNull(TEXT("전투 UI 모델"), Model)
 		|| !TestNotNull(TEXT("명령 카드"), Card)
-		|| !TestNotNull(TEXT("스킬 단추"), SkillButton))
+		|| !TestNotNull(TEXT("스킬 단추"), SkillButton)
+		|| !TestNotNull(TEXT("확정 단추"), ConfirmButton))
 	{
 		return false;
 	}
@@ -3085,6 +3170,13 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		FocusAnchorCount, 1);
 	TestEqual(TEXT("플레이어 턴은 커맨드 고리 중심에 포커스한다"),
 		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
+
+	// 확정 버튼은 조준 중 표시 여부와 별개로 클릭 델리게이트가 모델의
+	// Confirm 의도로 이어져야 한다. 바인딩이 빠지면 실제 전투에서 무반응이다.
+	Responder->mLastType = ECombatInputType::Cancel;
+	ConfirmButton->OnClicked.Broadcast();
+	TestEqual(TEXT("확정 단추가 전투 Confirm 명령을 보낸다"),
+		Responder->mLastType, ECombatInputType::Confirm);
 
 	// 자동 표시 뒤에도 스킬 단추는 수동 접기/다시 열기의 역할을 유지한다.
 	SkillButton->OnClicked.Broadcast();

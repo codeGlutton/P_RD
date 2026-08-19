@@ -101,6 +101,7 @@ class UMockCombatDriver;
 class UImage;
 class UProgressBar;
 class URewardUIModel;
+class USkillDetailOverlayPresenter;
 class UTextBlock;
 class UWidget;
 
@@ -170,6 +171,10 @@ public:
 	{
 		return mDetailOverlayWidget;
 	}
+	class USkillTacticalDiagramWidget* GetSkillTacticalDiagramForTest() const
+	{
+		return mSkillTacticalDiagramWidget;
+	}
 	const FSkillDetailUI& GetRenderedSkillDetailForTest() const
 	{
 		return mRenderedSkillDetailForTest;
@@ -193,12 +198,39 @@ public:
 	int32 GetMonsterTabViewportZOrderForTest() const;
 	int32 GetDetailOverlayViewportZOrderForTest() const;
 	void CloseDetailOverlayForTest() { HideDetailOverlay(false); }
+	/** 실제 공용 상세 WBP에 지정 아티팩트를 채워 캡처하는 테스트 진입점. */
+	void ShowArtifactDetailForTest(int32 SlotIndex)
+	{
+		ShowArtifactDetailOverlay(SlotIndex);
+	}
+	void ShowMercenaryInventoryForTest()
+	{
+		HandleInventoryClicked();
+	}
 	/** @brief 자동 턴 초점이 실제 카드 고리 앵커를 보냈는지 검증한다. */
 	FVector2D GetCommandRingAnchorForTest() const { return ComputeCommandRingAnchor(); }
 	/** @brief 패배에 승리 징글이 연결되지 않는 결과 음향 선택 계약. */
 	USoundBase* SelectCombatResultJingleForTest(bool bPlayerWin) const
 	{
 		return SelectCombatResultJingle(bPlayerWin);
+	}
+	/** @brief 보상 완료 직후 지도가 HUD를 덮은 상태를 재현한다. */
+	void EnterVictoryWorldMapStateForTest()
+	{
+		SetCombatResultViewActive(true, false);
+		mVictoryWorldMapLocked = true;
+	}
+	void RestorePostVictoryHUDAndInputForTest()
+	{
+		RestorePostVictoryHUDAndInput();
+	}
+	bool IsVictoryWorldMapLockedForTest() const
+	{
+		return mVictoryWorldMapLocked;
+	}
+	void SetVictoryWorldMapForTest(class UFrontendMapWidget* InWorldMap)
+	{
+		mVictoryWorldMap = InWorldMap;
 	}
 #endif
 
@@ -246,6 +278,8 @@ private:
 
 	/** @brief 프리미엄 용병 셸을 패널 최하단에 한 번 만들고 구식 판을 숨긴다. */
 	void EnsureMercenaryRosterShell();
+	/** @brief 구형 용병 WBP에도 스킬 슬롯의 투명 탭 영역을 보충한다. */
+	void EnsureMercenarySkillButtons();
 
 	/** @brief 전투 HUD의 용병 메뉴에서 보유 용병 패널을 펴거나 접는다. */
 	void SetMercenaryPanelShown(bool bShown);
@@ -254,6 +288,10 @@ private:
 
 	/** @brief 보유 용병 패널이 지금 열려 있는가. */
 	bool IsMercenaryPanelShown() const;
+	/** @brief 전투판과 카메라 입력을 가려야 하는 모달이 하나라도 열려 있는가. */
+	bool IsWorldInputModalShown() const;
+	/** @brief raw touch를 직접 읽는 전투 카메라 Pawn에 현재 모달 잠금을 반영한다. */
+	void RefreshWorldGestureInputBlock();
 
 	/** @brief 전투 HUD의 몬스터 메뉴에서 몬스터 탭(WBP_MonsterTab_Marchbound)을 펴거나 접는다. */
 	void SetMonsterTabShown(bool bShown);
@@ -541,6 +579,7 @@ private:
 	FDelegateHandle mTurnEndHandle;
 	FDelegateHandle mActionBeginHandle;
 	FDelegateHandle mActionEndHandle;
+	FDelegateHandle mBeginCombatHandle;
 	FDelegateHandle mEndCombatHandle;
 	FDelegateHandle mBeginRoundHandle;
 	FDelegateHandle mSkillCutInHandle;
@@ -735,57 +774,43 @@ private:
 	int32 mNextFloatingCombatLogArrivalOrder = 0;
 	float mFloatingCombatLogQueueCooldown = 0.0f;
 
-	/* ── 라운드 배너 (옛 HUD 에서 옮김) ──────────────────────────────────
-	 *
-	 * 라운드가 오르면 배리어를 붙잡고 33장짜리 배너를 튼다. 다 돌면 놓아서
-	 * 그 라운드 첫 턴이 진행된다. **못 틀면 즉시 놓는다** -- 안 그러면
-	 * 라운드가 영영 안 넘어간다.
-	 */
+	/* ── 라운드 시작 고지 ─────────────────────────────────────────────── */
 	/**
-	 * @brief 라운드 시작 배너를 틀지.
-	 *
-	 * 껐다. 턴 템포를 끊는다는 판단이다 -- 배너가 도는 1초 남짓 동안 배리어를
-	 * 붙잡아 게임이 멈춰 서 있다.
-	 *
-	 * 끄더라도 배리어는 그대로 넘겨받아 즉시 놓는다. 안 놓으면 라운드가 안
-	 * 넘어간다. 다시 켜려면 이 값만 참으로 되돌리면 된다.
+	 * @brief 라운드 시작 배너를 틀지. 격투게임식 라운드 고지를 기본으로 켠다.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Layout")
-	bool mPlayRoundBanner = false;
+	bool mPlayRoundBanner = true;
 
-	bool PlayTurnChangeIntro();
-	void FinishTurnChangeIntro();
-	bool EnsureTurnChangeFrameTextures();
-	void PreloadTurnChangeFrameTextures();
-	void EnsureTurnChangeWidgets();
-	void SetTurnChangeIntroVisibility(bool bVisible) const;
-	int32 GetTurnChangeDisplayNumber() const;
-	FString ResolveTurnChangeFrameAssetPath(int32 FrameIndex) const;
-	UTexture2D* LoadTurnChangeFrameTexture(const FString& FrameAssetPath) const;
-	void UpdateTurnChangeIntro(float InDeltaTime);
-	void ApplyTurnChangeFrame(int32 FrameIndex);
-
-	UPROPERTY(Transient) TObjectPtr<class UImage> mTurnChangeVideoImage;
 	UPROPERTY(Transient) TObjectPtr<class UButton> mTurnChangeInputBlocker;
-	UPROPERTY(Transient) TObjectPtr<class UBorder> mTurnChangeTurnTextPanel;
-	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mTurnChangeTurnText;
-	UPROPERTY(Transient) TObjectPtr<class UBorder> mTurnChangeBackdropPanel;
-	UPROPERTY(Transient) TArray<TObjectPtr<UTexture2D>> mTurnChangeFrameTextures;
-	TSharedPtr<struct FStreamableHandle> mTurnChangeFramePreloadHandle;
-	FSlateBrush mTurnChangeFrameBrush;
-	float mTurnChangeIntroElapsed = 0.0f;
-	int32 mTurnChangeCurrentFrameIndex = INDEX_NONE;
-	bool mTurnChangeIntroPlaying = false;
 
-	/**
-	 * @brief 배너를 강제로 끝내는 보험 타이머.
-	 *
-	 * 정상 종료는 Tick 의 경과 시간 판정뿐이다. 배너 도중 HUD 가 접혀 Tick 이
-	 * 멈추면 배리어가 영영 안 풀린다 -- 그 라운드가 진행 불능이 된다.
+	/* ── 전투/턴 시작 고지 ───────────────────────────────────────────────
+	 * 전투 시작, 라운드, 유닛 턴을 각 프레젠테이션 배리어로 직렬화한다.
+	 * 특히 턴 고지가 끝나기 전에는 스킬 UI를 열지 않는다.
 	 */
-	FTimerHandle mTurnChangeSafetyTimerHandle;
-	TSharedPtr<FPresentationBarrier> mRoundChangeBarrier;
-	int32 mLastShownTurnRound = 0;
+	enum class ECombatAnnouncementKind : uint8
+	{
+		None,
+		CombatStart,
+		RoundStart,
+		TurnStart
+	};
+	void EnsureCombatAnnouncementWidgets();
+	bool PlayCombatAnnouncement(const FText& Text, ECombatAnnouncementKind Kind,
+		TSharedPtr<FPresentationBarrier> Barrier);
+	void FinishCombatAnnouncement();
+	void CompleteTurnPresentationBegin();
+	void UpdateCombatAnnouncement(float DeltaTime);
+	FText GetCurrentTurnAnnouncementText() const;
+
+	UPROPERTY(Transient) TObjectPtr<class UBorder> mCombatAnnouncementRoot;
+	UPROPERTY(Transient) TObjectPtr<class UTextBlock> mCombatAnnouncementText;
+	TSharedPtr<FPresentationBarrier> mCombatAnnouncementBarrier;
+	FTimerHandle mCombatAnnouncementTimerHandle;
+	ECombatAnnouncementKind mCombatAnnouncementKind = ECombatAnnouncementKind::None;
+	float mCombatAnnouncementElapsed = 0.0f;
+	float mCombatAnnouncementDuration = 1.2f;
+	bool mCombatAnnouncementPlaying = false;
+	bool mInitialFocusAnchorRegistered = false;
 
 	/* ── 스킬 실행 직전 컷인 ────────────────────── */
 	void HandlePrePlaySkillCutIn(
@@ -813,6 +838,9 @@ private:
 	void SetupUnitHpBarFillClip(FCombatUnitHpBarWidget& Bar);
 	void CacheUnitHpBarStatusSlots(FCombatUnitHpBarWidget& Bar) const;
 	void UpdateUnitHpBarStatus(FCombatUnitHpBarWidget& Bar, const FUnitUI& Unit) const;
+
+	// [RDBOT] 직전에 내보낸 텔레메트리 줄. 같으면 다시 찍지 않는다(매 틱 도배 방지).
+	FString mLastBotTelemetry;
 
 	UPROPERTY(Transient) TArray<FCombatUnitHpBarWidget> mUnitHpBars;
 	UPROPERTY(Transient) TObjectPtr<class UCanvasPanel> mRootCanvas;
@@ -852,10 +880,25 @@ private:
 	 * 닫는 탭은 HUD(HandleBoardPressed)가 받아 처리한다 -- 아무 데나 톡 치면
 	 * 닫힌다.
 	 */
+	/*
+	 * 풍부한 스킬 상세 렌더(수치 메달·범위 버튼·전술 WBP)는 프레젠터가 맡는다
+	 * (SkillDetailOverlayPresenter). HUD 는 겹 클래스/그림을 생성자에서 물어
+	 * 프레젠터에 넘기고, UIModel 을 읽어야 하는 유닛/상태/아티팩트 상세만
+	 * 직접 그린다 -- 그때도 겹 부품은 프레젠터가 캐시한 같은 것을 쓴다.
+	 */
+	/** @brief 프레젠터를 한 번 만들고 설정을 최신으로 맞춘다. */
+	bool EnsureDetailPresenter();
+	/** @brief AP/쿨타임 배지의 실제 HUD 브러시를 프레젠터에 알려 주는 조회부. */
+	UTexture2D* ResolveDetailStatTexture(FName SourceWidgetName, UTexture2D* Fallback);
 	bool EnsureDetailOverlayWidget();
 	void ShowUnitInspection();
 	void ShowUnitDetailOverlay();
 	void ShowSkillDetailOverlay();
+	/** 스킬과 이동이 동일한 상세 WBP 렌더 경로를 사용하도록 하는 공용 함수. */
+	void ShowSkillDetailOverlay(const FSkillDetailUI& Detail);
+
+	/** @brief 스킬 상세 프레젠터. 겹 위젯과 그 부품의 실소유자다. */
+	UPROPERTY(Transient) TObjectPtr<USkillDetailOverlayPresenter> mDetailPresenter;
 
 	/**
 	 * @brief 이동 카드의 상세를 띄운다.
@@ -899,7 +942,7 @@ private:
 	UFUNCTION() void HandleEnemyStatusReleased_1();
 	UFUNCTION() void HandleEnemyStatusReleased_2();
 
-	/** @brief 상세 판 아무 데나 눌러 닫는 받이. */
+	/** @brief 상세 판의 명시적인 닫기 버튼 처리. */
 	UFUNCTION() void HandleDetailCloseCatchClicked();
 
 	/** @brief 스킬을 보는 동안 그 스킬 주인을 화면 가운데로 데려온다. */
@@ -925,10 +968,11 @@ private:
 	bool mSuppressNextUnitDetailOverlay = false;
 
 	/**
-	 * @brief 턴 칸을 눌렀다. 그 유닛을 화면 가운데로 잡고, 아군이면 카드도 편다.
+	 * @brief 턴 칸을 눌렀다. 스킬 UI를 건드리지 않고 그 유닛만 화면 가운데로 잡는다.
 	 *
 	 * @details 판 위의 유닛은 작고 매 턴 자리가 바뀐다. 턴 칸은 늘 같은 자리에
-	 * 있어 "이 사람 것을 보겠다" 는 손이 여기서 나온다(0806 합의).
+	 * 있어 "이 사람을 찾겠다" 는 손이 여기서 나온다. 행동 선택은 전투판의
+	 * 유닛을 직접 누르는 흐름과 분리한다.
 	 */
 	void HandleTurnTokenClicked(int32 SlotIndex);
 	UFUNCTION() void HandleTurnTokenClicked_0();
@@ -974,6 +1018,12 @@ private:
 
 	/** @brief 상세 패널 WBP(WBP_CombatDetailOverlay). 이름으로 찾고 없는 것은 건너뛴다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
+	/**
+	 * @brief 프레젠터가 만든 겹 인스턴스의 비친 포인터.
+	 *
+	 * 소유·생성·배선은 프레젠터가 한다. HUD 에 남은 유닛/상태/아티팩트 상세
+	 * 경로가 예전 코드 그대로 읽도록 EnsureDetailOverlayWidget() 이 비춘다.
+	 */
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> mDetailOverlayWidget;
 
 	/* ── 몬스터 탭 (WBP_MonsterTab_Marchbound) ──────────────────────────
@@ -990,7 +1040,12 @@ private:
 	void BeginMonsterSkillPress(int32 SlotIndex);
 	void EndMonsterSkillPress(int32 SlotIndex);
 	void HandleMonsterSkillLongPress(int32 SlotIndex);
+	void HandleMonsterSkillClicked(int32 SlotIndex);
 	void CancelMonsterSkillPress();
+	UFUNCTION() void HandleMonsterSkillClicked_0();
+	UFUNCTION() void HandleMonsterSkillClicked_1();
+	UFUNCTION() void HandleMonsterSkillClicked_2();
+	UFUNCTION() void HandleMonsterSkillClicked_3();
 	UFUNCTION() void HandleMonsterSkillPressed_0();
 	UFUNCTION() void HandleMonsterSkillPressed_1();
 	UFUNCTION() void HandleMonsterSkillPressed_2();
@@ -1013,10 +1068,15 @@ private:
 	FTimerHandle mMonsterSkillLongPressTimerHandle;
 	int32 mMonsterSkillPressedSlot = INDEX_NONE;
 	bool mMonsterSkillPressActive = false;
+	// 아래 넷도 프레젠터 캐시의 비친 포인터다. 값 채우기는 HUD 상세 경로가 한다.
 	UPROPERTY(Transient) TObjectPtr<UImage> mDetailIconImage;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailTitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailBodyText;
+	/** 장문 한글 상세 전용 OFL 폰트. 쿡 유지용 하드 참조로 들고 프레젠터에 넘긴다. */
+	UPROPERTY() TObjectPtr<class UFont> mReadableDetailFont;
+	/** @brief 프레젠터의 서체 전환으로 위임한다. 유닛/상태 상세가 계속 부른다. */
+	void ApplyReadableDetailTypography(bool bReadable);
 	#if WITH_DEV_AUTOMATION_TESTS
 	FSkillDetailUI mRenderedSkillDetailForTest;
 	#endif
@@ -1029,55 +1089,72 @@ private:
 	 *
 	 * 값은 전부 UI 모델(FSkillUI/FSkillTargetingUI/FUnitUI)에서 읽는다.
 	 * 게임모드를 직접 보지 않는다 -- PR#426 의 UI-GameMode 분리 규칙이다.
+	 *
+	 * 칩/격자의 실제 그리기는 프레젠터로 옮겼다. 아래는 남은 상세 경로용
+	 * 위임 래퍼다.
 	 */
-	static constexpr int32 DetailChipCount = 5;
-	static constexpr int32 DetailGridExtent = 5;   // 5x5. 가운데가 시전자.
-
-	void BindDetailExtras();
 	void SetDetailChip(int32 ChipSlot, const FText& Label, const FText& Value);
 	void ClearDetailChips();
-	/** @brief 형태·거리로 칸을 칠한다. 게임플레이가 내려준 스킬 스펙 그대로 그린다. */
-	void PaintSelectGrid(const FSkillTargetingUI& Targeting);
-	void PaintHitGrid(const FSkillTargetingUI& Targeting);
 	void ClearDetailGrids();
 
-	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailChipLabels;
-	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailChipValues;
-	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailSelectCells;
-	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailHitCells;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailAimBlockerText;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailEffectBlockerText;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSelectCaptionText;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailHitCaptionText;
+	/* ── 이미지 시안 기반 통합 스킬 미리보기 ─────────────────────────────
+	 * 수치 메달·범위 버튼·전술 WBP 는 프레젠터가 짓고 갱신한다. HUD 에는
+	 * 실험용 SceneCapture 경로만 남는다 -- 월드 카메라를 만지는 일이라
+	 * DTO 만 보는 프레젠터로 옮기지 않았다.
+	 */
+	/** @brief 메인 전투 카메라와 같은 장면을 렌더 타깃으로 받아 상세 WBP에 붙인다. */
+	bool StartSkillWorldPreview();
+	/** @brief 전투 카메라 이동/확대 상태를 상세창의 캡처 카메라에 동기화한다. */
+	void SyncSkillWorldPreviewCamera(bool bCaptureImmediately = false);
+	/** @brief 상세창을 닫을 때 캡처를 멈춘다. 액터/렌더 타깃은 재사용한다. */
+	void StopSkillWorldPreview();
+	/** @brief HUD 파괴 시 런타임 캡처 리소스를 완전히 해제한다. */
+	void ReleaseSkillWorldPreview();
+
+	/** 첨부 시안형 범위 디오라마 클래스. 쿡 유지용으로 들고 프레젠터에 넘긴다. */
+	UPROPERTY() TSubclassOf<class USkillTacticalDiagramWidget>
+		mSkillTacticalDiagramWidgetClass;
+	/** 프레젠터가 만든 범위판 인스턴스의 비친 포인터. 시험 접근자용. */
+	UPROPERTY(Transient) TObjectPtr<USkillTacticalDiagramWidget>
+		mSkillTacticalDiagramWidget;
+	/** 실제 전투 장면이 표시되는 WBP Image(프레젠터 소유의 비친 포인터).
+	 * SceneCapture2D의 RenderTarget을 브러시로 쓴다. */
+	UPROPERTY(Transient) TObjectPtr<UImage> mSkillWorldPreviewImage;
+	UPROPERTY(Transient) TObjectPtr<class UTextureRenderTarget2D> mSkillWorldPreviewRenderTarget;
+	UPROPERTY(Transient) TObjectPtr<class ASceneCapture2D> mSkillWorldPreviewCapture;
+	UPROPERTY(Transient) TObjectPtr<class UCameraComponent> mSkillWorldPreviewSourceCamera;
+	bool mSkillWorldPreviewActive = false;
+
+	// 생성자 하드 참조라 패키징에서도 통합 미리보기 부품이 빠지지 않는다.
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualRingTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualCellNormalTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualCellSelectedTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualAPIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualDamageIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualCooldownIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualCriticalIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualCasterIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillVisualTargetIconTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillRangeButtonTexture;
+	UPROPERTY() TObjectPtr<UTexture2D> mSkillRangeButtonSelectedTexture;
 
 	/* ── 오른쪽 열의 세 덩어리 ─────────────────────────────────────────
 	 *
 	 * 사거리 칸은 스킬 상세만, 스킬 칸은 유닛 상세만, 효과·조작 글은 아티팩트와
-	 * 이동만 쓴다. 셋은 절대 같이 뜨지 않으므로 한 자리를 나눠 쓰고 덩어리째
-	 * 껐다 켠다. 값만 비우면 빈 칸 50개가 그대로 남아 화면이 지저분해진다.
+	 * 이동만 쓴다. 실제 켜고 끄기와 열 재배치는 프레젠터가 맡고, 아래는 남은
+	 * 상세 경로용 위임 래퍼다.
 	 */
 	/** @brief 세 덩어리 중 하나만 켠다. 나머지는 끈다. */
 	void ShowDetailRightBlock(const UWidget* Wanted);
 	/** @brief 상세 종류에 맞춰 3열 또는 아티팩트 전용 2열로 실제 열을 재배치한다. */
 	void ApplyDetailColumnLayout(bool bArtifactTwoColumn);
 
+	/* 아래는 프레젠터 캐시의 비친 포인터. 유닛/상태/아티팩트 상세가 읽는다. */
 	/** @brief 수치 칩 묶음. 아티팩트에는 칩이 없어 통째로 끈다. */
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailStatBlock;
-
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailTargetBlock;
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailSkillBlock;
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailExtraBlock;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailExtraHeading;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailExtraText;
-
-	/* 프레임 안의 실제 열. 화면 비율이 달라도 같은 비율로 늘어나도록
-	 * Canvas anchor 로 배치하며, 아티팩트에서는 가운데 열과 두 번째 기둥을
-	 * 접고 나머지 두 열을 다시 펼친다. */
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailIdentityColumn;
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailStatColumn;
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailRightColumn;
-	/** @brief 가운데+오른쪽을 이어 붙인 열. 칩이 없는 화면(아티팩트·이동)만 쓴다. */
-	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailWideColumn;
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider0;
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider1;
 
@@ -1119,6 +1196,11 @@ private:
 
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
+	/** @brief 승리 후 지도 BACK을 처리하고 보상판은 닫힌 상태로 유지한다. */
+	void CloseWorldMapAfterVictory();
+
+	/** @brief 승리 지도 BACK 뒤 전투 HUD와 입력을 빈 화면 없이 복원한다. */
+	void RestorePostVictoryHUDAndInput();
 
 	/** @brief 전투 중 현재 런 지도를 방 선택 없이 조회용으로 연다. */
 	void OpenWorldMapForCombatReview();
@@ -1129,14 +1211,14 @@ private:
 	/** @brief 지도 닫기 완료 뒤 전투 입력을 안전하게 되돌린다. */
 	void RestoreCombatInputAfterWorldMap();
 
-	/** @brief 승리 지도는 잠그고, 조회 지도는 정상적으로 닫는다. */
+	/** @brief 조회 지도는 닫고, 승리 지도 BACK은 전투 HUD를 복구한다. */
 	UFUNCTION()
 	void HandleWorldMapCloseRequested();
 
 	/** @brief 결과 화면이 뜬 동안 조작을 감춘다. */
 	void SetCombatControlsShown(bool bShown);
 
-	/** @brief 전투가 끝났다. 승리는 즉시 보상, 패배는 결과 연출을 시작한다. */
+	/** @brief 전투가 끝났다. 전원 쓰러짐 연출을 기다린 뒤 승리/패배 결과를 시작한다. */
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
 
 	UPROPERTY(Transient) TObjectPtr<class UCinematicWidget> mCombatResultCinematicWidget;
@@ -1145,7 +1227,12 @@ private:
 	FTimerHandle mCombatResultStartDelayTimerHandle;
 	bool mIsPlayerWin = false;
 	bool mCombatResultFlowActive = false;
+	/** 승리 보상 완료 뒤 다음 방을 고를 때까지 조회용 지도 진입을 막는다. */
 	bool mVictoryWorldMapLocked = false;
+
+	/** @brief 마지막 사망 판정 뒤 쓰러짐 애니메이션을 보여 줄 최소 시간. */
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Result", meta = (ClampMin = "0.0", UIMin = "0.0"))
+	float mDeathAnimationResultDelaySeconds = 1.8f;
 
 	/** @brief 공용 서브시스템 초기화가 늦은 경로에서 조회 지도를 직접 만들 때 쓸 클래스. */
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Navigation")
@@ -1153,6 +1240,8 @@ private:
 
 	/** @brief MAP 메뉴로 연 조회용 지도. 승리 후 방 선택 지도와 상태를 구분한다. */
 	UPROPERTY(Transient) TObjectPtr<class UFrontendMapWidget> mCombatReviewWorldMap;
+	/** @brief 승리 BACK 후에도 같은 다음 방 선택 지도를 다시 열기 위한 인스턴스. */
+	UPROPERTY(Transient) TObjectPtr<class UFrontendMapWidget> mVictoryWorldMap;
 	bool mCombatReviewWorldMapOpen = false;
 	bool mShowMouseCursorBeforeCombatReviewMap = true;
 
@@ -1284,6 +1373,7 @@ private:
 	TObjectPtr<UProgressBar> mEnemyHPBar;
 	TObjectPtr<UTextBlock> mEnemyHPText;
 	TObjectPtr<UTextBlock> mEnemyAPText;
+	TObjectPtr<UTextBlock> mEnemyCritText;
 	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
 	TObjectPtr<UTextBlock> mEnemyForecastText;

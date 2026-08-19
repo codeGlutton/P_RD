@@ -135,6 +135,11 @@ protected:
 	/** @brief 위협 범위 칠을 지운다. 행동이 시작되면 칠해 둔 전제가 낡는다. */
 	void ClearThreatRangeView() const;
 
+	/** @brief 스킬 상세 동안 실제 전장에 그 스킬의 합법 조준/선택/효과 범위를 칠한다. */
+	void ShowSkillDetailPreview(UUnitModel* UnitModel, int32 SkillIndex);
+	/** @brief 상세 프리뷰가 빌려 쓴 Aim/Select/Effect 칠을 걷는다. */
+	void ClearSkillDetailPreview();
+
 protected:
 	void OnRegisterUnit(UUnitModel* Unit);
 	void OnUnregisterUnit(UUnitModel* Unit);
@@ -182,6 +187,8 @@ protected:
 
 	/** @brief 지금 상세창에 뜬 유닛. 상세창 스킬 칸 탭을 되짚는 기준이다. */
 	TWeakObjectPtr<UUnitModel> mDetailUnitModel;
+	/** 상세용 범위 칠이 켜졌는지. 실제 액션의 칠과 수명주기를 섞지 않기 위한 표식. */
+	bool mSkillDetailPreviewActive = false;
 
 	/** @brief 톡 쳐서 고른 칸을 UI 에 내린다. 스킬 표시값도 같이 다시 내린다. */
 	void PushCombatTargetUIData(const FTileIndex& Tile, AActor* HitActor);

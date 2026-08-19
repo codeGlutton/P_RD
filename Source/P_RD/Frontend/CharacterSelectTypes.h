@@ -39,6 +39,8 @@ struct P_RD_API FFrontendSkillOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectArea = 0;
 	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
 	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
+	/** @brief 영향 시점 패턴(PR #466 LineToTarget). 상세 모식도의 경로 표시에 쓴다. */
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) ETargetPattern mTargetPattern = ETargetPattern::TargetOnly;
 };
 
 /** @brief 캐릭터 선택 UI가 표시할 플레이어 유닛 카드 데이터 */

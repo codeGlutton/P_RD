@@ -22,9 +22,6 @@ namespace
 {
 	const TCHAR* const FallbackVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
 	const TCHAR* const FallbackDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
-	constexpr int32 CombatResultVideoZOrder = -20;
-	/** @brief 패배 판정 후 결과 영상 시작까지의 텀(전장을 잠깐 보여주는 시간). */
-	constexpr float CombatResultStartDelaySeconds = 1.2f;
 }
 
 void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin)
@@ -32,20 +29,20 @@ void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentat
 	mIsPlayerWin = IsPlayerWin;
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
+	mVictoryWorldMap = nullptr;
 
-	// 승리와 패배 모두 결과 영상을 사용하지 않는다. 활성 결과 경로에서
-	// 검증된 승리 징글만 한 번 재생하고, 패배는 잘못 연결됐던
-	// 승리곡이 나오지 않도록 무음을 유지한다.
-	if (USoundBase* ResultJingle = SelectCombatResultJingle(IsPlayerWin))
+	// 마지막 타격 직후에는 쓰러짐 애니메이션과 디졸브를 먼저 보여 준다.
+	// 배리어를 쥔 채 기다리므로 보상/패배 UI가 전장을 덮지 않는다.
+	if (UWorld* World = GetWorld(); World != nullptr
+		&& mDeathAnimationResultDelaySeconds > 0.0f)
 	{
-		UGameplayStatics::PlaySound2D(this, ResultJingle);
+		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
+		World->GetTimerManager().SetTimer(mCombatResultStartDelayTimerHandle,
+			this, &UCombatLayoutHUDWidget::StartCombatResultCinematic,
+			mDeathAnimationResultDelaySeconds, false);
+		return;
 	}
-
-	// 결과 위젯을 먼저 준비한 뒤 배리어를 놓으면 전투 모델이
-	// 같은 호출 흐름에서 결과 데이터를 밀고 OpenRequested를 방송한다.
-	EnsureCombatResultWidgets();
-	SetCombatResultViewActive(true);
-	mCombatResultBarrier.Reset();
+	StartCombatResultCinematic();
 }
 
 USoundBase* UCombatLayoutHUDWidget::SelectCombatResultJingle(const bool bPlayerWin) const
@@ -55,7 +52,7 @@ USoundBase* UCombatLayoutHUDWidget::SelectCombatResultJingle(const bool bPlayerW
 	return bPlayerWin == true ? mVictoryJingleSound.Get() : nullptr;
 }
 
-/** @brief 텀(딜레이) 후 실제 결과 연출 시작 — 징글 재생 + 결과 영상 오픈. */
+/** @brief 쓰러짐 대기 후 결과 데이터를 열 수 있게 하고 보상/패배 UI를 준비한다. */
 void UCombatLayoutHUDWidget::StartCombatResultCinematic()
 {
 	// 현재 검증된 결과 징글은 승리용만 있다. 패배이면 선택 함수가 nullptr을 준다.
@@ -67,23 +64,9 @@ void UCombatLayoutHUDWidget::StartCombatResultCinematic()
 
 	EnsureCombatResultWidgets();
 	SetCombatResultViewActive(true);
-
-	if (mCombatResultCinematicWidget == nullptr)
-	{
-		HandleCombatResultVideoFinished(nullptr);
-		return;
-	}
-
-	mCombatResultCinematicWidget->SetCinematicViewportZOrder(CombatResultVideoZOrder);
-	mCombatResultCinematicWidget->SetHoldLastFrameOnFinish(true);
-	mCombatResultCinematicWidget->SetCinematicVideoPath(GetCombatResultVideoPath(mIsPlayerWin));
-	mCombatResultCinematicWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget* OpenedWidget)
-	{
-		if (UCinematicWidget* OpenedCinematicWidget = Cast<UCinematicWidget>(OpenedWidget))
-		{
-			OpenedCinematicWidget->PlayCinematic(FOnEndCinematicAnimation::CreateUObject(this, &UCombatLayoutHUDWidget::HandleCombatResultVideoFinished));
-		}
-	}));
+	// 결과 위젯을 먼저 준비한 뒤 배리어를 놓으면 전투 모델이 결과 데이터를
+	// 밀고 OpenRequested를 방송한다. 결과 영상은 사용하지 않는다.
+	mCombatResultBarrier.Reset();
 }
 
 void UCombatLayoutHUDWidget::EnsureCombatResultWidgets()
@@ -139,6 +122,7 @@ void UCombatLayoutHUDWidget::HandleCombatResultOpenRequested()
 {
 	if (mIsPlayerWin == true)
 	{
+		EnsureCombatResultWidgets();
 		if (mCombatRewardWidget != nullptr && mCombatRewardUIModel != nullptr)
 		{
 			mCombatRewardWidget->OpenUI();
@@ -257,31 +241,49 @@ void UCombatLayoutHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> 
  * @details
  * 보상 확인 뒤에는 조회용 지도가 아니라 다음 방 선택용 지도를 열어야 한다.
  * 그래서 선택 모드와 최신 런 데이터를 먼저 적용하고, 다음 방으로 실제
- * 전환되기 전에는 BACK으로 닫아 전투가 끝난 화면으로 돌아갈 수 없게 한다.
+ * BACK은 전투 HUD를 복구하되 승리 대기 상태를 유지한다. 이후 MAP을 누르면
+ * 이 선택 지도를 다시 열어 다음 방 선택을 계속할 수 있다.
  */
 void UCombatLayoutHUDWidget::OpenWorldMapForNextRoom()
 {
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
 		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	if (WorldWidgetSubsystem == nullptr)
+	UFrontendMapWidget* MapWidget = mVictoryWorldMap;
+	if (MapWidget == nullptr && WorldWidgetSubsystem != nullptr)
 	{
-		UE_LOG(LogRD, Warning, TEXT("CombatLayoutHUDWidget: WorldWidgetSubsystem is unavailable after victory."));
-		return;
+		MapWidget = Cast<UFrontendMapWidget>(
+			WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::WorldMap));
 	}
-
-	UFrontendMapWidget* MapWidget = Cast<UFrontendMapWidget>(
-		WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::WorldMap));
+	if (MapWidget == nullptr && WorldWidgetSubsystem != nullptr)
+	{
+		WorldWidgetSubsystem->InitWorldWidget(EWorldWidgetType::WorldMap);
+		MapWidget = WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(
+			EWorldWidgetType::WorldMap);
+	}
+	if (MapWidget == nullptr && GetWorld() != nullptr
+		&& mWorldMapWidgetClass != nullptr)
+	{
+		MapWidget = CreateWidget<UFrontendMapWidget>(
+			GetWorld(), mWorldMapWidgetClass);
+	}
 	if (MapWidget == nullptr)
 	{
 		UE_LOG(LogRD, Warning, TEXT("CombatLayoutHUDWidget: WorldMap widget is not configured."));
+		RestorePostVictoryHUDAndInput();
 		return;
 	}
 
+	mVictoryWorldMap = MapWidget;
 	mVictoryWorldMapLocked = true;
 	MapWidget->OnCloseRequested.AddUniqueDynamic(
 		this, &UCombatLayoutHUDWidget::HandleWorldMapCloseRequested);
 	MapWidget->SetRoomSelectionEnabled(true);
 	MapWidget->ClearMapStatusOverride();
+	// The first post-victory open inherits a collapsed HUD from the reward flow.
+	// After BACK, however, RestorePostVictoryHUDAndInput makes the HUD visible
+	// again. Reopening without collapsing it leaves the full-screen combat HUD
+	// above the map and makes the MAP button appear to do nothing.
+	SetCombatControlsShown(false);
 	MapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(MapWidget, [](UUserWidget* OpenedWidget)
 	{
 		if (UFrontendMapWidget* OpenedMapWidget = Cast<UFrontendMapWidget>(OpenedWidget))
@@ -289,9 +291,64 @@ void UCombatLayoutHUDWidget::OpenWorldMapForNextRoom()
 			OpenedMapWidget->RefreshMap();
 		}
 	}));
+	if (APlayerController* PlayerController = GetOwningPlayer())
+	{
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(MapWidget->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		PlayerController->SetInputMode(InputMode);
+		PlayerController->SetShowMouseCursor(true);
+	}
 	// OpenUI가 이미 열린 위젯에서 즉시 반환하는 경우도 있으므로 여기서도
 	// 한 번 갱신한다. 갱신은 선택/ENTER 활성 상태까지 함께 다시 계산한다.
 	MapWidget->RefreshMap();
+}
+
+void UCombatLayoutHUDWidget::CloseWorldMapAfterVictory()
+{
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	UFrontendMapWidget* MapWidget = mVictoryWorldMap;
+	if (MapWidget == nullptr)
+	{
+		MapWidget = WorldWidgetSubsystem != nullptr
+		? WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(EWorldWidgetType::WorldMap)
+		: nullptr;
+	}
+	if (MapWidget == nullptr)
+	{
+		mVictoryWorldMap = nullptr;
+		RestorePostVictoryHUDAndInput();
+		return;
+	}
+
+	MapWidget->OnCloseRequested.RemoveDynamic(
+		this, &UCombatLayoutHUDWidget::HandleWorldMapCloseRequested);
+	MapWidget->CloseUI(FOnEndUICloseAnimation::CreateWeakLambda(this,
+		[this](UUserWidget*)
+		{
+			mVictoryWorldMap = nullptr;
+			// 보상판은 재지급처럼 보이므로 다시 띄우지 않는다. 대신 접어 둔
+			// 전투 HUD와 입력을 복구해 BACK 뒤 빈 화면이 남지 않게 한다.
+			RestorePostVictoryHUDAndInput();
+		}));
+}
+
+void UCombatLayoutHUDWidget::RestorePostVictoryHUDAndInput()
+{
+	SetCombatResultViewActive(false, true);
+	SetCommandsShown(true);
+	if (APlayerController* PlayerController = GetOwningPlayer())
+	{
+		FInputModeGameAndUI InputMode;
+		InputMode.SetWidgetToFocus(TakeWidget());
+		InputMode.SetHideCursorDuringCapture(false);
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		PlayerController->SetInputMode(InputMode);
+		PlayerController->SetShowMouseCursor(true);
+	}
+	UE_LOG(LogRD, Display,
+		TEXT("RD_VICTORY_MAP_BACK restored_hud=1 next_room_pending=1"));
 }
 
 /**
@@ -439,6 +496,13 @@ void UCombatLayoutHUDWidget::RestoreCombatInputAfterWorldMap()
 /** @brief MAP 메뉴는 같은 조회 지도를 열고 닫는 토글이다. */
 void UCombatLayoutHUDWidget::HandleWorldMapMenuClicked()
 {
+	// 승리 보상을 이미 받은 상태라면 MAP은 조회 지도가 아니라 닫기 전과 같은
+	// 다음 방 선택 지도를 다시 연다. 다음 전투 BindUIModel에서 lock은 해제된다.
+	if (mVictoryWorldMapLocked)
+	{
+		OpenWorldMapForNextRoom();
+		return;
+	}
 	if (mCombatReviewWorldMapOpen)
 	{
 		CloseWorldMapForCombatReview();
@@ -451,7 +515,7 @@ void UCombatLayoutHUDWidget::HandleWorldMapCloseRequested()
 {
 	if (mVictoryWorldMapLocked)
 	{
-		OpenWorldMapForNextRoom();
+		CloseWorldMapAfterVictory();
 		return;
 	}
 	CloseWorldMapForCombatReview();

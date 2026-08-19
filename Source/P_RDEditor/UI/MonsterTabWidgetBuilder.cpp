@@ -19,8 +19,10 @@ namespace MonsterTabWidgetBuilder
 		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound");
 	constexpr TCHAR CanonicalRowTexturePath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/MonsterTab/T_MT_RowNormal.T_MT_RowNormal");
-	constexpr TCHAR CanonicalPortraitFramePath[] =
+	constexpr TCHAR LegacyPortraitFramePath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Portrait_Frame.T_KitA_Portrait_Frame");
+	constexpr TCHAR PortraitCellPath[] =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal");
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 
 	void Expose(UWidgetBlueprint* Blueprint, UWidget* Widget)
@@ -51,7 +53,8 @@ namespace MonsterTabWidgetBuilder
 			? PortraitFrame->GetBrush().GetResourceObject() : nullptr;
 		return RowResource != nullptr && FrameResource != nullptr
 			&& RowResource->GetPathName() == CanonicalRowTexturePath
-			&& FrameResource->GetPathName() == CanonicalPortraitFramePath;
+			&& (FrameResource->GetPathName() == LegacyPortraitFramePath
+				|| FrameResource->GetPathName() == PortraitCellPath);
 	}
 
 	void StyleTransparentButton(UButton* Button)
@@ -102,6 +105,41 @@ namespace MonsterTabWidgetBuilder
 
 		Blueprint->Modify();
 		Blueprint->WidgetTree->Modify();
+
+		UTexture2D* PortraitCell = LoadObject<UTexture2D>(nullptr, PortraitCellPath);
+		UImage* PortraitFrame = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("MonsterPortraitFrame")));
+		UImage* DetailPortrait = Cast<UImage>(
+			Blueprint->WidgetTree->FindWidget(TEXT("MonsterDetailPortrait")));
+		UWidget* DetailPortraitLayer = Blueprint->WidgetTree->FindWidget(
+			TEXT("MonsterDetailPortraitScale"));
+		if (PortraitCell == nullptr || PortraitFrame == nullptr
+			|| DetailPortrait == nullptr || DetailPortraitLayer == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_MONSTER_TAB_REPAIR missing portrait cell widgets or texture"));
+			return;
+		}
+		FSlateBrush PortraitCellBrush = PortraitFrame->GetBrush();
+		PortraitCellBrush.SetResourceObject(PortraitCell);
+		PortraitCellBrush.DrawAs = ESlateBrushDrawType::Image;
+		PortraitCellBrush.Margin = FMargin(0.f);
+		PortraitFrame->SetBrush(PortraitCellBrush);
+		PortraitFrame->SetColorAndOpacity(FLinearColor::White);
+		PortraitFrame->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		DetailPortrait->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		DetailPortrait->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		if (UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(PortraitFrame->Slot))
+		{
+			if (const UCanvasPanelSlot* PortraitLayerSlot =
+				Cast<UCanvasPanelSlot>(DetailPortraitLayer->Slot))
+			{
+				// T_KitA_Cell_Normal은 중앙이 불투명한 셀이므로 초상화 위에
+				// 얹으면 그림을 가린다. 셀을 매트로 아래에 두고, 내부 초상화를
+				// 위에서 정사각 크롭한다.
+				FrameSlot->SetZOrder(PortraitLayerSlot->GetZOrder() - 1);
+			}
+		}
 		for (int32 Index = 0; Index < 4; ++Index)
 		{
 			const FName SlotName(*FString::Printf(TEXT("MonsterSkillSlot_%d"), Index));
@@ -156,7 +194,7 @@ namespace MonsterTabWidgetBuilder
 		}
 
 		UE_LOG(LogTemp, Display,
-			TEXT("RD_MONSTER_TAB_REPAIR success preserved=modern-canonical added=MonsterSkillButton_0..3"));
+			TEXT("RD_MONSTER_TAB_REPAIR success portrait=T_KitA_Cell_Normal added=MonsterSkillButton_0..3"));
 	}
 }
 

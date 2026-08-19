@@ -4,6 +4,7 @@
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 
 #include "Engine/AssetManager.h"
 #include "Engine/Texture2D.h"
@@ -27,6 +28,7 @@
 #include "UI/Combat/CombatUIDebugFixture.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Reward/RewardUIModel.h"
 
 #include "Actor/ActorView.h"
@@ -200,39 +202,6 @@ namespace
 		case ERarityType::Common:
 		default:
 			return FLinearColor(0.86f, 0.98f, 0.94f, 1.0f);
-		}
-	}
-
-	ECombatSkillSelectShapeUI GetCombatSkillSelectShape(EAimPattern Pattern)
-	{
-		switch (Pattern)
-		{
-		case EAimPattern::Single:
-			return ECombatSkillSelectShapeUI::Single;
-		case EAimPattern::Cross:
-			return ECombatSkillSelectShapeUI::Cross;
-		case EAimPattern::Star:
-			return ECombatSkillSelectShapeUI::Diagonal;
-		case EAimPattern::Square:
-			return ECombatSkillSelectShapeUI::Square;
-		default:
-			return ECombatSkillSelectShapeUI::None;
-		}
-	}
-
-	ECombatSkillHitShapeUI GetCombatSkillHitShape(EEffectPattern Pattern)
-	{
-		switch (Pattern)
-		{
-		case EEffectPattern::Single:
-			return ECombatSkillHitShapeUI::Single;
-		case EEffectPattern::Cross:
-		case EEffectPattern::Star:
-			return ECombatSkillHitShapeUI::Cross;
-		case EEffectPattern::Square:
-			return ECombatSkillHitShapeUI::Circle;
-		default:
-			return ECombatSkillHitShapeUI::None;
 		}
 	}
 
@@ -454,6 +423,10 @@ void ACombatGameMode::InitializeCombat()
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
 		CancelPendingActionEndAfterCameraReturn();
+		if (USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>())
+		{
+			PushSimulationFloatingLogs(SimulationSubsystem->ConsumeGameEventLogs(), false);
+		}
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
@@ -508,6 +481,8 @@ void ACombatGameMode::InitializeCombat()
 	mCombatUIModel->OnAbandonRun.AddUniqueDynamic(this, &ACombatGameMode::HandleAbandonRun);
 	mCombatUIModel->OnSaveAndExitRun.AddUniqueDynamic(this, &ACombatGameMode::HandleSaveAndExitRun);
 	mCombatUIModel->OnChangeFocusScreenAnchor.AddUObject(this, &ACombatGameMode::HandleChangeFocusScreenAnchor);
+	// HUD가 먼저 만들어져 앵커를 등록한 경우에도 구독 직후 같은 값을 카메라에 적용한다.
+	HandleChangeFocusScreenAnchor(mCombatUIModel->GetFocusScreenAnchor());
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
@@ -666,21 +641,37 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 	// 어디로 피하지"를 보면서 고르라고 켜 둔 것이다 -- 켜고 끄는 것은 적
 	// 타일 탭만 한다. 턴이 끝나면 적이 움직여 칠이 낡으므로 그때는 걷는다.
 	case ECombatInputType::SelectSkill:
+		ClearSkillDetailPreview();
 		SelectSkill(IntPayload);
 		break;
 	case ECombatInputType::Move:
+		ClearSkillDetailPreview();
 		SelectMove();
 		break;
 	case ECombatInputType::EndTurn:
+		ClearSkillDetailPreview();
 		ClearThreatRangeView();
 		EndTurn();
 		break;
 	case ECombatInputType::LongPressSkill:
 		// 길게 누른 스킬의 상세 정보를 UIModel에 채운다.
+		{
+			UPlayerUnitModel* UnitModel = FindPartyUnitModel(mInspectedUnitId);
+			if (UnitModel == nullptr)
+			{
+				UnitModel = GetTurnPlayerUnitModel();
+			}
+			if (UnitModel == nullptr)
+			{
+				UnitModel = GetPlayerUnitModel(0);
+			}
+			ShowSkillDetailPreview(UnitModel, IntPayload);
+		}
 		PushSkillDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::InspectUnitSkill:
 		// 상세창의 스킬 칸을 탭했다. 기준은 그 상세창에 뜬 유닛이다.
+		ShowSkillDetailPreview(mDetailUnitModel.Get(), IntPayload);
 		PushUnitSkillDetailUIData(IntPayload);
 		break;
 	case ECombatInputType::LongPressUnit:
@@ -689,6 +680,7 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		// (HandleCombatWorldTouch)가 트레이스로 처리하므로 여기서는 닫기만 맡는다.
 		if (IntPayload == INDEX_NONE)
 		{
+			ClearSkillDetailPreview();
 			ClearThreatRangeView();
 		}
 		break;
@@ -1233,8 +1225,20 @@ void ACombatGameMode::PushTurnUIData() const
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	const TArray<TObjectPtr<USRPGTurnContext>> TurnContexts = CombatModel->GetOrderedTurnContexts();
+	// 라운드 시작 UI는 새 턴 후보가 ApplyOrderedTurnCandidates 로 채워지기 전에
+	// 방송된다. 이 구간에서 바로 반환하면 TurnUI.mRound 만 이전 값으로 남아
+	// 실제 모델은 3라운드인데 배너/좌상단 표시는 ROUND 2를 그리게 된다.
+	// 턴이 비어 있어도 모델이 이미 올린 라운드 번호는 먼저 UI 스냅샷에 내린다.
 	if (TurnContexts.IsEmpty() == true)
 	{
+		FTurnUI RoundTransitionUI = mCombatUIModel->GetTurnUI();
+		RoundTransitionUI.mCurrentUnitId = INDEX_NONE;
+		RoundTransitionUI.mRound = CombatModel->GetRoundCount();
+		RoundTransitionUI.mCurrentRoundRemainingTurnCount = 0;
+		RoundTransitionUI.mTurnOrderUnitIds.Reset();
+		RoundTransitionUI.mNextRoundUnitIds.Reset();
+		RoundTransitionUI.mNextRoundOffset = 1;
+		mCombatUIModel->SetTurnUI(RoundTransitionUI);
 		return;
 	}
 
@@ -1688,14 +1692,20 @@ void ACombatGameMode::PushSkillUIData() const
 				&& SkillComponentModel->IsCooldown(i) == false
 				&& SkillComponentModel->HasRequiredActionPoint(i) == true
 				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
-			SkillUIData.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+			// 모양 변환은 화면 공용 변환표(SkillDetailUIBuilder) 하나만 쓴다.
+			SkillUIData.mTargeting.mSelectShape = SkillDetailUIBuilder::ToSelectShape(StaticSkillData->mAimPattern);
 			SkillUIData.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
-			SkillUIData.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+			SkillUIData.mTargeting.mHitShape = SkillDetailUIBuilder::ToHitShape(StaticSkillData->mEffectPattern);
 			SkillUIData.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 			// 차단 레이어를 그대로 넘긴다. 예전에는 "비었나" 만 bool 로 넘겨서
 			// 장애물만 막힘 / 유닛만 막힘 / 둘 다 막힘이 한 값으로 뭉개졌다.
 			SkillUIData.mTargeting.mAimBlockerMask = StaticSkillData->mAimBlockerMask;
 			SkillUIData.mTargeting.mEffectBlockerMask = StaticSkillData->mEffectBlockerMask;
+			// PR #466 LineToTarget -- 상세 모식도가 시전자→조준 경로를 그린다.
+			SkillUIData.mTargeting.mTargetPattern =
+				StaticSkillData->mTargetPattern == ETargetPattern::LineToTarget
+				? ECombatSkillTargetPatternUI::LineToTarget
+				: ECombatSkillTargetPatternUI::Default;
 		}
 	}
 
@@ -1969,13 +1979,18 @@ void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponent
 		}
 	}
 	OutDetail.mCriticalDamage = FMath::RoundToInt(OutDetail.mDamageMax * 1.5f);
-	OutDetail.mTargeting.mSelectShape = GetCombatSkillSelectShape(StaticSkillData->mAimPattern);
+	// 모양 변환은 화면 공용 변환표(SkillDetailUIBuilder) 하나만 쓴다.
+	OutDetail.mTargeting.mSelectShape = SkillDetailUIBuilder::ToSelectShape(StaticSkillData->mAimPattern);
 	OutDetail.mTargeting.mSelectRange = StaticCast<float>(StaticSkillData->mAimRange);
-	OutDetail.mTargeting.mHitShape = GetCombatSkillHitShape(StaticSkillData->mEffectPattern);
+	OutDetail.mTargeting.mHitShape = SkillDetailUIBuilder::ToHitShape(StaticSkillData->mEffectPattern);
 	OutDetail.mTargeting.mHitRange = StaticCast<float>(StaticSkillData->mEffectArea);
 	// 차단 레이어가 비어 있으면 곡사/관통으로 표시
 	OutDetail.mTargeting.mAimBlockerMask = StaticSkillData->mAimBlockerMask;
 	OutDetail.mTargeting.mEffectBlockerMask = StaticSkillData->mEffectBlockerMask;
+	OutDetail.mTargeting.mTargetPattern =
+		StaticSkillData->mTargetPattern == ETargetPattern::LineToTarget
+		? ECombatSkillTargetPatternUI::LineToTarget
+		: ECombatSkillTargetPatternUI::Default;
 }
 
 void ACombatGameMode::PushSkillDetailUIData(int32 SkillIndex) const
@@ -2269,10 +2284,77 @@ void ACombatGameMode::PushSimulationFloatingLogs(const TArray<FSRPGTurnEventLog>
 		}
 	}
 
-	if (Requests.Num() > 0)
+	mCombatUIModel->SetCombatEventBatch(
+		IsPreview ? ECombatEventDataSourceUI::SimulationPreview : ECombatEventDataSourceUI::LiveCombat,
+		Requests);
+}
+
+void ACombatGameMode::ShowSkillDetailPreview(UUnitModel* UnitModel,
+	const int32 SkillIndex)
+{
+	ClearSkillDetailPreview();
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	USkillComponentModel* SkillComponent = UnitModel != nullptr
+		? UnitModel->GetSkillComponentModel() : nullptr;
+	if (TileMap == nullptr || SkillComponent == nullptr
+		|| SkillComponent->GetSkill(SkillIndex) == nullptr)
 	{
-		mCombatUIModel->NotifyCombatFloatingLogs(Requests);
+		return;
 	}
+
+	const TArray<FTileIndex> AimTiles = SkillComponent->GetAimableTiles(
+		TileMap, SkillIndex);
+	if (AimTiles.IsEmpty())
+	{
+		return;
+	}
+
+	const FTileIndex Origin = UnitModel->GetTileTransform().mIndex;
+	FTileIndex PreviewTarget = AimTiles[0];
+	bool bFoundBoardActor = false;
+	int32 BestDistance = -1;
+	for (const FTileIndex& Tile : AimTiles)
+	{
+		// 실제 유닛이 사거리 안에 있으면 빈 칸보다 우선한다. 없을 때는 가장 먼
+		// 합법 타일을 골라 사거리 끝과 효과 범위가 한 화면에서 읽히게 한다.
+		const UUnitModel* Occupant = TileMap->GetActorOnTile<UUnitModel>(Tile);
+		const bool bOtherUnit = Occupant != nullptr && Occupant != UnitModel;
+		const int32 Distance = FMath::Abs(Tile.mX - Origin.mX)
+			+ FMath::Abs(Tile.mY - Origin.mY);
+		if ((bOtherUnit && bFoundBoardActor == false)
+			|| (bOtherUnit == bFoundBoardActor && Distance > BestDistance))
+		{
+			PreviewTarget = Tile;
+			BestDistance = Distance;
+			bFoundBoardActor = bOtherUnit;
+		}
+	}
+
+	const TArray<FTileIndex> TargetTiles = SkillComponent->GetTargetTiles(
+		TileMap, SkillIndex, PreviewTarget);
+	const TArray<FTileIndex> EffectTiles = SkillComponent->GetEffectTiles(
+		TileMap, SkillIndex, TargetTiles);
+	TileMap->SetTileHighlight(AimTiles, ETileHighlightFlag::Aim);
+	TileMap->SetTileHighlight(TargetTiles, ETileHighlightFlag::Select);
+	TileMap->SetTileHighlight(EffectTiles, ETileHighlightFlag::Effect);
+	mSkillDetailPreviewActive = true;
+}
+
+void ACombatGameMode::ClearSkillDetailPreview()
+{
+	if (mSkillDetailPreviewActive == false)
+	{
+		return;
+	}
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap != nullptr)
+	{
+		TileMap->ClearTileHighlight(ETileHighlightFlag::Aim
+			| ETileHighlightFlag::Select | ETileHighlightFlag::Effect);
+	}
+	mSkillDetailPreviewActive = false;
 }
 
 void ACombatGameMode::PushCombatRewardUIData() const

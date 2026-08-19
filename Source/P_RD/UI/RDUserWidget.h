@@ -179,6 +179,14 @@ protected:
 	 */
 	virtual void NativeOnInitialized() override;
 
+	/**
+	 * @brief 파생 위젯이 NativeConstruct에서 런타임 버튼을 만든 뒤 공용 사운드를 다시 배선한다.
+	 */
+	virtual void NativeConstruct() override;
+
+	/** @brief 런타임에 늦게 생성된 버튼 하나에 공용 클릭 사운드를 즉시 적용한다. */
+	void ApplyCommonButtonPressSound(UButton* Button) const;
+
 private:
 	/** @brief 이 위젯 트리의 버튼들을 찾아 누름 효과를 설정하고 눌림/뗌 이벤트를 연결한다. */
 	void SetupCommonButtonFeedback();

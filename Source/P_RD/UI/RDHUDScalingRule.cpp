@@ -2,9 +2,13 @@
 
 namespace
 {
-	/** @brief HUD를 짠 캔버스. 좌표가 전부 이 크기를 전제한다. */
-	constexpr float DesignWidth = 1920.0f;
-	constexpr float DesignHeight = 1080.0f;
+	/** @brief HUD를 짠 캔버스. 좌표가 전부 이 크기를 전제한다.
+	 *
+	 * 이름에 HUD를 붙인 것은 유니티 빌드 때문이다 -- 같은 뭉치에 들어오는
+	 * 다른 파일의 지역 DesignWidth와 이름이 겹치면 C4459 가림 경고가 난다.
+	 */
+	constexpr float HUDDesignWidth = 1920.0f;
+	constexpr float HUDDesignHeight = 1080.0f;
 }
 
 /**
@@ -26,7 +30,7 @@ float URDHUDScalingRule::GetDPIScaleBasedOnSize(FIntPoint Size) const
 		return 1.0f;
 	}
 
-	const float ByWidth = static_cast<float>(Size.X) / DesignWidth;
-	const float ByHeight = static_cast<float>(Size.Y) / DesignHeight;
+	const float ByWidth = static_cast<float>(Size.X) / HUDDesignWidth;
+	const float ByHeight = static_cast<float>(Size.Y) / HUDDesignHeight;
 	return FMath::Min3(ByWidth, ByHeight, 1.0f);
 }

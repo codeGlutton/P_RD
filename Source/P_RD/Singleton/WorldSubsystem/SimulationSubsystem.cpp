@@ -80,6 +80,13 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn(bool
 	return MoveTemp(ResultLogs);
 }
 
+TArray<FSRPGTurnEventLog> USimulationSubsystem::ConsumeGameEventLogs()
+{
+	return mGameRoomContext.mEventLogger != nullptr
+		? mGameRoomContext.mEventLogger->PopSRPGLogs()
+		: TArray<FSRPGTurnEventLog>();
+}
+
 void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 {
 	mSimulationState = State;

@@ -154,6 +154,41 @@ bool FCombatWorldMapMenuLifecycleTest::RunTest(const FString& Parameters)
 	// SelfHitTestInvisible 로 돌리면 지도를 닫은 뒤 빈 땅 탭이 전부 죽는다.
 	TestEqual(TEXT("닫기 뒤 전투 HUD 입력이 복원된다"),
 		HUD->GetVisibility(), ESlateVisibility::Visible);
+
+	// 에디터 단독 월드는 승리용 월드맵 싱글턴을 안정적으로 제공하지 않으므로,
+	// 실제 BACK 콜백이 호출하는 복구 경계를 직접 검증한다. 일반 지도의 실제
+	// 열기/닫기 델리게이트는 위에서 이미 확인했다.
+	HUD->EnterVictoryWorldMapStateForTest();
+	TestTrue(TEXT("승리 지도 잠금 상태가 유지된다"),
+		HUD->IsVictoryWorldMapLockedForTest());
+	TestEqual(TEXT("승리 지도 뒤 HUD는 접혀 있다"),
+		HUD->GetVisibility(), ESlateVisibility::Collapsed);
+
+	HUD->RestorePostVictoryHUDAndInputForTest();
+	TestEqual(TEXT("승리 지도 BACK 뒤 HUD가 빈 화면 없이 복원된다"),
+		HUD->GetVisibility(), ESlateVisibility::Visible);
+	TestTrue(TEXT("BACK 뒤에도 다음 방 선택 대기 상태를 유지한다"),
+		HUD->IsVictoryWorldMapLockedForTest());
+	// 헤드리스 픽스처에는 PlayerController가 없어 서브시스템이 지도를
+	// 다시 생성할 수 없다. 실제 첫 승리 지도와 같이 기존 인스턴스를 보관한다.
+	HUD->SetVictoryWorldMapForTest(Map);
+
+	// 실제 회귀 경로: 승리 지도에서 BACK으로 HUD를 복구한 뒤
+	// MAP을 다시 누른다. 이때 지도는 다시 보이고 전체 화면 HUD 입력층은
+	// 접혀져야 한다. HUD가 남으면 지도가 뒤에 깔려 탭이 안 먹는 것처럼 보인다.
+	MapButton->OnClicked.Broadcast();
+	TestEqual(TEXT("승리 BACK 뒤 MAP 재진입 시 HUD 입력층이 접힌다"),
+		HUD->GetVisibility(), ESlateVisibility::Collapsed);
+
+	UFrontendMapWidget* ReopenedVictoryMap = Map;
+	if (!TestNotNull(TEXT("재진입한 승리 지도"), ReopenedVictoryMap))
+	{
+		return false;
+	}
+	TestEqual(TEXT("승리 BACK 뒤 MAP을 다시 누르면 지도가 보인다"),
+		ReopenedVictoryMap->GetVisibility(), ESlateVisibility::Visible);
+	TestTrue(TEXT("재진입한 승리 지도는 다음 방 선택 가능"),
+		ReopenedVictoryMap->IsRoomSelectionEnabled());
 	return true;
 }
 

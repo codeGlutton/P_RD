@@ -13,6 +13,7 @@
 #include "UI/ShopWidgetBuilder.h"
 #include "UI/ShopFullGeneratedWidgetBuilder.h"
 #include "UI/WorldMapLandscapeWidgetBuilder.h"
+#include "UI/SkillTacticalDiagramWidgetBuilder.h"
 
 #include "ISequencerModule.h"
 #include "Animation/Track/BoardEventTrackEditor.h"
@@ -32,6 +33,7 @@ void FP_RDEditorModule::StartupModule()
 	RegisterShopWidgetBuilderCommands();
 	RegisterShopFullGeneratedWidgetBuilderCommands();
 	RegisterWorldMapLandscapeWidgetBuilderCommands();
+	RegisterSkillTacticalDiagramWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 */
 
@@ -68,6 +70,7 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterShopWidgetBuilderCommands();
 	UnregisterShopFullGeneratedWidgetBuilderCommands();
 	UnregisterWorldMapLandscapeWidgetBuilderCommands();
+	UnregisterSkillTacticalDiagramWidgetBuilderCommands();
 
 	/* 커스텀 디테일 레이아웃 등록 해제 */
 

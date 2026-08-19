@@ -100,6 +100,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UTimeScaleComponent* GetTimeScaleComponent();
 
+	/**
+	 * @brief 전투 모달 UI가 떠 있는 동안 raw touch 기반 카메라 제스처를 막는다.
+	 *
+	 * @details 이 Pawn은 UMG의 Handled 여부와 무관하게 GetInputTouchState를 직접
+	 * 폴링한다. 따라서 용병/인벤토리/몬스터/상세 팝업이 입력을 소비해도 여기서
+	 * 별도로 잠그지 않으면 손가락 움직임이 카메라 드래그로 새어 들어온다.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void SetTouchGestureInputEnabled(bool bEnabled);
+
+	UFUNCTION(BlueprintPure)
+	bool IsTouchGestureInputEnabled() const { return mTouchGestureInputEnabled; }
+
 private:
 	/*
 	* @brief Drag 중인지 나타내는 함수
@@ -114,6 +127,8 @@ private:
 	bool IsPinch();
 
 private:
+	/** UMG 모달이 켜지면 false. raw touch 폴링 자체를 멈춘다. */
+	bool mTouchGestureInputEnabled = true;
 
 	/*
 	* @brief Drag 중 카메라가 시행할 행동 
