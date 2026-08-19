@@ -73,6 +73,9 @@ private:
 	 */
 	UFUNCTION() void HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, int32 SkillSlotIndex);
 
+	/** @brief 판매 후보를 만들어 지정 파티 슬롯과 교체하고 과금한다. */
+	UFUNCTION() void HandleHireMercenaryRequested(int32 SlotIndex, int32 PartySlotIndex);
+
 	/**
 	 * @brief 소지 아티펙트 하나를 버림 (0골드 거래)
 	 * @details 파티 원본에서 제거 — 전 구성원 해제 배포까지 컴포넌트가 처리
@@ -90,6 +93,41 @@ private:
 
 	/** @brief 나간다. 지도를 열어 다음 방을 고르게 한다. */
 	UFUNCTION() void HandleLeaveRequested();
+
+	/**
+	 * @brief 판매 슬롯 상세 요청. 종류(mSlotSources)에 맞는 상세 DTO를 조립해 밀어준다.
+	 * @details 조립 실패 시에도 빈 DTO를 밀어 위젯이 플레인 상세로 폴백하게 한다.
+	 */
+	UFUNCTION() void HandleItemDetailRequested(int32 SlotIndex);
+
+	/** @brief 소지 용병 스킬 상세 요청. BuildPartyUnitSkillDetailUI 결과를 밀어준다. */
+	UFUNCTION() void HandleOwnedSkillDetailRequested(int32 UnitIndex, int32 SkillSlotIndex);
+
+	/**
+	 * @brief 판매 슬롯의 스킬 상품으로 스킬 상세 DTO를 조립한다.
+	 *
+	 * @details
+	 * 상점 상세도 전투와 같은 리치 상세창을 쓰기 위한 생산 API다. 이제 요청
+	 * 핸들러(HandleItemDetailRequested) 뒤에서만 쓰이므로 외부에 열지 않는다.
+	 * 아티팩트 슬롯이면 거짓을 돌려주고 화면은 기존 플레인 상세로 폴백한다.
+	 * @param SlotIndex 판매 슬롯 번호 (FShopItemUI::mSlotIndex)
+	 * @param[out] OutDetail 채워 줄 상세 DTO
+	 * @return 스킬 상품이라 채웠으면 참
+	 */
+	bool BuildShopItemSkillDetailUI(int32 SlotIndex, FSkillDetailUI& OutDetail) const;
+
+	/**
+	 * @brief 판매 슬롯의 아티팩트 상품으로 아티팩트 상세 DTO를 조립한다.
+	 *
+	 * @details
+	 * 스킬 상세(BuildShopItemSkillDetailUI)와 짝을 이루는 생산 API다.
+	 * 스킬 슬롯이거나 DA 로드에 실패하면 거짓 -- 화면은 플레인 상세로 폴백한다.
+	 * @param SlotIndex 판매 슬롯 번호 (FShopItemUI::mSlotIndex)
+	 * @param[out] OutDetail 채워 줄 상세 DTO
+	 * @return 아티팩트 상품이라 채웠으면 참
+	 */
+	bool BuildShopItemArtifactDetailUI(int32 SlotIndex,
+		FCombatArtifactUI& OutDetail) const;
 
 	/** @brief 지금 가진 돈. @return 없으면 0 */
 	int32 GetPartyGold() const;
@@ -122,13 +160,15 @@ private:
 	/**
 	 * @brief 판매 슬롯 번호가 가리키는 실제 상품
 	 * @details
-	 * 화면은 슬롯 번호만 돌려보내므로 지급할 상품은 여기서 찾는다.
+	 * 화면은 슬롯 번호만 돌려보내므로 구매 지급뿐 아니라 온디맨드 상세
+	 * (HandleItemDetailRequested)의 읽기 경로도 여기서 상품을 찾는다.
 	 * PushShopUIData가 판매 목록을 내릴 때마다 다시 기록한다.
 	 */
 	struct FShopSlotSource
 	{
 		EShopItemKind mKind = EShopItemKind::Skill;
 		FPrimaryAssetId mItemId;
+		int32 mCandidateIndex = INDEX_NONE;
 	};
 	TMap<int32, FShopSlotSource> mSlotSources;
 };

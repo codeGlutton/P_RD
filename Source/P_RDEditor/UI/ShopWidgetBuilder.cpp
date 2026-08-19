@@ -76,11 +76,34 @@ namespace ShopWidgetBuilder
 		const FVector2D& Size, const int32 ZOrder)
 	{
 		UCanvasPanelSlot* Slot = Parent->AddChildToCanvas(Child);
-		Slot->SetAnchors(FAnchors(0.f));
+		const FString ParentName = Parent->GetFName().ToString();
+		const bool bResponsiveParent = ParentName == TEXT("ShopDesignCanvas")
+			|| ParentName == TEXT("mArtifactShopPanel")
+			|| ParentName == TEXT("mSkillShopPanel")
+			|| ParentName == TEXT("mRestShopPanel")
+			|| ParentName == TEXT("mArtifactInventoryPanel")
+			|| ParentName.StartsWith(TEXT("RestUnitRowHolder_"));
 		Slot->SetAlignment(FVector2D::ZeroVector);
 		Slot->SetAutoSize(false);
-		Slot->SetPosition(Position);
-		Slot->SetSize(Size);
+		if (bResponsiveParent && Position.IsNearlyZero()
+			&& Size.Equals(FVector2D(DesignWidth, DesignHeight)))
+		{
+			Slot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			Slot->SetOffsets(FMargin(0.f));
+		}
+		else if (bResponsiveParent)
+		{
+			const FVector2D AnchorPoint(Position.X / DesignWidth,
+				Position.Y / DesignHeight);
+			Slot->SetAnchors(FAnchors(AnchorPoint.X, AnchorPoint.Y));
+			Slot->SetOffsets(FMargin(0.f, 0.f, Size.X, Size.Y));
+		}
+		else
+		{
+			Slot->SetAnchors(FAnchors(0.f));
+			Slot->SetPosition(Position);
+			Slot->SetSize(Size);
+		}
 		Slot->SetZOrder(ZOrder);
 	}
 
@@ -330,22 +353,9 @@ namespace ShopWidgetBuilder
 		Letterbox->SetPadding(FMargin(0.f));
 		FillOverlay(Root, Letterbox);
 
-		UScaleBox* MasterScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
-			UScaleBox::StaticClass(), TEXT("ShopMasterScale"));
-		MasterScale->SetStretch(EStretch::ScaleToFit);
-		MasterScale->SetStretchDirection(EStretchDirection::Both);
-		MasterScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-		FillOverlay(Root, MasterScale);
-
-		USizeBox* DesignSize = Blueprint->WidgetTree->ConstructWidget<USizeBox>(
-			USizeBox::StaticClass(), TEXT("ShopDesignSize"));
-		DesignSize->SetWidthOverride(DesignWidth);
-		DesignSize->SetHeightOverride(DesignHeight);
-		MasterScale->AddChild(DesignSize);
-
 		UCanvasPanel* Screen = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("ShopDesignCanvas"));
-		DesignSize->SetContent(Screen);
+		FillOverlay(Root, Screen);
 
 		// Each mode owns its scene art and mode-only content. Runtime switches these
 		// panels while the five-slot horizontal rail stays stable above both.
@@ -369,29 +379,7 @@ namespace ShopWidgetBuilder
 			FVector2D::ZeroVector, FVector2D(DesignWidth, DesignHeight), 0);
 		RestPanel->SetVisibility(ESlateVisibility::Collapsed);
 
-		// Lower contrast under the interactive rail keeps item silhouettes readable
-		// without baking any text or icons into the generated scene backgrounds.
-		// Each mode owns its scrim so its own skill-slot controls can paint above it.
-		auto AddRailScrim = [Blueprint](UCanvasPanel* ModePanel, const FName Name)
-		{
-			UBorder* RailScrim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
-				UBorder::StaticClass(), Name);
-			RailScrim->SetBrushColor(FLinearColor(.008f, .018f, .03f, .74f));
-			RailScrim->SetPadding(FMargin(0.f));
-			RailScrim->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(ModePanel, RailScrim, FVector2D(0.f, 438.f),
-				FVector2D(1600.f, 562.f), 5);
-		};
-		AddRailScrim(ArtifactPanel, TEXT("ArtifactRailScrim"));
-		AddRailScrim(SkillPanel, TEXT("SkillRailScrim"));
-
-		UBorder* RestScrim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
-			UBorder::StaticClass(), TEXT("RestContentScrim"));
-		RestScrim->SetBrushColor(FLinearColor(.008f, .018f, .03f, .72f));
-		RestScrim->SetPadding(FMargin(0.f));
-		RestScrim->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		Place(RestPanel, RestScrim, FVector2D(125.f, 112.f),
-			FVector2D(1350.f, 750.f), 3);
+		// Keep all three authored scenes unobscured; no mode-wide black scrims.
 
 		// Header and category selectors.
 		AddImage(Blueprint, Screen, TEXT("ShopTitlePlate"), TitlePlate,
@@ -478,8 +466,8 @@ namespace ShopWidgetBuilder
 				UCanvasPanel::StaticClass(),
 				FName(*FString::Printf(TEXT("RestUnitRowHolder_%d"), Index)));
 			RowHolder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(RestPanel, RowHolder, FVector2D::ZeroVector,
-				FVector2D(DesignWidth, DesignHeight), 5);
+			Anchor(RestPanel, RowHolder, FAnchors(0.f, 0.f, 1.f, 1.f),
+				FMargin(0.f), 5);
 
 			AddImage(Blueprint, RowHolder,
 				FName(*FString::Printf(TEXT("RestUnitPlate_%d"), Index)), CellNormal,
@@ -570,7 +558,8 @@ namespace ShopWidgetBuilder
 			FVector2D(616.f, 742.f), FVector2D(368.f, 82.f), 12, true);
 		AddText(Blueprint, RestPanel, TEXT("RestCostLabel"),
 			NSLOCTEXT("ShopHorizontalRail", "RestCost", "비용"), 21,
-			FVector2D(646.f, 759.f), FVector2D(90.f, 46.f), 14);
+			FVector2D(646.f, 759.f), FVector2D(90.f, 46.f), 14,
+			FLinearColor::White);
 		AddImage(Blueprint, RestPanel, TEXT("RestCostGoldIcon"), GoldIcon,
 			FVector2D(752.f, 760.f), FVector2D(42.f, 42.f), 14);
 		AddText(Blueprint, RestPanel, TEXT("RestCostText"), FText::FromString(TEXT("100 G")), 24,
@@ -673,7 +662,7 @@ namespace ShopWidgetBuilder
 		// Footer chrome stays clear of the rail at every supported aspect ratio.
 		AddLabeledButton(Blueprint, Screen, TEXT("CloseHolder"), TEXT("ClosePlate"),
 			TEXT("mCloseButtonText"), TEXT("mCloseButton"), BackPlate,
-			NSLOCTEXT("ShopHorizontalRail", "Back", "뒤로"),
+			NSLOCTEXT("ShopHorizontalRail", "Leave", "나가기"),
 			FVector2D(28.f, 890.f), FVector2D(286.f, 96.f), 40, 30);
 		AddLabeledButton(Blueprint, Screen, TEXT("BuyHolder"), TEXT("BuyPlate"),
 			TEXT("mBuyButtonText"), TEXT("mBuyButton"), BuyPlate,

@@ -60,6 +60,11 @@ void FShopRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimary
 	}
 	AdditionalAssetIds.Append(mSaleCommonSkillDataItems.mSaleItemIds);
 	AdditionalAssetIds.Append(mSaleArtifactDataItems.mSaleItemIds);
+	for (const FMercenaryCandidate& Candidate : mSaleMercenaryDataCandidates.mCandidates)
+	{
+		AdditionalAssetIds.Add(Candidate.mSaleMercenaryId);
+		AdditionalAssetIds.Append(Candidate.mOwingSkillIds);
+	}
 }
 
 FMonsterRoom::FMonsterRoom()
