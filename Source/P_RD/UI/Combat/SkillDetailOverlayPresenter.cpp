@@ -23,10 +23,15 @@
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
 
+/*
+ * 지역 헬퍼는 Detail 접두를 붙인다. 익명 이름 그대로 두면 유니티 빌드가
+ * CombatLayoutHUDWidget.cpp의 같은 이름 헬퍼와 한 덩어리로 묶일 때 중복
+ * 정의로 깨진다 -- 파일 수가 바뀌는 날 갑자기 (MercenaryHireDetail과 같은 사유).
+ */
 namespace
 {
 	/** @brief 있으면 보이고 없으면 접는다. 배치안마다 요소를 빼도 되게 하는 핵심. */
-	void SetShown(UWidget* Widget, const bool bShown)
+	void DetailSetShown(UWidget* Widget, const bool bShown)
 	{
 		if (Widget != nullptr)
 		{
@@ -36,7 +41,7 @@ namespace
 		}
 	}
 
-	void SetTextIfPresent(UTextBlock* Text, const FText& Value)
+	void DetailSetTextIfPresent(UTextBlock* Text, const FText& Value)
 	{
 		if (Text != nullptr)
 		{
@@ -68,7 +73,7 @@ namespace
 	 * 만들면 자산이 배로 는다. 그래서 **UV 로 윗부분만** 쓴다 -- HUD 본체의
 	 * 같은 이름 헬퍼와 동일한 규약이다.
 	 */
-	void SetPortraitCropped(UImage* Image, UTexture2D* Texture, const float Aspect = 1.f)
+	void DetailSetPortraitCropped(UImage* Image, UTexture2D* Texture, const float Aspect = 1.f)
 	{
 		if (Image == nullptr || Texture == nullptr)
 		{
@@ -111,7 +116,7 @@ namespace
 	 * @details INDEX_NONE 은 게임플레이가 아직 안 채운 것이라 빈 문자열을
 	 * 돌려준다 -- 모르는 것을 "없음" 이라고 하면 관통 스킬로 읽힌다.
 	 */
-	FString DescribeBlocker(const int32 Mask)
+	FString DetailDescribeBlocker(const int32 Mask)
 	{
 		if (Mask == INDEX_NONE)
 		{
@@ -584,7 +589,7 @@ void USkillDetailOverlayPresenter::ShowDetailRightBlock(const UWidget* Wanted)
 	{
 		if (Block != nullptr)
 		{
-			SetShown(Block, Block == Wanted);
+			DetailSetShown(Block, Block == Wanted);
 		}
 	}
 }
@@ -602,7 +607,7 @@ void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactT
 	// 스킬 전용 런타임 도식은 다른 상세 화면으로 넘어갈 때 반드시 먼저 걷는다.
 	SetSkillVisualPreviewShown(false);
 	// 아티팩트 전용 효과 스크롤도 같은 규칙 -- 다음 상세가 이어받지 않게 걷는다.
-	SetShown(mArtifactDescriptionRoot, false);
+	DetailSetShown(mArtifactDescriptionRoot, false);
 	/*
 	 * 자리는 **판이 정한다.** 여기서는 켜고 끄기만 한다.
 	 *
@@ -614,9 +619,9 @@ void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactT
 	 * 이제 판이 세 열과 "가운데+오른쪽을 이은 넓은 열" 을 모두 만들어 두고,
 	 * 여기서는 화면에 맞는 쪽을 편다.
 	 */
-	SetShown(mDetailStatColumn, bArtifactTwoColumn == false);
-	SetShown(mDetailRightColumn, bArtifactTwoColumn == false);
-	SetShown(mDetailWideColumn, bArtifactTwoColumn);
+	DetailSetShown(mDetailStatColumn, bArtifactTwoColumn == false);
+	DetailSetShown(mDetailRightColumn, bArtifactTwoColumn == false);
+	DetailSetShown(mDetailWideColumn, bArtifactTwoColumn);
 
 	// 확정 시안(0806)의 기본 모습으로 되돌린다. 아티팩트만 이 뒤에서
 	// 받침판을 걷고 보석 줄을 켠다 -- 한 번 켠 것이 다음 화면에 남지 않게.
@@ -634,13 +639,13 @@ void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactT
 			FVector2D(910.f, 106.f));
 		// 스킬/아티팩트가 접어 둔 메타 정보 판과 밝은 글자색을 다른 상세가
 		// 이어받지 않도록 공용 기본 상태부터 복구한다.
-		SetShown(mDetailOverlayWidget->GetWidgetFromName(
+		DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
 			TEXT("DetailIdentityPlate")), true);
-		SetShown(mDetailOverlayWidget->GetWidgetFromName(
+		DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
 			TEXT("DetailStatsPlate")), true);
 		if (mDetailSubtitleText != nullptr)
 		{
-			SetShown(mDetailSubtitleText, true);
+			DetailSetShown(mDetailSubtitleText, true);
 			mDetailSubtitleText->SetColorAndOpacity(FSlateColor(
 				FLinearColor(0.16f, 0.08f, 0.035f, 1.f)));
 		}
@@ -664,28 +669,28 @@ void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactT
 			FreePlate->SetVisibility(bArtifactTwoColumn
 				? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 		}
-		SetShown(mDetailBodyText, true);
+		DetailSetShown(mDetailBodyText, true);
 		for (int32 Index = 0; Index < 5; ++Index)
 		{
-			SetShown(mDetailOverlayWidget->GetWidgetFromName(
+			DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
 				FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))), false);
 		}
 	}
 	// 기둥 하나는 정체성 열과의 사이, 다른 하나는 가운데와 오른쪽 사이다.
 	// 두 열을 이어 붙이면 그 사이 기둥은 판 한가운데를 가로지른다.
-	SetShown(mDetailDivider0, true);
-	SetShown(mDetailDivider1, bArtifactTwoColumn == false);
+	DetailSetShown(mDetailDivider0, true);
+	DetailSetShown(mDetailDivider1, bArtifactTwoColumn == false);
 }
 
 void USkillDetailOverlayPresenter::SetDetailChip(int32 ChipSlot, const FText& Label, const FText& Value)
 {
 	if (mDetailChipLabels.IsValidIndex(ChipSlot) == true)
 	{
-		SetTextIfPresent(mDetailChipLabels[ChipSlot], Label);
+		DetailSetTextIfPresent(mDetailChipLabels[ChipSlot], Label);
 	}
 	if (mDetailChipValues.IsValidIndex(ChipSlot) == true)
 	{
-		SetTextIfPresent(mDetailChipValues[ChipSlot], Value);
+		DetailSetTextIfPresent(mDetailChipValues[ChipSlot], Value);
 	}
 }
 
@@ -769,10 +774,10 @@ void USkillDetailOverlayPresenter::ClearDetailGrids()
 			Cell->SetColorAndOpacity(Empty);
 		}
 	}
-	SetTextIfPresent(mDetailSelectCaptionText, FText::GetEmpty());
-	SetTextIfPresent(mDetailHitCaptionText, FText::GetEmpty());
-	SetTextIfPresent(mDetailAimBlockerText, FText::GetEmpty());
-	SetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
+	DetailSetTextIfPresent(mDetailSelectCaptionText, FText::GetEmpty());
+	DetailSetTextIfPresent(mDetailHitCaptionText, FText::GetEmpty());
+	DetailSetTextIfPresent(mDetailAimBlockerText, FText::GetEmpty());
+	DetailSetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
 }
 
 /** @brief 이미지 시안의 수치 메달/통합 전술 보드를 실제 상세 WBP 인스턴스에 짓는다. */
@@ -1152,7 +1157,7 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 				TEXT("TacticalSelectLegendButton"),
 				TEXT("TacticalEffectLegendButton") })
 			{
-				SetShown(mSkillTacticalDiagramWidget->GetWidgetFromName(WidgetName), false);
+				DetailSetShown(mSkillTacticalDiagramWidget->GetWidgetFromName(WidgetName), false);
 			}
 		}
 	}
@@ -1175,7 +1180,7 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 
 void USkillDetailOverlayPresenter::SetSkillVisualPreviewShown(const bool bShown)
 {
-	SetShown(mSkillVisualPreview, bShown);
+	DetailSetShown(mSkillVisualPreview, bShown);
 	if (bShown == false)
 	{
 		HideWorldPreviewImage();
@@ -1184,7 +1189,7 @@ void USkillDetailOverlayPresenter::SetSkillVisualPreviewShown(const bool bShown)
 
 void USkillDetailOverlayPresenter::HideWorldPreviewImage()
 {
-	SetShown(mSkillWorldPreviewImage, false);
+	DetailSetShown(mSkillWorldPreviewImage, false);
 	// SceneCapture 장치는 호출자 소유다. 캡처를 실제로 멈추는 것은 호출자
 	// 몫이라 신호만 보낸다 -- 프레젠터는 월드 액터를 만지지 않는다.
 	mOnWorldPreviewStopRequested.Broadcast();
@@ -1238,7 +1243,7 @@ void USkillDetailOverlayPresenter::HandleSkillTacticalPreviewVisibilityChanged(
 		mSkillDescriptionScrollBox->SetVisibility(bPreviewShown
 			? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
 	}
-	SetShown(mDetailBodyText, false);
+	DetailSetShown(mDetailBodyText, false);
 	RefreshSkillRangeButtonStyles();
 }
 
@@ -1246,18 +1251,18 @@ void USkillDetailOverlayPresenter::SetSyntheticSkillDiagramShown(const bool bSho
 {
 	for (UImage* Cell : mSkillVisualCells)
 	{
-		SetShown(Cell, bShown);
+		DetailSetShown(Cell, bShown);
 	}
 	for (UImage* Pip : mSkillVisualConnectorPips)
 	{
-		SetShown(Pip, bShown);
+		DetailSetShown(Pip, bShown);
 	}
-	SetShown(mSkillVisualCasterHalo, bShown);
-	SetShown(mSkillVisualEffectHalo, bShown);
-	SetShown(mSkillVisualCasterMarker, bShown);
-	SetShown(mSkillVisualTargetMarker, bShown);
-	SetShown(mSkillVisualSelectLegend, bShown);
-	SetShown(mSkillVisualEffectLegend, bShown);
+	DetailSetShown(mSkillVisualCasterHalo, bShown);
+	DetailSetShown(mSkillVisualEffectHalo, bShown);
+	DetailSetShown(mSkillVisualCasterMarker, bShown);
+	DetailSetShown(mSkillVisualTargetMarker, bShown);
+	DetailSetShown(mSkillVisualSelectLegend, bShown);
+	DetailSetShown(mSkillVisualEffectLegend, bShown);
 }
 
 /** @brief 실제 스킬 DTO로 수치 메달과 하나로 합친 사각 전술 보드를 갱신한다. */
@@ -1268,7 +1273,7 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 	{
 		return;
 	}
-	SetTextIfPresent(mSkillDescriptionText, Detail.mDescription);
+	DetailSetTextIfPresent(mSkillDescriptionText, Detail.mDescription);
 	if (mSkillDescriptionScrollBox != nullptr)
 	{
 		mSkillDescriptionScrollBox->ScrollToStart();
@@ -1290,15 +1295,15 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 			: FString(TEXT("치명타 -")) };
 	for (int32 Index = 0; Index < mSkillVisualStatTexts.Num(); ++Index)
 	{
-		SetTextIfPresent(mSkillVisualStatTexts[Index], FText::FromString(StatValues[Index]));
+		DetailSetTextIfPresent(mSkillVisualStatTexts[Index], FText::FromString(StatValues[Index]));
 	}
 	const int32 ActualSelectRange = FMath::Max(
 		FMath::RoundToInt(Detail.mTargeting.mSelectRange), 0);
 	const int32 ActualHitRange = FMath::Max(
 		FMath::RoundToInt(Detail.mTargeting.mHitRange), 0);
-	SetTextIfPresent(mSkillSelectRangeText, FText::FromString(FString::Printf(
+	DetailSetTextIfPresent(mSkillSelectRangeText, FText::FromString(FString::Printf(
 		TEXT("사정 범위  %d칸"), ActualSelectRange)));
-	SetTextIfPresent(mSkillEffectRangeText, FText::FromString(FString::Printf(
+	DetailSetTextIfPresent(mSkillEffectRangeText, FText::FromString(FString::Printf(
 		TEXT("영향 범위  %d칸"), ActualHitRange)));
 
 	const int32 PreviewSelectRange = FMath::Clamp(ActualSelectRange, 0, 2);
@@ -1385,13 +1390,13 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 		FVector2D(EffectDiameter, EffectDiameter));
 	PlaceCentered(mSkillVisualCasterMarker, CasterCenter, FVector2D(42.f, 42.f));
 	PlaceCentered(mSkillVisualTargetMarker, TargetCenter, FVector2D(42.f, 42.f));
-	SetShown(mSkillVisualTargetMarker, TargetRow != CasterRow || TargetColumn != CasterColumn);
+	DetailSetShown(mSkillVisualTargetMarker, TargetRow != CasterRow || TargetColumn != CasterColumn);
 
 	const bool bSeparateTarget = TargetRow != CasterRow || TargetColumn != CasterColumn;
 	for (int32 Index = 0; Index < mSkillVisualConnectorPips.Num(); ++Index)
 	{
 		UImage* Pip = mSkillVisualConnectorPips[Index];
-		SetShown(Pip, bSeparateTarget);
+		DetailSetShown(Pip, bSeparateTarget);
 		if (bSeparateTarget)
 		{
 			const float Alpha = static_cast<float>(Index + 1)
@@ -1400,11 +1405,11 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 				FVector2D(14.f, 14.f));
 		}
 	}
-	SetTextIfPresent(mSkillVisualSelectLegend, Detail.mTargeting.mSelectShape
+	DetailSetTextIfPresent(mSkillVisualSelectLegend, Detail.mTargeting.mSelectShape
 		== ECombatSkillSelectShapeUI::Single
 		? LOCTEXT("SkillPreviewSelfTarget", "선택 위치  현재 타일")
 		: FText::FromString(FString::Printf(TEXT("선택 거리  %d칸"), ActualSelectRange)));
-	SetTextIfPresent(mSkillVisualEffectLegend, ActualHitRange <= 0
+	DetailSetTextIfPresent(mSkillVisualEffectLegend, ActualHitRange <= 0
 		? LOCTEXT("SkillPreviewSingleEffect", "효과 범위  대상 1칸")
 		: FText::FromString(FString::Printf(TEXT("효과 범위  %d칸"), ActualHitRange)));
 
@@ -1437,11 +1442,11 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 		FVector2D(180.f, 180.f));
 	// 내부 양피지 판은 걷고, 같은 공간에 실제 데이터로 갱신되는 메달과 전술
 	// 보드를 얹는다. 외곽 WBP는 그대로 두어 다른 상세 화면의 구조와 충돌하지 않는다.
-	SetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityPlate")), false);
-	SetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatsPlate")), false);
-	SetShown(mDetailSubtitleText, false);
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityPlate")), false);
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatsPlate")), false);
+	DetailSetShown(mDetailSubtitleText, false);
 
-	SetTextIfPresent(mDetailTitleText, Detail.mName);
+	DetailSetTextIfPresent(mDetailTitleText, Detail.mName);
 
 	// 스킬 index는 유닛마다 0부터 다시 시작한다. 몬스터 상세에서 받은 index로
 	// 플레이어 카드 레일을 조회하면 같은 슬롯의 전혀 다른 수치가 섞인다. 이름,
@@ -1468,16 +1473,16 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	// 이 화면에만 새 범위판/격자 에셋을 추가하지 않는다. 핵심 수치는 상단 요약,
 	// 대상 규칙은 본문 안의 짧은 텍스트로 읽히므로 별도 열과 받침판을 모두 접는다.
 	ClearDetailGrids();
-	SetShown(mDetailStatBlock, false);
+	DetailSetShown(mDetailStatBlock, false);
 	ShowDetailRightBlock(nullptr);
-	SetShown(mDetailStatColumn, false);
-	SetShown(mDetailRightColumn, false);
-	SetShown(mDetailDivider0, false);
-	SetShown(mDetailDivider1, false);
+	DetailSetShown(mDetailStatColumn, false);
+	DetailSetShown(mDetailRightColumn, false);
+	DetailSetShown(mDetailDivider0, false);
+	DetailSetShown(mDetailDivider1, false);
 	if (UWidget* FreePlate = mDetailOverlayWidget->GetWidgetFromName(
 		TEXT("DetailFreePlate")))
 	{
-		SetShown(FreePlate, false);
+		DetailSetShown(FreePlate, false);
 	}
 
 	// 본문은 설명에만 집중한다. 선택 거리와 효과 범위는 아래 통합 보드가
@@ -1486,14 +1491,14 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	if (Detail.mTargeting.mAimBlockerMask != 0)
 	{
 		Body += FString::Printf(TEXT("\n\n조준 차단  %s"),
-			*DescribeBlocker(Detail.mTargeting.mAimBlockerMask));
+			*DetailDescribeBlocker(Detail.mTargeting.mAimBlockerMask));
 	}
 	if (Detail.mTargeting.mEffectBlockerMask != 0)
 	{
 		Body += FString::Printf(TEXT("\n효과 차단  %s"),
-			*DescribeBlocker(Detail.mTargeting.mEffectBlockerMask));
+			*DetailDescribeBlocker(Detail.mTargeting.mEffectBlockerMask));
 	}
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	DetailSetTextIfPresent(mDetailBodyText, FText::FromString(Body));
 	if (mDetailBodyText != nullptr)
 	{
 		mDetailBodyText->SetAutoWrapText(true);
@@ -1511,11 +1516,11 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	UpdateSkillVisualPreview(Detail);
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다. 실제
 	// 스킬 화면은 오른쪽 ScrollBox를 사용해 긴 설명과 차단 규칙을 모두 담는다.
-	SetTextIfPresent(mSkillDescriptionText, FText::FromString(Body));
-	SetShown(mDetailBodyText, false);
+	DetailSetTextIfPresent(mSkillDescriptionText, FText::FromString(Body));
+	DetailSetShown(mDetailBodyText, false);
 	SetSkillVisualPreviewShown(true);
 
-	SetPortraitCropped(mDetailIconImage, Detail.mIcon);
+	DetailSetPortraitCropped(mDetailIconImage, Detail.mIcon);
 	// 자기는 눌림을 안 받고 스킬 칸만 받는다. 그래서 칸 밖을 톡 치면 눌림이
 	// 호스트까지 내려가 패널이 닫힌다.
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
@@ -1637,7 +1642,7 @@ void USkillDetailOverlayPresenter::BuildArtifactDescriptionScroll()
 	}
 
 	mArtifactDescriptionRoot = DesignScale;
-	SetShown(mArtifactDescriptionRoot, false);
+	DetailSetShown(mArtifactDescriptionRoot, false);
 }
 
 /**
@@ -1669,19 +1674,19 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 		FVector2D(800.f, 90.f));
 	// 등급/적용 범위는 짧은 메타 정보라 별도 양피지 판이 필요 없다. 공용
 	// IdentityPlate를 접고 외곽의 검은 정보면 위에 직접 적는다.
-	SetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityPlate")), false);
-	SetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatsPlate")), false);
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityPlate")), false);
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatsPlate")), false);
 	if (mDetailSubtitleText != nullptr)
 	{
 		mDetailSubtitleText->SetColorAndOpacity(FSlateColor(
 			FLinearColor(0.92f, 0.84f, 0.68f, 1.f)));
 	}
 
-	SetTextIfPresent(mDetailTitleText, Detail.mName);
+	DetailSetTextIfPresent(mDetailTitleText, Detail.mName);
 
 	// 상세는 정보 화면이다. 가격은 상점의 구매/판매 문맥에서만 의미가
 	// 있으므로 여기에는 희귀도만 남긴다.
-	SetTextIfPresent(mDetailSubtitleText, Detail.mRarityName.IsEmpty()
+	DetailSetTextIfPresent(mDetailSubtitleText, Detail.mRarityName.IsEmpty()
 		? LOCTEXT("ArtifactPartyWide", "아티팩트 · 파티 전체 적용")
 		: FText::Format(LOCTEXT("ArtifactRarityPartyWide", "{0} · 파티 전체 적용"),
 			Detail.mRarityName));
@@ -1702,7 +1707,7 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 		Body = TEXT("효과 설명이 아직 없다.");
 	}
 
-	SetPortraitCropped(mDetailIconImage, Detail.mIcon);
+	DetailSetPortraitCropped(mDetailIconImage, Detail.mIcon);
 
 	// 아티팩트에는 사거리도 수치 칩도 없다. 스킬 상세가 남긴 것을 걷는다.
 	//
@@ -1710,24 +1715,24 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 	// 실제로 그렇게 나왔다(0804 검수). 칩 묶음을 통째로 끈다.
 	ClearDetailGrids();
 	ClearDetailChips();
-	SetShown(mDetailStatBlock, false);
+	DetailSetShown(mDetailStatBlock, false);
 	// 유닛 상세의 스킬 칸 줄도 걷는다. HUD 밖 호스트도 이름으로 찾아 닫는다.
-	SetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillRowHost")), false);
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillRowHost")), false);
 	// 아이콘·등급·효과를 하나의 연속된 정보면에서 읽는다. 효과 본문은 전용
 	// ScrollBox 에 담아, 패시브 줄이 길어도 잘리지 않고 스크롤로 다 읽힌다.
 	const FString EffectBody = FString(TEXT("효과")) + LINE_TERMINATOR + Body;
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다 -- 스킬
 	// 상세가 mDetailBodyText 를 데이터 전용으로 두는 것과 같은 규칙.
-	SetTextIfPresent(mDetailBodyText, FText::FromString(EffectBody));
-	SetShown(mDetailBodyText, false);
-	SetTextIfPresent(mArtifactDescriptionText, FText::FromString(EffectBody));
+	DetailSetTextIfPresent(mDetailBodyText, FText::FromString(EffectBody));
+	DetailSetShown(mDetailBodyText, false);
+	DetailSetTextIfPresent(mArtifactDescriptionText, FText::FromString(EffectBody));
 	if (mArtifactDescriptionScrollBox != nullptr)
 	{
 		mArtifactDescriptionScrollBox->ScrollToStart();
 	}
-	SetShown(mArtifactDescriptionRoot, true);
-	SetTextIfPresent(mDetailExtraHeading, FText::GetEmpty());
-	SetTextIfPresent(mDetailExtraText, FText::GetEmpty());
+	DetailSetShown(mArtifactDescriptionRoot, true);
+	DetailSetTextIfPresent(mDetailExtraHeading, FText::GetEmpty());
+	DetailSetTextIfPresent(mDetailExtraText, FText::GetEmpty());
 	ShowDetailRightBlock(nullptr);
 
 	// 확정 시안: 아티팩트에는 스킬용 받침판과 왼쪽 설명 글이 없다. 대신
@@ -1739,8 +1744,8 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 	}
 	// 아티팩트에는 열을 가르는 장식선 자체가 필요 없다. 두 열용 공용 판은
 	// 유지하되 선만 접어 아이콘과 효과가 한 화면으로 이어져 보이게 한다.
-	SetShown(mDetailDivider0, false);
-	SetShown(mDetailDivider1, false);
+	DetailSetShown(mDetailDivider0, false);
+	DetailSetShown(mDetailDivider1, false);
 	static const int32 LitByRarity[] = { 1, 3, 5 };
 	const int32 LitCount = LitByRarity[FMath::Clamp(Detail.mRarityLevel, 0, 2)];
 	for (int32 Index = 0; Index < 5; ++Index)
