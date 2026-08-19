@@ -83,6 +83,7 @@ void UUnitModel::OnEndRoom()
 
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetSpeedPointAttribute(), ETacticalModOp::Override, 0.f);
 	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 

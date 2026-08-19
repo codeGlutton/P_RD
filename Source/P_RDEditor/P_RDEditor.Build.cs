@@ -26,6 +26,14 @@ public class P_RDEditor : ModuleRules
             "Slate",
             "SlateCore",
 
+            /* Sequencer & MovieScene Modules */
+            "MovieScene",
+            "MovieSceneTracks",
+            "MovieSceneTools",
+            "Sequencer",
+            "SequencerCore",
+            "LevelSequence",
+
             /* Asset Validator Modules */
             "DataValidation",
         });
