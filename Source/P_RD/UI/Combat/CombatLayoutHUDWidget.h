@@ -251,6 +251,18 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Layout")
 	bool mUsePreviewData = true;
 
+public:
+	/**
+	 * @brief 화면에서 실제로 걷어낼 때 상세 겹(프레젠터 소유)을 함께 걷는다.
+	 *
+	 * @details 상세 겹 정리를 NativeDestruct에 두면 안 된다 — NativeDestruct는
+	 * Slate 수명 이벤트라, 위젯 렌더러(FWidgetRenderer)가 캡처용 임시 Slate
+	 * 트리를 버릴 때도 불린다. 그때 프레젠터를 끊으면 살아 있는 HUD의
+	 * 상세 배선(전술판 버튼 등)이 소리 없이 죽는다. 진짜 제거 경로인
+	 * RemoveFromParent(CloseUI→ApplyCloseUI, 뷰포트/레벨 정리)에서만 걷는다.
+	 */
+	virtual void RemoveFromParent() override;
+
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;

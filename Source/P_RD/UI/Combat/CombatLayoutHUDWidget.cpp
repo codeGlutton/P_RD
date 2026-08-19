@@ -401,6 +401,22 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 		CameraPawn->SetTouchGestureInputEnabled(true);
 	}
 	ReleaseSkillWorldPreview();
+	// 상세 겹(프레젠터 소유) 정리는 여기서 하지 않는다. NativeDestruct는 Slate
+	// 수명 이벤트라 위젯 렌더러(FWidgetRenderer)가 임시 트리를 버릴 때도 불리는데,
+	// 그때 프레젠터를 끊으면 살아 있는 HUD의 상세 배선(전술판 버튼 등)이 소리
+	// 없이 죽는다. 진짜 제거 경로인 RemoveFromParent가 맡는다.
+	if (mMonsterTabWidget != nullptr)
+	{
+		mMonsterTabWidget->RemoveFromParent();
+		mMonsterTabWidget = nullptr;
+	}
+	Super::NativeDestruct();
+}
+
+void UCombatLayoutHUDWidget::RemoveFromParent()
+{
+	// 뷰포트/레벨 정리가 HUD를 실제로 걷어낼 때만 상세 겹을 함께 걷는다.
+	// (CloseUI→ApplyCloseUI→RemoveFromParent, 월드 전환의 뷰포트 위젯 정리.)
 	if (mDetailPresenter != nullptr)
 	{
 		// 겹 제거는 소유자인 프레젠터가 한다. 비친 포인터만 함께 비운다.
@@ -408,12 +424,7 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 	}
 	mDetailOverlayWidget = nullptr;
 	mSkillTacticalDiagramWidget = nullptr;
-	if (mMonsterTabWidget != nullptr)
-	{
-		mMonsterTabWidget->RemoveFromParent();
-		mMonsterTabWidget = nullptr;
-	}
-	Super::NativeDestruct();
+	Super::RemoveFromParent();
 }
 
 /**
