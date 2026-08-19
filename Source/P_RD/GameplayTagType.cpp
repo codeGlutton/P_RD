@@ -36,6 +36,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_BlessedShield_Vigor,	"Animation.Montage.Skill.Mercenary.Knight.BlessedShield.Vigor")			
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Blessing,				"Animation.Montage.Skill.Mercenary.Knight.Blessing")
 
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_NormalShot,				"Animation.Montage.Skill.Mercenary.Ranger.NormalShot");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_PiercingShot,			"Animation.Montage.Skill.Mercenary.Ranger.PiercingShot");		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_SnipeShot,				"Animation.Montage.Skill.Mercenary.Ranger.SnipeShot");	
@@ -52,9 +53,6 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_AP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.AP");		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_SP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.SP");		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_StunningKick,			"Animation.Montage.Skill.Mercenary.Ranger.StunningKick");		
-
-
-
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_NormalEnergyBall,			"Animation.Montage.Skill.Mercenary.Mage.NormalEnergyBall");
@@ -90,6 +88,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_VampiricBite,		"Animation.Montage.Skill.Mercenary.Barbarian.VampiricBite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Taunt,				"Animation.Montage.Skill.Mercenary.Barbarian.Taunt");
 
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_NormalDoubleSlash,		"Animation.Montage.Skill.Mercenary.Rogue.NormalDoubleSlash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_Disarm,					"Animation.Montage.Skill.Mercenary.Rogue.Disarm");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_DaggerThrow,				"Animation.Montage.Skill.Mercenary.Rogue.DaggerThrow");
@@ -106,6 +105,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_HookAndPull,				"Animation.Montage.Skill.Mercenary.Rogue.HookAndPull");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_LegSweep,				"Animation.Montage.Skill.Mercenary.Rogue.LegSweep");
 
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_NormalAttack,			"Animation.Montage.Skill.Mercenary.Druid.NormalAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Longstrider,				"Animation.Montage.Skill.Mercenary.Druid.Longstrider");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Aging,					"Animation.Montage.Skill.Mercenary.Druid.Aging");
@@ -121,6 +121,39 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Web,						"Animation.Montage.Skill.Mercenary.Druid.Web");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_VineMire,				"Animation.Montage.Skill.Mercenary.Druid.VineMire");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_ExplosiveFruit,			"Animation.Montage.Skill.Mercenary.Druid.ExplosiveFruit");
+
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Mushroom_Bodyslam,				"Animation.Montage.Skill.Monster.Mushroom.Bodyslam");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Mushroom_Spore_Exhaustion,		"Animation.Montage.Skill.Monster.Mushroom.Spore.Exhaustion");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Mushroom_Spore_Frail,			"Animation.Montage.Skill.Monster.Mushroom.Spore.Frail");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Stump_Bodyslam,					"Animation.Montage.Skill.Monster.Stump.Bodyslam");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Stump_Grow,						"Animation.Montage.Skill.Monster.Stump.Grow");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Bite,						"Animation.Montage.Skill.Monster.Spider.Bite");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_PoisonSting,				"Animation.Montage.Skill.Monster.Spider.PoisonSting");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Web,						"Animation.Montage.Skill.Monster.Spider.Web");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Bodyslam,					"Animation.Montage.Skill.Monster.Slime.Bodyslam");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_dissolve_Weapon,			"Animation.Montage.Skill.Monster.Slime.dissolve.Weapon");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_dissolve_Euipment,			"Animation.Montage.Skill.Monster.Slime.dissolve.Equipment");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_Attack,					"Animation.Montage.Skill.Monster.Eagle.Attack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_BlindnessAttack,			"Animation.Montage.Skill.Monster.Eagle.BlindnessAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_WindyWing,					"Animation.Montage.Skill.Monster.Eagle.WindyWing");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Golem_Swing,						"Animation.Montage.Skill.Monster.Golem.Swing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Golem_EarthQuake, 				"Animation.Montage.Skill.Monster.Golem.EarthQuake");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Golem_Stamp, 					"Animation.Montage.Skill.Monster.Golem.Stamp");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Claw,					"Animation.Montage.Skill.Monster.Warewolf.Claw");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Howling,				"Animation.Montage.Skill.Monster.Warewolf.Howling");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Pierce,					"Animation.Montage.Skill.Monster.Warewolf.Pierce");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Attack,					"Animation.Montage.Skill.Monster.Leshy.Attack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Curse,						"Animation.Montage.Skill.Monster.Leshy.Curse");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Vine_Pull,					"Animation.Montage.Skill.Monster.Leshy.Vine.Pull");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Vine_Roots,				"Animation.Montage.Skill.Monster.Leshy.Vine.Roots");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Damage,									"Animation.Montage.Hit.Damage");
