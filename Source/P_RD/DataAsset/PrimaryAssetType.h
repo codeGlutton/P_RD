@@ -85,12 +85,3 @@ namespace SkillPrimaryAssetTypes
 	DECLARE_PRIMARY_ASSET_TYPE(ObstacleActive);
 }
 
-/**
- * @brief 주사위 Primary Asset Type들을 정의한 namespace 영역
- * @details
- * 희귀도 별로 등장하는 방을 나누어 설계
- */
-namespace DicePrimaryAssetTypes
-{
-	DECLARE_PRIMARY_ASSET_TYPE(Dice);
-}

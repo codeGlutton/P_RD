@@ -11,8 +11,6 @@
 #include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "StaticPlayerUnitSpawnData.generated.h"
 
-class UStaticDiceData;
-
 /**
  * @brief  플레이어 유닛 생성 시 사용되는 정적 Primary Data Asset
  */

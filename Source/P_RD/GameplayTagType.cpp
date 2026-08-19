@@ -138,22 +138,16 @@ namespace AnimationTags
 
 namespace AbilityTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_LevelUp,											"GameplayAbility.LevelUp");
-
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRoom,								"GameplayAbility.Passive.OnStartRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRoom,								"GameplayAbility.Passive.OnEndRoom");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartTurn,								"GameplayAbility.Passive.OnStartTurn");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndTurn,								"GameplayAbility.Passive.OnEndTurn");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartRollingDice,						"GameplayAbility.Passive.OnStartRollingDice");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndRollingDice,						"GameplayAbility.Passive.OnEndRollingDice");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartUsingSkill,						"GameplayAbility.Passive.OnStartUsingSkill");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndUsingSkill,							"GameplayAbility.Passive.OnEndUsingSkill");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartApplyingEffect,					"GameplayAbility.Passive.OnStartApplyingEffect");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndApplyingEffect,						"GameplayAbility.Passive.OnEndApplyingEffect");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartReceivingEffect,					"GameplayAbility.Passive.OnStartReceivingEffect");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndReceivingEffect,					"GameplayAbility.Passive.OnEndReceivingEffect");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnStartOneMove,							"GameplayAbility.Passive.OnStartOneMove");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayAbility_Passive_OnEndOneMove,							"GameplayAbility.Passive.OnEndOneMove");
 }
 
 namespace EffectTags

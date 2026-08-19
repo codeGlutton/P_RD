@@ -16,7 +16,6 @@
 class USRPGSkillBuildAction;
 class UStaticSkillData;
 class UTileMapModel;
-class UDiceModel;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
@@ -102,7 +101,7 @@ protected:
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 protected:
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite)
 	ESRPGSkillBuildPhase mSkillBuildPhase = ESRPGSkillBuildPhase::None;
 
 protected:

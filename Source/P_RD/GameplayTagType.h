@@ -170,10 +170,6 @@ namespace AnimationTags
  */
 namespace AbilityTags
 {
-	/* 플레이어 핵심 능력 태그들 */
-
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_LevelUp);
-
 	/* 패시브 능력 태그들 */
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRoom);
@@ -181,9 +177,6 @@ namespace AbilityTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartTurn);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndTurn);
-
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartRollingDice);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndRollingDice);
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartUsingSkill);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndUsingSkill);
@@ -193,9 +186,6 @@ namespace AbilityTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartReceivingEffect);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndReceivingEffect);
-
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnStartOneMove);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayAbility_Passive_OnEndOneMove);
 }
 
 /**
