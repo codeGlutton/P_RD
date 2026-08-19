@@ -172,8 +172,8 @@ namespace AnimationTags
 
 #pragma region Slime
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Slime_Bodyslam);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Slime_dissolve_Weapon);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Slime_dissolve_Euipment);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Slime_Dissolve_Weapon);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Slime_Dissolve_Equipment);
 
 #pragma endregion
 
@@ -190,9 +190,9 @@ namespace AnimationTags
 #pragma endregion
 
 #pragma region Warewolf
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Warewolf_Claw);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Warewolf_Howling);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Warewolf_Pierce);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Werewolf_Claw);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Werewolf_Howling);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Werewolf_Pierce);
 #pragma endregion
 
 #pragma region Leshy

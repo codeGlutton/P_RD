@@ -135,8 +135,8 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Web,						"Animation.Montage.Skill.Monster.Spider.Web");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Bodyslam,					"Animation.Montage.Skill.Monster.Slime.Bodyslam");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_dissolve_Weapon,			"Animation.Montage.Skill.Monster.Slime.dissolve.Weapon");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_dissolve_Euipment,			"Animation.Montage.Skill.Monster.Slime.dissolve.Equipment");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Dissolve_Weapon,			"Animation.Montage.Skill.Monster.Slime.Dissolve.Weapon");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Dissolve_Equipment,		"Animation.Montage.Skill.Monster.Slime.Dissolve.Equipment");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_Attack,					"Animation.Montage.Skill.Monster.Eagle.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_BlindnessAttack,			"Animation.Montage.Skill.Monster.Eagle.BlindnessAttack");
@@ -146,9 +146,9 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Golem_EarthQuake, 				"Animation.Montage.Skill.Monster.Golem.EarthQuake");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Golem_Stamp, 					"Animation.Montage.Skill.Monster.Golem.Stamp");
 
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Claw,					"Animation.Montage.Skill.Monster.Warewolf.Claw");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Howling,				"Animation.Montage.Skill.Monster.Warewolf.Howling");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Warewolf_Pierce,					"Animation.Montage.Skill.Monster.Warewolf.Pierce");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Werewolf_Claw,					"Animation.Montage.Skill.Monster.Werewolf.Claw");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Werewolf_Howling,				"Animation.Montage.Skill.Monster.Werewolf.Howling");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Werewolf_Pierce,					"Animation.Montage.Skill.Monster.Werewolf.Pierce");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Attack,					"Animation.Montage.Skill.Monster.Leshy.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Curse,						"Animation.Montage.Skill.Monster.Leshy.Curse");
