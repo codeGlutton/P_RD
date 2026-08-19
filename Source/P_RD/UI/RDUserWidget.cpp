@@ -6,6 +6,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
+#include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -200,6 +201,37 @@ void URDUserWidget::NativeOnInitialized()
 	SetupCommonButtonFeedback();
 }
 
+void URDUserWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	// WBP에 구워진 버튼은 NativeOnInitialized에서 처리된다. 다만 파생 클래스는
+	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
+	// 현재 호출과 다음 틱 재검사를 함께 두면 두 종류 모두 같은 소리를 쓴다.
+	SetupCommonButtonFeedback();
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			FTimerDelegate::CreateWeakLambda(this, [this]()
+				{
+					SetupCommonButtonFeedback();
+				}));
+	}
+}
+
+void URDUserWidget::ApplyCommonButtonPressSound(UButton* Button) const
+{
+	if (Button == nullptr || mCommonButtonPressSound == nullptr
+		|| Button->GetName().Contains(TEXT("InputBlocker")))
+	{
+		return;
+	}
+
+	FButtonStyle Style = Button->GetStyle();
+	Style.PressedSlateSound.SetResourceObject(mCommonButtonPressSound);
+	Button->SetStyle(Style);
+}
+
 void URDUserWidget::SetupCommonButtonFeedback()
 {
 	mFeedbackButtons.Reset();
@@ -210,11 +242,10 @@ void URDUserWidget::SetupCommonButtonFeedback()
 		return;
 	}
 
-	USoundBase* PressSound = mCommonButtonPressSound;
 	const bool bApplyPressVisual = ShouldApplyButtonFeedback();
 
 	// 이 위젯 트리 안의 모든 UButton을 순회한다(자식 UserWidget은 각자 이 베이스를 상속하므로 스스로 처리).
-	WidgetTree->ForEachWidget([this, PressSound, bApplyPressVisual](UWidget* Widget)
+	WidgetTree->ForEachWidget([this, bApplyPressVisual](UWidget* Widget)
 		{
 			UButton* Button = Cast<UButton>(Widget);
 			if (Button == nullptr)
@@ -224,11 +255,8 @@ void URDUserWidget::SetupCommonButtonFeedback()
 
 			// 클릭 사운드: 스타일의 PressedSlateSound에만 주입한다. 브러시/색은 그대로 둬 디자이너 스킨을 보존한다.
 			{
+				ApplyCommonButtonPressSound(Button);
 				FButtonStyle Style = Button->GetStyle();
-				if (PressSound != nullptr)
-				{
-					Style.PressedSlateSound.SetResourceObject(PressSound);
-				}
 
 				/*
 				 * 호버 피드백(0811 점검). 마우스를 올려도 아무 변화가 없어
@@ -248,7 +276,6 @@ void URDUserWidget::SetupCommonButtonFeedback()
 					HoverBrush.TintColor = FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.12f));
 					Style.SetHovered(HoverBrush);
 				}
-
 				Button->SetStyle(Style);
 			}
 

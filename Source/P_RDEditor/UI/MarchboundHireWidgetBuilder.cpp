@@ -36,7 +36,13 @@ namespace MarchboundHireWidgetBuilder
 	constexpr float ListRoleOpticalOffsetY = -2.25f;
 	constexpr float DetailNameOpticalOffsetY = -13.5f;
 	constexpr float SkillLabelOpticalOffsetY = -2.5f;
-	constexpr float ButtonLabelOpticalOffsetY = -20.0f;
+	/*
+	 * 나무판 아트의 시각 중심이 기하 중심보다 위라서 라벨을 살짝 올린다.
+	 * -20(글리프의 46%)은 과했고 0은 라벨이 가라앉아 보였다. 글리프 크기의
+	 * 약 23%가 판 면과 맞았다. 런타임이 폰트를 줄일 때는 이 값을 비례
+	 * 축소한다 (MercenaryHireWidget::RefreshBottomBar).
+	 */
+	constexpr float ButtonLabelOpticalOffsetY = -10.0f;
 	constexpr float PartyCountOpticalOffsetY = -26.5f;
 	constexpr float PartySlotNameOpticalOffsetY = -16.25f;
 
@@ -442,15 +448,40 @@ namespace MarchboundHireWidgetBuilder
 			TEXT("HireRightRegion"), FVector2D(520.0f, 1080.0f),
 			FAnchors(0.70f, 0.0f, 1.0f, 1.0f), 10);
 
+		// Each regional ScaleBox centers its 1080-high design board when the viewport
+		// is taller than the allocated region. Keep semantic groups separate so the
+		// runtime can leave the two side columns centered, move central stats/skills
+		// above the bottom action, and pin actions without rewriting child coordinates.
+		UCanvasPanel* LeftTopGroup = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireLeftTopGroup"));
+		PlaceCanvas(LeftRegion, LeftTopGroup, FVector2D::ZeroVector,
+			FVector2D(555.0f, 1080.0f), 5);
+		LeftTopGroup->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		UCanvasPanel* CenterTopGroup = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireCenterTopGroup"));
+		PlaceCanvas(CenterRegion, CenterTopGroup, FVector2D::ZeroVector,
+			FVector2D(845.0f, 1080.0f), 5);
+		CenterTopGroup->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		UCanvasPanel* CenterMiddleGroup = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireCenterMiddleGroup"));
+		PlaceCanvas(CenterRegion, CenterMiddleGroup, FVector2D::ZeroVector,
+			FVector2D(845.0f, 1080.0f), 6);
+		CenterMiddleGroup->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		UCanvasPanel* RightTopGroup = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireRightTopGroup"));
+		PlaceCanvas(RightRegion, RightTopGroup, FVector2D::ZeroVector,
+			FVector2D(520.0f, 1080.0f), 5);
+		RightTopGroup->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
 		const FVector2D ListPos(55.0f, 100.0f);
 		const FVector2D ListSize(500.0f, 850.0f);
-		AddImage(Blueprint, LeftRegion, TEXT("HireListFrameArt"), ListFrame,
+		AddImage(Blueprint, LeftTopGroup, TEXT("HireListFrameArt"), ListFrame,
 			ListPos, ListSize, 0);
 		const FBox2D ListInner = UIPartRects::Inner(TEXT("T_MB_HireListFrame"),
 			ListPos, ListSize, false);
 
 		UCanvasPanel* TitlePanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireTitlePanel"));
-		PlaceCanvas(CenterRegion, TitlePanel, FVector2D(190.0f, 18.0f), FVector2D(430.0f, 106.0f), 30);
+		PlaceCanvas(CenterTopGroup, TitlePanel, FVector2D(190.0f, 18.0f), FVector2D(430.0f, 106.0f), 30);
 		AddImage(Blueprint, TitlePanel, TEXT("HireTitleArt"), TitlePlate,
 			FVector2D::ZeroVector, FVector2D(430.0f, 106.0f), 0);
 		UTextBlock* TitleText = AddText(Blueprint, TitlePanel, TEXT("HireTitleText"),
@@ -484,7 +515,7 @@ namespace MarchboundHireWidgetBuilder
 			UCanvasPanel* Card = FindOrCreate<UCanvasPanel>(Blueprint,
 				FName(*FString::Printf(TEXT("HireCard_%d"), Index)));
 			// 카드는 목록 틀의 **구멍 안**에 줄 세운다. 95,158 은 눈대중이었다.
-			PlaceCanvas(LeftRegion, Card,
+			PlaceCanvas(LeftTopGroup, Card,
 				FVector2D(ListInner.Min.X + (ListInner.GetSize().X - CardSize.X) * 0.5f,
 					ListInner.Min.Y + 12.f + (CardSize.Y + 8.f) * Index),
 				CardSize, 10);
@@ -562,7 +593,7 @@ namespace MarchboundHireWidgetBuilder
 		}
 
 		UCanvasPanel* NamePanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailNamePanel"));
-		PlaceCanvas(CenterRegion, NamePanel, FVector2D(180.0f, 590.0f), FVector2D(520.0f, 120.0f), 20);
+		PlaceCanvas(CenterMiddleGroup, NamePanel, FVector2D(180.0f, 590.0f), FVector2D(520.0f, 120.0f), 20);
 		AddImage(Blueprint, NamePanel, TEXT("HireDetailNameArt"), NamePlate,
 			FVector2D::ZeroVector, FVector2D(520.0f, 120.0f), 0);
 		const FBox2D NameInner = UIPartRects::Inner(TEXT("T_MB_HireNamePlate"),
@@ -576,7 +607,7 @@ namespace MarchboundHireWidgetBuilder
 
 		UCanvasPanel* StatsPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireDetailStatsPanel"));
 		const FVector2D StatsSize(600.0f, 84.0f);
-		PlaceCanvas(CenterRegion, StatsPanel, FVector2D(122.5f, 728.0f), StatsSize, 20);
+		PlaceCanvas(CenterMiddleGroup, StatsPanel, FVector2D(122.5f, 728.0f), StatsSize, 20);
 		AddImage(Blueprint, StatsPanel, TEXT("HireDetailStatsArt"), StatsStrip,
 			FVector2D::ZeroVector, StatsSize, 0);
 		// 이 띠에는 세로 칸막이가 둘 그려져 있다. 셋으로 나눠 쓴다.
@@ -603,7 +634,7 @@ namespace MarchboundHireWidgetBuilder
 		{
 			UCanvasPanel* SkillPanel = FindOrCreate<UCanvasPanel>(Blueprint,
 				FName(*FString::Printf(TEXT("HireDetailSkill_%d"), Index)));
-			PlaceCanvas(CenterRegion, SkillPanel, FVector2D(53.0f + 126.0f * Index, 820.0f),
+			PlaceCanvas(CenterMiddleGroup, SkillPanel, FVector2D(53.0f + 126.0f * Index, 820.0f),
 				FVector2D(116.0f, 116.0f), 20);
 			SkillPanel->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 			AddImage(Blueprint, SkillPanel,
@@ -668,7 +699,7 @@ namespace MarchboundHireWidgetBuilder
 
 		UCanvasPanel* PartyPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireBottomBar"));
 		const FVector2D PartySize(420.0f, 627.0f);
-		PlaceCanvas(RightRegion, PartyPanel, FVector2D(40.0f, 145.0f), PartySize, 20);
+		PlaceCanvas(RightTopGroup, PartyPanel, FVector2D(40.0f, 145.0f), PartySize, 20);
 		UImage* PartyFrameArt = FindOrCreate<UImage>(Blueprint, TEXT("HireBottomBar_Art"));
 		PlaceCanvas(PartyPanel, PartyFrameArt, FVector2D::ZeroVector, PartySize, 0);
 		SetImage(PartyFrameArt, PartyFrame);
@@ -724,12 +755,23 @@ namespace MarchboundHireWidgetBuilder
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotName_%d"), Index)));
 			PlaceCenteredText(Blueprint, SlotPanel, Name,
-				SlotInner.Min + FVector2D(SlotFace + 12.f, SlotSpan.Y * 0.28f),
-				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.44f), 12);
+				SlotInner.Min + FVector2D(SlotFace + 12.f, 0.f),
+				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.62f), 12);
 			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 26);
 			ApplyTextOpticalCenter(Name, PartySlotNameOpticalOffsetY);
 			Name->SetVisibility(ESlateVisibility::Collapsed);
+
+			// 교체 대상도 왼쪽 후보 카드처럼 직업과 레벨을 두 줄로 나눈다.
+			UTextBlock* Level = FindOrCreate<UTextBlock>(Blueprint,
+				FName(*FString::Printf(TEXT("PartySlotLevel_%d"), Index)));
+			PlaceCenteredText(Blueprint, SlotPanel, Level,
+				SlotInner.Min + FVector2D(SlotFace + 12.f, SlotSpan.Y * 0.58f),
+				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.38f), 13);
+			Level->SetJustification(ETextJustify::Center);
+			SetFont(Level, Font, 16);
+			ApplyTextOpticalCenter(Level, ListRoleOpticalOffsetY);
+			Level->SetVisibility(ESlateVisibility::Collapsed);
 
 			UButton* SlotButton = FindOrCreate<UButton>(Blueprint,
 				FName(*FString::Printf(TEXT("PartySlotButton_%d"), Index)));

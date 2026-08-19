@@ -51,6 +51,9 @@ public:
 	 */
 	TArray<FSRPGTurnEventLog> SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction = true);
 
+	/** @brief 끝난 실제 전투 턴의 로그를 UI 어댑터가 가져간다. 시뮬레이션 컨텍스트에는 영향을 주지 않는다. */
+	TArray<FSRPGTurnEventLog> ConsumeGameEventLogs();
+
 protected:
 	void SetSimulationState(ESRPGSimulationState State);
 

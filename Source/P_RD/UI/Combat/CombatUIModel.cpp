@@ -86,7 +86,9 @@ void UCombatUIModel::SetTarget(const FCombatTargetUI& Target)
 
 void UCombatUIModel::SetFocusScreenAnchor(FVector2D AnchorFraction)
 {
-	OnChangeFocusScreenAnchor.Broadcast(AnchorFraction);
+	mFocusScreenAnchor.X = FMath::Clamp(AnchorFraction.X, 0.0f, 1.0f);
+	mFocusScreenAnchor.Y = FMath::Clamp(AnchorFraction.Y, 0.0f, 1.0f);
+	OnChangeFocusScreenAnchor.Broadcast(mFocusScreenAnchor);
 }
 
 void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
@@ -279,6 +281,21 @@ void UCombatUIModel::NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogReq
 		{
 			NotifyCombatFloatingLog(*SortedRequest.Request);
 		}
+	}
+}
+
+void UCombatUIModel::SetCombatEventBatch(
+	ECombatEventDataSourceUI Source,
+	const TArray<FCombatFloatingLogRequest>& Requests)
+{
+	mCombatEventBatch.mSource = Source;
+	++mCombatEventBatch.mRevision;
+	mCombatEventBatch.mFloatingLogs = Requests;
+	OnCombatEventBatchChanged.Broadcast(mCombatEventBatch);
+
+	if (Requests.Num() > 0)
+	{
+		NotifyCombatFloatingLogs(Requests);
 	}
 }
 

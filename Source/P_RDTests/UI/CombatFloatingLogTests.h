@@ -13,7 +13,11 @@ class UCombatFloatingLogTestListener : public UObject
 public:
 	UFUNCTION()
 	void HandleFloatingLog(FCombatFloatingLogRequest Request);
+	UFUNCTION()
+	void HandleEventBatch(FCombatEventBatchUI Batch);
 
 	int32 mFloatingLogCallCount = 0;
 	FCombatFloatingLogRequest mLastRequest;
+	int32 mEventBatchCallCount = 0;
+	FCombatEventBatchUI mLastBatch;
 };

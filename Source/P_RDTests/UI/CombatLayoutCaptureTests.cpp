@@ -20,6 +20,7 @@
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ImageUtils.h"
@@ -28,7 +29,11 @@
 #include "Misc/Paths.h"
 #include "RHI.h"
 #include "Slate/WidgetRenderer.h"
+#include "TextureCompiler.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Hire/MercenaryHireWidget.h"
+#include "UI/Reward/RewardSettlementWidgetBase.h"
+#include "UI/Reward/RewardUIModel.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScaleBox.h"
@@ -100,14 +105,14 @@ namespace CombatLayoutCapture
 	constexpr int32 DesignHeight = 1080;
 	constexpr int32 CaptureWidth = 1672;
 	constexpr int32 CaptureHeight = 941;
-	constexpr float CaptureScale = float(CaptureHeight) / float(DesignHeight);
 
 	/** @brief 1920 캔버스를 1672 로 줄여 그리도록 감싼다. 인게임과 같은 배율. */
-	TSharedRef<SWidget> ScaleToCapture(const TSharedRef<SWidget>& Inner)
+	TSharedRef<SWidget> ScaleToCapture(const TSharedRef<SWidget>& Inner,
+		const int32 TargetHeight = CaptureHeight)
 	{
 		return SNew(SScaleBox)
 			.Stretch(EStretch::UserSpecified)
-			.UserSpecifiedScale(CaptureScale)
+			.UserSpecifiedScale(float(TargetHeight) / float(DesignHeight))
 			[
 				SNew(SBox)
 				.WidthOverride(float(DesignWidth))
@@ -202,7 +207,14 @@ namespace CombatLayoutCapture
 	 */
 	bool CaptureLayout(UWorld& World, const TCHAR* ClassPath, FString& OutError,
 		const bool bShowMercenaryPanel = false,
-		const bool bShowInventoryPage = false)
+		const bool bShowInventoryPage = false,
+		const bool bShowRewardChoices = false,
+		const bool bGoldOnlyReward = false,
+		const bool bShowRewardExperience = false,
+		const int32 OutputWidth = CaptureWidth,
+		const int32 OutputHeight = CaptureHeight,
+		const bool bUseDirectViewportSize = false,
+		const TCHAR* AdditionalSuffix = TEXT(""))
 	{
 		UClass* LayoutClass = LoadClass<UUserWidget>(nullptr, ClassPath);
 		if (LayoutClass == nullptr)
@@ -224,6 +236,69 @@ namespace CombatLayoutCapture
 		// 않고 그리기만 하므로 표시 상태를 직접 세운다.
 		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		if (bUseDirectViewportSize)
+		{
+			if (UMercenaryHireWidget* Hire = Cast<UMercenaryHireWidget>(Layout))
+			{
+				Hire->ApplyResponsiveLayoutForTest(
+					FVector2D(OutputWidth, OutputHeight));
+			}
+		}
+		if (URewardSettlementWidgetBase* RewardWidget =
+			Cast<URewardSettlementWidgetBase>(Layout))
+		{
+			URewardUIModel* PreviewModel = NewObject<URewardUIModel>(RewardWidget);
+			FRewardUI PreviewReward;
+			PreviewReward.mTitle = NSLOCTEXT(
+				"CombatLayoutCapture", "RewardTitle", "전투 보상");
+			PreviewReward.mGoldGained = 22;
+			PreviewReward.mExpGained = 50;
+			UTexture2D* PreviewPortraits[] = {
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight")),
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage")),
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue")) };
+			const FText PreviewNames[] = {
+				NSLOCTEXT("CombatLayoutCapture", "RewardKnight", "기사"),
+				NSLOCTEXT("CombatLayoutCapture", "RewardMage", "마법사"),
+				NSLOCTEXT("CombatLayoutCapture", "RewardRogue", "도적") };
+			for (int32 Index = 0; Index < 3; ++Index)
+			{
+				FRewardMercenaryExpUI Mercenary;
+				Mercenary.mName = PreviewNames[Index];
+				Mercenary.mPortrait = PreviewPortraits[Index];
+				Mercenary.mLevel = Index + 1;
+				Mercenary.mExpBefore = 25.f + Index * 40.f;
+				Mercenary.mExpAfter = Mercenary.mExpBefore + 50.f;
+				Mercenary.mMaxExp = 250.f;
+				PreviewReward.mMercenaryExp.Add(Mercenary);
+			}
+			PreviewModel->SetReward(PreviewReward);
+			TArray<FRewardChoiceUI> PreviewChoices;
+			const FText Names[] = {
+				NSLOCTEXT("CombatLayoutCapture", "BloodChaliceChoice", "피의 성배"),
+				NSLOCTEXT("CombatLayoutCapture", "FangAmuletChoice", "야수의 송곳니"),
+				NSLOCTEXT("CombatLayoutCapture", "LuckyCoinChoice", "행운의 주화") };
+			UTexture2D* Icons[] = {
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice")),
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_FangAmulet.T_Artifact_FangAmulet")),
+				LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_LuckyCoin.T_Artifact_LuckyCoin")) };
+			for (int32 Index = 0; Index < 3; ++Index)
+			{
+				FRewardChoiceUI Choice;
+				Choice.mChoiceIndex = Index;
+				Choice.mKind = ERewardChoiceKind::Equipment;
+				Choice.mName = Names[Index];
+				Choice.mIcon = Icons[Index];
+				PreviewChoices.Add(Choice);
+			}
+			PreviewModel->SetRewardChoices(bGoldOnlyReward
+				? TArray<FRewardChoiceUI>() : PreviewChoices);
+			RewardWidget->BindUIModel(PreviewModel);
+			if (!bShowRewardExperience)
+			{
+				RewardWidget->ContinueToNext();
+			}
+		}
 		// TakeWidget()에서 NativeConstruct가 돌며 패널을 기본 Collapsed로
 		// 되돌린다. 변형 상태는 Construct가 끝난 뒤 세워야 캡처에 남는다.
 		if (bShowMercenaryPanel && Layout->WidgetTree != nullptr)
@@ -272,13 +347,46 @@ namespace CombatLayoutCapture
 				}
 				for (const TCHAR* Name : {
 					TEXT("MercDetailSection"), TEXT("MercenaryHeroPortrait"),
+					TEXT("MercenaryPortraitFrame"), TEXT("MercenaryNamePlate"),
 					TEXT("MercenaryDetailName"), TEXT("MercenaryDetailHP"),
-					TEXT("MercenaryDetailAP"), TEXT("MercenaryDetailSpeed") })
+					TEXT("MercenaryDetailAP"), TEXT("MercenaryDetailSpeed"),
+					TEXT("MercenaryCritPlate"), TEXT("MercenaryCritLabel"),
+					TEXT("MercenaryCritValue"), TEXT("MercenarySkillHeading"),
+					TEXT("MercenarySkillDivider") })
 				{
 					if (UWidget* Detail = MercenaryTree != nullptr
 						? MercenaryTree->FindWidget(FName(Name)) : nullptr)
 					{
 						Detail->SetVisibility(ESlateVisibility::Collapsed);
+					}
+				}
+				for (int32 Index = 0; Index < 3; ++Index)
+				{
+					for (const TCHAR* Prefix : { TEXT("MercenaryChip") })
+					{
+						for (const TCHAR* Suffix : { TEXT("Frame"), TEXT("Label") })
+						{
+							if (UWidget* Detail = MercenaryTree != nullptr
+								? MercenaryTree->FindWidget(FName(*FString::Printf(
+									TEXT("%s%d%s"), Prefix, Index, Suffix))) : nullptr)
+							{
+								Detail->SetVisibility(ESlateVisibility::Collapsed);
+							}
+						}
+					}
+				}
+				for (int32 Index = 0; Index < 6; ++Index)
+				{
+					for (const TCHAR* Prefix : { TEXT("MercenarySkillFrame"),
+						TEXT("MercenarySkillIcon"), TEXT("MercenarySkillName"),
+						TEXT("MercenarySkillCost"), TEXT("MercenarySkillButton") })
+					{
+						if (UWidget* Detail = MercenaryTree != nullptr
+							? MercenaryTree->FindWidget(FName(*FString::Printf(
+								TEXT("%s_%d"), Prefix, Index))) : nullptr)
+						{
+							Detail->SetVisibility(ESlateVisibility::Collapsed);
+						}
 					}
 				}
 				if (UWidget* Inventory = MercenaryTree != nullptr
@@ -304,6 +412,12 @@ namespace CombatLayoutCapture
 		// 기지값 색 띠. 리니어 {0, 0.05, 0.2158, 1.0}은 감마 인코딩을 정확히
 		// 한 번 거치면 sRGB {0, 65, 128, 255}가 된다. 다르게 읽히면 파이프라인
 		// 어딘가에서 변환이 빠졌거나 두 번 들어간 것이다.
+		// Legacy 16:9 comparisons reproduce the device DPI scale explicitly. Fold
+		// captures instead allocate the WBP the full framebuffer geometry so its own
+		// anchors and regional ScaleBoxes receive the real 2176x1812 aspect ratio.
+		const TSharedRef<SWidget> PresentedLayout = bUseDirectViewportSize
+			? LayoutSlate
+			: ScaleToCapture(LayoutSlate, OutputHeight);
 		const TSharedRef<SWidget> CaptureRoot =
 			SNew(SOverlay)
 			+ SOverlay::Slot()
@@ -312,7 +426,7 @@ namespace CombatLayoutCapture
 			]
 			+ SOverlay::Slot()
 			[
-				ScaleToCapture(LayoutSlate)
+				PresentedLayout
 			]
 			// 색 띠는 배치 위에 그린다.
 			//
@@ -356,12 +470,16 @@ namespace CombatLayoutCapture
 		// **다른 판**이 빠져서, 굽는 쪽이 깨진 것처럼 보였다 -- 한 번은 위쪽
 		// 세 장이, 다음 번에는 두루마리 한 장이 없었다. 찍는 눈이 흔들리면
 		// 없는 문제를 쫓게 된다.
+		// 위젯 생성 시점에 처음 로드된 텍스처는 비동기 컴파일이 걸려 있어
+		// 스트리밍 대기만으로는 빈 자리로 그려진다. 렌더 직전에 컴파일을
+		// 끝까지 기다린다 (경험치 판이 세션 첫 캡처마다 비던 원인).
+		FTextureCompilingManager::Get().FinishAllCompilation();
 		ForceTexturesResident(Layout);
 
 		FWidgetRenderer Renderer(true, true);
 		Renderer.SetIsPrepassNeeded(true);
 		UTextureRenderTarget2D* RenderTarget = Renderer.DrawWidget(
-			CaptureRoot, FVector2D(CaptureWidth, CaptureHeight));
+			CaptureRoot, FVector2D(OutputWidth, OutputHeight));
 		if (RenderTarget == nullptr)
 		{
 			OutError = TEXT("렌더 타깃이 만들어지지 않음");
@@ -373,7 +491,7 @@ namespace CombatLayoutCapture
 		FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
 		ReadFlags.SetLinearToGamma(false);
 		if (!RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, ReadFlags)
-			|| Pixels.Num() != CaptureWidth * CaptureHeight)
+			|| Pixels.Num() != OutputWidth * OutputHeight)
 		{
 			OutError = TEXT("렌더 결과를 읽지 못함");
 			return false;
@@ -401,7 +519,7 @@ namespace CombatLayoutCapture
 			const int32 SampleX[4] = { 20, 60, 100, 140 };
 			for (int32 Step = 0; Step < 4; ++Step)
 			{
-				const FColor& Pixel = Pixels[5 * CaptureWidth + SampleX[Step]];
+				const FColor& Pixel = Pixels[5 * OutputWidth + SampleX[Step]];
 				if (FMath::Abs(int32(Pixel.R) - Expected[Step]) > 6)
 				{
 					OutError = FString::Printf(
@@ -412,12 +530,12 @@ namespace CombatLayoutCapture
 				}
 			}
 			// 통과했으면 띠를 배경색으로 지워 그림을 깨끗하게 남긴다.
-			const FColor Background = Pixels[30 * CaptureWidth + 400];
+			const FColor Background = Pixels[30 * OutputWidth + 400];
 			for (int32 Y = 0; Y < 12; ++Y)
 			{
 				for (int32 X = 0; X < 170; ++X)
 				{
-					Pixels[Y * CaptureWidth + X] = Background;
+					Pixels[Y * OutputWidth + X] = Background;
 				}
 			}
 		}
@@ -440,13 +558,17 @@ namespace CombatLayoutCapture
 		FString Stem = FString(ClassPath);
 		Stem.Split(TEXT("."), nullptr, &Stem, ESearchCase::CaseSensitive, ESearchDir::FromEnd);
 		Stem.RemoveFromEnd(TEXT("_C"));
-		const FString OutputPath = FPaths::Combine(
-			OutputDirectory(), FString::Printf(TEXT("%s%s.png"), *Stem,
-				bShowInventoryPage ? TEXT("_Inventory")
-					: (bShowMercenaryPanel ? TEXT("_Mercenaries") : TEXT(""))));
+		FString CaptureSuffix = bShowRewardExperience ? TEXT("_Experience")
+			: (bGoldOnlyReward ? TEXT("_GoldOnly")
+				: (bShowRewardChoices ? TEXT("_Choices")
+					: (bShowInventoryPage ? TEXT("_Inventory")
+						: (bShowMercenaryPanel ? TEXT("_Mercenaries") : TEXT("")))));
+		CaptureSuffix += AdditionalSuffix;
+		const FString OutputPath = FPaths::Combine(OutputDirectory(),
+			FString::Printf(TEXT("%s%s.png"), *Stem, *CaptureSuffix));
 
 		TArray64<uint8> PngData;
-		FImageUtils::PNGCompressImageArray(CaptureWidth, CaptureHeight, Pixels, PngData);
+		FImageUtils::PNGCompressImageArray(OutputWidth, OutputHeight, Pixels, PngData);
 		IFileManager::Get().MakeDirectory(*FPaths::GetPath(OutputPath), true);
 		if (!FFileHelper::SaveArrayToFile(PngData, *OutputPath))
 		{
@@ -701,6 +823,15 @@ bool FMercenaryHireLayoutCaptureTest::RunTest(const FString& Parameters)
 		Error))
 	{
 		AddError(Error);
+	}
+
+	FString FoldError;
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C"),
+		FoldError, false, false, false, false, false,
+		2176, 1812, true, TEXT("_Fold2176x1812")))
+	{
+		AddError(FoldError);
 	}
 	return true;
 }

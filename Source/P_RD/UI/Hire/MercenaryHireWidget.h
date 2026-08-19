@@ -31,9 +31,13 @@
 
 class UButton;
 class UImage;
+class USkillDetailOverlayPresenter;
+class USkillTacticalDiagramWidget;
 class UTextBlock;
 class UUserWidget;
 class UWidget;
+struct FShopMercenaryUI;
+struct FShopMercenaryPartySlotUI;
 
 /** @brief 이력서 한 장이 지금 어떤 상태인가. */
 UENUM(BlueprintType)
@@ -56,6 +60,10 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FOnMercenaryPartyConfirmed,
 
 /** @brief 뒤로 버튼을 눌러 타이틀로 돌아가 달라는 요청. */
 DECLARE_MULTICAST_DELEGATE(FOnMercenaryHireBackRequested);
+
+/** @brief 상점 모드에서 후보 판매 슬롯과 교체 대상 파티 슬롯을 확정한다. */
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShopMercenaryHireRequested,
+	int32 /*CandidateSlotIndex*/, int32 /*PartySlotIndex*/);
 
 /**
  * @brief 이력서 한 장에 딸린 위젯들.
@@ -92,7 +100,11 @@ struct FMercenarySlotWidgets
 	UPROPERTY() TObjectPtr<UButton> mButton = nullptr;
 	UPROPERTY() TObjectPtr<UImage> mFace = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mName = nullptr;
+	UPROPERTY() TObjectPtr<UTextBlock> mLevel = nullptr;
 	UPROPERTY() TObjectPtr<UWidget> mPlus = nullptr;
+
+	/** 빌더가 구운 이름 밴드 크기. 레벨 줄이 없는 화면에서 밴드를 칸 전체로 늘일 때 기준. */
+	FVector2D mNameBandBase = FVector2D::ZeroVector;
 };
 
 /**
@@ -118,6 +130,17 @@ public:
 	 */
 	void SetCharacterOptions(const TArray<FFrontendCharacterOption>& Options,
 		int32 PartySize = 3);
+
+	/**
+	 * @brief 기존 용병 선택 화면을 상점의 1인 고용/교체 모드로 연다.
+	 * @details 왼쪽은 판매 후보, 오른쪽은 현재 파티, 가운데 추가 버튼은 고용
+	 * 결제로 바뀐다. 실제 과금과 모델 교체는 ShopGameMode가 수행한다.
+	 */
+	void SetShopMode(const TArray<FShopMercenaryUI>& Candidates,
+		const TArray<FShopMercenaryPartySlotUI>& PartySlots, int32 CurrentGold);
+
+	/** @brief 상점 모드를 해제하고 처음 파티 구성 규칙으로 되돌린다. */
+	void ClearShopMode();
 
 	/**
 	 * @brief 이력서 한 장을 누른다.
@@ -152,6 +175,9 @@ public:
 	/** @brief 뒤로 버튼을 눌렀을 때 알려준다. 화면 전환은 프론트엔드가 맡는다. */
 	FOnMercenaryHireBackRequested mOnBackRequested;
 
+	/** @brief 상점 고용 확정. 부모 상점 WBP가 UIModel 의도로 변환한다. */
+	FOnShopMercenaryHireRequested mOnShopHireRequested;
+
 #if WITH_DEV_AUTOMATION_TESTS
 	/** @brief 자동화가 실제 세로/가로 재배치를 한 프레임 기다리지 않고 검사한다. */
 	void ApplyResponsiveLayoutForTest(const FVector2D& ViewportSize)
@@ -166,6 +192,10 @@ public:
 	int32 GetPressedSkillSlotForTest() const { return mPressedSkillSlot; }
 	int32 GetSkillDataIndexForSlotForTest(int32 SlotIndex) const;
 	UUserWidget* GetSkillDetailOverlayForTest() const { return mSkillDetailOverlay; }
+	USkillDetailOverlayPresenter* GetSkillDetailPresenterForTest() const
+	{
+		return mSkillDetailPresenter;
+	}
 #endif
 
 protected:
@@ -222,6 +252,8 @@ private:
 
 	/** @brief 화면에 걸린 후보들. 비어 있으면 시안 값이 그대로 남는다. */
 	UPROPERTY() TArray<FFrontendCharacterOption> mCrew;
+	UPROPERTY() TArray<FShopMercenaryUI> mShopCandidates;
+	UPROPERTY() TArray<FShopMercenaryPartySlotUI> mShopPartySlots;
 
 	UPROPERTY() TArray<FMercenaryCardWidgets> mCards;
 	UPROPERTY() TArray<FMercenarySlotWidgets> mSlots;
@@ -231,6 +263,10 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mAddLabel = nullptr;
 	UPROPERTY() TObjectPtr<UButton> mDepartButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDepartLabel = nullptr;
+	/** 상점 고용비용 표기가 폰트를 줄이므로, 복원할 원래 폰트를 첫 변경 전에 보관한다. */
+	TOptional<FSlateFontInfo> mDepartLabelBaseFont;
+	/** 빌더가 구운 광학 오프셋. 폰트를 줄일 때 비례 축소해 다시 건다. */
+	TOptional<FVector2D> mDepartLabelBaseShift;
 	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailName = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailHP = nullptr;
@@ -246,6 +282,9 @@ private:
 
 	/** @brief 전투 HUD와 같은 상세판. 별도 viewport 겹으로 띄운다. */
 	UPROPERTY() TSubclassOf<UUserWidget> mSkillDetailOverlayClass;
+	UPROPERTY() TSubclassOf<USkillTacticalDiagramWidget> mSkillTacticalDiagramClass;
+	/** 전투 HUD와 공용인 리치 상세 프레젠터. mSkillDetailOverlay는 그 안의 겹을 비춘다. */
+	UPROPERTY(Transient) TObjectPtr<USkillDetailOverlayPresenter> mSkillDetailPresenter = nullptr;
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> mSkillDetailOverlay = nullptr;
 	FTimerHandle mSkillLongPressTimerHandle;
 	int32 mPressedSkillSlot = INDEX_NONE;
@@ -265,6 +304,9 @@ private:
 	int32 mReviewing = INDEX_NONE;
 
 	int32 mPartySize = 3;
+	int32 mShopTargetPartyViewIndex = 0;
+	int32 mShopGold = 0;
+	bool mIsShopMode = false;
 
 	/**
 	 * @brief 출발에 필요한 최소 인원.

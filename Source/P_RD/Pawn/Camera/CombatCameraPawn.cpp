@@ -73,6 +73,18 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 카메라는 UMG 이벤트가 아니라 raw touch를 직접 폴링한다. 모달 UI가 잠근
+	// 동안에는 이전 프레임 좌표도 지워서, 팝업을 닫은 손이 곧바로 드래그로
+	// 이어지지 않게 한다.
+	if (mTouchGestureInputEnabled == false)
+	{
+		for (FTouchState& TouchState : mTouchStates)
+		{
+			TouchState = FTouchState();
+		}
+		return;
+	}
+
 	AController* DefaultController = GetController();
 	// DefaultController가 존재하지 않으면 함수를 종료합니다.
 	if (!ensureMsgf(IsValid(DefaultController), TEXT("컨트롤러가 없습니다")))
@@ -145,6 +157,19 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 UTimeScaleComponent* ACombatCameraPawn::GetTimeScaleComponent()
 {
 	return mTimeScaleComponent.Get();
+}
+
+void ACombatCameraPawn::SetTouchGestureInputEnabled(const bool bEnabled)
+{
+	if (mTouchGestureInputEnabled == bEnabled)
+	{
+		return;
+	}
+	mTouchGestureInputEnabled = bEnabled;
+	for (FTouchState& TouchState : mTouchStates)
+	{
+		TouchState = FTouchState();
+	}
 }
 
 bool ACombatCameraPawn::IsDrag()

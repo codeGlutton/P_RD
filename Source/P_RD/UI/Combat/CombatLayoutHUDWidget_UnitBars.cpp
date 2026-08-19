@@ -13,6 +13,7 @@
 #include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "GameplayTagType.h"   // EffectTags::GameplayEffect_StatusEffect_* (상태이상 태그→아이콘 매핑)
+#include "P_RD.h"   // LogRD ([RDBOT] 자동 플레이/QA 텔레메트리)
 
 namespace
 {
@@ -451,6 +452,16 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	}
 	const FVector2D BarRenderScale(UnitHpBarRenderScale * ZoomScale, UnitHpBarRenderScale * ZoomScale);
 
+	/*
+	 * [RDBOT] 텔레메트리.
+	 *
+	 * 자동 플레이/QA 드라이버가 화면 픽셀을 추정하지 않도록, 이미 여기서 구하는
+	 * 유닛의 투영 좌표를 그대로 로그로 흘린다. HP바 배치에 쓰는 값과 같은 값이라
+	 * 별도 투영 경로를 두지 않는다(어긋날 여지를 없앤다).
+	 * 매 틱 찍으면 logcat이 넘치므로 내용이 바뀔 때만 한 줄 낸다.
+	 */
+	FString BotLine;
+
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	for (int32 BarIndex = 0; BarIndex < mUnitHpBars.Num(); ++BarIndex)
 	{
@@ -528,6 +539,17 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 			RootSlot->SetPosition(ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));   // 유닛 머리 위로 띄운다.
 		}
 
+		// [RDBOT] 유닛 한 칸. sx/sy 는 유닛 발밑(=탭해야 하는 타일) 기준 위젯 좌표.
+		BotLine += FString::Printf(
+			TEXT("|u=%d,%s,%s,%d/%d,ap=%d/%d,tile=%d:%d,sx=%.0f,sy=%.0f"),
+			Unit.mUnitId,
+			*Unit.mName.ToString(),
+			Unit.mIsPlayer ? TEXT("ally") : TEXT("foe"),
+			FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP),
+			Unit.mActionPoints, Unit.mMaxActionPoints,
+			Unit.mTile.mX, Unit.mTile.mY,
+			ScreenPosition.X, ScreenPosition.Y);
+
 		// 줌 배율 반영(하단 중앙 피벗이라 커져도 밑변이 머리 위 투영점에 고정).
 		Bar.mRoot->SetRenderScale(BarRenderScale);
 
@@ -535,6 +557,18 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 		UpdateUnitHpBarStatus(Bar, Unit);
 
 		Bar.mRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+	// [RDBOT] 내용이 바뀐 틱에만 한 줄. 드라이버는 vps(뷰포트 스케일)로
+	// 위젯 좌표를 기기 픽셀로 환산해 그대로 탭한다.
+	if (BotLine != mLastBotTelemetry)
+	{
+		mLastBotTelemetry = BotLine;
+		const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
+		UE_LOG(LogRD, Log, TEXT("[RDBOT] vp=%.0fx%.0f vps=%.3f%s"),
+			ViewportSize.X, ViewportSize.Y,
+			UWidgetLayoutLibrary::GetViewportScale(this),
+			*BotLine);
 	}
 }
 

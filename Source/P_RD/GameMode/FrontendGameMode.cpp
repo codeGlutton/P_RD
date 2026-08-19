@@ -488,6 +488,7 @@ bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& Ou
 			SkillOption.mEffectArea = Skill->mEffectArea;
 			SkillOption.mAimBlockerMask = Skill->mAimBlockerMask;
 			SkillOption.mEffectBlockerMask = Skill->mEffectBlockerMask;
+			SkillOption.mTargetPattern = Skill->mTargetPattern;
 			if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(Skill))
 			{
 				SkillOption.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);

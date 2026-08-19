@@ -55,6 +55,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatActionResolved);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatCommand, ECombatInputType, Type, int32, IntPayload);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCombatWorldTouch, FVector2D, ScreenPosition, bool, bLongPress);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLog, FCombatFloatingLogRequest, Request);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatEventBatchChanged, FCombatEventBatchUI, Batch);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
@@ -90,6 +91,10 @@ public:
 	/** @brief 전투 이벤트(HP 증감 등)를 지정 월드 위치에 플로팅 텍스트로 띄우라는 알림. HUD가 순차 큐로 재생한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatFloatingLog OnCombatFloatingLog;
+
+	/** @brief 예측/실전 어느 쪽에서 왔는지 포함한 정규화 전투 이벤트 스냅샷. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
+	FOnCombatEventBatchChanged OnCombatEventBatchChanged;
 
 	/** @brief 애니메이션 모션 하나가 끝났으니 해당 MotionIndex의 플로팅 로그를 정리하라는 알림. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
@@ -207,6 +212,8 @@ public:
 	 * 비율로 알려 주고, 카메라를 옮기는 게임플레이는 이 값을 읽기만 한다.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void SetFocusScreenAnchor(FVector2D AnchorFraction);
+	/** @brief 위젯 생성 시 등록된 카메라 초점 앵커. 늦게 붙는 게임플레이도 같은 값을 읽는다. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") FVector2D GetFocusScreenAnchor() const { return mFocusScreenAnchor; }
 	
 	/** @brief 화면 좌표와 롱프레스 여부만 넘긴다. 월드/타일 변환은 UIModel 바깥의 책임이다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress);
@@ -276,6 +283,10 @@ public:
 	/** @brief 여러 플로팅 로그를 한 번에 요청한다. Sequence 기준으로 브로드캐스트하면 HUD가 수신 순서대로 순차 재생한다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogRequest>& Requests);
 
+	/** @brief 시뮬레이션 또는 실전 로그를 공통 UI 스냅샷으로 저장하고 표시 요청을 보낸다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push")
+	void SetCombatEventBatch(ECombatEventDataSourceUI Source, const TArray<FCombatFloatingLogRequest>& Requests);
+
 	/** @brief 같은 액션의 MotionEventLogs 배열에서 MotionIndex번째 모션 연출이 끝났음을 알린다. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void NotifyCombatFloatingLogMotionFinished(int32 MotionIndex);
 
@@ -309,6 +320,7 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TArray<FEquipmentUI>& GetEquipmentUIs() const { return mEquipmentUIs; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatEventBatchUI& GetCombatEventBatch() const { return mCombatEventBatch; }
 
 private:
 	/** @brief 마지막으로 push된 전투 결과 */
@@ -340,4 +352,6 @@ private:
 	UPROPERTY(Transient) FEquipmentDetailUI mEquipmentDetail;
 	/** @brief 플레이어 메타 표시 스냅샷. */
 	UPROPERTY(Transient) FPlayerMetaUI mPlayerMeta;
+	/** @brief 가장 최근 예측/실전 전투 이벤트. Blueprint UI도 동일 모델에서 읽는다. */
+	UPROPERTY(Transient) FCombatEventBatchUI mCombatEventBatch;
 };

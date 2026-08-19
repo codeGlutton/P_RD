@@ -6,6 +6,8 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
@@ -13,10 +15,26 @@
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
+#include "Components/SizeBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
 #include "Components/TextBlock.h"
+#include "Camera/CameraComponent.h"
+#include "Camera/CameraActor.h"
+#include "Engine/Font.h"
+#include "Engine/SceneCapture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "EngineUtils.h"
+#include "FunctionLibrary/CameraFunctionLibrary.h"
+#include "Pawn/Camera/CombatCameraPawn.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/SkillDetailOverlayPresenter.h"
+#include "UI/Combat/SkillTacticalDiagramWidget.h"
+#include "UI/DetailOverlayInputShield.h"
 #include "UI/Combat/SkillCutInWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/Combat/MockCombatDriver.h"
@@ -70,6 +88,21 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
 	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
+	RD_LOAD_TEX(mSkillVisualRingTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring");
+	RD_LOAD_TEX(mSkillVisualCellNormalTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Disabled.T_KitA_Cell_Disabled");
+	RD_LOAD_TEX(mSkillVisualCellSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Selected.T_KitA_Cell_Selected");
+	// 스킬 상세 수치는 별도 컨셉 아이콘을 만들지 않고 전투 HUD가 이미 쓰는
+	// 브러시를 그대로 쓴다. AP는 커맨드 카드의 파란 비용 보석, 피해는 전투
+	// 피드백의 HP 피해 표식이다. 프레젠터가 ResolveDetailStatTexture()로 HUD
+	// 인스턴스의 실제 브러시를 한 번 더 우선 조회하므로 WBP 쪽 교체도 자동으로 따라간다.
+	RD_LOAD_TEX(mSkillVisualAPIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cost_badge.KK_HUD04_zone_cost_badge");
+	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCooldownIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
+	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCasterIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph");
+	RD_LOAD_TEX(mSkillVisualTargetIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph");
+	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
+	RD_LOAD_TEX(mSkillRangeButtonSelectedTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Selected_v1.T_SkillRangeButton_Selected_v1");
 #undef RD_LOAD_TEX
 
 	static ConstructorHelpers::FClassFinder<URewardSettlementWidgetBase> RewardWidgetClassFinder(
@@ -93,6 +126,20 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	if (DetailOverlayClassFinder.Succeeded())
 	{
 		mDetailOverlayWidgetClass = DetailOverlayClassFinder.Class;
+	}
+	static ConstructorHelpers::FObjectFinder<UFont> ReadableDetailFontFinder(
+		TEXT("/Game/UI/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang"));
+	if (ReadableDetailFontFinder.Succeeded())
+	{
+		mReadableDetailFont = ReadableDetailFontFinder.Object;
+	}
+	static ConstructorHelpers::FClassFinder<USkillTacticalDiagramWidget>
+		SkillTacticalDiagramClassFinder(
+			TEXT("/Game/UI/CombatDetail/SkillTactical/WBP_SkillTacticalDiagram"));
+	if (SkillTacticalDiagramClassFinder.Succeeded())
+	{
+		mSkillTacticalDiagramWidgetClass =
+			SkillTacticalDiagramClassFinder.Class;
 	}
 
 	// 몬스터 탭도 보상창처럼 하드 레퍼런스로 든다 -- 문자열 LoadClass만 있으면
@@ -309,11 +356,18 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CacheAuthoredWidgets();
+	EnsureMercenarySkillButtons();
 	WireCommands();
+	EnsureCombatAnnouncementWidgets();
 	StartPreviewIfUnbound();
 	// 실제 전투에서는 모델이 이미 채워진 뒤에 붙으므로, 붙자마자 한 번 그린다.
 	// BindUIModel의 All 갱신은 위젯을 찾기 전에 올 수도 있다.
 	NativeOnUIRefreshed(ECombatUIDomain::All);
+	// 카메라가 UI 레이아웃을 추측하지 않도록 위젯 생성 시 기본 앵커부터 등록한다.
+	if (mUIModel != nullptr)
+	{
+		mUIModel->SetFocusScreenAnchor(ComputeCommandRingAnchor());
+	}
 }
 
 void UCombatLayoutHUDWidget::NativeDestruct()
@@ -325,12 +379,35 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 	{
 		World->GetTimerManager().ClearTimer(mCommandLongPressTimerHandle);
 		World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+		World->GetTimerManager().ClearTimer(mCombatAnnouncementTimerHandle);
+		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
-	if (mDetailOverlayWidget != nullptr)
+	mCombatAnnouncementPlaying = false;
+	mCombatAnnouncementKind = ECombatAnnouncementKind::None;
+	mCombatAnnouncementBarrier.Reset();
+	// HUD가 사라진 뒤까지 모달 잠금이 Pawn에 남으면 다음 전투에서 카메라가
+	// 영구 정지한다. 제거 전에 반드시 기본 입력 상태로 돌린다.
+	ACombatCameraPawn* CameraPawn = nullptr;
+	if (APlayerController* OwningPlayer = GetOwningPlayer())
 	{
-		mDetailOverlayWidget->RemoveFromParent();
-		mDetailOverlayWidget = nullptr;
+		CameraPawn = Cast<ACombatCameraPawn>(OwningPlayer->GetPawn());
 	}
+	if (CameraPawn == nullptr)
+	{
+		CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
+	}
+	if (CameraPawn != nullptr)
+	{
+		CameraPawn->SetTouchGestureInputEnabled(true);
+	}
+	ReleaseSkillWorldPreview();
+	if (mDetailPresenter != nullptr)
+	{
+		// 겹 제거는 소유자인 프레젠터가 한다. 비친 포인터만 함께 비운다.
+		mDetailPresenter->Teardown();
+	}
+	mDetailOverlayWidget = nullptr;
+	mSkillTacticalDiagramWidget = nullptr;
 	if (mMonsterTabWidget != nullptr)
 	{
 		mMonsterTabWidget->RemoveFromParent();
@@ -456,6 +533,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
 	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
+	mEnemyCritText = Find<UTextBlock>(WidgetTree, TEXT("EnemyCritText"));
 	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
@@ -682,6 +760,20 @@ void UCombatLayoutHUDWidget::EnsureMercenaryRosterShell()
 	for (const TCHAR* Name : LegacyPlateNames)
 	{
 		SetShown(Find<UWidget>(WidgetTree, Name), false);
+	}
+
+	// 인벤토리의 오른쪽 내용은 하나의 Page 아래에 묶여 있다. 개별 슬롯을
+	// 옮기면 4x2 피치와 중앙 정렬이 흐트러지므로, 부모를 살짝 좌상단으로
+	// 옮겨 용병 상세와 같은 내용 여백을 쓴다.
+	if (UWidget* InventoryPage = Find<UWidget>(
+		WidgetTree, TEXT("MercenaryInventoryPage")))
+	{
+		if (UCanvasPanelSlot* InventorySlot =
+			Cast<UCanvasPanelSlot>(InventoryPage->Slot))
+		{
+			// 현재 직렬화된 WBP의 위치(584, 212)를 기준으로 좌 24 / 상 18.
+			InventorySlot->SetPosition(FVector2D(560.f, 194.f));
+		}
 	}
 }
 
@@ -1030,8 +1122,13 @@ void UCombatLayoutHUDWidget::WireCommands()
 				TEXT("MercenarySkillButton_%d"), Index));
 			if (Button != nullptr)
 			{
+				// 모바일에서는 길게 누르기와 구분할 필요가 없는 조회 버튼이다.
+				// 손가락을 뗀 한 번의 탭으로 확정되게 명시한다.
+				Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+				Button->SetClickMethod(EButtonClickMethod::PreciseClick);
 				Button->OnClicked.__Internal_AddUniqueDynamic(
 					this, SkillHandlers[Index], SkillHandlerNames[Index]);
+				BindPressFeedback(Button, Button);
 			}
 		}
 	}
@@ -1048,6 +1145,29 @@ void UCombatLayoutHUDWidget::BindPressFeedback(UButton* Button, UWidget* Target)
 	{
 		return;
 	}
+
+	// 몬스터 상세의 첫 목록 줄은 디자인 좌표 X=265, Y=271에서 시작한다.
+	// 용병 목록은 부모가 (231,279), 자식 ScaleBox가 (-21,1)에 있어 실제 시작점이
+	// (210,280)이었다. 같은 종류의 탐색 목록인데 용병 쪽만 55px 왼쪽으로 튀므로
+	// 부모 묶음을 옮겨 세 카드와 인벤토리 단추를 한 번에 같은 열에 맞춘다.
+	if (UWidget* Roster = Find<UWidget>(WidgetTree, TEXT("MercRosterSection")))
+	{
+		if (UCanvasPanelSlot* RosterSlot = Cast<UCanvasPanelSlot>(Roster->Slot))
+		{
+			RosterSlot->SetPosition(FVector2D(286.f, 270.f));
+		}
+	}
+	// 목록을 오른쪽으로 맞춘 뒤 초상과 목록 사이가 지나치게 붙었다. 몬스터 상세의
+	// 목록-초상 간격과 맞도록 용병 상세 묶음(초상·스탯·스킬)을 함께 옮긴다.
+	if (UWidget* Detail = Find<UWidget>(WidgetTree, TEXT("MercDetailSection")))
+	{
+		if (UCanvasPanelSlot* DetailSlot = Cast<UCanvasPanelSlot>(Detail->Slot))
+		{
+			DetailSlot->SetPosition(FVector2D(48.f, 0.f));
+		}
+	}
+	// 상세 오버레이처럼 NativeConstruct 이후 생기는 버튼도 공용 클릭음을 놓치지 않는다.
+	ApplyCommonButtonPressSound(Button);
 	// 가운데를 기준으로 줄어야 제자리에서 눌린 것처럼 보인다. 기본 기준점은
 	// 왼쪽 위라, 그대로 두면 오른쪽 아래로 밀리면서 작아진다.
 	Target->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
@@ -2266,6 +2386,9 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	}
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
+	// 치명 확률은 아직 FUnitUI 계약에 없으므로 값을 지어내지 않는다. 다만
+	// 용병 요약판과 짝인 프레임은 보이고 미지원 값은 명시적으로 '-'다.
+	SetTextIfPresent(mEnemyCritText, FText::FromString(TEXT("-")));
 
 	// 확정 시안: 상태는 아이콘으로만 보여 준다. 글줄은 걷는다.
 	SetShown(mEnemyStatusText, false);
@@ -2442,11 +2565,15 @@ void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
 	{
 		for (const TCHAR* Prefix : { TEXT("MercenarySkillFrame"),
 			TEXT("MercenarySkillIcon"), TEXT("MercenarySkillName"),
-			TEXT("MercenarySkillCost"), TEXT("MercenarySkillButton") })
+			TEXT("MercenarySkillCost") })
 		{
 			SetShown(Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s_%d"), Prefix, Index)), bShown == false);
 		}
+		// 장식과 같은 SetShown()을 쓰면 보이는 순간 SelfHitTestInvisible이 되어
+		// 버튼이 존재하고 OnClicked도 묶였는데 실제 손가락 입력만 사라진다.
+		SetInteractiveShown(Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillButton_%d"), Index)), bShown == false);
 	}
 }
 
@@ -2492,6 +2619,7 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 		}
 	}
 	RefreshCommandVisibility();
+	RefreshWorldGestureInputBlock();
 }
 
 bool UCombatLayoutHUDWidget::IsMercenaryPanelShown() const
@@ -2596,12 +2724,116 @@ bool UCombatLayoutHUDWidget::IsPlayerTurn() const
 }
 
 void UCombatLayoutHUDWidget::HandleTurnPresentationBegin(
-	TSharedPtr<FPresentationBarrier> /*Barrier*/)
+	TSharedPtr<FPresentationBarrier> Barrier)
 {
 	// 이전 행동의 "다음 틱에 다시 펴기" 예약이 남아 있어도 새 턴 상태보다
 	// 늦게 적용되지 않게 한다.
 	++mActionPresentationSerial;
 	mIsActionPlaying = false;
+	mIsTurnActive = false;
+	SetCommandsShown(false);
+
+	// 이름 고지가 끝난 다음에만 입력 가능한 스킬 UI를 연다.
+	if (PlayCombatAnnouncement(GetCurrentTurnAnnouncementText(),
+		ECombatAnnouncementKind::TurnStart, MoveTemp(Barrier)))
+	{
+		return;
+	}
+	CompleteTurnPresentationBegin();
+}
+
+bool UCombatLayoutHUDWidget::IsWorldInputModalShown() const
+{
+	return IsMercenaryPanelShown() || IsMonsterTabShown()
+		|| IsDetailOverlayShown();
+}
+
+void UCombatLayoutHUDWidget::RefreshWorldGestureInputBlock()
+{
+	APlayerController* OwningPlayer = GetOwningPlayer();
+	ACombatCameraPawn* CameraPawn = OwningPlayer != nullptr
+		? Cast<ACombatCameraPawn>(OwningPlayer->GetPawn()) : nullptr;
+	if (CameraPawn == nullptr)
+	{
+		CameraPawn = UCameraFunctionLibrary::GetMainCameraPawn(this);
+	}
+	if (CameraPawn != nullptr)
+	{
+		CameraPawn->SetTouchGestureInputEnabled(IsWorldInputModalShown() == false);
+	}
+}
+
+/**
+ * @brief 용병 패널의 스킬 그림 위에 한 번 탭하는 투명 버튼을 보장한다.
+ *
+ * @details 일부 기존 WBP에는 Frame/Icon/Cost만 있고 Button이 빠져 있었다.
+ * 런타임 바인딩 코드는 버튼 이름을 찾으므로, 이 상태에서는 그림을 눌러도
+ * 이벤트가 만들어지지 않는다. WBP를 다시 굽기 전의 자산도 안전하게 동작하게
+ * 프레임과 같은 Canvas 슬롯을 복제한다.
+ */
+void UCombatLayoutHUDWidget::EnsureMercenarySkillButtons()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	for (int32 Index = 0; Index < CommandSlotCount; ++Index)
+	{
+		const FName ButtonName(*FString::Printf(TEXT("MercenarySkillButton_%d"), Index));
+		if (WidgetTree->FindWidget(ButtonName) != nullptr)
+		{
+			continue;
+		}
+
+		UWidget* Frame = WidgetTree->FindWidget(FName(*FString::Printf(
+			TEXT("MercenarySkillFrame_%d"), Index)));
+		UCanvasPanel* CanvasParent = Frame != nullptr
+			? Cast<UCanvasPanel>(Frame->GetParent()) : nullptr;
+		UOverlay* OverlayParent = Frame != nullptr
+			? Cast<UOverlay>(Frame->GetParent()) : nullptr;
+		const UCanvasPanelSlot* FrameSlot = Frame != nullptr
+			? Cast<UCanvasPanelSlot>(Frame->Slot) : nullptr;
+		if (Frame == nullptr || (CanvasParent == nullptr && OverlayParent == nullptr))
+		{
+			continue;
+		}
+
+		UButton* Button = WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), ButtonName);
+		FButtonStyle Style = Button->GetStyle();
+		Style.Normal.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Hovered.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Button->SetStyle(Style);
+		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+
+		if (CanvasParent != nullptr && FrameSlot != nullptr)
+		{
+			UCanvasPanelSlot* ButtonSlot = CanvasParent->AddChildToCanvas(Button);
+			ButtonSlot->SetAnchors(FrameSlot->GetAnchors());
+			ButtonSlot->SetAlignment(FrameSlot->GetAlignment());
+			ButtonSlot->SetAutoSize(false);
+			ButtonSlot->SetPosition(FrameSlot->GetPosition());
+			ButtonSlot->SetSize(FrameSlot->GetSize());
+			ButtonSlot->SetZOrder(FrameSlot->GetZOrder() + 20);
+		}
+		else if (OverlayParent != nullptr)
+		{
+			if (UOverlaySlot* ButtonSlot = OverlayParent->AddChildToOverlay(Button))
+			{
+				ButtonSlot->SetPadding(FMargin(0.f));
+				ButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+				ButtonSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::CompleteTurnPresentationBegin()
+{
 	mIsTurnActive = true;
 
 	// SetTurnUI와 턴 시작 프레젠테이션은 별도 알림이다. 로딩/재바인딩으로
@@ -2684,11 +2916,23 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 	}
 
 	Super::BindUIModel(InUIModel);
+	mInitialFocusAnchorRegistered = false;
 	if (mUIModel != nullptr)
 	{
 		++mActionPresentationSerial;
 		mIsTurnActive = false;
 		mIsActionPlaying = false;
+
+		mUIModel->OnBeginCombat.RemoveAll(this);
+		mBeginCombatHandle = mUIModel->OnBeginCombat.AddWeakLambda(this,
+			[this](TSharedPtr<FPresentationBarrier> Barrier)
+			{
+				mIsTurnActive = false;
+				SetCommandsShown(false);
+				PlayCombatAnnouncement(
+					NSLOCTEXT("CombatAnnouncement", "BattleStart", "BATTLE START"),
+					ECombatAnnouncementKind::CombatStart, MoveTemp(Barrier));
+			});
 
 		mTurnBeginHandle = mUIModel->OnBeginAnyTurn.AddUObject(
 			this, &UCombatLayoutHUDWidget::HandleTurnPresentationBegin);
@@ -2731,20 +2975,22 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 		mUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
 
-		// 라운드 배너: 배리어를 붙잡고 틀었다가, 끝나면 놓아 첫 턴을 진행시킨다.
-		// 못 틀면 즉시 놓는다 -- 안 그러면 그 라운드가 영영 안 넘어간다.
+		// 라운드 고지도 전투/턴 고지와 같은 텍스트 연출을 쓴다. 예전 33장
+		// 프레임 시퀀스는 쓰지 않으며, 고지 타이머가 배리어 해제를 보장한다.
 		mUIModel->OnBeginAnyRound.RemoveAll(this);
 		mBeginRoundHandle = mUIModel->OnBeginAnyRound.AddWeakLambda(this,
 			[this](TSharedPtr<FPresentationBarrier> Barrier)
 			{
-				mRoundChangeBarrier.Reset();
-				mRoundChangeBarrier = MoveTemp(Barrier);
-				// 배너를 안 틀 때도 **배리어는 반드시 놓는다.** 붙잡은 채로
-				// 두면 그 라운드 첫 턴이 영영 안 온다.
-				if (mPlayRoundBanner == false || PlayTurnChangeIntro() == false)
+				if (mPlayRoundBanner == false)
 				{
-					mRoundChangeBarrier.Reset();
+					return;
 				}
+				const int32 Round = mUIModel != nullptr
+					? FMath::Max(1, mUIModel->GetTurnUI().mRound) : 1;
+				PlayCombatAnnouncement(FText::Format(
+					NSLOCTEXT("CombatAnnouncement", "Round", "ROUND {0}"),
+					FText::AsNumber(Round)), ECombatAnnouncementKind::RoundStart,
+					MoveTemp(Barrier));
 			});
 	}
 }
@@ -2785,6 +3031,7 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 		mUIModel->OnBeginAnyTurnAction.Remove(mActionBeginHandle);
 		mUIModel->OnEndAnyTurnAction.Remove(mActionEndHandle);
 		mUIModel->OnPrePlaySkillCutIn.Remove(mSkillCutInHandle);
+		mUIModel->OnBeginCombat.Remove(mBeginCombatHandle);
 		mUIModel->OnEndCombat.Remove(mEndCombatHandle);
 		mUIModel->OnCombatResultOpenRequested.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatResultOpenRequested);
@@ -2808,6 +3055,8 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 	mActionBeginHandle.Reset();
 	mActionEndHandle.Reset();
 	mSkillCutInHandle.Reset();
+	mBeginCombatHandle.Reset();
+	mCombatAnnouncementBarrier.Reset();
 
 	if (UWorld* World = GetWorld())
 	{
@@ -2859,15 +3108,22 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	if (mSkillWorldPreviewActive)
+	{
+		SyncSkillWorldPreviewCamera(false);
+	}
 	RefreshScreenScale();
 	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
 	UpdateUnitHpBars();
 	RefreshPendingAPGlow(DeltaTime);
 	UpdateFloatingCombatLogQueue(DeltaTime);
 	UpdateFloatingCombatLogs(DeltaTime);
-	if (mTurnChangeIntroPlaying)
+	UpdateCombatAnnouncement(DeltaTime);
+	if (mInitialFocusAnchorRegistered == false && mUIModel != nullptr
+		&& MyGeometry.GetLocalSize().X > 0.0f && MyGeometry.GetLocalSize().Y > 0.0f)
 	{
-		UpdateTurnChangeIntro(DeltaTime);
+		mInitialFocusAnchorRegistered = true;
+		mUIModel->SetFocusScreenAnchor(ComputeCommandRingAnchor());
 	}
 }
 
@@ -3080,6 +3336,10 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
+	if (IsWorldInputModalShown())
+	{
+		return FReply::Handled();
+	}
 	mPressOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
 	mPressMoved = false;
 	mPressActive = true;
@@ -3094,6 +3354,10 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	if (IsWorldInputModalShown())
+	{
+		return FReply::Handled();
+	}
 	mPressOrigin = FVector2D(InTouchEvent.GetScreenSpacePosition());
 	mPressMoved = false;
 	mPressActive = true;
@@ -3118,7 +3382,7 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 void UCombatLayoutHUDWidget::HandleBoardLongPress()
 {
 	if (mPressActive == false || mPressMoved == true || mUIModel == nullptr
-		|| IsMercenaryPanelShown() == true)
+		|| IsWorldInputModalShown())
 	{
 		return;
 	}
@@ -3160,6 +3424,12 @@ bool UCombatLayoutHUDWidget::IsOverChrome(const FVector2D& ScreenPosition) const
 FReply UCombatLayoutHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	if (IsWorldInputModalShown())
+	{
+		mPressActive = false;
+		mPressMoved = false;
+		return FReply::Handled();
+	}
 	FinishBoardPress(FVector2D(InTouchEvent.GetScreenSpacePosition()));
 	return Super::NativeOnTouchEnded(InGeometry, InTouchEvent);
 }
@@ -3167,6 +3437,12 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry,
 FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	if (IsWorldInputModalShown())
+	{
+		mPressActive = false;
+		mPressMoved = false;
+		return FReply::Handled();
+	}
 	if (FVector2D(InTouchEvent.GetScreenSpacePosition()).Equals(mPressOrigin, BoardTapSlack) == false)
 	{
 		mPressMoved = true;
@@ -3182,6 +3458,12 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 FReply UCombatLayoutHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 	const FPointerEvent& InMouseEvent)
 {
+	if (IsWorldInputModalShown())
+	{
+		mPressActive = false;
+		mPressMoved = false;
+		return FReply::Handled();
+	}
 	FinishBoardPress(FVector2D(InMouseEvent.GetScreenSpacePosition()));
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 }
@@ -3229,7 +3511,7 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 
 	// 용병 패널은 모달이다. 패널 바깥으로 새어 온 눌림도 전장 명령이나
 	// 커맨드 토글로 해석하지 않는다.
-	if (IsMercenaryPanelShown() == true)
+	if (IsMercenaryPanelShown() == true || IsMonsterTabShown() == true)
 	{
 		UE_LOG(LogRD, Log, TEXT("[탭진단] 판 탭 삼킴: 용병 패널 열림"));
 		return;
@@ -3724,7 +4006,8 @@ void UCombatLayoutHUDWidget::HandleArtifactLongPress(const int32 SlotIndex)
  *
  * @details 값은 이미 내려와 있는 PlayerMeta 를 읽는다. 스킬/유닛 상세와 달리
  * 게임플레이에 따로 청하지 않는다 -- 아티팩트는 전투 중에 바뀌지 않아 목록
- * 스냅샷으로 충분하다.
+ * 스냅샷으로 충분하다. 실제 렌더는 프레젠터(PresentArtifact)가 DTO만 받아
+ * 그리고, HUD 는 스킬 상세와 같은 방식으로 HUD 상태만 맡는다.
  */
 void UCombatLayoutHUDWidget::ShowArtifactDetailOverlay(const int32 SlotIndex)
 {
@@ -3737,79 +4020,10 @@ void UCombatLayoutHUDWidget::ShowArtifactDetailOverlay(const int32 SlotIndex)
 	{
 		return;
 	}
-	const FCombatArtifactUI& Artifact = Artifacts[SlotIndex];
-	ApplyDetailColumnLayout(true);
-
-	SetTextIfPresent(mDetailTitleText, Artifact.mName);
-
-	FString Subtitle = Artifact.mRarityName.IsEmpty()
-		? FString() : Artifact.mRarityName.ToString();
-	if (Artifact.mPrice > 0)
-	{
-		if (Subtitle.IsEmpty() == false)
-		{
-			Subtitle += TEXT("  ·  ");
-		}
-		Subtitle += FString::Printf(TEXT("판매가 %d"), Artifact.mPrice);
-	}
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
-
-	FString Body;
-	for (const FText& Line : Artifact.mEffectDescriptions)
-	{
-		if (Body.IsEmpty() == false)
-		{
-			Body += LINE_TERMINATOR;
-		}
-		Body += TEXT("· ");
-		Body += Line.ToString();
-	}
-	if (Body.IsEmpty() == true)
-	{
-		Body = TEXT("효과 설명이 아직 없다.");
-	}
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
-
-	SetPortraitCropped(mDetailIconImage, Artifact.mIcon);
-
-	// 아티팩트에는 사거리도 수치 칩도 없다. 스킬 상세가 남긴 것을 걷는다.
-	//
-	// 값만 비우면 "-" 다섯 개가 그대로 떠서 무언가 못 채운 화면처럼 보인다.
-	// 실제로 그렇게 나왔다(0804 검수). 칩 묶음을 통째로 끈다.
-	ClearDetailGrids();
-	ClearDetailChips();
-	SetShown(mDetailStatBlock, false);
+	mDetailPresenter->PresentArtifact(Artifacts[SlotIndex]);
+	// 이 칸들은 유닛 상세의 것이다. 아티팩트 하나를 보는 중에는 걷는다.
 	SetDetailSkillRowShown(false);
-	// 효과 목록은 왼쪽 설명 칸에 넣기엔 길다. 판이 잡아 둔 넓은 칸에 넣는다.
-	SetTextIfPresent(mDetailExtraHeading, LOCTEXT("DetailExtraArtifact", "효과"));
-	SetTextIfPresent(mDetailExtraText, FText::FromString(Body));
-	ShowDetailRightBlock(mDetailExtraBlock);
-
-	// 확정 시안: 아티팩트에는 스킬용 받침판과 왼쪽 설명 글이 없다. 대신
-	// 희귀도 보석 줄을 켠다 (일반 1 · 희귀 3 · 영웅 5).
-	if (UWidget* FreePlate = mDetailOverlayWidget->GetWidgetFromName(
-		TEXT("DetailFreePlate")))
-	{
-		FreePlate->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	SetShown(mDetailBodyText, false);
-	static const int32 LitByRarity[] = { 1, 3, 5 };
-	const int32 LitCount = LitByRarity[FMath::Clamp(Artifact.mRarityLevel, 0, 2)];
-	for (int32 Index = 0; Index < 5; ++Index)
-	{
-		UImage* Gem = Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))));
-		if (Gem == nullptr)
-		{
-			continue;
-		}
-		Gem->SetVisibility(ESlateVisibility::HitTestInvisible);
-		// 안 켠 보석은 같은 그림을 어둡게 깐다 -- 자리를 비우면 등급이 몇 칸
-		// 짜리인지 읽히지 않는다.
-		Gem->SetColorAndOpacity(Index < LitCount
-			? FLinearColor::White : FLinearColor(0.18f, 0.16f, 0.14f, 1.f));
-	}
-	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	RefreshWorldGestureInputBlock();
 }
 
 /**
@@ -3825,6 +4039,7 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		return;
 	}
+	ApplyReadableDetailTypography(false);
 	ApplyDetailColumnLayout(true);
 
 	SetTextIfPresent(mDetailTitleText,
@@ -3871,6 +4086,7 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	SetTextIfPresent(mDetailExtraText, FText::GetEmpty());
 	ShowDetailRightBlock(nullptr);
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	RefreshWorldGestureInputBlock();
 }
 
 void UCombatLayoutHUDWidget::HandleStatusClicked(const bool bAlly, const int32 SlotIndex)
@@ -3993,8 +4209,8 @@ void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_2() { EndStatusPress(fals
 /** @brief 용병탭 스킬 소켓 클릭. 0번은 이동, 나머지는 전투 레일과 같은 스킬 번호. */
 void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
 {
-	// 스킬 칸은 초상과 따로 있다. 누른 스킬의 주인을 화면 가운데로 데려온다.
-	FocusCameraOnTurnUnit();
+	// 용병 탭은 정보 모달이다. 여기서 카메라를 움직이면 상세를 읽으려는 손이
+	// 전장을 탐색하는 입력으로 바뀐다. 카메라 포커스는 전투판/턴 칸에만 맡긴다.
 	if (SlotIndex == 0)
 	{
 		ShowMoveDetailOverlay();
@@ -4002,6 +4218,10 @@ void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
 	}
 	if (mUIModel != nullptr)
 	{
+		// 용병 패널은 기본으로 현재 턴 용병을 보여 주지만, 목록을 직접 고르기
+		// 전에는 UnitDetail 기준(mDetailUnitModel)이 아직 없을 수 있다. 카드 레일과
+		// 같은 inspected/current fallback 경로를 쓰면 기본 용병과 고른 용병 모두
+		// 한 번의 탭으로 정확한 상세를 받는다.
 		mUIModel->RequestLongPressSkill(SlotIndex - 1);
 	}
 }
@@ -4009,8 +4229,8 @@ void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
 /**
  * @brief 턴 칸을 눌렀다.
  *
- * @details 아군이면 그 용병의 스킬 카드를 펴고, 적이면 카메라만 옮긴다 --
- * 적 스킬은 카드 레일이 아니라 요약판/상세가 맡는다(0806 합의).
+ * @details 아군/적 구분 없이 카메라만 옮긴다. 턴바는 순서를 확인하고 대상을
+ * 찾는 탐색 장치이며, 스킬 UI를 여는 입력은 전투판 선택에만 맡긴다.
  */
 void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 {
@@ -4037,15 +4257,16 @@ void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 	// 떠 있던 상세를 **먼저** 닫는다. 카메라를 잡은 뒤에 닫으면 닫기가 방금
 	// 잡은 것을 도로 놓아 버려 화면이 안 움직였다(0806 검수).
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
+	SetCommandsShown(false);
 
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
 	const FUnitUI* Unit = Units.FindByPredicate(
 		[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 	const bool bIsAlly = Unit != nullptr && Unit->mIsPlayer;
 
-	// 누른 유닛을 화면 가운데로. 카드 고리 세부조정은 카드가 뜨는
-	// 아군일 때만 한다(0807).
-	RequestCameraFocus(UnitId, /*bWithCommandRing=*/bIsAlly);
+	// 턴바 탭은 카메라 탐색만 한다. 커맨드 고리를 열지 않으므로 화면의
+	// 실제 가운데에 놓는다.
+	RequestCameraFocus(UnitId, /*bWithCommandRing=*/false);
 
 	if (bIsAlly == false)
 	{
@@ -4055,13 +4276,7 @@ void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 		Target.mUnitId = UnitId;
 		Target.mTile = Unit != nullptr ? Unit->mTile : FTileIndex();
 		mUIModel->SetTarget(Target);
-		return;
 	}
-
-	// 아군이면 그 용병의 카드로 갈아 끼우고 편다(상세 겹은 안 띄운다).
-	mSuppressNextUnitDetailOverlay = true;
-	mUIModel->RequestInspectUnit(UnitId);
-	SetCommandsShown(true);
 }
 
 void UCombatLayoutHUDWidget::HandleTurnTokenClicked_0() { HandleTurnTokenClicked(0); }
@@ -4099,6 +4314,28 @@ void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_0() { EndMonsterSkillPre
 void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_1() { EndMonsterSkillPress(1); }
 void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_2() { EndMonsterSkillPress(2); }
 void UCombatLayoutHUDWidget::HandleMonsterSkillReleased_3() { EndMonsterSkillPress(3); }
+
+void UCombatLayoutHUDWidget::HandleMonsterSkillClicked_0() { HandleMonsterSkillClicked(0); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillClicked_1() { HandleMonsterSkillClicked(1); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillClicked_2() { HandleMonsterSkillClicked(2); }
+void UCombatLayoutHUDWidget::HandleMonsterSkillClicked_3() { HandleMonsterSkillClicked(3); }
+
+/** @brief 몬스터 탭 스킬은 일반 버튼처럼 한 번 탭하면 즉시 상세를 연다. */
+void UCombatLayoutHUDWidget::HandleMonsterSkillClicked(const int32 SlotIndex)
+{
+	CancelMonsterSkillPress();
+	if (mUIModel == nullptr || IsMonsterTabShown() == false
+		|| IsDetailOverlayShown() == true
+		|| mMonsterTabSkillIndices.IsValidIndex(SlotIndex) == false)
+	{
+		return;
+	}
+	const int32 SkillIndex = mMonsterTabSkillIndices[SlotIndex];
+	if (SkillIndex != INDEX_NONE)
+	{
+		mUIModel->RequestInspectUnitSkill(SkillIndex);
+	}
+}
 
 /** @brief 몬스터 도감의 스킬 슬롯 누름을 롱프레스 후보로 잡는다. */
 void UCombatLayoutHUDWidget::BeginMonsterSkillPress(const int32 SlotIndex)
@@ -4220,6 +4457,7 @@ void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
 		mMonsterTabInspectedUnitId = INDEX_NONE;
 	}
 	RefreshCommandVisibility();
+	RefreshWorldGestureInputBlock();
 }
 
 bool UCombatLayoutHUDWidget::IsMonsterTabShown() const
@@ -4281,22 +4519,14 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 			this, &UCombatLayoutHUDWidget::HandleMonsterTabBackClicked);
 	}
 	using FMonsterSkillHandler = void (UCombatLayoutHUDWidget::*)();
-	static const FMonsterSkillHandler PressHandlers[4] = {
-		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_0,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_1,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_2,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillPressed_3 };
-	static const FMonsterSkillHandler ReleaseHandlers[4] = {
-		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_0,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_1,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_2,
-		&UCombatLayoutHUDWidget::HandleMonsterSkillReleased_3 };
-	static const TCHAR* const PressNames[4] = {
-		TEXT("HandleMonsterSkillPressed_0"), TEXT("HandleMonsterSkillPressed_1"),
-		TEXT("HandleMonsterSkillPressed_2"), TEXT("HandleMonsterSkillPressed_3") };
-	static const TCHAR* const ReleaseNames[4] = {
-		TEXT("HandleMonsterSkillReleased_0"), TEXT("HandleMonsterSkillReleased_1"),
-		TEXT("HandleMonsterSkillReleased_2"), TEXT("HandleMonsterSkillReleased_3") };
+	static const FMonsterSkillHandler ClickHandlers[4] = {
+		&UCombatLayoutHUDWidget::HandleMonsterSkillClicked_0,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillClicked_1,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillClicked_2,
+		&UCombatLayoutHUDWidget::HandleMonsterSkillClicked_3 };
+	static const TCHAR* const ClickNames[4] = {
+		TEXT("HandleMonsterSkillClicked_0"), TEXT("HandleMonsterSkillClicked_1"),
+		TEXT("HandleMonsterSkillClicked_2"), TEXT("HandleMonsterSkillClicked_3") };
 	for (int32 Index = 0; Index < 4; ++Index)
 	{
 		if (UButton* Button = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(
@@ -4304,10 +4534,8 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 		{
 			Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
 			Button->SetClickMethod(EButtonClickMethod::PreciseClick);
-			Button->OnPressed.__Internal_AddUniqueDynamic(
-				this, PressHandlers[Index], PressNames[Index]);
-			Button->OnReleased.__Internal_AddUniqueDynamic(
-				this, ReleaseHandlers[Index], ReleaseNames[Index]);
+			Button->OnClicked.__Internal_AddUniqueDynamic(
+				this, ClickHandlers[Index], ClickNames[Index]);
 		}
 	}
 	return true;
@@ -4369,7 +4597,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 				? Monsters[Index]->mTurnPortrait.Get() : Monsters[Index]->mPortrait.Get();
 			if (Head != nullptr)
 			{
-				Portrait->SetBrushFromTexture(Head);
+				SetPortraitCropped(Portrait, Head);
 			}
 		}
 		if (UTextBlock* Name = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(
@@ -4426,7 +4654,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 			? Monster.mPortrait.Get() : Monster.mTurnPortrait.Get();
 		if (Body != nullptr)
 		{
-			DetailPortrait->SetBrushFromTexture(Body);
+			SetPortraitCropped(DetailPortrait, Body);
 		}
 	}
 
@@ -4620,6 +4848,7 @@ namespace
 		{
 		case ECombatSkillHitShapeUI::Single: return TEXT("단일");
 		case ECombatSkillHitShapeUI::Cross:  return TEXT("십자");
+		case ECombatSkillHitShapeUI::Star:   return TEXT("8방향");
 		case ECombatSkillHitShapeUI::Circle: return TEXT("원형");
 		default:                             return TEXT("");
 		}
@@ -4682,92 +4911,105 @@ namespace
 }
 
 /**
+ * @brief 스킬 상세 프레젠터를 한 번 만들고 설정을 최신으로 맞춘다.
+ *
+ * @details
+ * 겹 클래스·전술 WBP 클래스·그림 묶음은 생성자가 하드 참조로 물어 둔 것을
+ * 그대로 넘긴다(쿡 유지는 HUD 몫). 겹이 아직 없으면 클래스 교체(시험 훅)도
+ * 매번 반영한다.
+ */
+bool UCombatLayoutHUDWidget::EnsureDetailPresenter()
+{
+	if (mDetailPresenter == nullptr)
+	{
+		mDetailPresenter = NewObject<USkillDetailOverlayPresenter>(this);
+		mDetailPresenter->Initialize(GetWorld(), mDetailOverlayWidgetClass,
+			mSkillTacticalDiagramWidgetClass, DetailOverlayViewportZOrder);
+		mDetailPresenter->SetReadableDetailFont(mReadableDetailFont);
+		FSkillDetailOverlayVisualAssets Assets;
+		Assets.mRingTexture = mSkillVisualRingTexture;
+		Assets.mCellNormalTexture = mSkillVisualCellNormalTexture;
+		Assets.mCellSelectedTexture = mSkillVisualCellSelectedTexture;
+		Assets.mAPIconTexture = mSkillVisualAPIconTexture;
+		Assets.mDamageIconTexture = mSkillVisualDamageIconTexture;
+		Assets.mCooldownIconTexture = mSkillVisualCooldownIconTexture;
+		Assets.mCriticalIconTexture = mSkillVisualCriticalIconTexture;
+		Assets.mCasterIconTexture = mSkillVisualCasterIconTexture;
+		Assets.mTargetIconTexture = mSkillVisualTargetIconTexture;
+		Assets.mRangeButtonTexture = mSkillRangeButtonTexture;
+		Assets.mRangeButtonSelectedTexture = mSkillRangeButtonSelectedTexture;
+		mDetailPresenter->SetVisualAssets(Assets);
+		// AP/쿨타임 아이콘은 HUD WBP 의 실제 배지 브러시를 따라간다.
+		mDetailPresenter->SetStatTextureResolver(
+			FSkillDetailStatTextureResolver::CreateUObject(this,
+				&UCombatLayoutHUDWidget::ResolveDetailStatTexture));
+		// 확정 시안의 "닫기" 단추 -> 기존 닫기 경로(위협 범위 걷기 포함).
+		mDetailPresenter->OnCloseClicked().AddUObject(this,
+			&UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked);
+		// 프레젠터가 상세 화면을 갈아 끼울 때 SceneCapture 도 함께 멈춘다.
+		mDetailPresenter->OnWorldPreviewStopRequested().AddUObject(this,
+			&UCombatLayoutHUDWidget::StopSkillWorldPreview);
+	}
+	// 시험이 TakeWidget 뒤에 클래스를 바꿔 끼우는 경로. 겹이 없을 때만 반영된다.
+	mDetailPresenter->SetOverlayWidgetClass(mDetailOverlayWidgetClass);
+	return true;
+}
+
+UTexture2D* UCombatLayoutHUDWidget::ResolveDetailStatTexture(
+	const FName SourceWidgetName, UTexture2D* Fallback)
+{
+	if (const UImage* SourceImage = Cast<UImage>(GetWidgetFromName(SourceWidgetName)))
+	{
+		if (UTexture2D* Texture = Cast<UTexture2D>(
+			SourceImage->GetBrush().GetResourceObject()))
+		{
+			return Texture;
+		}
+	}
+	return Fallback;
+}
+
+/**
  * @brief 상세 패널 위젯을 처음 한 번 만들어 화면에 얹는다.
  *
  * @details
- * WBP_CombatDetailOverlay 는 배치와 그림(판·틀·글꼴)을 소유하고, 내용 글자는
- * 여기서 이름으로 찾은 위젯에 채운다 -- HUD 본체와 같은 규약이라 없는 위젯은
- * 조용히 건너뛴다.
- *
- * 겹은 HitTestInvisible 로 얹는다. 눌림을 받으면 화면 전체를 덮는 한 장이
- * 되어 판 탭이 HUD 까지 안 내려온다 -- 닫는 탭을 받을 사람이 사라진다.
+ * 실제 생성·부품 캐시·모달 실드·닫기 배선은 프레젠터가 한다. HUD 는 남은
+ * 상세 경로(유닛/상태/아티팩트)가 예전 코드 그대로 읽도록 부품 포인터를
+ * 비추고, UIModel 이 필요한 스킬 칸 줄만 직접 짓는다.
  */
 bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 {
-	if (mDetailOverlayWidget != nullptr)
-	{
-		return true;
-	}
-	if (mDetailOverlayWidgetClass == nullptr)
+	if (EnsureDetailPresenter() == false
+		|| mDetailPresenter->EnsureOverlayWidget(GetOwningPlayer()) == false)
 	{
 		return false;
 	}
-	if (APlayerController* OwningPlayer = GetOwningPlayer())
-	{
-		mDetailOverlayWidget =
-			CreateWidget<UUserWidget>(OwningPlayer, mDetailOverlayWidgetClass);
-	}
-	else if (UWorld* World = GetWorld())
-	{
-		// 에디터 자동화처럼 로컬 플레이어가 없는 월드에서도 상세 계약은
-		// 검증할 수 있어야 한다. 실제 플레이에서는 늘 위의 소유 플레이어를 쓴다.
-		mDetailOverlayWidget =
-			CreateWidget<UUserWidget>(World, mDetailOverlayWidgetClass);
-	}
-	if (mDetailOverlayWidget == nullptr)
-	{
-		return false;
-	}
-	// 몬스터 도감(55)에서 스킬을 오래 눌러도 상세는 반드시 그 위에 온다.
-	mDetailOverlayWidget->AddToViewport(DetailOverlayViewportZOrder);
-	mDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
+	mDetailOverlayWidget = mDetailPresenter->GetOverlayWidget();
+	mDetailIconImage = mDetailPresenter->GetIconImage();
+	mDetailTitleText = mDetailPresenter->GetTitleText();
+	mDetailSubtitleText = mDetailPresenter->GetSubtitleText();
+	mDetailBodyText = mDetailPresenter->GetBodyText();
+	mDetailStatBlock = mDetailPresenter->GetStatBlock();
+	mDetailSkillBlock = mDetailPresenter->GetSkillBlock();
+	mDetailExtraHeading = mDetailPresenter->GetExtraHeading();
+	mDetailExtraText = mDetailPresenter->GetExtraText();
+	mDetailDivider0 = mDetailPresenter->GetDivider0();
+	mDetailDivider1 = mDetailPresenter->GetDivider1();
+	mSkillTacticalDiagramWidget = mDetailPresenter->GetTacticalDiagram();
+	mSkillWorldPreviewImage = mDetailPresenter->GetWorldPreviewImage();
 
-	mDetailIconImage = Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIconImage")));
-	mDetailTitleText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailTitleText")));
-	mDetailSubtitleText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSubtitleText")));
-	mDetailBodyText = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailBodyText")));
-	BindDetailExtras();
-
-	/*
-	 * 판·틀·글자는 눌림을 **삼키지 않게** 해 둔다.
-	 *
-	 * 스킬 칸이 생기면서 이 겹은 눌림을 받아야 하는데, 그러면 장식까지 눌림을
-	 * 먹어서 패널 위를 톡 쳐도 닫히지 않는다. 눌림을 받을 것은 스킬 칸뿐이다.
-	 */
-	static const TCHAR* const DecorativeNames[] = {
-		TEXT("DetailScrimImage"), TEXT("DetailFrameImage"), TEXT("DetailIconImage"),
-		TEXT("DetailTitleText"), TEXT("DetailSubtitleText"), TEXT("DetailBodyText") };
-	for (const TCHAR* Name : DecorativeNames)
-	{
-		if (UWidget* Decoration = mDetailOverlayWidget->GetWidgetFromName(Name))
-		{
-			Decoration->SetVisibility(ESlateVisibility::HitTestInvisible);
-		}
-	}
-	if (UWidget* PanelRoot = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailPanelRoot")))
-	{
-		// 자기는 안 받고 자식(스킬 칸)만 받는다.
-		PanelRoot->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	}
-
-	// 어디를 눌러도 닫히게 하는 받이. 용병탭처럼 판(Board) 눌림이 안 닿는
-	// 자리에서 열렸을 때도 이 받이가 닫아 준다 (0806 검수: 닫을 길이 없었다).
-	if (UButton* CloseCatch = Cast<UButton>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseCatch"))))
-	{
-		CloseCatch->OnClicked.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked);
-	}
-	// 확정 시안의 "닫기" 단추도 같은 곳으로 배선한다.
-	if (UButton* CloseButton = Cast<UButton>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton"))))
-	{
-		CloseButton->OnClicked.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked);
-	}
-
+	// 스킬 칸 줄은 UIModel 의 유닛 상세를 읽고 HUD 핸들러로 배선되므로 남는다.
+	// 자체 가드가 있어 두 번째 호출부터는 아무 일도 안 한다.
 	BuildDetailSkillRow();
 	return true;
+}
+
+void UCombatLayoutHUDWidget::ApplyReadableDetailTypography(const bool bReadable)
+{
+	if (mDetailPresenter != nullptr)
+	{
+		mDetailPresenter->ApplyReadableDetailTypography(bReadable);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandleDetailCloseCatchClicked()
@@ -5093,6 +5335,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	{
 		return;
 	}
+	ApplyReadableDetailTypography(false);
 	ApplyDetailColumnLayout(false);
 
 	SetTextIfPresent(mDetailTitleText, Detail.mName);
@@ -5176,6 +5419,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 	// 자기는 눌림을 안 받고 스킬 칸만 받는다. 그래서 칸 밖을 톡 치면 눌림이
 	// HUD 까지 내려가 패널이 닫힌다.
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	RefreshWorldGestureInputBlock();
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -5208,258 +5452,189 @@ int32 UCombatLayoutHUDWidget::GetDetailOverlayViewportZOrderForTest() const
 #endif
 
 /**
- * @brief 상세창의 수치 칩과 범위 칸을 이름으로 찾아 둔다.
- *
- * @details 없으면 그냥 건너뛴다. 옛 WBP 처럼 칩·칸이 없는 판도 그대로 돌아가야
- * 한다 -- 상세창은 화면 담당이 갈아 끼우는 자산이라 이쪽이 강제하지 않는다.
- */
-void UCombatLayoutHUDWidget::BindDetailExtras()
-{
-	mDetailChipLabels.Reset();
-	mDetailChipValues.Reset();
-	for (int32 ChipSlot = 0; ChipSlot < DetailChipCount; ++ChipSlot)
-	{
-		mDetailChipLabels.Add(Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("DetailChip%dLabel"), ChipSlot)))));
-		mDetailChipValues.Add(Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(
-			FName(*FString::Printf(TEXT("DetailChip%dValue"), ChipSlot)))));
-	}
-
-	mDetailSelectCells.Reset();
-	mDetailHitCells.Reset();
-	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
-	{
-		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
-		{
-			mDetailSelectCells.Add(Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
-				FName(*FString::Printf(TEXT("DetailSelectCell_R%dC%d"), Row, Column)))));
-			mDetailHitCells.Add(Cast<UImage>(mDetailOverlayWidget->GetWidgetFromName(
-				FName(*FString::Printf(TEXT("DetailHitCell_R%dC%d"), Row, Column)))));
-		}
-	}
-
-	mDetailAimBlockerText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailAimBlockerText")));
-	mDetailEffectBlockerText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailEffectBlockerText")));
-	mDetailSelectCaptionText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSelectCaptionText")));
-	mDetailHitCaptionText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailHitCaptionText")));
-
-	mDetailStatBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatBlock"));
-	mDetailTargetBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailTargetBlock"));
-	mDetailSkillBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillBlock"));
-	mDetailExtraBlock = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraBlock"));
-	mDetailExtraHeading = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraHeading")));
-	mDetailExtraText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailExtraText")));
-	mDetailIdentityColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityColumn"));
-	mDetailStatColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatColumn"));
-	mDetailRightColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailRightColumn"));
-	mDetailWideColumn = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailWideColumn"));
-	mDetailDivider0 = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailDivider_0"));
-	mDetailDivider1 = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailDivider_1"));
-}
-
-/**
- * @brief 오른쪽 열의 세 덩어리 중 하나만 켠다.
+ * @brief 오른쪽 열의 세 덩어리 중 하나만 켠다. 실제 일은 프레젠터가 한다.
  * @param Wanted 켤 덩어리. nullptr 이면 셋 다 끈다
  */
 void UCombatLayoutHUDWidget::ShowDetailRightBlock(const UWidget* Wanted)
 {
-	UWidget* const Blocks[] = { mDetailTargetBlock, mDetailSkillBlock, mDetailExtraBlock };
-	for (UWidget* Block : Blocks)
+	if (mDetailPresenter != nullptr)
 	{
-		if (Block != nullptr)
-		{
-			SetShown(Block, Block == Wanted);
-		}
+		mDetailPresenter->ShowDetailRightBlock(Wanted);
 	}
 }
 
 /**
- * @brief 상세 종류에 맞춰 열 자체를 재배치한다.
- *
- * @details 루트만 화면 전체에 앵커링하고 자식을 1920 좌표에 고정하면 20:9에서
- * 오른쪽이 비거나 늘어난다. 열을 화면 비율 앵커로 두면 폭이 달라져도 비율을
- * 유지한다. 아티팩트는 값만 숨기는 것이 아니라 가운데 열과 두 번째 기둥을
- * 접고, 정체성/효과 열을 34:66으로 다시 펼친다.
+ * @brief 상세 종류에 맞춰 열 자체를 재배치한다. 실제 일은 프레젠터가 한다.
  */
 void UCombatLayoutHUDWidget::ApplyDetailColumnLayout(const bool bArtifactTwoColumn)
 {
-	/*
-	 * 자리는 **판이 정한다.** 여기서는 켜고 끄기만 한다.
-	 *
-	 * 전에는 이 함수가 열마다 앵커 비율을 제 손으로 적어 두고 다시 앉혔다
-	 * (0.034 / 0.227 / 0.278 …). 그래서 배치 빌더에서 열 비율을 고치면
-	 * 화면은 안 따라오고, 두 값이 어긋난 채로 남았다. 자리를 재는 곳이
-	 * 둘이면 어느 쪽이 맞는지 늘 따지게 된다.
-	 *
-	 * 이제 판이 세 열과 "가운데+오른쪽을 이은 넓은 열" 을 모두 만들어 두고,
-	 * 여기서는 화면에 맞는 쪽을 편다.
-	 */
-	SetShown(mDetailStatColumn, bArtifactTwoColumn == false);
-	SetShown(mDetailRightColumn, bArtifactTwoColumn == false);
-	SetShown(mDetailWideColumn, bArtifactTwoColumn);
-
-	// 확정 시안(0806)의 기본 모습으로 되돌린다. 아티팩트만 이 뒤에서
-	// 받침판을 걷고 보석 줄을 켠다 -- 한 번 켠 것이 다음 화면에 남지 않게.
-	if (mDetailOverlayWidget != nullptr)
+	if (mDetailPresenter != nullptr)
 	{
-		if (UWidget* FreePlate = mDetailOverlayWidget->GetWidgetFromName(
-			TEXT("DetailFreePlate")))
-		{
-			FreePlate->SetVisibility(bArtifactTwoColumn
-				? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
-		}
-		SetShown(mDetailBodyText, true);
-		for (int32 Index = 0; Index < 5; ++Index)
-		{
-			SetShown(mDetailOverlayWidget->GetWidgetFromName(
-				FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))), false);
-		}
+		mDetailPresenter->ApplyDetailColumnLayout(bArtifactTwoColumn);
 	}
-	// 기둥 하나는 정체성 열과의 사이, 다른 하나는 가운데와 오른쪽 사이다.
-	// 두 열을 이어 붙이면 그 사이 기둥은 판 한가운데를 가로지른다.
-	SetShown(mDetailDivider0, true);
-	SetShown(mDetailDivider1, bArtifactTwoColumn == false);
 }
 
 void UCombatLayoutHUDWidget::SetDetailChip(int32 ChipSlot, const FText& Label, const FText& Value)
 {
-	if (mDetailChipLabels.IsValidIndex(ChipSlot) == true)
+	if (mDetailPresenter != nullptr)
 	{
-		SetTextIfPresent(mDetailChipLabels[ChipSlot], Label);
-	}
-	if (mDetailChipValues.IsValidIndex(ChipSlot) == true)
-	{
-		SetTextIfPresent(mDetailChipValues[ChipSlot], Value);
+		mDetailPresenter->SetDetailChip(ChipSlot, Label, Value);
 	}
 }
 
 void UCombatLayoutHUDWidget::ClearDetailChips()
 {
-	for (int32 ChipSlot = 0; ChipSlot < DetailChipCount; ++ChipSlot)
+	if (mDetailPresenter != nullptr)
 	{
-		SetDetailChip(ChipSlot, FText::GetEmpty(), FText::FromString(TEXT("-")));
-	}
-}
-
-namespace CombatDetailGrid
-{
-	// 빈 칸 / 조준 범위 / 타격 범위 / 시전자. 판에 칠하는 색과 같은 계열로 둔다.
-	const FLinearColor Empty(0.10f, 0.085f, 0.065f, 0.55f);
-	const FLinearColor Select(0.28f, 0.60f, 0.95f, 0.95f);
-	const FLinearColor Hit(0.90f, 0.32f, 0.30f, 0.95f);
-	const FLinearColor Caster(0.98f, 0.80f, 0.35f, 0.95f);
-
-	/** @brief 시전자(가운데)에서 (Row,Column)까지 이 형태가 닿는가. */
-	bool SelectCovers(ECombatSkillSelectShapeUI Shape, int32 Range, int32 dRow, int32 dColumn)
-	{
-		const int32 Manhattan = FMath::Abs(dRow) + FMath::Abs(dColumn);
-		const int32 Chebyshev = FMath::Max(FMath::Abs(dRow), FMath::Abs(dColumn));
-		switch (Shape)
-		{
-		case ECombatSkillSelectShapeUI::Single:   return Manhattan == 0;
-		case ECombatSkillSelectShapeUI::Cross:    return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
-		case ECombatSkillSelectShapeUI::Square:   return Chebyshev <= Range;
-		case ECombatSkillSelectShapeUI::Diagonal: return Chebyshev <= Range;
-		case ECombatSkillSelectShapeUI::Line:     return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
-		default:                                  return false;
-		}
-	}
-
-	bool HitCovers(ECombatSkillHitShapeUI Shape, int32 Range, int32 dRow, int32 dColumn)
-	{
-		const int32 Manhattan = FMath::Abs(dRow) + FMath::Abs(dColumn);
-		const int32 Chebyshev = FMath::Max(FMath::Abs(dRow), FMath::Abs(dColumn));
-		switch (Shape)
-		{
-		case ECombatSkillHitShapeUI::Single: return Manhattan == 0;
-		case ECombatSkillHitShapeUI::Cross:  return (dRow == 0 || dColumn == 0) && Manhattan <= Range;
-		case ECombatSkillHitShapeUI::Circle: return Chebyshev <= Range;
-		default:                             return false;
-		}
-	}
-}
-
-void UCombatLayoutHUDWidget::PaintSelectGrid(const FSkillTargetingUI& Targeting)
-{
-	using namespace CombatDetailGrid;
-	const int32 Center = DetailGridExtent / 2;
-	const int32 Range = FMath::RoundToInt(Targeting.mSelectRange);
-	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
-	{
-		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
-		{
-			UImage* Cell = mDetailSelectCells.IsValidIndex(Row * DetailGridExtent + Column)
-				? mDetailSelectCells[Row * DetailGridExtent + Column].Get() : nullptr;
-			if (Cell == nullptr)
-			{
-				continue;
-			}
-			const int32 dRow = Row - Center;
-			const int32 dColumn = Column - Center;
-			const bool bCaster = (dRow == 0 && dColumn == 0);
-			const bool bCovered = SelectCovers(Targeting.mSelectShape, Range, dRow, dColumn);
-			Cell->SetColorAndOpacity(bCaster ? Caster : (bCovered ? Select : Empty));
-		}
-	}
-}
-
-void UCombatLayoutHUDWidget::PaintHitGrid(const FSkillTargetingUI& Targeting)
-{
-	using namespace CombatDetailGrid;
-	const int32 Center = DetailGridExtent / 2;
-	const int32 Range = FMath::RoundToInt(Targeting.mHitRange);
-	for (int32 Row = 0; Row < DetailGridExtent; ++Row)
-	{
-		for (int32 Column = 0; Column < DetailGridExtent; ++Column)
-		{
-			UImage* Cell = mDetailHitCells.IsValidIndex(Row * DetailGridExtent + Column)
-				? mDetailHitCells[Row * DetailGridExtent + Column].Get() : nullptr;
-			if (Cell == nullptr)
-			{
-				continue;
-			}
-			const int32 dRow = Row - Center;
-			const int32 dColumn = Column - Center;
-			const bool bCaster = (dRow == 0 && dColumn == 0);
-			const bool bCovered = HitCovers(Targeting.mHitShape, Range, dRow, dColumn);
-			Cell->SetColorAndOpacity(bCaster ? Caster : (bCovered ? Hit : Empty));
-		}
+		mDetailPresenter->ClearDetailChips();
 	}
 }
 
 void UCombatLayoutHUDWidget::ClearDetailGrids()
 {
-	using namespace CombatDetailGrid;
-	for (TObjectPtr<UImage>& Cell : mDetailSelectCells)
+	if (mDetailPresenter != nullptr)
 	{
-		if (Cell != nullptr)
+		mDetailPresenter->ClearDetailGrids();
+	}
+}
+
+bool UCombatLayoutHUDWidget::StartSkillWorldPreview()
+{
+	// 미리보기 이미지 위젯은 프레젠터가 짓는다. 겹이 아직 없으면 그냥 실패한다.
+	if (mDetailPresenter != nullptr)
+	{
+		mDetailPresenter->EnsureSkillVisualPreviewBuilt();
+		mSkillWorldPreviewImage = mDetailPresenter->GetWorldPreviewImage();
+	}
+	UWorld* World = GetWorld();
+	if (World == nullptr || mSkillWorldPreviewImage == nullptr)
+	{
+		return false;
+	}
+
+	UCameraComponent* SourceCamera = nullptr;
+	if (ACombatCameraPawn* MainCamera = UCameraFunctionLibrary::GetMainCameraPawn(this))
+	{
+		SourceCamera = MainCamera->GetCameraComponent();
+	}
+	if (SourceCamera == nullptr)
+	{
+		// 편집기 자동 캡처처럼 PlayerController가 아직 Pawn을 소유하기 전에도
+		// 실제 카메라 액터가 있으면 같은 경로를 검수할 수 있게 한다.
+		for (TActorIterator<ACameraActor> It(World); It; ++It)
 		{
-			Cell->SetColorAndOpacity(Empty);
+			SourceCamera = It->GetCameraComponent();
+			break;
 		}
 	}
-	for (TObjectPtr<UImage>& Cell : mDetailHitCells)
+	if (SourceCamera == nullptr)
 	{
-		if (Cell != nullptr)
-		{
-			Cell->SetColorAndOpacity(Empty);
-		}
+		return false;
 	}
-	SetTextIfPresent(mDetailSelectCaptionText, FText::GetEmpty());
-	SetTextIfPresent(mDetailHitCaptionText, FText::GetEmpty());
-	SetTextIfPresent(mDetailAimBlockerText, FText::GetEmpty());
-	SetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
+	mSkillWorldPreviewSourceCamera = SourceCamera;
+
+	if (mSkillWorldPreviewRenderTarget == nullptr)
+	{
+		mSkillWorldPreviewRenderTarget = NewObject<UTextureRenderTarget2D>(this,
+			TEXT("SkillDetailWorldRenderTarget"), RF_Transient);
+		mSkillWorldPreviewRenderTarget->RenderTargetFormat = RTF_RGBA8_SRGB;
+		mSkillWorldPreviewRenderTarget->ClearColor = FLinearColor(0.008f, 0.01f, 0.015f, 1.f);
+		mSkillWorldPreviewRenderTarget->InitCustomFormat(1024, 384, PF_B8G8R8A8, true);
+		mSkillWorldPreviewRenderTarget->UpdateResourceImmediate(true);
+	}
+	if (mSkillWorldPreviewCapture == nullptr)
+	{
+		FActorSpawnParameters Params;
+		Params.Name = MakeUniqueObjectName(World, ASceneCapture2D::StaticClass(),
+			TEXT("SkillDetailSceneCapture"));
+		Params.ObjectFlags |= RF_Transient;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		mSkillWorldPreviewCapture = World->SpawnActor<ASceneCapture2D>(Params);
+	}
+	USceneCaptureComponent2D* CaptureComponent = mSkillWorldPreviewCapture != nullptr
+		? mSkillWorldPreviewCapture->GetCaptureComponent2D() : nullptr;
+	if (CaptureComponent == nullptr)
+	{
+		return false;
+	}
+	CaptureComponent->TextureTarget = mSkillWorldPreviewRenderTarget;
+	CaptureComponent->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
+	CaptureComponent->bCaptureEveryFrame = true;
+	CaptureComponent->bCaptureOnMovement = true;
+	CaptureComponent->bAlwaysPersistRenderingState = true;
+	CaptureComponent->ShowFlags.SetMotionBlur(false);
+
+	FSlateBrush Brush;
+	Brush.SetResourceObject(mSkillWorldPreviewRenderTarget);
+	Brush.ImageSize = FVector2D(1024.f, 384.f);
+	Brush.DrawAs = ESlateBrushDrawType::Image;
+	mSkillWorldPreviewImage->SetBrush(Brush);
+	mSkillWorldPreviewImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+	mSkillWorldPreviewActive = true;
+	SyncSkillWorldPreviewCamera(true);
+	return true;
+}
+
+void UCombatLayoutHUDWidget::SyncSkillWorldPreviewCamera(const bool bCaptureImmediately)
+{
+	if (mSkillWorldPreviewCapture == nullptr || mSkillWorldPreviewSourceCamera == nullptr)
+	{
+		StopSkillWorldPreview();
+		return;
+	}
+	UCameraComponent* Source = mSkillWorldPreviewSourceCamera;
+	USceneCaptureComponent2D* Capture = mSkillWorldPreviewCapture->GetCaptureComponent2D();
+	if (Source == nullptr || Capture == nullptr)
+	{
+		StopSkillWorldPreview();
+		return;
+	}
+	mSkillWorldPreviewCapture->SetActorTransform(Source->GetComponentTransform());
+	Capture->ProjectionType = Source->ProjectionMode;
+	Capture->FOVAngle = Source->FieldOfView;
+	// 패널이 본 화면보다 가로로 길다. 같은 폭을 쓰면 전장이 지나치게 작아지므로
+	// 실제 카메라 중심은 유지하고 약간만 줌인한다.
+	Capture->OrthoWidth = Source->OrthoWidth * 0.78f;
+	Capture->PostProcessSettings = Source->PostProcessSettings;
+	Capture->PostProcessBlendWeight = Source->PostProcessBlendWeight;
+	if (bCaptureImmediately)
+	{
+		Capture->CaptureScene();
+	}
+}
+
+void UCombatLayoutHUDWidget::StopSkillWorldPreview()
+{
+	mSkillWorldPreviewActive = false;
+	if (mSkillWorldPreviewCapture != nullptr
+		&& mSkillWorldPreviewCapture->GetCaptureComponent2D() != nullptr)
+	{
+		mSkillWorldPreviewCapture->GetCaptureComponent2D()->bCaptureEveryFrame = false;
+	}
+	SetShown(mSkillWorldPreviewImage, false);
+}
+
+void UCombatLayoutHUDWidget::ReleaseSkillWorldPreview()
+{
+	StopSkillWorldPreview();
+	if (mSkillWorldPreviewCapture != nullptr)
+	{
+		mSkillWorldPreviewCapture->Destroy();
+	}
+	mSkillWorldPreviewCapture = nullptr;
+	mSkillWorldPreviewSourceCamera = nullptr;
+	if (mSkillWorldPreviewRenderTarget != nullptr)
+	{
+		mSkillWorldPreviewRenderTarget->ReleaseResource();
+	}
+	mSkillWorldPreviewRenderTarget = nullptr;
+	mSkillWorldPreviewImage = nullptr;
 }
 
 /** @brief 스킬 상세를 패널에 채워 띄운다. 수치는 요청한 유닛의 상세 DTO에서 읽는다. */
 void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 {
-	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
+	if (mUIModel == nullptr)
 	{
 		return;
 	}
@@ -5468,100 +5643,32 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	{
 		return;
 	}
+	ShowSkillDetailOverlay(Detail);
+}
+
+void UCombatLayoutHUDWidget::ShowSkillDetailOverlay(const FSkillDetailUI& Detail)
+{
+	// 풍부한 렌더는 프레젠터(Present)가 DTO만 받아 그린다. HUD 는 겹 부품을
+	// 비추고, 유닛 상세의 스킬 칸 줄과 월드 제스처 잠금 같은 HUD 상태만 맡는다.
+	if (EnsureDetailOverlayWidget() == false)
+	{
+		return;
+	}
 	#if WITH_DEV_AUTOMATION_TESTS
 	// WBP 없이 도는 자동화에서도 실제 렌더 함수가 어느 DTO를 소비했는지 남긴다.
 	mRenderedSkillDetailForTest = Detail;
 	#endif
-	ApplyDetailColumnLayout(false);
-
-	SetTextIfPresent(mDetailTitleText, Detail.mName);
-
-	// 스킬 index는 유닛마다 0부터 다시 시작한다. 몬스터 상세에서 받은 index로
-	// 플레이어 카드 레일을 조회하면 같은 슬롯의 전혀 다른 수치가 섞인다. 이름,
-	// 설명과 함께 왕복한 상세 DTO를 이 화면의 단일 출처로 쓴다.
-	ClearDetailChips();
-	SetDetailChip(0, LOCTEXT("DetailChipCost", "AP"),
-		FText::AsNumber(Detail.mActionPointCost));
-	SetDetailChip(1, LOCTEXT("DetailChipDamage", "피해"),
-		Detail.mDamageMax <= 0 ? FText::FromString(TEXT("-"))
-			: (Detail.mDamageMin == Detail.mDamageMax
-				? FText::AsNumber(Detail.mDamageMax)
-				: FText::FromString(FString::Printf(TEXT("%d~%d"),
-					Detail.mDamageMin, Detail.mDamageMax))));
-	SetDetailChip(2, LOCTEXT("DetailChipCooldown", "쿨타임"),
-		Detail.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
-			: FText::FromString(FString::Printf(TEXT("%d턴"), Detail.mCooldownTurns)));
-	// 타수는 칩으로 두지 않는다. 2타 이상일 때 설명 문장에 적기로 합의돼
-	// 있어(0802), 칩까지 두면 같은 정보가 두 군데 나온다.
-	SetDetailChip(3, LOCTEXT("DetailChipRange", "사거리"),
-		FText::AsNumber(FMath::RoundToInt(Detail.mTargeting.mSelectRange)));
-	SetDetailChip(4, LOCTEXT("DetailChipCritical", "치명"),
-		Detail.mCriticalDamage <= 0 ? FText::FromString(TEXT("-"))
-			: FText::AsNumber(Detail.mCriticalDamage));
-	SetShown(mDetailStatBlock, true);
-	ShowDetailRightBlock(mDetailTargetBlock);
-	PaintSelectGrid(Detail.mTargeting);
-	PaintHitGrid(Detail.mTargeting);
-	SetTextIfPresent(mDetailAimBlockerText, FText::FromString(
-		DescribeBlocker(Detail.mTargeting.mAimBlockerMask)));
-	SetTextIfPresent(mDetailEffectBlockerText, FText::FromString(
-		DescribeBlocker(Detail.mTargeting.mEffectBlockerMask)));
-	SetTextIfPresent(mDetailSelectCaptionText, FText::FromString(FString::Printf(
-		TEXT("%s · 거리 %.0f"), SelectShapeName(Detail.mTargeting.mSelectShape),
-		Detail.mTargeting.mSelectRange)));
-	SetTextIfPresent(mDetailHitCaptionText, FText::FromString(FString::Printf(
-		TEXT("%s · 범위 %.0f"), HitShapeName(Detail.mTargeting.mHitShape),
-		Detail.mTargeting.mHitRange)));
-
-	FString Subtitle = FString::Printf(TEXT("AP %d"), Detail.mActionPointCost);
-	if (Detail.mActionPointGain > 0)
-	{
-		Subtitle += FString::Printf(TEXT("  ·  AP 회복 %d"), Detail.mActionPointGain);
-	}
-	if (Detail.mCooldownTurns > 0)
-	{
-		Subtitle += FString::Printf(TEXT("  ·  쿨타임 %d턴"), Detail.mCooldownTurns);
-	}
-	if (Detail.mDamageMax > 0)
-	{
-		Subtitle += Detail.mDamageMin == Detail.mDamageMax
-			? FString::Printf(TEXT("  ·  피해 %d"), Detail.mDamageMax)
-			: FString::Printf(TEXT("  ·  피해 %d~%d"), Detail.mDamageMin, Detail.mDamageMax);
-	}
-	// 수치 칩 기둥을 걷었으니(확정 시안) 사거리·치명도 이 줄에 싣는다.
-	Subtitle += FString::Printf(TEXT("  ·  사거리 %.0f"),
-		Detail.mTargeting.mSelectRange);
-	if (Detail.mCriticalDamage > 0)
-	{
-		// "치명"만 쓰면 확률인지 피해인지 못 읽는다(0806 검수). 이 값은 피해다.
-		Subtitle += FString::Printf(TEXT("  ·  치명타피해 %d"), Detail.mCriticalDamage);
-	}
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
-
-	FString Body = Detail.mDescription.ToString();
-	const FString Targeting = DescribeTargeting(Detail.mTargeting);
-	if (Targeting.IsEmpty() == false)
-	{
-		if (Body.IsEmpty() == false)
-		{
-			Body += TEXT("\n\n");
-		}
-		Body += Targeting;
-	}
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
-
-	SetPortraitCropped(mDetailIconImage, Detail.mIcon);
+	mDetailPresenter->Present(Detail);
 	// 이 칸들은 유닛 상세의 것이다. 스킬 하나를 보는 중에는 걷는다.
 	SetDetailSkillRowShown(false);
-	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	RefreshWorldGestureInputBlock();
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
 FString UCombatLayoutHUDWidget::GetDetailChipValueForTest(const int32 ChipIndex) const
 {
-	return mDetailChipValues.IsValidIndex(ChipIndex)
-		&& mDetailChipValues[ChipIndex] != nullptr
-		? mDetailChipValues[ChipIndex]->GetText().ToString() : FString();
+	return mDetailPresenter != nullptr
+		? mDetailPresenter->GetChipValueString(ChipIndex) : FString();
 }
 
 FString UCombatLayoutHUDWidget::GetDetailSubtitleForTest() const
@@ -5581,53 +5688,37 @@ FString UCombatLayoutHUDWidget::GetDetailSubtitleForTest() const
  */
 void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 {
-	if (mUIModel == nullptr || EnsureDetailOverlayWidget() == false)
+	if (mUIModel == nullptr)
 	{
 		return;
 	}
-	ApplyDetailColumnLayout(false);
-
 	const FUnitUI* TurnUnit = FindTurnUnit();
 	const int32 Left = TurnUnit != nullptr
 		? FMath::Max(FMath::RoundToInt(TurnUnit->mMovementPoint), 0) : 0;
 
-	SetTextIfPresent(mDetailTitleText, LOCTEXT("MoveDetailTitle", "이동"));
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(
-		FString::Printf(TEXT("AP 1/칸  ·  남은 AP %d"), Left)));
-
-	// 이동에는 조준 형태가 없다. 스킬 상세가 남긴 칸과 칩을 걷는다.
-	ClearDetailGrids();
-	ClearDetailChips();
-	SetDetailChip(0, LOCTEXT("DetailChipMoveCost", "AP/칸"), FText::AsNumber(1));
-	SetDetailChip(1, LOCTEXT("DetailChipMoveLeft", "남은 AP"), FText::AsNumber(Left));
-	SetDetailChip(2, LOCTEXT("DetailChipMoveRange", "최대 칸"), FText::AsNumber(Left));
-
-	FString Body = FString::Printf(
-		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다.\n지금 남은 행동력으로 최대 %d칸 갈 수 있다."), Left);
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
-	// 조작 안내는 규칙 설명과 결이 다르다. 한 칸에 이어 붙이면
-	// 한 덩어리로 읽혀 어디까지가 규칙인지 흐려진다. 오른쪽 열로 리자.
-	const FString Guide = FString(
-		TEXT("판을 톡 쳐서 갈 곳을 고른다. 여러 번 찍으면 그 자리가 경유지가 되어"))
-		+ TEXT(" 찍은 차례대로 돌아간다.") + LINE_TERMINATOR
-		+ TEXT("마지막으로 찍은 칸을 다시 누르면 확정하고, 판 밖을 누르면")
-		+ TEXT(" 마지막 경유지만 무른다.");
-
-	// 카드에 그려 둔 그림을 그대로 쓴다. 이동은 상세용 그림이 따로 없다.
+	// 이동도 별도 판을 손으로 조립하지 않고 스킬과 같은 DTO→공용 상세 WBP
+	// 렌더 경로를 탄다. 그래서 제목/수치 메달/전술 보드/닫기 동작이 동일하다.
 	UTexture2D* MoveIcon = nullptr;
 	if (mCommandSlots.IsValidIndex(0) && mCommandSlots[0].Icon != nullptr)
 	{
 		MoveIcon = Cast<UTexture2D>(mCommandSlots[0].Icon->GetBrush().GetResourceObject());
 	}
-	SetPortraitCropped(mDetailIconImage, MoveIcon);
 
-	// 스킬 칸은 유닛 상세의 것이다.
-	SetDetailSkillRowShown(false);
-	SetShown(mDetailStatBlock, true);
-	SetTextIfPresent(mDetailExtraHeading, LOCTEXT("DetailExtraMove", "조작"));
-	SetTextIfPresent(mDetailExtraText, FText::FromString(Guide));
-	ShowDetailRightBlock(mDetailExtraBlock);
-	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	FSkillDetailUI MoveDetail;
+	MoveDetail.mSkillIndex = -2; // INDEX_NONE과 구분되는 UI 전용 이동 식별자.
+	MoveDetail.mName = LOCTEXT("MoveDetailTitle", "이동");
+	MoveDetail.mDescription = FText::FromString(FString::Printf(
+		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 %d칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
+		Left));
+	MoveDetail.mIcon = MoveIcon;
+	MoveDetail.mActionPointCost = 1;
+	MoveDetail.mTargeting.mSelectShape = ECombatSkillSelectShapeUI::Cross;
+	MoveDetail.mTargeting.mSelectRange = static_cast<float>(Left);
+	MoveDetail.mTargeting.mHitShape = ECombatSkillHitShapeUI::Single;
+	MoveDetail.mTargeting.mHitRange = 0.f;
+	MoveDetail.mTargeting.mAimBlockerMask = 0;
+	MoveDetail.mTargeting.mEffectBlockerMask = 0;
+	ShowSkillDetailOverlay(MoveDetail);
 }
 
 void UCombatLayoutHUDWidget::HideDetailOverlay(const bool bNotifyGameplay)
@@ -5637,6 +5728,8 @@ void UCombatLayoutHUDWidget::HideDetailOverlay(const bool bNotifyGameplay)
 		return;
 	}
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
+	StopSkillWorldPreview();
+	RefreshWorldGestureInputBlock();
 
 	// 카메라는 안 건드린다. 즉시 이동 방식이라 잡아 둔 것이 없고,
 	// 해제 신호를 보내 봐야 게임플레이가 무시한다(0807 감사에서 노-옵 확인).

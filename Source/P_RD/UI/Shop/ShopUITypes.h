@@ -6,6 +6,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/UnitSpawnData/UnitJobType.h"
+#include "Frontend/CharacterSelectTypes.h"
 #include "ShopUITypes.generated.h"
 
 class UTexture2D;
@@ -24,7 +25,9 @@ enum class EShopUIDomain : uint8
 	// 시연(용병 소환/이동/스킬 시전) 상태
 	Preview,
 	// 고용 게시판
-	Mercenary
+	Mercenary,
+	// 온디맨드 상세(스킬/아티팩트) — Request*Detail 응답으로만 갱신
+	Detail
 };
 
 /**
@@ -100,6 +103,8 @@ struct FShopOwnedSkillSlotUI
 	// 빈 슬롯 여부 (빈 슬롯 = 구매 대상, 찬 슬롯 = 교체 대상)
 	UPROPERTY(BlueprintReadOnly) bool mIsEmpty = true;
 	UPROPERTY(BlueprintReadOnly) FText mName;
+	/** 길게 누르기 상세 카드에 표시할 스킬 설명. */
+	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 };
 
@@ -149,6 +154,38 @@ struct FShopRestUI
 	UPROPERTY(BlueprintReadOnly) TArray<FShopRestUnitUI> mUnits;
 };
 
+/**
+ * @brief 상점의 용병 후보 한 명.
+ * @details
+ * 후보의 전투 표시값은 기존 용병 선택 화면과 같은 FFrontendCharacterOption을
+ * 재사용한다. 상점에서만 필요한 가격/품절/판매 슬롯만 바깥에 덧붙여 두 화면의
+ * 이름·스탯·스킬 표현이 서로 갈라지지 않게 한다.
+ */
+USTRUCT(BlueprintType)
+struct FShopMercenaryUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FFrontendCharacterOption mCharacter;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	UPROPERTY(BlueprintReadOnly) int32 mPrice = 0;
+	UPROPERTY(BlueprintReadOnly) bool mIsAffordable = false;
+	UPROPERTY(BlueprintReadOnly) bool mIsSoldOut = false;
+};
+
+/** @brief 고용 화면 오른쪽의 교체/배치 대상 파티 슬롯. 빈 슬롯도 보존한다. */
+USTRUCT(BlueprintType)
+struct FShopMercenaryPartySlotUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mUnitIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) bool mIsOccupied = false;
+	UPROPERTY(BlueprintReadOnly) EUnitJobType mJobType = EUnitJobType::None;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+};
+
 /** @brief 상점 화면 전체 표시값입니다. */
 // UI 필요값:
 // - mGold: 상단 보유 골드(구매 가능 여부 갱신 기준).
@@ -165,4 +202,6 @@ struct FShopUI
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedArtifactUI> mOwnedArtifacts;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedUnitUI> mOwnedUnits;
 	UPROPERTY(BlueprintReadOnly) FShopRestUI mRest;
+	UPROPERTY(BlueprintReadOnly) TArray<FShopMercenaryUI> mMercenaries;
+	UPROPERTY(BlueprintReadOnly) TArray<FShopMercenaryPartySlotUI> mMercenaryPartySlots;
 };
