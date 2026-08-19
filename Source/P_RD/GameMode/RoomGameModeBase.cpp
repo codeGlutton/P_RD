@@ -15,7 +15,18 @@
 #include "Setting/RDWorldSettings.h"
 
 #include "Engine/AssetManager.h"
+#include "Engine/Texture2D.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
+#include "AttributeSet/PartyAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -144,6 +155,78 @@ namespace
 			NSLOCTEXT("RoomGameModeBase", "StartPointDescription", "Routes: {0}"),
 			FText::AsNumber(Room.mNextRoomColumns.Num())
 		);
+	}
+
+	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case ERarityType::Epic:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
+		}
+	}
+
+	/**
+	 * @brief 용병 패널의 직업 표시명. RunOptionsRail 위젯에 있던 표를 생산자로 옮겼다.
+	 * @details 위젯이 직업 enum 을 해석하면 표시 규칙이 화면마다 갈라진다 (PR #426 규칙).
+	 */
+	FText GetRosterJobName(const UPlayerUnitModel* Unit)
+	{
+		if (Unit == nullptr)
+		{
+			return FText::GetEmpty();
+		}
+		switch (Unit->GetUnitJobType())
+		{
+		case EUnitJobType::Knight: return NSLOCTEXT("RoomGameModeBase", "RosterJobKnight", "기사");
+		case EUnitJobType::Mage: return NSLOCTEXT("RoomGameModeBase", "RosterJobMage", "마법사");
+		case EUnitJobType::Ranger: return NSLOCTEXT("RoomGameModeBase", "RosterJobRanger", "궁수");
+		case EUnitJobType::Rogue: return NSLOCTEXT("RoomGameModeBase", "RosterJobRogue", "도적");
+		case EUnitJobType::Barbarian: return NSLOCTEXT("RoomGameModeBase", "RosterJobBarbarian", "야만전사");
+		case EUnitJobType::Druid: return NSLOCTEXT("RoomGameModeBase", "RosterJobDruid", "드루이드");
+		default: return Unit->GetBoardActorDisplayName();
+		}
+	}
+
+	/**
+	 * @brief 용병 패널 초상 해석. 직업별 T_MB_HireIcon_* 우선, 없으면 보드 아이콘/초상화.
+	 * @details RunOptionsRail 위젯의 해석 규칙을 그대로 생산자로 옮긴 것 -- 화면은 결과만 받는다.
+	 */
+	UTexture2D* GetRosterHeadPortrait(const UPlayerUnitModel* Unit)
+	{
+		if (Unit == nullptr)
+		{
+			return nullptr;
+		}
+		const TCHAR* Stem = nullptr;
+		switch (Unit->GetUnitJobType())
+		{
+		case EUnitJobType::Knight: Stem = TEXT("Knight"); break;
+		case EUnitJobType::Mage: Stem = TEXT("Mage"); break;
+		case EUnitJobType::Ranger: Stem = TEXT("Ranger"); break;
+		case EUnitJobType::Rogue: Stem = TEXT("Rogue"); break;
+		case EUnitJobType::Barbarian: Stem = TEXT("Barbarian"); break;
+		case EUnitJobType::Druid: Stem = TEXT("Druid"); break;
+		default: break;
+		}
+		if (Stem != nullptr)
+		{
+			const FString AssetName = FString::Printf(TEXT("T_MB_HireIcon_%s"), Stem);
+			const FString AssetPath = FString::Printf(
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
+				*AssetName, *AssetName);
+			if (UTexture2D* Portrait = LoadObject<UTexture2D>(nullptr, *AssetPath))
+			{
+				return Portrait;
+			}
+		}
+		return Unit->GetBoardActorIcon() != nullptr
+			? Unit->GetBoardActorIcon() : Unit->GetBoardActorPortrait();
 	}
 
 }
@@ -563,3 +646,173 @@ void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
 	mSelectedRoomSpawnSettingName = Name;
 }
 
+bool ARoomGameModeBase::BuildPartyUnitSkillDetailUI(int32 MemberIndex, int32 SkillIndex,
+	FSkillDetailUI& OutDetail) const
+{
+	OutDetail = FSkillDetailUI();
+	OutDetail.mSkillIndex = SkillIndex;
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return false;
+	}
+	const TArray<TObjectPtr<UPlayerUnitModel>>& Members = PartyModel->GetPlayerUnitModels();
+	UPlayerUnitModel* Member = Members.IsValidIndex(MemberIndex)
+		? Members[MemberIndex].Get() : nullptr;
+	USkillComponentModel* SkillComponent = Member != nullptr
+		? Member->GetSkillComponentModel() : nullptr;
+	const FSkillEntry* SkillEntry = SkillComponent != nullptr
+		? SkillComponent->GetSkill(SkillIndex) : nullptr;
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromSkillData(SkillEntry->mData.Get(), OutDetail);
+	/* 쿨다운은 컴포넌트가 진짜다 -- 전투의 FillSkillDetailUIData와 같은 규칙. */
+	OutDetail.mCooldownTurns = FMath::Max(
+		SkillComponent->GetStaticCooldownDuration(SkillIndex), 0);
+	return true;
+}
+
+bool ARoomGameModeBase::BuildPartyArtifactDetailUI(int32 ArtifactIndex,
+	FCombatArtifactUI& OutDetail) const
+{
+	OutDetail = FCombatArtifactUI();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (PartyArtifacts == nullptr)
+	{
+		return false;
+	}
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+		PartyArtifacts->GetPartyArtifacts();
+	if (Artifacts.IsValidIndex(ArtifactIndex) == false
+		|| Artifacts[ArtifactIndex] == nullptr)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromArtifactData(Artifacts[ArtifactIndex], OutDetail);
+	return true;
+}
+
+bool ARoomGameModeBase::GetPartyRosterView(FPartyRosterView& OutView) const
+{
+	/*
+	 * 인벤토리(GetInventoryView)와 같은 규칙 -- 밀지 않고 물어보게 둔다.
+	 * 직업명/초상/스킬 아이콘 해석까지 여기서 끝내고, 위젯은 받은 값만 그린다.
+	 */
+	OutView = FPartyRosterView();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return false;
+	}
+
+	const TArray<TObjectPtr<UPlayerUnitModel>>& Members = PartyModel->GetPlayerUnitModels();
+	for (int32 MemberIndex = 0; MemberIndex < Members.Num(); ++MemberIndex)
+	{
+		const UPlayerUnitModel* Member = Members[MemberIndex].Get();
+		if (Member == nullptr)
+		{
+			// 빈 파티 슬롯은 명단에 싣지 않는다. 상세 왕복은 mMemberIndex 로 한다.
+			continue;
+		}
+
+		FPartyRosterMemberView& Row = OutView.mMembers.AddDefaulted_GetRef();
+		Row.mMemberIndex = MemberIndex;
+		Row.mJobName = GetRosterJobName(Member);
+		Row.mLevel = Member->GetPlayerLevel();
+		Row.mPortrait = GetRosterHeadPortrait(Member);
+
+		if (const UAttributeSetComponentModel* Attributes = Member->GetAttributeComponentModel())
+		{
+			Row.mHP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetHPAttribute()));
+			Row.mMaxHP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetMaxHPAttribute()));
+			Row.mAP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetActionPointAttribute()));
+			Row.mMaxAP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetRechargeActionPointAttribute()));
+			Row.mSpeed = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetRechargeSpeedPointAttribute()));
+		}
+
+		if (const USkillComponentModel* SkillComponent = Member->GetSkillComponentModel())
+		{
+			const TArray<FSkillEntry>& Entries = SkillComponent->GetSkills();
+			for (int32 EntryIndex = 0; EntryIndex < Entries.Num(); ++EntryIndex)
+			{
+				const UStaticSkillData* Skill = Entries[EntryIndex].mData;
+				if (Skill == nullptr)
+				{
+					continue;
+				}
+				FPartyRosterSkillView& SkillRow = Row.mSkills.AddDefaulted_GetRef();
+				SkillRow.mName = Skill->mName;
+				SkillRow.mIcon = Skill->mIcon.LoadSynchronous();
+				/* 상세 조회는 컴포넌트 원본 슬롯 index 로 해야 한다. */
+				SkillRow.mSlotIndex = EntryIndex;
+				if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(Skill))
+				{
+					SkillRow.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);
+				}
+				if (SkillRow.mIcon == nullptr)
+				{
+					// 아이콘 미설정 DA 는 화면이 이름 글자로 폴백한다. 데이터 소유자가
+					// 알아챌 수 있게 생산자에서 한 번씩 흔적을 남긴다.
+					UE_LOG(LogTemp, Verbose,
+						TEXT("파티 명단 스킬 아이콘 미설정: %s (Member=%d, Slot=%d)"),
+						*Skill->GetName(), MemberIndex, EntryIndex);
+				}
+			}
+		}
+	}
+
+	/*
+	 * 파티 공용 골드/아티팩트도 같은 판에 싣는다. 레일 인벤토리 페이지가
+	 * 이 값만 보고 그린다 -- 조립 규칙(희귀도 색·이름 폴백)은 인벤토리와 같다.
+	 */
+	if (const UAttributeSetComponentModel* PartyAttributes =
+		PartyModel->GetAttributeComponentModel())
+	{
+		OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
+			UPartyAttributeSet::GetMoneyAttribute()));
+	}
+	if (const UPartyArtifactComponentModel* PartyArtifacts =
+		PartyModel->GetPartyArtifactComponentModel())
+	{
+		const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+			PartyArtifacts->GetPartyArtifacts();
+		OutView.mArtifacts.Reserve(Artifacts.Num());
+		for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
+		{
+			const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
+			if (Artifact == nullptr)
+			{
+				continue;
+			}
+
+			FPartyRosterArtifactView& ArtifactRow = OutView.mArtifacts.AddDefaulted_GetRef();
+			ArtifactRow.mArtifactIndex = ArtifactIndex;
+			ArtifactRow.mName = Artifact->mName.IsEmpty() == false
+				? Artifact->mName
+				: FText::Format(
+					NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
+					FText::AsNumber(ArtifactIndex + 1));
+			ArtifactRow.mIcon = Artifact->mIcon.LoadSynchronous();
+			ArtifactRow.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
+			ArtifactRow.mDetail = NSLOCTEXT(
+				"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
+		}
+	}
+
+	// 빈 파티(전원 공석)도 판 자체는 유효하다 -- 거짓은 파티 모델 부재뿐.
+	return true;
+}

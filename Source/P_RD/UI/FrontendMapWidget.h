@@ -27,6 +27,7 @@ class USizeBox;
 class UTextBlock;
 class UTexture2D;
 class UWidget;
+class URunOptionsRailWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFrontendMapWidgetSimpleEvent);
 
@@ -121,6 +122,14 @@ public:
 	 */
 	bool IsRoomSelectionEnabled() const;
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 지도 생명주기가 공용 설정바 WBP도 만들었는지 자동화에서 확인한다. */
+	URunOptionsRailWidget* GetRunOptionsRailForTest() const
+	{
+		return mRunOptionsRailWidget;
+	}
+#endif
+
 	/** @brief 탑바/전환 흐름이 일시적으로 표시할 상태 문구를 지정한다. */
 	void SetMapStatusOverride(const FText& InText);
 
@@ -186,6 +195,12 @@ private:
 	 *          쓰고, 현재 B안처럼 없는 자산에서만 런타임 안전망을 만든다.
 	 */
 	void EnsureCloseButton();
+	/** @brief 전투 HUD와 동일한 지도·용병·몬스터·설정 레일을 지도 위에 얹는다. */
+	void EnsureRunOptionsRail();
+	/** @brief 지도 본체가 닫힐 때 별도 Viewport 레일도 함께 숨긴다. */
+	void HandleMapVisibilityChanged(ESlateVisibility InVisibility);
+	/** @brief 현재 지도 표시 상태를 별도 Viewport 레일에 즉시 반영한다. */
+	void SyncRunOptionsRailVisibility(ESlateVisibility MapVisibility) const;
 
 	/** @brief BACK 단추를 오른쪽 아래 구석에 판 그림 비율대로 배치한다. */
 	void UpdateCloseButtonLayout() const;
@@ -478,6 +493,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> mMapLegendToggleText;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URunOptionsRailWidget> mRunOptionsRailWidget;
 
 	/**
 	 * @brief 범례를 펴 놓았는지 여부. 기본은 접힘.
