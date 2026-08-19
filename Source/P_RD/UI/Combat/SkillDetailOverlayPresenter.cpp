@@ -267,13 +267,13 @@ USkillDetailOverlayPresenter::USkillDetailOverlayPresenter()
 	RD_LOAD_TEX(mSkillVisualCellNormalTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Disabled.T_KitA_Cell_Disabled");
 	RD_LOAD_TEX(mSkillVisualCellSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Selected.T_KitA_Cell_Selected");
 	RD_LOAD_TEX(mSkillVisualAPIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cost_badge.KK_HUD04_zone_cost_badge");
-	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCooldownIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
-	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCasterIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph");
 	RD_LOAD_TEX(mSkillVisualTargetIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph");
-	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
-	RD_LOAD_TEX(mSkillRangeButtonSelectedTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Selected_v1.T_SkillRangeButton_Selected_v1");
+	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
+	RD_LOAD_TEX(mSkillRangeButtonSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Selected_v1.T_SkillRangeButton_Selected_v1");
 #undef RD_LOAD_TEX
 }
 
@@ -467,7 +467,7 @@ void USkillDetailOverlayPresenter::ApplyReadableDetailTypography(const bool bRea
 	if (bReadable && mReadableDetailFont == nullptr)
 	{
 		mReadableDetailFont = LoadObject<UFont>(nullptr,
-			TEXT("/Game/UI/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang"));
+			TEXT("/Game/SVN/OutSideAsset/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang"));
 	}
 	auto ApplyPrimary = [this, bReadable](UTextBlock* Text,
 		const FSlateFontInfo& DefaultFont, const bool bBold)

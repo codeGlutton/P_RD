@@ -811,6 +811,8 @@ private:
 	float mCombatAnnouncementDuration = 1.2f;
 	bool mCombatAnnouncementPlaying = false;
 	bool mInitialFocusAnchorRegistered = false;
+	/** @brief 마지막으로 앵커를 등록했을 때의 판 크기. 크기가 바뀌면 다시 등록한다. */
+	FVector2D mLastFocusAnchorLocalSize = FVector2D::ZeroVector;
 
 	/* ── 스킬 실행 직전 컷인 ────────────────────── */
 	void HandlePrePlaySkillCutIn(
