@@ -210,3 +210,75 @@ public:
 	/** @brief 파티가 공용으로 소유 중인 아티팩트. */
 	UPROPERTY(BlueprintReadOnly) TArray<FInventoryArtifactView> mArtifacts;
 };
+
+/**
+ * @brief 용병 패널에 늘어놓는 장착 스킬 한 칸.
+ *
+ * @details
+ * 화면은 스킬 DA 를 모른다. 그릴 것(이름/아이콘/비용)과 상세를 청할 때
+ * 되돌려 보낼 슬롯 번호만 안다 -- 인벤토리(FInventoryArtifactView)와 같은 규칙.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FPartyRosterSkillView
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+
+	/** @brief 스킬 컴포넌트 원본 슬롯 index. 상세 요청(BuildPartyUnitSkillDetailUI) payload다. */
+	UPROPERTY(BlueprintReadOnly) int32 mSlotIndex = INDEX_NONE;
+
+	/** @brief 소모 AP. 유닛 스킬이 아니라 비용 개념이 없으면 INDEX_NONE(표시 생략). */
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = INDEX_NONE;
+};
+
+/**
+ * @brief 용병 패널의 파티원 한 줄(초상·직업명·레벨·스탯·장착 스킬).
+ *
+ * @details
+ * 직업 표시명과 초상 해석까지 생산자(GameMode)가 끝낸다. 화면이 직업 enum 을
+ * 직접 해석하면 표시 규칙이 위젯마다 갈라진다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FPartyRosterMemberView
+{
+	GENERATED_BODY()
+
+public:
+	/** @brief 파티 목록 원본 index. 상세 요청(BuildPartyUnitSkillDetailUI)의 MemberIndex payload다. */
+	UPROPERTY(BlueprintReadOnly) int32 mMemberIndex = INDEX_NONE;
+
+	/** @brief 직업 표시명(기사/마법사…). 로컬라이징 규칙 변경도 생산자만 고친다. */
+	UPROPERTY(BlueprintReadOnly) FText mJobName;
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	UPROPERTY(BlueprintReadOnly) int32 mHP = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mMaxHP = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mAP = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mMaxAP = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mSpeed = 0;
+
+	/** @brief 목록/상세 초상. 직업 아이콘 → 보드 아이콘 → 초상화 순 해석 결과. */
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
+
+	/** @brief 장착 스킬(빈 슬롯 제외). 상세 왕복은 각 칸의 mSlotIndex 로 한다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FPartyRosterSkillView> mSkills;
+};
+
+/**
+ * @brief 용병 패널 한 판(파티 전체).
+ *
+ * @details
+ * 지도/상점의 우상단 레일이 여는 용병 패널용. 인벤토리와 같은 규칙이다 --
+ * 밀지 않고 물어보게 둔다(GetPartyRosterView). 패널이 열려 있을 때만 보면 된다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FPartyRosterView
+{
+	GENERATED_BODY()
+
+public:
+	/** @brief 파티원(빈 파티 슬롯 제외). 상세 왕복은 각 줄의 mMemberIndex 로 한다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FPartyRosterMemberView> mMembers;
+};
