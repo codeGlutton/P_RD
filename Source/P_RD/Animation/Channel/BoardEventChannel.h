@@ -169,8 +169,13 @@ struct TMovieSceneChannelTraits<FBoardEventTriggerChannel> : TMovieSceneChannelT
 	enum { SupportsDefaults = false };
 };
 
-inline bool EvaluateChannel(const FBoardEventTriggerChannel* InChannel, FFrameTime InTime, FBoardSceneEvent& OutValue)
+inline bool EvaluateChannel(const FBoardEventTriggerChannel* InChannel, FFrameTime InTime, FBoardEventTriggerData& OutValue)
 {
 	return false;
+}
+
+inline bool ValueExistsAtTime(const FBoardEventTriggerChannel* InChannel, FFrameNumber Time, const FBoardEventTriggerData& Value)
+{
+	return InChannel->GetData().FindKey(Time) != INDEX_NONE;
 }
 

@@ -32,6 +32,7 @@ public class P_RDEditor : ModuleRules
             "MovieSceneTools",
             "Sequencer",
             "SequencerCore",
+            "CurveEditor",
             "LevelSequence",
 
             /* Asset Validator Modules */

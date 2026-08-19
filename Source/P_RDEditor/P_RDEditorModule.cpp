@@ -16,6 +16,12 @@
 
 #include "ISequencerModule.h"
 #include "Animation/Track/BoardEventTrackEditor.h"
+#include "SequencerChannelInterface.h"
+#include "Animation/Channel/BoardEventChannel.h"
+#include "ICurveEditorModule.h"
+#include "Animation/Channel/BoardEventChannelCurveModel.h"
+#include "Animation/Channel/BoardEventChannelDetailsCustomization.h"
+#include "Channels/SCurveEditorEventChannelView.h"
 
 IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 
@@ -42,6 +48,10 @@ void FP_RDEditorModule::StartupModule()
 			UStaticSkillData::StaticClass()->GetFName(),
 			FOnGetDetailCustomizationInstance::CreateStatic(&FStaticSkillDataPropertyCustomization::MakeInstance)
 		);
+		PropertyModule.RegisterCustomPropertyTypeLayout(
+			"BoardEventTriggerData", 
+			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBoardEventChannelDetailsCustomization::MakeInstance)
+		);
 	}
 
 	/* 보드 이벤트 트랙 등록 */
@@ -52,6 +62,19 @@ void FP_RDEditorModule::StartupModule()
 		mBoardEventTrackEditorHandle = SequencerModule.RegisterTrackEditor(
 			FOnCreateTrackEditor::CreateStatic(&FBoardEventTrackEditor::CreateTrackEditor)
 		);
+
+		SequencerModule.RegisterChannelInterface<FBoardEventTriggerChannel>();
+	}
+
+	ICurveEditorModule& CurveEditorModule = FModuleManager::LoadModuleChecked<ICurveEditorModule>("CurveEditor");
+	if (FModuleManager::Get().IsModuleLoaded("CurveEditor") == true)
+	{
+		FBoardEventChannelCurveModel::EventView = CurveEditorModule.RegisterView(FOnCreateCurveEditorView::CreateStatic(
+			[](TWeakPtr<FCurveEditor> WeakCurveEditor) -> TSharedRef<SCurveEditorView>
+			{
+				return SNew(SCurveEditorEventChannelView, WeakCurveEditor);
+			}
+		));
 	}
 }
 

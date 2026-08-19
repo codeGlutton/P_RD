@@ -29,7 +29,7 @@ public:
 
 	void BuildAddTrackMenu(FMenuBuilder& MenuBuilder) override;
 	TSharedPtr<SWidget> BuildOutlinerEditWidget(const FGuid& ObjectBinding, UMovieSceneTrack* Track, const FBuildEditWidgetParams& Params) override;
-	
+
 	FText GetDisplayName() const override;
 	const FSlateBrush* GetIconBrush() const override;
 
