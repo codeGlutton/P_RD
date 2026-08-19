@@ -12,6 +12,7 @@
 #include "Misc/AutomationTest.h"
 #include "UI/FrontendMapLandscapeWidget.h"
 #include "UI/FrontendMapGraphWidgets.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "Widgets/SWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -82,6 +83,40 @@ bool FFrontendMapLandscapeStructureTest::RunTest(const FString& Parameters)
 	if (!TestTrue(TEXT("월드맵 Slate 생명주기 유지"), MapSlate.IsValid()))
 	{
 		return false;
+	}
+	URunOptionsRailWidget* OptionsRail = Map->GetRunOptionsRailForTest();
+	TestNotNull(TEXT("지도에 공용 설정바 WBP 생성"), OptionsRail);
+	if (OptionsRail != nullptr)
+	{
+		OptionsRail->TakeWidget();
+		TestTrue(TEXT("지도 버튼은 현재 화면으로 표시"),
+			OptionsRail->IsMapContextForTest());
+		TestEqual(TEXT("열린 지도에서는 별도 설정바 자식만 입력 허용"),
+			OptionsRail->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		UWidget* RailRoot = OptionsRail->GetWidgetFromName(TEXT("RunOptionsRailRoot"));
+		UWidget* RailCanvas = OptionsRail->GetWidgetFromName(TEXT("RunOptionsRailCanvas"));
+		TestNotNull(TEXT("설정바 전체 화면 루트"), RailRoot);
+		TestNotNull(TEXT("설정바 우상단 Canvas"), RailCanvas);
+		if (RailRoot != nullptr)
+		{
+			TestEqual(TEXT("전체 화면 루트는 지도 입력을 통과"),
+				RailRoot->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		}
+		if (RailCanvas != nullptr)
+		{
+			TestEqual(TEXT("설정바 Canvas는 버튼 자식만 입력"),
+				RailCanvas->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		}
+		Map->SetVisibility(ESlateVisibility::Collapsed);
+		TestEqual(TEXT("BACK으로 지도 본체를 닫으면 별도 설정바도 숨김"),
+			OptionsRail->GetVisibility(), ESlateVisibility::Collapsed);
+		Map->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		TestEqual(TEXT("지도를 다시 열면 별도 설정바도 복구"),
+			OptionsRail->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		TestNotNull(TEXT("설정바 용병/인벤토리 버튼"),
+			OptionsRail->GetWidgetFromName(TEXT("MenuButton_1")));
+		TestNotNull(TEXT("설정바 설정 버튼"),
+			OptionsRail->GetWidgetFromName(TEXT("MenuButton_3")));
 	}
 
 	UWidgetTree* Tree = Map->WidgetTree;

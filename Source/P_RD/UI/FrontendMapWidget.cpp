@@ -1,4 +1,5 @@
 #include "UI/FrontendMapWidget.h"
+#include "UI/RunOptionsRailWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -458,6 +459,12 @@ UFrontendMapWidget::UFrontendMapWidget(const FObjectInitializer& ObjectInitializ
 void UFrontendMapWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	// 설정바는 지도 WidgetTree의 자식이 아니라 별도 Viewport 위젯이다. 지도만
+	// CloseUI로 접으면 설정바가 화면에 남아 아래 전투 HUD의 MAP 버튼을 덮는다.
+	OnNativeVisibilityChanged.RemoveAll(this);
+	OnNativeVisibilityChanged.AddUObject(
+		this, &UFrontendMapWidget::HandleMapVisibilityChanged);
+	EnsureRunOptionsRail();
 	if (IsLandscapeLayout())
 	{
 		EnsureCloseButton();
@@ -485,6 +492,59 @@ void UFrontendMapWidget::NativeConstruct()
 	RefreshLocalizedTextCache();
 	HideUnusedMapTextSurfaces();
 	RefreshMap();
+}
+
+void UFrontendMapWidget::EnsureRunOptionsRail()
+{
+	if (mRunOptionsRailWidget != nullptr)
+	{
+		mRunOptionsRailWidget->SetMapContext(true);
+		SyncRunOptionsRailVisibility(GetVisibility());
+		return;
+	}
+	UClass* RailClass = LoadClass<URunOptionsRailWidget>(nullptr,
+		TEXT("/Game/UI/Common/WBP_RunOptionsRail.WBP_RunOptionsRail_C"));
+	if (RailClass == nullptr)
+	{
+		RailClass = URunOptionsRailWidget::StaticClass();
+	}
+	if (APlayerController* Owner = GetOwningPlayer())
+	{
+		mRunOptionsRailWidget = CreateWidget<URunOptionsRailWidget>(Owner, RailClass);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		mRunOptionsRailWidget = CreateWidget<URunOptionsRailWidget>(World, RailClass);
+	}
+	if (mRunOptionsRailWidget != nullptr)
+	{
+		mRunOptionsRailWidget->SetMapContext(true);
+		if (GetOwningPlayer() != nullptr)
+		{
+			mRunOptionsRailWidget->AddToViewport(10001);
+		}
+		SyncRunOptionsRailVisibility(GetVisibility());
+	}
+}
+
+void UFrontendMapWidget::HandleMapVisibilityChanged(
+	const ESlateVisibility InVisibility)
+{
+	SyncRunOptionsRailVisibility(InVisibility);
+}
+
+void UFrontendMapWidget::SyncRunOptionsRailVisibility(
+	const ESlateVisibility MapVisibility) const
+{
+	if (mRunOptionsRailWidget == nullptr)
+	{
+		return;
+	}
+
+	const bool bMapShown = MapVisibility != ESlateVisibility::Collapsed
+		&& MapVisibility != ESlateVisibility::Hidden;
+	mRunOptionsRailWidget->SetVisibility(bMapShown
+		? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 }
 
 /**
@@ -1077,6 +1137,12 @@ bool UFrontendMapWidget::TryHandleMapPerspectiveTap(const FVector2D& ScreenPosit
 void UFrontendMapWidget::NativeDestruct()
 {
 	mMapDragScrolling = false;
+	OnNativeVisibilityChanged.RemoveAll(this);
+	if (mRunOptionsRailWidget != nullptr)
+	{
+		mRunOptionsRailWidget->RemoveFromParent();
+		mRunOptionsRailWidget = nullptr;
+	}
 	UnbindEvents();
 	for (FFrontendMapNodePoolEntry& NodeEntry : mMapNodePool)
 	{
@@ -1789,6 +1855,8 @@ void UFrontendMapWidget::HandleMapNodeClicked(int32 RowIndex, int32 ColumnIndex)
  */
 void UFrontendMapWidget::HandleCloseButtonClicked()
 {
+	UE_LOG(LogRD, Display, TEXT("RD_WORLD_MAP_BACK_CLICK room_selection=%d"),
+		mRoomSelectionEnabled ? 1 : 0);
 	OnCloseRequested.Broadcast();
 }
 
@@ -1811,7 +1879,7 @@ void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 	}
 
 	mEnterRequested = true;
-	SetEnterButtonText(mLoadingStatusText);
+	/* 버튼 라벨은 입장 그대로 둔다. 진행 상태는 상태 문구만 알린다. */
 	SetMapStatusText(mLoadingStatusText);
 
 	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
@@ -1823,7 +1891,6 @@ void UFrontendMapWidget::HandleEnterRoomButtonClicked()
 	}
 
 	mEnterRequested = false;
-	SetEnterButtonText(mEnterText);
 	SetMapStatusText(mMapUnavailableStatusText);
 }
 
