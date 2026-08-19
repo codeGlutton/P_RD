@@ -96,13 +96,13 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	// 피드백의 HP 피해 표식이다. 프레젠터가 ResolveDetailStatTexture()로 HUD
 	// 인스턴스의 실제 브러시를 한 번 더 우선 조회하므로 WBP 쪽 교체도 자동으로 따라간다.
 	RD_LOAD_TEX(mSkillVisualAPIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cost_badge.KK_HUD04_zone_cost_badge");
-	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCooldownIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
-	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCasterIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph");
 	RD_LOAD_TEX(mSkillVisualTargetIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph");
-	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
-	RD_LOAD_TEX(mSkillRangeButtonSelectedTexture, "/Game/UI/CombatDetail/SkillTactical/Art/T_SkillRangeButton_Selected_v1.T_SkillRangeButton_Selected_v1");
+	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
+	RD_LOAD_TEX(mSkillRangeButtonSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Selected_v1.T_SkillRangeButton_Selected_v1");
 #undef RD_LOAD_TEX
 
 	static ConstructorHelpers::FClassFinder<URewardSettlementWidgetBase> RewardWidgetClassFinder(
@@ -128,7 +128,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 		mDetailOverlayWidgetClass = DetailOverlayClassFinder.Class;
 	}
 	static ConstructorHelpers::FObjectFinder<UFont> ReadableDetailFontFinder(
-		TEXT("/Game/UI/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang"));
+		TEXT("/Game/SVN/OutSideAsset/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang"));
 	if (ReadableDetailFontFinder.Succeeded())
 	{
 		mReadableDetailFont = ReadableDetailFontFinder.Object;
@@ -401,6 +401,22 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 		CameraPawn->SetTouchGestureInputEnabled(true);
 	}
 	ReleaseSkillWorldPreview();
+	// 상세 겹(프레젠터 소유) 정리는 여기서 하지 않는다. NativeDestruct는 Slate
+	// 수명 이벤트라 위젯 렌더러(FWidgetRenderer)가 임시 트리를 버릴 때도 불리는데,
+	// 그때 프레젠터를 끊으면 살아 있는 HUD의 상세 배선(전술판 버튼 등)이 소리
+	// 없이 죽는다. 진짜 제거 경로인 RemoveFromParent가 맡는다.
+	if (mMonsterTabWidget != nullptr)
+	{
+		mMonsterTabWidget->RemoveFromParent();
+		mMonsterTabWidget = nullptr;
+	}
+	Super::NativeDestruct();
+}
+
+void UCombatLayoutHUDWidget::RemoveFromParent()
+{
+	// 뷰포트/레벨 정리가 HUD를 실제로 걷어낼 때만 상세 겹을 함께 걷는다.
+	// (CloseUI→ApplyCloseUI→RemoveFromParent, 월드 전환의 뷰포트 위젯 정리.)
 	if (mDetailPresenter != nullptr)
 	{
 		// 겹 제거는 소유자인 프레젠터가 한다. 비친 포인터만 함께 비운다.
@@ -408,12 +424,7 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 	}
 	mDetailOverlayWidget = nullptr;
 	mSkillTacticalDiagramWidget = nullptr;
-	if (mMonsterTabWidget != nullptr)
-	{
-		mMonsterTabWidget->RemoveFromParent();
-		mMonsterTabWidget = nullptr;
-	}
-	Super::NativeDestruct();
+	Super::RemoveFromParent();
 }
 
 /**
@@ -1262,6 +1273,8 @@ void UCombatLayoutHUDWidget::HandleCommandLongPress(const int32 SlotIndex)
  * @details "가운데" 는 화면 한가운데가 아니라 스킬 카드 여섯 장이 둘러싼
  * 자리다(0807 합의). 카드 자리는 WBP 캔버스에 고정돼 있으므로 슬롯
  * 좌표의 평균을 판 크기로 나눠 비율로 만든다 -- 해상도가 바뀌어도 맞는다.
+ * 생성 직후(그리기 전)라 판 크기가 아직 0이어도 저작 캔버스 크기(1920x1080)
+ * 를 기준으로 계산하므로 유효한 앵커를 낸다.
  */
 FVector2D UCombatLayoutHUDWidget::ComputeCommandRingAnchor() const
 {
@@ -1311,10 +1324,12 @@ FVector2D UCombatLayoutHUDWidget::ComputeCommandRingAnchor() const
 	 * 저절로 안 펴지니 흔한 일이다). 그려진 자국 대신 **슬롯 레이아웃**으로
 	 * 같은 값을 계산한다(0807 검수: 첫 클릭만 세부조정이 빠짐).
 	 */
-	const FVector2D RootLocal = RootGeometry.GetLocalSize();
+	FVector2D RootLocal = RootGeometry.GetLocalSize();
 	if (RootLocal.X <= 0.f || RootLocal.Y <= 0.f)
 	{
-		return FVector2D(0.5f, 0.5f);
+		// 생성 직후라 판이 아직 안 재졌다. 슬롯 좌표는 어차피 저작 캔버스
+		// (WBP_CombatHUD04, 1920x1080) 기준이므로 그 크기를 분모로 쓴다.
+		RootLocal = FVector2D(1920.f, 1080.f);
 	}
 	Sum = FVector2D::ZeroVector;
 	Count = 0;
@@ -3119,10 +3134,15 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	UpdateFloatingCombatLogQueue(DeltaTime);
 	UpdateFloatingCombatLogs(DeltaTime);
 	UpdateCombatAnnouncement(DeltaTime);
-	if (mInitialFocusAnchorRegistered == false && mUIModel != nullptr
-		&& MyGeometry.GetLocalSize().X > 0.0f && MyGeometry.GetLocalSize().Y > 0.0f)
+	// 해상도/레터박스 변화 시 앵커 비율이 달라질 수 있어 다시 등록한다.
+	const FVector2D LocalSize = MyGeometry.GetLocalSize();
+	if (mUIModel != nullptr && LocalSize.X > 0.0f && LocalSize.Y > 0.0f
+		&& (mInitialFocusAnchorRegistered == false
+			|| FMath::Abs(LocalSize.X - mLastFocusAnchorLocalSize.X) > 0.5f
+			|| FMath::Abs(LocalSize.Y - mLastFocusAnchorLocalSize.Y) > 0.5f))
 	{
 		mInitialFocusAnchorRegistered = true;
+		mLastFocusAnchorLocalSize = LocalSize;
 		mUIModel->SetFocusScreenAnchor(ComputeCommandRingAnchor());
 	}
 }

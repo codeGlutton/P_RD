@@ -925,7 +925,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 			TEXT("RuntimeSkillStatIcon_1"))))
 		{
 			UTexture2D* ExpectedDamage = LoadTexture(TEXT(
-				"/Game/UI/CombatDetail/SkillTactical/Art/"
+				"/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
 				"T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2"));
 			if (TestNotNull(TEXT("모바일용 단순 피해 에셋"), ExpectedDamage))
 			{
@@ -938,7 +938,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 			TEXT("RuntimeSkillStatIcon_3"))))
 		{
 			UTexture2D* ExpectedCritical = LoadTexture(TEXT(
-				"/Game/UI/CombatDetail/SkillTactical/Art/"
+				"/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
 				"T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2"));
 			if (TestNotNull(TEXT("모바일용 단순 치명타 에셋"), ExpectedCritical))
 			{
