@@ -1,5 +1,7 @@
 ﻿#include "UI/Combat/CombatUIModel.h"
 
+#include "UI/Combat/SimulationPreviewUIModel.h"
+
 // ───────── UI → gameplay : 의도만 브로드캐스트 (실행은 게임플레이가) ─────────
 
 /** @brief 스킬 레일 index 선택 의도를 게임플레이 구독자에게 전달한다. */
@@ -319,6 +321,17 @@ void UCombatUIModel::NotifyCombatFloatingLogsCleared()
 void UCombatUIModel::NotifyCombatResultOpenRequested()
 {
 	OnCombatResultOpenRequested.Broadcast();
+}
+
+/** @brief 시뮬레이션 미리보기 뷰모델을 돌려준다. 처음 요청 시 지연 생성한다. */
+USimulationPreviewUIModel* UCombatUIModel::GetSimulationPreviewUIModel()
+{
+	if (mSimulationPreviewUIModel == nullptr)
+	{
+		mSimulationPreviewUIModel =
+			NewObject<USimulationPreviewUIModel>(this, TEXT("SimulationPreviewUIModel"));
+	}
+	return mSimulationPreviewUIModel;
 }
 
 void UCombatUIModel::NotifyPrePlaySkillCutIn(

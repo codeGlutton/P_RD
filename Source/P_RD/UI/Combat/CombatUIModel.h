@@ -35,6 +35,7 @@ enum class ECombatInputType : uint8
 };
 
 class AActor;
+class USimulationPreviewUIModel;
 class UTexture2D;
 struct FPresentationBarrier;
 
@@ -322,6 +323,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatEventBatchUI& GetCombatEventBatch() const { return mCombatEventBatch; }
 
+	/**
+	 * @brief 시뮬레이션 미리보기 전용 뷰모델. 실전 표시 상태와 저장 자리를 나눈다.
+	 *
+	 * @details 없으면 이때 만든다 — 이 모델은 GameMode 생성자에서
+	 * CreateDefaultSubobject로 태어나므로, 생성자에서 NewObject를 부르면
+	 * CDO 구성 중 StaticConstructObject 호출이 되어 막힌다. 지연 생성이 안전하다.
+	 */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") USimulationPreviewUIModel* GetSimulationPreviewUIModel();
+
 private:
 	/** @brief 마지막으로 push된 전투 결과 */
 	UPROPERTY(Transient) FCombatResultUI mCombatResultUI;
@@ -354,4 +364,6 @@ private:
 	UPROPERTY(Transient) FPlayerMetaUI mPlayerMeta;
 	/** @brief 가장 최근 예측/실전 전투 이벤트. Blueprint UI도 동일 모델에서 읽는다. */
 	UPROPERTY(Transient) FCombatEventBatchUI mCombatEventBatch;
+	/** @brief 시뮬레이션 미리보기 뷰모델. Getter가 지연 생성한다(생성자 NewObject 금지). */
+	UPROPERTY(Transient) TObjectPtr<USimulationPreviewUIModel> mSimulationPreviewUIModel;
 };
