@@ -447,6 +447,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			FMercenaryCandidate Candidate;
 			Candidate.mSaleMercenaryId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, mMercenaryAssetIds);
 			Candidate.mLevel = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mParams.mMercenaryLevelRange);
+			Candidate.mPrice = 100 + FMath::Max(1, Candidate.mLevel) * 50;
 
 			const UEnum* StaticJobEnum = StaticEnum<EUnitJobType>();
 			const FString FoundJobStr = GetPropertyAssetData(Candidate.mSaleMercenaryId, TEXT("mJobType"));

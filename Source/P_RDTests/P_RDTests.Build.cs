@@ -48,6 +48,7 @@ public class P_RDTests : ModuleRules
         if (Target.bBuildEditor)
         {
             PrivateDependencyModuleNames.Add("UnrealEd");
+            PrivateDependencyModuleNames.Add("P_RDEditor");
         }
 
         // 모듈 내 하위 폴더에서 루트 헤더를 참조할 수 있도록 경로 추가
@@ -55,6 +56,7 @@ public class P_RDTests : ModuleRules
         {
             "P_RDTests",
             "P_RD",  // P_RD 모듈 헤더 참조를 위한 경로
+            "P_RDEditor",
         });
     }
 }

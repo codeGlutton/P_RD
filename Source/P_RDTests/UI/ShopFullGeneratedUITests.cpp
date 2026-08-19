@@ -19,8 +19,21 @@ namespace ShopFullGeneratedUITests
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated");
 	constexpr TCHAR WidgetPackage[] =
 		TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated");
+	constexpr TCHAR RailScrimTexturePackage[] =
+		TEXT("/Game/UI/Shop/T_ShopFG_RailScrimGradient");
 	constexpr TCHAR ShopGameModePackage[] =
 		TEXT("/Game/BP/GameMode/BP_ShopGameMode");
+	const TCHAR* ReusedChromeTexturePackages[] = {
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Wide_Normal"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/T_Combat_Button_Wood_SkillConfirm_20260811_v3"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_SkillCard_Frame_Combat"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal"),
+		TEXT("/Game/UI/Shop/T_ShopFG_RestUnitPanel_Clean"),
+		TEXT("/Game/UI/Shop/T_ShopFG_SkillSlot07_Square"),
+		TEXT("/Game/UI/Shop/T_ShopFG_SkillSlot07_Square_Selected"),
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireNamePlate"),
+	};
 
 	struct FExpectedTexture
 	{
@@ -47,11 +60,9 @@ namespace ShopFullGeneratedUITests
 		{ TEXT("Chrome"), TEXT("T_ShopFG_SkillSlot_Selected"), 320, 224, true },
 		{ TEXT("Chrome"), TEXT("T_ShopFG_RestUnitPanel"), 1280, 192, true },
 		{ TEXT("Chrome"), TEXT("T_ShopFG_RestCostPlate"), 512, 144, true },
-		{ TEXT("Chrome"), TEXT("T_ShopFG_InventoryPanel"), 1280, 768, true },
 		{ TEXT("Chrome"), TEXT("T_ShopFG_SelectionPointer"), 96, 144, true },
 		{ TEXT("Controls"), TEXT("T_ShopFG_Button_Back"), 512, 192, true },
 		{ TEXT("Controls"), TEXT("T_ShopFG_Button_Primary"), 512, 192, true },
-		{ TEXT("Controls"), TEXT("T_ShopFG_Button_Secondary"), 512, 160, true },
 		{ TEXT("Controls"), TEXT("T_ShopFG_Arrow_Left"), 128, 192, true },
 		{ TEXT("Controls"), TEXT("T_ShopFG_Arrow_Right"), 128, 192, true },
 		{ TEXT("Meters"), TEXT("T_ShopFG_MeterTrack"), 512, 48, true },
@@ -146,7 +157,7 @@ bool FShopFullGeneratedTextureContractTest::RunTest(const FString& Parameters)
 	using namespace ShopFullGeneratedUITests;
 	bool bAllValid = true;
 	TestEqual(TEXT("전용 생성 상점 텍스처 수"),
-		static_cast<int32>(UE_ARRAY_COUNT(ExpectedTextures)), 24);
+		static_cast<int32>(UE_ARRAY_COUNT(ExpectedTextures)), 22);
 
 	for (const FExpectedTexture& Expected : ExpectedTextures)
 	{
@@ -209,17 +220,32 @@ bool FShopFullGeneratedDependencyContractTest::RunTest(const FString& Parameters
 	}
 
 	bool bAllValid = true;
-	for (const FExpectedTexture& Expected : ExpectedTextures)
+	// The first seven generated textures and the two former footer buttons remain
+	// validated as source assets, but this WBP deliberately reuses combat HUD chrome.
+	for (int32 Index = 7; Index < UE_ARRAY_COUNT(ExpectedTextures); ++Index)
 	{
+		if (Index == 7 || Index == 8 || Index == 9 || Index == 10
+			|| Index == 11 || Index == 12 || Index == 13 || Index == 14
+			|| Index == 15 || Index == 16 || Index == 17)
+		{
+			continue;
+		}
+		const FExpectedTexture& Expected = ExpectedTextures[Index];
 		const FString PackagePath = TexturePackagePath(Expected);
 		bAllValid &= TestTrue(*FString::Printf(TEXT("새 WBP가 전용 파츠를 참조: %s"),
 			*PackagePath), PackageContainsString(PackageBytes, PackagePath));
 	}
+	for (const TCHAR* PackagePath : ReusedChromeTexturePackages)
+	{
+		bAllValid &= TestTrue(*FString::Printf(TEXT("새 WBP가 전투 HUD 헤더 파츠를 참조: %s"),
+			PackagePath), PackageContainsString(PackageBytes, PackagePath));
+	}
+	bAllValid &= TestFalse(TEXT("새 WBP가 제거된 검은 레일 그라데이션을 참조하지 않음"),
+		PackageContainsString(PackageBytes, RailScrimTexturePackage));
 
 	// 아이콘은 런타임 모델이 공급한다. 새 WBP에 예시 아이콘이나 이전 UI 크롬을
 	// 시드하면 새 디자인이 다시 기존 에셋에 의존하므로 패키지 단계에서 막는다.
 	const TCHAR* ForbiddenStaticDependencies[] = {
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/"),
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Defeat/"),
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/"),
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/"),

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "TimerManager.h"
 #include "UI/RDUserWidget.h"
 #include "UI/Shop/ShopUITypes.h"
 #include "ShopUIWidgetBase.generated.h"
@@ -16,6 +17,9 @@ class UTextBlock;
 class UWidget;
 class UWrapBox;
 class UShopUIModel;
+class URunOptionsRailWidget;
+class USkillDetailOverlayPresenter;
+class UMercenaryHireWidget;
 class UTexture2D;
 
 /** @brief 상점 화면 WBP 베이스. WBP(create_shop_wbp.py 생성) 위젯 이름은 아래 BindWidget 멤버명과 일치해야 한다. */
@@ -81,6 +85,7 @@ private:
 	UFUNCTION() void HandleArtifactTabClicked();
 	UFUNCTION() void HandleSkillTabClicked();
 	UFUNCTION() void HandleRestTabClicked();
+	UFUNCTION() void HandleMercenaryTabClicked();
 	UFUNCTION() void HandleRestClicked();
 	UFUNCTION() void HandleInventoryClicked();
 	UFUNCTION() void HandleArtifactInventoryCloseClicked();
@@ -92,6 +97,16 @@ private:
 	UFUNCTION() void HandleRailClicked2();
 	UFUNCTION() void HandleRailClicked3();
 	UFUNCTION() void HandleRailClicked4();
+	UFUNCTION() void HandleRailPressed0();
+	UFUNCTION() void HandleRailPressed1();
+	UFUNCTION() void HandleRailPressed2();
+	UFUNCTION() void HandleRailPressed3();
+	UFUNCTION() void HandleRailPressed4();
+	UFUNCTION() void HandleRailReleased0();
+	UFUNCTION() void HandleRailReleased1();
+	UFUNCTION() void HandleRailReleased2();
+	UFUNCTION() void HandleRailReleased3();
+	UFUNCTION() void HandleRailReleased4();
 	UFUNCTION() void HandleUnitClicked0();
 	UFUNCTION() void HandleUnitClicked1();
 	UFUNCTION() void HandleUnitClicked2();
@@ -99,6 +114,17 @@ private:
 	UFUNCTION() void HandleSkillSlotClicked1();
 	UFUNCTION() void HandleSkillSlotClicked2();
 	UFUNCTION() void HandleSkillSlotClicked3();
+	UFUNCTION() void HandleSkillSlotPressed0();
+	UFUNCTION() void HandleSkillSlotPressed1();
+	UFUNCTION() void HandleSkillSlotPressed2();
+	UFUNCTION() void HandleSkillSlotPressed3();
+	UFUNCTION() void HandleSkillSlotReleased0();
+	UFUNCTION() void HandleSkillSlotReleased1();
+	UFUNCTION() void HandleSkillSlotReleased2();
+	UFUNCTION() void HandleSkillSlotReleased3();
+	UFUNCTION() void HandleShopDetailCloseClicked();
+	void HandleMercenaryHireRequested(int32 CandidateSlotIndex, int32 PartySlotIndex);
+	void HandleMercenaryHireBackRequested();
 
 	/** @brief 현재 UIModel 구독을 해제하고 참조를 비운다. */
 	void UnbindUIModel();
@@ -125,9 +151,26 @@ private:
 	/** @brief 확정 레이아웃의 로컬 선택 상태를 바꾼다. */
 	void SetActiveItemKind(EShopItemKind Kind);
 	void SelectRailSlot(int32 RailSlotIndex);
+	void BeginRailSlotPress(int32 RailSlotIndex);
+	void EndRailSlotPress(int32 RailSlotIndex);
+	void ShowHeldRailItemDetails(int32 RailSlotIndex);
 	void SelectUnitSlot(int32 UnitViewIndex);
 	void SelectSkillSlot(int32 SkillSlotIndex);
+	void BeginSkillSlotPress(int32 SkillSlotIndex);
+	void EndSkillSlotPress(int32 SkillSlotIndex);
+	void ShowHeldSkillDetails(int32 SkillSlotIndex);
+	void RestoreSelectedShopItemDetails();
+
+	/** @brief Detail 도메인 알림 처리 — 밀려온 상세 DTO를 그리거나 플레인 폴백을 연다. */
+	void PresentPushedDetail();
 	const FShopItemUI* GetSelectedItem(const FShopUI& Shop) const;
+	bool EnsureShopDetailOverlay();
+	bool EnsureShopSkillDetailPresenter();
+	void ReleaseShopDetailOverlay();
+	void ShowSelectedItemDetails();
+	void ShowShopDetail(const FText& Name, const FText& Description,
+		UTexture2D* Icon, bool bArtifact, EUnitJobType RequiredJob);
+	void EnsureRunOptionsRail();
 
 	/** @brief 소지 아티펙트(파티 소유)와 파티 유닛 카드를 소지 박스에 반영한다. */
 	void RefreshOwnedView(const FShopUI& Shop);
@@ -176,6 +219,9 @@ protected:
 	TObjectPtr<UButton> mRestTabButton;
 
 	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> mMercenaryTabButton;
+
+	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mArtifactTabText;
 
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -183,6 +229,9 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> mRestTabText;
+
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> mMercenaryTabText;
 
 	/** Optional presentation plates cached by agreed source-widget names. */
 	UPROPERTY(Transient)
@@ -193,6 +242,9 @@ protected:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UImage> mRestTabPlate;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> mMercenaryTabPlate;
 
 	/** @brief 스킬 상세 카드에서 현재 교체 슬롯을 가리키는 포인터. */
 	UPROPERTY(Transient)
@@ -242,6 +294,19 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UWidget> mBuyHolder;
 
+	/** 고정 디자인 보드 안의 상/중/하 모드별 로컬 컨테이너. */
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mItemCarouselPanel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mSkillTopContextPanel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mSkillBottomContextPanel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWidget> mRestBottomContextPanel;
+
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> mArtifactShopPanel;
 
@@ -250,6 +315,10 @@ protected:
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> mRestShopPanel;
+
+	/** 기존 용병 선택 WBP를 그대로 재사용하는 상점 고용 전용 전체화면 겹. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UMercenaryHireWidget> mMercenaryHireWidget;
 
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> mSelectedItemIcon;
@@ -328,6 +397,18 @@ protected:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mRestUnitAPAfterFills;
 
+	/** 전투 HUD와 같은 공용 상세 WBP. 상점 본문에는 설명을 중복 표시하지 않는다. */
+	UPROPERTY(Transient)
+	TObjectPtr<UUserWidget> mShopDetailOverlayWidget;
+
+	/** 스킬 상품/보유 스킬용 리치 상세 프레젠터. 아티팩트는 플레인 겹을 유지한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<USkillDetailOverlayPresenter> mShopSkillDetailPresenter;
+
+	/** 전투 HUD 우상단 메뉴를 TopZone 안에서 공유하는 WBP 인스턴스. */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<URunOptionsRailWidget> mRunOptionsRailWidget;
+
 	/** @brief 활성 탭에서 Shop.mItems로 돌아가기 위한 인덱스와 레일 배치. */
 	TArray<int32> mFilteredShopItemIndices;
 	TArray<int32> mRailShopItemIndices;
@@ -336,6 +417,27 @@ protected:
 	int32 mSelectedUnitViewIndex = 0;
 	int32 mSelectedSkillSlotIndex = 0;
 	bool mIsArtifactInventoryOpen = false;
+
+	/** 모바일 장착 스킬 길게 누르기 상태. */
+	FTimerHandle mSkillLongPressTimer;
+	int32 mPressedSkillSlotIndex = INDEX_NONE;
+	bool mSkillLongPressTriggered = false;
+
+	/** 판매 아티팩트/스킬 카드는 손을 떼기 전 임계시간에 상세를 연다. */
+	FTimerHandle mRailLongPressTimer;
+	int32 mPressedRailSlotIndex = INDEX_NONE;
+	bool mRailLongPressTriggered = false;
+
+	/**
+	 * @brief 상세 요청 직전에 담아 두는 플레인 폴백 재료.
+	 * @details 밀려온 DTO가 비어 있으면(조립 실패) 이 값으로 기존 플레인 상세를 연다.
+	 * Request → Set*Detail → Detail 알림이 같은 호출 흐름 안에서 돌아오므로 유효하다.
+	 */
+	FText mPendingDetailName;
+	FText mPendingDetailDescription;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mPendingDetailIcon;
+	bool mPendingDetailIsArtifact = false;
+	EUnitJobType mPendingDetailJob = EUnitJobType::None;
 
 	/** @brief 현재 바인딩된 상점 상태 소유자; 위젯은 이 객체를 소유하지 않고 구독만 한다. */
 	UPROPERTY(BlueprintReadOnly, Category = "Shop|UI", meta = (AllowPrivateAccess = "true"))

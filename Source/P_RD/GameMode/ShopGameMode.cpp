@@ -16,8 +16,11 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "PCGStage/Room.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/FrontendMapWidget.h"
@@ -27,6 +30,34 @@ namespace
 	constexpr int32 ShopRestPrice = 100;
 	constexpr int32 ReplaceableSkillStartIndex = 2;
 	constexpr int32 ReplaceableSkillSlotCount = 4;
+
+	FText ShopMercenaryName(const EUnitJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EUnitJobType::Knight: return NSLOCTEXT("ShopGameMode", "Knight", "기사");
+		case EUnitJobType::Mage: return NSLOCTEXT("ShopGameMode", "Mage", "마법사");
+		case EUnitJobType::Ranger: return NSLOCTEXT("ShopGameMode", "Ranger", "레인저");
+		case EUnitJobType::Rogue: return NSLOCTEXT("ShopGameMode", "Rogue", "도적");
+		case EUnitJobType::Barbarian: return NSLOCTEXT("ShopGameMode", "Barbarian", "야만전사");
+		case EUnitJobType::Druid: return NSLOCTEXT("ShopGameMode", "Druid", "드루이드");
+		default: return NSLOCTEXT("ShopGameMode", "UnknownMercenary", "용병");
+		}
+	}
+
+	FText ShopMercenaryRole(const EUnitJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EUnitJobType::Knight: return NSLOCTEXT("ShopGameMode", "KnightRole", "방패 탱커 · 근접");
+		case EUnitJobType::Mage: return NSLOCTEXT("ShopGameMode", "MageRole", "주문 술사 · 원거리");
+		case EUnitJobType::Ranger: return NSLOCTEXT("ShopGameMode", "RangerRole", "명사수 · 원거리");
+		case EUnitJobType::Rogue: return NSLOCTEXT("ShopGameMode", "RogueRole", "기습 암살자 · 근접");
+		case EUnitJobType::Barbarian: return NSLOCTEXT("ShopGameMode", "BarbarianRole", "광전사 · 근접");
+		case EUnitJobType::Druid: return NSLOCTEXT("ShopGameMode", "DruidRole", "자연 술사 · 지원");
+		default: return FText::GetEmpty();
+		}
+	}
 
 	// TODO: 희귀도 색상 임시값 (인벤토리 GetInventoryRarityColor와 동일) -> 나중에 확정판에서 용수님의 UI 값으로 수정
 	FLinearColor GetShopRarityColor(ERarityType RarityType)
@@ -74,6 +105,8 @@ void AShopGameMode::InitializeRoom()
 			this, &AShopGameMode::HandleBuyRequested);
 		mShopUIModel->OnBuySkillRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleBuySkillRequested);
+		mShopUIModel->OnHireMercenaryRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleHireMercenaryRequested);
 		mShopUIModel->OnDiscardArtifactRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleDiscardArtifactRequested);
 		mShopUIModel->OnDiscardSkillRequested.AddUniqueDynamic(
@@ -82,6 +115,10 @@ void AShopGameMode::InitializeRoom()
 			this, &AShopGameMode::HandleRestRequested);
 		mShopUIModel->OnLeaveRequested.AddUniqueDynamic(
 			this, &AShopGameMode::HandleLeaveRequested);
+		mShopUIModel->OnItemDetailRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleItemDetailRequested);
+		mShopUIModel->OnOwnedSkillDetailRequested.AddUniqueDynamic(
+			this, &AShopGameMode::HandleOwnedSkillDetailRequested);
 	}
 }
 
@@ -244,6 +281,114 @@ void AShopGameMode::PushShopUIData()
 	AddList(ShopRoom->mSaleCommonSkillDataItems, EShopItemKind::Skill);
 	AddList(ShopRoom->mSaleArtifactDataItems, EShopItemKind::Artifact);
 
+	// 용병 후보는 기존 캐릭터 선택 DTO를 그대로 채워 전용 고용 화면에 내린다.
+	// FShopRoom에는 이미 후보/레벨/추가 스킬이 저장돼 있었지만, 이전 상점
+	// 어댑터가 이 목록을 누락해 UI의 Mercenary 종류가 항상 비어 있었다.
+	const int32 PartyDifficulty = GetPartyModel() != nullptr
+		? GetPartyModel()->GetDifficulty() : 1;
+	for (int32 CandidateIndex = 0;
+		CandidateIndex < ShopRoom->mSaleMercenaryDataCandidates.mCandidates.Num();
+		++CandidateIndex)
+	{
+		const FMercenaryCandidate& Candidate =
+			ShopRoom->mSaleMercenaryDataCandidates.mCandidates[CandidateIndex];
+		const int32 Slot = SlotIndex++;
+		if (!Candidate.mSaleMercenaryId.IsValid() || AssetManager == nullptr)
+		{
+			continue;
+		}
+
+		mSlotSources.Add(Slot,
+			{ EShopItemKind::Mercenary, Candidate.mSaleMercenaryId, CandidateIndex });
+		FShopMercenaryUI& Mercenary =
+			ShopUIData.mMercenaries.AddDefaulted_GetRef();
+		Mercenary.mSlotIndex = Slot;
+		Mercenary.mLevel = FMath::Max(1, Candidate.mLevel);
+		// 구형 저장 데이터는 가격이 0이었다. 새 생성 룸은 StageBuilder가 같은
+		// 공식으로 값을 기록하고, 구형 런도 여기서 정상 가격으로 보정한다.
+		Mercenary.mPrice = Candidate.mPrice > 0
+			? Candidate.mPrice : 100 + Mercenary.mLevel * 50;
+		Mercenary.mIsSoldOut = mSoldSlots.Contains(Slot);
+
+		FFrontendCharacterOption& Character = Mercenary.mCharacter;
+		Character.mIndex = CandidateIndex;
+		Character.mPlayerUnitId = Candidate.mSaleMercenaryId;
+		const UStaticPlayerUnitSpawnData* UnitData =
+			AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(
+				Candidate.mSaleMercenaryId);
+		if (UnitData != nullptr)
+		{
+			Character.mJobType = UnitData->mJobType;
+			Character.mDisplayName = ShopMercenaryName(UnitData->mJobType);
+			Character.mRoleText = ShopMercenaryRole(UnitData->mJobType);
+			Character.mRoleShort = FText::Format(
+				NSLOCTEXT("ShopGameMode", "MercenaryLevel", "Lv.{0}"),
+				FText::AsNumber(Mercenary.mLevel));
+			Character.mDescription = UnitData->mDescription.IsEmpty()
+				? Character.mRoleText : UnitData->mDescription;
+			Character.mPortrait = UnitData->mPortrait;
+			Character.mIcon = UnitData->mIcon;
+			Character.mMaxHP = FMath::RoundToInt(UnitData->GetDefaultAttributeValue(
+				GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+				UPlayerUnitAttributeSet::GetMaxHPAttribute(), PartyDifficulty));
+			Character.mMaxAP = FMath::RoundToInt(UnitData->GetDefaultAttributeValue(
+				GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+				UUnitAttributeSet::GetRechargeActionPointAttribute(), PartyDifficulty));
+			Character.mSpeed = FMath::RoundToInt(UnitData->GetDefaultAttributeValue(
+				GetWorld(), UPlayerUnitAttributeSet::StaticClass(),
+				UUnitAttributeSet::GetRechargeSpeedPointAttribute(), PartyDifficulty));
+			Character.mStatSummary = FText::Format(
+				NSLOCTEXT("ShopGameMode", "MercenarySummary", "Lv.{0} · HP {1}"),
+				FText::AsNumber(Mercenary.mLevel), FText::AsNumber(Character.mMaxHP));
+
+			auto AppendSkill = [&Character](const UStaticSkillData* Skill)
+			{
+				if (Skill == nullptr)
+				{
+					return;
+				}
+				Character.mSkillNames.Add(Skill->mName);
+				Character.mSkillIcons.Add(Skill->mIcon);
+				FFrontendSkillOption& Detail =
+					Character.mSkillDetails.AddDefaulted_GetRef();
+				Detail.mName = Skill->mName;
+				Detail.mDescription = Skill->mDescription;
+				Detail.mIcon = Skill->mIcon;
+				Detail.mCooldownTurns = FMath::Max(0, Skill->mCooldownDuration);
+				Detail.mAimPattern = Skill->mAimPattern;
+				Detail.mAimRange = Skill->mAimRange;
+				Detail.mEffectPattern = Skill->mEffectPattern;
+				Detail.mEffectArea = Skill->mEffectArea;
+				Detail.mAimBlockerMask = Skill->mAimBlockerMask;
+				Detail.mEffectBlockerMask = Skill->mEffectBlockerMask;
+				Detail.mTargetPattern = Skill->mTargetPattern;
+				if (const UStaticUnitSkillData* UnitSkill =
+					Cast<UStaticUnitSkillData>(Skill))
+				{
+					Detail.mActionPointCost =
+						FMath::Max(0, UnitSkill->mRequiredActionPoint);
+				}
+			};
+			for (const TSoftObjectPtr<UStaticSkillData>& Skill : UnitData->mSkillDatas)
+			{
+				AppendSkill(Skill.LoadSynchronous());
+			}
+			for (const FPrimaryAssetId& SkillId : Candidate.mOwingSkillIds)
+			{
+				AppendSkill(AssetManager->GetPrimaryAssetObject<UStaticSkillData>(SkillId));
+			}
+			Character.mSelectable = !Mercenary.mIsSoldOut
+				&& !UnitData->mModelClass.IsNull();
+		}
+		Mercenary.mIsAffordable = !Mercenary.mIsSoldOut
+			&& Mercenary.mPrice <= ShopUIData.mGold;
+		if (Mercenary.mIsSoldOut)
+		{
+			Character.mDisabledReason =
+				NSLOCTEXT("ShopGameMode", "MercenarySold", "고용 완료");
+		}
+	}
+
 	mShopUIModel->SetShop(ShopUIData);
 }
 
@@ -290,10 +435,16 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 	for (int32 UnitIndex = 0; UnitIndex < UnitModels.Num(); ++UnitIndex)
 	{
 		const UPlayerUnitModel* UnitModel = UnitModels[UnitIndex];
+		FShopMercenaryPartySlotUI& HireSlot =
+			ShopUIData.mMercenaryPartySlots.AddDefaulted_GetRef();
+		HireSlot.mUnitIndex = UnitIndex;
 		if (UnitModel == nullptr)
 		{
 			continue;
 		}
+		HireSlot.mIsOccupied = true;
+		HireSlot.mJobType = UnitModel->GetUnitJobType();
+		HireSlot.mLevel = UnitModel->GetPlayerLevel();
 
 		FShopOwnedUnitUI OwnedUnit;
 		OwnedUnit.mUnitIndex = UnitIndex;
@@ -328,6 +479,7 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 				{
 					SkillSlot.mIsEmpty = false;
 					SkillSlot.mName = Data->mName;
+					SkillSlot.mDescription = Data->mDescription;
 					SkillSlot.mIcon = Data->mIcon.LoadSynchronous();
 				}
 				OwnedUnit.mSkillSlots.Add(SkillSlot);
@@ -473,6 +625,109 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, in
 
 	// 과금 + 품절 처리
 	SpendPartyGold(Item->mPrice);
+	mSoldSlots.Add(SlotIndex);
+	PushShopUIData();
+}
+
+void AShopGameMode::HandleHireMercenaryRequested(
+	const int32 SlotIndex, const int32 PartySlotIndex)
+{
+	if (mShopUIModel == nullptr || mSoldSlots.Contains(SlotIndex))
+	{
+		return;
+	}
+
+	const FShopMercenaryUI* DisplayCandidate =
+		mShopUIModel->GetShop().mMercenaries.FindByPredicate(
+			[SlotIndex](const FShopMercenaryUI& Candidate)
+			{ return Candidate.mSlotIndex == SlotIndex; });
+	const FShopSlotSource* Source = mSlotSources.Find(SlotIndex);
+	if (DisplayCandidate == nullptr || !DisplayCandidate->mIsAffordable
+		|| DisplayCandidate->mIsSoldOut || Source == nullptr
+		|| Source->mKind != EShopItemKind::Mercenary)
+	{
+		return;
+	}
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	const FShopRoom* ShopRoom = nullptr;
+	if (RunPersistData != nullptr)
+	{
+		const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
+		if (CurrentRoom.mType == ERoomType::Shop)
+		{
+			ShopRoom = &static_cast<const FShopRoom&>(CurrentRoom);
+		}
+	}
+	if (ShopRoom == nullptr
+		|| !ShopRoom->mSaleMercenaryDataCandidates.mCandidates.IsValidIndex(
+			Source->mCandidateIndex))
+	{
+		return;
+	}
+	const FMercenaryCandidate& Candidate =
+		ShopRoom->mSaleMercenaryDataCandidates.mCandidates[Source->mCandidateIndex];
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr
+		|| !PartyModel->GetPlayerUnitModels().IsValidIndex(PartySlotIndex))
+	{
+		return;
+	}
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	UStaticPlayerUnitSpawnData* UnitData = AssetManager != nullptr
+		? AssetManager->GetPrimaryAssetObject<UStaticPlayerUnitSpawnData>(
+			Candidate.mSaleMercenaryId) : nullptr;
+	UClass* ModelClass = UnitData != nullptr
+		? UnitData->mModelClass.LoadSynchronous() : nullptr;
+	if (UnitData == nullptr || ModelClass == nullptr)
+	{
+		return;
+	}
+
+	UPlayerUnitModel* NewUnit =
+		GetWorldModelFactory(this)->NewModelDeferred<UPlayerUnitModel>(ModelClass);
+	if (NewUnit == nullptr)
+	{
+		return;
+	}
+	NewUnit->SetStaticSpawnData(UnitData);
+	NewUnit->SetPlayerLevel(FMath::Max(1, Candidate.mLevel));
+	NewUnit->FinishCreating();
+	// #432 규칙(신규 합류 일괄 장착): 파티 공용 아티팩트를 새 용병에게도 장착한다.
+	// 빠뜨리면 상점 고용 용병만 아티팩트 효과 없이 전투에 들어간다.
+	if (UPartyArtifactComponentModel* PartyArtifacts =
+		PartyModel->GetPartyArtifactComponentModel())
+	{
+		PartyArtifacts->EquipArtifactsTo(NewUnit);
+	}
+
+	UPlayerUnitModel* PreviousUnit =
+		PartyModel->GetPlayerUnitModels()[PartySlotIndex].Get();
+	PartyModel->SetPlayerUnitModel(PartySlotIndex, NewUnit);
+
+	// 후보에 붙은 추가 스킬은 플레이어 고정 스킬 뒤의 교체 가능 슬롯부터
+	// 채운다. 실패한 스킬 하나 때문에 이미 생성된 용병 전체를 무효화하지 않는다.
+	if (USkillComponentModel* SkillModel = NewUnit->GetSkillComponentModel())
+	{
+		for (int32 Index = 0;
+			Index < Candidate.mOwingSkillIds.Num()
+				&& Index < ReplaceableSkillSlotCount; ++Index)
+		{
+			if (UStaticSkillData* Skill =
+				AssetManager->GetPrimaryAssetObject<UStaticSkillData>(
+					Candidate.mOwingSkillIds[Index]))
+			{
+				SkillModel->SetSkill(ReplaceableSkillStartIndex + Index, Skill);
+			}
+		}
+	}
+	if (PreviousUnit != nullptr)
+	{
+		GetWorldModelFactory(this)->DestroyModel(PreviousUnit);
+	}
+
+	SpendPartyGold(DisplayCandidate->mPrice);
 	mSoldSlots.Add(SlotIndex);
 	PushShopUIData();
 }
@@ -715,4 +970,92 @@ void AShopGameMode::SpawnTileMap()
 
 	// 유닛 배치 전에 모델이 타일 저장소를 직접 빌드
 	mTileMap->RebuildTiles();
+}
+
+/**
+ * @brief 판매 슬롯 상세 요청 → 종류에 맞는 상세 DTO를 조립해 모델로 되민다.
+ *
+ * @details
+ * 위젯은 GetAuthGameMode로 이쪽을 직접 부르지 않는다 -- 의도(Request)만 보내고
+ * 응답은 Set*Detail 푸시로 받는다 (SetShop과 같은 계약). 조립 실패(로드 실패 등)
+ * 시에도 빈 DTO를 밀어 위젯이 플레인 폴백을 열 수 있게 한다.
+ */
+void AShopGameMode::HandleItemDetailRequested(int32 SlotIndex)
+{
+	if (mShopUIModel == nullptr)
+	{
+		return;
+	}
+
+	const FShopSlotSource* Source = mSlotSources.Find(SlotIndex);
+	if (Source != nullptr && Source->mKind == EShopItemKind::Artifact)
+	{
+		FCombatArtifactUI Detail;
+		BuildShopItemArtifactDetailUI(SlotIndex, OUT Detail);
+		mShopUIModel->SetArtifactDetail(Detail);
+		return;
+	}
+
+	FSkillDetailUI Detail;
+	BuildShopItemSkillDetailUI(SlotIndex, OUT Detail);
+	mShopUIModel->SetSkillDetail(Detail);
+}
+
+/** @brief 소지 용병 스킬 상세 요청 → 파티 생산 API 결과를 모델로 되민다. */
+void AShopGameMode::HandleOwnedSkillDetailRequested(int32 UnitIndex, int32 SkillSlotIndex)
+{
+	if (mShopUIModel == nullptr)
+	{
+		return;
+	}
+
+	FSkillDetailUI Detail;
+	BuildPartyUnitSkillDetailUI(UnitIndex, SkillSlotIndex, OUT Detail);
+	mShopUIModel->SetSkillDetail(Detail);
+}
+
+bool AShopGameMode::BuildShopItemSkillDetailUI(int32 SlotIndex,
+	FSkillDetailUI& OutDetail) const
+{
+	OutDetail = FSkillDetailUI();
+
+	const FShopSlotSource* Source = mSlotSources.Find(SlotIndex);
+	if (Source == nullptr || Source->mKind != EShopItemKind::Skill)
+	{
+		return false;
+	}
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	const UStaticSkillData* SkillData = AssetManager != nullptr
+		? AssetManager->GetPrimaryAssetObject<UStaticSkillData>(Source->mItemId)
+		: nullptr;
+	if (SkillData == nullptr)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromSkillData(SkillData, OutDetail);
+	return true;
+}
+
+bool AShopGameMode::BuildShopItemArtifactDetailUI(int32 SlotIndex,
+	FCombatArtifactUI& OutDetail) const
+{
+	OutDetail = FCombatArtifactUI();
+
+	const FShopSlotSource* Source = mSlotSources.Find(SlotIndex);
+	if (Source == nullptr || Source->mKind != EShopItemKind::Artifact)
+	{
+		return false;
+	}
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	const UStaticArtifactData* ArtifactData = AssetManager != nullptr
+		? AssetManager->GetPrimaryAssetObject<UStaticArtifactData>(Source->mItemId)
+		: nullptr;
+	if (ArtifactData == nullptr)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromArtifactData(ArtifactData, OutDetail);
+	return true;
 }

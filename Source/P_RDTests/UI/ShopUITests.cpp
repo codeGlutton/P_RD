@@ -389,8 +389,6 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 	const FExpectedWidget Required[] = {
 		{ TEXT("ShopViewportRoot"), UOverlay::StaticClass() },
 		{ TEXT("ShopLetterbox"), UBorder::StaticClass() },
-		{ TEXT("ShopMasterScale"), UScaleBox::StaticClass() },
-		{ TEXT("ShopDesignSize"), USizeBox::StaticClass() },
 		{ TEXT("ShopDesignCanvas"), UCanvasPanel::StaticClass() },
 		{ TEXT("mArtifactShopPanel"), UCanvasPanel::StaticClass() },
 		{ TEXT("mSkillShopPanel"), UCanvasPanel::StaticClass() },
@@ -456,8 +454,14 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 		if (Button != nullptr)
 		{
 			bContractValid &= TestTrue(*FString::Printf(
-				TEXT("레일 버튼 %d 런타임 이벤트 연결"), Index),
+				TEXT("레일 버튼 %d 짧은 탭 이벤트 연결"), Index),
 				Button->OnClicked.IsBound());
+			bContractValid &= TestTrue(*FString::Printf(
+				TEXT("레일 버튼 %d 눌러서 상세 타이머 시작"), Index),
+				Button->OnPressed.IsBound());
+			bContractValid &= TestTrue(*FString::Printf(
+				TEXT("레일 버튼 %d 손을 떼면 상세 타이머 종료"), Index),
+				Button->OnReleased.IsBound());
 		}
 	}
 
@@ -532,8 +536,11 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 		if (Button != nullptr)
 		{
 			bContractValid &= TestTrue(*FString::Printf(
-				TEXT("스킬 슬롯 버튼 %d 런타임 이벤트 연결"), Index),
-				Button->OnClicked.IsBound());
+				TEXT("스킬 슬롯 버튼 %d 누르기 이벤트 연결"), Index),
+				Button->OnPressed.IsBound());
+			bContractValid &= TestTrue(*FString::Printf(
+				TEXT("스킬 슬롯 버튼 %d 떼기 이벤트 연결"), Index),
+				Button->OnReleased.IsBound());
 		}
 	}
 
@@ -552,10 +559,21 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	if (USizeBox* DesignSize = Cast<USizeBox>(Tree->FindWidget(TEXT("ShopDesignSize"))))
+	TestNull(TEXT("고정 디자인 ScaleBox 제거"),
+		Tree->FindWidget(TEXT("ShopMasterScale")));
+	TestNull(TEXT("고정 1600x1000 SizeBox 제거"),
+		Tree->FindWidget(TEXT("ShopDesignSize")));
+	TestNull(TEXT("아티팩트 검은 레일 배경 제거"),
+		Tree->FindWidget(TEXT("ArtifactRailScrim")));
+	TestNull(TEXT("스킬 검은 레일 배경 제거"),
+		Tree->FindWidget(TEXT("SkillRailScrim")));
+	TestNull(TEXT("휴식 검은 배경 제거"),
+		Tree->FindWidget(TEXT("RestContentScrim")));
+	if (UTextBlock* CloseText = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("mCloseButtonText"))))
 	{
-		TestEqual(TEXT("상점 디자인 폭"), DesignSize->GetWidthOverride(), 1600.f);
-		TestEqual(TEXT("상점 디자인 높이"), DesignSize->GetHeightOverride(), 1000.f);
+		TestEqual(TEXT("상점 종료 버튼 문구"), CloseText->GetText().ToString(),
+			FString(TEXT("나가기")));
 	}
 	return bContractValid;
 }

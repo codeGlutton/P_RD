@@ -52,6 +52,8 @@ GEMINI.md
 # Precompiled Assets
 SourceArt/**/*.png
 SourceArt/**/*.tga
+# 선택한 KayKit 상점 배경은 WBP 빌더가 재임포트할 원본까지 함께 배포한다.
+!SourceArt/UI/ShopFullGenerated/T_ShopFG_KayKit_WagonHorse.png
 
 # Binary Files
 Binaries/*
@@ -87,6 +89,11 @@ DerivedDataCache/*
 # Imported resource assets are stored in SVN, not Git.
 /Content/Audio/
 /Content/**/T_*.uasset
+!/Content/UI/Shop/T_ShopFG_RailScrimGradient.uasset
+!/Content/UI/Shop/T_ShopFG_RestUnitPanel_Clean.uasset
+!/Content/UI/Shop/T_ShopFG_SkillSlot07_Square.uasset
+!/Content/UI/Shop/T_ShopFG_SkillSlot07_Square_Selected.uasset
+!/Content/UI/Shop/Art/T_ShopFG_KayKit_WagonHorse.uasset
 /Content/**/S_*.uasset
 # 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
 !/Content/UI/Art/RunFlow/T_*.uasset
