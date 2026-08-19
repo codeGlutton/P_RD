@@ -2,7 +2,6 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
-#include "AutomatedAssetImportData.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
@@ -32,10 +31,10 @@
 namespace SkillTacticalDiagramWidgetBuilder
 {
 	constexpr TCHAR PackagePath[] = TEXT("/Game/UI/CombatDetail/SkillTactical");
-	constexpr TCHAR ArtPackagePath[] = TEXT("/Game/UI/CombatDetail/SkillTactical/Art");
-	constexpr TCHAR FontPackagePath[] = TEXT("/Game/UI/Fonts/GowunBatang");
-	constexpr TCHAR FontAssetPackage[] = TEXT("/Game/UI/Fonts/GowunBatang/F_GowunBatang");
-	constexpr TCHAR FontAssetPath[] = TEXT("/Game/UI/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang");
+	constexpr TCHAR ArtPackagePath[] = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical");
+	constexpr TCHAR FontPackagePath[] = TEXT("/Game/SVN/OutSideAsset/Fonts/GowunBatang");
+	constexpr TCHAR FontAssetPackage[] = TEXT("/Game/SVN/OutSideAsset/Fonts/GowunBatang/F_GowunBatang");
+	constexpr TCHAR FontAssetPath[] = TEXT("/Game/SVN/OutSideAsset/Fonts/GowunBatang/F_GowunBatang.F_GowunBatang");
 	constexpr TCHAR AssetName[] = TEXT("WBP_SkillTacticalDiagram");
 	constexpr TCHAR AssetPath[] =
 		TEXT("/Game/UI/CombatDetail/SkillTactical/WBP_SkillTacticalDiagram.WBP_SkillTacticalDiagram");
@@ -58,101 +57,24 @@ namespace SkillTacticalDiagramWidgetBuilder
 			FSavePackageArgs()), TEXT("Could not save %s"), *Object->GetPathName());
 	}
 
-	FString SourceFile(const TCHAR* Name)
+	UFont* EnsureDetailFont()
 	{
-		return FPaths::Combine(FPaths::ProjectDir(), TEXT("SourceArt"), TEXT("UI"),
-			TEXT("CombatDetail"), TEXT("SkillTactical"), FString(Name) + TEXT(".png"));
-	}
-
-	FString FontSourceFile(const TCHAR* Name)
-	{
-		return FPaths::Combine(FPaths::ProjectDir(), TEXT("SourceArt"), TEXT("UI"),
-			TEXT("Fonts"), TEXT("GowunBatang"), FString(Name) + TEXT(".ttf"));
-	}
-
-	UFontFace* ImportFontFace(const TCHAR* Name)
-	{
-		const FString File = FontSourceFile(Name);
-		checkf(FPaths::FileExists(File), TEXT("Missing Gowun Batang source: %s"), *File);
-		UAutomatedAssetImportData* ImportData = NewObject<UAutomatedAssetImportData>();
-		ImportData->DestinationPath = FontPackagePath;
-		ImportData->Filenames = { File };
-		ImportData->bReplaceExisting = true;
-		ImportData->bSkipReadOnly = true;
-		FAssetToolsModule& AssetTools =
-			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
-		const TArray<UObject*> Imported = AssetTools.Get().ImportAssetsAutomated(ImportData);
-		for (UObject* Object : Imported)
-		{
-			if (UFontFace* Face = Cast<UFontFace>(Object))
-			{
-				Face->MarkPackageDirty();
-				SaveObject(Face);
-				return Face;
-			}
-		}
-		checkf(false, TEXT("Failed to import Gowun Batang font face: %s"), *File);
-		return nullptr;
-	}
-
-	UFont* BuildDetailFont()
-	{
-		UFontFace* RegularFace = ImportFontFace(TEXT("GowunBatang-Regular"));
-		UFontFace* BoldFace = ImportFontFace(TEXT("GowunBatang-Bold"));
+		// 고운바탕 폰트는 SVN(OutSideAsset)에서 관리한다. 재임포트하지 않고
+		// 이미 커밋된 에셋을 그대로 읽는다.
 		UFont* Font = LoadObject<UFont>(nullptr, FontAssetPath);
-		if (Font == nullptr)
-		{
-			UPackage* Package = CreatePackage(FontAssetPackage);
-			Font = NewObject<UFont>(Package, TEXT("F_GowunBatang"),
-				RF_Public | RF_Standalone | RF_Transactional);
-			FAssetRegistryModule::AssetCreated(Font);
-		}
-		check(Font != nullptr && RegularFace != nullptr && BoldFace != nullptr);
-		Font->Modify();
-		Font->FontCacheType = EFontCacheType::Runtime;
-		FCompositeFont& Composite = Font->GetMutableInternalCompositeFont();
-		Composite.DefaultTypeface.Fonts.Reset();
-		FTypefaceEntry Regular(TEXT("Regular"));
-		Regular.Font = FFontData(RegularFace);
-		Composite.DefaultTypeface.Fonts.Add(MoveTemp(Regular));
-		FTypefaceEntry Bold(TEXT("Bold"));
-		Bold.Font = FFontData(BoldFace);
-		Composite.DefaultTypeface.Fonts.Add(MoveTemp(Bold));
-		Font->PostEditChange();
-		Font->MarkPackageDirty();
-		SaveObject(Font);
+		checkf(Font != nullptr,
+			TEXT("Missing Gowun Batang font (SVN 업데이트 필요): %s"), FontAssetPath);
 		return Font;
 	}
 
-	UTexture2D* ImportTexture(const TCHAR* Name)
+	UTexture2D* ArtTexture(const TCHAR* Name)
 	{
-		const FString File = SourceFile(Name);
-		checkf(FPaths::FileExists(File), TEXT("Missing tactical tile source: %s"), *File);
-		UAutomatedAssetImportData* ImportData = NewObject<UAutomatedAssetImportData>();
-		ImportData->DestinationPath = ArtPackagePath;
-		ImportData->Filenames = { File };
-		ImportData->bReplaceExisting = true;
-		ImportData->bSkipReadOnly = true;
-		FAssetToolsModule& AssetTools =
-			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
-		AssetTools.Get().ImportAssetsAutomated(ImportData);
-
+		// 전술판 아트도 SVN(OutSideAsset)에서 관리한다.
 		const FString ObjectPath = FString::Printf(TEXT("%s/%s.%s"),
 			ArtPackagePath, Name, Name);
 		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *ObjectPath);
-		checkf(Texture != nullptr, TEXT("Failed to import tactical tile: %s"), *ObjectPath);
-		Texture->Modify();
-		Texture->LODGroup = TEXTUREGROUP_UI;
-		Texture->MipGenSettings = TMGS_FromTextureGroup;
-		Texture->CompressionSettings = TC_EditorIcon;
-		Texture->NeverStream = true;
-		Texture->VirtualTextureStreaming = false;
-		Texture->SRGB = true;
-		Texture->AddressX = TA_Clamp;
-		Texture->AddressY = TA_Clamp;
-		Texture->MaxTextureSize = 512;
-		Texture->PostEditChange();
-		SaveObject(Texture);
+		checkf(Texture != nullptr,
+			TEXT("Missing tactical art texture (SVN 업데이트 필요): %s"), *ObjectPath);
 		return Texture;
 	}
 
@@ -272,7 +194,7 @@ namespace SkillTacticalDiagramWidgetBuilder
 
 	void Build()
 	{
-		BuildDetailFont();
+		EnsureDetailFont();
 		UTexture2D* NeutralTile = Texture(TEXT(
 			"/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/"
 			"T_KitA_Cell_Disabled.T_KitA_Cell_Disabled"));
@@ -285,14 +207,14 @@ namespace SkillTacticalDiagramWidgetBuilder
 		UTexture2D* Target = Texture(TEXT(
 			"/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/"
 			"T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph"));
-		UTexture2D* RangeButton = ImportTexture(
+		UTexture2D* RangeButton = ArtTexture(
 			TEXT("T_SkillRangeButton_Normal_v1"));
-		UTexture2D* SelectedRangeButton = ImportTexture(
+		UTexture2D* SelectedRangeButton = ArtTexture(
 			TEXT("T_SkillRangeButton_Selected_v1"));
 		// 피해/치명타는 작은 모바일 수치 행에서도 한 번에 읽히도록 단순화한
-		// 전용 원본을 UI 텍스처로 굽고 런타임이 하드 참조한다.
-		ImportTexture(TEXT("T_SkillStat_Damage_Simple_v2"));
-		ImportTexture(TEXT("T_SkillStat_Critical_Simple_v2"));
+		// 전용 에셋을 런타임이 하드 참조한다. 존재 확인만 한다.
+		ArtTexture(TEXT("T_SkillStat_Damage_Simple_v2"));
+		ArtTexture(TEXT("T_SkillStat_Critical_Simple_v2"));
 
 		UWidgetBlueprint* Blueprint = EnsureBlueprint();
 		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
