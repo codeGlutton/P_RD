@@ -33,7 +33,7 @@
 namespace RewardConcept03NewWidgetBuilder
 {
 	constexpr TCHAR PackagePath[] = TEXT("/Game/UI/RewardConcept03New");
-	constexpr TCHAR ArtPackagePath[] = TEXT("/Game/UI/RewardConcept03New/Art");
+	constexpr TCHAR ArtPackagePath[] = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/RewardConcept03New");
 	constexpr TCHAR FourStepAssetName[] = TEXT("WBP_RewardConcept03_New");
 	constexpr TCHAR FourStepAssetPath[] =
 		TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_New.WBP_RewardConcept03_New");

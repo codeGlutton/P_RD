@@ -98,14 +98,14 @@ URewardSettlementWidgetBase::URewardSettlementWidgetBase(const FObjectInitialize
 #define RD_SETTLEMENT_TEX(Member, Path) Member = LoadObject<UTexture2D>(nullptr, TEXT(Path))
 	RD_SETTLEMENT_TEX(mGoldIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/RewardV4_11/Tex/T_reward_v4_gold_icon.T_reward_v4_gold_icon");
 	RD_SETTLEMENT_TEX(mEquipmentIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Equipment/T_equip_weapon_common.T_equip_weapon_common");
-	RD_SETTLEMENT_TEX(mChestClosedTexture, "/Game/UI/ResultBoards/GeneratedArt/T_RS_WireframeV4_ChestClosed.T_RS_WireframeV4_ChestClosed");
-	RD_SETTLEMENT_TEX(mChestHalfOpenTexture, "/Game/UI/ResultBoards/GeneratedArt/T_RS_WireframeV4_ChestOpen.T_RS_WireframeV4_ChestOpen");
-	RD_SETTLEMENT_TEX(mChestOpenTexture, "/Game/UI/ResultBoards/GeneratedArt/T_RS_WireframeV4_ChestOpen.T_RS_WireframeV4_ChestOpen");
-	RD_SETTLEMENT_TEX(mChestRevealAuraTexture, "/Game/UI/ResultBoards/GeneratedArt/T_RS_Generated_ChestRevealAuraV2.T_RS_Generated_ChestRevealAuraV2");
-	RD_SETTLEMENT_TEX(mChoiceCardNormalTexture, "/Game/UI/ResultBoards/GeneratedArt/V7/T_RS_V7_ArtifactCard.T_RS_V7_ArtifactCard");
-	RD_SETTLEMENT_TEX(mChoiceCardSelectedTexture, "/Game/UI/ResultBoards/GeneratedArt/V7/T_RS_V7_ArtifactCard.T_RS_V7_ArtifactCard");
-	RD_SETTLEMENT_TEX(mStepCoinActiveTexture, "/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepCoinActive.T_C03_StepCoinActive");
-	RD_SETTLEMENT_TEX(mStepCoinInactiveTexture, "/Game/UI/ResultBoards/GeneratedArt/C03/T_C03_StepCoinInactive.T_C03_StepCoinInactive");
+	RD_SETTLEMENT_TEX(mChestClosedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/T_RS_WireframeV4_ChestClosed.T_RS_WireframeV4_ChestClosed");
+	RD_SETTLEMENT_TEX(mChestHalfOpenTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/T_RS_WireframeV4_ChestOpen.T_RS_WireframeV4_ChestOpen");
+	RD_SETTLEMENT_TEX(mChestOpenTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/T_RS_WireframeV4_ChestOpen.T_RS_WireframeV4_ChestOpen");
+	RD_SETTLEMENT_TEX(mChestRevealAuraTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/T_RS_Generated_ChestRevealAuraV2.T_RS_Generated_ChestRevealAuraV2");
+	RD_SETTLEMENT_TEX(mChoiceCardNormalTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/V7/T_RS_V7_ArtifactCard.T_RS_V7_ArtifactCard");
+	RD_SETTLEMENT_TEX(mChoiceCardSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/V7/T_RS_V7_ArtifactCard.T_RS_V7_ArtifactCard");
+	RD_SETTLEMENT_TEX(mStepCoinActiveTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/C03/T_C03_StepCoinActive.T_C03_StepCoinActive");
+	RD_SETTLEMENT_TEX(mStepCoinInactiveTexture, "/Game/SVN/OutSideAsset/AICreation/UI/ResultBoards/C03/T_C03_StepCoinInactive.T_C03_StepCoinInactive");
 	// 스킬 아이콘 그림은 지웠다(새 그림 예정). 투명 그림 하나를 세워 두는 대신
 	// 아예 비워 둔다 -- 자리를 채우려고 만든 자산이 또 다른 지울 것이 된다.
 	// 쓰는 쪽은 이미 nullptr 을 검사하고 그리지 않는다.
