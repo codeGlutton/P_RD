@@ -5,6 +5,8 @@
 #include "UI/MarchboundHireWidgetBuilder.h"
 #include "UI/CombatHUDWidgetBuilder.h"
 #include "UI/RewardSettlementWidgetBuilder.h"
+#include "UI/RewardConceptBoardBuilder.h"
+#include "UI/RewardConcept03NewWidgetBuilder.h"
 #include "UI/CombatDefeatWidgetBuilder.h"
 #include "UI/MonsterTabWidgetBuilder.h"
 #include "UI/SettingsPanelWidgetBuilder.h"
@@ -22,6 +24,8 @@ void FP_RDEditorModule::StartupModule()
 	RegisterMarchboundHireWidgetBuilderCommands();
 	RegisterCombatHUDWidgetBuilderCommands();
 	RegisterRewardSettlementWidgetBuilderCommands();
+	RegisterRewardConceptBoardBuilderCommands();
+	RegisterRewardConcept03NewWidgetBuilderCommands();
 	RegisterCombatDefeatWidgetBuilderCommands();
 	RegisterMonsterTabWidgetBuilderCommands();
 	RegisterSettingsPanelWidgetBuilderCommands();
@@ -49,6 +53,8 @@ void FP_RDEditorModule::ShutdownModule()
 	UnregisterMarchboundHireWidgetBuilderCommands();
 	UnregisterCombatHUDWidgetBuilderCommands();
 	UnregisterRewardSettlementWidgetBuilderCommands();
+	UnregisterRewardConceptBoardBuilderCommands();
+	UnregisterRewardConcept03NewWidgetBuilderCommands();
 	UnregisterCombatDefeatWidgetBuilderCommands();
 	UnregisterMonsterTabWidgetBuilderCommands();
 	UnregisterSettingsPanelWidgetBuilderCommands();

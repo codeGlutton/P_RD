@@ -8,9 +8,13 @@
 #pragma once
 
 #include "GameMode/RoomGameModeBase.h"
+#include "UI/Reward/RewardUITypes.h"
 #include "TreasureGameMode.generated.h"
 
 class UTreasureUIModel;
+class URewardUIModel;
+class URewardConcept03Widget;
+class UUserWidget;
 
 /**
  * @brief  보상 방에 대한 GameMode
@@ -21,6 +25,9 @@ class P_RD_API ATreasureGameMode : public ARoomGameModeBase
 	GENERATED_BODY()
 
 public:
+	/** @brief 보상 연출 WBP 기본값을 클래스 레퍼런스로 세팅한다. */
+	ATreasureGameMode();
+
 	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 	/**
@@ -39,6 +46,22 @@ protected:
 	void InitializeRoom() override;
 	void BeginRoom() override;
 
+protected:
+	/**
+	 * @brief 보물방 공용 보상 연출 WBP 클래스.
+	 *
+	 * @details
+	 * 런타임 LoadClass 리터럴 대신 클래스 레퍼런스로 노출한다 -- HUDClass 배선과
+	 * 같은 의도로, BP 디자이너가 파생 BP에서 연출 판을 교체할 수 있다.
+	 * 기본값은 WBP_RewardConcept03_Frameless.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = Reward)
+	TSubclassOf<UUserWidget> mRewardWidgetClass;
+
+	/** @brief 아티팩트 보상이 없는 보물방용 변형 WBP. 기본값은 _NoArtifact 판. */
+	UPROPERTY(EditDefaultsOnly, Category = Reward)
+	TSubclassOf<UUserWidget> mRewardWidgetClassNoArtifact;
+
 private:
 	/**
 	 * @brief 보물상자 액터를 방 스타트포인트에 스폰 (연출용)
@@ -49,6 +72,9 @@ private:
 	/** @brief 상자 상태와 지급 내역을 화면에 내림 */
 	void PushTreasureUIData();
 
+	/** @brief 보물방 데이터를 공용 보상 연출 WBP에 연결해 연다. */
+	bool OpenRewardPresentation();
+
 	/**
 	 * @brief 상자 개봉 및 보상 전부 지급
 	 * @details 골드와 아티팩트를 순서대로 지급 후 개봉 상태로 갱신. 재개봉 불가
@@ -57,6 +83,12 @@ private:
 
 	/** @brief 나가기 의도 처리. 다음 방 선택은 지도(월드맵) 담당 */
 	UFUNCTION() void HandleLeaveRequested();
+
+	UFUNCTION()
+	void HandleRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
+	UFUNCTION()
+	void HandleRewardPresentationCompleted(int32 ArtifactIndex);
 
 	/** @brief 파티 골드 지급. 0 이하 금액은 무시 */
 	void GivePartyGold(int32 Amount);
@@ -67,6 +99,12 @@ private:
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTreasureUIModel> mTreasureUIModel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardUIModel> mRewardUIModel;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URewardConcept03Widget> mRewardWidget;
 
 	// @brief 스폰된 보물상자 액터 (연출용)
 	UPROPERTY(Transient)

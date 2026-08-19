@@ -99,4 +99,8 @@ struct FRewardChoiceUI
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+	/** Shared CombatDetail overlay subtitle. */
+	UPROPERTY(BlueprintReadOnly) FText mRarityName;
+	/** Common=0, Rare=1, Epic=2; drives the existing 1/3/5 rarity gems. */
+	UPROPERTY(BlueprintReadOnly) int32 mRarityLevel = 0;
 };

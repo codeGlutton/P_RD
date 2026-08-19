@@ -40,6 +40,7 @@
 #include "UI/Combat/MockCombatDriver.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "UI/CombatResultOverlayWidget.h"
@@ -3018,6 +3019,10 @@ void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
 	if (mCombatRewardWidget != nullptr)
 	{
 		mCombatRewardWidget->BindUIModel(mCombatRewardUIModel);
+	}
+	if (mCombatRewardConceptWidget != nullptr)
+	{
+		mCombatRewardConceptWidget->BindUIModel(mCombatRewardUIModel);
 	}
 }
 
