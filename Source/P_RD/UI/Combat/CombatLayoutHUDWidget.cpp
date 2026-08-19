@@ -32,6 +32,7 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/DetailOverlayInputShield.h"
@@ -2990,6 +2991,15 @@ void UCombatLayoutHUDWidget::BindUIModel(UCombatUIModel* InUIModel)
 		mUIModel->OnCombatFloatingLogsCleared.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
 
+		// 미리보기 로그는 예측 전용 모델에서 따로 받는다 — 실전 표시와 저장 자리가 다르다.
+		if (USimulationPreviewUIModel* SimulationPreviewUIModel = mUIModel->GetSimulationPreviewUIModel())
+		{
+			SimulationPreviewUIModel->OnPreviewEventBatch.AddUniqueDynamic(
+				this, &UCombatLayoutHUDWidget::HandleSimulationPreviewBatch);
+			SimulationPreviewUIModel->OnPreviewCleared.AddUniqueDynamic(
+				this, &UCombatLayoutHUDWidget::HandleSimulationPreviewCleared);
+		}
+
 		// 라운드 고지도 전투/턴 고지와 같은 텍스트 연출을 쓴다. 예전 33장
 		// 프레임 시퀀스는 쓰지 않으며, 고지 타이머가 배리어 해제를 보장한다.
 		mUIModel->OnBeginAnyRound.RemoveAll(this);
@@ -3060,6 +3070,13 @@ void UCombatLayoutHUDWidget::UnbindUIModel()
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogMotionFinished);
 		mUIModel->OnCombatFloatingLogsCleared.RemoveDynamic(
 			this, &UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared);
+		if (USimulationPreviewUIModel* SimulationPreviewUIModel = mUIModel->GetSimulationPreviewUIModel())
+		{
+			SimulationPreviewUIModel->OnPreviewEventBatch.RemoveDynamic(
+				this, &UCombatLayoutHUDWidget::HandleSimulationPreviewBatch);
+			SimulationPreviewUIModel->OnPreviewCleared.RemoveDynamic(
+				this, &UCombatLayoutHUDWidget::HandleSimulationPreviewCleared);
+		}
 		mUIModel->OnBeginAnyRound.Remove(mBeginRoundHandle);
 	}
 	++mActionPresentationSerial;

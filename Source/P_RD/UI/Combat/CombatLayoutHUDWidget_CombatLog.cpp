@@ -40,6 +40,8 @@
  *  ## 데이터 경계 (누가 뭘 정하나)
  *  들어오는 값은 전부 CombatUIModel 델리게이트로만 받는다
  *  (OnCombatFloatingLog / OnCombatFloatingLogMotionFinished / OnCombatFloatingLogsCleared / FTurnUI.mRound=배너).
+ *  미리보기 로그만 예외로 예측 전용 모델(USimulationPreviewUIModel)의
+ *  OnPreviewEventBatch / OnPreviewCleared 로 받는다 — 실전과 저장 자리가 다르다.
  *  게임플레이는 아이콘/색 "의미(enum)"만 넘기고, 실제 텍스처·FLinearColor는 여기(ResolveFloatingLogIcon/Color)가 정한다.
  */
 
@@ -157,6 +159,78 @@ void UCombatLayoutHUDWidget::HandleCombatFloatingLogsCleared()
 	for (int32 LogIndex = mFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
 	{
 		FFloatingCombatLogEntry& Entry = mFloatingCombatLogs[LogIndex];
+		if (Entry.mRoot == nullptr)
+		{
+			mFloatingCombatLogs.RemoveAt(LogIndex);
+			continue;
+		}
+		if (Entry.mIsDismissing == false)
+		{
+			Entry.mIsDismissing = true;
+			Entry.mDismissElapsed = 0.0f;
+		}
+	}
+}
+
+/**
+ * @brief [수신·미리보기] 예측 모델이 보낸 미리보기 배치 하나를 화면에 갈아 끼운다(OnPreviewEventBatch 구독).
+ * @details 새 배치는 이전 미리보기 표시를 전제부터 대체하므로, 먼저 미리보기분만 걷고 새 배치를 즉시 스폰한다.
+ *          실전 로그(수명 juice)는 건드리지 않는다. 정렬은 실전 경로(NotifyCombatFloatingLogs)와 같은
+ *          규칙 — mSequence 오름차순, 같으면 입력 순서(StableSort).
+ * @param Batch 미리보기 플로팅 로그 스냅샷(값 복사 — 다이나믹 델리게이트 규약).
+ */
+void UCombatLayoutHUDWidget::HandleSimulationPreviewBatch(FCombatEventBatchUI Batch)
+{
+	RetireSimulationPreviewFloatingLogs();
+
+	Batch.mFloatingLogs.StableSort(
+		[](const FCombatFloatingLogRequest& Lhs, const FCombatFloatingLogRequest& Rhs) {
+			return Lhs.mSequence < Rhs.mSequence;
+		});
+	for (const FCombatFloatingLogRequest& Request : Batch.mFloatingLogs)
+	{
+		// 미리보기 배치 규약(mIsPreview=true) 위반분은 실전 대기 큐로 새지 않게 버린다.
+		if (Request.mIsPreview == false)
+		{
+			continue;
+		}
+		HandleCombatFloatingLog(Request);
+	}
+}
+
+/**
+ * @brief [제거·미리보기] 미리보기가 통째로 버려졌다(OnPreviewCleared 구독). 미리보기 표시만 걷는다.
+ * @details 취소/새 조준/턴 종료가 예측 모델의 ClearPreview를 부르면 여기로 온다.
+ *          실전 로그는 수명 규칙 그대로 남는다 — 전체 클리어(HandleCombatFloatingLogsCleared)와 다른 점이다.
+ */
+void UCombatLayoutHUDWidget::HandleSimulationPreviewCleared()
+{
+	RetireSimulationPreviewFloatingLogs();
+}
+
+/**
+ * @brief 대기 큐·화면에서 mIsPreview==true 인 로그만 걷어낸다(전체 클리어 로직의 미리보기 한정판).
+ * @details 실전 큐 상태(쿨다운·도착 순번)는 건드리지 않는다. 떠 있는 미리보기 로그는 전체 클리어와
+ *          같은 퇴장 연출(오른쪽 슬라이드+페이드)로 보내고, 실제 제거는 UpdateFloatingCombatLogs가 한다.
+ */
+void UCombatLayoutHUDWidget::RetireSimulationPreviewFloatingLogs()
+{
+	// 아직 안 뜬 대기분 중 미리보기만 비운다(다음 프레임에 되살아나지 않게).
+	for (int32 LogIndex = mPendingFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
+	{
+		if (mPendingFloatingCombatLogs[LogIndex].mRequest.mIsPreview == true)
+		{
+			mPendingFloatingCombatLogs.RemoveAt(LogIndex);
+		}
+	}
+
+	for (int32 LogIndex = mFloatingCombatLogs.Num() - 1; LogIndex >= 0; --LogIndex)
+	{
+		FFloatingCombatLogEntry& Entry = mFloatingCombatLogs[LogIndex];
+		if (Entry.mIsPreview == false)
+		{
+			continue;
+		}
 		if (Entry.mRoot == nullptr)
 		{
 			mFloatingCombatLogs.RemoveAt(LogIndex);
