@@ -144,6 +144,10 @@ namespace EffectTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect);
 
+	/* 전투 종료 시까지 유지되는 상태 이상 태그들 */
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite);
+
 	/* 턴마다 1씩 감소하는 상태 이상 태그들 */
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration);

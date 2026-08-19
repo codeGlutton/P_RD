@@ -91,6 +91,7 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,									"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,										"GameplayEffect.StatusEffect");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,							"GameplayEffect.StatusEffect.Infinite");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration,						"GameplayEffect.StatusEffect.TurnDuration");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff,					"GameplayEffect.StatusEffect.TurnDuration.Buff");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor,				"GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor");
