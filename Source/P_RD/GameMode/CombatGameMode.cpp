@@ -436,9 +436,8 @@ void ACombatGameMode::InitializeCombat()
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
 		CancelPendingActionEndAfterCameraReturn();
 		// 행동이 시작되면 그 전의 예측 전제는 낡았다 — 미리보기만 통째로 버린다.
+		// (실전 juice 로그는 수명 규칙으로 스스로 사라진다.)
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
-		// [임시 이중기록] HUD가 미리보기 모델의 Cleared를 구독하기 전까지 옛 전체 클리어를 유지한다.
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
@@ -606,8 +605,6 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
 		// 무름(취소)은 실전 표시를 건드리지 않는다 — 미리보기만 통째로 버린다.
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
-		// [임시 이중기록] HUD가 미리보기 모델의 Cleared를 구독하기 전까지 옛 전체 클리어를 유지한다.
-		mCombatUIModel->NotifyCombatFloatingLogsCleared();
 		});
 
 	return CommandRouterModel->SummitCommand(SkillSelectCommand);
@@ -2369,12 +2366,6 @@ void ACombatGameMode::PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog
 
 	SimulationPreviewUIModel->SetPreviewEventBatch(PreviewGeneration, Requests);
 	SimulationPreviewUIModel->SetPredictedUnits(PreviewGeneration, BuildUnitPredictions(TurnEventLogs));
-
-	// [임시 이중기록] HUD가 아직 실전 모델의 클리어/배치만 구독한다. 옛 경로와 같은
-	// 순서(전체 클리어 → 배치)로 실전 모델에도 흘려보내고, HUD가 미리보기 모델을
-	// 구독하게 되면 이 두 줄을 제거한다.
-	mCombatUIModel->NotifyCombatFloatingLogsCleared();
-	mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::SimulationPreview, Requests);
 }
 
 void ACombatGameMode::PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
