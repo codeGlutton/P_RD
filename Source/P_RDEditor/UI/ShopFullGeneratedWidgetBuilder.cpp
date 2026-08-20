@@ -6,6 +6,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
@@ -13,7 +14,6 @@
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/ScaleBox.h"
-#include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/WrapBox.h"
@@ -21,8 +21,11 @@
 #include "HAL/IConsoleManager.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
-#include "Brushes/SlateColorBrush.h"
+#include "Misc/PackageName.h"
+#include "Misc/Paths.h"
 #include "UI/UIFont.h"
+#include "UI/Hire/MercenaryHireWidget.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "UI/Shop/ShopFullGeneratedWidgetBase.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
@@ -34,10 +37,46 @@ namespace ShopFullGeneratedWidgetBuilder
 	constexpr TCHAR PackagePath[] = TEXT("/Game/UI/Shop");
 	constexpr TCHAR AssetName[] = TEXT("WBP_Shop_FullGenerated");
 	constexpr TCHAR AssetPath[] = TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated.WBP_Shop_FullGenerated");
+	constexpr TCHAR ArtPackagePath[] =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated");
+	constexpr TCHAR OptionsRailPackagePath[] = TEXT("/Game/UI/Common");
+	constexpr TCHAR OptionsRailAssetName[] = TEXT("WBP_RunOptionsRail");
+	constexpr TCHAR OptionsRailAssetPath[] = TEXT("/Game/UI/Common/WBP_RunOptionsRail.WBP_RunOptionsRail");
+	constexpr TCHAR SharedBackgroundName[] = TEXT("T_ShopFG_KayKit_WagonHorse");
 	constexpr float DesignWidth = 1600.f;
 	constexpr float DesignHeight = 1000.f;
+	constexpr float TopZoneHeight = 210.f;
+	constexpr float CenterZoneHeight = 580.f;
+	constexpr float BottomZoneHeight = 210.f;
 
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+
+	FString SharedBackgroundObjectPath()
+	{
+		return FString::Printf(TEXT("%s/%s.%s"), ArtPackagePath,
+			SharedBackgroundName, SharedBackgroundName);
+	}
+
+	void SaveObject(UObject* Object)
+	{
+		check(Object != nullptr);
+		const FString Filename = FPackageName::LongPackageNameToFilename(
+			Object->GetOutermost()->GetName(), FPackageName::GetAssetPackageExtension());
+		checkf(UPackage::SavePackage(Object->GetPackage(), Object, *Filename,
+			FSavePackageArgs()), TEXT("Could not save %s"), *Object->GetPathName());
+	}
+
+	UTexture2D* EnsureSharedBackgroundTexture()
+	{
+		// 배경 텍스처는 SVN(OutSideAsset)에서 관리한다. 재임포트하지 않고
+		// 이미 커밋된 에셋을 그대로 읽는다.
+		const FString ObjectPath = SharedBackgroundObjectPath();
+		UTexture2D* Background = LoadObject<UTexture2D>(nullptr, *ObjectPath);
+		checkf(Background != nullptr,
+			TEXT("Missing selected KayKit shop background (SVN 업데이트 필요): %s"),
+			*ObjectPath);
+		return Background;
+	}
 
 	UTexture2D* Texture(const TCHAR* Path)
 	{
@@ -77,9 +116,12 @@ namespace ShopFullGeneratedWidgetBuilder
 		const FVector2D& Size, const int32 ZOrder)
 	{
 		UCanvasPanelSlot* Slot = Parent->AddChildToCanvas(Child);
-		Slot->SetAnchors(FAnchors(0.f));
 		Slot->SetAlignment(FVector2D::ZeroVector);
 		Slot->SetAutoSize(false);
+		// Screen-space adaptation belongs to ShopMasterScale. Every descendant keeps
+		// authored 1600x1000-local coordinates so positions, extents and text baselines
+		// always receive the same scale, exactly like Combat HUD's design board.
+		Slot->SetAnchors(FAnchors(0.f));
 		Slot->SetPosition(Position);
 		Slot->SetSize(Size);
 		Slot->SetZOrder(ZOrder);
@@ -151,18 +193,6 @@ namespace ShopFullGeneratedWidgetBuilder
 		return Image;
 	}
 
-	UImage* AddSolidImage(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent,
-		const FName Name, const FLinearColor& Color, const FVector2D& Position,
-		const FVector2D& Size, const int32 ZOrder)
-	{
-		UImage* Image = Blueprint->WidgetTree->ConstructWidget<UImage>(
-			UImage::StaticClass(), Name);
-		Image->SetBrush(FSlateColorBrush(Color));
-		Image->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		Place(Parent, Image, Position, Size, ZOrder);
-		return Image;
-	}
-
 	UTextBlock* AddText(UWidgetBlueprint* Blueprint, UCanvasPanel* Parent,
 		const FName Name, const FText& Value, const int32 FontSize,
 		const FVector2D& Position, const FVector2D& Size, const int32 ZOrder,
@@ -205,16 +235,36 @@ namespace ShopFullGeneratedWidgetBuilder
 		const FName HolderName, const FName ArtName, const FName TextName,
 		const FName ButtonName, UTexture2D* Art, const FText& Label,
 		const FVector2D& Position, const FVector2D& Size, const int32 ZOrder,
-		const int32 FontSize = 30)
+		const int32 FontSize = 30, const bool bNineSlice = true)
 	{
 		UCanvasPanel* Holder = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), HolderName);
 		Place(Parent, Holder, Position, Size, ZOrder);
-		AddImage(Blueprint, Holder, ArtName, Art, FVector2D::ZeroVector, Size, 0, true);
-		AddText(Blueprint, Holder, TextName, Label, FontSize,
-			FVector2D(Size.X * .09f, Size.Y * .12f),
-			FVector2D(Size.X * .82f, Size.Y * .68f), 2);
-		AddButton(Blueprint, Holder, ButtonName, FVector2D::ZeroVector, Size, 5);
+		AddImage(Blueprint, Holder, ArtName, Art, FVector2D::ZeroVector, Size, 0,
+			bNineSlice);
+		UButton* Button = AddButton(Blueprint, Holder, ButtonName,
+			FVector2D::ZeroVector, Size, 5);
+
+		// Button labels are actual button content, not a visual sibling layered above
+		// the hit target. This keeps alignment, opacity, focus, and accessibility in
+		// one widget hierarchy.
+		UOverlay* TextCenter = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+			UOverlay::StaticClass(), FName(*(TextName.ToString() + TEXT("_Center"))));
+		UButtonSlot* ContentSlot = CastChecked<UButtonSlot>(Button->AddChild(TextCenter));
+		ContentSlot->SetPadding(FMargin(0.f));
+		ContentSlot->SetHorizontalAlignment(HAlign_Fill);
+		ContentSlot->SetVerticalAlignment(VAlign_Fill);
+
+		UTextBlock* Text = Blueprint->WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(), TextName);
+		Text->SetText(Label);
+		StyleText(Text, FontSize, FLinearColor(1.f, .91f, .73f, 1.f),
+			ETextJustify::Center);
+		Text->SetMargin(FMargin(0.f));
+		UOverlaySlot* TextSlot = TextCenter->AddChildToOverlay(Text);
+		TextSlot->SetPadding(FMargin(0.f));
+		TextSlot->SetHorizontalAlignment(HAlign_Fill);
+		TextSlot->SetVerticalAlignment(VAlign_Center);
 	}
 
 	UWidgetBlueprint* EnsureBlueprint()
@@ -230,6 +280,44 @@ namespace ShopFullGeneratedWidgetBuilder
 			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
 		return Cast<UWidgetBlueprint>(AssetTools.Get().CreateAsset(
 			AssetName, PackagePath, UWidgetBlueprint::StaticClass(), Factory));
+	}
+
+	UWidgetBlueprint* EnsureOptionsRailBlueprint()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(
+			nullptr, OptionsRailAssetPath);
+		if (Blueprint == nullptr)
+		{
+			UWidgetBlueprintFactory* Factory = NewObject<UWidgetBlueprintFactory>();
+			Factory->ParentClass = URunOptionsRailWidget::StaticClass();
+			FAssetToolsModule& AssetTools =
+				FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+			Blueprint = Cast<UWidgetBlueprint>(AssetTools.Get().CreateAsset(
+				OptionsRailAssetName, OptionsRailPackagePath,
+				UWidgetBlueprint::StaticClass(), Factory));
+		}
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			return nullptr;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		if (UWidget* PreviousRoot = Blueprint->WidgetTree->RootWidget)
+		{
+			// The shared WBP deliberately has no authored tree. Its native parent builds
+			// the exact Combat HUD rail so Shop and Map cannot drift independently.
+			Blueprint->ParentClass = UUserWidget::StaticClass();
+			TSet<UWidget*> Widgets;
+			Widgets.Add(PreviousRoot);
+			FWidgetBlueprintEditorUtils::DeleteWidgets(Blueprint, MoveTemp(Widgets),
+				FWidgetBlueprintEditorUtils::EDeleteWidgetWarningType::DeleteSilently);
+		}
+		Blueprint->ParentClass = URunOptionsRailWidget::StaticClass();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+		SaveObject(Blueprint);
+		return Blueprint;
 	}
 
 	void ResetTree(UWidgetBlueprint* Blueprint)
@@ -255,30 +343,45 @@ namespace ShopFullGeneratedWidgetBuilder
 
 		// Resolve all hard dependencies before replacing the existing tree. A missing
 		// generated background therefore cannot leave the alternate WBP half rebuilt.
-		UTexture2D* ArtifactBackground = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Backgrounds/T_ShopFG_Artifact_Background.T_ShopFG_Artifact_Background"));
-		UTexture2D* SkillBackground = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Backgrounds/T_ShopFG_Skill_Background.T_ShopFG_Skill_Background"));
-		UTexture2D* RestBackground = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Backgrounds/T_ShopFG_Rest_Background.T_ShopFG_Rest_Background"));
-		UTexture2D* TitlePlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_TitlePlate.T_ShopFG_TitlePlate"));
-		UTexture2D* TabNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_Tab_Normal.T_ShopFG_Tab_Normal"));
-		UTexture2D* TabSelected = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_Tab_Selected.T_ShopFG_Tab_Selected"));
-		UTexture2D* GoldPlateArt = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_GoldPlate.T_ShopFG_GoldPlate"));
-		UTexture2D* RailCardNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_RailCard_Normal.T_ShopFG_RailCard_Normal"));
-		UTexture2D* RailCardSelected = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_RailCard_Selected.T_ShopFG_RailCard_Selected"));
-		UTexture2D* UnitSlotNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_UnitSlot_Normal.T_ShopFG_UnitSlot_Normal"));
-		UTexture2D* UnitSlotSelected = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_UnitSlot_Selected.T_ShopFG_UnitSlot_Selected"));
-		UTexture2D* SkillSlotNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_SkillSlot_Normal.T_ShopFG_SkillSlot_Normal"));
-		UTexture2D* SkillSlotSelected = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_SkillSlot_Selected.T_ShopFG_SkillSlot_Selected"));
-		UTexture2D* RestUnitPanel = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_RestUnitPanel.T_ShopFG_RestUnitPanel"));
-		UTexture2D* RestCostPlateArt = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_RestCostPlate.T_ShopFG_RestCostPlate"));
-		UTexture2D* InventoryPanel = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_InventoryPanel.T_ShopFG_InventoryPanel"));
-		UTexture2D* SelectionPointer = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Chrome/T_ShopFG_SelectionPointer.T_ShopFG_SelectionPointer"));
-		UTexture2D* ButtonBack = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Button_Back.T_ShopFG_Button_Back"));
-		UTexture2D* ButtonPrimary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Button_Primary.T_ShopFG_Button_Primary"));
-		UTexture2D* ButtonSecondary = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Button_Secondary.T_ShopFG_Button_Secondary"));
+		UTexture2D* SharedBackground = EnsureSharedBackgroundTexture();
+		UTexture2D* TitlePlate = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame"));
+		UTexture2D* TabNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Button_Wide_Normal.T_KitA_Button_Wide_Normal"));
+		UTexture2D* TabSelected = TabNormal;
+		UTexture2D* GoldPlateArt = TitlePlate;
+		UTexture2D* RailCardNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_SkillCard_Frame_Combat.T_SkillCard_Frame_Combat"));
+		UTexture2D* RailCardSelected = RailCardNormal;
+		UTexture2D* UnitSlotNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Normal.T_KitA_Cell_Normal"));
+		UTexture2D* UnitSlotSelected = UnitSlotNormal;
+		UTexture2D* SkillSlotNormal = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/T_ShopFG_SkillSlot07_Square.T_ShopFG_SkillSlot07_Square"));
+		UTexture2D* SkillSlotSelected = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/T_ShopFG_SkillSlot07_Square_Selected.T_ShopFG_SkillSlot07_Square_Selected"));
+		UTexture2D* RestUnitPanel = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/T_ShopFG_RestUnitPanel_Clean.T_ShopFG_RestUnitPanel_Clean"));
+		UTexture2D* RestCostPlateArt = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Hire/T_MB_HireNamePlate.T_MB_HireNamePlate"));
+		UTexture2D* ButtonBack = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/HUD04/T_Combat_Button_Wood_SkillConfirm_20260811_v3.T_Combat_Button_Wood_SkillConfirm_20260811_v3"));
+		UTexture2D* ButtonPrimary = ButtonBack;
 		UTexture2D* ArrowLeft = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Arrow_Left.T_ShopFG_Arrow_Left"));
 		UTexture2D* ArrowRight = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Arrow_Right.T_ShopFG_Arrow_Right"));
 		UTexture2D* MeterTrack = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Meters/T_ShopFG_MeterTrack.T_ShopFG_MeterTrack"));
 		UTexture2D* MeterFill = Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Meters/T_ShopFG_MeterFill.T_ShopFG_MeterFill"));
+		UWidgetBlueprint* OptionsRailBlueprint = EnsureOptionsRailBlueprint();
+		UClass* OptionsRailWidgetClass = OptionsRailBlueprint != nullptr
+			? OptionsRailBlueprint->GeneratedClass : nullptr;
+		if (OptionsRailWidgetClass == nullptr
+			|| !OptionsRailWidgetClass->IsChildOf(URunOptionsRailWidget::StaticClass()))
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_SHOP_FULL_GENERATED_BUILD could not resolve embedded %s"),
+				OptionsRailAssetPath);
+			return;
+		}
+		UClass* MercenaryHireWidgetClass = LoadClass<UMercenaryHireWidget>(nullptr,
+			TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound."
+				"WBP_MercenaryHire_Marchbound_C"));
+		if (MercenaryHireWidgetClass == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_SHOP_FULL_GENERATED_BUILD could not resolve mercenary hire WBP"));
+			return;
+		}
 
 		UWidgetBlueprint* Blueprint = EnsureBlueprint();
 		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
@@ -298,11 +401,41 @@ namespace ShopFullGeneratedWidgetBuilder
 		Letterbox->SetPadding(FMargin(0.f));
 		FillOverlay(Root, Letterbox);
 
+		// The scene is allowed to crop independently so it always covers the viewport.
+		UScaleBox* BackgroundScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
+			UScaleBox::StaticClass(), TEXT("ShopBackgroundScale"));
+		BackgroundScale->SetStretch(EStretch::ScaleToFill);
+		BackgroundScale->SetStretchDirection(EStretchDirection::Both);
+		BackgroundScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		BackgroundScale->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		FillOverlay(Root, BackgroundScale);
+
+		UImage* BackgroundArt = Blueprint->WidgetTree->ConstructWidget<UImage>(
+			UImage::StaticClass(), TEXT("ShopBackgroundArt"));
+		BackgroundArt->SetBrush(TextureBrush(SharedBackground));
+		BackgroundArt->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		BackgroundScale->AddChild(BackgroundArt);
+
+		// 용병 고용은 검증된 기존 선택 WBP 전체를 재사용한다. 상점 MasterScale보다
+		// 먼저 쌓아 용병 배경/후보/상세는 보이되, MasterScale의 상단 탭·설정바는
+		// 항상 그 위에 남도록 한다. 런타임은 용병 모드가 아닐 때 이 겹을 접는다.
+		UMercenaryHireWidget* EmbeddedMercenaryHire =
+			Blueprint->WidgetTree->ConstructWidget<UMercenaryHireWidget>(
+				MercenaryHireWidgetClass, TEXT("mMercenaryHireWidget"));
+		EmbeddedMercenaryHire->SetVisibility(ESlateVisibility::Collapsed);
+		FillOverlay(Root, EmbeddedMercenaryHire);
+
+		// Combat HUD pattern: scale one fixed design board as a unit. The former
+		// per-widget normalized anchors moved positions without scaling sizes, which
+		// broke card text and rest meters on tall Fold viewports.
 		UScaleBox* MasterScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
 			UScaleBox::StaticClass(), TEXT("ShopMasterScale"));
 		MasterScale->SetStretch(EStretch::ScaleToFit);
 		MasterScale->SetStretchDirection(EStretchDirection::Both);
 		MasterScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		// The master layer owns the interactive shop chrome, but its empty canvas
+		// must not swallow input meant for the embedded mercenary picker below it.
+		MasterScale->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		FillOverlay(Root, MasterScale);
 
 		USizeBox* DesignSize = Blueprint->WidgetTree->ConstructWidget<USizeBox>(
@@ -313,121 +446,144 @@ namespace ShopFullGeneratedWidgetBuilder
 
 		UCanvasPanel* Screen = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("ShopDesignCanvas"));
-		DesignSize->SetContent(Screen);
+		DesignSize->AddChild(Screen);
+
+		// The fixed design board is split into three non-overlapping local regions.
+		// Mode-specific content is parented to the region that owns its semantics,
+		// so later layout edits cannot make headers, cards and actions drift together.
+		UCanvasPanel* TopZone = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("TopZone"));
+		Place(Screen, TopZone, FVector2D::ZeroVector,
+			FVector2D(DesignWidth, TopZoneHeight), 1);
+		UCanvasPanel* CenterZone = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("CenterZone"));
+		Place(Screen, CenterZone, FVector2D(0.f, TopZoneHeight),
+			FVector2D(DesignWidth, CenterZoneHeight), 1);
+		UCanvasPanel* BottomZone = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("BottomZone"));
+		Place(Screen, BottomZone,
+			FVector2D(0.f, TopZoneHeight + CenterZoneHeight),
+			FVector2D(DesignWidth, BottomZoneHeight), 1);
 
 		// Each mode owns its scene art and mode-only content. Runtime switches these
-		// panels while the five-slot horizontal rail stays stable above both.
+		// center panels while the shared item carousel stays in CenterZone.
 		UCanvasPanel* ArtifactPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("mArtifactShopPanel"));
-		Anchor(Screen, ArtifactPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
-		AddImage(Blueprint, ArtifactPanel, TEXT("ArtifactShopBackground"), ArtifactBackground,
-			FVector2D::ZeroVector, FVector2D(DesignWidth, DesignHeight), 0);
+		Anchor(CenterZone, ArtifactPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
 
 		UCanvasPanel* SkillPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("mSkillShopPanel"));
-		Anchor(Screen, SkillPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
-		AddImage(Blueprint, SkillPanel, TEXT("SkillShopBackground"), SkillBackground,
-			FVector2D::ZeroVector, FVector2D(DesignWidth, DesignHeight), 0);
+		Anchor(CenterZone, SkillPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
 		SkillPanel->SetVisibility(ESlateVisibility::Collapsed);
 
 		UCanvasPanel* RestPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 			UCanvasPanel::StaticClass(), TEXT("mRestShopPanel"));
-		Anchor(Screen, RestPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
-		AddImage(Blueprint, RestPanel, TEXT("RestShopBackground"), RestBackground,
-			FVector2D::ZeroVector, FVector2D(DesignWidth, DesignHeight), 0);
+		Anchor(CenterZone, RestPanel, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 0);
 		RestPanel->SetVisibility(ESlateVisibility::Collapsed);
 
-		// Lower contrast under the interactive rail keeps item silhouettes readable
-		// without baking any text or icons into the generated scene backgrounds.
-		// Each mode owns its scrim so its own skill-slot controls can paint above it.
-		auto AddRailScrim = [Blueprint](UCanvasPanel* ModePanel, const FName Name)
-		{
-			UBorder* RailScrim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
-				UBorder::StaticClass(), Name);
-			RailScrim->SetBrushColor(FLinearColor(.008f, .018f, .03f, .74f));
-			RailScrim->SetPadding(FMargin(0.f));
-			RailScrim->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(ModePanel, RailScrim, FVector2D(0.f, 438.f),
-				FVector2D(1600.f, 562.f), 5);
-		};
-		AddRailScrim(ArtifactPanel, TEXT("ArtifactRailScrim"));
-		AddRailScrim(SkillPanel, TEXT("SkillRailScrim"));
+		UCanvasPanel* ItemCarouselPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("ItemCarouselPanel"));
+		Anchor(CenterZone, ItemCarouselPanel, FAnchors(0.f, 0.f, 1.f, 1.f),
+			FMargin(0.f), 5);
 
-		UBorder* RestScrim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
-			UBorder::StaticClass(), TEXT("RestContentScrim"));
-		RestScrim->SetBrushColor(FLinearColor(.008f, .018f, .03f, .72f));
-		RestScrim->SetPadding(FMargin(0.f));
-		RestScrim->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-		Place(RestPanel, RestScrim, FVector2D(125.f, 112.f),
-			FVector2D(1350.f, 750.f), 3);
+		UCanvasPanel* SkillTopContextPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SkillTopContextPanel"));
+		Anchor(TopZone, SkillTopContextPanel, FAnchors(0.f, 0.f, 1.f, 1.f),
+			FMargin(0.f), 20);
+		SkillTopContextPanel->SetVisibility(ESlateVisibility::Collapsed);
+
+		UCanvasPanel* SkillBottomContextPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("SkillBottomContextPanel"));
+		Anchor(BottomZone, SkillBottomContextPanel, FAnchors(0.f, 0.f, 1.f, 1.f),
+			FMargin(0.f), 5);
+		SkillBottomContextPanel->SetVisibility(ESlateVisibility::Collapsed);
+
+		UCanvasPanel* RestBottomContextPanel = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+			UCanvasPanel::StaticClass(), TEXT("RestBottomContextPanel"));
+		Anchor(BottomZone, RestBottomContextPanel, FAnchors(0.f, 0.f, 1.f, 1.f),
+			FMargin(0.f), 5);
+		RestBottomContextPanel->SetVisibility(ESlateVisibility::Collapsed);
+
+		// Mode-wide black rail/rest scrims were removed. The authored shared
+		// background now remains visible behind every functional control.
 
 		// Header and category selectors.
-		AddImage(Blueprint, Screen, TEXT("ShopTitlePlate"), TitlePlate,
-			FVector2D(20.f, 14.f), FVector2D(356.f, 88.f), 10, true);
-		AddText(Blueprint, Screen, TEXT("mTitleText"),
-			NSLOCTEXT("ShopHorizontalRail", "Title", "상점"), 38,
-			FVector2D(52.f, 27.f), FVector2D(292.f, 54.f), 12);
+		AddImage(Blueprint, TopZone, TEXT("ShopTitlePlate"), TitlePlate,
+			FVector2D(24.f, 9.5f), FVector2D(280.f, 87.243f), 10);
+		AddText(Blueprint, TopZone, TEXT("mTitleText"),
+			NSLOCTEXT("ShopHorizontalRail", "Title", "상점"), 34,
+			FVector2D(52.f, 20.f), FVector2D(224.f, 58.f), 12);
 
-		AddLabeledButton(Blueprint, Screen, TEXT("ArtifactTabHolder"),
+		AddLabeledButton(Blueprint, TopZone, TEXT("ArtifactTabHolder"),
 			TEXT("ArtifactTabPlate"), TEXT("mArtifactTabText"), TEXT("mArtifactTabButton"),
 			TabSelected, NSLOCTEXT("ShopHorizontalRail", "Artifact", "아티팩트"),
-			FVector2D(402.f, 21.f), FVector2D(242.f, 69.f), 12, 27);
-		AddLabeledButton(Blueprint, Screen, TEXT("SkillTabHolder"),
+			FVector2D(330.f, 28.f), FVector2D(190.f, 49.372f), 12, 20, false);
+		AddLabeledButton(Blueprint, TopZone, TEXT("SkillTabHolder"),
 			TEXT("SkillTabPlate"), TEXT("mSkillTabText"), TEXT("mSkillTabButton"),
 			TabNormal, NSLOCTEXT("ShopHorizontalRail", "Skill", "스킬"),
-			FVector2D(650.f, 21.f), FVector2D(242.f, 69.f), 12, 27);
-		AddLabeledButton(Blueprint, Screen, TEXT("RestTabHolder"),
+			FVector2D(540.f, 28.f), FVector2D(190.f, 49.372f), 12, 20, false);
+		AddLabeledButton(Blueprint, TopZone, TEXT("RestTabHolder"),
 			TEXT("RestTabPlate"), TEXT("mRestTabText"), TEXT("mRestTabButton"),
 			TabNormal, NSLOCTEXT("ShopHorizontalRail", "Rest", "휴식"),
-			FVector2D(898.f, 21.f), FVector2D(242.f, 69.f), 12, 27);
+			FVector2D(750.f, 28.f), FVector2D(190.f, 49.372f), 12, 20, false);
+		AddLabeledButton(Blueprint, TopZone, TEXT("MercenaryTabHolder"),
+			TEXT("MercenaryTabPlate"), TEXT("mMercenaryTabText"), TEXT("mMercenaryTabButton"),
+			TabNormal, NSLOCTEXT("ShopHorizontalRail", "Mercenary", "용병 고용"),
+			FVector2D(960.f, 28.f), FVector2D(190.f, 49.372f), 12, 19, false);
 
-		AddImage(Blueprint, Screen, TEXT("GoldPlate"), GoldPlateArt,
-			FVector2D(1290.f, 24.f), FVector2D(286.f, 64.f), 10, true);
-		AddText(Blueprint, Screen, TEXT("mGoldText"), FText::FromString(TEXT("0 G")), 26,
-			FVector2D(1314.f, 28.f), FVector2D(238.f, 48.f), 12);
-		AddLabeledButton(Blueprint, ArtifactPanel, TEXT("InventoryHolder"),
-			TEXT("InventoryPlate"), TEXT("mInventoryButtonText"), TEXT("mInventoryButton"),
-			ButtonSecondary, NSLOCTEXT("ShopHorizontalRail", "Inventory", "인벤토리"),
-			FVector2D(1148.f, 24.f), FVector2D(136.f, 64.f), 42, 18);
+		// The shared Combat options rail owns the upper-right corner. Keep party gold
+		// directly below it so neither control steals the other's hit area.
+		URunOptionsRailWidget* EmbeddedOptionsRail =
+			Blueprint->WidgetTree->ConstructWidget<URunOptionsRailWidget>(
+				OptionsRailWidgetClass, TEXT("mRunOptionsRailWidget"));
+		Place(TopZone, EmbeddedOptionsRail, FVector2D(1198.f, 0.f),
+			FVector2D(378.f, 136.f), 30);
+
+		AddImage(Blueprint, TopZone, TEXT("GoldPlate"), GoldPlateArt,
+			FVector2D(1296.f, 120.f), FVector2D(280.f, 87.243f), 10);
+		AddText(Blueprint, TopZone, TEXT("mGoldText"), FText::FromString(TEXT("0 G")), 26,
+			FVector2D(1296.f, 120.f), FVector2D(280.f, 87.243f), 12);
 
 		// Existing contract boxes remain real widgets with their exact legacy types.
 		// The horizontal-rail runtime uses the fixed controls below; these boxes stay
 		// collapsed as a compatibility sink for older data-population code.
 		UHorizontalBox* ItemBox = Blueprint->WidgetTree->ConstructWidget<UHorizontalBox>(
 			UHorizontalBox::StaticClass(), TEXT("mItemBox"));
-		Place(Screen, ItemBox, FVector2D(100.f, 130.f), FVector2D(1400.f, 260.f), 7);
+		Place(ItemCarouselPanel, ItemBox, FVector2D(100.f, 0.f), FVector2D(1400.f, 260.f), 7);
 		ItemBox->SetVisibility(ESlateVisibility::Collapsed);
 
 		UWrapBox* ArtifactItemBox = Blueprint->WidgetTree->ConstructWidget<UWrapBox>(
 			UWrapBox::StaticClass(), TEXT("mArtifactItemBox"));
-		Place(ArtifactPanel, ArtifactItemBox, FVector2D(100.f, 130.f),
+		Place(ArtifactPanel, ArtifactItemBox, FVector2D(100.f, 0.f),
 			FVector2D(1400.f, 260.f), 4);
 		ArtifactItemBox->SetVisibility(ESlateVisibility::Collapsed);
 
 		UWrapBox* SkillItemBox = Blueprint->WidgetTree->ConstructWidget<UWrapBox>(
 			UWrapBox::StaticClass(), TEXT("mSkillItemBox"));
-		Place(SkillPanel, SkillItemBox, FVector2D(100.f, 130.f),
+		Place(SkillPanel, SkillItemBox, FVector2D(100.f, 0.f),
 			FVector2D(1400.f, 260.f), 4);
 		SkillItemBox->SetVisibility(ESlateVisibility::Collapsed);
 
 		UWrapBox* OwnedUnitBox = Blueprint->WidgetTree->ConstructWidget<UWrapBox>(
 			UWrapBox::StaticClass(), TEXT("mOwnedUnitBox"));
-		Place(SkillPanel, OwnedUnitBox, FVector2D(1030.f, 108.f),
+		Place(SkillPanel, OwnedUnitBox, FVector2D(1030.f, 0.f),
 			FVector2D(530.f, 110.f), 4);
 		OwnedUnitBox->SetVisibility(ESlateVisibility::Collapsed);
 
 		// Skill target rail: select a party member before replacing one of four slots.
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
-			const FVector2D Position(610.f + Index * 126.f, 108.f);
-			const FVector2D Extent(112.f, 112.f);
-			AddImage(Blueprint, SkillPanel,
+			const FVector2D Position(604.f + Index * 138.f, 94.f);
+			const FVector2D Extent(120.f, 110.f);
+			AddImage(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("UnitSelectPlate_%d"), Index)),
-				Index == 0 ? UnitSlotSelected : UnitSlotNormal, Position, Extent, 8, true);
-			AddImage(Blueprint, SkillPanel,
+				Index == 0 ? UnitSlotSelected : UnitSlotNormal, Position, Extent, 8,
+				false, Index == 0 ? FLinearColor::White
+					: FLinearColor(.58f, .62f, .66f, .82f));
+			AddImage(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("mUnitSelectIcon_%d"), Index)), nullptr,
-				Position + FVector2D(13.f), Extent - FVector2D(26.f), 10);
-			AddButton(Blueprint, SkillPanel,
+				Position + FVector2D(16.f, 12.774f), FVector2D(88.f), 10);
+			AddButton(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("mUnitSelectButton_%d"), Index)),
 				Position, Extent, 12);
 		}
@@ -439,247 +595,232 @@ namespace ShopFullGeneratedWidgetBuilder
 		const int32 RestAPBefore[3] = { 6, 3, 8 };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
-			const float RowY = 142.f + Index * 196.f;
+			const float RowY = 8.f + Index * 190.f;
 			UCanvasPanel* RowHolder = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 				UCanvasPanel::StaticClass(),
 				FName(*FString::Printf(TEXT("RestUnitRowHolder_%d"), Index)));
 			RowHolder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			Place(RestPanel, RowHolder, FVector2D::ZeroVector,
-				FVector2D(DesignWidth, DesignHeight), 5);
+			Place(RestPanel, RowHolder, FVector2D(190.f, RowY),
+				FVector2D(1220.f, 183.f), 5);
 
 			AddImage(Blueprint, RowHolder,
 				FName(*FString::Printf(TEXT("RestUnitPlate_%d"), Index)), RestUnitPanel,
-				FVector2D(180.f, RowY), FVector2D(1240.f, 176.f), 6, true,
+				FVector2D::ZeroVector, FVector2D(1220.f, 183.f), 6, false,
 				FLinearColor(.54f, .66f, .78f, 1.f));
-			AddImage(Blueprint, RowHolder,
+
+			// Keep the panel chrome independent from its data. The content canvas is the
+			// tight 938x153 authored bounding box of name, portrait and HP/AP ledger,
+			// centered inside the 1220x183 row. This prevents the former left/top bias
+			// and keeps the complete unit block centered when the master ScaleBox adapts.
+			UCanvasPanel* ContentHolder = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
+				UCanvasPanel::StaticClass(),
+				FName(*FString::Printf(TEXT("RestUnitContent_%d"), Index)));
+			ContentHolder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			Place(RowHolder, ContentHolder, FVector2D(141.f, 15.f),
+				FVector2D(938.f, 153.f), 7);
+
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitIcon_%d"), Index)), nullptr,
-				FVector2D(210.f, RowY + 15.f), FVector2D(146.f, 146.f), 8);
-			AddText(Blueprint, RowHolder,
+				FVector2D(26.f, 33.f), FVector2D(120.f, 120.f), 8);
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitNameText_%d"), Index)),
 				FText::Format(NSLOCTEXT("ShopHorizontalRail", "RestUnitLevel", "용병 {0}"),
 					FText::AsNumber(Index + 1)), 22,
-				FVector2D(372.f, RowY + 12.f), FVector2D(134.f, 38.f), 9,
+				FVector2D(0.f, 0.f), FVector2D(172.f, 32.f), 9,
 				FLinearColor(.95f, .88f, .7f, 1.f));
 
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPLabel_%d"), Index)), FText::FromString(TEXT("HP")), 20,
-				FVector2D(382.f, RowY + 57.f), FVector2D(58.f, 40.f), 9,
+				FVector2D(190.f, 50.f), FVector2D(56.f, 40.f), 9,
 				FLinearColor(1.f, .54f, .52f, 1.f));
-			AddImage(Blueprint, RowHolder,
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPBeforeTrack_%d"), Index)),
-				MeterTrack, FVector2D(450.f, RowY + 64.f), FVector2D(310.f, 24.f), 8, true);
-			AddImage(Blueprint, RowHolder,
+				MeterTrack, FVector2D(258.f, 57.f), FVector2D(300.f, 28.125f), 8, true);
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPBeforeFill_%d"), Index)),
-				MeterFill, FVector2D(454.f, RowY + 68.f), FVector2D(302.f, 16.f), 9,
+				MeterFill, FVector2D(262.f, 57.375f), FVector2D(292.f, 27.375f), 9,
 				true, FLinearColor(.86f, .24f, .25f, 1.f));
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPBeforeText_%d"), Index)),
 				FText::FromString(FString::Printf(TEXT("%d/100"), RestHPBefore[Index])), 17,
-				FVector2D(450.f, RowY + 56.f), FVector2D(310.f, 40.f), 10,
+				FVector2D(258.f, 49.f), FVector2D(300.f, 40.f), 10,
 				FLinearColor::White);
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPArrow_%d"), Index)), FText::FromString(TEXT("→")), 28,
-				FVector2D(772.f, RowY + 55.f), FVector2D(62.f, 42.f), 10,
+				FVector2D(568.f, 48.f), FVector2D(60.f, 42.f), 10,
 				FLinearColor(.85f, .88f, .9f, 1.f));
-			AddImage(Blueprint, RowHolder,
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPAfterTrack_%d"), Index)),
-				MeterTrack, FVector2D(846.f, RowY + 64.f), FVector2D(420.f, 24.f), 8, true);
-			AddImage(Blueprint, RowHolder,
+				MeterTrack, FVector2D(638.f, 57.f), FVector2D(300.f, 28.125f), 8, true);
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPAfterFill_%d"), Index)),
-				MeterFill, FVector2D(850.f, RowY + 68.f), FVector2D(412.f, 16.f), 9,
+				MeterFill, FVector2D(642.f, 57.375f), FVector2D(292.f, 27.375f), 9,
 				true, FLinearColor(.86f, .24f, .25f, 1.f));
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitHPAfterText_%d"), Index)), FText::FromString(TEXT("100/100")), 17,
-				FVector2D(846.f, RowY + 56.f), FVector2D(420.f, 40.f), 10,
+				FVector2D(638.f, 49.f), FVector2D(300.f, 40.f), 10,
 				FLinearColor::White);
 
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPLabel_%d"), Index)), FText::FromString(TEXT("AP")), 20,
-				FVector2D(382.f, RowY + 108.f), FVector2D(58.f, 40.f), 9,
+				FVector2D(190.f, 101.f), FVector2D(56.f, 40.f), 9,
 				FLinearColor(.38f, .72f, 1.f, 1.f));
-			AddImage(Blueprint, RowHolder,
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPBeforeTrack_%d"), Index)),
-				MeterTrack, FVector2D(450.f, RowY + 115.f), FVector2D(310.f, 24.f), 8, true);
-			AddImage(Blueprint, RowHolder,
+				MeterTrack, FVector2D(258.f, 108.f), FVector2D(300.f, 28.125f), 8, true);
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPBeforeFill_%d"), Index)),
-				MeterFill, FVector2D(454.f, RowY + 119.f), FVector2D(302.f, 16.f), 9,
+				MeterFill, FVector2D(262.f, 108.375f), FVector2D(292.f, 27.375f), 9,
 				true, FLinearColor(.16f, .56f, 1.f, 1.f));
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPBeforeText_%d"), Index)),
 				FText::FromString(FString::Printf(TEXT("%d/12"), RestAPBefore[Index])), 17,
-				FVector2D(450.f, RowY + 107.f), FVector2D(310.f, 40.f), 10,
+				FVector2D(258.f, 100.f), FVector2D(300.f, 40.f), 10,
 				FLinearColor::White);
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPArrow_%d"), Index)), FText::FromString(TEXT("→")), 28,
-				FVector2D(772.f, RowY + 106.f), FVector2D(62.f, 42.f), 10,
+				FVector2D(568.f, 99.f), FVector2D(60.f, 42.f), 10,
 				FLinearColor(.85f, .88f, .9f, 1.f));
-			AddImage(Blueprint, RowHolder,
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPAfterTrack_%d"), Index)),
-				MeterTrack, FVector2D(846.f, RowY + 115.f), FVector2D(420.f, 24.f), 8, true);
-			AddImage(Blueprint, RowHolder,
+				MeterTrack, FVector2D(638.f, 108.f), FVector2D(300.f, 28.125f), 8, true);
+			AddImage(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPAfterFill_%d"), Index)),
-				MeterFill, FVector2D(850.f, RowY + 119.f), FVector2D(412.f, 16.f), 9,
+				MeterFill, FVector2D(642.f, 108.375f), FVector2D(292.f, 27.375f), 9,
 				true, FLinearColor(.16f, .56f, 1.f, 1.f));
-			AddText(Blueprint, RowHolder,
+			AddText(Blueprint, ContentHolder,
 				FName(*FString::Printf(TEXT("RestUnitAPAfterText_%d"), Index)), FText::FromString(TEXT("12/12")), 17,
-				FVector2D(846.f, RowY + 107.f), FVector2D(420.f, 40.f), 10,
+				FVector2D(638.f, 100.f), FVector2D(300.f, 40.f), 10,
 				FLinearColor::White);
 		}
 
-		AddImage(Blueprint, RestPanel, TEXT("RestCostPlate"), RestCostPlateArt,
-			FVector2D(616.f, 742.f), FVector2D(368.f, 82.f), 12, true);
-		AddText(Blueprint, RestPanel, TEXT("RestCostLabel"),
+		AddImage(Blueprint, RestBottomContextPanel, TEXT("RestCostPlate"), RestCostPlateArt,
+			FVector2D(570.f, 20.f), FVector2D(460.f, 106.953f), 12, false);
+		AddText(Blueprint, RestBottomContextPanel, TEXT("RestCostLabel"),
 			NSLOCTEXT("ShopHorizontalRail", "RestCost", "비용"), 21,
-			FVector2D(646.f, 759.f), FVector2D(90.f, 46.f), 14);
-		AddText(Blueprint, RestPanel, TEXT("RestCostText"), FText::FromString(TEXT("100 G")), 24,
-			FVector2D(752.f, 757.f), FVector2D(202.f, 48.f), 14,
-			FLinearColor(1.f, .82f, .35f, 1.f));
-		AddLabeledButton(Blueprint, RestPanel, TEXT("RestButtonHolder"),
+			FVector2D(640.f, 48.f), FVector2D(120.f, 50.f), 14,
+			FLinearColor::White);
+		AddText(Blueprint, RestBottomContextPanel, TEXT("RestCostText"), FText::FromString(TEXT("100 G")), 24,
+			FVector2D(760.f, 48.f), FVector2D(200.f, 50.f), 14,
+			FLinearColor(.20f, .09f, .025f, 1.f));
+		AddLabeledButton(Blueprint, RestBottomContextPanel, TEXT("RestButtonHolder"),
 			TEXT("RestButtonPlate"), TEXT("mRestButtonText"), TEXT("mRestButton"),
 			ButtonPrimary, NSLOCTEXT("ShopHorizontalRail", "RestCTA", "휴식하기"),
-			FVector2D(1280.f, 890.f), FVector2D(292.f, 96.f), 40, 30);
+			FVector2D(1268.f, 48.f), FVector2D(304.f, 137.96f), 40, 30, false);
 
 		// Shared five-item horizontal rail. Slot 2 is the expanded selection; runtime
 		// updates every icon/price and collapses unavailable slots.
 		const FVector2D RailPositions[5] = {
-			FVector2D(80.f, 520.f), FVector2D(310.f, 485.f),
-			FVector2D(640.f, 365.f), FVector2D(1080.f, 485.f),
-			FVector2D(1340.f, 520.f)
+			FVector2D(80.f, 240.f), FVector2D(300.f, 190.f),
+			FVector2D(540.f, 25.f), FVector2D(1030.f, 190.f),
+			FVector2D(1290.f, 240.f)
 		};
 		const FVector2D RailSizes[5] = {
-			FVector2D(180.f, 225.f), FVector2D(210.f, 263.f),
-			FVector2D(320.f, 400.f), FVector2D(210.f, 263.f),
-			FVector2D(180.f, 225.f)
+			FVector2D(230.f, 244.174f), FVector2D(270.f, 286.64f),
+			FVector2D(520.f, 552.047f), FVector2D(270.f, 286.64f),
+			FVector2D(230.f, 244.174f)
 		};
 		for (int32 Index = 0; Index < 5; ++Index)
 		{
 			const FVector2D Position = RailPositions[Index];
 			const FVector2D Size = RailSizes[Index];
-			AddImage(Blueprint, Screen,
+			const int32 CarouselDepth = 2 - FMath::Abs(Index - 2);
+			AddImage(Blueprint, ItemCarouselPanel,
 				FName(*FString::Printf(TEXT("ShopRailPlate_%d"), Index)),
-				Index == 2 ? RailCardSelected : RailCardNormal, Position, Size, 20, true);
+				Index == 2 ? RailCardSelected : RailCardNormal, Position, Size,
+				20 + CarouselDepth,
+				false, Index == 2 ? FLinearColor::White
+					: FLinearColor(.58f, .62f, .66f, .86f));
 
-			const float IconExtent = Index == 2 ? 164.f : (Index == 0 || Index == 4 ? 102.f : 124.f);
+			const bool bOuterSlot = Index == 0 || Index == 4;
+			const float IconExtent = Index == 2 ? 205.f : (bOuterSlot ? 116.f : 145.f);
 			const FVector2D IconPosition(
 				Position.X + (Size.X - IconExtent) * .5f,
-				Position.Y + (Index == 2 ? 34.f : 28.f));
-			UImage* Icon = AddImage(Blueprint, Screen,
+				Position.Y + (Index == 2 ? 62.f : 42.f));
+			UImage* Icon = AddImage(Blueprint, ItemCarouselPanel,
 				FName(*FString::Printf(TEXT("ShopRailIcon_%d"), Index)), nullptr,
-				IconPosition, FVector2D(IconExtent), 22);
+				IconPosition, FVector2D(IconExtent), 22 + CarouselDepth);
 			if (Index == 2)
 			{
 				Icon->SetVisibility(ESlateVisibility::Collapsed);
 			}
 
-			UTextBlock* Price = AddText(Blueprint, Screen,
+			const float PriceBottomInset = bOuterSlot ? 84.f : 92.f;
+			UTextBlock* Price = AddText(Blueprint, ItemCarouselPanel,
 				FName(*FString::Printf(TEXT("ShopRailPriceText_%d"), Index)),
 				FText::Format(NSLOCTEXT("ShopHorizontalRail", "PreviewPrice", "{0} G"),
 					FText::AsNumber(60 + Index * 10)), 22,
-				FVector2D(Position.X + 18.f, Position.Y + Size.Y - 62.f),
-				FVector2D(Size.X - 36.f, 42.f), 24,
+				FVector2D(Position.X + 20.f,
+					Position.Y + Size.Y - PriceBottomInset),
+				FVector2D(Size.X - 40.f, 42.f), 24 + CarouselDepth,
 				FLinearColor(1.f, .82f, .35f, 1.f));
 			if (Index == 2)
 			{
 				Price->SetVisibility(ESlateVisibility::Collapsed);
 			}
-			AddButton(Blueprint, Screen,
+			AddButton(Blueprint, ItemCarouselPanel,
 				FName(*FString::Printf(TEXT("ShopRailButton_%d"), Index)),
-				Position, Size, 29);
+				Position, Size, 29 + CarouselDepth);
 		}
 
-		AddImage(Blueprint, SkillPanel, TEXT("ShopSelectionPointer"), SelectionPointer,
-			FVector2D(545.f, 650.f), FVector2D(96.f, 144.f), 26);
-
-		AddImage(Blueprint, Screen, TEXT("mSelectedItemIcon"), nullptr,
-			FVector2D(718.f, 405.f), FVector2D(164.f, 164.f), 23);
-		AddText(Blueprint, Screen, TEXT("mSelectedItemNameText"),
+		AddImage(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemIcon"), nullptr,
+			FVector2D(697.5f, 121.f), FVector2D(205.f, 205.f), 25);
+		AddText(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemNameText"),
 			NSLOCTEXT("ShopHorizontalRail", "PreviewName", "피의 성배"), 29,
-			FVector2D(660.f, 570.f), FVector2D(280.f, 42.f), 25);
-		UTextBlock* Description = AddText(Blueprint, Screen,
+			FVector2D(610.f, 343.f), FVector2D(380.f, 52.f), 27);
+		UTextBlock* Description = AddText(Blueprint, ItemCarouselPanel,
 			TEXT("mSelectedItemDescriptionText"),
-			NSLOCTEXT("ShopHorizontalRail", "PreviewDescription", "처치 시 체력 5 회복"), 19,
-			FVector2D(668.f, 614.f), FVector2D(264.f, 58.f), 25,
+			FText::GetEmpty(), 19,
+			FVector2D(650.f, 371.f), FVector2D(300.f, 76.f), 27,
 			FLinearColor(.89f, .92f, .94f, 1.f));
 		Description->SetAutoWrapText(true);
-		AddText(Blueprint, Screen, TEXT("mSelectedItemPriceText"),
+		Description->SetVisibility(ESlateVisibility::Collapsed);
+		AddText(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemPriceText"),
 			NSLOCTEXT("ShopHorizontalRail", "SelectedPrice", "75 G"), 24,
-			FVector2D(688.f, 696.f), FVector2D(224.f, 44.f), 25,
+			FVector2D(650.f, 408.f), FVector2D(300.f, 52.f), 27,
 			FLinearColor(1.f, .82f, .35f, 1.f));
 
-		AddLabeledButton(Blueprint, Screen, TEXT("PreviousHolder"),
+		AddLabeledButton(Blueprint, ItemCarouselPanel, TEXT("PreviousHolder"),
 			TEXT("PreviousPlate"), TEXT("PreviousLabel"), TEXT("mPreviousButton"),
 			ArrowLeft, FText::GetEmpty(),
-			FVector2D(14.f, 570.f), FVector2D(58.f, 98.f), 30, 34);
-		AddLabeledButton(Blueprint, Screen, TEXT("NextHolder"),
+			FVector2D(14.f, 300.f), FVector2D(84.f, 126.f), 30, 34, false);
+		AddLabeledButton(Blueprint, ItemCarouselPanel, TEXT("NextHolder"),
 			TEXT("NextPlate"), TEXT("NextLabel"), TEXT("mNextButton"),
 			ArrowRight, FText::GetEmpty(),
-			FVector2D(1528.f, 570.f), FVector2D(58.f, 98.f), 30, 34);
+			FVector2D(1502.f, 300.f), FVector2D(84.f, 126.f), 30, 34, false);
 
 		// Skill replacement slots live in the skill panel and collapse with it.
 		for (int32 Index = 0; Index < 4; ++Index)
 		{
-			const FVector2D Position(530.f + Index * 142.f, 790.f);
-			const FVector2D Extent(126.f, 86.f);
-			AddImage(Blueprint, SkillPanel,
+			const FVector2D Position(522.f + Index * 144.f, 8.f);
+			const FVector2D Extent(128.f, 128.f);
+			AddImage(Blueprint, SkillBottomContextPanel,
 				FName(*FString::Printf(TEXT("SkillSlotPlate_%d"), Index)),
-				Index == 2 ? SkillSlotSelected : SkillSlotNormal, Position, Extent, 35, true);
-			AddImage(Blueprint, SkillPanel,
+				Index == 2 ? SkillSlotSelected : SkillSlotNormal, Position, Extent, 35, false);
+			AddImage(Blueprint, SkillBottomContextPanel,
 				FName(*FString::Printf(TEXT("mSkillSlotIcon_%d"), Index)), nullptr,
-				Position + FVector2D(26.f, 6.f), FVector2D(74.f), 37);
-			AddButton(Blueprint, SkillPanel,
+				Position + FVector2D(27.f), FVector2D(74.f), 37);
+			AddButton(Blueprint, SkillBottomContextPanel,
 				FName(*FString::Printf(TEXT("mSkillSlotButton_%d"), Index)),
 				Position, Extent, 39);
 		}
 
 		// Footer chrome stays clear of the rail at every supported aspect ratio.
-		AddLabeledButton(Blueprint, Screen, TEXT("CloseHolder"), TEXT("ClosePlate"),
+		AddLabeledButton(Blueprint, BottomZone, TEXT("CloseHolder"), TEXT("ClosePlate"),
 			TEXT("mCloseButtonText"), TEXT("mCloseButton"), ButtonBack,
-			NSLOCTEXT("ShopHorizontalRail", "Back", "뒤로"),
-			FVector2D(28.f, 890.f), FVector2D(286.f, 96.f), 40, 30);
-		AddLabeledButton(Blueprint, Screen, TEXT("BuyHolder"), TEXT("ButtonPrimary"),
+			NSLOCTEXT("ShopHorizontalRail", "Leave", "나가기"),
+			FVector2D(28.f, 48.f), FVector2D(304.f, 137.96f), 40, 30, false);
+		AddLabeledButton(Blueprint, BottomZone, TEXT("BuyHolder"), TEXT("ButtonPrimary"),
 			TEXT("mBuyButtonText"), TEXT("mBuyButton"), ButtonPrimary,
 			NSLOCTEXT("ShopHorizontalRail", "Buy", "구매"),
-			FVector2D(1280.f, 890.f), FVector2D(292.f, 96.f), 40, 30);
-
-		// Artifact inventory is a shop-local, read-only overlay. It intentionally
-		// reuses the existing owned-artifact DTO/WrapBox contract and has no discard
-		// affordance. A scroll container keeps every dynamically sized party list
-		// reachable without introducing a separate Inventory world widget.
-		UCanvasPanel* ArtifactInventoryPanel =
-			Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
-				UCanvasPanel::StaticClass(), TEXT("mArtifactInventoryPanel"));
-		Anchor(Screen, ArtifactInventoryPanel, FAnchors(0.f, 0.f, 1.f, 1.f),
-			FMargin(0.f), 80);
-		ArtifactInventoryPanel->SetVisibility(ESlateVisibility::Collapsed);
-		AddSolidImage(Blueprint, ArtifactInventoryPanel,
-			TEXT("ArtifactInventoryDim"), FLinearColor(.005f, .009f, .016f, .82f),
-			FVector2D::ZeroVector, FVector2D(DesignWidth, DesignHeight), 0);
-		AddImage(Blueprint, ArtifactInventoryPanel, TEXT("ArtifactInventoryFrame"),
-			InventoryPanel, FVector2D(245.f, 145.f), FVector2D(1110.f, 700.f), 2, true,
-			FLinearColor(.72f, .78f, .86f, 1.f));
-		AddImage(Blueprint, ArtifactInventoryPanel, TEXT("ArtifactInventoryTitlePlate"),
-			TitlePlate, FVector2D(550.f, 153.f), FVector2D(500.f, 104.f), 3, true);
-		AddText(Blueprint, ArtifactInventoryPanel, TEXT("ArtifactInventoryTitleText"),
-			NSLOCTEXT("ShopHorizontalRail", "OwnedArtifacts", "보유 아티팩트"), 34,
-			FVector2D(620.f, 171.f), FVector2D(360.f, 58.f), 5);
-		AddLabeledButton(Blueprint, ArtifactInventoryPanel,
-			TEXT("ArtifactInventoryCloseHolder"), TEXT("ArtifactInventoryClosePlate"),
-			TEXT("ArtifactInventoryCloseText"), TEXT("mArtifactInventoryCloseButton"),
-			ButtonSecondary, NSLOCTEXT("ShopHorizontalRail", "CloseInventory", "닫기"),
-			FVector2D(1130.f, 174.f), FVector2D(174.f, 64.f), 6, 21);
-
-		UScrollBox* ArtifactInventoryScroll =
-			Blueprint->WidgetTree->ConstructWidget<UScrollBox>(
-				UScrollBox::StaticClass(), TEXT("ArtifactInventoryScroll"));
-		Place(ArtifactInventoryPanel, ArtifactInventoryScroll,
-			FVector2D(325.f, 285.f), FVector2D(950.f, 480.f), 4);
-		UWrapBox* OwnedArtifactBox = Blueprint->WidgetTree->ConstructWidget<UWrapBox>(
-			UWrapBox::StaticClass(), TEXT("mOwnedArtifactBox"));
-		OwnedArtifactBox->SetVisibility(ESlateVisibility::Collapsed);
-		ArtifactInventoryScroll->AddChild(OwnedArtifactBox);
+			FVector2D(1268.f, 48.f), FVector2D(304.f, 137.96f), 40, 30, false);
 
 		Blueprint->ForEachSourceWidget([Blueprint](UWidget* Widget)
 		{
+			if (UTextBlock* Text = Cast<UTextBlock>(Widget))
+			{
+				Text->SetJustification(ETextJustify::Center);
+			}
 			ExposeWithGuid(Blueprint, Widget);
 		});
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
@@ -697,6 +838,9 @@ namespace ShopFullGeneratedWidgetBuilder
 		UE_LOG(LogTemp, Display,
 			TEXT("RD_SHOP_FULL_GENERATED_BUILD success asset=%s design=1600x1000 rail_slots=5 unit_slots=3 skill_slots=4"),
 			AssetPath);
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_SHOP_FULL_GENERATED_BUILD embedded_common_rail=%s zones=210/580/210"),
+			OptionsRailAssetPath);
 	}
 }
 
