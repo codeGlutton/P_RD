@@ -34,6 +34,7 @@ public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeActionPoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, RechargeSpeedPoint)
 
+	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, LastRechargedActionPoint)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, LastRechargedSpeedPoint)
 
 	/* Instant로 즉각 적용되는 Attribute 값 */
@@ -65,6 +66,8 @@ protected:
 
 	/* 캐시 스텟들 */
 protected:
+	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
+	FTacticalAttributeData LastRechargedActionPoint;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData LastRechargedSpeedPoint;
 };

@@ -164,7 +164,12 @@ struct FActiveTacticalEffect
 
 public:
     FActiveTacticalEffect() = default;
-    FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec);
+    FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec, float CurrentTime);
+
+    FActiveTacticalEffect(const FActiveTacticalEffect& Other) = default;
+    FActiveTacticalEffect(FActiveTacticalEffect&& Other) = default;
+    FActiveTacticalEffect& operator=(FActiveTacticalEffect&& Other) = default;
+    FActiveTacticalEffect& operator=(const FActiveTacticalEffect& Other) = default;
 
 public:
     bool operator==(const FActiveTacticalEffect& Other)
