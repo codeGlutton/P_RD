@@ -37,6 +37,9 @@ class UTacticalEffectExecutionCalculation_GetActionPoint : public UTacticalEffec
 
 public:
 	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+protected:
+	virtual void OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const;
 };
 
 /**
@@ -56,10 +59,25 @@ public:
 };
 
 /**
+ * @brief ActionPoint 충전 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_RechargeActionPoint : public UTacticalEffectExecutionCalculation_GetActionPoint
+{
+	GENERATED_BODY()
+
+protected:
+	void OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const override;
+};
+
+/**
  * @brief ActionPoint 충전 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_RechargeActionPoint : public UTacticalEffect_GetActionPoint
+class P_RD_API UTacticalEffect_RechargeActionPoint : public UTacticalEffect_Unit
 {
 	GENERATED_BODY()
+
+public:
+	UTacticalEffect_RechargeActionPoint();
 };

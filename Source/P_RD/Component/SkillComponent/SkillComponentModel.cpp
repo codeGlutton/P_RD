@@ -225,7 +225,7 @@ void USkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 	/* 쿨다운 처리 */
 
 	{
-		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_Cooldown::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(SkillData->mCooldownEffectClass.LoadSynchronous(), EffectContext);
 		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
 		SkillEntry.mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}

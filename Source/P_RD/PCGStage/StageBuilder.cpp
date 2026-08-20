@@ -510,7 +510,16 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
+		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
+		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
+		{
+			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
+				mBuildStream, CandidateIds);
+			NewRoom.mRewardArtifactDataIds.Add(Picked);
+			CandidateIds.RemoveSingle(Picked);
+		}
+		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
+			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -526,7 +535,16 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
 
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[StaticCast<uint8>(ERarityType::Epic)];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
+		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
+		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
+		{
+			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
+				mBuildStream, CandidateIds);
+			NewRoom.mRewardArtifactDataIds.Add(Picked);
+			CandidateIds.RemoveSingle(Picked);
+		}
+		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
+			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
 
 		NewRoomPtr = &NewRoom;
 		break;

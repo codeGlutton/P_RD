@@ -1140,8 +1140,13 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
-		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
 		PushSkillUIData();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetLastRechargedActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetLastRechargedSpeedPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -1379,16 +1384,10 @@ void ACombatGameMode::PushUnitUIData() const
 		CombatUIDebugFixture::ApplyDisplayHPOne(UnitModel->IsDead() == false, OUT UnitUIData);
 		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
 		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
-		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
-			UUnitAttributeSet::GetRechargeSpeedPointAttribute());
-		if (UnitUIData.mSpeedPoint <= 0.f)
-		{
-			UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
-				UUnitAttributeSet::GetSpeedPointFactorAttribute());
-		}
+		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedActionPointAttribute());
 		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
 		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
 		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);
@@ -2565,12 +2564,42 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 			Choice.mSourceAssetId = EquipmentId;
 			Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
 
-			if (const UStaticEquipmentData* EquipmentData = LoadPrimaryAssetData<UStaticEquipmentData>(EquipmentId))
+			// StageBuilder rolls Artifact primary assets here. Reading them through
+			// UStaticEquipmentData silently left the reward/detail DTO with fallback
+			// names and no icon/effect data.
+			if (const UStaticArtifactData* ArtifactData =
+				LoadPrimaryAssetData<UStaticArtifactData>(EquipmentId))
 			{
-				Choice.mName = EquipmentData->mName.IsEmpty() ? Choice.mName : EquipmentData->mName;
-				Choice.mDescription = EquipmentData->mDescription;
-				Choice.mIcon = EquipmentData->mIcon.LoadSynchronous();
-				Choice.mRarityColor = GetRarityColor(EquipmentData->mRarityType);
+				Choice.mName = ArtifactData->mName.IsEmpty()
+					? Choice.mName : ArtifactData->mName;
+				Choice.mIcon = ArtifactData->mIcon.LoadSynchronous();
+				Choice.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
+				Choice.mRarityName = StaticEnum<ERarityType>() != nullptr
+					? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(
+						StaticCast<int64>(ArtifactData->mRarityType))
+					: FText::GetEmpty();
+				Choice.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
+
+				TArray<FString> EffectLines;
+				for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
+					: ArtifactData->mStaticPassiveData)
+				{
+					if (const UStaticPassiveData* Passive =
+						PassiveSoft.LoadSynchronous())
+					{
+						if (!Passive->mDescription.IsEmpty())
+						{
+							EffectLines.Add(Passive->mDescription.ToString());
+						}
+					}
+				}
+				if (EffectLines.IsEmpty() && !ArtifactData->mStatModifiers.IsEmpty())
+				{
+					EffectLines.Add(TEXT("파티 전체 능력치를 강화합니다."));
+				}
+				Choice.mDescription = EffectLines.IsEmpty()
+					? FText::FromString(TEXT("파티 전체에 적용됩니다."))
+					: FText::FromString(FString::Join(EffectLines, TEXT("\n")));
 			}
 
 			Choices.Add(Choice);
@@ -2579,10 +2608,45 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	switch (CurrentRoom.mType)
 	{
 	case ERoomType::EliteMonster:
-		AddEquipmentReward(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataId);
+	{
+		const FEliteMonsterRoom& EliteRoom = static_cast<const FEliteMonsterRoom&>(CurrentRoom);
+		if (EliteRoom.mRewardArtifactDataIds.IsEmpty())
+		{
+			AddEquipmentReward(EliteRoom.mRewardArtifactDataId);
+		}
+		else
+		{
+			for (const FPrimaryAssetId& ArtifactId : EliteRoom.mRewardArtifactDataIds)
+			{
+				if (Choices.Num() >= 3)
+				{
+					break;
+				}
+				AddEquipmentReward(ArtifactId);
+			}
+		}
 		break;
+	}
 	case ERoomType::BossMonster:
+	{
+		const FBossMonsterRoom& BossRoom = static_cast<const FBossMonsterRoom&>(CurrentRoom);
+		if (BossRoom.mRewardArtifactDataIds.IsEmpty())
+		{
+			AddEquipmentReward(BossRoom.mRewardArtifactDataId);
+		}
+		else
+		{
+			for (const FPrimaryAssetId& ArtifactId : BossRoom.mRewardArtifactDataIds)
+			{
+				if (Choices.Num() >= 3)
+				{
+					break;
+				}
+				AddEquipmentReward(ArtifactId);
+			}
+		}
 		break;
+	}
 	default:
 		break;
 	}

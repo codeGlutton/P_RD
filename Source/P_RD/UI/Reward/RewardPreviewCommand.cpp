@@ -133,23 +133,23 @@ namespace RewardPreview
 		Model->SetReward(Reward);
 
 		TArray<FRewardChoiceUI> Choices;
+		const FText ArtifactNames[] = {
+			NSLOCTEXT("RewardPreview", "ArtifactRewardBloodChalice", "피의 성배"),
+			NSLOCTEXT("RewardPreview", "ArtifactRewardFangAmulet", "야수의 송곳니"),
+			NSLOCTEXT("RewardPreview", "ArtifactRewardLuckyCoin", "행운의 주화") };
+		UTexture2D* ArtifactIcons[] = {
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_FangAmulet.T_Artifact_FangAmulet")),
+			LoadObject<UTexture2D>(nullptr, TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_LuckyCoin.T_Artifact_LuckyCoin")) };
+		for (int32 Index = 0; Index < UE_ARRAY_COUNT(ArtifactNames); ++Index)
 		{
-			FRewardChoiceUI& Skill = Choices.AddDefaulted_GetRef();
-			Skill.mChoiceIndex = 0;
-			Skill.mKind = ERewardChoiceKind::Skill;
-			Skill.mName = NSLOCTEXT(
-				"RewardPreview", "SkillRewardName", "회전베기");
-			Skill.mDescription = NSLOCTEXT(
-				"RewardPreview", "SkillRewardDescription", "공용 스킬 보상");
-		}
-		{
-			FRewardChoiceUI& Equipment = Choices.AddDefaulted_GetRef();
-			Equipment.mChoiceIndex = 1;
-			Equipment.mKind = ERewardChoiceKind::Equipment;
-			Equipment.mName = NSLOCTEXT(
-				"RewardPreview", "EquipmentRewardName", "수호자의 검");
-			Equipment.mDescription = NSLOCTEXT(
-				"RewardPreview", "EquipmentRewardDescription", "장비 선택 보상");
+			FRewardChoiceUI& Artifact = Choices.AddDefaulted_GetRef();
+			Artifact.mChoiceIndex = Index;
+			Artifact.mKind = ERewardChoiceKind::Equipment;
+			Artifact.mName = ArtifactNames[Index];
+			Artifact.mDescription = NSLOCTEXT(
+				"RewardPreview", "ArtifactRewardDescription", "아티팩트 선택 보상");
+			Artifact.mIcon = ArtifactIcons[Index];
 		}
 		Model->SetRewardChoices(Choices);
 

@@ -188,6 +188,10 @@ public:
 	FText GetDisplayName() const override;
 
 public:
+	// New rooms carry the real three-choice pool. The legacy single field remains
+	// serialized below so existing saves can still be loaded and rewarded.
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataIds"))
+	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardArtifactDataId;
 };
@@ -208,6 +212,8 @@ public:
 	FText GetDisplayName() const override;
 
 public:
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataIds"))
+	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardArtifactDataId;
 };
