@@ -21,6 +21,7 @@
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Stun.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.h"
+#include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -48,6 +49,8 @@ namespace
 	UStaticSkillData* MakeGimmickSkillDataBase(UObject* Outer)
 	{
 		UStaticSkillData* SkillData = NewObject<UStaticSkillData>(Outer);
+		// 스킬 시전 시 쿨다운 스펙을 만들므로 실제 기믹 DA와 같은 라운드 쿨다운 지정 (미지정 시 스펙이 무효)
+		SkillData->mCooldownEffectClass = UTacticalEffect_RoundCooldown::StaticClass();
 		SkillData->mSkillAnimationSet.mApplyMotionTags.Add(AnimationTags::Animation_Montage_Skill_Melee_Punch);
 		SkillData->mSkillAnimationSet.mAutoRotateTowardTarget = false;
 		SkillData->mTargetPattern = ETargetPattern::TargetOnly;
