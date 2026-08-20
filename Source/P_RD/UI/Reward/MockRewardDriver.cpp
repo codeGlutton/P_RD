@@ -51,18 +51,17 @@ void UMockRewardDriver::Start(URewardUIModel* UIModel)
 	Reward.mMaxExp = 100.f;
 	mUIModel->SetReward(Reward);
 
-	// 가짜 보상 항목 목록(스킬/장비). 밸런스 데이터 아님.
+	// 가짜 아티팩트 3중 1택. 골드는 Reward.mGoldGained로 별도 지급된다.
 	TArray<FRewardChoiceUI> Choices;
-	const ERewardChoiceKind Kinds[] = { ERewardChoiceKind::Skill, ERewardChoiceKind::Equipment };
 	// mock fixture 이름은 실제 게임 콘텐츠가 아니라 개발용 더미다(실데이터는 DataAsset/API로 대체).
 	// 로컬라이즈 대상이 아니므로 FText::FromString으로 런타임 문자열을 그대로 쓴다.
-	const TCHAR* MockNames[] = { TEXT("Fireball"), TEXT("Iron Shield") };
+	const TCHAR* MockNames[] = { TEXT("Blood Chalice"), TEXT("Fang Amulet"), TEXT("Lucky Coin") };
 	const FLinearColor Colors[] = { FLinearColor(0.86f, 0.98f, 0.94f, 1.f), FLinearColor(0.55f, 0.72f, 1.f, 1.f), FLinearColor(0.82f, 0.58f, 1.f, 1.f) };
-	for (int32 i = 0; i < UE_ARRAY_COUNT(Kinds); ++i)
+	for (int32 i = 0; i < UE_ARRAY_COUNT(MockNames); ++i)
 	{
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = i;
-		Choice.mKind = Kinds[i];
+		Choice.mKind = ERewardChoiceKind::Equipment;
 		Choice.mName = FText::FromString(MockNames[i]);
 		Choice.mDescription = LOCTEXT("(mock reward)", "(mock reward)");
 		Choice.mRarityColor = Colors[i];
