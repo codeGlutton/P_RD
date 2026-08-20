@@ -325,7 +325,7 @@ public:
      */
     inline void UpdateTagMap(const FGameplayTagContainer& Container, int32 CountDelta)
     {
-        if (!Container.IsEmpty()) // 빈 컨테이너는 갱신/알림 비용을 피하기 위해 조기 반환.
+        if (Container.IsEmpty() == false)
         {
             UpdateTagMap_Internal(Container, CountDelta);
         }

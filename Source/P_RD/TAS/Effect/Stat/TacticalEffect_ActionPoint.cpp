@@ -63,7 +63,6 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	const bool IsTargetExhaustion = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion);
 	const float TargetExhaustionRatio = IsTargetExhaustion == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion] : 1.f;
 
-
 	const float TotalMove = 
 		ExecutionParams.GetOwningSpec().GetStackCount() * 
 		ExecutionParams.GetOwningSpec().mDynamicMagnitude * 
@@ -76,7 +75,8 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	{
 		/* 이동 증가 적용 */
 		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, MoveDiff));
-	
+		OnGetActionPoint(ExecutionParams, OutExecutionOutput, MoveDiff);
+
 		/* 로그 적용 */
 		FSRPGAttributeEffectEventLog Log;
 		Log.mEffectAttribute = UUnitAttributeSet::GetActionPointAttribute();
@@ -89,6 +89,10 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 
 	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
 	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+void UTacticalEffectExecutionCalculation_GetActionPoint::OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+{
 }
 
 UTacticalEffect_GetActionPoint::UTacticalEffect_GetActionPoint()
@@ -124,3 +128,20 @@ bool UTacticalEffect_GetActionPoint::CanApply(const FActiveTacticalEffectsContai
 	return true;
 }
 
+void UTacticalEffectExecutionCalculation_RechargeActionPoint::OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+{
+	Super::OnGetActionPoint(ExecutionParams, OutExecutionOutput, SpeedPoint);
+
+	OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetLastRechargedActionPointAttribute(), ETacticalModOp::Override, SpeedPoint));
+}
+
+UTacticalEffect_RechargeActionPoint::UTacticalEffect_RechargeActionPoint()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_RechargeActionPoint::StaticClass();
+	mExecutions.Add(Definition);
+}

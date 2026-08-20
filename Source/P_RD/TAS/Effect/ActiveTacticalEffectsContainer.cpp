@@ -272,14 +272,14 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 			{
 				/* 비어있는 경우 */
 
-				AppliedActiveEffect = new FActiveTacticalEffect(NewHandle, Spec);
+				AppliedActiveEffect = new FActiveTacticalEffect(NewHandle, Spec, GetWorldTime(Spec.mEffectClass->mDurationUnitPolicy));
 				*mPendingTacticalEffectTail = AppliedActiveEffect;
 			}
 			else
 			{
 				/* 할당 공간이 남아있는 경우 */
 
-				**mPendingTacticalEffectTail = FActiveTacticalEffect(NewHandle, Spec);
+				**mPendingTacticalEffectTail = FActiveTacticalEffect(NewHandle, Spec, GetWorldTime(Spec.mEffectClass->mDurationUnitPolicy));
 				AppliedActiveEffect = *mPendingTacticalEffectTail;
 			}
 			mPendingTacticalEffectTail = &AppliedActiveEffect->mPendingNext;
@@ -288,7 +288,7 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::ApplyTacticalEffectSpec(
 		{
 			/* 배열 크기 재할당이 필요없는 경우 */
 
-			AppliedActiveEffect = new(mTacticalEffects) FActiveTacticalEffect(NewHandle, Spec);
+			AppliedActiveEffect = new(mTacticalEffects) FActiveTacticalEffect(NewHandle, Spec, GetWorldTime(Spec.mEffectClass->mDurationUnitPolicy));
 		}
 	}
 

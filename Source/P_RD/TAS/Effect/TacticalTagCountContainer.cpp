@@ -47,7 +47,9 @@ bool FTacticalTagCountContainer::HasAnyMatchingGameplayTags(const FGameplayTagCo
 
 void FTacticalTagCountContainer::CaptureAllTags(UBoardCombatTargetSnapshotData* Snapshot) const
 {
-	Snapshot->mTags = mTagCountMap;
+	Snapshot->mTags = mTagCountMap.FilterByPredicate([](const auto& Pair) {
+			return Pair.Value != 0;
+		});
 }
 
 void FTacticalTagCountContainer::UpdateTagCount(const FGameplayTagContainer& Container, int32 CountDelta)

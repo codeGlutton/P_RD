@@ -1140,8 +1140,13 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
-		// 행동력이 줄면 못 쓰게 되는 카드가 생긴다. 같이 다시 내린다.
 		PushSkillUIData();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetLastRechargedActionPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
+		});
+	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetLastRechargedSpeedPointAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
+		PushUnitUIData();
 		});
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
 		PushUnitUIData();
@@ -1379,16 +1384,10 @@ void ACombatGameMode::PushUnitUIData() const
 		CombatUIDebugFixture::ApplyDisplayHPOne(UnitModel->IsDead() == false, OUT UnitUIData);
 		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
 		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
-		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
-			UUnitAttributeSet::GetRechargeSpeedPointAttribute());
-		if (UnitUIData.mSpeedPoint <= 0.f)
-		{
-			UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(
-				UUnitAttributeSet::GetSpeedPointFactorAttribute());
-		}
+		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
-		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetRechargeActionPointAttribute());
+		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedActionPointAttribute());
 		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
 		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
 		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);

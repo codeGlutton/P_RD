@@ -60,9 +60,10 @@ void FActiveTacticalEffectHandle::RemoveFromGlobalMap()
     TacticalFrameworkModel->mEffectOwningModelMap.Remove(*this);
 }
 
-FActiveTacticalEffect::FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec) :
+FActiveTacticalEffect::FActiveTacticalEffect(FActiveTacticalEffectHandle Handle, const FTacticalEffectSpec& Spec, float CurrentTime) :
     mHandle(Handle),
-    mSpec(Spec)
+    mSpec(Spec),
+    mStartTime(CurrentTime)
 {
 }
 
