@@ -46,9 +46,6 @@ bool UGimmickModel::TryTriggerGimmick(const FTileIndex& AimedTileIndex)
 		return false;
 	}
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
 	// 수명 차감 (무제한은 음수 유지)
 	// 뷰가 없으면 시전이 아래 호출 안에서 동기로 끝나므로, 종료 콜백이 소진을 볼 수 있게 먼저 차감
 	if (mRemainingTriggerCount > 0)
@@ -59,8 +56,19 @@ bool UGimmickModel::TryTriggerGimmick(const FTileIndex& AimedTileIndex)
 	// 장착된 스킬 강제 시전 (기믹은 행동력 개념이 없으므로 소모 검사 없이 시전)
 	FOnEndSkillUI EndCallback;
 	EndCallback.AddUObject(this, &UGimmickModel::OnGimmickSkillEnd);
-	SkillComp->ForcedActivateSkill(CombatModel->GetTileMap(), mTriggerSkillIndex, AimedTileIndex, EndCallback);
+	SkillComp->ForcedActivateSkill(GetTileMap(), mTriggerSkillIndex, AimedTileIndex, EndCallback);
 	return true;
+}
+
+UTileMapModel* UGimmickModel::GetTileMap() const
+{
+	// 전투 모델 서브시스템에서 타일맵 획득
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	UTileMapModel* TileMap = CombatModel->GetTileMap();
+	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+	return TileMap;
 }
 
 void UGimmickModel::OnGimmickSkillEnd(const FActiveSkillContext& Context, const UStaticSkillData* SkillData)

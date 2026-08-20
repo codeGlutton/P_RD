@@ -7,7 +7,6 @@
 
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.h"
 
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
@@ -22,11 +21,6 @@ void FSkillEffectLayer_Push::CommitEffect(const FSkillEffectCommitParams& Params
 	const FTileIndex InstigatorTileIndex = InstigatorModel->GetTileTransform().mIndex;
 	const ETileActorDirection PushDirection = InstigatorModel->GetTileTransform().mDirection;
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(InstigatorModel);
-	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-	UTileMapModel* TileMap = CombatModel->GetTileMap();
-	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
-
 	for (const TScriptInterface<IBoardCombatTarget>& Target : Params.mTargets)
 	{
 		UBoardActorModel* TargetModel = Cast<UBoardActorModel>(Target.GetObject());
@@ -35,6 +29,10 @@ void FSkillEffectLayer_Push::CommitEffect(const FSkillEffectCommitParams& Params
 		{
 			continue;
 		}
+
+		// 타일맵은 대상의 이동 컴포넌트에서 획득 (같은 보드 위이므로 동일한 맵)
+		UTileMapModel* TileMap = TargetMoveComp->GetTileMap();
+		checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
 		// 밀리는 경로 계산 (뒤가 막히면 막히기 직전까지로 짧아짐)
 		const TArray<FTileIndex> PushPath = TileMap->GetPushPath(TargetModel->GetTileTransform().mIndex, PushDirection, mPushDistance);

@@ -41,6 +41,10 @@ protected:
 	 */
 	bool TryTriggerGimmick(const FTileIndex& AimedTileIndex);
 
+protected:
+	// @brief 타일맵 획득 (테스트용 파생 모델이 오버라이드 할 수 있게 가상함수로 선언)
+	virtual UTileMapModel* GetTileMap() const;
+
 private:
 	// @brief 발동 스킬 종료 콜백 (수명을 다 썼으면 여기서 사망 처리)
 	void OnGimmickSkillEnd(const FActiveSkillContext& Context, const UStaticSkillData* SkillData);

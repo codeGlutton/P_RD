@@ -73,13 +73,14 @@ public:
 	 */
 	void CancelMove();
 
+public:
+	// @brief 타일맵 획득 (테스트용 파생 컴포넌트가 오버라이드 할 수 있게 가상함수로 선언)
+	virtual UTileMapModel* GetTileMap() const;
+
 	/* 파생 훅 */
 protected:
 	// @brief 스텝 시작 직전 훅 (유닛 파생의 AP 차감 등). MoveMode로 일반이동/밀치기이동 구분
 	virtual void OnStartStep(int32 StepIndex, EBoardMoveMode MoveMode) {}
-
-	// @brief 타일맵 획득 (테스트용 파생 컴포넌트가 오버라이드 할 수 있게 가상함수로 선언)
-	virtual UTileMapModel* GetTileMap() const;
 
 	/* 스텝 처리 */
 private:
