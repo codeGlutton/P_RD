@@ -973,8 +973,10 @@ namespace SettingsPanelWidgetBuilder
 			SelectedCookReference->SetVisibility(ESlateVisibility::Collapsed);
 		}
 
+		// BookBase 제목 명패의 실제 그림 중심은 panel-local Y=58 부근이다.
+		// 기존 셀(Y=34, H=76)은 중심이 Y=72라 글자가 약 14px 아래로 보였다.
 		PlaceInSettingsCanvas(Blueprint, Canvas, TEXT("SettingsTitleText_Center"),
-			FVector2D(515.f, 34.f), FVector2D(540.f, 76.f), 5,
+			FVector2D(515.f, 20.f), FVector2D(540.f, 76.f), 5,
 			ESlateVisibility::SelfHitTestInvisible);
 		PlaceInTextureContent(Blueprint, Canvas, TEXT("AudioSectionHeader_Center"),
 			FVector2D(188.f, 150.f), FVector2D(450.f, 112.f), RibbonContent, 4);

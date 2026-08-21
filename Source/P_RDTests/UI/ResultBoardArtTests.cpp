@@ -798,6 +798,18 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				Widget != nullptr && Widget->GetParent() == ContentCanvas);
 		}
 	}
+	UWidget* SettingsTitleCenter = Tree->FindWidget(TEXT("SettingsTitleText_Center"));
+	UCanvasPanelSlot* SettingsTitleCenterSlot = SettingsTitleCenter != nullptr
+		? Cast<UCanvasPanelSlot>(SettingsTitleCenter->Slot) : nullptr;
+	if (TestNotNull(TEXT("설정 제목 중앙 셀"), SettingsTitleCenterSlot))
+	{
+		TestTrue(TEXT("설정 제목 셀은 BookBase 명패 중심에 위치"),
+			SettingsTitleCenterSlot->GetPosition().Equals(
+				FVector2D(515.f, 20.f), 0.01));
+		TestTrue(TEXT("설정 제목 셀 크기 유지"),
+			SettingsTitleCenterSlot->GetSize().Equals(
+				FVector2D(540.f, 76.f), 0.01));
+	}
 	UOverlay* BackMount = Cast<UOverlay>(Tree->FindWidget(TEXT("BackButtonPlateMount")));
 	UButton* BackButton = Cast<UButton>(Tree->FindWidget(TEXT("BackButton")));
 	if (TestNotNull(TEXT("Back 명패 마운트"), BackMount)
