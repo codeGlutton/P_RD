@@ -8,6 +8,7 @@
 
 #include "Engine/AssetManager.h"
 #include "Engine/Texture2D.h"
+#include "HAL/IConsoleManager.h"
 #include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
@@ -39,10 +40,12 @@
 
 #include "SRPGFramework/SRPGSkillBuildAction.h"
 #include "SRPGFramework/SRPGMoveBuildAction.h"
+#include "SRPGFramework/SRPGAction.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
@@ -50,6 +53,7 @@
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "Setting/GameTeamType.h"
 #include "Setting/GameBalanceSettings.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
@@ -313,6 +317,48 @@ namespace
 	}
 }
 
+#if !UE_BUILD_SHIPPING
+
+namespace CombatAutoBattleDev
+{
+	void ExecuteCommand(const TArray<FString>& Args, UWorld* World)
+	{
+		ACombatGameMode* GameMode = World != nullptr
+			? World->GetAuthGameMode<ACombatGameMode>() : nullptr;
+		if (GameMode == nullptr)
+		{
+			UE_LOG(LogCombatGameMode, Warning,
+				TEXT("P_RD.AutoBattle: 전투 게임 월드를 찾지 못했습니다."));
+			return;
+		}
+
+		bool bEnabled = !GameMode->IsAutoBattleEnabled();
+		if (Args.IsValidIndex(0))
+		{
+			const FString& Value = Args[0];
+			if (Value == TEXT("1") || Value.Equals(TEXT("on"), ESearchCase::IgnoreCase)
+				|| Value.Equals(TEXT("true"), ESearchCase::IgnoreCase))
+			{
+				bEnabled = true;
+			}
+			else if (Value == TEXT("0") || Value.Equals(TEXT("off"), ESearchCase::IgnoreCase)
+				|| Value.Equals(TEXT("false"), ESearchCase::IgnoreCase))
+			{
+				bEnabled = false;
+			}
+		}
+
+		GameMode->SetAutoBattleEnabled(bEnabled);
+	}
+
+	FAutoConsoleCommandWithWorldAndArgs AutoBattleCommand(
+		TEXT("P_RD.AutoBattle"),
+		TEXT("개발용 자동전투를 켜거나 끈다. 사용법: P_RD.AutoBattle [1|0|toggle]"),
+		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&ExecuteCommand));
+}
+
+#endif
+
 ACombatGameMode::ACombatGameMode()
 {
 	mCombatUIModel = CreateDefaultSubobject<UCombatUIModel>(TEXT("CombatUIModel"));
@@ -415,6 +461,16 @@ void ACombatGameMode::InitializeCombat()
 		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
 		// 무엇을 조종하는 중인지 알 수 없다.
 		mInspectedUnitId = INDEX_NONE;
+	#if !UE_BUILD_SHIPPING
+		if (mAutoBattleEnabled && TurnContext != nullptr
+			&& TurnContext->GetOwner() != nullptr
+			&& TurnContext->GetOwner()->IsPlayerUnitModel())
+		{
+			// EndTurn 뒤의 새 플레이어 턴에서 다음 자동 행동을 시작한다.
+			// 이전 액션 상태를 남겨 두면 턴이 바뀐 뒤에도 낡은 대상을 재확정할 수 있다.
+			ResetAutoBattleAction();
+		}
+	#endif
 		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
@@ -438,6 +494,15 @@ void ACombatGameMode::InitializeCombat()
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
 		CancelPendingActionEndAfterCameraReturn();
+	#if !UE_BUILD_SHIPPING
+		if (mAutoBattleEnabled && mAutoBattlePhase == EAutoBattlePhase::WaitingForAction
+			&& TurnContext != nullptr && Action != nullptr
+			&& Action->GetInstigator() == mAutoBattleUnit.Get()
+			&& Action->GetActionType() == ESRPGActionType::InPlayAction)
+		{
+			mAutoBattleSawInPlayAction = true;
+		}
+	#endif
 		// 행동이 시작되면 그 전의 예측 전제는 낡았다 — 미리보기만 통째로 버린다.
 		// (실전 juice 로그는 수명 규칙으로 스스로 사라진다.)
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
@@ -451,6 +516,17 @@ void ACombatGameMode::InitializeCombat()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
+	#if !UE_BUILD_SHIPPING
+		if (mAutoBattleEnabled && mAutoBattlePhase == EAutoBattlePhase::WaitingForAction
+			&& TurnContext != nullptr && Action != nullptr
+			&& Action->GetInstigator() == mAutoBattleUnit.Get()
+			&& Action->GetActionType() == ESRPGActionType::InPlayAction)
+		{
+			// BuildAction 종료는 실제 스킬/이동이 시작되기 전 단계다. 실제
+			// InPlayAction이 끝난 뒤에만 다음 자동 행동을 계획한다.
+			ResetAutoBattleAction();
+		}
+	#endif
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
@@ -559,6 +635,13 @@ void ACombatGameMode::BeginRoom()
 	}
 
 	CombatModel->BeginCombat();
+
+#if !UE_BUILD_SHIPPING
+	// 자동전투는 개발 빌드의 현재 전투방에서만 폴링한다. 기본값은 꺼져
+	// 있으므로 기존 플레이 흐름과 저장 데이터에는 영향을 주지 않는다.
+	GetWorld()->GetTimerManager().SetTimer(
+		mAutoBattleTimerHandle, this, &ACombatGameMode::AutoBattlePulse, 0.15f, true);
+#endif
 }
 
 UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
@@ -570,6 +653,338 @@ URewardUIModel* ACombatGameMode::GetRewardUIModel() const
 {
 	return mRewardUIModel;
 }
+
+#if !UE_BUILD_SHIPPING
+
+void ACombatGameMode::SetAutoBattleEnabled(const bool bEnabled)
+{
+	mAutoBattleEnabled = bEnabled;
+	ResetAutoBattleAction();
+
+	UE_LOG(LogCombatGameMode, Display,
+		TEXT("P_RD.AutoBattle: %s"), bEnabled ? TEXT("켜짐") : TEXT("꺼짐"));
+}
+
+bool ACombatGameMode::IsAutoBattleEnabled() const
+{
+	return mAutoBattleEnabled;
+}
+
+void ACombatGameMode::ResetAutoBattleAction()
+{
+	mAutoBattlePhase = EAutoBattlePhase::Idle;
+	mAutoBattleUnit.Reset();
+	mAutoBattleSkillIndex = INDEX_NONE;
+	mAutoBattleTargetTile = FTileIndex::Invalid;
+	mAutoBattleTurnId = INDEX_NONE;
+	mAutoBattleSawInPlayAction = false;
+	mAutoBattleWaitingPulseCount = 0;
+}
+
+bool ACombatGameMode::IsAutoBattleHostile(const UUnitModel* Unit) const
+{
+	return Unit != nullptr && Unit->IsDead() == false
+		&& FGenericTeamId::GetAttitude(
+			EGameTeamType::Adventurer, Unit->GetGenericTeamId()) == ETeamAttitude::Hostile;
+}
+
+bool ACombatGameMode::FindAutoBattleSkill(
+	UPlayerUnitModel* PlayerUnit, OUT int32& SkillIndex, OUT FTileIndex& TargetTile) const
+{
+	SkillIndex = INDEX_NONE;
+	TargetTile = FTileIndex::Invalid;
+	if (PlayerUnit == nullptr)
+	{
+		return false;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	USkillComponentModel* SkillComponent = PlayerUnit->GetSkillComponentModel();
+	if (TileMap == nullptr || SkillComponent == nullptr)
+	{
+		return false;
+	}
+
+	int32 BestHitCount = 0;
+	const TArray<FSkillEntry>& Skills = SkillComponent->GetSkills();
+	for (int32 CandidateSkillIndex = 0; CandidateSkillIndex < Skills.Num(); ++CandidateSkillIndex)
+	{
+		if (Skills[CandidateSkillIndex].IsValid() == false
+			|| SkillComponent->CanActiveSkill(CandidateSkillIndex) == false)
+		{
+			continue;
+		}
+
+		const TArray<FTileIndex> AimableTiles = SkillComponent->GetAimableTiles(
+			TileMap, CandidateSkillIndex);
+		for (const FTileIndex& AimableTile : AimableTiles)
+		{
+			const TArray<FTileIndex> EffectTiles = SkillComponent->GetEffectTiles(
+				TileMap, CandidateSkillIndex, AimableTile);
+			int32 HitCount = 0;
+			for (const FTileIndex& EffectTile : EffectTiles)
+			{
+				for (UUnitModel* Unit : TileMap->GetActorsOnTile<UUnitModel>(
+					EffectTile, ETileLayerFlag::Unit))
+				{
+					if (IsAutoBattleHostile(Unit))
+					{
+						++HitCount;
+					}
+				}
+			}
+
+			if (HitCount > BestHitCount)
+			{
+				BestHitCount = HitCount;
+				SkillIndex = CandidateSkillIndex;
+				TargetTile = AimableTile;
+			}
+		}
+	}
+
+	return SkillIndex != INDEX_NONE && TargetTile != FTileIndex::Invalid;
+}
+
+bool ACombatGameMode::FindAutoBattleMove(
+	UPlayerUnitModel* PlayerUnit, OUT FTileIndex& TargetTile) const
+{
+	TargetTile = FTileIndex::Invalid;
+	if (PlayerUnit == nullptr || PlayerUnit->IsDead())
+	{
+		return false;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	UAttributeSetComponentModel* Attributes = PlayerUnit->GetAttributeComponentModel();
+	if (CombatModel == nullptr || TileMap == nullptr || Attributes == nullptr)
+	{
+		return false;
+	}
+
+	const int32 ActionPoint = FMath::FloorToInt(
+		Attributes->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute()));
+	if (ActionPoint <= 0)
+	{
+		return false;
+	}
+
+	const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
+	TArray<FTileIndex> ReachableTiles = TileMap->GetReachableTiles(
+		Origin, ActionPoint, PlayerUnit);
+	if (ReachableTiles.IsEmpty())
+	{
+		return false;
+	}
+
+	int32 CurrentNearestEnemyDistance = MAX_int32;
+	for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
+	{
+		if (IsAutoBattleHostile(Unit.Get()) == false)
+		{
+			continue;
+		}
+		const FTileIndex EnemyTile = Unit->GetTileTransform().mIndex;
+		CurrentNearestEnemyDistance = FMath::Min(
+			CurrentNearestEnemyDistance,
+			FMath::Abs(Origin.mX - EnemyTile.mX) + FMath::Abs(Origin.mY - EnemyTile.mY));
+	}
+	if (CurrentNearestEnemyDistance == MAX_int32)
+	{
+		return false;
+	}
+
+	int32 BestDistance = CurrentNearestEnemyDistance;
+	int32 BestPathProgress = -1;
+	for (const FTileIndex& CandidateTile : ReachableTiles)
+	{
+		int32 CandidateNearestEnemyDistance = MAX_int32;
+		for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
+		{
+			if (IsAutoBattleHostile(Unit.Get()) == false)
+			{
+				continue;
+			}
+			const FTileIndex EnemyTile = Unit->GetTileTransform().mIndex;
+			CandidateNearestEnemyDistance = FMath::Min(
+				CandidateNearestEnemyDistance,
+				FMath::Abs(CandidateTile.mX - EnemyTile.mX)
+					+ FMath::Abs(CandidateTile.mY - EnemyTile.mY));
+		}
+
+		const int32 PathProgress = FMath::Abs(Origin.mX - CandidateTile.mX)
+			+ FMath::Abs(Origin.mY - CandidateTile.mY);
+		if (CandidateNearestEnemyDistance < BestDistance
+			|| (CandidateNearestEnemyDistance == BestDistance
+				&& PathProgress > BestPathProgress))
+		{
+			BestDistance = CandidateNearestEnemyDistance;
+			BestPathProgress = PathProgress;
+			TargetTile = CandidateTile;
+		}
+	}
+
+	return TargetTile != FTileIndex::Invalid;
+}
+
+bool ACombatGameMode::TapAutoBattleTile(const FTileIndex& Tile)
+{
+	if (Tile == FTileIndex::Invalid)
+	{
+		return false;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap == nullptr || Controller == nullptr)
+	{
+		return false;
+	}
+
+	FVector2D ScreenPosition = FVector2D::ZeroVector;
+	if (Controller->ProjectWorldLocationToScreen(
+		TileMap->TileToWorldLocation(Tile), OUT ScreenPosition) == false)
+	{
+		return false;
+	}
+
+	HandleCombatWorldTouch(ScreenPosition, false);
+	return true;
+}
+
+void ACombatGameMode::AutoBattlePulse()
+{
+	if (mAutoBattleEnabled == false)
+	{
+		return;
+	}
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	USRPGTurnContext* TurnContext = CombatModel != nullptr
+		? CombatModel->GetCurrentTurnContext() : nullptr;
+	UPlayerUnitModel* PlayerUnit = TurnContext != nullptr
+		? Cast<UPlayerUnitModel>(TurnContext->GetOwner()) : nullptr;
+	if (PlayerUnit == nullptr || PlayerUnit->IsDead())
+	{
+		return;
+	}
+
+	if (mAutoBattlePhase == EAutoBattlePhase::WaitingForTurn)
+	{
+		return;
+	}
+
+	if (mAutoBattlePhase == EAutoBattlePhase::WaitingForAction)
+	{
+		++mAutoBattleWaitingPulseCount;
+		if (mAutoBattleWaitingPulseCount > 200)
+		{
+			UE_LOG(LogCombatGameMode, Warning,
+				TEXT("P_RD.AutoBattle: 액션 완료 대기 시간이 초과되어 재계획합니다."));
+			ResetAutoBattleAction();
+		}
+		return;
+	}
+
+	if (mAutoBattleUnit.Get() != PlayerUnit
+		|| mAutoBattleTurnId != TurnContext->GetTurnId())
+	{
+		ResetAutoBattleAction();
+		mAutoBattleUnit = PlayerUnit;
+		mAutoBattleTurnId = TurnContext->GetTurnId();
+	}
+
+	USkillComponentModel* SkillComponent = PlayerUnit->GetSkillComponentModel();
+	UBoardMovementComponentModel* Movement = PlayerUnit->GetBoardMovementComponentModel();
+	if ((SkillComponent != nullptr && SkillComponent->IsAnySkillActivated())
+		|| (Movement != nullptr && Movement->IsMoving()))
+	{
+		return;
+	}
+
+	const ECombatBuildPhaseUI BuildPhase = mCombatUIModel != nullptr
+		? mCombatUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
+	if (mAutoBattlePhase == EAutoBattlePhase::SelectingSkill
+		|| mAutoBattlePhase == EAutoBattlePhase::ConfirmingSkill
+		|| mAutoBattlePhase == EAutoBattlePhase::SelectingMove
+		|| mAutoBattlePhase == EAutoBattlePhase::ConfirmingMove)
+	{
+		if (BuildPhase == ECombatBuildPhaseUI::AimSelection
+			&& (mAutoBattlePhase == EAutoBattlePhase::SelectingSkill
+				|| mAutoBattlePhase == EAutoBattlePhase::SelectingMove))
+		{
+			if (TapAutoBattleTile(mAutoBattleTargetTile))
+			{
+				mAutoBattlePhase = mAutoBattlePhase == EAutoBattlePhase::SelectingSkill
+					? EAutoBattlePhase::ConfirmingSkill : EAutoBattlePhase::ConfirmingMove;
+			}
+			return;
+		}
+
+		if (BuildPhase == ECombatBuildPhaseUI::Preview
+			&& (mAutoBattlePhase == EAutoBattlePhase::ConfirmingSkill
+				|| mAutoBattlePhase == EAutoBattlePhase::ConfirmingMove)
+			&& mPendingConfirmTile != FTileIndex::Invalid)
+		{
+			// 확인 호출 중에 InPlayAction이 동기적으로 시작할 수도 있으므로
+			// 먼저 대기 상태를 세팅한다.
+			mAutoBattlePhase = EAutoBattlePhase::WaitingForAction;
+			mAutoBattleSawInPlayAction = false;
+			mAutoBattleWaitingPulseCount = 0;
+			ConfirmTargetTile();
+		}
+		return;
+	}
+
+	if (BuildPhase != ECombatBuildPhaseUI::None)
+	{
+		// 사용자가 열어 둔 수동 프리뷰를 자동전투가 덮어쓰지 않는다.
+		return;
+	}
+
+	int32 CandidateSkillIndex = INDEX_NONE;
+	FTileIndex CandidateSkillTarget = FTileIndex::Invalid;
+	if (FindAutoBattleSkill(PlayerUnit, OUT CandidateSkillIndex, OUT CandidateSkillTarget))
+	{
+		mAutoBattleSkillIndex = CandidateSkillIndex;
+		mAutoBattleTargetTile = CandidateSkillTarget;
+		if (SelectSkill(CandidateSkillIndex))
+		{
+			mAutoBattlePhase = EAutoBattlePhase::SelectingSkill;
+			UE_LOG(LogCombatGameMode, Verbose,
+				TEXT("P_RD.AutoBattle: 유닛 %d 스킬 %d 대상 (%d,%d)"),
+				PlayerUnit->GetModelId(), CandidateSkillIndex,
+				CandidateSkillTarget.mX, CandidateSkillTarget.mY);
+		}
+		return;
+	}
+
+	FTileIndex CandidateMoveTarget = FTileIndex::Invalid;
+	if (FindAutoBattleMove(PlayerUnit, OUT CandidateMoveTarget))
+	{
+		mAutoBattleTargetTile = CandidateMoveTarget;
+		if (SelectMove())
+		{
+			mAutoBattlePhase = EAutoBattlePhase::SelectingMove;
+			UE_LOG(LogCombatGameMode, Verbose,
+				TEXT("P_RD.AutoBattle: 유닛 %d 이동 대상 (%d,%d)"),
+				PlayerUnit->GetModelId(), CandidateMoveTarget.mX, CandidateMoveTarget.mY);
+		}
+		return;
+	}
+
+	if (EndTurn())
+	{
+		mAutoBattlePhase = EAutoBattlePhase::WaitingForTurn;
+		UE_LOG(LogCombatGameMode, Verbose,
+			TEXT("P_RD.AutoBattle: 유닛 %d 턴 종료"), PlayerUnit->GetModelId());
+	}
+}
+
+#endif
 
 void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 {

@@ -13,6 +13,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Simulation/Logger/EventLog.h"
 #include "UI/Reward/RewardUITypes.h"
+#include "TimerManager.h"
 #include "CombatGameMode.generated.h"
 
 class USRPGTurnContext;
@@ -57,9 +58,46 @@ protected:
 private:
 	void InitializeCombat();
 
+#if !UE_BUILD_SHIPPING
+	/** @brief 개발 빌드에서만 켤 수 있는 자동전투 토글. develop 게임 규칙에는 포함하지 않는다. */
+	void AutoBattlePulse();
+	bool FindAutoBattleSkill(UPlayerUnitModel* PlayerUnit, OUT int32& SkillIndex, OUT FTileIndex& TargetTile) const;
+	bool FindAutoBattleMove(UPlayerUnitModel* PlayerUnit, OUT FTileIndex& TargetTile) const;
+	bool IsAutoBattleHostile(const UUnitModel* Unit) const;
+	bool TapAutoBattleTile(const FTileIndex& Tile);
+	void ResetAutoBattleAction();
+
+	enum class EAutoBattlePhase : uint8
+	{
+		Idle,
+		SelectingSkill,
+		ConfirmingSkill,
+		SelectingMove,
+		ConfirmingMove,
+		WaitingForAction,
+		WaitingForTurn,
+	};
+
+	FTimerHandle mAutoBattleTimerHandle;
+	bool mAutoBattleEnabled = false;
+	EAutoBattlePhase mAutoBattlePhase = EAutoBattlePhase::Idle;
+	TWeakObjectPtr<UPlayerUnitModel> mAutoBattleUnit;
+	int32 mAutoBattleSkillIndex = INDEX_NONE;
+	FTileIndex mAutoBattleTargetTile = FTileIndex::Invalid;
+	int32 mAutoBattleTurnId = INDEX_NONE;
+	bool mAutoBattleSawInPlayAction = false;
+	int32 mAutoBattleWaitingPulseCount = 0;
+#endif
+
 public:
 	UCombatUIModel* GetCombatUIModel() const;
 	URewardUIModel* GetRewardUIModel() const;
+
+#if !UE_BUILD_SHIPPING
+	/** @brief 개발 빌드에서만 켤 수 있는 자동전투 토글. develop 게임 규칙에는 포함하지 않는다. */
+	void SetAutoBattleEnabled(bool bEnabled);
+	bool IsAutoBattleEnabled() const;
+#endif
 
 	/* UI 진입점 */
 public:
