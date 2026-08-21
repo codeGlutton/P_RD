@@ -526,6 +526,7 @@ void UTitleMenuWidget::AlignMenuTextBlock(UTextBlock* TextBlock)
 	{
 		ExistingOverlaySlot->SetHorizontalAlignment(HAlign_Fill);
 		ExistingOverlaySlot->SetVerticalAlignment(VAlign_Center);
+		NormalizeCommonButtonLabel(TextBlock);
 		return;
 	}
 
@@ -576,6 +577,7 @@ void UTitleMenuWidget::AlignMenuTextBlock(UTextBlock* TextBlock)
 		TextOverlaySlot->SetVerticalAlignment(VAlign_Center);
 		TextOverlaySlot->SetPadding(FMargin(0.0f));
 	}
+	NormalizeCommonButtonLabel(TextBlock);
 }
 
 /** @brief 현재 타이틀 화면에서 사용하지 않는 상태 문구 영역을 항상 숨긴다. */

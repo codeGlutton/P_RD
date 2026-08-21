@@ -250,4 +250,56 @@ bool FCommonPassiveLayerContractTest::RunTest(const FString& Parameters)
 	return !HasAnyErrors();
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCommonKoreanButtonOpticalCenterTest,
+	"P_RD.UI.Common.KoreanButtonOpticalCenter",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCommonKoreanButtonOpticalCenterTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("한글 버튼 광학 보정 에디터 월드"), World))
+	{
+		return false;
+	}
+
+	UClass* WidgetClass = LoadClass<URDUserWidget>(nullptr,
+		TEXT("/Game/UI/WBP_TitleMenu.WBP_TitleMenu_C"));
+	URDUserWidget* Widget = WidgetClass != nullptr
+		? CreateWidget<URDUserWidget>(World, WidgetClass) : nullptr;
+	if (!TestNotNull(TEXT("타이틀 위젯"), Widget))
+	{
+		return false;
+	}
+	Widget->TakeWidget();
+
+	UTextBlock* Label = Cast<UTextBlock>(Widget->GetWidgetFromName(
+		TEXT("StartButtonText__base_16_9")));
+	if (!TestNotNull(TEXT("새로 시작 라벨"), Label))
+	{
+		return false;
+	}
+
+	Label->SetText(FText::FromString(TEXT("새로 시작")));
+	Widget->NormalizeCommonUIContractForTest();
+	const FVector2D KoreanTranslation = Label->GetRenderTransform().Translation;
+	TestTrue(TEXT("한글 버튼 라벨은 광학 중심을 위해 위로 이동"),
+		KoreanTranslation.Y < 0.0f);
+
+	Widget->NormalizeCommonUIContractForTest();
+	TestEqual(TEXT("반복 정규화에도 보정이 누적되지 않음"),
+		Label->GetRenderTransform().Translation, KoreanTranslation);
+
+	Label->SetText(FText::FromString(TEXT("NEW START")));
+	Widget->NormalizeCommonUIContractForTest();
+	const double ExpectedOffset = FMath::Clamp(
+		static_cast<double>(Label->GetFont().Size) * 0.08, 1.0, 4.0);
+	TestEqual(TEXT("영문으로 바뀌면 폰트 크기 기반 한글 광학 보정을 제거"),
+		Label->GetRenderTransform().Translation.Y - KoreanTranslation.Y,
+		ExpectedOffset);
+
+	return !HasAnyErrors();
+}
+
 #endif

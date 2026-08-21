@@ -21,6 +21,31 @@ namespace
 	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
 	constexpr float ButtonPressColorMul = 0.6f;
 
+	/** 한글 버튼 라벨의 fallback font 메트릭을 판별한다. */
+	bool ContainsHangul(const FString& Value)
+	{
+		for (const TCHAR Character : Value)
+		{
+			const uint32 CodePoint = static_cast<uint32>(Character);
+			if ((CodePoint >= 0xAC00 && CodePoint <= 0xD7A3)
+				|| (CodePoint >= 0x1100 && CodePoint <= 0x11FF)
+				|| (CodePoint >= 0x3130 && CodePoint <= 0x318F)
+				|| (CodePoint >= 0xA960 && CodePoint <= 0xA97F)
+				|| (CodePoint >= 0xD7B0 && CodePoint <= 0xD7FF))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** 글자가 클수록 커지는 보정량. 작은 HUD 라벨은 과하게 움직이지 않게 제한한다. */
+	float KoreanOpticalCenterOffsetY(const UTextBlock& Text)
+	{
+		return -FMath::Clamp(static_cast<float>(Text.GetFont().Size) * 0.08f,
+			1.0f, 4.0f);
+	}
+
 	void SplitProfiledButtonName(const FString& FullName, FString& OutBase,
 		FString& OutSuffix)
 	{
@@ -285,20 +310,54 @@ void URDUserWidget::NormalizeCommonInputLayersAndButtonLabels()
 				continue;
 			}
 
-			Text->SetJustification(ETextJustify::Center);
-			if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Text->Slot))
-			{
-				OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
-				OverlaySlot->SetVerticalAlignment(VAlign_Center);
-			}
-			else if (UScaleBoxSlot* ScaleSlot = Cast<UScaleBoxSlot>(Text->Slot))
-			{
-				ScaleSlot->SetHorizontalAlignment(HAlign_Center);
-				ScaleSlot->SetVerticalAlignment(VAlign_Center);
-			}
-
+			NormalizeCommonButtonLabel(Text);
 		}
 	}
+}
+
+void URDUserWidget::NormalizeCommonButtonLabel(UTextBlock* Text)
+{
+	if (Text == nullptr)
+	{
+		return;
+	}
+
+	Text->SetJustification(ETextJustify::Center);
+	if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Text->Slot))
+	{
+		OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+		OverlaySlot->SetVerticalAlignment(VAlign_Center);
+	}
+	else if (UScaleBoxSlot* ScaleSlot = Cast<UScaleBoxSlot>(Text->Slot))
+	{
+		ScaleSlot->SetHorizontalAlignment(HAlign_Center);
+		ScaleSlot->SetVerticalAlignment(VAlign_Center);
+	}
+
+	const TWeakObjectPtr<UTextBlock> Key(Text);
+	const FVector2D CurrentTranslation = Text->GetRenderTransform().Translation;
+	FVector2D* BaseTranslation = mButtonLabelBaseTranslations.Find(Key);
+	const FVector2D* LastApplied = mButtonLabelLastAppliedTranslations.Find(Key);
+	if (BaseTranslation == nullptr)
+	{
+		mButtonLabelBaseTranslations.Add(Key, CurrentTranslation);
+		BaseTranslation = mButtonLabelBaseTranslations.Find(Key);
+	}
+	else if (LastApplied != nullptr && !CurrentTranslation.Equals(*LastApplied, KINDA_SMALL_NUMBER))
+	{
+		// 파생 화면이 Super::NativeConstruct() 이후 별도 배치를 적용했다면
+		// 그 값을 새 기준으로 받아들여 화면 고유 보정을 덮어쓰지 않는다.
+		*BaseTranslation = CurrentTranslation;
+	}
+
+	const float OpticalOffsetY = ContainsHangul(Text->GetText().ToString())
+		? KoreanOpticalCenterOffsetY(*Text) : 0.0f;
+	const FVector2D DesiredTranslation = *BaseTranslation
+		+ FVector2D(0.0f, OpticalOffsetY);
+	FWidgetTransform Transform = Text->GetRenderTransform();
+	Transform.Translation = DesiredTranslation;
+	Text->SetRenderTransform(Transform);
+	mButtonLabelLastAppliedTranslations.Add(Key, DesiredTranslation);
 }
 
 void URDUserWidget::ApplyCommonButtonPressSound(UButton* Button) const

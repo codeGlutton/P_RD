@@ -7,6 +7,7 @@
 
 class UButton;
 class USoundBase;
+class UTextBlock;
 
 /**
  * @brief UI 열기 애니메이션이 끝났을 때 호출되는 콜백
@@ -195,6 +196,14 @@ protected:
 	/** @brief 런타임에 늦게 생성된 버튼 하나에 공용 클릭 사운드를 즉시 적용한다. */
 	void ApplyCommonButtonPressSound(UButton* Button) const;
 
+	/**
+	 * @brief 버튼 라벨의 논리적 중앙 정렬과 한글 글리프의 광학 중앙 보정을 적용한다.
+	 * @details 한글 fallback 폰트의 ascent/descent 때문에 중앙 정렬된 line box에서도
+	 *          글자가 아래로 보인다. 폰트 크기에 비례한 작은 상향 보정을 적용하되,
+	 *          화면별로 이미 지정된 RenderTranslation은 기준값으로 보존한다.
+	 */
+	void NormalizeCommonButtonLabel(UTextBlock* Text);
+
 private:
 	/**
 	 * @brief 장식 위젯이 버튼 입력을 가로막지 않게 하고 버튼 라벨의 중앙 정렬을 통일한다.
@@ -254,6 +263,12 @@ private:
 	/** @brief 공용 버튼 클릭 사운드(생성자에서 하드레퍼런스 로드). 버튼 스타일 PressedSlateSound에 주입한다. */
 	UPROPERTY(Transient)
 	TObjectPtr<USoundBase> mCommonButtonPressSound;
+
+	/** @brief 화면별 보정을 포함한 버튼 라벨의 원래 RenderTranslation. */
+	TMap<TWeakObjectPtr<UTextBlock>, FVector2D> mButtonLabelBaseTranslations;
+
+	/** @brief 반복 정규화 때 광학 보정이 누적되지 않도록 마지막 적용값을 기억한다. */
+	TMap<TWeakObjectPtr<UTextBlock>, FVector2D> mButtonLabelLastAppliedTranslations;
 
 protected:
 	/**
