@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   UnitMovementComponentModel.cpp
  * @brief  유닛 전용 이동 컴포넌트 모델 구현 파일
  * @author 이문환
@@ -20,7 +20,10 @@ bool UUnitMovementComponentModel::IsMoveable() const
 	{
 		return true;
 	}
-	return AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root) == false;
+	const bool IsNotRoot = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root) == false;
+	const bool IsNotStun = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun) == false;
+
+	return IsNotRoot && IsNotStun;
 }
 
 void UUnitMovementComponentModel::OnStartStep(int32 StepIndex, EBoardMoveMode MoveMode)

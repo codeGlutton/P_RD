@@ -203,6 +203,7 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Slow,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Slow");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Frail");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Root,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Root");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Stun");
 }
 
 namespace CueTags

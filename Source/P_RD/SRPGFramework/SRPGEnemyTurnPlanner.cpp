@@ -190,7 +190,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	bool HasUsableSkill = false;
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
-		if (Skills[Index].IsValid() && SkillComp->IsCooldown(Index) == false)
+		if (Skills[Index].IsValid() && SkillComp->CanActiveSkill(Index) == false)
 		{
 			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
 			HasUsableSkill = true;
