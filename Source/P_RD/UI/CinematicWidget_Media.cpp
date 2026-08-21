@@ -18,8 +18,8 @@
 
 namespace
 {
-	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s.mp4");
-	const TCHAR* const FallbackAcceleratedIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s_3x.mp4");
+	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v02_16x9_15s.mp4");
+	const TCHAR* const FallbackAcceleratedIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v02_16x9_15s_3x.mp4");
 
 	FString GetIntroCinematicVideoPath()
 	{
