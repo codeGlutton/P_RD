@@ -457,38 +457,13 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 	{
 		mRailButtons[4]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleRailClicked4);
 	}
-	auto BindRailHold = [](UButton* Button, UObject* Owner,
-		const FName PressedFunction, const FName ReleasedFunction)
-	{
-		if (Button == nullptr || Owner == nullptr)
-		{
-			return;
-		}
-		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
-		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
-		FScriptDelegate PressedDelegate;
-		PressedDelegate.BindUFunction(Owner, PressedFunction);
-		Button->OnPressed.AddUnique(PressedDelegate);
-		FScriptDelegate ReleasedDelegate;
-		ReleasedDelegate.BindUFunction(Owner, ReleasedFunction);
-		Button->OnReleased.AddUnique(ReleasedDelegate);
-	};
-	const FName RailPressedHandlers[5] = {
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed0),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed1),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed2),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed3),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed4) };
-	const FName RailReleasedHandlers[5] = {
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased0),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased1),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased2),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased3),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased4) };
 	for (int32 Index = 0; Index < mRailButtons.Num() && Index < 5; ++Index)
 	{
-		BindRailHold(mRailButtons[Index], this,
-			RailPressedHandlers[Index], RailReleasedHandlers[Index]);
+		if (mRailButtons[Index] != nullptr)
+		{
+			mRailButtons[Index]->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			mRailButtons[Index]->SetClickMethod(EButtonClickMethod::PreciseClick);
+		}
 	}
 
 	if (mUnitSelectButtons.IsValidIndex(0) && mUnitSelectButtons[0] != nullptr)
@@ -817,13 +792,13 @@ void UShopUIWidgetBase::SelectRailSlot(int32 RailSlotIndex)
 	const int32 FilteredIndex = mFilteredShopItemIndices.Find(ShopItemIndex);
 	if (FilteredIndex != INDEX_NONE)
 	{
-		if (FilteredIndex == mSelectedFilteredIndex)
+		if (FilteredIndex != mSelectedFilteredIndex)
 		{
-			ShowSelectedItemDetails();
-			return;
+			mSelectedFilteredIndex = FilteredIndex;
+			RefreshView();
 		}
-		mSelectedFilteredIndex = FilteredIndex;
-		RefreshView();
+		// 판매 아티팩트/스킬은 한 번 터치하면 즉시 상세를 연다.
+		ShowSelectedItemDetails();
 	}
 }
 

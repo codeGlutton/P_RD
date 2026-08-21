@@ -14,6 +14,7 @@ class UTextBlock;
 class UWidget;
 class UWidgetSwitcher;
 class URewardUIModel;
+class URunOptionsRailWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
 	FRewardConcept03StepChanged, int32, StepIndex);
@@ -78,6 +79,21 @@ public:
 	{
 		return ArtifactDetailOverlayWidget;
 	}
+
+#if WITH_DEV_AUTOMATION_TESTS
+	URunOptionsRailWidget* GetRunOptionsRailForTest() const
+	{
+		return RunOptionsRailWidget;
+	}
+
+	void InitializeInteractionBindingsForTest()
+	{
+		ResolveWidgets();
+		BindInput();
+		RefreshRewardData();
+		ApplyVisualState();
+	}
+#endif
 
 	UFUNCTION(BlueprintPure, Category = "Reward Concept 03")
 	int32 GetCurrentStepIndex() const { return CurrentStepIndex; }
@@ -154,6 +170,7 @@ private:
 	void EndArtifactPress();
 	void CancelArtifactPress();
 	bool EnsureArtifactDetailOverlay();
+	void EnsureRunOptionsRail();
 	void ReleaseArtifactDetailOverlay();
 
 	UFUNCTION()
@@ -303,6 +320,10 @@ private:
 	/** Existing shared detail screen used by Combat HUD. */
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> ArtifactDetailOverlayWidget;
+
+	/** Reward overlay에서도 전투/상점과 같은 지도·용병·설정 레일을 제공한다. */
+	UPROPERTY(Transient)
+	TObjectPtr<URunOptionsRailWidget> RunOptionsRailWidget;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UImage> SelectionOutline;
