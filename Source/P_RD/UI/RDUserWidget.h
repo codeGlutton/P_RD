@@ -198,9 +198,9 @@ protected:
 private:
 	/**
 	 * @brief 장식 위젯이 버튼 입력을 가로막지 않게 하고 버튼 라벨의 중앙 정렬을 통일한다.
-	 * @details Image/Text는 입력 대상이 아니므로 HitTestInvisible로, 순수 배치 패널은
-	 *          SelfHitTestInvisible로 정규화한다. 버튼명과 짝이 맞는 Text는 중앙 정렬하고,
-	 *          같은 Canvas에 놓인 별도 라벨의 중심을 버튼 중심에 맞춘다.
+	 * @details Image/Text 장식은 HitTestInvisible로 정규화한다. 정확한 이름 규칙으로
+	 *          버튼과 짝이 확인된 Text의 내부 정렬만 중앙으로 맞춘다. Canvas 좌표와
+	 *          배치 패널의 입력 정책은 화면별 builder와 responsive layout이 소유한다.
 	 */
 	void NormalizeCommonInputLayersAndButtonLabels();
 
@@ -210,8 +210,8 @@ private:
 	/**
 	 * @brief 버튼과 짝지어진 "보이는" 동반 위젯(프레임 이미지/텍스트)을 이름 규칙으로 찾는다.
 	 * @details 타이틀처럼 버튼이 투명 히트영역이고 실제 시각요소가 같은 위치의 형제 위젯인 경우를 위해서다.
-	 *          규칙: 버튼명 "<Base>__<Profile>" 에 대해, 같은 트리에서 "<Base>...__<Profile>"로 시작/끝나는 Image/Text 형제.
-	 *          접미사(__프로필)가 없으면 버튼명으로 시작하는 Image/Text를 짝으로 본다. 없으면 빈 배열(무해).
+	 *          규칙: 버튼명 "<Base>__<Profile>" 에 대해 Text, Label, FrameImage, Plate, Art를
+	 *          정확히 붙인 이름만 허용한다. 비용·상태·설명처럼 prefix만 같은 위젯은 포함하지 않는다.
 	 */
 	void CollectButtonCompanions(const UButton* Button, TArray<UWidget*>& OutCompanions) const;
 
@@ -233,11 +233,23 @@ private:
 	/** @brief 각 버튼의 원래 배경색(멀티플라이어). 누르면 이 값을 어둡게, 떼면 이 값으로 복원한다. mFeedbackButtons와 인덱스 대응. */
 	TArray<FLinearColor> mFeedbackButtonBaseColors;
 
+	/** @brief 공통 누름 효과 적용 전 버튼의 원래 RenderTransform. */
+	TArray<FWidgetTransform> mFeedbackButtonBaseTransforms;
+
+	/** @brief 공통 누름 효과 적용 전 버튼의 원래 RenderTransformPivot. */
+	TArray<FVector2D> mFeedbackButtonBasePivots;
+
 	/** @brief 지금 눌려서 어둡게/축소된 동반 위젯들(한 번에 한 버튼). 떼면 복원 후 비운다. 트리가 소유하므로 약참조. */
 	TArray<TWeakObjectPtr<UWidget>> mActivePressCompanions;
 
 	/** @brief mActivePressCompanions의 원래 색(복원용). 인덱스 대응. */
 	TArray<FLinearColor> mActivePressCompanionBaseColors;
+
+	/** @brief 눌림 효과 적용 전 동반 위젯의 원래 RenderTransform. */
+	TArray<FWidgetTransform> mActivePressCompanionBaseTransforms;
+
+	/** @brief 눌림 효과 적용 전 동반 위젯의 원래 RenderTransformPivot. */
+	TArray<FVector2D> mActivePressCompanionBasePivots;
 
 	/** @brief 공용 버튼 클릭 사운드(생성자에서 하드레퍼런스 로드). 버튼 스타일 PressedSlateSound에 주입한다. */
 	UPROPERTY(Transient)

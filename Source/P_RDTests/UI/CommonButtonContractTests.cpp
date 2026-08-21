@@ -1,6 +1,5 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Editor.h"
@@ -23,7 +22,7 @@ namespace
 	{
 		{ TEXT("Title"), TEXT("/Game/UI/WBP_TitleMenu.WBP_TitleMenu_C") },
 		{ TEXT("Settings"), TEXT("/Game/UI/WBP_SettingsPanel.WBP_SettingsPanel_C") },
-		{ TEXT("FrontendMap"), TEXT("/Game/UI/WBP_FrontendMap.WBP_FrontendMap_C") },
+		{ TEXT("FrontendMap"), TEXT("/Game/UI/WorldMapLandscape/WBP_FrontendMapLandscape.WBP_FrontendMapLandscape_C") },
 		{ TEXT("MercenaryHire"), TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C") },
 		{ TEXT("CombatHUD"), TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C") },
 		{ TEXT("Shop"), TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated.WBP_Shop_FullGenerated_C") },
@@ -49,35 +48,27 @@ namespace
 				== static_cast<uint8>(ETextJustify::Center);
 	}
 
-	UWidget* FindNearestCanvasMount(UWidget* Widget)
+	void SplitProfiledButtonName(const FString& FullName, FString& OutBase,
+		FString& OutSuffix)
 	{
-		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		OutBase = FullName;
+		OutSuffix.Reset();
+		const int32 Separator = FullName.Find(
+			TEXT("__"), ESearchCase::CaseSensitive, ESearchDir::FromStart);
+		if (Separator != INDEX_NONE)
 		{
-			if (Cast<UCanvasPanelSlot>(Node->Slot) != nullptr)
-			{
-				return Node;
-			}
+			OutBase = FullName.Left(Separator);
+			OutSuffix = FullName.Mid(Separator);
 		}
-		return nullptr;
 	}
 
-	bool SameFixedCanvasSpace(const UCanvasPanelSlot* First,
-		const UCanvasPanelSlot* Second)
+	bool IsExactButtonLabelName(const FString& ButtonName, const FString& WidgetName)
 	{
-		if (First == nullptr || Second == nullptr || First->Parent != Second->Parent)
-		{
-			return false;
-		}
-		const FAnchors A = First->GetAnchors();
-		const FAnchors B = Second->GetAnchors();
-		return A.Minimum.Equals(A.Maximum) && B.Minimum.Equals(B.Maximum)
-			&& A.Minimum.Equals(B.Minimum);
-	}
-
-	FVector2D CanvasCenter(const UCanvasPanelSlot* Slot)
-	{
-		return Slot->GetPosition()
-			+ (FVector2D(0.5f, 0.5f) - Slot->GetAlignment()) * Slot->GetSize();
+		FString Base;
+		FString Suffix;
+		SplitProfiledButtonName(ButtonName, Base, Suffix);
+		return WidgetName == Base + TEXT("Text") + Suffix
+			|| WidgetName == Base + TEXT("Label") + Suffix;
 	}
 }
 
@@ -98,6 +89,7 @@ bool FCommonButtonBindingContractTest::RunTest(const FString& Parameters)
 	int32 AuditedButtonCount = 0;
 	for (const FScreenContract& Screen : MainScreens)
 	{
+		int32 ScreenAuditedButtonCount = 0;
 		UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, Screen.ClassPath);
 		if (!TestNotNull(*FString::Printf(TEXT("%s WBP"), Screen.Label), WidgetClass))
 		{
@@ -119,14 +111,13 @@ bool FCommonButtonBindingContractTest::RunTest(const FString& Parameters)
 		}
 
 		Widget->WidgetTree->ForEachWidgetAndDescendants(
-			[this, &AuditedButtonCount, &Screen, Widget](UWidget* Child)
+			[this, &AuditedButtonCount, &ScreenAuditedButtonCount, &Screen, Widget](UWidget* Child)
 			{
 				UButton* Button = Cast<UButton>(Child);
 				if (Button == nullptr)
 				{
 					return;
 				}
-				++AuditedButtonCount;
 				const FString Name = Button->GetName();
 				if (IsIntentionalInputShield(Name))
 				{
@@ -142,18 +133,26 @@ bool FCommonButtonBindingContractTest::RunTest(const FString& Parameters)
 				{
 					return;
 				}
+				++AuditedButtonCount;
+				++ScreenAuditedButtonCount;
 
 				// 일반 버튼은 Clicked, 상세용 길게 누르기 버튼은 Pressed+Released가
 				// 실제 동작 계약이다. 둘 다 없으면 화면에 있어도 절대 반응하지 않는다.
 				const bool bClickAction = Button->OnClicked.IsBound();
 				const bool bPressAction = Button->OnPressed.IsBound()
 					&& Button->OnReleased.IsBound();
-				if (!bClickAction && !bPressAction)
+				// Title/Settings는 공통 눌림 피드백이 Pressed+Released를 자동으로
+				// 연결한다. 이 두 화면에서는 반드시 실제 Clicked 동작이 있어야 한다.
+				const bool bRequiresClickAction = FCString::Strcmp(Screen.Label, TEXT("Title")) == 0
+					|| FCString::Strcmp(Screen.Label, TEXT("Settings")) == 0;
+				if (!bClickAction && (bRequiresClickAction || !bPressAction))
 				{
 					AddError(FString::Printf(TEXT("%s: button '%s' has no action delegate"),
 						Screen.Label, *Name));
 				}
 			});
+		TestTrue(*FString::Printf(TEXT("%s 기능 버튼을 실제로 검사함"), Screen.Label),
+			ScreenAuditedButtonCount > 0);
 	}
 
 	TestTrue(TEXT("메인 화면 버튼을 실제로 검사함"), AuditedButtonCount > 30);
@@ -214,19 +213,10 @@ bool FCommonPassiveLayerContractTest::RunTest(const FString& Parameters)
 					AddError(FString::Printf(TEXT("%s: decoration '%s' still blocks hit testing"),
 						Screen.Label, *Child->GetName()));
 				}
-				if (const UTextBlock* Text = Cast<UTextBlock>(Child))
-				{
-					const FString Name = Text->GetName();
-					if (Name.Contains(TEXT("Button")) && Name.Contains(TEXT("Text"))
-						&& !IsCentered(Text))
-					{
-						AddError(FString::Printf(TEXT("%s: button label '%s' is not centered"),
-							Screen.Label, *Name));
-					}
-				}
 			});
 
-		// 버튼과 별도 Canvas 자식으로 배치된 라벨도 버튼 중심과 같은지를 본다.
+		// 공통 정규화가 소유하는 정확한 이름의 라벨만 중앙 정렬됐는지 본다.
+		// sibling Canvas 위치는 화면별 builder/responsive layout의 책임이다.
 		TArray<UButton*> Buttons;
 		Widget->WidgetTree->ForEachWidget([&Buttons](UWidget* Child)
 			{
@@ -237,22 +227,12 @@ bool FCommonPassiveLayerContractTest::RunTest(const FString& Parameters)
 			});
 		for (UButton* Button : Buttons)
 		{
-			FString Base = Button->GetName();
-			FString Suffix;
-			const int32 Separator = Base.Find(TEXT("__"));
-			if (Separator != INDEX_NONE)
-			{
-				Suffix = Base.Mid(Separator);
-				Base = Base.Left(Separator);
-			}
-
 			Widget->WidgetTree->ForEachWidget(
-				[this, &Screen, Button, &Base, &Suffix](UWidget* Child)
+				[this, &Screen, Button](UWidget* Child)
 				{
 					UTextBlock* Text = Cast<UTextBlock>(Child);
 					if (Text == nullptr
-						|| !Text->GetName().StartsWith(Base)
-						|| !Text->GetName().EndsWith(Suffix))
+						|| !IsExactButtonLabelName(Button->GetName(), Text->GetName()))
 					{
 						return;
 					}
@@ -260,20 +240,6 @@ bool FCommonPassiveLayerContractTest::RunTest(const FString& Parameters)
 					{
 						AddError(FString::Printf(TEXT("%s: paired label '%s' is not centered"),
 							Screen.Label, *Text->GetName()));
-					}
-
-					UWidget* ButtonMount = FindNearestCanvasMount(Button);
-					UWidget* TextMount = FindNearestCanvasMount(Text);
-					UCanvasPanelSlot* ButtonSlot = ButtonMount != nullptr
-						? Cast<UCanvasPanelSlot>(ButtonMount->Slot) : nullptr;
-					UCanvasPanelSlot* TextSlot = TextMount != nullptr
-						? Cast<UCanvasPanelSlot>(TextMount->Slot) : nullptr;
-					if (ButtonMount != TextMount && SameFixedCanvasSpace(ButtonSlot, TextSlot)
-						&& !CanvasCenter(ButtonSlot).Equals(CanvasCenter(TextSlot), 0.5f))
-					{
-						AddError(FString::Printf(
-							TEXT("%s: paired label '%s' center differs from button '%s'"),
-							Screen.Label, *Text->GetName(), *Button->GetName()));
 					}
 				});
 		}

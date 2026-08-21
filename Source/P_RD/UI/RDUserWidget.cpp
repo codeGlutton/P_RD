@@ -1,20 +1,12 @@
 #include "UI/RDUserWidget.h"
 
 #include "Components/Button.h"
-#include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
-#include "Components/GridPanel.h"
-#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
-#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
-#include "Components/UniformGridPanel.h"
-#include "Components/VerticalBox.h"
-#include "Components/WrapBox.h"
 #include "Blueprint/WidgetTree.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
@@ -29,48 +21,18 @@ namespace
 	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
 	constexpr float ButtonPressColorMul = 0.6f;
 
-	bool IsPassiveLayoutPanel(const UWidget* Widget)
+	void SplitProfiledButtonName(const FString& FullName, FString& OutBase,
+		FString& OutSuffix)
 	{
-		return Widget != nullptr
-			&& (Widget->IsA<UCanvasPanel>() || Widget->IsA<UOverlay>()
-				|| Widget->IsA<UScaleBox>() || Widget->IsA<USizeBox>()
-				|| Widget->IsA<UHorizontalBox>() || Widget->IsA<UVerticalBox>()
-				|| Widget->IsA<UWrapBox>() || Widget->IsA<UGridPanel>()
-				|| Widget->IsA<UUniformGridPanel>());
-	}
-
-	UWidget* FindNearestCanvasMountedWidget(UWidget* Widget)
-	{
-		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		OutBase = FullName;
+		OutSuffix.Reset();
+		const int32 ProfileSeparator = FullName.Find(
+			TEXT("__"), ESearchCase::CaseSensitive, ESearchDir::FromStart);
+		if (ProfileSeparator != INDEX_NONE)
 		{
-			if (Cast<UCanvasPanelSlot>(Node->Slot) != nullptr)
-			{
-				return Node;
-			}
+			OutBase = FullName.Left(ProfileSeparator);
+			OutSuffix = FullName.Mid(ProfileSeparator);
 		}
-		return nullptr;
-	}
-
-	bool HaveSameFixedAnchors(const UCanvasPanelSlot* First,
-		const UCanvasPanelSlot* Second)
-	{
-		if (First == nullptr || Second == nullptr
-			|| First->Parent != Second->Parent)
-		{
-			return false;
-		}
-		const FAnchors FirstAnchors = First->GetAnchors();
-		const FAnchors SecondAnchors = Second->GetAnchors();
-		return FirstAnchors.Minimum.Equals(FirstAnchors.Maximum)
-			&& SecondAnchors.Minimum.Equals(SecondAnchors.Maximum)
-			&& FirstAnchors.Minimum.Equals(SecondAnchors.Minimum);
-	}
-
-	FVector2D FixedCanvasSlotCenter(const UCanvasPanelSlot* Slot)
-	{
-		const FVector2D Position = Slot->GetPosition();
-		const FVector2D Size = Slot->GetSize();
-		return Position + (FVector2D(0.5f, 0.5f) - Slot->GetAlignment()) * Size;
 	}
 }
 
@@ -300,34 +262,6 @@ void URDUserWidget::NormalizeCommonInputLayersAndButtonLabels()
 			{
 				Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
-			else if (IsPassiveLayoutPanel(Widget)
-				&& Widget->GetVisibility() == ESlateVisibility::Visible)
-			{
-				Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-			}
-
-			// 일부 WBP는 버튼과 라벨 이름을 mOpenButton/mOpenButtonText처럼
-			// 짓지만 둘을 별도 Canvas 자식으로 둔다. 이런 명시적 버튼 라벨은
-			// 동반 위젯 검색 결과와 관계없이 자체 텍스트 영역부터 중앙 정렬한다.
-			if (UTextBlock* Text = Cast<UTextBlock>(Widget))
-			{
-				const FString Name = Text->GetName();
-				if (Name.Contains(TEXT("Button"))
-					&& (Name.Contains(TEXT("Text")) || Name.Contains(TEXT("Label"))))
-				{
-					Text->SetJustification(ETextJustify::Center);
-					if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Text->Slot))
-					{
-						OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
-						OverlaySlot->SetVerticalAlignment(VAlign_Center);
-					}
-					else if (UScaleBoxSlot* ScaleSlot = Cast<UScaleBoxSlot>(Text->Slot))
-					{
-						ScaleSlot->SetHorizontalAlignment(HAlign_Center);
-						ScaleSlot->SetVerticalAlignment(VAlign_Center);
-					}
-				}
-			}
 		});
 
 	TArray<UButton*> Buttons;
@@ -363,21 +297,6 @@ void URDUserWidget::NormalizeCommonInputLayersAndButtonLabels()
 				ScaleSlot->SetVerticalAlignment(VAlign_Center);
 			}
 
-			UWidget* ButtonMount = FindNearestCanvasMountedWidget(Button);
-			UWidget* TextMount = FindNearestCanvasMountedWidget(Text);
-			UCanvasPanelSlot* ButtonSlot = ButtonMount != nullptr
-				? Cast<UCanvasPanelSlot>(ButtonMount->Slot) : nullptr;
-			UCanvasPanelSlot* TextSlot = TextMount != nullptr
-				? Cast<UCanvasPanelSlot>(TextMount->Slot) : nullptr;
-			if (ButtonMount != TextMount && HaveSameFixedAnchors(ButtonSlot, TextSlot))
-			{
-				const FVector2D Delta = FixedCanvasSlotCenter(ButtonSlot)
-					- FixedCanvasSlotCenter(TextSlot);
-				if (!Delta.IsNearlyZero(0.5f))
-				{
-					TextSlot->SetPosition(TextSlot->GetPosition() + Delta);
-				}
-			}
 		}
 	}
 }
@@ -399,6 +318,8 @@ void URDUserWidget::SetupCommonButtonFeedback()
 {
 	mFeedbackButtons.Reset();
 	mFeedbackButtonBaseColors.Reset();
+	mFeedbackButtonBaseTransforms.Reset();
+	mFeedbackButtonBasePivots.Reset();
 
 	if (WidgetTree == nullptr)
 	{
@@ -450,12 +371,13 @@ void URDUserWidget::SetupCommonButtonFeedback()
 
 			// 누름 피드백: 배경색을 어둡게(주 효과) + 살짝 축소(보조). 브러시 자체는 안 건드려 디자이너 스킨 보존.
 			// 원래 배경색을 저장해 뒀다가 떼면 그대로 복원한다(버튼별 커스텀 틴트도 안전).
-			Button->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 			Button->OnPressed.AddUniqueDynamic(this, &URDUserWidget::HandleAnyButtonPressed);
 			Button->OnReleased.AddUniqueDynamic(this, &URDUserWidget::HandleAnyButtonReleased);
 
 			mFeedbackButtons.Add(Button);
 			mFeedbackButtonBaseColors.Add(Button->GetBackgroundColor());
+			mFeedbackButtonBaseTransforms.Add(Button->GetRenderTransform());
+			mFeedbackButtonBasePivots.Add(Button->GetRenderTransformPivot());
 		});
 }
 
@@ -466,19 +388,22 @@ void URDUserWidget::CollectButtonCompanions(const UButton* Button, TArray<UWidge
 		return;
 	}
 
-	// 버튼명을 "<Base>__<Profile>"로 보고 Base/접미사를 분리한다(접미사 없으면 Base=전체, 접미사="").
-	const FString FullName = Button->GetName();
-	FString Base = FullName;
+	// 버튼명을 "<Base>__<Profile>"로 보고 Base/접미사를 분리한다.
+	FString Base;
 	FString Suffix;
-	const int32 ProfileSep = FullName.Find(TEXT("__"), ESearchCase::CaseSensitive, ESearchDir::FromStart);
-	if (ProfileSep != INDEX_NONE)
+	SplitProfiledButtonName(Button->GetName(), Base, Suffix);
+	const TSet<FString> ExactCompanionNames =
 	{
-		Base = FullName.Left(ProfileSep);       // 예: "StartButton"
-		Suffix = FullName.Mid(ProfileSep);      // 예: "__base_16_9"
-	}
+		Base + TEXT("Text") + Suffix,
+		Base + TEXT("Label") + Suffix,
+		Base + TEXT("FrameImage") + Suffix,
+		Base + TEXT("Plate") + Suffix,
+		Base + TEXT("Art") + Suffix,
+	};
 
-	// 같은 트리에서 Base로 시작 + 같은 접미사로 끝나는 Image/Text 형제를 짝으로 모은다.
-	WidgetTree->ForEachWidget([&Base, &Suffix, Button, &OutCompanions](UWidget* Widget)
+	// 비용·상태·설명처럼 같은 prefix를 공유하는 요소는 건드리지 않는다.
+	// 공통 처리는 정확한 라벨/프레임 이름만 맡고, 특수 화면은 builder가 명시적으로 정렬한다.
+	WidgetTree->ForEachWidget([&ExactCompanionNames, Button, &OutCompanions](UWidget* Widget)
 		{
 			if (Widget == nullptr || Widget == Button)
 			{
@@ -488,8 +413,7 @@ void URDUserWidget::CollectButtonCompanions(const UButton* Button, TArray<UWidge
 			{
 				return;
 			}
-			const FString Name = Widget->GetName();
-			if (Name.StartsWith(Base) == true && Name.EndsWith(Suffix) == true)
+			if (ExactCompanionNames.Contains(Widget->GetName()))
 			{
 				OutCompanions.Add(Widget);
 			}
@@ -513,7 +437,12 @@ void URDUserWidget::HandleAnyButtonPressed()
 		Pressed.G *= ButtonPressColorMul;
 		Pressed.B *= ButtonPressColorMul;   // 알파는 유지, RGB만 어둡게.
 		Button->SetBackgroundColor(Pressed);
-		Button->SetRenderScale(FVector2D(ButtonPressScale, ButtonPressScale));
+		const FWidgetTransform BaseTransform = mFeedbackButtonBaseTransforms.IsValidIndex(Index)
+			? mFeedbackButtonBaseTransforms[Index] : Button->GetRenderTransform();
+		FWidgetTransform PressedTransform = BaseTransform;
+		PressedTransform.Scale *= ButtonPressScale;
+		Button->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		Button->SetRenderTransform(PressedTransform);
 
 		// (2) 동반 시각 위젯 — 투명 버튼 위에 얹힌 프레임/텍스트(타이틀 등). 이쪽을 어둡게+축소해야 실제로 보인다.
 		//     이전 잔여가 있으면 먼저 복원 후 새로 적용(한 번에 한 버튼만 눌린다는 전제).
@@ -522,8 +451,12 @@ void URDUserWidget::HandleAnyButtonPressed()
 		CollectButtonCompanions(Button, Companions);
 		for (UWidget* Companion : Companions)
 		{
+			const FWidgetTransform CompanionBaseTransform = Companion->GetRenderTransform();
+			const FVector2D CompanionBasePivot = Companion->GetRenderTransformPivot();
 			Companion->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
-			Companion->SetRenderScale(FVector2D(ButtonPressScale, ButtonPressScale));
+			FWidgetTransform CompanionPressedTransform = CompanionBaseTransform;
+			CompanionPressedTransform.Scale *= ButtonPressScale;
+			Companion->SetRenderTransform(CompanionPressedTransform);
 
 			FLinearColor CompanionBase = FLinearColor::White;
 			if (UImage* Image = Cast<UImage>(Companion))
@@ -547,6 +480,8 @@ void URDUserWidget::HandleAnyButtonPressed()
 
 			mActivePressCompanions.Add(Companion);
 			mActivePressCompanionBaseColors.Add(CompanionBase);
+			mActivePressCompanionBaseTransforms.Add(CompanionBaseTransform);
+			mActivePressCompanionBasePivots.Add(CompanionBasePivot);
 		}
 
 		break;   // 한 번에 한 버튼만.
@@ -566,7 +501,14 @@ void URDUserWidget::HandleAnyButtonReleased()
 
 		const FLinearColor Base = mFeedbackButtonBaseColors.IsValidIndex(Index) ? mFeedbackButtonBaseColors[Index] : FLinearColor::White;
 		Button->SetBackgroundColor(Base);
-		Button->SetRenderScale(FVector2D(1.0f, 1.0f));
+		if (mFeedbackButtonBaseTransforms.IsValidIndex(Index))
+		{
+			Button->SetRenderTransform(mFeedbackButtonBaseTransforms[Index]);
+		}
+		if (mFeedbackButtonBasePivots.IsValidIndex(Index))
+		{
+			Button->SetRenderTransformPivot(mFeedbackButtonBasePivots[Index]);
+		}
 	}
 
 	// 동반 위젯 복원.
@@ -592,9 +534,18 @@ void URDUserWidget::RestoreActivePressCompanions()
 		{
 			Text->SetColorAndOpacity(FSlateColor(Base));
 		}
-		Companion->SetRenderScale(FVector2D(1.0f, 1.0f));
+		if (mActivePressCompanionBaseTransforms.IsValidIndex(Index))
+		{
+			Companion->SetRenderTransform(mActivePressCompanionBaseTransforms[Index]);
+		}
+		if (mActivePressCompanionBasePivots.IsValidIndex(Index))
+		{
+			Companion->SetRenderTransformPivot(mActivePressCompanionBasePivots[Index]);
+		}
 	}
 
 	mActivePressCompanions.Reset();
 	mActivePressCompanionBaseColors.Reset();
+	mActivePressCompanionBaseTransforms.Reset();
+	mActivePressCompanionBasePivots.Reset();
 }
