@@ -18,7 +18,8 @@
 
 namespace
 {
-	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_RotundaReveal_15s.mp4");
+	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s.mp4");
+	const TCHAR* const FallbackAcceleratedIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s_3x.mp4");
 
 	FString GetIntroCinematicVideoPath()
 	{
@@ -29,6 +30,17 @@ namespace
 		}
 
 		return FString(FallbackIntroCinematicVideoPath);
+	}
+
+	FString GetAcceleratedIntroCinematicVideoPath()
+	{
+		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+		if (GamePlaySettings != nullptr && GamePlaySettings->mIntroCinematicAcceleratedVideoPath.IsEmpty() == false)
+		{
+			return GamePlaySettings->mIntroCinematicAcceleratedVideoPath;
+		}
+
+		return FString(FallbackAcceleratedIntroCinematicVideoPath);
 	}
 }
 
@@ -192,6 +204,11 @@ FString UCinematicWidget::ResolveCinematicVideoPath() const
 	return RDUITexture::ResolveContentFilePath(CinematicVideoPath);
 }
 
+FString UCinematicWidget::ResolveAcceleratedCinematicVideoPath() const
+{
+	return RDUITexture::ResolveContentFilePath(GetAcceleratedIntroCinematicVideoPath());
+}
+
 /**
  * @brief 미디어 소스 open 성공 콜백. 실제 재생을 시작하고 종료 폴백 타이머를 건다.
  * @param OpenedUrl 열린 미디어의 URL(엔진 델리게이트 시그니처상 전달되나 본 핸들러에서는 사용하지 않음)
@@ -215,6 +232,25 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 			mCinematicVideoBrush.ImageSize = mCinematicVideoNativeSize;                  // 브러시 이미지 크기를 실해상도에 맞춰 비율 보존
 		}
 
+		if (mUsingAcceleratedCinematicSource)
+		{
+			if (mAcceleratedCinematicStartTime > FTimespan::Zero() && mCinematicMediaPlayer->SupportsSeeking())
+			{
+				mCinematicMediaPlayer->Seek(mAcceleratedCinematicStartTime);
+			}
+			const float RemainingSeconds = StaticCast<float>(FMath::Max(
+				0.0,
+				(mCinematicMediaPlayer->GetDuration() - mAcceleratedCinematicStartTime).GetTotalSeconds()));
+			StartDefaultCinematicTimer(RemainingSeconds + 1.0f);
+			UE_LOG(LogRD, Display, TEXT("Intro cinematic switched to pre-encoded 3.00x source at %.2fs"), mAcceleratedCinematicStartTime.GetTotalSeconds());
+			return;
+		}
+
+		if (mRequestedPlaybackRate > 1.0f && ApplyRequestedCinematicPlaybackRate())
+		{
+			return;
+		}
+
 		const float MediaDurationSeconds = StaticCast<float>(mCinematicMediaPlayer->GetDuration().GetTotalSeconds());
 		if (MediaDurationSeconds > 0.0f)
 		{
@@ -225,6 +261,54 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 			StartDefaultCinematicTimer(mDefaultCinematicDuration); // 길이 미상이면 기본 재생 시간으로 폴백 타이머 설정
 		}
 	}
+}
+
+bool UCinematicWidget::ApplyRequestedCinematicPlaybackRate()
+{
+	if (mCinematicMediaPlayer == nullptr || mCinematicMediaPlayer->IsReady() == false)
+	{
+		return false;
+	}
+
+	const float PlaybackRate = FMath::Max(mRequestedPlaybackRate, KINDA_SMALL_NUMBER);
+	if (mCinematicMediaPlayer->SetRate(PlaybackRate) == false)
+	{
+		const FString AcceleratedVideoPath = ResolveAcceleratedCinematicVideoPath();
+		if (FMath::IsNearlyEqual(PlaybackRate, 3.0f) == false
+			|| FPaths::FileExists(AcceleratedVideoPath) == false
+			|| mCinematicMediaSource == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("Intro cinematic playback rate %.2fx is not supported by the active media player"), PlaybackRate);
+			return false;
+		}
+
+		mAcceleratedCinematicStartTime = FTimespan::FromSeconds(mCinematicMediaPlayer->GetTime().GetTotalSeconds() / 3.0);
+		mUsingAcceleratedCinematicSource = true;
+		if (mCinematicMediaTexture != nullptr)
+		{
+			mCinematicMediaTexture->AutoClear = false;
+		}
+		mCinematicMediaPlayer->Close();
+		mCinematicMediaSource->SetFilePath(AcceleratedVideoPath);
+		if (mCinematicMediaPlayer->OpenSource(mCinematicMediaSource) == false)
+		{
+			mUsingAcceleratedCinematicSource = false;
+			UE_LOG(LogRD, Warning, TEXT("Intro cinematic failed to open pre-encoded 3.00x source: %s"), *AcceleratedVideoPath);
+			return false;
+		}
+		UE_LOG(LogRD, Display, TEXT("Intro cinematic opening pre-encoded 3.00x source: %s"), *AcceleratedVideoPath);
+		return true;
+	}
+
+	const double RemainingSeconds = FMath::Max(
+		0.0,
+		(mCinematicMediaPlayer->GetDuration() - mCinematicMediaPlayer->GetTime()).GetTotalSeconds());
+	if (RemainingSeconds > 0.0)
+	{
+		StartDefaultCinematicTimer(StaticCast<float>(RemainingSeconds / PlaybackRate) + 1.0f);
+	}
+	UE_LOG(LogRD, Display, TEXT("Intro cinematic playback accelerated to %.2fx; remaining media time %.2fs"), PlaybackRate, RemainingSeconds);
+	return true;
 }
 
 /**

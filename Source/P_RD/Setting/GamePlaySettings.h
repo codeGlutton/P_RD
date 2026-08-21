@@ -76,10 +76,13 @@ public:
     /* 비디오 세팅 */
 public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicVideoPath"))
-    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_RotundaReveal_15s.mp4");
+    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s.mp4");
+
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicAcceleratedVideoPath"))
+    FString mIntroCinematicAcceleratedVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s_3x.mp4");
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPath"))
-    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30/Title_All6_combo01_5s_mobile.mp4");
+    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_16x9/Title_All6_16x9_combo01_5s_mobile.mp4");
 
     /** @brief 타이틀에서 셔플 재생할 전체 화면 영상 목록. 비어 있으면 단일 TitleBackgroundVideoPath를 사용한다. */
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPaths"))
