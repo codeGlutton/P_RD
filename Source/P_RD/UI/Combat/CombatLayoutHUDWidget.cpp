@@ -14,7 +14,6 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
-#include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
 #include "Components/SizeBox.h"
@@ -360,9 +359,6 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 
 	CacheAuthoredWidgets();
 	EnsureMercenarySkillButtons();
-	#if !UE_BUILD_SHIPPING
-	EnsureAutoBattleButton();
-	#endif
 	WireCommands();
 	EnsureCombatAnnouncementWidgets();
 	StartPreviewIfUnbound();
@@ -829,129 +825,6 @@ void UCombatLayoutHUDWidget::StartPreviewIfUnbound()
 	mPreviewDriver->Start(PreviewModel);
 }
 
-#if !UE_BUILD_SHIPPING
-
-void UCombatLayoutHUDWidget::EnsureAutoBattleButton()
-{
-	if (mAutoBattleButton != nullptr || WidgetTree == nullptr || mRootCanvas == nullptr)
-	{
-		return;
-	}
-
-	mAutoBattleButton = WidgetTree->ConstructWidget<UButton>(
-		UButton::StaticClass(), TEXT("AutoBattleButton_Runtime"));
-	if (mAutoBattleButton == nullptr)
-	{
-		return;
-	}
-
-	// 기존 턴 종료 버튼의 스타일을 복사해 HUD의 공통 프레임/입력 피드백을
-	// 유지한다. WBP에 새 위젯을 저장하지 않으므로 개발 빌드에서만 존재한다.
-	if (const UButton* StyleSource = mEndTurnButton != nullptr
-		? mEndTurnButton.Get() : mSkillToggleButton.Get())
-	{
-		mAutoBattleButton->SetStyle(StyleSource->GetStyle());
-	}
-	mAutoBattleButton->SetTouchMethod(EButtonTouchMethod::PreciseTap);
-	mAutoBattleButton->SetClickMethod(EButtonClickMethod::PreciseClick);
-	mAutoBattleButton->SetToolTipText(
-		LOCTEXT("AutoBattleTooltip", "개발용 자동전투를 켜거나 끕니다."));
-
-	mAutoBattleLabel = WidgetTree->ConstructWidget<UTextBlock>(
-		UTextBlock::StaticClass(), TEXT("AutoBattleLabel_Runtime"));
-	if (mAutoBattleLabel != nullptr)
-	{
-		mAutoBattleLabel->SetJustification(ETextJustify::Center);
-		mAutoBattleLabel->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-		mAutoBattleLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
-		mAutoBattleButton->AddChild(mAutoBattleLabel);
-	}
-
-	bool bPlaced = false;
-	if (mEndTurnButton != nullptr)
-	{
-		UCanvasPanel* ParentCanvas = Cast<UCanvasPanel>(mEndTurnButton->GetParent());
-		const UCanvasPanelSlot* ReferenceSlot = Cast<UCanvasPanelSlot>(
-			mEndTurnButton->Slot);
-		if (ParentCanvas != nullptr && ReferenceSlot != nullptr)
-		{
-			UCanvasPanelSlot* ButtonSlot = ParentCanvas->AddChildToCanvas(
-				mAutoBattleButton);
-			if (ButtonSlot != nullptr)
-			{
-				FVector2D ButtonSize = ReferenceSlot->GetSize();
-				if (ButtonSize.X <= 1.f || ButtonSize.Y <= 1.f)
-				{
-					ButtonSize = FVector2D(180.f, 52.f);
-				}
-				ButtonSlot->SetAnchors(ReferenceSlot->GetAnchors());
-				ButtonSlot->SetAlignment(ReferenceSlot->GetAlignment());
-				ButtonSlot->SetAutoSize(false);
-				ButtonSlot->SetSize(ButtonSize);
-				ButtonSlot->SetPosition(ReferenceSlot->GetPosition()
-					- FVector2D(ButtonSize.X + 12.f, 0.f));
-				ButtonSlot->SetZOrder(ReferenceSlot->GetZOrder() + 50);
-				bPlaced = true;
-			}
-		}
-	}
-
-	if (bPlaced == false)
-	{
-		// 레이아웃 안에 EndTurnButton이 없는 배치안도 동작하도록 우하단
-		// 안전 위치를 fallback으로 둔다.
-		if (UCanvasPanelSlot* ButtonSlot = mRootCanvas->AddChildToCanvas(
-			mAutoBattleButton))
-		{
-			ButtonSlot->SetAnchors(FAnchors(1.f, 1.f));
-			ButtonSlot->SetAlignment(FVector2D(1.f, 1.f));
-			ButtonSlot->SetAutoSize(false);
-			ButtonSlot->SetPosition(FVector2D(-24.f, -118.f));
-			ButtonSlot->SetSize(FVector2D(180.f, 52.f));
-			ButtonSlot->SetZOrder(1000);
-		}
-	}
-
-	const bool bGameWorld = GetWorld() != nullptr && GetWorld()->IsGameWorld();
-	mAutoBattleButton->SetVisibility(bGameWorld
-		? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	RefreshAutoBattleButton();
-}
-
-void UCombatLayoutHUDWidget::RefreshAutoBattleButton()
-{
-	if (mAutoBattleButton == nullptr)
-	{
-		return;
-	}
-
-	const bool bEnabled = mUIModel != nullptr && mUIModel->IsAutoBattleEnabled();
-	if (mAutoBattleLabel != nullptr)
-	{
-		mAutoBattleLabel->SetText(bEnabled
-			? LOCTEXT("AutoBattleEnabledLabel", "자동전투 ON")
-			: LOCTEXT("AutoBattleDisabledLabel", "자동전투 OFF"));
-	}
-
-	// 켜짐은 녹색, 꺼짐은 중성색으로 표시해 현재 상태를 글자와 색으로
-	// 동시에 읽을 수 있게 한다.
-	mAutoBattleButton->SetBackgroundColor(bEnabled
-		? FLinearColor(0.12f, 0.55f, 0.24f, 0.96f)
-		: FLinearColor(0.18f, 0.20f, 0.24f, 0.94f));
-}
-
-#endif
-
-void UCombatLayoutHUDWidget::HandleAutoBattleClicked()
-{
-#if !UE_BUILD_SHIPPING
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestAutoBattleToggle();
-	}
-#endif
-}
-
 void UCombatLayoutHUDWidget::WireCommands()
 {
 	// 슬롯별 핸들러를 따로 두는 이유: UFUNCTION 델리게이트는 페이로드를 못 받는다.
@@ -1014,15 +887,6 @@ void UCombatLayoutHUDWidget::WireCommands()
 			this, &UCombatLayoutHUDWidget::HandleSkillToggleClicked);
 		BindPressFeedback(mSkillToggleButton, mSkillToggleButton);
 	}
-
-#if !UE_BUILD_SHIPPING
-	if (mAutoBattleButton != nullptr)
-	{
-		mAutoBattleButton->OnClicked.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleAutoBattleClicked);
-		BindPressFeedback(mAutoBattleButton, mAutoBattleButton);
-	}
-#endif
 
 	if (mConfirmButton != nullptr)
 	{
@@ -1674,12 +1538,6 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	{
 		RefreshMeta();
 	}
-#if !UE_BUILD_SHIPPING
-	if (bAll || Domain == ECombatUIDomain::AutoBattle)
-	{
-		RefreshAutoBattleButton();
-	}
-#endif
 	// 상세는 All 에 실려 오지 않는다. 롱프레스 요청의 응답으로만 열어야,
 	// 바인딩 직후 All 갱신이 빈 상세 패널을 띄우지 않는다.
 	if (Domain == ECombatUIDomain::UnitDetail)

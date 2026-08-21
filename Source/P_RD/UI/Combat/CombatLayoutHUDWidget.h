@@ -277,13 +277,6 @@ private:
 	/** @brief 버튼 클릭을 UIModel의 Request*로 연결한다. */
 	void WireCommands();
 
-	#if !UE_BUILD_SHIPPING
-	/** @brief WBP를 수정하지 않고 개발 빌드 HUD에 자동전투 버튼을 추가한다. */
-	void EnsureAutoBattleButton();
-	void RefreshAutoBattleButton();
-	#endif
-	UFUNCTION() void HandleAutoBattleClicked();
-
 	/** @brief 붙은 UIModel이 없을 때 미리보기 전투 장면을 세운다. */
 	void StartPreviewIfUnbound();
 
@@ -1435,10 +1428,6 @@ private:
 	TObjectPtr<UButton> mSkillToggleButton;
 	TObjectPtr<UWidget> mSkillTogglePlate;
 	TObjectPtr<UWidget> mSkillToggleLabel;
-
-	/** @brief 개발 빌드에서만 런타임 생성되는 자동전투 토글. */
-	UPROPERTY(Transient) TObjectPtr<UButton> mAutoBattleButton;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mAutoBattleLabel;
 
 	/** @brief 미리보기용 가짜 전투 드라이버. 실제 전투에서는 null이다. */
 	UPROPERTY(Transient) TObjectPtr<UMockCombatDriver> mPreviewDriver;
