@@ -87,6 +87,10 @@ private:
 	UFUNCTION()
 	void HandleRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
+	/** @brief 보물방 GrantAll 정책 요청을 실제 Room 보상 전체 지급으로 연결한다. */
+	UFUNCTION()
+	void HandleRewardGrantBundleRequested();
+
 	UFUNCTION()
 	void HandleRewardPresentationCompleted(int32 ArtifactIndex);
 
@@ -95,6 +99,15 @@ private:
 
 	/** @brief 현재 파티 골드. @return 없으면 0 */
 	int32 GetPartyGold() const;
+
+	/** @brief 골드만 한 번 지급한다. 아티팩트 bundle과 독립된 단계다. */
+	bool GrantTreasureGold();
+
+	/** @brief Room의 유효 아티팩트 목록을 모두 시도하고 결과를 반환한다. */
+	FRewardGrantBundleResultUI GrantTreasureArtifactBundle();
+
+	/** @brief 구형 보물방 진입점용 전체 지급 어댑터. */
+	void GrantTreasureRewards(OUT FRewardGrantBundleResultUI& OutResult);
 
 private:
 	UPROPERTY(Transient)
@@ -119,7 +132,9 @@ private:
 	 * 개봉 후 저장을 추가하는 경우 이 값도 세이브 대상에 포함할 것
 	 */
 	bool mOpened = false;
+	bool mGoldRewardGranted = false;
 
 	// @brief 실제 지급에 성공한 아티팩트 ID (지급 내역 표시용)
 	TArray<FPrimaryAssetId> mGrantedArtifactIds;
+	TArray<FPrimaryAssetId> mFailedArtifactIds;
 };

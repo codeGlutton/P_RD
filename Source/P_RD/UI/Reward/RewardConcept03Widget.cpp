@@ -153,6 +153,10 @@ void URewardConcept03Widget::BindUIModel(URewardUIModel* InUIModel)
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnChoicesChanged.AddUniqueDynamic(
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
+		UIModel->OnRewardSelectionConfirmed.AddUniqueDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardGrantBundleConfirmed.AddUniqueDynamic(
+			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
 	RefreshRewardData();
 }
@@ -165,6 +169,10 @@ void URewardConcept03Widget::UnbindUIModel()
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnChoicesChanged.RemoveDynamic(
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
+		UIModel->OnRewardSelectionConfirmed.RemoveDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardGrantBundleConfirmed.RemoveDynamic(
+			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
 	UIModel = nullptr;
 }
@@ -172,6 +180,37 @@ void URewardConcept03Widget::UnbindUIModel()
 void URewardConcept03Widget::HandleRewardDataChanged()
 {
 	RefreshRewardData();
+}
+
+void URewardConcept03Widget::HandleRewardSelectionConfirmed(
+	const FPrimaryAssetId RewardId)
+{
+	if (bRewardRequestPending == false
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
+		|| PendingRewardId != RewardId)
+	{
+		return;
+	}
+
+	bRewardRequestPending = false;
+	FinishRewardFlowAfterConfirmation();
+}
+
+void URewardConcept03Widget::HandleRewardGrantBundleConfirmed(
+	const FRewardGrantBundleResultUI Result)
+{
+	if (bRewardRequestPending == false
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::GrantAll)
+	{
+		return;
+	}
+
+	// 부분 실패도 정책상 bundle 처리는 끝난 것이다. 실제 결과는
+	// 게임플레이가 보관하고 UI는 완료 confirmation 이후에만 닫는다.
+	bRewardRequestPending = false;
+	FinishRewardFlowAfterConfirmation();
 }
 
 void URewardConcept03Widget::NativeTick(
@@ -394,9 +433,16 @@ void URewardConcept03Widget::RefreshRewardData()
 	}
 
 	if (UsesArtifactStep() && Choices.Num() > 0
+		&& UIModel != nullptr
+		&& UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne
 		&& !Choices.IsValidIndex(SelectedArtifactIndex))
 	{
 		SelectedArtifactIndex = FMath::Min(1, Choices.Num() - 1);
+	}
+	if (UIModel != nullptr
+		&& UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne)
+	{
+		SelectedArtifactIndex = INDEX_NONE;
 	}
 	ApplyArtifactSelection();
 }
@@ -416,6 +462,8 @@ FText URewardConcept03Widget::GetRewardChoiceTypeText(
 		return LOCTEXT("ChoiceTypeSkill", "스킬");
 	case ERewardChoiceKind::Gold:
 		return LOCTEXT("ChoiceTypeGold", "골드");
+	case ERewardChoiceKind::Artifact:
+		return LOCTEXT("ChoiceTypeArtifact", "아티팩트");
 	default:
 		return LOCTEXT("ChoiceTypeArtifact", "아티팩트");
 	}
@@ -529,12 +577,16 @@ void URewardConcept03Widget::ResetRewardFlow()
 	const int32 ChoiceCount = UIModel != nullptr
 		? UIModel->GetRewardChoices().Num() : 3;
 	SelectedArtifactIndex = UsesArtifactStep() && ChoiceCount > 0
+		&& (UIModel == nullptr
+			|| UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne)
 		? FMath::Min(RewardConcept03::DefaultArtifact, ChoiceCount - 1)
 		: INDEX_NONE;
 	bChestOpened = false;
 	bFlowCompleted = false;
 	bExperienceClaimRequested = false;
 	bGoldClaimRequested = false;
+	bRewardRequestPending = false;
+	PendingRewardId = FPrimaryAssetId();
 	PresentationState = EPresentationState::Idle;
 	PresentationElapsed = 0.f;
 	HideArtifactDetails();
@@ -545,7 +597,7 @@ void URewardConcept03Widget::ResetRewardFlow()
 
 void URewardConcept03Widget::AdvanceRewardFlow()
 {
-	if (bFlowCompleted)
+	if (bFlowCompleted || bRewardRequestPending)
 	{
 		return;
 	}
@@ -565,7 +617,9 @@ void URewardConcept03Widget::AdvanceRewardFlow()
 		break;
 	case RewardConcept03::ArtifactStep:
 		if (PresentationState == EPresentationState::AwaitArtifactChoice
-			&& SelectedArtifactIndex != INDEX_NONE)
+			&& UIModel != nullptr
+			&& (UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::GrantAll
+				|| SelectedArtifactIndex != INDEX_NONE))
 		{
 			CompleteRewardFlow();
 		}
@@ -1126,9 +1180,10 @@ void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 	if (!UsesArtifactStep()
 		|| CurrentStepIndex != RewardConcept03::ArtifactStep
 		|| PresentationState != EPresentationState::AwaitArtifactChoice
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| ArtifactIndex < 0 || ArtifactIndex >= UE_ARRAY_COUNT(ArtifactButtons)
-		|| (UIModel != nullptr
-			&& !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex)))
+		|| !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex))
 	{
 		return;
 	}
@@ -1144,6 +1199,7 @@ void URewardConcept03Widget::BeginArtifactPress(const int32 ArtifactIndex)
 		|| CurrentStepIndex != RewardConcept03::ArtifactStep
 		|| PresentationState != EPresentationState::AwaitArtifactChoice
 		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex))
 	{
 		return;
@@ -1387,7 +1443,7 @@ void URewardConcept03Widget::ClaimGoldReward()
 
 void URewardConcept03Widget::CompleteRewardFlow()
 {
-	if (bFlowCompleted)
+	if (bFlowCompleted || bRewardRequestPending)
 	{
 		return;
 	}
@@ -1397,17 +1453,49 @@ void URewardConcept03Widget::CompleteRewardFlow()
 	}
 	if (UIModel != nullptr)
 	{
-		if (UsesArtifactStep())
+		const ERewardAcquisitionPolicy Policy =
+			UIModel->GetAcquisitionPolicy();
+		if (Policy == ERewardAcquisitionPolicy::SelectOne)
 		{
 			const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
 			if (!Choices.IsValidIndex(SelectedArtifactIndex))
 			{
 				return;
 			}
-			UIModel->RequestClaimReward(ERewardClaimKind::Choice,
-				Choices[SelectedArtifactIndex].mChoiceIndex);
+
+			PendingRewardId = Choices[SelectedArtifactIndex].mSourceAssetId;
+			bRewardRequestPending = true;
+			if (UIModel->RequestSelectReward(PendingRewardId) == false)
+			{
+				bRewardRequestPending = false;
+				PendingRewardId = FPrimaryAssetId();
+			}
+			return;
 		}
-		UIModel->RequestClaim();
+		if (Policy == ERewardAcquisitionPolicy::GrantAll)
+		{
+			bRewardRequestPending = true;
+			if (UIModel->RequestGrantBundle() == false)
+			{
+				bRewardRequestPending = false;
+			}
+			return;
+		}
+	}
+
+	FinishRewardFlowAfterConfirmation();
+}
+
+void URewardConcept03Widget::FinishRewardFlowAfterConfirmation()
+{
+	if (bFlowCompleted)
+	{
+		return;
+	}
+
+	if (UIModel != nullptr)
+	{
+		UIModel->RequestFinishPresentation();
 	}
 	bFlowCompleted = true;
 	PresentationState = EPresentationState::Completed;
@@ -1457,7 +1545,8 @@ void URewardConcept03Widget::ApplyVisualState()
 	}
 	if (BottomActionButton != nullptr)
 	{
-		BottomActionButton->SetIsEnabled(bBottomVisible && !bFlowCompleted);
+		BottomActionButton->SetIsEnabled(
+			bBottomVisible && !bFlowCompleted && !bRewardRequestPending);
 	}
 	ApplyBottomActionVisual();
 	if (ChestButton != nullptr)
@@ -1469,8 +1558,12 @@ void URewardConcept03Widget::ApplyVisualState()
 	{
 		if (ArtifactButton != nullptr)
 		{
+			const bool bSelectionEnabled = UIModel == nullptr
+				|| UIModel->GetAcquisitionPolicy()
+					== ERewardAcquisitionPolicy::SelectOne;
 			ArtifactButton->SetIsEnabled(PresentationState
-				== EPresentationState::AwaitArtifactChoice && !bFlowCompleted);
+				== EPresentationState::AwaitArtifactChoice
+				&& bSelectionEnabled && !bFlowCompleted);
 		}
 	}
 	ApplyArtifactSelection();
@@ -1483,6 +1576,8 @@ void URewardConcept03Widget::ApplyArtifactSelection()
 		return;
 	}
 	if (PresentationState != EPresentationState::AwaitArtifactChoice
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| SelectedArtifactIndex < 0
 		|| SelectedArtifactIndex >= UE_ARRAY_COUNT(RewardConcept03::SelectionXs))
 	{

@@ -229,6 +229,8 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	{
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = Index;
+		Choice.mSourceAssetId = FPrimaryAssetId(
+			TEXT("Artifact"), FName(*FString::Printf(TEXT("TestArtifact_%d"), Index)));
 		Choice.mName = FText::FromString(FString::Printf(TEXT("시험 아티팩트 %d"),
 			Index + 1));
 		Choice.mDescription = FText::FromString(TEXT("롱프레스 상세 설명"));
@@ -466,7 +468,11 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("세 번째 아티팩트 선택"),
 		Widget->GetSelectedArtifactIndex(), 2);
 	Widget->AdvanceRewardFlow();
-	TestTrue(TEXT("보상 흐름 확정"), Widget->IsRewardFlowCompleted());
+	TestFalse(TEXT("지급 confirmation 전에는 보상 흐름을 확정하지 않음"),
+		Widget->IsRewardFlowCompleted());
+	RewardModel->ConfirmSelectedReward(TestChoices[2].mSourceAssetId);
+	TestTrue(TEXT("지급 confirmation 후 보상 흐름 확정"),
+		Widget->IsRewardFlowCompleted());
 	return true;
 }
 

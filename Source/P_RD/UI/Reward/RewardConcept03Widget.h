@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "TimerManager.h"
+#include "UI/Reward/RewardUITypes.h"
 
 #include "RewardConcept03Widget.generated.h"
 
@@ -130,6 +131,7 @@ private:
 	void UnbindInput();
 	void SetCurrentStep(int32 StepIndex);
 	void CompleteRewardFlow();
+	void FinishRewardFlowAfterConfirmation();
 	void StartChestOpening();
 	void UpdateChestOpening(float NormalizedTime);
 	void FinishChestOpening();
@@ -198,6 +200,12 @@ private:
 
 	UFUNCTION()
 	void HandleRewardDataChanged();
+
+	UFUNCTION()
+	void HandleRewardSelectionConfirmed(FPrimaryAssetId RewardId);
+
+	UFUNCTION()
+	void HandleRewardGrantBundleConfirmed(FRewardGrantBundleResultUI Result);
 
 	UPROPERTY(Transient)
 	TObjectPtr<UWidgetSwitcher> StepSwitcher;
@@ -330,6 +338,8 @@ private:
 	bool bBottomActionHovered = false;
 	bool bExperienceClaimRequested = false;
 	bool bGoldClaimRequested = false;
+	bool bRewardRequestPending = false;
+	FPrimaryAssetId PendingRewardId;
 	bool bSuppressNextArtifactClick = false;
 	int32 PressedArtifactIndex = INDEX_NONE;
 	FTimerHandle ArtifactLongPressTimer;
