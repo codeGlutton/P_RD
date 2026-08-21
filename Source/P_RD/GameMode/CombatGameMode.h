@@ -89,6 +89,10 @@ public:
 	UFUNCTION()
 	void HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
+	/** @brief 엘리트·보스 SelectOne 정책 요청을 실제 아티팩트 지급으로 연결한다. */
+	UFUNCTION()
+	void HandleRewardSelectionRequested(FPrimaryAssetId RewardId);
+
 	UFUNCTION()
 	void HandleAbandonRun();
 
@@ -103,6 +107,9 @@ protected:
 	 * @return 지급이 완료되어 UI가 해당 행을 수령 처리해도 되는 경우 true.
 	 */
 	bool ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
+
+	/** @brief Room의 실제 후보 풀을 재검증한 뒤 선택 아티팩트를 파티에 지급한다. */
+	bool ClaimCombatSelectedArtifact(const FPrimaryAssetId& RewardId);
 
 	/**
 	 * @brief 터치/클릭 지점의 월드 액터를 검사하여 이벤트를 실행한다.
@@ -313,6 +320,8 @@ private:
 	bool mGoldRewardClaimed = false;
 	bool mExpRewardClaimed = false;
 	TSet<int32> mClaimedRewardChoiceIndices;
+	bool mRewardSelectionClaimed = false;
+	FPrimaryAssetId mSelectedRewardArtifactId;
 
 	/** @brief 옵션 커밋부터 방 전환까지 이어지는 설정판 런 액션의 중복 요청 방지. */
 	bool mSettingsRunActionPending = false;

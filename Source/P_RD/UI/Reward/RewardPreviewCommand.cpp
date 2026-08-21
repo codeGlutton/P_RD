@@ -145,7 +145,9 @@ namespace RewardPreview
 		{
 			FRewardChoiceUI& Artifact = Choices.AddDefaulted_GetRef();
 			Artifact.mChoiceIndex = Index;
-			Artifact.mKind = ERewardChoiceKind::Equipment;
+			Artifact.mKind = ERewardChoiceKind::Artifact;
+			Artifact.mSourceAssetId = FPrimaryAssetId(
+				TEXT("Artifact"), FName(*FString::Printf(TEXT("PreviewArtifact_%d"), Index)));
 			Artifact.mName = ArtifactNames[Index];
 			Artifact.mDescription = NSLOCTEXT(
 				"RewardPreview", "ArtifactRewardDescription", "아티팩트 선택 보상");

@@ -31,6 +31,7 @@
 #include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Reward/RewardUIModel.h"
+#include "UI/Reward/ArtifactRewardPolicy.h"
 
 #include "Actor/ActorView.h"
 
@@ -346,6 +347,8 @@ void ACombatGameMode::InitializeCombat()
 	mGoldRewardClaimed = false;
 	mExpRewardClaimed = false;
 	mClaimedRewardChoiceIndices.Reset();
+	mRewardSelectionClaimed = false;
+	mSelectedRewardArtifactId = FPrimaryAssetId();
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -489,6 +492,8 @@ void ACombatGameMode::InitializeCombat()
 	// HUD가 먼저 만들어져 앵커를 등록한 경우에도 구독 직후 같은 값을 카메라에 적용한다.
 	HandleChangeFocusScreenAnchor(mCombatUIModel->GetFocusScreenAnchor());
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
+	mRewardUIModel->OnRewardSelectionRequested.AddUniqueDynamic(
+		this, &ACombatGameMode::HandleRewardSelectionRequested);
 
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
@@ -806,6 +811,65 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 	}
 }
 
+void ACombatGameMode::HandleRewardSelectionRequested(
+	const FPrimaryAssetId RewardId)
+{
+	if (ClaimCombatSelectedArtifact(RewardId) && mRewardUIModel != nullptr)
+	{
+		mRewardUIModel->ConfirmSelectedReward(RewardId);
+	}
+}
+
+bool ACombatGameMode::ClaimCombatSelectedArtifact(
+	const FPrimaryAssetId& RewardId)
+{
+	if (mRewardSelectionClaimed || RewardId.IsValid() == false)
+	{
+		return false;
+	}
+
+	URunPersistData* RunPersistData = GetRunPersistData();
+	if (RunPersistData == nullptr || mRewardUIModel == nullptr)
+	{
+		return false;
+	}
+
+	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
+	TArray<FPrimaryAssetId> CandidateIds;
+	switch (CurrentRoom.mType)
+	{
+	case ERoomType::EliteMonster:
+		CandidateIds = static_cast<const FEliteMonsterRoom&>(CurrentRoom)
+			.GetEffectiveRewardArtifactDataIds();
+		break;
+	case ERoomType::BossMonster:
+		CandidateIds = static_cast<const FBossMonsterRoom&>(CurrentRoom)
+			.GetEffectiveRewardArtifactDataIds();
+		break;
+	default:
+		return false;
+	}
+
+	FPrimaryAssetId SelectedId;
+	if (ArtifactRewardPolicy::TrySelectOne(
+		CandidateIds, RewardId, OUT SelectedId) == false)
+	{
+		return false;
+	}
+
+	UPartyModel* PartyModel = GetPartyModel();
+	UPartyArtifactComponentModel* ArtifactModel = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (ArtifactModel == nullptr || ArtifactModel->AddArtifact(SelectedId) == false)
+	{
+		return false;
+	}
+
+	mRewardSelectionClaimed = true;
+	mSelectedRewardArtifactId = SelectedId;
+	return true;
+}
+
 bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
 {
 	URunPersistData* RunPersistData = GetRunPersistData();
@@ -905,6 +969,9 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 	{
 	case ERewardChoiceKind::Equipment:
 		bClaimed = RunPersistData->AddRewardEquipment(FoundChoice->mSourceAssetId);
+		break;
+	case ERewardChoiceKind::Artifact:
+		bClaimed = ClaimCombatSelectedArtifact(FoundChoice->mSourceAssetId);
 		break;
 	case ERewardChoiceKind::Skill:
 		bClaimed = RunPersistData->AddRewardSkill(FoundChoice->mSourceAssetId);
@@ -2546,7 +2613,8 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	if (RunPersistData == nullptr)
 	{
-		mRewardUIModel->SetRewardChoices(Choices);
+		FRewardSelectionOfferUI EmptyOffer;
+		mRewardUIModel->SetSelectionOffer(EmptyOffer);
 		return;
 	}
 
@@ -2560,7 +2628,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 
 			FRewardChoiceUI Choice;
 			Choice.mChoiceIndex = Choices.Num();
-			Choice.mKind = ERewardChoiceKind::Equipment;
+			Choice.mKind = ERewardChoiceKind::Artifact;
 			Choice.mSourceAssetId = EquipmentId;
 			Choice.mName = FText::FromName(EquipmentId.PrimaryAssetName);
 
@@ -2610,40 +2678,26 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	case ERoomType::EliteMonster:
 	{
 		const FEliteMonsterRoom& EliteRoom = static_cast<const FEliteMonsterRoom&>(CurrentRoom);
-		if (EliteRoom.mRewardArtifactDataIds.IsEmpty())
+		for (const FPrimaryAssetId& ArtifactId : EliteRoom.GetEffectiveRewardArtifactDataIds())
 		{
-			AddEquipmentReward(EliteRoom.mRewardArtifactDataId);
-		}
-		else
-		{
-			for (const FPrimaryAssetId& ArtifactId : EliteRoom.mRewardArtifactDataIds)
+			if (Choices.Num() >= 3)
 			{
-				if (Choices.Num() >= 3)
-				{
-					break;
-				}
-				AddEquipmentReward(ArtifactId);
+				break;
 			}
+			AddEquipmentReward(ArtifactId);
 		}
 		break;
 	}
 	case ERoomType::BossMonster:
 	{
 		const FBossMonsterRoom& BossRoom = static_cast<const FBossMonsterRoom&>(CurrentRoom);
-		if (BossRoom.mRewardArtifactDataIds.IsEmpty())
+		for (const FPrimaryAssetId& ArtifactId : BossRoom.GetEffectiveRewardArtifactDataIds())
 		{
-			AddEquipmentReward(BossRoom.mRewardArtifactDataId);
-		}
-		else
-		{
-			for (const FPrimaryAssetId& ArtifactId : BossRoom.mRewardArtifactDataIds)
+			if (Choices.Num() >= 3)
 			{
-				if (Choices.Num() >= 3)
-				{
-					break;
-				}
-				AddEquipmentReward(ArtifactId);
+				break;
 			}
+			AddEquipmentReward(ArtifactId);
 		}
 		break;
 	}
@@ -2651,5 +2705,8 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 		break;
 	}
 
-	mRewardUIModel->SetRewardChoices(Choices);
+	FRewardSelectionOfferUI SelectionOffer;
+	SelectionOffer.mOptions = MoveTemp(Choices);
+	SelectionOffer.mSelectionCount = 1;
+	mRewardUIModel->SetSelectionOffer(SelectionOffer);
 }

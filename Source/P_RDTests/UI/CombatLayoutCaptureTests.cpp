@@ -286,7 +286,9 @@ namespace CombatLayoutCapture
 			{
 				FRewardChoiceUI Choice;
 				Choice.mChoiceIndex = Index;
-				Choice.mKind = ERewardChoiceKind::Equipment;
+				Choice.mKind = ERewardChoiceKind::Artifact;
+				Choice.mSourceAssetId = FPrimaryAssetId(
+					TEXT("Artifact"), FName(*FString::Printf(TEXT("CaptureArtifact_%d"), Index)));
 				Choice.mName = Names[Index];
 				Choice.mIcon = Icons[Index];
 				PreviewChoices.Add(Choice);
