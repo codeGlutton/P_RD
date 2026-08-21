@@ -133,10 +133,13 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Bite,						"Animation.Montage.Skill.Monster.Spider.Bite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_PoisonSting,				"Animation.Montage.Skill.Monster.Spider.PoisonSting");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Web,						"Animation.Montage.Skill.Monster.Spider.Web");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Web_Explosion,			"Animation.Montage.Skill.Monster.Spider.Web.Explosion");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Spider_Web_Roots,				"Animation.Montage.Skill.Monster.Spider.Web.Roots");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Bodyslam,					"Animation.Montage.Skill.Monster.Slime.Bodyslam");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Dissolve_Weapon,			"Animation.Montage.Skill.Monster.Slime.Dissolve.Weapon");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Dissolve_Equipment,		"Animation.Montage.Skill.Monster.Slime.Dissolve.Equipment");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Slime_Explosion,					"Animation.Montage.Skill.Monster.Slime.Explosion");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_Attack,					"Animation.Montage.Skill.Monster.Eagle.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Eagle_BlindnessAttack,			"Animation.Montage.Skill.Monster.Eagle.BlindnessAttack");
@@ -155,6 +158,32 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Vine_Pull,					"Animation.Montage.Skill.Monster.Leshy.Vine.Pull");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Leshy_Vine_Roots,				"Animation.Montage.Skill.Monster.Leshy.Vine.Roots");
 
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Melee_Punch,			"Animation.Montage.Skill.Monster.Skeleton.Melee.Punch");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Melee_BoneStrike,		"Animation.Montage.Skill.Monster.Skeleton.Melee.BoneStrike");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Melee_Clatter,			"Animation.Montage.Skill.Monster.Skeleton.Melee.Clatter");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Ranged_Shot,			"Animation.Montage.Skill.Monster.Skeleton.Ranged.Shot");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Ranged_ClaimtheBone,	"Animation.Montage.Skill.Monster.Skeleton.Ranged.ClaimtheBone");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Bat_Bodyslam,					"Animation.Montage.Skill.Monster.Bat.Bodyslam");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Mimic_Surprise,					"Animation.Montage.Skill.Monster.Mimic.Surprise");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Mimic_Bite,						"Animation.Montage.Skill.Monster.Mimic.Bite");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Pumpkin_ScytheSwing,				"Animation.Montage.Skill.Monster.Pumpkin.ScytheSwing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Pumpkin_NastyTrick,				"Animation.Montage.Skill.Monster.Pumpkin.NastyTrick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Pumpkin_ScytheSweep,				"Animation.Montage.Skill.Monster.Pumpkin.ScytheSweep");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Pumpkin_Chop,					"Animation.Montage.Skill.Monster.Pumpkin.Chop");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_HatchetBird_AxeSlam,				"Animation.Montage.Skill.Monster.HatchetBird.AxeSlam");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_HatchetBird_BladeWind,			"Animation.Montage.Skill.Monster.HatchetBird.BladeWind");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_HatchetBird_BladeStorm,			"Animation.Montage.Skill.Monster.HatchetBird.BladeStorm");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_HatchetBird_Haste,				"Animation.Montage.Skill.Monster.HatchetBird.Haste");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Golem_Swing,			"Animation.Montage.Skill.Monster.Skeleton.Golem.Swing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Golem_Kick,				"Animation.Montage.Skill.Monster.Skeleton.Golem.Kick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Golem_Stamp,			"Animation.Montage.Skill.Monster.Skeleton.Golem.Stamp");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Monster_Skeleton_Golem_Howl,				"Animation.Montage.Skill.Monster.Skeleton.Golem.Howl");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Damage,									"Animation.Montage.Hit.Damage");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Buff,										"Animation.Montage.Hit.Buff");
