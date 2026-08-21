@@ -483,9 +483,11 @@ void UTileMapModel::UnregisterActorFromTile(FTile* Tile, UBoardActorModel* Actor
 void UTileMapModel::NotifyBeginOverlap(FTile* Tile, UBoardActorModel* Actor)
 {
 	// 같은 타일의 다른 액터들과 양방향 OnBegin 통지 (자기 제외)
-	for (const TWeakObjectPtr<UBoardActorModel>& Other : Tile->mBoardActors)
+	// 통지 중 기믹 발동으로 액터가 이동/제거되며 타일 목록이 바뀔 수 있으므로 복사본 순회
+	TArray<TWeakObjectPtr<UBoardActorModel>> BoardActors = Tile->mBoardActors;
+	for (const TWeakObjectPtr<UBoardActorModel>& Other : BoardActors)
 	{
-		if (Other.Get() == Actor)
+		if (Other.IsValid() == false || Other.Get() == Actor)
 		{
 			continue;
 		}
@@ -497,9 +499,11 @@ void UTileMapModel::NotifyBeginOverlap(FTile* Tile, UBoardActorModel* Actor)
 void UTileMapModel::NotifyEndOverlap(FTile* Tile, UBoardActorModel* Actor)
 {
 	// 같은 타일의 다른 액터들과 양방향 OnEnd 통지 (자기 제외)
-	for (const TWeakObjectPtr<UBoardActorModel>& Other : Tile->mBoardActors)
+	// 통지 중 기믹 발동으로 액터가 이동/제거되며 타일 목록이 바뀔 수 있으므로 복사본 순회
+	TArray<TWeakObjectPtr<UBoardActorModel>> BoardActors = Tile->mBoardActors;
+	for (const TWeakObjectPtr<UBoardActorModel>& Other : BoardActors)
 	{
-		if (Other.Get() == Actor)
+		if (Other.IsValid() == false || Other.Get() == Actor)
 		{
 			continue;
 		}
