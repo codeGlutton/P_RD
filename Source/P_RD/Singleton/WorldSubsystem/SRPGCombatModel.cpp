@@ -399,6 +399,20 @@ void USRPGCombatModel::AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> 
 	mRoundEndEvents.Add(MoveTemp(Event));
 }
 
+void USRPGCombatModel::AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
+{
+	// 같은 타입 이벤트가 이미 있으면 무시 (타입 = 이벤트 구조체의 C++ 타입)
+	for (const TInstancedStruct<FSRPGCombatRoundEvent>& RoundEndEvent : mRoundEndEvents)
+	{
+		if (RoundEndEvent.GetScriptStruct() == Event.GetScriptStruct())
+		{
+			return;
+		}
+	}
+
+	mRoundEndEvents.Add(MoveTemp(Event));
+}
+
 void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex)
 {
 	if (RoundEvents.IsValidIndex(EventIndex) == false)

@@ -13,6 +13,7 @@
 
 struct FActiveSkillContext;
 class UStaticSkillData;
+struct FPresentationBarrier;
 
 /**
  * @brief  기믹 공통 모델
@@ -37,9 +38,10 @@ protected:
 	 * @details 장착된 스킬을 강제 시전하고 수명을 차감.
 	 *          수명을 다 쓰면 사망 태그를 붙여 기존 정리(ClearDeadActorModels)가 수거하게 함
 	 * @param AimedTileIndex 스킬 조준 타일
+	 * @param PresentationBarrier 스킬이 끝날 때까지 붙잡아 둘 배리어 (없으면 발동만 하고 기다리지 않음)
 	 * @return 발동 여부 (수명 소진, 사망, 시전 중이면 false)
 	 */
-	bool TryTriggerGimmick(const FTileIndex& AimedTileIndex);
+	bool TryTriggerGimmick(const FTileIndex& AimedTileIndex, TSharedPtr<FPresentationBarrier> PresentationBarrier = nullptr);
 
 protected:
 	// @brief 타일맵 획득 (테스트용 파생 모델이 오버라이드 할 수 있게 가상함수로 선언)
