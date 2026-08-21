@@ -3,6 +3,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
@@ -1101,8 +1102,16 @@ void UShopUIWidgetBase::RefreshFinalShopView(const FShopUI& Shop)
 	SetShopWidgetShown(mRestBottomContextPanel, bRestMode);
 	if (WidgetTree != nullptr)
 	{
-		SetShopWidgetShown(WidgetTree->FindWidget(TEXT("CloseHolder")),
-			!bMercenaryMode);
+		// 용병 탭의 뒤로가기는 탭 내부 이동이고, CloseHolder는 상점 전체
+		// 나가기다. 서로 다른 역할이므로 어느 탭에서도 전역 닫기를 숨기지 않는다.
+		UWidget* CloseHolder = WidgetTree->FindWidget(TEXT("CloseHolder"));
+		SetShopWidgetShown(CloseHolder, true);
+		if (UCanvasPanelSlot* CloseSlot = CloseHolder != nullptr
+			? Cast<UCanvasPanelSlot>(CloseHolder->Slot) : nullptr)
+		{
+			// 전체 화면 용병 위젯이 같은 Canvas에 있어도 닫기 입력이 가려지지 않는다.
+			CloseSlot->SetZOrder(FMath::Max(CloseSlot->GetZOrder(), 200));
+		}
 	}
 	SetShopButtonShown(mInventoryButton, bArtifactMode);
 	if (mArtifactInventoryPanel != nullptr)

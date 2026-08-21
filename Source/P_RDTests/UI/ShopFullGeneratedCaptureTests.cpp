@@ -398,6 +398,60 @@ namespace ShopFullGeneratedCaptureTests
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FShopFullGeneratedMercenaryCloseTest,
+	"P_RD.UI.ShopFullGenerated.MercenaryClose",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FShopFullGeneratedMercenaryCloseTest::RunTest(const FString& Parameters)
+{
+	using namespace ShopFullGeneratedCaptureTests;
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("상점 나가기 검사 에디터 월드"), World))
+	{
+		return false;
+	}
+	UClass* ShopClass = LoadClass<UShopUIWidgetBase>(nullptr, WidgetClassPath);
+	if (!TestNotNull(TEXT("전체 생성 상점 클래스"), ShopClass))
+	{
+		return false;
+	}
+	UShopUIWidgetBase* Widget = CreateWidget<UShopUIWidgetBase>(World, ShopClass);
+	if (!TestNotNull(TEXT("전체 생성 상점 인스턴스"), Widget))
+	{
+		return false;
+	}
+	Widget->TakeWidget();
+	UShopUIModel* Model = NewObject<UShopUIModel>(Widget,
+		TEXT("ShopMercenaryCloseTestModel"));
+	if (!TestNotNull(TEXT("상점 나가기 검사 모델"), Model))
+	{
+		return false;
+	}
+	Model->SetShop(MakeSyntheticShop());
+	Widget->BindUIModel(Model);
+
+	UButton* MercenaryTab = Cast<UButton>(
+		Widget->GetWidgetFromName(TEXT("mMercenaryTabButton")));
+	UWidget* CloseHolder = Widget->GetWidgetFromName(TEXT("CloseHolder"));
+	if (!TestNotNull(TEXT("용병 탭 버튼"), MercenaryTab)
+		|| !TestNotNull(TEXT("상점 나가기 홀더"), CloseHolder))
+	{
+		return false;
+	}
+	MercenaryTab->OnClicked.Broadcast();
+	TestEqual(TEXT("용병 탭에서도 상점 나가기 버튼 유지"),
+		CloseHolder->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	if (const UCanvasPanelSlot* CloseSlot = Cast<UCanvasPanelSlot>(
+		CloseHolder->Slot))
+	{
+		TestTrue(TEXT("용병 전체 화면보다 나가기 버튼 입력 우선"),
+			CloseSlot->GetZOrder() >= 200);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FShopFullGeneratedRenderedCaptureTest,
 	"P_RD.UI.ShopFullGenerated.RenderedCapture",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -734,8 +788,8 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 		PartyLevel->GetText().ToString().StartsWith(TEXT("Lv.")));
 	TestEqual(TEXT("용병 내부 뒤로 버튼 제거"),
 		HireBackHolder->GetVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("용병 모드에서 상점 나가기 버튼 제거"),
-		ShopCloseHolder->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("용병 모드에서도 상점 나가기 버튼 유지"),
+		ShopCloseHolder->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("용병 모드에서 상점 상단바 유지"),
 		TopZone->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TArray<FColor> MercenaryPixels;

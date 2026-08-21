@@ -238,6 +238,61 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	}
 	RewardModel->SetRewardChoices(TestChoices);
 	Widget->BindUIModel(RewardModel);
+	auto TestChoiceLayout = [this, Widget, RewardModel, &TestChoices](
+		const int32 ChoiceCount, const TArray<double>& ExpectedXs)
+	{
+		TArray<FRewardChoiceUI> VisibleChoices;
+		for (int32 Index = 0; Index < ChoiceCount; ++Index)
+		{
+			VisibleChoices.Add(TestChoices[Index]);
+		}
+		RewardModel->SetRewardChoices(VisibleChoices);
+		for (int32 Index = 0; Index < ExpectedXs.Num(); ++Index)
+		{
+			UWidget* Panel = Widget->GetWidgetFromName(*FString::Printf(
+				TEXT("NewArtifactChoicePanel_%d"), Index));
+			const UCanvasPanelSlot* PanelSlot = Panel != nullptr
+				? Cast<UCanvasPanelSlot>(Panel->Slot) : nullptr;
+			if (TestNotNull(*FString::Printf(
+				TEXT("%d개 보상 카드 %d Canvas 슬롯"), ChoiceCount, Index),
+				PanelSlot))
+			{
+				TestEqual(*FString::Printf(
+					TEXT("%d개 보상 카드 %d X 위치"), ChoiceCount, Index),
+					PanelSlot->GetPosition().X, ExpectedXs[Index]);
+			}
+		}
+	};
+	TestChoiceLayout(1, { 450.0 });
+	TestChoiceLayout(2, { 285.0, 615.0 });
+	TestChoiceLayout(3, { 120.0, 450.0, 780.0 });
+
+	URewardConcept03Widget* GrantAllWidget = CreateWidget<URewardConcept03Widget>(
+		World, WidgetClass);
+	URewardUIModel* GrantAllModel = NewObject<URewardUIModel>(GrantAllWidget);
+	if (TestNotNull(TEXT("일괄 지급 보상 위젯"), GrantAllWidget)
+		&& TestNotNull(TEXT("일괄 지급 보상 모델"), GrantAllModel))
+	{
+		FRewardGrantBundleUI Bundle;
+		Bundle.mItems.Add(TestChoices[0]);
+		GrantAllModel->SetGrantBundle(Bundle);
+		GrantAllWidget->BindUIModel(GrantAllModel);
+		UWidget* OnlyPanel = GrantAllWidget->GetWidgetFromName(
+			TEXT("NewArtifactChoicePanel_0"));
+		const UCanvasPanelSlot* OnlyPanelSlot = OnlyPanel != nullptr
+			? Cast<UCanvasPanelSlot>(OnlyPanel->Slot) : nullptr;
+		if (TestNotNull(TEXT("일괄 지급 단일 카드 Canvas 슬롯"), OnlyPanelSlot))
+		{
+			TestEqual(TEXT("일괄 지급 단일 카드는 중앙 정렬"),
+				OnlyPanelSlot->GetPosition().X, 450.0);
+		}
+		if (UWidget* Outline = GrantAllWidget->GetWidgetFromName(
+			TEXT("NewArtifactSelection")))
+		{
+			TestEqual(TEXT("일괄 지급에서는 선택 외곽선 숨김"),
+				Outline->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	}
 	for (const TCHAR* ButtonName : {
 		TEXT("NewBottomActionButton"), TEXT("NewChestOpenButton"),
 		TEXT("NewArtifactChoiceButton_0"),
