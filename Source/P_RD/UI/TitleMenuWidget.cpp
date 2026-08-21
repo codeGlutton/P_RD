@@ -99,6 +99,12 @@ namespace
 				LogoBrush.ImageSize = FVector2D(1536.0, 1024.0);
 				LogoImage->SetBrush(LogoBrush);
 				LogoImage->SetColorAndOpacity(FLinearColor::White);
+				LogoImage->SetDesiredSizeOverride(FVector2D(600.0f, 400.0f));
+				if (UCanvasPanelSlot* LogoSlot = Cast<UCanvasPanelSlot>(LogoImage->Slot))
+				{
+					LogoSlot->SetAutoSize(false);
+					LogoSlot->SetSize(FVector2D(600.0f, 400.0f));
+				}
 				LogoImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 				UE_LOG(LogRD, Display, TEXT("TitleMenuWidget: title logo applied to %s from %s"),
 					*LogoName.ToString(), *LogoTexture->GetPathName());

@@ -32,7 +32,7 @@
 // 이 번역 단위 내부에서만 쓰는 배경 영상 핏 보조 함수/상수 모음(외부 링크 노출 방지용 익명 namespace).
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30/Title_All6_combo01_5s_mobile.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_16x9/Title_All6_16x9_combo01_5s_mobile.mp4");
 
 	FString GetTitleBackgroundVideoPath()
 	{
@@ -290,6 +290,9 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 		: FVector2D(1280.0f, 1280.0f);
 	mBackgroundRuntime.mVideoBrush.SetResourceObject(mBackgroundRuntime.mMediaTexture);
 	TitleBackgroundImage->SetBrush(mBackgroundRuntime.mVideoBrush);
+	// WBP에 남아 있던 배경용 틴트가 MediaTexture까지 어둡게 만들지 않도록 원색/완전 불투명으로 고정한다.
+	TitleBackgroundImage->SetColorAndOpacity(FLinearColor::White);
+	TitleBackgroundImage->SetRenderOpacity(1.0f);
 
 	// concept_title_01_classic의 TitleVignetteImage는 투명 오버레이가 아니라 불투명 정적 배경이다.
 	// 영상 브러시가 실제로 적용된 뒤에는 숨겨야 재생 중인 MediaTexture가 화면에 보인다.

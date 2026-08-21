@@ -15,7 +15,7 @@
 
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30/Title_All6_combo01_5s_mobile.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_16x9/Title_All6_16x9_combo01_5s_mobile.mp4");
 
 	TArray<FString> GetDefaultTitleBackgroundVideoPaths()
 	{
