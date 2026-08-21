@@ -174,6 +174,7 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 
 		for (const FName ProfileName : TitleLayoutProfiles)
 		{
+			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("TitleLogoImage"), ProfileName), ESlateVisibility::HitTestInvisible);
 			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonFrameImage"), ProfileName), ESlateVisibility::Visible);
 			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), ESlateVisibility::Visible);
 			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), ESlateVisibility::Visible);

@@ -29,6 +29,7 @@ void AIntroGameMode::BeginRoom()
 
 	UCinematicWidget* CinematicHUD = WorldWidgetSubsystem->GetHUD<UCinematicWidget>();
 	checkf(CinematicHUD != nullptr, TEXT("인트로에 보여줄 Cinematic 위젯 nullptr"));
+	mCinematicWidget = CinematicHUD;
 
 	// UI 열리는 애니메이션 시작
 	CinematicHUD->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(this, [this](UUserWidget* OpenedWidget) {
@@ -74,6 +75,8 @@ void AIntroGameMode::OnLoadOptionData(const FString& SlotName, int32 SlotIndex, 
 
 void AIntroGameMode::TryToMarkExternalReady()
 {
+	TryToAccelerateCinematicAfterLoading();
+
 	if (EnumHasAllFlags(mStateFlag, EIntroGameModeStateFlag::ReadyToTransition) == false)
 	{
 		return;
@@ -83,5 +86,24 @@ void AIntroGameMode::TryToMarkExternalReady()
 	// <시네마틱 && 런 데이터 로드 && 유저 데이터 로드>에 대한 대기 상태 모두 완료 알림
 	const bool IsExternalReadyMarked = MarkExternalReadyForTransition();
 	checkf(IsExternalReadyMarked == true, TEXT("대기 상태 모두 완료 알림 실패"));
+}
+
+void AIntroGameMode::TryToAccelerateCinematicAfterLoading()
+{
+	constexpr EIntroGameModeStateFlag LoadingReady = EIntroGameModeStateFlag::UserDataLoaded
+		| EIntroGameModeStateFlag::RunDataLoaded
+		| EIntroGameModeStateFlag::OptionDataLoaded;
+	if (mCinematicAccelerationRequested
+		|| EnumHasAllFlags(mStateFlag, LoadingReady) == false
+		|| EnumHasAnyFlags(mStateFlag, EIntroGameModeStateFlag::CinematicAnimationEnded))
+	{
+		return;
+	}
+
+	mCinematicAccelerationRequested = true;
+	if (UCinematicWidget* CinematicWidget = mCinematicWidget.Get())
+	{
+		CinematicWidget->SetCinematicPlaybackRate(3.0f);
+	}
 }
 

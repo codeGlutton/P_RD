@@ -56,8 +56,10 @@ public class P_RD : ModuleRules
 
         // MediaPlayer가 OS 파일 경로로 직접 여는 mp4는 pak/ucas 안이 아니라 loose 파일로 스테이징한다.
         // Content/SVN 전체를 패키징하면 SVN 원본/시안/.svn 메타데이터까지 들어가 APK가 크게 불어난다.
-        StageContentMedia(Target, "mTitleBackgroundVideoPath", "SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
-        StageContentMedia(Target, "mIntroCinematicVideoPath", "SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+        StageContentMedia(Target, "mTitleBackgroundVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_16x9/Title_All6_16x9_combo01_5s_mobile.mp4");
+        StageContentMediaArray(Target, "mTitleBackgroundVideoPaths");
+        StageContentMedia(Target, "mIntroCinematicVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s.mp4");
+        StageContentMedia(Target, "mIntroCinematicAcceleratedVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_Crystal_v01_15s_3x.mp4");
         StageContentMedia(Target, "mCombatVictoryVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
         StageContentMedia(Target, "mCombatDefeatVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
@@ -89,6 +91,17 @@ public class P_RD : ModuleRules
         RuntimeDependencies.Add(DependencyPath, StagedFileType.NonUFS);
     }
 
+    private void StageContentMediaArray(ReadOnlyTargetRules Target, string ConfigKey)
+    {
+        foreach (string MediaPath in ReadDefaultGameConfigValues(Target, ConfigKey))
+        {
+            string DependencyPath = Path.IsPathRooted(MediaPath)
+                ? MediaPath
+                : "$(ProjectDir)/Content/" + MediaPath.Replace("\\", "/");
+            RuntimeDependencies.Add(DependencyPath, StagedFileType.NonUFS);
+        }
+    }
+
     private static string ReadDefaultGameConfigValue(ReadOnlyTargetRules Target, string ConfigKey, string FallbackValue)
     {
         if (Target.ProjectFile == null)
@@ -112,5 +125,37 @@ public class P_RD : ModuleRules
         }
 
         return FallbackValue;
+    }
+
+    private static string[] ReadDefaultGameConfigValues(ReadOnlyTargetRules Target, string ConfigKey)
+    {
+        if (Target.ProjectFile == null)
+        {
+            return new string[0];
+        }
+
+        string IniPath = Path.Combine(Target.ProjectFile.Directory.FullName, "Config", "DefaultGame.ini");
+        if (!File.Exists(IniPath))
+        {
+            return new string[0];
+        }
+
+        var Values = new System.Collections.Generic.List<string>();
+        string PlainPrefix = ConfigKey + "=";
+        string AddPrefix = "+" + ConfigKey + "=";
+        foreach (string RawLine in File.ReadLines(IniPath))
+        {
+            string Line = RawLine.Trim();
+            if (Line.StartsWith(PlainPrefix) || Line.StartsWith(AddPrefix))
+            {
+                int EqualsIndex = Line.IndexOf('=');
+                string Value = Line.Substring(EqualsIndex + 1).Trim().Trim('"');
+                if (!string.IsNullOrWhiteSpace(Value))
+                {
+                    Values.Add(Value);
+                }
+            }
+        }
+        return Values.ToArray();
     }
 }

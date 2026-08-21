@@ -152,6 +152,17 @@ void UCinematicWidget::SetCinematicViewportZOrder(int32 InViewportZOrder)
 	mViewportZOrder = InViewportZOrder;
 }
 
+bool UCinematicWidget::SetCinematicPlaybackRate(float InPlaybackRate)
+{
+	if (InPlaybackRate <= 0.0f)
+	{
+		return false;
+	}
+
+	mRequestedPlaybackRate = InPlaybackRate;
+	return ApplyRequestedCinematicPlaybackRate();
+}
+
 /**
  * @brief Slate 위젯 트리를 구성한다(검은 배경 + cover 영상 이미지 + 로딩 대기 레이어).
  * @details 미디어 오브젝트를 확보하고 영상 원본 해상도를 읽어 브러시를 세팅한 뒤,
@@ -258,6 +269,9 @@ void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
 
 	OnEndCinematicAnimation = MoveTemp(Callback);  // 종료 콜백 등록(불필요 복사 방지 위해 이동)
 	mCinematicFinished = false;                    // 종료 플래그 리셋
+	mRequestedPlaybackRate = 1.0f;                 // 매 재생은 정상 속도에서 시작하고, 로딩 완료 시 GameMode가 가속한다.
+	mUsingAcceleratedCinematicSource = false;
+	mAcceleratedCinematicStartTime = FTimespan::Zero();
 	ClearDefaultCinematicTimer();
 	ClearCinematicFadeTimer();
 	HideLoadingWaitScreen();                       // 이전 재생에서 남은 로딩막 제거
