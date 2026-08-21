@@ -119,6 +119,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Toggleable")
 	void FinishCloseUI();
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 파생 위젯의 후순위 Refresh 뒤 최종 공통 UI 계약을 즉시 재검증한다. */
+	void NormalizeCommonUIContractForTest()
+	{
+		NormalizeCommonInputLayersAndButtonLabels();
+	}
+#endif
+
 protected:
 	/**
 	 * @brief 열기 애니메이션을 재생한다.
@@ -188,6 +196,14 @@ protected:
 	void ApplyCommonButtonPressSound(UButton* Button) const;
 
 private:
+	/**
+	 * @brief 장식 위젯이 버튼 입력을 가로막지 않게 하고 버튼 라벨의 중앙 정렬을 통일한다.
+	 * @details Image/Text는 입력 대상이 아니므로 HitTestInvisible로, 순수 배치 패널은
+	 *          SelfHitTestInvisible로 정규화한다. 버튼명과 짝이 맞는 Text는 중앙 정렬하고,
+	 *          같은 Canvas에 놓인 별도 라벨의 중심을 버튼 중심에 맞춘다.
+	 */
+	void NormalizeCommonInputLayersAndButtonLabels();
+
 	/** @brief 이 위젯 트리의 버튼들을 찾아 누름 효과를 설정하고 눌림/뗌 이벤트를 연결한다. */
 	void SetupCommonButtonFeedback();
 

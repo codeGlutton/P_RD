@@ -68,10 +68,11 @@ namespace
 {
 	/** @brief 결과 판이 열릴 때 전투 방 음악이 짧게 정리되는 시간. */
 	constexpr float CombatResultBGMFadeOutSeconds = 0.35f;
-	constexpr const TCHAR* ArtifactFallbackIconPath =
+	constexpr const TCHAR* CombatArtifactFallbackIconPath =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
 
-	UTexture2D* ResolveArtifactInventoryIcon(const UStaticArtifactData* Artifact)
+	UTexture2D* ResolveCombatArtifactInventoryIcon(
+		const UStaticArtifactData* Artifact)
 	{
 		if (Artifact != nullptr)
 		{
@@ -83,7 +84,7 @@ namespace
 				TEXT("아티팩트 아이콘 미설정, 기본 아이콘 사용: %s"),
 				*Artifact->GetPathName());
 		}
-		return LoadObject<UTexture2D>(nullptr, ArtifactFallbackIconPath);
+		return LoadObject<UTexture2D>(nullptr, CombatArtifactFallbackIconPath);
 	}
 
 	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
@@ -2145,7 +2146,7 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 				? ArtifactData->mName
 				: FText::Format(NSLOCTEXT("CombatGameMode", "ArtifactFallbackName",
 					"Artifact {0}"), FText::AsNumber(ArtifactIndex + 1));
-			ArtifactUI.mIcon = ResolveArtifactInventoryIcon(ArtifactData);
+			ArtifactUI.mIcon = ResolveCombatArtifactInventoryIcon(ArtifactData);
 			ArtifactUI.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
 			ArtifactUI.mRarityName = StaticEnum<ERarityType>() != nullptr
 				? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(

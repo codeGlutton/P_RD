@@ -1,8 +1,20 @@
 #include "UI/RDUserWidget.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/GridPanel.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/VerticalBox.h"
+#include "Components/WrapBox.h"
 #include "Blueprint/WidgetTree.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
@@ -16,6 +28,50 @@ namespace
 
 	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
 	constexpr float ButtonPressColorMul = 0.6f;
+
+	bool IsPassiveLayoutPanel(const UWidget* Widget)
+	{
+		return Widget != nullptr
+			&& (Widget->IsA<UCanvasPanel>() || Widget->IsA<UOverlay>()
+				|| Widget->IsA<UScaleBox>() || Widget->IsA<USizeBox>()
+				|| Widget->IsA<UHorizontalBox>() || Widget->IsA<UVerticalBox>()
+				|| Widget->IsA<UWrapBox>() || Widget->IsA<UGridPanel>()
+				|| Widget->IsA<UUniformGridPanel>());
+	}
+
+	UWidget* FindNearestCanvasMountedWidget(UWidget* Widget)
+	{
+		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		{
+			if (Cast<UCanvasPanelSlot>(Node->Slot) != nullptr)
+			{
+				return Node;
+			}
+		}
+		return nullptr;
+	}
+
+	bool HaveSameFixedAnchors(const UCanvasPanelSlot* First,
+		const UCanvasPanelSlot* Second)
+	{
+		if (First == nullptr || Second == nullptr
+			|| First->Parent != Second->Parent)
+		{
+			return false;
+		}
+		const FAnchors FirstAnchors = First->GetAnchors();
+		const FAnchors SecondAnchors = Second->GetAnchors();
+		return FirstAnchors.Minimum.Equals(FirstAnchors.Maximum)
+			&& SecondAnchors.Minimum.Equals(SecondAnchors.Maximum)
+			&& FirstAnchors.Minimum.Equals(SecondAnchors.Minimum);
+	}
+
+	FVector2D FixedCanvasSlotCenter(const UCanvasPanelSlot* Slot)
+	{
+		const FVector2D Position = Slot->GetPosition();
+		const FVector2D Size = Slot->GetSize();
+		return Position + (FVector2D(0.5f, 0.5f) - Slot->GetAlignment()) * Size;
+	}
 }
 
 /**
@@ -197,6 +253,7 @@ void URDUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	NormalizeCommonInputLayersAndButtonLabels();
 	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
 	SetupCommonButtonFeedback();
 }
@@ -208,14 +265,120 @@ void URDUserWidget::NativeConstruct()
 	// WBP에 구워진 버튼은 NativeOnInitialized에서 처리된다. 다만 파생 클래스는
 	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
 	// 현재 호출과 다음 틱 재검사를 함께 두면 두 종류 모두 같은 소리를 쓴다.
+	NormalizeCommonInputLayersAndButtonLabels();
 	SetupCommonButtonFeedback();
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimerForNextTick(
 			FTimerDelegate::CreateWeakLambda(this, [this]()
 				{
+					NormalizeCommonInputLayersAndButtonLabels();
 					SetupCommonButtonFeedback();
 				}));
+	}
+}
+
+void URDUserWidget::NormalizeCommonInputLayersAndButtonLabels()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// 그림과 글자는 시각 요소다. Visible 상태로 버튼 위에 놓이면 Slate 히트
+	// 경로의 앞쪽을 차지할 수 있으므로 자신과 자식 모두 입력 대상에서 뺀다.
+	// 순수 배치 패널은 자신만 빼고 자식 버튼은 계속 입력을 받게 한다.
+	WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			if (Widget == nullptr)
+			{
+				return;
+			}
+			if ((Widget->IsA<UImage>() || Widget->IsA<UTextBlock>())
+				&& (Widget->GetVisibility() == ESlateVisibility::Visible
+					|| Widget->GetVisibility() == ESlateVisibility::SelfHitTestInvisible))
+			{
+				Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else if (IsPassiveLayoutPanel(Widget)
+				&& Widget->GetVisibility() == ESlateVisibility::Visible)
+			{
+				Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+
+			// 일부 WBP는 버튼과 라벨 이름을 mOpenButton/mOpenButtonText처럼
+			// 짓지만 둘을 별도 Canvas 자식으로 둔다. 이런 명시적 버튼 라벨은
+			// 동반 위젯 검색 결과와 관계없이 자체 텍스트 영역부터 중앙 정렬한다.
+			if (UTextBlock* Text = Cast<UTextBlock>(Widget))
+			{
+				const FString Name = Text->GetName();
+				if (Name.Contains(TEXT("Button"))
+					&& (Name.Contains(TEXT("Text")) || Name.Contains(TEXT("Label"))))
+				{
+					Text->SetJustification(ETextJustify::Center);
+					if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Text->Slot))
+					{
+						OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+						OverlaySlot->SetVerticalAlignment(VAlign_Center);
+					}
+					else if (UScaleBoxSlot* ScaleSlot = Cast<UScaleBoxSlot>(Text->Slot))
+					{
+						ScaleSlot->SetHorizontalAlignment(HAlign_Center);
+						ScaleSlot->SetVerticalAlignment(VAlign_Center);
+					}
+				}
+			}
+		});
+
+	TArray<UButton*> Buttons;
+	WidgetTree->ForEachWidget([&Buttons](UWidget* Widget)
+		{
+			if (UButton* Button = Cast<UButton>(Widget))
+			{
+				Buttons.Add(Button);
+			}
+		});
+
+	for (UButton* Button : Buttons)
+	{
+		TArray<UWidget*> Companions;
+		CollectButtonCompanions(Button, Companions);
+		for (UWidget* Companion : Companions)
+		{
+			UTextBlock* Text = Cast<UTextBlock>(Companion);
+			if (Text == nullptr)
+			{
+				continue;
+			}
+
+			Text->SetJustification(ETextJustify::Center);
+			if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Text->Slot))
+			{
+				OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+				OverlaySlot->SetVerticalAlignment(VAlign_Center);
+			}
+			else if (UScaleBoxSlot* ScaleSlot = Cast<UScaleBoxSlot>(Text->Slot))
+			{
+				ScaleSlot->SetHorizontalAlignment(HAlign_Center);
+				ScaleSlot->SetVerticalAlignment(VAlign_Center);
+			}
+
+			UWidget* ButtonMount = FindNearestCanvasMountedWidget(Button);
+			UWidget* TextMount = FindNearestCanvasMountedWidget(Text);
+			UCanvasPanelSlot* ButtonSlot = ButtonMount != nullptr
+				? Cast<UCanvasPanelSlot>(ButtonMount->Slot) : nullptr;
+			UCanvasPanelSlot* TextSlot = TextMount != nullptr
+				? Cast<UCanvasPanelSlot>(TextMount->Slot) : nullptr;
+			if (ButtonMount != TextMount && HaveSameFixedAnchors(ButtonSlot, TextSlot))
+			{
+				const FVector2D Delta = FixedCanvasSlotCenter(ButtonSlot)
+					- FixedCanvasSlotCenter(TextSlot);
+				if (!Delta.IsNearlyZero(0.5f))
+				{
+					TextSlot->SetPosition(TextSlot->GetPosition() + Delta);
+				}
+			}
+		}
 	}
 }
 

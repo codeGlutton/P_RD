@@ -452,6 +452,69 @@ bool FShopFullGeneratedMercenaryCloseTest::RunTest(const FString& Parameters)
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FShopFullGeneratedSingleTapDetailTest,
+	"P_RD.UI.ShopFullGenerated.SingleTapDetail",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FShopFullGeneratedSingleTapDetailTest::RunTest(const FString& Parameters)
+{
+	using namespace ShopFullGeneratedCaptureTests;
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	UClass* ShopClass = LoadClass<UShopUIWidgetBase>(nullptr, WidgetClassPath);
+	if (!TestNotNull(TEXT("단일 터치 상세 월드"), World)
+		|| !TestNotNull(TEXT("단일 터치 상세 상점 클래스"), ShopClass))
+	{
+		return false;
+	}
+	UShopUIWidgetBase* Widget = CreateWidget<UShopUIWidgetBase>(World, ShopClass);
+	if (!TestNotNull(TEXT("단일 터치 상세 상점"), Widget))
+	{
+		return false;
+	}
+	Widget->TakeWidget();
+	UShopUIModel* Model = NewObject<UShopUIModel>(Widget,
+		TEXT("ShopSingleTapDetailModel"));
+	Model->SetShop(MakeSyntheticShop());
+	Widget->BindUIModel(Model);
+
+	UButton* SecondRail = Cast<UButton>(
+		Widget->GetWidgetFromName(TEXT("ShopRailButton_1")));
+	if (!TestNotNull(TEXT("두 번째 판매 카드"), SecondRail))
+	{
+		return false;
+	}
+	TestFalse(TEXT("판매 카드는 롱프레스 입력을 사용하지 않음"),
+		SecondRail->OnPressed.IsBound() || SecondRail->OnReleased.IsBound());
+	SecondRail->OnClicked.Broadcast();
+	UUserWidget* Detail = Widget->GetShopDetailOverlayForTest();
+	TestTrue(TEXT("아티팩트 한 번 터치로 상세 표시"), Detail != nullptr
+		&& Detail->GetVisibility() == ESlateVisibility::SelfHitTestInvisible);
+	if (UTextBlock* Title = Cast<UTextBlock>(Detail != nullptr
+		? Detail->GetWidgetFromName(TEXT("DetailTitleText")) : nullptr))
+	{
+		TestEqual(TEXT("한 번 터치한 아티팩트 상세 이름"),
+			Title->GetText().ToString(), FString(TEXT("가시 문장")));
+	}
+
+	UButton* SkillTab = Cast<UButton>(
+		Widget->GetWidgetFromName(TEXT("mSkillTabButton")));
+	if (TestNotNull(TEXT("스킬 탭"), SkillTab))
+	{
+		SkillTab->OnClicked.Broadcast();
+		SecondRail->OnClicked.Broadcast();
+		Detail = Widget->GetShopDetailOverlayForTest();
+		if (UTextBlock* Title = Cast<UTextBlock>(Detail != nullptr
+			? Detail->GetWidgetFromName(TEXT("DetailTitleText")) : nullptr))
+		{
+			TestEqual(TEXT("스킬 한 번 터치로 상세 이름"),
+				Title->GetText().ToString(), FString(TEXT("돌진")));
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FShopFullGeneratedRenderedCaptureTest,
 	"P_RD.UI.ShopFullGenerated.RenderedCapture",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)

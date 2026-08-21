@@ -802,11 +802,17 @@ namespace RewardConcept03NewWidgetBuilder
 		UOverlay* VisualPanel = AddOverlayPanel(Blueprint, Layout,
 			TEXT("NewChestVisualPanel"), FVector2D(250.f, 0.f),
 			FVector2D(660.f, 390.f), 1);
+		VisualPanel->SetClipping(EWidgetClipping::Inherit);
 		auto AddAtlasLayer = [Blueprint, VisualPanel, BurstAtlas](
 			const FName Name, const float Opacity)
 		{
 			UImage* Image = AddOverlayFittedImage(Blueprint, VisualPanel, Name,
 				BurstAtlas);
+			Image->SetClipping(EWidgetClipping::Inherit);
+			if (UWidget* Fit = Image->GetParent())
+			{
+				Fit->SetClipping(EWidgetClipping::Inherit);
+			}
 			FSlateBrush Brush = Image->GetBrush();
 			Brush.ImageSize = FVector2D(682.f, 455.f);
 			Brush.SetUVRegion(FBox2f(FVector2f(0.f, 0.f),

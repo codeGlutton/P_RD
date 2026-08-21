@@ -196,6 +196,72 @@ namespace
 			}
 		}
 	}
+
+	/** @brief WBP에 EXIT 장식만 있고 UButton이 빠진 경우 같은 자리에 투명 클릭 영역을 만든다. */
+	UButton* EnsureTransparentMenuButton(
+		UUserWidget* Owner,
+		const FName ButtonName,
+		const FName FrameName)
+	{
+		if (Owner == nullptr || Owner->WidgetTree == nullptr)
+		{
+			return nullptr;
+		}
+		if (UButton* ExistingButton = Cast<UButton>(Owner->GetWidgetFromName(ButtonName)))
+		{
+			return ExistingButton;
+		}
+
+		UWidget* Frame = Owner->GetWidgetFromName(FrameName);
+		UPanelWidget* Parent = Frame != nullptr ? Frame->GetParent() : nullptr;
+		if (Frame == nullptr || Parent == nullptr)
+		{
+			return nullptr;
+		}
+
+		UButton* Button = Owner->WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), ButtonName);
+		if (Button == nullptr)
+		{
+			return nullptr;
+		}
+
+		// 프레임과 글자가 이미 모든 아트를 그리므로 버튼은 입력 영역만 제공한다.
+		FButtonStyle TransparentStyle = Button->GetStyle();
+		TransparentStyle.Normal.DrawAs = ESlateBrushDrawType::NoDrawType;
+		TransparentStyle.Hovered.DrawAs = ESlateBrushDrawType::NoDrawType;
+		TransparentStyle.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
+		TransparentStyle.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Button->SetStyle(TransparentStyle);
+
+		if (UOverlay* OverlayParent = Cast<UOverlay>(Parent))
+		{
+			if (UOverlaySlot* ButtonSlot = OverlayParent->AddChildToOverlay(Button))
+			{
+				ButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+				ButtonSlot->SetVerticalAlignment(VAlign_Fill);
+			}
+		}
+		else if (UCanvasPanel* CanvasParent = Cast<UCanvasPanel>(Parent))
+		{
+			UCanvasPanelSlot* ButtonSlot = CanvasParent->AddChildToCanvas(Button);
+			const UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(Frame->Slot);
+			if (ButtonSlot != nullptr && FrameSlot != nullptr)
+			{
+				ButtonSlot->SetAnchors(FrameSlot->GetAnchors());
+				ButtonSlot->SetOffsets(FrameSlot->GetOffsets());
+				ButtonSlot->SetAlignment(FrameSlot->GetAlignment());
+				ButtonSlot->SetAutoSize(FrameSlot->GetAutoSize());
+				ButtonSlot->SetZOrder(FrameSlot->GetZOrder() + 1);
+			}
+		}
+		else
+		{
+			Parent->AddChild(Button);
+		}
+
+		return Button;
+	}
 }
 
 /**
@@ -247,6 +313,13 @@ void UTitleMenuWidget::NativeConstruct()
 	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize());
 	StartTitleBackgroundVideo();
 
+	EnsureTransparentMenuButton(this, TEXT("ExitButton"), TEXT("ExitButtonFrameImage"));
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		EnsureTransparentMenuButton(this,
+			MakeProfileWidgetName(TEXT("ExitButton"), ProfileName),
+			MakeProfileWidgetName(TEXT("ExitButtonFrameImage"), ProfileName));
+	}
 	BindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
@@ -353,6 +426,10 @@ void UTitleMenuWidget::BindMainMenuButtons()
 	{
 		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
+	if (UButton* ExitButton = Cast<UButton>(GetWidgetFromName(TEXT("ExitButton"))))
+	{
+		ExitButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
+	}
 
 	for (const FName ProfileName : TitleLayoutProfiles)
 	{
@@ -367,6 +444,10 @@ void UTitleMenuWidget::BindMainMenuButtons()
 		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
 		{
 			ProfileSettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+		if (UButton* ProfileExitButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButton"), ProfileName))))
+		{
+			ProfileExitButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
 		}
 	}
 }
@@ -386,6 +467,10 @@ void UTitleMenuWidget::UnbindMainMenuButtons()
 	{
 		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
+	if (UButton* ExitButton = Cast<UButton>(GetWidgetFromName(TEXT("ExitButton"))))
+	{
+		ExitButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
+	}
 
 	for (const FName ProfileName : TitleLayoutProfiles)
 	{
@@ -400,6 +485,10 @@ void UTitleMenuWidget::UnbindMainMenuButtons()
 		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
 		{
 			ProfileSettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+		if (UButton* ProfileExitButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButton"), ProfileName))))
+		{
+			ProfileExitButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
 		}
 	}
 }

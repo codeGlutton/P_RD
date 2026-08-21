@@ -293,6 +293,8 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 	// WBP에 남아 있던 배경용 틴트가 MediaTexture까지 어둡게 만들지 않도록 원색/완전 불투명으로 고정한다.
 	TitleBackgroundImage->SetColorAndOpacity(FLinearColor::White);
 	TitleBackgroundImage->SetRenderOpacity(1.0f);
+	// 전체 화면 배경은 표시만 담당하며 메뉴 버튼보다 먼저 입력을 가로채면 안 된다.
+	TitleBackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 
 	// concept_title_01_classic에는 Image뿐 아니라 별도의 어두운 Border도 남아 있다.
 	// Image만 숨기면 Border가 MediaTexture 위에서 전체 영상을 계속 어둡게 만든다.

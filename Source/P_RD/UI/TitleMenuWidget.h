@@ -192,6 +192,10 @@ private:
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/** @brief EXIT 버튼 클릭으로 현재 게임 세션을 종료한다. */
+	UFUNCTION()
+	void HandleExitButtonClicked();
+
 	/** @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다. */
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
