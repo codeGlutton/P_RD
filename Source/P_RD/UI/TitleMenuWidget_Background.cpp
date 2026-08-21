@@ -32,7 +32,7 @@
 // 이 번역 단위 내부에서만 쓰는 배경 영상 핏 보조 함수/상수 모음(외부 링크 노출 방지용 익명 namespace).
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_16x9/Title_All6_16x9_combo01_5s_mobile.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_Right16x9/Title_All6_Right_16x9_combo01_5s_mobile.mp4");
 
 	FString GetTitleBackgroundVideoPath()
 	{
@@ -294,11 +294,19 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 	TitleBackgroundImage->SetColorAndOpacity(FLinearColor::White);
 	TitleBackgroundImage->SetRenderOpacity(1.0f);
 
-	// concept_title_01_classic의 TitleVignetteImage는 투명 오버레이가 아니라 불투명 정적 배경이다.
-	// 영상 브러시가 실제로 적용된 뒤에는 숨겨야 재생 중인 MediaTexture가 화면에 보인다.
-	if (UWidget* TitleVignetteWidget = GetWidgetFromName(TEXT("TitleVignetteImage")))
+	// concept_title_01_classic에는 Image뿐 아니라 별도의 어두운 Border도 남아 있다.
+	// Image만 숨기면 Border가 MediaTexture 위에서 전체 영상을 계속 어둡게 만든다.
+	const FName VignetteWidgetNames[] =
 	{
-		TitleVignetteWidget->SetVisibility(ESlateVisibility::Collapsed);
+		TEXT("TitleVignetteImage"),
+		TEXT("TitleVignetteBorder"),
+	};
+	for (const FName VignetteWidgetName : VignetteWidgetNames)
+	{
+		if (UWidget* TitleVignetteWidget = GetWidgetFromName(VignetteWidgetName))
+		{
+			TitleVignetteWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 
@@ -436,14 +444,16 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 	}
 
 	TitleBackgroundImage->SetDesiredSizeOverride(TargetSize);
-	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	// v05 원화는 원본 정사각형이 우측 끝에 고정되고 왼쪽이 확장 영역이다.
+	// 폴드처럼 화면이 좁아질 때는 왼쪽 확장부부터 잘리고 원본 우측은 끝까지 보존한다.
+	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(1.0f, 0.5f));
 	TitleBackgroundImage->SetRenderTransform(FWidgetTransform());
 
-	// 정상 경로: 캔버스 슬롯이면 중앙 앵커/정렬로 고정하고 계산된 cover 크기를 그대로 슬롯 크기로 준다(넘치는 부분이 화면 밖으로 잘림).
+	// 정상 경로: 우측 중앙 앵커/정렬로 고정해 cover의 가로 초과분을 왼쪽에서만 잘라낸다.
 	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(TitleBackgroundImage->Slot))
 	{
-		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));     // 화면 중앙 기준 앵커.
-		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));  // 피벗도 중앙 → 좌우/상하 크롭이 대칭으로 일어남.
+		CanvasSlot->SetAnchors(FAnchors(1.0f, 0.5f));
+		CanvasSlot->SetAlignment(FVector2D(1.0f, 0.5f));
 		CanvasSlot->SetPosition(FVector2D::ZeroVector);
 		CanvasSlot->SetAutoSize(false);
 		CanvasSlot->SetSize(TargetSize);
