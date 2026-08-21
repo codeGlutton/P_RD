@@ -401,15 +401,15 @@ void USRPGCombatModel::AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> 
 
 void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex)
 {
-	if (mRoundEndEvents.IsValidIndex(EventIndex) == false)
+	if (RoundEvents.IsValidIndex(EventIndex) == false)
 	{
 		return;
 	}
 
 	auto RoundEventBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateLambda([this, RoundPresentationBarrier, &RoundEvents, EventIndex]() {
-		if (mRoundEndEvents[EventIndex].GetMutable().IsActivated() == false)
+		if (RoundEvents[EventIndex].GetMutable().IsActivated() == false)
 		{
-			mRoundEndEvents.RemoveAt(EventIndex);
+			RoundEvents.RemoveAt(EventIndex);
 			TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex);
 		}
 		else
@@ -418,7 +418,7 @@ void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> Round
 		}
 		}));
 
-	mRoundEndEvents[EventIndex].GetMutable().TryToTrigger(RoundEventBarrier.ToSharedRef(), this);
+	RoundEvents[EventIndex].GetMutable().TryToTrigger(RoundEventBarrier.ToSharedRef(), this);
 }
 
 void USRPGCombatModel::OnEndCurrentTurn(USRPGTurnContext* TurnContext, ESRPGTurnResult TurnResult)
