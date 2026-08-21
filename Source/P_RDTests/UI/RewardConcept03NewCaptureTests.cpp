@@ -814,12 +814,14 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	Widget->AdvanceRewardPresentation(.06f);
 	if (ChestSequence != nullptr && ChestBlendSequence != nullptr)
 	{
-		TestTrue(TEXT("현재 상자 프레임이 크로스페이드 중"),
-			ChestSequence->GetRenderOpacity() > 0.f
-			&& ChestSequence->GetRenderOpacity() < 1.f);
-		TestTrue(TEXT("다음 상자 프레임이 크로스페이드 중"),
-			ChestBlendSequence->GetRenderOpacity() > 0.f
-			&& ChestBlendSequence->GetRenderOpacity() < 1.f);
+		// 아틀라스 프레임을 겹쳐 보이게 하던 크로스페이드는 과도한 반짝임의
+		// 원인이었다. 현재 계약은 한 프레임만 완전히 표시하고 blend layer를 끈다.
+		TestEqual(TEXT("현재 상자 프레임은 단독 표시"),
+			ChestSequence->GetRenderOpacity(), 1.f);
+		TestEqual(TEXT("다음 상자 프레임 레이어는 비활성"),
+			ChestBlendSequence->GetVisibility(), ESlateVisibility::Collapsed);
+		TestEqual(TEXT("다음 상자 프레임 투명도는 0"),
+			ChestBlendSequence->GetRenderOpacity(), 0.f);
 	}
 	Widget->ResetRewardFlow();
 	StepSwitcher->SetActiveWidgetIndex(1);
@@ -827,7 +829,7 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	ButtonSwitcher->SetActiveWidgetIndex(1);
 	FString PrimerError;
 	if (!Capture(*Widget, SlateWidget, TEXT("_FramelessWarmup.png"),
-		PrimerError, 21))
+		PrimerError, 20))
 	{
 		AddError(PrimerError);
 		return false;
@@ -849,7 +851,7 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 		ProgressSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		ButtonSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		FString CaptureError;
-		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 21))
+		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 20))
 		{
 			AddError(CaptureError);
 			return false;

@@ -31,7 +31,6 @@
 #include "UI/Shop/ShopFullGeneratedWidgetBase.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Hire/MercenaryHireWidget.h"
-#include "UI/ShopFullGeneratedWidgetBuilder.h"
 #include "UI/RunOptionsRailWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/SOverlay.h"
@@ -529,9 +528,9 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 		return true;
 	}
 
-	// 명령행 ExecCmds는 에디터 모듈 등록보다 먼저 실행될 수 있으므로,
-	// 선택 원화 임포트와 WBP 재생성을 캡처 직전에 직접 보장한다.
-	ShopFullGeneratedWidgetBuilder::Build();
+	// 캡처는 현재 브랜치에 커밋된 WBP를 검수하는 읽기 전용 작업이다.
+	// 여기서 builder를 실행하면 스크린샷 생성만으로 uasset이 다시 저장되어
+	// 작업 트리가 오염될 수 있으므로 에셋 생성은 별도 editor command가 맡는다.
 
 	UWorld* World = GEditor != nullptr
 		? GEditor->GetEditorWorldContext().World() : nullptr;
