@@ -139,7 +139,7 @@ protected:
 	TObjectPtr<UMovieSceneBindingOverrides> mBindingOverrides;
 
 	UPROPERTY(Category = Setting, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "OverrideInstanceData"))
-	uint8 mOverrideInstanceData : 1 = false;
+	uint8 mOverrideInstanceData : 1 = true;
 
 	UPROPERTY(Category = Setting, Instanced, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultInstanceData"))
 	TObjectPtr<UObject> mDefaultInstanceData;
