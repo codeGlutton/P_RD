@@ -60,6 +60,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatEventBatchChanged, FCombatE
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCombatFloatingLogMotionFinished, int32, MotionIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatFloatingLogsCleared);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCombatResultOpenRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAutoBattleToggleRequested);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbandonRun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSaveAndExitRun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveAndExitCompleted, bool, bSuccess);
@@ -108,6 +109,10 @@ public:
 	/** @brief 전투 보상 오버레이를 열라는 알림 */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
 	FOnCombatResultOpenRequested OnCombatResultOpenRequested;
+
+	/** @brief 개발용 자동전투 버튼을 눌렀다는 의도. 실제 토글은 게임모드가 맡는다. */
+	UPROPERTY(BlueprintAssignable, Category = "Combat|Input")
+	FOnAutoBattleToggleRequested OnAutoBattleToggleRequested;
 
 	/** @brief 저장 후 타이틀 이동 요청의 완료 결과. 실패 시 HUD가 입력을 복구한다. */
 	UPROPERTY(BlueprintAssignable, Category = "Combat|View")
@@ -205,6 +210,9 @@ public:
 	 * @param UnitId 가운데로 데려올 유닛
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestFocusUnit(int32 UnitId);
+
+	/** @brief 개발용 자동전투 토글 의도. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Input") void RequestAutoBattleToggle();
 	/**
 	 * @brief 초점 유닛이 놓일 화면 자리(0~1 비율). RequestFocusUnit 전에 세운다.
 	 *
@@ -323,6 +331,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatEventBatchUI& GetCombatEventBatch() const { return mCombatEventBatch; }
 
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") bool IsAutoBattleEnabled() const { return mAutoBattleEnabled; }
+	/** @brief 게임모드가 토글 결과를 HUD에 되돌려준다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetAutoBattleEnabled(bool bEnabled);
+
 	/**
 	 * @brief 시뮬레이션 미리보기 전용 뷰모델. 실전 표시 상태와 저장 자리를 나눈다.
 	 *
@@ -364,6 +376,8 @@ private:
 	UPROPERTY(Transient) FPlayerMetaUI mPlayerMeta;
 	/** @brief 가장 최근 예측/실전 전투 이벤트. Blueprint UI도 동일 모델에서 읽는다. */
 	UPROPERTY(Transient) FCombatEventBatchUI mCombatEventBatch;
+	/** @brief 개발용 자동전투 버튼이 읽는 현재 토글 상태. */
+	UPROPERTY(Transient) bool mAutoBattleEnabled = false;
 	/** @brief 시뮬레이션 미리보기 뷰모델. Getter가 지연 생성한다(생성자 NewObject 금지). */
 	UPROPERTY(Transient) TObjectPtr<USimulationPreviewUIModel> mSimulationPreviewUIModel;
 };

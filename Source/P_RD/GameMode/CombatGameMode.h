@@ -93,11 +93,14 @@ public:
 	UCombatUIModel* GetCombatUIModel() const;
 	URewardUIModel* GetRewardUIModel() const;
 
-#if !UE_BUILD_SHIPPING
+	#if !UE_BUILD_SHIPPING
 	/** @brief 개발 빌드에서만 켤 수 있는 자동전투 토글. develop 게임 규칙에는 포함하지 않는다. */
 	void SetAutoBattleEnabled(bool bEnabled);
 	bool IsAutoBattleEnabled() const;
-#endif
+	#endif
+
+	UFUNCTION()
+	void HandleAutoBattleToggleRequested();
 
 	/* UI 진입점 */
 public:

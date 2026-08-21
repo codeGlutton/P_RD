@@ -34,6 +34,11 @@ void UCombatUIModel::RequestFocusUnit(int32 UnitId)
 	OnCombatCommand.Broadcast(ECombatInputType::FocusUnit, UnitId);
 }
 
+void UCombatUIModel::RequestAutoBattleToggle()
+{
+	OnAutoBattleToggleRequested.Broadcast();
+}
+
 /** @brief MOVE 모드 진입 의도를 전달한다. */
 void UCombatUIModel::RequestMove()
 {
@@ -217,6 +222,17 @@ void UCombatUIModel::SetPlayerMeta(const FPlayerMetaUI& Meta)
 {
 	mPlayerMeta = Meta;
 	OnUIChanged.Broadcast(ECombatUIDomain::Meta);
+}
+
+void UCombatUIModel::SetAutoBattleEnabled(const bool bEnabled)
+{
+	if (mAutoBattleEnabled == bEnabled)
+	{
+		return;
+	}
+
+	mAutoBattleEnabled = bEnabled;
+	OnUIChanged.Broadcast(ECombatUIDomain::AutoBattle);
 }
 
 /** @brief 행동 결과 큐를 통째로 교체하고 Queue 도메인 갱신을 알린다. */

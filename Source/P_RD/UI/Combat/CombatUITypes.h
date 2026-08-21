@@ -29,7 +29,9 @@ enum class ECombatUIDomain : uint8
 	// 상세 스냅샷은 목록 갱신(Unit/Skill)과 분리해 알린다. Unit은 HP 변경마다
 	// 오므로, 같은 도메인에 실으면 롱프레스 상세 패널이 HP 갱신마다 열린다.
 	UnitDetail,
-	SkillDetail
+	SkillDetail,
+	/** @brief 개발용 자동전투 버튼 상태가 바뀌었을 때만 갱신한다. */
+	AutoBattle
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */

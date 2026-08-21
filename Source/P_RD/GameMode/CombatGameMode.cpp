@@ -562,6 +562,10 @@ void ACombatGameMode::InitializeCombat()
 
 	mCombatUIModel->OnCombatCommand.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatCommand);
 	mCombatUIModel->OnCombatWorldTouch.AddUniqueDynamic(this, &ACombatGameMode::HandleCombatWorldTouch);
+#if !UE_BUILD_SHIPPING
+	mCombatUIModel->OnAutoBattleToggleRequested.AddUniqueDynamic(
+		this, &ACombatGameMode::HandleAutoBattleToggleRequested);
+#endif
 	mCombatUIModel->OnAbandonRun.AddUniqueDynamic(this, &ACombatGameMode::HandleAbandonRun);
 	mCombatUIModel->OnSaveAndExitRun.AddUniqueDynamic(this, &ACombatGameMode::HandleSaveAndExitRun);
 	mCombatUIModel->OnChangeFocusScreenAnchor.AddUObject(this, &ACombatGameMode::HandleChangeFocusScreenAnchor);
@@ -660,6 +664,10 @@ void ACombatGameMode::SetAutoBattleEnabled(const bool bEnabled)
 {
 	mAutoBattleEnabled = bEnabled;
 	ResetAutoBattleAction();
+	if (mCombatUIModel != nullptr)
+	{
+		mCombatUIModel->SetAutoBattleEnabled(bEnabled);
+	}
 
 	UE_LOG(LogCombatGameMode, Display,
 		TEXT("P_RD.AutoBattle: %s"), bEnabled ? TEXT("켜짐") : TEXT("꺼짐"));
@@ -706,7 +714,7 @@ bool ACombatGameMode::FindAutoBattleSkill(
 		return false;
 	}
 
-	int32 BestHitCount = 0;
+	float BestScore = -MAX_flt;
 	const TArray<FSkillEntry>& Skills = SkillComponent->GetSkills();
 	for (int32 CandidateSkillIndex = 0; CandidateSkillIndex < Skills.Num(); ++CandidateSkillIndex)
 	{
@@ -716,28 +724,104 @@ bool ACombatGameMode::FindAutoBattleSkill(
 			continue;
 		}
 
+		const UStaticUnitSkillData* SkillData = Cast<UStaticUnitSkillData>(
+			Skills[CandidateSkillIndex].mData.Get());
+		int32 MinDamage = 0;
+		int32 MaxDamage = 0;
+		if (SkillData != nullptr)
+		{
+			for (const FSkillPhaseLayer& PhaseLayer : SkillData->mSkillPhaseLayers)
+			{
+				for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer
+					: PhaseLayer.mSkillEffectLayers)
+				{
+					if (const FSkillEffectLayer_Attack* Attack =
+						EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+					{
+						MinDamage += Attack->mMinDamage;
+						MaxDamage += Attack->mMaxDamage;
+					}
+				}
+			}
+		}
+		const int32 ExpectedDamage = FMath::Max(
+			FMath::RoundToInt((MinDamage + MaxDamage) * 0.5f), 0);
+		const int32 ActionPointCost = SkillData != nullptr
+			? FMath::Max(SkillData->mRequiredActionPoint, 0) : 0;
+
 		const TArray<FTileIndex> AimableTiles = SkillComponent->GetAimableTiles(
 			TileMap, CandidateSkillIndex);
 		for (const FTileIndex& AimableTile : AimableTiles)
 		{
 			const TArray<FTileIndex> EffectTiles = SkillComponent->GetEffectTiles(
 				TileMap, CandidateSkillIndex, AimableTile);
-			int32 HitCount = 0;
+			TSet<int32> HitUnitIds;
+			int32 EffectiveDamage = 0;
+			int32 LethalCount = 0;
+			float LowHealthFocus = 0.f;
+			float ThreatValue = 0.f;
 			for (const FTileIndex& EffectTile : EffectTiles)
 			{
 				for (UUnitModel* Unit : TileMap->GetActorsOnTile<UUnitModel>(
 					EffectTile, ETileLayerFlag::Unit))
 				{
-					if (IsAutoBattleHostile(Unit))
+					if (IsAutoBattleHostile(Unit)
+						&& HitUnitIds.Contains(Unit->GetModelId()) == false)
 					{
-						++HitCount;
+						HitUnitIds.Add(Unit->GetModelId());
+						const UAttributeSetComponentModel* EnemyAttributes =
+							Unit->GetAttributeComponentModel();
+						const float EnemyHP = EnemyAttributes != nullptr
+							? EnemyAttributes->GetAttributeCurrentValue(
+								UCombatTargetAttributeSet::GetHPAttribute()) : 0.f;
+						const float EnemyMaxHP = EnemyAttributes != nullptr
+							? FMath::Max(EnemyAttributes->GetAttributeCurrentValue(
+								UCombatTargetAttributeSet::GetMaxHPAttribute()), 1.f) : 1.f;
+						const float MissingHealthRatio = FMath::Clamp(
+							1.f - (EnemyHP / EnemyMaxHP), 0.f, 1.f);
+						LowHealthFocus += MissingHealthRatio;
+						if (MaxDamage > 0)
+						{
+							EffectiveDamage += FMath::Min(
+								MaxDamage, FMath::RoundToInt(FMath::Max(EnemyHP, 0.f)));
+							if (MaxDamage >= EnemyHP)
+							{
+								++LethalCount;
+							}
+						}
+						// 먼저 처리할 가치가 높은 적(공격력/위협도가 높은 적)을
+						// 약간 우선한다. AttackFactor는 적의 기본 위협도에 해당한다.
+						if (EnemyAttributes != nullptr)
+						{
+							ThreatValue += EnemyAttributes->GetAttributeCurrentValue(
+								UCombatTargetAttributeSet::GetAttackFactorAttribute());
+						}
 					}
 				}
 			}
 
-			if (HitCount > BestHitCount)
+			const int32 HitCount = HitUnitIds.Num();
+			if (HitCount == 0)
 			{
-				BestHitCount = HitCount;
+				continue;
+			}
+
+			const FTileIndex Origin = PlayerUnit->GetTileTransform().mIndex;
+			const int32 AimDistance = FMath::Abs(Origin.mX - AimableTile.mX)
+				+ FMath::Abs(Origin.mY - AimableTile.mY);
+			// 점수 우선순위: 다수 타격 > 처치 가능성 > 실피 적 마무리
+			// > 기대 피해/위협도 > AP 효율 > 가까운 조준점 순서다.
+			const float Score = HitCount * 1000.f
+				+ LethalCount * 5000.f
+				+ EffectiveDamage * 12.f
+				+ LowHealthFocus * 350.f
+				+ ThreatValue * 8.f
+				+ ExpectedDamage * HitCount * 2.f
+				- ActionPointCost * 90.f
+				- AimDistance * 3.f;
+			if (Score > BestScore)
+			{
+				BestScore = Score;
 				SkillIndex = CandidateSkillIndex;
 				TargetTile = AimableTile;
 			}
@@ -779,13 +863,41 @@ bool ACombatGameMode::FindAutoBattleMove(
 		return false;
 	}
 
-	int32 CurrentNearestEnemyDistance = MAX_int32;
+	TArray<UUnitModel*> HostileUnits;
+	TSet<FTileIndex> EnemyThreatTiles;
 	for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
 	{
 		if (IsAutoBattleHostile(Unit.Get()) == false)
 		{
 			continue;
 		}
+
+		HostileUnits.Add(Unit.Get());
+		const FTileIndex EnemyTile = Unit->GetTileTransform().mIndex;
+		EnemyThreatTiles.Add(EnemyTile);
+
+		const UAttributeSetComponentModel* EnemyAttributes =
+			Unit->GetAttributeComponentModel();
+		const int32 EnemyActionPoint = EnemyAttributes != nullptr
+			? FMath::FloorToInt(FMath::Max(EnemyAttributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetActionPointAttribute()), 0.f)) : 0;
+		if (EnemyActionPoint > 0)
+		{
+			for (const FTileIndex& ThreatTile : TileMap->GetReachableTiles(
+				EnemyTile, EnemyActionPoint, Unit))
+			{
+				EnemyThreatTiles.Add(ThreatTile);
+			}
+		}
+	}
+	if (HostileUnits.IsEmpty())
+	{
+		return false;
+	}
+
+	int32 CurrentNearestEnemyDistance = MAX_int32;
+	for (const UUnitModel* Unit : HostileUnits)
+	{
 		const FTileIndex EnemyTile = Unit->GetTileTransform().mIndex;
 		CurrentNearestEnemyDistance = FMath::Min(
 			CurrentNearestEnemyDistance,
@@ -796,17 +908,17 @@ bool ACombatGameMode::FindAutoBattleMove(
 		return false;
 	}
 
-	int32 BestDistance = CurrentNearestEnemyDistance;
-	int32 BestPathProgress = -1;
+	const float CurrentHP = Attributes->GetAttributeCurrentValue(
+		UCombatTargetAttributeSet::GetHPAttribute());
+	const float MaxHP = FMath::Max(Attributes->GetAttributeCurrentValue(
+		UCombatTargetAttributeSet::GetMaxHPAttribute()), 1.f);
+	const bool bNeedsSafety = CurrentHP / MaxHP < 0.4f;
+	float BestScore = -MAX_flt;
 	for (const FTileIndex& CandidateTile : ReachableTiles)
 	{
 		int32 CandidateNearestEnemyDistance = MAX_int32;
-		for (const TObjectPtr<UUnitModel>& Unit : CombatModel->GetUnits())
+		for (const UUnitModel* Unit : HostileUnits)
 		{
-			if (IsAutoBattleHostile(Unit.Get()) == false)
-			{
-				continue;
-			}
 			const FTileIndex EnemyTile = Unit->GetTileTransform().mIndex;
 			CandidateNearestEnemyDistance = FMath::Min(
 				CandidateNearestEnemyDistance,
@@ -816,12 +928,24 @@ bool ACombatGameMode::FindAutoBattleMove(
 
 		const int32 PathProgress = FMath::Abs(Origin.mX - CandidateTile.mX)
 			+ FMath::Abs(Origin.mY - CandidateTile.mY);
-		if (CandidateNearestEnemyDistance < BestDistance
-			|| (CandidateNearestEnemyDistance == BestDistance
-				&& PathProgress > BestPathProgress))
+		const bool bThreatened = EnemyThreatTiles.Contains(CandidateTile);
+		const bool bImprovesPosition = CandidateNearestEnemyDistance
+			< CurrentNearestEnemyDistance;
+		if (bImprovesPosition == false && bNeedsSafety == false)
 		{
-			BestDistance = CandidateNearestEnemyDistance;
-			BestPathProgress = PathProgress;
+			continue;
+		}
+
+		// 평소에는 적에게 접근하면서 위협 칸을 피한다. 체력이 낮으면
+		// 접근성보다 생존을 우선하고, 같은 거리라면 안전한 칸을 고른다.
+		const float Score = (CurrentNearestEnemyDistance
+			- CandidateNearestEnemyDistance) * 1200.f
+			+ PathProgress * 4.f
+			+ (bThreatened ? (bNeedsSafety ? -5000.f : -700.f)
+				: (bNeedsSafety ? 2600.f : 0.f));
+		if (Score > BestScore)
+		{
+			BestScore = Score;
 			TargetTile = CandidateTile;
 		}
 	}
@@ -986,6 +1110,13 @@ void ACombatGameMode::AutoBattlePulse()
 
 #endif
 
+void ACombatGameMode::HandleAutoBattleToggleRequested()
+{
+#if !UE_BUILD_SHIPPING
+	SetAutoBattleEnabled(!mAutoBattleEnabled);
+#endif
+}
+
 void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 {
 	if (mPendingActionEndAfterCameraReturnHandle.IsValid() == false)
@@ -1061,6 +1192,15 @@ bool ACombatGameMode::EndTurn()
 
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
+#if !UE_BUILD_SHIPPING
+	// 사용자가 수동 명령을 내리면 자동전투를 잠시 끈다. 현재 진행 중인
+	// 액션은 끝까지 두고, 다음 행동부터 사람이 이어받게 한다.
+	if (mAutoBattleEnabled)
+	{
+		SetAutoBattleEnabled(false);
+	}
+#endif
+
 	switch (Type)
 	{
 	// 스킬/이동을 골라도 켜 둔 위협 범위는 걷지 않는다. "저기까지 오는데
