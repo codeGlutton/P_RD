@@ -32,7 +32,7 @@
 // 이 번역 단위 내부에서만 쓰는 배경 영상 핏 보조 함수/상수 모음(외부 링크 노출 방지용 익명 namespace).
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30/Title_All6_combo01_5s_mobile.mp4");
 
 	FString GetTitleBackgroundVideoPath()
 	{
@@ -229,8 +229,8 @@ bool UTitleMenuWidget::TryUseSharedTitleBackgroundVideo()
 		return false;
 	}
 
-	const FString RequestedPath = GetTitleBackgroundVideoPath();
-	VideoSubsystem->PreloadTitleBackgroundVideo(RequestedPath);
+	// 빈 경로를 넘겨 설정의 30종 셔플 목록을 사용한다. 단일 폴백 경로를 넘기면 첫 영상만 영구 루프된다.
+	VideoSubsystem->PreloadTitleBackgroundVideo(FString());
 
 	UMediaPlayer* SharedMediaPlayer = VideoSubsystem->GetMediaPlayer();
 	UMediaTexture* SharedMediaTexture = VideoSubsystem->GetMediaTexture();
@@ -545,7 +545,11 @@ void UTitleMenuWidget::HandleTitleBackgroundMediaOpened(FString OpenedUrl)
 {
 	if (mBackgroundRuntime.mMediaPlayer != nullptr)
 	{
-		mBackgroundRuntime.mMediaPlayer->SetLooping(true);
+		// 공유 플레이어의 단일/셔플 반복 정책은 서브시스템이 관리한다.
+		if (mBackgroundRuntime.mUsesSharedMedia == false)
+		{
+			mBackgroundRuntime.mMediaPlayer->SetLooping(true);
+		}
 		mBackgroundRuntime.mMediaPlayer->Play();
 
 		const int32 VideoTrack = mBackgroundRuntime.mMediaPlayer->GetSelectedTrack(EMediaPlayerTrack::Video);

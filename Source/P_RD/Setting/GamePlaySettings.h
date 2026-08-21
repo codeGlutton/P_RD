@@ -20,6 +20,8 @@
 
 #include "GamePlaySettings.generated.h"
 
+class UTexture2D;
+
 /**
  * @brief  게임 플레이 연관 설정
  */
@@ -74,10 +76,18 @@ public:
     /* 비디오 세팅 */
 public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicVideoPath"))
-    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_RotundaReveal_15s.mp4");
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPath"))
-    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30/Title_All6_combo01_5s_mobile.mp4");
+
+    /** @brief 타이틀에서 셔플 재생할 전체 화면 영상 목록. 비어 있으면 단일 TitleBackgroundVideoPath를 사용한다. */
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPaths"))
+    TArray<FString> mTitleBackgroundVideoPaths;
+
+    /** @brief 타이틀 WBP의 TitleLogoImage에 런타임으로 적용할 SVN 텍스처. */
+    UPROPERTY(Config, Category = UI, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleLogoTexture"))
+    TSoftObjectPtr<UTexture2D> mTitleLogoTexture;
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatVictoryVideoPath"))
     FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");

@@ -23,6 +23,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
+#include "Setting/GamePlaySettings.h"
 #include "UI/SettingsPanelWidget.h"
 
 using namespace RDTitleMenu;
@@ -64,6 +65,45 @@ namespace
 			*FormatVec2(Geometry.GetLocalSize()),
 			*FormatVec2(AbsolutePosition),
 			*FormatVec2(Widget->GetDesiredSize()));
+	}
+
+	void ApplyConfiguredTitleLogo(UUserWidget* Owner)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		const UGamePlaySettings* Settings = GetDefault<UGamePlaySettings>();
+		UTexture2D* LogoTexture = Settings != nullptr
+			? Settings->mTitleLogoTexture.LoadSynchronous()
+			: nullptr;
+		if (LogoTexture == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: configured title logo texture could not be loaded"));
+			return;
+		}
+
+		const FName LogoNames[] =
+		{
+			TEXT("TitleLogoImage"),
+			MakeProfileWidgetName(TEXT("TitleLogoImage"), TitleLayoutProfileBase16x9),
+		};
+		for (const FName LogoName : LogoNames)
+		{
+			if (UImage* LogoImage = Cast<UImage>(Owner->GetWidgetFromName(LogoName)))
+			{
+				FSlateBrush LogoBrush = LogoImage->GetBrush();
+				LogoBrush.SetResourceObject(LogoTexture);
+				LogoBrush.DrawAs = ESlateBrushDrawType::Image;
+				LogoBrush.ImageSize = FVector2D(1536.0, 1024.0);
+				LogoImage->SetBrush(LogoBrush);
+				LogoImage->SetColorAndOpacity(FLinearColor::White);
+				LogoImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+				UE_LOG(LogRD, Display, TEXT("TitleMenuWidget: title logo applied to %s from %s"),
+					*LogoName.ToString(), *LogoTexture->GetPathName());
+			}
+		}
 	}
 }
 
@@ -112,6 +152,7 @@ void UTitleMenuWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
+	ApplyConfiguredTitleLogo(this);
 	StartTitleBackgroundVideo();
 
 	BindMainMenuButtons();
