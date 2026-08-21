@@ -839,6 +839,7 @@ namespace RewardConcept03NewWidgetBuilder
 			for (UImage* Effect : { Glow, Ring, Rays, Spark })
 			{
 				Effect->SetRenderOpacity(0.f);
+				Effect->SetVisibility(ESlateVisibility::Collapsed);
 				Effect->SetRenderTransformPivot(FVector2D(.5f, .5f));
 			}
 		}
@@ -852,6 +853,7 @@ namespace RewardConcept03NewWidgetBuilder
 				GoldCoin, FVector2D(552.f, 178.f), FVector2D(56.f, 56.f),
 				20 + Index);
 			Coin->SetRenderOpacity(0.f);
+			Coin->SetVisibility(ESlateVisibility::Collapsed);
 			Coin->SetRenderTransformPivot(FVector2D(.5f, .5f));
 		}
 		AddOverlayInvisibleButton(Blueprint, VisualPanel,
@@ -881,8 +883,8 @@ namespace RewardConcept03NewWidgetBuilder
 		UBackgroundBlur* ChestBlur =
 			Blueprint->WidgetTree->ConstructWidget<UBackgroundBlur>(
 				UBackgroundBlur::StaticClass(), TEXT("NewGoldChestBlur"));
-		ChestBlur->SetBlurStrength(16.f);
-		ChestBlur->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		ChestBlur->SetBlurStrength(0.f);
+		ChestBlur->SetVisibility(ESlateVisibility::Collapsed);
 		Place(Layout, ChestBlur, FVector2D(250.f, 0.f),
 			FVector2D(660.f, 390.f), 2);
 

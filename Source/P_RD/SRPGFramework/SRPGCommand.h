@@ -70,6 +70,16 @@ public:
 	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ScreenPosition"))
 	FVector2D mScreenPosition = FVector2D(-1.0, -1.0);
 
+	/**
+	 * @brief 이미 게임플레이가 확정한 타일. Invalid이면 화면 좌표를 트레이스한다.
+	 * @details 확정 버튼처럼 커서가 UI 위에 있는 입력은 다시 hit-test하면 버튼
+	 *          뒤의 엉뚱한 월드를 집을 수 있다. 그런 경우 선택 단계에서 보관한
+	 *          타일을 직접 전달해 동일한 WorldTrace 규칙만 재사용한다.
+	 */
+	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite,
+		meta = (DisplayName = "ResolvedTileIndex"))
+	FTileIndex mResolvedTileIndex = FTileIndex::Invalid;
+
 public:
 	FOnShowTargetDetailPanelUI OnShowTargetDetailPanelUI;
 

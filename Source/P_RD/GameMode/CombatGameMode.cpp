@@ -68,6 +68,23 @@ namespace
 {
 	/** @brief 결과 판이 열릴 때 전투 방 음악이 짧게 정리되는 시간. */
 	constexpr float CombatResultBGMFadeOutSeconds = 0.35f;
+	constexpr const TCHAR* ArtifactFallbackIconPath =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
+
+	UTexture2D* ResolveArtifactInventoryIcon(const UStaticArtifactData* Artifact)
+	{
+		if (Artifact != nullptr)
+		{
+			if (UTexture2D* Icon = Artifact->mIcon.LoadSynchronous())
+			{
+				return Icon;
+			}
+			UE_LOG(LogCombatGameMode, Verbose,
+				TEXT("아티팩트 아이콘 미설정, 기본 아이콘 사용: %s"),
+				*Artifact->GetPathName());
+		}
+		return LoadObject<UTexture2D>(nullptr, ArtifactFallbackIconPath);
+	}
 
 	FString CombatPortraitIdentity(const UUnitModel* UnitModel)
 	{
@@ -769,7 +786,8 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
  * @details
  * 판에서 두 번째 탭이 확정이다. 화면 아래 단추로도 되게 하려면 그 탭을
  * 대신 놓아 주면 된다 -- 확정 판정을 UI 나 여기서 흉내 내면 규칙이 두 곳에
- * 생긴다. 칸을 화면 좌표로 되돌려 같은 길로 흘려보낸다.
+ * 생긴다. 다만 확정 순간 커서는 버튼 위에 있으므로 화면을 다시 트레이스하지
+ * 않고, 선택 단계가 보관한 칸을 WorldTrace 커맨드에 직접 싣는다.
  */
 void ACombatGameMode::ConfirmTargetTile()
 {
@@ -786,21 +804,7 @@ void ACombatGameMode::ConfirmTargetTile()
 		ConfirmTile = mCombatUIModel->GetTarget().mTile;
 	}
 
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
-	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
-	if (TileMap == nullptr || Controller == nullptr)
-	{
-		return;
-	}
-
-	FVector2D ScreenPosition = FVector2D::ZeroVector;
-	const FVector World = TileMap->TileToWorldLocation(ConfirmTile);
-	if (Controller->ProjectWorldLocationToScreen(World, OUT ScreenPosition) == false)
-	{
-		return;
-	}
-	ResolveWorldTouchEvent(ScreenPosition);
+	ResolveWorldTouchEvent(FVector2D(-1.0, -1.0), ConfirmTile);
 }
 
 void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
@@ -1093,6 +1097,12 @@ void ACombatGameMode::HandleChangeFocusScreenAnchor(const FVector2D& ScreenRatio
 
 bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 {
+	return ResolveWorldTouchEvent(ScreenPosition, FTileIndex::Invalid);
+}
+
+bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition,
+	const FTileIndex& ResolvedTileIndex)
+{
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
 
@@ -1101,6 +1111,8 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mResolvedTileIndex =
+		ResolvedTileIndex;
 	// 톡 친 칸을 UI 에 알린다. 어느 타일인지는 트레이스한 쪽만 안다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnSelectTargetTile.AddWeakLambda(this,
 		[this](const FTileIndex& Tile, AActor* HitActor) {
@@ -1192,7 +1204,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	if (CombatUIDebugFixture::ShouldMutateActualHPOne())
+	if (CombatUIDebugFixture::ShouldMutateActualHPOne()
+		&& Unit->IsPlayerUnitModel() == false)
 	{
 		AttributeSetComponentModel->SetAttributeBaseValue(
 			UUnitAttributeSet::GetHPAttribute(), 1.f);
@@ -2117,16 +2130,22 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	if (const UPartyArtifactComponentModel* PartyArtifacts =
 		PartyModel->GetPartyArtifactComponentModel())
 	{
-		for (const UStaticArtifactData* ArtifactData : PartyArtifacts->GetPartyArtifacts())
+		const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+			PartyArtifacts->GetPartyArtifacts();
+		for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
 		{
+			const UStaticArtifactData* ArtifactData = Artifacts[ArtifactIndex];
 			if (ArtifactData == nullptr)
 			{
 				continue;
 			}
 			FCombatArtifactUI& ArtifactUI =
 				PlayerMetaUIData.mArtifacts.AddDefaulted_GetRef();
-			ArtifactUI.mName = ArtifactData->mName;
-			ArtifactUI.mIcon = ArtifactData->mIcon.LoadSynchronous();
+			ArtifactUI.mName = ArtifactData->mName.IsEmpty() == false
+				? ArtifactData->mName
+				: FText::Format(NSLOCTEXT("CombatGameMode", "ArtifactFallbackName",
+					"Artifact {0}"), FText::AsNumber(ArtifactIndex + 1));
+			ArtifactUI.mIcon = ResolveArtifactInventoryIcon(ArtifactData);
 			ArtifactUI.mRarityColor = GetRarityColor(ArtifactData->mRarityType);
 			ArtifactUI.mRarityName = StaticEnum<ERarityType>() != nullptr
 				? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(

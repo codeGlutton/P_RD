@@ -39,6 +39,24 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  */
 namespace
 {
+	constexpr const TCHAR* ArtifactFallbackIconPath =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
+
+	UTexture2D* ResolveArtifactInventoryIcon(const UStaticArtifactData* Artifact)
+	{
+		if (Artifact != nullptr)
+		{
+			if (UTexture2D* Icon = Artifact->mIcon.LoadSynchronous())
+			{
+				return Icon;
+			}
+			UE_LOG(LogRoomGameMode, Verbose,
+				TEXT("아티팩트 아이콘 미설정, 기본 아이콘 사용: %s"),
+				*Artifact->GetPathName());
+		}
+		return LoadObject<UTexture2D>(nullptr, ArtifactFallbackIconPath);
+	}
+
 	/**
 	 * @brief 지정 좌표가 현재 Stage의 시작 지점인지 계산한다.
 	 *
@@ -806,7 +824,7 @@ bool ARoomGameModeBase::GetPartyRosterView(FPartyRosterView& OutView) const
 				: FText::Format(
 					NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
 					FText::AsNumber(ArtifactIndex + 1));
-			ArtifactRow.mIcon = Artifact->mIcon.LoadSynchronous();
+			ArtifactRow.mIcon = ResolveArtifactInventoryIcon(Artifact);
 			ArtifactRow.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
 			ArtifactRow.mDetail = NSLOCTEXT(
 				"RoomGameModeBase", "PartyArtifact", "Party-wide effect");

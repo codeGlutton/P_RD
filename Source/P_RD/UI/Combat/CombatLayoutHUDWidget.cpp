@@ -2510,13 +2510,14 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 	{
 		const FCombatArtifactUI* Artifact = Meta.mArtifacts.IsValidIndex(Index)
 			? &Meta.mArtifacts[Index] : nullptr;
-		const bool bHasArtifact = Artifact != nullptr && Artifact->mIcon != nullptr;
+		const bool bHasArtifact = Artifact != nullptr;
+		const bool bHasIcon = bHasArtifact && Artifact->mIcon != nullptr;
 		SetShown(mMercenaryInventoryArtifactFrames[Index], true);
 		if (mMercenaryInventoryArtifactIcons.IsValidIndex(Index))
 		{
 			UImage* Icon = mMercenaryInventoryArtifactIcons[Index];
-			SetShown(Icon, bHasArtifact);
-			if (Icon != nullptr && bHasArtifact)
+			SetShown(Icon, bHasIcon);
+			if (Icon != nullptr && bHasIcon)
 			{
 				Icon->SetBrushFromTexture(Artifact->mIcon.Get(), false);
 			}
@@ -2525,7 +2526,11 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 		{
 			UTextBlock* Name = mMercenaryInventoryArtifactNames[Index];
 			// 이름 표시 여부는 WBP 디자이너 값에 맡긴다. C++은 내용만 바꾼다.
-			SetTextIfPresent(Name, bHasArtifact ? Artifact->mName : FText::GetEmpty());
+			SetTextIfPresent(Name, bHasArtifact
+				? (Artifact->mName.IsEmpty()
+					? NSLOCTEXT("CombatHUD", "ArtifactFallbackName", "Artifact")
+					: Artifact->mName)
+				: FText::GetEmpty());
 		}
 		if (mMercenaryInventoryArtifactButtons.IsValidIndex(Index)
 			&& mMercenaryInventoryArtifactButtons[Index] != nullptr)

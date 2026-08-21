@@ -117,6 +117,8 @@ protected:
 	 * @return 이벤트 성공 여부
 	 */
 	bool ResolveWorldTouchEvent(FVector2D ScreenPosition);
+	bool ResolveWorldTouchEvent(FVector2D ScreenPosition,
+		const FTileIndex& ResolvedTileIndex);
 
 	/** @brief 겨냥해 둔 칸을 그대로 다시 누른다. 확정 단추가 부른다. */
 	void ConfirmTargetTile();

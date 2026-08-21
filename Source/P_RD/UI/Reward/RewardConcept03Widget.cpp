@@ -23,7 +23,10 @@ namespace RewardConcept03
 	constexpr int32 ArtifactStep = 3;
 	constexpr int32 SwitcherWarmupOffset = 1;
 	constexpr int32 DefaultArtifact = 1;
-	constexpr float SelectionXs[] = { 95.f, 425.f, 755.f };
+	constexpr float ChoicePanelXs[] = { 120.f, 450.f, 780.f };
+	constexpr float ChoicePanelWidth = 260.f;
+	constexpr float ChoiceListWidth = 1160.f;
+	constexpr float ChoiceSpacing = 330.f;
 	constexpr int32 TripleBurstFrameCount = 33;
 	constexpr int32 TripleBurstAtlasColumns = 6;
 	constexpr int32 TripleBurstAtlasRows = 6;
@@ -37,6 +40,23 @@ namespace RewardConcept03
 		FVector2D(330.f, 105.f), FVector2D(0.f, 105.f),
 		FVector2D(-330.f, 105.f) };
 	constexpr float ArtifactStartAngles[] = { -11.f, 0.f, 11.f };
+
+	float GetChoicePanelX(const int32 ChoiceCount, const int32 ChoiceIndex)
+	{
+		const int32 Count = FMath::Clamp(ChoiceCount, 1,
+			UE_ARRAY_COUNT(ChoicePanelXs));
+		if (Count == 1)
+		{
+			return (ChoiceListWidth - ChoicePanelWidth) * .5f;
+		}
+		if (Count == 2)
+		{
+			const float FirstCenter = ChoiceListWidth * .5f - ChoiceSpacing * .5f;
+			return FirstCenter - ChoicePanelWidth * .5f
+				+ ChoiceIndex * ChoiceSpacing;
+		}
+		return ChoicePanelXs[FMath::Clamp(ChoiceIndex, 0, Count - 1)];
+	}
 
 	void SetPortraitCropped(UImage* Image, UTexture2D* Texture)
 	{
@@ -408,6 +428,8 @@ void URewardConcept03Widget::RefreshRewardData()
 	}
 
 	const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
+	const int32 VisibleChoiceCount = FMath::Min(Choices.Num(),
+		static_cast<int32>(UE_ARRAY_COUNT(ArtifactChoicePanels)));
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		const bool bHasChoice = Choices.IsValidIndex(Index);
@@ -415,6 +437,17 @@ void URewardConcept03Widget::RefreshRewardData()
 		{
 			Panel->SetVisibility(bHasChoice
 				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+			if (bHasChoice)
+			{
+				if (UCanvasPanelSlot* PanelSlot =
+					Cast<UCanvasPanelSlot>(Panel->Slot))
+				{
+					FVector2D Position = PanelSlot->GetPosition();
+					Position.X = RewardConcept03::GetChoicePanelX(
+						VisibleChoiceCount, Index);
+					PanelSlot->SetPosition(Position);
+				}
+			}
 		}
 		if (!bHasChoice)
 		{
@@ -735,6 +768,19 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 		RewardConcept03::TripleBurstFrameCount - 1);
 	if (bUsesAtlas)
 	{
+		ChestSequenceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (ChestSequenceBlendImage != nullptr)
+		{
+			ChestSequenceBlendImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		if (ChestVisualSwitcher != nullptr)
+		{
+			ChestVisualSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (ChestBlendSwitcher != nullptr)
+		{
+			ChestBlendSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+		}
 		const int32 Frame = FMath::Clamp(FMath::FloorToInt(FramePosition),
 			0, RewardConcept03::TripleBurstFrameCount - 1);
 		const int32 NextFrame = FMath::Min(Frame + 1,
@@ -750,6 +796,19 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 	}
 	else if (ChestVisualSwitcher != nullptr)
 	{
+		ChestVisualSwitcher->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (ChestBlendSwitcher != nullptr)
+		{
+			ChestBlendSwitcher->SetVisibility(ESlateVisibility::HitTestInvisible);
+		}
+		if (ChestSequenceImage != nullptr)
+		{
+			ChestSequenceImage->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (ChestSequenceBlendImage != nullptr)
+		{
+			ChestSequenceBlendImage->SetVisibility(ESlateVisibility::Collapsed);
+		}
 		const int32 Frame = bUsesTripleBurstFrames
 			? FMath::Clamp(FMath::FloorToInt(FramePosition),
 				0, RewardConcept03::TripleBurstFrameCount - 1)
@@ -787,14 +846,14 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 			const float Burst1 = RewardConcept03::ImpactPulse(T, .430f, .050f);
 			const float Burst2 = RewardConcept03::ImpactPulse(T, .590f, .055f);
 			const float Compression = RewardConcept03::Segment(T, 0.f, .18f);
-			Scale = T < .18f ? FMath::Lerp(1.f, .965f, Compression)
-				: 1.f + OpenImpact * .14f + Burst0 * .07f
-					+ Burst1 * .055f + Burst2 * .045f;
-			const float ShakeEnvelope = OpenImpact * 15.f + Burst0 * 9.f
-				+ Burst1 * 7.f + Burst2 * 5.f;
+			Scale = T < .18f ? FMath::Lerp(1.f, .985f, Compression)
+				: 1.f + OpenImpact * .025f + Burst0 * .012f
+					+ Burst1 * .008f + Burst2 * .006f;
+			const float ShakeEnvelope = OpenImpact * 3.f + Burst0 * 2.f
+				+ Burst1 * 1.5f + Burst2;
 			Shake = FMath::Sin(T * 310.f) * ShakeEnvelope;
-			VerticalKick = -OpenImpact * 18.f - Burst0 * 7.f
-				- Burst1 * 5.f - Burst2 * 4.f;
+			VerticalKick = -OpenImpact * 4.f - Burst0 * 2.f
+				- Burst1 * 1.5f - Burst2;
 		}
 		else
 		{
@@ -808,8 +867,10 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 				? FMath::Sin(T * 78.f) * (1.f - T / .62f) * 8.f : 0.f;
 		}
 		UWidget* SequenceLayers[] = {
-			ChestSequenceImage.Get(), ChestSequenceBlendImage.Get(),
-			ChestVisualSwitcher.Get() };
+			bUsesAtlas ? static_cast<UWidget*>(ChestSequenceImage.Get())
+				: static_cast<UWidget*>(ChestVisualSwitcher.Get()),
+			bUsesAtlas ? static_cast<UWidget*>(ChestSequenceBlendImage.Get())
+				: static_cast<UWidget*>(ChestBlendSwitcher.Get()) };
 		for (UWidget* SequenceLayer : SequenceLayers)
 		{
 			if (SequenceLayer != nullptr)
@@ -819,91 +880,48 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 				SequenceLayer->SetRenderTranslation(FVector2D(Shake, VerticalKick));
 			}
 		}
-		if (bCanBlendTripleBurstFrames)
-		{
-			ChestBlendSwitcher->SetRenderTransformPivot(FVector2D(.5f, .5f));
-			ChestBlendSwitcher->SetRenderScale(FVector2D(Scale));
-			ChestBlendSwitcher->SetRenderTranslation(
-				FVector2D(Shake, VerticalKick));
-		}
 	}
-	constexpr float BurstStarts[] = { .22f, .40f, .56f };
-	for (int32 Wave = 0; Wave < UE_ARRAY_COUNT(BurstStarts); ++Wave)
+	// Atlas 자체에 이미 빛과 코인 연출이 들어 있다. UMG 보조 효과는 첫 충격
+	// 한 번만 약하게 겹치고 나머지 두 wave와 전경 코인은 완전히 끈다.
+	constexpr float BurstStart = .25f;
+	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
-		const float WaveT = RewardConcept03::Segment(
-			T, BurstStarts[Wave], BurstStarts[Wave] + .22f);
-		const bool bActive = T >= BurstStarts[Wave]
-			&& T < BurstStarts[Wave] + .22f;
+		const float WaveT = RewardConcept03::Segment(T, BurstStart, BurstStart + .16f);
+		const bool bActive = Wave == 0 && T >= BurstStart
+			&& T < BurstStart + .16f;
 		const float Alpha = bActive ? FMath::Sin(WaveT * PI) : 0.f;
 		if (UImage* Glow = ChestBurstGlows[Wave])
 		{
-			Glow->SetRenderOpacity(Alpha * .62f);
-			Glow->SetRenderScale(FVector2D(FMath::Lerp(.25f, 1.65f, WaveT)));
+			Glow->SetVisibility(Wave == 0
+				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			Glow->SetRenderOpacity(Alpha * .24f);
+			Glow->SetRenderScale(FVector2D(FMath::Lerp(.72f, 1.08f, WaveT)));
 		}
 		if (UImage* Ring = ChestBurstRings[Wave])
 		{
-			Ring->SetRenderOpacity(Alpha * .95f);
-			Ring->SetRenderScale(FVector2D(FMath::Lerp(.18f, 1.90f, WaveT)));
+			Ring->SetVisibility(Wave == 0
+				? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			Ring->SetRenderOpacity(Alpha * .34f);
+			Ring->SetRenderScale(FVector2D(FMath::Lerp(.70f, 1.10f, WaveT)));
 		}
 		if (UImage* Rays = ChestBurstRays[Wave])
 		{
-			Rays->SetRenderOpacity(Alpha * .78f);
-			Rays->SetRenderScale(FVector2D(FMath::Lerp(.45f, 1.38f, WaveT)));
-			Rays->SetRenderTransformAngle(
-				(Wave % 2 == 0 ? 1.f : -1.f) * 24.f * WaveT);
+			Rays->SetVisibility(ESlateVisibility::Collapsed);
+			Rays->SetRenderOpacity(0.f);
 		}
 		if (UImage* Spark = ChestBurstSparks[Wave])
 		{
-			const float SparkScale = FMath::Lerp(.18f, 1.22f,
-				RewardConcept03::EaseOutBack(FMath::Min(WaveT * 2.6f, 1.f)));
-			Spark->SetRenderOpacity(Alpha);
-			Spark->SetRenderScale(FVector2D(SparkScale));
-			Spark->SetRenderTransformAngle(
-				(Wave % 2 == 0 ? -1.f : 1.f) * 65.f * WaveT);
+			Spark->SetVisibility(ESlateVisibility::Collapsed);
+			Spark->SetRenderOpacity(0.f);
 		}
 	}
-
-	// 각 충격파마다 네 개의 전경 코인이 상자에서 시작해 화면 가장자리로
-	// 커지며 날아간다. 영상 속 작은 코인보다 위에 그려 원근감을 강조한다.
-	constexpr float CoinEndXs[] = {
-		-320.f, -120.f, 125.f, 320.f,
-		-350.f, -170.f, 180.f, 350.f,
-		-280.f, -90.f, 100.f, 285.f };
-	constexpr float CoinArcHeights[] = {
-		250.f, 300.f, 285.f, 240.f,
-		210.f, 270.f, 260.f, 200.f,
-		180.f, 240.f, 230.f, 175.f };
-	constexpr float CoinHeroScales[] = {
-		1.70f, 1.30f, 1.40f, 1.65f,
-		1.55f, 1.20f, 1.35f, 1.60f,
-		1.40f, 1.15f, 1.25f, 1.45f };
-	for (int32 Index = 0;
-		Index < UE_ARRAY_COUNT(ChestBurstForegroundCoins); ++Index)
+	for (UImage* Coin : ChestBurstForegroundCoins)
 	{
-		UImage* Coin = ChestBurstForegroundCoins[Index];
-		if (Coin == nullptr)
+		if (Coin != nullptr)
 		{
-			continue;
+			Coin->SetVisibility(ESlateVisibility::Collapsed);
+			Coin->SetRenderOpacity(0.f);
 		}
-		const int32 Wave = Index / 4;
-		const float Start = BurstStarts[Wave] + .015f
-			+ (Index % 4) * .008f;
-		const float CoinT = RewardConcept03::Segment(T, Start, Start + .40f);
-		const bool bActive = T >= Start && T < Start + .40f;
-		const float FadeIn = RewardConcept03::Segment(CoinT, 0.f, .08f);
-		const float FadeOut = 1.f - RewardConcept03::Segment(CoinT, .70f, 1.f);
-		const float Arc = 4.f * CoinT * (1.f - CoinT);
-		Coin->SetRenderOpacity(bActive ? FadeIn * FadeOut : 0.f);
-		Coin->SetRenderTranslation(FVector2D(
-			CoinEndXs[Index] * CoinT,
-			-CoinArcHeights[Index] * Arc + 145.f * CoinT));
-		const float GrowT = FMath::Min(CoinT / .34f, 1.f);
-		const float Scale = FMath::Lerp(.20f, CoinHeroScales[Index],
-			RewardConcept03::EaseOutBack(GrowT))
-			* FMath::Lerp(1.f, .78f, RewardConcept03::Segment(CoinT, .72f, 1.f));
-		Coin->SetRenderScale(FVector2D(Scale));
-		Coin->SetRenderTransformAngle(
-			(Index % 2 == 0 ? -1.f : 1.f) * 540.f * CoinT);
 	}
 	if (ChestInfoPanel != nullptr)
 	{
@@ -942,16 +960,16 @@ void URewardConcept03Widget::UpdateGoldReveal(const float NormalizedTime)
 		const float BlurT = RewardConcept03::Segment(T, 0.f, .30f);
 		const float RewardT = RewardConcept03::Segment(T, .10f, .66f);
 		const float RewardEase = RewardConcept03::EaseOutBack(RewardT);
-		GoldChestBlur->SetBlurStrength(FMath::Lerp(0.f, 18.f, BlurT));
-		GoldChestBlur->SetRenderOpacity(BlurT);
+		GoldChestBlur->SetBlurStrength(0.f);
+		GoldChestBlur->SetRenderOpacity(0.f);
+		GoldChestBlur->SetVisibility(ESlateVisibility::Collapsed);
 
 		GoldBackgroundChestImage->SetRenderTransformPivot(FVector2D(.5f, .5f));
 		GoldBackgroundChestImage->SetRenderOpacity(
-			FMath::Lerp(.96f, .42f, BlurT));
+			FMath::Lerp(.96f, .82f, BlurT));
 		GoldBackgroundChestImage->SetRenderScale(FVector2D(
-			FMath::Lerp(1.03f, .92f, BlurT)));
-		GoldBackgroundChestImage->SetRenderTranslation(FVector2D(
-			0.f, FMath::Lerp(0.f, 18.f, BlurT)));
+			FMath::Lerp(1.f, .98f, BlurT)));
+		GoldBackgroundChestImage->SetRenderTranslation(FVector2D::ZeroVector);
 
 		if (GoldVisualPanel != nullptr)
 		{
@@ -1082,20 +1100,29 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 {
 	RewardConcept03::SetAtlasFrame(ChestSequenceImage, 0);
 	RewardConcept03::SetAtlasFrame(ChestSequenceBlendImage, 0);
+	const bool bUsesAtlas = ChestSequenceImage != nullptr;
 	if (ChestSequenceImage != nullptr)
 	{
+		ChestSequenceImage->SetVisibility(bUsesAtlas
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		ChestSequenceImage->SetRenderOpacity(1.f);
 	}
 	if (ChestSequenceBlendImage != nullptr)
 	{
+		ChestSequenceBlendImage->SetVisibility(bUsesAtlas
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		ChestSequenceBlendImage->SetRenderOpacity(0.f);
 	}
 	if (ChestVisualSwitcher != nullptr)
 	{
+		ChestVisualSwitcher->SetVisibility(bUsesAtlas
+			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 		ChestVisualSwitcher->SetActiveWidgetIndex(0);
 	}
 	if (ChestBlendSwitcher != nullptr)
 	{
+		ChestBlendSwitcher->SetVisibility(bUsesAtlas
+			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 		ChestBlendSwitcher->SetActiveWidgetIndex(0);
 		ChestBlendSwitcher->SetRenderOpacity(0.f);
 	}
@@ -1127,6 +1154,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 	{
 		GoldChestBlur->SetBlurStrength(0.f);
 		GoldChestBlur->SetRenderOpacity(0.f);
+		GoldChestBlur->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
@@ -1136,6 +1164,12 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 		{
 			if (Effect != nullptr)
 			{
+				const bool bShowSubtleWave = Wave == 0
+					&& (Effect == ChestBurstGlows[Wave].Get()
+						|| Effect == ChestBurstRings[Wave].Get());
+				Effect->SetVisibility(bShowSubtleWave
+					? ESlateVisibility::HitTestInvisible
+					: ESlateVisibility::Collapsed);
 				Effect->SetRenderOpacity(0.f);
 				Effect->SetRenderTranslation(FVector2D::ZeroVector);
 				Effect->SetRenderScale(FVector2D(1.f));
@@ -1147,6 +1181,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 	{
 		if (Coin != nullptr)
 		{
+			Coin->SetVisibility(ESlateVisibility::Collapsed);
 			Coin->SetRenderOpacity(0.f);
 			Coin->SetRenderTranslation(FVector2D::ZeroVector);
 			Coin->SetRenderScale(FVector2D(1.f));
@@ -1579,17 +1614,22 @@ void URewardConcept03Widget::ApplyArtifactSelection()
 		|| UIModel == nullptr
 		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| SelectedArtifactIndex < 0
-		|| SelectedArtifactIndex >= UE_ARRAY_COUNT(RewardConcept03::SelectionXs))
+		|| SelectedArtifactIndex >= UE_ARRAY_COUNT(ArtifactChoicePanels))
 	{
 		SelectionOutline->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
 	SelectionOutline->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	if (UCanvasPanelSlot* CanvasSlot =
-		Cast<UCanvasPanelSlot>(SelectionOutline->Slot))
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(SelectionOutline->Slot);
+	const UCanvasPanelSlot* PanelSlot = ArtifactChoicePanels[SelectedArtifactIndex]
+		? Cast<UCanvasPanelSlot>(ArtifactChoicePanels[SelectedArtifactIndex]->Slot)
+		: nullptr;
+	if (CanvasSlot != nullptr && PanelSlot != nullptr)
 	{
 		FVector2D Position = CanvasSlot->GetPosition();
-		Position.X = RewardConcept03::SelectionXs[SelectedArtifactIndex];
+		// 카드와 outline 폭이 달라도 두 중심이 일치하게 한다.
+		Position.X = PanelSlot->GetPosition().X
+			+ (PanelSlot->GetSize().X - CanvasSlot->GetSize().X) * .5f;
 		CanvasSlot->SetPosition(Position);
 	}
 }
