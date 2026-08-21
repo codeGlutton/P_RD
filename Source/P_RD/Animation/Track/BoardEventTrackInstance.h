@@ -13,6 +13,9 @@
 #include "Animation/Section/BoardEventDurationSection.h"
 #include "BoardEventTrackInstance.generated.h"
 
+// Board Event Track 신규 로그 카테고리 등록
+DECLARE_LOG_CATEGORY_EXTERN(LogBoardEventTrack, Log, All)
+
 class UBoardActorSequencePlayer;
 
 /**
