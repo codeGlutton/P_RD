@@ -314,12 +314,12 @@ namespace
 	 * 것은 우리말로 바꾼다. 모르는 태그는 잎 이름 그대로 -- 게임플레이가
 	 * 새 상태를 추가해도 빈칸이 되지는 않는다.
 	 */
-	FString StatusDisplayName(const FGameplayTag& Tag)
+	FText StatusDisplayName(const FGameplayTag& Tag)
 	{
 		FString Full = Tag.GetTagName().ToString();
 		if (Full.IsEmpty())
 		{
-			return TEXT("이상");
+			return NSLOCTEXT("CombatLayoutHUD", "StatusUnknown", "이상");
 		}
 
 		FString Leaf = Full;
@@ -329,27 +329,27 @@ namespace
 			Leaf = Full.Mid(Dot + 1);
 		}
 
-		static const TMap<FString, FString> Korean = {
-			{ TEXT("Weakness"),      TEXT("약화") },
-			{ TEXT("Vulnerability"), TEXT("취약") },
-			{ TEXT("Vigor"),         TEXT("활력") },
-			{ TEXT("Fortification"), TEXT("강화") },
-			{ TEXT("Haste"),         TEXT("신속") },
-			{ TEXT("Exhaustion"),    TEXT("탈진") },
-			{ TEXT("Slow"),          TEXT("둔화") },
-			{ TEXT("Frail"),         TEXT("쇠약") },
-			{ TEXT("Root"),          TEXT("속박") },
-			{ TEXT("Poison"),        TEXT("중독") },
-			{ TEXT("Bleed"),         TEXT("출혈") },
-			{ TEXT("Stun"),          TEXT("기절") },
-			{ TEXT("Stealth"),       TEXT("은신") },
-			{ TEXT("Dead"),          TEXT("전투불능") },
+		static const TMap<FString, FText> Names = {
+			{ TEXT("Weakness"),      NSLOCTEXT("CombatLayoutHUD", "StatusWeakness", "약화") },
+			{ TEXT("Vulnerability"), NSLOCTEXT("CombatLayoutHUD", "StatusVulnerability", "취약") },
+			{ TEXT("Vigor"),         NSLOCTEXT("CombatLayoutHUD", "StatusVigor", "활력") },
+			{ TEXT("Fortification"), NSLOCTEXT("CombatLayoutHUD", "StatusFortification", "강화") },
+			{ TEXT("Haste"),         NSLOCTEXT("CombatLayoutHUD", "StatusHaste", "신속") },
+			{ TEXT("Exhaustion"),    NSLOCTEXT("CombatLayoutHUD", "StatusExhaustion", "탈진") },
+			{ TEXT("Slow"),          NSLOCTEXT("CombatLayoutHUD", "StatusSlow", "둔화") },
+			{ TEXT("Frail"),         NSLOCTEXT("CombatLayoutHUD", "StatusFrail", "쇠약") },
+			{ TEXT("Root"),          NSLOCTEXT("CombatLayoutHUD", "StatusRoot", "속박") },
+			{ TEXT("Poison"),        NSLOCTEXT("CombatLayoutHUD", "StatusPoison", "중독") },
+			{ TEXT("Bleed"),         NSLOCTEXT("CombatLayoutHUD", "StatusBleed", "출혈") },
+			{ TEXT("Stun"),          NSLOCTEXT("CombatLayoutHUD", "StatusStun", "기절") },
+			{ TEXT("Stealth"),       NSLOCTEXT("CombatLayoutHUD", "StatusStealth", "은신") },
+			{ TEXT("Dead"),          NSLOCTEXT("CombatLayoutHUD", "StatusDead", "전투불능") },
 		};
-		if (const FString* Found = Korean.Find(Leaf))
+		if (const FText* Found = Names.Find(Leaf))
 		{
 			return *Found;
 		}
-		return Leaf;
+		return FText::FromString(Leaf);
 	}
 }
 
@@ -2220,8 +2220,9 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			{
 				// 시안은 "피해 8~14" 처럼 무엇의 숫자인지 적는다. 숫자만
 				// 있으면 쿨 턴 수와 구분이 안 된다.
-				Widgets.Damage->SetText(FText::FromString(FString::Printf(
-					TEXT("피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax)));
+				Widgets.Damage->SetText(FText::Format(
+					LOCTEXT("SkillCardDamage", "피해 {0}~{1}"),
+					Skill.mDamageMin, Skill.mDamageMax));
 			}
 		}
 
@@ -4081,27 +4082,27 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	ApplyReadableDetailTypography(false);
 	ApplyDetailColumnLayout(true);
 
-	SetTextIfPresent(mDetailTitleText,
-		FText::FromString(StatusDisplayName(StatusTag)));
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(StackCount > 1
-		? FString::Printf(TEXT("상태이상  ·  %d중첩"), StackCount)
-		: FString(TEXT("상태이상"))));
+	SetTextIfPresent(mDetailTitleText, StatusDisplayName(StatusTag));
+	SetTextIfPresent(mDetailSubtitleText, StackCount > 1
+		? FText::Format(
+			LOCTEXT("StatusSubtitleStacked", "상태이상  ·  {0}중첩"), StackCount)
+		: LOCTEXT("StatusSubtitle", "상태이상"));
 
 	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
-	static const TMap<FString, FString> Descriptions = {
-		{ TEXT("Fortification"), TEXT("받는 피해가 줄어든다.") },
-		{ TEXT("Vulnerability"), TEXT("받는 피해가 늘어난다.") },
-		{ TEXT("Weakness"),      TEXT("주는 피해가 줄어든다.") },
-		{ TEXT("Vigor"),         TEXT("행동력 효율이 올라간다.") },
-		{ TEXT("Haste"),         TEXT("속도가 올라간다.") },
-		{ TEXT("Exhaustion"),    TEXT("행동력 효율이 내려간다.") },
-		{ TEXT("Slow"),          TEXT("속도가 내려간다.") },
-		{ TEXT("Frail"),         TEXT("방어력이 내려간다.") },
-		{ TEXT("Root"),          TEXT("이동할 수 없다.") },
-		{ TEXT("Poison"),        TEXT("턴마다 피해를 입는다.") },
-		{ TEXT("Bleed"),         TEXT("턴마다 피해를 입는다.") },
-		{ TEXT("Stun"),          TEXT("턴을 진행할 수 없다.") },
-		{ TEXT("Stealth"),       TEXT("적의 대상이 되지 않는다.") },
+	static const TMap<FString, FText> Descriptions = {
+		{ TEXT("Fortification"), LOCTEXT("StatusDescFortification", "받는 피해가 줄어든다.") },
+		{ TEXT("Vulnerability"), LOCTEXT("StatusDescVulnerability", "받는 피해가 늘어난다.") },
+		{ TEXT("Weakness"),      LOCTEXT("StatusDescWeakness", "주는 피해가 줄어든다.") },
+		{ TEXT("Vigor"),         LOCTEXT("StatusDescVigor", "행동력 효율이 올라간다.") },
+		{ TEXT("Haste"),         LOCTEXT("StatusDescHaste", "속도가 올라간다.") },
+		{ TEXT("Exhaustion"),    LOCTEXT("StatusDescExhaustion", "행동력 효율이 내려간다.") },
+		{ TEXT("Slow"),          LOCTEXT("StatusDescSlow", "속도가 내려간다.") },
+		{ TEXT("Frail"),         LOCTEXT("StatusDescFrail", "방어력이 내려간다.") },
+		{ TEXT("Root"),          LOCTEXT("StatusDescRoot", "이동할 수 없다.") },
+		{ TEXT("Poison"),        LOCTEXT("StatusDescPoison", "턴마다 피해를 입는다.") },
+		{ TEXT("Bleed"),         LOCTEXT("StatusDescBleed", "턴마다 피해를 입는다.") },
+		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "턴을 진행할 수 없다.") },
+		{ TEXT("Stealth"),       LOCTEXT("StatusDescStealth", "적의 대상이 되지 않는다.") },
 	};
 	FString Leaf = StatusTag.GetTagName().ToString();
 	int32 Dot = INDEX_NONE;
@@ -4109,11 +4110,12 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		Leaf = Leaf.Mid(Dot + 1);
 	}
-	const FString* Description = Descriptions.Find(Leaf);
-	FString Body = Description != nullptr
-		? *Description : TEXT("효과 설명이 아직 없다.");
-	Body += TEXT("\n턴이 지나면 사라진다.");
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	const FText* Description = Descriptions.Find(Leaf);
+	SetTextIfPresent(mDetailBodyText, FText::Format(
+		LOCTEXT("StatusDescBodyFmt", "{0}\n턴이 지나면 사라진다."),
+		Description != nullptr
+			? *Description
+			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다.")));
 
 	SetPortraitCropped(mDetailIconImage, StatusIconFor(StatusTag));
 

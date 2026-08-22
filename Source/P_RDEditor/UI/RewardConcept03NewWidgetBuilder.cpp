@@ -558,7 +558,10 @@ namespace RewardConcept03NewWidgetBuilder
 		UCanvasPanel* List = AddCanvasPanel(Blueprint, Layout,
 			TEXT("NewExperienceList"), FVector2D(20.f, 12.f),
 			FVector2D(650.f, 360.f), 1);
-		const TCHAR* Labels[] = { TEXT("용병 1"), TEXT("용병 2"), TEXT("용병 3") };
+		const FText Labels[] = {
+			NSLOCTEXT("RewardConcept03", "MercPreview1", "용병 1"),
+			NSLOCTEXT("RewardConcept03", "MercPreview2", "용병 2"),
+			NSLOCTEXT("RewardConcept03", "MercPreview3", "용병 3") };
 		const TCHAR* Progress[] = { TEXT("75 / 250"), TEXT("150 / 250"), TEXT("225 / 250") };
 		const float PreviewPercents[] = { .30f, .60f, .90f };
 		for (int32 Index = 0; Index < 3; ++Index)
@@ -592,7 +595,7 @@ namespace RewardConcept03NewWidgetBuilder
 
 			UTextBlock* PortraitFallback = AddOverlayText(Blueprint, PortraitInner,
 				*FString::Printf(TEXT("NewPortraitLabel_%d"), Index),
-				FText::FromString(Labels[Index]), 16, FMargin(3.f),
+				Labels[Index], 16, FMargin(3.f),
 				FLinearColor(.93f, .84f, .64f, 1.f));
 			PortraitFallback->SetVisibility(ESlateVisibility::Collapsed);
 
@@ -648,7 +651,7 @@ namespace RewardConcept03NewWidgetBuilder
 			FVector2D(270.f, 50.f), 1);
 		AddOverlayText(Blueprint, HeadingZone,
 			TEXT("NewExperienceSummaryHeading"),
-			FText::FromString(TEXT("경험치 획득")), 22, FMargin(4.f),
+			NSLOCTEXT("RewardConcept03", "ExpHeading", "경험치 획득"), 22, FMargin(4.f),
 			FLinearColor::White);
 		UOverlay* RewardZone = AddOverlayPanel(Blueprint, SummaryContent,
 			TEXT("NewExperienceRewardZone"), FVector2D(0.f, 92.f),
@@ -659,8 +662,8 @@ namespace RewardConcept03NewWidgetBuilder
 	}
 
 	void AddCenteredInfoStep(UWidgetBlueprint* Blueprint, UCanvasPanel* Step,
-		UTexture2D* Panel, const TCHAR* Heading, const TCHAR* MainText,
-		const TCHAR* Hint, const FName Prefix,
+		UTexture2D* Panel, const FText& Heading, const FText& MainText,
+		const FText& Hint, const FName Prefix,
 		UTexture2D* ChestClosed = nullptr, UTexture2D* ChestOpen25 = nullptr,
 		UTexture2D* ChestOpen50 = nullptr, UTexture2D* ChestOpen75 = nullptr,
 		UTexture2D* ChestOpen = nullptr, UTexture2D* GoldCoin = nullptr,
@@ -767,21 +770,21 @@ namespace RewardConcept03NewWidgetBuilder
 			FVector2D(0.f, 6.f), FVector2D(296.f, 52.f), 1);
 		AddOverlayText(Blueprint, HeadingZone,
 			FName(*(Prefix.ToString() + TEXT("Heading"))),
-			FText::FromString(Heading), 25, FMargin(6.f),
+			Heading, 25, FMargin(6.f),
 			FLinearColor(.24f, .14f, .07f, 1.f));
 		UOverlay* MainZone = AddOverlayPanel(Blueprint, Content,
 			FName(*(Prefix.ToString() + TEXT("MainZone"))),
 			FVector2D(0.f, 68.f), FVector2D(296.f, 82.f), 2);
 		AddOverlayText(Blueprint, MainZone,
 			FName(*(Prefix.ToString() + TEXT("Main"))),
-			FText::FromString(MainText), bIsChest ? 34 : 44, FMargin(4.f),
+			MainText, bIsChest ? 34 : 44, FMargin(4.f),
 			FLinearColor(.16f, .095f, .045f, 1.f));
 		UOverlay* HintZone = AddOverlayPanel(Blueprint, Content,
 			FName(*(Prefix.ToString() + TEXT("HintZone"))),
 			FVector2D(0.f, 166.f), FVector2D(296.f, 54.f), 3);
 		UTextBlock* HintText = AddOverlayFittedText(Blueprint, HintZone,
 			FName(*(Prefix.ToString() + TEXT("Hint"))),
-			FText::FromString(Hint), bIsChest ? 23 : 20, FMargin(8.f),
+			Hint, bIsChest ? 23 : 20, FMargin(8.f),
 			FLinearColor(.28f, .18f, .10f, 1.f));
 		HintText->SetAutoWrapText(false);
 	}
@@ -922,7 +925,10 @@ namespace RewardConcept03NewWidgetBuilder
 		UCanvasPanel* ChoiceList = AddCanvasPanel(Blueprint, Step,
 			TEXT("NewArtifactChoiceList"), FVector2D::ZeroVector,
 			FVector2D(1160.f, 390.f), 1);
-		const TCHAR* Names[] = { TEXT("피의 성배"), TEXT("야수의 송곳니"), TEXT("행운의 주화") };
+		const FText Names[] = {
+			NSLOCTEXT("RewardConcept03", "ArtifactPreview1", "피의 성배"),
+			NSLOCTEXT("RewardConcept03", "ArtifactPreview2", "야수의 송곳니"),
+			NSLOCTEXT("RewardConcept03", "ArtifactPreview3", "행운의 주화") };
 		const float Xs[] = { 120.f, 450.f, 780.f };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
@@ -942,14 +948,14 @@ namespace RewardConcept03NewWidgetBuilder
 				FVector2D(0.f, 18.f), FVector2D(232.f, 58.f), 1);
 			AddOverlayFittedText(Blueprint, NameZone,
 				*FString::Printf(TEXT("NewChoiceName_%d"), Index),
-				FText::FromString(Names[Index]), 21, FMargin(5.f),
+				Names[Index], 21, FMargin(5.f),
 				FLinearColor(.21f, .12f, .06f, 1.f));
 			UOverlay* TypeZone = AddOverlayPanel(Blueprint, ChoiceContent,
 				*FString::Printf(TEXT("NewChoiceTypeZone_%d"), Index),
 				FVector2D(16.f, 225.f), FVector2D(200.f, 40.f), 2);
 			AddOverlayText(Blueprint, TypeZone,
 				*FString::Printf(TEXT("NewChoiceType_%d"), Index),
-				FText::FromString(TEXT("아티팩트")), 17, FMargin(3.f),
+				NSLOCTEXT("RewardConcept03", "TypeArtifact", "아티팩트"), 17, FMargin(3.f),
 				FLinearColor(.35f, .21f, .10f, 1.f));
 			AddOverlayInvisibleButton(Blueprint, ChoicePanel,
 				*FString::Printf(TEXT("NewArtifactChoiceButton_%d"), Index));
@@ -1074,7 +1080,7 @@ namespace RewardConcept03NewWidgetBuilder
 			FVector2D(580.f, 116.f), 20);
 		AddOverlayImage(Blueprint, HeaderPanel, TEXT("NewHeaderArt"), Header);
 		AddOverlayText(Blueprint, HeaderPanel, TEXT("NewTitleText"),
-			FText::FromString(TEXT("전투 보상")), 43,
+			NSLOCTEXT("RewardConcept03", "Title", "전투 보상"), 43,
 			FMargin(82.f, 13.f, 82.f, 19.f),
 			FLinearColor(.96f, .90f, .74f, 1.f));
 
@@ -1169,15 +1175,18 @@ namespace RewardConcept03NewWidgetBuilder
 					UWidgetSwitcher::StaticClass(), TEXT("NewRewardTabSwitcher"));
 			AddOverlayChild(TabPanel, TabSwitcher, FMargin(14.f, 11.f, 14.f, 17.f));
 			AddSwitcherOverlay(Blueprint, TabSwitcher, TEXT("NewTabWarmupState"));
-			const TCHAR* TabNames[] = {
-				TEXT("경험치"), TEXT("상자"), TEXT("골드"), TEXT("아티팩트") };
+			const FText TabNames[] = {
+				NSLOCTEXT("RewardConcept03", "TabExp", "경험치"),
+				NSLOCTEXT("RewardConcept03", "TabChest", "상자"),
+				NSLOCTEXT("RewardConcept03", "TabGold", "골드"),
+				NSLOCTEXT("RewardConcept03", "TabArtifact", "아티팩트") };
 			for (int32 Index = 0; Index < RewardStepCount; ++Index)
 			{
 				UOverlay* State = AddSwitcherOverlay(Blueprint, TabSwitcher,
 					*FString::Printf(TEXT("NewTabState_%d"), Index + 1));
 				AddOverlayFittedText(Blueprint, State,
 					*FString::Printf(TEXT("NewTabText_%d"), Index + 1),
-					FText::FromString(TabNames[Index]), 22, FMargin(3.f),
+					TabNames[Index], 22, FMargin(3.f),
 					FLinearColor(.96f, .90f, .74f, 1.f));
 			}
 			TabSwitcher->SetActiveWidgetIndex(1);
@@ -1206,7 +1215,9 @@ namespace RewardConcept03NewWidgetBuilder
 		else
 		{
 			AddCenteredInfoStep(Blueprint, Step2, ParchmentMedium,
-				TEXT("보상 상자"), TEXT("상자 열기"), TEXT("상자를 눌러 여세요"),
+				NSLOCTEXT("RewardConcept03", "ChestHeading", "보상 상자"),
+				NSLOCTEXT("RewardConcept03", "ChestOpenLabel", "상자 열기"),
+				NSLOCTEXT("RewardConcept03", "ChestHint", "상자를 눌러 여세요"),
 				TEXT("NewChest"), ChestClosed, ChestOpen25, ChestOpen50,
 				ChestOpen75, ChestOpen);
 		}
@@ -1218,7 +1229,9 @@ namespace RewardConcept03NewWidgetBuilder
 		else
 		{
 			AddCenteredInfoStep(Blueprint, Step3, ParchmentMedium,
-				TEXT("획득 골드"), TEXT("+350 G"), TEXT("보상이 지급되었습니다"),
+				NSLOCTEXT("RewardConcept03", "GoldHeading", "획득 골드"),
+				FText::FromString(TEXT("+350 G")),
+				NSLOCTEXT("RewardConcept03", "GoldGrantedHint", "보상이 지급되었습니다"),
 				TEXT("NewGold"), nullptr, nullptr, nullptr, nullptr, nullptr,
 				GoldCoin, false);
 		}
@@ -1253,8 +1266,9 @@ namespace RewardConcept03NewWidgetBuilder
 				*FString::Printf(TEXT("NewButtonState_%d"), Index + 1));
 			AddOverlayFittedText(Blueprint, State,
 				*FString::Printf(TEXT("NewButtonText_%d"), Index + 1),
-				FText::FromString(Index == RewardStepCount - 1
-					? TEXT("확정") : TEXT("다음")), 31,
+				Index == RewardStepCount - 1
+					? NSLOCTEXT("RewardConcept03", "Confirm", "확정")
+					: NSLOCTEXT("RewardConcept03", "Next", "다음"), 31,
 				FMargin(4.f), FLinearColor(.96f, .90f, .74f, 1.f));
 		}
 		ButtonSwitcher->SetActiveWidgetIndex(1);
