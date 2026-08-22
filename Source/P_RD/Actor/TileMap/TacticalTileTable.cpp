@@ -16,6 +16,7 @@ void FTacticalTileTable::Build(
 	const FTileIndex& Origin,
 	const TArray<FTileIndex>& TargetTiles,
 	const TArray<const UStaticUnitSkillData*>& Skills,
+	int32 MoveBudget,
 	int32 ActionPoint)
 {
 	// 재사용 대비 초기화
@@ -31,7 +32,7 @@ void FTacticalTileTable::Build(
 	}
 
 	// 이동가능한 타일 수집 (어쨌거나 이동가능한 타일에서 공격을 시작하니까)
-	TArray<FTileIndex> ReachableTiles = TileMap->GetReachableTiles(Origin, ActionPoint, Self);
+	TArray<FTileIndex> ReachableTiles = TileMap->GetReachableTiles(Origin, MoveBudget, Self);
 	ReachableTiles.Add(Origin);
 
 	// 원점에서 타일까지 이동거리장 (타일까지 이동하는데 소모하는 행동력)

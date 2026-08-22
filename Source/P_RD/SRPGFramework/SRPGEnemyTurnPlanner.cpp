@@ -183,16 +183,26 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움 (사용불가 슬롯은 nullptr 유지)
+	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 대상
+	// Attack은 공격 후보로 테이블에 채우고(사용불가 슬롯은 nullptr 유지), Spell은 자기 버프로 별도 수집
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
 	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
+	TArray<int32> SpellSlots;
 	bool HasUsableSkill = false;
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
 		if (Skills[Index].IsValid() && SkillComp->IsCooldown(Index) == false)
 		{
-			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			const UStaticUnitSkillData* Skill = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			if (Skill->mSkillType == ESkillType::Spell)
+			{
+				SpellSlots.Add(Index);
+			}
+			else
+			{
+				SkillDatas[Index] = Skill;
+			}
 			HasUsableSkill = true;
 		}
 	}
@@ -220,7 +230,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
 
 	// 속박 등으로 이동 불가면 이동 예산을 0으로 -> 도달 범위가 제자리로 줄어 제자리 스킬만 계획
-	// (스킬 비용 판정은 별도로 ActionPoint를 쓰므로 영향 없음)
+	// (시전 예산은 ActionPoint를 따로 넘기므로 이동 불가여도 스킬 비용 판정에는 영향 없음)
 	const UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(Enemy->GetBoardMovementComponentModel());
 	const int32 MoveBudget = (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
 		? 0
@@ -228,7 +238,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
 	FTacticalTileTable Table;
-	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, MoveBudget);
+	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, MoveBudget, ActionPoint);
 
 	// 목적지 이동비용 조회 (판단근거 로그용)
 	auto GetTableMoveCost = [&Table](const FTileIndex& Tile)

@@ -8,6 +8,7 @@
  * 다중 스킬 랜덤 선택 케이스(Case4-1) 포함.
  * 다중 플레이어 대응: 최근접 타겟 선택(Case5-1), 시전 가능 타겟 우선(Case5-2),
  * 균형 후퇴(Case5-3), 최근접 접근 폴백(Case5-4).
+ * 속박: 제자리 시전(Case6-1), 사거리 밖(Case6-2), 비용 있는 스킬 시전 회귀(Case6-3).
  * Single 조준 스킬: 영향 범위로 타격 판정(Case7-1), 자기 차폐 회귀(Case7-2), 접근 폴백(Case7-3).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
@@ -82,12 +83,13 @@ namespace
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
 	// @param EffectPattern 영향 범위 패턴 (Single 조준 스킬은 이 범위로 타격 여부가 결정됨)
 	// @param EffectArea 영향 범위 크기
+	// @param SkillCost 시전 비용 (플래너 AP 판정용, 0이면 비용 없음)
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange,
-		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0)
+		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0, int32 SkillCost = 0)
 	{
 		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
 		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
-		Skill->mRequiredActionPoint = 0;	// 시전 비용 없음 (플래너 AP 판정용)
+		Skill->mRequiredActionPoint = SkillCost;
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
@@ -111,6 +113,7 @@ namespace
 	// @param Rooted 속박 상태 여부 (이동 불가 계획 검증용)
 	// @param EffectPattern 슬롯 0 스킬의 영향 범위 패턴 (Single 조준 검증용)
 	// @param EffectArea 슬롯 0 스킬의 영향 범위 크기
+	// @param SkillCost 슬롯 0 스킬의 시전 비용 (이동과 시전의 AP 분배 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -127,7 +130,8 @@ namespace
 		FTileIndex SecondPlayerIndex = FTileIndex::Invalid,
 		bool Rooted = false,
 		EEffectPattern EffectPattern = EEffectPattern::Single,
-		int32 EffectArea = 0)
+		int32 EffectArea = 0,
+		int32 SkillCost = 0)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -154,7 +158,7 @@ namespace
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
 		// 스킬 추가: 일반공격 계열
-		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea));
+		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea, SkillCost));
 		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
 		if (SecondSkillAimRange > 0)
 		{
@@ -586,6 +590,30 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		CheckTail(*this, Commands, TEXT("Case6-2"));
 		TestTrue(TEXT("[Case6-2] 이동커맨드 없음(속박)"), FindMoveCommand(Commands) == nullptr);
 		TestTrue(TEXT("[Case6-2] 스킬커맨드 없음(사거리 밖)"), FindCast(Commands) == nullptr);
+	}
+
+	/**
+	 * Case6-3: 속박 / 비용 있는 스킬 / 제자리 조준 가능 (이동 예산 0이 시전 예산까지 0으로 만들던 회귀 방지)
+	 *   -> 이동은 못 해도 AP 6으로 비용 2 스킬은 시전 가능해야 함
+	 * 맵 (6x3): E(2,1) P(3,1), 등거리 성향, AP 6, 스킬 비용 2
+	 */
+	AddInfo(TEXT("=== Case6-3: 속박 / 비용 있는 스킬 시전 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			6, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/true,
+			EEffectPattern::Single, /*EffectArea*/0,
+			/*SkillCost*/2);
+		CheckTail(*this, Commands, TEXT("Case6-3"));
+		TestTrue(TEXT("[Case6-3] 이동커맨드 없음(속박)"), FindMoveCommand(Commands) == nullptr);
+		TestTrue(TEXT("[Case6-3] 스킬커맨드 존재(이동 불가여도 시전 예산은 AP 기준)"), FindCast(Commands) != nullptr);
 	}
 
 	/**

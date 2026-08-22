@@ -67,7 +67,8 @@ public:
 	 * @param[in] Origin : 계획 주체의 현재 타일
 	 * @param[in] TargetTiles : 타겟들의 타일 (배열 순서가 곧 타겟 인덱스)
 	 * @param[in] Skills : 스킬 슬롯 배열 (배열 순서가 곧 슬롯 인덱스, 빈 슬롯은 nullptr)
-	 * @param[in] ActionPoint : 이동과 스킬 시전이 나눠 쓰는 행동력
+	 * @param[in] MoveBudget : 이동에 쓸 수 있는 행동력 (도달 범위 기준, 속박 등으로 이동 불가면 0)
+	 * @param[in] ActionPoint : 이동과 스킬 시전이 나눠 쓰는 행동력 (시전 예산 판정 기준)
 	 */
 	void Build(
 		const UTileMapModel* TileMap,
@@ -75,6 +76,7 @@ public:
 		const FTileIndex& Origin,
 		const TArray<FTileIndex>& TargetTiles,
 		const TArray<const UStaticUnitSkillData*>& Skills,
+		int32 MoveBudget,
 		int32 ActionPoint);
 
 	// @brief 해당 타일에서 해당 스킬로 해당 타겟을 조준 가능한 지 판정
