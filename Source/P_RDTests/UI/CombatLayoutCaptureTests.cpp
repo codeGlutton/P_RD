@@ -298,6 +298,14 @@ namespace CombatLayoutCapture
 			{
 				RewardWidget->ContinueToNext();
 			}
+			if (bShowRewardChoices)
+			{
+				RewardWidget->CompleteChestRevealForTest();
+				if (!bGoldOnlyReward)
+				{
+					RewardWidget->AdvanceGoldToArtifactForTest();
+				}
+			}
 		}
 		// TakeWidget()에서 NativeConstruct가 돌며 패널을 기본 Collapsed로
 		// 되돌린다. 변형 상태는 Construct가 끝난 뒤 세워야 캡처에 남는다.
@@ -791,6 +799,165 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 		if (!CaptureLayout(*World, ClassPath, Error, true, true))
 		{
 			AddError(FString::Printf(TEXT("%s 인벤토리 탭: %s"), ClassPath, *Error));
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardSettlementV3CaptureTest,
+	"P_RD.UI.ResultBoards.CaptureV3",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRewardSettlementV3CaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+	if (GUsingNullRHI)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 V3 보상 캡처 생략"));
+		return true;
+	}
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("V3 보상 캡처 월드"), World))
+	{
+		return false;
+	}
+	FString Error;
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"),
+		Error, false, false, false, false, true))
+	{
+		AddError(Error);
+		return false;
+	}
+	Error.Reset();
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"),
+		Error))
+	{
+		AddError(Error);
+		return false;
+	}
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"),
+		Error, false, false, true))
+	{
+		AddError(Error);
+		return false;
+	}
+	Error.Reset();
+	if (!CaptureLayout(*World,
+		TEXT("/Game/UI/RewardSettlement/WBP_RewardSettlement_V3.WBP_RewardSettlement_V3_C"),
+		Error, false, false, true, true))
+	{
+		AddError(Error);
+		return false;
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardConceptBoardsCaptureTest,
+	"P_RD.UI.ResultBoards.CaptureConcepts",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRewardConceptBoardsCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+	if (GUsingNullRHI)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 시안 보드 캡처 생략"));
+		return true;
+	}
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("시안 보드 캡처 월드"), World))
+	{
+		return false;
+	}
+	for (const TCHAR* Concept : { TEXT("02"), TEXT("03"), TEXT("06") })
+	{
+		for (const TCHAR* Stage :
+			{ TEXT("Experience"), TEXT("Chest"), TEXT("Gold"), TEXT("Artifact") })
+		{
+			const FString Path = FString::Printf(
+				TEXT("/Game/UI/RewardSettlement/Concepts/WBP_RC%s_%s.WBP_RC%s_%s_C"),
+				Concept, Stage, Concept, Stage);
+			FString Error;
+			if (!CaptureLayout(*World, *Path, Error))
+			{
+				AddError(FString::Printf(TEXT("%s: %s"), *Path, *Error));
+			}
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardC03BoardsCaptureTest,
+	"P_RD.UI.ResultBoards.CaptureC03",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRewardC03BoardsCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+	if (GUsingNullRHI)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 C03 보드 캡처 생략"));
+		return true;
+	}
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("C03 보드 캡처 월드"), World))
+	{
+		return false;
+	}
+	// 갓 임포트된 텍스처는 비동기 컴파일이 끝나기 전까지 빈 자리로 그려진다.
+	// WaitForStreaming은 이를 커버하지 못하므로 컴파일 완료를 명시적으로 기다린다.
+	FTextureCompilingManager::Get().FinishAllCompilation();
+	for (const TCHAR* Stage :
+		{ TEXT("Experience"), TEXT("Chest"), TEXT("Gold"), TEXT("Artifact") })
+	{
+		const FString Path = FString::Printf(
+			TEXT("/Game/UI/RewardSettlement/Concepts/WBP_C03_%s.WBP_C03_%s_C"),
+			Stage, Stage);
+		FString Error;
+		if (!CaptureLayout(*World, *Path, Error))
+		{
+			AddError(FString::Printf(TEXT("%s: %s"), *Path, *Error));
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardBSBoardsCaptureTest,
+	"P_RD.UI.ResultBoards.CaptureBS",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRewardBSBoardsCaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+	if (GUsingNullRHI)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 BS 보드 캡처 생략"));
+		return true;
+	}
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("BS 보드 캡처 월드"), World))
+	{
+		return false;
+	}
+	FTextureCompilingManager::Get().FinishAllCompilation();
+	for (const TCHAR* Stage :
+		{ TEXT("Experience"), TEXT("Chest"), TEXT("Gold"), TEXT("Artifact") })
+	{
+		const FString Path = FString::Printf(
+			TEXT("/Game/UI/RewardSettlement/Concepts/WBP_BS_%s.WBP_BS_%s_C"),
+			Stage, Stage);
+		FString Error;
+		if (!CaptureLayout(*World, *Path, Error,
+			false, false, false, false, false, 1536, 864))
+		{
+			AddError(FString::Printf(TEXT("%s: %s"), *Path, *Error));
 		}
 	}
 	return true;

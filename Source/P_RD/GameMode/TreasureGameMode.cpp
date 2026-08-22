@@ -5,6 +5,7 @@
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticTreasureRoomSpawnData.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "Setting/RDWorldSettings.h"
 #include "Actor/Party/PartyModel.h"
 #include "AttributeSet/PartyAttributeSet.h"
@@ -12,8 +13,14 @@
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "PCGStage/Room.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
+#include "UObject/ConstructorHelpers.h"
 #include "UI/Treasure/TreasureUIModel.h"
 #include "UI/Treasure/TreasureUIWidgetBase.h"
+#include "UI/FrontendMapWidget.h"
+#include "UI/Reward/RewardConcept03Widget.h"
+#include "UI/Reward/RewardUIModel.h"
 
 #define LOCTEXT_NAMESPACE "TreasureGameMode"
 
@@ -32,6 +39,47 @@ namespace
 		default:
 			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
 		}
+	}
+
+	/**
+	 * @brief 아티팩트 효과 줄 조립. 중복 조립 대신 공용 조립기 결과를 이어 붙인다.
+	 * @details 패시브 설명 수집과 순수 스탯 폴백은 SkillDetailUIBuilder 가 담당한다.
+	 */
+	FText GetTreasureArtifactDescription(const UStaticArtifactData* Data)
+	{
+		if (Data == nullptr)
+		{
+			return FText::GetEmpty();
+		}
+		FCombatArtifactUI Detail;
+		SkillDetailUIBuilder::FillFromArtifactData(Data, Detail);
+		if (Detail.mEffectDescriptions.IsEmpty())
+		{
+			return LOCTEXT("TreasureArtifactFallback", "파티 전체에 적용됩니다.");
+		}
+		TArray<FString> Lines;
+		for (const FText& Line : Detail.mEffectDescriptions)
+		{
+			Lines.Add(Line.ToString());
+		}
+		return FText::FromString(FString::Join(Lines, TEXT("\n")));
+	}
+}
+
+/** @brief 보상 연출 WBP 기본값. BP 디자이너가 파생 BP에서 교체할 수 있다. */
+ATreasureGameMode::ATreasureGameMode()
+{
+	static ConstructorHelpers::FClassFinder<UUserWidget> RewardWidgetFinder(
+		TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_Frameless"));
+	static ConstructorHelpers::FClassFinder<UUserWidget> RewardWidgetNoArtifactFinder(
+		TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_Frameless_NoArtifact"));
+	if (RewardWidgetFinder.Succeeded())
+	{
+		mRewardWidgetClass = RewardWidgetFinder.Class;
+	}
+	if (RewardWidgetNoArtifactFinder.Succeeded())
+	{
+		mRewardWidgetClassNoArtifact = RewardWidgetNoArtifactFinder.Class;
 	}
 }
 
@@ -72,21 +120,126 @@ void ATreasureGameMode::BeginRoom()
 {
 	Super::BeginRoom();
 
-	// 모델은 게임모드가 위젯에 건네줌 (위젯이 게임모드를 역참조하면 UI에 게임플레이 의존이 생김)
-	// 붙인 뒤 열어야 첫 갱신 시점에 모델이 있어 빈 화면이 스치지 않음
-	if (UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	if (OpenRewardPresentation())
 	{
-		if (URDUserWidget* TreasureHUD = WorldWidgetSubsystem->GetHUD<URDUserWidget>())
+		return;
+	}
+
+	// 공용 보상 WBP를 불러오지 못했을 때만 기존 보물방 HUD로 안전하게 폴백한다.
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		GetWorld()->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (URDUserWidget* TreasureHUD =
+			WorldWidgetSubsystem->GetHUD<URDUserWidget>())
 		{
-			if (UTreasureUIWidgetBase* TreasureUIWidget = Cast<UTreasureUIWidgetBase>(TreasureHUD))
+			if (UTreasureUIWidgetBase* TreasureUIWidget =
+				Cast<UTreasureUIWidgetBase>(TreasureHUD))
 			{
 				TreasureUIWidget->BindUIModel(mTreasureUIModel);
 			}
 			TreasureHUD->OpenUI();
 		}
 	}
-
 	PushTreasureUIData();
+}
+
+bool ATreasureGameMode::OpenRewardPresentation()
+{
+	UWorld* World = GetWorld();
+	APlayerController* PlayerController = World != nullptr
+		? World->GetFirstPlayerController() : nullptr;
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	if (World == nullptr || PlayerController == nullptr || RunPersistData == nullptr)
+	{
+		return false;
+	}
+	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
+	if (CurrentRoom.mType != ERoomType::Treasure)
+	{
+		return false;
+	}
+	const FTreasureRoom& TreasureRoom =
+		static_cast<const FTreasureRoom&>(CurrentRoom);
+	const bool bHasArtifact = !TreasureRoom.mRewardArtifactDataIds.IsEmpty();
+	// 클래스 지정은 BP 디자이너 몫(EditDefaultsOnly) -- 코드에는 경로 리터럴을 두지 않는다.
+	UClass* WidgetClass = bHasArtifact
+		? mRewardWidgetClass.Get() : mRewardWidgetClassNoArtifact.Get();
+	if (WidgetClass == nullptr)
+	{
+		UE_LOG(LogRD, Warning,
+			TEXT("보물방 공용 보상 WBP 클래스 미설정 (bHasArtifact=%d)"), bHasArtifact);
+		return false;
+	}
+
+	mRewardUIModel = NewObject<URewardUIModel>(this, TEXT("TreasureRewardUIModel"));
+	FRewardUI Reward;
+	Reward.mTitle = LOCTEXT("TreasureRewardTitle", "보상");
+	Reward.mGoldGained = FMath::Max(0, TreasureRoom.mRewardMoney);
+	Reward.mGoldBalance = GetPartyGold() + Reward.mGoldGained;
+	mRewardUIModel->SetReward(Reward);
+
+	TArray<FRewardChoiceUI> Choices;
+	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	for (int32 Index = 0;
+		Index < TreasureRoom.mRewardArtifactDataIds.Num(); ++Index)
+	{
+		const FPrimaryAssetId& ArtifactId =
+			TreasureRoom.mRewardArtifactDataIds[Index];
+		FRewardChoiceUI Choice;
+		Choice.mChoiceIndex = Index;
+		Choice.mKind = ERewardChoiceKind::Equipment;
+		Choice.mSourceAssetId = ArtifactId;
+		Choice.mName = FText::FromName(ArtifactId.PrimaryAssetName);
+		if (AssetManager != nullptr)
+		{
+			if (const UStaticArtifactData* Data =
+				AssetManager->GetPrimaryAssetObject<UStaticArtifactData>(ArtifactId))
+			{
+				if (!Data->mName.IsEmpty())
+				{
+					Choice.mName = Data->mName;
+				}
+				Choice.mIcon = Data->mIcon.LoadSynchronous();
+				Choice.mDescription = GetTreasureArtifactDescription(Data);
+				Choice.mRarityColor = GetTreasureRarityColor(Data->mRarityType);
+				Choice.mRarityName = StaticEnum<ERarityType>() != nullptr
+					? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(
+						StaticCast<int64>(Data->mRarityType))
+					: FText::GetEmpty();
+				Choice.mRarityLevel = StaticCast<int32>(Data->mRarityType);
+			}
+		}
+		Choices.Add(Choice);
+	}
+	mRewardUIModel->SetRewardChoices(Choices);
+	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(
+		this, &ATreasureGameMode::HandleRewardClaimRequested);
+
+	mRewardWidget = CreateWidget<URewardConcept03Widget>(
+		PlayerController, WidgetClass);
+	if (mRewardWidget == nullptr)
+	{
+		mRewardUIModel = nullptr;
+		return false;
+	}
+	mRewardWidget->BindUIModel(mRewardUIModel);
+	mRewardWidget->OnRewardFlowCompleted.AddUniqueDynamic(
+		this, &ATreasureGameMode::HandleRewardPresentationCompleted);
+	mRewardWidget->AddToViewport(60);
+	mRewardWidget->ResetRewardFlow();
+	// 보물방은 EXP가 없으므로 첫 '다음' 입력을 자동 수행해 상자 단계부터 시작한다.
+	mRewardWidget->AdvanceRewardFlow();
+
+	if (UWorldWidgetSubsystem* WorldWidgetSubsystem =
+		World->GetSubsystem<UWorldWidgetSubsystem>())
+	{
+		if (URDUserWidget* TreasureHUD =
+			WorldWidgetSubsystem->GetHUD<URDUserWidget>())
+		{
+			TreasureHUD->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+	return true;
 }
 
 /**
@@ -229,8 +382,66 @@ void ATreasureGameMode::HandleOpenRequested()
 /** @brief 나가기 의도 처리. 다음 방 선택은 지도(월드맵) 담당 */
 void ATreasureGameMode::HandleLeaveRequested()
 {
-	// [합의필요] 보물방을 나가면 바로 지도인가, 방 안에 서 있다가 나가는가.
-	// 지금은 지도를 여는 길이 방 HUD에만 있어 여기서 할 일이 없다.
+	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld() != nullptr
+		? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	if (WorldWidgetSubsystem == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("보물방 나가기 실패: WorldWidgetSubsystem 없음"));
+		return;
+	}
+	UFrontendMapWidget* MapWidget =
+		WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(
+			EWorldWidgetType::WorldMap);
+	if (MapWidget == nullptr)
+	{
+		WorldWidgetSubsystem->InitWorldWidget(EWorldWidgetType::WorldMap);
+		MapWidget = WorldWidgetSubsystem->GetWorldWidget<UFrontendMapWidget>(
+			EWorldWidgetType::WorldMap);
+	}
+	if (MapWidget == nullptr)
+	{
+		UE_LOG(LogRD, Warning, TEXT("보물방 나가기 실패: WorldMap 위젯 미설정"));
+		return;
+	}
+	MapWidget->SetRoomSelectionEnabled(true);
+	MapWidget->ClearMapStatusOverride();
+	MapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(
+		MapWidget, [](UUserWidget* OpenedWidget)
+		{
+			if (UFrontendMapWidget* OpenedMapWidget =
+				Cast<UFrontendMapWidget>(OpenedWidget))
+			{
+				OpenedMapWidget->RefreshMap();
+			}
+		}));
+	MapWidget->RefreshMap();
+}
+
+void ATreasureGameMode::HandleRewardClaimRequested(
+	const ERewardClaimKind ClaimKind, const int32 ChoiceIndex)
+{
+	if (!mOpened && ClaimKind != ERewardClaimKind::Exp)
+	{
+		HandleOpenRequested();
+	}
+	if (mRewardUIModel != nullptr)
+	{
+		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+	}
+}
+
+void ATreasureGameMode::HandleRewardPresentationCompleted(int32 ArtifactIndex)
+{
+	if (!mOpened)
+	{
+		HandleOpenRequested();
+	}
+	if (mRewardWidget != nullptr)
+	{
+		mRewardWidget->RemoveFromParent();
+		mRewardWidget = nullptr;
+	}
+	HandleLeaveRequested();
 }
 
 /** @brief 파티 골드 지급. 0 이하 금액은 무시 */

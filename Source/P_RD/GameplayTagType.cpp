@@ -6,11 +6,11 @@ namespace InputTags
 
 namespace AnimationTags
 {
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Kick,									"Animation.Montage.Skill.Melee.Kick");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Punch,									"Animation.Montage.Skill.Melee.Punch");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Slash,									"Animation.Montage.Skill.Melee.Slash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Stab,									"Animation.Montage.Skill.Melee.Stab");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Smash,									"Animation.Montage.Skill.Melee.Smash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Melee_Kick,								"Animation.Montage.Skill.Melee.Kick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Melee_Punch,								"Animation.Montage.Skill.Melee.Punch");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Melee_Slash,								"Animation.Montage.Skill.Melee.Slash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Melee_Stab,								"Animation.Montage.Skill.Melee.Stab");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Melee_Smash,								"Animation.Montage.Skill.Melee.Smash");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Ranged_Direct,							"Animation.Montage.Skill.Ranged.Direct");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Ranged_Indirect,							"Animation.Montage.Skill.Ranged.InDirect");

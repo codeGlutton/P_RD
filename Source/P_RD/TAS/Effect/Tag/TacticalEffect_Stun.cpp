@@ -1,4 +1,4 @@
-﻿#include "TAS/Effect/Tag/TacticalEffect_Stun.h"
+#include "TAS/Effect/Tag/TacticalEffect_Stun.h"
 #include "GameplayTagType.h"
 
 UTacticalEffect_Stun::UTacticalEffect_Stun()

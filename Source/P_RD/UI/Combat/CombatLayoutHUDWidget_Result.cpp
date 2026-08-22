@@ -16,6 +16,7 @@
 #include "UI/CombatResultOverlayWidget.h"
 #include "UI/FrontendMapWidget.h"
 #include "UI/Reward/RewardUIModel.h"
+#include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 
 namespace
@@ -90,16 +91,46 @@ void UCombatLayoutHUDWidget::EnsureCombatResultWidgets()
 		mCombatResultOverlayWidget = CreateWidget<UCombatResultOverlayWidget>(GetOwningPlayer(), DefeatWidgetClass);
 	}
 
-	if (mCombatRewardWidget == nullptr && mRewardWidgetClass != nullptr)
+	if (mCombatRewardUIModel == nullptr)
 	{
-		mCombatRewardWidget = CreateWidget<URewardSettlementWidgetBase>(GetOwningPlayer(), mRewardWidgetClass);
+		return;
 	}
 
-	if (mCombatRewardWidget != nullptr)
+	const bool bHasArtifactChoices =
+		mCombatRewardUIModel->GetRewardChoices().Num() > 0;
+	if (mCombatRewardConceptWidget != nullptr
+		&& mCombatRewardConceptWidget->HasArtifactReward() != bHasArtifactChoices)
 	{
-		mCombatRewardWidget->OnClosed.RemoveDynamic(this, &UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed);
-		mCombatRewardWidget->OnClosed.AddUniqueDynamic(this, &UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed);
-		mCombatRewardWidget->BindUIModel(mCombatRewardUIModel);
+		mCombatRewardConceptWidget->RemoveFromParent();
+		mCombatRewardConceptWidget = nullptr;
+	}
+
+	if (mCombatRewardConceptWidget == nullptr)
+	{
+		static const TCHAR* FourStepClassPath =
+			TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_Frameless.WBP_RewardConcept03_Frameless_C");
+		static const TCHAR* ThreeStepClassPath =
+			TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_Frameless_NoArtifact.WBP_RewardConcept03_Frameless_NoArtifact_C");
+		const TCHAR* ClassPath = bHasArtifactChoices
+			? FourStepClassPath : ThreeStepClassPath;
+		UClass* RewardClass = LoadClass<URewardConcept03Widget>(nullptr, ClassPath);
+		if (RewardClass == nullptr)
+		{
+			UE_LOG(LogRD, Error,
+				TEXT("Combat reward Concept03 WBP is unavailable: %s"), ClassPath);
+			return;
+		}
+		mCombatRewardConceptWidget =
+			CreateWidget<URewardConcept03Widget>(GetOwningPlayer(), RewardClass);
+	}
+
+	if (mCombatRewardConceptWidget != nullptr)
+	{
+		mCombatRewardConceptWidget->OnRewardFlowCompleted.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleRewardConcept03Completed);
+		mCombatRewardConceptWidget->OnRewardFlowCompleted.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleRewardConcept03Completed);
+		mCombatRewardConceptWidget->BindUIModel(mCombatRewardUIModel);
 	}
 }
 
@@ -123,9 +154,26 @@ void UCombatLayoutHUDWidget::HandleCombatResultOpenRequested()
 	if (mIsPlayerWin == true)
 	{
 		EnsureCombatResultWidgets();
-		if (mCombatRewardWidget != nullptr && mCombatRewardUIModel != nullptr)
+		if (mCombatRewardConceptWidget != nullptr
+			&& mCombatRewardUIModel != nullptr)
 		{
-			mCombatRewardWidget->OpenUI();
+			mCombatRewardConceptWidget->BindUIModel(mCombatRewardUIModel);
+			mCombatRewardConceptWidget->ResetRewardFlow();
+			mCombatRewardConceptWidget->AddToViewport(10000);
+			if (APlayerController* PlayerController = GetOwningPlayer())
+			{
+				FInputModeUIOnly InputMode;
+				InputMode.SetWidgetToFocus(
+					mCombatRewardConceptWidget->TakeWidget());
+				InputMode.SetLockMouseToViewportBehavior(
+					EMouseLockMode::DoNotLock);
+				PlayerController->SetInputMode(InputMode);
+				PlayerController->SetShowMouseCursor(true);
+			}
+			UE_LOG(LogRD, Display,
+				TEXT("RD_REWARD_CONCEPT03_COMBAT shown artifact=%d choices=%d"),
+				mCombatRewardConceptWidget->HasArtifactReward() ? 1 : 0,
+				mCombatRewardUIModel->GetRewardChoices().Num());
 		}
 		return;
 	}
@@ -302,6 +350,22 @@ void UCombatLayoutHUDWidget::OpenWorldMapForNextRoom()
 	// OpenUI가 이미 열린 위젯에서 즉시 반환하는 경우도 있으므로 여기서도
 	// 한 번 갱신한다. 갱신은 선택/ENTER 활성 상태까지 함께 다시 계산한다.
 	MapWidget->RefreshMap();
+}
+
+void UCombatLayoutHUDWidget::HandleRewardConcept03Completed(const int32 ArtifactIndex)
+{
+	UE_LOG(LogRD, Display,
+		TEXT("RD_REWARD_CONCEPT03_COMBAT completed artifact_index=%d"),
+		ArtifactIndex);
+	if (mCombatRewardConceptWidget != nullptr)
+	{
+		mCombatRewardConceptWidget->OnRewardFlowCompleted.RemoveDynamic(
+			this, &UCombatLayoutHUDWidget::HandleRewardConcept03Completed);
+		mCombatRewardConceptWidget->BindUIModel(nullptr);
+		mCombatRewardConceptWidget->RemoveFromParent();
+		mCombatRewardConceptWidget = nullptr;
+	}
+	HandleCombatResultRewardConfirmed();
 }
 
 void UCombatLayoutHUDWidget::CloseWorldMapAfterVictory()

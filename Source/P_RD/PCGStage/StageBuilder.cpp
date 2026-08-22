@@ -9,6 +9,18 @@
 
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
+namespace
+{
+	FString GFixedMonsterRoomNameForDebugging;
+
+	FAutoConsoleVariableRef CFixedMonsterRoomNameForDebugging(
+		TEXT("Stage.FixedMonsterRoom"),
+		GFixedMonsterRoomNameForDebugging,
+		TEXT("디버깅을 위해서 몬스터방을 지정 방 DA로 고정 (예: DA_MonsterRoom_GimmickTest). 빈 값이면 미사용"),
+		ECVF_Default
+	);
+}
+
 FStageBuilder::FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache) :
 	mBuildStream(BuildStream),
 	mGlobalSetting(GlobalSetting),
@@ -498,7 +510,16 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
+		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
+		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
+		{
+			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
+				mBuildStream, CandidateIds);
+			NewRoom.mRewardArtifactDataIds.Add(Picked);
+			CandidateIds.RemoveSingle(Picked);
+		}
+		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
+			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -514,7 +535,16 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
 
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[StaticCast<uint8>(ERarityType::Epic)];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
+		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
+		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
+		{
+			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
+				mBuildStream, CandidateIds);
+			NewRoom.mRewardArtifactDataIds.Add(Picked);
+			CandidateIds.RemoveSingle(Picked);
+		}
+		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
+			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -527,6 +557,21 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 	NewRoomPtr->mColumn = Column;
 	NewRoomPtr->mPositionOffsetRate = FVector2D(mBuildStream.FRandRange(-1., 1.), mBuildStream.FRandRange(-1., 1.));
 	NewRoomPtr->mStaticRoomSpawnDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, RoomIdArray);
+
+	// 디버깅용 몬스터방 고정: 지정 이름의 방 DA가 실제로 있으면 추첨 결과를 교체
+	// (추첨은 위에서 이미 소모했으므로 다른 방/보상의 시드 재현성은 유지됨)
+	if (Type == ERoomType::Monster && GFixedMonsterRoomNameForDebugging.IsEmpty() == false)
+	{
+		const FPrimaryAssetId FixedRoomId(RoomPrimaryAssetTypes::GetMonsterRoomType(), FName(GFixedMonsterRoomNameForDebugging));
+		if (UAssetManager::Get().GetPrimaryAssetPath(FixedRoomId).IsValid() == true)
+		{
+			NewRoomPtr->mStaticRoomSpawnDataId = FixedRoomId;
+		}
+		else
+		{
+			UE_LOG(LogStageBuilder, Warning, TEXT("몬스터방 고정 실패 - 방 DA 미존재: %s"), *GFixedMonsterRoomNameForDebugging);
+		}
+	}
 
 	return *NewRoomPtr;
 }
