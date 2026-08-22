@@ -571,11 +571,12 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판을 그만큼
-	// 줄인다. 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
-	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 줄인다.
-	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel"),
-		TEXT("EnemyPlateMount"), TEXT("AllyPlateMount") })
+	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판의 그
+	// 바닥을 잘라낸다. 판 그림을 줄이면 무늬가 세로로 눌리므로(1차 시안 반려),
+	// 그림은 원본 크기 그대로 두고 패널을 345 에서 끊어 아래를 클리핑한다.
+	// 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
+	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 자른다.
+	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel") })
 	{
 		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
 		{
@@ -583,6 +584,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			{
 				SummarySlot->SetSize(FVector2D(600.f, 345.f));
 			}
+			Summary->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		}
 	}
 	mEnemyStatusFrames.Reset();
@@ -2192,9 +2194,12 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			// 행동력이 바닥나면 이동도 잠근다. 갈 수 있는 칸이 없다 -- 스킬은
 			// 잠그면서 이동만 열어 두면 "왜 이것만 되지"가 된다. 긴 누름으로
 			// 설명을 읽는 것은 스킬과 마찬가지로 잠겨도 된다.
+			// 남의 레일(들여다보기)에서도 잠근다 -- 스킬 카드는 mIsUsable 로
+			// 꺼지는데 이동만 열려 보이면 눌러 보게 된다(0823 검수).
 			{
 				const FUnitUI* TurnUnit = FindTurnUnit();
-				const bool bCanMove = TurnUnit != nullptr
+				const bool bCanMove = mUIModel->IsSkillRailOwnTurn()
+					&& TurnUnit != nullptr
 					&& FMath::RoundToInt(TurnUnit->mMovementPoint) > 0;
 				SetShown(Widgets.Disabled, !bCanMove);
 			}
@@ -2685,6 +2690,11 @@ void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	if (SlotIndex == 0)
 	{
+		// 남의 레일(들여다보기)에서는 이동 카드가 구경용이다(0823 검수).
+		if (mUIModel->IsSkillRailOwnTurn() == false)
+		{
+			return;
+		}
 		// 행동력이 없으면 이동 모드에 들어가지 않는다. 갈 칸이 없는데
 		// 조준만 열리면 취소밖에 할 게 없다.
 		const FUnitUI* TurnUnit = FindTurnUnit();
