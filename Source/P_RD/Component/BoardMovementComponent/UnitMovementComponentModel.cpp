@@ -20,8 +20,8 @@ bool UUnitMovementComponentModel::IsMoveable() const
 	{
 		return true;
 	}
-	const bool IsNotRoot = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root) == false;
-	const bool IsNotStun = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun) == false;
+	const bool IsNotRoot = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root) == false;
+	const bool IsNotStun = AttrComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun) == false;
 
 	return IsNotRoot && IsNotStun;
 }

@@ -7,23 +7,17 @@
 
 UTacticalEffect_Dead::UTacticalEffect_Dead()
 {
-	// 즉시형
-	mDurationPolicy = ETacticalEffectDurationType::Instant;
-	mStackingType = ETacticalEffectStackingType::None;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_ActorState_Dead);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
-void UTacticalEffect_Dead::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+UTacticalEffect_AddDead::UTacticalEffect_AddDead()
 {
-	Super::OnExecuted(ActiveTEContainer, TESpec);
-
-	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
-
-	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead, 1);
-
-	FSRPGTagEffectEventLog Log;
-	Log.mEffectTag = EffectTags::GameplayEffect_ActorState_Dead;
-	Log.mCount = 1;
-
-	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	mStatusEffect = UTacticalEffect_Dead::StaticClass();
 }
+
+UTacticalEffect_GetDead::UTacticalEffect_GetDead()
+{
+	mStatusEffect = UTacticalEffect_Dead::StaticClass();
+}
+

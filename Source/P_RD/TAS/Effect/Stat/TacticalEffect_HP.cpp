@@ -133,12 +133,12 @@ void UTacticalEffectExecutionCalculation_Attack::Execute(const FTacticalEffectCu
 	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
 
 	// 약화
-	const bool IsOwnerWeakness = SourceSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
-	const float OwnerWeaknessRatio = IsOwnerWeakness == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness] : 1.f;
+	const bool IsOwnerWeakness = SourceSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+	const float OwnerWeaknessRatio = IsOwnerWeakness == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness] : 1.f;
 
 	// 취약
-	const bool IsTargetVulnerability = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
-	const float TargetVulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability] : 1.f;
+	const bool IsTargetVulnerability = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
+	const float TargetVulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability] : 1.f;
 
 	// 최종 공격력과 방어력
 	const int32 TotalAttack =

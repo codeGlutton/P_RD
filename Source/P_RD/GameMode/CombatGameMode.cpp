@@ -270,22 +270,22 @@ namespace
 
 	void ConvertFloatingLogUITypes(const FSRPGTagEffectEventLog& TagLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor))
+		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor))
 		{
 			IconType = EFloatingLogIconType::Vigor;
 			ColorType = EFloatingLogColorType::Buff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification))
 		{
 			IconType = EFloatingLogIconType::Fortification;
 			ColorType = EFloatingLogColorType::Buff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability))
 		{
 			IconType = EFloatingLogIconType::Vulnerability;
 			ColorType = EFloatingLogColorType::Debuff;
 		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness))
+		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness))
 		{
 			IconType = EFloatingLogIconType::Weakness;
 			ColorType = EFloatingLogColorType::Debuff;
@@ -1153,7 +1153,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		});
 
 	// 상태 이상 태그 변경 시에도 UI 갱신 바인딩
-	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::AnyCountChange).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
 		PushUnitUIData();
 		});
 
@@ -1199,7 +1199,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetActionPointAttribute()).RemoveAll(this);
 	AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetDefenseAttribute()).RemoveAll(this);
 
-	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::NewOrRemoved).RemoveAll(this);
+	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::AnyCountChange).RemoveAll(this);
 
 	USkillComponentModel* SkillComponentModel = Unit->GetSkillComponentModel();
 	checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
@@ -1392,20 +1392,22 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
 		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);
 
-		UnitUIData.mStatusTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
+		UnitUIData.mOwnedTags = AttributeSetComponentModel->GetOwnedGameplayTags(); // 모든 소유 태그가 아닌 고의적으로 넣은 태그만 해당
 
 		// HP바 밑 상태이상 칸용: 부모/분류 태그는 제외하고, 실제 표시 대상 상태만 (태그 + 스택 수)로 채운다.
 		// 텍스처 선택은 HUD(UpdateUnitHpBarStatus)가 소유하고, 스택 수는 태그 컨테이너의 누적 카운트에서 읽는다.
 		UnitUIData.mStatusEffects.Reset();
-		for (const FGameplayTag& StatusTag : UnitUIData.mStatusTags)
+		TMap<FGameplayTag, int32> ActiveEffectTagCounts = AttributeSetComponentModel->GetActiveEffectTagCountsWithAllTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect));
+		for (const auto& ActiveEffectTagCount : ActiveEffectTagCounts)
 		{
-			if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect) == false)
+			if (ActiveEffectTagCount.Value == 0)
 			{
 				continue;
 			}
+
 			FStatusEffectUI StatusEffect;
-			StatusEffect.mTag = StatusTag;
-			StatusEffect.mStackCount = AttributeSetComponentModel->GetTagCount(StatusTag);
+			StatusEffect.mTag = ActiveEffectTagCount.Key;
+			StatusEffect.mStackCount = ActiveEffectTagCount.Value;
 			UnitUIData.mStatusEffects.Add(StatusEffect);
 		}
 

@@ -45,7 +45,7 @@ bool UUnitSkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
 	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
 	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	const bool IsNotStun = AttributeSetCompModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun) == false;
+	const bool IsNotStun = AttributeSetCompModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun) == false;
 
 	return CanSuperActivateSkill == true && HasEnoughMovement == true && IsNotStun == true;
 }

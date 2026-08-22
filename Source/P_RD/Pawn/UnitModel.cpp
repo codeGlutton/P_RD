@@ -60,6 +60,11 @@ void UUnitModel::OnEndRoom()
 {
 	Super::OnEndRoom();
 
+	/* 모두 제거 */
+
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetSpeedPointAttribute(), ETacticalModOp::Override, 0.f);
+
 	/* 전투 종료 패시브 처리 */
 
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndRoom);
@@ -78,13 +83,6 @@ void UUnitModel::OnEndRoom()
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndRoom, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
-
-	/* 모두 제거 */
-
-	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetSpeedPointAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
 void UUnitModel::OnBeginRound(int32 RoundCount)
@@ -190,6 +188,10 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 
 void UUnitModel::OnEndTurn(int32 TurnCount)
 {
+	/* 행동력 제거 */
+
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
+
 	/* 턴 종료 패시브 처리 */
 
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
@@ -208,14 +210,6 @@ void UUnitModel::OnEndTurn(int32 TurnCount)
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
-
-	/* 행동력 제거 */
-
-	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
-	
-	/* 턴제 상태이상 한 스택 감소 */
-
-	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration, 1);
 }
 
 UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const

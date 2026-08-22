@@ -8,20 +8,41 @@
 #pragma once
 
 #include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "TacticalEffect_Dead.generated.h"
 
-/**
- * @brief  Dead 이펙트
- */
+ /**
+  * @brief  Dead 이펙트
+  */
 UCLASS()
-class P_RD_API UTacticalEffect_Dead : public UTacticalEffect
+class P_RD_API UTacticalEffect_Dead : public UTacticalEffect_InfiniteStatus
 {
 	GENERATED_BODY()
 
 public:
 	UTacticalEffect_Dead();
+};
 
-	/* UTacticalEffect 상속 */
+/**
+ * @brief  Dead 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddDead : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
 public:
-	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
+	UTacticalEffect_AddDead();
+};
+
+/**
+ * @brief  Dead 부여 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_GetDead : public UTacticalEffect_GetStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_GetDead();
 };

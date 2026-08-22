@@ -46,8 +46,8 @@ void UCombatTargetObstacleModel::OnEndRoom()
 
 	/* 모두 제거 */
 
+	mAttributeCompModel->RemoveActiveEffectsWithTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect));
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
 UAttributeSetComponentModel* UCombatTargetObstacleModel::GetAttributeComponentModel() const

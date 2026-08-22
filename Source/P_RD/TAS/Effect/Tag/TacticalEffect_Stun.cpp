@@ -3,10 +3,16 @@
 
 UTacticalEffect_Stun::UTacticalEffect_Stun()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
+}
+
+UTacticalEffect_AddStun::UTacticalEffect_AddStun()
+{
+	mStatusEffect = UTacticalEffect_Stun::StaticClass();
 }
 
 UTacticalEffect_GetStun::UTacticalEffect_GetStun()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun;
+	mStatusEffect = UTacticalEffect_Stun::StaticClass();
 }

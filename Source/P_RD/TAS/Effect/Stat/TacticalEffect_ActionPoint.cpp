@@ -56,12 +56,12 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
 
 	// 활력
-	const bool IsTargetVigor = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor);
-	const float TargetVigorRatio = IsTargetVigor == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor] : 1.f;
+	const bool IsTargetVigor = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor);
+	const float TargetVigorRatio = IsTargetVigor == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor] : 1.f;
 
 	// 탈진
-	const bool IsTargetExhaustion = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion);
-	const float TargetExhaustionRatio = IsTargetExhaustion == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion] : 1.f;
+	const bool IsTargetExhaustion = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion);
+	const float TargetExhaustionRatio = IsTargetExhaustion == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion] : 1.f;
 
 	const float TotalMove = 
 		ExecutionParams.GetOwningSpec().GetStackCount() * 

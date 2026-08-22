@@ -1,11 +1,13 @@
 ﻿#include "TAS/Effect/ActiveTacticalEffectsContainer.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+#include "TAS/Effect/TacticalEffectQuery.h"
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 FScopedActiveTacticalEffectLock::FScopedActiveTacticalEffectLock(FActiveTacticalEffectsContainer& Container) :
     mContainer(Container)
@@ -444,6 +446,23 @@ bool FActiveTacticalEffectsContainer::RemoveActiveTacticalEffect(FActiveTactical
     return false;
 }
 
+int32 FActiveTacticalEffectsContainer::RemoveActiveEffects(const FTacticalEffectQuery& Query, int32 StacksToRemove)
+{
+    TACTICAL_EFFECT_SCOPE_LOCK();
+    int32 NumRemoved = 0;
+
+    for (int32 ActiveEffectIdx = GetNumTacticalEffects() - 1; ActiveEffectIdx >= 0; --ActiveEffectIdx)
+    {
+        const FActiveTacticalEffect& Effect = *GetActiveTacticalEffect(ActiveEffectIdx);
+        if (Effect.mIsPendingRemove == false && Query.Matches(Effect) == true)
+        {
+            InternalRemoveActiveTacticalEffect(ActiveEffectIdx, StacksToRemove, true);
+            ++NumRemoved;
+        }
+    }
+    return NumRemoved;
+}
+
 FOnChangeAttributeValue& FActiveTacticalEffectsContainer::GetTacticalAttributeValueChangeDelegate(FTacticalAttribute Attribute)
 {
     return mAttributeValueChangeDelegates.FindOrAdd(Attribute);
@@ -471,16 +490,15 @@ void FActiveTacticalEffectsContainer::CheckDurationExpired(const int32 Time, con
             continue;
         }
 
+        Effect.mSpec.mEffectClass->OnReduceTimeRemaining(*this, Effect.mSpec);
+
         int32 StacksToRemove = -2;
         bool NeedToRefreshStartTime = false;
-        bool IsReducedRemainingTime = false;
 
         /* Effect 만기 */
 
         if ((Effect.mStartTime + Duration) <= Time)
         {
-            IsReducedRemainingTime = true;
-
             switch (Effect.mSpec.mEffectClass->mStackExpirationPolicy)
             {
             case ETacticalEffectStackingExpirationPolicy::ClearEntireStack:
@@ -506,11 +524,6 @@ void FActiveTacticalEffectsContainer::CheckDurationExpired(const int32 Time, con
         {
             RestartActiveTacticalEffectDuration(Effect);
             OnDurationChange(Effect);
-        }
-
-        if (IsReducedRemainingTime == true)
-        {
-            Effect.mSpec.mEffectClass->OnReduceTimeRemaining(*this, Effect.mSpec);
         }
     }
 }
@@ -803,6 +816,17 @@ void FActiveTacticalEffectsContainer::RestartActiveTacticalEffectDuration(FActiv
     ActiveTacticalEffect.mStartTime = GetWorldTime(ActiveTacticalEffect.GetDurationUnit());
 }
 
+void FActiveTacticalEffectsContainer::CaptureAllEffectStacks(UBoardCombatTargetSnapshotData* Snapshot) const
+{
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        for (const FGameplayTag& AssetTag : Effect.mSpec.mEffectClass->GetAssetTags())
+        {
+            Snapshot->mEffectCounts.FindOrAdd(AssetTag) += Effect.mSpec.GetStackCount();
+        }
+    }
+}
+
 FActiveTacticalEffect* FActiveTacticalEffectsContainer::GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle)
 {
     for (FActiveTacticalEffect& Effect : this)
@@ -850,6 +874,115 @@ FActiveTacticalEffect* FActiveTacticalEffectsContainer::GetActiveTacticalEffect(
 const FActiveTacticalEffect* FActiveTacticalEffectsContainer::GetActiveTacticalEffect(int32 Index) const
 {
     return const_cast<FActiveTacticalEffectsContainer*>(this)->GetActiveTacticalEffect(Index);
+}
+
+TArray<FActiveTacticalEffectHandle> FActiveTacticalEffectsContainer::GetActiveEffects(const FTacticalEffectQuery& Query) const
+{
+    TArray<FActiveTacticalEffectHandle> ReturnList;
+
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Query.Matches(Effect) == false)
+        {
+            continue;
+        }
+        ReturnList.Add(Effect.mHandle);
+    }
+
+    return ReturnList;
+}
+
+TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    float CurrentTime = GetWorldTime(UnitType);
+
+    TArray<float> ReturnList;
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Query.Matches(Effect) == false)
+        {
+            continue;
+        }
+
+        float Elapsed = CurrentTime - Effect.mStartTime;
+        float Duration = Effect.GetDuration();
+
+        ReturnList.Add(Duration - Elapsed);
+    }
+
+    return ReturnList;
+}
+
+TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const
+{
+    TArray<float> ReturnList;
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Query.Matches(Effect) == false)
+        {
+            continue;
+        }
+
+        ReturnList.Add(Effect.GetDuration());
+    }
+
+    return ReturnList;
+}
+
+TArray<TPair<float, float>> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    float CurrentTime = GetWorldTime(UnitType);
+
+    TArray<TPair<float, float>> ReturnList;
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Query.Matches(Effect) == false)
+        {
+            continue;
+        }
+
+        float Elapsed = CurrentTime - Effect.mStartTime;
+        float Duration = Effect.GetDuration();
+
+        ReturnList.Emplace(Duration - Elapsed, Duration);
+    }
+
+    return ReturnList;
+}
+
+float FActiveTacticalEffectsContainer::GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const
+{
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Effect.mHandle == Handle)
+        {
+            for (int32 ModIdx = 0; ModIdx < Effect.mSpec.mModifiers.Num(); ++ModIdx)
+            {
+                const FTacticalModifierInfo& ModDef = Effect.mSpec.mEffectClass->mModifiers[ModIdx];
+                const float ModSpec = Effect.mSpec.mModifiers[ModIdx];
+
+                if (ModDef.mAttribute == Attribute)
+                {
+                    return ModSpec;
+                }
+            }
+            return -1.f;
+        }
+    }
+    return -1.f;
+}
+
+int32 FActiveTacticalEffectsContainer::GetActiveEffectCount(const FTacticalEffectQuery& Query) const
+{
+    int32 Count = 0;
+    for (const FActiveTacticalEffect& Effect : this)
+    {
+        if (Query.Matches(Effect))
+        {
+            Count += Effect.mSpec.GetStackCount();
+        }
+    }
+    return Count;
 }
 
 int32 FActiveTacticalEffectsContainer::GetNumTacticalEffects() const

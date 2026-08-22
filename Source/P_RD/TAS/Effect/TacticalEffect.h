@@ -15,6 +15,7 @@ class UTacticalEffect;
 class UTacticalEffectContext;
 class UTacticalEffectExecutionCalculation;
 
+struct FActiveTacticalEffect;
 struct FActiveTacticalEffectsContainer;
 
 struct FTacticalEffectConstants
@@ -262,6 +263,8 @@ public:
 	UPROPERTY(Category = "Execution", EditDefaultsOnly, meta = (DisplayName = "CalculationClass"))
 	TSubclassOf<UTacticalEffectExecutionCalculation> mCalculationClass;
 };
+
+
 
 /**
  * @brief  속성값 및 태그를 변경하는 객체

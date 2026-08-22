@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   EnemyTurnPlannerTests.cpp
  * @brief  USRPGEnemyTurnPlanner 유닛테스트
  * @details
@@ -139,7 +139,7 @@ namespace
 		// 속박 옵션: 이동불가 상태의 계획 검증용
 		if (Rooted == true)
 		{
-			Enemy->GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root, 1);
+			Enemy->GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root, 1);
 		}
 
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
