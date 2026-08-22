@@ -2297,8 +2297,9 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		EnemyPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("몬스터 차례에는 겹친 용병 요약판을 접는다"),
 		AllyPanel->GetVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("몬스터 AP는 요약판에서 읽는다"),
-		EnemyAPText->GetText().ToString(), FString(TEXT("AP 3/5")));
+	// 0822 확정: 요약판 AP 표기는 걷었다. 이름 계약은 남았지만 항상 접혀 있다.
+	TestEqual(TEXT("몬스터 요약판 AP 문구는 접혀 있다"),
+		EnemyAPText->GetVisibility(), ESlateVisibility::Collapsed);
 	TestEqual(TEXT("상태가 있는 요약판 버튼만 입력 가능"),
 		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Visible);
 	TestEqual(TEXT("빈 상태 소켓 버튼은 입력을 막지 않음"),
@@ -2330,43 +2331,16 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("다른 모달을 열면 상태 상세도 정리됨"),
 		HUD->IsDetailOverlayShown());
 	MercenaryMenu->OnClicked.Broadcast();
-	for (int32 Index = 0; Index < 10; ++Index)
+	if (UWidget* PipRow = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipRow")))
 	{
-		UWidget* Pip = HUD->WidgetTree->FindWidget(FName(*FString::Printf(
-			TEXT("EnemyAPPip_%d"), Index)));
-		UWidget* UsedPip = HUD->WidgetTree->FindWidget(FName(*FString::Printf(
-			TEXT("EnemyAPPipUsed_%d"), Index)));
-		if (TestNotNull(*FString::Printf(TEXT("몬스터 AP 보석 %d"), Index), Pip))
-		{
-			TestEqual(*FString::Printf(TEXT("남은 AP에 맞춘 보석 %d"), Index),
-				Pip->GetVisibility(), Index < 3
-					? ESlateVisibility::SelfHitTestInvisible
-					: ESlateVisibility::Collapsed);
-		}
-		if (TestNotNull(*FString::Printf(TEXT("몬스터 빈 AP 보석 %d"), Index),
-			UsedPip))
-		{
-			TestEqual(*FString::Printf(TEXT("남은 10칸을 빈 보석으로 표시 %d"), Index),
-				UsedPip->GetVisibility(), Index >= 3
-					? ESlateVisibility::SelfHitTestInvisible
-					: ESlateVisibility::Collapsed);
-		}
+		TestEqual(TEXT("몬스터 AP 보석 행은 통째로 접혀 있다"),
+			PipRow->GetVisibility(), ESlateVisibility::Collapsed);
 	}
 	MonsterUnit.mActionPoints = 2;
 	MonsterUnit.mMovementPoint = 2.f;
 	Model->SetUnitUIs({ MonsterUnit });
-	TestEqual(TEXT("몬스터의 실제 AP가 한 칸 줄면 숫자가 즉시 갱신된다"),
-		EnemyAPText->GetText().ToString(), FString(TEXT("AP 2/5")));
-	if (UWidget* SpentPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPip_2")))
-	{
-		TestEqual(TEXT("몬스터가 AP를 쓰면 보석 하나가 사라진다"),
-			SpentPip->GetVisibility(), ESlateVisibility::Collapsed);
-	}
-	if (UWidget* EmptyPip = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipUsed_2")))
-	{
-		TestEqual(TEXT("몬스터의 실제 AP가 줄면 빈 보석이 남는다"),
-			EmptyPip->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
-	}
+	TestEqual(TEXT("AP가 줄어도 요약판 AP 문구는 접힌 채다"),
+		EnemyAPText->GetVisibility(), ESlateVisibility::Collapsed);
 	MonsterMenu->OnClicked.Broadcast();
 	if (HUD->IsMonsterTabShown() == true)
 	{
@@ -2646,6 +2620,7 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("현재 라운드 독립 패널"), RoundPanel)
 		&& TestNotNull(TEXT("현재 라운드 패널 슬롯"), RoundPanelSlot))
 	{
+		// 0822 확정: 라운드 패널은 좌하단 구석이다.
 		TestEqual(TEXT("라운드 패널 위치"), RoundPanelSlot->GetPosition(),
 			FVector2D(18.f, 10.f));
 		TestEqual(TEXT("라운드 패널 크기"), RoundPanelSlot->GetSize(),
@@ -2678,8 +2653,9 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		if (UCanvasPanelSlot* PlateMountSlot =
 			Cast<UCanvasPanelSlot>(RoundPlateMount->Slot))
 		{
+			// 배지는 패널 바닥에 붙는다(위 98px 는 구형 임무 문구 자리).
 			TestEqual(TEXT("라운드 배지 래퍼 위치"),
-				PlateMountSlot->GetPosition(), FVector2D::ZeroVector);
+				PlateMountSlot->GetPosition(), FVector2D(0.f, 98.f));
 			TestEqual(TEXT("라운드 배지 래퍼 크기"),
 				PlateMountSlot->GetSize(), FVector2D(218.f, 68.f));
 		}
@@ -3089,7 +3065,7 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("독립 라운드 텍스트"), RoundText))
 	{
 		TestEqual(TEXT("현재 라운드는 독립 패널에 표시"),
-			RoundText->GetText().ToString(), FString(TEXT("ROUND 3")));
+			RoundText->GetText().ToString(), FString(TEXT("03")));
 	}
 
 	UButton* Left = Cast<UButton>(

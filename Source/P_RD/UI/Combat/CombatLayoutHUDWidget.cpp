@@ -90,6 +90,16 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
 	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
+	// 플로팅 로그 글꼴. 새로 만든 TextBlock 은 엔진 기본 Roboto 로 남으므로
+	// HUD 공용 숫자 글꼴(F_HUD_Oswald)을 여기서 물어 둔다(UIFont::ProjectFont 짝).
+	{
+		static ConstructorHelpers::FObjectFinder<UFont> FloatingLogFontFinder(
+			TEXT("/Game/SVN/OutSideAsset/Fonts/F_HUD_Oswald.F_HUD_Oswald"));
+		if (FloatingLogFontFinder.Succeeded())
+		{
+			mFloatingLogFont = FloatingLogFontFinder.Object;
+		}
+	}
 	RD_LOAD_TEX(mSkillVisualRingTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring");
 	RD_LOAD_TEX(mSkillVisualCellNormalTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Disabled.T_KitA_Cell_Disabled");
 	RD_LOAD_TEX(mSkillVisualCellSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Selected.T_KitA_Cell_Selected");
@@ -452,6 +462,26 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mRoundPanel = Find<UWidget>(WidgetTree, TEXT("RoundPanel"));
 	mRoundText = Find<UTextBlock>(WidgetTree, TEXT("RoundText"));
+	// 0822 확정: 라운드 패널은 좌상단이 아니라 하단(좌하단 구석)이다. WBP에는
+	// 아직 좌상단으로 구워져 있으므로, 리베이크 전까지 런타임에서 자리를 옮긴다.
+	// (빌더 RD.Editor.RepairCombatHUDRoundTurn 도 같은 값으로 굽는다.)
+	if (mRoundPanel != nullptr)
+	{
+		if (UCanvasPanelSlot* RoundSlot = Cast<UCanvasPanelSlot>(mRoundPanel->Slot))
+		{
+			RoundSlot->SetAnchors(FAnchors(0.f, 1.f));
+			RoundSlot->SetAlignment(FVector2D(0.f, 1.f));
+			RoundSlot->SetPosition(FVector2D(8.f, -8.f));
+		}
+		// 배지는 패널 바닥에 붙인다. 패널 위쪽 98px 는 구형 임무 문구 자리다.
+		if (UWidget* RoundPlateMount = Find<UWidget>(WidgetTree, TEXT("RoundPlateMount")))
+		{
+			if (UCanvasPanelSlot* MountSlot = Cast<UCanvasPanelSlot>(RoundPlateMount->Slot))
+			{
+				MountSlot->SetPosition(FVector2D(0.f, 98.f));
+			}
+		}
+	}
 	mObjectiveText = Find<UTextBlock>(WidgetTree, TEXT("ObjectiveText"));
 
 	mPartySlots.SetNum(PartySlotCount);
@@ -543,26 +573,22 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyName = Find<UTextBlock>(WidgetTree, TEXT("EnemyName"));
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
-	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
 	mEnemyCritText = Find<UTextBlock>(WidgetTree, TEXT("EnemyCritText"));
 	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
-	mEnemyAPPips.Reset();
-	mEnemyAPPipsUsed.Reset();
-	for (int32 Index = 0; ; ++Index)
+	// 0822 확정: 요약판의 AP 표기는 걷는다. 판·문구·보석 행이 WBP 에 구워져
+	// 있으므로 이름으로 찾아 통째로 접는다. 중앙 턴 AP 막대는 그대로 둔다.
+	for (const TCHAR* APWidgetName : {
+		TEXT("EnemyAPPlate"), TEXT("EnemyAPText"), TEXT("EnemyAPPipRow"),
+		TEXT("AllyAPPlate"), TEXT("AllyAPText") })
 	{
-		UWidget* Pip = Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("EnemyAPPip_%d"), Index));
-		if (Pip == nullptr)
+		if (UWidget* APWidget = Find<UWidget>(WidgetTree, APWidgetName))
 		{
-			break;
+			APWidget->SetVisibility(ESlateVisibility::Collapsed);
 		}
-		mEnemyAPPips.Add(Pip);
-		mEnemyAPPipsUsed.Add(Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("EnemyAPPipUsed_%d"), Index)));
 	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
@@ -584,7 +610,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyName = Find<UTextBlock>(WidgetTree, TEXT("AllyName"));
 	mAllyHPBar = Find<UProgressBar>(WidgetTree, TEXT("AllyHPBar"));
 	mAllyHPText = Find<UTextBlock>(WidgetTree, TEXT("AllyHPText"));
-	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	mAllyStatusFrames.Reset();
@@ -2002,8 +2027,9 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
 	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
 	SetShown(mRoundPanel, true);
+	// 0822 확정: 라운드는 두 자리 숫자만("01"). ROUND 글줄은 걷는다.
 	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
+		FString::Printf(TEXT("%02d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
 	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
@@ -2301,11 +2327,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		SetTextIfPresent(mAllyHPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(AllyShown->mHP),
 			FMath::RoundToInt(AllyShown->mMaxHP))));
-		// 확정 시안 표기: "AP 10/10", 속도는 아이콘 옆 숫자만.
-		SetTextIfPresent(mAllyAPText, FText::FromString(AllyShown->mMaxActionPoints > 0
-			? FString::Printf(TEXT("AP %d/%d"), AllyShown->mActionPoints,
-				AllyShown->mMaxActionPoints)
-			: FString::Printf(TEXT("AP %d"), AllyShown->mActionPoints)));
+		// 0822 확정: 요약판 AP 표기는 걷었다(캐시 단계에서 판째 접는다).
 		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
 			FMath::RoundToInt(AllyShown->mSpeedPoint)));
 
@@ -2367,28 +2389,10 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		mEnemyHPBar->SetPercent(
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
-	// 확정 시안 표기: "100/100" · "AP 0/5" · 속도는 아이콘 옆 숫자만.
+	// 확정 시안 표기: "100/100" · 속도는 아이콘 옆 숫자만.
+	// 0822 확정: 요약판 AP 표기(문구·보석 행)는 걷었다(캐시 단계에서 판째 접는다).
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
-	const int32 EnemyAPLeft = mUIModel != nullptr
-		? mUIModel->GetDisplayedMovementPoint(*Shown)
-		: FMath::Max(Shown->mActionPoints, 0);
-	const int32 EnemyAPTotal = FMath::Max(
-		FMath::RoundToInt(Shown->mMaxMovementPoint),
-		FMath::Max(Shown->mMaxActionPoints, EnemyAPLeft));
-	SetTextIfPresent(mEnemyAPText, FText::FromString(
-		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
-	// 고정 10칸을 항상 그린다. 현재 AP만 채운 보석이고 나머지는 빈 보석이다.
-	// 이동 스텝 또는 스킬 소비로 실제 AP가 줄면 같은 자리에서 즉시 교체된다.
-	for (int32 Index = 0; Index < mEnemyAPPips.Num(); ++Index)
-	{
-		const bool bFilled = Index < EnemyAPLeft;
-		SetShown(mEnemyAPPips[Index], bFilled);
-		if (mEnemyAPPipsUsed.IsValidIndex(Index))
-		{
-			SetShown(mEnemyAPPipsUsed[Index], bFilled == false);
-		}
-	}
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
 	// 치명 확률은 아직 FUnitUI 계약에 없으므로 값을 지어내지 않는다. 다만
@@ -4864,90 +4868,6 @@ void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 }
 
 /* ── 상세 패널 (롱프레스 정보) ─────────────────────────────────────── */
-
-namespace
-{
-	/** @brief 조준 형태의 표시 이름. 계약 enum 을 화면 글자로 바꾸는 것은 UI 소관이다. */
-	const TCHAR* SelectShapeName(const ECombatSkillSelectShapeUI Shape)
-	{
-		switch (Shape)
-		{
-		case ECombatSkillSelectShapeUI::Single:   return TEXT("단일");
-		case ECombatSkillSelectShapeUI::Square:   return TEXT("사각");
-		case ECombatSkillSelectShapeUI::Cross:    return TEXT("십자");
-		case ECombatSkillSelectShapeUI::Diagonal: return TEXT("대각");
-		case ECombatSkillSelectShapeUI::Line:     return TEXT("직선");
-		default:                                  return TEXT("");
-		}
-	}
-
-	const TCHAR* HitShapeName(const ECombatSkillHitShapeUI Shape)
-	{
-		switch (Shape)
-		{
-		case ECombatSkillHitShapeUI::Single: return TEXT("단일");
-		case ECombatSkillHitShapeUI::Cross:  return TEXT("십자");
-		case ECombatSkillHitShapeUI::Star:   return TEXT("8방향");
-		case ECombatSkillHitShapeUI::Circle: return TEXT("원형");
-		default:                             return TEXT("");
-		}
-	}
-
-	/** @brief 사거리/타격범위/곡사·관통을 한 줄로 요약한다. 없는 항목은 뺀다. */
-	/**
-	 * @brief 차단 레이어 비트마스크를 사람 말로 바꾼다.
-	 *
-	 * @details INDEX_NONE 은 게임플레이가 아직 안 채운 것이라 빈 문자열을
-	 * 돌려준다 -- 모르는 것을 "없음" 이라고 하면 관통 스킬로 읽힌다.
-	 */
-	FString DescribeBlocker(const int32 Mask)
-	{
-		if (Mask == INDEX_NONE)
-		{
-			return FString();
-		}
-		if (Mask == 0)
-		{
-			return TEXT("없음");
-		}
-		TArray<FString> Layers;
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Obstacle)) != 0)
-		{
-			Layers.Add(TEXT("장애물"));
-		}
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Unit)) != 0)
-		{
-			Layers.Add(TEXT("유닛"));
-		}
-		return Layers.Num() > 0 ? FString::Join(Layers, TEXT("·")) : TEXT("없음");
-	}
-
-	FString DescribeTargeting(const FSkillTargetingUI& Targeting)
-	{
-		TArray<FString> Parts;
-		if (Targeting.mSelectShape != ECombatSkillSelectShapeUI::None)
-		{
-			Parts.Add(FString::Printf(TEXT("사거리 %.0f (%s)"),
-				Targeting.mSelectRange, SelectShapeName(Targeting.mSelectShape)));
-		}
-		if (Targeting.mHitShape != ECombatSkillHitShapeUI::None)
-		{
-			Parts.Add(FString::Printf(TEXT("타격 %s %.0f"),
-				HitShapeName(Targeting.mHitShape), Targeting.mHitRange));
-		}
-		const FString Aim = DescribeBlocker(Targeting.mAimBlockerMask);
-		if (Aim.IsEmpty() == false)
-		{
-			Parts.Add(FString::Printf(TEXT("조준 차단 %s"), *Aim));
-		}
-		const FString Effect = DescribeBlocker(Targeting.mEffectBlockerMask);
-		if (Effect.IsEmpty() == false)
-		{
-			Parts.Add(FString::Printf(TEXT("영향 차단 %s"), *Effect));
-		}
-		return FString::Join(Parts, TEXT("  ·  "));
-	}
-}
 
 /**
  * @brief 스킬 상세 프레젠터를 한 번 만들고 설정을 최신으로 맞춘다.
