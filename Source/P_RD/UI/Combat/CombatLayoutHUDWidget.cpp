@@ -462,26 +462,9 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mRoundPanel = Find<UWidget>(WidgetTree, TEXT("RoundPanel"));
 	mRoundText = Find<UTextBlock>(WidgetTree, TEXT("RoundText"));
-	// 0822 확정: 라운드 패널은 좌상단이 아니라 하단(좌하단 구석)이다. WBP에는
-	// 아직 좌상단으로 구워져 있으므로, 리베이크 전까지 런타임에서 자리를 옮긴다.
-	// (빌더 RD.Editor.RepairCombatHUDRoundTurn 도 같은 값으로 굽는다.)
-	if (mRoundPanel != nullptr)
-	{
-		if (UCanvasPanelSlot* RoundSlot = Cast<UCanvasPanelSlot>(mRoundPanel->Slot))
-		{
-			RoundSlot->SetAnchors(FAnchors(0.f, 1.f));
-			RoundSlot->SetAlignment(FVector2D(0.f, 1.f));
-			RoundSlot->SetPosition(FVector2D(8.f, -8.f));
-		}
-		// 배지는 패널 바닥에 붙인다. 패널 위쪽 98px 는 구형 임무 문구 자리다.
-		if (UWidget* RoundPlateMount = Find<UWidget>(WidgetTree, TEXT("RoundPlateMount")))
-		{
-			if (UCanvasPanelSlot* MountSlot = Cast<UCanvasPanelSlot>(RoundPlateMount->Slot))
-			{
-				MountSlot->SetPosition(FVector2D(0.f, 98.f));
-			}
-		}
-	}
+	// 0823 확정: 좌상단 ROUND 배지는 그대로 두고, 그 아래에 두 자리 숫자("01")를
+	// 따로 크게 보여 준다. 숫자 칸은 빌더가 굽는다(구형 WBP 면 없을 수 있다).
+	mRoundNumberText = Find<UTextBlock>(WidgetTree, TEXT("RoundNumberText"));
 	mObjectiveText = Find<UTextBlock>(WidgetTree, TEXT("ObjectiveText"));
 
 	mPartySlots.SetNum(PartySlotCount);
@@ -579,16 +562,12 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
-	// 0822 확정: 요약판의 AP 표기는 걷는다. 판·문구·보석 행이 WBP 에 구워져
-	// 있으므로 이름으로 찾아 통째로 접는다. 중앙 턴 AP 막대는 그대로 둔다.
-	for (const TCHAR* APWidgetName : {
-		TEXT("EnemyAPPlate"), TEXT("EnemyAPText"), TEXT("EnemyAPPipRow"),
-		TEXT("AllyAPPlate"), TEXT("AllyAPText") })
+	// 0823 확정: 요약판 AP 는 문구("AP n/n")로만 보여 준다. 보석 아이콘
+	// 행만 걷는다(WBP 에 구워져 있으므로 이름으로 찾아 접는다).
+	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
+	if (UWidget* PipRow = Find<UWidget>(WidgetTree, TEXT("EnemyAPPipRow")))
 	{
-		if (UWidget* APWidget = Find<UWidget>(WidgetTree, APWidgetName))
-		{
-			APWidget->SetVisibility(ESlateVisibility::Collapsed);
-		}
+		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
@@ -610,6 +589,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyName = Find<UTextBlock>(WidgetTree, TEXT("AllyName"));
 	mAllyHPBar = Find<UProgressBar>(WidgetTree, TEXT("AllyHPBar"));
 	mAllyHPText = Find<UTextBlock>(WidgetTree, TEXT("AllyHPText"));
+	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	mAllyStatusFrames.Reset();
@@ -2027,8 +2007,10 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
 	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
 	SetShown(mRoundPanel, true);
-	// 0822 확정: 라운드는 두 자리 숫자만("01"). ROUND 글줄은 걷는다.
 	SetTextIfPresent(mRoundText, FText::FromString(
+		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
+	// 0823 확정: 배지 아래에 같은 라운드를 두 자리 숫자로 한 번 더 보여 준다.
+	SetTextIfPresent(mRoundNumberText, FText::FromString(
 		FString::Printf(TEXT("%02d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
@@ -2327,7 +2309,11 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		SetTextIfPresent(mAllyHPText, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(AllyShown->mHP),
 			FMath::RoundToInt(AllyShown->mMaxHP))));
-		// 0822 확정: 요약판 AP 표기는 걷었다(캐시 단계에서 판째 접는다).
+		// 확정 시안 표기: "AP 10/10", 속도는 아이콘 옆 숫자만.
+		SetTextIfPresent(mAllyAPText, FText::FromString(AllyShown->mMaxActionPoints > 0
+			? FString::Printf(TEXT("AP %d/%d"), AllyShown->mActionPoints,
+				AllyShown->mMaxActionPoints)
+			: FString::Printf(TEXT("AP %d"), AllyShown->mActionPoints)));
 		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
 			FMath::RoundToInt(AllyShown->mSpeedPoint)));
 
@@ -2389,10 +2375,18 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		mEnemyHPBar->SetPercent(
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
-	// 확정 시안 표기: "100/100" · 속도는 아이콘 옆 숫자만.
-	// 0822 확정: 요약판 AP 표기(문구·보석 행)는 걷었다(캐시 단계에서 판째 접는다).
+	// 확정 시안 표기: "100/100" · "AP 0/5" · 속도는 아이콘 옆 숫자만.
+	// 0823 확정: AP 보석 행은 걷었고 문구만 남긴다.
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
+	const int32 EnemyAPLeft = mUIModel != nullptr
+		? mUIModel->GetDisplayedMovementPoint(*Shown)
+		: FMath::Max(Shown->mActionPoints, 0);
+	const int32 EnemyAPTotal = FMath::Max(
+		FMath::RoundToInt(Shown->mMaxMovementPoint),
+		FMath::Max(Shown->mMaxActionPoints, EnemyAPLeft));
+	SetTextIfPresent(mEnemyAPText, FText::FromString(
+		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
 	// 치명 확률은 아직 FUnitUI 계약에 없으므로 값을 지어내지 않는다. 다만
@@ -3539,6 +3533,14 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	mPressMoved = false;
 	if (bDragged == true)
 	{
+		// 0823 확정: 지도를 끄는 것도 판을 만진 것이다. 펴 둔 카드는 접는다.
+		// 조준 중(끌며 겨냥 확인)·연출 중·HUD 위에서 시작한 끌기는 건드리지
+		// 않는다 -- 탭의 예외 규칙과 같다.
+		if (IsAiming() == false && mIsActionPlaying == false
+			&& IsOverChrome(mPressOrigin) == false)
+		{
+			SetCommandsShown(false);
+		}
 		return;
 	}
 	HandleBoardPressed(ScreenPosition);

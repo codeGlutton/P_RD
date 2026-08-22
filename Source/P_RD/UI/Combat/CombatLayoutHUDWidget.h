@@ -1398,6 +1398,8 @@ private:
 	/** @brief 현재 라운드를 카드와 분리해 표시하는 왼쪽 상단 패널. */
 	TObjectPtr<UWidget> mRoundPanel;
 	TObjectPtr<UTextBlock> mRoundText;
+	/** @brief ROUND 배지 아래의 큰 두 자리 라운드 숫자("01"). 구형 WBP 면 없다. */
+	TObjectPtr<UTextBlock> mRoundNumberText;
 	TObjectPtr<UTextBlock> mObjectiveText;
 
 	TObjectPtr<UWidget> mEnemyPanel;
@@ -1405,6 +1407,7 @@ private:
 	TObjectPtr<UTextBlock> mEnemyName;
 	TObjectPtr<UProgressBar> mEnemyHPBar;
 	TObjectPtr<UTextBlock> mEnemyHPText;
+	TObjectPtr<UTextBlock> mEnemyAPText;
 	TObjectPtr<UTextBlock> mEnemyCritText;
 	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
@@ -1420,6 +1423,7 @@ private:
 	TObjectPtr<UTextBlock> mAllyName;
 	TObjectPtr<UProgressBar> mAllyHPBar;
 	TObjectPtr<UTextBlock> mAllyHPText;
+	TObjectPtr<UTextBlock> mAllyAPText;
 	TObjectPtr<UTextBlock> mAllySpeedText;
 	TObjectPtr<UTextBlock> mAllyStatusText;
 	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;

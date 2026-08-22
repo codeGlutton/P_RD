@@ -478,9 +478,7 @@ namespace CombatHUDWidgetBuilder
 
 		UOverlay* RoundPlateMount = CastChecked<UOverlay>(
 			Blueprint->WidgetTree->FindWidget(TEXT("RoundPlateMount")));
-		// 배지는 패널 바닥에 붙인다. 패널 위쪽 98px 는 구형 임무 문구 자리라
-		// 비어 있는데, 위에 붙이면 배지가 바닥에서 그만큼 떠 보인다.
-		PlaceCanvas(RoundPanel, RoundPlateMount, FVector2D(0.f, 98.f),
+		PlaceCanvas(RoundPanel, RoundPlateMount, FVector2D::ZeroVector,
 			FVector2D(218.f, 68.f), 5);
 		RoundPlateMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
@@ -526,8 +524,7 @@ namespace CombatHUDWidgetBuilder
 		RoundFont.OutlineSettings.OutlineSize = 2;
 		RoundFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 		RoundText->SetFont(RoundFont);
-		// 0822 확정: 두 자리 숫자만("01"). 런타임 RefreshTurnOrder 의 %02d 와 짝.
-		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "01"));
+		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND 1"));
 		RoundText->SetJustification(ETextJustify::Center);
 		RoundText->SetColorAndOpacity(FSlateColor(
 			FLinearColor(.973f, .973f, .953f, 1.f)));
@@ -1108,16 +1105,15 @@ namespace CombatHUDWidgetBuilder
 		HPText->SetText(NSLOCTEXT("CombatHUD", "EnemyHPPreview", "HP  64 / 64"));
 		SetReadableFont(HPText, BaseFont, 27);
 
-		// 0822 확정: 요약판 AP 표기는 걷는다. 이름 계약은 남기되 접어서 굽는다.
+		// 0823 확정: 요약판 AP 는 문구로만 보여 준다(보석 행만 걷는다).
 		UBorder* APPlate = FindOrCreate<UBorder>(Blueprint, TEXT("EnemyAPPlate"));
 		PlaceCanvas(Panel, APPlate, FVector2D(54.f, 184.f), FVector2D(230.f, 58.f), 5);
 		APPlate->SetBrushColor(FLinearColor(.025f, .17f, .27f, .97f));
-		APPlate->SetVisibility(ESlateVisibility::Collapsed);
+		APPlate->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		UTextBlock* APText = FindOrCreate<UTextBlock>(Blueprint, TEXT("EnemyAPText"));
 		PlaceCanvas(Panel, APText, FVector2D(54.f, 188.f), FVector2D(230.f, 50.f), 6);
 		APText->SetText(NSLOCTEXT("CombatHUD", "EnemyAPPreview", "AP  5 / 5"));
 		SetReadableFont(APText, BaseFont, 29);
-		APText->SetVisibility(ESlateVisibility::Collapsed);
 
 		UBorder* SpeedPlate = FindOrCreate<UBorder>(Blueprint, TEXT("EnemySpeedPlate"));
 		PlaceCanvas(Panel, SpeedPlate, FVector2D(316.f, 184.f), FVector2D(230.f, 58.f), 5);
@@ -1230,16 +1226,15 @@ namespace CombatHUDWidgetBuilder
 		HPText->SetText(NSLOCTEXT("CombatHUD", "AllyHPPreview", "HP  100 / 100"));
 		SetReadableFont(HPText, BaseFont, 27);
 
-		// 0822 확정: 요약판 AP 표기는 걷는다. 이름 계약은 남기되 접어서 굽는다.
+		// 0823 확정: 요약판 AP 는 문구로만 보여 준다(보석 행만 걷는다).
 		UBorder* APPlate = FindOrCreate<UBorder>(Blueprint, TEXT("AllyAPPlate"));
 		PlaceCanvas(Panel, APPlate, FVector2D(54.f, 184.f), FVector2D(230.f, 58.f), 5);
 		APPlate->SetBrushColor(FLinearColor(.025f, .17f, .27f, .97f));
-		APPlate->SetVisibility(ESlateVisibility::Collapsed);
+		APPlate->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		UTextBlock* APText = FindOrCreate<UTextBlock>(Blueprint, TEXT("AllyAPText"));
 		PlaceCanvas(Panel, APText, FVector2D(54.f, 188.f), FVector2D(230.f, 50.f), 6);
 		APText->SetText(NSLOCTEXT("CombatHUD", "AllyAPPreview", "AP  10 / 10"));
 		SetReadableFont(APText, BaseFont, 29);
-		APText->SetVisibility(ESlateVisibility::Collapsed);
 
 		UBorder* SpeedPlate = FindOrCreate<UBorder>(Blueprint, TEXT("AllySpeedPlate"));
 		PlaceCanvas(Panel, SpeedPlate, FVector2D(316.f, 184.f), FVector2D(230.f, 58.f), 5);
