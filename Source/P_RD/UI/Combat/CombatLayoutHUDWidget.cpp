@@ -569,6 +569,20 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
+	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판을 그만큼
+	// 줄인다. 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
+	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 줄인다.
+	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel"),
+		TEXT("EnemyPlateMount"), TEXT("AllyPlateMount") })
+	{
+		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
+		{
+			if (UCanvasPanelSlot* SummarySlot = Cast<UCanvasPanelSlot>(Summary->Slot))
+			{
+				SummarySlot->SetSize(FVector2D(600.f, 345.f));
+			}
+		}
+	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
@@ -2007,9 +2021,8 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
 	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
 	SetShown(mRoundPanel, true);
-	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
-	// 0823 확정: 배지 아래에 같은 라운드를 두 자리 숫자로 한 번 더 보여 준다.
+	// 0823 확정: 배지는 "ROUND" 글자만, 라운드 수는 아래 두 자리 숫자가 맡는다.
+	SetTextIfPresent(mRoundText, FText::FromString(TEXT("ROUND")));
 	SetTextIfPresent(mRoundNumberText, FText::FromString(
 		FString::Printf(TEXT("%02d"), Turn.mRound)));
 
@@ -3482,11 +3495,19 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 	}
 	if (FVector2D(InTouchEvent.GetScreenSpacePosition()).Equals(mPressOrigin, BoardTapSlack) == false)
 	{
+		const bool bDragJustStarted = mPressActive && mPressMoved == false;
 		mPressMoved = true;
 		// 끌기 시작했다. 지도를 미는 손을 긴 누름으로 오인하지 않는다.
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+		}
+		// 0823 확정: 카드는 손을 뗄 때가 아니라 **끌기 시작하는 순간** 접는다.
+		// 손을 뗀 뒤에 접히면 화면을 미는 내내 카드가 시야를 가린다.
+		if (bDragJustStarted && IsAiming() == false && mIsActionPlaying == false
+			&& IsOverChrome(mPressOrigin) == false)
+		{
+			SetCommandsShown(false);
 		}
 	}
 	return Super::NativeOnTouchMoved(InGeometry, InTouchEvent);

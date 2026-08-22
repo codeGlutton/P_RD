@@ -524,7 +524,8 @@ namespace CombatHUDWidgetBuilder
 		RoundFont.OutlineSettings.OutlineSize = 2;
 		RoundFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 		RoundText->SetFont(RoundFont);
-		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND 1"));
+		// 0823 확정: 배지는 "ROUND" 글자만. 라운드 수는 아래 숫자 칸이 맡는다.
+		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND"));
 		RoundText->SetJustification(ETextJustify::Center);
 		RoundText->SetColorAndOpacity(FSlateColor(
 			FLinearColor(.973f, .973f, .953f, 1.f)));

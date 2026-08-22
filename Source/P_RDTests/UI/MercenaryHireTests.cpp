@@ -3062,8 +3062,8 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 	}
 	if (TestNotNull(TEXT("독립 라운드 텍스트"), RoundText))
 	{
-		TestEqual(TEXT("현재 라운드는 독립 패널에 표시"),
-			RoundText->GetText().ToString(), FString(TEXT("ROUND 3")));
+		TestEqual(TEXT("배지는 ROUND 글자만 표시"),
+			RoundText->GetText().ToString(), FString(TEXT("ROUND")));
 	// 0823 확정: 배지 아래 두 자리 숫자 칸에도 같은 라운드가 나온다.
 	if (UTextBlock* RoundNumber = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("RoundNumberText"))))
