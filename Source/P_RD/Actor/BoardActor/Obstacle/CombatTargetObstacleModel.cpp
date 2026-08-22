@@ -10,6 +10,9 @@
 
 #include "DataAsset/ObstacleSpawnData/StaticCombatTargetObstacleSpawnData.h"
 
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Tag/TacticalEffect_Immunity.h"
+
 UCombatTargetObstacleModel::UCombatTargetObstacleModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
@@ -38,6 +41,16 @@ void UCombatTargetObstacleModel::PostInitializeComponentModels()
 	{
 		SkillComp->SetSkillFrom(ObstacleSpawn->mSkillDatas);
 	}
+}
+
+void UCombatTargetObstacleModel::OnBeginRoom()
+{
+	Super::OnBeginRoom();
+
+	UTacticalEffectContext* EffectContext = mAttributeCompModel->MakeEffectContext();
+
+	TSharedPtr<FTacticalEffectSpec> InfiniteEffect = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetImmunity::StaticClass(), EffectContext);
+	mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
 }
 
 void UCombatTargetObstacleModel::OnEndRoom()

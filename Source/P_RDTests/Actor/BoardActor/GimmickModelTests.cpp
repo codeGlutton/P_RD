@@ -132,7 +132,7 @@ namespace
 	// @brief 기절 태그 보유 여부
 	bool HasStunTag(const UMockGimmickVictimUnitModel* Unit)
 	{
-		return Unit->GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun);
+		return Unit->GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
 	}
 
 	// @brief 추가 피해자 유닛 생성/배치 (2번째 유닛이 필요한 케이스용)

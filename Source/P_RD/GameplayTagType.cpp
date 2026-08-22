@@ -187,6 +187,8 @@ namespace EffectTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost,												"GameplayEffect.Cost");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost_PassiveStack,								"GameplayEffect.Cost.PassiveStack");
+	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Immunity,								"GameplayEffect.ActorState.Immunity");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,									"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,										"GameplayEffect.StatusEffect");

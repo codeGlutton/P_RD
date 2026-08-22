@@ -255,6 +255,7 @@ namespace EffectTags
 
 	/* 액터 상태 태그들 */
 
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Immunity);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
 
 	/* 상태 이상 태그들 */

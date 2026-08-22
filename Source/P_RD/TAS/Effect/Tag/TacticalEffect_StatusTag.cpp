@@ -78,6 +78,17 @@ bool UTacticalEffect_GetStatus::CanApply(const FActiveTacticalEffectsContainer& 
 		return false;
 	}
 
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	if (AttributeSetCompModelInstance == nullptr)
+	{
+		return false;
+	}
+
+	if (AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Immunity) == true)
+	{
+		return false;
+	}
+
 	return true;
 }
 
