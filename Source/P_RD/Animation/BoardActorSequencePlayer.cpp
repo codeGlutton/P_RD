@@ -99,6 +99,11 @@ bool UBoardActorSequencePlayer::PlaySequenceUsingTag_Internal(FBoardActorAnimati
 
 	StopSequenceUsingTag();
 
+	UDefaultLevelSequenceInstanceData* InstanceData = Cast<UDefaultLevelSequenceInstanceData>(mDefaultInstanceData);
+	if (InstanceData != nullptr)
+	{
+		InstanceData->TransformOriginActor = GetOwningActor();
+	}
 	mLevelSequencePlayer->Initialize(TargetLevelSequence, GetOwningActor()->GetLevel(), mCameraSettings);
 	ApplyDynamicBindings(TargetLevelSequence);
 

@@ -4,6 +4,8 @@
 #include "IMovieScenePlayer.h"
 #include "Evaluation/IMovieScenePlaybackCapability.h"
 
+DEFINE_LOG_CATEGORY(LogBoardEventTrack)
+
 UBoardEventTrackInstance::UBoardEventTrackInstance()
 {
 }
@@ -123,6 +125,8 @@ UBoardActorSequencePlayer* UBoardEventTrackInstance::GetBoardActorSequencePlayer
 
 void UBoardEventTrackInstance::TriggerBoardEvent(const FBoardSceneEvent& Event, UE::MovieScene::FInstanceHandle Handle)
 {
+	UE_LOG(LogBoardEventTrack, Log, TEXT("보드 이벤트 시도"));
+
 	UBoardActorSequencePlayer* BoardActorSequencePlayer = GetBoardActorSequencePlayer(Handle);
 	if (BoardActorSequencePlayer == nullptr)
 	{
@@ -132,11 +136,24 @@ void UBoardEventTrackInstance::TriggerBoardEvent(const FBoardSceneEvent& Event, 
 	if (Event.mEventTag.IsValid() == true)
 	{
 		BoardActorSequencePlayer->TriggerMontageTagEvent(Event.mEventTag, Event.mEventPayload.GetPtr());
+		UE_LOG(LogBoardEventTrack, Log, TEXT("보드 이벤트 실행"));
 	}
 }
 
 void UBoardEventTrackInstance::TriggerBoardEventEnd(const FBoardSceneEvent& Event, UE::MovieScene::FInstanceHandle Handle)
 {
-	const FDurationEventTriggerPayload& Payload = Event.mEventPayload.Get<FDurationEventTriggerPayload>();
-	Payload.OnEndDurationEventTrigger.ExecuteIfBound();
+	UE_LOG(LogBoardEventTrack, Log, TEXT("보드 이벤트 종료 콜백 시도"));
+
+	UBoardActorSequencePlayer* BoardActorSequencePlayer = GetBoardActorSequencePlayer(Handle);
+	if (BoardActorSequencePlayer == nullptr)
+	{
+		return;
+	}
+
+	const FDurationEventTriggerPayload* Payload = Event.mEventPayload.GetPtr<FDurationEventTriggerPayload>();
+	if (Event.mEventTag.IsValid() == true && Payload != nullptr)
+	{
+		Payload->OnEndDurationEventTrigger.ExecuteIfBound();
+		UE_LOG(LogBoardEventTrack, Log, TEXT("보드 이벤트 종료 콜백 실행"));
+	}
 }
