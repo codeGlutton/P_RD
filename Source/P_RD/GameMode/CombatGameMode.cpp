@@ -2688,10 +2688,12 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 				}
 				if (EffectLines.IsEmpty() && !ArtifactData->mStatModifiers.IsEmpty())
 				{
-					EffectLines.Add(TEXT("파티 전체 능력치를 강화합니다."));
+					EffectLines.Add(NSLOCTEXT("CombatGameMode",
+						"ArtifactStatBoost", "파티 전체 능력치를 강화합니다.").ToString());
 				}
 				Choice.mDescription = EffectLines.IsEmpty()
-					? FText::FromString(TEXT("파티 전체에 적용됩니다."))
+					? NSLOCTEXT("CombatGameMode",
+						"ArtifactPartyWide", "파티 전체에 적용됩니다.")
 					: FText::FromString(FString::Join(EffectLines, TEXT("\n")));
 			}
 

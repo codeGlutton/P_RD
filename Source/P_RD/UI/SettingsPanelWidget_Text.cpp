@@ -177,16 +177,11 @@ void USettingsPanelWidget::SyncText() const
 		}
 	};
 
-	const FText SettingsLedgerTitle = FText::FromString(
-		mValueModel.mUseKoreanLanguage ? TEXT("설정 장부") : TEXT("SETTINGS LEDGER"));
-	const FText BackLabel = FText::FromString(
-		mValueModel.mUseKoreanLanguage ? TEXT("뒤로") : TEXT("Back"));
-	const FText SaveAndExitLabel = FText::FromString(
-		mValueModel.mUseKoreanLanguage ? TEXT("저장 후 종료") : TEXT("Save and Exit"));
-	const FText AbandonRunLabel = FText::FromString(
-		mValueModel.mUseKoreanLanguage ? TEXT("런 포기") : TEXT("Abandon Run"));
-	const FText ResetLabel = FText::FromString(
-		mValueModel.mUseKoreanLanguage ? TEXT("초기화") : TEXT("Reset"));
+	const FText SettingsLedgerTitle = LOCTEXT("SettingsLedger", "SETTINGS LEDGER");
+	const FText BackLabel = LOCTEXT("Back", "Back");
+	const FText SaveAndExitLabel = LOCTEXT("SaveAndExit", "Save and Exit");
+	const FText AbandonRunLabel = LOCTEXT("AbandonRun", "Abandon Run");
+	const FText ResetLabel = LOCTEXT("Reset", "Reset");
 	if (SettingsTitleText != nullptr)
 	{
 		SettingsTitleText->SetText(SettingsLedgerTitle);
@@ -210,11 +205,11 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "MID"));
 	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "HIGH"));
 	SetNamedText(TEXT("LowQualityButtonText"),
-		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("낮음") : TEXT("LOW")));
+		LOCTEXT("Low", "LOW"));
 	SetNamedText(TEXT("MediumQualityButtonText"),
-		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("중간") : TEXT("MID")));
+		LOCTEXT("Mid", "MID"));
 	SetNamedText(TEXT("HighQualityButtonText"),
-		FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("높음") : TEXT("HIGH")));
+		LOCTEXT("High", "HIGH"));
 	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
@@ -335,39 +330,31 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(FText::FromString(
-			mValueModel.mUseKoreanLanguage ? TEXT("낮음") : TEXT("LOW")));
+		LowQualityButtonText->SetText(LOCTEXT("Low", "LOW"));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(FText::FromString(
-			mValueModel.mUseKoreanLanguage ? TEXT("중간") : TEXT("MID")));
+		MediumQualityButtonText->SetText(LOCTEXT("Mid", "MID"));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(FText::FromString(
-			mValueModel.mUseKoreanLanguage ? TEXT("높음") : TEXT("HIGH")));
+		HighQualityButtonText->SetText(LOCTEXT("High", "HIGH"));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{
-		AbandonConfirmTitleText->SetText(FText::FromString(mValueModel.mUseKoreanLanguage
-			? TEXT("런을 포기하시겠습니까?") : TEXT("Abandon this run?")));
+		AbandonConfirmTitleText->SetText(LOCTEXT("AbandonConfirmTitle", "Abandon this run?"));
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
-		AbandonConfirmBodyText->SetText(FText::FromString(mValueModel.mUseKoreanLanguage
-			? TEXT("현재 진행 상황을 삭제하고 타이틀로 돌아갑니다.")
-			: TEXT("Current progress will be deleted and you will return to the title.")));
+		AbandonConfirmBodyText->SetText(LOCTEXT("AbandonConfirmBody", "Current progress will be deleted and you will return to the title."));
 	}
 	if (ConfirmAbandonButtonText != nullptr)
 	{
-		ConfirmAbandonButtonText->SetText(FText::FromString(
-			mValueModel.mUseKoreanLanguage ? TEXT("포기") : TEXT("Abandon")));
+		ConfirmAbandonButtonText->SetText(LOCTEXT("Abandon", "Abandon"));
 	}
 	if (CancelAbandonButtonText != nullptr)
 	{
-		CancelAbandonButtonText->SetText(FText::FromString(
-			mValueModel.mUseKoreanLanguage ? TEXT("취소") : TEXT("Cancel")));
+		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
 	}
 	if (mRunConfirmAction != ERunConfirmAction::None)
 	{
