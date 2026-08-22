@@ -564,6 +564,25 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		mEnemyAPPipsUsed.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("EnemyAPPipUsed_%d"), Index)));
 	}
+	// WBP 에 번역 키 없이(구형 bake) 박힌 라벨을 로컬라이즈 텍스트로 갈아
+	// 끼운다. 빌더는 이미 NSLOCTEXT 를 쓰지만 마지막 리베이크가 그 이전이다.
+	{
+		const TPair<const TCHAR*, FText> BakedLabels[] = {
+			{ TEXT("MercenaryCritLabel"),
+				NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타") },
+			{ TEXT("MercenaryCloseText"),
+				NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기") },
+			{ TEXT("ConfirmLabel"),
+				NSLOCTEXT("CombatHUD", "ConfirmLabel", "확정") },
+		};
+		for (const TPair<const TCHAR*, FText>& Label : BakedLabels)
+		{
+			if (UTextBlock* Text = Find<UTextBlock>(WidgetTree, Label.Key))
+			{
+				Text->SetText(Label.Value);
+			}
+		}
+	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
@@ -4539,6 +4558,18 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	// 평상시에는 HUD보다 위. 몬스터 스킬 상세(70)는 이 탭보다 위에 놓인다.
 	mMonsterTabWidget->AddToViewport(MonsterTabViewportZOrder);
 	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	// WBP 에 번역 키 없이 박힌 라벨을 로컬라이즈 텍스트로 갈아 끼운다.
+	if (UTextBlock* CritLabel = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterChip2Label"))))
+	{
+		CritLabel->SetText(NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타"));
+	}
+	if (UTextBlock* BackText = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackText"))))
+	{
+		BackText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기"));
+	}
 
 	// AddDynamic은 함수 이름을 문자열로 찍는 매크로라 포인터 배열로 돌릴 수 없다.
 	if (UButton* Row0 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_0"))))
