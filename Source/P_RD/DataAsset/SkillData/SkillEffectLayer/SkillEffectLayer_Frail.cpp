@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Frail::GetTagEffectClass() const
     return UTacticalEffect_GetFrail::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Frail"
 
 FText FSkillEffectLayer_Frail::GetTagDisplayName() const
@@ -15,4 +14,3 @@ FText FSkillEffectLayer_Frail::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

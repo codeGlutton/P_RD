@@ -2040,7 +2040,14 @@ void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponent
 	}
 
 	OutDetail.mName = StaticSkillData->mName;
-	OutDetail.mDescription = StaticSkillData->mDescription;
+	// 0823 확정: 구워 둔 설명은 번역 키가 없어(생성 스냅샷) 언어를 안 탄다.
+	// 같은 내용을 런타임에 다시 생성해 현재 언어의 LOCTEXT 로 조립한다.
+	// 레이어가 없어 생성이 비면 구워 둔 설명(수기 작성분)을 그대로 쓴다.
+	{
+		const FText Generated = StaticSkillData->MakeDescription();
+		OutDetail.mDescription = Generated.IsEmpty()
+			? StaticSkillData->mDescription : Generated;
+	}
 	OutDetail.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 	// 이 상세는 플레이어 카드 레일뿐 아니라 임의 유닛(몬스터 포함)의 스킬에도
 	// 쓰인다. 유닛별 슬롯 index만 넘기면 HUD에서 다른 유닛의 같은 슬롯과

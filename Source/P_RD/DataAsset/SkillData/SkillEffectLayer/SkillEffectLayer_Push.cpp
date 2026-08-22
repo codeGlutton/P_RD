@@ -56,7 +56,6 @@ void FSkillEffectLayer_Push::CommitEffect(const FSkillEffectCommitParams& Params
 	}
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Push"
 
 FText FSkillEffectLayer_Push::MakeDescription() const
@@ -68,4 +67,3 @@ FText FSkillEffectLayer_Push::MakeDescription() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif
