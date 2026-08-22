@@ -8,6 +8,7 @@
  * 다중 스킬 랜덤 선택 케이스(Case4-1) 포함.
  * 다중 플레이어 대응: 최근접 타겟 선택(Case5-1), 시전 가능 타겟 우선(Case5-2),
  * 균형 후퇴(Case5-3), 최근접 접근 폴백(Case5-4).
+ * Single 조준 스킬: 영향 범위로 타격 판정(Case7-1), 자기 차폐 회귀(Case7-2), 접근 폴백(Case7-3).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -79,7 +80,10 @@ namespace
 	}
 
 	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange)
+	// @param EffectPattern 영향 범위 패턴 (Single 조준 스킬은 이 범위로 타격 여부가 결정됨)
+	// @param EffectArea 영향 범위 크기
+	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange,
+		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0)
 	{
 		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
 		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
@@ -88,8 +92,8 @@ namespace
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
-		Skill->mEffectPattern = EEffectPattern::Single;
-		Skill->mEffectArea = 0;
+		Skill->mEffectPattern = EffectPattern;
+		Skill->mEffectArea = EffectArea;
 		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
 		Skill->mSkillPhaseLayers.AddDefaulted();
@@ -104,6 +108,9 @@ namespace
 	// @param SecondSkillAimRange 슬롯 1에 장착할 Square 스킬의 사거리 (0이면 미장착. 스킬 랜덤 선택 검증용)
 	// @param BlockerIndex 길/시야를 막는 제3의 유닛 배치 좌표 (Invalid면 미배치. 우회 접근 검증용)
 	// @param SecondPlayerIndex 두 번째 플레이어 배치 좌표 (Invalid면 미배치. 다중 타겟 선택 검증용)
+	// @param Rooted 속박 상태 여부 (이동 불가 계획 검증용)
+	// @param EffectPattern 슬롯 0 스킬의 영향 범위 패턴 (Single 조준 검증용)
+	// @param EffectArea 슬롯 0 스킬의 영향 범위 크기
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -118,7 +125,9 @@ namespace
 		int32 SecondSkillAimRange = 0,
 		FTileIndex BlockerIndex = FTileIndex::Invalid,
 		FTileIndex SecondPlayerIndex = FTileIndex::Invalid,
-		bool Rooted = false)
+		bool Rooted = false,
+		EEffectPattern EffectPattern = EEffectPattern::Single,
+		int32 EffectArea = 0)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -145,7 +154,7 @@ namespace
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
 		// 스킬 추가: 일반공격 계열
-		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange));
+		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea));
 		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
 		if (SecondSkillAimRange > 0)
 		{
@@ -577,6 +586,88 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		CheckTail(*this, Commands, TEXT("Case6-2"));
 		TestTrue(TEXT("[Case6-2] 이동커맨드 없음(속박)"), FindMoveCommand(Commands) == nullptr);
 		TestTrue(TEXT("[Case6-2] 스킬커맨드 없음(사거리 밖)"), FindCast(Commands) == nullptr);
+	}
+
+	/**
+	 * Case7-1: Single 조준 / 영향 범위 Cross(1) / 플레이어 인접
+	 *   -> 조준 타일은 자기 칸이지만 영향 범위에 플레이어가 들어오므로 제자리 시전
+	 *   -> 시전 커맨드의 조준 타일은 플레이어 칸이 아니라 자기 칸이어야 함
+	 * 맵 (6x3): E(2,1) P(3,1), 등거리 성향, 이동력 3
+	 */
+	AddInfo(TEXT("=== Case7-1: Single 조준 / 영향 범위로 인접 타격 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 0, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Single,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Cross, /*EffectArea*/1);
+		CheckTail(*this, Commands, TEXT("Case7-1"));
+		TestTrue(TEXT("[Case7-1] 이동커맨드 없음(제자리 영향 범위에 플레이어 포함)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case7-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case7-1] 조준 타일은 자기 칸(2,1)"), Cast->mTargetIndex == FTileIndex(2, 1));
+		}
+	}
+
+	/**
+	 * Case7-2: Single 조준 / 영향 범위 Cross(2) / 출발 칸 너머의 플레이어 (자기 차폐 회귀 방지)
+	 *   -> 한 칸 물러난 (2,0)에서 왼쪽으로 뻗는 영향 범위가 자기 출발 칸 (1,0)에 막히면 안 됨
+	 * 맵 (8x1): P(0,0) E(1,0), 원거리 성향, 이동력 6
+	 *   -> 시전 가능 타일은 (1,0)과 (2,0). 최근접 거리 최대인 (2,0)으로 이동 후 자기 칸 조준 시전
+	 */
+	AddInfo(TEXT("=== Case7-2: Single 조준 / 출발 칸 너머 타격 / 자기 차폐 회귀 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			6, 0, 8, 1,
+			FTileIndex(1, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Single,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Cross, /*EffectArea*/2);
+		CheckTail(*this, Commands, TEXT("Case7-2"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case7-2] 이동커맨드 존재(자기 차폐로 제자리 시전이면 실패)"), Move != nullptr) &&
+			TestTrue(TEXT("[Case7-2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case7-2] 목적지=(2,0)"), Move->mPathTileIndexes.Last() == FTileIndex(2, 0));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case7-2] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case7-2] 조준 타일은 목적지(2,0)"), Cast->mTargetIndex == FTileIndex(2, 0));
+		}
+	}
+
+	/**
+	 * Case7-3: Single 조준 / 영향 범위 Cross(1) / 이동해도 닿지 않음
+	 *   -> 플레이어에게 최대한 접근, 시전 없음
+	 * 맵 (10x3): E(0,1) P(9,1), 근접 성향, 이동력 4
+	 */
+	AddInfo(TEXT("=== Case7-3: Single 조준 / 영향 범위 밖 / 접근 폴백 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			4, 0, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(9, 1),
+			EAimPattern::Single,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Cross, /*EffectArea*/1);
+		CheckApproachNoCast(*this, Commands, TEXT("Case7-3"), FTileIndex(4, 1));
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상

@@ -379,13 +379,15 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 */ 
 	if (CanCast == true)
 	{
-		// 시전 커맨드에는 타겟 타일과 주사위 합만 담는다.
-		// 실제 효과 타일은 실행 시점에 스킬 컴포넌트가 목적지(시전 원점) 기준으로 계산한다.
+		// 시전 커맨드에는 조준 타일과 스킬 슬롯만 담는다.
+		// 실제 효과 타일은 실행 시점에 스킬 컴포넌트가 조준 타일 기준으로 계산한다.
+		// Single 패턴은 조준 타일이 시전자 자기 칸이므로 타겟 칸이 아닌 목적지를 넣는다.
+		const bool bSingleAim = (SkillDatas[ChosenSkillSlot]->mAimPattern == EAimPattern::Single);
 		TInstancedStruct<FSRPGCommand> Cast;
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = ChosenSkillSlot;
-		CastRef.mTargetIndex = TargetTiles[ChosenTarget];
+		CastRef.mTargetIndex = bSingleAim ? Dest : TargetTiles[ChosenTarget];
 		AddAction(MoveTemp(Cast));
 	}
 

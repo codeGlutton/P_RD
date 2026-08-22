@@ -317,7 +317,7 @@ void UTileMapModel::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& S
 	}
 }
 
-void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out) const
+void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out, const UBoardActorModel* IgnoreBlocker) const
 {
 	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
 	FTileIndex Current = Origin;
@@ -334,8 +334,17 @@ void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileInde
 		// 이 칸은 영향에 포함 (점유 칸이면 "맞고 멈춤"이라 포함 후 종료)
 		Out.Add(Current);
 
-		// 차단 레이어의 액터가 있는 칸이면 그 너머로는 진행하지 않음
-		if (GetActorsOnTile(Current, BlockerLayers).Num() > 0)
+		// 차단 레이어의 액터가 있는 칸이면 그 너머로는 진행하지 않음 (무시 대상만 있는 칸은 차단으로 치지 않음)
+		bool bBlocked = false;
+		for (const UBoardActorModel* Actor : GetActorsOnTile(Current, BlockerLayers))
+		{
+			if (Actor != IgnoreBlocker)
+			{
+				bBlocked = true;
+				break;
+			}
+		}
+		if (bBlocked)
 			break;
 	}
 }
@@ -916,6 +925,10 @@ bool UTileMapModel::IsAimBlocked(const FTileIndex& Origin, const FTileIndex& Tar
 	if (bApplyLineOfSight && !HasLineOfSight(Origin, Target, IgnoreBlocker, BlockerLayers))
 		return true;
 
+	// Single은 시전자 자기 칸을 조준하므로 점유 검사 의미 없음 (자기 칸은 항상 점유 상태)
+	if (Pattern == EAimPattern::Single)
+		return false;
+
 	// 점유 타일을 포함하지 않으면 조준 불가
 	if (!bIncludeOccupied && IsOccupied(Target))
 		// Incoming으로 교체 불가능하면 조준 불가
@@ -966,7 +979,7 @@ TArray<FTileIndex> UTileMapModel::GetTargetTiles(const FTileIndex& Caster, const
 	return Result;
 }
 
-TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Target, EEffectPattern Pattern, int32 Size, ETileLayerFlag BlockerLayers) const
+TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Target, EEffectPattern Pattern, int32 Size, ETileLayerFlag BlockerLayers, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -987,15 +1000,15 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Target, EEffe
 	case EEffectPattern::Cross:
 		// 중심에서 직교 4방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		break;
 
 	case EEffectPattern::Star:
 		// 중심에서 직교 + 대각 8방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		for (const FTileIndex& Step : Diagonal4)
-			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		break;
 
 	case EEffectPattern::Square:

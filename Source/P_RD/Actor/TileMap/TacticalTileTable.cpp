@@ -90,18 +90,49 @@ void FTacticalTileTable::Build(
 			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
 			const bool bBudgetOk = (Info.mMoveCost + Skill->mRequiredActionPoint <= ActionPoint);
 
+			// Single 판정 준비: 조준 타일이 시전자 자기 칸이라 타겟 칸 조준 여부로는 판정 불가.
+			// 이 타일을 조준 타일로 삼아 타겟 패턴 -> 영향 범위를 계산해 두고, 타겟 칸이 그 안에 드는지로 판정.
+			// 자기 자신은 이동으로 자리를 비울 예정이므로 확산 차단에서 제외
+			const bool bSingleAim = (Skill->mAimPattern == EAimPattern::Single);
+			TArray<FTileIndex> SingleEffectTiles;
+			if (bSingleAim)
+			{
+				const TArray<FTileIndex> CenterTiles = TileMap->GetTargetTiles(Tile, Tile, Skill->mTargetPattern);
+				for (const FTileIndex& Center : CenterTiles)
+				{
+					for (const FTileIndex& Effect : TileMap->GetEffectTiles(
+						Center,
+						Skill->mEffectPattern,
+						Skill->mEffectArea,
+						static_cast<ETileLayerFlag>(Skill->mEffectBlockerMask),
+						/*IgnoreBlocker*/Self))
+					{
+						SingleEffectTiles.AddUnique(Effect);
+					}
+				}
+			}
+
 			for (int32 TargetIndex = 0; TargetIndex < mTargetCount; ++TargetIndex)
 			{
-				// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
-				const bool bAimable = TileMap->CanAim(
-					Tile,
-					TargetTiles[TargetIndex],
-					Skill->mAimRange,
-					Skill->mAimPattern,
-					Skill->mCanAimBoardActor,
-					static_cast<ETileLayerFlag>(Skill->mAimBlockerMask),
-					/*Incoming*/nullptr,
-					/*IgnoreBlocker*/Self);
+				bool bAimable = false;
+				if (bSingleAim)
+				{
+					// Single: 영향 범위에 타겟 칸이 들면 조준(=시전) 가능
+					bAimable = SingleEffectTiles.Contains(TargetTiles[TargetIndex]);
+				}
+				else
+				{
+					// 그 외 패턴: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
+					bAimable = TileMap->CanAim(
+						Tile,
+						TargetTiles[TargetIndex],
+						Skill->mAimRange,
+						Skill->mAimPattern,
+						Skill->mCanAimBoardActor,
+						static_cast<ETileLayerFlag>(Skill->mAimBlockerMask),
+						/*Incoming*/nullptr,
+						/*IgnoreBlocker*/Self);
+				}
 
 				const int32 Flag = FlagIndex(SkillSlot, TargetIndex);
 				Info.mAimableFlags[Flag] = bAimable;
