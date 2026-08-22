@@ -21,8 +21,6 @@ struct P_RD_API FSkillEffectLayer_Fortification : public FSkillEffectLayer_TagBa
 public:
 	TSubclassOf<UTacticalEffect> GetTagEffectClass() const override;
 
-#if WITH_EDITOR
 public:
 	FText GetTagDisplayName() const override;
-#endif
 };

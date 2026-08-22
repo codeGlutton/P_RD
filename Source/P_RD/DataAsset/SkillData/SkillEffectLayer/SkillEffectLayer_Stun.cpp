@@ -13,7 +13,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Stun::GetTagEffectClass() const
 	return UTacticalEffect_GetStun::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Stun"
 
 FText FSkillEffectLayer_Stun::GetTagDisplayName() const
@@ -22,4 +21,3 @@ FText FSkillEffectLayer_Stun::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

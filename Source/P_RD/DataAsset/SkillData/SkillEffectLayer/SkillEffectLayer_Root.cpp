@@ -13,7 +13,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Root::GetTagEffectClass() const
     return UTacticalEffect_GetRoot::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Root"
 
 FText FSkillEffectLayer_Root::GetTagDisplayName() const
@@ -22,4 +21,3 @@ FText FSkillEffectLayer_Root::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

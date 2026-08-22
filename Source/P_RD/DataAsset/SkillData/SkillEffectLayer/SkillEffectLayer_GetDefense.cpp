@@ -62,7 +62,6 @@ void FSkillEffectLayer_GetDefense::CommitEffect(const FSkillEffectCommitParams& 
     }
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_GetDefense"
 
 FText FSkillEffectLayer_GetDefense::MakeDescription() const
@@ -74,4 +73,3 @@ FText FSkillEffectLayer_GetDefense::MakeDescription() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

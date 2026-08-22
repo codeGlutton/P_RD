@@ -571,11 +571,11 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판의 그
-	// 바닥을 잘라낸다. 판 그림을 줄이면 무늬가 세로로 눌리므로(1차 시안 반려),
-	// 그림은 원본 크기 그대로 두고 패널을 345 에서 끊어 아래를 클리핑한다.
-	// 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
-	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 자른다.
+	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판을 345 로
+	// 줄인다. 잘라내면(2차 시안) 바닥 테두리가 사라지고, 통째로 누르면(1차
+	// 시안) 무늬가 눌린다. 판 그림을 9-slice(Box)로 바꿔 테두리는 원본 두께
+	// 그대로 두고 가운데만 줄인다. 남은 내용물의 바닥은 상태 단추(~329)다.
+	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 조정한다.
 	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel") })
 	{
 		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
@@ -584,7 +584,27 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			{
 				SummarySlot->SetSize(FVector2D(600.f, 345.f));
 			}
-			Summary->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		}
+	}
+	for (const TCHAR* PlateMountName :
+		{ TEXT("EnemyPlateMount"), TEXT("AllyPlateMount") })
+	{
+		if (UWidget* PlateMount = Find<UWidget>(WidgetTree, PlateMountName))
+		{
+			if (UCanvasPanelSlot* MountSlot = Cast<UCanvasPanelSlot>(PlateMount->Slot))
+			{
+				MountSlot->SetSize(FVector2D(600.f, 345.f));
+			}
+		}
+	}
+	for (const TCHAR* PlateName : { TEXT("EnemyPlate"), TEXT("AllyPlate") })
+	{
+		if (UImage* Plate = Find<UImage>(WidgetTree, PlateName))
+		{
+			FSlateBrush PlateBrush = Plate->GetBrush();
+			PlateBrush.DrawAs = ESlateBrushDrawType::Box;
+			PlateBrush.Margin = FMargin(0.15f);
+			Plate->SetBrush(PlateBrush);
 		}
 	}
 	mEnemyStatusFrames.Reset();

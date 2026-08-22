@@ -62,7 +62,6 @@ void FSkillEffectLayer_Heal::CommitEffect(const FSkillEffectCommitParams& Params
     }
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Heal"
 
 FText FSkillEffectLayer_Heal::MakeDescription() const
@@ -74,4 +73,3 @@ FText FSkillEffectLayer_Heal::MakeDescription() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

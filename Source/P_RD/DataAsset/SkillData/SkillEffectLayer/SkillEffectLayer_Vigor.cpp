@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Vigor::GetTagEffectClass() const
     return UTacticalEffect_GetVigor::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Vigor"
 
 FText FSkillEffectLayer_Vigor::GetTagDisplayName() const
@@ -15,5 +14,4 @@ FText FSkillEffectLayer_Vigor::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif
 
