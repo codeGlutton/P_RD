@@ -10,6 +10,7 @@
  * 균형 후퇴(Case5-3), 최근접 접근 폴백(Case5-4).
  * 속박: 제자리 시전(Case6-1), 사거리 밖(Case6-2), 비용 있는 스킬 시전 회귀(Case6-3).
  * Single 조준 스킬: 영향 범위로 타격 판정(Case7-1), 자기 차폐 회귀(Case7-2), 접근 폴백(Case7-3).
+ * 자기 버프: 공격 우선(Case8-1), 버프 비용 떼고 이동 후 버프(Case8-2), 버프만 보유 시 성향 이동(Case8-3).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -84,11 +85,14 @@ namespace
 	// @param EffectPattern 영향 범위 패턴 (Single 조준 스킬은 이 범위로 타격 여부가 결정됨)
 	// @param EffectArea 영향 범위 크기
 	// @param SkillCost 시전 비용 (플래너 AP 판정용, 0이면 비용 없음)
+	// @param SkillType 스킬 타입 (Attack은 공격 후보, Spell은 자기 버프)
 	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange,
-		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0, int32 SkillCost = 0)
+		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0, int32 SkillCost = 0,
+		ESkillType SkillType = ESkillType::Attack)
 	{
 		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
 		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
+		Skill->mSkillType = SkillType;
 		Skill->mRequiredActionPoint = SkillCost;
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
@@ -114,6 +118,8 @@ namespace
 	// @param EffectPattern 슬롯 0 스킬의 영향 범위 패턴 (Single 조준 검증용)
 	// @param EffectArea 슬롯 0 스킬의 영향 범위 크기
 	// @param SkillCost 슬롯 0 스킬의 시전 비용 (이동과 시전의 AP 분배 검증용)
+	// @param SpellCost 슬롯 2에 장착할 자기 버프의 시전 비용 (0이면 미장착. 버프 턴 검증용)
+	// @param HasAttack 슬롯 0 공격 스킬 장착 여부 (거짓이면 버프만 가진 적. 성향 이동 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
 		TArray<UObject*>& KeepAlive,
@@ -131,7 +137,9 @@ namespace
 		bool Rooted = false,
 		EEffectPattern EffectPattern = EEffectPattern::Single,
 		int32 EffectArea = 0,
-		int32 SkillCost = 0)
+		int32 SkillCost = 0,
+		int32 SpellCost = 0,
+		bool HasAttack = true)
 	{
 		// 타일맵 생성
 		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
@@ -157,12 +165,21 @@ namespace
 
 		// 스킬 슬롯 풀 할당: Mock은 스폰 데이터 초기화를 건너뛰므로 빈 목록으로 슬롯만 확보
 		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
-		// 스킬 추가: 일반공격 계열
-		Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea, SkillCost));
+		// 스킬 추가: 일반공격 계열 (버프만 가진 적 검증 시 생략)
+		if (HasAttack == true)
+		{
+			Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea, SkillCost));
+		}
 		// 두 번째 스킬(옵션): 스킬 랜덤 선택 검증용
 		if (SecondSkillAimRange > 0)
 		{
 			Enemy->GetSkillComponentModel()->SetSkill(1, MakeSkill(World, KeepAlive, EAimPattern::Square, SecondSkillAimRange));
+		}
+		// 자기 버프(옵션): Single 조준, 영향 범위 자기 칸
+		if (SpellCost > 0)
+		{
+			Enemy->GetSkillComponentModel()->SetSkill(2, MakeSkill(World, KeepAlive, EAimPattern::Single, 0,
+				EEffectPattern::Single, 0, SpellCost, ESkillType::Spell));
 		}
 
 		// 플레이어유닛과 적유닛 배치
@@ -696,6 +713,109 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			/*Rooted*/false,
 			EEffectPattern::Cross, /*EffectArea*/1);
 		CheckApproachNoCast(*this, Commands, TEXT("Case7-3"), FTileIndex(4, 1));
+	}
+
+	/**
+	 * Case8-1: 공격 가능 + 자기 버프 보유
+	 *   -> 턴당 시전 1회이므로 공격을 우선, 버프는 시전하지 않음
+	 * 맵 (6x3): E(2,1) P(3,1), 등거리 성향, AP 3, 공격 사거리 1, 버프 비용 1 (슬롯 2)
+	 */
+	AddInfo(TEXT("=== Case8-1: 공격 가능 / 버프 보유 / 공격 우선 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::HoldRange,
+			3, 1, 6, 3,
+			FTileIndex(2, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Single, /*EffectArea*/0,
+			/*SkillCost*/0,
+			/*SpellCost*/1);
+		CheckTail(*this, Commands, TEXT("Case8-1"));
+		TestTrue(TEXT("[Case8-1] 이동커맨드 없음"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case8-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case8-1] 공격 슬롯 0 선택(버프 슬롯 2 아님)"), Cast->mSkillIndex, 0);
+			TestTrue(TEXT("[Case8-1] 조준 타일은 플레이어 칸(3,1)"), Cast->mTargetIndex == FTileIndex(3, 1));
+		}
+	}
+
+	/**
+	 * Case8-2: 공격 불가 + 자기 버프 보유
+	 *   -> 버프 비용을 먼저 떼고 남는 행동력으로 접근한 뒤 버프 시전
+	 * 맵 (10x3): E(0,1) P(9,1), 근접 성향, AP 4, 공격 사거리 1, 버프 비용 2
+	 *   -> 이동 예산 4-2=2 → (2,1)까지만 접근, 목적지에서 버프 (조준 타일 = 목적지)
+	 */
+	AddInfo(TEXT("=== Case8-2: 공격 불가 / 버프 비용 떼고 이동 후 버프 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			4, 1, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(9, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Single, /*EffectArea*/0,
+			/*SkillCost*/0,
+			/*SpellCost*/2);
+		CheckTail(*this, Commands, TEXT("Case8-2"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case8-2] 이동커맨드 존재"), Move != nullptr) &&
+			TestTrue(TEXT("[Case8-2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case8-2] 목적지=(2,1) (버프 비용 2를 뺀 이동 예산 2)"), Move->mPathTileIndexes.Last() == FTileIndex(2, 1));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case8-2] 스킬커맨드 존재(버프)"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case8-2] 버프 슬롯 2 선택"), Cast->mSkillIndex, 2);
+			TestTrue(TEXT("[Case8-2] 조준 타일은 목적지(2,1)"), Cast->mTargetIndex == FTileIndex(2, 1));
+		}
+	}
+
+	/**
+	 * Case8-3: 버프만 보유 (공격 스킬 없음) + 원거리 성향
+	 *   -> 접근 폴백이 아니라 이동 성향대로 멀어진 뒤 버프 시전
+	 * 맵 (8x1): P(0,0) E(2,0), 원거리 성향, AP 4, 버프 비용 1
+	 *   -> 이동 예산 3 → 최근접 거리 최대인 (5,0)으로 후퇴, 거기서 버프
+	 */
+	AddInfo(TEXT("=== Case8-3: 버프만 보유 / 성향 이동 후 버프 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveAway,
+			4, 1, 8, 1,
+			FTileIndex(2, 0),
+			FTileIndex(0, 0),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Single, /*EffectArea*/0,
+			/*SkillCost*/0,
+			/*SpellCost*/1,
+			/*HasAttack*/false);
+		CheckTail(*this, Commands, TEXT("Case8-3"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case8-3] 이동커맨드 존재(접근이 아닌 후퇴)"), Move != nullptr) &&
+			TestTrue(TEXT("[Case8-3] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case8-3] 목적지=(5,0) (이동 예산 3으로 최대 후퇴)"), Move->mPathTileIndexes.Last() == FTileIndex(5, 0));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case8-3] 스킬커맨드 존재(버프)"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case8-3] 버프 슬롯 2 선택"), Cast->mSkillIndex, 2);
+			TestTrue(TEXT("[Case8-3] 조준 타일은 목적지(5,0)"), Cast->mTargetIndex == FTileIndex(5, 0));
+		}
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상

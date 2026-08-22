@@ -28,6 +28,14 @@ enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
  *
  * @details
  * 플레이어가 쓰는 것과 동일한 최종 커맨드(이동/스킬시전/턴종료)를 순서대로 만들어 반환
+ *
+ * 전제: 턴당 스킬 시전은 1회
+ *   - Attack 스킬은 공격 후보, Spell 스킬은 자기 버프로 취급
+ *   - 공격 가능하면 공격, 불가능하면 버프 비용을 먼저 떼고 남는 행동력으로 이동한 뒤 버프
+ *   - 공격 스킬이 없으면 이동 성향대로 자리를 잡고 버프
+ * @note
+ * 턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로
+ * 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함
  */
 UCLASS()
 class P_RD_API USRPGEnemyTurnPlanner : public UObject
