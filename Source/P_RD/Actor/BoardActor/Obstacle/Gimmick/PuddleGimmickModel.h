@@ -36,12 +36,17 @@ public:
 	// @brief 스폰 데이터에서 라운드 수명을 읽고, 장판 일괄 발동 이벤트를 전투 모델에 등록
 	void PostInitializeComponentModels() override;
 
+	/* UBoardActorModel 상속 */
+public:
+	// @brief 새 장판에 밀려났을 때 사망 태그를 붙여 정리 및 수거되게 함
+	void OnReplaced(FTile* CurTile, UBoardActorModel* Other) override;
+
 	/* 라운드 끝 처리 */
 public:
 	/**
 	 * @brief 라운드 끝 발동 처리 (FPuddleRoundEndEvent가 호출)
 	 * @details 위에 발동 대상이 서 있으면 스킬을 시전하고, 라운드 수명을 차감.
-	 *          수명을 다 쓰면 사망 태그를 붙여 기존 정리(ClearDeadActorModels)가 수거하게 함
+	 *          수명을 다 쓰면 사망 태그를 붙여 정리 및 수거되게 함
 	 * @param PresentationBarrier 스킬이 끝날 때까지 붙잡아 둘 배리어 (모든 장판이 공유 = 동시 연출)
 	 */
 	void TriggerRoundEnd(TSharedPtr<FPresentationBarrier> PresentationBarrier);

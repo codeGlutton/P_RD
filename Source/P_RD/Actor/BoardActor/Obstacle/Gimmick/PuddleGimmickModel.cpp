@@ -40,6 +40,14 @@ void UPuddleGimmickModel::PostInitializeComponentModels()
 	}
 }
 
+void UPuddleGimmickModel::OnReplaced(FTile* CurTile, UBoardActorModel* Other)
+{
+	Super::OnReplaced(CurTile, Other);
+
+	// 타일에서는 이미 빠진 상태. 사망 태그를 붙여 다음 정리 시점에 수거되게 함
+	GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+}
+
 void UPuddleGimmickModel::TriggerRoundEnd(TSharedPtr<FPresentationBarrier> PresentationBarrier)
 {
 	// 이번 라운드 중 교체되었거나 이미 수명이 끝난 장판은 처리하지 않음
@@ -63,7 +71,7 @@ void UPuddleGimmickModel::TriggerRoundEnd(TSharedPtr<FPresentationBarrier> Prese
 		--mRemainingRoundCount;
 	}
 
-	// 수명 소진 시 사망 태그를 붙임. 제거는 기존 정리(ClearDeadActorModels)가 담당
+	// 수명 소진 시 사망 태그를 붙여 다음 정리 시점에 수거되게 함
 	// 방금 시전한 스킬 연출은 배리어가 잡고 있어서 정리 전에 끝까지 재생됨
 	if (mRemainingRoundCount == 0)
 	{
