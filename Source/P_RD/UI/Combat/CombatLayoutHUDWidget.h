@@ -893,6 +893,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
+	/** @brief 플로팅 로그 글꼴(F_HUD_Oswald). 없으면 엔진 기본 글꼴로 남는다. */
+	UPROPERTY(Transient) TObjectPtr<class UFont> mFloatingLogFont;
 
 	/* ── 상세 패널 (롱프레스 정보) ──────────────────────────────────────
 	 *
@@ -1398,16 +1400,12 @@ private:
 	TObjectPtr<UTextBlock> mEnemyName;
 	TObjectPtr<UProgressBar> mEnemyHPBar;
 	TObjectPtr<UTextBlock> mEnemyHPText;
-	TObjectPtr<UTextBlock> mEnemyAPText;
 	TObjectPtr<UTextBlock> mEnemyCritText;
 	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
 	TObjectPtr<UTextBlock> mEnemyForecastText;
 	TObjectPtr<UWidget> mEnemyNextSkillFrame;
 	TObjectPtr<UImage> mEnemyNextSkillIcon;
-	/** @brief 적 요약판의 채운/쓴 AP 보석. 둘 중 하나만 보인다. */
-	TArray<TObjectPtr<UWidget>> mEnemyAPPips;
-	TArray<TObjectPtr<UWidget>> mEnemyAPPipsUsed;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
@@ -1417,7 +1415,6 @@ private:
 	TObjectPtr<UTextBlock> mAllyName;
 	TObjectPtr<UProgressBar> mAllyHPBar;
 	TObjectPtr<UTextBlock> mAllyHPText;
-	TObjectPtr<UTextBlock> mAllyAPText;
 	TObjectPtr<UTextBlock> mAllySpeedText;
 	TObjectPtr<UTextBlock> mAllyStatusText;
 	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;

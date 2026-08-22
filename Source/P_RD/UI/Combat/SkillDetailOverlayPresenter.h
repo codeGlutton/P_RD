@@ -266,8 +266,6 @@ private:
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mDetailChipValues;
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailSelectCells;
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mDetailHitCells;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailAimBlockerText;
-	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailEffectBlockerText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSelectCaptionText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailHitCaptionText;
 
