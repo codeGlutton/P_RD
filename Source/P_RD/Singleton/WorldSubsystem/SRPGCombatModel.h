@@ -121,8 +121,13 @@ public:
 	void AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
 	void AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
 
+	FSRPGCombatRoundEvent* FindRoundStartEvent(const FName& EventName);
+	const FSRPGCombatRoundEvent* FindRoundStartEvent(const FName& EventName) const;
+	FSRPGCombatRoundEvent* FindRoundEndEvent(const FName& EventName);
+	const FSRPGCombatRoundEvent* FindRoundEndEvent(const FName& EventName) const;
+
 protected:
-	void TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex);
+	void TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, FSRPGCombatRoundEventContainer& RoundEvents, int32 EventIndex);
 
 	/* 전투 상태 평가 */
 public:
@@ -353,10 +358,10 @@ protected:
 protected:
 	// @brief 등록된 라운드 시작 이벤트
 	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents"))
-	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
+	FSRPGCombatRoundEventContainer mRoundStartEvents;
 	// @brief 등록된 라운드 종료 이벤트
 	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents"))
-	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
+	FSRPGCombatRoundEventContainer mRoundEndEvents;
 
 protected:
 	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지
