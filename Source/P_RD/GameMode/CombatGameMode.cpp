@@ -674,6 +674,14 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		SelectSkill(IntPayload);
 		break;
 	case ECombatInputType::Move:
+		// 다른 용병을 들여다보는 중의 이동 카드는 구경용이다. 여기서 안 막으면
+		// 차례 유닛이 대신 이동 모드에 들어간다(0823 검수: 남 카드에서 이동이 눌림).
+		if (mInspectedUnitId != INDEX_NONE
+			&& FindPartyUnitModel(mInspectedUnitId) != nullptr
+			&& FindPartyUnitModel(mInspectedUnitId) != GetTurnPlayerUnitModel())
+		{
+			break;
+		}
 		ClearSkillDetailPreview();
 		SelectMove();
 		break;
@@ -1801,6 +1809,9 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+	// 이동 카드는 스킬 목록 밖이라 mIsUsable 로 못 끈다. 레일 주인이 차례
+	// 유닛인지 함께 내려 화면이 이동 카드도 같은 규칙으로 잠그게 한다.
+	mCombatUIModel->SetSkillRailOwnTurn(bIsOwnTurn);
 }
 
 void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
