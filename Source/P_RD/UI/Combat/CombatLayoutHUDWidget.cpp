@@ -571,40 +571,26 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판을 345 로
-	// 줄인다. 잘라내면(2차 시안) 바닥 테두리가 사라지고, 통째로 누르면(1차
-	// 시안) 무늬가 눌린다. 판 그림을 9-slice(Box)로 바꿔 테두리는 원본 두께
-	// 그대로 두고 가운데만 줄인다. 남은 내용물의 바닥은 상태 단추(~329)다.
-	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 조정한다.
-	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel") })
+	// 0823 확정: 요약판 축소 시안(345 클리핑/9-slice)은 반려 — 판은 authored
+	// 원본(600x430) 그대로 둔다. 걷는 것은 위의 AP 보석 행뿐이다.
+
+	// WBP 에 번역 키 없이(구형 bake) 박힌 라벨을 로컬라이즈 텍스트로 갈아
+	// 끼운다. 빌더는 이미 NSLOCTEXT 를 쓰지만 마지막 리베이크가 그 이전이다.
 	{
-		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
+		const TPair<const TCHAR*, FText> BakedLabels[] = {
+			{ TEXT("MercenaryCritLabel"),
+				NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타") },
+			{ TEXT("MercenaryCloseText"),
+				NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기") },
+			{ TEXT("ConfirmLabel"),
+				NSLOCTEXT("CombatHUD", "ConfirmLabel", "확정") },
+		};
+		for (const TPair<const TCHAR*, FText>& Label : BakedLabels)
 		{
-			if (UCanvasPanelSlot* SummarySlot = Cast<UCanvasPanelSlot>(Summary->Slot))
+			if (UTextBlock* Text = Find<UTextBlock>(WidgetTree, Label.Key))
 			{
-				SummarySlot->SetSize(FVector2D(600.f, 345.f));
+				Text->SetText(Label.Value);
 			}
-		}
-	}
-	for (const TCHAR* PlateMountName :
-		{ TEXT("EnemyPlateMount"), TEXT("AllyPlateMount") })
-	{
-		if (UWidget* PlateMount = Find<UWidget>(WidgetTree, PlateMountName))
-		{
-			if (UCanvasPanelSlot* MountSlot = Cast<UCanvasPanelSlot>(PlateMount->Slot))
-			{
-				MountSlot->SetSize(FVector2D(600.f, 345.f));
-			}
-		}
-	}
-	for (const TCHAR* PlateName : { TEXT("EnemyPlate"), TEXT("AllyPlate") })
-	{
-		if (UImage* Plate = Find<UImage>(WidgetTree, PlateName))
-		{
-			FSlateBrush PlateBrush = Plate->GetBrush();
-			PlateBrush.DrawAs = ESlateBrushDrawType::Box;
-			PlateBrush.Margin = FMargin(0.15f);
-			Plate->SetBrush(PlateBrush);
 		}
 	}
 	mEnemyStatusFrames.Reset();
@@ -4604,6 +4590,18 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	// 평상시에는 HUD보다 위. 몬스터 스킬 상세(70)는 이 탭보다 위에 놓인다.
 	mMonsterTabWidget->AddToViewport(MonsterTabViewportZOrder);
 	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);
+
+	// WBP 에 번역 키 없이 박힌 라벨을 로컬라이즈 텍스트로 갈아 끼운다.
+	if (UTextBlock* CritLabel = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterChip2Label"))))
+	{
+		CritLabel->SetText(NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타"));
+	}
+	if (UTextBlock* BackText = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackText"))))
+	{
+		BackText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기"));
+	}
 
 	// AddDynamic은 함수 이름을 문자열로 찍는 매크로라 포인터 배열로 돌릴 수 없다.
 	if (UButton* Row0 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_0"))))

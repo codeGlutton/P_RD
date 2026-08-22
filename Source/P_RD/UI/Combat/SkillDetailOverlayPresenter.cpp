@@ -529,11 +529,34 @@ void USkillDetailOverlayPresenter::BindDetailExtras()
 	// 0822 확정: 조준/효과 차단 글줄 설명은 걷는다. WBP 에 라벨이 구워져
 	// 있으므로 이름으로 찾아 접는다(계약 이름은 남긴다).
 	for (const TCHAR* BlockerName :
-		{ TEXT("DetailAimBlockerText"), TEXT("DetailEffectBlockerText") })
+		{ TEXT("DetailAimBlockerText"), TEXT("DetailEffectBlockerText"),
+		TEXT("DetailBlockerHeading"), TEXT("DetailAimBlockerLabel"),
+		TEXT("DetailEffectBlockerLabel") })
 	{
 		if (UWidget* Blocker = mDetailOverlayWidget->GetWidgetFromName(BlockerName))
 		{
 			Blocker->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
+
+	// WBP 에 번역 키 없이(구형 bake) 박힌 구획 제목·닫기 라벨을 로컬라이즈
+	// 텍스트로 갈아 끼운다.
+	{
+		const TPair<const TCHAR*, FText> BakedHeadings[] = {
+			{ TEXT("DetailCloseText"), NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기") },
+			{ TEXT("DetailStatHeading"), LOCTEXT("DetailStatHeading", "수치") },
+			{ TEXT("DetailSkillHeading"), LOCTEXT("DetailSkillHeading", "스킬") },
+			{ TEXT("DetailBodyHeading"), LOCTEXT("DetailBodyHeading", "설명") },
+			{ TEXT("DetailSelectHeading"), LOCTEXT("DetailSelectHeading", "사거리") },
+			{ TEXT("DetailHitHeading"), LOCTEXT("DetailHitHeading", "영향 범위") },
+		};
+		for (const TPair<const TCHAR*, FText>& Heading : BakedHeadings)
+		{
+			if (UTextBlock* Text = Cast<UTextBlock>(
+				mDetailOverlayWidget->GetWidgetFromName(Heading.Key)))
+			{
+				Text->SetText(Heading.Value);
+			}
 		}
 	}
 	mDetailSelectCaptionText = Cast<UTextBlock>(
