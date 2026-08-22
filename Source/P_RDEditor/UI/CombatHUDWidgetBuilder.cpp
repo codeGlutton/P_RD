@@ -1250,9 +1250,13 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_ThornCrest.T_Artifact_ThornCrest"),
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_TravelersMap.T_Artifact_TravelersMap"),
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_WornShieldOrnament.T_Artifact_WornShieldOrnament") };
-		static const TCHAR* const PreviewArtifactNames[6] = {
-			TEXT("피의 성배"), TEXT("야수의 송곳니"), TEXT("행운의 주화"),
-			TEXT("가시 문장"), TEXT("여행자의 지도"), TEXT("낡은 방패 장식") };
+		static const FText PreviewArtifactNames[6] = {
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewChalice", "피의 성배"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewFang", "야수의 송곳니"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewCoin", "행운의 주화"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewThorn", "가시 문장"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewMap", "여행자의 지도"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewShield", "낡은 방패 장식") };
 		for (int32 Index = 0; Index < 7; ++Index)
 		{
 			const int32 VisualIndex = Index + 1;
@@ -1302,7 +1306,7 @@ namespace CombatHUDWidgetBuilder
 			PlaceCanvas(Page, Name, CellOrigin + FVector2D(-24.f, FrameSize + 3.f),
 				FVector2D(FrameSize + 48.f, 34.f), 4);
 			Name->SetText(Index < 6
-				? FText::FromString(PreviewArtifactNames[Index])
+				? FText(PreviewArtifactNames[Index])
 				: FText::GetEmpty());
 			SetReadableFont(Name, BaseFont, 17);
 			Name->SetJustification(ETextJustify::Center);
@@ -1926,7 +1930,8 @@ namespace CombatHUDWidgetBuilder
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(TEXT("PartyName") + Suffix));
 			PlaceCanvas(Content, Name, FVector2D(128.f, 21.f), FVector2D(190.f, 46.f), 15);
-			Name->SetText(FText::FromString(FString::Printf(TEXT("용병 %d"), Index + 1)));
+			Name->SetText(FText::Format(
+				NSLOCTEXT("CombatHUD", "MercenaryPreviewName", "용병 {0}"), Index + 1));
 			SetReadableFont(Name, BaseFont, 27);
 
 			UProgressBar* HPBar = FindOrCreate<UProgressBar>(Blueprint,
@@ -2019,13 +2024,15 @@ namespace CombatHUDWidgetBuilder
 		 * 같은 물건으로 맞춘다 -- 같은 값은 같은 모양으로 보여야 한다.
 		 */
 		const FDetailText Details[] = {
-			{ TEXT("MercenaryDetailName"), FVector2D(1080.f, 230.f), FVector2D(620.f, 82.f), TEXT("용병"), 42 },
+			{ TEXT("MercenaryDetailName"), FVector2D(1080.f, 230.f), FVector2D(620.f, 82.f), TEXT(""), 42 },
 		};
 		for (const FDetailText& Detail : Details)
 		{
 			UTextBlock* Text = FindOrCreate<UTextBlock>(Blueprint, FName(Detail.Name));
 			PlaceCanvas(DetailSection, Text, Detail.Position, Detail.Size, 8);
-			Text->SetText(FText::FromString(Detail.Preview));
+			Text->SetText(FCString::Strlen(Detail.Preview) > 0
+				? FText::FromString(Detail.Preview)
+				: NSLOCTEXT("CombatHUD", "MercenaryDetailPreview", "용병"));
 			SetReadableFont(Text, BaseFont, Detail.FontSize);
 			Text->SetJustification(ETextJustify::Left);
 		}
@@ -2034,7 +2041,9 @@ namespace CombatHUDWidgetBuilder
 		const TCHAR* const ChipValueNames[3] = {
 			TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
 			TEXT("MercenaryDetailSpeed") };
-		const TCHAR* const ChipLabels[3] = { TEXT("HP"), TEXT("AP"), TEXT("속도") };
+		const FText ChipLabels[3] = { FText::FromString(TEXT("HP")),
+			FText::FromString(TEXT("AP")),
+			NSLOCTEXT("CombatHUD", "ChipSpeed", "속도") };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const FVector2D ChipPos(1080.f, 330.f + 82.f * Index);
@@ -2048,7 +2057,7 @@ namespace CombatHUDWidgetBuilder
 				TEXT("MercenaryChip%dLabel"), Index)));
 			PlaceCanvas(DetailSection, Label, ChipPos + FVector2D(38.f, 4.f),
 				FVector2D(145.f, 58.f), 9);
-			Label->SetText(FText::FromString(ChipLabels[Index]));
+			Label->SetText(ChipLabels[Index]);
 			SetReadableFont(Label, BaseFont, 27);
 			Label->SetJustification(ETextJustify::Left);
 
@@ -2110,7 +2119,8 @@ namespace CombatHUDWidgetBuilder
 			PlaceCanvas(DetailSection, Name, CellInner.Min, CellInner.GetSize(), 10);
 			Name->SetText(Index == 0
 				? NSLOCTEXT("CombatHUD", "MercenaryMovePreview", "이동")
-				: FText::FromString(FString::Printf(TEXT("스킬 %d"), Index)));
+				: FText::Format(
+					NSLOCTEXT("CombatHUD", "MercenarySkillPreview", "스킬 {0}"), Index));
 			SetReadableFont(Name, BaseFont, 18);
 
 			UTextBlock* Cost = FindOrCreate<UTextBlock>(Blueprint, FName(*FString::Printf(

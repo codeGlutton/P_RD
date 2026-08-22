@@ -146,6 +146,35 @@ void URewardConcept03Widget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	ResolveWidgets();
+	// WBP 에 번역 키 없이(culture-invariant) 구워진 고정 라벨들을 로컬라이즈
+	// 텍스트로 갈아 끼운다. 빌더 리베이크에는 이 PC 에 없는 소스 아트가
+	// 필요해서(0823), 런타임에서 이름으로 찾아 덮는 쪽이 안전하다.
+	{
+		const TPair<const TCHAR*, FText> BakedLabels[] = {
+			{ TEXT("NewTabText_1"), LOCTEXT("TabExp", "경험치") },
+			{ TEXT("NewTabText_2"), LOCTEXT("TabChest", "상자") },
+			{ TEXT("NewTabText_3"), LOCTEXT("TabGold", "골드") },
+			{ TEXT("NewTabText_4"), LOCTEXT("TabArtifact", "아티팩트") },
+			{ TEXT("NewButtonText_1"), LOCTEXT("NextButton", "다음") },
+			{ TEXT("NewButtonText_2"), LOCTEXT("NextButton", "다음") },
+			{ TEXT("NewButtonText_3"), UsesArtifactStep()
+				? LOCTEXT("NextButton", "다음") : LOCTEXT("ConfirmButton", "확정") },
+			{ TEXT("NewButtonText_4"), LOCTEXT("ConfirmButton", "확정") },
+			{ TEXT("NewExperienceSummaryHeading"), LOCTEXT("ExpHeading", "경험치 획득") },
+			{ TEXT("NewChestHeading"), LOCTEXT("ChestHeading", "보상 상자") },
+			{ TEXT("NewChestMain"), LOCTEXT("ChestOpenLabel", "상자 열기") },
+			{ TEXT("NewChestHint"), LOCTEXT("ChestHint", "상자를 눌러 여세요") },
+			{ TEXT("NewGoldHeading"), LOCTEXT("GoldHeading", "획득 골드") },
+			{ TEXT("NewGoldHint"), LOCTEXT("GoldGrantedHint", "보상이 지급되었습니다") },
+		};
+		for (const TPair<const TCHAR*, FText>& Label : BakedLabels)
+		{
+			if (UTextBlock* Text = Cast<UTextBlock>(GetWidgetFromName(Label.Key)))
+			{
+				Text->SetText(Label.Value);
+			}
+		}
+	}
 	BindInput();
 	EnsureRunOptionsRail();
 	RefreshRewardData();
@@ -405,7 +434,8 @@ void URewardConcept03Widget::RefreshRewardData()
 			if (Name != nullptr)
 			{
 				Name->SetText(Mercenary.mName.IsEmpty()
-					? FText::FromString(FString::Printf(TEXT("용병 %d"), Index + 1))
+					? FText::Format(
+						LOCTEXT("MercenaryFallbackName", "용병 {0}"), Index + 1)
 					: Mercenary.mName);
 				Name->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			}
@@ -448,8 +478,9 @@ void URewardConcept03Widget::RefreshRewardData()
 	if (UTextBlock* GoldHint = Cast<UTextBlock>(
 		GetWidgetFromName(TEXT("NewGoldHint"))))
 	{
-		GoldHint->SetText(FText::FromString(FString::Printf(
-			TEXT("총 보유 %d G"), FMath::Max(0, Reward.mGoldBalance))));
+		GoldHint->SetText(FText::Format(
+			LOCTEXT("GoldBalanceHint", "총 보유 {0} G"),
+			FMath::Max(0, Reward.mGoldBalance)));
 	}
 
 	const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();

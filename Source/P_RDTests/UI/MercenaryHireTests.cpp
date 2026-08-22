@@ -336,6 +336,22 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMercenaryHireRuntimeBindingTest,
 
 bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 {
+	// 한글 표시 문자열을 단언하므로 ko 컬처로 고정한다. en/ko 번역이 모두
+	// 채워진 뒤로는 실행 컬처에 따라 표시가 달라진다(0823).
+	struct FScopedKoreanCulture
+	{
+		FString mOriginal;
+		FScopedKoreanCulture()
+			: mOriginal(FInternationalization::Get().GetCurrentCulture()->GetName())
+		{
+			FInternationalization::Get().SetCurrentCulture(TEXT("ko"));
+		}
+		~FScopedKoreanCulture()
+		{
+			FInternationalization::Get().SetCurrentCulture(mOriginal);
+		}
+	};
+	const FScopedKoreanCulture ScopedKoreanCulture;
 	const UGamePlaySettings* Settings = GetDefault<UGamePlaySettings>();
 	if (!TestNotNull(TEXT("게임 플레이 설정이 있어야 한다"), Settings))
 	{
@@ -1905,6 +1921,22 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatHUDMercenaryTabBehaviorTest,
  */
 bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 {
+	// 한글 표시 문자열을 단언하므로 ko 컬처로 고정한다. en/ko 번역이 모두
+	// 채워진 뒤로는 실행 컬처에 따라 표시가 달라진다(0823).
+	struct FScopedKoreanCulture
+	{
+		FString mOriginal;
+		FScopedKoreanCulture()
+			: mOriginal(FInternationalization::Get().GetCurrentCulture()->GetName())
+		{
+			FInternationalization::Get().SetCurrentCulture(TEXT("ko"));
+		}
+		~FScopedKoreanCulture()
+		{
+			FInternationalization::Get().SetCurrentCulture(mOriginal);
+		}
+	};
+	const FScopedKoreanCulture ScopedKoreanCulture;
 	UWorld* World = nullptr;
 	if (GEngine != nullptr)
 	{
