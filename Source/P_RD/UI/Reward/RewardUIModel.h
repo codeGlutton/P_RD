@@ -19,6 +19,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardChoicesChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardChosen, int32, ChoiceIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRewardClaimRequested, ERewardClaimKind, ClaimKind, int32, ChoiceIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRewardClaimConfirmed, ERewardClaimKind, ClaimKind, int32, ChoiceIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardSelectionRequested, FPrimaryAssetId, RewardId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardGrantBundleRequested);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardSelectionConfirmed, FPrimaryAssetId, RewardId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardGrantBundleConfirmed, FRewardGrantBundleResultUI, Result);
 
 /** @brief 보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다. */
 // 이 객체는 보상을 계산하거나 지급하지 않는다. 표시 스냅샷과 UI 입력 의도만 양방향으로 중계한다.
@@ -55,6 +59,18 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
 	FOnRewardClaimConfirmed OnRewardClaimConfirmed;
 
+	UPROPERTY(BlueprintAssignable, Category = "Reward|Input")
+	FOnRewardSelectionRequested OnRewardSelectionRequested;
+
+	UPROPERTY(BlueprintAssignable, Category = "Reward|Input")
+	FOnRewardGrantBundleRequested OnRewardGrantBundleRequested;
+
+	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
+	FOnRewardSelectionConfirmed OnRewardSelectionConfirmed;
+
+	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
+	FOnRewardGrantBundleConfirmed OnRewardGrantBundleConfirmed;
+
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */
 public:
 	/** @brief UI가 '받기'를 눌렀다는 의도를 게임플레이 구독자에게 전달한다. */
@@ -67,6 +83,10 @@ public:
 
 	/** @brief 보상 행 하나를 지급해달라는 의도를 게임플레이 구독자에게 전달한다. */
 	UFUNCTION(BlueprintCallable, Category = "Reward|Input") void RequestClaimReward(ERewardClaimKind ClaimKind, int32 ChoiceIndex = -1); // UHT는 UFUNCTION 기본값에 INDEX_NONE 못 씀 → -1(동일값)
+	/** @brief SelectOne 정책에서 후보의 PrimaryAssetId 하나를 지급해달라는 의도. */
+	UFUNCTION(BlueprintCallable, Category = "Reward|Input") bool RequestSelectReward(FPrimaryAssetId RewardId);
+	/** @brief GrantAll 정책에서 현재 bundle 전체를 지급해달라는 의도. ID 배열은 UI가 전달하지 않는다. */
+	UFUNCTION(BlueprintCallable, Category = "Reward|Input") bool RequestGrantBundle();
 
 	/* ───────── gameplay → UI : 표시값을 밀어넣는다 ───────── */
 public:
@@ -75,9 +95,14 @@ public:
 
 	/** @brief 룸에서 나온 보상 항목 목록을 설정하고 변경 알림을 보낸다. */
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void SetRewardChoices(const TArray<FRewardChoiceUI>& Choices);
+	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void SetSelectionOffer(const FRewardSelectionOfferUI& Offer);
+	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void SetGrantBundle(const FRewardGrantBundleUI& Bundle);
 
 	/** @brief 게임플레이가 보상 지급 성공을 UI에 확정한다. 실패한 요청에는 호출하지 않는다. */
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmRewardClaim(ERewardClaimKind ClaimKind, int32 ChoiceIndex = -1);
+	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmSelectedReward(FPrimaryAssetId RewardId);
+	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmGrantBundle(const FRewardGrantBundleResultUI& Result);
+	UFUNCTION(BlueprintCallable, Category = "Reward|Input") void RequestFinishPresentation() { RequestClaim(); }
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:
@@ -86,6 +111,9 @@ public:
 
 	/** @brief 위젯이 현재 보상 항목 목록을 읽는다; 반환 참조는 다음 SetRewardChoices()까지 유효하다. */
 	UFUNCTION(BlueprintPure, Category = "Reward|Read") const TArray<FRewardChoiceUI>& GetRewardChoices() const { return mChoices; }
+	UFUNCTION(BlueprintPure, Category = "Reward|Read") ERewardAcquisitionPolicy GetAcquisitionPolicy() const { return mAcquisitionPolicy; }
+	UFUNCTION(BlueprintPure, Category = "Reward|Read") const FRewardSelectionOfferUI& GetSelectionOffer() const { return mSelectionOffer; }
+	UFUNCTION(BlueprintPure, Category = "Reward|Read") const FRewardGrantBundleUI& GetGrantBundle() const { return mGrantBundle; }
 
 private:
 	/** @brief 마지막으로 Push된 보상 표시값; Transient라 세이브/에셋 상태로 남기지 않는다. */
@@ -93,4 +121,7 @@ private:
 
 	/** @brief 마지막으로 Push된 보상 항목 목록. */
 	UPROPERTY(Transient) TArray<FRewardChoiceUI> mChoices;
+	UPROPERTY(Transient) ERewardAcquisitionPolicy mAcquisitionPolicy = ERewardAcquisitionPolicy::None;
+	UPROPERTY(Transient) FRewardSelectionOfferUI mSelectionOffer;
+	UPROPERTY(Transient) FRewardGrantBundleUI mGrantBundle;
 };

@@ -65,7 +65,16 @@ enum class ERewardChoiceKind : uint8
 {
 	Skill,
 	Equipment,
-	Gold
+	Gold,
+	Artifact
+};
+
+UENUM(BlueprintType)
+enum class ERewardAcquisitionPolicy : uint8
+{
+	None,
+	GrantAll,
+	SelectOne
 };
 
 /** @brief UI에서 클릭한 보상 행이 어떤 실제 지급 항목인지 구분한다. */
@@ -103,4 +112,30 @@ struct FRewardChoiceUI
 	UPROPERTY(BlueprintReadOnly) FText mRarityName;
 	/** Common=0, Rare=1, Epic=2; drives the existing 1/3/5 rarity gems. */
 	UPROPERTY(BlueprintReadOnly) int32 mRarityLevel = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FRewardSelectionOfferUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) TArray<FRewardChoiceUI> mOptions;
+	UPROPERTY(BlueprintReadOnly) int32 mSelectionCount = 1;
+};
+
+USTRUCT(BlueprintType)
+struct FRewardGrantBundleUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) TArray<FRewardChoiceUI> mItems;
+};
+
+USTRUCT(BlueprintType)
+struct FRewardGrantBundleResultUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) TArray<FPrimaryAssetId> mGrantedItemIds;
+	UPROPERTY(BlueprintReadOnly) TArray<FPrimaryAssetId> mFailedItemIds;
 };

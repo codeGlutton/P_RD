@@ -184,12 +184,8 @@ public:
 	{
 		ApplyResponsiveLayout(ViewportSize);
 	}
-	/** @brief 타이머를 기다리지 않고 같은 상세 발화 경로를 검증한다. */
-	void TriggerSkillLongPressForTest(int32 SlotIndex);
-	void BeginSkillPressForTest(int32 SlotIndex) { BeginSkillPress(SlotIndex); }
-	void ReleaseSkillPressForTest(int32 SlotIndex) { EndSkillPress(SlotIndex); }
-	bool IsSkillLongPressPendingForTest() const;
-	int32 GetPressedSkillSlotForTest() const { return mPressedSkillSlot; }
+	/** @brief 실제 단일 클릭과 같은 상세 발화 경로를 검증한다. */
+	void TriggerSkillClickForTest(int32 SlotIndex) { HandleSkillClicked(SlotIndex); }
 	int32 GetSkillDataIndexForSlotForTest(int32 SlotIndex) const;
 	UUserWidget* GetSkillDetailOverlayForTest() const { return mSkillDetailOverlay; }
 	USkillDetailOverlayPresenter* GetSkillDetailPresenterForTest() const
@@ -214,10 +210,7 @@ private:
 	void RefreshDetail();
 	int32 GetSkillDataIndexForSlot(const FFrontendCharacterOption& Option,
 		int32 SlotIndex) const;
-	void BeginSkillPress(int32 SlotIndex);
-	void EndSkillPress(int32 SlotIndex);
-	void CancelSkillPress();
-	void HandleSkillLongPress(int32 SlotIndex, int32 ReviewingIndex);
+	void HandleSkillClicked(int32 SlotIndex);
 	bool EnsureSkillDetailOverlay();
 	void ShowSkillDetailOverlay(const FFrontendSkillOption& Skill);
 	void HideSkillDetailOverlay();
@@ -236,18 +229,12 @@ private:
 	UFUNCTION() void HandleAddClicked();
 	UFUNCTION() void HandleDepartClicked();
 	UFUNCTION() void HandleBackClicked();
-	UFUNCTION() void HandleSkillPressed_0();
-	UFUNCTION() void HandleSkillPressed_1();
-	UFUNCTION() void HandleSkillPressed_2();
-	UFUNCTION() void HandleSkillPressed_3();
-	UFUNCTION() void HandleSkillPressed_4();
-	UFUNCTION() void HandleSkillPressed_5();
-	UFUNCTION() void HandleSkillReleased_0();
-	UFUNCTION() void HandleSkillReleased_1();
-	UFUNCTION() void HandleSkillReleased_2();
-	UFUNCTION() void HandleSkillReleased_3();
-	UFUNCTION() void HandleSkillReleased_4();
-	UFUNCTION() void HandleSkillReleased_5();
+	UFUNCTION() void HandleSkillClicked_0();
+	UFUNCTION() void HandleSkillClicked_1();
+	UFUNCTION() void HandleSkillClicked_2();
+	UFUNCTION() void HandleSkillClicked_3();
+	UFUNCTION() void HandleSkillClicked_4();
+	UFUNCTION() void HandleSkillClicked_5();
 	UFUNCTION() void HandleSkillDetailCloseClicked();
 
 	/** @brief 화면에 걸린 후보들. 비어 있으면 시안 값이 그대로 남는다. */
@@ -286,10 +273,6 @@ private:
 	/** 전투 HUD와 공용인 리치 상세 프레젠터. mSkillDetailOverlay는 그 안의 겹을 비춘다. */
 	UPROPERTY(Transient) TObjectPtr<USkillDetailOverlayPresenter> mSkillDetailPresenter = nullptr;
 	UPROPERTY(Transient) TObjectPtr<UUserWidget> mSkillDetailOverlay = nullptr;
-	FTimerHandle mSkillLongPressTimerHandle;
-	int32 mPressedSkillSlot = INDEX_NONE;
-	int32 mPressedReviewingIndex = INDEX_NONE;
-	static constexpr float SkillLongPressSeconds = 0.5f;
 
 	/** @brief 신규 Marchbound 레이아웃에서만 추가 표시 규칙을 사용한다. */
 	bool mIsMarchboundLayout = false;

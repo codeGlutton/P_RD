@@ -18,6 +18,10 @@ void UMockRewardDriver::BindAutoConfirm(URewardUIModel* UIModel)
 	mUIModel = UIModel;
 	mUIModel->OnRewardClaimRequested.AddUniqueDynamic(
 		this, &UMockRewardDriver::HandleClaimRequested);
+	mUIModel->OnRewardSelectionRequested.AddUniqueDynamic(
+		this, &UMockRewardDriver::HandleSelectionRequested);
+	mUIModel->OnRewardGrantBundleRequested.AddUniqueDynamic(
+		this, &UMockRewardDriver::HandleGrantBundleRequested);
 	mUIModel->OnRewardClaimed.AddUniqueDynamic(
 		this, &UMockRewardDriver::HandleClaimed);
 }
@@ -61,7 +65,9 @@ void UMockRewardDriver::Start(URewardUIModel* UIModel)
 	{
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = i;
-		Choice.mKind = ERewardChoiceKind::Equipment;
+		Choice.mKind = ERewardChoiceKind::Artifact;
+		Choice.mSourceAssetId = FPrimaryAssetId(
+			TEXT("Artifact"), FName(*FString::Printf(TEXT("MockArtifact_%d"), i)));
 		Choice.mName = FText::FromString(MockNames[i]);
 		Choice.mDescription = LOCTEXT("(mock reward)", "(mock reward)");
 		Choice.mRarityColor = Colors[i];
@@ -99,6 +105,30 @@ void UMockRewardDriver::HandleClaimRequested(
 	}
 }
 
+void UMockRewardDriver::HandleSelectionRequested(
+	const FPrimaryAssetId RewardId)
+{
+	if (mUIModel != nullptr)
+	{
+		mUIModel->ConfirmSelectedReward(RewardId);
+	}
+}
+
+void UMockRewardDriver::HandleGrantBundleRequested()
+{
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+
+	FRewardGrantBundleResultUI Result;
+	for (const FRewardChoiceUI& Choice : mUIModel->GetGrantBundle().mItems)
+	{
+		Result.mGrantedItemIds.Add(Choice.mSourceAssetId);
+	}
+	mUIModel->ConfirmGrantBundle(Result);
+}
+
 void UMockRewardDriver::UnbindUIModel()
 {
 	if (mUIModel == nullptr)
@@ -108,6 +138,10 @@ void UMockRewardDriver::UnbindUIModel()
 
 	mUIModel->OnRewardClaimRequested.RemoveDynamic(
 		this, &UMockRewardDriver::HandleClaimRequested);
+	mUIModel->OnRewardSelectionRequested.RemoveDynamic(
+		this, &UMockRewardDriver::HandleSelectionRequested);
+	mUIModel->OnRewardGrantBundleRequested.RemoveDynamic(
+		this, &UMockRewardDriver::HandleGrantBundleRequested);
 	mUIModel->OnRewardClaimed.RemoveDynamic(
 		this, &UMockRewardDriver::HandleClaimed);
 	mUIModel->OnRewardChosen.RemoveDynamic(

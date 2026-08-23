@@ -26,6 +26,7 @@
 #include "Styling/SlateTypes.h"
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardUIModel.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/SOverlay.h"
 
@@ -223,12 +224,29 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
+	Widget->TakeWidget();
+	Widget->InitializeInteractionBindingsForTest();
+	URunOptionsRailWidget* OptionsRail = Widget->GetRunOptionsRailForTest();
+	UClass* OptionsRailClass = LoadClass<URunOptionsRailWidget>(nullptr,
+		TEXT("/Game/UI/Common/WBP_RunOptionsRail.WBP_RunOptionsRail_C"));
+	TestNotNull(TEXT("보상 화면 공용 설정바 클래스"), OptionsRailClass);
+	// EditorWorld has no runtime PlayerController, so the detached automation
+	// widget cannot create a viewport rail. Validate its class contract here;
+	// PIE validates the actual attached instance.
+	if (OptionsRail != nullptr)
+	{
+		OptionsRail->TakeWidget();
+		TestNotNull(TEXT("보상 화면 설정 버튼"),
+			OptionsRail->GetWidgetFromName(TEXT("MenuButton_3")));
+	}
 	URewardUIModel* RewardModel = NewObject<URewardUIModel>(Widget);
 	TArray<FRewardChoiceUI> TestChoices;
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = Index;
+		Choice.mSourceAssetId = FPrimaryAssetId(
+			TEXT("Artifact"), FName(*FString::Printf(TEXT("TestArtifact_%d"), Index)));
 		Choice.mName = FText::FromString(FString::Printf(TEXT("시험 아티팩트 %d"),
 			Index + 1));
 		Choice.mDescription = FText::FromString(TEXT("롱프레스 상세 설명"));
@@ -236,6 +254,86 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	}
 	RewardModel->SetRewardChoices(TestChoices);
 	Widget->BindUIModel(RewardModel);
+	auto TestChoiceLayout = [this, Widget, RewardModel, &TestChoices](
+		const int32 ChoiceCount, const TArray<double>& ExpectedXs)
+	{
+		TArray<FRewardChoiceUI> VisibleChoices;
+		for (int32 Index = 0; Index < ChoiceCount; ++Index)
+		{
+			VisibleChoices.Add(TestChoices[Index]);
+		}
+		RewardModel->SetRewardChoices(VisibleChoices);
+		for (int32 Index = 0; Index < ExpectedXs.Num(); ++Index)
+		{
+			UWidget* Panel = Widget->GetWidgetFromName(*FString::Printf(
+				TEXT("NewArtifactChoicePanel_%d"), Index));
+			const UCanvasPanelSlot* PanelSlot = Panel != nullptr
+				? Cast<UCanvasPanelSlot>(Panel->Slot) : nullptr;
+			if (TestNotNull(*FString::Printf(
+				TEXT("%d개 보상 카드 %d Canvas 슬롯"), ChoiceCount, Index),
+				PanelSlot))
+			{
+				TestEqual(*FString::Printf(
+					TEXT("%d개 보상 카드 %d X 위치"), ChoiceCount, Index),
+					PanelSlot->GetPosition().X, ExpectedXs[Index]);
+			}
+		}
+	};
+	TestChoiceLayout(1, { 450.0 });
+	TestChoiceLayout(2, { 285.0, 615.0 });
+	TestChoiceLayout(3, { 120.0, 450.0, 780.0 });
+
+	URewardConcept03Widget* GrantAllWidget = CreateWidget<URewardConcept03Widget>(
+		World, WidgetClass);
+	URewardUIModel* GrantAllModel = NewObject<URewardUIModel>(GrantAllWidget);
+	if (TestNotNull(TEXT("일괄 지급 보상 위젯"), GrantAllWidget)
+		&& TestNotNull(TEXT("일괄 지급 보상 모델"), GrantAllModel))
+	{
+		FRewardGrantBundleUI Bundle;
+		Bundle.mItems.Add(TestChoices[0]);
+		GrantAllModel->SetGrantBundle(Bundle);
+		GrantAllWidget->BindUIModel(GrantAllModel);
+		GrantAllWidget->TakeWidget();
+		GrantAllWidget->InitializeInteractionBindingsForTest();
+		GrantAllWidget->SetRewardPresentationManualTick(true);
+		UWidget* OnlyPanel = GrantAllWidget->GetWidgetFromName(
+			TEXT("NewArtifactChoicePanel_0"));
+		const UCanvasPanelSlot* OnlyPanelSlot = OnlyPanel != nullptr
+			? Cast<UCanvasPanelSlot>(OnlyPanel->Slot) : nullptr;
+		if (TestNotNull(TEXT("일괄 지급 단일 카드 Canvas 슬롯"), OnlyPanelSlot))
+		{
+			TestEqual(TEXT("일괄 지급 단일 카드는 중앙 정렬"),
+				OnlyPanelSlot->GetPosition().X, 450.0);
+		}
+		if (UWidget* Outline = GrantAllWidget->GetWidgetFromName(
+			TEXT("NewArtifactSelection")))
+		{
+			TestEqual(TEXT("일괄 지급에서는 선택 외곽선 숨김"),
+				Outline->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+		GrantAllWidget->AdvanceRewardFlow();
+		GrantAllWidget->OpenRewardChest();
+		GrantAllWidget->SkipRewardPresentation();
+		GrantAllWidget->SkipRewardPresentation();
+		GrantAllWidget->SkipRewardPresentation();
+		TestEqual(TEXT("일괄 지급 아티팩트 단계 도달"),
+			GrantAllWidget->GetCurrentStepIndex(), 3);
+		TestFalse(TEXT("일괄 지급 아티팩트 공개 연출 완료"),
+			GrantAllWidget->IsRewardPresentationPlaying());
+		TestFalse(TEXT("일괄 지급 확정 전 흐름 미완료"),
+			GrantAllWidget->IsRewardFlowCompleted());
+		TestEqual(TEXT("일괄 지급 상세 대상 유지"),
+			GrantAllModel->GetRewardChoices().Num(), 1);
+		UButton* GrantAllCard = Cast<UButton>(GrantAllWidget->GetWidgetFromName(
+			TEXT("NewArtifactChoiceButton_0")));
+		if (TestNotNull(TEXT("일괄 지급 카드 롱프레스 버튼"), GrantAllCard))
+		{
+			TestTrue(TEXT("일괄 지급 카드 롱프레스 시작 바인딩"),
+				GrantAllCard->OnPressed.IsBound());
+			TestTrue(TEXT("일괄 지급 카드 롱프레스 종료 바인딩"),
+				GrantAllCard->OnReleased.IsBound());
+		}
+	}
 	for (const TCHAR* ButtonName : {
 		TEXT("NewBottomActionButton"), TEXT("NewChestOpenButton"),
 		TEXT("NewArtifactChoiceButton_0"),
@@ -426,9 +524,24 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	Widget->AdvanceRewardFlow();
 	TestEqual(TEXT("상자 개봉 전 진행 차단"), Widget->GetCurrentStepIndex(), 1);
 	Widget->OpenRewardChest();
+	Widget->SetRewardPresentationManualTick(true);
 	TestTrue(TEXT("상자 개봉 상태"), Widget->IsRewardChestOpened());
 	TestTrue(TEXT("상자 개봉 연출 재생"),
 		Widget->IsRewardPresentationPlaying());
+	UWidget* AtlasBlend = Widget->GetWidgetFromName(
+		TEXT("NewChestSequenceBlendImage"));
+	TestTrue(TEXT("상자 프레임 중첩 레이어 비활성"), AtlasBlend == nullptr
+		|| AtlasBlend->GetVisibility() == ESlateVisibility::Collapsed);
+	for (const TCHAR* EffectName : { TEXT("NewChestBurstGlow_0"),
+		TEXT("NewChestBurstRing_0"), TEXT("NewChestBurstRays_0"),
+		TEXT("NewChestBurstSpark_0") })
+	{
+		if (UWidget* Effect = Widget->GetWidgetFromName(EffectName))
+		{
+			TestEqual(*FString::Printf(TEXT("보조 상자 광원 비활성: %s"),
+				EffectName), Effect->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	}
 	if (ChestVisualSwitcher != nullptr)
 	{
 		TestEqual(TEXT("상자 개봉 연출은 닫힘 프레임에서 시작"),
@@ -437,7 +550,10 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	Widget->AdvanceRewardFlow();
 	TestEqual(TEXT("수동 다음 입력은 개봉 연출을 건너뛰지 않음"),
 		Widget->GetCurrentStepIndex(), 1);
-	Widget->SkipRewardPresentation();
+	Widget->AdvanceRewardPresentation(.95f);
+	TestEqual(TEXT("0.95초에는 상자 연출 유지"),
+		Widget->GetCurrentStepIndex(), 1);
+	Widget->AdvanceRewardPresentation(.21f);
 	TestEqual(TEXT("개봉 후 골드 단계 자동 이동"),
 		Widget->GetCurrentStepIndex(), 2);
 	TestTrue(TEXT("골드 연출 재생"), Widget->IsRewardPresentationPlaying());
@@ -466,7 +582,11 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("세 번째 아티팩트 선택"),
 		Widget->GetSelectedArtifactIndex(), 2);
 	Widget->AdvanceRewardFlow();
-	TestTrue(TEXT("보상 흐름 확정"), Widget->IsRewardFlowCompleted());
+	TestFalse(TEXT("지급 confirmation 전에는 보상 흐름을 확정하지 않음"),
+		Widget->IsRewardFlowCompleted());
+	RewardModel->ConfirmSelectedReward(TestChoices[2].mSourceAssetId);
+	TestTrue(TEXT("지급 confirmation 후 보상 흐름 확정"),
+		Widget->IsRewardFlowCompleted());
 	return true;
 }
 

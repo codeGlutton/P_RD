@@ -16,7 +16,7 @@
  * @brief  방 데이터
  */
 USTRUCT(BlueprintType)
-struct FRoom
+struct P_RD_API FRoom
 {
 	GENERATED_BODY()
 
@@ -59,7 +59,7 @@ public:
  * @brief  보물 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FTreasureRoom : public FRoom
+struct P_RD_API FTreasureRoom : public FRoom
 {
 	GENERATED_BODY()
 
@@ -71,12 +71,19 @@ public:
 	FText GetDisplayName() const override;
 
 public:
+	/** @brief 신규 저장 데이터가 보상 배열을 명시적으로 설정했는지 여부. */
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsConfigured"))
+	bool mIsConfigured = false;
+
 	// 상자 개봉 시 지급될 골드
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
 	int32 mRewardMoney = 0;
 	// 상자 개봉 시 지급될 아티팩트 목록
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataIds"))
 	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
+
+	/** @brief 신규 데이터와 구형 세이브를 함께 지원하는 유효 보상 목록. */
+	TArray<FPrimaryAssetId> GetEffectiveRewardArtifactDataIds() const;
 };
 
 USTRUCT(BlueprintType)
@@ -176,7 +183,7 @@ public:
  * @brief  엘리트 몬스터 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FEliteMonsterRoom : public FMonsterRoom
+struct P_RD_API FEliteMonsterRoom : public FMonsterRoom
 {
 	GENERATED_BODY()
 
@@ -188,19 +195,26 @@ public:
 	FText GetDisplayName() const override;
 
 public:
+	/** @brief 신규 저장 데이터가 보상 배열을 명시적으로 설정했는지 여부. */
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsConfigured"))
+	bool mIsConfigured = false;
+
 	// New rooms carry the real three-choice pool. The legacy single field remains
 	// serialized below so existing saves can still be loaded and rewarded.
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataIds"))
 	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardArtifactDataId;
+
+	/** @brief 신규 배열을 우선하고, 미설정 구형 세이브만 단일 필드로 복구한다. */
+	TArray<FPrimaryAssetId> GetEffectiveRewardArtifactDataIds() const;
 };
 
 /**
  * @brief  엘리트 몬스터 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FBossMonsterRoom : public FMonsterRoom
+struct P_RD_API FBossMonsterRoom : public FMonsterRoom
 {
 	GENERATED_BODY()
 
@@ -208,6 +222,10 @@ public:
 	FBossMonsterRoom();
 
 public:
+	/** @brief 신규 저장 데이터가 보상 배열을 명시적으로 설정했는지 여부. */
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsConfigured"))
+	bool mIsConfigured = false;
+
 	void CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const override;
 	FText GetDisplayName() const override;
 
@@ -216,4 +234,7 @@ public:
 	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardArtifactDataId;
+
+	/** @brief 신규 배열을 우선하고, 미설정 구형 세이브만 단일 필드로 복구한다. */
+	TArray<FPrimaryAssetId> GetEffectiveRewardArtifactDataIds() const;
 };

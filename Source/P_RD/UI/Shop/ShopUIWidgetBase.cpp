@@ -3,6 +3,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
@@ -456,38 +457,13 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 	{
 		mRailButtons[4]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleRailClicked4);
 	}
-	auto BindRailHold = [](UButton* Button, UObject* Owner,
-		const FName PressedFunction, const FName ReleasedFunction)
-	{
-		if (Button == nullptr || Owner == nullptr)
-		{
-			return;
-		}
-		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
-		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
-		FScriptDelegate PressedDelegate;
-		PressedDelegate.BindUFunction(Owner, PressedFunction);
-		Button->OnPressed.AddUnique(PressedDelegate);
-		FScriptDelegate ReleasedDelegate;
-		ReleasedDelegate.BindUFunction(Owner, ReleasedFunction);
-		Button->OnReleased.AddUnique(ReleasedDelegate);
-	};
-	const FName RailPressedHandlers[5] = {
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed0),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed1),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed2),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed3),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed4) };
-	const FName RailReleasedHandlers[5] = {
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased0),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased1),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased2),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased3),
-		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased4) };
 	for (int32 Index = 0; Index < mRailButtons.Num() && Index < 5; ++Index)
 	{
-		BindRailHold(mRailButtons[Index], this,
-			RailPressedHandlers[Index], RailReleasedHandlers[Index]);
+		if (mRailButtons[Index] != nullptr)
+		{
+			mRailButtons[Index]->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			mRailButtons[Index]->SetClickMethod(EButtonClickMethod::PreciseClick);
+		}
 	}
 
 	if (mUnitSelectButtons.IsValidIndex(0) && mUnitSelectButtons[0] != nullptr)
@@ -816,13 +792,13 @@ void UShopUIWidgetBase::SelectRailSlot(int32 RailSlotIndex)
 	const int32 FilteredIndex = mFilteredShopItemIndices.Find(ShopItemIndex);
 	if (FilteredIndex != INDEX_NONE)
 	{
-		if (FilteredIndex == mSelectedFilteredIndex)
+		if (FilteredIndex != mSelectedFilteredIndex)
 		{
-			ShowSelectedItemDetails();
-			return;
+			mSelectedFilteredIndex = FilteredIndex;
+			RefreshView();
 		}
-		mSelectedFilteredIndex = FilteredIndex;
-		RefreshView();
+		// 판매 아티팩트/스킬은 한 번 터치하면 즉시 상세를 연다.
+		ShowSelectedItemDetails();
 	}
 }
 
@@ -1101,8 +1077,16 @@ void UShopUIWidgetBase::RefreshFinalShopView(const FShopUI& Shop)
 	SetShopWidgetShown(mRestBottomContextPanel, bRestMode);
 	if (WidgetTree != nullptr)
 	{
-		SetShopWidgetShown(WidgetTree->FindWidget(TEXT("CloseHolder")),
-			!bMercenaryMode);
+		// 용병 탭의 뒤로가기는 탭 내부 이동이고, CloseHolder는 상점 전체
+		// 나가기다. 서로 다른 역할이므로 어느 탭에서도 전역 닫기를 숨기지 않는다.
+		UWidget* CloseHolder = WidgetTree->FindWidget(TEXT("CloseHolder"));
+		SetShopWidgetShown(CloseHolder, true);
+		if (UCanvasPanelSlot* CloseSlot = CloseHolder != nullptr
+			? Cast<UCanvasPanelSlot>(CloseHolder->Slot) : nullptr)
+		{
+			// 전체 화면 용병 위젯이 같은 Canvas에 있어도 닫기 입력이 가려지지 않는다.
+			CloseSlot->SetZOrder(FMath::Max(CloseSlot->GetZOrder(), 200));
+		}
 	}
 	SetShopButtonShown(mInventoryButton, bArtifactMode);
 	if (mArtifactInventoryPanel != nullptr)

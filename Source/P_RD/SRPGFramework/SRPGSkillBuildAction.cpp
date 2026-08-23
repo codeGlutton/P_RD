@@ -124,7 +124,8 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleWorldTraceCommand(const TInstanc
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorUnderCursor(GetWorld(), RDTraceChannels::TileOnlyTrace, WorldTraceCommand.mScreenPosition, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorForCommand(GetWorld(), RDTraceChannels::TileOnlyTrace,
+        WorldTraceCommand, OUT TargetActor, OUT TargetTileIndex);
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedBoard = TargetTileIndex != FTileIndex::Invalid;
