@@ -52,6 +52,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Shop|UI")
 	void Leave();
 
+#if WITH_DEV_AUTOMATION_TESTS
+	UUserWidget* GetShopDetailOverlayForTest() const
+	{
+		return mShopDetailOverlayWidget;
+	}
+#endif
+
 protected:
 	/** @brief 상점값이 들어왔을 때 호출. WBP가 추가 연출을 하고 싶으면 여기서 한다(선택). */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Shop|UI")
@@ -74,7 +81,6 @@ protected:
 	virtual UTexture2D* ResolveSkillSelectionPlate(bool bSelected) const;
 	virtual UTexture2D* ResolveOwnedArtifactPlate() const;
 	virtual UTexture2D* ResolveTabPlate(bool bSelected) const;
-
 private:
 	/** @brief 나가기 버튼 클릭 → Leave 의도 전달 후 화면을 닫는다. */
 	UFUNCTION() void HandleCloseClicked();

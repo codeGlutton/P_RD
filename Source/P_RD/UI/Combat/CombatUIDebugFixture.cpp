@@ -1,6 +1,8 @@
 ﻿#include "UI/Combat/CombatUIDebugFixture.h"
 
 #include "GameplayTagType.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 namespace
 {
@@ -12,7 +14,8 @@ namespace
 	int32 GForceCombatHPOne = 0;
 	FAutoConsoleVariableRef CForceCombatHPOne(
 		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
-		TEXT("Legacy explicit opt-in: 1 mutates combat units' actual HP to 1."));
+		TEXT("Explicit opt-in: 1 mutates enemy combat units' actual HP to 1. "
+			"The -EnemyHPOne command-line switch enables the same fixture."));
 }
 
 int32 CombatUIDebugFixture::GetMode()
@@ -31,7 +34,8 @@ bool CombatUIDebugFixture::ShouldMutateActualHPOne()
 #else
 	// Deliberately independent from CombatUIFixture mode. The normal UI fixture
 	// must not alter combat outcome or the HP tracked by RunPersistData.
-	return GForceCombatHPOne != 0;
+	return GForceCombatHPOne != 0
+		|| FParse::Param(FCommandLine::Get(), TEXT("EnemyHPOne"));
 #endif
 }
 
