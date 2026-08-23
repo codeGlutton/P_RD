@@ -2478,8 +2478,8 @@ void UCombatLayoutHUDWidget::RefreshMeta()
 	{
 		Alive += (!Unit.mIsPlayer && Unit.mHP > 0.f) ? 1 : 0;
 	}
-	SetTextIfPresent(mObjectiveText, FText::FromString(
-		FString::Printf(TEXT("모든 적 처치 — 남은 적 %d"), Alive)));
+	SetTextIfPresent(mObjectiveText, FText::Format(
+		LOCTEXT("CombatObjectiveRemaining", "모든 적 처치 — 남은 적 {0}"), Alive));
 	SetTextIfPresent(mMercenaryGoldText,
 		FText::AsNumber(mUIModel->GetPlayerMeta().mGold));
 
@@ -5423,17 +5423,25 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		}
 	}
 
-	FString Subtitle = FString::Printf(TEXT("Lv.%d"), Detail.mLevel);
+	FText Subtitle = FText::Format(LOCTEXT("UnitDetailLevel", "Lv.{0}"),
+		FMath::Max(1, Detail.mLevel));
 	if (Unit != nullptr)
 	{
-		Subtitle += Unit->mIsPlayer == true ? TEXT("  ·  아군") : TEXT("  ·  적");
-		Subtitle += FString::Printf(TEXT("  ·  HP %.0f/%.0f"), Unit->mHP, Unit->mMaxHP);
+		const FText Side = Unit->mIsPlayer == true
+			? LOCTEXT("UnitDetailAlly", "아군")
+			: LOCTEXT("UnitDetailEnemy", "적");
+		Subtitle = FText::Format(
+			LOCTEXT("UnitDetailIdentityAndHp", "{0}  ·  {1}  ·  HP {2}/{3}"),
+			Subtitle, Side, FMath::RoundToInt(Unit->mHP),
+			FMath::RoundToInt(Unit->mMaxHP));
 		if (Unit->mDefensePoint > 0.f)
 		{
-			Subtitle += FString::Printf(TEXT("  ·  방어 %.0f"), Unit->mDefensePoint);
+			Subtitle = FText::Format(
+				LOCTEXT("UnitDetailWithDefense", "{0}  ·  방어 {1}"), Subtitle,
+				FMath::RoundToInt(Unit->mDefensePoint));
 		}
 	}
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
+	SetTextIfPresent(mDetailSubtitleText, Subtitle);
 
 	// 소켓에는 이 유닛의 초상을 건다. 안 걸면 직전 스킬 아이콘이 그대로 남는다
 	// (0806 검수: 적 상세에 칼 아이콘이 떠 있었다).
@@ -5463,27 +5471,23 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
 	}
 
-	FString Body;
+	TArray<FText> PassiveLines;
 	for (const FText& Passive : Detail.mPassiveDescriptions)
 	{
-		if (Body.IsEmpty() == false)
-		{
-			Body += TEXT("\n");
-		}
-		Body += TEXT("· ");
-		Body += Passive.ToString();
+		PassiveLines.Add(FText::Format(
+			LOCTEXT("UnitDetailPassiveLine", "· {0}"), Passive));
 	}
-	if (Body.IsEmpty() == true)
-	{
-		Body = TEXT("패시브 없음");
-	}
+	FText Body = PassiveLines.IsEmpty()
+		? LOCTEXT("UnitDetailNoPassives", "패시브 없음")
+		: FText::Join(FText::FromString(TEXT("\n")), PassiveLines);
 	if (Unit != nullptr && Unit->mIsPlayer == false)
 	{
 		// 판에 함께 칠린 위협 범위의 범례다. 칠만 있고 뜻을 알려 주는 곳이
 		// 없으면 밴드와 채움을 구분할 길이 없다.
-		Body += TEXT("\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위.");
+		Body = FText::Format(LOCTEXT("UnitDetailEnemyThreatLegend",
+			"{0}\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위."), Body);
 	}
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	SetTextIfPresent(mDetailBodyText, Body);
 
 	SetPortraitCropped(mDetailIconImage, Detail.mPortrait);
 	SetShown(mDetailStatBlock, true);
@@ -5780,9 +5784,9 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 	FSkillDetailUI MoveDetail;
 	MoveDetail.mSkillIndex = -2; // INDEX_NONE과 구분되는 UI 전용 이동 식별자.
 	MoveDetail.mName = LOCTEXT("MoveDetailTitle", "이동");
-	MoveDetail.mDescription = FText::FromString(FString::Printf(
-		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 %d칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
-		Left));
+	MoveDetail.mDescription = FText::Format(LOCTEXT("MoveDetailDescription",
+		"한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 {0}칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
+		Left);
 	MoveDetail.mIcon = MoveIcon;
 	MoveDetail.mActionPointCost = 1;
 	MoveDetail.mTargeting.mSelectShape = ECombatSkillSelectShapeUI::Cross;

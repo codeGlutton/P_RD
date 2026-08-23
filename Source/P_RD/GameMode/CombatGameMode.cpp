@@ -1208,6 +1208,20 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	{
 		AttributeSetComponentModel->SetAttributeBaseValue(
 			UUnitAttributeSet::GetHPAttribute(), 1.f);
+
+		// 방어도가 데미지를 전부 흡수하면 HP 1이어도 일격에 죽지 않으므로,
+		// 픽스처 활성 시 적 방어도는 획득 즉시 0으로 되돌린다.
+		AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
+			UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
+			[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
+			(const FTacticalAttributeChangeData& Data)
+			{
+				if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
+				{
+					WeakAttributeSet->ApplyModToAttribute(
+						UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+				}
+			});
 	}
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
