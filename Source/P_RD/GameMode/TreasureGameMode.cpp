@@ -400,10 +400,10 @@ FRewardGrantBundleResultUI ATreasureGameMode::GrantTreasureArtifactBundle()
 
 	mGrantedArtifactIds = Result.mGrantedItemIds;
 	mFailedArtifactIds = Result.mFailedItemIds;
-	for (const FPrimaryAssetId& ArtifactId : Result.mFailedItemIds)
+	for (const FPrimaryAssetId& FailedArtifactId : Result.mFailedItemIds)
 	{
 		UE_LOG(LogRD, Log, TEXT("보물방 아티팩트 지급 실패: %s"),
-			*ArtifactId.ToString());
+			*FailedArtifactId.ToString());
 	}
 	return Result;
 }
