@@ -1,6 +1,7 @@
 ﻿#include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/TacticalEffectQuery.h"
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Actor/ActorModel.h"
@@ -137,6 +138,8 @@ void UAttributeSetComponentModel::CaptureAllStates(UBoardCombatTargetSnapshotDat
     {
         SpawnedAttribute->CaptureAllAttributes(Snapshot); 
     }
+    // 이펙트 카운트 캡처
+    mActiveAttributeEffects.CaptureAllEffectStacks(Snapshot);
     // 태그 카운트 캡처
     mTacticalTagCountContainer.CaptureAllTags(Snapshot);
 
@@ -360,6 +363,48 @@ bool UAttributeSetComponentModel::RemoveActiveTacticalEffect(FActiveTacticalEffe
     return mActiveAttributeEffects.RemoveActiveTacticalEffect(Handle, StacksToRemove);
 }
 
+void UAttributeSetComponentModel::RemoveActiveTacticalEffectBySourceEffect(TSubclassOf<UTacticalEffect> TacticalEffect, UAttributeSetComponentModel* InstigatorComponentModel, int32 StacksToRemove)
+{
+    if (TacticalEffect != nullptr)
+    {
+        FTacticalEffectQuery Query;
+        Query.mCustomMatchDelegate.BindLambda([&](const FActiveTacticalEffect& CurEffect)
+            {
+                bool IsMatches = false;
+
+                if (CurEffect.mSpec.mEffectClass != nullptr && TacticalEffect == CurEffect.mSpec.mEffectClass->GetClass())
+                {
+                    if (InstigatorComponentModel != nullptr)
+                    {
+                        IsMatches = (InstigatorComponentModel == CurEffect.mSpec.GetContext()->GetAttributeSetComponentModel());
+                    }
+                    else
+                    {
+                        IsMatches = true;
+                    }
+                }
+
+                return IsMatches;
+            });
+        mActiveAttributeEffects.RemoveActiveEffects(Query, StacksToRemove);
+    }
+}
+
+int32 UAttributeSetComponentModel::RemoveActiveEffects(const FTacticalEffectQuery& Query, int32 StacksToRemove)
+{
+    return mActiveAttributeEffects.RemoveActiveEffects(Query, StacksToRemove);
+}
+
+int32 UAttributeSetComponentModel::RemoveActiveEffectsWithTags(FGameplayTagContainer Tags)
+{
+    return RemoveActiveEffects(FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(Tags));
+}
+
+int32 UAttributeSetComponentModel::RemoveActiveEffectsWithAppliedTags(FGameplayTagContainer Tags)
+{
+    return RemoveActiveEffects(FTacticalEffectQuery::MakeQuery_MatchAnyOwningTags(Tags));
+}
+
 const UTacticalEffect* UAttributeSetComponentModel::GetTacticalEffectDefForHandle(FActiveTacticalEffectHandle Handle)
 {
     FActiveTacticalEffect* ActiveEffect = mActiveAttributeEffects.GetActiveTacticalEffect(Handle);
@@ -373,6 +418,57 @@ const UTacticalEffect* UAttributeSetComponentModel::GetTacticalEffectDefForHandl
 const FActiveTacticalEffect* UAttributeSetComponentModel::GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const
 {
     return mActiveAttributeEffects.GetActiveTacticalEffect(Handle);
+}
+
+TArray<FActiveTacticalEffectHandle> UAttributeSetComponentModel::GetActiveEffects(const FTacticalEffectQuery& Query) const
+{
+    return mActiveAttributeEffects.GetActiveEffects(Query);
+}
+
+TArray<FActiveTacticalEffectHandle> UAttributeSetComponentModel::GetActiveEffectsWithAllTags(FGameplayTagContainer Tags) const
+{
+    return GetActiveEffects(FTacticalEffectQuery::MakeQuery_MatchAllEffectTags(Tags));
+}
+
+TMap<FGameplayTag, int32> UAttributeSetComponentModel::GetActiveEffectTagCountsWithAllTags(FGameplayTagContainer Tags) const
+{
+    TMap<FGameplayTag, int32> EffectAssetTagCounts;
+
+    const TArray<FActiveTacticalEffectHandle> Handles = GetActiveEffectsWithAllTags(Tags);
+    for (const FActiveTacticalEffectHandle& Handle : Handles)
+    {
+        const FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
+        if (ActiveEffect == nullptr)
+        {
+            continue;
+        }
+
+        for (const FGameplayTag& AssetTag : ActiveEffect->mSpec.mEffectClass->GetAssetTags())
+        {
+            EffectAssetTagCounts.FindOrAdd(AssetTag) += ActiveEffect->mSpec.GetStackCount();
+        }
+    }
+
+    return EffectAssetTagCounts;
+}
+
+float UAttributeSetComponentModel::GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const
+{
+    return mActiveAttributeEffects.GetTacticalEffectMagnitude(Handle, Attribute);
+}
+
+int32 UAttributeSetComponentModel::GetCurrentStackCount(FActiveTacticalEffectHandle Handle) const
+{
+    if (const FActiveTacticalEffect* ActiveTE = mActiveAttributeEffects.GetActiveTacticalEffect(Handle))
+    {
+        return ActiveTE->mSpec.GetStackCount();
+    }
+    return 0;
+}
+
+int32 UAttributeSetComponentModel::GetAggregatedStackCount(const FTacticalEffectQuery& Query) const
+{
+    return mActiveAttributeEffects.GetActiveEffectCount(Query);
 }
 
 void UAttributeSetComponentModel::CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType)
@@ -391,10 +487,25 @@ int32 UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FActiveTa
     return ActiveEffect->GetTimeRemaining(WorldTime);
 }
 
+TArray<float> UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    return mActiveAttributeEffects.GetActiveEffectsTimeRemaining(Query, UnitType);
+}
+
 int32 UAttributeSetComponentModel::GetActiveEffectsDuration(const FActiveTacticalEffectHandle Handle) const
 {
     const FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
     return ActiveEffect->GetDuration();
+}
+
+TArray<float> UAttributeSetComponentModel::GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    return mActiveAttributeEffects.GetActiveEffectsTimeRemaining(Query, UnitType);
+}
+
+TArray<TPair<float, float>> UAttributeSetComponentModel::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    return mActiveAttributeEffects.GetActiveEffectsTimeRemainingAndDuration(Query, UnitType);
 }
 
 void UAttributeSetComponentModel::OnAttributeAggregatorDirty(FTacticalAggregator* Aggregator, FTacticalAttribute Attribute)

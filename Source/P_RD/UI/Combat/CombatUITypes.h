@@ -306,8 +306,8 @@ struct FUnitUI
 	// 어댑터가 유닛 뷰 액터를 채우고, UI는 유효하면 이 액터의 현재 GetActorLocation()을 투영한다(스냅샷보다 우선).
 	UPROPERTY() TWeakObjectPtr<AActor> mViewActor;
 
-	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
-	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
+	// 머리 위 버프/디버프 아이콘용. 정확한 태그와 수가 아닌 대략적인 정보를 담고 있다.
+	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mOwnedTags;
 
 	// 머리 위 HP바 상태이상 칸(태그 + 스택 수). HP바가 GetUnitUIs()로 매 프레임 읽어 아이콘/개수를 채운다.
 	// (mStatusTags는 집합만이라 스택 수가 없어서, 개수까지 표시하려면 이 배열을 쓴다.)

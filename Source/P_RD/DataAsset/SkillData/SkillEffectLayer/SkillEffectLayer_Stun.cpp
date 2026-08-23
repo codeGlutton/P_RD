@@ -1,10 +1,3 @@
-﻿/*****************************************************************//**
- * @file   SkillEffectLayer_Stun.cpp
- * @brief  하나의 스킬 모션 내에서 적용하는 기절 디버프 효과 단위 구현 파일
- * @author 이문환
- * @date   2026-08-20
- *********************************************************************/
-
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Stun.h"
 #include "TAS/Effect/Tag/TacticalEffect_Stun.h"
 

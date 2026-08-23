@@ -1,12 +1,18 @@
-#include "TAS/Effect/Tag/TacticalEffect_Weakness.h"
+﻿#include "TAS/Effect/Tag/TacticalEffect_Weakness.h"
 #include "GameplayTagType.h"
 
 UTacticalEffect_Weakness::UTacticalEffect_Weakness()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+}
+
+UTacticalEffect_AddWeakness::UTacticalEffect_AddWeakness()
+{
+	mStatusEffect = UTacticalEffect_Weakness::StaticClass();
 }
 
 UTacticalEffect_GetWeakness::UTacticalEffect_GetWeakness()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness;
+	mStatusEffect = UTacticalEffect_Weakness::StaticClass();
 }

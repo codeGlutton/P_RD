@@ -337,7 +337,7 @@ bool FPassiveAddTagTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 
 	// 검증 대상 태그: 취약
-	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability;
 	TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
@@ -385,7 +385,7 @@ bool FPassiveGrantedTagBuffTest::RunTest(const FString& Parameters)
 	UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 
 	// 검증 대상 태그: 취약 (목 이펙트의 GrantedTags)
-	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability;
 	TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));

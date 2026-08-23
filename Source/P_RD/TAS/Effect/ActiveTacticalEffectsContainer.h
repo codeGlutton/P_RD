@@ -16,6 +16,8 @@ class UAttributeSetComponentModel;
 struct FTacticalAggregator;
 class UTacticalEffect;
 struct FTacticalEffectSpec;
+class UBoardCombatTargetSnapshotData;
+struct FTacticalEffectQuery;
 
 // 속성 수치가 변경되었을 때 변경 전/후 값을 브로드캐스트하는 멀티캐스트 대리자
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeAttributeValue, const FTacticalAttributeChangeData& /*ChangeData*/);
@@ -316,6 +318,7 @@ public:
      * @return 제거가 수행되었으면 true
      */
     bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove);
+    int32 RemoveActiveEffects(const FTacticalEffectQuery& Query, int32 StacksToRemove);
 
     /**
      * @brief 특정 속성의 값 변경 대리자를 반환한다(없으면 생성).
@@ -351,6 +354,8 @@ private:
     void RestartActiveTacticalEffectDuration(FActiveTacticalEffect& ActiveTacticalEffect);
 
 public:
+    void CaptureAllEffectStacks(UBoardCombatTargetSnapshotData* Snapshot) const;
+
     /**
      * @brief 핸들로 활성 이펙트를 조회(없으면 nullptr)
      * @param Handle 탐색 핸들
@@ -366,6 +371,14 @@ public:
     FActiveTacticalEffect* GetActiveTacticalEffect(int32 Index);
     const FActiveTacticalEffect* GetActiveTacticalEffect(int32 Index) const;
 
+    TArray<FActiveTacticalEffectHandle> GetActiveEffects(const FTacticalEffectQuery& Query) const;
+
+    TArray<float> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    TArray<float> GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const;
+    TArray<TPair<float, float>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+
+    float GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const;
+    int32 GetActiveEffectCount(const FTacticalEffectQuery& Query) const;
     int32 GetNumTacticalEffects() const;
     int32 GetWorldTime(ETacticalEffectDurationUnitType UnitType) const;
 

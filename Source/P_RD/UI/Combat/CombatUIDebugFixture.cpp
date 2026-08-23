@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatUIDebugFixture.h"
+﻿#include "UI/Combat/CombatUIDebugFixture.h"
 
 #include "GameplayTagType.h"
 
@@ -60,11 +60,11 @@ void CombatUIDebugFixture::AppendStatuses(const bool bPlayer,
 	}
 
 	const FGameplayTag Buff = bPlayer
-		? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification
-		: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor;
+		? EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification
+		: EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor;
 	const FGameplayTag Debuff = bPlayer
-		? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness
-		: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+		? EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness
+		: EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability;
 	const bool bAddBuff = SideIndex == 0 || SideIndex == 2;
 	const bool bAddDebuff = SideIndex == 1 || SideIndex == 2;
 	const auto AddIfMissing = [&Statuses](const FGameplayTag Tag, const int32 Stack)

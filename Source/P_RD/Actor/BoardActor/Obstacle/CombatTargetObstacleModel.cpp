@@ -10,6 +10,9 @@
 
 #include "DataAsset/ObstacleSpawnData/StaticCombatTargetObstacleSpawnData.h"
 
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Tag/TacticalEffect_Immunity.h"
+
 UCombatTargetObstacleModel::UCombatTargetObstacleModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
@@ -40,14 +43,24 @@ void UCombatTargetObstacleModel::PostInitializeComponentModels()
 	}
 }
 
+void UCombatTargetObstacleModel::OnBeginRoom()
+{
+	Super::OnBeginRoom();
+
+	UTacticalEffectContext* EffectContext = mAttributeCompModel->MakeEffectContext();
+
+	TSharedPtr<FTacticalEffectSpec> InfiniteEffect = mAttributeCompModel->MakeOutgoingSpec(UTacticalEffect_GetImmunity::StaticClass(), EffectContext);
+	mAttributeCompModel->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
+}
+
 void UCombatTargetObstacleModel::OnEndRoom()
 {
 	Super::OnEndRoom();
 
 	/* 모두 제거 */
 
+	mAttributeCompModel->RemoveActiveEffectsWithTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect));
 	mAttributeCompModel->ApplyModToAttribute(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-	mAttributeCompModel->RemoveLooseGameplayTagsMatchingTag(EffectTags::GameplayEffect_StatusEffect, INT_MAX);
 }
 
 UAttributeSetComponentModel* UCombatTargetObstacleModel::GetAttributeComponentModel() const

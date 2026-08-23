@@ -16,6 +16,7 @@
 #include "AttributeSetComponentModel.generated.h"
 
 struct FTacticalAggregator;
+struct FTacticalEffectQuery;
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FTacticalEventTagMulticastDelegate, FGameplayTag, const FTacticalEventData*);
 
@@ -207,6 +208,11 @@ public:
      * @return 제거에 성공하면 true.
      */
     virtual bool RemoveActiveTacticalEffect(FActiveTacticalEffectHandle Handle, int32 StacksToRemove = -1);
+    virtual void RemoveActiveTacticalEffectBySourceEffect(TSubclassOf<UTacticalEffect> TacticalEffect, UAttributeSetComponentModel* InstigatorComponentModel, int32 StacksToRemove = -1);
+    virtual int32 RemoveActiveEffects(const FTacticalEffectQuery& Query, int32 StacksToRemove = -1);
+
+    int32 RemoveActiveEffectsWithTags(FGameplayTagContainer Tags);
+    int32 RemoveActiveEffectsWithAppliedTags(FGameplayTagContainer Tags);
 
     /**
      * @brief 활성 Effect 핸들에 대응하는 Effect 정의(CDO)를 반환한다.
@@ -221,6 +227,15 @@ public:
      * @return Active Effect 객체(없으면 nullptr).
      */
     const FActiveTacticalEffect* GetActiveTacticalEffect(const FActiveTacticalEffectHandle Handle) const;
+
+    TArray<FActiveTacticalEffectHandle> GetActiveEffects(const FTacticalEffectQuery& Query) const;
+    TArray<FActiveTacticalEffectHandle> GetActiveEffectsWithAllTags(FGameplayTagContainer Tags) const;
+
+    TMap<FGameplayTag, int32> GetActiveEffectTagCountsWithAllTags(FGameplayTagContainer Tags) const;
+
+    float GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const;
+    int32 GetCurrentStackCount(FActiveTacticalEffectHandle Handle) const;
+    int32 GetAggregatedStackCount(const FTacticalEffectQuery& Query) const;
 
 public:
     /**
@@ -239,11 +254,15 @@ public:
      * @brief 특정 Effect의 남은 시간 가져오기
      */
     int32 GetActiveEffectsTimeRemaining(const FActiveTacticalEffectHandle Handle) const;
+    TArray<float> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
     /**
      * @brief 특정 Effect의 Duration 가져오기
      */
     int32 GetActiveEffectsDuration(const FActiveTacticalEffectHandle Handle) const;
+    TArray<float> GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
 
+    TArray<TPair<float, float>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    
     /* Tag 연관 */
 public:
     /**

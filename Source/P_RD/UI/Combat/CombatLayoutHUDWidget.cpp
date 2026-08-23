@@ -1904,10 +1904,10 @@ UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
 			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
 			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Agility") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor, TEXT("T_Status_Agility") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
 		};
 		for (const TPair<FGameplayTag, const TCHAR*>& Pair : Pairs)
 		{

@@ -56,12 +56,12 @@ void UTacticalEffectExecutionCalculation_GetDefense::Execute(const FTacticalEffe
 	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
 
 	// 요새화
-	const bool IsTargetFortification = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
-	const float TargetFortificationRatio = IsTargetFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification] : 1.f;
+	const bool IsTargetFortification = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification);
+	const float TargetFortificationRatio = IsTargetFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification] : 1.f;
 
 	// 손상
-	const bool IsTargetFrail = TargetSnapshotData->mTags.Contains(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail);
-	const float TargetFrailRatio = IsTargetFrail == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail] : 1.f;
+	const bool IsTargetFrail = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail);
+	const float TargetFrailRatio = IsTargetFrail == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail] : 1.f;
 
 	const float TotalDefense =
 		ExecutionParams.GetOwningSpec().GetStackCount() *

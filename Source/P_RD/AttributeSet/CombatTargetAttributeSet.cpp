@@ -59,7 +59,7 @@ void UCombatTargetAttributeSet::PostAttributeChange(const FTacticalAttribute& At
 
 		UTacticalEffectContext* EffectContext = ASC->MakeEffectContext();
 
-		TSharedPtr<FTacticalEffectSpec> InfiniteEffect = ASC->MakeOutgoingSpec(UTacticalEffect_Dead::StaticClass(), EffectContext);
+		TSharedPtr<FTacticalEffectSpec> InfiniteEffect = ASC->MakeOutgoingSpec(UTacticalEffect_GetDead::StaticClass(), EffectContext);
 		FActiveTacticalEffectHandle ActiveHandle = ASC->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
 	}
 }
