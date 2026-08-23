@@ -1218,6 +1218,8 @@ private:
 	/** @brief 칸 -> 그 유닛의 스킬 index. 빈 칸은 INDEX_NONE. */
 	TArray<int32> mDetailSkillIndices;
 
+	/** @brief 승리 뒤 다음 스테이지로 진행 요청한다. */
+	void RequestToEnterNextStage();
 	/** @brief 승리 뒤 다음 방을 고르도록 지도를 연다. */
 	void OpenWorldMapForNextRoom();
 	/** @brief 승리 후 지도 BACK을 처리하고 보상판은 닫힌 상태로 유지한다. */

@@ -113,6 +113,10 @@ struct FCombatResultUI
 	GENERATED_BODY()
 
 public:
+	/** @brief 마지막 스테이지 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsLastStage = false;
+	/** @brief 스테이지 클리어 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsClearStage = false;
 	/** @brief 승리 여부 */
 	UPROPERTY(BlueprintReadWrite) bool mIsWin = false;
 	/** @brief 결과 화면에 표시할 현재 전투 지역 이름. */

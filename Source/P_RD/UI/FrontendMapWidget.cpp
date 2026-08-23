@@ -1,4 +1,4 @@
-#include "UI/FrontendMapWidget.h"
+﻿#include "UI/FrontendMapWidget.h"
 #include "UI/RunOptionsRailWidget.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"

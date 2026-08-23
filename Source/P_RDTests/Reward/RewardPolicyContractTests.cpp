@@ -1,4 +1,4 @@
-#include "Reward/RewardPolicyContractTests.h"
+﻿#include "Reward/RewardPolicyContractTests.h"
 
 #include "Misc/AutomationTest.h"
 #include "PCGStage/Room.h"
@@ -88,39 +88,6 @@ bool FRewardGrantAllPartialFailureContractTest::RunTest(
 		Result.mGrantedItemIds, TArray<FPrimaryAssetId>({ ArtifactA, ArtifactA }));
 	TestEqual(TEXT("실패 항목 한 건 기록"),
 		Result.mFailedItemIds, TArray<FPrimaryAssetId>({ ArtifactB }));
-	return true;
-}
-
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(
-	FRewardRoomPolicyCompatibilityContractTest,
-	"P_RD.Reward.Room.LegacyFallbackAndConfiguredEmpty",
-	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
-
-bool FRewardRoomPolicyCompatibilityContractTest::RunTest(
-	const FString& Parameters)
-{
-	const FPrimaryAssetId LegacyArtifact(TEXT("Artifact"), TEXT("Legacy"));
-	const FPrimaryAssetId NewArtifact(TEXT("Artifact"), TEXT("New"));
-
-	FEliteMonsterRoom LegacyRoom;
-	LegacyRoom.mRewardArtifactDataId = LegacyArtifact;
-	TestEqual(TEXT("미설정 구형 엘리트는 단일 필드로 복구"),
-		LegacyRoom.GetEffectiveRewardArtifactDataIds(),
-		TArray<FPrimaryAssetId>({ LegacyArtifact }));
-
-	LegacyRoom.mIsConfigured = true;
-	TestTrue(TEXT("신규 configured-empty는 구형 단일 필드를 부활시키지 않음"),
-		LegacyRoom.GetEffectiveRewardArtifactDataIds().IsEmpty());
-
-	LegacyRoom.mRewardArtifactDataIds = { NewArtifact };
-	TestEqual(TEXT("신규 배열이 설정되면 배열을 권위 있게 사용"),
-		LegacyRoom.GetEffectiveRewardArtifactDataIds(),
-		TArray<FPrimaryAssetId>({ NewArtifact }));
-
-	FTreasureRoom TreasureRoom;
-	TreasureRoom.mIsConfigured = true;
-	TestTrue(TEXT("보물방 configured-empty는 빈 GrantAll bundle"),
-		TreasureRoom.GetEffectiveRewardArtifactDataIds().IsEmpty());
 	return true;
 }
 

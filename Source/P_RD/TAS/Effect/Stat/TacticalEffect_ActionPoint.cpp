@@ -1,11 +1,4 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_ActionPoint.cpp
- * @brief  ActionPoint 이펙트 구현
- * @author 이문환, 모호재
- * @date   2026-08-01
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
@@ -69,13 +62,14 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 		TargetVigorRatio *
 		TargetExhaustionRatio * 
 		SourceSnapshotData->mAttributes[UUnitAttributeSet::GetActionPointFactorAttribute()];
-	const float MoveDiff = FMath::Floor(TotalMove);
-	
+	float MoveDiff = FMath::Floor(TotalMove);
+
+	OnPreGetActionPoint(ExecutionParams, OutExecutionOutput, OUT MoveDiff);
 	if (MoveDiff > 0.f)
 	{
 		/* 이동 증가 적용 */
 		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::AddBase, MoveDiff));
-		OnGetActionPoint(ExecutionParams, OutExecutionOutput, MoveDiff);
+		OnPostGetActionPoint(ExecutionParams, OutExecutionOutput, MoveDiff);
 
 		/* 로그 적용 */
 		FSRPGAttributeEffectEventLog Log;
@@ -91,7 +85,11 @@ void UTacticalEffectExecutionCalculation_GetActionPoint::Execute(const FTactical
 	OutExecutionOutput.MarkStackCountHandledManually();
 }
 
-void UTacticalEffectExecutionCalculation_GetActionPoint::OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+void UTacticalEffectExecutionCalculation_GetActionPoint::OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const
+{
+}
+
+void UTacticalEffectExecutionCalculation_GetActionPoint::OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const
 {
 }
 
@@ -128,11 +126,21 @@ bool UTacticalEffect_GetActionPoint::CanApply(const FActiveTacticalEffectsContai
 	return true;
 }
 
-void UTacticalEffectExecutionCalculation_RechargeActionPoint::OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const
+void UTacticalEffectExecutionCalculation_RechargeActionPoint::OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const
 {
-	Super::OnGetActionPoint(ExecutionParams, OutExecutionOutput, SpeedPoint);
+	Super::OnPreGetActionPoint(ExecutionParams, OutExecutionOutput, OUT ActionPoint);
 
-	OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetLastRechargedActionPointAttribute(), ETacticalModOp::Override, SpeedPoint));
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	ActionPoint = GameBalanceSettings->mRechargedActionPointLimits.Clamp(ActionPoint);
+}
+
+void UTacticalEffectExecutionCalculation_RechargeActionPoint::OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const
+{
+	Super::OnPostGetActionPoint(ExecutionParams, OutExecutionOutput, ActionPoint);
+
+	OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UUnitAttributeSet::GetLastRechargedActionPointAttribute(), ETacticalModOp::Override, ActionPoint));
 }
 
 UTacticalEffect_RechargeActionPoint::UTacticalEffect_RechargeActionPoint()
