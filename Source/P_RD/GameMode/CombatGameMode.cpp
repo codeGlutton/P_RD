@@ -1296,7 +1296,12 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 {
+	const FStage& CurStage = GetRunPersistData()->GetStage();
+	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
+
 	FCombatResultUI CombatResultUIData;
+	CombatResultUIData.mIsLastStage = CurStage.mStageLevel == EStageLevelType::Stage3;
+	CombatResultUIData.mIsClearStage = CurRoom.mType == ERoomType::BossMonster;
 	CombatResultUIData.mIsWin = Result == ESRPGCombatResult::PlayerWin;
 	CombatResultUIData.mLocationName = NSLOCTEXT("CombatGameMode", "CurrentCombatArea", "현재 전투 지역");
 	CombatResultUIData.mRound = mCombatUIModel != nullptr ? mCombatUIModel->GetTurnUI().mRound : 0;

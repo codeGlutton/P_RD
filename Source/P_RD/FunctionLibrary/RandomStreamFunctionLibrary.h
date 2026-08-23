@@ -36,7 +36,7 @@ public:
 	template<typename T>
 	static TArray<T> GetRandomUniqueItemsUsingCopiedArray(const FRandomStream& Stream, const TArray<T>& Array, int32 N)
 	{
-		checkf(Array.Num() < N, TEXT("Random Array is not enough to get random items"));
+		checkf(Array.Num() >= N, TEXT("Random Array is not enough to get random items"));
 
 		TArray<T> Shuffled = Array;
 		ShuffleArray(Stream, OUT Shuffled);
@@ -55,7 +55,7 @@ public:
 	template<typename T>
 	static TArray<T> GetRandomUniqueItemsUsingNonCopiedArray(const FRandomStream& Stream, const TArray<T>& Array, int32 N)
 	{
-		checkf(Array.Num() < N, TEXT("Random Array is not enough to get random items"));
+		checkf(Array.Num() >= N, TEXT("Random Array is not enough to get random items"));
 
 		TArray<T> Candidates;
 

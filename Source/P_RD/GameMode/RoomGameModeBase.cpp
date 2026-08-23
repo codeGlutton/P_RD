@@ -393,6 +393,30 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 	return IsTransitionStarted;
 }
 
+bool ARoomGameModeBase::EnterNextStage()
+{
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	const FStage& Stage = RunPersistData->GetStage();
+
+	EStageLevelType CurStageLevel = Stage.mStageLevel;
+	EStageLevelType NextStageLevel = StaticCast<EStageLevelType>(StaticCast<uint8>(CurStageLevel) + 1);
+	if (CurStageLevel == EStageLevelType::Stage3)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("게임 클리어로 다음 스테이지 접근 불가"));
+		return false;
+	}
+
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(NextStageLevel);
+	checkf(IsTransitionStarted == true, TEXT("스테이지 처음 방으로 전환 실패"));
+	return IsTransitionStarted;
+}
+
 bool ARoomGameModeBase::AbandonRunFromRoom()
 {
 	if (mSaveAndExitPending || mWasNextRoomPreloadRequested == true)
