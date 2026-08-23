@@ -29,6 +29,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "EngineUtils.h"
 #include "FunctionLibrary/CameraFunctionLibrary.h"
+#include "Internationalization/Internationalization.h"
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -368,6 +369,7 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CacheAuthoredWidgets();
+	ApplyActionLabelOpticalAlignment();
 	EnsureMercenarySkillButtons();
 	WireCommands();
 	EnsureCombatAnnouncementWidgets();
@@ -3209,6 +3211,8 @@ void UCombatLayoutHUDWidget::RefreshScreenScale()
 
 void UCombatLayoutHUDWidget::RefreshActionButtons()
 {
+	ApplyActionLabelOpticalAlignment();
+
 	const ECombatBuildPhaseUI Phase = mUIModel != nullptr
 		? mUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
 
@@ -3229,6 +3233,43 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 	SetShown(mSkillTogglePlate, bSkillButtonShown);
 	SetShown(mSkillToggleLabel, bSkillButtonShown);
 }
+
+void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignment()
+{
+	// Overlay/TextBlock의 레이아웃 박스는 버튼 중심과 0.5px 이내로 이미 맞는다.
+	// 다만 합성 글꼴의 ascent/descent 때문에 실제 잉크는 ko 약 5px, en 약
+	// 2.5px 아래에 그려진다. 라벨 슬롯의 아래 여백을 더 줘 같은 양만 위로
+	// 올린다. 문자열이 동적으로 바뀌어도 같은 언어/글꼴 메트릭을 그대로 쓴다.
+	const FString CultureName =
+		FInternationalization::Get().GetCurrentCulture()->GetName();
+	const float OffsetY = CultureName.StartsWith(TEXT("ko"), ESearchCase::IgnoreCase)
+		? -5.f : -2.5f;
+
+	auto ApplyOffset = [OffsetY](UWidget* Label)
+	{
+		if (Label == nullptr)
+		{
+			return;
+		}
+		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(Label->Slot))
+		{
+			const FMargin Padding = Slot->GetPadding();
+			Slot->SetPadding(FMargin(Padding.Left, Padding.Top, Padding.Right,
+				Padding.Top - 2.f * OffsetY));
+		}
+	};
+
+	ApplyOffset(mSkillToggleLabel);
+	ApplyOffset(mEndTurnLabel);
+}
+
+#if WITH_EDITOR
+void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignmentForCapture()
+{
+	CacheAuthoredWidgets();
+	ApplyActionLabelOpticalAlignment();
+}
+#endif
 
 /** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
 void UCombatLayoutHUDWidget::RefreshTurnActionPoints()

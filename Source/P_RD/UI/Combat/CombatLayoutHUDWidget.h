@@ -111,6 +111,11 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+#if WITH_EDITOR
+	/** @brief 오프스크린 WBP 감사도 실제 게임과 같은 글자 보정을 적용한다. */
+	void ApplyActionLabelOpticalAlignmentForCapture();
+#endif
+
 	UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/**
@@ -1300,6 +1305,8 @@ private:
 
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();
+	/** @brief 현재 언어 글꼴의 실제 잉크 중심을 목재 행동 버튼 중심에 맞춘다. */
+	void ApplyActionLabelOpticalAlignment();
 
 	/* ── 쓸 행동력 미리 보이기 ────────────────────────────────────────────
 	 *

@@ -622,6 +622,10 @@ namespace CombatLayoutCapture
 		}
 		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		if (UCombatLayoutHUDWidget* CombatHUD = Cast<UCombatLayoutHUDWidget>(Layout))
+		{
+			CombatHUD->ApplyActionLabelOpticalAlignmentForCapture();
+		}
 		Layout->ForceLayoutPrepass();
 		ResidentBrushTextures(*Layout);
 
