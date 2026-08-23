@@ -24,6 +24,7 @@
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ImageUtils.h"
+#include "Internationalization/Internationalization.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -747,6 +748,306 @@ namespace CombatLayoutCapture
 			*Stem, Saved, *Dir);
 		return Saved > 0;
 	}
+
+	constexpr int32 AuditCaptureWidth = 1600;
+	constexpr int32 AuditCaptureHeight = 590;
+
+	void ApplyCaptureGammaCorrection(TArray<FColor>& Pixels)
+	{
+		for (FColor& Pixel : Pixels)
+		{
+			Pixel.R = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.R / 255.f, 2.2f)));
+			Pixel.G = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.G / 255.f, 2.2f)));
+			Pixel.B = uint8(FMath::RoundToInt(
+				255.f * FMath::Pow(Pixel.B / 255.f, 2.2f)));
+		}
+	}
+
+	bool SavePng(const FString& Path, const int32 Width, const int32 Height,
+		const TArray<FColor>& Pixels)
+	{
+		TArray64<uint8> Png;
+		FImageUtils::PNGCompressImageArray(Width, Height, Pixels, Png);
+		IFileManager::Get().MakeDirectory(*FPaths::GetPath(Path), true);
+		return FFileHelper::SaveArrayToFile(Png, *Path);
+	}
+
+	FString CsvField(FString Value)
+	{
+		Value.ReplaceInline(TEXT("\""), TEXT("\"\""));
+		return FString::Printf(TEXT("\"%s\""), *Value);
+	}
+
+	void GatherWidgetTree(UUserWidget* Root, TArray<UWidget*>& OutWidgets,
+		TSet<UWidgetTree*>& VisitedTrees)
+	{
+		if (Root == nullptr || Root->WidgetTree == nullptr
+			|| VisitedTrees.Contains(Root->WidgetTree))
+		{
+			return;
+		}
+		VisitedTrees.Add(Root->WidgetTree);
+		TArray<UWidget*> LocalWidgets;
+		Root->WidgetTree->GetAllWidgets(LocalWidgets);
+		for (UWidget* Widget : LocalWidgets)
+		{
+			OutWidgets.AddUnique(Widget);
+			if (UUserWidget* Nested = Cast<UUserWidget>(Widget))
+			{
+				GatherWidgetTree(Nested, OutWidgets, VisitedTrees);
+			}
+		}
+	}
+
+	bool SaveWidgetCrop(const FString& Path, const TArray<FColor>& FullPixels,
+		const FIntRect& Rect)
+	{
+		const int32 Width = Rect.Width();
+		const int32 Height = Rect.Height();
+		if (Width <= 0 || Height <= 0)
+		{
+			return false;
+		}
+		TArray<FColor> Crop;
+		Crop.SetNumUninitialized(Width * Height);
+		for (int32 Y = 0; Y < Height; ++Y)
+		{
+			const FColor* Source = FullPixels.GetData()
+				+ (Rect.Min.Y + Y) * AuditCaptureWidth + Rect.Min.X;
+			FColor* Destination = Crop.GetData() + Y * Width;
+			FMemory::Memcpy(Destination, Source, Width * sizeof(FColor));
+		}
+		return SavePng(Path, Width, Height, Crop);
+	}
+
+	/**
+	 * 16:5.9 화면에서 WBP 전체와 보이는 Button/TextBlock을 실물 픽셀로 저장한다.
+	 * 좌표 추측이 아니라 Slate가 실제 배치한 캐시 기하를 사용한다.
+	 */
+	bool CaptureButtonsAndText16x5_9(UWorld& World, const TCHAR* ClassPath,
+		FString& OutError)
+	{
+		UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, ClassPath);
+		if (WidgetClass == nullptr)
+		{
+			OutError = FString::Printf(TEXT("클래스를 못 찾음: %s"), ClassPath);
+			return false;
+		}
+		UUserWidget* Layout = CreateWidget<UUserWidget>(&World, WidgetClass);
+		if (Layout == nullptr || Layout->WidgetTree == nullptr)
+		{
+			OutError = TEXT("위젯 생성 실패");
+			return false;
+		}
+		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		if (UMercenaryHireWidget* Hire = Cast<UMercenaryHireWidget>(Layout))
+		{
+			Hire->ApplyResponsiveLayoutForTest(
+				FVector2D(AuditCaptureWidth, AuditCaptureHeight));
+		}
+		Layout->ForceLayoutPrepass();
+		ResidentBrushTextures(*Layout);
+		FTextureCompilingManager::Get().FinishAllCompilation();
+		ForceTexturesResident(Layout);
+
+		const TSharedRef<SWidget> CaptureRoot =
+			SNew(SOverlay)
+			+ SOverlay::Slot()
+			[
+				SNew(SColorBlock).Color(FLinearColor(0.008f, 0.009f, 0.011f, 1.0f))
+			]
+			+ SOverlay::Slot()
+			[
+				LayoutSlate
+			];
+
+		FWidgetRenderer Renderer(true, true);
+		Renderer.SetIsPrepassNeeded(true);
+		UTextureRenderTarget2D* RenderTarget = Renderer.DrawWidget(
+			CaptureRoot, FVector2D(AuditCaptureWidth, AuditCaptureHeight));
+		if (RenderTarget == nullptr)
+		{
+			OutError = TEXT("렌더 타깃 생성 실패");
+			return false;
+		}
+		FlushRenderingCommands();
+		TArray<FColor> Pixels;
+		FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
+		ReadFlags.SetLinearToGamma(false);
+		if (!RenderTarget->GameThread_GetRenderTargetResource()->ReadPixels(
+			Pixels, ReadFlags)
+			|| Pixels.Num() != AuditCaptureWidth * AuditCaptureHeight)
+		{
+			OutError = TEXT("렌더 결과 읽기 실패");
+			return false;
+		}
+		ApplyCaptureGammaCorrection(Pixels);
+
+		FString Stem = FString(ClassPath);
+		Stem.Split(TEXT("."), nullptr, &Stem, ESearchCase::CaseSensitive,
+			ESearchDir::FromEnd);
+		Stem.RemoveFromEnd(TEXT("_C"));
+		const FString Culture = FInternationalization::Get().GetCurrentCulture()->GetName();
+		const FString Directory = FPaths::Combine(FPaths::ProjectDir(),
+			TEXT("Design"), TEXT("UIAudit"), TEXT("WBPCaptures16x5_9"),
+			Culture, Stem);
+		IFileManager::Get().DeleteDirectory(*Directory, false, true);
+		IFileManager::Get().MakeDirectory(*Directory, true);
+		const FString FullPath = FPaths::Combine(Directory,
+			TEXT("Full_1600x590.png"));
+		if (!SavePng(FullPath, AuditCaptureWidth, AuditCaptureHeight, Pixels))
+		{
+			OutError = FString::Printf(TEXT("전체 PNG 저장 실패: %s"), *FullPath);
+			return false;
+		}
+
+		TArray<UWidget*> AllWidgets;
+		TSet<UWidgetTree*> VisitedTrees;
+		GatherWidgetTree(Layout, AllWidgets, VisitedTrees);
+		TMap<UWidget*, ESlateVisibility> OriginalVisibility;
+		for (UWidget* Widget : AllWidgets)
+		{
+			OriginalVisibility.Add(Widget, Widget->GetVisibility());
+		}
+		FString Manifest = TEXT("type,name,text,x,y,width,height,file\n");
+		int32 ButtonCount = 0;
+		int32 TextCount = 0;
+		for (UWidget* Widget : AllWidgets)
+		{
+			UButton* Button = Cast<UButton>(Widget);
+			UTextBlock* Text = Cast<UTextBlock>(Widget);
+			if (Button == nullptr && Text == nullptr)
+			{
+				continue;
+			}
+			if (Text != nullptr && Text->GetText().IsEmpty())
+			{
+				continue;
+			}
+
+			// 버튼의 투명 hit box만 남기면 판과 라벨이 사라진다. 버튼/글자가
+			// 속한 가장 가까운 의미 컨테이너까지 올려 그 하위는 함께 보존하고,
+			// 그 밖의 형제만 숨긴다. 이렇게 해야 다른 패널에 가려진 상태라도
+			// 실제 버튼 아트와 글자를 한 장에 잡을 수 있다.
+			UWidget* CaptureGroup = Widget;
+			for (UWidget* Parent = Widget->GetParent(); Parent != nullptr;
+				Parent = Parent->GetParent())
+			{
+				CaptureGroup = Parent;
+				const FString ParentName = Parent->GetName();
+				if (ParentName.Contains(TEXT("Panel"))
+					|| ParentName.Contains(TEXT("Card"))
+					|| ParentName.Contains(TEXT("Row"))
+					|| ParentName.Contains(TEXT("Slot")))
+				{
+					break;
+				}
+			}
+			TSet<UWidget*> Ancestors;
+			for (UWidget* Walk = CaptureGroup; Walk != nullptr; Walk = Walk->GetParent())
+			{
+				Ancestors.Add(Walk);
+			}
+			for (UWidget* Candidate : AllWidgets)
+			{
+				bool bInGroup = false;
+				for (UWidget* Walk = Candidate; Walk != nullptr; Walk = Walk->GetParent())
+				{
+					if (Walk == CaptureGroup)
+					{
+						bInGroup = true;
+						break;
+					}
+				}
+				Candidate->SetVisibility(bInGroup || Ancestors.Contains(Candidate)
+					? OriginalVisibility[Candidate]
+					: ESlateVisibility::Hidden);
+			}
+			for (UWidget* Ancestor : Ancestors)
+			{
+				Ancestor->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+			Widget->SetVisibility(Button != nullptr
+				? ESlateVisibility::Visible
+				: ESlateVisibility::SelfHitTestInvisible);
+			Layout->ForceLayoutPrepass();
+
+			FWidgetRenderer ElementRenderer(true, true);
+			ElementRenderer.SetIsPrepassNeeded(true);
+			UTextureRenderTarget2D* ElementTarget = ElementRenderer.DrawWidget(
+				CaptureRoot, FVector2D(AuditCaptureWidth, AuditCaptureHeight));
+			if (ElementTarget == nullptr)
+			{
+				continue;
+			}
+			FlushRenderingCommands();
+			TArray<FColor> ElementPixels;
+			if (!ElementTarget->GameThread_GetRenderTargetResource()->ReadPixels(
+				ElementPixels, ReadFlags)
+				|| ElementPixels.Num() != AuditCaptureWidth * AuditCaptureHeight)
+			{
+				continue;
+			}
+			ApplyCaptureGammaCorrection(ElementPixels);
+
+			const FGeometry Geometry = Widget->GetCachedGeometry();
+			const FVector2D Position = FVector2D(Geometry.GetAbsolutePosition());
+			const FVector2D Size = FVector2D(Geometry.GetAbsoluteSize());
+			if (Size.X < 2.0 || Size.Y < 2.0)
+			{
+				continue;
+			}
+			const int32 Padding = Button != nullptr ? 6 : 4;
+			const int32 MinX = FMath::Clamp(
+				FMath::FloorToInt(Position.X) - Padding, 0, AuditCaptureWidth);
+			const int32 MinY = FMath::Clamp(
+				FMath::FloorToInt(Position.Y) - Padding, 0, AuditCaptureHeight);
+			const int32 MaxX = FMath::Clamp(
+				FMath::CeilToInt(Position.X + Size.X) + Padding, 0, AuditCaptureWidth);
+			const int32 MaxY = FMath::Clamp(
+				FMath::CeilToInt(Position.Y + Size.Y) + Padding, 0, AuditCaptureHeight);
+			const FIntRect Rect(MinX, MinY, MaxX, MaxY);
+			if (Rect.Width() < 2 || Rect.Height() < 2)
+			{
+				continue;
+			}
+
+			const FString SafeName = FPaths::MakeValidFileName(Widget->GetName());
+			const TCHAR* TypeName = Button != nullptr ? TEXT("Button") : TEXT("Text");
+			const FString RelativeFile = FPaths::Combine(TypeName,
+				FString::Printf(TEXT("%s_%s.png"), TypeName, *SafeName));
+			const FString FilePath = FPaths::Combine(Directory, RelativeFile);
+			if (!SaveWidgetCrop(FilePath, ElementPixels, Rect))
+			{
+				continue;
+			}
+			const FString TextValue = Text != nullptr ? Text->GetText().ToString() : FString();
+			Button != nullptr ? ++ButtonCount : ++TextCount;
+			Manifest += FString::Printf(TEXT("%s,%s,%s,%d,%d,%d,%d,%s\n"),
+				TypeName, *CsvField(Widget->GetName()), *CsvField(TextValue),
+				Rect.Min.X, Rect.Min.Y, Rect.Width(), Rect.Height(),
+				*CsvField(RelativeFile));
+		}
+		for (const TPair<UWidget*, ESlateVisibility>& Pair : OriginalVisibility)
+		{
+			Pair.Key->SetVisibility(Pair.Value);
+		}
+
+		const FString ManifestPath = FPaths::Combine(Directory, TEXT("manifest.csv"));
+		if (!FFileHelper::SaveStringToFile(Manifest, *ManifestPath,
+			FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+		{
+			OutError = FString::Printf(TEXT("manifest 저장 실패: %s"), *ManifestPath);
+			return false;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("[WBPAudit16x5_9] %s %s: full + buttons %d + texts %d -> %s"),
+			*Culture, *Stem, ButtonCount, TextCount, *Directory);
+		return ButtonCount > 0 && TextCount > 0;
+	}
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -777,6 +1078,41 @@ bool FCombatLayoutElementCaptureTest::RunTest(const FString& Parameters)
 		AddError(Error);
 	}
 	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FWBPButtonsAndText16x5_9CaptureTest,
+	"P_RD.UI.WBPAudit.Capture16x5_9",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FWBPButtonsAndText16x5_9CaptureTest::RunTest(const FString& Parameters)
+{
+	using namespace CombatLayoutCapture;
+
+	if (GUsingNullRHI == true)
+	{
+		AddInfo(TEXT("NullRHI 환경이라 16:5.9 WBP 캡처 생략"));
+		return true;
+	}
+	UWorld* World = GEditor != nullptr ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드가 있어야 WBP를 캡처할 수 있다"), World))
+	{
+		return false;
+	}
+
+	const TCHAR* Targets[] = {
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"),
+	};
+	for (const TCHAR* Target : Targets)
+	{
+		FString Error;
+		if (!CaptureButtonsAndText16x5_9(*World, Target, Error))
+		{
+			AddError(FString::Printf(TEXT("%s: %s"), Target, *Error));
+		}
+	}
+	return !HasAnyErrors();
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
