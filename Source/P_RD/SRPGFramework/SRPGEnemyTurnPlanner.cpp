@@ -68,8 +68,10 @@ namespace
 			}
 			else if (Skills[Slot].IsValid() == true)
 			{
-				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s 쿨다운 → 제외"),
-					*LogPrefix, Slot, *Skills[Slot].mData->GetName());
+				// 공격 후보에서 빠진 이유: 자기 버프이거나 쿨다운
+				const bool bSpell = StaticCast<const UStaticUnitSkillData*>(Skills[Slot].mData)->mSkillType == ESkillType::Spell;
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬[%d]=%s %s → 공격 후보 제외"),
+					*LogPrefix, Slot, *Skills[Slot].mData->GetName(), bSpell ? TEXT("자기 버프") : TEXT("쿨다운"));
 			}
 		}
 
@@ -183,16 +185,28 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		return Commands;
 	}
 
-	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움 (사용불가 슬롯은 nullptr 유지)
+	// 사용 가능한 스킬 수집: 장착돼 있고 쿨다운이 아닌 슬롯만 대상
+	// Attack은 공격 후보로 테이블에 채우고(사용불가 슬롯은 nullptr 유지), Spell은 자기 버프로 별도 수집
 	const TArray<FSkillEntry>& Skills = SkillComp->GetSkills();
 	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
+	TArray<int32> SpellSlots;
 	bool HasUsableSkill = false;
+	bool HasAttackSkill = false;
 	for (int32 Index = 0; Index < Skills.Num(); ++Index)
 	{
 		if (Skills[Index].IsValid() && SkillComp->CanActiveSkill(Index) == false)
 		{
-			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			const UStaticUnitSkillData* Skill = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			if (Skill->mSkillType == ESkillType::Spell)
+			{
+				SpellSlots.Add(Index);
+			}
+			else
+			{
+				SkillDatas[Index] = Skill;
+				HasAttackSkill = true;
+			}
 			HasUsableSkill = true;
 		}
 	}
@@ -220,7 +234,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	const FTileIndex EnemyTile = Enemy->GetTileTransform().mIndex;
 
 	// 속박 등으로 이동 불가면 이동 예산을 0으로 -> 도달 범위가 제자리로 줄어 제자리 스킬만 계획
-	// (스킬 비용 판정은 별도로 ActionPoint를 쓰므로 영향 없음)
+	// (시전 예산은 ActionPoint를 따로 넘기므로 이동 불가여도 스킬 비용 판정에는 영향 없음)
 	const UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(Enemy->GetBoardMovementComponentModel());
 	const int32 MoveBudget = (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
 		? 0
@@ -228,7 +242,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 
 	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
 	FTacticalTileTable Table;
-	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, MoveBudget);
+	Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, MoveBudget, ActionPoint);
 
 	// 목적지 이동비용 조회 (판단근거 로그용)
 	auto GetTableMoveCost = [&Table](const FTileIndex& Tile)
@@ -302,6 +316,35 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 판단근거 로그: 시전하지 못한 턴은 근거를 상세히 남김
 		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), SkillComp, SkillDatas, TargetModels, TargetTiles, Table);
 
+		//
+		// 자기 버프: 공격을 못 하는 턴이면 비용을 감당할 수 있는 버프 중 하나를 랜덤 선택
+		// (턴당 시전 1회 전제. 버프 비용을 먼저 떼고 남는 행동력으로 이동하므로 테이블을 다시 구성)
+		//
+		{
+			TArray<int32> CastableSpells;
+			for (const int32 Slot : SpellSlots)
+			{
+				const UStaticUnitSkillData* Spell = StaticCast<const UStaticUnitSkillData*>(Skills[Slot].mData);
+				if (Spell->mRequiredActionPoint <= ActionPoint)
+				{
+					CastableSpells.Add(Slot);
+				}
+			}
+			if (CastableSpells.IsEmpty() == false)
+			{
+				ChosenSkillSlot = CastableSpells[EventStream.RandRange(0, CastableSpells.Num() - 1)];
+				CanCast = true;
+
+				// 버프 비용을 뺀 이동 예산으로 도달 범위 재구성 (조준 플래그는 선점이동 판단에 계속 사용)
+				const int32 SpellCost = StaticCast<const UStaticUnitSkillData*>(Skills[ChosenSkillSlot].mData)->mRequiredActionPoint;
+				const int32 SpellMoveBudget = FMath::Max(MoveBudget - SpellCost, 0);
+				Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, SpellMoveBudget, ActionPoint);
+
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 버프예약: 스킬[%d]=%s 비용%d, 남은 이동예산 %d"),
+					*LogPrefix, ChosenSkillSlot, *Skills[ChosenSkillSlot].mData->GetName(), SpellCost, SpellMoveBudget);
+			}
+		}
+
 		// 폴백의 기준 타겟: 전체 타겟 중 최근접
 		TArray<int32> AllTargets;
 		for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
@@ -330,6 +373,29 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 			else
 			{
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 제자리대기 — 이동해도 개선 없음"), *LogPrefix);
+			}
+		}
+		else if (HasAttackSkill == false)
+		{
+			//
+			// 3단계(버프 전용): 공격 스킬이 없으면 접근할 이유가 없으므로 이동 성향대로 자리를 잡음
+			// (도달 가능한 모든 타일이 후보)
+			//
+			Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), NearestTarget, EnemyTile,
+				[](const FTacticalTileInfo&)
+				{
+					return true;
+				});
+
+			// 판단근거 로그: 성향이동 결정
+			if (Dest != EnemyTile)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 성향이동 → (%d,%d) 이동%d/AP%d, 공격 스킬 없음"),
+					*LogPrefix, Dest.mX, Dest.mY, GetTableMoveCost(Dest), ActionPoint);
+			}
+			else
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 제자리대기 — 공격 스킬 없음, 성향상 이동 불필요"), *LogPrefix);
 			}
 		}
 		else
@@ -379,13 +445,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	 */ 
 	if (CanCast == true)
 	{
-		// 시전 커맨드에는 타겟 타일과 주사위 합만 담는다.
-		// 실제 효과 타일은 실행 시점에 스킬 컴포넌트가 목적지(시전 원점) 기준으로 계산한다.
+		// 시전 커맨드에는 조준 타일과 스킬 슬롯만 담는다.
+		// 실제 효과 타일은 실행 시점에 스킬 컴포넌트가 조준 타일 기준으로 계산한다.
+		// Single 패턴은 조준 타일이 시전자 자기 칸이므로 타겟 칸이 아닌 목적지를 넣는다.
+		// 자기 버프는 타겟 없이 시전하므로 역시 목적지를 넣는다.
+		const UStaticSkillData* ChosenSkill = Skills[ChosenSkillSlot].mData;
+		const bool bAimSelf = (ChosenSkill->mAimPattern == EAimPattern::Single) || (ChosenTarget == INDEX_NONE);
 		TInstancedStruct<FSRPGCommand> Cast;
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = ChosenSkillSlot;
-		CastRef.mTargetIndex = TargetTiles[ChosenTarget];
+		CastRef.mTargetIndex = bAimSelf ? Dest : TargetTiles[ChosenTarget];
 		AddAction(MoveTemp(Cast));
 	}
 
