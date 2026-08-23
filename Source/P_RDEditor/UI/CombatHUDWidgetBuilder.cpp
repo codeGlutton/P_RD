@@ -162,7 +162,7 @@ namespace CombatHUDWidgetBuilder
 	}
 
 	/**
-	 * @brief 0811에서 확정한 ROUND 배지와 턴 카드 줄을 WBP에 다시 굽는다.
+	 * @brief #567 크기 조정본의 ROUND 배지와 턴 카드 줄을 WBP에 다시 굽는다.
 	 *
 	 * @details
 	 * ROUND는 별도 HUD 구석 장식이 아니라 턴 카드 줄의 첫 칸이다. 둘을 같은
@@ -182,8 +182,8 @@ namespace CombatHUDWidgetBuilder
 			Blueprint->WidgetTree->RootWidget);
 		UCanvasPanel* RoundPanel = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("RoundPanel")));
-		PlaceCanvas(Root, RoundPanel, FVector2D(8.f, 8.f),
-			FVector2D(218.f, 166.f), 100);
+		PlaceCanvas(Root, RoundPanel, FVector2D(18.f, 10.f),
+			FVector2D(218.f, 173.f), 100);
 		RoundPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
 		UOverlay* RoundPlateMount = CastChecked<UOverlay>(
@@ -244,12 +244,12 @@ namespace CombatHUDWidgetBuilder
 		RoundText->SetAutoWrapText(false);
 		RoundText->SetMinDesiredWidth(0.f);
 		RoundText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		// 0823 확정: 배지 아래 빈 98px 띠에 같은 라운드를 두 자리 숫자로
+		// 0823 확정: 배지 아래 빈 105px 띠에 같은 라운드를 두 자리 숫자로
 		// 한 번 더 크게 보여 준다. 런타임 RefreshTurnOrder 의 %02d 와 짝.
 		UTextBlock* RoundNumberText = FindOrCreate<UTextBlock>(
 			Blueprint, TEXT("RoundNumberText"));
 		PlaceCanvas(RoundPanel, RoundNumberText, FVector2D(0.f, 68.f),
-			FVector2D(218.f, 98.f), 6);
+			FVector2D(218.f, 105.f), 6);
 		FSlateFontInfo RoundNumberFont
 			= UIFont::MakeProjectExact(RoundNumberText->GetFont(), 64);
 		RoundNumberFont.LetterSpacing = 0;
@@ -275,7 +275,7 @@ namespace CombatHUDWidgetBuilder
 
 		UCanvasPanel* TurnPanel = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnPanel")));
-		PlaceCanvas(Root, TurnPanel, FVector2D(236.f, 8.f),
+		PlaceCanvas(Root, TurnPanel, FVector2D(246.f, 10.f),
 			FVector2D(1090.f, 174.f), 90);
 		TurnPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 
@@ -455,24 +455,22 @@ namespace CombatHUDWidgetBuilder
 		{
 			return;
 		}
-		// 장식 모서리와 바깥 들보를 제외한 중앙 목재 면. 전체 그림 중심보다
-		// 약간 위라서 full bounds 중앙 정렬 때 글자가 아래로 처져 보였다.
-		constexpr float Left = .082f;
-		constexpr float Top = .178f;
-		constexpr float Right = .082f;
-		constexpr float Bottom = .202f;
+		// 0823 크기 조정본은 높이만 150px로 줄이고 좌우 여백과 기존 상단
+		// 중심선을 유지했다. 하단도 같은 좌우 inset으로 맞춰 문구를 고정한다.
+		constexpr float Side = .082f;
+		constexpr float Top = 32.295502f;
 		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(LabelCenter->Slot))
 		{
 			Slot->SetPadding(FMargin(
-				Bounds.X * Left, Bounds.Y * Top,
-				Bounds.X * Right, Bounds.Y * Bottom));
+				Bounds.X * Side, Top,
+				Bounds.X * Side, Bounds.X * Side));
 			Slot->SetHorizontalAlignment(HAlign_Fill);
 			Slot->SetVerticalAlignment(VAlign_Fill);
 		}
 	}
 
 	/**
-	 * @brief 0811 확정본의 우측 메뉴, 요약판, 행동 단추 배치만 복구한다.
+	 * @brief #567 크기 조정본의 우측 메뉴, 요약판, 행동 단추 배치만 복구한다.
 	 *
 	 * @details ROUND/턴바와 용병 판은 이 함수에서 이름조차 찾지 않는다. 요약판
 	 * 내부 역시 디자이너 자산을 그대로 두고, 화면에 붙는 루트 슬롯만 복구한다.
@@ -506,8 +504,8 @@ namespace CombatHUDWidgetBuilder
 		// 3번 단추만 ObjectivePanel의 Canvas 자식인 구조도 그대로 보존한다.
 		UCanvasPanel* Objective = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("ObjectivePanel")));
-		PlaceCanvas(Root, Objective, FVector2D(-470.f, 4.f),
-			FVector2D(470.f, 173.f), 90);
+		PlaceCanvas(Root, Objective, FVector2D(-570.f, 2.f),
+			FVector2D(564.f, 207.6f), 90);
 		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Objective->Slot))
 		{
 			Slot->SetAnchors(FAnchors(1.f, 0.f));
@@ -534,7 +532,12 @@ namespace CombatHUDWidgetBuilder
 		UOverlay* OptionsMount = FindOrCreate<UOverlay>(Blueprint,
 			TEXT("OptionsRailFrameMount"));
 		PlaceCanvas(Objective, OptionsMount, FVector2D::ZeroVector,
-			FVector2D(470.f, 173.f), 1);
+			FVector2D::ZeroVector, 1);
+		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(OptionsMount->Slot))
+		{
+			Slot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			Slot->SetOffsets(FMargin(0.f));
+		}
 		OptionsMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		ResetVisualTransform(OptionsMount, FVector2D(.5f, .5f));
 
@@ -572,16 +575,20 @@ namespace CombatHUDWidgetBuilder
 			FVector2D Size;
 		};
 		const FIconLayout IconLayouts[] = {
-			{ TEXT("MenuMapIcon"), FVector2D(45.f, 44.f), FVector2D(80.f, 81.f) },
-			{ TEXT("MenuMercenaryIcon"), FVector2D(154.f, 36.f), FVector2D(63.f, 96.f) },
-			{ TEXT("MenuMonsterIcon"), FVector2D(248.f, 48.f), FVector2D(77.f, 83.f) },
-			{ TEXT("MenuSettingsIcon"), FVector2D(348.f, 48.f), FVector2D(77.f, 80.f) },
+			{ TEXT("MenuMapIcon"), FVector2D(-228.f, -51.f), FVector2D(96.f, 97.2f) },
+			{ TEXT("MenuMercenaryIcon"), FVector2D(-97.2f, -60.6f), FVector2D(75.6f, 115.2f) },
+			{ TEXT("MenuMonsterIcon"), FVector2D(15.6f, -46.2f), FVector2D(92.4f, 99.6f) },
+			{ TEXT("MenuSettingsIcon"), FVector2D(135.6f, -46.2f), FVector2D(92.4f, 96.f) },
 		};
 		for (const FIconLayout& Layout : IconLayouts)
 		{
 			UImage* Icon = CastChecked<UImage>(
 				Blueprint->WidgetTree->FindWidget(Layout.Name));
 			PlaceCanvas(Objective, Icon, Layout.Position, Layout.Size, 31);
+			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Icon->Slot))
+			{
+				Slot->SetAnchors(FAnchors(.5f, .5f));
+			}
 			Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
 
@@ -593,7 +600,7 @@ namespace CombatHUDWidgetBuilder
 			UCanvasPanel* Panel = CastChecked<UCanvasPanel>(
 				Blueprint->WidgetTree->FindWidget(PanelName));
 			PlaceCanvas(Root, Panel, FVector2D(0.f, 140.f),
-				FVector2D(600.f, 430.f), 60);
+				FVector2D(575.f, 430.f), 60);
 			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Panel->Slot))
 			{
 				Slot->SetAnchors(FAnchors(1.f, 0.f));
@@ -612,7 +619,7 @@ namespace CombatHUDWidgetBuilder
 			}
 		}
 
-		const FVector2D ActionSize(396.172241f, 181.435410f);
+		const FVector2D ActionSize(396.172241f, 150.f);
 		auto PlaceActionPanel = [&](const FName PanelName,
 			const FName MountName, const FVector2D Position)
 		{
@@ -634,7 +641,7 @@ namespace CombatHUDWidgetBuilder
 		};
 
 		UOverlay* SkillMount = PlaceActionPanel(TEXT("SkillTogglePanel"),
-			TEXT("SkillTogglePlateMount"), FVector2D(-10.334961f, -209.789490f));
+			TEXT("SkillTogglePlateMount"), FVector2D(-10.334961f, -202.f));
 		UImage* SkillPlate = CastChecked<UImage>(
 			Blueprint->WidgetTree->FindWidget(TEXT("SkillTogglePlate")));
 		EnsureParent(SkillMount, SkillPlate);
@@ -672,7 +679,7 @@ namespace CombatHUDWidgetBuilder
 		SkillButton->SetVisibility(ESlateVisibility::Visible);
 
 		UOverlay* EndMount = PlaceActionPanel(TEXT("EndTurnPanel"),
-			TEXT("EndTurnPlateMount"), FVector2D(-10.334961f, -14.354064f));
+			TEXT("EndTurnPlateMount"), FVector2D(-10.334961f, -26.f));
 		UImage* EndPlate = CastChecked<UImage>(
 			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnPlate")));
 		EnsureParent(EndMount, EndPlate);
@@ -1629,7 +1636,7 @@ namespace CombatHUDWidgetBuilder
 			TEXT("RD_COMBAT_HUD_INVENTORY_BUILD success assets=2"));
 	}
 
-	/** @brief 다른 HUD 구역은 건드리지 않고 0811 ROUND+턴바만 복구한다. */
+	/** @brief 다른 HUD 구역은 건드리지 않고 #567 ROUND+턴바만 복구한다. */
 	void RepairRoundTurnOnly()
 	{
 		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
@@ -1692,7 +1699,7 @@ namespace CombatHUDWidgetBuilder
 			TEXT("RD_COMBAT_HUD_ACTION_BUTTON_ART_REPAIR success plates=2"));
 	}
 
-	/** @brief ROUND/턴바/용병 판을 보존하고 0811 우측 HUD만 복구한다. */
+	/** @brief ROUND/턴바/용병 판을 보존하고 #567 우측 HUD만 복구한다. */
 	void RepairRightHUDOnly()
 	{
 		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
@@ -2432,7 +2439,7 @@ void RegisterCombatHUDWidgetBuilderCommands()
 		FConsoleCommandDelegate::CreateStatic(&BuildInventoryTabOnly));
 	RoundTurnRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDRoundTurn"),
-		TEXT("Restore the authored 0811 ROUND/turn bar and #519 action button art."),
+		TEXT("Restore the #567-sized ROUND/turn bar and #519 action button art."),
 		FConsoleCommandDelegate::CreateStatic(&RepairRoundTurnOnly));
 	ActionButtonArtRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDActionButtonArt"),
@@ -2440,7 +2447,7 @@ void RegisterCombatHUDWidgetBuilderCommands()
 		FConsoleCommandDelegate::CreateStatic(&RepairActionButtonArtOnly));
 	RightHUDRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDRightLayout"),
-		TEXT("Restore only the authored 0811 options, summaries, and action buttons."),
+		TEXT("Restore only the #567-sized options, summaries, and action buttons."),
 		FConsoleCommandDelegate::CreateStatic(&RepairRightHUDOnly));
 	MercenaryPortraitFrameRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDMercenaryPortraitFrame"),

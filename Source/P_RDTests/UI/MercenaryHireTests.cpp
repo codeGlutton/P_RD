@@ -1005,7 +1005,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 0811 authored donor의 Canvas 계약. 전체 HUD 재생성기가 우측 HUD를
+	// #567 크기 조정본의 Canvas 계약. 전체 HUD 재생성기가 우측 HUD를
 	// 임의 배율/좌표로 다시 쓰면 폴드에서 설정 바와 요약판이 서로 붙고,
 	// 스킬 판만 납작해진다. 존재 여부가 아니라 기준 좌표까지 잠근다.
 	auto CheckCanvasContract = [this](const FString& Context, UWidget* Widget,
@@ -1084,14 +1084,14 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 
 	UCanvasPanel* ObjectivePanel = Cast<UCanvasPanel>(
 		Tree->FindWidget(TEXT("ObjectivePanel")));
-	if (TestNotNull(TEXT("0811 우측 설정 바 루트"), ObjectivePanel))
+	if (TestNotNull(TEXT("#567 우측 설정 바 루트"), ObjectivePanel))
 	{
 		TestEqual(TEXT("설정 바는 HUD 루트 직계 자식"),
 			ObjectivePanel->GetParent(), RootCanvas);
 		TestEqual(TEXT("설정 바 기본 표시"), ObjectivePanel->GetVisibility(),
 			ESlateVisibility::SelfHitTestInvisible);
 		CheckCanvasContract(TEXT("설정 바 루트"), ObjectivePanel,
-			FVector2D(-470.f, 4.f), FVector2D(470.f, 173.f),
+			FVector2D(-570.f, 2.f), FVector2D(564.f, 207.6f),
 			FVector2D(1.f, 0.f), FVector2D(1.f, 0.f),
 			FVector2D::ZeroVector, 90);
 		CheckRenderContract(TEXT("설정 바 루트"), ObjectivePanel,
@@ -1127,8 +1127,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			OptionsRailFrameMount->GetParent(),
 			static_cast<UPanelWidget*>(ObjectivePanel));
 		CheckCanvasContract(TEXT("옵션 프레임 Overlay"), OptionsRailFrameMount,
-			FVector2D::ZeroVector, FVector2D(470.f, 173.f),
 			FVector2D::ZeroVector, FVector2D::ZeroVector,
+			FVector2D::ZeroVector, FVector2D(1.f, 1.f),
 			FVector2D::ZeroVector, 1);
 	}
 	if (TestNotNull(TEXT("옵션 네 칸 프레임"), OptionsRailFrame))
@@ -1149,10 +1149,10 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		FVector2D Size;
 	};
 	const FOptionIconContract OptionIcons[] = {
-		{ TEXT("MenuMapIcon"), FVector2D(45.f, 44.f), FVector2D(80.f, 81.f) },
-		{ TEXT("MenuMercenaryIcon"), FVector2D(154.f, 36.f), FVector2D(63.f, 96.f) },
-		{ TEXT("MenuMonsterIcon"), FVector2D(248.f, 48.f), FVector2D(77.f, 83.f) },
-		{ TEXT("MenuSettingsIcon"), FVector2D(348.f, 48.f), FVector2D(77.f, 80.f) },
+		{ TEXT("MenuMapIcon"), FVector2D(-228.f, -51.f), FVector2D(96.f, 97.2f) },
+		{ TEXT("MenuMercenaryIcon"), FVector2D(-97.2f, -60.6f), FVector2D(75.6f, 115.2f) },
+		{ TEXT("MenuMonsterIcon"), FVector2D(15.6f, -46.2f), FVector2D(92.4f, 99.6f) },
+		{ TEXT("MenuSettingsIcon"), FVector2D(135.6f, -46.2f), FVector2D(92.4f, 96.f) },
 	};
 	for (const FOptionIconContract& Expected : OptionIcons)
 	{
@@ -1162,8 +1162,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s 설정 바 직계 자식"), Expected.Name),
 				Icon->GetParent(), static_cast<UPanelWidget*>(ObjectivePanel));
 			CheckCanvasContract(FString::Printf(TEXT("%s 아이콘"), Expected.Name),
-				Icon, Expected.Position, Expected.Size, FVector2D::ZeroVector,
-				FVector2D::ZeroVector, FVector2D::ZeroVector, 31);
+				Icon, Expected.Position, Expected.Size, FVector2D(.5f, .5f),
+				FVector2D(.5f, .5f), FVector2D::ZeroVector, 31);
 			TestNotNull(*FString::Printf(TEXT("%s 텍스처"), Expected.Name),
 				Cast<UTexture2D>(Icon->GetBrush().GetResourceObject()));
 		}
@@ -1220,7 +1220,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s 요약판 기본값은 닫힘"), Prefix),
 				SummaryPanel->GetVisibility(), ESlateVisibility::Collapsed);
 			CheckCanvasContract(FString::Printf(TEXT("%s 요약판"), Prefix),
-				SummaryPanel, FVector2D(0.f, 140.f), FVector2D(600.f, 430.f),
+				SummaryPanel, FVector2D(0.f, 140.f), FVector2D(575.f, 430.f),
 				FVector2D(1.f, 0.f), FVector2D(1.f, 0.f),
 				FVector2D(1.f, 0.f), 60);
 			CheckRenderContract(FString::Printf(TEXT("%s 요약판"), Prefix),
@@ -1258,7 +1258,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	// 우하단 두 버튼은 같은 authored 396.172241x181.435410 판을 쓴다.
+	// 우하단 두 버튼은 같은 authored 396.172241x150 판을 쓴다.
 	// 버튼/그림/중앙 문구가 별도 Canvas 좌표로 흩어지면 한 요소만 줄어드는
 	// 회귀가 다시 생기므로, 동일 크기 Overlay 계보 전체를 함께 확인한다.
 	struct FActionPanelContract
@@ -1271,19 +1271,19 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		const TCHAR* LabelName;
 		FVector2D Position;
 	};
-	const FVector2D ActionPanelSize(396.172241f, 181.435410f);
+	const FVector2D ActionPanelSize(396.172241f, 150.f);
 	const FMargin ActionLabelContentPadding(
-		ActionPanelSize.X * .082f, ActionPanelSize.Y * .178f,
-		ActionPanelSize.X * .082f, ActionPanelSize.Y * .202f);
+		ActionPanelSize.X * .082f, 32.295502f,
+		ActionPanelSize.X * .082f, ActionPanelSize.X * .082f);
 	const FActionPanelContract ActionPanels[] = {
 		{ TEXT("SkillTogglePanel"), TEXT("SkillTogglePlateMount"),
 			TEXT("SkillTogglePlate"), TEXT("SkillToggleButton"),
 			TEXT("SkillToggleLabel_Center"), TEXT("SkillToggleLabel"),
-			FVector2D(-10.334961f, -209.789490f) },
+			FVector2D(-10.334961f, -202.f) },
 		{ TEXT("EndTurnPanel"), TEXT("EndTurnPlateMount"),
 			TEXT("EndTurnPlate"), TEXT("EndTurnButton"),
 			TEXT("EndTurnLabel_Center"), TEXT("EndTurnLabel"),
-			FVector2D(-10.334961f, -14.354064f) },
+			FVector2D(-10.334961f, -26.f) },
 	};
 	TArray<FVector2D> AuthoredActionSizes;
 	for (const FActionPanelContract& Expected : ActionPanels)
@@ -1382,8 +1382,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		FVector2D Size;
 	};
 	const FPreservedHudRect PreservedHudRects[] = {
-		{ TEXT("RoundPanel"), FVector2D(8.f, 8.f), FVector2D(218.f, 166.f) },
-		{ TEXT("TurnPanel"), FVector2D(236.f, 8.f), FVector2D(1090.f, 174.f) },
+		{ TEXT("RoundPanel"), FVector2D(18.f, 10.f), FVector2D(218.f, 173.f) },
+		{ TEXT("TurnPanel"), FVector2D(246.f, 10.f), FVector2D(1090.f, 174.f) },
 		{ TEXT("MercRosterSection"), FVector2D(231.f, 279.f),
 			FVector2D(375.f, 527.33f) },
 	};
@@ -2466,6 +2466,8 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 	}
 	UWidget* RoundPanel = Tree->FindWidget(TEXT("RoundPanel"));
 	UTextBlock* RoundText = Cast<UTextBlock>(Tree->FindWidget(TEXT("RoundText")));
+	UTextBlock* RoundNumberText = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("RoundNumberText")));
 	UImage* RoundPlate = Cast<UImage>(Tree->FindWidget(TEXT("RoundPlate")));
 	UPanelWidget* RoundPlateMount =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("RoundPlateMount")));
@@ -2476,15 +2478,32 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		&& TestNotNull(TEXT("현재 라운드 패널 슬롯"), RoundPanelSlot))
 	{
 		TestEqual(TEXT("라운드 패널 위치"), RoundPanelSlot->GetPosition(),
-			FVector2D(8.f, 8.f));
+			FVector2D(18.f, 10.f));
 		TestEqual(TEXT("라운드 패널 크기"), RoundPanelSlot->GetSize(),
-			FVector2D(218.f, 166.f));
+			FVector2D(218.f, 173.f));
 		TestEqual(TEXT("라운드 패널 좌상단 앵커 최소"),
 			RoundPanelSlot->GetAnchors().Minimum, FVector2D::ZeroVector);
 		TestEqual(TEXT("라운드 패널 좌상단 앵커 최대"),
 			RoundPanelSlot->GetAnchors().Maximum, FVector2D::ZeroVector);
 	}
 	TestNotNull(TEXT("현재 라운드 독립 텍스트"), RoundText);
+	if (TestNotNull(TEXT("현재 라운드 두 자리 숫자"), RoundNumberText))
+	{
+		TestEqual(TEXT("라운드 숫자 부모"), RoundNumberText->GetParent(),
+			Cast<UPanelWidget>(RoundPanel));
+		if (UCanvasPanelSlot* NumberSlot =
+			Cast<UCanvasPanelSlot>(RoundNumberText->Slot))
+		{
+			TestEqual(TEXT("라운드 숫자 위치"), NumberSlot->GetPosition(),
+				FVector2D(0.f, 68.f));
+			TestEqual(TEXT("라운드 숫자 크기"), NumberSlot->GetSize(),
+				FVector2D(218.f, 105.f));
+		}
+		else
+		{
+			AddError(TEXT("라운드 숫자 Canvas 슬롯 없음"));
+		}
+	}
 	if (TestNotNull(TEXT("라운드 배지 내부 래퍼"), RoundPlateMount))
 	{
 		TestEqual(TEXT("라운드 배지 래퍼 부모"), RoundPlateMount->GetParent(),
@@ -2525,9 +2544,9 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("사용자 배치 턴바 슬롯"), TurnPanelSlot))
 	{
 		TestEqual(TEXT("턴바 사용자 배치 X"),
-			double(TurnPanelSlot->GetPosition().X), 236.0);
+			double(TurnPanelSlot->GetPosition().X), 246.0);
 		TestEqual(TEXT("턴바 사용자 배치 Y"),
-			double(TurnPanelSlot->GetPosition().Y), 8.0);
+			double(TurnPanelSlot->GetPosition().Y), 10.0);
 		TestEqual(TEXT("턴바 사용자 배치 크기"),
 			TurnPanelSlot->GetSize(), FVector2D(1090.f, 174.f));
 		TestEqual(TEXT("턴바 좌상단 앵커 최소"),
@@ -2830,13 +2849,14 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 	{
 		TestEqual(TEXT("배지는 ROUND 글자만 표시"),
 			RoundText->GetText().ToString(), FString(TEXT("ROUND")));
+	}
 	// 0823 확정: 배지 아래 두 자리 숫자 칸에도 같은 라운드가 나온다.
-	if (UTextBlock* RoundNumber = Cast<UTextBlock>(
-		HUD->WidgetTree->FindWidget(TEXT("RoundNumberText"))))
+	UTextBlock* RoundNumber = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("RoundNumberText")));
+	if (TestNotNull(TEXT("독립 라운드 숫자"), RoundNumber))
 	{
 		TestEqual(TEXT("라운드 두 자리 숫자 표시"),
 			RoundNumber->GetText().ToString(), FString(TEXT("03")));
-	}
 	}
 
 	UButton* Left = Cast<UButton>(
