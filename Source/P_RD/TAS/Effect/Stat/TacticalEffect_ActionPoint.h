@@ -39,7 +39,8 @@ public:
 	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
 
 protected:
-	virtual void OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const;
+	virtual void OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const;
+	virtual void OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const;
 };
 
 /**
@@ -67,7 +68,8 @@ class UTacticalEffectExecutionCalculation_RechargeActionPoint : public UTactical
 	GENERATED_BODY()
 
 protected:
-	void OnGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float SpeedPoint) const override;
+	void OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const override;
+	void OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const override;
 };
 
 /**

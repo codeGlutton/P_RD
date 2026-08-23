@@ -45,6 +45,13 @@ public:
 	UPROPERTY(Config, Category = Combat, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectSetting", ToolTip = "상태 이상 적용 시, 사용되는 전역 설정 값"))
 	FGlobalStatusEffectBalanceSetting mGlobalStatusEffectSetting;
 
-	UPROPERTY(Config, Category = Combat, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RequiredSpeedPointForTurn", ToolTip = "턴을 소유하기 위해 소모되는 스피드 포인트 값"))
+public:
+	UPROPERTY(Config, Category = SpeedPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RequiredSpeedPointForTurn", ToolTip = "턴을 소유하기 위해 소모되는 스피드 포인트 값"))
 	int32 mRequiredSpeedPointForTurn = 10;
+
+	UPROPERTY(Config, Category = SpeedPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RechargedSpeedPointLimits", ToolTip = "스피드 포인트 충전값 최소 최댓 값"))
+	FInt32Interval mRechargedSpeedPointLimits = {5, 15};
+
+	UPROPERTY(Config, Category = ActionPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RechargedActionPointLimits", ToolTip = "액션 포인트 충전값 최소 최댓 값"))
+	FInt32Interval mRechargedActionPointLimits = {1, 20};
 };
