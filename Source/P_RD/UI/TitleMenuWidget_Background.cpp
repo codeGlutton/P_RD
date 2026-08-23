@@ -361,8 +361,8 @@ void UTitleMenuWidget::PlayTitleBackgroundVideo()
 	}
 }
 
-/** @brief WBP Image 슬롯을 영상 원본 비율로 키워 화면 전체를 덮고, 남는 방향을 중앙 기준으로 잘라낸다. */
-void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
+/** @brief WBP Image 슬롯을 영상 원본 비율로 키워 화면 전체를 덮고, 남는 세로 영역은 아래쪽에서 잘라낸다. */
+void UTitleMenuWidget::FitTitleBackgroundVideoToViewport()
 {
 	if (TitleBackgroundImage == nullptr)
 	{
@@ -426,19 +426,18 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 		return;
 	}
 
-	// "cover" 핏 계산: 영상과 캔버스의 가로세로비를 비교해, 짧은 쪽을 꽉 채우고 긴 쪽은 넘치게(잘리게) 둔다.
+	// 화면을 비우지 않는 cover 핏을 유지하되, 넓은 하늘이 먼저 보이도록 상단에 고정한다.
+	// 폴드에서는 좌우가 잘리지만 세로 전체가 채워지고, 와이드 화면에서는 초과 세로분만 아래에서 잘린다.
 	const float VideoAspect = VideoSize.X / VideoSize.Y;
 	const float ViewportAspect = FitSize.X / FitSize.Y;
 	FVector2D TargetSize;
 	if (ViewportAspect < VideoAspect)
 	{
-		// 캔버스가 영상보다 세로로 길쭉함 → 세로를 꽉 채우고, 가로는 비율대로 넘치게(좌우가 잘림).
 		TargetSize.Y = FitSize.Y;
 		TargetSize.X = FitSize.Y * VideoAspect;
 	}
 	else
 	{
-		// 캔버스가 영상보다 가로로 넓음 → 가로를 꽉 채우고, 세로는 비율대로 넘치게(상하가 잘림 = 상하크롭).
 		TargetSize.X = FitSize.X;
 		TargetSize.Y = FitSize.X / VideoAspect;
 	}
@@ -446,14 +445,15 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 	TitleBackgroundImage->SetDesiredSizeOverride(TargetSize);
 	// v05 원화는 원본 정사각형이 우측 끝에 고정되고 왼쪽이 확장 영역이다.
 	// 폴드처럼 화면이 좁아질 때는 왼쪽 확장부부터 잘리고 원본 우측은 끝까지 보존한다.
-	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(1.0f, 0.5f));
+	// 세로가 짧은 폴드 멀티윈도우/와이드 화면에서는 상단을 보존하고 초과분을 아래에서 자른다.
+	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(1.0f, 0.0f));
 	TitleBackgroundImage->SetRenderTransform(FWidgetTransform());
 
-	// 정상 경로: 우측 중앙 앵커/정렬로 고정해 cover의 가로 초과분을 왼쪽에서만 잘라낸다.
+	// 정상 경로: 우측 상단 앵커/정렬로 고정해 초과분을 왼쪽과 아래쪽에서만 잘라낸다.
 	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(TitleBackgroundImage->Slot))
 	{
-		CanvasSlot->SetAnchors(FAnchors(1.0f, 0.5f));
-		CanvasSlot->SetAlignment(FVector2D(1.0f, 0.5f));
+		CanvasSlot->SetAnchors(FAnchors(1.0f, 0.0f));
+		CanvasSlot->SetAlignment(FVector2D(1.0f, 0.0f));
 		CanvasSlot->SetPosition(FVector2D::ZeroVector);
 		CanvasSlot->SetAutoSize(false);
 		CanvasSlot->SetSize(TargetSize);
@@ -465,7 +465,7 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 	const FVector2D CurrentImageSize = TitleBackgroundImage->GetCachedGeometry().GetLocalSize();
 	if (CurrentImageSize.X > 0.0f && CurrentImageSize.Y > 0.0f)
 	{
-		// 가로/세로 중 더 큰 배율을 택해야 양쪽 모두 화면을 덮는다(cover 보장).
+		// 캔버스 슬롯을 쓸 수 없는 경우에도 화면을 완전히 덮는 cover 배율을 유지한다.
 		const float RenderScale = FMath::Max(TargetSize.X / CurrentImageSize.X, TargetSize.Y / CurrentImageSize.Y);
 		if (RenderScale > 0.0f)
 		{
