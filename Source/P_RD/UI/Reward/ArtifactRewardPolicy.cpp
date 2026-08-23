@@ -1,4 +1,4 @@
-#include "UI/Reward/ArtifactRewardPolicy.h"
+﻿#include "UI/Reward/ArtifactRewardPolicy.h"
 
 namespace ArtifactRewardPolicy
 {
@@ -21,6 +21,26 @@ namespace ArtifactRewardPolicy
 
 		SelectedId = RequestedId;
 		return true;
+	}
+
+	FRewardGrantBundleResultUI GrantOne(
+		const FPrimaryAssetId& ArtifactId,
+		TFunctionRef<bool(const FPrimaryAssetId&)> Grant)
+	{
+		FRewardGrantBundleResultUI Result;
+		Result.mGrantedItemIds.Reserve(1);
+		Result.mFailedItemIds.Reserve(1);
+
+		if (Grant(ArtifactId))
+		{
+			Result.mGrantedItemIds.Add(ArtifactId);
+		}
+		else
+		{
+			Result.mFailedItemIds.Add(ArtifactId);
+		}
+
+		return Result;
 	}
 
 	FRewardGrantBundleResultUI GrantAll(
