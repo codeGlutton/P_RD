@@ -57,8 +57,6 @@ public:
 	{
 		checkf(Array.Num() >= N, TEXT("Random Array is not enough to get random items"));
 
-		TArray<T> Candidates;
-
 		TSet<int32> SelectedIndices;
 		SelectedIndices.Reserve(N);
 		while (SelectedIndices.Num() < N)
@@ -74,7 +72,7 @@ public:
 		Result.Reserve(N);
 		for (const int32 Index : SelectedIndices)
 		{
-			Result.Add(Candidates[Index]);
+			Result.Add(Array[Index]);
 		}
 
 		return Result;
