@@ -1,4 +1,4 @@
-#include "PCGStage/Room.h"
+﻿#include "PCGStage/Room.h"
 
 #define LOCTEXT_NAMESPACE "Room"
 
@@ -26,20 +26,7 @@ void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPri
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	// 보상 아티팩트도 방 진입 전에 미리 로드 대상에 포함
-	for (const FPrimaryAssetId& ArtifactId : GetEffectiveRewardArtifactDataIds())
-	{
-		if (ArtifactId.IsValid())
-		{
-			AdditionalAssetIds.Add(ArtifactId);
-		}
-	}
-}
-
-TArray<FPrimaryAssetId> FTreasureRoom::GetEffectiveRewardArtifactDataIds() const
-{
-	// mIsConfigured=true인 빈 배열은 의도적인 무보상이며 구형 필드를 부활시키지 않는다.
-	return mRewardArtifactDataIds;
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 FShopRoom::FShopRoom()
@@ -103,28 +90,7 @@ void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	for (const FPrimaryAssetId& ArtifactId : GetEffectiveRewardArtifactDataIds())
-	{
-		if (ArtifactId.IsValid())
-		{
-			AdditionalAssetIds.Add(ArtifactId);
-		}
-	}
-}
-
-TArray<FPrimaryAssetId> FEliteMonsterRoom::GetEffectiveRewardArtifactDataIds() const
-{
-	if (mIsConfigured || mRewardArtifactDataIds.IsEmpty() == false)
-	{
-		return mRewardArtifactDataIds;
-	}
-
-	TArray<FPrimaryAssetId> Result;
-	if (mRewardArtifactDataId.IsValid())
-	{
-		Result.Add(mRewardArtifactDataId);
-	}
-	return Result;
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 FBossMonsterRoom::FBossMonsterRoom()
@@ -141,28 +107,13 @@ void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<F
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	for (const FPrimaryAssetId& ArtifactId : GetEffectiveRewardArtifactDataIds())
+	for (const FPrimaryAssetId& ArtifactId : mRewardArtifactDataIds)
 	{
 		if (ArtifactId.IsValid())
 		{
 			AdditionalAssetIds.Add(ArtifactId);
 		}
 	}
-}
-
-TArray<FPrimaryAssetId> FBossMonsterRoom::GetEffectiveRewardArtifactDataIds() const
-{
-	if (mIsConfigured || mRewardArtifactDataIds.IsEmpty() == false)
-	{
-		return mRewardArtifactDataIds;
-	}
-
-	TArray<FPrimaryAssetId> Result;
-	if (mRewardArtifactDataId.IsValid())
-	{
-		Result.Add(mRewardArtifactDataId);
-	}
-	return Result;
 }
 
 #undef LOCTEXT_NAMESPACE

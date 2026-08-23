@@ -401,7 +401,6 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
-		NewRoom.mIsConfigured = true;
 
 		// 개봉 보상 골드 선정
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mTreasureRewardMoney);
@@ -411,7 +410,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
 		if (ArtifactIdArray.IsEmpty() == false)
 		{
-			NewRoom.mRewardArtifactDataIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray));
+			NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
 		}
 
 		NewRoomPtr = &NewRoom;
@@ -427,33 +426,25 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		const uint8 JobTypeCount = StaticCast<uint8>(EUnitJobType::PlayerJobCount);
 		for (uint8 JobTypeIndex = 0; JobTypeIndex < JobTypeCount; ++JobTypeIndex)
 		{
-			for (int32 i = 0; i < 2; ++i)
-			{
-				const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
-				const TArray<FPrimaryAssetId>& SkillIdArray = mJobSkillAssetIds[JobTypeIndex][RarityTypeIndex];
-				NewRoom.mSaleJobSkillDataItems[JobTypeIndex].mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
-			}
+			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
+			const TArray<FPrimaryAssetId>& SkillIdArray = mJobSkillAssetIds[JobTypeIndex][RarityTypeIndex];
+
+			NewRoom.mSaleJobSkillDataItems[JobTypeIndex].mSaleItemIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, SkillIdArray, 2);
 		}
-		for (int32 i = 0; i < 3; ++i)
 		{
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mSkillRarityRate);
 			const TArray<FPrimaryAssetId>& SkillIdArray = mCommonSkillAssetIds[RarityTypeIndex];
-			NewRoom.mSaleCommonSkillDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, SkillIdArray));
+			NewRoom.mSaleCommonSkillDataItems.mSaleItemIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, SkillIdArray, 3);
 		}
 
-		/* 판매 아티펙트 선정 (해당 희귀도 에셋이 없으면 빈 슬롯 허용) */
-		for (int32 i = 0; i < 3; ++i)
+		/* 판매 아티펙트 선정 */
 		{
 			const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 			const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-			if (ArtifactIdArray.IsEmpty() == true)
-			{
-				continue;
-			}
-			NewRoom.mSaleArtifactDataItems.mSaleItemIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray));
+			NewRoom.mSaleArtifactDataItems.mSaleItemIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, ArtifactIdArray, 3);
 		}
 
-		/* 고용가능한 용병 */
+		/* 고용가능한 용병 (중복 허용) */
 
 		for (int32 i = 0; i < 3; ++i)
 		{
@@ -505,23 +496,14 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FEliteMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FEliteMonsterRoom>();
-		NewRoom.mIsConfigured = true;
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mEliteRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
 
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
+
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
-		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
-		{
-			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
-				mBuildStream, CandidateIds);
-			NewRoom.mRewardArtifactDataIds.Add(Picked);
-			CandidateIds.RemoveSingle(Picked);
-		}
-		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
-			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
+		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -532,22 +514,12 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FBossMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FBossMonsterRoom>();
-		NewRoom.mIsConfigured = true;
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mBossRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;
 
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[StaticCast<uint8>(ERarityType::Epic)];
-		TArray<FPrimaryAssetId> CandidateIds = ArtifactIdArray;
-		while (NewRoom.mRewardArtifactDataIds.Num() < 3 && CandidateIds.IsEmpty() == false)
-		{
-			const FPrimaryAssetId Picked = URandomStreamFunctionLibrary::GetRandomItem(
-				mBuildStream, CandidateIds);
-			NewRoom.mRewardArtifactDataIds.Add(Picked);
-			CandidateIds.RemoveSingle(Picked);
-		}
-		NewRoom.mRewardArtifactDataId = NewRoom.mRewardArtifactDataIds.IsEmpty()
-			? FPrimaryAssetId() : NewRoom.mRewardArtifactDataIds[0];
+		NewRoom.mRewardArtifactDataIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, ArtifactIdArray, 3);
 
 		NewRoomPtr = &NewRoom;
 		break;

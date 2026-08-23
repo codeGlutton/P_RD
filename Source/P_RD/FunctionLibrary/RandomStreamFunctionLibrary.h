@@ -33,6 +33,53 @@ public:
 		return Array[Stream.RandRange(0, Array.Num() - 1)];
 	}
 
+	template<typename T>
+	static TArray<T> GetRandomUniqueItemsUsingCopiedArray(const FRandomStream& Stream, const TArray<T>& Array, int32 N)
+	{
+		checkf(Array.Num() < N, TEXT("Random Array is not enough to get random items"));
+
+		TArray<T> Shuffled = Array;
+		ShuffleArray(Stream, OUT Shuffled);
+
+		TArray<T> Result;
+		Result.Reserve(N);
+
+		for (int32 i = 0; i < N; ++i)
+		{
+			Result.Add(Shuffled[i]);
+		}
+
+		return Result;
+	}
+
+	template<typename T>
+	static TArray<T> GetRandomUniqueItemsUsingNonCopiedArray(const FRandomStream& Stream, const TArray<T>& Array, int32 N)
+	{
+		checkf(Array.Num() < N, TEXT("Random Array is not enough to get random items"));
+
+		TArray<T> Candidates;
+
+		TSet<int32> SelectedIndices;
+		SelectedIndices.Reserve(N);
+		while (SelectedIndices.Num() < N)
+		{
+			const int32 RandomIndex = Stream.RandRange(0, Array.Num() - 1);
+			if (SelectedIndices.Contains(RandomIndex) == false)
+			{
+				SelectedIndices.Add(RandomIndex);
+			}
+		}
+
+		TArray<T> Result;
+		Result.Reserve(N);
+		for (const int32 Index : SelectedIndices)
+		{
+			Result.Add(Candidates[Index]);
+		}
+
+		return Result;
+	}
+
 public:
 	template<typename T>
 	static void ShuffleArray(const FRandomStream& Stream, TArray<T>& Array)

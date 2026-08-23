@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "RDMinimal.h"
 #include "UI/Reward/RewardUITypes.h"
@@ -20,6 +20,13 @@ namespace ArtifactRewardPolicy
 	P_RD_API bool TrySelectOne(const TArray<FPrimaryAssetId>& CandidateIds,
 		const FPrimaryAssetId& RequestedId,
 		OUT FPrimaryAssetId& SelectedId);
+
+	/**
+	 * @brief 하나의 입력 ID를 필터링해 한 번 지급한다.
+	 */
+	P_RD_API FRewardGrantBundleResultUI GrantOne(
+		const FPrimaryAssetId& ArtifactIds,
+		TFunctionRef<bool(const FPrimaryAssetId&)> Grant);
 
 	/**
 	 * @brief 모든 입력 ID를 순서와 중복을 보존해 한 번씩 지급한다.

@@ -844,12 +844,10 @@ bool ACombatGameMode::ClaimCombatSelectedArtifact(
 	switch (CurrentRoom.mType)
 	{
 	case ERoomType::EliteMonster:
-		CandidateIds = static_cast<const FEliteMonsterRoom&>(CurrentRoom)
-			.GetEffectiveRewardArtifactDataIds();
+		CandidateIds.Add(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataId);
 		break;
 	case ERoomType::BossMonster:
-		CandidateIds = static_cast<const FBossMonsterRoom&>(CurrentRoom)
-			.GetEffectiveRewardArtifactDataIds();
+		CandidateIds = static_cast<const FBossMonsterRoom&>(CurrentRoom).mRewardArtifactDataIds;
 		break;
 	default:
 		return false;
@@ -2700,20 +2698,19 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	case ERoomType::EliteMonster:
 	{
 		const FEliteMonsterRoom& EliteRoom = static_cast<const FEliteMonsterRoom&>(CurrentRoom);
-		for (const FPrimaryAssetId& ArtifactId : EliteRoom.GetEffectiveRewardArtifactDataIds())
 		{
 			if (Choices.Num() >= 3)
 			{
 				break;
 			}
-			AddEquipmentReward(ArtifactId);
+			AddEquipmentReward(EliteRoom.mRewardArtifactDataId);
 		}
 		break;
 	}
 	case ERoomType::BossMonster:
 	{
 		const FBossMonsterRoom& BossRoom = static_cast<const FBossMonsterRoom&>(CurrentRoom);
-		for (const FPrimaryAssetId& ArtifactId : BossRoom.GetEffectiveRewardArtifactDataIds())
+		for (const FPrimaryAssetId& ArtifactId : BossRoom.mRewardArtifactDataIds)
 		{
 			if (Choices.Num() >= 3)
 			{

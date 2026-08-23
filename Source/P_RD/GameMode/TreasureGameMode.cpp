@@ -165,9 +165,9 @@ bool ATreasureGameMode::OpenRewardPresentation()
 	}
 	const FTreasureRoom& TreasureRoom =
 		static_cast<const FTreasureRoom&>(CurrentRoom);
-	const TArray<FPrimaryAssetId> ArtifactIds =
-		TreasureRoom.GetEffectiveRewardArtifactDataIds();
-	const bool bHasArtifact = !ArtifactIds.IsEmpty();
+	const FPrimaryAssetId ArtifactId =
+		TreasureRoom.mRewardArtifactDataId;
+	const bool bHasArtifact = ArtifactId.IsValid() == false;
 	// 클래스 지정은 BP 디자이너 몫(EditDefaultsOnly) -- 코드에는 경로 리터럴을 두지 않는다.
 	UClass* WidgetClass = bHasArtifact
 		? mRewardWidgetClass.Get() : mRewardWidgetClassNoArtifact.Get();
@@ -187,12 +187,9 @@ bool ATreasureGameMode::OpenRewardPresentation()
 
 	TArray<FRewardChoiceUI> Choices;
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
-	for (int32 Index = 0; Index < ArtifactIds.Num(); ++Index)
 	{
-		const FPrimaryAssetId& ArtifactId =
-			ArtifactIds[Index];
 		FRewardChoiceUI Choice;
-		Choice.mChoiceIndex = Index;
+		Choice.mChoiceIndex = 0;
 		Choice.mKind = ERewardChoiceKind::Artifact;
 		Choice.mSourceAssetId = ArtifactId;
 		Choice.mName = FText::FromName(ArtifactId.PrimaryAssetName);
@@ -387,14 +384,14 @@ FRewardGrantBundleResultUI ATreasureGameMode::GrantTreasureArtifactBundle()
 
 	const FTreasureRoom& TreasureRoom = static_cast<const FTreasureRoom&>(
 		RunPersistData->GetCurrentRoom());
-	const TArray<FPrimaryAssetId> ArtifactIds =
-		TreasureRoom.GetEffectiveRewardArtifactDataIds();
+	const FPrimaryAssetId ArtifactId =
+		TreasureRoom.mRewardArtifactDataId;
 	UPartyModel* PartyModel = GetPartyModel();
 	UPartyArtifactComponentModel* ArtifactModel = PartyModel != nullptr
 		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
 
-	Result = ArtifactRewardPolicy::GrantAll(
-		ArtifactIds,
+	Result = ArtifactRewardPolicy::GrantOne(
+		ArtifactId,
 		[ArtifactModel](const FPrimaryAssetId& ArtifactId)
 		{
 			return ArtifactModel != nullptr
