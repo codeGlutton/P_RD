@@ -80,3 +80,4 @@ public:
 	UPROPERTY(Category = "Tag", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TagGain"))
 	int32 mTagGain = 0;
 };
+

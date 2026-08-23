@@ -94,7 +94,7 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		// 활성 중 부여 태그: 취약 (모디파이어 없음 = 순수 태그형)
-		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
+		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
 	}
 };
 

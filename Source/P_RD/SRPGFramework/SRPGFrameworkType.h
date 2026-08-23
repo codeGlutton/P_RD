@@ -398,10 +398,18 @@ struct FSRPGCombatRoundEvent
 {
     GENERATED_BODY()
 
+    friend struct FSRPGCompositeCombatRoundEvent;
+
 public:
     virtual ~FSRPGCombatRoundEvent() = default;
 
 public:
+    void SetEventName(const FName& NewName);
+    FName GetEventName() const;
+    int32 GetLayerIndex() const;
+
+public:
+    bool IsTriggered() const;
     bool IsActivated() const;
     void TryToTrigger(TSharedRef<FPresentationBarrier> RoundBarrier, USRPGCombatModel* Model);
 
@@ -425,6 +433,14 @@ private:
     }
 
     /**
+     * @brief 초기 트리거 실행 전에 실행되는 함수
+     * @param Model 전투 모델 객체 
+     */
+    virtual void PreTrigger_Internal(USRPGCombatModel* Model)
+    {
+    }
+
+    /**
      * @brief 트리거 라운드에 도달 이후부터, 호출되는 함수
      * @param Model 전투 모델 객체
      * @return 종료 여부
@@ -443,6 +459,12 @@ private:
     }
 
 protected:
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EventName"))
+    FName mEventName;
+
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "LayerIndex"))
+    int32 mLayerIndex = 0;
+
     UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLoop"))
     bool mIsLoop = false;
 
@@ -452,4 +474,102 @@ private:
     UPROPERTY()
     bool mIsActivated = true;
 };
+
+/**
+ * @brief 라운드 이벤트를 LayerIndex 순서로 관리하며, Lock/Unlock 기반 지연 추가/삭제를 지원하는 컨테이너
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FSRPGCombatRoundEventContainer
+{
+    GENERATED_BODY()
+
+    /* RAII ScopedLock */
+public:
+    struct FScopedLock
+    {
+    public:
+        explicit FScopedLock(FSRPGCombatRoundEventContainer& InContainer) : mContainer(InContainer)
+        {
+            mContainer.Lock();
+        }
+
+        ~FScopedLock()
+        {
+            mContainer.Unlock();
+        }
+
+        FScopedLock(const FScopedLock&) = delete;
+        FScopedLock& operator=(const FScopedLock&) = delete;
+
+    private:
+        FSRPGCombatRoundEventContainer& mContainer;
+    };
+
+public:
+    FSRPGCombatRoundEventContainer() = default;
+
+public:
+    TInstancedStruct<FSRPGCombatRoundEvent>& operator[](int32 Index);
+    const TInstancedStruct<FSRPGCombatRoundEvent>& operator[](int32 Index) const;
+
+public:
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& GetEvents();
+    const TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& GetEvents() const;
+
+    /* 기본 TArray 문법 */
+public:
+    int32 Num() const;
+    bool IsEmpty() const;
+    bool IsValidIndex(int32 Index) const;
+    bool RemoveAt(int32 Index);
+    void Empty();
+
+    /* range-based for loop (for-each) 지원 */
+public:
+    auto begin()
+    { 
+        return mEvents.begin(); 
+    }
+    auto end() 
+    { 
+        return mEvents.end(); 
+    }
+    auto begin() const 
+    { 
+        return mEvents.begin(); 
+    }
+    auto end() const 
+    { 
+        return mEvents.end();
+    }
+
+    /* 이벤트 제어 (추가/검색/삭제) */
+public:
+    void AddEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
+
+    FSRPGCombatRoundEvent* FindEvent(const FName& EventName);
+    const FSRPGCombatRoundEvent* FindEvent(const FName& EventName) const;
+
+    bool RemoveEvent(const FName& EventName);
+
+public:
+    /* Lock / Unlock 메커니즘 */
+    void Lock();
+    void Unlock();
+    bool IsLocked() const;
+    int32 GetLockCount() const;
+
+private:
+    void FlushPendingOperations();
+
+protected:
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Events"))
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mEvents;
+
+private:
+    int32 mLockCount = 0;
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mReservedAdds;
+    TArray<int32> mReservedRemoveIndices;
+};
+
 

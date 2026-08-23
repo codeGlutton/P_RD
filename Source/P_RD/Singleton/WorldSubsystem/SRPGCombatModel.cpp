@@ -7,6 +7,7 @@
 
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGFramework/SRPGTurnEndAction.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
@@ -391,45 +392,49 @@ void USRPGCombatModel::EndRound(TSharedPtr<FPresentationBarrier> RoundPresentati
 
 void USRPGCombatModel::AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
 {
-	mRoundStartEvents.Add(MoveTemp(Event));
+	mRoundStartEvents.AddEvent(Event);
 }
 
 void USRPGCombatModel::AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
 {
-	mRoundEndEvents.Add(MoveTemp(Event));
+	mRoundEndEvents.AddEvent(Event);
 }
 
-void USRPGCombatModel::AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event)
+FSRPGCombatRoundEvent* USRPGCombatModel::FindRoundStartEvent(const FName& EventName)
 {
-	// 같은 타입 이벤트가 이미 있으면 무시 (타입 = 이벤트 구조체의 C++ 타입)
-	for (const TInstancedStruct<FSRPGCombatRoundEvent>& RoundEndEvent : mRoundEndEvents)
-	{
-		if (RoundEndEvent.GetScriptStruct() == Event.GetScriptStruct())
-		{
-			return;
-		}
-	}
-
-	mRoundEndEvents.Add(MoveTemp(Event));
+	return mRoundStartEvents.FindEvent(EventName);
 }
 
-void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex)
+const FSRPGCombatRoundEvent* USRPGCombatModel::FindRoundStartEvent(const FName& EventName) const
+{
+	return mRoundStartEvents.FindEvent(EventName);
+}
+
+FSRPGCombatRoundEvent* USRPGCombatModel::FindRoundEndEvent(const FName& EventName)
+{
+	return mRoundEndEvents.FindEvent(EventName);
+}
+
+const FSRPGCombatRoundEvent* USRPGCombatModel::FindRoundEndEvent(const FName& EventName) const
+{
+	return mRoundEndEvents.FindEvent(EventName);
+}
+
+void USRPGCombatModel::TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, FSRPGCombatRoundEventContainer& RoundEvents, int32 EventIndex)
 {
 	if (RoundEvents.IsValidIndex(EventIndex) == false)
 	{
 		return;
 	}
 
+	RoundEvents.Lock();
 	auto RoundEventBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateLambda([this, RoundPresentationBarrier, &RoundEvents, EventIndex]() {
 		if (RoundEvents[EventIndex].GetMutable().IsActivated() == false)
 		{
 			RoundEvents.RemoveAt(EventIndex);
-			TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex);
 		}
-		else
-		{
-			TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex + 1);
-		}
+		TriggerRoundEvents(RoundPresentationBarrier, RoundEvents, EventIndex + 1);
+		RoundEvents.Unlock();
 		}));
 
 	RoundEvents[EventIndex].GetMutable().TryToTrigger(RoundEventBarrier.ToSharedRef(), this);

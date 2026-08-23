@@ -35,6 +35,7 @@ public:
 	void PostInitializeComponentModels() override;
 
 public:
+	void OnBeginRoom() override;
 	void OnEndRoom() override;
 
 	/* IBoardCombatTarget 상속 */

@@ -35,9 +35,13 @@ public:
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
 	TMap<FTacticalAttribute, float> mAttributes;
 
-	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "발동 여부"
+	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "상태이상 Effect 스택 수"
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	TMap<FGameplayTag, int32> mTags;
+	TMap<FGameplayTag, int32> mEffectCounts;
+
+	// @brief 죽음, 버프, 디버프의 모든 "태그 부여 요인 수"
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	TMap<FGameplayTag, int32> mGrantedTags;
 
 	// @brief 타일 위치
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)

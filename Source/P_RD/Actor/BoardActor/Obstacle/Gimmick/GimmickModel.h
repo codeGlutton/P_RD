@@ -14,6 +14,7 @@
 struct FActiveSkillContext;
 class UStaticSkillData;
 struct FPresentationBarrier;
+class UTileMapModel;
 
 /**
  * @brief  기믹 공통 모델

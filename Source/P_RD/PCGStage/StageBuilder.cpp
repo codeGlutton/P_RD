@@ -401,6 +401,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FTreasureRoom>();
 		auto& NewRoom = Room.GetMutable<FTreasureRoom>();
+		NewRoom.mIsConfigured = true;
 
 		// 개봉 보상 골드 선정
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mTreasureRewardMoney);
@@ -504,6 +505,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FEliteMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FEliteMonsterRoom>();
+		NewRoom.mIsConfigured = true;
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mEliteRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mEliteRewardExp;
@@ -530,6 +532,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 
 		Room.InitializeAs<FBossMonsterRoom>();
 		auto& NewRoom = Room.GetMutable<FBossMonsterRoom>();
+		NewRoom.mIsConfigured = true;
 
 		NewRoom.mRewardMoney = URandomStreamFunctionLibrary::GetRandomFromInterval(mBuildStream, mGlobalSetting.mBossRewardMoney);
 		NewRoom.mRewardExp = mGlobalSetting.mBossRewardExp;

@@ -1904,10 +1904,10 @@ UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
 			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
 			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor, TEXT("T_Status_Agility") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
-			{ EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor, TEXT("T_Status_Agility") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
+			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
 		};
 		for (const TPair<FGameplayTag, const TCHAR*>& Pair : Pairs)
 		{
@@ -2510,13 +2510,14 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 	{
 		const FCombatArtifactUI* Artifact = Meta.mArtifacts.IsValidIndex(Index)
 			? &Meta.mArtifacts[Index] : nullptr;
-		const bool bHasArtifact = Artifact != nullptr && Artifact->mIcon != nullptr;
+		const bool bHasArtifact = Artifact != nullptr;
+		const bool bHasIcon = bHasArtifact && Artifact->mIcon != nullptr;
 		SetShown(mMercenaryInventoryArtifactFrames[Index], true);
 		if (mMercenaryInventoryArtifactIcons.IsValidIndex(Index))
 		{
 			UImage* Icon = mMercenaryInventoryArtifactIcons[Index];
-			SetShown(Icon, bHasArtifact);
-			if (Icon != nullptr && bHasArtifact)
+			SetShown(Icon, bHasIcon);
+			if (Icon != nullptr && bHasIcon)
 			{
 				Icon->SetBrushFromTexture(Artifact->mIcon.Get(), false);
 			}
@@ -2525,7 +2526,11 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 		{
 			UTextBlock* Name = mMercenaryInventoryArtifactNames[Index];
 			// 이름 표시 여부는 WBP 디자이너 값에 맡긴다. C++은 내용만 바꾼다.
-			SetTextIfPresent(Name, bHasArtifact ? Artifact->mName : FText::GetEmpty());
+			SetTextIfPresent(Name, bHasArtifact
+				? (Artifact->mName.IsEmpty()
+					? NSLOCTEXT("CombatHUD", "ArtifactFallbackName", "Artifact")
+					: Artifact->mName)
+				: FText::GetEmpty());
 		}
 		if (mMercenaryInventoryArtifactButtons.IsValidIndex(Index)
 			&& mMercenaryInventoryArtifactButtons[Index] != nullptr)

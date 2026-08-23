@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TacticalEffect_Root.cpp
  * @brief  Root(속박) 이펙트 구현 파일
  * @author 이문환
@@ -10,10 +10,16 @@
 
 UTacticalEffect_Root::UTacticalEffect_Root()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
+}
+
+UTacticalEffect_AddRoot::UTacticalEffect_AddRoot()
+{
+	mStatusEffect = UTacticalEffect_Root::StaticClass();
 }
 
 UTacticalEffect_GetRoot::UTacticalEffect_GetRoot()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root;
+	mStatusEffect = UTacticalEffect_Root::StaticClass();
 }

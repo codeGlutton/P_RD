@@ -22,6 +22,7 @@
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Stun.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.h"
 #include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
+#include "TAS/Effect/TacticalEffectQuery.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -132,13 +133,16 @@ namespace
 	// @brief 기절 태그 보유 여부
 	bool HasStunTag(const UMockGimmickVictimUnitModel* Unit)
 	{
-		return Unit->GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun);
+		return Unit->GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
 	}
 
-	// @brief 기절 태그 누적 수 (장판처럼 여러 번 맞는 케이스의 발동 횟수 검증용)
+	// @brief 기절 스택 수 (장판처럼 여러 번 맞는 케이스의 발동 횟수 검증용)
+	// 기절은 스택형 지속 효과라 태그는 1개만 붙고, 맞은 횟수는 스택에 누적됨
 	int32 GetStunCount(const UMockGimmickVictimUnitModel* Unit)
 	{
-		return Unit->GetAttributeComponentModel()->GetTagCount(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun);
+		const FTacticalEffectQuery Query = FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(
+			FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun));
+		return Unit->GetAttributeComponentModel()->GetAggregatedStackCount(Query);
 	}
 
 	// @brief 장판 테스트 픽스처 (타일맵 + 장판 + 피해자 유닛)
@@ -595,11 +599,13 @@ bool FPuddleRoundEndEventTests::RunTest(const FString& Parameters)
 	CombatModel->SetTileMap(TileMap);
 
 	/* Case1: 중복 등록 방지 */
-	AddInfo(TEXT("=== Case1: 일괄 발동 이벤트 2회 등록 -> 1개 ==="));
+	AddInfo(TEXT("=== Case1: 일괄 발동 이벤트 등록 시도 2회 -> 1개 ==="));
 
-	CombatModel->AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent>::Make<FPuddleRoundEndEvent>());
-	CombatModel->AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent>::Make<FPuddleRoundEndEvent>());
+	// 장판 2개가 스폰되며 각각 등록을 시도하는 상황
+	FPuddleRoundEndEvent::Register(CombatModel);
+	FPuddleRoundEndEvent::Register(CombatModel);
 	TestEqual(TEXT("[Case1] 등록된 라운드 끝 이벤트 1개"), CombatModel->GetRoundEndEventCount(), 1);
+	TestNotNull(TEXT("[Case1] 이름으로 조회 가능"), CombatModel->FindRoundEndEvent(FPuddleRoundEndEvent::EventName));
 
 	/* Case2: 보드 위 모든 장판 일괄 발동 */
 	AddInfo(TEXT("=== Case2: 장판 3개(유닛 2 + 빈 1), 이벤트 1회 -> 유닛 기절 +1, 수명 전부 -1 ==="));

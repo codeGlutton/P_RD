@@ -3,10 +3,16 @@
 
 UTacticalEffect_Vigor::UTacticalEffect_Vigor()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor);
+}
+
+UTacticalEffect_AddVigor::UTacticalEffect_AddVigor()
+{
+	mStatusEffect = UTacticalEffect_Vigor::StaticClass();
 }
 
 UTacticalEffect_GetVigor::UTacticalEffect_GetVigor()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor;
+	mStatusEffect = UTacticalEffect_Vigor::StaticClass();
 }

@@ -124,16 +124,16 @@ public:
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimPattern"))
     EAimPattern mAimPattern;
 
-    // @brief 조준 가능 거리 계산 시 사용되는 기본 값
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRange"))
+    // @brief 조준 가능 거리 계산 시 사용되는 기본 값 (Single 패턴은 자기 칸 조준이라 사용하지 않음)
+    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRange", EditCondition = "mAimPattern != EAimPattern::Single", EditConditionHides))
     int32 mAimRange;
 
-    // @brief 조준 시야를 막는 레이어 (비어 있으면 아무것도 조준을 막지 않음)
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "AimBlockerMask"))
+    // @brief 조준 시야를 막는 레이어 (비어 있으면 아무것도 조준을 막지 않음, Single 패턴은 사용하지 않음)
+    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "AimBlockerMask", EditCondition = "mAimPattern != EAimPattern::Single", EditConditionHides))
     int32 mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 
-    // @brief 보드 액터도 조준 대상으로 지정 가능 여부
-    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CanAimBoardActor"))
+    // @brief 보드 액터도 조준 대상으로 지정 가능 여부 (Single 패턴은 자기 칸 조준이라 사용하지 않음)
+    UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CanAimBoardActor", EditCondition = "mAimPattern != EAimPattern::Single", EditConditionHides))
     bool mCanAimBoardActor = true;
 
 public:

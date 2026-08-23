@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   UnitMovementComponentModelTests.cpp
  * @brief  유닛 이동 컴포넌트 모델의 속박(이동불가) 판정 유닛테스트
  * @details
@@ -77,7 +77,7 @@ bool FUnitRootTests::RunTest(const FString& Parameters)
 	TestTrue(TEXT("기본: 이동 가능"), MovementCompModel->IsMoveable());
 
 	/* [2] 속박 2스택 부여: 이동 불가 */
-	AttrComp->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Root, 2);
+	AttrComp->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root, 2);
 	TestFalse(TEXT("속박 2스택: 이동 불가"), MovementCompModel->IsMoveable());
 
 	/* [3] 턴 종료 1회: 1스택 남아 여전히 이동 불가 (기존 턴제 상태이상 감소 메커니즘 재사용) */

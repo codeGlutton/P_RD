@@ -1,6 +1,8 @@
-#include "UI/Combat/CombatUIDebugFixture.h"
+﻿#include "UI/Combat/CombatUIDebugFixture.h"
 
 #include "GameplayTagType.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 namespace
 {
@@ -12,7 +14,8 @@ namespace
 	int32 GForceCombatHPOne = 0;
 	FAutoConsoleVariableRef CForceCombatHPOne(
 		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
-		TEXT("Legacy explicit opt-in: 1 mutates combat units' actual HP to 1."));
+		TEXT("Explicit opt-in: 1 mutates enemy combat units' actual HP to 1. "
+			"The -EnemyHPOne command-line switch enables the same fixture."));
 }
 
 int32 CombatUIDebugFixture::GetMode()
@@ -31,7 +34,8 @@ bool CombatUIDebugFixture::ShouldMutateActualHPOne()
 #else
 	// Deliberately independent from CombatUIFixture mode. The normal UI fixture
 	// must not alter combat outcome or the HP tracked by RunPersistData.
-	return GForceCombatHPOne != 0;
+	return GForceCombatHPOne != 0
+		|| FParse::Param(FCommandLine::Get(), TEXT("EnemyHPOne"));
 #endif
 }
 
@@ -60,11 +64,11 @@ void CombatUIDebugFixture::AppendStatuses(const bool bPlayer,
 	}
 
 	const FGameplayTag Buff = bPlayer
-		? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification
-		: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor;
+		? EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification
+		: EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor;
 	const FGameplayTag Debuff = bPlayer
-		? EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness
-		: EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability;
+		? EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness
+		: EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability;
 	const bool bAddBuff = SideIndex == 0 || SideIndex == 2;
 	const bool bAddDebuff = SideIndex == 1 || SideIndex == 2;
 	const auto AddIfMissing = [&Statuses](const FGameplayTag Tag, const int32 Stack)

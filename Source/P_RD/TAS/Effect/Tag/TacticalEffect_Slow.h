@@ -12,11 +12,11 @@
 #include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "TacticalEffect_Slow.generated.h"
 
- /**
-  * @brief Slow(둔화) 이펙트
-  */
+/**
+ * @brief Slow(둔화) 이펙트
+ */
 UCLASS()
-class P_RD_API UTacticalEffect_Slow : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_Slow : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -25,10 +25,22 @@ public:
 };
 
 /**
+ * @brief Slow(둔화) 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddSlow : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_AddSlow();
+};
+
+/**
  * @brief Slow(둔화) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetSlow : public UTacticalEffect_GetStatusTag
+class P_RD_API UTacticalEffect_GetSlow : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

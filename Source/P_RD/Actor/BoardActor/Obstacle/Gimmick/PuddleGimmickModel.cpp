@@ -31,12 +31,12 @@ void UPuddleGimmickModel::PostInitializeComponentModels()
 		mRemainingRoundCount = PuddleSpawn->mRoundLifetime;
 	}
 
-	// 장판 일괄 발동 이벤트 등록 시도
-	// 테스트 등 전투 모델이 없는 환경에서는 등록 생략
+	// 장판 일괄 발동 이벤트 등록 (이미 등록돼 있으면 안에서 생략)
+	// 테스트 등 전투 모델이 없는 환경에서는 건너뜀
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	if (CombatModel != nullptr)
 	{
-		CombatModel->AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent>::Make<FPuddleRoundEndEvent>());
+		FPuddleRoundEndEvent::Register(CombatModel);
 	}
 }
 
@@ -79,8 +79,23 @@ void UPuddleGimmickModel::TriggerRoundEnd(TSharedPtr<FPresentationBarrier> Prese
 	}
 }
 
+const FName FPuddleRoundEndEvent::EventName = TEXT("PuddleRoundEnd");
+
+void FPuddleRoundEndEvent::Register(USRPGCombatModel* CombatModel)
+{
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	// 먼저 스폰된 장판이 이미 등록했으면 생략
+	if (CombatModel->FindRoundEndEvent(EventName) == nullptr)
+	{
+		CombatModel->AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent>::Make<FPuddleRoundEndEvent>());
+	}
+}
+
 FPuddleRoundEndEvent::FPuddleRoundEndEvent()
 {
+	mEventName = EventName;
+
 	// 한 번 발동하고 끝나는 이벤트가 아니라 라운드 끝마다 반복 발동
 	mIsLoop = true;
 }

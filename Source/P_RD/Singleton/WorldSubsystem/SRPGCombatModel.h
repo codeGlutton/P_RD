@@ -121,18 +121,13 @@ public:
 	void AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
 	void AddRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
 
-	/**
-	 * @brief 라운드 끝 이벤트 등록. 단, 같은 타입 이벤트가 이미 등록돼 있으면 무시
-	 * @details "여러 번 불러도 한 번만 등록"이 필요한 이벤트용.
-	 *          예: 장판 일괄 발동 이벤트는 전투에 1개만 있어야 하는데,
-	 *          장판들은 자기가 첫 스폰인지 알 수 없어 저마다 등록을 시도함
-	 *          → 첫 시도만 등록되고 나머지는 무시됨
-	 * @param Event 등록할 이벤트
-	 */
-	void AddUniqueRoundEndEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
+	FSRPGCombatRoundEvent* FindRoundStartEvent(const FName& EventName);
+	const FSRPGCombatRoundEvent* FindRoundStartEvent(const FName& EventName) const;
+	FSRPGCombatRoundEvent* FindRoundEndEvent(const FName& EventName);
+	const FSRPGCombatRoundEvent* FindRoundEndEvent(const FName& EventName) const;
 
 protected:
-	void TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& RoundEvents, int32 EventIndex);
+	void TriggerRoundEvents(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier, FSRPGCombatRoundEventContainer& RoundEvents, int32 EventIndex);
 
 	/* 전투 상태 평가 */
 public:
@@ -363,10 +358,10 @@ protected:
 protected:
 	// @brief 등록된 라운드 시작 이벤트
 	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents"))
-	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
+	FSRPGCombatRoundEventContainer mRoundStartEvents;
 	// @brief 등록된 라운드 종료 이벤트
 	UPROPERTY(Category = Event, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents"))
-	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
+	FSRPGCombatRoundEventContainer mRoundEndEvents;
 
 protected:
 	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지

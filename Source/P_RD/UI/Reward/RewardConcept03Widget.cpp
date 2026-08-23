@@ -12,6 +12,7 @@
 #include "TimerManager.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUITypes.h"
+#include "UI/RunOptionsRailWidget.h"
 
 #define LOCTEXT_NAMESPACE "RewardConcept03Widget"
 
@@ -23,13 +24,18 @@ namespace RewardConcept03
 	constexpr int32 ArtifactStep = 3;
 	constexpr int32 SwitcherWarmupOffset = 1;
 	constexpr int32 DefaultArtifact = 1;
-	constexpr float SelectionXs[] = { 95.f, 425.f, 755.f };
+	constexpr float ChoicePanelXs[] = { 120.f, 450.f, 780.f };
+	constexpr float ChoicePanelWidth = 260.f;
+	constexpr float ChoiceListWidth = 1160.f;
+	constexpr float ChoiceSpacing = 330.f;
 	constexpr int32 TripleBurstFrameCount = 33;
 	constexpr int32 TripleBurstAtlasColumns = 6;
 	constexpr int32 TripleBurstAtlasRows = 6;
 	constexpr float ArtifactLongPressSeconds = .5f;
 	constexpr float DefaultChestRevealDuration = 1.15f;
-	constexpr float TripleBurstRevealDuration = 4.0625f;
+	// 33장을 약 24fps로 한 번만 보여 준다. 기존 4.06초는 보상 흐름을
+	// 지나치게 늦추고 밝은 프레임의 중첩을 더 눈에 띄게 했다.
+	constexpr float TripleBurstRevealDuration = 1.35f;
 	constexpr float GoldRevealDuration = 1.65f;
 	constexpr float ArtifactRevealDuration = 1.20f;
 	constexpr float ArtifactStagger = .12f;
@@ -37,6 +43,23 @@ namespace RewardConcept03
 		FVector2D(330.f, 105.f), FVector2D(0.f, 105.f),
 		FVector2D(-330.f, 105.f) };
 	constexpr float ArtifactStartAngles[] = { -11.f, 0.f, 11.f };
+
+	float GetChoicePanelX(const int32 ChoiceCount, const int32 ChoiceIndex)
+	{
+		const int32 Count = FMath::Clamp(ChoiceCount, 1,
+			UE_ARRAY_COUNT(ChoicePanelXs));
+		if (Count == 1)
+		{
+			return (ChoiceListWidth - ChoicePanelWidth) * .5f;
+		}
+		if (Count == 2)
+		{
+			const float FirstCenter = ChoiceListWidth * .5f - ChoiceSpacing * .5f;
+			return FirstCenter - ChoicePanelWidth * .5f
+				+ ChoiceIndex * ChoiceSpacing;
+		}
+		return ChoicePanelXs[FMath::Clamp(ChoiceIndex, 0, Count - 1)];
+	}
 
 	void SetPortraitCropped(UImage* Image, UTexture2D* Texture)
 	{
@@ -124,6 +147,7 @@ void URewardConcept03Widget::NativeConstruct()
 	Super::NativeConstruct();
 	ResolveWidgets();
 	BindInput();
+	EnsureRunOptionsRail();
 	RefreshRewardData();
 	ApplyVisualState();
 }
@@ -134,6 +158,11 @@ void URewardConcept03Widget::NativeDestruct()
 	UnbindInput();
 	UnbindUIModel();
 	ReleaseArtifactDetailOverlay();
+	if (RunOptionsRailWidget != nullptr)
+	{
+		RunOptionsRailWidget->RemoveFromParent();
+		RunOptionsRailWidget = nullptr;
+	}
 	Super::NativeDestruct();
 }
 
@@ -153,6 +182,10 @@ void URewardConcept03Widget::BindUIModel(URewardUIModel* InUIModel)
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnChoicesChanged.AddUniqueDynamic(
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
+		UIModel->OnRewardSelectionConfirmed.AddUniqueDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardGrantBundleConfirmed.AddUniqueDynamic(
+			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
 	RefreshRewardData();
 }
@@ -165,6 +198,10 @@ void URewardConcept03Widget::UnbindUIModel()
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnChoicesChanged.RemoveDynamic(
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
+		UIModel->OnRewardSelectionConfirmed.RemoveDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardGrantBundleConfirmed.RemoveDynamic(
+			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
 	UIModel = nullptr;
 }
@@ -172,6 +209,37 @@ void URewardConcept03Widget::UnbindUIModel()
 void URewardConcept03Widget::HandleRewardDataChanged()
 {
 	RefreshRewardData();
+}
+
+void URewardConcept03Widget::HandleRewardSelectionConfirmed(
+	const FPrimaryAssetId RewardId)
+{
+	if (bRewardRequestPending == false
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
+		|| PendingRewardId != RewardId)
+	{
+		return;
+	}
+
+	bRewardRequestPending = false;
+	FinishRewardFlowAfterConfirmation();
+}
+
+void URewardConcept03Widget::HandleRewardGrantBundleConfirmed(
+	const FRewardGrantBundleResultUI Result)
+{
+	if (bRewardRequestPending == false
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::GrantAll)
+	{
+		return;
+	}
+
+	// 부분 실패도 정책상 bundle 처리는 끝난 것이다. 실제 결과는
+	// 게임플레이가 보관하고 UI는 완료 confirmation 이후에만 닫는다.
+	bRewardRequestPending = false;
+	FinishRewardFlowAfterConfirmation();
 }
 
 void URewardConcept03Widget::NativeTick(
@@ -210,6 +278,22 @@ void URewardConcept03Widget::ResolveWidgets()
 	ChestButton = Cast<UButton>(
 		GetWidgetFromName(TEXT("NewChestOpenButton")));
 	ChestVisualPanel = GetWidgetFromName(TEXT("NewChestVisualPanel"));
+	// 아틀라스 셀은 자체적으로 투명 여백을 포함한다. Fit/Panel이 다시
+	// 경계를 자르면 빛과 상자 가장자리가 직사각형으로 잘려 보인다.
+	UWidget* SequenceWidgets[] = {
+		ChestVisualPanel.Get(), static_cast<UWidget*>(ChestSequenceImage.Get()),
+		static_cast<UWidget*>(ChestSequenceBlendImage.Get()),
+		ChestSequenceImage != nullptr
+			? static_cast<UWidget*>(ChestSequenceImage->GetParent()) : nullptr,
+		ChestSequenceBlendImage != nullptr
+			? static_cast<UWidget*>(ChestSequenceBlendImage->GetParent()) : nullptr };
+	for (UWidget* SequenceWidget : SequenceWidgets)
+	{
+		if (SequenceWidget != nullptr)
+		{
+			SequenceWidget->SetClipping(EWidgetClipping::Inherit);
+		}
+	}
 	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
 		ChestBurstGlows[Wave] = Cast<UImage>(GetWidgetFromName(
@@ -369,6 +453,8 @@ void URewardConcept03Widget::RefreshRewardData()
 	}
 
 	const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
+	const int32 VisibleChoiceCount = FMath::Min(Choices.Num(),
+		static_cast<int32>(UE_ARRAY_COUNT(ArtifactChoicePanels)));
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
 		const bool bHasChoice = Choices.IsValidIndex(Index);
@@ -376,6 +462,17 @@ void URewardConcept03Widget::RefreshRewardData()
 		{
 			Panel->SetVisibility(bHasChoice
 				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+			if (bHasChoice)
+			{
+				if (UCanvasPanelSlot* PanelSlot =
+					Cast<UCanvasPanelSlot>(Panel->Slot))
+				{
+					FVector2D Position = PanelSlot->GetPosition();
+					Position.X = RewardConcept03::GetChoicePanelX(
+						VisibleChoiceCount, Index);
+					PanelSlot->SetPosition(Position);
+				}
+			}
 		}
 		if (!bHasChoice)
 		{
@@ -394,9 +491,16 @@ void URewardConcept03Widget::RefreshRewardData()
 	}
 
 	if (UsesArtifactStep() && Choices.Num() > 0
+		&& UIModel != nullptr
+		&& UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne
 		&& !Choices.IsValidIndex(SelectedArtifactIndex))
 	{
 		SelectedArtifactIndex = FMath::Min(1, Choices.Num() - 1);
+	}
+	if (UIModel != nullptr
+		&& UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne)
+	{
+		SelectedArtifactIndex = INDEX_NONE;
 	}
 	ApplyArtifactSelection();
 }
@@ -416,6 +520,8 @@ FText URewardConcept03Widget::GetRewardChoiceTypeText(
 		return LOCTEXT("ChoiceTypeSkill", "스킬");
 	case ERewardChoiceKind::Gold:
 		return LOCTEXT("ChoiceTypeGold", "골드");
+	case ERewardChoiceKind::Artifact:
+		return LOCTEXT("ChoiceTypeArtifact", "아티팩트");
 	default:
 		return LOCTEXT("ChoiceTypeArtifact", "아티팩트");
 	}
@@ -529,12 +635,16 @@ void URewardConcept03Widget::ResetRewardFlow()
 	const int32 ChoiceCount = UIModel != nullptr
 		? UIModel->GetRewardChoices().Num() : 3;
 	SelectedArtifactIndex = UsesArtifactStep() && ChoiceCount > 0
+		&& (UIModel == nullptr
+			|| UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne)
 		? FMath::Min(RewardConcept03::DefaultArtifact, ChoiceCount - 1)
 		: INDEX_NONE;
 	bChestOpened = false;
 	bFlowCompleted = false;
 	bExperienceClaimRequested = false;
 	bGoldClaimRequested = false;
+	bRewardRequestPending = false;
+	PendingRewardId = FPrimaryAssetId();
 	PresentationState = EPresentationState::Idle;
 	PresentationElapsed = 0.f;
 	HideArtifactDetails();
@@ -545,7 +655,7 @@ void URewardConcept03Widget::ResetRewardFlow()
 
 void URewardConcept03Widget::AdvanceRewardFlow()
 {
-	if (bFlowCompleted)
+	if (bFlowCompleted || bRewardRequestPending)
 	{
 		return;
 	}
@@ -565,7 +675,9 @@ void URewardConcept03Widget::AdvanceRewardFlow()
 		break;
 	case RewardConcept03::ArtifactStep:
 		if (PresentationState == EPresentationState::AwaitArtifactChoice
-			&& SelectedArtifactIndex != INDEX_NONE)
+			&& UIModel != nullptr
+			&& (UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::GrantAll
+				|| SelectedArtifactIndex != INDEX_NONE))
 		{
 			CompleteRewardFlow();
 		}
@@ -673,52 +785,55 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 	const bool bUsesTripleBurstFrames = bUsesAtlas || (ChestVisualSwitcher != nullptr
 		&& ChestVisualSwitcher->GetNumWidgets()
 			== RewardConcept03::TripleBurstFrameCount);
-	const bool bCanBlendTripleBurstFrames = bUsesTripleBurstFrames
-		&& ChestBlendSwitcher != nullptr
-		&& ChestBlendSwitcher->GetNumWidgets()
-			== RewardConcept03::TripleBurstFrameCount;
 	const float FramePosition = T * static_cast<float>(
 		RewardConcept03::TripleBurstFrameCount - 1);
 	if (bUsesAtlas)
 	{
-		const int32 Frame = FMath::Clamp(FMath::FloorToInt(FramePosition),
-			0, RewardConcept03::TripleBurstFrameCount - 1);
-		const int32 NextFrame = FMath::Min(Frame + 1,
-			RewardConcept03::TripleBurstFrameCount - 1);
-		const float BlendAlpha = NextFrame == Frame ? 0.f : FMath::Frac(FramePosition);
-		RewardConcept03::SetAtlasFrame(ChestSequenceImage, Frame);
-		RewardConcept03::SetAtlasFrame(ChestSequenceBlendImage, NextFrame);
-		ChestSequenceImage->SetRenderOpacity(1.f - BlendAlpha);
+		ChestSequenceImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (ChestSequenceBlendImage != nullptr)
 		{
-			ChestSequenceBlendImage->SetRenderOpacity(BlendAlpha);
+			ChestSequenceBlendImage->SetVisibility(ESlateVisibility::Collapsed);
+			ChestSequenceBlendImage->SetRenderOpacity(0.f);
 		}
+		if (ChestVisualSwitcher != nullptr)
+		{
+			ChestVisualSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (ChestBlendSwitcher != nullptr)
+		{
+			ChestBlendSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		const int32 Frame = FMath::Clamp(FMath::FloorToInt(FramePosition),
+			0, RewardConcept03::TripleBurstFrameCount - 1);
+		RewardConcept03::SetAtlasFrame(ChestSequenceImage, Frame);
+		ChestSequenceImage->SetRenderOpacity(1.f);
 	}
 	else if (ChestVisualSwitcher != nullptr)
 	{
+		ChestVisualSwitcher->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (ChestBlendSwitcher != nullptr)
+		{
+			ChestBlendSwitcher->SetVisibility(ESlateVisibility::Collapsed);
+			ChestBlendSwitcher->SetRenderOpacity(0.f);
+		}
+		if (ChestSequenceImage != nullptr)
+		{
+			ChestSequenceImage->SetVisibility(ESlateVisibility::Collapsed);
+		}
+		if (ChestSequenceBlendImage != nullptr)
+		{
+			ChestSequenceBlendImage->SetVisibility(ESlateVisibility::Collapsed);
+		}
 		const int32 Frame = bUsesTripleBurstFrames
 			? FMath::Clamp(FMath::FloorToInt(FramePosition),
 				0, RewardConcept03::TripleBurstFrameCount - 1)
 			: T < .24f ? 0 : T < .39f ? 1
 				: T < .54f ? 2 : T < .69f ? 3 : 4;
 		ChestVisualSwitcher->SetActiveWidgetIndex(Frame);
-		if (bCanBlendTripleBurstFrames)
+		ChestVisualSwitcher->SetRenderOpacity(1.f);
+		if (ChestBlendSwitcher != nullptr)
 		{
-			const int32 NextFrame = FMath::Min(Frame + 1,
-				RewardConcept03::TripleBurstFrameCount - 1);
-			const float BlendAlpha = NextFrame == Frame
-				? 0.f : FMath::Frac(FramePosition);
-			ChestBlendSwitcher->SetActiveWidgetIndex(NextFrame);
-			ChestVisualSwitcher->SetRenderOpacity(1.f - BlendAlpha);
-			ChestBlendSwitcher->SetRenderOpacity(BlendAlpha);
-		}
-		else
-		{
-			ChestVisualSwitcher->SetRenderOpacity(1.f);
-			if (ChestBlendSwitcher != nullptr)
-			{
-				ChestBlendSwitcher->SetRenderOpacity(0.f);
-			}
+			ChestBlendSwitcher->SetRenderOpacity(0.f);
 		}
 	}
 	if (ChestVisualSwitcher != nullptr || ChestSequenceImage != nullptr)
@@ -728,19 +843,9 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 		float VerticalKick = 0.f;
 		if (bUsesTripleBurstFrames)
 		{
-			const float OpenImpact = RewardConcept03::ImpactPulse(T, .235f, .055f);
-			const float Burst0 = RewardConcept03::ImpactPulse(T, .275f, .050f);
-			const float Burst1 = RewardConcept03::ImpactPulse(T, .430f, .050f);
-			const float Burst2 = RewardConcept03::ImpactPulse(T, .590f, .055f);
-			const float Compression = RewardConcept03::Segment(T, 0.f, .18f);
-			Scale = T < .18f ? FMath::Lerp(1.f, .965f, Compression)
-				: 1.f + OpenImpact * .14f + Burst0 * .07f
-					+ Burst1 * .055f + Burst2 * .045f;
-			const float ShakeEnvelope = OpenImpact * 15.f + Burst0 * 9.f
-				+ Burst1 * 7.f + Burst2 * 5.f;
-			Shake = FMath::Sin(T * 310.f) * ShakeEnvelope;
-			VerticalKick = -OpenImpact * 18.f - Burst0 * 7.f
-				- Burst1 * 5.f - Burst2 * 4.f;
+			// 아틀라스 안에 이미 카메라 확대와 광량 변화가 들어 있다. UMG에서
+			// 다시 흔들거나 확대하지 않고 8% 여백을 둬 가장자리 잘림을 막는다.
+			Scale = .92f;
 		}
 		else
 		{
@@ -754,8 +859,10 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 				? FMath::Sin(T * 78.f) * (1.f - T / .62f) * 8.f : 0.f;
 		}
 		UWidget* SequenceLayers[] = {
-			ChestSequenceImage.Get(), ChestSequenceBlendImage.Get(),
-			ChestVisualSwitcher.Get() };
+			bUsesAtlas ? static_cast<UWidget*>(ChestSequenceImage.Get())
+				: static_cast<UWidget*>(ChestVisualSwitcher.Get()),
+			bUsesAtlas ? static_cast<UWidget*>(ChestSequenceBlendImage.Get())
+				: static_cast<UWidget*>(ChestBlendSwitcher.Get()) };
 		for (UWidget* SequenceLayer : SequenceLayers)
 		{
 			if (SequenceLayer != nullptr)
@@ -765,91 +872,38 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 				SequenceLayer->SetRenderTranslation(FVector2D(Shake, VerticalKick));
 			}
 		}
-		if (bCanBlendTripleBurstFrames)
-		{
-			ChestBlendSwitcher->SetRenderTransformPivot(FVector2D(.5f, .5f));
-			ChestBlendSwitcher->SetRenderScale(FVector2D(Scale));
-			ChestBlendSwitcher->SetRenderTranslation(
-				FVector2D(Shake, VerticalKick));
-		}
 	}
-	constexpr float BurstStarts[] = { .22f, .40f, .56f };
-	for (int32 Wave = 0; Wave < UE_ARRAY_COUNT(BurstStarts); ++Wave)
+	// Atlas 자체에 빛과 코인이 들어 있으므로 모든 UMG 보조광을 끈다.
+	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
-		const float WaveT = RewardConcept03::Segment(
-			T, BurstStarts[Wave], BurstStarts[Wave] + .22f);
-		const bool bActive = T >= BurstStarts[Wave]
-			&& T < BurstStarts[Wave] + .22f;
-		const float Alpha = bActive ? FMath::Sin(WaveT * PI) : 0.f;
 		if (UImage* Glow = ChestBurstGlows[Wave])
 		{
-			Glow->SetRenderOpacity(Alpha * .62f);
-			Glow->SetRenderScale(FVector2D(FMath::Lerp(.25f, 1.65f, WaveT)));
+			Glow->SetVisibility(ESlateVisibility::Collapsed);
+			Glow->SetRenderOpacity(0.f);
 		}
 		if (UImage* Ring = ChestBurstRings[Wave])
 		{
-			Ring->SetRenderOpacity(Alpha * .95f);
-			Ring->SetRenderScale(FVector2D(FMath::Lerp(.18f, 1.90f, WaveT)));
+			Ring->SetVisibility(ESlateVisibility::Collapsed);
+			Ring->SetRenderOpacity(0.f);
 		}
 		if (UImage* Rays = ChestBurstRays[Wave])
 		{
-			Rays->SetRenderOpacity(Alpha * .78f);
-			Rays->SetRenderScale(FVector2D(FMath::Lerp(.45f, 1.38f, WaveT)));
-			Rays->SetRenderTransformAngle(
-				(Wave % 2 == 0 ? 1.f : -1.f) * 24.f * WaveT);
+			Rays->SetVisibility(ESlateVisibility::Collapsed);
+			Rays->SetRenderOpacity(0.f);
 		}
 		if (UImage* Spark = ChestBurstSparks[Wave])
 		{
-			const float SparkScale = FMath::Lerp(.18f, 1.22f,
-				RewardConcept03::EaseOutBack(FMath::Min(WaveT * 2.6f, 1.f)));
-			Spark->SetRenderOpacity(Alpha);
-			Spark->SetRenderScale(FVector2D(SparkScale));
-			Spark->SetRenderTransformAngle(
-				(Wave % 2 == 0 ? -1.f : 1.f) * 65.f * WaveT);
+			Spark->SetVisibility(ESlateVisibility::Collapsed);
+			Spark->SetRenderOpacity(0.f);
 		}
 	}
-
-	// 각 충격파마다 네 개의 전경 코인이 상자에서 시작해 화면 가장자리로
-	// 커지며 날아간다. 영상 속 작은 코인보다 위에 그려 원근감을 강조한다.
-	constexpr float CoinEndXs[] = {
-		-320.f, -120.f, 125.f, 320.f,
-		-350.f, -170.f, 180.f, 350.f,
-		-280.f, -90.f, 100.f, 285.f };
-	constexpr float CoinArcHeights[] = {
-		250.f, 300.f, 285.f, 240.f,
-		210.f, 270.f, 260.f, 200.f,
-		180.f, 240.f, 230.f, 175.f };
-	constexpr float CoinHeroScales[] = {
-		1.70f, 1.30f, 1.40f, 1.65f,
-		1.55f, 1.20f, 1.35f, 1.60f,
-		1.40f, 1.15f, 1.25f, 1.45f };
-	for (int32 Index = 0;
-		Index < UE_ARRAY_COUNT(ChestBurstForegroundCoins); ++Index)
+	for (UImage* Coin : ChestBurstForegroundCoins)
 	{
-		UImage* Coin = ChestBurstForegroundCoins[Index];
-		if (Coin == nullptr)
+		if (Coin != nullptr)
 		{
-			continue;
+			Coin->SetVisibility(ESlateVisibility::Collapsed);
+			Coin->SetRenderOpacity(0.f);
 		}
-		const int32 Wave = Index / 4;
-		const float Start = BurstStarts[Wave] + .015f
-			+ (Index % 4) * .008f;
-		const float CoinT = RewardConcept03::Segment(T, Start, Start + .40f);
-		const bool bActive = T >= Start && T < Start + .40f;
-		const float FadeIn = RewardConcept03::Segment(CoinT, 0.f, .08f);
-		const float FadeOut = 1.f - RewardConcept03::Segment(CoinT, .70f, 1.f);
-		const float Arc = 4.f * CoinT * (1.f - CoinT);
-		Coin->SetRenderOpacity(bActive ? FadeIn * FadeOut : 0.f);
-		Coin->SetRenderTranslation(FVector2D(
-			CoinEndXs[Index] * CoinT,
-			-CoinArcHeights[Index] * Arc + 145.f * CoinT));
-		const float GrowT = FMath::Min(CoinT / .34f, 1.f);
-		const float Scale = FMath::Lerp(.20f, CoinHeroScales[Index],
-			RewardConcept03::EaseOutBack(GrowT))
-			* FMath::Lerp(1.f, .78f, RewardConcept03::Segment(CoinT, .72f, 1.f));
-		Coin->SetRenderScale(FVector2D(Scale));
-		Coin->SetRenderTransformAngle(
-			(Index % 2 == 0 ? -1.f : 1.f) * 540.f * CoinT);
 	}
 	if (ChestInfoPanel != nullptr)
 	{
@@ -888,16 +942,16 @@ void URewardConcept03Widget::UpdateGoldReveal(const float NormalizedTime)
 		const float BlurT = RewardConcept03::Segment(T, 0.f, .30f);
 		const float RewardT = RewardConcept03::Segment(T, .10f, .66f);
 		const float RewardEase = RewardConcept03::EaseOutBack(RewardT);
-		GoldChestBlur->SetBlurStrength(FMath::Lerp(0.f, 18.f, BlurT));
-		GoldChestBlur->SetRenderOpacity(BlurT);
+		GoldChestBlur->SetBlurStrength(0.f);
+		GoldChestBlur->SetRenderOpacity(0.f);
+		GoldChestBlur->SetVisibility(ESlateVisibility::Collapsed);
 
 		GoldBackgroundChestImage->SetRenderTransformPivot(FVector2D(.5f, .5f));
 		GoldBackgroundChestImage->SetRenderOpacity(
-			FMath::Lerp(.96f, .42f, BlurT));
+			FMath::Lerp(.96f, .82f, BlurT));
 		GoldBackgroundChestImage->SetRenderScale(FVector2D(
-			FMath::Lerp(1.03f, .92f, BlurT)));
-		GoldBackgroundChestImage->SetRenderTranslation(FVector2D(
-			0.f, FMath::Lerp(0.f, 18.f, BlurT)));
+			FMath::Lerp(1.f, .98f, BlurT)));
+		GoldBackgroundChestImage->SetRenderTranslation(FVector2D::ZeroVector);
 
 		if (GoldVisualPanel != nullptr)
 		{
@@ -1028,20 +1082,27 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 {
 	RewardConcept03::SetAtlasFrame(ChestSequenceImage, 0);
 	RewardConcept03::SetAtlasFrame(ChestSequenceBlendImage, 0);
+	const bool bUsesAtlas = ChestSequenceImage != nullptr;
 	if (ChestSequenceImage != nullptr)
 	{
+		ChestSequenceImage->SetVisibility(bUsesAtlas
+			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		ChestSequenceImage->SetRenderOpacity(1.f);
 	}
 	if (ChestSequenceBlendImage != nullptr)
 	{
+		ChestSequenceBlendImage->SetVisibility(ESlateVisibility::Collapsed);
 		ChestSequenceBlendImage->SetRenderOpacity(0.f);
 	}
 	if (ChestVisualSwitcher != nullptr)
 	{
+		ChestVisualSwitcher->SetVisibility(bUsesAtlas
+			? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 		ChestVisualSwitcher->SetActiveWidgetIndex(0);
 	}
 	if (ChestBlendSwitcher != nullptr)
 	{
+		ChestBlendSwitcher->SetVisibility(ESlateVisibility::Collapsed);
 		ChestBlendSwitcher->SetActiveWidgetIndex(0);
 		ChestBlendSwitcher->SetRenderOpacity(0.f);
 	}
@@ -1073,6 +1134,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 	{
 		GoldChestBlur->SetBlurStrength(0.f);
 		GoldChestBlur->SetRenderOpacity(0.f);
+		GoldChestBlur->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
@@ -1082,6 +1144,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 		{
 			if (Effect != nullptr)
 			{
+				Effect->SetVisibility(ESlateVisibility::Collapsed);
 				Effect->SetRenderOpacity(0.f);
 				Effect->SetRenderTranslation(FVector2D::ZeroVector);
 				Effect->SetRenderScale(FVector2D(1.f));
@@ -1093,6 +1156,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 	{
 		if (Coin != nullptr)
 		{
+			Coin->SetVisibility(ESlateVisibility::Collapsed);
 			Coin->SetRenderOpacity(0.f);
 			Coin->SetRenderTranslation(FVector2D::ZeroVector);
 			Coin->SetRenderScale(FVector2D(1.f));
@@ -1126,9 +1190,10 @@ void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 	if (!UsesArtifactStep()
 		|| CurrentStepIndex != RewardConcept03::ArtifactStep
 		|| PresentationState != EPresentationState::AwaitArtifactChoice
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| ArtifactIndex < 0 || ArtifactIndex >= UE_ARRAY_COUNT(ArtifactButtons)
-		|| (UIModel != nullptr
-			&& !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex)))
+		|| !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex))
 	{
 		return;
 	}
@@ -1387,7 +1452,7 @@ void URewardConcept03Widget::ClaimGoldReward()
 
 void URewardConcept03Widget::CompleteRewardFlow()
 {
-	if (bFlowCompleted)
+	if (bFlowCompleted || bRewardRequestPending)
 	{
 		return;
 	}
@@ -1397,17 +1462,81 @@ void URewardConcept03Widget::CompleteRewardFlow()
 	}
 	if (UIModel != nullptr)
 	{
-		if (UsesArtifactStep())
+		const ERewardAcquisitionPolicy Policy =
+			UIModel->GetAcquisitionPolicy();
+		if (Policy == ERewardAcquisitionPolicy::SelectOne)
 		{
 			const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
 			if (!Choices.IsValidIndex(SelectedArtifactIndex))
 			{
 				return;
 			}
-			UIModel->RequestClaimReward(ERewardClaimKind::Choice,
-				Choices[SelectedArtifactIndex].mChoiceIndex);
+
+			PendingRewardId = Choices[SelectedArtifactIndex].mSourceAssetId;
+			bRewardRequestPending = true;
+			if (UIModel->RequestSelectReward(PendingRewardId) == false)
+			{
+				bRewardRequestPending = false;
+				PendingRewardId = FPrimaryAssetId();
+			}
+			return;
 		}
-		UIModel->RequestClaim();
+		if (Policy == ERewardAcquisitionPolicy::GrantAll)
+		{
+			bRewardRequestPending = true;
+			if (UIModel->RequestGrantBundle() == false)
+			{
+				bRewardRequestPending = false;
+			}
+			return;
+		}
+	}
+
+	FinishRewardFlowAfterConfirmation();
+}
+
+void URewardConcept03Widget::EnsureRunOptionsRail()
+{
+	if (RunOptionsRailWidget != nullptr)
+	{
+		RunOptionsRailWidget->SetMapContext(false);
+		RunOptionsRailWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		return;
+	}
+	UClass* RailClass = LoadClass<URunOptionsRailWidget>(nullptr,
+		TEXT("/Game/UI/Common/WBP_RunOptionsRail.WBP_RunOptionsRail_C"));
+	if (RailClass == nullptr)
+	{
+		RailClass = URunOptionsRailWidget::StaticClass();
+	}
+	if (APlayerController* Owner = GetOwningPlayer())
+	{
+		RunOptionsRailWidget = CreateWidget<URunOptionsRailWidget>(Owner, RailClass);
+	}
+	else if (UWorld* World = GetWorld())
+	{
+		RunOptionsRailWidget = CreateWidget<URunOptionsRailWidget>(World, RailClass);
+	}
+	if (RunOptionsRailWidget != nullptr)
+	{
+		RunOptionsRailWidget->SetMapContext(false);
+		if (GetOwningPlayer() != nullptr)
+		{
+			RunOptionsRailWidget->AddToViewport(10001);
+		}
+	}
+}
+
+void URewardConcept03Widget::FinishRewardFlowAfterConfirmation()
+{
+	if (bFlowCompleted)
+	{
+		return;
+	}
+
+	if (UIModel != nullptr)
+	{
+		UIModel->RequestFinishPresentation();
 	}
 	bFlowCompleted = true;
 	PresentationState = EPresentationState::Completed;
@@ -1457,7 +1586,8 @@ void URewardConcept03Widget::ApplyVisualState()
 	}
 	if (BottomActionButton != nullptr)
 	{
-		BottomActionButton->SetIsEnabled(bBottomVisible && !bFlowCompleted);
+		BottomActionButton->SetIsEnabled(
+			bBottomVisible && !bFlowCompleted && !bRewardRequestPending);
 	}
 	ApplyBottomActionVisual();
 	if (ChestButton != nullptr)
@@ -1465,12 +1595,18 @@ void URewardConcept03Widget::ApplyVisualState()
 		ChestButton->SetIsEnabled(
 			PresentationState == EPresentationState::ChestAwaitInput);
 	}
-	for (UButton* ArtifactButton : ArtifactButtons)
+	for (int32 Index = 0; Index < UE_ARRAY_COUNT(ArtifactButtons); ++Index)
 	{
+		UButton* ArtifactButton = ArtifactButtons[Index];
 		if (ArtifactButton != nullptr)
 		{
-			ArtifactButton->SetIsEnabled(PresentationState
-				== EPresentationState::AwaitArtifactChoice && !bFlowCompleted);
+			// Choice cards live only on the artifact switcher page. Keep an
+			// available card enabled throughout that page's lifecycle so GrantAll
+			// cards can receive the same long-press detail input as SelectOne cards;
+			// the handlers still guard the exact interaction state.
+			ArtifactButton->SetIsEnabled(UIModel != nullptr
+				&& UIModel->GetRewardChoices().IsValidIndex(Index)
+				&& !bFlowCompleted && !bRewardRequestPending);
 		}
 	}
 	ApplyArtifactSelection();
@@ -1483,18 +1619,25 @@ void URewardConcept03Widget::ApplyArtifactSelection()
 		return;
 	}
 	if (PresentationState != EPresentationState::AwaitArtifactChoice
+		|| UIModel == nullptr
+		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| SelectedArtifactIndex < 0
-		|| SelectedArtifactIndex >= UE_ARRAY_COUNT(RewardConcept03::SelectionXs))
+		|| SelectedArtifactIndex >= UE_ARRAY_COUNT(ArtifactChoicePanels))
 	{
 		SelectionOutline->SetVisibility(ESlateVisibility::Collapsed);
 		return;
 	}
 	SelectionOutline->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
-	if (UCanvasPanelSlot* CanvasSlot =
-		Cast<UCanvasPanelSlot>(SelectionOutline->Slot))
+	UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(SelectionOutline->Slot);
+	const UCanvasPanelSlot* PanelSlot = ArtifactChoicePanels[SelectedArtifactIndex]
+		? Cast<UCanvasPanelSlot>(ArtifactChoicePanels[SelectedArtifactIndex]->Slot)
+		: nullptr;
+	if (CanvasSlot != nullptr && PanelSlot != nullptr)
 	{
 		FVector2D Position = CanvasSlot->GetPosition();
-		Position.X = RewardConcept03::SelectionXs[SelectedArtifactIndex];
+		// 카드와 outline 폭이 달라도 두 중심이 일치하게 한다.
+		Position.X = PanelSlot->GetPosition().X
+			+ (PanelSlot->GetSize().X - CanvasSlot->GetSize().X) * .5f;
 		CanvasSlot->SetPosition(Position);
 	}
 }

@@ -5,10 +5,16 @@
 
 UTacticalEffect_Haste::UTacticalEffect_Haste()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Haste;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Haste);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Haste);
+}
+
+UTacticalEffect_AddHaste::UTacticalEffect_AddHaste()
+{
+	mStatusEffect = UTacticalEffect_Haste::StaticClass();
 }
 
 UTacticalEffect_GetHaste::UTacticalEffect_GetHaste()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Buff_Haste;
+	mStatusEffect = UTacticalEffect_Haste::StaticClass();
 }

@@ -194,7 +194,6 @@ void UMercenaryHireWidget::NativeConstruct()
 
 void UMercenaryHireWidget::NativeDestruct()
 {
-	CancelSkillPress();
 	if (mSkillDetailPresenter != nullptr)
 	{
 		mSkillDetailPresenter->Teardown();
@@ -210,7 +209,6 @@ void UMercenaryHireWidget::NativeDestruct()
 
 void UMercenaryHireWidget::ApplyCloseUI()
 {
-	CancelSkillPress();
 	HideSkillDetailOverlay();
 	Super::ApplyCloseUI();
 }
@@ -235,7 +233,6 @@ void UMercenaryHireWidget::NativeTick(const FGeometry& MyGeometry, const float I
 void UMercenaryHireWidget::SetCharacterOptions(
 	const TArray<FFrontendCharacterOption>& Options, const int32 PartySize)
 {
-	CancelSkillPress();
 	HideSkillDetailOverlay();
 	mIsShopMode = false;
 	mShopCandidates.Reset();
@@ -252,7 +249,6 @@ void UMercenaryHireWidget::SetShopMode(
 	const TArray<FShopMercenaryUI>& Candidates,
 	const TArray<FShopMercenaryPartySlotUI>& PartySlots, const int32 CurrentGold)
 {
-	CancelSkillPress();
 	HideSkillDetailOverlay();
 	mIsShopMode = true;
 	mShopCandidates = Candidates;
@@ -566,39 +562,29 @@ void UMercenaryHireWidget::CacheWidgets()
 				this, Handlers[Index].Function, Handlers[Index].Name);
 		}
 	}
-	struct FSkillPressHandler
+	struct FSkillClickHandler
 	{
 		void (UMercenaryHireWidget::*Function)();
 		const TCHAR* Name;
 	};
-	static const FSkillPressHandler SkillPressHandlers[6] = {
-		{ &UMercenaryHireWidget::HandleSkillPressed_0, TEXT("HandleSkillPressed_0") },
-		{ &UMercenaryHireWidget::HandleSkillPressed_1, TEXT("HandleSkillPressed_1") },
-		{ &UMercenaryHireWidget::HandleSkillPressed_2, TEXT("HandleSkillPressed_2") },
-		{ &UMercenaryHireWidget::HandleSkillPressed_3, TEXT("HandleSkillPressed_3") },
-		{ &UMercenaryHireWidget::HandleSkillPressed_4, TEXT("HandleSkillPressed_4") },
-		{ &UMercenaryHireWidget::HandleSkillPressed_5, TEXT("HandleSkillPressed_5") },
-	};
-	static const FSkillPressHandler SkillReleaseHandlers[6] = {
-		{ &UMercenaryHireWidget::HandleSkillReleased_0, TEXT("HandleSkillReleased_0") },
-		{ &UMercenaryHireWidget::HandleSkillReleased_1, TEXT("HandleSkillReleased_1") },
-		{ &UMercenaryHireWidget::HandleSkillReleased_2, TEXT("HandleSkillReleased_2") },
-		{ &UMercenaryHireWidget::HandleSkillReleased_3, TEXT("HandleSkillReleased_3") },
-		{ &UMercenaryHireWidget::HandleSkillReleased_4, TEXT("HandleSkillReleased_4") },
-		{ &UMercenaryHireWidget::HandleSkillReleased_5, TEXT("HandleSkillReleased_5") },
+	static const FSkillClickHandler SkillClickHandlers[6] = {
+		{ &UMercenaryHireWidget::HandleSkillClicked_0, TEXT("HandleSkillClicked_0") },
+		{ &UMercenaryHireWidget::HandleSkillClicked_1, TEXT("HandleSkillClicked_1") },
+		{ &UMercenaryHireWidget::HandleSkillClicked_2, TEXT("HandleSkillClicked_2") },
+		{ &UMercenaryHireWidget::HandleSkillClicked_3, TEXT("HandleSkillClicked_3") },
+		{ &UMercenaryHireWidget::HandleSkillClicked_4, TEXT("HandleSkillClicked_4") },
+		{ &UMercenaryHireWidget::HandleSkillClicked_5, TEXT("HandleSkillClicked_5") },
 	};
 	for (int32 Index = 0; Index < mDetailSkillButtons.Num(); ++Index)
 	{
 		if (UButton* Button = mDetailSkillButtons[Index])
 		{
-			// 손가락이 스크롤/드래그로 빠지면 눌림을 취소해 엉뚱한 상세가
-			// 열리지 않게 한다. 정상 탭에는 클릭 동작이 없으므로 부작용이 없다.
+			// 짧게 한 번 터치해도 상세가 즉시 열린다. PreciseTap은 스크롤/드래그로
+			// 손가락이 빠진 경우 클릭이 잘못 확정되는 것만 막는다.
 			Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
 			Button->SetClickMethod(EButtonClickMethod::PreciseClick);
-			Button->OnPressed.__Internal_AddUniqueDynamic(this,
-				SkillPressHandlers[Index].Function, SkillPressHandlers[Index].Name);
-			Button->OnReleased.__Internal_AddUniqueDynamic(this,
-				SkillReleaseHandlers[Index].Function, SkillReleaseHandlers[Index].Name);
+			Button->OnClicked.__Internal_AddUniqueDynamic(this,
+				SkillClickHandlers[Index].Function, SkillClickHandlers[Index].Name);
 		}
 	}
 	struct FPartySlotHandler
@@ -689,7 +675,6 @@ void UMercenaryHireWidget::ClickCard(const int32 CardIndex)
 
 	// 목록은 상세 검토만 바꾼다. 파티 편성은 중앙 하단의 추가 버튼 한 곳에서
 	// 명시적으로 수행해, 후보를 둘러보다가 파티가 바뀌는 일을 막는다.
-	CancelSkillPress();
 	HideSkillDetailOverlay();
 	mReviewing = CardIndex;
 	Refresh();
@@ -995,60 +980,13 @@ int32 UMercenaryHireWidget::GetSkillDataIndexForSlot(
 	return Option.mSkillDetails.IsValidIndex(DataIndex) ? DataIndex : INDEX_NONE;
 }
 
-void UMercenaryHireWidget::BeginSkillPress(const int32 SlotIndex)
+void UMercenaryHireWidget::HandleSkillClicked(const int32 SlotIndex)
 {
-	CancelSkillPress();
-	if (!mCrew.IsValidIndex(mReviewing)
-		|| GetSkillDataIndexForSlot(mCrew[mReviewing], SlotIndex) == INDEX_NONE)
+	if (!mCrew.IsValidIndex(mReviewing))
 	{
 		return;
 	}
-	UWorld* World = GetWorld();
-	if (World == nullptr)
-	{
-		return;
-	}
-	mPressedSkillSlot = SlotIndex;
-	mPressedReviewingIndex = mReviewing;
-	World->GetTimerManager().SetTimer(mSkillLongPressTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this,
-			[this, SlotIndex, ReviewingIndex = mReviewing]()
-			{
-				HandleSkillLongPress(SlotIndex, ReviewingIndex);
-			}), SkillLongPressSeconds, false);
-}
-
-void UMercenaryHireWidget::EndSkillPress(const int32 SlotIndex)
-{
-	// 다른 손가락이 새 스킬을 누른 뒤 먼저 댄 손가락의 Released가 늦게
-	// 도착할 수 있다. 그 오래된 release로 현재 롱프레스를 취소하지 않는다.
-	if (mPressedSkillSlot == SlotIndex)
-	{
-		CancelSkillPress();
-	}
-}
-
-void UMercenaryHireWidget::CancelSkillPress()
-{
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mSkillLongPressTimerHandle);
-	}
-	mPressedSkillSlot = INDEX_NONE;
-	mPressedReviewingIndex = INDEX_NONE;
-}
-
-void UMercenaryHireWidget::HandleSkillLongPress(
-	const int32 SlotIndex, const int32 ReviewingIndex)
-{
-	// 누르기 시작 뒤 후보가 바뀌었거나 다른 누름이 들어왔으면 오래된 타이머다.
-	if (ReviewingIndex != mReviewing || SlotIndex != mPressedSkillSlot
-		|| ReviewingIndex != mPressedReviewingIndex
-		|| !mCrew.IsValidIndex(ReviewingIndex))
-	{
-		return;
-	}
-	const FFrontendCharacterOption& Option = mCrew[ReviewingIndex];
+	const FFrontendCharacterOption& Option = mCrew[mReviewing];
 	const int32 DataIndex = GetSkillDataIndexForSlot(Option, SlotIndex);
 	if (!Option.mSkillDetails.IsValidIndex(DataIndex))
 	{
@@ -1114,33 +1052,14 @@ void UMercenaryHireWidget::HandleSkillDetailCloseClicked()
 	HideSkillDetailOverlay();
 }
 
-void UMercenaryHireWidget::HandleSkillPressed_0() { BeginSkillPress(0); }
-void UMercenaryHireWidget::HandleSkillPressed_1() { BeginSkillPress(1); }
-void UMercenaryHireWidget::HandleSkillPressed_2() { BeginSkillPress(2); }
-void UMercenaryHireWidget::HandleSkillPressed_3() { BeginSkillPress(3); }
-void UMercenaryHireWidget::HandleSkillPressed_4() { BeginSkillPress(4); }
-void UMercenaryHireWidget::HandleSkillPressed_5() { BeginSkillPress(5); }
-void UMercenaryHireWidget::HandleSkillReleased_0() { EndSkillPress(0); }
-void UMercenaryHireWidget::HandleSkillReleased_1() { EndSkillPress(1); }
-void UMercenaryHireWidget::HandleSkillReleased_2() { EndSkillPress(2); }
-void UMercenaryHireWidget::HandleSkillReleased_3() { EndSkillPress(3); }
-void UMercenaryHireWidget::HandleSkillReleased_4() { EndSkillPress(4); }
-void UMercenaryHireWidget::HandleSkillReleased_5() { EndSkillPress(5); }
+void UMercenaryHireWidget::HandleSkillClicked_0() { HandleSkillClicked(0); }
+void UMercenaryHireWidget::HandleSkillClicked_1() { HandleSkillClicked(1); }
+void UMercenaryHireWidget::HandleSkillClicked_2() { HandleSkillClicked(2); }
+void UMercenaryHireWidget::HandleSkillClicked_3() { HandleSkillClicked(3); }
+void UMercenaryHireWidget::HandleSkillClicked_4() { HandleSkillClicked(4); }
+void UMercenaryHireWidget::HandleSkillClicked_5() { HandleSkillClicked(5); }
 
 #if WITH_DEV_AUTOMATION_TESTS
-void UMercenaryHireWidget::TriggerSkillLongPressForTest(const int32 SlotIndex)
-{
-	mPressedSkillSlot = SlotIndex;
-	mPressedReviewingIndex = mReviewing;
-	HandleSkillLongPress(SlotIndex, mReviewing);
-}
-
-bool UMercenaryHireWidget::IsSkillLongPressPendingForTest() const
-{
-	const UWorld* World = GetWorld();
-	return World != nullptr
-		&& World->GetTimerManager().IsTimerActive(mSkillLongPressTimerHandle);
-}
 
 int32 UMercenaryHireWidget::GetSkillDataIndexForSlotForTest(
 	const int32 SlotIndex) const
@@ -1319,7 +1238,6 @@ void UMercenaryHireWidget::RefreshBottomBar()
 
 void UMercenaryHireWidget::HandleBackClicked()
 {
-	CancelSkillPress();
 	HideSkillDetailOverlay();
 	if (mOnBackRequested.IsBound())
 	{

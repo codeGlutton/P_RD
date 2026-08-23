@@ -40,6 +40,9 @@ private:
 	/** @brief 개발 프리뷰에서는 저장 변경 없이 누른 행을 즉시 지급 성공으로 되돌린다. */
 	UFUNCTION() void HandleClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
+	UFUNCTION() void HandleSelectionRequested(FPrimaryAssetId RewardId);
+	UFUNCTION() void HandleGrantBundleRequested();
+
 	/** @brief 테스트 중 UIModel이 GC되지 않게 들고 있는 참조; Mock이 실제 소유자는 아니다. */
 	UPROPERTY(Transient) TObjectPtr<URewardUIModel> mUIModel;
 

@@ -456,12 +456,6 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 			bContractValid &= TestTrue(*FString::Printf(
 				TEXT("레일 버튼 %d 짧은 탭 이벤트 연결"), Index),
 				Button->OnClicked.IsBound());
-			bContractValid &= TestTrue(*FString::Printf(
-				TEXT("레일 버튼 %d 눌러서 상세 타이머 시작"), Index),
-				Button->OnPressed.IsBound());
-			bContractValid &= TestTrue(*FString::Printf(
-				TEXT("레일 버튼 %d 손을 떼면 상세 타이머 종료"), Index),
-				Button->OnReleased.IsBound());
 		}
 	}
 

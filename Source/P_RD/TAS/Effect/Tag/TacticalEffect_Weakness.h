@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Weakness.h
  * @brief  Weakness 이펙트 정의 헤더
  * @author 모호재
@@ -14,7 +14,7 @@
   * @brief  Weakness 이펙트
   */
 UCLASS()
-class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -23,10 +23,22 @@ public:
 };
 
 /**
+ * @brief  Weakness 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddWeakness : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_AddWeakness();
+};
+
+/**
  * @brief  Weakness 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetWeakness : public UTacticalEffect_GetStatusTag
+class P_RD_API UTacticalEffect_GetWeakness : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

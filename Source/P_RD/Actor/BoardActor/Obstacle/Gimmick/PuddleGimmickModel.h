@@ -60,7 +60,7 @@ protected:
 /**
  * @brief  장판 일괄 발동 이벤트
  * @details 라운드가 끝날 때 보드 위 모든 장판을 찾아 한꺼번에 발동시키는 관리자.
- *          전투당 1개만 등록됨 (장판마다 스폰 시 AddUniqueRoundEndEvent로 등록을 시도하고, 첫 시도만 등록됨).
+ *          전투당 1개만 등록됨 (장판마다 스폰 시 같은 이름의 이벤트가 없을 때만 등록).
  *          장판 목록을 따로 들고 있지 않고 매번 타일맵을 훑으므로,
  *          장판이 중간에 생기거나 없어져도 따로 관리하지 않아도 됨
  */
@@ -70,7 +70,14 @@ struct P_RD_API FPuddleRoundEndEvent : public FSRPGCombatRoundEvent
 	GENERATED_BODY()
 
 public:
-	// @brief 전투 내내 반복 발동하도록 설정
+	// @brief 이벤트 이름 (전투 모델에서 중복 등록 여부를 찾는 키)
+	static const FName EventName;
+
+	// @brief 전투 모델에 이 이벤트를 등록. 같은 이름이 이미 등록돼 있으면 생략
+	static void Register(USRPGCombatModel* CombatModel);
+
+public:
+	// @brief 이름 지정 + 전투 내내 반복 발동하도록 설정
 	FPuddleRoundEndEvent();
 
 private:

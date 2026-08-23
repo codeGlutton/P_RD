@@ -1,7 +1,8 @@
 ﻿#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
+#include "TAS/Effect/TacticalEffectContext.h"
 
-FTacticalEffectSpec::FTacticalEffectSpec(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext) :
-	FTacticalEffectSpec()
+FTacticalEffectSpec::FTacticalEffectSpec(const UTacticalEffect* Class, UTacticalEffectContext* EffectContext) : FTacticalEffectSpec()
 {
 	Initialize(Class, EffectContext);
 }
