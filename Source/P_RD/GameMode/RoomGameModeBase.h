@@ -89,6 +89,13 @@ public:
 	bool EnterSelectedRoom();
 
 	/**
+	 * @brief 다음 스테이지 입장을 요청한다.
+	 * @return 입장 요청을 시작했으면 true
+	 */
+	UFUNCTION(Category = Room, BlueprintCallable)
+	bool EnterNextStage();
+
+	/**
 	 * @brief 런을 종료하고 Frontend로 돌아간다.
 	 * @return 전환 시작했으면 true
 	 */

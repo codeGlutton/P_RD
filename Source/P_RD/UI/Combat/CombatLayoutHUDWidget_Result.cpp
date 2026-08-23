@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatLayoutHUDWidget.h"
+﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
@@ -18,6 +18,7 @@
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
+#include "GameMode/RoomGameModeBase.h"
 
 namespace
 {
@@ -196,7 +197,25 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 	CloseCombatResultCinematic(FSimpleDelegate::CreateWeakLambda(this, [this]() mutable
 	{
 		SetCombatResultViewActive(false, false);
-		OpenWorldMapForNextRoom();
+
+		const FCombatResultUI& ResultUI = mUIModel->GetCombatResultUI();
+		if (ResultUI.mIsClearStage == true)
+		{
+			if (ResultUI.mIsLastStage == true)
+			{
+				// 게임 클리어 시
+			}
+			else
+			{
+				// 보스 방 종료 시
+				RequestToEnterNextStage();
+			}
+		}
+		else
+		{
+			// 일반 방 종료 시
+			OpenWorldMapForNextRoom();
+		}
 	}));
 }
 
@@ -281,6 +300,17 @@ void UCombatLayoutHUDWidget::HandleEndCombatUI(TSharedPtr<FPresentationBarrier> 
 	}
 
 	BeginCombatResultPresentation(MoveTemp(Barrier), mUIModel->GetCombatResultUI().mIsWin);
+}
+
+void UCombatLayoutHUDWidget::RequestToEnterNextStage()
+{
+	if (ARoomGameModeBase* RoomGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr)
+	{
+		if (RoomGameMode->EnterNextStage())
+		{
+			return;
+		}
+	}
 }
 
 /**
