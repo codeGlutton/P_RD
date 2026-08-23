@@ -9,6 +9,12 @@
 
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
+bool StageBuilderAssetFilter::IsRuntimeArtifactCandidate(const FName& AssetName)
+{
+	return AssetName.ToString().StartsWith(TEXT("DA_TestArtifact_"),
+		ESearchCase::CaseSensitive) == false;
+}
+
 namespace
 {
 	FString GFixedMonsterRoomNameForDebugging;
@@ -133,7 +139,12 @@ void FStageBuilder::LoadAllAssetIds()
 			bool IsFound = AssetData.GetTagValue(TEXT("mRarityType"), OUT FoundStr) == true;
 			return IsFound == true && FoundStr == FilterStr;
 			};
-		mArtifactAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(ArtifactPrimaryAssetTypes::GetArtifactType(), RarityFilter);
+		auto ArtifactFilter = [&RarityFilter](const FAssetData& AssetData) -> bool {
+			return RarityFilter(AssetData)
+				&& StageBuilderAssetFilter::IsRuntimeArtifactCandidate(AssetData.AssetName);
+			};
+		mArtifactAssetIds[RarityTypeIndex] = GetFilteredPrimaryAssets(
+			ArtifactPrimaryAssetTypes::GetArtifactType(), ArtifactFilter);
 		const TArray<FAssetData> SkillAssetDatas = GetFilteredPrimaryAssetDatas(SkillPrimaryAssetTypes::GetActiveType(), RarityFilter);
 		
 		const uint8 JobTypeCount = StaticCast<uint8>(EUnitJobType::PlayerJobCount);

@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "PCGStage/Room.h"
+#include "PCGStage/StageBuilder.h"
 #include "UI/Reward/ArtifactRewardPolicy.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UObject/StrongObjectPtr.h"
@@ -121,6 +122,36 @@ bool FRewardRoomPolicyCompatibilityContractTest::RunTest(
 	TreasureRoom.mIsConfigured = true;
 	TestTrue(TEXT("보물방 configured-empty는 빈 GrantAll bundle"),
 		TreasureRoom.GetEffectiveRewardArtifactDataIds().IsEmpty());
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardArtifactRuntimeCandidateContractTest,
+	"P_RD.Reward.ArtifactPool.ExcludesTestAssets",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FRewardArtifactRuntimeCandidateContractTest::RunTest(
+	const FString& Parameters)
+{
+	for (const FName TestAssetName : {
+		FName(TEXT("DA_TestArtifact_Common")),
+		FName(TEXT("DA_TestArtifact_Rare")),
+		FName(TEXT("DA_TestArtifact_Epic")) })
+	{
+		TestFalse(*FString::Printf(TEXT("%s는 보상 풀에서 제외"),
+			*TestAssetName.ToString()),
+			StageBuilderAssetFilter::IsRuntimeArtifactCandidate(TestAssetName));
+	}
+
+	for (const FName RuntimeAssetName : {
+		FName(TEXT("DA_Artifact_Common_BrokenBow")),
+		FName(TEXT("DA_Artifact_Rare_Seasoning")),
+		FName(TEXT("DA_Artifact_Epic_LeftOver")) })
+	{
+		TestTrue(*FString::Printf(TEXT("%s는 보상 풀에 유지"),
+			*RuntimeAssetName.ToString()),
+			StageBuilderAssetFilter::IsRuntimeArtifactCandidate(RuntimeAssetName));
+	}
 	return true;
 }
 

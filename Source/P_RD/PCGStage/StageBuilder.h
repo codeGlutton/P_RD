@@ -19,6 +19,12 @@
 // Stage Builder 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogStageBuilder, Log, All)
 
+namespace StageBuilderAssetFilter
+{
+	/** @brief 에디터/검증 전용 DA_TestArtifact_* 를 런타임 보상 풀에서 제외한다. */
+	P_RD_API bool IsRuntimeArtifactCandidate(const FName& AssetName);
+}
+
 struct FRoomEdge
 {
 	TArray<int32> mPreRoomColumns;
