@@ -429,7 +429,7 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 
 	GetWorldEventLogger(this)->BeginMotionLog();
 
-	/* Effect 기본 값부터 적용 */
+	/* Effect 헬퍼 */
 
 	struct FFactorEffectHandleContainer
 	{
@@ -442,14 +442,20 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 		TArray<FActiveTacticalEffectHandle> mHandles;
 	};
 
+	const int32 EffectLayerNum = PhaseLayer.mSkillEffectLayers.Num();
 	TArray<FFactorEffectHandleContainer> FactorEffectHandleContainers;
 	FactorEffectHandleContainers.Reserve(PhaseLayer.mSkillEffectLayers.Num());
 
-	const int32 EffectLayerNum = PhaseLayer.mSkillEffectLayers.Num();
-	for (int32 i = 0; i < EffectLayerNum; ++i)
+	/* Effect 기본 값부터 적용 */
+
 	{
-		const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
-		FactorEffectHandleContainers.Add(EffectLayer.Get().ApplyFactorEffect(OwnerCombatTarget));
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			FactorEffectHandleContainers.Add(EffectLayer.Get().ApplyFactorEffect(OwnerCombatTarget, OwnerSnapshot));
+		}
 	}
 
 	/* 이펙트 전 이벤트들 */
@@ -509,10 +515,12 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 
 	/* Effect 포인트 수치 비우기 */
 
-	for (int32 i = 0; i < EffectLayerNum; ++i)
 	{
-		const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
-		EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandleContainers[i].mHandles);
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandleContainers[i].mHandles);
+		}
 	}
 
 	/* 모션 로그 종료 */

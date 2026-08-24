@@ -9,9 +9,7 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(SkillEffectLayer_GetActionPoint)
-
-TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_GetActionPoint::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
+TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_GetActionPoint::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));

@@ -1,11 +1,4 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_MaxHP.cpp
- * @brief  MaxHP 이펙트 구현
- * @author 이문환
- * @date   2026-07-01
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_MaxHP.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_MaxHP.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
