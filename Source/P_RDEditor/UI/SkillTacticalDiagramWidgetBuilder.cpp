@@ -159,7 +159,8 @@ namespace SkillTacticalDiagramWidgetBuilder
 		Style.SetPressed(Pressed);
 		Style.SetDisabled(Normal);
 		Style.SetNormalPadding(FMargin(0.f));
-		Style.SetPressedPadding(FMargin(1.f, 2.f, 0.f, 0.f));
+		// 눌림 상태에서도 라벨의 중앙 좌표를 바꾸지 않는다.
+		Style.SetPressedPadding(FMargin(0.f));
 		Button->SetStyle(Style);
 		Button->SetBackgroundColor(FLinearColor::White);
 		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);

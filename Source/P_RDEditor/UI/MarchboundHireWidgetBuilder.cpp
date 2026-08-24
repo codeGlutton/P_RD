@@ -30,23 +30,9 @@ namespace MarchboundHireWidgetBuilder
 		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound");
 	// Each screen region owns its own mobile-responsive scale box.
 	const FVector2D DesignSize(1920.0f, 1080.0f);
-	// LINESeedKR의 line box와 실제 글리프 중심 차이를 용도별로 보정한다.
-	constexpr float TitleOpticalOffsetY = -31.5f;
-	constexpr float ListNameOpticalOffsetY = -18.125f;
-	constexpr float ListRoleOpticalOffsetY = -2.25f;
-	constexpr float DetailNameOpticalOffsetY = -13.5f;
-	constexpr float SkillLabelOpticalOffsetY = -2.5f;
-	/*
-	 * 나무판 아트의 시각 중심이 기하 중심보다 위라서 라벨을 살짝 올린다.
-	 * -20(글리프의 46%)은 과했고 0은 라벨이 가라앉아 보였다. 글리프 크기의
-	 * 약 23%가 판 면과 맞았다. 런타임이 폰트를 줄일 때는 이 값을 비례
-	 * 축소한다 (MercenaryHireWidget::RefreshBottomBar).
-	 */
-	constexpr float ButtonLabelOpticalOffsetY = -10.0f;
-	constexpr float PartyCountOpticalOffsetY = -26.5f;
-	constexpr float PartySlotNameOpticalOffsetY = -16.25f;
-
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+	TUniquePtr<FAutoConsoleCommand> ButtonLabelRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> TextTranslationRepairCommand;
 
 	template <typename T>
 	T* FindOrCreate(UWidgetBlueprint* Blueprint, const FName Name)
@@ -180,10 +166,20 @@ namespace MarchboundHireWidgetBuilder
 		Text->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 	}
 
-	void ApplyTextOpticalCenter(UTextBlock* Text, const float OffsetY)
+	void SetTransparentButton(UButton* Button);
+
+	/**
+	 * 단일 문구 버튼은 아트, 라벨 레이아웃, 클릭 영역이 같은 사각을 쓴다.
+	 * 글꼴의 ascent/descent를 좌표로 상쇄하지 않고 Overlay가 문구를 중앙에
+	 * 배치하게 하므로 문자열과 언어가 바뀌어도 별도 Y 보정이 필요 없다.
+	 */
+	void FillSingleLabelButton(UWidgetBlueprint* Blueprint, UCanvasPanel* Holder,
+		UTextBlock* Label, UButton* Button, const FVector2D Size)
 	{
-		check(Text != nullptr);
-		Text->SetRenderTranslation(FVector2D(0.0f, OffsetY));
+		PlaceCenteredText(Blueprint, Holder, Label,
+			FVector2D::ZeroVector, Size, 15);
+		PlaceCanvas(Holder, Button, FVector2D::ZeroVector, Size, 30);
+		SetTransparentButton(Button);
 	}
 
 	void StretchCanvas(UCanvasPanel* Parent, UWidget* Child,
@@ -266,6 +262,102 @@ namespace MarchboundHireWidgetBuilder
 		Result->SetJustification(Justify);
 		SetFont(Result, Font, FontSize);
 		return Result;
+	}
+
+	bool SaveCompiledBlueprint(UWidgetBlueprint* Blueprint)
+	{
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+		return UPackage::SavePackage(Blueprint->GetPackage(), Blueprint,
+			*FPackageName::LongPackageNameToFilename(
+				Blueprint->GetOutermost()->GetName(),
+				FPackageName::GetAssetPackageExtension()), FSavePackageArgs());
+	}
+
+	/** 기존 WBP의 단일 문구 버튼만 수술해 디자이너의 다른 배치를 보존한다. */
+	void RepairSingleLabelButtonsOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_MB_HIRE_BUTTON_LABEL_REPAIR missing %s"),
+				AssetPath);
+			return;
+		}
+
+		struct FButtonContract
+		{
+			FName Holder;
+			FName Label;
+			FName Button;
+			FVector2D Size;
+		};
+		const FButtonContract Contracts[] = {
+			{ TEXT("HireAddHolder"), TEXT("HireAddLabel"),
+				TEXT("HireAddButton"), FVector2D(270.f, 106.f) },
+			{ TEXT("DepartHolder"), TEXT("DepartLabel"),
+				TEXT("DepartButton"), FVector2D(224.f, 106.f) },
+			{ TEXT("HireBackHolder"), TEXT("HireBackLabel"),
+				TEXT("HireBackButton"), FVector2D(270.f, 106.f) },
+		};
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		for (const FButtonContract& Contract : Contracts)
+		{
+			UCanvasPanel* Holder = CastChecked<UCanvasPanel>(
+				Blueprint->WidgetTree->FindWidget(Contract.Holder));
+			UTextBlock* Label = CastChecked<UTextBlock>(
+				Blueprint->WidgetTree->FindWidget(Contract.Label));
+			UButton* Button = CastChecked<UButton>(
+				Blueprint->WidgetTree->FindWidget(Contract.Button));
+			FillSingleLabelButton(Blueprint, Holder, Label, Button, Contract.Size);
+		}
+
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_MB_HIRE_BUTTON_LABEL_REPAIR save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_MB_HIRE_BUTTON_LABEL_REPAIR success buttons=3"));
+	}
+
+	/** 수동 광학 보정값을 지우고 각 Center/AutoFit의 정렬만 사용한다. */
+	void RepairTextRenderTranslationsOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_MB_HIRE_TEXT_TRANSLATION_REPAIR missing %s"), AssetPath);
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		int32 ResetCount = 0;
+		Blueprint->WidgetTree->ForEachWidget([&ResetCount](UWidget* Widget)
+		{
+			if (UTextBlock* Text = Cast<UTextBlock>(Widget))
+			{
+				if (!Text->GetRenderTransform().Translation.IsNearlyZero())
+				{
+					++ResetCount;
+				}
+				Text->SetRenderTranslation(FVector2D::ZeroVector);
+			}
+		});
+
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_MB_HIRE_TEXT_TRANSLATION_REPAIR save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_MB_HIRE_TEXT_TRANSLATION_REPAIR success reset=%d"),
+			ResetCount);
 	}
 
 	void Build()
@@ -488,7 +580,6 @@ namespace MarchboundHireWidgetBuilder
 			NSLOCTEXT("MarchboundHire", "Title", "용병 선택"), Font, 42,
 			FVector2D(30.0f, 20.0f), FVector2D(370.0f, 64.0f), 10);
 		SetLightFont(TitleText, Font, 42);
-		ApplyTextOpticalCenter(TitleText, TitleOpticalOffsetY);
 		// 화면의 용도가 좌우 후보/파티로 이미 분명하고, 이 판은 영웅 머리만
 		// 가린다. 자식 계약은 보존하되 패널 전체를 표시하지 않는다.
 		TitlePanel->SetVisibility(ESlateVisibility::Collapsed);
@@ -556,7 +647,6 @@ namespace MarchboundHireWidgetBuilder
 			Name->SetText(FText::FromString(DefaultNames[Index]));
 			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 29);
-			ApplyTextOpticalCenter(Name, ListNameOpticalOffsetY);
 
 			UTextBlock* Role = FindOrCreate<UTextBlock>(Blueprint,
 				FName(*FString::Printf(TEXT("HireRole_%d"), Index)));
@@ -566,7 +656,6 @@ namespace MarchboundHireWidgetBuilder
 			Role->SetText(FText::FromString(DefaultRoles[Index]));
 			Role->SetJustification(ETextJustify::Center);
 			SetFont(Role, Font, 16);
-			ApplyTextOpticalCenter(Role, ListRoleOpticalOffsetY);
 
 			for (const TCHAR* Prefix : {TEXT("HireHP"), TEXT("HireBadge"), TEXT("HireTrait")})
 			{
@@ -601,7 +690,6 @@ namespace MarchboundHireWidgetBuilder
 		UTextBlock* DetailName = AddText(Blueprint, NamePanel, TEXT("HireDetailName"),
 			NSLOCTEXT("MarchboundHire", "Knight", "기사"), Font, 38,
 			NameInner.Min, NameInner.GetSize(), 10);
-		ApplyTextOpticalCenter(DetailName, DetailNameOpticalOffsetY);
 		// 후보 목록에 클래스명이 이미 있으므로 중앙에서 반복하지 않는다.
 		NamePanel->SetVisibility(ESlateVisibility::Collapsed);
 
@@ -675,7 +763,6 @@ namespace MarchboundHireWidgetBuilder
 				SkillInner.Min, SkillInner.GetSize(), 10);
 			SkillText->SetText(FText::FromString(DefaultSkillLabels[Index]));
 			SetLightFont(SkillText, Font, 18);
-			ApplyTextOpticalCenter(SkillText, SkillLabelOpticalOffsetY);
 			UButton* SkillButton = FindOrCreate<UButton>(Blueprint,
 				FName(*FString::Printf(TEXT("HireDetailSkillButton_%d"), Index)));
 			PlaceCanvas(SkillPanel, SkillButton, FVector2D::ZeroVector,
@@ -690,12 +777,11 @@ namespace MarchboundHireWidgetBuilder
 			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 0);
 		UTextBlock* AddLabel = AddText(Blueprint, Add, TEXT("HireAddLabel"),
 			NSLOCTEXT("MarchboundHire", "Add", "추가"), Font, 32,
-			FVector2D(25.0f, 24.0f), FVector2D(220.0f, 58.0f), 15);
+			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 15);
 		SetLightFont(AddLabel, Font, 32);
-		ApplyTextOpticalCenter(AddLabel, ButtonLabelOpticalOffsetY);
 		UButton* AddButton = FindOrCreate<UButton>(Blueprint, TEXT("HireAddButton"));
-		PlaceCanvas(Add, AddButton, FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 30);
-		SetTransparentButton(AddButton);
+		FillSingleLabelButton(Blueprint, Add, AddLabel, AddButton,
+			FVector2D(270.0f, 106.0f));
 
 		UCanvasPanel* PartyPanel = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireBottomBar"));
 		const FVector2D PartySize(420.0f, 627.0f);
@@ -717,7 +803,6 @@ namespace MarchboundHireWidgetBuilder
 		PartyCount->SetText(NSLOCTEXT("MarchboundHire", "PartyDefault", "파티 0/3"));
 		PartyCount->SetJustification(ETextJustify::Center);
 		SetLightFont(PartyCount, Font, 32);
-		ApplyTextOpticalCenter(PartyCount, PartyCountOpticalOffsetY);
 
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
@@ -759,7 +844,6 @@ namespace MarchboundHireWidgetBuilder
 				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.62f), 12);
 			Name->SetJustification(ETextJustify::Center);
 			SetFont(Name, Font, 26);
-			ApplyTextOpticalCenter(Name, PartySlotNameOpticalOffsetY);
 			Name->SetVisibility(ESlateVisibility::Collapsed);
 
 			// 교체 대상도 왼쪽 후보 카드처럼 직업과 레벨을 두 줄로 나눈다.
@@ -770,7 +854,6 @@ namespace MarchboundHireWidgetBuilder
 				FVector2D(SlotSpan.X - SlotFace - 12.f, SlotSpan.Y * 0.38f), 13);
 			Level->SetJustification(ETextJustify::Center);
 			SetFont(Level, Font, 16);
-			ApplyTextOpticalCenter(Level, ListRoleOpticalOffsetY);
 			Level->SetVisibility(ESlateVisibility::Collapsed);
 
 			UButton* SlotButton = FindOrCreate<UButton>(Blueprint,
@@ -788,17 +871,12 @@ namespace MarchboundHireWidgetBuilder
 		AddImage(Blueprint, Depart, TEXT("DepartArt"), DepartPlate,
 			FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), 0);
 		UTextBlock* DepartLabel = FindOrCreate<UTextBlock>(Blueprint, TEXT("DepartLabel"));
-		const FBox2D DepartInner = UIPartRects::Inner(TEXT("T_MB_HireDepartButton"),
-			FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), false);
-		PlaceCenteredText(Blueprint, Depart, DepartLabel,
-			DepartInner.Min, DepartInner.GetSize(), 15);
 		DepartLabel->SetText(NSLOCTEXT("MarchboundHire", "Depart", "출발"));
 		DepartLabel->SetJustification(ETextJustify::Center);
 		SetLightFont(DepartLabel, Font, 32);
-		ApplyTextOpticalCenter(DepartLabel, ButtonLabelOpticalOffsetY);
 		UButton* DepartButton = FindOrCreate<UButton>(Blueprint, TEXT("DepartButton"));
-		PlaceCanvas(Depart, DepartButton, FVector2D::ZeroVector, FVector2D(224.0f, 106.0f), 30);
-		SetTransparentButton(DepartButton);
+		FillSingleLabelButton(Blueprint, Depart, DepartLabel, DepartButton,
+			FVector2D(224.0f, 106.0f));
 
 		UCanvasPanel* Back = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("HireBackHolder"));
 		PlaceCanvas(LeftRegion, Back, FVector2D(70.0f, 962.0f), FVector2D(270.0f, 106.0f), 30);
@@ -806,12 +884,11 @@ namespace MarchboundHireWidgetBuilder
 			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 0);
 		UTextBlock* BackLabel = AddText(Blueprint, Back, TEXT("HireBackLabel"),
 			NSLOCTEXT("MarchboundHire", "Back", "뒤로"), Font, 32,
-			FVector2D(25.0f, 24.0f), FVector2D(220.0f, 58.0f), 15);
+			FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 15);
 		SetLightFont(BackLabel, Font, 32);
-		ApplyTextOpticalCenter(BackLabel, ButtonLabelOpticalOffsetY);
 		UButton* BackButton = FindOrCreate<UButton>(Blueprint, TEXT("HireBackButton"));
-		PlaceCanvas(Back, BackButton, FVector2D::ZeroVector, FVector2D(270.0f, 106.0f), 30);
-		SetTransparentButton(BackButton);
+		FillSingleLabelButton(Blueprint, Back, BackLabel, BackButton,
+			FVector2D(270.0f, 106.0f));
 
 		PruneStaleVariables(Blueprint);
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
@@ -838,9 +915,19 @@ void RegisterMarchboundHireWidgetBuilderCommands()
 		TEXT("RD.Editor.BuildMercenaryHire"),
 		TEXT("Rebuild WBP_MercenaryHire_Marchbound with the Marchbound split UI parts."),
 		FConsoleCommandDelegate::CreateStatic(&Build));
+	ButtonLabelRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairMercenaryHireButtonLabels"),
+		TEXT("Make the Add, Depart, and Back label bounds match their buttons."),
+		FConsoleCommandDelegate::CreateStatic(&RepairSingleLabelButtonsOnly));
+	TextTranslationRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.ResetMercenaryHireTextTranslations"),
+		TEXT("Remove every manual TextBlock render translation from the hire WBP."),
+		FConsoleCommandDelegate::CreateStatic(&RepairTextRenderTranslationsOnly));
 }
 
 void UnregisterMarchboundHireWidgetBuilderCommands()
 {
 	MarchboundHireWidgetBuilder::BuildCommand.Reset();
+	MarchboundHireWidgetBuilder::ButtonLabelRepairCommand.Reset();
+	MarchboundHireWidgetBuilder::TextTranslationRepairCommand.Reset();
 }
