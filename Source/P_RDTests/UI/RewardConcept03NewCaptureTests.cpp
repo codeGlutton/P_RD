@@ -206,6 +206,22 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 {
+	// 한글 표시 문자열을 단언하므로 ko 컬처로 고정한다. en/ko 번역이 모두
+	// 채워진 뒤로는 실행 컬처에 따라 표시가 달라진다(0823).
+	struct FScopedKoreanCulture
+	{
+		FString mOriginal;
+		FScopedKoreanCulture()
+			: mOriginal(FInternationalization::Get().GetCurrentCulture()->GetName())
+		{
+			FInternationalization::Get().SetCurrentCulture(TEXT("ko"));
+		}
+		~FScopedKoreanCulture()
+		{
+			FInternationalization::Get().SetCurrentCulture(mOriginal);
+		}
+	};
+	const FScopedKoreanCulture ScopedKoreanCulture;
 	using namespace RewardConcept03NewCapture;
 	UWorld* World = GEditor != nullptr
 		? GEditor->GetEditorWorldContext().World() : nullptr;
@@ -874,6 +890,22 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FRewardConcept03NewNoArtifactInteractionTest::RunTest(
 	const FString& Parameters)
 {
+	// 한글 표시 문자열을 단언하므로 ko 컬처로 고정한다. en/ko 번역이 모두
+	// 채워진 뒤로는 실행 컬처에 따라 표시가 달라진다(0823).
+	struct FScopedKoreanCulture
+	{
+		FString mOriginal;
+		FScopedKoreanCulture()
+			: mOriginal(FInternationalization::Get().GetCurrentCulture()->GetName())
+		{
+			FInternationalization::Get().SetCurrentCulture(TEXT("ko"));
+		}
+		~FScopedKoreanCulture()
+		{
+			FInternationalization::Get().SetCurrentCulture(mOriginal);
+		}
+	};
+	const FScopedKoreanCulture ScopedKoreanCulture;
 	using namespace RewardConcept03NewCapture;
 	UWorld* World = GEditor != nullptr
 		? GEditor->GetEditorWorldContext().World() : nullptr;

@@ -46,8 +46,8 @@ public:
 	FTileTransform mTransform;
 
 public:
-	UPROPERTY(Category = "Speed", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RechargeSpeedPointOffset", ToolTip = "스피트 포인트 충전 값 오프셋 "))
-	int32 mRechargeSpeedPointOffset = 0;
+	UPROPERTY(Category = "Speed", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultSpeedPoint", ToolTip = "스피트 포인트 기본 오프셋 "))
+	int32 mDefaultSpeedPoint = 0;
 };
 
 /**

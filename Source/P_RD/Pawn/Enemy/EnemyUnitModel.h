@@ -36,7 +36,6 @@ public:
 
 public:
 	void SetDifficulty(int32 Difficulty);
-	void AddRechargeSpeedPointOffset(int32 Offset);
 
 public:
 	EUnitJobType GetUnitJobType() const override;

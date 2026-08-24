@@ -1086,8 +1086,10 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				TEXT("TacticalSelectLegendText")));
 			if (TestNotNull(TEXT("전술 WBP 선택거리 중앙정렬 라벨"), Select))
 			{
+				const FString ExpectedRange = FText::AsNumber(
+					Fixture.SkillDetail.mTargeting.mSelectRange).ToString();
 				TestTrue(TEXT("전술 WBP가 DTO 선택거리 사용"),
-					Select->GetText().ToString().Contains(TEXT("2칸")));
+					Select->GetText().ToString().Contains(ExpectedRange));
 			}
 			int32 TacticalCellCount = 0;
 			for (int32 Row = 0; Row < 9; ++Row)

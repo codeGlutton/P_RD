@@ -38,6 +38,7 @@ public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;
 
+	void OnPreEvaluateRound() override;
 	void OnBeginRound(int32 RoundCount) override;
 
 public:

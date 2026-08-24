@@ -70,7 +70,12 @@ EDataValidationResult UStaticObstacleSpawnData::IsDataValid(FDataValidationConte
 
 FName UStaticObstacleSpawnData::GetKeyName() const
 {
-	FString Key = mDisplayName.ToString();
+	// 속성 그룹 키는 데이터 키다. 번역된 표시 문자열(ToString)을 쓰면 언어에
+	// 따라 키가 바뀌어 커브 테이블(영문 행)과 어긋난다 — ko 번역이 채워진 뒤
+	// 한국어 모드에서 스탯 초기화가 전멸해 전투 진입이 죽었다(0823).
+	// 원문(소스) 문자열로 고정해 어떤 언어에서도 같은 키를 쓴다.
+	const FString* SourceString = FTextInspector::GetSourceString(mDisplayName);
+	FString Key = SourceString != nullptr ? *SourceString : mDisplayName.ToString();
 	Key.RemoveSpacesInline();
 	return *Key;
 }

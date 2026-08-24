@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Slow::GetTagEffectClass() const
 	return UTacticalEffect_GetSlow ::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Slow"
 
 FText FSkillEffectLayer_Slow::GetTagDisplayName() const
@@ -15,5 +14,4 @@ FText FSkillEffectLayer_Slow::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif
 

@@ -137,6 +137,11 @@ public:
 	virtual void OnEndRoom();
 
 	/**
+	 * @brief 새로운 라운드 평가마다 실행될 함수
+	 */
+	virtual void OnPreEvaluateRound();
+
+	/**
 	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */
 	virtual void OnBeginRound(int32 RoundCount);

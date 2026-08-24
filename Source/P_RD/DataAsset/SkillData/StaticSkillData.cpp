@@ -44,7 +44,6 @@ TArray<IBoardCombatTarget*> FSkillPhaseLayer::FilterCombatTargets(const UTileMap
     return FilteredCombatTargets;
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "StaticSkillData"
 
 FText UStaticSkillData::MakeDescription() const
@@ -88,6 +87,7 @@ FText UStaticSkillData::MakeDescription() const
 	return FText::Join(FText::FromString(TEXT("\n")), DescriptionLines);
 }
 
+#if WITH_EDITOR
 EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Context) const
 {
     EDataValidationResult SuperResult = Super::IsDataValid(Context);
@@ -111,7 +111,7 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
 
     return CombineDataValidationResults(SuperResult, ThisResult);
 }
+#endif
 
 #undef LOCTEXT_NAMESPACE
-#endif
 
