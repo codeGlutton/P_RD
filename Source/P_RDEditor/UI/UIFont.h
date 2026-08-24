@@ -20,18 +20,9 @@ namespace UIFont
 	constexpr TCHAR SettingsFont[] =
 		TEXT("/Game/SVN/OutSideAsset/Fonts/F_HUD_LINESeedKR.F_HUD_LINESeedKR");
 
-	/**
-	 * @brief 모바일 배율.
-	 *
-	 * 값들은 모니터를 보며 정한 것이다. 폰은 화면이 손바닥만 하고 손가락으로
-	 * 누르므로 글자와 누를 자리가 다 커야 한다. 1920x1080 판을 폰에 맞춰
-	 * 줄이면 22px 글자가 실제로는 10px 도 안 된다.
-	 */
-	constexpr float Mobile = 1.35f;
-
 	inline int32 Size(const int32 Base)
 	{
-		return FMath::RoundToInt(Base * Mobile);
+		return Base;
 	}
 
 	/**
@@ -68,7 +59,7 @@ namespace UIFont
 		return MakeExact(Template, SettingsFont, ExactSize);
 	}
 
-	/** @brief 글꼴 구조체에 프로젝트 글꼴과 (모바일로 키운) 크기를 넣는다. */
+	/** @brief 글꼴 구조체에 프로젝트 글꼴과 지정한 크기를 그대로 넣는다. */
 	inline FSlateFontInfo Make(const FSlateFontInfo& Template, const int32 Base)
 	{
 		return MakeProjectExact(Template, Size(Base));

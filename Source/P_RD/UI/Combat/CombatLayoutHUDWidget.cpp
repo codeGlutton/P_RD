@@ -531,8 +531,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Button = Find<UButton>(WidgetTree, TEXT("TurnTokenButton") + Suffix);
 		Widgets.Portrait = Find<UImage>(WidgetTree, TEXT("TurnPortrait") + Suffix);
 		Widgets.Name = Find<UTextBlock>(WidgetTree, TEXT("TurnName") + Suffix);
-		Widgets.SpeedIcon = Find<UWidget>(WidgetTree, TEXT("TurnSpeedIcon") + Suffix);
-		Widgets.Speed = Find<UTextBlock>(WidgetTree, TEXT("TurnSpeed") + Suffix);
 		Widgets.Current = Find<UWidget>(WidgetTree, TEXT("TurnCurrent") + Suffix);
 		Widgets.RoundDivider = Find<UWidget>(
 			WidgetTree, TEXT("TurnRoundDivider") + Suffix);
@@ -2038,8 +2036,6 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
-			SetShown(Widgets.SpeedIcon, false);
-			SetShown(Widgets.Speed, false);
 			continue;
 		}
 		// 앞쪽은 이번 라운드 잔여, 가운데는 빈 라운드 칸, 뒤는 다음 턴
@@ -2062,8 +2058,6 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			}
 			SetShown(Widgets.Portrait, false);
 			SetTextIfPresent(Widgets.Name, FText::GetEmpty());
-			SetShown(Widgets.SpeedIcon, false);
-			SetShown(Widgets.Speed, false);
 			SetShown(Widgets.Current, false);
 			SetShown(Widgets.RoundDivider, true);
 			SetShown(Widgets.RoundLabel, true);
@@ -2085,8 +2079,6 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			SetInteractiveShown(Widgets.Button, false);
 			SetShown(Widgets.RoundDivider, false);
 			SetShown(Widgets.RoundLabel, false);
-			SetShown(Widgets.SpeedIcon, false);
-			SetShown(Widgets.Speed, false);
 			continue;
 		}
 
@@ -2104,10 +2096,6 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		// 클릭 받이는 TurnToken의 자식이 아니라 TurnPanel의 직계 형제다.
 		// 토큰만 켜서는 donor에 저장된 Collapsed 버튼이 되살아나지 않는다.
 		SetInteractiveShown(Widgets.Button, true);
-		SetShown(Widgets.SpeedIcon, true);
-		SetShown(Widgets.Speed, true);
-		SetTextIfPresent(Widgets.Speed,
-			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
 		if (Widgets.Root != nullptr)
 		{
 			Widgets.Root->SetRenderOpacity(RoundOffset == 0 ? 1.f : 0.45f);
@@ -3155,6 +3143,10 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 		SyncSkillWorldPreviewCamera(false);
 	}
 	RefreshScreenScale();
+	if (mDetailPresenter != nullptr)
+	{
+		mDetailPresenter->RefreshResponsiveLayout();
+	}
 	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
 	UpdateUnitHpBars();
 	RefreshPendingAPGlow(DeltaTime);
@@ -5043,6 +5035,7 @@ bool UCombatLayoutHUDWidget::EnsureDetailOverlayWidget()
 	mDetailDivider0 = mDetailPresenter->GetDivider0();
 	mDetailDivider1 = mDetailPresenter->GetDivider1();
 	mSkillTacticalDiagramWidget = mDetailPresenter->GetTacticalDiagram();
+	mSkillDetailContentWidget = mDetailPresenter->GetSkillContentWidget();
 	mSkillWorldPreviewImage = mDetailPresenter->GetWorldPreviewImage();
 
 	// 스킬 칸 줄은 UIModel 의 유닛 상세를 읽고 HUD 핸들러로 배선되므로 남는다.
