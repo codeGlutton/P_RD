@@ -8,6 +8,7 @@
 #include "Components/Button.h"
 #include "Components/ButtonSlot.h"
 #include "Components/CheckBox.h"
+#include "Components/ContentWidget.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
@@ -31,6 +32,7 @@
 namespace SettingsPanelWidgetBuilder
 {
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
+	TUniquePtr<FAutoConsoleCommand> TextDefaultsCommand;
 
 	constexpr const TCHAR* SettingsLedgerAssetRoot =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger");
@@ -171,6 +173,191 @@ namespace SettingsPanelWidgetBuilder
 		Brush.Margin = FMargin(0.f);
 		Image->SetBrush(Brush);
 		Image->SetColorAndOpacity(FLinearColor::White);
+	}
+
+	UTextBlock* FindFirstTextBlockIn(UWidget* Root)
+	{
+		if (Root == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTextBlock* Text = Cast<UTextBlock>(Root))
+		{
+			return Text;
+		}
+		if (UContentWidget* Content = Cast<UContentWidget>(Root))
+		{
+			if (UTextBlock* Text = FindFirstTextBlockIn(Content->GetContent()))
+			{
+				return Text;
+			}
+		}
+		if (UPanelWidget* Panel = Cast<UPanelWidget>(Root))
+		{
+			for (int32 Index = 0; Index < Panel->GetChildrenCount(); ++Index)
+			{
+				if (UTextBlock* Text = FindFirstTextBlockIn(Panel->GetChildAt(Index)))
+				{
+					return Text;
+				}
+			}
+		}
+		return nullptr;
+	}
+
+	/**
+	 * 런타임 USettingsPanelWidget::SyncText와 같은 localization identity를
+	 * WBP 기본값에도 굽는다. 디자이너와 게임이 서로 다른 문구 사전을 갖지
+	 * 않도록 namespace/key/source를 C++ 쪽과 정확히 공유한다.
+	 */
+	void ApplyRuntimeTextDefaults(UWidgetBlueprint* Blueprint)
+	{
+		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
+		struct FTextDefault
+		{
+			const TCHAR* Widget;
+			FText Text;
+		};
+		const FText SettingsLedger = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "SettingsLedger", "SETTINGS LEDGER");
+		const FText Back = NSLOCTEXT("SettingsPanelWidget_Text", "Back", "Back");
+		const FText SaveAndExit = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "SaveAndExit", "Save and Exit");
+		const FText AbandonRun = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "AbandonRun", "Abandon Run");
+		const FText Reset = NSLOCTEXT("SettingsPanelWidget_Text", "Reset", "Reset");
+		const FText Graphics = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Graphics", "Graphics");
+		const FText Volume = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Volume", "Volume");
+		const FText Gameplay = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Gameplay", "Gameplay");
+		const FText Fps = NSLOCTEXT("SettingsPanelWidget_Text", "FPS", "FPS");
+		const FText Quality = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Quality", "Quality");
+		const FText Low = NSLOCTEXT("SettingsPanelWidget_Text", "Low", "LOW");
+		const FText Mid = NSLOCTEXT("SettingsPanelWidget_Text", "Mid", "MID");
+		const FText High = NSLOCTEXT("SettingsPanelWidget_Text", "High", "HIGH");
+		const FText ScreenShake = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Screen Shake", "Screen Shake");
+		const FText Effects = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Effects", "Effects");
+		const FText Language = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Language", "Language");
+		const FText Master = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Master", "Master");
+		const FText Bgm = NSLOCTEXT("SettingsPanelWidget_Text", "BGM", "BGM");
+		const FText Sfx = NSLOCTEXT("SettingsPanelWidget_Text", "SFX", "SFX");
+		const FText Ui = NSLOCTEXT("SettingsPanelWidget_Text", "UI", "UI");
+		const FText Audio = NSLOCTEXT("SettingsPanelWidget_Text", "Audio", "Audio");
+		const FText Display = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Display", "Display");
+		const FText Brightness = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Brightness", "Brightness");
+		const FText Vibration = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Vibration", "Vibration");
+		const FText FastMode = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Fast Mode", "Fast Mode");
+		const FText SkipAnimation = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Skip Animation", "Skip Animation");
+		const FText AutoEndTurn = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Auto End Turn", "Auto End Turn");
+		const FText Info = NSLOCTEXT("SettingsPanelWidget_Text", "Info", "Info");
+		const FText Credits = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Credits", "Credits");
+		const FText License = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "License", "License");
+		const FText Open = NSLOCTEXT("SettingsPanelWidget_Text", "Open", "Open");
+		const FText AbandonTitle = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "AbandonConfirmTitle", "Abandon this run?");
+		const FText AbandonBody = NSLOCTEXT("SettingsPanelWidget_Text",
+			"AbandonConfirmBody",
+			"Current progress will be deleted and you will return to the title.");
+		const FText Abandon = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Abandon", "Abandon");
+		const FText Cancel = NSLOCTEXT(
+			"SettingsPanelWidget_Text", "Cancel", "Cancel");
+
+		const FTextDefault Defaults[] = {
+			{ TEXT("SettingsTitleText"), SettingsLedger },
+			{ TEXT("Set_sec_graphics_text"), Graphics },
+			{ TEXT("Set_sec_display_text"), Graphics },
+			{ TEXT("Set_sec_audio_text"), Volume },
+			{ TEXT("Set_sec_volume_text"), Volume },
+			{ TEXT("Set_sec_gameplay_text"), Gameplay },
+			{ TEXT("Set_row_fps_label"), Fps },
+			{ TEXT("FpsRow_Label"), Fps },
+			{ TEXT("FpsThirtyButton"), FText::AsNumber(30) },
+			{ TEXT("FpsSixtyButton"), FText::AsNumber(60) },
+			{ TEXT("FpsThirtyButtonText"), FText::AsNumber(30) },
+			{ TEXT("FpsSixtyButtonText"), FText::AsNumber(60) },
+			{ TEXT("Set_row_quality_label"), Quality },
+			{ TEXT("QualityRow_Label"), Quality },
+			{ TEXT("QualityLowButton"), Low },
+			{ TEXT("QualityMidButton"), Mid },
+			{ TEXT("QualityHighButton"), High },
+			{ TEXT("LowQualityButton"), Low },
+			{ TEXT("MediumQualityButton"), Mid },
+			{ TEXT("HighQualityButton"), High },
+			{ TEXT("LowQualityButtonText"), Low },
+			{ TEXT("MediumQualityButtonText"), Mid },
+			{ TEXT("HighQualityButtonText"), High },
+			{ TEXT("Set_row_screen_shake_label"), ScreenShake },
+			{ TEXT("ScreenShakeRow_Label"), ScreenShake },
+			{ TEXT("Set_row_effects_label"), Effects },
+			{ TEXT("Set_row_effects_text"), Effects },
+			{ TEXT("EffectsRow_Label"), Effects },
+			{ TEXT("Set_row_language_label"), Language },
+			{ TEXT("LanguageRow_Label"), Language },
+			{ TEXT("LanguageKoreanButton"), FText::FromString(TEXT("한국어")) },
+			{ TEXT("LanguageEnglishButton"), FText::FromString(TEXT("English")) },
+			{ TEXT("LanguageKoreanButtonText"), FText::FromString(TEXT("한국어")) },
+			{ TEXT("LanguageEnglishButtonText"), FText::FromString(TEXT("English")) },
+			{ TEXT("Set_row_master_label"), Master },
+			{ TEXT("MasterVolumeRow_Label"), Master },
+			{ TEXT("Set_row_bgm_label"), Bgm },
+			{ TEXT("BGMVolumeRow_Label"), Bgm },
+			{ TEXT("Set_row_sfx_label"), Sfx },
+			{ TEXT("SFXVolumeRow_Label"), Sfx },
+			{ TEXT("Set_row_ui_label"), Ui },
+			{ TEXT("UIVolumeRow_Label"), Ui },
+			{ TEXT("BackButton"), Back },
+			{ TEXT("BackButtonText"), Back },
+			{ TEXT("SaveAndExitButton"), SaveAndExit },
+			{ TEXT("SaveAndExitButtonText"), SaveAndExit },
+			{ TEXT("AbandonRunButton"), AbandonRun },
+			{ TEXT("AbandonRunButtonText"), AbandonRun },
+			{ TEXT("ResetButton"), Reset },
+			{ TEXT("ResetButtonText"), Reset },
+			{ TEXT("AudioSectionHeader"), Audio },
+			{ TEXT("DisplaySectionHeader"), Display },
+			{ TEXT("BrightnessRow_Label"), Brightness },
+			{ TEXT("VibrationRow_Label"), Vibration },
+			{ TEXT("GameplaySectionHeader"), Gameplay },
+			{ TEXT("FastModeRow_Label"), FastMode },
+			{ TEXT("SkipAnimationRow_Label"), SkipAnimation },
+			{ TEXT("AutoEndTurnRow_Label"), AutoEndTurn },
+			{ TEXT("InfoSectionHeader"), Info },
+			{ TEXT("CreditsRow_Label"), Credits },
+			{ TEXT("LicenseRow_Label"), License },
+			{ TEXT("CreditsOpenButtonText"), Open },
+			{ TEXT("LicenseOpenButtonText"), Open },
+			{ TEXT("AbandonConfirmTitleText"), AbandonTitle },
+			{ TEXT("AbandonConfirmBodyText"), AbandonBody },
+			{ TEXT("ConfirmAbandonButtonText"), Abandon },
+			{ TEXT("CancelAbandonButtonText"), Cancel },
+			{ TEXT("RunConfirmHeaderText"), NSLOCTEXT(
+				"SettingsPanelWidget", "AbandonRunHeader", "ABANDON RUN") },
+		};
+
+		for (const FTextDefault& Default : Defaults)
+		{
+			if (UTextBlock* Text = FindFirstTextBlockIn(
+				Blueprint->WidgetTree->FindWidget(FName(Default.Widget))))
+			{
+				Text->SetText(Default.Text);
+			}
+		}
 	}
 
 	UImage* EnsureLedgerImage(UWidgetBlueprint* Blueprint, UCanvasPanel* Canvas,
@@ -1396,6 +1583,39 @@ namespace SettingsPanelWidgetBuilder
 		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
 	}
 
+	bool SaveCompiledBlueprint(UWidgetBlueprint* Blueprint)
+	{
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
+		FKismetEditorUtilities::CompileBlueprint(Blueprint);
+		const FString Filename = FPackageName::LongPackageNameToFilename(
+			Blueprint->GetOutermost()->GetName(), FPackageName::GetAssetPackageExtension());
+		return UPackage::SavePackage(Blueprint->GetPackage(), Blueprint, *Filename,
+			FSavePackageArgs());
+	}
+
+	/** 설정판의 좌표/아트는 보존하고 C++ localization 기본값만 WBP에 동기화한다. */
+	void SyncTextDefaultsOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr,
+			TEXT("/Game/UI/WBP_SettingsPanel.WBP_SettingsPanel"));
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_SETTINGS_TEXT_SYNC missing WBP"));
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		ApplyRuntimeTextDefaults(Blueprint);
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_SETTINGS_TEXT_SYNC save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_SETTINGS_TEXT_SYNC success source=SettingsPanelWidget::SyncText"));
+	}
+
 	void Build()
 	{
 		LogPhase(TEXT("begin"));
@@ -1435,6 +1655,7 @@ namespace SettingsPanelWidgetBuilder
 		// asset mixed label children of the frame Overlay with controls on the root
 		// Canvas, so the composition only happened to line up at one resolution.
 		LayoutSettingsContent(Blueprint);
+		ApplyRuntimeTextDefaults(Blueprint);
 		LogPhase(TEXT("laid-out"));
 
 		// RunActionsPanel is 620x118. Its two children and the actual transparent
@@ -1542,9 +1763,14 @@ void RegisterSettingsPanelWidgetBuilderCommands()
 		TEXT("RD.Editor.BuildSettingsReadability"),
 		TEXT("Build the Settings Ledger art, layout and project typography into WBP_SettingsPanel."),
 		FConsoleCommandDelegate::CreateStatic(&Build));
+	TextDefaultsCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.SyncSettingsTextDefaults"),
+		TEXT("Sync WBP_SettingsPanel text defaults to the runtime localization keys."),
+		FConsoleCommandDelegate::CreateStatic(&SyncTextDefaultsOnly));
 }
 
 void UnregisterSettingsPanelWidgetBuilderCommands()
 {
 	SettingsPanelWidgetBuilder::BuildCommand.Reset();
+	SettingsPanelWidgetBuilder::TextDefaultsCommand.Reset();
 }
