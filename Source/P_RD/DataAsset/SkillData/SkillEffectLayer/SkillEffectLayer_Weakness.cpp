@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Weakness::GetTagEffectClass() con
     return UTacticalEffect_GetWeakness::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Weakness"
 
 FText FSkillEffectLayer_Weakness::GetTagDisplayName() const
@@ -15,4 +14,3 @@ FText FSkillEffectLayer_Weakness::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

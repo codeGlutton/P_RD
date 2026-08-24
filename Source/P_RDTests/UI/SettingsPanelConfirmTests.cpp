@@ -9,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Editor.h"
+#include "Internationalization/Internationalization.h"
 #include "Misc/AutomationTest.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
@@ -18,6 +19,127 @@
 #include "Widgets/SWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsPanelWbpTextDefaultsTest,
+	"P_RD.UI.Settings.WBPTextDefaults",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FSettingsPanelWbpTextDefaultsTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	UClass* SettingsClass = LoadClass<USettingsPanelWidget>(nullptr,
+		TEXT("/Game/UI/WBP_SettingsPanel.WBP_SettingsPanel_C"));
+	if (!TestNotNull(TEXT("설정 WBP"), SettingsClass)
+		|| !TestNotNull(TEXT("테스트 월드"), World))
+	{
+		return false;
+	}
+
+	struct FCultureRestore
+	{
+		FString OriginalCulture =
+			FInternationalization::Get().GetCurrentCulture()->GetName();
+		~FCultureRestore()
+		{
+			FInternationalization::Get().SetCurrentCulture(OriginalCulture);
+		}
+	} CultureRestore;
+
+	struct FExpectedText
+	{
+		const TCHAR* WidgetName;
+		const TCHAR* Korean;
+		const TCHAR* English;
+	};
+	const FExpectedText Expected[] = {
+		{ TEXT("SettingsTitleText"), TEXT("설정 장부"), TEXT("SETTINGS LEDGER") },
+		{ TEXT("AudioSectionHeader"), TEXT("오디오"), TEXT("Audio") },
+		{ TEXT("MasterVolumeRow_Label"), TEXT("전체"), TEXT("Master") },
+		{ TEXT("BGMVolumeRow_Label"), TEXT("배경음"), TEXT("BGM") },
+		{ TEXT("SFXVolumeRow_Label"), TEXT("효과음"), TEXT("SFX") },
+		{ TEXT("UIVolumeRow_Label"), TEXT("UI"), TEXT("UI") },
+		{ TEXT("DisplaySectionHeader"), TEXT("화면"), TEXT("Display") },
+		{ TEXT("BrightnessRow_Label"), TEXT("밝기"), TEXT("Brightness") },
+		{ TEXT("ScreenShakeRow_Label"), TEXT("화면 흔들림"), TEXT("Screen Shake") },
+		{ TEXT("EffectsRow_Label"), TEXT("이펙트"), TEXT("Effects") },
+		{ TEXT("VibrationRow_Label"), TEXT("진동"), TEXT("Vibration") },
+		{ TEXT("QualityRow_Label"), TEXT("품질"), TEXT("Quality") },
+		{ TEXT("FpsRow_Label"), TEXT("FPS"), TEXT("FPS") },
+		{ TEXT("LowQualityButtonText"), TEXT("낮음"), TEXT("LOW") },
+		{ TEXT("MediumQualityButtonText"), TEXT("중간"), TEXT("MID") },
+		{ TEXT("HighQualityButtonText"), TEXT("높음"), TEXT("HIGH") },
+		{ TEXT("FpsThirtyButtonText"), TEXT("30"), TEXT("30") },
+		{ TEXT("FpsSixtyButtonText"), TEXT("60"), TEXT("60") },
+		{ TEXT("GameplaySectionHeader"), TEXT("게임플레이"), TEXT("Gameplay") },
+		{ TEXT("FastModeRow_Label"), TEXT("빠른 모드"), TEXT("Fast Mode") },
+		{ TEXT("SkipAnimationRow_Label"), TEXT("연출 스킵"), TEXT("Skip Animation") },
+		{ TEXT("AutoEndTurnRow_Label"), TEXT("자동 턴 종료"), TEXT("Auto End Turn") },
+		{ TEXT("LanguageRow_Label"), TEXT("언어"), TEXT("Language") },
+		{ TEXT("LanguageKoreanButtonText"), TEXT("한국어"), TEXT("한국어") },
+		{ TEXT("LanguageEnglishButtonText"), TEXT("English"), TEXT("English") },
+		{ TEXT("CreditsOpenButtonText"), TEXT("열기"), TEXT("Open") },
+		{ TEXT("LicenseOpenButtonText"), TEXT("열기"), TEXT("Open") },
+		{ TEXT("BackButtonText"), TEXT("뒤로가기"), TEXT("Back") },
+		{ TEXT("SaveAndExitButtonText"), TEXT("저장 후 종료"), TEXT("Save and Exit") },
+		{ TEXT("AbandonRunButtonText"), TEXT("런 포기"), TEXT("Abandon Run") },
+		{ TEXT("ResetButtonText"), TEXT("초기화"), TEXT("Reset") },
+		{ TEXT("AbandonConfirmTitleText"), TEXT("이 런을 포기하시겠습니까?"), TEXT("Abandon this run?") },
+		{ TEXT("AbandonConfirmBodyText"), TEXT("현재 진행 상황이 삭제되고 타이틀로 돌아갑니다."),
+			TEXT("Current progress will be deleted and you will return to the title.") },
+		{ TEXT("ConfirmAbandonButtonText"), TEXT("포기"), TEXT("Abandon") },
+		{ TEXT("CancelAbandonButtonText"), TEXT("취소"), TEXT("Cancel") },
+		{ TEXT("RunConfirmHeaderText"), TEXT("런 포기"), TEXT("ABANDON RUN") },
+	};
+
+	const auto CheckCulture = [this, World, SettingsClass, &Expected](
+		const TCHAR* Culture, const bool bKorean)
+	{
+		if (!FInternationalization::Get().SetCurrentCulture(Culture))
+		{
+			AddError(FString::Printf(TEXT("문화 변경 실패: %s"), Culture));
+			return;
+		}
+		// TakeWidget/NativeConstruct를 호출하지 않아 C++ SyncText가 값을
+		// 덮어쓰지 않는 순수 WBP 기본값을 검증한다.
+		USettingsPanelWidget* Panel =
+			CreateWidget<USettingsPanelWidget>(World, SettingsClass);
+		if (!TestNotNull(FString::Printf(TEXT("%s WBP 인스턴스"), Culture), Panel))
+		{
+			return;
+		}
+		USettingsPanelWidget* RuntimePanel =
+			CreateWidget<USettingsPanelWidget>(World, SettingsClass);
+		if (!TestNotNull(FString::Printf(TEXT("%s 런타임 인스턴스"), Culture),
+			RuntimePanel))
+		{
+			return;
+		}
+		RuntimePanel->ApplyValueModel(RuntimePanel->GetValueModel());
+		for (const FExpectedText& Entry : Expected)
+		{
+			UTextBlock* Text = Cast<UTextBlock>(
+				Panel->WidgetTree->FindWidget(FName(Entry.WidgetName)));
+			if (TestNotNull(FString::Printf(TEXT("%s/%s"), Culture, Entry.WidgetName), Text))
+			{
+				TestEqual(FString::Printf(TEXT("%s/%s 문구"), Culture, Entry.WidgetName),
+					Text->GetText().ToString(),
+					FString(bKorean ? Entry.Korean : Entry.English));
+				if (UTextBlock* RuntimeText = Cast<UTextBlock>(
+					RuntimePanel->WidgetTree->FindWidget(FName(Entry.WidgetName))))
+				{
+					TestEqual(FString::Printf(TEXT("%s/%s WBP-C++ 일치"),
+						Culture, Entry.WidgetName), Text->GetText().ToString(),
+						RuntimeText->GetText().ToString());
+				}
+			}
+		}
+	};
+
+	CheckCulture(TEXT("ko"), true);
+	CheckCulture(TEXT("en"), false);
+	return !HasAnyErrors();
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsPanelConfirmFlowTest,
 	"P_RD.UI.Settings.ConfirmFlow",

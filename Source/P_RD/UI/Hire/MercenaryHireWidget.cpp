@@ -942,7 +942,8 @@ void UMercenaryHireWidget::RefreshDetail()
 			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
 				Option.mSkillNames.IsValidIndex(SkillIndex)
 					? Option.mSkillNames[SkillIndex]
-					: FText::FromString(FString::Printf(TEXT("스킬 %d"), SkillIndex + 1)));
+					: FText::Format(LOCTEXT("SkillSlotFallback", "스킬 {0}"),
+					SkillIndex + 1));
 			if (Option.mSkillIcons.IsValidIndex(SkillIndex))
 			{
 				IconTexture = Option.mSkillIcons[SkillIndex].LoadSynchronous();
@@ -1170,10 +1171,11 @@ void UMercenaryHireWidget::RefreshBottomBar()
 		mDepartLabel->SetFont(mDepartLabelBaseFont.GetValue());
 	}
 
-	const FString PartyCount = mIsMarchboundLayout
-		? FString::Printf(TEXT("파티 %d/%d"), mChosen.Num(), mPartySize)
-		: FString::Printf(TEXT("파티\n%d/%d"), mChosen.Num(), mPartySize);
-	MercenaryHireDetail::SetTextIfPresent(mPartyCountText, FText::FromString(PartyCount));
+	const FText PartyCount = FText::Format(mIsMarchboundLayout
+		? LOCTEXT("PartyCountInline", "파티 {0}/{1}")
+		: LOCTEXT("PartyCountStacked", "파티\n{0}/{1}"),
+		mChosen.Num(), mPartySize);
+	MercenaryHireDetail::SetTextIfPresent(mPartyCountText, PartyCount);
 
 	for (int32 SlotIndex = 0; SlotIndex < mSlots.Num(); ++SlotIndex)
 	{

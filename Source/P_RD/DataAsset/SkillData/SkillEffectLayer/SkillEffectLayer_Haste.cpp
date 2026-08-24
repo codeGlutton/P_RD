@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Haste::GetTagEffectClass() const
 	return UTacticalEffect_GetHaste::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Haste"
 
 FText FSkillEffectLayer_Haste::GetTagDisplayName() const
@@ -15,5 +14,4 @@ FText FSkillEffectLayer_Haste::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif
 

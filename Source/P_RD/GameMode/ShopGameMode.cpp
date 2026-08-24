@@ -227,7 +227,12 @@ void AShopGameMode::PushShopUIData()
 							Item.mName = Data->mName;
 						}
 						Item.mIcon = Data->mIcon.LoadSynchronous();
-						Item.mDescription = Data->mDescription;
+						// 0823 확정: 설명은 런타임 생성이 언어를 탄다(스냅샷 폴백).
+						{
+							const FText Generated = Data->MakeDescription();
+							Item.mDescription = Generated.IsEmpty()
+								? Data->mDescription : Generated;
+						}
 						// 가격은 유닛 스킬 파생 타입(UStaticUnitSkillData)에 있다
 						if (const UStaticUnitSkillData* UnitSkillData = Cast<UStaticUnitSkillData>(Data))
 						{
@@ -479,7 +484,12 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 				{
 					SkillSlot.mIsEmpty = false;
 					SkillSlot.mName = Data->mName;
-					SkillSlot.mDescription = Data->mDescription;
+					// 0823 확정: 설명은 런타임 생성이 언어를 탄다(스냅샷 폴백).
+					{
+						const FText Generated = Data->MakeDescription();
+						SkillSlot.mDescription = Generated.IsEmpty()
+							? Data->mDescription : Generated;
+					}
 					SkillSlot.mIcon = Data->mIcon.LoadSynchronous();
 				}
 				OwnedUnit.mSkillSlots.Add(SkillSlot);

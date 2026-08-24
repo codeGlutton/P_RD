@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Exhaustion::GetTagEffectClass() c
 	return UTacticalEffect_GetExhaustion::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Exhaustion"
 
 FText FSkillEffectLayer_Exhaustion::GetTagDisplayName() const
@@ -15,5 +14,4 @@ FText FSkillEffectLayer_Exhaustion::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif
 
