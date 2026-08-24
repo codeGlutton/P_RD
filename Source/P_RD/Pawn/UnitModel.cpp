@@ -85,9 +85,9 @@ void UUnitModel::OnEndRoom()
 	}
 }
 
-void UUnitModel::OnBeginRound(int32 RoundCount)
+void UUnitModel::OnPreEvaluateRound()
 {
-	Super::OnBeginRound(RoundCount);
+	Super::OnPreEvaluateRound();
 
 	/* 자기 자신에게 SpeedPoint 부여 */
 
@@ -124,6 +124,11 @@ void UUnitModel::OnBeginRound(int32 RoundCount)
 
 		mAttributeCompModel->RemoveActiveTacticalEffect(FactorHandle);
 	}
+}
+
+void UUnitModel::OnBeginRound(int32 RoundCount)
+{
+	Super::OnBeginRound(RoundCount);
 }
 
 void UUnitModel::OnBeginTurn(int32 TurnCount)
