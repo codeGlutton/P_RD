@@ -251,6 +251,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetTarget(const FCombatTargetUI& Target);
 	/** @brief 스킬 레일(이름/아이콘/사용가능). [합의필요] 소스=USkillComponent(김준형), 현재 Mock. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillUIs(const TArray<FSkillUI>& Skills);
+	/**
+	 * @brief 지금 레일이 차례 유닛 것인지. 다른 용병을 들여다보는 중이면 false.
+	 *
+	 * 스킬 카드는 mIsUsable 로 하나씩 꺼지지만 이동 카드는 스킬 목록 밖이라
+	 * 이 플래그로 함께 잠근다(0823 검수: 남 카드에서 이동이 눌림).
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSkillRailOwnTurn(bool bOwnTurn);
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") bool IsSkillRailOwnTurn() const { return mIsSkillRailOwnTurn; }
 
 	/** @brief 선택한 스킬 index. [소스] SRPGSkillBuildAction.mSelectedSkill. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetSelectedSkill(int32 SelectedIndex);
@@ -341,6 +349,8 @@ private:
 	UPROPERTY(Transient) FUnitDetailUI mUnitDetail;
 	/** @brief 스킬 레일 표시 스냅샷. SkillIndex payload와 같은 index 계약을 가진다. */
 	UPROPERTY(Transient) TArray<FSkillUI> mSkillUIs;
+	/** @brief 레일 주인이 차례 유닛인지. 기본은 true(차례 유닛 레일). */
+	UPROPERTY(Transient) bool mIsSkillRailOwnTurn = true;
 	/** @brief 현재 선택한 스킬 index. index는 mSkillUIs 배열 기준이다. */
 	UPROPERTY(Transient) int32 mSelectedSkillIndex = 0;
 

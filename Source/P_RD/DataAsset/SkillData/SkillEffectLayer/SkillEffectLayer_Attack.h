@@ -25,10 +25,8 @@ public:
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
-#if WITH_EDITOR
 public:
 	FText MakeDescription() const override;
-#endif
 
 public:
 	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxDamage"))

@@ -674,6 +674,14 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 		SelectSkill(IntPayload);
 		break;
 	case ECombatInputType::Move:
+		// 다른 용병을 들여다보는 중의 이동 카드는 구경용이다. 여기서 안 막으면
+		// 차례 유닛이 대신 이동 모드에 들어간다(0823 검수: 남 카드에서 이동이 눌림).
+		if (mInspectedUnitId != INDEX_NONE
+			&& FindPartyUnitModel(mInspectedUnitId) != nullptr
+			&& FindPartyUnitModel(mInspectedUnitId) != GetTurnPlayerUnitModel())
+		{
+			break;
+		}
 		ClearSkillDetailPreview();
 		SelectMove();
 		break;
@@ -1208,6 +1216,20 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	{
 		AttributeSetComponentModel->SetAttributeBaseValue(
 			UUnitAttributeSet::GetHPAttribute(), 1.f);
+
+		// 방어도가 데미지를 전부 흡수하면 HP 1이어도 일격에 죽지 않으므로,
+		// 픽스처 활성 시 적 방어도는 획득 즉시 0으로 되돌린다.
+		AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
+			UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
+			[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
+			(const FTacticalAttributeChangeData& Data)
+			{
+				if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
+				{
+					WeakAttributeSet->ApplyModToAttribute(
+						UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+				}
+			});
 	}
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
@@ -1799,6 +1821,9 @@ void ACombatGameMode::PushSkillUIData() const
 	}
 
 	mCombatUIModel->SetSkillUIs(SkillUIDatas);
+	// 이동 카드는 스킬 목록 밖이라 mIsUsable 로 못 끈다. 레일 주인이 차례
+	// 유닛인지 함께 내려 화면이 이동 카드도 같은 규칙으로 잠그게 한다.
+	mCombatUIModel->SetSkillRailOwnTurn(bIsOwnTurn);
 }
 
 void ACombatGameMode::PushSelectedSkillUIData(int32 SkillIndex) const
@@ -2038,7 +2063,14 @@ void ACombatGameMode::FillSkillDetailUIData(USkillComponentModel* SkillComponent
 	}
 
 	OutDetail.mName = StaticSkillData->mName;
-	OutDetail.mDescription = StaticSkillData->mDescription;
+	// 0823 확정: 구워 둔 설명은 번역 키가 없어(생성 스냅샷) 언어를 안 탄다.
+	// 같은 내용을 런타임에 다시 생성해 현재 언어의 LOCTEXT 로 조립한다.
+	// 레이어가 없어 생성이 비면 구워 둔 설명(수기 작성분)을 그대로 쓴다.
+	{
+		const FText Generated = StaticSkillData->MakeDescription();
+		OutDetail.mDescription = Generated.IsEmpty()
+			? StaticSkillData->mDescription : Generated;
+	}
 	OutDetail.mIcon = StaticSkillData->mIcon.LoadSynchronous();
 	// 이 상세는 플레이어 카드 레일뿐 아니라 임의 유닛(몬스터 포함)의 스킬에도
 	// 쓰인다. 유닛별 슬롯 index만 넘기면 HUD에서 다른 유닛의 같은 슬롯과
@@ -2686,10 +2718,12 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 				}
 				if (EffectLines.IsEmpty() && !ArtifactData->mStatModifiers.IsEmpty())
 				{
-					EffectLines.Add(TEXT("파티 전체 능력치를 강화합니다."));
+					EffectLines.Add(NSLOCTEXT("CombatGameMode",
+						"ArtifactStatBoost", "파티 전체 능력치를 강화합니다.").ToString());
 				}
 				Choice.mDescription = EffectLines.IsEmpty()
-					? FText::FromString(TEXT("파티 전체에 적용됩니다."))
+					? NSLOCTEXT("CombatGameMode",
+						"ArtifactPartyWide", "파티 전체에 적용됩니다.")
 					: FText::FromString(FString::Join(EffectLines, TEXT("\n")));
 			}
 

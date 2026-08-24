@@ -302,13 +302,15 @@ namespace WorldMapLandscapeWidgetBuilder
 			FVector2D::ZeroVector, FVector2D(240.f, 448.f), 0);
 		Frame->SetColorAndOpacity(FLinearColor::White);
 
-		struct FLegendItem { const TCHAR* Label; const TCHAR* TexturePath; };
+		// 라벨은 NSLOCTEXT 로 굽는다. FromString 으로 구우면 번역 키 없는
+		// 문자열(culture-invariant)로 박혀 영어 모드에서도 한글로 남는다.
+		struct FLegendItem { FText Label; const TCHAR* TexturePath; };
 		const FLegendItem Items[] = {
-			{ TEXT("전투"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Battle_Gen_20260812.T_WorldMap_Node_Battle_Gen_20260812") },
-			{ TEXT("엘리트"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Elite_Gen_20260812.T_WorldMap_Node_Elite_Gen_20260812") },
-			{ TEXT("보스"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Boss_Gen_20260812.T_WorldMap_Node_Boss_Gen_20260812") },
-			{ TEXT("상점"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Shop_Gen_20260812.T_WorldMap_Node_Shop_Gen_20260812") },
-			{ TEXT("보물"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Treasure_Gen_20260812.T_WorldMap_Node_Treasure_Gen_20260812") },
+			{ NSLOCTEXT("WorldMap", "LegendBattle", "전투"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Battle_Gen_20260812.T_WorldMap_Node_Battle_Gen_20260812") },
+			{ NSLOCTEXT("WorldMap", "LegendElite", "엘리트"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Elite_Gen_20260812.T_WorldMap_Node_Elite_Gen_20260812") },
+			{ NSLOCTEXT("WorldMap", "LegendBoss", "보스"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Boss_Gen_20260812.T_WorldMap_Node_Boss_Gen_20260812") },
+			{ NSLOCTEXT("WorldMap", "LegendShop", "상점"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Shop_Gen_20260812.T_WorldMap_Node_Shop_Gen_20260812") },
+			{ NSLOCTEXT("WorldMap", "LegendTreasure", "보물"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/P_RD/WorldMap/T_WorldMap_Node_Treasure_Gen_20260812.T_WorldMap_Node_Treasure_Gen_20260812") },
 		};
 
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(Items); ++Index)
@@ -317,8 +319,9 @@ namespace WorldMapLandscapeWidgetBuilder
 			AddImage(Blueprint, Legend, FName(*FString::Printf(TEXT("LegendIcon_%d"), Index)),
 				Texture(Items[Index].TexturePath), FVector2D(34.f, Y), FVector2D(60.f, 60.f), 2);
 			UTextBlock* Label = AddText(Blueprint, Legend,
-				FName(*FString::Printf(TEXT("LegendText_%d"), Index)), Items[Index].Label,
+				FName(*FString::Printf(TEXT("LegendText_%d"), Index)), TEXT(""),
 				25, FVector2D(101.f, Y + 7.f), FVector2D(101.f, 46.f), 3);
+			Label->SetText(Items[Index].Label);
 			Label->SetJustification(ETextJustify::Left);
 
 			if (Index + 1 < UE_ARRAY_COUNT(Items))
@@ -406,7 +409,7 @@ namespace WorldMapLandscapeWidgetBuilder
 
 		UTextBlock* Title = Blueprint->WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(), TEXT("MapTitleText"));
-		Title->SetText(FText::FromString(TEXT("지도")));
+		Title->SetText(NSLOCTEXT("WorldMap", "MapTitle", "지도"));
 		StyleText(Title, 65);
 		Title->SetColorAndOpacity(FSlateColor(FLinearColor(.96f, .91f, .74f, 1.f)));
 		// 프로젝트 폰트의 line box는 실제 글리프보다 위쪽 여백이 커서 슬롯의
