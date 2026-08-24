@@ -52,7 +52,10 @@ private:
 
 protected:
 	void TryToMarkExternalReady();
+	void TryToAccelerateCinematicAfterLoading();
 
 protected:
 	EIntroGameModeStateFlag mStateFlag = EIntroGameModeStateFlag::None;
+	TWeakObjectPtr<UCinematicWidget> mCinematicWidget;
+	bool mCinematicAccelerationRequested = false;
 };

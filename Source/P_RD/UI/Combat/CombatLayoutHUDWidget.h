@@ -175,6 +175,10 @@ public:
 	{
 		return mSkillTacticalDiagramWidget;
 	}
+	UUserWidget* GetSkillDetailContentForTest() const
+	{
+		return mSkillDetailContentWidget;
+	}
 	const FSkillDetailUI& GetRenderedSkillDetailForTest() const
 	{
 		return mRenderedSkillDetailForTest;
@@ -1141,6 +1145,7 @@ private:
 	/** 프레젠터가 만든 범위판 인스턴스의 비친 포인터. 시험 접근자용. */
 	UPROPERTY(Transient) TObjectPtr<USkillTacticalDiagramWidget>
 		mSkillTacticalDiagramWidget;
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mSkillDetailContentWidget;
 	/** 실제 전투 장면이 표시되는 WBP Image(프레젠터 소유의 비친 포인터).
 	 * SceneCapture2D의 RenderTarget을 브러시로 쓴다. */
 	UPROPERTY(Transient) TObjectPtr<UImage> mSkillWorldPreviewImage;
@@ -1375,8 +1380,6 @@ private:
 		TObjectPtr<UButton> Button;
 		TObjectPtr<UImage> Portrait;
 		TObjectPtr<UTextBlock> Name;
-		TObjectPtr<UWidget> SpeedIcon;
-		TObjectPtr<UTextBlock> Speed;
 		TObjectPtr<UWidget> Current;
 		/** @brief 이 슬롯 앞에서 라운드가 바뀔 때만 보이는 세로 막대와 R# 표기. */
 		TObjectPtr<UWidget> RoundDivider;

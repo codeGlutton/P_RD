@@ -96,6 +96,8 @@ DerivedDataCache/*
 !/Content/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_*.uasset
 # 외부 SVN 원화에서 배경을 분리한 프로젝트 전용 전경 컷아웃.
 !/Content/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_*_v1.uasset
+# 전투 HUD에서 생성해 WBP가 직접 참조하는 속도 제거/하단 제거 프레임.
+!/Content/UI/Generated/CombatHUD/T_MB_*_v1.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output

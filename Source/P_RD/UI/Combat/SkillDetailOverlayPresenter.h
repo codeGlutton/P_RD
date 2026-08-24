@@ -31,11 +31,13 @@ class UButton;
 class UCanvasPanel;
 class UFont;
 class UImage;
+class UOverlay;
 class UScrollBox;
 class USkillTacticalDiagramWidget;
 class UTextBlock;
 class UUserWidget;
 class UWidget;
+class UWidgetSwitcher;
 
 /**
  * @brief 통합 미리보기가 쓰는 그림 묶음.
@@ -179,6 +181,8 @@ public:
 
 	/* ── 겹 부품 접근자. 호출자의 나머지 상세 경로가 같은 판을 그릴 때 쓴다. ── */
 	UUserWidget* GetOverlayWidget() const { return mDetailOverlayWidget; }
+	/** @brief 디자이너에서 직접 편집하는 스킬 전용 정보면 WBP 인스턴스. */
+	UUserWidget* GetSkillContentWidget() const { return mSkillContentWidget; }
 	USkillTacticalDiagramWidget* GetTacticalDiagram() const
 	{
 		return mSkillTacticalDiagramWidget;
@@ -199,6 +203,18 @@ public:
 	UImage* GetWorldPreviewImage() const { return mSkillWorldPreviewImage; }
 	/** @brief 자동화 검증용 수치 칩 값 문자열. */
 	FString GetChipValueString(int32 ChipIndex) const;
+	/**
+	 * @brief 전역 DPI 이후 1920x1080 상세 디자인 전체를 화면에 맞출 배율.
+	 * @param ViewportSize 물리 픽셀 기준 화면 크기
+	 * @param ViewportScale 현재 전역 UMG DPI 배율
+	 */
+	static float CalculateResponsiveSkillPanelScale(FVector2D ViewportSize,
+		float ViewportScale);
+	/** @brief 스킬 외 상세판도 같은 전체 디자인 기준으로 맞춘 배율. */
+	static float CalculateResponsiveDetailPanelScale(FVector2D ViewportSize,
+		float ViewportScale);
+	/** @brief 열린 상세판을 현재 뷰포트 크기에 다시 맞춘다. */
+	void RefreshResponsiveLayout();
 
 private:
 	/* ── 이미지 시안 기반 통합 스킬 미리보기 ─────────────────────────────
@@ -212,6 +228,13 @@ private:
 	/** @brief 상세창의 수치 칩과 범위 칸을 이름으로 찾아 둔다. 없으면 건너뛴다. */
 	void BindDetailExtras();
 	/**
+	 * @brief 모든 상세판의 1920x1080 디자인 전체를 화면 안에 중앙 배치한다.
+	 *
+	 * @details 전역 DPI가 이미 모자란 축을 맞춘 뒤이므로 여기서 판만 다시
+	 * 확대하지 않는다. 남는 논리 공간에 디자인 캔버스를 중앙 배치한다.
+	 */
+	void ApplyResponsiveSkillPanelScale(bool bSkillDetail);
+	/**
 	 * @brief 아티팩트 효과 본문 전용 ScrollBox 묶음을 처음 한 번 짓는다.
 	 *
 	 * @details 공용 DetailBodyText 는 고정 높이 Canvas 슬롯이라 효과 줄이 길면
@@ -221,6 +244,8 @@ private:
 	void BuildArtifactDescriptionScroll();
 	/** @brief 이미지 시안의 수치 메달/통합 전술 보드를 실제 상세 WBP 인스턴스에 짓는다. */
 	void BuildSkillVisualPreview();
+	/** @brief 별도 WBP가 가진 스킬 정보면을 공용 상세판에 한 번 꽂고 이름으로 바인딩한다. */
+	bool BindAuthoredSkillContent();
 	/** @brief 실제 월드 프리뷰가 없을 때만 쓰는 구형 모식도 묶음을 켜거나 끈다. */
 	void SetSyntheticSkillDiagramShown(bool bShown);
 	/** @brief 생성 이미지의 정상/선택 브러시를 현재 범위 토글 상태에 맞춘다. */
@@ -240,6 +265,8 @@ private:
 	/* ── 설정 ─────────────────────────────────────────────────────────── */
 	UPROPERTY(Transient) TWeakObjectPtr<UWorld> mWorld;
 	UPROPERTY() TSubclassOf<UUserWidget> mDetailOverlayWidgetClass;
+	/** 스킬 정보면은 별도 WBP가 모든 내부 배치를 소유한다. */
+	UPROPERTY() TSubclassOf<UUserWidget> mSkillDetailContentWidgetClass;
 	UPROPERTY() TSubclassOf<USkillTacticalDiagramWidget>
 		mSkillTacticalDiagramWidgetClass;
 	int32 mViewportZOrder = 70;
@@ -253,6 +280,16 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailTitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailSubtitleText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mDetailBodyText;
+	/** 상세 종류별 안전 사각형으로 전역 DPI 축소를 보정하는 디자인 캔버스. */
+	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDesignCanvas;
+	FVector2D mDefaultDetailDesignScale = FVector2D(1.f, 1.f);
+	FVector2D mDefaultDetailDesignTranslation = FVector2D::ZeroVector;
+	FVector2D mDefaultDetailDesignPivot = FVector2D(0.5f, 0.5f);
+	FVector2D mLastResponsiveViewportSize = FVector2D::ZeroVector;
+	float mLastResponsiveViewportScale = 0.f;
+	bool mDetailScaleDefaultsCached = false;
+	bool mResponsiveDetailActive = false;
+	bool mResponsiveDetailIsSkill = false;
 
 	/** 장문 한글 상세 전용 OFL 폰트. 유닛/상태 상세의 기존 서체는 유지한다. */
 	UPROPERTY() TObjectPtr<UFont> mReadableDetailFont;
@@ -285,14 +322,17 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider0;
 	UPROPERTY(Transient) TObjectPtr<UWidget> mDetailDivider1;
 
-	/* ── 통합 미리보기 런타임 위젯 ────────────────────────────────────── */
+	/* ── WBP authored 스킬 정보면 ─────────────────────────────────────── */
+	UPROPERTY(Transient) TObjectPtr<UUserWidget> mSkillContentWidget;
 	UPROPERTY(Transient) TObjectPtr<UCanvasPanel> mSkillVisualPreview;
+	UPROPERTY(Transient) TObjectPtr<UImage> mSkillIconImage;
 	/** @brief 전투 HUD의 실제 AP/피해/쿨타임/치명타 브러시를 복제한 4행 아이콘. */
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mSkillVisualStatIcons;
 	UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> mSkillVisualStatTexts;
 	/** @brief 긴 설명을 고정 폭에서 스크롤하는 스킬 전용 본문. */
 	UPROPERTY(Transient) TObjectPtr<UScrollBox> mSkillDescriptionScrollBox;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mSkillDescriptionText;
+	UPROPERTY(Transient) TObjectPtr<UWidgetSwitcher> mSkillContentSwitcher;
 
 	/* ── 아티팩트 효과 본문 전용 스크롤 묶음 ──────────────────────────── */
 	/** @brief 1920 디자인 축척을 거는 루트(ScaleBox). 켜고 끄는 단위다. */
@@ -304,6 +344,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UButton> mSkillEffectRangeButton;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mSkillSelectRangeText;
 	UPROPERTY(Transient) TObjectPtr<UTextBlock> mSkillEffectRangeText;
+	UPROPERTY(Transient) TObjectPtr<UImage> mSkillSelectRangePlate;
+	UPROPERTY(Transient) TObjectPtr<UImage> mSkillEffectRangePlate;
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mSkillVisualCells;
 	UPROPERTY(Transient) TArray<TObjectPtr<UImage>> mSkillVisualConnectorPips;
 	UPROPERTY(Transient) TObjectPtr<UImage> mSkillVisualCasterHalo;

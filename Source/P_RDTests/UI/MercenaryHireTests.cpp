@@ -437,8 +437,8 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		if (UTextBlock* StatText = Cast<UTextBlock>(HireTree->FindWidget(Name)))
 		{
 			TestEqual(*FString::Printf(TEXT("%s 글꼴 크기"), Name),
-				// 빌더 기준 24에 공용 모바일 배율 1.35를 적용한 저장값.
-				StatText->GetFont().Size, 32.0f);
+				// 빌더 기준 크기를 모바일 전용 확대 없이 그대로 저장한다.
+				StatText->GetFont().Size, 24.0f);
 		}
 		else
 		{
@@ -486,13 +486,23 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 		{
 			AddError(FString::Printf(TEXT("스킬 %d 텍스트 슬롯은 ScaleBoxSlot이어야 함"), Index));
 		}
-		TestEqual(*FString::Printf(TEXT("스킬 %d 의도한 광학 보정만 유지"), Index),
-			SkillText->GetRenderTransform().Translation, FVector2D(0.0f, -2.5f));
+		TestEqual(*FString::Printf(TEXT("스킬 %d 수동 좌표 보정 없음"), Index),
+			SkillText->GetRenderTransform().Translation, FVector2D::ZeroVector);
 		TestTrue(*FString::Printf(TEXT("스킬 %d 아이콘은 전용 래퍼 자식"), Index),
 			SkillIcon->GetParent() == SkillIconMount);
 		TestEqual(*FString::Printf(TEXT("스킬 %d 기본 아이콘은 숨김"), Index),
 			SkillIcon->GetVisibility(), ESlateVisibility::Collapsed);
 	}
+
+	HireTree->ForEachWidget([this](UWidget* Widget)
+	{
+		if (UTextBlock* Text = Cast<UTextBlock>(Widget))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 수동 Render Translation 없음"),
+				*Text->GetName()), Text->GetRenderTransform().Translation,
+				FVector2D::ZeroVector);
+		}
+	});
 
 	static const TCHAR* MercenaryNames[6] = {
 		TEXT("Knight"), TEXT("Mage"), TEXT("Ranger"),
@@ -789,6 +799,72 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("상세 아래 추가 버튼"), AddButton))
 	{
 		TestTrue(TEXT("추가 버튼 동작이 묶여 있다"), AddButton->OnClicked.IsBound());
+	}
+	// 단일 문구 버튼은 아트와 클릭 영역 사이에 더 작은 라벨 좌표계를 두지 않는다.
+	// 문자열이 영어/한국어 또는 비용으로 바뀌어도 이 전체 사각 안에서 중앙 정렬된다.
+	struct FSingleLabelButtonContract
+	{
+		const TCHAR* HolderName;
+		const TCHAR* CenterName;
+		const TCHAR* LabelName;
+		const TCHAR* ButtonName;
+		FVector2D Size;
+	};
+	const FSingleLabelButtonContract SingleLabelButtons[] = {
+		{ TEXT("HireAddHolder"), TEXT("HireAddLabel_Center"),
+			TEXT("HireAddLabel"), TEXT("HireAddButton"), FVector2D(270.f, 106.f) },
+		{ TEXT("DepartHolder"), TEXT("DepartLabel_Center"),
+			TEXT("DepartLabel"), TEXT("DepartButton"), FVector2D(224.f, 106.f) },
+		{ TEXT("HireBackHolder"), TEXT("HireBackLabel_Center"),
+			TEXT("HireBackLabel"), TEXT("HireBackButton"), FVector2D(270.f, 106.f) },
+	};
+	for (const FSingleLabelButtonContract& Expected : SingleLabelButtons)
+	{
+		UWidget* Holder = Board->WidgetTree->FindWidget(Expected.HolderName);
+		UOverlay* Center = Cast<UOverlay>(
+			Board->WidgetTree->FindWidget(Expected.CenterName));
+		UTextBlock* Label = Cast<UTextBlock>(
+			Board->WidgetTree->FindWidget(Expected.LabelName));
+		UScaleBox* AutoFit = Cast<UScaleBox>(Board->WidgetTree->FindWidget(
+			FName(*FString::Printf(TEXT("%s_AutoFit"), Expected.LabelName))));
+		UButton* Button = Cast<UButton>(
+			Board->WidgetTree->FindWidget(Expected.ButtonName));
+		if (TestNotNull(*FString::Printf(TEXT("%s 전체 라벨"), Expected.CenterName),
+			Center) && TestNotNull(*FString::Printf(TEXT("%s 클릭 영역"),
+			Expected.ButtonName), Button))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 라벨 부모"), Expected.CenterName),
+				Center->GetParent(), Cast<UPanelWidget>(Holder));
+			UCanvasPanelSlot* CenterSlot = Cast<UCanvasPanelSlot>(Center->Slot);
+			UCanvasPanelSlot* ButtonSlot = Cast<UCanvasPanelSlot>(Button->Slot);
+			if (TestNotNull(TEXT("라벨 Canvas 슬롯"), CenterSlot)
+				&& TestNotNull(TEXT("버튼 Canvas 슬롯"), ButtonSlot))
+			{
+				TestEqual(TEXT("라벨과 버튼 시작점 일치"),
+					CenterSlot->GetPosition(), ButtonSlot->GetPosition());
+				TestEqual(TEXT("라벨과 버튼 크기 일치"),
+					CenterSlot->GetSize(), ButtonSlot->GetSize());
+				TestEqual(TEXT("라벨은 홀더 전체 크기"),
+					CenterSlot->GetSize(), Expected.Size);
+			}
+		}
+		if (TestNotNull(*FString::Printf(TEXT("%s 축소 래퍼"), Expected.LabelName),
+			AutoFit))
+		{
+			TestEqual(TEXT("축소 래퍼는 전체 라벨의 자식"), AutoFit->GetParent(),
+				static_cast<UPanelWidget*>(Center));
+			TestEqual(TEXT("긴 문구만 가로 축소"), AutoFit->GetStretch(),
+				EStretch::ScaleToFitX);
+			TestEqual(TEXT("짧은 문구는 확대하지 않음"),
+				AutoFit->GetStretchDirection(), EStretchDirection::DownOnly);
+		}
+		if (TestNotNull(*FString::Printf(TEXT("%s 문구"), Expected.LabelName), Label))
+		{
+			TestEqual(TEXT("문구는 축소 래퍼의 자식"), Label->GetParent(),
+				static_cast<UPanelWidget*>(AutoFit));
+			TestEqual(TEXT("단일 문구에 좌표 보정 없음"),
+				Label->GetRenderTransform().Translation, FVector2D::ZeroVector);
+		}
 	}
 	if (TestNotNull(TEXT("파티 슬롯 해제 버튼"), PartySlotButton))
 	{
@@ -1210,6 +1286,20 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			CheckRenderContract(FString::Printf(TEXT("%s 요약판"), Prefix),
 				SummaryPanel, FVector2D(1.f, 1.f), FVector2D(1.f, 0.f));
 		}
+		if (UImage* SummaryPlate = Cast<UImage>(Tree->FindWidget(FName(
+			*FString::Printf(TEXT("%sPlate"), Prefix)))))
+		{
+			UObject* Resource = SummaryPlate->GetBrush().GetResourceObject();
+			if (TestNotNull(*FString::Printf(TEXT("%s 하단 없는 요약판 에셋"),
+				Prefix), Resource))
+			{
+				TestEqual(TEXT("요약판은 하단 빈 바 제거 에셋 사용"),
+					Resource->GetPathName(), FString(TEXT(
+						"/Game/UI/Generated/CombatHUD/"
+						"T_MB_GenericDetailPanel_NoFooter_v1."
+						"T_MB_GenericDetailPanel_NoFooter_v1")));
+			}
+		}
 		for (const TCHAR* Suffix : {
 			TEXT("Portrait"), TEXT("Name"), TEXT("HPBar"), TEXT("HPText"),
 			TEXT("APText"), TEXT("SpeedText"), TEXT("Status") })
@@ -1256,9 +1346,6 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		FVector2D Position;
 	};
 	const FVector2D ActionPanelSize(396.172241f, 181.435410f);
-	const FMargin ActionLabelContentPadding(
-		ActionPanelSize.X * .082f, ActionPanelSize.Y * .178f,
-		ActionPanelSize.X * .082f, ActionPanelSize.Y * .202f);
 	const FActionPanelContract ActionPanels[] = {
 		{ TEXT("SkillTogglePanel"), TEXT("SkillTogglePlateMount"),
 			TEXT("SkillTogglePlate"), TEXT("SkillToggleButton"),
@@ -1284,6 +1371,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Tree->FindWidget(FName(Expected.LabelCenterName)));
 		UTextBlock* Label = Cast<UTextBlock>(
 			Tree->FindWidget(FName(Expected.LabelName)));
+		UScaleBox* LabelFit = Cast<UScaleBox>(Tree->FindWidget(FName(
+			*FString::Printf(TEXT("%s_AutoFit"), Expected.LabelName))));
 
 		if (TestNotNull(*FString::Printf(TEXT("%s 우하단 루트"),
 			Expected.PanelName), Panel))
@@ -1325,27 +1414,83 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 				TestEqual(*FString::Printf(TEXT("%s 부모"), OverlayChild.Key),
 					OverlayChild.Value->GetParent(),
 					static_cast<UPanelWidget*>(Mount));
-				const FMargin ExpectedPadding = OverlayChild.Value == LabelCenter
-					? ActionLabelContentPadding : FMargin(0.f);
 				CheckOverlayContract(FString::Printf(TEXT("%s Overlay 자식"),
-					OverlayChild.Key), OverlayChild.Value, ExpectedPadding,
+					OverlayChild.Key), OverlayChild.Value, FMargin(0.f),
 					HAlign_Fill, VAlign_Fill);
 			}
+		}
+		if (TestNotNull(*FString::Printf(TEXT("%s 축소 래퍼"),
+			Expected.LabelName), LabelFit))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 중앙 래퍼"), Expected.LabelName),
+				LabelFit->GetParent(), static_cast<UPanelWidget*>(LabelCenter));
+			CheckOverlayContract(FString::Printf(TEXT("%s 축소 영역"),
+				Expected.LabelName), LabelFit, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+			TestEqual(TEXT("긴 액션명만 가로 축소"), LabelFit->GetStretch(),
+				EStretch::ScaleToFitX);
+			TestEqual(TEXT("짧은 액션명은 확대하지 않음"),
+				LabelFit->GetStretchDirection(), EStretchDirection::DownOnly);
 		}
 		if (TestNotNull(*FString::Printf(TEXT("%s 중앙 문구"),
 			Expected.LabelName), Label))
 		{
-			TestEqual(*FString::Printf(TEXT("%s 중앙 래퍼"), Expected.LabelName),
-				Label->GetParent(), static_cast<UPanelWidget*>(LabelCenter));
-			CheckOverlayContract(FString::Printf(TEXT("%s 중앙 문구"),
-				Expected.LabelName), Label, FMargin(0.f),
-				HAlign_Center, VAlign_Center);
+			TestEqual(*FString::Printf(TEXT("%s 축소 자식"), Expected.LabelName),
+				Label->GetParent(), static_cast<UPanelWidget*>(LabelFit));
+			UScaleBoxSlot* LabelSlot = Cast<UScaleBoxSlot>(Label->Slot);
+			if (TestNotNull(TEXT("액션 문구 ScaleBox 슬롯"), LabelSlot))
+			{
+				TestEqual(TEXT("액션 문구 가로 중앙"),
+					LabelSlot->GetHorizontalAlignment(), HAlign_Center);
+				TestEqual(TEXT("액션 문구 세로 중앙"),
+					LabelSlot->GetVerticalAlignment(), VAlign_Center);
+			}
+			TestEqual(*FString::Printf(TEXT("%s 좌표 보정 없음"),
+				Expected.LabelName), Label->GetRenderTransform().Translation,
+				FVector2D::ZeroVector);
 		}
 	}
 	if (AuthoredActionSizes.Num() == UE_ARRAY_COUNT(ActionPanels))
 	{
 		TestEqual(TEXT("스킬/턴 종료 루트는 정확히 같은 크기"),
 			AuthoredActionSizes[0], AuthoredActionSizes[1]);
+	}
+	// 조준 확정은 평상시 스킬 단추와 자리를 바꾸지만 동일한 단일 문구
+	// 버튼이다. 숨겨져 있어도 라벨/클릭 영역 계약은 같아야 한다.
+	UOverlay* ConfirmMount = Cast<UOverlay>(
+		Tree->FindWidget(TEXT("ConfirmPlateMount")));
+	UOverlay* ConfirmCenter = Cast<UOverlay>(
+		Tree->FindWidget(TEXT("ConfirmLabel_Center")));
+	UTextBlock* ConfirmLabel = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("ConfirmLabel")));
+	UScaleBox* ConfirmFit = Cast<UScaleBox>(
+		Tree->FindWidget(TEXT("ConfirmLabel_AutoFit")));
+	UButton* ConfirmButton = Cast<UButton>(
+		Tree->FindWidget(TEXT("ConfirmButton")));
+	if (TestNotNull(TEXT("확정 버튼 Overlay"), ConfirmMount)
+		&& TestNotNull(TEXT("확정 전체 라벨"), ConfirmCenter)
+		&& TestNotNull(TEXT("확정 클릭 영역"), ConfirmButton))
+	{
+		for (const TPair<const TCHAR*, UWidget*> Child : {
+			TPair<const TCHAR*, UWidget*>(TEXT("ConfirmLabel_Center"), ConfirmCenter),
+			TPair<const TCHAR*, UWidget*>(TEXT("ConfirmButton"), ConfirmButton) })
+		{
+			TestEqual(*FString::Printf(TEXT("%s 부모"), Child.Key),
+				Child.Value->GetParent(), static_cast<UPanelWidget*>(ConfirmMount));
+			CheckOverlayContract(FString::Printf(TEXT("%s 전체 영역"), Child.Key),
+				Child.Value, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+		}
+	}
+	if (TestNotNull(TEXT("확정 문구"), ConfirmLabel))
+	{
+		if (TestNotNull(TEXT("확정 문구 축소 래퍼"), ConfirmFit))
+		{
+			TestEqual(TEXT("확정 축소 래퍼 중앙 부모"), ConfirmFit->GetParent(),
+				static_cast<UPanelWidget*>(ConfirmCenter));
+		}
+		TestEqual(TEXT("확정 문구 축소 자식"), ConfirmLabel->GetParent(),
+			static_cast<UPanelWidget*>(ConfirmFit));
+		TestEqual(TEXT("확정 문구 좌표 보정 없음"),
+			ConfirmLabel->GetRenderTransform().Translation, FVector2D::ZeroVector);
 	}
 	UImage* SkillPlate = Cast<UImage>(Tree->FindWidget(TEXT("SkillTogglePlate")));
 	UImage* EndTurnPlate = Cast<UImage>(Tree->FindWidget(TEXT("EndTurnPlate")));
@@ -1366,8 +1511,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		FVector2D Size;
 	};
 	const FPreservedHudRect PreservedHudRects[] = {
-		{ TEXT("RoundPanel"), FVector2D(8.f, 8.f), FVector2D(218.f, 166.f) },
-		{ TEXT("TurnPanel"), FVector2D(236.f, 8.f), FVector2D(1090.f, 174.f) },
+		{ TEXT("RoundPanel"), FVector2D(18.f, 10.f), FVector2D(218.f, 136.f) },
+		{ TEXT("TurnPanel"), FVector2D(246.f, 10.f), FVector2D(1090.f, 150.f) },
 		{ TEXT("MercRosterSection"), FVector2D(231.f, 279.f),
 			FVector2D(375.f, 527.33f) },
 	};
@@ -1451,8 +1596,27 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	TestNotNull(TEXT("보유 용병 판"), MercenaryBoard);
 	TestNotNull(TEXT("보유 골드 글자"),
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryGoldText"))));
-	TestNotNull(TEXT("용병 패널 닫기 단추"),
-		Cast<UButton>(Tree->FindWidget(TEXT("MercenaryCloseButton"))));
+	UButton* MercenaryCloseButton = Cast<UButton>(
+		Tree->FindWidget(TEXT("MercenaryCloseButton")));
+	UOverlay* MercenaryCloseCenter = Cast<UOverlay>(
+		Tree->FindWidget(TEXT("MercenaryCloseText_Center")));
+	TestNotNull(TEXT("용병 패널 닫기 단추"), MercenaryCloseButton);
+	if (TestNotNull(TEXT("용병 패널 닫기 전체 라벨"), MercenaryCloseCenter)
+		&& MercenaryCloseButton != nullptr)
+	{
+		const UCanvasPanelSlot* CenterSlot = Cast<UCanvasPanelSlot>(
+			MercenaryCloseCenter->Slot);
+		const UCanvasPanelSlot* ButtonSlot = Cast<UCanvasPanelSlot>(
+			MercenaryCloseButton->Slot);
+		if (TestNotNull(TEXT("용병 닫기 라벨 Canvas 슬롯"), CenterSlot)
+			&& TestNotNull(TEXT("용병 닫기 버튼 Canvas 슬롯"), ButtonSlot))
+		{
+			TestEqual(TEXT("용병 닫기 라벨/버튼 시작점 일치"),
+				CenterSlot->GetPosition(), ButtonSlot->GetPosition());
+			TestEqual(TEXT("용병 닫기 라벨/버튼 크기 일치"),
+				CenterSlot->GetSize(), ButtonSlot->GetSize());
+		}
+	}
 	TestNotNull(TEXT("용병 패널 뒤로 프레임"),
 		Cast<UImage>(Tree->FindWidget(TEXT("MercenaryBackArt"))));
 	if (UTextBlock* BackText =
@@ -1643,8 +1807,13 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			UWidget* Part = Tree->FindWidget(FName(Name));
 			if (TestNotNull(*FString::Printf(TEXT("%s WBP 부품"), Name), Part))
 			{
+				UPanelWidget* VisualParent = Part->GetParent();
+				if (UScaleBox* AutoFit = Cast<UScaleBox>(VisualParent))
+				{
+					VisualParent = AutoFit->GetParent();
+				}
 				TestEqual(*FString::Printf(TEXT("%s 는 인벤토리 탭 안"), Name),
-					Part->GetParent(), InventoryTab);
+					VisualParent, InventoryTab);
 			}
 		}
 		if (UImage* Icon = Cast<UImage>(
@@ -2460,9 +2629,17 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 	}
 	UWidget* RoundPanel = Tree->FindWidget(TEXT("RoundPanel"));
 	UTextBlock* RoundText = Cast<UTextBlock>(Tree->FindWidget(TEXT("RoundText")));
+	UTextBlock* RoundNumberText = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("RoundNumberText")));
 	UImage* RoundPlate = Cast<UImage>(Tree->FindWidget(TEXT("RoundPlate")));
 	UPanelWidget* RoundPlateMount =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("RoundPlateMount")));
+	UImage* RoundNumberPlate = Cast<UImage>(
+		Tree->FindWidget(TEXT("RoundNumberPlate")));
+	UPanelWidget* RoundNumberPlateMount = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("RoundNumberPlateMount")));
+	UPanelWidget* RoundNumberTextCenter = Cast<UPanelWidget>(
+		Tree->FindWidget(TEXT("RoundNumberText_Center")));
 	UWidget* ObjectiveTextCenter = Tree->FindWidget(TEXT("ObjectiveText_Center"));
 	UCanvasPanelSlot* RoundPanelSlot = RoundPanel != nullptr
 		? Cast<UCanvasPanelSlot>(RoundPanel->Slot) : nullptr;
@@ -2470,15 +2647,30 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		&& TestNotNull(TEXT("현재 라운드 패널 슬롯"), RoundPanelSlot))
 	{
 		TestEqual(TEXT("라운드 패널 위치"), RoundPanelSlot->GetPosition(),
-			FVector2D(8.f, 8.f));
+			FVector2D(18.f, 10.f));
 		TestEqual(TEXT("라운드 패널 크기"), RoundPanelSlot->GetSize(),
-			FVector2D(218.f, 166.f));
+			FVector2D(218.f, 136.f));
 		TestEqual(TEXT("라운드 패널 좌상단 앵커 최소"),
 			RoundPanelSlot->GetAnchors().Minimum, FVector2D::ZeroVector);
 		TestEqual(TEXT("라운드 패널 좌상단 앵커 최대"),
 			RoundPanelSlot->GetAnchors().Maximum, FVector2D::ZeroVector);
 	}
 	TestNotNull(TEXT("현재 라운드 독립 텍스트"), RoundText);
+	if (TestNotNull(TEXT("현재 라운드 두 자리 숫자"), RoundNumberText))
+	{
+		UScaleBox* RoundNumberAutoFit = Cast<UScaleBox>(
+			Tree->FindWidget(TEXT("RoundNumberText_AutoFit")));
+		if (TestNotNull(TEXT("라운드 숫자 자동 축소 래퍼"), RoundNumberAutoFit))
+		{
+			TestEqual(TEXT("라운드 숫자 래퍼 부모"),
+				RoundNumberAutoFit->GetParent(), RoundNumberTextCenter);
+			TestEqual(TEXT("라운드 숫자 텍스트 부모"),
+				RoundNumberText->GetParent(),
+				static_cast<UPanelWidget*>(RoundNumberAutoFit));
+		}
+		TestEqual(TEXT("라운드 숫자는 두 자리 미리보기"),
+			RoundNumberText->GetText().ToString(), FString(TEXT("01")));
+	}
 	if (TestNotNull(TEXT("라운드 배지 내부 래퍼"), RoundPlateMount))
 	{
 		TestEqual(TEXT("라운드 배지 래퍼 부모"), RoundPlateMount->GetParent(),
@@ -2505,7 +2697,27 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 						"T_MB_RoundBadge_Frame.T_MB_RoundBadge_Frame")));
 		}
 	}
-	if (TestNotNull(TEXT("구형 임무 문구 래퍼"), ObjectiveTextCenter))
+	if (TestNotNull(TEXT("라운드 숫자 배지 래퍼"), RoundNumberPlateMount))
+	{
+		TestEqual(TEXT("라운드 숫자 배지 래퍼 부모"),
+			RoundNumberPlateMount->GetParent(), Cast<UPanelWidget>(RoundPanel));
+		if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(
+			RoundNumberPlateMount->Slot))
+		{
+			TestEqual(TEXT("라운드 숫자 배지는 ROUND 바로 아래"),
+				Slot->GetPosition(), FVector2D(0.f, 68.f));
+			TestEqual(TEXT("두 라운드 배지는 같은 크기"), Slot->GetSize(),
+				FVector2D(218.f, 68.f));
+		}
+	}
+	if (TestNotNull(TEXT("라운드 숫자 배지 그림"), RoundNumberPlate)
+		&& RoundPlate != nullptr)
+	{
+		TestEqual(TEXT("ROUND와 숫자는 같은 에셋"),
+			RoundNumberPlate->GetBrush().GetResourceObject(),
+			RoundPlate->GetBrush().GetResourceObject());
+	}
+	if (ObjectiveTextCenter != nullptr)
 	{
 		TestEqual(TEXT("구형 임무 문구는 라운드 아래에 표시하지 않음"),
 			ObjectiveTextCenter->GetVisibility(), ESlateVisibility::Collapsed);
@@ -2519,11 +2731,11 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("사용자 배치 턴바 슬롯"), TurnPanelSlot))
 	{
 		TestEqual(TEXT("턴바 사용자 배치 X"),
-			double(TurnPanelSlot->GetPosition().X), 236.0);
+			double(TurnPanelSlot->GetPosition().X), 246.0);
 		TestEqual(TEXT("턴바 사용자 배치 Y"),
-			double(TurnPanelSlot->GetPosition().Y), 8.0);
+			double(TurnPanelSlot->GetPosition().Y), 10.0);
 		TestEqual(TEXT("턴바 사용자 배치 크기"),
-			TurnPanelSlot->GetSize(), FVector2D(1090.f, 174.f));
+			TurnPanelSlot->GetSize(), FVector2D(1090.f, 150.f));
 		TestEqual(TEXT("턴바 좌상단 앵커 최소"),
 			TurnPanelSlot->GetAnchors().Minimum, FVector2D::ZeroVector);
 		TestEqual(TEXT("턴바 좌상단 앵커 최대"),
@@ -2546,10 +2758,6 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 			FString::Printf(TEXT("TurnRoundLabel_%d"), Index);
 		const FString LabelCenterName =
 			FString::Printf(TEXT("TurnRoundLabel_%d_Center"), Index);
-		const FString SpeedName =
-			FString::Printf(TEXT("TurnSpeed_%d"), Index);
-		const FString SpeedIconName =
-			FString::Printf(TEXT("TurnSpeedIcon_%d"), Index);
 		const FString FrameName =
 			FString::Printf(TEXT("TurnFrame_%d"), Index);
 
@@ -2567,10 +2775,6 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 			Cast<UTextBlock>(Tree->FindWidget(FName(*LabelName)));
 		UPanelWidget* LabelCenter =
 			Cast<UPanelWidget>(Tree->FindWidget(FName(*LabelCenterName)));
-		UTextBlock* Speed =
-			Cast<UTextBlock>(Tree->FindWidget(FName(*SpeedName)));
-		UImage* SpeedIcon =
-			Cast<UImage>(Tree->FindWidget(FName(*SpeedIconName)));
 		UImage* Frame =
 			Cast<UImage>(Tree->FindWidget(FName(*FrameName)));
 		if (TestNotNull(*TokenName, Token)
@@ -2589,7 +2793,7 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 				TestEqual(*FString::Printf(TEXT("%s 위치"), *TokenName),
 					TokenSlot->GetPosition(), FVector2D(5.f + 109.f * Index, 30.f));
 				TestEqual(*FString::Printf(TEXT("%s 크기"), *TokenName),
-					TokenSlot->GetSize(), FVector2D(108.f, 144.f));
+					TokenSlot->GetSize(), FVector2D(108.f, 120.f));
 			}
 		}
 		if (TestNotNull(*ButtonName, Button))
@@ -2601,7 +2805,7 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 				TestEqual(*FString::Printf(TEXT("%s 위치"), *ButtonName),
 					ButtonSlot->GetPosition(), FVector2D(5.f + 109.f * Index, 30.f));
 				TestEqual(*FString::Printf(TEXT("%s 크기"), *ButtonName),
-					ButtonSlot->GetSize(), FVector2D(108.f, 144.f));
+					ButtonSlot->GetSize(), FVector2D(108.f, 120.f));
 			}
 		}
 		if (TestNotNull(*DividerName, Divider))
@@ -2629,22 +2833,31 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(*FString::Printf(TEXT("%s 기본 숨김"), *LabelName),
 				RoundLabel->GetVisibility(), ESlateVisibility::Collapsed);
-			TestEqual(*FString::Printf(TEXT("%s 중앙정렬 래퍼"), *LabelName),
-				RoundLabel->GetParent(), LabelCenter);
+			UScaleBox* LabelAutoFit = Cast<UScaleBox>(Tree->FindWidget(
+				FName(*FString::Printf(TEXT("%s_AutoFit"), *LabelName))));
+			if (TestNotNull(*FString::Printf(TEXT("%s 자동 축소 래퍼"),
+				*LabelName), LabelAutoFit))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 중앙 영역"), *LabelName),
+					LabelAutoFit->GetParent(), LabelCenter);
+				TestEqual(*FString::Printf(TEXT("%s 자동 축소 내부"), *LabelName),
+					RoundLabel->GetParent(),
+					static_cast<UPanelWidget*>(LabelAutoFit));
+			}
 		}
 		if (TestNotNull(*LabelCenterName, LabelCenter))
 		{
 			TestEqual(*FString::Printf(TEXT("%s 배지 래퍼"), *LabelCenterName),
 				LabelCenter->GetParent(), DividerMount);
 		}
-		TestNotNull(*SpeedName, Speed);
-		if (Speed != nullptr)
+		for (const FString& RemovedName : {
+			FString::Printf(TEXT("TurnSpeed_%d"), Index),
+			FString::Printf(TEXT("TurnSpeed_%d_Center"), Index),
+			FString::Printf(TEXT("TurnSpeedIcon_%d"), Index),
+			FString::Printf(TEXT("TurnSpeedPlate_%d"), Index) })
 		{
-			const FString CenterName =
-				FString::Printf(TEXT("TurnSpeed_%d_Center"), Index);
-			TestEqual(*FString::Printf(TEXT("%s 중앙정렬 래퍼"), *SpeedName),
-				Speed->GetParent(),
-				Cast<UPanelWidget>(Tree->FindWidget(FName(*CenterName))));
+			TestNull(*FString::Printf(TEXT("%s는 WBP에서 완전 제거"),
+				*RemovedName), Tree->FindWidget(FName(*RemovedName)));
 		}
 		if (TestNotNull(*FrameName, Frame))
 		{
@@ -2655,17 +2868,12 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 			if (TestNotNull(*FString::Printf(TEXT("%s 텍스처"), *FrameName),
 				Texture))
 			{
-				const FIntPoint ImportedSize = Texture->GetImportedSize();
-				TestEqual(*FString::Printf(TEXT("%s 원본 폭"), *FrameName),
-					ImportedSize.X, 731);
-				TestEqual(*FString::Printf(TEXT("%s 원본 높이"), *FrameName),
-					ImportedSize.Y, 995);
+				TestEqual(*FString::Printf(TEXT("%s 하단 없는 프레임 경로"),
+					*FrameName), Texture->GetPathName(), FString(TEXT(
+						"/Game/UI/Generated/CombatHUD/"
+						"T_MB_TurnToken_Frame_NoSpeed_v1."
+						"T_MB_TurnToken_Frame_NoSpeed_v1")));
 			}
-		}
-		if (TestNotNull(*SpeedIconName, SpeedIcon))
-		{
-			TestNotNull(*FString::Printf(TEXT("%s 텍스처"), *SpeedIconName),
-				Cast<UTexture2D>(SpeedIcon->GetBrush().GetResourceObject()));
 		}
 	}
 
@@ -2673,6 +2881,69 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("TurnPageLeft")));
 	TestNotNull(TEXT("오른쪽 넘김 버튼"),
 		Tree->FindWidget(TEXT("TurnPageRight")));
+	int32 CenterPairCount = 0;
+	Tree->ForEachWidget([this, Tree, &CenterPairCount](UWidget* Widget)
+	{
+		UTextBlock* Text = Cast<UTextBlock>(Widget);
+		if (Text == nullptr)
+		{
+			return;
+		}
+		UOverlay* Center = Cast<UOverlay>(Tree->FindWidget(FName(*FString::Printf(
+			TEXT("%s_Center"), *Text->GetName()))));
+		if (Center == nullptr)
+		{
+			return;
+		}
+		UWidget* CenterChild = Text;
+		while (CenterChild != nullptr && CenterChild->GetParent() != Center)
+		{
+			CenterChild = CenterChild->GetParent();
+		}
+		if (!TestNotNull(*FString::Printf(TEXT("%s는 동명 Center 내부"),
+			*Text->GetName()), CenterChild))
+		{
+			return;
+		}
+		UScaleBox* AutoFit = Cast<UScaleBox>(CenterChild);
+		if (TestNotNull(*FString::Printf(TEXT("%s 자동 축소 래퍼"),
+			*Text->GetName()), AutoFit))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 가로 넘침만 축소"),
+				*Text->GetName()), AutoFit->GetStretch(), EStretch::ScaleToFitX);
+			TestEqual(*FString::Printf(TEXT("%s 원래 크기보다 확대하지 않음"),
+				*Text->GetName()), AutoFit->GetStretchDirection(),
+				EStretchDirection::DownOnly);
+			UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(Text->Slot);
+			if (TestNotNull(*FString::Printf(TEXT("%s AutoFit 내부 슬롯"),
+				*Text->GetName()), TextSlot))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 글자 가로 중앙"),
+					*Text->GetName()), TextSlot->GetHorizontalAlignment(),
+					HAlign_Center);
+				TestEqual(*FString::Printf(TEXT("%s 글자 세로 중앙"),
+					*Text->GetName()), TextSlot->GetVerticalAlignment(),
+					VAlign_Center);
+			}
+		}
+		UOverlaySlot* Slot = Cast<UOverlaySlot>(CenterChild->Slot);
+		if (TestNotNull(*FString::Printf(TEXT("%s Center 슬롯"),
+			*Text->GetName()), Slot))
+		{
+			TestEqual(*FString::Printf(TEXT("%s Center와 같은 가로 영역"),
+				*Text->GetName()), Slot->GetHorizontalAlignment(), HAlign_Fill);
+			TestEqual(*FString::Printf(TEXT("%s Center와 같은 세로 영역"),
+				*Text->GetName()), Slot->GetVerticalAlignment(), VAlign_Fill);
+			TestEqual(*FString::Printf(TEXT("%s Center 내부 여백 없음"),
+				*Text->GetName()), Slot->GetPadding(), FMargin(0.f));
+		}
+		TestEqual(*FString::Printf(TEXT("%s 개별 좌표 보정 없음"),
+			*Text->GetName()), Text->GetRenderTransform().Translation,
+			FVector2D::ZeroVector);
+		++CenterPairCount;
+	});
+	TestTrue(TEXT("전투 HUD Center/Text 계약을 실제로 전체 순회함"),
+		CenterPairCount >= 10);
 	return true;
 }
 
@@ -2791,13 +3062,8 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 			TurnPortrait0->GetBrush().GetResourceObject(),
 			static_cast<UObject*>(TurnPortrait));
 	}
-	UTextBlock* TurnSpeed0 = Cast<UTextBlock>(
+	TestNull(TEXT("런타임에도 턴 속도 위젯 없음"),
 		HUD->WidgetTree->FindWidget(TEXT("TurnSpeed_0")));
-	if (TestNotNull(TEXT("턴바 속도"), TurnSpeed0))
-	{
-		TestEqual(TEXT("첫 턴 유닛 속도 수치 표기"),
-			TurnSpeed0->GetText().ToString(), FString(TEXT("10")));
-	}
 	UWidget* CurrentRoundDivider =
 		HUD->WidgetTree->FindWidget(TEXT("TurnRoundDivider_0"));
 	UWidget* CurrentRoundLabel =
