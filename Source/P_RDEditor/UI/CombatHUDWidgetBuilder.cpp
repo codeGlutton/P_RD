@@ -837,8 +837,9 @@ namespace CombatHUDWidgetBuilder
 			Widget->SetClipping(EWidgetClipping::Inherit);
 		};
 
-		// 우상단 설정 바. 0~2번 단추는 donor의 Overlay 여백을 쓰고,
-		// 3번 단추만 ObjectivePanel의 Canvas 자식인 구조도 그대로 보존한다.
+		// 우상단 설정 바. 네 단추를 모두 같은 Overlay 입력 계층에 둔다.
+		// 설정 단추만 Canvas 자식으로 남으면 프레임 위 다른 자식의 hit test에
+		// 가려져 모바일에서 눌리지 않는 회귀가 생긴다.
 		UCanvasPanel* Objective = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("ObjectivePanel")));
 		PlaceCanvas(Root, Objective, FVector2D(-570.f, 2.f),
@@ -901,8 +902,9 @@ namespace CombatHUDWidgetBuilder
 		}
 		UButton* SettingsButton = CastChecked<UButton>(
 			Blueprint->WidgetTree->FindWidget(TEXT("MenuButton_3")));
-		PlaceCanvas(Objective, SettingsButton, FVector2D(344.f, 36.f),
-			FVector2D(83.5f, 102.000008f), 0);
+		EnsureParent(OptionsMount, SettingsButton);
+		SetOverlaySlot(SettingsButton, FMargin(344.f, 36.f, 42.5f, 35.f),
+			HAlign_Fill, VAlign_Fill);
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 
 		struct FIconLayout
@@ -956,7 +958,7 @@ namespace CombatHUDWidgetBuilder
 			}
 		}
 
-		const FVector2D ActionSize(396.172241f, 150.f);
+		const FVector2D ActionSize(396.172241f, 181.435410f);
 		auto PlaceActionPanel = [&](const FName PanelName,
 			const FName MountName, const FVector2D Position)
 		{

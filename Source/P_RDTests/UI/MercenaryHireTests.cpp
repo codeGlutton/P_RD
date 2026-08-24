@@ -1265,12 +1265,11 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	if (UButton* SettingsButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("MenuButton_3"))))
 	{
-		TestEqual(TEXT("설정 버튼은 donor 설정 바 직계 자식"),
-			SettingsButton->GetParent(), static_cast<UPanelWidget*>(ObjectivePanel));
-		CheckCanvasContract(TEXT("설정 버튼"), SettingsButton,
-			FVector2D(344.f, 36.f), FVector2D(83.5f, 102.000008f),
-			FVector2D::ZeroVector, FVector2D::ZeroVector,
-			FVector2D::ZeroVector, 0);
+		TestEqual(TEXT("설정 버튼은 옵션 Overlay 안"),
+			SettingsButton->GetParent(),
+			static_cast<UPanelWidget*>(OptionsRailFrameMount));
+		CheckOverlayContract(TEXT("설정 버튼"), SettingsButton,
+			FMargin(344.f, 36.f, 42.5f, 35.f), HAlign_Fill, VAlign_Fill);
 	}
 	for (const TCHAR* Name : {
 		TEXT("MenuMercenaryMaskLabel"), TEXT("MenuEmptyMaskLabel") })
@@ -1348,7 +1347,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	// 우하단 두 버튼은 같은 authored 396.172241x150 판을 쓴다.
+	// 우하단 두 버튼은 같은 authored 396.172241x181.435410 판을 쓴다.
 	// 버튼/그림/중앙 문구가 별도 Canvas 좌표로 흩어지면 한 요소만 줄어드는
 	// 회귀가 다시 생기므로, 동일 크기 Overlay 계보 전체를 함께 확인한다.
 	struct FActionPanelContract
