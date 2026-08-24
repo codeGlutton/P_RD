@@ -1347,14 +1347,12 @@ void ACombatGameMode::PushTurnUIData() const
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	TArray<FSRPGTurnCandidate> ValidTurnCandidates;
-	int32 ValidRoundOffset = INDEX_NONE;
-	CombatModel->GetValidRoundAndOrderedTurnCandidates(OUT ValidTurnCandidates, OUT ValidRoundOffset);
+	TArray<FSRPGTurnCandidate> ValidTurnCandidates = CombatModel->GetOrderedTurnCandidates();
 	for (const FSRPGTurnCandidate& ValidTurnCandidate : ValidTurnCandidates)
 	{
 		TurnUI.mNextRoundUnitIds.Add(ValidTurnCandidate.mOwner->GetModelId());
 	}
-	TurnUI.mNextRoundOffset = ValidRoundOffset + 1;
+	TurnUI.mNextRoundOffset = 1;
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 

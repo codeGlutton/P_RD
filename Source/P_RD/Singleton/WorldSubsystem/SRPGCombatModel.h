@@ -168,14 +168,10 @@ protected:
 	bool UnregisterTurn(UUnitModel* Owner, bool IncludeCurTurn = true);
 
 protected:
-	/**
-	 * 턴을 정렬하여 새로운 라운드의 턴 객체 후보들 얻기
-	 * @param RoundOffset 라운드 진행 오프셋 (음수의 경우, 유효한 라운드에서 종료)
-	 * @param Candidates 새로운 라운드의 턴 객체 후보들
-	 * @param NextRoundRandomSeed 새로운 라운드의 랜덤 시드값
-	 * @return 라운드 진행 가능 여부
-	 */
-	bool CheckOrderedTurnCandidates(int32 RoundOffset, OUT int32& ResultRoundOffset, OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
+	void EvaluateRound();
+
+	bool CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
+	bool PredictOrderedTurnCandidatesOnNewRound(int32 RoundOffset, OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
 	void ApplyOrderedTurnCandidates(const TArray<FSRPGTurnCandidate>& Candidates, int32 NextRoundRandomSeed);
 
 	/* 유닛 등록 및 해제 함수 */
@@ -219,7 +215,6 @@ public:
 	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner) const;
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
 	TArray<FSRPGTurnCandidate> GetOrderedTurnCandidates(uint32 RoundOffset = 0) const;
-	void GetValidRoundAndOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& RoundOffset) const;
 	UTileMapModel* GetTileMap() const;
 
 	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;
