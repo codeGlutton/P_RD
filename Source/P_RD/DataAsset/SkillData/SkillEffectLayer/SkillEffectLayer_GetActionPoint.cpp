@@ -64,7 +64,6 @@ void FSkillEffectLayer_GetActionPoint::CommitEffect(const FSkillEffectCommitPara
     }
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_GetActionPoint"
 
 FText FSkillEffectLayer_GetActionPoint::MakeDescription() const
@@ -76,4 +75,3 @@ FText FSkillEffectLayer_GetActionPoint::MakeDescription() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

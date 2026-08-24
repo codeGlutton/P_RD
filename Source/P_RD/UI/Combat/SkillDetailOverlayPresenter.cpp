@@ -683,6 +683,27 @@ void USkillDetailOverlayPresenter::BindDetailExtras()
 			Blocker->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
+
+	// WBP 에 번역 키 없이(구형 bake) 박힌 구획 제목·닫기 라벨을 로컬라이즈
+	// 텍스트로 갈아 끼운다.
+	{
+		const TPair<const TCHAR*, FText> BakedHeadings[] = {
+			{ TEXT("DetailCloseText"), NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기") },
+			{ TEXT("DetailStatHeading"), LOCTEXT("DetailStatHeading", "수치") },
+			{ TEXT("DetailSkillHeading"), LOCTEXT("DetailSkillHeading", "스킬") },
+			{ TEXT("DetailBodyHeading"), LOCTEXT("DetailBodyHeading", "설명") },
+			{ TEXT("DetailSelectHeading"), LOCTEXT("DetailSelectHeading", "사거리") },
+			{ TEXT("DetailHitHeading"), LOCTEXT("DetailHitHeading", "영향 범위") },
+		};
+		for (const TPair<const TCHAR*, FText>& Heading : BakedHeadings)
+		{
+			if (UTextBlock* Text = Cast<UTextBlock>(
+				mDetailOverlayWidget->GetWidgetFromName(Heading.Key)))
+			{
+				Text->SetText(Heading.Value);
+			}
+		}
+	}
 	mDetailSelectCaptionText = Cast<UTextBlock>(
 		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSelectCaptionText")));
 	mDetailHitCaptionText = Cast<UTextBlock>(
@@ -1628,32 +1649,36 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 		mSkillDescriptionScrollBox->ScrollToStart();
 		mSkillDescriptionScrollBox->SetVisibility(ESlateVisibility::Visible);
 	}
-	const FString DamageText = Detail.mDamageMax <= 0
-		? FString(TEXT("피해 -"))
+	const FText DamageText = Detail.mDamageMax <= 0
+		? LOCTEXT("SkillStatDamageNone", "피해 -")
 		: (Detail.mDamageMin == Detail.mDamageMax
-			? FString::Printf(TEXT("피해 %d"), Detail.mDamageMax)
-			: FString::Printf(TEXT("피해 %d~%d"), Detail.mDamageMin, Detail.mDamageMax));
-	const FString StatValues[SkillPreviewStatCount] = {
-		FString::Printf(TEXT("AP %d"), Detail.mActionPointCost),
+			? FText::Format(LOCTEXT("SkillStatDamageFlat", "피해 {0}"),
+				Detail.mDamageMax)
+			: FText::Format(LOCTEXT("SkillStatDamageRange", "피해 {0}~{1}"),
+				Detail.mDamageMin, Detail.mDamageMax));
+	const FText StatValues[SkillPreviewStatCount] = {
+		FText::Format(LOCTEXT("SkillStatAP", "AP {0}"), Detail.mActionPointCost),
 		DamageText,
 		Detail.mCooldownTurns > 0
-			? FString::Printf(TEXT("쿨타임 %d턴"), Detail.mCooldownTurns)
-			: FString(TEXT("쿨타임 -")),
+			? FText::Format(LOCTEXT("SkillStatCooldown", "쿨타임 {0}턴"),
+				Detail.mCooldownTurns)
+			: LOCTEXT("SkillStatCooldownNone", "쿨타임 -"),
 		Detail.mCriticalDamage > 0
-			? FString::Printf(TEXT("치명타 %d"), Detail.mCriticalDamage)
-			: FString(TEXT("치명타 -")) };
+			? FText::Format(LOCTEXT("SkillStatCritical", "치명타 {0}"),
+				Detail.mCriticalDamage)
+			: LOCTEXT("SkillStatCriticalNone", "치명타 -") };
 	for (int32 Index = 0; Index < mSkillVisualStatTexts.Num(); ++Index)
 	{
-		DetailSetTextIfPresent(mSkillVisualStatTexts[Index], FText::FromString(StatValues[Index]));
+		DetailSetTextIfPresent(mSkillVisualStatTexts[Index], StatValues[Index]);
 	}
 	const int32 ActualSelectRange = FMath::Max(
 		FMath::RoundToInt(Detail.mTargeting.mSelectRange), 0);
 	const int32 ActualHitRange = FMath::Max(
 		FMath::RoundToInt(Detail.mTargeting.mHitRange), 0);
-	DetailSetTextIfPresent(mSkillSelectRangeText, FText::FromString(FString::Printf(
-		TEXT("사정 범위  %d칸"), ActualSelectRange)));
-	DetailSetTextIfPresent(mSkillEffectRangeText, FText::FromString(FString::Printf(
-		TEXT("영향 범위  %d칸"), ActualHitRange)));
+	DetailSetTextIfPresent(mSkillSelectRangeText, FText::Format(
+		LOCTEXT("SkillSelectRangeFmt", "사정 범위  {0}칸"), ActualSelectRange));
+	DetailSetTextIfPresent(mSkillEffectRangeText, FText::Format(
+		LOCTEXT("SkillEffectRangeFmt", "영향 범위  {0}칸"), ActualHitRange));
 
 	const int32 PreviewSelectRange = FMath::Clamp(ActualSelectRange, 0, 2);
 	const int32 PreviewHitRange = FMath::Clamp(ActualHitRange, 0, 2);
@@ -1757,10 +1782,12 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 	DetailSetTextIfPresent(mSkillVisualSelectLegend, Detail.mTargeting.mSelectShape
 		== ECombatSkillSelectShapeUI::Single
 		? LOCTEXT("SkillPreviewSelfTarget", "선택 위치  현재 타일")
-		: FText::FromString(FString::Printf(TEXT("선택 거리  %d칸"), ActualSelectRange)));
+		: FText::Format(
+			LOCTEXT("SkillSelectLegendFmt", "선택 거리  {0}칸"), ActualSelectRange));
 	DetailSetTextIfPresent(mSkillVisualEffectLegend, ActualHitRange <= 0
 		? LOCTEXT("SkillPreviewSingleEffect", "효과 범위  대상 1칸")
-		: FText::FromString(FString::Printf(TEXT("효과 범위  %d칸"), ActualHitRange)));
+		: FText::Format(
+			LOCTEXT("SkillEffectLegendFmt", "효과 범위  {0}칸"), ActualHitRange));
 
 	// 전용 WBP가 표현을 맡는다. 구형 셀과 SceneCapture 이미지는 항상 접는다.
 	SetSyntheticSkillDiagramShown(false);
@@ -1809,7 +1836,8 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 					Detail.mDamageMin, Detail.mDamageMax))));
 	SetDetailChip(2, LOCTEXT("DetailChipCooldown", "쿨타임"),
 		Detail.mCooldownTurns <= 0 ? FText::FromString(TEXT("-"))
-			: FText::FromString(FString::Printf(TEXT("%d턴"), Detail.mCooldownTurns)));
+			: FText::Format(LOCTEXT("DetailChipCooldownTurns", "{0}턴"),
+				Detail.mCooldownTurns));
 	// 타수는 칩으로 두지 않는다. 2타 이상일 때 설명 문장에 적기로 합의돼
 	// 있어(0802), 칩까지 두면 같은 정보가 두 군데 나온다.
 	SetDetailChip(3, LOCTEXT("DetailChipRange", "사거리"),
@@ -2029,7 +2057,7 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 	}
 	if (Body.IsEmpty() == true)
 	{
-		Body = TEXT("효과 설명이 아직 없다.");
+		Body = LOCTEXT("ArtifactDescMissing", "효과 설명이 아직 없다.").ToString();
 	}
 
 	DetailSetPortraitCropped(mDetailIconImage, Detail.mIcon);
@@ -2045,7 +2073,8 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailSkillRowHost")), false);
 	// 아이콘·등급·효과를 하나의 연속된 정보면에서 읽는다. 효과 본문은 전용
 	// ScrollBox 에 담아, 패시브 줄이 길어도 잘리지 않고 스크롤로 다 읽힌다.
-	const FString EffectBody = FString(TEXT("효과")) + LINE_TERMINATOR + Body;
+	const FString EffectBody =
+		LOCTEXT("ArtifactEffectHeader", "효과").ToString() + LINE_TERMINATOR + Body;
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다 -- 스킬
 	// 상세가 mDetailBodyText 를 데이터 전용으로 두는 것과 같은 규칙.
 	DetailSetTextIfPresent(mDetailBodyText, FText::FromString(EffectBody));

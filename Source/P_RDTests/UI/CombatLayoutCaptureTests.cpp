@@ -235,6 +235,21 @@ namespace CombatLayoutCapture
 		// URDUserWidget은 OpenUI() 전까지 Collapsed다. 여기서는 뷰포트에 올리지
 		// 않고 그리기만 하므로 표시 상태를 직접 세운다.
 		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		// 몬스터 탭 WBP 에는 번역 키 없이 구워진 라벨이 남아 있고, 실게임은
+		// EnsureMonsterTabWidget() 이 로컬라이즈 텍스트로 갈아 끼운다. 캡처는
+		// 그 배선을 우회하므로 같은 덮어쓰기를 여기서 재현한다 -- 안 하면
+		// 언어별 캡처에 구형 한글이 남는다(0823 검수).
+		if (UTextBlock* CritLabel = Cast<UTextBlock>(
+			Layout->GetWidgetFromName(TEXT("MonsterChip2Label"))))
+		{
+			CritLabel->SetText(NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타"));
+		}
+		if (UTextBlock* BackText = Cast<UTextBlock>(
+			Layout->GetWidgetFromName(TEXT("MonsterBackText"))))
+		{
+			BackText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기"));
+		}
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
 		if (bUseDirectViewportSize)
 		{
@@ -352,7 +367,8 @@ namespace CombatLayoutCapture
 				if (UTextBlock* Title = Cast<UTextBlock>(MercenaryTree != nullptr
 					? MercenaryTree->FindWidget(TEXT("MercenaryTitleText")) : nullptr))
 				{
-					Title->SetText(NSLOCTEXT("CombatLayoutCapture",
+					// 런타임과 같은 키를 써야 언어별 캡처에서 번역이 붙는다.
+					Title->SetText(NSLOCTEXT("CombatHUD",
 						"MercenaryInventoryPageTitle", "인벤토리"));
 				}
 				for (const TCHAR* Name : {

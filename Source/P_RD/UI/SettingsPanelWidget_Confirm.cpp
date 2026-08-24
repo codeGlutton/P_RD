@@ -3,42 +3,42 @@
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
 
+#define LOCTEXT_NAMESPACE "SettingsPanelWidget"
+
 void USettingsPanelWidget::SyncRunConfirmText() const
 {
-	const bool bKorean = mValueModel.mUseKoreanLanguage;
+	// 0823 확정: 언어 삼항 하드코딩을 걷고 로컬라이제이션(locres) 한 길로
+	// 통일한다. 한국어는 ko archive 번역이 맡는다.
 	const bool bSaveAndExit = mRunConfirmAction == ERunConfirmAction::SaveAndExit;
 	if (RunConfirmHeaderText != nullptr)
 	{
-		RunConfirmHeaderText->SetText(FText::FromString(bSaveAndExit
-			? (bKorean ? TEXT("저장 후 종료") : TEXT("SAVE & EXIT"))
-			: (bKorean ? TEXT("런 포기") : TEXT("ABANDON RUN"))));
+		RunConfirmHeaderText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExitHeader", "SAVE & EXIT")
+			: LOCTEXT("AbandonRunHeader", "ABANDON RUN"));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{
-		AbandonConfirmTitleText->SetText(FText::FromString(bSaveAndExit
-			? (bKorean ? TEXT("저장 후 종료하시겠습니까?") : TEXT("Save and exit this run?"))
-			: (bKorean ? TEXT("런을 포기하시겠습니까?") : TEXT("Abandon this run?"))));
+		AbandonConfirmTitleText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExitConfirmTitle", "Save and exit this run?")
+			: LOCTEXT("AbandonConfirmTitle", "Abandon this run?"));
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
-		AbandonConfirmBodyText->SetText(FText::FromString(bSaveAndExit
-			? (bKorean
-				? TEXT("현재 진행 상황을 저장하고 타이틀로 돌아갑니다.")
-				: TEXT("Current progress will be saved before returning to the title."))
-			: (bKorean
-				? TEXT("현재 진행 상황을 삭제하고 타이틀로 돌아갑니다.")
-				: TEXT("Current progress will be deleted before returning to the title."))));
+		AbandonConfirmBodyText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExitConfirmBody",
+				"Current progress will be saved before returning to the title.")
+			: LOCTEXT("AbandonConfirmBody",
+				"Current progress will be deleted and you will return to the title."));
 	}
 	if (ConfirmAbandonButtonText != nullptr)
 	{
-		ConfirmAbandonButtonText->SetText(FText::FromString(bSaveAndExit
-			? (bKorean ? TEXT("저장 후 종료") : TEXT("Save and Exit"))
-			: (bKorean ? TEXT("포기") : TEXT("Abandon"))));
+		ConfirmAbandonButtonText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExit", "Save and Exit")
+			: LOCTEXT("Abandon", "Abandon"));
 	}
 	if (CancelAbandonButtonText != nullptr)
 	{
-		CancelAbandonButtonText->SetText(FText::FromString(
-			bKorean ? TEXT("취소") : TEXT("Cancel")));
+		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
 	}
 }
 
@@ -128,3 +128,5 @@ void USettingsPanelWidget::HandleCancelAbandonButtonClicked()
 {
 	HideAbandonConfirm();
 }
+
+#undef LOCTEXT_NAMESPACE
