@@ -141,6 +141,10 @@ void UBoardActorModel::OnEndRoom()
 {
 }
 
+void UBoardActorModel::OnPreEvaluateRound()
+{
+}
+
 void UBoardActorModel::OnBeginRound(int32 RoundCount)
 {
 }

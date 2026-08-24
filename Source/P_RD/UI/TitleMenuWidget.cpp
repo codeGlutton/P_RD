@@ -23,6 +23,7 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
+#include "Setting/GamePlaySettings.h"
 #include "UI/SettingsPanelWidget.h"
 
 using namespace RDTitleMenu;
@@ -64,6 +65,136 @@ namespace
 			*FormatVec2(Geometry.GetLocalSize()),
 			*FormatVec2(AbsolutePosition),
 			*FormatVec2(Widget->GetDesiredSize()));
+	}
+
+	UCanvasPanelSlot* FindNearestCanvasSlot(UWidget* Widget)
+	{
+		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
+		{
+			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Node->Slot))
+			{
+				return CanvasSlot;
+			}
+		}
+		return nullptr;
+	}
+
+	void PositionProfileWidget(
+		UUserWidget* Owner,
+		const TCHAR* BaseName,
+		const FAnchors& Anchors,
+		const FVector2D& Alignment,
+		const FVector2D& Position)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UWidget* Widget = Owner->GetWidgetFromName(
+			MakeProfileWidgetName(BaseName, TitleLayoutProfileBase16x9)))
+		{
+			if (UCanvasPanelSlot* CanvasSlot = FindNearestCanvasSlot(Widget))
+			{
+				CanvasSlot->SetAnchors(Anchors);
+				CanvasSlot->SetAlignment(Alignment);
+				CanvasSlot->SetPosition(Position);
+			}
+		}
+	}
+
+	void ApplyResponsiveTitleLayout(UUserWidget* Owner, const FVector2D& ViewportSize)
+	{
+		if (Owner == nullptr || ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
+		{
+			return;
+		}
+
+		// ScaleToFit shrinks a 16:9 design by width on a 4:3 fold screen. ScaleToFitY
+		// deliberately keeps logo/button touch targets tied to the stable safe height.
+		if (UScaleBox* LayoutScaleBox = Cast<UScaleBox>(
+			Owner->GetWidgetFromName(TEXT("TitleLayoutScaleBox_base_16_9"))))
+		{
+			LayoutScaleBox->SetStretch(EStretch::ScaleToFitY);
+			LayoutScaleBox->SetStretchDirection(EStretchDirection::Both);
+		}
+
+		constexpr float DesignWidth = 1920.0f;
+		constexpr float DesignHeight = 1080.0f;
+		constexpr float ButtonLeftMargin = 60.0f;
+		const float VisibleDesignWidth = DesignHeight * (ViewportSize.X / ViewportSize.Y);
+		const float CroppedDesignMargin = FMath::Max(0.0f, (DesignWidth - VisibleDesignWidth) * 0.5f);
+		const float ButtonX = CroppedDesignMargin + ButtonLeftMargin;
+
+		PositionProfileWidget(Owner, TEXT("TitleLogoImage"), FAnchors(0.5f, 0.0f),
+			FVector2D(0.5f, 0.0f), FVector2D(0.0f, 24.0f));
+
+		struct FButtonRow
+		{
+			const TCHAR* Frame;
+			const TCHAR* Button;
+			const TCHAR* Text;
+			float BottomOffset;
+		};
+		const FButtonRow Rows[] =
+		{
+			{ TEXT("StartButtonFrameImage"), TEXT("StartButton"), TEXT("StartButtonText"), 333.0f },
+			{ TEXT("ContinueButtonFrameImage"), TEXT("ContinueButton"), TEXT("ContinueButtonText"), 238.0f },
+			{ TEXT("SettingsButtonFrameImage"), TEXT("SettingsButton"), TEXT("SettingsButtonText"), 143.0f },
+			{ TEXT("ExitButtonFrameImage"), TEXT("ExitButton"), TEXT("ExitButtonText"), 48.0f },
+		};
+		for (const FButtonRow& Row : Rows)
+		{
+			const FVector2D Position(ButtonX, -Row.BottomOffset);
+			PositionProfileWidget(Owner, Row.Frame, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
+			PositionProfileWidget(Owner, Row.Button, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
+			PositionProfileWidget(Owner, Row.Text, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
+		}
+	}
+
+	void ApplyConfiguredTitleLogo(UUserWidget* Owner)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		const UGamePlaySettings* Settings = GetDefault<UGamePlaySettings>();
+		UTexture2D* LogoTexture = Settings != nullptr
+			? Settings->mTitleLogoTexture.LoadSynchronous()
+			: nullptr;
+		if (LogoTexture == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: configured title logo texture could not be loaded"));
+			return;
+		}
+
+		const FName LogoNames[] =
+		{
+			TEXT("TitleLogoImage"),
+			MakeProfileWidgetName(TEXT("TitleLogoImage"), TitleLayoutProfileBase16x9),
+		};
+		for (const FName LogoName : LogoNames)
+		{
+			if (UImage* LogoImage = Cast<UImage>(Owner->GetWidgetFromName(LogoName)))
+			{
+				FSlateBrush LogoBrush = LogoImage->GetBrush();
+				LogoBrush.SetResourceObject(LogoTexture);
+				LogoBrush.DrawAs = ESlateBrushDrawType::Image;
+				LogoBrush.ImageSize = FVector2D(1536.0, 1024.0);
+				LogoImage->SetBrush(LogoBrush);
+				LogoImage->SetColorAndOpacity(FLinearColor::White);
+				LogoImage->SetDesiredSizeOverride(FVector2D(600.0f, 400.0f));
+				if (UCanvasPanelSlot* LogoSlot = Cast<UCanvasPanelSlot>(LogoImage->Slot))
+				{
+					LogoSlot->SetAutoSize(false);
+					LogoSlot->SetSize(FVector2D(600.0f, 400.0f));
+				}
+				LogoImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+				UE_LOG(LogRD, Display, TEXT("TitleMenuWidget: title logo applied to %s from %s"),
+					*LogoName.ToString(), *LogoTexture->GetPathName());
+			}
+		}
 	}
 }
 
@@ -112,6 +243,8 @@ void UTitleMenuWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
+	ApplyConfiguredTitleLogo(this);
+	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize());
 	StartTitleBackgroundVideo();
 
 	BindMainMenuButtons();
@@ -141,6 +274,7 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 	// 레이아웃은 ScaleBox 가 알아서 줄인다. 전에는 여기서 매 틱 화면비를 재
 	// 다섯 벌 중 하나를 골랐는데, 재 보니 그 다섯이 서로 30~44px 밖에 안 달라
 	// 한 벌로 줄였다. 고를 것이 없으면 고르는 코드도 없어야 한다.
+	ApplyResponsiveTitleLayout(this, MyGeometry.GetLocalSize());
 	FitTitleBackgroundVideoToViewport();
 }
 
