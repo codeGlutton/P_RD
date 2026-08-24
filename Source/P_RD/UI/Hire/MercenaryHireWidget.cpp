@@ -5,6 +5,7 @@
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
+#include "UI/TextOpticalAlignment.h"
 
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
@@ -30,6 +31,8 @@ namespace MercenaryHireDetail
 {
 	/** @brief 화면에 걸리는 이력서 칸 수. WBP 가 여섯 칸으로 구워져 있다. */
 	constexpr int32 CardCount = 6;
+	/** Marchbound 용병판이 타이틀과 공유하는 폰트 스타일의 전역 광학 보정값. */
+	constexpr float HireTextOpticalBiasY = 1.0f;
 
 	const TCHAR* IconPaths[CardCount] = {
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
@@ -138,23 +141,34 @@ namespace MercenaryHireDetail
 	 */
 	void SetPartySlotNameBand(const FMercenarySlotWidgets& Widgets, const bool bWithLevelRow)
 	{
-		if (Widgets.mName == nullptr || Widgets.mNameBandBase.IsNearlyZero())
+		if (Widgets.mNameBand == nullptr || Widgets.mNameBandBaseSize.IsNearlyZero())
 		{
 			return;
 		}
-		UPanelWidget* NameWrap = Widgets.mName->GetParent();
-		UCanvasPanelSlot* NameSlot = NameWrap != nullptr
-			? Cast<UCanvasPanelSlot>(NameWrap->Slot) : nullptr;
+		UCanvasPanelSlot* NameSlot = Cast<UCanvasPanelSlot>(Widgets.mNameBand->Slot);
 		if (NameSlot == nullptr)
 		{
 			return;
 		}
-		FVector2D Size = Widgets.mNameBandBase;
-		if (bWithLevelRow == false)
+
+		if (bWithLevelRow || Widgets.mLevelBandBaseSize.IsNearlyZero())
 		{
-			Size.Y = Size.Y / 0.62f;
+			NameSlot->SetPosition(Widgets.mNameBandBasePosition);
+			NameSlot->SetSize(Widgets.mNameBandBaseSize);
+			return;
 		}
-		NameSlot->SetSize(Size);
+
+		// 레벨을 표시하지 않는 초기 편성 화면에서는 두 Center 슬롯의 실제
+		// 합집합을 이름 슬롯이 차지한다. 빌더 비율(0.62/0.38)을 다시 추측하지 않는다.
+		const FVector2D UnionMin(
+			FMath::Min(Widgets.mNameBandBasePosition.X, Widgets.mLevelBandBasePosition.X),
+			FMath::Min(Widgets.mNameBandBasePosition.Y, Widgets.mLevelBandBasePosition.Y));
+		const FVector2D NameMax = Widgets.mNameBandBasePosition + Widgets.mNameBandBaseSize;
+		const FVector2D LevelMax = Widgets.mLevelBandBasePosition + Widgets.mLevelBandBaseSize;
+		const FVector2D UnionMax(FMath::Max(NameMax.X, LevelMax.X),
+			FMath::Max(NameMax.Y, LevelMax.Y));
+		NameSlot->SetPosition(UnionMin);
+		NameSlot->SetSize(UnionMax - UnionMin);
 	}
 
 }
@@ -485,21 +499,29 @@ void UMercenaryHireWidget::CacheWidgets()
 			TEXT("PartySlotLevel") + Tail);
 		mSlots[Index].mPlus = MercenaryHireDetail::Find<UWidget>(WidgetTree,
 			TEXT("PartySlotPlus") + Tail);
+		mSlots[Index].mNameBand = MercenaryHireDetail::Find<UWidget>(WidgetTree,
+			TEXT("PartySlotName") + Tail + TEXT("_Center"));
+		mSlots[Index].mLevelBand = MercenaryHireDetail::Find<UWidget>(WidgetTree,
+			TEXT("PartySlotLevel") + Tail + TEXT("_Center"));
 		if (mSlots[Index].mName != nullptr)
 		{
 			mSlots[Index].mName->SetJustification(ETextJustify::Center);
-			/* 레벨 줄 유무에 따라 이름 밴드를 늘였다 줄이므로 원본 크기를 보관한다. */
-			if (UPanelWidget* NameWrap = mSlots[Index].mName->GetParent())
-			{
-				if (UCanvasPanelSlot* NameSlot = Cast<UCanvasPanelSlot>(NameWrap->Slot))
-				{
-					mSlots[Index].mNameBandBase = NameSlot->GetSize();
-				}
-			}
 		}
 		if (mSlots[Index].mLevel != nullptr)
 		{
 			mSlots[Index].mLevel->SetJustification(ETextJustify::Center);
+		}
+		if (UCanvasPanelSlot* NameSlot = mSlots[Index].mNameBand != nullptr
+			? Cast<UCanvasPanelSlot>(mSlots[Index].mNameBand->Slot) : nullptr)
+		{
+			mSlots[Index].mNameBandBasePosition = NameSlot->GetPosition();
+			mSlots[Index].mNameBandBaseSize = NameSlot->GetSize();
+		}
+		if (UCanvasPanelSlot* LevelSlot = mSlots[Index].mLevelBand != nullptr
+			? Cast<UCanvasPanelSlot>(mSlots[Index].mLevelBand->Slot) : nullptr)
+		{
+			mSlots[Index].mLevelBandBasePosition = LevelSlot->GetPosition();
+			mSlots[Index].mLevelBandBaseSize = LevelSlot->GetSize();
 		}
 	}
 
@@ -755,6 +777,51 @@ void UMercenaryHireWidget::Refresh()
 		RefreshDetail();
 	}
 	RefreshBottomBar();
+	ApplyTextOpticalAlignment();
+}
+
+void UMercenaryHireWidget::ApplyTextOpticalAlignment()
+{
+	if (!mIsMarchboundLayout)
+	{
+		return;
+	}
+
+	auto Apply = [](UTextBlock* Text)
+	{
+		RDTextOpticalAlignment::Apply(Text, MercenaryHireDetail::HireTextOpticalBiasY);
+	};
+
+	for (const FMercenaryCardWidgets& Card : mCards)
+	{
+		for (UTextBlock* Text : { Card.mName.Get(), Card.mRole.Get(), Card.mHP.Get(),
+			Card.mBadge.Get(), Card.mTrait.Get() })
+		{
+			Apply(Text);
+		}
+		for (UTextBlock* Text : Card.mSkills)
+		{
+			Apply(Text);
+		}
+	}
+
+	for (const FMercenarySlotWidgets& SlotWidgets : mSlots)
+	{
+		Apply(SlotWidgets.mName);
+		Apply(SlotWidgets.mLevel);
+	}
+
+	for (UTextBlock* Text : { mPartyCountText.Get(), mAddLabel.Get(),
+		mDepartLabel.Get(), mDetailName.Get(), mDetailHP.Get(),
+		mDetailAP.Get(), mDetailSpeed.Get(),
+		MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireBackLabel")) })
+	{
+		Apply(Text);
+	}
+	for (UTextBlock* Text : mDetailSkills)
+	{
+		Apply(Text);
+	}
 }
 
 void UMercenaryHireWidget::RefreshCard(const int32 CardIndex)

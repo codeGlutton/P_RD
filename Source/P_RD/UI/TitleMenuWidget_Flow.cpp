@@ -3,7 +3,6 @@
 
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
 #include "GameMode/FrontendGameMode.h"
@@ -14,47 +13,6 @@ using namespace RDTitleMenu;
 
 namespace
 {
-	/**
-	 * @brief 프로필 위젯의 실제 배치 캔버스 슬롯을 찾는다.
-	 *
-	 * 틀·글자·버튼은 WBP에서 XxxMount(Overlay) 하나로 묶여 있고 자리는 그 Mount가 쥔다.
-	 * 그래서 이름으로 찾은 위젯이 캔버스에 없으면 위로 올라가며 캔버스 슬롯을 가진 조상을 쓴다.
-	 * 부모 이름을 문자열로 넘겨짚던 예전 방식과 달리, 무엇으로 감싸든 통한다.
-	 */
-	UCanvasPanelSlot* FindProfileCanvasSlot(UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName)
-	{
-		if (Owner == nullptr)
-		{
-			return nullptr;
-		}
-
-		UWidget* Widget = Owner->GetWidgetFromName(MakeProfileWidgetName(BaseName, ProfileName));
-		for (UWidget* Node = Widget; Node != nullptr; Node = Node->GetParent())
-		{
-			if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Node->Slot))
-			{
-				return CanvasSlot;
-			}
-		}
-
-		return nullptr;
-	}
-
-	/** @brief ToBase 프로필 위젯의 세로 위치(Y)만 FromBase 프로필 위젯의 Y로 맞춘다(X/크기는 그대로). */
-	void CopyProfileWidgetPositionY(UUserWidget* Owner, const TCHAR* FromBase, const TCHAR* ToBase, const FName ProfileName)
-	{
-		UCanvasPanelSlot* FromSlot = FindProfileCanvasSlot(Owner, FromBase, ProfileName);
-		UCanvasPanelSlot* ToSlot = FindProfileCanvasSlot(Owner, ToBase, ProfileName);
-		if (FromSlot == nullptr || ToSlot == nullptr)
-		{
-			return;
-		}
-
-		FVector2D Position = ToSlot->GetPosition();
-		Position.Y = FromSlot->GetPosition().Y;
-		ToSlot->SetPosition(Position);
-	}
-
 	void SetWidgetAndGeneratedParentVisibility(UWidget* Widget, ESlateVisibility Visibility)
 	{
 		if (Widget == nullptr)
@@ -224,19 +182,6 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		// 부모는 자기 자신만 입력에서 빠지고 자식 버튼은 계속 입력받아야 한다.
 		SetNamedWidgetVisibilityOnly(this, TEXT("TitleLayoutScaleBox_base_16_9"), ESlateVisibility::SelfHitTestInvisible);
 
-		// 세이브가 없어 CONTINUE가 숨겨지면, 캔버스 절대배치라 리플로우가 안 돼 NEW START만 위 슬롯에 홀로 떠 보인다.
-		// 이때 NEW START(프레임/버튼/텍스트)를 비어 있는 CONTINUE 슬롯 위치로 내려 SETTING/EXIT 묶음과 붙인다.
-		if (bCanContinueRun == false)
-		{
-			// 틀·글자·버튼이 XxxMount 하나로 묶여 있으므로 자리도 하나만 옮기면 된다.
-			// 예전에는 셋을 따로 옮겼고, 하나라도 빠뜨리면 글자만 제자리에 남았다.
-			UTitleMenuWidget* MutableSelf = const_cast<UTitleMenuWidget*>(this);
-			for (const FName ProfileName : TitleLayoutProfiles)
-			{
-				CopyProfileWidgetPositionY(MutableSelf, TEXT("ContinueButtonFrameImage"), TEXT("StartButtonFrameImage"), ProfileName);
-			}
-		}
-
 		return;
 	}
 
@@ -343,5 +288,11 @@ void UTitleMenuWidget::HandleSettingsPanelBackRequested()
 		TitleSettingsPanel->CloseUI();
 	}
 
+	// 설정 화면에서 언어가 바뀌었을 수 있으므로 현재 컬처의 번역과
+	// 합성 폰트 광학 보정을 메인 메뉴에 다시 반영한다.
+	SyncMainText();
+	AlignMainMenuTextBlocks();
+	RefreshMainMenuState();
+	ApplyMainMenuTextOpticalAlignment();
 	SetStatusText(FText::GetEmpty());
 }

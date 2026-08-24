@@ -1411,8 +1411,10 @@ namespace SettingsPanelWidgetBuilder
 		};
 		for (const FTextFitSpec& Fit : TextFits)
 		{
-			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container,
-				TextureContentPadding(Fit.Texture, Fit.Bounds, Fit.Content));
+			// 버튼 이름이 길어질 때 ScaleBox가 전체 클릭 영역을 기준으로만
+			// 축소하도록 라벨 영역을 버튼과 정확히 일치시킨다. 이미지 안쪽 면을
+			// 다시 여백으로 적용하면 언어마다 보이는 중심이 달라진다.
+			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, FMargin(0.f));
 		}
 	}
 

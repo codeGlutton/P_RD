@@ -116,33 +116,6 @@ namespace
 		Image->SetBrush(Brush);
 	}
 
-	/**
-	 * @brief 차단 레이어 비트마스크를 사람 말로 바꾼다.
-	 *
-	 * @details INDEX_NONE 은 게임플레이가 아직 안 채운 것이라 빈 문자열을
-	 * 돌려준다 -- 모르는 것을 "없음" 이라고 하면 관통 스킬로 읽힌다.
-	 */
-	FString DetailDescribeBlocker(const int32 Mask)
-	{
-		if (Mask == INDEX_NONE)
-		{
-			return FString();
-		}
-		if (Mask == 0)
-		{
-			return TEXT("없음");
-		}
-		TArray<FString> Layers;
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Obstacle)) != 0)
-		{
-			Layers.Add(TEXT("장애물"));
-		}
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Unit)) != 0)
-		{
-			Layers.Add(TEXT("유닛"));
-		}
-		return Layers.Num() > 0 ? FString::Join(Layers, TEXT("·")) : TEXT("없음");
-	}
 }
 
 namespace CombatDetailGrid
@@ -700,10 +673,16 @@ void USkillDetailOverlayPresenter::BindDetailExtras()
 		}
 	}
 
-	mDetailAimBlockerText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailAimBlockerText")));
-	mDetailEffectBlockerText = Cast<UTextBlock>(
-		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailEffectBlockerText")));
+	// 0822 확정: 조준/효과 차단 글줄 설명은 걷는다. WBP 에 라벨이 구워져
+	// 있으므로 이름으로 찾아 접는다(계약 이름은 남긴다).
+	for (const TCHAR* BlockerName :
+		{ TEXT("DetailAimBlockerText"), TEXT("DetailEffectBlockerText") })
+	{
+		if (UWidget* Blocker = mDetailOverlayWidget->GetWidgetFromName(BlockerName))
+		{
+			Blocker->SetVisibility(ESlateVisibility::Collapsed);
+		}
+	}
 
 	// WBP 에 번역 키 없이(구형 bake) 박힌 구획 제목·닫기 라벨을 로컬라이즈
 	// 텍스트로 갈아 끼운다.
@@ -950,8 +929,6 @@ void USkillDetailOverlayPresenter::ClearDetailGrids()
 	}
 	DetailSetTextIfPresent(mDetailSelectCaptionText, FText::GetEmpty());
 	DetailSetTextIfPresent(mDetailHitCaptionText, FText::GetEmpty());
-	DetailSetTextIfPresent(mDetailAimBlockerText, FText::GetEmpty());
-	DetailSetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
 }
 
 bool USkillDetailOverlayPresenter::BindAuthoredSkillContent()
@@ -1885,17 +1862,9 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 
 	// 본문은 설명에만 집중한다. 선택 거리와 효과 범위는 아래 통합 보드가
 	// 색·위치·라벨로 함께 설명하므로 같은 내용을 텍스트로 반복하지 않는다.
+	// 0822 확정: 조준/효과 차단 텍스트 설명은 걷었다. 차단 정보는
+	// 통합 전술 보드의 색·범위 표시가 대신한다.
 	FString Body = Detail.mDescription.ToString();
-	if (Detail.mTargeting.mAimBlockerMask != 0)
-	{
-		Body += FString::Printf(TEXT("\n\n조준 차단  %s"),
-			*DetailDescribeBlocker(Detail.mTargeting.mAimBlockerMask));
-	}
-	if (Detail.mTargeting.mEffectBlockerMask != 0)
-	{
-		Body += FString::Printf(TEXT("\n효과 차단  %s"),
-			*DetailDescribeBlocker(Detail.mTargeting.mEffectBlockerMask));
-	}
 	DetailSetTextIfPresent(mDetailBodyText, FText::FromString(Body));
 	UpdateSkillVisualPreview(Detail);
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다. 실제
