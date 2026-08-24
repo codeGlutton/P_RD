@@ -93,6 +93,9 @@ private:
 	// RectEditor의 textAlignH/textAlignV가 WBP 생성 때 누락될 수 있어 런타임에서 보정한다.
 	void AlignMainMenuTextBlocks();
 
+	/** @brief 현재 문자열의 실제 글리프 잉크 경계를 측정해 메뉴 글자를 광학 중앙에 맞춘다. */
+	void ApplyMainMenuTextOpticalAlignment();
+
 	/** @brief TextBlock 하나를 원래 Canvas 위치를 유지한 채 Overlay로 감싸 세로 중앙 정렬한다. */
 	void AlignMenuTextBlock(UTextBlock* TextBlock);
 
