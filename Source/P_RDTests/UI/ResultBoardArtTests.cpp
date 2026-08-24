@@ -1015,23 +1015,14 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				if (TestTrue(*FString::Printf(TEXT("%s 기준 이미지 크기"), Expected.TextName),
 					Fitted.X > 0. && Fitted.Y > 0.))
 				{
-					const FVector2D Offset = (Expected.Bounds - Fitted) * .5;
-					const FVector4 Content = Expected.bActionPlate
-						? FVector4(.19, .12, .81, .58)
-						: FVector4(.10, .20, .90, .78);
-					const FMargin ExpectedPadding(
-						Offset.X + Fitted.X * Content.X,
-						Offset.Y + Fitted.Y * Content.Y,
-						Offset.X + Fitted.X * (1. - Content.Z),
-						Offset.Y + Fitted.Y * (1. - Content.W));
-					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Left"), Expected.TextName),
-						ActualPadding.Left, ExpectedPadding.Left, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Top"), Expected.TextName),
-						ActualPadding.Top, ExpectedPadding.Top, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Right"), Expected.TextName),
-						ActualPadding.Right, ExpectedPadding.Right, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 이미지 내부 면 Bottom"), Expected.TextName),
-						ActualPadding.Bottom, ExpectedPadding.Bottom, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Left"), Expected.TextName),
+						ActualPadding.Left, 0.f, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Top"), Expected.TextName),
+						ActualPadding.Top, 0.f, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Right"), Expected.TextName),
+						ActualPadding.Right, 0.f, .02f);
+					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Bottom"), Expected.TextName),
+						ActualPadding.Bottom, 0.f, .02f);
 				}
 				TestEqual(*FString::Printf(TEXT("%s 가로 Fill"), Expected.TextName),
 					ScaleSlot->GetHorizontalAlignment(), HAlign_Fill);
