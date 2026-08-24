@@ -88,9 +88,11 @@ public:
         return FPrimaryAssetId(SkillPrimaryAssetTypes::GetObstacleActiveType(), GetFName());
     }
 
-#if WITH_EDITOR
 public:
     virtual FText MakeDescription() const;
+
+#if WITH_EDITOR
+public:
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 

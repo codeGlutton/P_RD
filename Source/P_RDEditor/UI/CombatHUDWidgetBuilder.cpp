@@ -453,7 +453,7 @@ namespace CombatHUDWidgetBuilder
 	}
 
 	/**
-	 * @brief 0811에서 확정한 ROUND 배지와 턴 카드 줄을 WBP에 다시 굽는다.
+	 * @brief #567 크기 조정본의 ROUND 배지와 턴 카드 줄을 WBP에 다시 굽는다.
 	 *
 	 * @details
 	 * ROUND는 별도 HUD 구석 장식이 아니라 턴 카드 줄의 첫 칸이다. 둘을 같은
@@ -524,7 +524,8 @@ namespace CombatHUDWidgetBuilder
 		RoundFont.OutlineSettings.OutlineSize = 2;
 		RoundFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 		RoundText->SetFont(RoundFont);
-		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND 1"));
+		// 0823 확정: 배지는 "ROUND" 글자만. 라운드 수는 아래 숫자 칸이 맡는다.
+		RoundText->SetText(NSLOCTEXT("CombatHUD", "RoundPreview", "ROUND"));
 		RoundText->SetJustification(ETextJustify::Center);
 		RoundText->SetColorAndOpacity(FSlateColor(
 			FLinearColor(.973f, .973f, .953f, 1.f)));
@@ -806,7 +807,7 @@ namespace CombatHUDWidgetBuilder
 	}
 
 	/**
-	 * @brief 0811 확정본의 우측 메뉴, 요약판, 행동 단추 배치만 복구한다.
+	 * @brief #567 크기 조정본의 우측 메뉴, 요약판, 행동 단추 배치만 복구한다.
 	 *
 	 * @details ROUND/턴바와 용병 판은 이 함수에서 이름조차 찾지 않는다. 요약판
 	 * 내부 역시 디자이너 자산을 그대로 두고, 화면에 붙는 루트 슬롯만 복구한다.
@@ -836,12 +837,13 @@ namespace CombatHUDWidgetBuilder
 			Widget->SetClipping(EWidgetClipping::Inherit);
 		};
 
-		// 우상단 설정 바. 0~2번 단추는 donor의 Overlay 여백을 쓰고,
-		// 3번 단추만 ObjectivePanel의 Canvas 자식인 구조도 그대로 보존한다.
+		// 우상단 설정 바. 네 단추를 모두 같은 Overlay 입력 계층에 둔다.
+		// 설정 단추만 Canvas 자식으로 남으면 프레임 위 다른 자식의 hit test에
+		// 가려져 모바일에서 눌리지 않는 회귀가 생긴다.
 		UCanvasPanel* Objective = CastChecked<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("ObjectivePanel")));
-		PlaceCanvas(Root, Objective, FVector2D(-470.f, 4.f),
-			FVector2D(470.f, 173.f), 90);
+		PlaceCanvas(Root, Objective, FVector2D(-570.f, 2.f),
+			FVector2D(564.f, 207.6f), 90);
 		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Objective->Slot))
 		{
 			Slot->SetAnchors(FAnchors(1.f, 0.f));
@@ -868,7 +870,12 @@ namespace CombatHUDWidgetBuilder
 		UOverlay* OptionsMount = FindOrCreate<UOverlay>(Blueprint,
 			TEXT("OptionsRailFrameMount"));
 		PlaceCanvas(Objective, OptionsMount, FVector2D::ZeroVector,
-			FVector2D(470.f, 173.f), 1);
+			FVector2D::ZeroVector, 1);
+		if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(OptionsMount->Slot))
+		{
+			Slot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			Slot->SetOffsets(FMargin(0.f));
+		}
 		OptionsMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		ResetVisualTransform(OptionsMount, FVector2D(.5f, .5f));
 
@@ -895,8 +902,9 @@ namespace CombatHUDWidgetBuilder
 		}
 		UButton* SettingsButton = CastChecked<UButton>(
 			Blueprint->WidgetTree->FindWidget(TEXT("MenuButton_3")));
-		PlaceCanvas(Objective, SettingsButton, FVector2D(344.f, 36.f),
-			FVector2D(83.5f, 102.000008f), 0);
+		EnsureParent(OptionsMount, SettingsButton);
+		SetOverlaySlot(SettingsButton, FMargin(344.f, 36.f, 42.5f, 35.f),
+			HAlign_Fill, VAlign_Fill);
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 
 		struct FIconLayout
@@ -906,16 +914,20 @@ namespace CombatHUDWidgetBuilder
 			FVector2D Size;
 		};
 		const FIconLayout IconLayouts[] = {
-			{ TEXT("MenuMapIcon"), FVector2D(45.f, 44.f), FVector2D(80.f, 81.f) },
-			{ TEXT("MenuMercenaryIcon"), FVector2D(154.f, 36.f), FVector2D(63.f, 96.f) },
-			{ TEXT("MenuMonsterIcon"), FVector2D(248.f, 48.f), FVector2D(77.f, 83.f) },
-			{ TEXT("MenuSettingsIcon"), FVector2D(348.f, 48.f), FVector2D(77.f, 80.f) },
+			{ TEXT("MenuMapIcon"), FVector2D(-228.f, -51.f), FVector2D(96.f, 97.2f) },
+			{ TEXT("MenuMercenaryIcon"), FVector2D(-97.2f, -60.6f), FVector2D(75.6f, 115.2f) },
+			{ TEXT("MenuMonsterIcon"), FVector2D(15.6f, -46.2f), FVector2D(92.4f, 99.6f) },
+			{ TEXT("MenuSettingsIcon"), FVector2D(135.6f, -46.2f), FVector2D(92.4f, 96.f) },
 		};
 		for (const FIconLayout& Layout : IconLayouts)
 		{
 			UImage* Icon = CastChecked<UImage>(
 				Blueprint->WidgetTree->FindWidget(Layout.Name));
 			PlaceCanvas(Objective, Icon, Layout.Position, Layout.Size, 31);
+			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Icon->Slot))
+			{
+				Slot->SetAnchors(FAnchors(.5f, .5f));
+			}
 			Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		}
 
@@ -927,7 +939,7 @@ namespace CombatHUDWidgetBuilder
 			UCanvasPanel* Panel = CastChecked<UCanvasPanel>(
 				Blueprint->WidgetTree->FindWidget(PanelName));
 			PlaceCanvas(Root, Panel, FVector2D(0.f, 140.f),
-				FVector2D(600.f, 430.f), 60);
+				FVector2D(575.f, 430.f), 60);
 			if (UCanvasPanelSlot* Slot = CastChecked<UCanvasPanelSlot>(Panel->Slot))
 			{
 				Slot->SetAnchors(FAnchors(1.f, 0.f));
@@ -968,7 +980,7 @@ namespace CombatHUDWidgetBuilder
 		};
 
 		UOverlay* SkillMount = PlaceActionPanel(TEXT("SkillTogglePanel"),
-			TEXT("SkillTogglePlateMount"), FVector2D(-10.334961f, -209.789490f));
+			TEXT("SkillTogglePlateMount"), FVector2D(-10.334961f, -202.f));
 		UImage* SkillPlate = CastChecked<UImage>(
 			Blueprint->WidgetTree->FindWidget(TEXT("SkillTogglePlate")));
 		EnsureParent(SkillMount, SkillPlate);
@@ -1006,7 +1018,7 @@ namespace CombatHUDWidgetBuilder
 		SkillButton->SetVisibility(ESlateVisibility::Visible);
 
 		UOverlay* EndMount = PlaceActionPanel(TEXT("EndTurnPanel"),
-			TEXT("EndTurnPlateMount"), FVector2D(-10.334961f, -14.354064f));
+			TEXT("EndTurnPlateMount"), FVector2D(-10.334961f, -26.f));
 		UImage* EndPlate = CastChecked<UImage>(
 			Blueprint->WidgetTree->FindWidget(TEXT("EndTurnPlate")));
 		EnsureParent(EndMount, EndPlate);
@@ -1105,6 +1117,7 @@ namespace CombatHUDWidgetBuilder
 		HPText->SetText(NSLOCTEXT("CombatHUD", "EnemyHPPreview", "HP  64 / 64"));
 		SetReadableFont(HPText, BaseFont, 27);
 
+		// 0823 확정: 요약판 AP 는 문구로만 보여 준다(보석 행만 걷는다).
 		UBorder* APPlate = FindOrCreate<UBorder>(Blueprint, TEXT("EnemyAPPlate"));
 		PlaceCanvas(Panel, APPlate, FVector2D(54.f, 184.f), FVector2D(230.f, 58.f), 5);
 		APPlate->SetBrushColor(FLinearColor(.025f, .17f, .27f, .97f));
@@ -1225,6 +1238,7 @@ namespace CombatHUDWidgetBuilder
 		HPText->SetText(NSLOCTEXT("CombatHUD", "AllyHPPreview", "HP  100 / 100"));
 		SetReadableFont(HPText, BaseFont, 27);
 
+		// 0823 확정: 요약판 AP 는 문구로만 보여 준다(보석 행만 걷는다).
 		UBorder* APPlate = FindOrCreate<UBorder>(Blueprint, TEXT("AllyAPPlate"));
 		PlaceCanvas(Panel, APPlate, FVector2D(54.f, 184.f), FVector2D(230.f, 58.f), 5);
 		APPlate->SetBrushColor(FLinearColor(.025f, .17f, .27f, .97f));
@@ -1584,9 +1598,13 @@ namespace CombatHUDWidgetBuilder
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_ThornCrest.T_Artifact_ThornCrest"),
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_TravelersMap.T_Artifact_TravelersMap"),
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_WornShieldOrnament.T_Artifact_WornShieldOrnament") };
-		static const TCHAR* const PreviewArtifactNames[6] = {
-			TEXT("피의 성배"), TEXT("야수의 송곳니"), TEXT("행운의 주화"),
-			TEXT("가시 문장"), TEXT("여행자의 지도"), TEXT("낡은 방패 장식") };
+		static const FText PreviewArtifactNames[6] = {
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewChalice", "피의 성배"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewFang", "야수의 송곳니"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewCoin", "행운의 주화"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewThorn", "가시 문장"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewMap", "여행자의 지도"),
+			NSLOCTEXT("CombatHUD", "ArtifactPreviewShield", "낡은 방패 장식") };
 		for (int32 Index = 0; Index < 7; ++Index)
 		{
 			const int32 VisualIndex = Index + 1;
@@ -1636,7 +1654,7 @@ namespace CombatHUDWidgetBuilder
 			PlaceCanvas(Page, Name, CellOrigin + FVector2D(-24.f, FrameSize + 3.f),
 				FVector2D(FrameSize + 48.f, 34.f), 4);
 			Name->SetText(Index < 6
-				? FText::FromString(PreviewArtifactNames[Index])
+				? FText(PreviewArtifactNames[Index])
 				: FText::GetEmpty());
 			SetReadableFont(Name, BaseFont, 17);
 			Name->SetJustification(ETextJustify::Center);
@@ -1736,7 +1754,8 @@ namespace CombatHUDWidgetBuilder
 		UCanvasPanel* Row = FindOrCreate<UCanvasPanel>(
 			Blueprint, TEXT("EnemyAPPipRow"));
 		PlaceCanvas(EnemyPanel, Row, RowPosition, RowSize, 15);
-		Row->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		// 0822 확정: 요약판 AP 보석 행도 걷는다. 이름 계약만 남긴다.
+		Row->SetVisibility(ESlateVisibility::Collapsed);
 		for (int32 Index = 0; Index < PipCount; ++Index)
 		{
 			const FVector2D PipPosition(Index * (PipSize + PipGap), 0.f);
@@ -1958,7 +1977,7 @@ namespace CombatHUDWidgetBuilder
 			TEXT("RD_COMBAT_HUD_INVENTORY_BUILD success assets=2"));
 	}
 
-	/** @brief 다른 HUD 구역은 건드리지 않고 0811 ROUND+턴바만 복구한다. */
+	/** @brief 다른 HUD 구역은 건드리지 않고 #567 ROUND+턴바만 복구한다. */
 	void RepairRoundTurnOnly()
 	{
 		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
@@ -2075,7 +2094,7 @@ namespace CombatHUDWidgetBuilder
 			TEXT("RD_COMBAT_HUD_ACTION_BUTTON_ART_REPAIR success plates=2 labels=3"));
 	}
 
-	/** @brief ROUND/턴바/용병 판을 보존하고 0811 우측 HUD만 복구한다. */
+	/** @brief ROUND/턴바/용병 판을 보존하고 #567 우측 HUD만 복구한다. */
 	void RepairRightHUDOnly()
 	{
 		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
@@ -2313,7 +2332,8 @@ namespace CombatHUDWidgetBuilder
 			UTextBlock* Name = FindOrCreate<UTextBlock>(Blueprint,
 				FName(TEXT("PartyName") + Suffix));
 			PlaceCanvas(Content, Name, FVector2D(128.f, 21.f), FVector2D(190.f, 46.f), 15);
-			Name->SetText(FText::FromString(FString::Printf(TEXT("용병 %d"), Index + 1)));
+			Name->SetText(FText::Format(
+				NSLOCTEXT("CombatHUD", "MercenaryPreviewName", "용병 {0}"), Index + 1));
 			SetReadableFont(Name, BaseFont, 27);
 
 			UProgressBar* HPBar = FindOrCreate<UProgressBar>(Blueprint,
@@ -2406,13 +2426,15 @@ namespace CombatHUDWidgetBuilder
 		 * 같은 물건으로 맞춘다 -- 같은 값은 같은 모양으로 보여야 한다.
 		 */
 		const FDetailText Details[] = {
-			{ TEXT("MercenaryDetailName"), FVector2D(1080.f, 230.f), FVector2D(620.f, 82.f), TEXT("용병"), 42 },
+			{ TEXT("MercenaryDetailName"), FVector2D(1080.f, 230.f), FVector2D(620.f, 82.f), TEXT(""), 42 },
 		};
 		for (const FDetailText& Detail : Details)
 		{
 			UTextBlock* Text = FindOrCreate<UTextBlock>(Blueprint, FName(Detail.Name));
 			PlaceCanvas(DetailSection, Text, Detail.Position, Detail.Size, 8);
-			Text->SetText(FText::FromString(Detail.Preview));
+			Text->SetText(FCString::Strlen(Detail.Preview) > 0
+				? FText::FromString(Detail.Preview)
+				: NSLOCTEXT("CombatHUD", "MercenaryDetailPreview", "용병"));
 			SetReadableFont(Text, BaseFont, Detail.FontSize);
 			Text->SetJustification(ETextJustify::Left);
 		}
@@ -2421,7 +2443,9 @@ namespace CombatHUDWidgetBuilder
 		const TCHAR* const ChipValueNames[3] = {
 			TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
 			TEXT("MercenaryDetailSpeed") };
-		const TCHAR* const ChipLabels[3] = { TEXT("HP"), TEXT("AP"), TEXT("속도") };
+		const FText ChipLabels[3] = { FText::FromString(TEXT("HP")),
+			FText::FromString(TEXT("AP")),
+			NSLOCTEXT("CombatHUD", "ChipSpeed", "속도") };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const FVector2D ChipPos(1080.f, 330.f + 82.f * Index);
@@ -2435,7 +2459,7 @@ namespace CombatHUDWidgetBuilder
 				TEXT("MercenaryChip%dLabel"), Index)));
 			PlaceCanvas(DetailSection, Label, ChipPos + FVector2D(38.f, 4.f),
 				FVector2D(145.f, 58.f), 9);
-			Label->SetText(FText::FromString(ChipLabels[Index]));
+			Label->SetText(ChipLabels[Index]);
 			SetReadableFont(Label, BaseFont, 27);
 			Label->SetJustification(ETextJustify::Left);
 
@@ -2497,7 +2521,8 @@ namespace CombatHUDWidgetBuilder
 			PlaceCanvas(DetailSection, Name, CellInner.Min, CellInner.GetSize(), 10);
 			Name->SetText(Index == 0
 				? NSLOCTEXT("CombatHUD", "MercenaryMovePreview", "이동")
-				: FText::FromString(FString::Printf(TEXT("스킬 %d"), Index)));
+				: FText::Format(
+					NSLOCTEXT("CombatHUD", "MercenarySkillPreview", "스킬 {0}"), Index));
 			SetReadableFont(Name, BaseFont, 18);
 
 			UTextBlock* Cost = FindOrCreate<UTextBlock>(Blueprint, FName(*FString::Printf(
@@ -2816,7 +2841,7 @@ void RegisterCombatHUDWidgetBuilderCommands()
 		FConsoleCommandDelegate::CreateStatic(&RepairActionButtonArtOnly));
 	RightHUDRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDRightLayout"),
-		TEXT("Restore only the authored 0811 options, summaries, and action buttons."),
+		TEXT("Restore only the #567-sized options, summaries, and action buttons."),
 		FConsoleCommandDelegate::CreateStatic(&RepairRightHUDOnly));
 	MercenaryPortraitFrameRepairCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.RepairCombatHUDMercenaryPortraitFrame"),

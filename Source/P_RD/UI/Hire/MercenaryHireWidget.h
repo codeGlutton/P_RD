@@ -102,9 +102,14 @@ struct FMercenarySlotWidgets
 	UPROPERTY() TObjectPtr<UTextBlock> mName = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mLevel = nullptr;
 	UPROPERTY() TObjectPtr<UWidget> mPlus = nullptr;
+	UPROPERTY() TObjectPtr<UWidget> mNameBand = nullptr;
+	UPROPERTY() TObjectPtr<UWidget> mLevelBand = nullptr;
 
-	/** 빌더가 구운 이름 밴드 크기. 레벨 줄이 없는 화면에서 밴드를 칸 전체로 늘일 때 기준. */
-	FVector2D mNameBandBase = FVector2D::ZeroVector;
+	/** 빌더가 구운 두 Center 슬롯의 원래 영역. 초기 선택/상점 모드를 오갈 때 복원한다. */
+	FVector2D mNameBandBasePosition = FVector2D::ZeroVector;
+	FVector2D mNameBandBaseSize = FVector2D::ZeroVector;
+	FVector2D mLevelBandBasePosition = FVector2D::ZeroVector;
+	FVector2D mLevelBandBaseSize = FVector2D::ZeroVector;
 };
 
 /**
@@ -208,6 +213,7 @@ private:
 	void RefreshCard(int32 CardIndex);
 	void RefreshBottomBar();
 	void RefreshDetail();
+	void ApplyTextOpticalAlignment();
 	int32 GetSkillDataIndexForSlot(const FFrontendCharacterOption& Option,
 		int32 SlotIndex) const;
 	void HandleSkillClicked(int32 SlotIndex);

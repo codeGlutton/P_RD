@@ -24,10 +24,8 @@ struct P_RD_API FSkillEffectLayer_Push : public FSkillEffectLayer
 public:
 	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
-#if WITH_EDITOR
 public:
 	FText MakeDescription() const override;
-#endif
 
 public:
 	// @brief 최대 밀치기 칸 수 (뒤가 막히면 막히기 직전까지 밀림)

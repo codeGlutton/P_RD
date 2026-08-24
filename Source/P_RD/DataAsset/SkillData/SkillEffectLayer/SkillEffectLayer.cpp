@@ -51,7 +51,6 @@ void FSkillEffectLayer_TagBase::CommitEffect(const FSkillEffectCommitParams& Par
     }
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_TagBase"
 
 FText FSkillEffectLayer_TagBase::MakeDescription() const
@@ -64,4 +63,3 @@ FText FSkillEffectLayer_TagBase::MakeDescription() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

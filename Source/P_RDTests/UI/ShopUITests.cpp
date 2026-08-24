@@ -360,6 +360,21 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FShopWBPContractTest::RunTest(const FString& Parameters)
 {
+	// 한글 표시 문자열을 단언하므로 ko 컬처로 고정한다(0823).
+	struct FScopedKoreanCulture
+	{
+		FString mOriginal;
+		FScopedKoreanCulture()
+			: mOriginal(FInternationalization::Get().GetCurrentCulture()->GetName())
+		{
+			FInternationalization::Get().SetCurrentCulture(TEXT("ko"));
+		}
+		~FScopedKoreanCulture()
+		{
+			FInternationalization::Get().SetCurrentCulture(mOriginal);
+		}
+	};
+	const FScopedKoreanCulture ScopedKoreanCulture;
 	using namespace ShopUITests;
 
 	UClass* ShopClass = LoadClass<UShopUIWidgetBase>(nullptr, ShopClassPath);

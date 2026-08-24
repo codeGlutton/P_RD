@@ -148,6 +148,17 @@ void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
+/** @brief 레일 주인이 차례 유닛인지 교체한다. 이동 카드 잠금이 이 값을 본다. */
+void UCombatUIModel::SetSkillRailOwnTurn(bool bOwnTurn)
+{
+	if (mIsSkillRailOwnTurn == bOwnTurn)
+	{
+		return;
+	}
+	mIsSkillRailOwnTurn = bOwnTurn;
+	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+}
+
 /** @brief 선택된 스킬 index를 교체한다. */
 void UCombatUIModel::SetSelectedSkill(int32 SelectedIndex)
 {

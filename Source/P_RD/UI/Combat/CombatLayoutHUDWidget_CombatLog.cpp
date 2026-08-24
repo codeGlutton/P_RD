@@ -8,6 +8,7 @@
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Font.h"
 #include "Engine/Texture2D.h"
 #include "UI/Combat/CombatUIModel.h"
 
@@ -61,27 +62,23 @@ namespace
 	/**
 	 * @brief 색 의미(enum) → 실제 화면 색. "어떤 빨강이냐" 같은 디자인 값은 게임플레이가 아니라 여기서 정한다.
 	 * @param ColorType 게임플레이가 넘긴 의미값(Damage/Heal/Buff/Debuff/Warning/Move/Neutral).
-	 * @return 해당 의미에 대응하는 실제 색. 미지정(Neutral·그 외)은 흰색.
+	 * @return 해당 의미에 대응하는 실제 색.
+	 * @note 0822 확정: 색은 빨강/파랑 둘뿐이다. 해로운 것(피해·디버프·경고)은
+	 *       빨강, 나머지(회복·버프·강화·이동·중립)는 파랑. 일곱 색이던 시절에는
+	 *       한 화면에서 색이 의미를 잃었다.
 	 */
 	FLinearColor ResolveFloatingLogColor(EFloatingLogColorType ColorType)
 	{
+		const FLinearColor HarmfulRed(1.0f, 0.25f, 0.2f, 1.0f);
+		const FLinearColor HelpfulBlue(0.4f, 0.7f, 1.0f, 1.0f);
 		switch (ColorType)
 		{
 		case EFloatingLogColorType::Damage:
-			return FLinearColor(1.0f, 0.25f, 0.2f, 1.0f);
-		case EFloatingLogColorType::Heal:
-			return FLinearColor(0.35f, 1.0f, 0.4f, 1.0f);
-		case EFloatingLogColorType::Buff:
-			return FLinearColor(0.45f, 0.75f, 1.0f, 1.0f);
 		case EFloatingLogColorType::Debuff:
-			return FLinearColor(0.75f, 0.45f, 1.0f, 1.0f);
 		case EFloatingLogColorType::Warning:
-			return FLinearColor(1.0f, 0.8f, 0.2f, 1.0f);
-		case EFloatingLogColorType::Move:
-			return FLinearColor(0.85f, 0.85f, 0.85f, 1.0f);
-		case EFloatingLogColorType::Neutral:
+			return HarmfulRed;
 		default:
-			return FLinearColor::White;
+			return HelpfulBlue;
 		}
 	}
 }
@@ -319,8 +316,13 @@ void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloating
 	LogText->SetJustification(ETextJustify::Center);
 	LogText->SetText(Request.mText);
 	LogText->SetColorAndOpacity(FSlateColor(ResolveFloatingLogColor(Request.mColorType)));
-	// 기본 폰트에서 크기만 키운다(전투 화면 위에서 읽히는 최소 크기).
+	// HUD 공용 숫자 글꼴로 통일한다. 한 게임에서 글꼴이 둘이면 같은 값도
+	// 다른 화면처럼 읽힌다. 글꼴을 못 물어 왔으면 기본 글꼴로 크기만 키운다.
 	FSlateFontInfo LogFont = LogText->GetFont();
+	if (mFloatingLogFont != nullptr)
+	{
+		LogFont.FontObject = mFloatingLogFont;
+	}
 	LogFont.Size = 22;
 	// 밝은 배경(모래/눈밭) 위에서도 읽히도록 검은 윤곽선을 두른다.
 	LogFont.OutlineSettings.OutlineSize = 2;

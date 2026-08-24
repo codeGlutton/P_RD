@@ -29,6 +29,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "EngineUtils.h"
 #include "FunctionLibrary/CameraFunctionLibrary.h"
+#include "Internationalization/Internationalization.h"
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "UI/Combat/CombatUIModel.h"
@@ -90,6 +91,16 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
 	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
+	// 플로팅 로그 글꼴. 새로 만든 TextBlock 은 엔진 기본 Roboto 로 남으므로
+	// HUD 공용 숫자 글꼴(F_HUD_Oswald)을 여기서 물어 둔다(UIFont::ProjectFont 짝).
+	{
+		static ConstructorHelpers::FObjectFinder<UFont> FloatingLogFontFinder(
+			TEXT("/Game/SVN/OutSideAsset/Fonts/F_HUD_Oswald.F_HUD_Oswald"));
+		if (FloatingLogFontFinder.Succeeded())
+		{
+			mFloatingLogFont = FloatingLogFontFinder.Object;
+		}
+	}
 	RD_LOAD_TEX(mSkillVisualRingTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_StatChip_Ring.T_KitA_StatChip_Ring");
 	RD_LOAD_TEX(mSkillVisualCellNormalTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Disabled.T_KitA_Cell_Disabled");
 	RD_LOAD_TEX(mSkillVisualCellSelectedTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/T_KitA_Cell_Selected.T_KitA_Cell_Selected");
@@ -314,12 +325,12 @@ namespace
 	 * 것은 우리말로 바꾼다. 모르는 태그는 잎 이름 그대로 -- 게임플레이가
 	 * 새 상태를 추가해도 빈칸이 되지는 않는다.
 	 */
-	FString StatusDisplayName(const FGameplayTag& Tag)
+	FText StatusDisplayName(const FGameplayTag& Tag)
 	{
 		FString Full = Tag.GetTagName().ToString();
 		if (Full.IsEmpty())
 		{
-			return TEXT("이상");
+			return NSLOCTEXT("CombatLayoutHUD", "StatusUnknown", "이상");
 		}
 
 		FString Leaf = Full;
@@ -329,27 +340,27 @@ namespace
 			Leaf = Full.Mid(Dot + 1);
 		}
 
-		static const TMap<FString, FString> Korean = {
-			{ TEXT("Weakness"),      TEXT("약화") },
-			{ TEXT("Vulnerability"), TEXT("취약") },
-			{ TEXT("Vigor"),         TEXT("활력") },
-			{ TEXT("Fortification"), TEXT("강화") },
-			{ TEXT("Haste"),         TEXT("신속") },
-			{ TEXT("Exhaustion"),    TEXT("탈진") },
-			{ TEXT("Slow"),          TEXT("둔화") },
-			{ TEXT("Frail"),         TEXT("쇠약") },
-			{ TEXT("Root"),          TEXT("속박") },
-			{ TEXT("Poison"),        TEXT("중독") },
-			{ TEXT("Bleed"),         TEXT("출혈") },
-			{ TEXT("Stun"),          TEXT("기절") },
-			{ TEXT("Stealth"),       TEXT("은신") },
-			{ TEXT("Dead"),          TEXT("전투불능") },
+		static const TMap<FString, FText> Names = {
+			{ TEXT("Weakness"),      NSLOCTEXT("CombatLayoutHUD", "StatusWeakness", "약화") },
+			{ TEXT("Vulnerability"), NSLOCTEXT("CombatLayoutHUD", "StatusVulnerability", "취약") },
+			{ TEXT("Vigor"),         NSLOCTEXT("CombatLayoutHUD", "StatusVigor", "활력") },
+			{ TEXT("Fortification"), NSLOCTEXT("CombatLayoutHUD", "StatusFortification", "강화") },
+			{ TEXT("Haste"),         NSLOCTEXT("CombatLayoutHUD", "StatusHaste", "신속") },
+			{ TEXT("Exhaustion"),    NSLOCTEXT("CombatLayoutHUD", "StatusExhaustion", "탈진") },
+			{ TEXT("Slow"),          NSLOCTEXT("CombatLayoutHUD", "StatusSlow", "둔화") },
+			{ TEXT("Frail"),         NSLOCTEXT("CombatLayoutHUD", "StatusFrail", "쇠약") },
+			{ TEXT("Root"),          NSLOCTEXT("CombatLayoutHUD", "StatusRoot", "속박") },
+			{ TEXT("Poison"),        NSLOCTEXT("CombatLayoutHUD", "StatusPoison", "중독") },
+			{ TEXT("Bleed"),         NSLOCTEXT("CombatLayoutHUD", "StatusBleed", "출혈") },
+			{ TEXT("Stun"),          NSLOCTEXT("CombatLayoutHUD", "StatusStun", "기절") },
+			{ TEXT("Stealth"),       NSLOCTEXT("CombatLayoutHUD", "StatusStealth", "은신") },
+			{ TEXT("Dead"),          NSLOCTEXT("CombatLayoutHUD", "StatusDead", "전투불능") },
 		};
-		if (const FString* Found = Korean.Find(Leaf))
+		if (const FText* Found = Names.Find(Leaf))
 		{
 			return *Found;
 		}
-		return Leaf;
+		return FText::FromString(Leaf);
 	}
 }
 
@@ -358,6 +369,7 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CacheAuthoredWidgets();
+	ApplyActionLabelOpticalAlignment();
 	EnsureMercenarySkillButtons();
 	WireCommands();
 	EnsureCombatAnnouncementWidgets();
@@ -452,6 +464,9 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mRoundPanel = Find<UWidget>(WidgetTree, TEXT("RoundPanel"));
 	mRoundText = Find<UTextBlock>(WidgetTree, TEXT("RoundText"));
+	// 0823 확정: 좌상단 ROUND 배지는 그대로 두고, 그 아래에 두 자리 숫자("01")를
+	// 따로 크게 보여 준다. 숫자 칸은 빌더가 굽는다(구형 WBP 면 없을 수 있다).
+	mRoundNumberText = Find<UTextBlock>(WidgetTree, TEXT("RoundNumberText"));
 	mObjectiveText = Find<UTextBlock>(WidgetTree, TEXT("ObjectiveText"));
 
 	mPartySlots.SetNum(PartySlotCount);
@@ -543,26 +558,53 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyName = Find<UTextBlock>(WidgetTree, TEXT("EnemyName"));
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
-	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
 	mEnemyCritText = Find<UTextBlock>(WidgetTree, TEXT("EnemyCritText"));
 	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
-	mEnemyAPPips.Reset();
-	mEnemyAPPipsUsed.Reset();
-	for (int32 Index = 0; ; ++Index)
+	// 0823 확정: 요약판 AP 는 문구("AP n/n")로만 보여 준다. 보석 아이콘
+	// 행만 걷는다(WBP 에 구워져 있으므로 이름으로 찾아 접는다).
+	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
+	if (UWidget* PipRow = Find<UWidget>(WidgetTree, TEXT("EnemyAPPipRow")))
 	{
-		UWidget* Pip = Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("EnemyAPPip_%d"), Index));
-		if (Pip == nullptr)
+		PipRow->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판의 그
+	// 바닥을 잘라낸다. 판 그림을 줄이면 무늬가 세로로 눌리므로(1차 시안 반려),
+	// 그림은 원본 크기 그대로 두고 패널을 345 에서 끊어 아래를 클리핑한다.
+	// 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
+	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 자른다.
+	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel") })
+	{
+		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
 		{
-			break;
+			if (UCanvasPanelSlot* SummarySlot = Cast<UCanvasPanelSlot>(Summary->Slot))
+			{
+				SummarySlot->SetSize(FVector2D(600.f, 345.f));
+			}
+			Summary->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		}
-		mEnemyAPPips.Add(Pip);
-		mEnemyAPPipsUsed.Add(Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("EnemyAPPipUsed_%d"), Index)));
+	}
+	// WBP 에 번역 키 없이(구형 bake) 박힌 라벨을 로컬라이즈 텍스트로 갈아
+	// 끼운다. 빌더는 이미 NSLOCTEXT 를 쓰지만 마지막 리베이크가 그 이전이다.
+	{
+		const TPair<const TCHAR*, FText> BakedLabels[] = {
+			{ TEXT("MercenaryCritLabel"),
+				NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타") },
+			{ TEXT("MercenaryCloseText"),
+				NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기") },
+			{ TEXT("ConfirmLabel"),
+				NSLOCTEXT("CombatHUD", "ConfirmLabel", "확정") },
+		};
+		for (const TPair<const TCHAR*, FText>& Label : BakedLabels)
+		{
+			if (UTextBlock* Text = Find<UTextBlock>(WidgetTree, Label.Key))
+			{
+				Text->SetText(Label.Value);
+			}
+		}
 	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
@@ -2002,8 +2044,10 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
 	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
 	SetShown(mRoundPanel, true);
-	SetTextIfPresent(mRoundText, FText::FromString(
-		FString::Printf(TEXT("ROUND %d"), Turn.mRound)));
+	// 0823 확정: 배지는 "ROUND" 글자만, 라운드 수는 아래 두 자리 숫자가 맡는다.
+	SetTextIfPresent(mRoundText, FText::FromString(TEXT("ROUND")));
+	SetTextIfPresent(mRoundNumberText, FText::FromString(
+		FString::Printf(TEXT("%02d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
 	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
@@ -2159,9 +2203,12 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			// 행동력이 바닥나면 이동도 잠근다. 갈 수 있는 칸이 없다 -- 스킬은
 			// 잠그면서 이동만 열어 두면 "왜 이것만 되지"가 된다. 긴 누름으로
 			// 설명을 읽는 것은 스킬과 마찬가지로 잠겨도 된다.
+			// 남의 레일(들여다보기)에서도 잠근다 -- 스킬 카드는 mIsUsable 로
+			// 꺼지는데 이동만 열려 보이면 눌러 보게 된다(0823 검수).
 			{
 				const FUnitUI* TurnUnit = FindTurnUnit();
-				const bool bCanMove = TurnUnit != nullptr
+				const bool bCanMove = mUIModel->IsSkillRailOwnTurn()
+					&& TurnUnit != nullptr
 					&& FMath::RoundToInt(TurnUnit->mMovementPoint) > 0;
 				SetShown(Widgets.Disabled, !bCanMove);
 			}
@@ -2220,8 +2267,9 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			{
 				// 시안은 "피해 8~14" 처럼 무엇의 숫자인지 적는다. 숫자만
 				// 있으면 쿨 턴 수와 구분이 안 된다.
-				Widgets.Damage->SetText(FText::FromString(FString::Printf(
-					TEXT("피해 %d~%d"), Skill.mDamageMin, Skill.mDamageMax)));
+				Widgets.Damage->SetText(FText::Format(
+					LOCTEXT("SkillCardDamage", "피해 {0}~{1}"),
+					Skill.mDamageMin, Skill.mDamageMax));
 			}
 		}
 
@@ -2368,6 +2416,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 			Shown->mMaxHP > 0.f ? Shown->mHP / Shown->mMaxHP : 0.f);
 	}
 	// 확정 시안 표기: "100/100" · "AP 0/5" · 속도는 아이콘 옆 숫자만.
+	// 0823 확정: AP 보석 행은 걷었고 문구만 남긴다.
 	SetTextIfPresent(mEnemyHPText, FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Shown->mHP), FMath::RoundToInt(Shown->mMaxHP))));
 	const int32 EnemyAPLeft = mUIModel != nullptr
@@ -2378,17 +2427,6 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		FMath::Max(Shown->mMaxActionPoints, EnemyAPLeft));
 	SetTextIfPresent(mEnemyAPText, FText::FromString(
 		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
-	// 고정 10칸을 항상 그린다. 현재 AP만 채운 보석이고 나머지는 빈 보석이다.
-	// 이동 스텝 또는 스킬 소비로 실제 AP가 줄면 같은 자리에서 즉시 교체된다.
-	for (int32 Index = 0; Index < mEnemyAPPips.Num(); ++Index)
-	{
-		const bool bFilled = Index < EnemyAPLeft;
-		SetShown(mEnemyAPPips[Index], bFilled);
-		if (mEnemyAPPipsUsed.IsValidIndex(Index))
-		{
-			SetShown(mEnemyAPPipsUsed[Index], bFilled == false);
-		}
-	}
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
 	// 치명 확률은 아직 FUnitUI 계약에 없으므로 값을 지어내지 않는다. 다만
@@ -2458,8 +2496,8 @@ void UCombatLayoutHUDWidget::RefreshMeta()
 	{
 		Alive += (!Unit.mIsPlayer && Unit.mHP > 0.f) ? 1 : 0;
 	}
-	SetTextIfPresent(mObjectiveText, FText::FromString(
-		FString::Printf(TEXT("모든 적 처치 — 남은 적 %d"), Alive)));
+	SetTextIfPresent(mObjectiveText, FText::Format(
+		LOCTEXT("CombatObjectiveRemaining", "모든 적 처치 — 남은 적 {0}"), Alive));
 	SetTextIfPresent(mMercenaryGoldText,
 		FText::AsNumber(mUIModel->GetPlayerMeta().mGold));
 
@@ -2662,6 +2700,11 @@ void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	if (SlotIndex == 0)
 	{
+		// 남의 레일(들여다보기)에서는 이동 카드가 구경용이다(0823 검수).
+		if (mUIModel->IsSkillRailOwnTurn() == false)
+		{
+			return;
+		}
 		// 행동력이 없으면 이동 모드에 들어가지 않는다. 갈 칸이 없는데
 		// 조준만 열리면 취소밖에 할 게 없다.
 		const FUnitUI* TurnUnit = FindTurnUnit();
@@ -3188,6 +3231,8 @@ void UCombatLayoutHUDWidget::RefreshScreenScale()
 
 void UCombatLayoutHUDWidget::RefreshActionButtons()
 {
+	ApplyActionLabelOpticalAlignment();
+
 	const ECombatBuildPhaseUI Phase = mUIModel != nullptr
 		? mUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
 
@@ -3208,6 +3253,43 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 	SetShown(mSkillTogglePlate, bSkillButtonShown);
 	SetShown(mSkillToggleLabel, bSkillButtonShown);
 }
+
+void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignment()
+{
+	// Overlay/TextBlock의 레이아웃 박스는 버튼 중심과 0.5px 이내로 이미 맞는다.
+	// 다만 합성 글꼴의 ascent/descent 때문에 실제 잉크는 ko 약 5px, en 약
+	// 2.5px 아래에 그려진다. 라벨 슬롯의 아래 여백을 더 줘 같은 양만 위로
+	// 올린다. 문자열이 동적으로 바뀌어도 같은 언어/글꼴 메트릭을 그대로 쓴다.
+	const FString CultureName =
+		FInternationalization::Get().GetCurrentCulture()->GetName();
+	const float OffsetY = CultureName.StartsWith(TEXT("ko"), ESearchCase::IgnoreCase)
+		? -5.f : -2.5f;
+
+	auto ApplyOffset = [OffsetY](UWidget* Label)
+	{
+		if (Label == nullptr)
+		{
+			return;
+		}
+		if (UOverlaySlot* Slot = Cast<UOverlaySlot>(Label->Slot))
+		{
+			const FMargin Padding = Slot->GetPadding();
+			Slot->SetPadding(FMargin(Padding.Left, Padding.Top, Padding.Right,
+				Padding.Top - 2.f * OffsetY));
+		}
+	};
+
+	ApplyOffset(mSkillToggleLabel);
+	ApplyOffset(mEndTurnLabel);
+}
+
+#if WITH_EDITOR
+void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignmentForCapture()
+{
+	CacheAuthoredWidgets();
+	ApplyActionLabelOpticalAlignment();
+}
+#endif
 
 /** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
 void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
@@ -3484,11 +3566,19 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 	}
 	if (FVector2D(InTouchEvent.GetScreenSpacePosition()).Equals(mPressOrigin, BoardTapSlack) == false)
 	{
+		const bool bDragJustStarted = mPressActive && mPressMoved == false;
 		mPressMoved = true;
 		// 끌기 시작했다. 지도를 미는 손을 긴 누름으로 오인하지 않는다.
 		if (UWorld* World = GetWorld())
 		{
 			World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+		}
+		// 0823 확정: 카드는 손을 뗄 때가 아니라 **끌기 시작하는 순간** 접는다.
+		// 손을 뗀 뒤에 접히면 화면을 미는 내내 카드가 시야를 가린다.
+		if (bDragJustStarted && IsAiming() == false && mIsActionPlaying == false
+			&& IsOverChrome(mPressOrigin) == false)
+		{
+			SetCommandsShown(false);
 		}
 	}
 	return Super::NativeOnTouchMoved(InGeometry, InTouchEvent);
@@ -3535,6 +3625,14 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	mPressMoved = false;
 	if (bDragged == true)
 	{
+		// 0823 확정: 지도를 끄는 것도 판을 만진 것이다. 펴 둔 카드는 접는다.
+		// 조준 중(끌며 겨냥 확인)·연출 중·HUD 위에서 시작한 끌기는 건드리지
+		// 않는다 -- 탭의 예외 규칙과 같다.
+		if (IsAiming() == false && mIsActionPlaying == false
+			&& IsOverChrome(mPressOrigin) == false)
+		{
+			SetCommandsShown(false);
+		}
 		return;
 	}
 	HandleBoardPressed(ScreenPosition);
@@ -4081,27 +4179,27 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	ApplyReadableDetailTypography(false);
 	ApplyDetailColumnLayout(true);
 
-	SetTextIfPresent(mDetailTitleText,
-		FText::FromString(StatusDisplayName(StatusTag)));
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(StackCount > 1
-		? FString::Printf(TEXT("상태이상  ·  %d중첩"), StackCount)
-		: FString(TEXT("상태이상"))));
+	SetTextIfPresent(mDetailTitleText, StatusDisplayName(StatusTag));
+	SetTextIfPresent(mDetailSubtitleText, StackCount > 1
+		? FText::Format(
+			LOCTEXT("StatusSubtitleStacked", "상태이상  ·  {0}중첩"), StackCount)
+		: LOCTEXT("StatusSubtitle", "상태이상"));
 
 	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
-	static const TMap<FString, FString> Descriptions = {
-		{ TEXT("Fortification"), TEXT("받는 피해가 줄어든다.") },
-		{ TEXT("Vulnerability"), TEXT("받는 피해가 늘어난다.") },
-		{ TEXT("Weakness"),      TEXT("주는 피해가 줄어든다.") },
-		{ TEXT("Vigor"),         TEXT("행동력 효율이 올라간다.") },
-		{ TEXT("Haste"),         TEXT("속도가 올라간다.") },
-		{ TEXT("Exhaustion"),    TEXT("행동력 효율이 내려간다.") },
-		{ TEXT("Slow"),          TEXT("속도가 내려간다.") },
-		{ TEXT("Frail"),         TEXT("방어력이 내려간다.") },
-		{ TEXT("Root"),          TEXT("이동할 수 없다.") },
-		{ TEXT("Poison"),        TEXT("턴마다 피해를 입는다.") },
-		{ TEXT("Bleed"),         TEXT("턴마다 피해를 입는다.") },
-		{ TEXT("Stun"),          TEXT("턴을 진행할 수 없다.") },
-		{ TEXT("Stealth"),       TEXT("적의 대상이 되지 않는다.") },
+	static const TMap<FString, FText> Descriptions = {
+		{ TEXT("Fortification"), LOCTEXT("StatusDescFortification", "받는 피해가 줄어든다.") },
+		{ TEXT("Vulnerability"), LOCTEXT("StatusDescVulnerability", "받는 피해가 늘어난다.") },
+		{ TEXT("Weakness"),      LOCTEXT("StatusDescWeakness", "주는 피해가 줄어든다.") },
+		{ TEXT("Vigor"),         LOCTEXT("StatusDescVigor", "행동력 효율이 올라간다.") },
+		{ TEXT("Haste"),         LOCTEXT("StatusDescHaste", "속도가 올라간다.") },
+		{ TEXT("Exhaustion"),    LOCTEXT("StatusDescExhaustion", "행동력 효율이 내려간다.") },
+		{ TEXT("Slow"),          LOCTEXT("StatusDescSlow", "속도가 내려간다.") },
+		{ TEXT("Frail"),         LOCTEXT("StatusDescFrail", "방어력이 내려간다.") },
+		{ TEXT("Root"),          LOCTEXT("StatusDescRoot", "이동할 수 없다.") },
+		{ TEXT("Poison"),        LOCTEXT("StatusDescPoison", "턴마다 피해를 입는다.") },
+		{ TEXT("Bleed"),         LOCTEXT("StatusDescBleed", "턴마다 피해를 입는다.") },
+		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "턴을 진행할 수 없다.") },
+		{ TEXT("Stealth"),       LOCTEXT("StatusDescStealth", "적의 대상이 되지 않는다.") },
 	};
 	FString Leaf = StatusTag.GetTagName().ToString();
 	int32 Dot = INDEX_NONE;
@@ -4109,11 +4207,12 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		Leaf = Leaf.Mid(Dot + 1);
 	}
-	const FString* Description = Descriptions.Find(Leaf);
-	FString Body = Description != nullptr
-		? *Description : TEXT("효과 설명이 아직 없다.");
-	Body += TEXT("\n턴이 지나면 사라진다.");
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	const FText* Description = Descriptions.Find(Leaf);
+	SetTextIfPresent(mDetailBodyText, FText::Format(
+		LOCTEXT("StatusDescBodyFmt", "{0}\n턴이 지나면 사라진다."),
+		Description != nullptr
+			? *Description
+			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다.")));
 
 	SetPortraitCropped(mDetailIconImage, StatusIconFor(StatusTag));
 
@@ -4538,6 +4637,18 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	mMonsterTabWidget->AddToViewport(MonsterTabViewportZOrder);
 	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);
 
+	// WBP 에 번역 키 없이 박힌 라벨을 로컬라이즈 텍스트로 갈아 끼운다.
+	if (UTextBlock* CritLabel = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterChip2Label"))))
+	{
+		CritLabel->SetText(NSLOCTEXT("CombatHUD", "MercenaryCrit", "치명타"));
+	}
+	if (UTextBlock* BackText = Cast<UTextBlock>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackText"))))
+	{
+		BackText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기"));
+	}
+
 	// AddDynamic은 함수 이름을 문자열로 찍는 매크로라 포인터 배열로 돌릴 수 없다.
 	if (UButton* Row0 = Cast<UButton>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_0"))))
 	{
@@ -4864,90 +4975,6 @@ void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 }
 
 /* ── 상세 패널 (롱프레스 정보) ─────────────────────────────────────── */
-
-namespace
-{
-	/** @brief 조준 형태의 표시 이름. 계약 enum 을 화면 글자로 바꾸는 것은 UI 소관이다. */
-	const TCHAR* SelectShapeName(const ECombatSkillSelectShapeUI Shape)
-	{
-		switch (Shape)
-		{
-		case ECombatSkillSelectShapeUI::Single:   return TEXT("단일");
-		case ECombatSkillSelectShapeUI::Square:   return TEXT("사각");
-		case ECombatSkillSelectShapeUI::Cross:    return TEXT("십자");
-		case ECombatSkillSelectShapeUI::Diagonal: return TEXT("대각");
-		case ECombatSkillSelectShapeUI::Line:     return TEXT("직선");
-		default:                                  return TEXT("");
-		}
-	}
-
-	const TCHAR* HitShapeName(const ECombatSkillHitShapeUI Shape)
-	{
-		switch (Shape)
-		{
-		case ECombatSkillHitShapeUI::Single: return TEXT("단일");
-		case ECombatSkillHitShapeUI::Cross:  return TEXT("십자");
-		case ECombatSkillHitShapeUI::Star:   return TEXT("8방향");
-		case ECombatSkillHitShapeUI::Circle: return TEXT("원형");
-		default:                             return TEXT("");
-		}
-	}
-
-	/** @brief 사거리/타격범위/곡사·관통을 한 줄로 요약한다. 없는 항목은 뺀다. */
-	/**
-	 * @brief 차단 레이어 비트마스크를 사람 말로 바꾼다.
-	 *
-	 * @details INDEX_NONE 은 게임플레이가 아직 안 채운 것이라 빈 문자열을
-	 * 돌려준다 -- 모르는 것을 "없음" 이라고 하면 관통 스킬로 읽힌다.
-	 */
-	FString DescribeBlocker(const int32 Mask)
-	{
-		if (Mask == INDEX_NONE)
-		{
-			return FString();
-		}
-		if (Mask == 0)
-		{
-			return TEXT("없음");
-		}
-		TArray<FString> Layers;
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Obstacle)) != 0)
-		{
-			Layers.Add(TEXT("장애물"));
-		}
-		if ((Mask & StaticCast<int32>(ETileLayerFlag::Unit)) != 0)
-		{
-			Layers.Add(TEXT("유닛"));
-		}
-		return Layers.Num() > 0 ? FString::Join(Layers, TEXT("·")) : TEXT("없음");
-	}
-
-	FString DescribeTargeting(const FSkillTargetingUI& Targeting)
-	{
-		TArray<FString> Parts;
-		if (Targeting.mSelectShape != ECombatSkillSelectShapeUI::None)
-		{
-			Parts.Add(FString::Printf(TEXT("사거리 %.0f (%s)"),
-				Targeting.mSelectRange, SelectShapeName(Targeting.mSelectShape)));
-		}
-		if (Targeting.mHitShape != ECombatSkillHitShapeUI::None)
-		{
-			Parts.Add(FString::Printf(TEXT("타격 %s %.0f"),
-				HitShapeName(Targeting.mHitShape), Targeting.mHitRange));
-		}
-		const FString Aim = DescribeBlocker(Targeting.mAimBlockerMask);
-		if (Aim.IsEmpty() == false)
-		{
-			Parts.Add(FString::Printf(TEXT("조준 차단 %s"), *Aim));
-		}
-		const FString Effect = DescribeBlocker(Targeting.mEffectBlockerMask);
-		if (Effect.IsEmpty() == false)
-		{
-			Parts.Add(FString::Printf(TEXT("영향 차단 %s"), *Effect));
-		}
-		return FString::Join(Parts, TEXT("  ·  "));
-	}
-}
 
 /**
  * @brief 스킬 상세 프레젠터를 한 번 만들고 설정을 최신으로 맞춘다.
@@ -5390,17 +5417,25 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		}
 	}
 
-	FString Subtitle = FString::Printf(TEXT("Lv.%d"), Detail.mLevel);
+	FText Subtitle = FText::Format(LOCTEXT("UnitDetailLevel", "Lv.{0}"),
+		FMath::Max(1, Detail.mLevel));
 	if (Unit != nullptr)
 	{
-		Subtitle += Unit->mIsPlayer == true ? TEXT("  ·  아군") : TEXT("  ·  적");
-		Subtitle += FString::Printf(TEXT("  ·  HP %.0f/%.0f"), Unit->mHP, Unit->mMaxHP);
+		const FText Side = Unit->mIsPlayer == true
+			? LOCTEXT("UnitDetailAlly", "아군")
+			: LOCTEXT("UnitDetailEnemy", "적");
+		Subtitle = FText::Format(
+			LOCTEXT("UnitDetailIdentityAndHp", "{0}  ·  {1}  ·  HP {2}/{3}"),
+			Subtitle, Side, FMath::RoundToInt(Unit->mHP),
+			FMath::RoundToInt(Unit->mMaxHP));
 		if (Unit->mDefensePoint > 0.f)
 		{
-			Subtitle += FString::Printf(TEXT("  ·  방어 %.0f"), Unit->mDefensePoint);
+			Subtitle = FText::Format(
+				LOCTEXT("UnitDetailWithDefense", "{0}  ·  방어 {1}"), Subtitle,
+				FMath::RoundToInt(Unit->mDefensePoint));
 		}
 	}
-	SetTextIfPresent(mDetailSubtitleText, FText::FromString(Subtitle));
+	SetTextIfPresent(mDetailSubtitleText, Subtitle);
 
 	// 소켓에는 이 유닛의 초상을 건다. 안 걸면 직전 스킬 아이콘이 그대로 남는다
 	// (0806 검수: 적 상세에 칼 아이콘이 떠 있었다).
@@ -5430,27 +5465,23 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
 	}
 
-	FString Body;
+	TArray<FText> PassiveLines;
 	for (const FText& Passive : Detail.mPassiveDescriptions)
 	{
-		if (Body.IsEmpty() == false)
-		{
-			Body += TEXT("\n");
-		}
-		Body += TEXT("· ");
-		Body += Passive.ToString();
+		PassiveLines.Add(FText::Format(
+			LOCTEXT("UnitDetailPassiveLine", "· {0}"), Passive));
 	}
-	if (Body.IsEmpty() == true)
-	{
-		Body = TEXT("패시브 없음");
-	}
+	FText Body = PassiveLines.IsEmpty()
+		? LOCTEXT("UnitDetailNoPassives", "패시브 없음")
+		: FText::Join(FText::FromString(TEXT("\n")), PassiveLines);
 	if (Unit != nullptr && Unit->mIsPlayer == false)
 	{
 		// 판에 함께 칠린 위협 범위의 범례다. 칠만 있고 뜻을 알려 주는 곳이
 		// 없으면 밴드와 채움을 구분할 길이 없다.
-		Body += TEXT("\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위.");
+		Body = FText::Format(LOCTEXT("UnitDetailEnemyThreatLegend",
+			"{0}\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위."), Body);
 	}
-	SetTextIfPresent(mDetailBodyText, FText::FromString(Body));
+	SetTextIfPresent(mDetailBodyText, Body);
 
 	SetPortraitCropped(mDetailIconImage, Detail.mPortrait);
 	SetShown(mDetailStatBlock, true);
@@ -5747,9 +5778,9 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 	FSkillDetailUI MoveDetail;
 	MoveDetail.mSkillIndex = -2; // INDEX_NONE과 구분되는 UI 전용 이동 식별자.
 	MoveDetail.mName = LOCTEXT("MoveDetailTitle", "이동");
-	MoveDetail.mDescription = FText::FromString(FString::Printf(
-		TEXT("한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 %d칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
-		Left));
+	MoveDetail.mDescription = FText::Format(LOCTEXT("MoveDetailDescription",
+		"한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 {0}칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
+		Left);
 	MoveDetail.mIcon = MoveIcon;
 	MoveDetail.mActionPointCost = 1;
 	MoveDetail.mTargeting.mSelectShape = ECombatSkillSelectShapeUI::Cross;
