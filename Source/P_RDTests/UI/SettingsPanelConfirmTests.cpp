@@ -303,6 +303,9 @@ bool FSettingsPanelBackLifecycleTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
+	// 이 시험은 설정 입력 계층만 검증한다. 헤드리스 환경에서 별도의
+	// 가짜 전투까지 시작하면 프리뷰용 GameplayTag 구성에 결과가 종속된다.
+	HUD->mUsePreviewData = false;
 	const TSharedRef<SWidget> HUDSlate = HUD->TakeWidget();
 	(void)HUDSlate;
 	UButton* GearButton = Cast<UButton>(
@@ -310,6 +313,23 @@ bool FSettingsPanelBackLifecycleTest::RunTest(const FString& Parameters)
 	if (!TestNotNull(TEXT("실제 설정 톱니 버튼"), GearButton))
 	{
 		return false;
+	}
+	UOverlay* OptionsRailFrameMount = Cast<UOverlay>(
+		HUD->WidgetTree->FindWidget(TEXT("OptionsRailFrameMount")));
+	if (TestNotNull(TEXT("전투 메뉴 입력 Overlay"), OptionsRailFrameMount))
+	{
+		TestEqual(TEXT("설정 톱니도 앞의 세 버튼과 같은 입력 계층"),
+			GearButton->GetParent(),
+			static_cast<UPanelWidget*>(OptionsRailFrameMount));
+		if (UOverlaySlot* GearSlot = Cast<UOverlaySlot>(GearButton->Slot))
+		{
+			TestEqual(TEXT("설정 톱니 런타임 여백"), GearSlot->GetPadding(),
+				FMargin(344.f, 36.f, 42.5f, 35.f));
+		}
+		else
+		{
+			AddError(TEXT("설정 톱니가 Overlay 슬롯을 받지 못했다."));
+		}
 	}
 	GearButton->OnClicked.Broadcast();
 	USettingsPanelWidget* GearPanel =

@@ -111,6 +111,11 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+#if WITH_EDITOR
+	/** @brief 오프스크린 WBP 감사도 실제 게임과 같은 글자 보정을 적용한다. */
+	void ApplyActionLabelOpticalAlignmentForCapture();
+#endif
+
 	UCombatLayoutHUDWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/**
@@ -897,6 +902,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
+	/** @brief 플로팅 로그 글꼴(F_HUD_Oswald). 없으면 엔진 기본 글꼴로 남는다. */
+	UPROPERTY(Transient) TObjectPtr<class UFont> mFloatingLogFont;
 
 	/* ── 상세 패널 (롱프레스 정보) ──────────────────────────────────────
 	 *
@@ -1298,6 +1305,8 @@ private:
 
 	/** @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다. */
 	void RefreshActionButtons();
+	/** @brief 현재 언어 글꼴의 실제 잉크 중심을 목재 행동 버튼 중심에 맞춘다. */
+	void ApplyActionLabelOpticalAlignment();
 
 	/* ── 쓸 행동력 미리 보이기 ────────────────────────────────────────────
 	 *
@@ -1396,6 +1405,8 @@ private:
 	/** @brief 현재 라운드를 카드와 분리해 표시하는 왼쪽 상단 패널. */
 	TObjectPtr<UWidget> mRoundPanel;
 	TObjectPtr<UTextBlock> mRoundText;
+	/** @brief ROUND 배지 아래의 큰 두 자리 라운드 숫자("01"). 구형 WBP 면 없다. */
+	TObjectPtr<UTextBlock> mRoundNumberText;
 	TObjectPtr<UTextBlock> mObjectiveText;
 
 	TObjectPtr<UWidget> mEnemyPanel;
@@ -1410,9 +1421,6 @@ private:
 	TObjectPtr<UTextBlock> mEnemyForecastText;
 	TObjectPtr<UWidget> mEnemyNextSkillFrame;
 	TObjectPtr<UImage> mEnemyNextSkillIcon;
-	/** @brief 적 요약판의 채운/쓴 AP 보석. 둘 중 하나만 보인다. */
-	TArray<TObjectPtr<UWidget>> mEnemyAPPips;
-	TArray<TObjectPtr<UWidget>> mEnemyAPPipsUsed;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
