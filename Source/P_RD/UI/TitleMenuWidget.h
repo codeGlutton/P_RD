@@ -147,7 +147,7 @@ private:
 	/** @brief 타이틀 배경 영상 Image를 원본 비율 유지 cover-crop으로 배치한다. */
 	// 좌우는 뷰포트 너비에 맞추고(letterbox 없이 가득 채움), 비율 초과분은 상하를 잘라낸다(crop).
 	// 영상 원본 비율과 화면 비율이 다를 때 검은 띠 없이 화면을 가득 덮기 위한 cover 방식 배치다.
-	void FitTitleBackgroundVideoToViewport() const;
+	void FitTitleBackgroundVideoToViewport();
 
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();

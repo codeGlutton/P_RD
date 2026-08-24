@@ -1148,16 +1148,10 @@ void UMercenaryHireWidget::RefreshBottomBar()
 			if (mDepartLabelBaseFont.IsSet() == false)
 			{
 				mDepartLabelBaseFont = mDepartLabel->GetFont();
-				mDepartLabelBaseShift = mDepartLabel->GetRenderTransform().Translation;
 			}
 			FSlateFontInfo CostFont = mDepartLabelBaseFont.GetValue();
 			CostFont.Size = 20;
 			mDepartLabel->SetFont(CostFont);
-			/* 광학 오프셋은 글리프 크기에 비례한다 -- 줄어든 만큼 함께 줄인다. */
-			const float BaseSize = FMath::Max(
-				static_cast<float>(mDepartLabelBaseFont.GetValue().Size), 1.0f);
-			mDepartLabel->SetRenderTranslation(
-				mDepartLabelBaseShift.GetValue() * (20.0f / BaseSize));
 		}
 		/* 규칙 전용 테스트는 WBP 없이 돌아 WidgetTree가 없다. */
 		MercenaryHireDetail::SetShown(WidgetTree != nullptr
@@ -1174,7 +1168,6 @@ void UMercenaryHireWidget::RefreshBottomBar()
 		 * 추가/뒤로 라벨과 크기가 어긋났다.
 		 */
 		mDepartLabel->SetFont(mDepartLabelBaseFont.GetValue());
-		mDepartLabel->SetRenderTranslation(mDepartLabelBaseShift.GetValue());
 	}
 
 	const FString PartyCount = mIsMarchboundLayout
