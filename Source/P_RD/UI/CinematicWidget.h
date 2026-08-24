@@ -56,6 +56,9 @@ public:
 	/** @brief 이 시네마틱 위젯의 뷰포트 ZOrder를 지정한다. */
 	void SetCinematicViewportZOrder(int32 InViewportZOrder);
 
+	/** @brief 현재/다음 시네마틱 재생 속도를 지정한다. 미디어 오픈 전 호출해도 오픈 직후 적용된다. */
+	bool SetCinematicPlaybackRate(float InPlaybackRate);
+
 	/** @brief 시네마틱을 즉시 종료 처리하고 등록된 종료 콜백을 발생시킨다(중복 호출 방지됨). */
 	UFUNCTION(BlueprintCallable, Category = "UI|Cinematic")
 	void FinishCinematic();
@@ -134,6 +137,12 @@ private:
 
 	/** @brief 지원되는 플랫폼에서는 종료 직전 프레임으로 되돌려 정지한다. */
 	void HoldCinematicLastFrame();
+
+	/** @brief 요청된 재생 속도를 열린 MediaPlayer에 적용하고 남은 시간 기준 폴백 타이머를 다시 건다. */
+	bool ApplyRequestedCinematicPlaybackRate();
+
+	/** @brief 네이티브 배속 미지원 플랫폼용 사전 인코딩 3배속 영상 경로를 해석한다. */
+	FString ResolveAcceleratedCinematicVideoPath() const;
 
 	/**
 	 * @brief 영상 종료 이벤트 미수신 대비 폴백 타이머를 시작한다.
@@ -235,6 +244,15 @@ private:
 
 	/** @brief 페이드 시작 후 누적 경과 시간(초). 불투명도 보간에 사용. */
 	float mFadeElapsedTime = 0.0f;
+
+	/** @brief 미디어가 아직 열리지 않았을 때도 유지되는 요청 재생 속도. */
+	float mRequestedPlaybackRate = 1.0f;
+
+	/** @brief 사전 인코딩된 3배속 소스를 재생 중인지 여부. */
+	bool mUsingAcceleratedCinematicSource = false;
+
+	/** @brief 원본 재생 위치를 3배속 소스 타임라인으로 환산한 이어보기 위치. */
+	FTimespan mAcceleratedCinematicStartTime = FTimespan::Zero();
 
 	/** @brief 로딩 대기 레이어의 현재 불투명도(0~1). */
 	float mLoadingWaitLayerOpacity = 0.0f;

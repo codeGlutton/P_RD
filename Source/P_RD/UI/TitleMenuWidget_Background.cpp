@@ -32,7 +32,7 @@
 // 이 번역 단위 내부에서만 쓰는 배경 영상 핏 보조 함수/상수 모음(외부 링크 노출 방지용 익명 namespace).
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_Right16x9/Title_All6_Right_16x9_combo01_5s_mobile.mp4");
 
 	FString GetTitleBackgroundVideoPath()
 	{
@@ -229,8 +229,8 @@ bool UTitleMenuWidget::TryUseSharedTitleBackgroundVideo()
 		return false;
 	}
 
-	const FString RequestedPath = GetTitleBackgroundVideoPath();
-	VideoSubsystem->PreloadTitleBackgroundVideo(RequestedPath);
+	// 빈 경로를 넘겨 설정의 30종 셔플 목록을 사용한다. 단일 폴백 경로를 넘기면 첫 영상만 영구 루프된다.
+	VideoSubsystem->PreloadTitleBackgroundVideo(FString());
 
 	UMediaPlayer* SharedMediaPlayer = VideoSubsystem->GetMediaPlayer();
 	UMediaTexture* SharedMediaTexture = VideoSubsystem->GetMediaTexture();
@@ -290,12 +290,25 @@ void UTitleMenuWidget::ApplyTitleBackgroundVideoBrush()
 		: FVector2D(1280.0f, 1280.0f);
 	mBackgroundRuntime.mVideoBrush.SetResourceObject(mBackgroundRuntime.mMediaTexture);
 	TitleBackgroundImage->SetBrush(mBackgroundRuntime.mVideoBrush);
+	// WBP에 남아 있던 배경용 틴트가 MediaTexture까지 어둡게 만들지 않도록 원색/완전 불투명으로 고정한다.
+	TitleBackgroundImage->SetColorAndOpacity(FLinearColor::White);
+	TitleBackgroundImage->SetRenderOpacity(1.0f);
+	// 전체 화면 배경은 시각 요소일 뿐이므로 어떤 슬롯/Z-Order에서도 메뉴 터치를 가로채지 않는다.
+	TitleBackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-	// concept_title_01_classic의 TitleVignetteImage는 투명 오버레이가 아니라 불투명 정적 배경이다.
-	// 영상 브러시가 실제로 적용된 뒤에는 숨겨야 재생 중인 MediaTexture가 화면에 보인다.
-	if (UWidget* TitleVignetteWidget = GetWidgetFromName(TEXT("TitleVignetteImage")))
+	// concept_title_01_classic에는 Image뿐 아니라 별도의 어두운 Border도 남아 있다.
+	// Image만 숨기면 Border가 MediaTexture 위에서 전체 영상을 계속 어둡게 만든다.
+	const FName VignetteWidgetNames[] =
 	{
-		TitleVignetteWidget->SetVisibility(ESlateVisibility::Collapsed);
+		TEXT("TitleVignetteImage"),
+		TEXT("TitleVignetteBorder"),
+	};
+	for (const FName VignetteWidgetName : VignetteWidgetNames)
+	{
+		if (UWidget* TitleVignetteWidget = GetWidgetFromName(VignetteWidgetName))
+		{
+			TitleVignetteWidget->SetVisibility(ESlateVisibility::Collapsed);
+		}
 	}
 }
 
@@ -350,8 +363,8 @@ void UTitleMenuWidget::PlayTitleBackgroundVideo()
 	}
 }
 
-/** @brief WBP Image 슬롯을 영상 원본 비율로 키워 화면 전체를 덮고, 남는 방향을 중앙 기준으로 잘라낸다. */
-void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
+/** @brief WBP Image 슬롯을 영상 원본 비율로 키워 화면 전체를 덮고, 남는 세로 영역은 아래쪽에서 잘라낸다. */
+void UTitleMenuWidget::FitTitleBackgroundVideoToViewport()
 {
 	if (TitleBackgroundImage == nullptr)
 	{
@@ -415,32 +428,34 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 		return;
 	}
 
-	// "cover" 핏 계산: 영상과 캔버스의 가로세로비를 비교해, 짧은 쪽을 꽉 채우고 긴 쪽은 넘치게(잘리게) 둔다.
+	// 화면을 비우지 않는 cover 핏을 유지하되, 넓은 하늘이 먼저 보이도록 상단에 고정한다.
+	// 폴드에서는 좌우가 잘리지만 세로 전체가 채워지고, 와이드 화면에서는 초과 세로분만 아래에서 잘린다.
 	const float VideoAspect = VideoSize.X / VideoSize.Y;
 	const float ViewportAspect = FitSize.X / FitSize.Y;
 	FVector2D TargetSize;
 	if (ViewportAspect < VideoAspect)
 	{
-		// 캔버스가 영상보다 세로로 길쭉함 → 세로를 꽉 채우고, 가로는 비율대로 넘치게(좌우가 잘림).
 		TargetSize.Y = FitSize.Y;
 		TargetSize.X = FitSize.Y * VideoAspect;
 	}
 	else
 	{
-		// 캔버스가 영상보다 가로로 넓음 → 가로를 꽉 채우고, 세로는 비율대로 넘치게(상하가 잘림 = 상하크롭).
 		TargetSize.X = FitSize.X;
 		TargetSize.Y = FitSize.X / VideoAspect;
 	}
 
 	TitleBackgroundImage->SetDesiredSizeOverride(TargetSize);
-	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	// v05 원화는 원본 정사각형이 우측 끝에 고정되고 왼쪽이 확장 영역이다.
+	// 폴드처럼 화면이 좁아질 때는 왼쪽 확장부부터 잘리고 원본 우측은 끝까지 보존한다.
+	// 세로가 짧은 폴드 멀티윈도우/와이드 화면에서는 상단을 보존하고 초과분을 아래에서 자른다.
+	TitleBackgroundImage->SetRenderTransformPivot(FVector2D(1.0f, 0.0f));
 	TitleBackgroundImage->SetRenderTransform(FWidgetTransform());
 
-	// 정상 경로: 캔버스 슬롯이면 중앙 앵커/정렬로 고정하고 계산된 cover 크기를 그대로 슬롯 크기로 준다(넘치는 부분이 화면 밖으로 잘림).
+	// 정상 경로: 우측 상단 앵커/정렬로 고정해 초과분을 왼쪽과 아래쪽에서만 잘라낸다.
 	if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(TitleBackgroundImage->Slot))
 	{
-		CanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));     // 화면 중앙 기준 앵커.
-		CanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));  // 피벗도 중앙 → 좌우/상하 크롭이 대칭으로 일어남.
+		CanvasSlot->SetAnchors(FAnchors(1.0f, 0.0f));
+		CanvasSlot->SetAlignment(FVector2D(1.0f, 0.0f));
 		CanvasSlot->SetPosition(FVector2D::ZeroVector);
 		CanvasSlot->SetAutoSize(false);
 		CanvasSlot->SetSize(TargetSize);
@@ -452,7 +467,7 @@ void UTitleMenuWidget::FitTitleBackgroundVideoToViewport() const
 	const FVector2D CurrentImageSize = TitleBackgroundImage->GetCachedGeometry().GetLocalSize();
 	if (CurrentImageSize.X > 0.0f && CurrentImageSize.Y > 0.0f)
 	{
-		// 가로/세로 중 더 큰 배율을 택해야 양쪽 모두 화면을 덮는다(cover 보장).
+		// 캔버스 슬롯을 쓸 수 없는 경우에도 화면을 완전히 덮는 cover 배율을 유지한다.
 		const float RenderScale = FMath::Max(TargetSize.X / CurrentImageSize.X, TargetSize.Y / CurrentImageSize.Y);
 		if (RenderScale > 0.0f)
 		{
@@ -545,7 +560,11 @@ void UTitleMenuWidget::HandleTitleBackgroundMediaOpened(FString OpenedUrl)
 {
 	if (mBackgroundRuntime.mMediaPlayer != nullptr)
 	{
-		mBackgroundRuntime.mMediaPlayer->SetLooping(true);
+		// 공유 플레이어의 단일/셔플 반복 정책은 서브시스템이 관리한다.
+		if (mBackgroundRuntime.mUsesSharedMedia == false)
+		{
+			mBackgroundRuntime.mMediaPlayer->SetLooping(true);
+		}
 		mBackgroundRuntime.mMediaPlayer->Play();
 
 		const int32 VideoTrack = mBackgroundRuntime.mMediaPlayer->GetSelectedTrack(EMediaPlayerTrack::Video);
