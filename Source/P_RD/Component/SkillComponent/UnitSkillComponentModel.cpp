@@ -40,7 +40,14 @@ bool UUnitSkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
 	const bool CanSuperActivateSkill = Super::CanActiveSkill_Internal(SkillIndex);
 	const bool HasEnoughMovement = HasRequiredActionPoint(SkillIndex);
 
-	return CanSuperActivateSkill == true && HasEnoughMovement == true;
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	const bool IsNotStun = AttributeSetCompModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun) == false;
+
+	return CanSuperActivateSkill == true && HasEnoughMovement == true && IsNotStun == true;
 }
 
 void UUnitSkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)

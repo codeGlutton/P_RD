@@ -1,8 +1,17 @@
 #include "UI/RDUserWidget.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/GridPanel.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/ScaleBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/VerticalBox.h"
+#include "Components/WrapBox.h"
 #include "Blueprint/WidgetTree.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
@@ -16,6 +25,16 @@ namespace
 
 	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
 	constexpr float ButtonPressColorMul = 0.6f;
+
+	bool IsPassiveLayoutPanel(const UWidget* Widget)
+	{
+		return Widget != nullptr
+			&& (Widget->IsA<UCanvasPanel>() || Widget->IsA<UOverlay>()
+				|| Widget->IsA<UScaleBox>() || Widget->IsA<USizeBox>()
+				|| Widget->IsA<UHorizontalBox>() || Widget->IsA<UVerticalBox>()
+				|| Widget->IsA<UWrapBox>() || Widget->IsA<UGridPanel>()
+				|| Widget->IsA<UUniformGridPanel>());
+	}
 }
 
 /**
@@ -197,6 +216,7 @@ void URDUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	NormalizeCommonInputLayers();
 	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
 	SetupCommonButtonFeedback();
 }
@@ -208,15 +228,47 @@ void URDUserWidget::NativeConstruct()
 	// WBP에 구워진 버튼은 NativeOnInitialized에서 처리된다. 다만 파생 클래스는
 	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
 	// 현재 호출과 다음 틱 재검사를 함께 두면 두 종류 모두 같은 소리를 쓴다.
+	NormalizeCommonInputLayers();
 	SetupCommonButtonFeedback();
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimerForNextTick(
 			FTimerDelegate::CreateWeakLambda(this, [this]()
 				{
+					NormalizeCommonInputLayers();
 					SetupCommonButtonFeedback();
 				}));
 	}
+}
+
+void URDUserWidget::NormalizeCommonInputLayers()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// 그림과 글자는 시각 요소다. Visible 상태로 버튼 위에 놓이면 Slate 히트
+	// 경로의 앞쪽을 차지할 수 있으므로 자신과 자식 모두 입력 대상에서 뺀다.
+	// 순수 배치 패널은 자신만 빼고 자식 버튼은 계속 입력을 받게 한다.
+	WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			if (Widget == nullptr)
+			{
+				return;
+			}
+			if ((Widget->IsA<UImage>() || Widget->IsA<UTextBlock>())
+				&& (Widget->GetVisibility() == ESlateVisibility::Visible
+					|| Widget->GetVisibility() == ESlateVisibility::SelfHitTestInvisible))
+			{
+				Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else if (IsPassiveLayoutPanel(Widget)
+				&& Widget->GetVisibility() == ESlateVisibility::Visible)
+			{
+				Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+		});
 }
 
 void URDUserWidget::ApplyCommonButtonPressSound(UButton* Button) const

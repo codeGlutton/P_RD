@@ -72,14 +72,17 @@ int32 FActiveTacticalEffect::GetTimeRemaining(int32 WorldTime) const
     int32 Duration = GetDuration();
     return (Duration == FTacticalEffectConstants::INFINITE_DURATION ? -1 : Duration - (WorldTime - mStartTime));
 }
+
 int32 FActiveTacticalEffect::GetDuration() const
 {
     return mSpec.GetDuration();
 }
+
 ETacticalEffectDurationUnitType FActiveTacticalEffect::GetDurationUnit() const
 {
     return mSpec.mEffectClass->mDurationUnitPolicy;
 }
+
 int32 FActiveTacticalEffect::GetEndTime() const
 {
     int32 Duration = GetDuration();

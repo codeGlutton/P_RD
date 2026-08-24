@@ -39,6 +39,25 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  */
 namespace
 {
+	constexpr const TCHAR* RoomArtifactFallbackIconPath =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
+
+	UTexture2D* ResolveRoomArtifactInventoryIcon(
+		const UStaticArtifactData* Artifact)
+	{
+		if (Artifact != nullptr)
+		{
+			if (UTexture2D* Icon = Artifact->mIcon.LoadSynchronous())
+			{
+				return Icon;
+			}
+			UE_LOG(LogRoomGameMode, Verbose,
+				TEXT("아티팩트 아이콘 미설정, 기본 아이콘 사용: %s"),
+				*Artifact->GetPathName());
+		}
+		return LoadObject<UTexture2D>(nullptr, RoomArtifactFallbackIconPath);
+	}
+
 	/**
 	 * @brief 지정 좌표가 현재 Stage의 시작 지점인지 계산한다.
 	 *
@@ -371,6 +390,30 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 
 	const bool IsTransitionStarted = PreloadAndTransitionSelectedRoomAsync();
 	checkf(IsTransitionStarted == true, TEXT("다음 방으로 전환 실패"));
+	return IsTransitionStarted;
+}
+
+bool ARoomGameModeBase::EnterNextStage()
+{
+	if (mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	const FStage& Stage = RunPersistData->GetStage();
+
+	EStageLevelType CurStageLevel = Stage.mStageLevel;
+	EStageLevelType NextStageLevel = StaticCast<EStageLevelType>(StaticCast<uint8>(CurStageLevel) + 1);
+	if (CurStageLevel == EStageLevelType::Stage3)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("게임 클리어로 다음 스테이지 접근 불가"));
+		return false;
+	}
+
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(NextStageLevel);
+	checkf(IsTransitionStarted == true, TEXT("스테이지 처음 방으로 전환 실패"));
 	return IsTransitionStarted;
 }
 
@@ -806,7 +849,7 @@ bool ARoomGameModeBase::GetPartyRosterView(FPartyRosterView& OutView) const
 				: FText::Format(
 					NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
 					FText::AsNumber(ArtifactIndex + 1));
-			ArtifactRow.mIcon = Artifact->mIcon.LoadSynchronous();
+			ArtifactRow.mIcon = ResolveRoomArtifactInventoryIcon(Artifact);
 			ArtifactRow.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
 			ArtifactRow.mDetail = NSLOCTEXT(
 				"RoomGameModeBase", "PartyArtifact", "Party-wide effect");

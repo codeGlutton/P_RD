@@ -401,13 +401,15 @@ public:
 	 * @param[in] Pattern : 영향 범위 패턴
 	 * @param[in] Size : 범위 크기 (0=점, 이후 확장)
 	 * @param[in] BlockerLayers : 영향 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
+	 * @param[in] IgnoreBlocker : 확산 차단에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 영향받는 타일 좌표 목록 (맵 밖 좌표 제외)
 	 */
 	TArray<FTileIndex> GetEffectTiles(
 		const FTileIndex& Target,
 		EEffectPattern Pattern,
 		int32 Size,
-		ETileLayerFlag BlockerLayers
+		ETileLayerFlag BlockerLayers,
+		const UBoardActorModel* IgnoreBlocker = nullptr
 	) const;
 
 	/**
@@ -688,8 +690,9 @@ private:
 	 * @param[in] Range  뻗을 칸 수 (0 이하이면 아무것도 추가하지 않음)
 	 * @param[in] BlockerLayers 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
 	 * @param[in,out] Out 결과를 누적할 배열
+	 * @param[in] IgnoreBlocker 차단 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
 	 */
-	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out) const;
+	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 타일에 장애물 또는 유닛이 있는 지 검사

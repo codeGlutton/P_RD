@@ -1,15 +1,18 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "TAS/Effect/Tag/TacticalEffect_Exhaustion.h"
-#include "TacticalEffect_Exhaustion.h"
+﻿#include "TAS/Effect/Tag/TacticalEffect_Exhaustion.h"
+#include "GameplayTagType.h"
 
 UTacticalEffect_Exhaustion::UTacticalEffect_Exhaustion()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion);
+}
+
+UTacticalEffect_AddExhaustion::UTacticalEffect_AddExhaustion()
+{
+	mStatusEffect = UTacticalEffect_Exhaustion::StaticClass();
 }
 
 UTacticalEffect_GetExhaustion::UTacticalEffect_GetExhaustion()
 {
-	mStatusTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion;
+	mStatusEffect = UTacticalEffect_Exhaustion::StaticClass();
 }

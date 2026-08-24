@@ -12,3 +12,4 @@ void UObstacleModel::PostInitializeComponentModels()
 {
 	Super::PostInitializeComponentModels();
 }
+

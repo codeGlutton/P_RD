@@ -1,4 +1,4 @@
-#include "PCGStage/Room.h"
+﻿#include "PCGStage/Room.h"
 
 #define LOCTEXT_NAMESPACE "Room"
 
@@ -26,8 +26,7 @@ void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPri
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	// 보상 아티팩트도 방 진입 전에 미리 로드 대상에 포함
-	AdditionalAssetIds.Append(mRewardArtifactDataIds);
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 FShopRoom::FShopRoom()
@@ -91,14 +90,7 @@ void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	if (mRewardArtifactDataIds.IsEmpty())
-	{
-		AdditionalAssetIds.Add(mRewardArtifactDataId);
-	}
-	else
-	{
-		AdditionalAssetIds.Append(mRewardArtifactDataIds);
-	}
+	AdditionalAssetIds.Add(mRewardArtifactDataId);
 }
 
 FBossMonsterRoom::FBossMonsterRoom()
@@ -115,13 +107,12 @@ void FBossMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<F
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	if (mRewardArtifactDataIds.IsEmpty())
+	for (const FPrimaryAssetId& ArtifactId : mRewardArtifactDataIds)
 	{
-		AdditionalAssetIds.Add(mRewardArtifactDataId);
-	}
-	else
-	{
-		AdditionalAssetIds.Append(mRewardArtifactDataIds);
+		if (ArtifactId.IsValid())
+		{
+			AdditionalAssetIds.Add(ArtifactId);
+		}
 	}
 }
 

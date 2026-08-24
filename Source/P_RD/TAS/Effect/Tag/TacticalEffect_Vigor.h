@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Vigor.h
  * @brief  Vigor 이펙트 정의 헤더
  * @details AP(행동력)을 더 많이 얻는 상태이상 이펙트
@@ -15,7 +15,7 @@
  * @brief  Vigor 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_Vigor : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_Vigor : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -24,10 +24,22 @@ public:
 };
 
 /**
+ * @brief  Vigor 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddVigor : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_AddVigor();
+};
+
+/**
  * @brief  Vigor 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetVigor : public UTacticalEffect_GetStatusTag
+class P_RD_API UTacticalEffect_GetVigor : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

@@ -3,6 +3,7 @@
 #include "Blueprint/SlateBlueprintLibrary.h"
 #include "InputCoreTypes.h"
 #include "ObjectView.h"
+#include "SRPGFramework/SRPGCommand.h"
 
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "Actor/TileMap/TileMapModel.h"
@@ -69,4 +70,35 @@ void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChann
 void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex)
 {
 	GetTileActorUnderCursor(World, Channel, FVector2D(-1.0, -1.0), OUT Actor, OUT TileIndex);
+}
+
+void ISRPGCommandHandler::GetTileActorForCommand(UWorld* World,
+	ECollisionChannel Channel, const FSRPGWorldTraceCommand& Command,
+	OUT AActor*& Actor, OUT FTileIndex& TileIndex)
+{
+	check(World != nullptr);
+
+	if (Command.mResolvedTileIndex == FTileIndex::Invalid)
+	{
+		GetTileActorUnderCursor(World, Channel, Command.mScreenPosition,
+			OUT Actor, OUT TileIndex);
+		return;
+	}
+
+	Actor = nullptr;
+	TileIndex = FTileIndex::Invalid;
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(World);
+	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
+	if (TileMap == nullptr || !TileMap->IsValidIndex(Command.mResolvedTileIndex))
+	{
+		return;
+	}
+
+	TileIndex = Command.mResolvedTileIndex;
+	Actor = TileMap->GetView<AActor>();
+	if (UBoardActorModel* Occupant =
+		TileMap->GetActorOnTile<UBoardActorModel>(TileIndex))
+	{
+		Actor = Occupant->GetView<AActor>();
+	}
 }

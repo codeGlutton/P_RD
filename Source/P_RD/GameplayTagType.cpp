@@ -216,23 +216,26 @@ namespace EffectTags
 {
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost,												"GameplayEffect.Cost");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_Cost_PassiveStack,								"GameplayEffect.Cost.PassiveStack");
+	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Immunity,								"GameplayEffect.ActorState.Immunity");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,									"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,										"GameplayEffect.StatusEffect");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,							"GameplayEffect.StatusEffect.Infinite");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration,						"GameplayEffect.StatusEffect.TurnDuration");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff,					"GameplayEffect.StatusEffect.TurnDuration.Buff");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor,				"GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Haste,				"GameplayEffect.StatusEffect.TurnDuration.Buff.Haste");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification,		"GameplayEffect.StatusEffect.TurnDuration.Buff.Fortification");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff,					"GameplayEffect.StatusEffect.TurnDuration.Debuff");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness,		"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion,		"GameplayEffect.StatusEffect.TurnDuration.Debuff.Exhaustion");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Slow,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Slow");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Frail");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Root,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Root");
-	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun,			"GameplayEffect.StatusEffect.TurnDuration.Debuff.Stun");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration,						"GameplayEffect.StatusEffect.RoundDuration");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff,					"GameplayEffect.StatusEffect.RoundDuration.Buff");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor,			"GameplayEffect.StatusEffect.RoundDuration.Buff.Vigor");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff_Haste,			"GameplayEffect.StatusEffect.RoundDuration.Buff.Haste");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification,	"GameplayEffect.StatusEffect.RoundDuration.Buff.Fortification");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff,				"GameplayEffect.StatusEffect.RoundDuration.Debuff");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness,		"GameplayEffect.StatusEffect.RoundDuration.Debuff.Weakness");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability,	"GameplayEffect.StatusEffect.RoundDuration.Debuff.Vulnerability");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion,		"GameplayEffect.StatusEffect.RoundDuration.Debuff.Exhaustion");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Slow,			"GameplayEffect.StatusEffect.RoundDuration.Debuff.Slow");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail,			"GameplayEffect.StatusEffect.RoundDuration.Debuff.Frail");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Root,			"GameplayEffect.StatusEffect.RoundDuration.Debuff.Root");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun,			"GameplayEffect.StatusEffect.RoundDuration.Debuff.Stun");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Debuff_Poison,			"GameplayEffect.StatusEffect.RoundDuration.Debuff.Poison");
 }
 
 namespace CueTags

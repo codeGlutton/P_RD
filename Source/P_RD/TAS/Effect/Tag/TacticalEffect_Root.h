@@ -14,7 +14,7 @@
   * @brief  Root(속박) 이펙트
   */
 UCLASS()
-class P_RD_API UTacticalEffect_Root : public UTacticalEffect_StatusTag
+class P_RD_API UTacticalEffect_Root : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -23,10 +23,22 @@ public:
 };
 
 /**
+ * @brief  Root(속박) 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddRoot : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_AddRoot();
+};
+
+/**
  * @brief  Root(속박) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetRoot : public UTacticalEffect_GetStatusTag
+class P_RD_API UTacticalEffect_GetRoot : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

@@ -298,6 +298,7 @@ namespace EffectTags
 
 	/* 액터 상태 태그들 */
 
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Immunity);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_ActorState_Dead);
 
 	/* 상태 이상 태그들 */
@@ -310,23 +311,24 @@ namespace EffectTags
 
 	/* 턴마다 1씩 감소하는 상태 이상 태그들 */
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Vigor);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Fortification);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Buff_Haste);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Haste);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Exhaustion);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Slow);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Frail);
-	// @brief 속박 - 보유 중엔 이동 불가 (IsMoveable이 매번 계산)
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Root);
-	// @brief 기절 - 보유 중엔 턴 진행 불가
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_TurnDuration_Debuff_Stun);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Exhaustion);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Slow);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Poison);
 }
 
 /**

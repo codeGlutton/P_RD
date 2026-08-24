@@ -635,13 +635,11 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	{
 		UButton* SkillButton = Cast<UButton>(Board->WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("HireDetailSkillButton_%d"), Index))));
-		if (TestNotNull(*FString::Printf(TEXT("스킬 %d 롱프레스 버튼"), Index),
+		if (TestNotNull(*FString::Printf(TEXT("스킬 %d 단일 클릭 버튼"), Index),
 			SkillButton))
 		{
-			TestTrue(*FString::Printf(TEXT("스킬 %d 누름 배선"), Index),
-				SkillButton->OnPressed.IsBound());
-			TestTrue(*FString::Printf(TEXT("스킬 %d 뗌 배선"), Index),
-				SkillButton->OnReleased.IsBound());
+			TestTrue(*FString::Printf(TEXT("스킬 %d 클릭 배선"), Index),
+				SkillButton->OnClicked.IsBound());
 		}
 		UTextBlock* SkillText = Cast<UTextBlock>(Board->WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("HireDetailSkillText_%d"), Index))));
@@ -657,26 +655,16 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 			Index == 0 ? INDEX_NONE : Index - 1);
 	}
 
-	// 두 손가락이 겹치면 이전 슬롯의 release가 나중 슬롯 타이머를 끊으면
-	// 안 된다. 자기 슬롯을 뗐을 때만 현재 롱프레스를 끝낸다.
-	Board->BeginSkillPressForTest(1);
-	Board->BeginSkillPressForTest(2);
-	TestEqual(TEXT("두 번째 손가락이 현재 롱프레스 슬롯"),
-		Board->GetPressedSkillSlotForTest(), 2);
-	Board->ReleaseSkillPressForTest(1);
-	TestEqual(TEXT("오래된 슬롯 release는 현재 누름을 보존"),
-		Board->GetPressedSkillSlotForTest(), 2);
-	TestTrue(TEXT("오래된 슬롯 release 뒤 타이머도 보존"),
-		Board->IsSkillLongPressPendingForTest());
-	Board->ReleaseSkillPressForTest(2);
-	TestEqual(TEXT("현재 슬롯 release는 누름을 종료"),
-		Board->GetPressedSkillSlotForTest(), INDEX_NONE);
-	TestFalse(TEXT("현재 슬롯 release는 타이머를 종료"),
-		Board->IsSkillLongPressPendingForTest());
-
 	for (int32 Index = 1; Index < 6; ++Index)
 	{
-		Board->TriggerSkillLongPressForTest(Index);
+		UButton* SkillButton = Cast<UButton>(Board->WidgetTree->FindWidget(
+			FName(*FString::Printf(TEXT("HireDetailSkillButton_%d"), Index))));
+		if (!TestNotNull(*FString::Printf(TEXT("스킬 %d 클릭 대상"), Index),
+			SkillButton))
+		{
+			return false;
+		}
+		SkillButton->OnClicked.Broadcast();
 		UUserWidget* DetailOverlay = Board->GetSkillDetailOverlayForTest();
 		if (!TestNotNull(*FString::Printf(TEXT("스킬 %d 상세 겹"), Index),
 			DetailOverlay))
@@ -744,7 +732,7 @@ bool FMercenaryHireRuntimeBindingTest::RunTest(const FString& Parameters)
 	KnightOnly[0].mSkillDetails[0].mCriticalDamage = FMath::RoundToInt(
 		KnightOnly[0].mSkillDetails[0].mDamageMax * 1.5f);
 	Board->SetCharacterOptions(KnightOnly, 3);
-	Board->TriggerSkillLongPressForTest(1);
+	Board->TriggerSkillClickForTest(1);
 	/*
 	 * 고용 상세는 이제 전투 HUD와 같은 프레젠터를 그대로 쓴다. 그림을 흉내낸
 	 * 구식 5x5 격자 단언 대신, 같은 변환기(SkillDetailUIBuilder)가 같은 모양을

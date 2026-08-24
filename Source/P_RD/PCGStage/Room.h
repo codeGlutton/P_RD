@@ -16,7 +16,7 @@
  * @brief  방 데이터
  */
 USTRUCT(BlueprintType)
-struct FRoom
+struct P_RD_API FRoom
 {
 	GENERATED_BODY()
 
@@ -59,7 +59,7 @@ public:
  * @brief  보물 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FTreasureRoom : public FRoom
+struct P_RD_API FTreasureRoom : public FRoom
 {
 	GENERATED_BODY()
 
@@ -74,9 +74,9 @@ public:
 	// 상자 개봉 시 지급될 골드
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
 	int32 mRewardMoney = 0;
-	// 상자 개봉 시 지급될 아티팩트 목록
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataIds"))
-	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
+	// 상자 개봉 시 지급될 아티팩트
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataId"))
+	FPrimaryAssetId mRewardArtifactDataId;
 };
 
 USTRUCT(BlueprintType)
@@ -176,7 +176,7 @@ public:
  * @brief  엘리트 몬스터 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FEliteMonsterRoom : public FMonsterRoom
+struct P_RD_API FEliteMonsterRoom : public FMonsterRoom
 {
 	GENERATED_BODY()
 
@@ -188,10 +188,6 @@ public:
 	FText GetDisplayName() const override;
 
 public:
-	// New rooms carry the real three-choice pool. The legacy single field remains
-	// serialized below so existing saves can still be loaded and rewarded.
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataIds"))
-	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
 	FPrimaryAssetId mRewardArtifactDataId;
 };
@@ -200,7 +196,7 @@ public:
  * @brief  엘리트 몬스터 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FBossMonsterRoom : public FMonsterRoom
+struct P_RD_API FBossMonsterRoom : public FMonsterRoom
 {
 	GENERATED_BODY()
 
@@ -214,6 +210,4 @@ public:
 public:
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataIds"))
 	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
-	FPrimaryAssetId mRewardArtifactDataId;
 };
