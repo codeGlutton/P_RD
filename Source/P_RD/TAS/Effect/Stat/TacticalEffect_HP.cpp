@@ -1,11 +1,4 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_HP.cpp
- * @brief  체력(HP) 가감 이펙트 구현
- * @author 이문환
- * @date   2026-06-30
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_HP.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 

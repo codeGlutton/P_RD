@@ -46,7 +46,7 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel) const 
+	virtual TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 	{ 
 		return TArray<FActiveTacticalEffectHandle>();
 	}
@@ -77,3 +77,11 @@ public:
 	int32 mTagGain = 0;
 };
 
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_AttributeTagBase : public FSkillEffectLayer_TagBase
+{
+	GENERATED_BODY()
+
+public:
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+};

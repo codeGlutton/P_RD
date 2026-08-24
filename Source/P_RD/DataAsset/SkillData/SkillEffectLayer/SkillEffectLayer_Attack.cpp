@@ -12,7 +12,7 @@
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
-TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
+TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
@@ -25,10 +25,19 @@ TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(
     {
         const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(AttributeSetComponentModel);
 
+        int32 StatusDamage = (
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength, 0) -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength, 0)
+            );
         int32 SkillDamage = RandomStream.RandRange(mMinDamage, mMaxDamage);
-        const float CriticalRandValue = RandomStream.FRand() * 100.f;
-        const bool IsCritical = CriticalRandValue < AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
 
+        int32 StatusCriticalPercent = (
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny, 0) -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny, 0)
+            );
+        const float CriticalPercent = RandomStream.FRand() * 100.f;
+
+        const bool IsCritical = (CriticalPercent + StatusCriticalPercent) < AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
         if (IsCritical == true)
         {
             SkillDamage = mMaxDamage;
@@ -39,7 +48,7 @@ TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(
         }
 
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = SkillDamage;
+        EffectSpec->mDynamicMagnitude = SkillDamage + StatusDamage;
         EffectHandles.Add(AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec));
     }
 
