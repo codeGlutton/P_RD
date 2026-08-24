@@ -252,8 +252,6 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mDepartLabel = nullptr;
 	/** 상점 고용비용 표기가 폰트를 줄이므로, 복원할 원래 폰트를 첫 변경 전에 보관한다. */
 	TOptional<FSlateFontInfo> mDepartLabelBaseFont;
-	/** 빌더가 구운 광학 오프셋. 폰트를 줄일 때 비례 축소해 다시 건다. */
-	TOptional<FVector2D> mDepartLabelBaseShift;
 	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailName = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailHP = nullptr;

@@ -1,5 +1,6 @@
 #include "UI/Combat/MockCombatDriver.h"
 
+#include "GameplayTagType.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "Engine/Texture2D.h"
 
@@ -63,8 +64,8 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			if (i == 0)
 			{
 				FStatusEffectUI Debuff;
-				Debuff.mTag = FGameplayTag::RequestGameplayTag(TEXT(
-					"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness"));
+				Debuff.mTag = EffectTags::
+					GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness;
 				Debuff.mStackCount = 2;
 				Ally.mStatusEffects.Add(Debuff);
 			}
@@ -105,9 +106,9 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			// 적 머리 위 바도 상태 슬롯을 반드시 검증한다. 첫 적은 취약,
 			// 둘째 적은 활력을 넣어 아군/적 공통 표시 계약을 고정한다.
 			FStatusEffectUI Status;
-			Status.mTag = FGameplayTag::RequestGameplayTag(i == 0
-				? TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability")
-				: TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor"));
+			Status.mTag = i == 0
+				? EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability
+				: EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor;
 			Status.mStackCount = i == 0 ? 2 : 1;
 			Foe.mStatusEffects.Add(Status);
 			Units.Add(Foe);

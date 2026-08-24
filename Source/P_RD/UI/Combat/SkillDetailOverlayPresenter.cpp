@@ -3,19 +3,25 @@
 #include "Actor/TileMap/TileLayer.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/ButtonSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
 #include "Components/ScrollBox.h"
 #include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/Font.h"
+#include "GameFramework/PlayerController.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/DetailOverlayInputShield.h"
 #include "UObject/ConstructorHelpers.h"
@@ -195,9 +201,12 @@ namespace SkillVisualLayout
 		FVector2D(430.f, 609.f), FVector2D(430.f, 651.f) };
 	const FVector2D StatIconSize(34.f, 34.f);
 	const FVector2D StatTextSize(232.f, 36.f);
-	const FVector2D SelectButtonPosition(368.f, 700.f);
-	const FVector2D EffectButtonPosition(368.f, 747.f);
-	const FVector2D RangeButtonSize(316.f, 40.f);
+	// 40px 설계 높이는 1600x590(약 0.55배)에서 실제 22px까지 줄어
+	// 라벨과 터치 영역 모두 지나치게 얇았다. 두 버튼을 하단 프레임 안에서
+	// 56px로 키우고 간격을 다시 잡는다.
+	const FVector2D SelectButtonPosition(368.f, 690.f);
+	const FVector2D EffectButtonPosition(368.f, 752.f);
+	const FVector2D RangeButtonSize(316.f, 56.f);
 	const FVector2D DescriptionPosition(724.f, 278.f);
 	const FVector2D DescriptionSize(778.f, 494.f);
 	const FVector2D DividerPosition(694.f, 274.f);
@@ -259,6 +268,13 @@ namespace SkillVisualLayout
 
 USkillDetailOverlayPresenter::USkillDetailOverlayPresenter()
 {
+	static ConstructorHelpers::FClassFinder<UUserWidget> SkillContentFinder(
+		TEXT("/Game/UI/CombatDetail/WBP_SkillDetailContent"));
+	if (SkillContentFinder.Succeeded())
+	{
+		mSkillDetailContentWidgetClass = SkillContentFinder.Class;
+	}
+
 	/*
 	 * HUD 생성자와 같은 그림을 기본값으로 든다. 호스트가 SetVisualAssets로
 	 * 덮으면 그쪽이 이긴다. 하드 참조라 전투 HUD 없이도 쿡에서 안 빠진다.
@@ -348,10 +364,19 @@ bool USkillDetailOverlayPresenter::EnsureOverlayWidget(
 	{
 		return false;
 	}
-	if (OwningPlayer != nullptr)
+	APlayerController* ResolvedOwningPlayer = OwningPlayer;
+	if (ResolvedOwningPlayer == nullptr)
+	{
+		if (UWorld* World = mWorld.Get())
+		{
+			ResolvedOwningPlayer = World->GetFirstPlayerController();
+		}
+	}
+	if (ResolvedOwningPlayer != nullptr)
 	{
 		mDetailOverlayWidget =
-			CreateWidget<UUserWidget>(OwningPlayer, mDetailOverlayWidgetClass);
+			CreateWidget<UUserWidget>(ResolvedOwningPlayer,
+				mDetailOverlayWidgetClass);
 	}
 	else if (UWorld* World = mWorld.Get())
 	{
@@ -390,7 +415,8 @@ bool USkillDetailOverlayPresenter::EnsureOverlayWidget(
 	 * 먹어서 패널 위를 톡 쳐도 닫히지 않는다. 눌림을 받을 것은 스킬 칸뿐이다.
 	 */
 	static const TCHAR* const DecorativeNames[] = {
-		TEXT("DetailScrimImage"), TEXT("DetailFrameImage"), TEXT("DetailIconImage"),
+		TEXT("DetailScrimBg"), TEXT("DetailScrimImage"),
+		TEXT("DetailFrameImage"), TEXT("DetailIconImage"),
 		TEXT("DetailTitleText"), TEXT("DetailSubtitleText"), TEXT("DetailBodyText") };
 	for (const TCHAR* Name : DecorativeNames)
 	{
@@ -427,11 +453,22 @@ void USkillDetailOverlayPresenter::Teardown()
 		mDetailOverlayWidget = nullptr;
 	}
 	mSkillTacticalDiagramWidget = nullptr;
+	mSkillContentWidget = nullptr;
 	mSkillVisualPreview = nullptr;
+	mSkillIconImage = nullptr;
+	mSkillContentSwitcher = nullptr;
+	mSkillSelectRangePlate = nullptr;
+	mSkillEffectRangePlate = nullptr;
 	mSkillWorldPreviewImage = nullptr;
 	mArtifactDescriptionRoot = nullptr;
 	mArtifactDescriptionScrollBox = nullptr;
 	mArtifactDescriptionText = nullptr;
+	mDetailDesignCanvas = nullptr;
+	mDetailScaleDefaultsCached = false;
+	mLastResponsiveViewportSize = FVector2D::ZeroVector;
+	mLastResponsiveViewportScale = 0.f;
+	mResponsiveDetailActive = false;
+	mResponsiveDetailIsSkill = false;
 	mDefaultDetailFontsCached = false;
 }
 
@@ -461,6 +498,116 @@ bool USkillDetailOverlayPresenter::IsShowing() const
 {
 	return mDetailOverlayWidget != nullptr
 		&& mDetailOverlayWidget->GetVisibility() != ESlateVisibility::Collapsed;
+}
+
+void USkillDetailOverlayPresenter::ApplyResponsiveSkillPanelScale(
+	const bool bSkillDetail)
+{
+	mResponsiveDetailActive = true;
+	mResponsiveDetailIsSkill = bSkillDetail;
+	if (mDetailOverlayWidget == nullptr)
+	{
+		return;
+	}
+
+	if (mDetailDesignCanvas == nullptr)
+	{
+		mDetailDesignCanvas = Cast<UCanvasPanel>(
+			mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailResponsiveCanvas")));
+	}
+
+	if (mDetailDesignCanvas == nullptr)
+	{
+		return;
+	}
+	if (mDetailScaleDefaultsCached == false)
+	{
+		mDefaultDetailDesignScale =
+			mDetailDesignCanvas->GetRenderTransform().Scale;
+		mDefaultDetailDesignTranslation =
+			mDetailDesignCanvas->GetRenderTransform().Translation;
+		mDefaultDetailDesignPivot = mDetailDesignCanvas->GetRenderTransformPivot();
+		mDetailScaleDefaultsCached = true;
+	}
+
+	// 실제 반응형 배율은 WBP의 DetailResponsiveScale(ScaleToFit)이 담당한다.
+	// 여기서 루트 Canvas를 다시 RenderScale 하면 DPI 배율과 중복되어 폴드/태블릿에서
+	// 판이 커지고 닫기 버튼이 화면 밖으로 잘린다. 디자인 Canvas는 항상 원본 transform이다.
+	mDetailDesignCanvas->SetRenderTransformPivot(mDefaultDetailDesignPivot);
+	mDetailDesignCanvas->SetRenderTranslation(mDefaultDetailDesignTranslation);
+	mDetailDesignCanvas->SetRenderScale(mDefaultDetailDesignScale);
+
+	const FVector2D ViewportSize =
+		UWidgetLayoutLibrary::GetViewportSize(mDetailOverlayWidget);
+	if (mDetailOverlayWidget->GetOwningPlayer() == nullptr
+		|| ViewportSize.X <= 0.f || ViewportSize.Y <= 0.f)
+	{
+		// WidgetRenderer 자동화처럼 소유 플레이어/GameViewport가 없는 경로에서는
+		// 위치 보정을 계산할 수 없다. authored 1920 위치와 배율을 그대로 쓴다.
+		return;
+	}
+
+	const float ViewportScale = FMath::Max(KINDA_SMALL_NUMBER,
+		UWidgetLayoutLibrary::GetViewportScale(mDetailOverlayWidget));
+	const float ResponsiveScale = bSkillDetail
+		? CalculateResponsiveSkillPanelScale(ViewportSize, ViewportScale)
+		: CalculateResponsiveDetailPanelScale(ViewportSize, ViewportScale);
+	const FVector2D LogicalViewport = ViewportSize / ViewportScale;
+	const FVector2D DesignSize(1920.f, 1080.f);
+	const FVector2D PresentedDesignSize = DesignSize * ResponsiveScale;
+	mLastResponsiveViewportSize = ViewportSize;
+	mLastResponsiveViewportScale = ViewportScale;
+	mDetailOverlayWidget->ForceLayoutPrepass();
+	UE_LOG(LogTemp, Display,
+		TEXT("RD_DETAIL_RESPONSIVE viewport=%.0fx%.0f dpi=%.3f logical=%.0fx%.0f fit=%.3f letterbox=%.0f,%.0f skill=%d"),
+		ViewportSize.X, ViewportSize.Y, ViewportScale,
+		LogicalViewport.X, LogicalViewport.Y, ResponsiveScale,
+		(LogicalViewport.X - PresentedDesignSize.X) * .5f,
+		(LogicalViewport.Y - PresentedDesignSize.Y) * .5f,
+		bSkillDetail ? 1 : 0);
+}
+
+float USkillDetailOverlayPresenter::CalculateResponsiveDetailPanelScale(
+	const FVector2D ViewportSize, const float ViewportScale)
+{
+	if (ViewportSize.X <= 0.f || ViewportSize.Y <= 0.f
+		|| ViewportScale <= KINDA_SMALL_NUMBER)
+	{
+		return 1.f;
+	}
+	const FVector2D LogicalViewport = ViewportSize / ViewportScale;
+	const float FitScale = FMath::Min(LogicalViewport.X / 1920.f,
+		LogicalViewport.Y / 1080.f);
+	// 4K에서 원화를 무한히 키우지는 않되 폴드의 2176 폭은 자연스럽게 채운다.
+	return FMath::Clamp(FitScale, .5f, 1.25f);
+}
+
+float USkillDetailOverlayPresenter::CalculateResponsiveSkillPanelScale(
+	const FVector2D ViewportSize, const float ViewportScale)
+{
+	// 스킬도 닫기 단추와 설명 스크롤까지 전부 보여야 한다. 판 내부만 기준으로
+	// 다시 키우면 폴드에서 1.5배가 되어 하단 조작부가 화면 밖으로 밀린다.
+	return CalculateResponsiveDetailPanelScale(ViewportSize, ViewportScale);
+}
+
+void USkillDetailOverlayPresenter::RefreshResponsiveLayout()
+{
+	if (mResponsiveDetailActive == false || IsShowing() == false
+		|| mDetailOverlayWidget == nullptr
+		|| mDetailOverlayWidget->GetOwningPlayer() == nullptr)
+	{
+		return;
+	}
+	const FVector2D ViewportSize =
+		UWidgetLayoutLibrary::GetViewportSize(mDetailOverlayWidget);
+	const float ViewportScale = FMath::Max(KINDA_SMALL_NUMBER,
+		UWidgetLayoutLibrary::GetViewportScale(mDetailOverlayWidget));
+	if (ViewportSize.Equals(mLastResponsiveViewportSize, .5f)
+		&& FMath::IsNearlyEqual(ViewportScale, mLastResponsiveViewportScale, .001f))
+	{
+		return;
+	}
+	ApplyResponsiveSkillPanelScale(mResponsiveDetailIsSkill);
 }
 
 void USkillDetailOverlayPresenter::ApplyReadableDetailTypography(const bool bReadable)
@@ -604,6 +751,9 @@ void USkillDetailOverlayPresenter::ShowDetailRightBlock(const UWidget* Wanted)
  */
 void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactTwoColumn)
 {
+	// 유닛/상태/아티팩트가 스킬 뒤에 같은 WBP를 재사용할 때 스킬 전용 DPI
+	// 보정을 물려받지 않게 공용 배치 진입점에서 authored 배율로 먼저 돌린다.
+	ApplyResponsiveSkillPanelScale(false);
 	// 스킬 전용 런타임 도식은 다른 상세 화면으로 넘어갈 때 반드시 먼저 걷는다.
 	SetSkillVisualPreviewShown(false);
 	// 아티팩트 전용 효과 스크롤도 같은 규칙 -- 다음 상세가 이어받지 않게 걷는다.
@@ -634,6 +784,9 @@ void USkillDetailOverlayPresenter::ApplyDetailColumnLayout(const bool bArtifactT
 			FVector2D(300.f, 300.f));
 		SetCanvasRect(mDetailIconImage, FVector2D(365.f, 273.f),
 			FVector2D(204.f, 204.f));
+		DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
+			TEXT("DetailIconFrame")), true);
+		DetailSetShown(mDetailIconImage, true);
 		SetCanvasRect(mDetailOverlayWidget->GetWidgetFromName(
 			TEXT("DetailSubtitleText_Center")), FVector2D(611.f, 231.f),
 			FVector2D(910.f, 106.f));
@@ -780,9 +933,198 @@ void USkillDetailOverlayPresenter::ClearDetailGrids()
 	DetailSetTextIfPresent(mDetailEffectBlockerText, FText::GetEmpty());
 }
 
+bool USkillDetailOverlayPresenter::BindAuthoredSkillContent()
+{
+	if (mSkillContentWidget != nullptr)
+	{
+		return mSkillVisualPreview != nullptr;
+	}
+	if (mDetailOverlayWidget == nullptr)
+	{
+		return false;
+	}
+	if (mSkillDetailContentWidgetClass == nullptr)
+	{
+		mSkillDetailContentWidgetClass = LoadClass<UUserWidget>(nullptr,
+			TEXT("/Game/UI/CombatDetail/WBP_SkillDetailContent."
+				"WBP_SkillDetailContent_C"));
+	}
+	if (mSkillDetailContentWidgetClass == nullptr)
+	{
+		return false;
+	}
+
+	if (APlayerController* Owner = mDetailOverlayWidget->GetOwningPlayer())
+	{
+		mSkillContentWidget = CreateWidget<UUserWidget>(Owner,
+			mSkillDetailContentWidgetClass);
+	}
+	else if (UWorld* World = mWorld.Get())
+	{
+		mSkillContentWidget = CreateWidget<UUserWidget>(World,
+			mSkillDetailContentWidgetClass);
+	}
+	if (mSkillContentWidget == nullptr)
+	{
+		return false;
+	}
+
+	UCanvasPanel* Host = Cast<UCanvasPanel>(
+		mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailResponsiveCanvas")));
+	if (Host == nullptr)
+	{
+		Host = Cast<UCanvasPanel>(
+			mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailPanelRoot")));
+	}
+	if (Host == nullptr)
+	{
+		mSkillContentWidget = nullptr;
+		return false;
+	}
+	if (UCanvasPanelSlot* Slot = Host->AddChildToCanvas(mSkillContentWidget))
+	{
+		// 이 한 사각형만 공용 프레임 좌표에 둔다. 내부 배치는 전부
+		// WBP_SkillDetailContent의 1230x563 디자이너가 소유한다.
+		Slot->SetAnchors(FAnchors(0.f));
+		Slot->SetAlignment(FVector2D::ZeroVector);
+		Slot->SetAutoSize(false);
+		Slot->SetPosition(FVector2D(344.f, 254.f));
+		Slot->SetSize(FVector2D(1230.f, 563.f));
+		Slot->SetZOrder(40);
+	}
+
+	mSkillVisualPreview = Cast<UCanvasPanel>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillDetailContentRoot")));
+	mSkillIconImage = Cast<UImage>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillIconImage")));
+	mSkillDescriptionScrollBox = Cast<UScrollBox>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillDescriptionScroll")));
+	mSkillDescriptionText = Cast<UTextBlock>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillDescriptionText")));
+	mSkillContentSwitcher = Cast<UWidgetSwitcher>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillContentSwitcher")));
+	mSkillSelectRangeButton = Cast<UButton>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillSelectRangeButton")));
+	mSkillEffectRangeButton = Cast<UButton>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillEffectRangeButton")));
+	mSkillSelectRangeText = Cast<UTextBlock>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillSelectRangeText")));
+	mSkillEffectRangeText = Cast<UTextBlock>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillEffectRangeText")));
+	mSkillSelectRangePlate = Cast<UImage>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillSelectRangePlate")));
+	mSkillEffectRangePlate = Cast<UImage>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillEffectRangePlate")));
+	mSkillWorldPreviewImage = Cast<UImage>(
+		mSkillContentWidget->GetWidgetFromName(TEXT("SkillWorldPreview")));
+
+	auto ResolveHudTexture = [this](const FName SourceWidgetName,
+		UTexture2D* Fallback) -> UTexture2D*
+	{
+		if (mStatTextureResolver.IsBound())
+		{
+			if (UTexture2D* Texture = mStatTextureResolver.Execute(
+				SourceWidgetName, Fallback))
+			{
+				return Texture;
+			}
+		}
+		return Fallback;
+	};
+	UTexture2D* StatTextures[SkillPreviewStatCount] = {
+		ResolveHudTexture(TEXT("CommandCostBadge_0"), mSkillVisualAPIconTexture),
+		mSkillVisualDamageIconTexture,
+		ResolveHudTexture(TEXT("CommandCooldownBadge_0"),
+			mSkillVisualCooldownIconTexture),
+		mSkillVisualCriticalIconTexture };
+	mSkillVisualStatIcons.Reset();
+	mSkillVisualStatTexts.Reset();
+	for (int32 Index = 0; Index < SkillPreviewStatCount; ++Index)
+	{
+		UImage* Icon = Cast<UImage>(mSkillContentWidget->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("SkillStatIcon_%d"), Index))));
+		if (Icon != nullptr && StatTextures[Index] != nullptr)
+		{
+			Icon->SetBrushFromTexture(StatTextures[Index], false);
+		}
+		mSkillVisualStatIcons.Add(Icon);
+		mSkillVisualStatTexts.Add(Cast<UTextBlock>(
+			mSkillContentWidget->GetWidgetFromName(FName(*FString::Printf(
+				TEXT("SkillStatText_%d"), Index)))));
+	}
+
+	if (mSkillSelectRangeButton != nullptr)
+	{
+		mSkillSelectRangeButton->OnClicked.AddUniqueDynamic(this,
+			&USkillDetailOverlayPresenter::HandleSkillSelectRangeButtonClicked);
+	}
+	if (mSkillEffectRangeButton != nullptr)
+	{
+		mSkillEffectRangeButton->OnClicked.AddUniqueDynamic(this,
+			&USkillDetailOverlayPresenter::HandleSkillEffectRangeButtonClicked);
+	}
+
+	if (mSkillTacticalDiagramWidgetClass != nullptr)
+	{
+		if (APlayerController* Owner = mDetailOverlayWidget->GetOwningPlayer())
+		{
+			mSkillTacticalDiagramWidget =
+				CreateWidget<USkillTacticalDiagramWidget>(Owner,
+					mSkillTacticalDiagramWidgetClass);
+		}
+		else if (UWorld* World = mWorld.Get())
+		{
+			mSkillTacticalDiagramWidget =
+				CreateWidget<USkillTacticalDiagramWidget>(World,
+					mSkillTacticalDiagramWidgetClass);
+		}
+		UOverlay* TacticalHost = Cast<UOverlay>(
+			mSkillContentWidget->GetWidgetFromName(TEXT("SkillTacticalHost")));
+		if (mSkillTacticalDiagramWidget != nullptr && TacticalHost != nullptr)
+		{
+			TacticalHost->AddChildToOverlay(mSkillTacticalDiagramWidget);
+			if (UOverlaySlot* Slot = Cast<UOverlaySlot>(
+				mSkillTacticalDiagramWidget->Slot))
+			{
+				Slot->SetPadding(FMargin(0.f));
+				Slot->SetHorizontalAlignment(HAlign_Fill);
+				Slot->SetVerticalAlignment(VAlign_Fill);
+			}
+			mSkillTacticalDiagramWidget->OnPreviewVisibilityChanged().AddUObject(
+				this, &USkillDetailOverlayPresenter::
+					HandleSkillTacticalPreviewVisibilityChanged);
+			mSkillTacticalDiagramWidget->SetVisibility(
+				ESlateVisibility::SelfHitTestInvisible);
+			for (const TCHAR* WidgetName : {
+				TEXT("TacticalDiagramBackdrop"), TEXT("TacticalLegendRule"),
+				TEXT("TacticalSelectLegendButton"),
+				TEXT("TacticalEffectLegendButton") })
+			{
+				DetailSetShown(
+					mSkillTacticalDiagramWidget->GetWidgetFromName(WidgetName), false);
+			}
+		}
+	}
+
+	if (mSkillContentSwitcher != nullptr)
+	{
+		mSkillContentSwitcher->SetActiveWidgetIndex(0);
+	}
+	RefreshSkillRangeButtonStyles();
+	DetailSetShown(mSkillVisualPreview, false);
+	UE_LOG(LogTemp, Display,
+		TEXT("RD_SKILL_DETAIL_CONTENT bound asset=%s host=%s authored=1"),
+		*mSkillContentWidget->GetClass()->GetPathName(), *Host->GetName());
+	return mSkillVisualPreview != nullptr;
+}
+
 /** @brief 이미지 시안의 수치 메달/통합 전술 보드를 실제 상세 WBP 인스턴스에 짓는다. */
 void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 {
+	if (BindAuthoredSkillContent())
+	{
+		return;
+	}
 	if (mSkillVisualPreview != nullptr || mDetailOverlayWidget == nullptr
 		|| mDetailOverlayWidget->WidgetTree == nullptr)
 	{
@@ -1033,17 +1375,32 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 			Slot->SetZOrder(12);
 		}
 		// 별도 생성한 얇은 투명 PNG를 실제 버튼 브러시로 쓴다. 원본의 가로형
-		// 비율을 거의 유지한 316x40으로 키워 시인성과 터치 면적을 함께 확보한다.
+		// 비율을 유지한 316x56으로 키워 초광폭 모바일에서도 읽을 높이를 확보한다.
 		Button->SetStyle(SkillVisualLayout::MakeRangeButtonStyle(
 			mSkillRangeButtonTexture, mSkillRangeButtonSelectedTexture, false));
 		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
 		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
 		Button->SetVisibility(ESlateVisibility::Visible);
 
+		UScaleBox* AutoFit = Tree->ConstructWidget<UScaleBox>(
+			UScaleBox::StaticClass(), FName(*FString::Printf(TEXT("%s_AutoFit"),
+				*TextName.ToString())));
+		AutoFit->SetStretch(EStretch::ScaleToFitX);
+		AutoFit->SetStretchDirection(EStretchDirection::DownOnly);
+		AutoFit->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		AutoFit->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Button->SetContent(AutoFit);
+		if (UButtonSlot* AutoFitSlot = Cast<UButtonSlot>(AutoFit->Slot))
+		{
+			AutoFitSlot->SetHorizontalAlignment(HAlign_Fill);
+			AutoFitSlot->SetVerticalAlignment(VAlign_Fill);
+			AutoFitSlot->SetPadding(FMargin(0.f));
+		}
+
 		OutText = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TextName);
 		FSlateFontInfo ButtonFont = mDetailBodyText != nullptr
 			? mDetailBodyText->GetFont() : FSlateFontInfo();
-		ButtonFont.Size = 22;
+		ButtonFont.Size = 24;
 		OutText->SetFont(ButtonFont);
 		OutText->SetColorAndOpacity(FSlateColor(
 			FLinearColor(0.96f, 0.91f, 0.80f, 1.f)));
@@ -1051,12 +1408,11 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 		OutText->SetShadowColorAndOpacity(FLinearColor(0.f, 0.f, 0.f, .9f));
 		OutText->SetShadowOffset(FVector2D(1.5f, 1.5f));
 		OutText->SetVisibility(ESlateVisibility::HitTestInvisible);
-		Button->SetContent(OutText);
-		if (UButtonSlot* TextSlot = Cast<UButtonSlot>(OutText->Slot))
+		AutoFit->SetContent(OutText);
+		if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(OutText->Slot))
 		{
-			TextSlot->SetHorizontalAlignment(HAlign_Fill);
+			TextSlot->SetHorizontalAlignment(HAlign_Center);
 			TextSlot->SetVerticalAlignment(VAlign_Center);
-			TextSlot->SetPadding(FMargin(0.f));
 		}
 		return Button;
 	};
@@ -1219,13 +1575,25 @@ void USkillDetailOverlayPresenter::RefreshSkillRangeButtonStyles()
 		&& mSkillTacticalDiagramWidget->IsSelectRangePreviewShown();
 	const bool bEffectActive = mSkillTacticalDiagramWidget != nullptr
 		&& mSkillTacticalDiagramWidget->IsEffectRangePreviewShown();
-	if (mSkillSelectRangeButton != nullptr)
+	if (mSkillSelectRangePlate != nullptr)
+	{
+		mSkillSelectRangePlate->SetBrushFromTexture(
+			bSelectActive && mSkillRangeButtonSelectedTexture != nullptr
+				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture, false);
+	}
+	else if (mSkillSelectRangeButton != nullptr)
 	{
 		mSkillSelectRangeButton->SetStyle(SkillVisualLayout::MakeRangeButtonStyle(
 			mSkillRangeButtonTexture, mSkillRangeButtonSelectedTexture,
 			bSelectActive));
 	}
-	if (mSkillEffectRangeButton != nullptr)
+	if (mSkillEffectRangePlate != nullptr)
+	{
+		mSkillEffectRangePlate->SetBrushFromTexture(
+			bEffectActive && mSkillRangeButtonSelectedTexture != nullptr
+				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture, false);
+	}
+	else if (mSkillEffectRangeButton != nullptr)
 	{
 		mSkillEffectRangeButton->SetStyle(SkillVisualLayout::MakeRangeButtonStyle(
 			mSkillRangeButtonTexture, mSkillRangeButtonSelectedTexture,
@@ -1242,6 +1610,10 @@ void USkillDetailOverlayPresenter::HandleSkillTacticalPreviewVisibilityChanged(
 	{
 		mSkillDescriptionScrollBox->SetVisibility(bPreviewShown
 			? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+	}
+	if (mSkillContentSwitcher != nullptr)
+	{
+		mSkillContentSwitcher->SetActiveWidgetIndex(bPreviewShown ? 1 : 0);
 	}
 	DetailSetShown(mDetailBodyText, false);
 	RefreshSkillRangeButtonStyles();
@@ -1434,14 +1806,12 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	}
 	ApplyReadableDetailTypography(true);
 	ApplyDetailColumnLayout(false);
-	// 선택 시안처럼 아이콘을 왼쪽 열의 주인공으로 키우고, 네 개 수치와 두
-	// 범위 버튼은 그 아래 같은 기준선에 세로로 맞춘다.
-	SetCanvasRect(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIconFrame")),
-		FVector2D(374.f, 264.f), FVector2D(264.f, 264.f));
-	SetCanvasRect(mDetailIconImage, FVector2D(416.f, 306.f),
-		FVector2D(180.f, 180.f));
-	// 내부 양피지 판은 걷고, 같은 공간에 실제 데이터로 갱신되는 메달과 전술
-	// 보드를 얹는다. 외곽 WBP는 그대로 두어 다른 상세 화면의 구조와 충돌하지 않는다.
+	ApplyResponsiveSkillPanelScale(true);
+	// 스킬 내부 정보면은 WBP_SkillDetailContent가 전부 소유한다. 공용 상세판의
+	// 레거시 아이콘/양피지는 스킬 상태에서만 접고 다른 상세에서는 복구한다.
+	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
+		TEXT("DetailIconFrame")), false);
+	DetailSetShown(mDetailIconImage, false);
 	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailIdentityPlate")), false);
 	DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailStatsPlate")), false);
 	DetailSetShown(mDetailSubtitleText, false);
@@ -1499,20 +1869,6 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 			*DetailDescribeBlocker(Detail.mTargeting.mEffectBlockerMask));
 	}
 	DetailSetTextIfPresent(mDetailBodyText, FText::FromString(Body));
-	if (mDetailBodyText != nullptr)
-	{
-		mDetailBodyText->SetAutoWrapText(true);
-		mDetailBodyText->SetWrapTextAt(800.f);
-		mDetailBodyText->SetJustification(ETextJustify::Left);
-		if (UWidget* BodyMount = mDetailBodyText->GetParent())
-		{
-			if (UCanvasPanelSlot* BodySlot = Cast<UCanvasPanelSlot>(BodyMount->Slot))
-			{
-				BodySlot->SetPosition(FVector2D(631.f, 347.f));
-				BodySlot->SetSize(FVector2D(844.f, 145.f));
-			}
-		}
-	}
 	UpdateSkillVisualPreview(Detail);
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다. 실제
 	// 스킬 화면은 오른쪽 ScrollBox를 사용해 긴 설명과 차단 규칙을 모두 담는다.
@@ -1520,7 +1876,7 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	DetailSetShown(mDetailBodyText, false);
 	SetSkillVisualPreviewShown(true);
 
-	DetailSetPortraitCropped(mDetailIconImage, Detail.mIcon);
+	DetailSetPortraitCropped(mSkillIconImage, Detail.mIcon);
 	// 자기는 눌림을 안 받고 스킬 칸만 받는다. 그래서 칸 밖을 톡 치면 눌림이
 	// 호스트까지 내려가 패널이 닫힌다.
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);

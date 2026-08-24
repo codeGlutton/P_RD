@@ -202,6 +202,49 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Leshy_Vine_Roots);
 #pragma endregion
 
+	// 스테이지 2
+#pragma region Skeleton_Melee
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Melee_Punch);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Melee_BoneStrike);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Melee_Clatter);
+#pragma endregion
+
+#pragma region Skeleton_Ranged
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Ranged_Shot);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Ranged_ClaimtheBone);
+#pragma endregion
+
+#pragma region Bat
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Bat_Bodyslam);
+
+#pragma endregion
+
+#pragma region Mimic
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Mimic_Surprise);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Mimic_Bite);
+#pragma endregion
+
+#pragma region Pumpkin
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Pumpkin_ScytheSwing);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Pumpkin_NastyTrick);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Pumpkin_ScytheSweep);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Pumpkin_Chop);
+#pragma endregion
+
+#pragma region HatchetBird
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_HatchetBird_AxeSlam);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_HatchetBird_BladeWind);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_HatchetBird_BladeStorm);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_HatchetBird_Haste);
+#pragma endregion
+
+#pragma region Skeleton_Golem
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Golem_Swing);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Golem_Kick);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Golem_Stamp);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Monster_Skeleton_Golem_Howl);
+#pragma endregion
+
 #pragma endregion
 
 

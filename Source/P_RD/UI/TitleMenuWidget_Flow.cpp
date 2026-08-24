@@ -86,6 +86,20 @@ namespace
 		SetWidgetAndGeneratedParentVisibility(const_cast<UUserWidget*>(Owner)->GetWidgetFromName(WidgetName), Visibility);
 	}
 
+	/** @brief 장식 위젯만 표시 상태를 바꾸고, 같은 Mount를 공유하는 버튼의 히트 테스트는 건드리지 않는다. */
+	void SetNamedWidgetVisibilityOnly(const UUserWidget* Owner, const FName WidgetName, ESlateVisibility Visibility)
+	{
+		if (Owner == nullptr)
+		{
+			return;
+		}
+
+		if (UWidget* Widget = const_cast<UUserWidget*>(Owner)->GetWidgetFromName(WidgetName))
+		{
+			Widget->SetVisibility(Visibility);
+		}
+	}
+
 	void SetNamedText(const UUserWidget* Owner, const FName WidgetName, const FText& Text)
 	{
 		if (Owner == nullptr)
@@ -148,6 +162,9 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 {
 	const bool bCanContinueRun = CanContinueRun();
 	const ESlateVisibility ContinueVisibility = bCanContinueRun ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
+	const ESlateVisibility ContinueDecorationVisibility = bCanContinueRun
+		? ESlateVisibility::HitTestInvisible
+		: ESlateVisibility::Collapsed;
 
 	// 프로필 위젯을 쓰는 판인지 본다. 전에는 스위처가 있느냐로 물었는데,
 	// 스위처는 벌이 여럿일 때만 있던 것이고 이제 한 벌뿐이라 없앴다.
@@ -174,24 +191,38 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 
 		for (const FName ProfileName : TitleLayoutProfiles)
 		{
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonFrameImage"), ProfileName), ESlateVisibility::Visible);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), ESlateVisibility::Visible);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), ESlateVisibility::Visible);
+			// 프로필 위젯은 모두 같은 16:9 ScaleBox 아래에 있다. 여기서 "캔버스 조상"까지
+			// visibility를 전파하면 로고의 조상이 전체 ScaleBox로 잡혀 모든 자식 버튼의
+			// 히트 테스트가 함께 꺼질 수 있다. 프로필 요소는 반드시 자기 자신만 바꾼다.
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("TitleLogoImage"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("StartButtonFrameImage"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), ESlateVisibility::HitTestInvisible);
 			SetNamedText(this, MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName), mNewStartButtonText);
 			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("StartButton"), ProfileName), true);
 
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButtonFrameImage"), ProfileName), ContinueVisibility);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName), ContinueVisibility);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName), ContinueVisibility);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName), ContinueVisibility);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ContinueButtonFrameImage"), ProfileName), ContinueDecorationVisibility);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName), ContinueDecorationVisibility);
 			SetNamedText(this, MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName), mContinueButtonText);
 			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("ContinueButton"), ProfileName), bCanContinueRun);
 
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButtonFrameImage"), ProfileName), ESlateVisibility::Visible);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), ESlateVisibility::Visible);
-			SetNamedWidgetAndGeneratedParentVisibility(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("SettingsButtonFrameImage"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), ESlateVisibility::HitTestInvisible);
 			SetNamedText(this, MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName), mSettingsButtonText);
 			SetNamedButtonEnabled(this, MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName), true);
+
+			// EXIT과 버전 표기도 장식이 버튼/화면 입력을 가로채지 않게 한다.
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ExitButton"), ProfileName), ESlateVisibility::Visible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ExitButtonFrameImage"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("ExitButtonText"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("VersionPlateImage"), ProfileName), ESlateVisibility::HitTestInvisible);
+			SetNamedWidgetVisibilityOnly(this, MakeProfileWidgetName(TEXT("VersionText"), ProfileName), ESlateVisibility::HitTestInvisible);
 		}
+
+		// 부모는 자기 자신만 입력에서 빠지고 자식 버튼은 계속 입력받아야 한다.
+		SetNamedWidgetVisibilityOnly(this, TEXT("TitleLayoutScaleBox_base_16_9"), ESlateVisibility::SelfHitTestInvisible);
 
 		// 세이브가 없어 CONTINUE가 숨겨지면, 캔버스 절대배치라 리플로우가 안 돼 NEW START만 위 슬롯에 홀로 떠 보인다.
 		// 이때 NEW START(프레임/버튼/텍스트)를 비어 있는 CONTINUE 슬롯 위치로 내려 SETTING/EXIT 묶음과 붙인다.

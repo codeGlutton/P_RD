@@ -5,13 +5,21 @@
  *********************************************************************/
 
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/PanelWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/ScaleBox.h"
+#include "Components/ScaleBoxSlot.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/LightComponent.h"
 #include "Components/PointLightComponent.h"
@@ -40,6 +48,7 @@
 #include "TextureCompiler.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/Layout/SBox.h"
@@ -86,6 +95,21 @@ namespace CombatDetailCaptureTests
 				]
 			];
 	}
+
+	struct FCaptureSlateCache
+	{
+		TMap<UUserWidget*, TSharedPtr<SWidget>> Widgets;
+
+		TSharedRef<SWidget> Take(UUserWidget& Widget)
+		{
+			TSharedPtr<SWidget>& Cached = Widgets.FindOrAdd(&Widget);
+			if (Cached.IsValid() == false)
+			{
+				Cached = Widget.TakeWidget();
+			}
+			return Cached.ToSharedRef();
+		}
+	};
 
 	int32 MakeTexturesResident(UUserWidget* UserWidget)
 	{
@@ -141,7 +165,7 @@ namespace CombatDetailCaptureTests
 	}
 
 	bool Capture(UCombatLayoutHUDWidget& HUD, UUserWidget* Foreground,
-		const TCHAR* FileName, FString& OutError)
+		FCaptureSlateCache& SlateCache, const TCHAR* FileName, FString& OutError)
 	{
 		HUD.SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		HUD.ForceLayoutPrepass();
@@ -158,13 +182,15 @@ namespace CombatDetailCaptureTests
 		];
 		Root->AddSlot()
 		[
-			ScaleToCapture(HUD.TakeWidget())
+			ScaleToCapture(SlateCache.Take(HUD))
 		];
 		if (Foreground != nullptr)
 		{
+			// 상세판은 HUD 위에 별도 루트로 올라간다. 설명/사정/영향 상태를
+			// 연속 캡처하므로 첫 DrawWidget 뒤에도 같은 Slate 인스턴스를 유지한다.
 			Root->AddSlot()
 			[
-				ScaleToCapture(Foreground->TakeWidget())
+				ScaleToCapture(SlateCache.Take(*Foreground))
 			];
 		}
 
@@ -608,6 +634,212 @@ namespace CombatDetailCaptureTests
 	}
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkillDetailResponsiveScaleTest,
+	"P_RD.UI.CombatDetails.ResponsiveScale",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FSkillDetailResponsiveScaleTest::RunTest(const FString& Parameters)
+{
+	TestTrue(TEXT("16:9에서는 1920 디자인 배율 유지"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveSkillPanelScale(
+				FVector2D(1920.f, 1080.f), 1.f), 1.f, .0001f));
+	TestTrue(TEXT("축소 렌더 폴드는 전역 DPI 이후 이중 확대하지 않음"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveSkillPanelScale(
+				FVector2D(1296.f, 1080.f), 1296.f / 1920.f),
+			1.f, 0.0001f));
+	TestTrue(TEXT("초광폭 저해상도도 전역 높이 DPI 이후 배율 유지"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveSkillPanelScale(
+				FVector2D(1600.f, 590.f), 590.f / 1080.f),
+			1.f, .0001f));
+	TestTrue(TEXT("일반 상세도 16:9 디자인 배율 유지"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveDetailPanelScale(
+				FVector2D(1920.f, 1080.f), 1.f),
+			1.f, .0001f));
+	TestTrue(TEXT("축소 렌더 폴드 일반 상세도 이중 확대하지 않음"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveDetailPanelScale(
+				FVector2D(1296.f, 1080.f), 1296.f / 1920.f),
+			1.f, .0001f));
+	TestTrue(TEXT("초광폭 일반 상세도 전역 DPI 이후 배율 유지"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveDetailPanelScale(
+				FVector2D(1600.f, 590.f), 590.f / 1080.f),
+			1.f, .0001f));
+	TestTrue(TEXT("실제 Fold5 해상도는 전체 디자인을 약 13% 확대해 중앙 배치"),
+		FMath::IsNearlyEqual(
+			USkillDetailOverlayPresenter::CalculateResponsiveSkillPanelScale(
+				FVector2D(2176.f, 1812.f), 1.f),
+			2176.f / 1920.f, .0001f));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatDetailResponsiveTreeTest,
+	"P_RD.UI.CombatDetails.ResponsiveTree",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCombatDetailResponsiveTreeTest::RunTest(const FString& Parameters)
+{
+	UClass* OverlayClass = LoadClass<UUserWidget>(nullptr,
+		TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay.WBP_CombatDetailOverlay_C"));
+	UWidgetBlueprintGeneratedClass* Generated =
+		Cast<UWidgetBlueprintGeneratedClass>(OverlayClass);
+	UWidgetTree* Tree = Generated != nullptr
+		? Generated->GetWidgetTreeArchetype() : nullptr;
+	if (!TestNotNull(TEXT("공용 상세 WBP 위젯 트리"), Tree))
+	{
+		return false;
+	}
+	UWidget* Root = Tree->FindWidget(TEXT("DetailPanelRoot"));
+	UScaleBox* Scale = Cast<UScaleBox>(Tree->FindWidget(TEXT("DetailResponsiveScale")));
+	USizeBox* Size = Cast<USizeBox>(Tree->FindWidget(TEXT("DetailResponsiveDesignSize")));
+	UCanvasPanel* Canvas = Cast<UCanvasPanel>(
+		Tree->FindWidget(TEXT("DetailResponsiveCanvas")));
+	if (TestNotNull(TEXT("상세 루트"), Root)
+		&& TestNotNull(TEXT("상세 자동 맞춤 ScaleBox"), Scale))
+	{
+		TestEqual(TEXT("ScaleBox는 전체 화면 루트 바로 아래"),
+			static_cast<UWidget*>(Scale->GetParent()), Root);
+		TestEqual(TEXT("상세 자동 맞춤 방식"), Scale->GetStretch(),
+			EStretch::ScaleToFit);
+	}
+	if (TestNotNull(TEXT("1920x1080 디자인 SizeBox"), Size))
+	{
+		TestEqual(TEXT("디자인 폭"), Size->GetWidthOverride(), 1920.f);
+		TestEqual(TEXT("디자인 높이"), Size->GetHeightOverride(), 1080.f);
+		TestEqual(TEXT("SizeBox는 ScaleBox 콘텐츠"),
+			static_cast<UWidget*>(Size->GetParent()), static_cast<UWidget*>(Scale));
+	}
+	if (TestNotNull(TEXT("상세 디자인 Canvas"), Canvas))
+	{
+		TestEqual(TEXT("Canvas는 SizeBox 콘텐츠"),
+			static_cast<UWidget*>(Canvas->GetParent()), static_cast<UWidget*>(Size));
+		if (UWidget* Frame = Tree->FindWidget(TEXT("DetailFrameImage")))
+		{
+			TestEqual(TEXT("프레임은 반응형 Canvas 안에 있음"),
+				static_cast<UWidget*>(Frame->GetParent()), static_cast<UWidget*>(Canvas));
+		}
+	}
+	for (const FName RootChildName : { FName(TEXT("DetailScrimBg")),
+		FName(TEXT("DetailCloseCatch")) })
+	{
+		if (UWidget* RootChild = Tree->FindWidget(RootChildName))
+		{
+			TestEqual(*FString::Printf(TEXT("%s는 전 화면 루트 유지"),
+				*RootChildName.ToString()),
+				static_cast<UWidget*>(RootChild->GetParent()), Root);
+		}
+	}
+	if (UWidget* CloseHost = Tree->FindWidget(TEXT("DetailCloseButton")))
+	{
+		while (CloseHost != nullptr
+			&& Cast<UCanvasPanelSlot>(CloseHost->Slot) == nullptr)
+		{
+			CloseHost = CloseHost->GetParent();
+		}
+		if (UCanvasPanelSlot* CloseSlot = CloseHost != nullptr
+			? Cast<UCanvasPanelSlot>(CloseHost->Slot) : nullptr)
+		{
+			TestTrue(TEXT("상세 닫기 버튼 최소 폭"), CloseSlot->GetSize().X >= 360.f);
+			TestTrue(TEXT("상세 닫기 버튼 최소 높이"), CloseSlot->GetSize().Y >= 96.f);
+		}
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRelatedWidgetTextBoundsContractTest,
+	"P_RD.UI.TextBounds.RelatedWidgets",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRelatedWidgetTextBoundsContractTest::RunTest(const FString& Parameters)
+{
+	const TCHAR* Classes[] = {
+		TEXT("/Game/UI/CombatLayouts/WBP_MercenaryHire_Marchbound.WBP_MercenaryHire_Marchbound_C"),
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"),
+		TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay.WBP_CombatDetailOverlay_C"),
+		TEXT("/Game/UI/CombatDetail/WBP_SkillDetailContent.WBP_SkillDetailContent_C"),
+		TEXT("/Game/UI/CombatDetail/SkillTactical/WBP_SkillTacticalDiagram.WBP_SkillTacticalDiagram_C"),
+		TEXT("/Game/UI/MonsterTab/WBP_MonsterTab_Marchbound.WBP_MonsterTab_Marchbound_C")
+	};
+	for (const TCHAR* ClassPath : Classes)
+	{
+		UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, ClassPath);
+		UWidgetBlueprintGeneratedClass* Generated =
+			Cast<UWidgetBlueprintGeneratedClass>(WidgetClass);
+		UWidgetTree* Tree = Generated != nullptr
+			? Generated->GetWidgetTreeArchetype() : nullptr;
+		if (!TestNotNull(FString::Printf(TEXT("%s 위젯 트리"), ClassPath), Tree))
+		{
+			continue;
+		}
+
+		Tree->ForEachWidget([this, ClassPath](UWidget* Widget)
+		{
+			UTextBlock* Text = Cast<UTextBlock>(Widget);
+			if (Text == nullptr)
+			{
+				return;
+			}
+			UScaleBox* AutoFit = Cast<UScaleBox>(Text->GetParent());
+			if (AutoFit == nullptr)
+			{
+				return;
+			}
+			const FString Prefix = FString::Printf(TEXT("%s/%s"),
+				ClassPath, *Text->GetName());
+			TestEqual(Prefix + TEXT(" AutoFit 가로축소"), AutoFit->GetStretch(),
+				EStretch::ScaleToFitX);
+			TestEqual(Prefix + TEXT(" AutoFit 확대 금지"),
+				AutoFit->GetStretchDirection(), EStretchDirection::DownOnly);
+			TestEqual(Prefix + TEXT(" 텍스트 이동값 0"),
+				Text->GetRenderTransform().Translation, FVector2D::ZeroVector);
+			if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(Text->Slot))
+			{
+				TestEqual(Prefix + TEXT(" 라벨 가로 중앙"),
+					TextSlot->GetHorizontalAlignment(), HAlign_Center);
+				TestEqual(Prefix + TEXT(" 라벨 세로 중앙"),
+					TextSlot->GetVerticalAlignment(), VAlign_Center);
+			}
+			if (UOverlay* Center = Cast<UOverlay>(AutoFit->GetParent()))
+			{
+				const FName ExpectedCenter(*FString::Printf(TEXT("%s_Center"),
+					*Text->GetName()));
+				if (Center->GetFName() == ExpectedCenter)
+				{
+					if (UOverlaySlot* OuterSlot = Cast<UOverlaySlot>(AutoFit->Slot))
+					{
+						TestEqual(Prefix + TEXT(" 라벨 상자는 Center 가로 전체"),
+							OuterSlot->GetHorizontalAlignment(), HAlign_Fill);
+						TestEqual(Prefix + TEXT(" 라벨 상자는 Center 세로 전체"),
+							OuterSlot->GetVerticalAlignment(), VAlign_Fill);
+						const FMargin Padding = OuterSlot->GetPadding();
+						TestTrue(FString::Printf(
+							TEXT("%s Center 내부 여백 0 actual=%.2f,%.2f,%.2f,%.2f"),
+							*Prefix, Padding.Left, Padding.Top,
+							Padding.Right, Padding.Bottom), Padding == FMargin(0.f));
+					}
+				}
+			}
+			else if (Cast<UButton>(AutoFit->GetParent()) != nullptr)
+			{
+				if (UButtonSlot* OuterSlot = Cast<UButtonSlot>(AutoFit->Slot))
+				{
+					TestEqual(Prefix + TEXT(" 버튼 라벨 상자 가로 전체"),
+						OuterSlot->GetHorizontalAlignment(), HAlign_Fill);
+					TestEqual(Prefix + TEXT(" 버튼 라벨 상자 세로 전체"),
+						OuterSlot->GetVerticalAlignment(), VAlign_Fill);
+					TestEqual(Prefix + TEXT(" 버튼 내부 여백 0"),
+						OuterSlot->GetPadding(), FMargin(0.f));
+				}
+			}
+		});
+	}
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatDetailCaptureTest,
 	"P_RD.UI.CombatDetails.CaptureAll",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -628,6 +860,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 	}
 
 	FString Error;
+	FCaptureSlateCache SlateCache;
 	{
 		FDetailFixture Fixture = MakeFixture(*World);
 		if (!TestNotNull(TEXT("용병 상세 HUD"), Fixture.HUD.Get()))
@@ -674,7 +907,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				Fixture.KnightDetail.mName.ToString());
 		}
 		Error.Reset();
-		if (!Capture(*Fixture.HUD, nullptr,
+		if (!Capture(*Fixture.HUD, nullptr, SlateCache,
 			TEXT("CombatDetail_Mercenary.png"), Error))
 		{
 			AddError(Error);
@@ -713,7 +946,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 			}
 		}
 		Error.Reset();
-		if (!Capture(*Fixture.HUD, nullptr,
+		if (!Capture(*Fixture.HUD, nullptr, SlateCache,
 			TEXT("CombatDetail_Inventory.png"), Error))
 		{
 			AddError(Error);
@@ -752,7 +985,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				Fixture.SpiderDetail.mName.ToString());
 		}
 		Error.Reset();
-		if (!Capture(*Fixture.HUD, MonsterTab,
+		if (!Capture(*Fixture.HUD, MonsterTab, SlateCache,
 			TEXT("CombatDetail_Monster.png"), Error))
 		{
 			AddError(Error);
@@ -773,6 +1006,11 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 		{
 			return false;
 		}
+		UUserWidget* SkillContent = Fixture.HUD->GetSkillDetailContentForTest();
+		if (!TestNotNull(TEXT("WBP authored 스킬 정보면"), SkillContent))
+		{
+			return false;
+		}
 		UTextBlock* Title = Cast<UTextBlock>(Overlay->GetWidgetFromName(
 			TEXT("DetailTitleText")));
 		if (TestNotNull(TEXT("스킬 상세 제목"), Title))
@@ -786,37 +1024,45 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 			TestEqual(TEXT("기존 텍스트 수치줄은 시각 메달로 대체"),
 				Subtitle->GetVisibility(), ESlateVisibility::Collapsed);
 		}
-		if (UWidget* Preview = Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillVisualPreview")))
+		if (UWidget* Preview = SkillContent->GetWidgetFromName(
+			TEXT("SkillDetailContentRoot")))
 		{
 			TestEqual(TEXT("통합 스킬 상세 레이아웃 표시"), Preview->GetVisibility(),
 				ESlateVisibility::SelfHitTestInvisible);
 		}
-		UWidget* DescriptionScroll = Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillDescriptionScroll"));
+		UWidget* DescriptionScroll = SkillContent->GetWidgetFromName(
+			TEXT("SkillDescriptionScroll"));
 		if (TestNotNull(TEXT("긴 설명용 스크롤 영역"), DescriptionScroll))
 		{
 			TestEqual(TEXT("기본 상태에서 우측 설명 표시"),
 				DescriptionScroll->GetVisibility(),
 				ESlateVisibility::Visible);
 		}
-		UButton* RuntimeSelectButton = Cast<UButton>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillSelectRangeButton")));
-		UButton* RuntimeEffectButton = Cast<UButton>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillEffectRangeButton")));
+		UButton* RuntimeSelectButton = Cast<UButton>(SkillContent->GetWidgetFromName(
+			TEXT("SkillSelectRangeButton")));
+		UButton* RuntimeEffectButton = Cast<UButton>(SkillContent->GetWidgetFromName(
+			TEXT("SkillEffectRangeButton")));
 		if (TestNotNull(TEXT("아이콘 아래 사정 범위 버튼"), RuntimeSelectButton))
 		{
+			UScaleBox* AutoFit = Cast<UScaleBox>(RuntimeSelectButton->GetContent());
+			if (TestNotNull(TEXT("사정 범위 라벨 AutoFit"), AutoFit))
+			{
+				TestEqual(TEXT("사정 범위는 가로 초과 때만 축소"),
+					AutoFit->GetStretch(), EStretch::ScaleToFitX);
+				TestEqual(TEXT("사정 범위 글자는 확대하지 않음"),
+					AutoFit->GetStretchDirection(), EStretchDirection::DownOnly);
+			}
 			if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(
 				RuntimeSelectButton->Slot))
 			{
-				TestEqual(TEXT("사정 범위 버튼 왼쪽 요약열 X"),
-					Slot->GetPosition().X, 368.0);
+				TestEqual(TEXT("사정 범위 버튼 정보면 로컬 X"),
+					Slot->GetPosition().X, 24.0);
 				TestEqual(TEXT("사정 범위 버튼은 수치 아래 Y"),
-					Slot->GetPosition().Y, 700.0);
+					Slot->GetPosition().Y, 436.0);
 				TestEqual(TEXT("사정 범위 버튼 얇은 정보행 폭"),
 					Slot->GetSize().X, 316.0);
-				TestEqual(TEXT("사정 범위 버튼 얇은 정보행 높이"),
-					Slot->GetSize().Y, 40.0);
+				TestEqual(TEXT("사정 범위 버튼 모바일 가독 높이"),
+					Slot->GetSize().Y, 56.0);
 			}
 		}
 		if (TestNotNull(TEXT("아이콘 아래 영향 범위 버튼"), RuntimeEffectButton))
@@ -825,9 +1071,9 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				RuntimeEffectButton->Slot))
 			{
 				TestEqual(TEXT("영향 범위 버튼도 왼쪽 요약열 기준선 사용"),
-					Slot->GetPosition().X, 368.0);
+					Slot->GetPosition().X, 24.0);
 				TestEqual(TEXT("영향 범위 버튼은 사정 범위 아래"),
-					Slot->GetPosition().Y, 747.0);
+					Slot->GetPosition().Y, 498.0);
 			}
 		}
 		USkillTacticalDiagramWidget* Tactical =
@@ -872,40 +1118,36 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					LegendRule->GetVisibility(), ESlateVisibility::Collapsed);
 			}
 		}
-		if (UWidget* WorldPreview = Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillWorldPreview")))
+		if (UWidget* WorldPreview = SkillContent->GetWidgetFromName(
+			TEXT("SkillWorldPreview")))
 		{
 			TestEqual(TEXT("전투 RenderTarget은 표시하지 않음"),
 				WorldPreview->GetVisibility(), ESlateVisibility::Collapsed);
 		}
-		if (UWidget* OldCell = Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillRangeCell_R0C0")))
-		{
-			TestEqual(TEXT("실제 전장이 있으면 모식도 셀 제거"),
-				OldCell->GetVisibility(), ESlateVisibility::Collapsed);
-		}
-		if (UTextBlock* AP = Cast<UTextBlock>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillStatText_0"))))
+		TestNull(TEXT("WBP 정보면에는 구형 합성 셀이 없음"),
+			SkillContent->GetWidgetFromName(TEXT("RuntimeSkillRangeCell_R0C0")));
+		if (UTextBlock* AP = Cast<UTextBlock>(SkillContent->GetWidgetFromName(
+			TEXT("SkillStatText_0"))))
 		{
 			TestEqual(TEXT("AP 텍스트가 실제 DTO를 사용"), AP->GetText().ToString(),
 				FString(TEXT("AP 4")));
 			if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(AP->Slot))
 			{
-				TestEqual(TEXT("AP 수치를 왼쪽 정보열에 배치 X"),
-					Slot->GetPosition().X, 430.0);
+				TestEqual(TEXT("AP 수치를 WBP 왼쪽 정보열에 배치 X"),
+					Slot->GetPosition().X, 86.0);
 				TestEqual(TEXT("AP 수치를 큰 아이콘 아래에 배치 Y"),
-					Slot->GetPosition().Y, 525.0);
+					Slot->GetPosition().Y, 271.0);
 			}
 		}
 		const FName RuntimeStatIconNames[] = {
-			TEXT("RuntimeSkillStatIcon_0"), TEXT("RuntimeSkillStatIcon_1"),
-			TEXT("RuntimeSkillStatIcon_2"), TEXT("RuntimeSkillStatIcon_3") };
+			TEXT("SkillStatIcon_0"), TEXT("SkillStatIcon_1"),
+			TEXT("SkillStatIcon_2"), TEXT("SkillStatIcon_3") };
 		const FName HudSourceIconNames[] = {
 			TEXT("CommandCostBadge_0"), NAME_None,
 			TEXT("CommandCooldownBadge_0"), NAME_None };
 		for (int32 Index = 0; Index < UE_ARRAY_COUNT(RuntimeStatIconNames); ++Index)
 		{
-			UImage* RuntimeIcon = Cast<UImage>(Overlay->GetWidgetFromName(
+			UImage* RuntimeIcon = Cast<UImage>(SkillContent->GetWidgetFromName(
 				RuntimeStatIconNames[Index]));
 			if (TestNotNull(*FString::Printf(TEXT("전투 HUD 수치 아이콘 %d"), Index),
 				RuntimeIcon) && HudSourceIconNames[Index] != NAME_None)
@@ -921,8 +1163,8 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				}
 			}
 		}
-		if (UImage* DamageIcon = Cast<UImage>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillStatIcon_1"))))
+		if (UImage* DamageIcon = Cast<UImage>(SkillContent->GetWidgetFromName(
+			TEXT("SkillStatIcon_1"))))
 		{
 			UTexture2D* ExpectedDamage = LoadTexture(TEXT(
 				"/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
@@ -934,8 +1176,8 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					static_cast<UObject*>(ExpectedDamage));
 			}
 		}
-		if (UImage* CriticalIcon = Cast<UImage>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillStatIcon_3"))))
+		if (UImage* CriticalIcon = Cast<UImage>(SkillContent->GetWidgetFromName(
+			TEXT("SkillStatIcon_3"))))
 		{
 			UTexture2D* ExpectedCritical = LoadTexture(TEXT(
 				"/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
@@ -947,18 +1189,87 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					static_cast<UObject*>(ExpectedCritical));
 			}
 		}
-		if (UWidget* RuntimeScale = Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillDesignScale")))
+		TestNull(TEXT("스킬 내부 런타임 ScaleBox 제거"),
+			Overlay->GetWidgetFromName(TEXT("RuntimeSkillDesignScale")));
+		UWidget* DetailRoot = Overlay->GetWidgetFromName(TEXT("DetailPanelRoot"));
+		UScaleBox* ResponsiveScale = Cast<UScaleBox>(Overlay->GetWidgetFromName(
+			TEXT("DetailResponsiveScale")));
+		USizeBox* ResponsiveSize = Cast<USizeBox>(Overlay->GetWidgetFromName(
+			TEXT("DetailResponsiveDesignSize")));
+		UCanvasPanel* ResponsiveCanvas = Cast<UCanvasPanel>(
+			Overlay->GetWidgetFromName(TEXT("DetailResponsiveCanvas")));
+		if (TestNotNull(TEXT("공용 상세 ScaleBox"), ResponsiveScale))
 		{
-			TestTrue(TEXT("런타임 상세가 1920 디자인 ScaleBox를 사용"),
-				RuntimeScale->IsA<UScaleBox>());
+			TestEqual(TEXT("공용 상세는 ScaleToFit"), ResponsiveScale->GetStretch(),
+				EStretch::ScaleToFit);
+			TestEqual(TEXT("ScaleBox는 전체 화면 루트 바로 아래"),
+				static_cast<UWidget*>(ResponsiveScale->GetParent()), DetailRoot);
 		}
-		if (UTextBlock* SelectLegend = Cast<UTextBlock>(Overlay->GetWidgetFromName(
-			TEXT("RuntimeSkillSelectLegend"))))
+		if (TestNotNull(TEXT("공용 상세 1920x1080 SizeBox"), ResponsiveSize))
 		{
-			TestEqual(TEXT("구형 합성 범위 라벨 제거"),
-				SelectLegend->GetVisibility(), ESlateVisibility::Collapsed);
+			TestEqual(TEXT("디자인 폭"), ResponsiveSize->GetWidthOverride(), 1920.f);
+			TestEqual(TEXT("디자인 높이"), ResponsiveSize->GetHeightOverride(), 1080.f);
+			TestEqual(TEXT("SizeBox는 ScaleBox의 콘텐츠"),
+				static_cast<UWidget*>(ResponsiveSize->GetParent()),
+				static_cast<UWidget*>(ResponsiveScale));
 		}
+		if (TestNotNull(TEXT("공용 상세 디자인 Canvas"), ResponsiveCanvas))
+		{
+			TestEqual(TEXT("디자인 Canvas는 SizeBox의 콘텐츠"),
+				static_cast<UWidget*>(ResponsiveCanvas->GetParent()),
+				static_cast<UWidget*>(ResponsiveSize));
+			if (UWidget* Frame = Overlay->GetWidgetFromName(TEXT("DetailFrameImage")))
+			{
+				TestEqual(TEXT("프레임은 반응형 Canvas 바로 아래"),
+					static_cast<UWidget*>(Frame->GetParent()),
+					static_cast<UWidget*>(ResponsiveCanvas));
+			}
+			if (UCanvasPanelSlot* ContentSlot = Cast<UCanvasPanelSlot>(
+				SkillContent->Slot))
+			{
+				TestEqual(TEXT("스킬 정보면은 공용 디자인 Canvas의 authored 자식"),
+					static_cast<UWidget*>(SkillContent->GetParent()),
+					static_cast<UWidget*>(ResponsiveCanvas));
+				TestEqual(TEXT("정보면 WBP 글로벌 X"),
+					ContentSlot->GetPosition().X, 344.0);
+				TestEqual(TEXT("정보면 WBP 글로벌 Y"),
+					ContentSlot->GetPosition().Y, 254.0);
+				TestEqual(TEXT("정보면 WBP 폭"), ContentSlot->GetSize().X, 1230.0);
+				TestEqual(TEXT("정보면 WBP 높이"), ContentSlot->GetSize().Y, 563.0);
+			}
+		}
+		for (const FName RootChildName : { FName(TEXT("DetailScrimBg")),
+			FName(TEXT("DetailCloseCatch")) })
+		{
+			if (UWidget* RootChild = Overlay->GetWidgetFromName(RootChildName))
+			{
+				TestEqual(*FString::Printf(TEXT("%s는 전 화면 루트 유지"),
+					*RootChildName.ToString()),
+					static_cast<UWidget*>(RootChild->GetParent()), DetailRoot);
+			}
+		}
+		// WidgetRenderer에는 소유 플레이어가 없으므로 authored 1920 배율을 쓴다.
+		if (UWidget* Frame = Overlay->GetWidgetFromName(TEXT("DetailFrameImage")))
+		{
+			UWidget* DesignCanvas = nullptr;
+			for (UPanelWidget* Parent = Frame->GetParent(); Parent != nullptr;
+				Parent = Parent->GetParent())
+			{
+				if (DesignCanvas == nullptr && Parent->IsA<UCanvasPanel>())
+				{
+					DesignCanvas = Parent;
+					break;
+				}
+			}
+			if (TestNotNull(TEXT("스킬 상세 디자인 캔버스"), DesignCanvas))
+			{
+				TestEqual(TEXT("오프스크린 상세 판 authored 배율"),
+					DesignCanvas->GetRenderTransform().Scale,
+					FVector2D(1.f, 1.f));
+			}
+		}
+		TestNull(TEXT("구형 합성 범위 라벨 제거"),
+			SkillContent->GetWidgetFromName(TEXT("RuntimeSkillSelectLegend")));
 		if (UWidget* TargetBlock = Overlay->GetWidgetFromName(
 			TEXT("DetailTargetBlock")))
 		{
@@ -1002,7 +1313,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					|| Body->GetText().ToString().Contains(TEXT("적용 범위")));
 		}
 		Error.Reset();
-		if (!Capture(*Fixture.HUD, Overlay,
+		if (!Capture(*Fixture.HUD, Overlay, SlateCache,
 			TEXT("CombatDetail_Skill_TacticalWBP.png"), Error))
 		{
 			AddError(Error);
@@ -1025,7 +1336,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					DescriptionScroll->GetVisibility(), ESlateVisibility::Collapsed);
 			}
 			Error.Reset();
-			if (!Capture(*Fixture.HUD, Overlay,
+			if (!Capture(*Fixture.HUD, Overlay, SlateCache,
 				TEXT("CombatDetail_Skill_SelectRange.png"), Error))
 			{
 				AddError(Error);
@@ -1035,7 +1346,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 
 			RuntimeEffectButton->OnClicked.Broadcast();
 			Error.Reset();
-			if (!Capture(*Fixture.HUD, Overlay,
+			if (!Capture(*Fixture.HUD, Overlay, SlateCache,
 				TEXT("CombatDetail_Skill_EffectRange.png"), Error))
 			{
 				AddError(Error);
@@ -1133,7 +1444,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 				StatsPlate->GetVisibility(), ESlateVisibility::Collapsed);
 		}
 		Error.Reset();
-		if (!Capture(*Fixture.HUD, Overlay,
+		if (!Capture(*Fixture.HUD, Overlay, SlateCache,
 			TEXT("CombatDetail_Artifact.png"), Error))
 		{
 			AddError(Error);

@@ -15,17 +15,24 @@
 
 namespace
 {
-	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+	const TCHAR* const FallbackTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_Right16x9/Title_All6_Right_16x9_combo01_5s_mobile.mp4");
 
-	FString GetDefaultTitleBackgroundVideoPath()
+	TArray<FString> GetDefaultTitleBackgroundVideoPaths()
 	{
 		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-		if (GamePlaySettings != nullptr && GamePlaySettings->mTitleBackgroundVideoPath.IsEmpty() == false)
+		if (GamePlaySettings != nullptr)
 		{
-			return GamePlaySettings->mTitleBackgroundVideoPath;
+			if (GamePlaySettings->mTitleBackgroundVideoPaths.IsEmpty() == false)
+			{
+				return GamePlaySettings->mTitleBackgroundVideoPaths;
+			}
+			if (GamePlaySettings->mTitleBackgroundVideoPath.IsEmpty() == false)
+			{
+				return { GamePlaySettings->mTitleBackgroundVideoPath };
+			}
 		}
 
-		return FString(FallbackTitleBackgroundVideoPath);
+		return { FString(FallbackTitleBackgroundVideoPath) };
 	}
 }
 
@@ -37,13 +44,18 @@ namespace
  */
 void UTitleBackgroundVideoSubsystem::PreloadTitleBackgroundVideo(const FString& RelativeContentPath)
 {
-	// 빈 경로면 게임 설정의 기본 영상을 사용.
-	const FString RequestedPath = RelativeContentPath.IsEmpty()
-		? GetDefaultTitleBackgroundVideoPath()
-		: RelativeContentPath;
+	// 명시 경로면 단일 루프, 빈 경로면 설정의 30종 셔플 목록을 사용한다.
+	TArray<FString> RequestedPaths = RelativeContentPath.IsEmpty()
+		? GetDefaultTitleBackgroundVideoPaths()
+		: TArray<FString> { RelativeContentPath };
+	RequestedPaths.RemoveAll([](const FString& Path) { return Path.IsEmpty(); });
+	if (RequestedPaths.IsEmpty())
+	{
+		return;
+	}
 
-	// 같은 영상을 이미 열도록 요청했으면 다시 열지 않는다(GameInstance라 화면 재진입 시 중복 호출될 수 있음).
-	if (mOpenRequested && RequestedPath == mCurrentRelativePath)
+	// 같은 재생 목록이 이미 열려 있으면 위젯의 중복 Prime/Construct 호출로 재시작하지 않는다.
+	if (mOpenRequested && RequestedPaths == mCandidateRelativePaths)
 	{
 		return;
 	}
@@ -55,37 +67,11 @@ void UTitleBackgroundVideoSubsystem::PreloadTitleBackgroundVideo(const FString& 
 		return;
 	}
 
-	// Content 상대 경로 → 실제 디스크 절대 경로로 해석(에디터/패키지 환경 모두 대응).
-	const FString VideoPath = RDUITexture::ResolveContentFilePath(RequestedPath);
-	if (FPaths::FileExists(VideoPath) == false)
-	{
-		UE_LOG(LogRD, Warning, TEXT("TitleBackgroundVideoSubsystem: title background video missing: %s"), *VideoPath);
-		return;
-	}
-
-	mCurrentRelativePath = RequestedPath;
-	mOpenRequested = true;
-	mMediaOpened = false;
-
-	// PlayOnOpen: 열리는 즉시 자동 재생 / SetLooping: 끝나면 처음으로 반복.
-	mMediaPlayer->PlayOnOpen = true;
-	mMediaPlayer->SetLooping(true);
-	// 이전 재생을 닫아 상태를 초기화하고, 소스에 새 파일 경로를 지정한 뒤 연다.
-	mMediaPlayer->Close();
-	mMediaSource->SetFilePath(VideoPath);
-
-	// OpenSource는 "열기 시작" 비동기 요청 — 성공/실패는 OnMediaOpened/OnMediaOpenFailed 콜백으로 통지된다.
-	if (mMediaPlayer->OpenSource(mMediaSource) == false)
-	{
-		// 즉시 거부된 경우(소스 무효 등) — 요청 플래그를 되돌린다.
-		mOpenRequested = false;
-		UE_LOG(LogRD, Warning, TEXT("TitleBackgroundVideoSubsystem: failed to open title background video: %s"), *VideoPath);
-	}
-	else
-	{
-		// 열기 시작 성공 — PlayOnOpen이 있어도 명시적으로 Play를 한 번 더 호출(안전).
-		mMediaPlayer->Play();
-	}
+	mCandidateRelativePaths = MoveTemp(RequestedPaths);
+	mShuffleBag.Reset();
+	mShuffleCursor = 0;
+	mCurrentCandidateIndex = INDEX_NONE;
+	OpenNextTitleBackgroundVideo();
 }
 
 /**
@@ -104,6 +90,7 @@ void UTitleBackgroundVideoSubsystem::StopTitleBackgroundVideo()
 		// 종료 후 콜백이 죽은 this를 건드리지 않도록 먼저 해제한다.
 		mMediaPlayer->OnMediaOpened.RemoveAll(this);
 		mMediaPlayer->OnMediaOpenFailed.RemoveAll(this);
+		mMediaPlayer->OnEndReached.RemoveAll(this);
 		mMediaPlayer->Close();
 	}
 	if (mMediaTexture != nullptr)
@@ -113,8 +100,74 @@ void UTitleBackgroundVideoSubsystem::StopTitleBackgroundVideo()
 	}
 
 	mCurrentRelativePath.Reset();
+	mCandidateRelativePaths.Reset();
+	mShuffleBag.Reset();
+	mShuffleCursor = 0;
+	mCurrentCandidateIndex = INDEX_NONE;
 	mOpenRequested = false;
 	mMediaOpened = false;
+}
+
+void UTitleBackgroundVideoSubsystem::RebuildShuffleBag()
+{
+	mShuffleBag.Reset(mCandidateRelativePaths.Num());
+	for (int32 Index = 0; Index < mCandidateRelativePaths.Num(); ++Index)
+	{
+		mShuffleBag.Add(Index);
+	}
+
+	for (int32 Index = mShuffleBag.Num() - 1; Index > 0; --Index)
+	{
+		mShuffleBag.Swap(Index, FMath::RandRange(0, Index));
+	}
+	if (mShuffleBag.Num() > 1 && mShuffleBag[0] == mCurrentCandidateIndex)
+	{
+		mShuffleBag.Swap(0, 1);
+	}
+	mShuffleCursor = 0;
+}
+
+void UTitleBackgroundVideoSubsystem::OpenNextTitleBackgroundVideo()
+{
+	if (mMediaPlayer == nullptr || mMediaSource == nullptr || mCandidateRelativePaths.IsEmpty())
+	{
+		return;
+	}
+
+	for (int32 Attempt = 0; Attempt < mCandidateRelativePaths.Num(); ++Attempt)
+	{
+		if (mShuffleCursor >= mShuffleBag.Num())
+		{
+			RebuildShuffleBag();
+		}
+
+		const int32 CandidateIndex = mShuffleBag[mShuffleCursor++];
+		const FString& RequestedPath = mCandidateRelativePaths[CandidateIndex];
+		const FString VideoPath = RDUITexture::ResolveContentFilePath(RequestedPath);
+		if (FPaths::FileExists(VideoPath) == false)
+		{
+			UE_LOG(LogRD, Warning, TEXT("TitleBackgroundVideoSubsystem: title background video missing: %s"), *VideoPath);
+			continue;
+		}
+
+		mCurrentCandidateIndex = CandidateIndex;
+		mCurrentRelativePath = RequestedPath;
+		mOpenRequested = true;
+		mMediaOpened = false;
+		mMediaPlayer->PlayOnOpen = true;
+		mMediaPlayer->SetLooping(mCandidateRelativePaths.Num() == 1);
+		mMediaPlayer->Close();
+		mMediaSource->SetFilePath(VideoPath);
+		if (mMediaPlayer->OpenSource(mMediaSource))
+		{
+			return;
+		}
+
+		mOpenRequested = false;
+		UE_LOG(LogRD, Warning, TEXT("TitleBackgroundVideoSubsystem: failed to open title background video: %s"), *VideoPath);
+	}
+
+	UE_LOG(LogRD, Error, TEXT("TitleBackgroundVideoSubsystem: no playable title background video in configured list"));
 }
 
 /**
@@ -143,13 +196,14 @@ void UTitleBackgroundVideoSubsystem::EnsureMediaObjects()
 		// AddUnique: 중복 등록 방지(EnsureMediaObjects가 여러 번 불려도 콜백은 1개로 유지).
 		mMediaPlayer->OnMediaOpened.AddUniqueDynamic(this, &UTitleBackgroundVideoSubsystem::HandleMediaOpened);
 		mMediaPlayer->OnMediaOpenFailed.AddUniqueDynamic(this, &UTitleBackgroundVideoSubsystem::HandleMediaOpenFailed);
+		mMediaPlayer->OnEndReached.AddUniqueDynamic(this, &UTitleBackgroundVideoSubsystem::HandleMediaEndReached);
 	}
 
 	// 2) 출력 텍스처(MediaTexture) — 위젯이 브러시로 그릴 대상.
 	if (mMediaTexture == nullptr)
 	{
 		mMediaTexture = NewObject<UMediaTexture>(this, TEXT("SharedTitleBackgroundMediaTexture"));
-		mMediaTexture->AutoClear = true;                 // 프레임이 없을 때 ClearColor로 비운다.
+		mMediaTexture->AutoClear = false;                // 다음 파일 open 중에는 직전 마지막 정지 프레임을 유지한다.
 		mMediaTexture->ClearColor = FLinearColor::Black; // 첫 프레임 전/끊김 시 검은색.
 	}
 	if (mMediaTexture != nullptr)
@@ -178,7 +232,7 @@ void UTitleBackgroundVideoSubsystem::HandleMediaOpened(FString OpenedUrl)
 	mMediaOpened = true;
 	if (mMediaPlayer != nullptr)
 	{
-		mMediaPlayer->SetLooping(true);
+		mMediaPlayer->SetLooping(mCandidateRelativePaths.Num() == 1);
 		mMediaPlayer->Play();
 
 		// 선택된 비디오 트랙 → 그 트랙의 포맷 → 포맷의 해상도 순으로 원본 크기를 조회한다.
@@ -203,4 +257,16 @@ void UTitleBackgroundVideoSubsystem::HandleMediaOpenFailed(FString FailedUrl)
 	mOpenRequested = false;
 	mMediaOpened = false;
 	UE_LOG(LogRD, Warning, TEXT("TitleBackgroundVideoSubsystem: media open failed: %s"), *FailedUrl);
+}
+
+void UTitleBackgroundVideoSubsystem::HandleMediaEndReached()
+{
+	if (mCandidateRelativePaths.Num() <= 1)
+	{
+		return;
+	}
+
+	mMediaOpened = false;
+	mOpenRequested = false;
+	OpenNextTitleBackgroundVideo();
 }
