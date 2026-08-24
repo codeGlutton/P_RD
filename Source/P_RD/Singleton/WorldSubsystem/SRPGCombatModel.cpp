@@ -824,7 +824,15 @@ void USRPGCombatModel::RegisterEnemyUnitModel(FEnemyUnitPlacementData& EnemyPlac
 	checkf(EnemyUnitModel != nullptr, TEXT("보드액터 스폰 실패"));
 
 	EnemyUnitModel->SetDifficulty(EnemyPlacementData.mDifficulty);
-	EnemyUnitModel->AddRechargeSpeedPointOffset(StaticCast<float>(EnemyPlacementData.mRechargeSpeedPointOffset));
+
+	if (EnemyPlacementData.mDefaultSpeedPoint > 0)
+	{
+		UTacticalEffectContext* Context = EnemyUnitModel->GetAttributeComponentModel()->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> Spec = EnemyUnitModel->GetAttributeComponentModel()->MakeOutgoingSpec(UTacticalEffect_SpeedPoint::StaticClass(), Context);
+		Spec->mDynamicMagnitude = StaticCast<float>(EnemyPlacementData.mDefaultSpeedPoint);
+
+		EnemyUnitModel->GetAttributeComponentModel()->ApplyTacticalEffectSpecToSelf(*Spec);
+	}
 
 	/* 등록 */
 

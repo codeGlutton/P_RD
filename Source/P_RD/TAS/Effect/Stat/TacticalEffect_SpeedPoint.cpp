@@ -51,11 +51,9 @@ void UTacticalEffectExecutionCalculation_GetSpeedPoint::Execute(const FTacticalE
 	const bool IsTargetHaste = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Haste);
 	const float TargetHasteRatio = IsTargetHaste == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Haste] : 1.f;
 
-
 	// 둔화
 	const bool IsTargetSlow = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Slow);
 	const float TargetSlowRatio = IsTargetSlow == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Slow] : 1.f;
-
 
 	const float TotalSpeed = 
 		ExecutionParams.GetOwningSpec().GetStackCount() * 

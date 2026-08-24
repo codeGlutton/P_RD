@@ -17,7 +17,6 @@ UTacticalEffect_InfiniteStatus::UTacticalEffect_InfiniteStatus()
 UTacticalEffect_DurationStatus::UTacticalEffect_DurationStatus()
 {
 	mDurationPolicy = ETacticalEffectDurationType::Duration;
-	mDurationUnitPolicy = ETacticalEffectDurationUnitType::EveryRound;
 	mDurationMagnitude = 1;
 
 	mDurationUnitPolicy = ETacticalEffectDurationUnitType::EveryRound;
