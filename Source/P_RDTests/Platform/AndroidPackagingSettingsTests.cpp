@@ -23,8 +23,9 @@ bool FAndroidLandscapeOnlyPackagingSettingsTest::RunTest(const FString& Paramete
 		&& GConfig->GetString(AndroidSettingsSection, TEXT("Orientation"), Orientation,
 			GEngineIni);
 	TestTrue(TEXT("Android orientation must be explicitly configured"), bHasOrientation);
-	TestEqual(TEXT("Android manifest must use fixed landscape, not a sensor mode"),
-		Orientation, FString(TEXT("Landscape")));
+	// 가로 양방향 허용, 세로만 차단
+	TestEqual(TEXT("Android manifest must use sensor landscape (both landscape directions, no portrait)"),
+		Orientation, FString(TEXT("SensorLandscape")));
 
 	bool bAllowResizing = true;
 	const bool bHasAllowResizing = GConfig != nullptr

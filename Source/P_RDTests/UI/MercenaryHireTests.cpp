@@ -2114,7 +2114,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	MonsterUnit.mMaxMovementPoint = 5.f;
 	FStatusEffectUI MonsterStatus;
 	MonsterStatus.mTag = FGameplayTag::RequestGameplayTag(
-		TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability"));
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Vulnerability"));
 	MonsterStatus.mStackCount = 2;
 	MonsterUnit.mStatusEffects.Add(MonsterStatus);
 	Model->SetUnitUIs({ MonsterUnit });

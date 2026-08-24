@@ -64,7 +64,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			{
 				FStatusEffectUI Debuff;
 				Debuff.mTag = FGameplayTag::RequestGameplayTag(TEXT(
-					"GameplayEffect.StatusEffect.TurnDuration.Debuff.Weakness"));
+					"GameplayEffect.StatusEffect.RoundDuration.Debuff.Weakness"));
 				Debuff.mStackCount = 2;
 				Ally.mStatusEffects.Add(Debuff);
 			}
@@ -106,8 +106,8 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			// 둘째 적은 활력을 넣어 아군/적 공통 표시 계약을 고정한다.
 			FStatusEffectUI Status;
 			Status.mTag = FGameplayTag::RequestGameplayTag(i == 0
-				? TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff.Vulnerability")
-				: TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff.Vigor"));
+				? TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Vulnerability")
+				: TEXT("GameplayEffect.StatusEffect.RoundDuration.Buff.Vigor"));
 			Status.mStackCount = i == 0 ? 2 : 1;
 			Foe.mStatusEffects.Add(Status);
 			Units.Add(Foe);
