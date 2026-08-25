@@ -316,26 +316,33 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 판단근거 로그: 시전하지 못한 턴은 근거를 상세히 남김
 		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), SkillComp, SkillDatas, TargetModels, TargetTiles, Table);
 
-		//
-		// 자기 버프: 공격을 못 하는 턴이면 비용을 감당할 수 있는 버프 중 하나를 랜덤 선택
-		// (턴당 시전 1회 전제. 버프 비용을 먼저 떼고 남는 행동력으로 이동하므로 테이블을 다시 구성)
-		//
+		// 예산 안에서 쓸 수 있는 자기 버프 하나를 랜덤 선택 (없으면 INDEX_NONE)
+		auto ChooseSpell = [&SpellSlots, &Skills, &EventStream](const int32 Budget)
 		{
 			TArray<int32> CastableSpells;
 			for (const int32 Slot : SpellSlots)
 			{
 				const UStaticUnitSkillData* Spell = StaticCast<const UStaticUnitSkillData*>(Skills[Slot].mData);
-				if (Spell->mRequiredActionPoint <= ActionPoint)
+				if (Spell->mRequiredActionPoint <= Budget)
 				{
 					CastableSpells.Add(Slot);
 				}
 			}
-			if (CastableSpells.IsEmpty() == false)
+			return CastableSpells.IsEmpty()
+				? StaticCast<int32>(INDEX_NONE)
+				: CastableSpells[EventStream.RandRange(0, CastableSpells.Num() - 1)];
+		};
+
+		// 쓸 수 있는 공격 스킬이 없는 적은 붙을 이유가 없으니 버프 비용을 먼저 떼고 남는 AP로 이동
+		// (공격 스킬이 있는 적은 이동을 먼저 정하고, 남는 AP로 버프)
+		if (HasAttackSkill == false)
+		{
+			ChosenSkillSlot = ChooseSpell(ActionPoint);
+			if (ChosenSkillSlot != INDEX_NONE)
 			{
-				ChosenSkillSlot = CastableSpells[EventStream.RandRange(0, CastableSpells.Num() - 1)];
 				CanCast = true;
 
-				// 버프 비용을 뺀 이동 예산으로 도달 범위 재구성 (조준 플래그는 선점이동 판단에 계속 사용)
+				// 줄어든 이동 예산으로 도달 범위 재계산
 				const int32 SpellCost = StaticCast<const UStaticUnitSkillData*>(Skills[ChosenSkillSlot].mData)->mRequiredActionPoint;
 				const int32 SpellMoveBudget = FMath::Max(MoveBudget - SpellCost, 0);
 				Table.Build(TileMap, Enemy, EnemyTile, TargetTiles, SkillDatas, SpellMoveBudget, ActionPoint);
@@ -414,6 +421,20 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 			else
 			{
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 제자리대기 — 접근 경로 없음"), *LogPrefix);
+			}
+		}
+
+		// 공격 스킬이 있는 적: 이동하고 남는 AP로 버프 (못 움직이면 AP 전부로 버프)
+		if (HasAttackSkill == true)
+		{
+			const int32 RemainingActionPoint = ActionPoint - GetTableMoveCost(Dest);
+			ChosenSkillSlot = ChooseSpell(RemainingActionPoint);
+			if (ChosenSkillSlot != INDEX_NONE)
+			{
+				CanCast = true;
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 버프: 스킬[%d]=%s 비용%d ≤ 남은 AP%d"),
+					*LogPrefix, ChosenSkillSlot, *Skills[ChosenSkillSlot].mData->GetName(),
+					StaticCast<const UStaticUnitSkillData*>(Skills[ChosenSkillSlot].mData)->mRequiredActionPoint, RemainingActionPoint);
 			}
 		}
 	}
