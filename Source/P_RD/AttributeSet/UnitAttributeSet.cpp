@@ -2,6 +2,8 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
+#include "Pawn/Player/PlayerUnitModel.h"
+
 void UUnitAttributeSet::PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue)
 {
 	/* 충전 값 감소 시, 마이너스 방지 */
@@ -51,8 +53,10 @@ void UPlayerUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attr
 		if (NewValue >= GetMaxExp())
 		{
 			UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
+			ASC->ApplyModToAttribute(GetExpAttribute(), ETacticalModOp::AddBase, -GetMaxExp());
 
-			// TODO : 레벨업 시도 (ASC를 통해 Level 증가 및 Exp 초기화 모디파이어 적용 예정)
+			UPlayerUnitModel* PlayerModel = ASC->GetOwnerModel<UPlayerUnitModel>();
+			PlayerModel->LevelUp();
 		}
 	}
 }

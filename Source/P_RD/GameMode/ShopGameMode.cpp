@@ -25,6 +25,8 @@
 #include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/FrontendMapWidget.h"
 
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
+
 namespace
 {
 	constexpr int32 ShopRestPrice = 100;
@@ -846,14 +848,10 @@ void AShopGameMode::HandleRestRequested()
 
 	for (UAttributeSetComponentModel* Attributes : UnitAttributes)
 	{
-		const float MaxHP = Attributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetMaxHPAttribute());
-		const float MaxAP = Attributes->GetAttributeCurrentValue(
-			UUnitAttributeSet::GetRechargeActionPointAttribute());
-		Attributes->ApplyModToAttribute(
-			UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, MaxHP);
-		Attributes->ApplyModToAttribute(
-			UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, MaxAP);
+		UTacticalEffectContext* Context = Attributes->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> Spec = Attributes->MakeOutgoingSpec(UTacticalEffect_BreakTimeHeal::StaticClass(), Context);
+
+		Attributes->ApplyTacticalEffectSpecToSelf(*Spec);
 	}
 
 	SpendPartyGold(ShopRestPrice);

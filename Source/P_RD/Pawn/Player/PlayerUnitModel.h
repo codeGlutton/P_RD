@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 
 #include "Pawn/UnitModel.h"
+#include "DataAsset/RarityRate.h"
 
 #include "PlayerUnitModel.generated.h"
 
@@ -19,7 +20,8 @@ class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*PlayerLevel*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*NewPlayerLevel*/);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPlayerLevelUp, UPlayerUnitModel* /*Model*/, int32 /*NewPlayerLevel*/, const FRarityRate& /*SkillRarityRate*/);
 
 /**
  * @brief 플레이어 베이스 유닛 모델 입니다.
@@ -51,10 +53,14 @@ public:
 	int32 GetPlayerLevel() const;
 
 public:
+	void LevelUp();
+
+public:
 	UArtifactComponentModel* GetArtifactComponentModel() const;
 
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
+	FOnPlayerLevelUp OnPlayerLevelUp;
 
 private:
 	/** @brief 난이도 스케일 AttributeSet */

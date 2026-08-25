@@ -27,6 +27,18 @@ public:
  * @brief 영구적 상태이상 자체를 의미하는 이펙트 부모 클래스
  */
 UCLASS(Abstract)
+class P_RD_API UTacticalEffect_InstantStatus : public UTacticalEffect_Status
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_InstantStatus();
+};
+
+/**
+ * @brief 영구적 상태이상 자체를 의미하는 이펙트 부모 클래스
+ */
+UCLASS(Abstract)
 class P_RD_API UTacticalEffect_InfiniteStatus : public UTacticalEffect_Status
 {
 	GENERATED_BODY()

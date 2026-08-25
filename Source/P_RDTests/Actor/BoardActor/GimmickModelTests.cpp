@@ -81,7 +81,7 @@ namespace
 
 		TInstancedStruct<FSkillEffectLayer> Layer;
 		Layer.InitializeAs<FSkillEffectLayer_Push>();
-		Layer.GetMutable<FSkillEffectLayer_Push>().mPushDistance = PushDistance;
+		Layer.GetMutable<FSkillEffectLayer_Push>().mTagGain = PushDistance;
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(Layer);
 		return SkillData;
 	}
