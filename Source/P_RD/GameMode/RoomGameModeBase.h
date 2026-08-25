@@ -157,6 +157,9 @@ protected:
 	bool PreloadAndTransitionSelectedRoomAsync();
 	void SaveRunWithUIAsync() const;
 
+protected:
+	void ApplyStageClearHeal() const;
+
 private:
 	void RestorePlayerUnit();
 

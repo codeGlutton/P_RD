@@ -17,18 +17,13 @@
  *          이동만 담당하고 데미지는 Attack 레이어를 함께 사용
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_Push : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_Push : public FSkillEffectLayer_TagBase
 {
 	GENERATED_BODY()
 
 public:
-	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+	TSubclassOf<UTacticalEffect> GetTagEffectClass() const override;
 
 public:
 	FText MakeDescription() const override;
-
-public:
-	// @brief 최대 밀치기 칸 수 (뒤가 막히면 막히기 직전까지 밀림)
-	UPROPERTY(Category = "Push", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PushDistance", ClampMin = "1"))
-	int32 mPushDistance = 1;
 };
