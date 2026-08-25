@@ -9,6 +9,11 @@ UTacticalEffect_Status::UTacticalEffect_Status()
 	mStackingType = ETacticalEffectStackingType::AggregateByTarget;
 }
 
+UTacticalEffect_InstantStatus::UTacticalEffect_InstantStatus()
+{
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+}
+
 UTacticalEffect_InfiniteStatus::UTacticalEffect_InfiniteStatus()
 {
 	mDurationPolicy = ETacticalEffectDurationType::Infinite;

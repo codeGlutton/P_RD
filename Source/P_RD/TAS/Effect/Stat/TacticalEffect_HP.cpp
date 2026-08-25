@@ -46,10 +46,10 @@ void UTacticalEffectExecutionCalculation_SystemHeal::Execute(const FTacticalEffe
 {
 	Super::Execute(ExecutionParams, OutExecutionOutput);
 
-	UAttributeSetComponentModel* SourceAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
-	checkf(SourceAttributeSetCompModel != nullptr, TEXT("소스 컴포넌트 모델 nullptr"));
+	UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+	checkf(TargetAttributeSetCompModel != nullptr, TEXT("소스 컴포넌트 모델 nullptr"));
 
-	const float MaxHP = SourceAttributeSetCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
+	const float MaxHP = TargetAttributeSetCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 	const float BaseHeal = MaxHP * FMath::Max(0.f, GetHealRatio());
 
 	// 최종 힐
