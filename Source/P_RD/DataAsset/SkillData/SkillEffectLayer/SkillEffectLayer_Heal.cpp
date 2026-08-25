@@ -9,7 +9,7 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
-TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Heal::ApplyFactorEffect(IBoardCombatTarget* ActorModel) const
+TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Heal::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));

@@ -19,7 +19,7 @@ struct P_RD_API FSkillEffectLayer_Attack : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel) const override;
+	TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const override;
 	void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const override;
 
 public:

@@ -221,7 +221,15 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_ActorState_Dead,									"GameplayEffect.ActorState.Dead");
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,										"GameplayEffect.StatusEffect");
+	
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,							"GameplayEffect.StatusEffect.Infinite");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Strength,				"GameplayEffect.StatusEffect.Infinite.Buff.Strength");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Dexterity,				"GameplayEffect.StatusEffect.Infinite.Buff.Dexterity");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Acumeny,				"GameplayEffect.StatusEffect.Infinite.Buff.Acumeny");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Strength,			"GameplayEffect.StatusEffect.Infinite.Debuff.Strength");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity,			"GameplayEffect.StatusEffect.Infinite.Debuff.Dexterity");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny,				"GameplayEffect.StatusEffect.Infinite.Debuff.Acumeny");
+
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration,						"GameplayEffect.StatusEffect.RoundDuration");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff,					"GameplayEffect.StatusEffect.RoundDuration.Buff");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor,			"GameplayEffect.StatusEffect.RoundDuration.Buff.Vigor");

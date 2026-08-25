@@ -25,12 +25,16 @@
 #include "Engine/Texture2D.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/SettingsPanelWidget.h"
+#include "UI/TextOpticalAlignment.h"
 
 using namespace RDTitleMenu;
 
 namespace
 {
 	constexpr float TitleLayoutLogViewportThreshold = 12.0f;
+	// 글리프 경계의 수학적 중앙과 이 타이틀 폰트가 눈에 보이는 중앙의 차이.
+	// 문구별 좌표가 아니라 동일 폰트 스타일 전체에 한 번만 적용한다.
+	constexpr float TitleMenuFontOpticalBiasY = 1.0f;
 
 	void SetProfileText(const UUserWidget* Owner, const TCHAR* BaseName, const FName ProfileName, const FText& Text)
 	{
@@ -103,7 +107,8 @@ namespace
 		}
 	}
 
-	void ApplyResponsiveTitleLayout(UUserWidget* Owner, const FVector2D& ViewportSize)
+	void ApplyResponsiveTitleLayout(UUserWidget* Owner, const FVector2D& ViewportSize,
+		const bool bCanContinueRun)
 	{
 		if (Owner == nullptr || ViewportSize.X <= 0.0f || ViewportSize.Y <= 0.0f)
 		{
@@ -136,9 +141,12 @@ namespace
 			const TCHAR* Text;
 			float BottomOffset;
 		};
+		// 이어하기가 숨겨지면 새로 시작이 그 빈 슬롯으로 내려가야 한다.
+		// NativeTick에서도 이 함수를 호출하므로 최종 좌표 계산 자체에 상태를 넣는다.
+		const float StartBottomOffset = bCanContinueRun ? 333.0f : 238.0f;
 		const FButtonRow Rows[] =
 		{
-			{ TEXT("StartButtonFrameImage"), TEXT("StartButton"), TEXT("StartButtonText"), 333.0f },
+			{ TEXT("StartButtonFrameImage"), TEXT("StartButton"), TEXT("StartButtonText"), StartBottomOffset },
 			{ TEXT("ContinueButtonFrameImage"), TEXT("ContinueButton"), TEXT("ContinueButtonText"), 238.0f },
 			{ TEXT("SettingsButtonFrameImage"), TEXT("SettingsButton"), TEXT("SettingsButtonText"), 143.0f },
 			{ TEXT("ExitButtonFrameImage"), TEXT("ExitButton"), TEXT("ExitButtonText"), 48.0f },
@@ -244,7 +252,7 @@ void UTitleMenuWidget::NativeConstruct()
 
 	ValidateDesignerBindings();
 	ApplyConfiguredTitleLogo(this);
-	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize());
+	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize(), CanContinueRun());
 	StartTitleBackgroundVideo();
 
 	BindMainMenuButtons();
@@ -257,6 +265,7 @@ void UTitleMenuWidget::NativeConstruct()
 	SyncMainText();
 	AlignMainMenuTextBlocks();
 	RefreshMainMenuState();
+	ApplyMainMenuTextOpticalAlignment();
 	SetStatusText(FText::GetEmpty());
 }
 
@@ -274,7 +283,7 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 	// 레이아웃은 ScaleBox 가 알아서 줄인다. 전에는 여기서 매 틱 화면비를 재
 	// 다섯 벌 중 하나를 골랐는데, 재 보니 그 다섯이 서로 30~44px 밖에 안 달라
 	// 한 벌로 줄였다. 고를 것이 없으면 고르는 코드도 없어야 한다.
-	ApplyResponsiveTitleLayout(this, MyGeometry.GetLocalSize());
+	ApplyResponsiveTitleLayout(this, MyGeometry.GetLocalSize(), CanContinueRun());
 	FitTitleBackgroundVideoToViewport();
 }
 
@@ -420,6 +429,33 @@ void UTitleMenuWidget::AlignMainMenuTextBlocks()
 		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName))));
 		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButtonText"), ProfileName))));
 		AlignMenuTextBlock(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName))));
+	}
+}
+
+/** @brief 현재 문자열의 실제 글리프 잉크 경계를 버튼의 시각적 중앙에 맞춘다. */
+void UTitleMenuWidget::ApplyMainMenuTextOpticalAlignment()
+{
+	// UMG의 Center는 폰트 줄 박스를 중앙에 놓는다. 현재 번역 문자열을 Slate가
+	// 실제로 shaping/rasterize한 결과의 잉크 경계를 구해 남는 차이만 보정한다.
+	// 문자열/언어/대체 폰트가 달라져도 별도의 언어 조건값은 필요 없다.
+	auto ApplyOffset = [](UTextBlock* TextBlock)
+	{
+		RDTextOpticalAlignment::Apply(TextBlock, TitleMenuFontOpticalBiasY);
+	};
+
+	ApplyOffset(StartButtonText);
+	ApplyOffset(ContinueButtonText);
+	ApplyOffset(SettingsButtonText);
+	ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(TEXT("ExitButtonText"))));
+	ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(TEXT("VersionText"))));
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("StartButtonText"), ProfileName))));
+		ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ContinueButtonText"), ProfileName))));
+		ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButtonText"), ProfileName))));
+		ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButtonText"), ProfileName))));
+		ApplyOffset(Cast<UTextBlock>(GetWidgetFromName(MakeProfileWidgetName(TEXT("VersionText"), ProfileName))));
 	}
 }
 

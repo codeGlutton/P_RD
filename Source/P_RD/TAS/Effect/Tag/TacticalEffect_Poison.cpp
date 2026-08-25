@@ -4,6 +4,8 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 UTacticalEffect_Poison::UTacticalEffect_Poison()
@@ -22,9 +24,13 @@ void UTacticalEffect_Poison::OnReduceTimeRemaining(FActiveTacticalEffectsContain
 		return;
 	}
 
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+	const float PosionRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Poison];
+
 	UTacticalEffectContext* Context = AttributeSetCompModelInstance->MakeEffectContext();
 	TSharedPtr<FTacticalEffectSpec> NewSpec = AttributeSetCompModelInstance->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), Context);
-	NewSpec->mDynamicMagnitude = TESpec.GetStackCount();
+	NewSpec->mDynamicMagnitude = TESpec.GetStackCount() * PosionRatio;
 	AttributeSetCompModelInstance->ApplyTacticalEffectSpecToSelf(*NewSpec);
 }
 

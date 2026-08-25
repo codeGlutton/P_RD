@@ -1,11 +1,4 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_Defense.cpp
- * @brief  Defense 이펙트 구현
- * @author 이문환, 모호재
- * @date   2026-07-01
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_Defense.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
