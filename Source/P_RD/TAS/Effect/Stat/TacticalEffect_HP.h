@@ -51,6 +51,9 @@ class UTacticalEffectExecutionCalculation_BreakTimeHeal : public UTacticalEffect
 {
 	GENERATED_BODY()
 
+public:
+	static float GetStaticHealRatio();
+
 protected:
 	float GetHealRatio() const override;
 };
@@ -74,6 +77,9 @@ UCLASS()
 class UTacticalEffectExecutionCalculation_StageClearHeal : public UTacticalEffectExecutionCalculation_SystemHeal
 {
 	GENERATED_BODY()
+
+public:
+	static float GetStaticHealRatio();
 
 protected:
 	float GetHealRatio() const override;

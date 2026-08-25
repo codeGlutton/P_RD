@@ -1,4 +1,4 @@
-#include "UI/Shop/ShopUIWidgetBase.h"
+﻿#include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/DetailOverlayInputShield.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -23,6 +23,8 @@
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/ViewportZOrderType.h"
+
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 #define LOCTEXT_NAMESPACE "ShopUIWidgetBase"
 
@@ -1494,15 +1496,19 @@ void UShopUIWidgetBase::RefreshRestView(const FShopUI& Shop)
 		}
 
 		const FShopRestUnitUI& Unit = Shop.mRest.mUnits[UnitViewIndex];
+
+		const float HealRatio = FMath::Max(0.f ,UTacticalEffectExecutionCalculation_BreakTimeHeal::GetStaticHealRatio());
+		const float AfterHP = FMath::Min(Unit.mHP + (Unit.mMaxHP * HealRatio), Unit.mMaxHP);
+
 		SetShopImage(Icon, ResolveUnitIcon(Unit.mJobType));
 		SetValueText(HPBeforeText, Unit.mHP, Unit.mMaxHP, true);
-		SetValueText(HPAfterText, Unit.mMaxHP, Unit.mMaxHP, true);
+		SetValueText(HPAfterText, AfterHP, Unit.mMaxHP, true);
 		SetValueText(APBeforeText, Unit.mAP, Unit.mMaxAP, true);
-		SetValueText(APAfterText, Unit.mMaxAP, Unit.mMaxAP, true);
+		SetValueText(APAfterText, Unit.mAP, Unit.mMaxAP, true);
 		SetFillRatio(HPBeforeFill, Unit.mHP, Unit.mMaxHP, true);
-		SetFillRatio(HPAfterFill, Unit.mMaxHP, Unit.mMaxHP, true);
+		SetFillRatio(HPAfterFill, AfterHP, Unit.mMaxHP, true);
 		SetFillRatio(APBeforeFill, Unit.mAP, Unit.mMaxAP, true);
-		SetFillRatio(APAfterFill, Unit.mMaxAP, Unit.mMaxAP, true);
+		SetFillRatio(APAfterFill, Unit.mAP, Unit.mMaxAP, true);
 	}
 
 	if (mRestButton == nullptr || !bRestMode)

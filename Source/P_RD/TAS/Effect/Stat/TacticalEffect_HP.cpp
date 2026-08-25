@@ -49,9 +49,6 @@ void UTacticalEffectExecutionCalculation_SystemHeal::Execute(const FTacticalEffe
 	UAttributeSetComponentModel* SourceAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
 	checkf(SourceAttributeSetCompModel != nullptr, TEXT("소스 컴포넌트 모델 nullptr"));
 
-	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
-	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
-
 	const float MaxHP = SourceAttributeSetCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
 	const float BaseHeal = MaxHP * FMath::Max(0.f, GetHealRatio());
 
@@ -81,12 +78,17 @@ float UTacticalEffectExecutionCalculation_SystemHeal::GetHealRatio() const
 	return 0.f;
 }
 
-float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetHealRatio() const
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetStaticHealRatio()
 {
 	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
 	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
 
 	return GameBalanceSettings->mBreakTimeHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
 }
 
 UTacticalEffect_BreakTimeHeal::UTacticalEffect_BreakTimeHeal()
@@ -100,12 +102,17 @@ UTacticalEffect_BreakTimeHeal::UTacticalEffect_BreakTimeHeal()
 	mExecutions.Add(Definition);
 }
 
-float UTacticalEffectExecutionCalculation_StageClearHeal::GetHealRatio() const
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetStaticHealRatio()
 {
 	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
 	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
 
 	return GameBalanceSettings->mStageClearHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
 }
 
 UTacticalEffect_StageClearHeal::UTacticalEffect_StageClearHeal()
