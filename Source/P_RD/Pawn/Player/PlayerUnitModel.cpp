@@ -4,6 +4,7 @@
 
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/LevelAttributeSet.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 
@@ -74,6 +75,15 @@ UPartyModel* UPlayerUnitModel::GetOwnerParty() const
 int32 UPlayerUnitModel::GetPlayerLevel() const
 {
     return mPlayerLevel;
+}
+
+void UPlayerUnitModel::LevelUp()
+{
+    const int32 NewPlayerLevel = mPlayerLevel + 1;
+    SetPlayerLevel(NewPlayerLevel);
+
+    const FRarityRate SkillRarityRate = ULevelAttributeSet::GetRarityRate(this, NewPlayerLevel);
+    OnPlayerLevelUp.Broadcast(this, NewPlayerLevel, SkillRarityRate);
 }
 
 UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const

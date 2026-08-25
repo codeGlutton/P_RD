@@ -8,6 +8,7 @@
 #pragma once
 
 #include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Stat/TacticalEffect_Unit.h"
 #include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
 #include "TacticalEffect_HP.generated.h"
 
@@ -28,7 +29,70 @@ public:
 };
 
 /**
- * @brief HP 데미지 계산기
+ * @brief 퍼센트 기반 시스템 명령 HP 힐 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_SystemHeal : public UTacticalEffectExecutionCalculation
+{
+	GENERATED_BODY()
+
+public:
+	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+protected:
+	virtual float GetHealRatio() const;
+};
+
+/**
+ * @brief 휴식으로 인한 HP 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_BreakTimeHeal : public UTacticalEffectExecutionCalculation_SystemHeal
+{
+	GENERATED_BODY()
+
+protected:
+	float GetHealRatio() const override;
+};
+
+/**
+ * @brief 휴식으로 인한 HP 적용 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_BreakTimeHeal : public UTacticalEffect_Unit
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_BreakTimeHeal();
+};
+
+/**
+ * @brief 클리어로 인한 HP 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_StageClearHeal : public UTacticalEffectExecutionCalculation_SystemHeal
+{
+	GENERATED_BODY()
+
+protected:
+	float GetHealRatio() const override;
+};
+
+/**
+ * @brief 클리어로 인한 HP 적용 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_StageClearHeal : public UTacticalEffect_Unit
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_StageClearHeal();
+};
+
+/**
+ * @brief HP 힐 계산기
  */
 UCLASS()
 class UTacticalEffectExecutionCalculation_Heal : public UTacticalEffectExecutionCalculation
@@ -40,7 +104,7 @@ public:
 };
 
 /**
- * @brief HP 데미지 적용 이펙트
+ * @brief HP 힐 적용 이펙트
  */
 UCLASS()
 class P_RD_API UTacticalEffect_Heal : public UTacticalEffect

@@ -28,6 +28,8 @@
 #include "UI/Combat/CombatUITypes.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
+
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
 /**
@@ -401,6 +403,8 @@ bool ARoomGameModeBase::EnterNextStage()
 		return false;
 	}
 
+	ApplyStageClearHeal();
+
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	const FStage& Stage = RunPersistData->GetStage();
 
@@ -613,6 +617,41 @@ void ARoomGameModeBase::SaveRunWithUIAsync() const
 	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
 		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
 		}));
+}
+
+void ARoomGameModeBase::ApplyStageClearHeal() const
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	TArray<UAttributeSetComponentModel*> AttributeSetCompModels;
+	for (const TObjectPtr<UPlayerUnitModel>& PlayerUnitModel : PartyModel->GetPlayerUnitModels())
+	{
+		UPlayerUnitModel* UnitModel = PlayerUnitModel.Get();
+		if (UnitModel == nullptr)
+		{
+			continue;
+		}
+
+		UAttributeSetComponentModel* Attributes = UnitModel->GetAttributeComponentModel();
+		if (Attributes == nullptr)
+		{
+			return;
+		}
+
+		AttributeSetCompModels.Add(Attributes);
+	}
+
+	for (UAttributeSetComponentModel* AttributeSetCompModel : AttributeSetCompModels)
+	{
+		UTacticalEffectContext* Context = AttributeSetCompModel->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> Spec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_StageClearHeal::StaticClass(), Context);
+
+		AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*Spec);
+	}
 }
 
 void ARoomGameModeBase::RestorePlayerUnit()
