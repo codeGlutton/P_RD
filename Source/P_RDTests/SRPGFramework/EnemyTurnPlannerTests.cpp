@@ -10,7 +10,8 @@
  * 균형 후퇴(Case5-3), 최근접 접근 폴백(Case5-4).
  * 속박: 제자리 시전(Case6-1), 사거리 밖(Case6-2), 비용 있는 스킬 시전 회귀(Case6-3).
  * Single 조준 스킬: 영향 범위로 타격 판정(Case7-1), 자기 차폐 회귀(Case7-2), 접근 폴백(Case7-3).
- * 자기 버프: 공격 우선(Case8-1), 버프 비용 떼고 이동 후 버프(Case8-2), 버프만 보유 시 성향 이동(Case8-3).
+ * 자기 버프: 공격 우선(Case8-1), 이동 후 남는 AP로 버프(Case8-2), 버프만 보유 시 성향 이동(Case8-3),
+ *           버프 비용이 AP 전부면 버프 대신 접근(Case8-4).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -746,16 +747,52 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	}
 
 	/**
-	 * Case8-2: 공격 불가 + 자기 버프 보유
-	 *   -> 버프 비용을 먼저 떼고 남는 행동력으로 접근한 뒤 버프 시전
-	 * 맵 (10x3): E(0,1) P(9,1), 근접 성향, AP 4, 공격 사거리 1, 버프 비용 2
-	 *   -> 이동 예산 4-2=2 → (2,1)까지만 접근, 목적지에서 버프 (조준 타일 = 목적지)
+	 * Case8-2: 공격 불가 + 자기 버프 보유, 이동하고 AP가 남는 경우
+	 *   -> 조준 가능한 타일로 먼저 이동하고, 남는 행동력으로 버프 시전
+	 * 맵 (10x3): E(0,1) P(3,1), 근접 성향, AP 4, 공격 사거리 1, 공격 비용 3, 버프 비용 2
+	 *   -> 공격은 이동2 + 시전3 = 5 > 4 로 불가 → 조준 타일 (2,1)로 선점이동(비용 2), 남은 AP 2로 버프 (조준 타일 = 목적지)
 	 */
-	AddInfo(TEXT("=== Case8-2: 공격 불가 / 버프 비용 떼고 이동 후 버프 ==="));
+	AddInfo(TEXT("=== Case8-2: 공격 불가 / 이동 후 남는 AP로 버프 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
 			World, KeepAlive, EMoveTendency::MoveClose,
 			4, 1, 10, 3,
+			FTileIndex(0, 1),
+			FTileIndex(3, 1),
+			EAimPattern::Square,
+			/*SecondSkillAimRange*/0,
+			/*BlockerIndex*/FTileIndex::Invalid,
+			/*SecondPlayerIndex*/FTileIndex::Invalid,
+			/*Rooted*/false,
+			EEffectPattern::Single, /*EffectArea*/0,
+			/*SkillCost*/3,
+			/*SpellCost*/2);
+		CheckTail(*this, Commands, TEXT("Case8-2"));
+		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
+		if (TestTrue(TEXT("[Case8-2] 이동커맨드 존재"), Move != nullptr) &&
+			TestTrue(TEXT("[Case8-2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
+		{
+			TestTrue(TEXT("[Case8-2] 목적지=(2,1) (조준 가능 타일로 선점이동)"), Move->mPathTileIndexes.Last() == FTileIndex(2, 1));
+		}
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case8-2] 스킬커맨드 존재(버프)"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case8-2] 버프 슬롯 2 선택"), Cast->mSkillIndex, 2);
+			TestTrue(TEXT("[Case8-2] 조준 타일은 목적지(2,1)"), Cast->mTargetIndex == FTileIndex(2, 1));
+		}
+	}
+
+	/**
+	 * Case8-4: 공격 불가 + 버프 비용이 AP 전부인 경우 (회귀: 버프만 하고 제자리에 서던 문제)
+	 *   -> 버프를 포기하고 행동력 전부로 접근
+	 * 맵 (10x3): E(0,1) P(9,1), 근접 성향, AP 3, 공격 사거리 1, 버프 비용 3
+	 *   -> (3,1)까지 접근, 남은 AP 0이라 버프 없음
+	 */
+	AddInfo(TEXT("=== Case8-4: 공격 불가 / 버프 비용이 AP 전부 / 버프 대신 접근 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
+			World, KeepAlive, EMoveTendency::MoveClose,
+			3, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1),
 			EAimPattern::Square,
@@ -765,20 +802,8 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			/*Rooted*/false,
 			EEffectPattern::Single, /*EffectArea*/0,
 			/*SkillCost*/0,
-			/*SpellCost*/2);
-		CheckTail(*this, Commands, TEXT("Case8-2"));
-		const FSRPGMoveCommand* Move = FindMoveCommand(Commands);
-		if (TestTrue(TEXT("[Case8-2] 이동커맨드 존재"), Move != nullptr) &&
-			TestTrue(TEXT("[Case8-2] 경로 2칸 이상"), Move->mPathTileIndexes.Num() >= 2))
-		{
-			TestTrue(TEXT("[Case8-2] 목적지=(2,1) (버프 비용 2를 뺀 이동 예산 2)"), Move->mPathTileIndexes.Last() == FTileIndex(2, 1));
-		}
-		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
-		if (TestTrue(TEXT("[Case8-2] 스킬커맨드 존재(버프)"), Cast != nullptr))
-		{
-			TestEqual(TEXT("[Case8-2] 버프 슬롯 2 선택"), Cast->mSkillIndex, 2);
-			TestTrue(TEXT("[Case8-2] 조준 타일은 목적지(2,1)"), Cast->mTargetIndex == FTileIndex(2, 1));
-		}
+			/*SpellCost*/3);
+		CheckApproachNoCast(*this, Commands, TEXT("Case8-4"), FTileIndex(3, 1));
 	}
 
 	/**

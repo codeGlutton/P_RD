@@ -27,6 +27,7 @@
 #include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
 #include "GameplayTagType.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "TAS/Effect/TacticalEffectQuery.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
@@ -356,10 +357,12 @@ bool FPassiveAddTagTest::RunTest(const FString& Parameters)
 	DriveTiming(Passive, OnStartTurn, Ctx);
 	TestFalse(TEXT("타이밍태그가 없으므로 발동 안 함: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
-	// OnEndTurn에 발동: 취약 태그 3개 부여
+	// OnEndTurn에 발동: 취약 3스택 부여
+	// 상태이상은 스택형 지속 효과라 태그는 1개만 붙고, 수치는 스택 수로 확인
 	DriveTiming(Passive, OnEndTurn, Ctx);
 	TestTrue(TEXT("OnEndTurn에 발동 함: 취약 태그 보유"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
-	TestEqual(TEXT("취약 태그 카운트는 3"), Comp->GetTagCount(VulnerabilityTag), 3);
+	const FTacticalEffectQuery VulnerabilityQuery = FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(FGameplayTagContainer(VulnerabilityTag));
+	TestEqual(TEXT("취약 스택은 3"), Comp->GetAggregatedStackCount(VulnerabilityQuery), 3);
 
 	return true;
 }
