@@ -210,7 +210,7 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_DemonicBargain,				"Animation.Montage.Skill.Enemy.Demon.DemonicBargain");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Slash,						"Animation.Montage.Skill.Enemy.Demon.Slash");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Sacrifice,					"Animation.Montage.Skill.Enemy.Demon.Sacrifice");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Offering,					"Animation.Montage.Skill.Enemy.Demon.Offering");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Fireball,					"Animation.Montage.Skill.Enemy.Demon.Fireball");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_ScytheSwing,				"Animation.Montage.Skill.Enemy.Reaper.ScytheSwing");
