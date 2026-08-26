@@ -185,6 +185,47 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Stamp,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Stamp");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Howl");
 
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Whirlwind,		"Animation.Montage.Skill.Enemy.Skeleton.Warrior.Whirlwind");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Warrior_PushAttack,		"Animation.Montage.Skill.Enemy.Skeleton.Warrior.PushAttack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Rage,				"Animation.Montage.Skill.Enemy.Skeleton.Warrior.Rage");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Warrior_HeavyStrike,		"Animation.Montage.Skill.Enemy.Skeleton.Warrior.HeavyStrike");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Mage_FireBall,			"Animation.Montage.Skill.Enemy.Skeleton.Mage.FireBall");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Mage_EldritchBlast,		"Animation.Montage.Skill.Enemy.Skeleton.Mage.EldritchBlast");	
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Mage_Blizarrd,			"Animation.Montage.Skill.Enemy.Skeleton.Mage.Blizarrd");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Rogue_Assassinate,		"Animation.Montage.Skill.Enemy.Skeleton.Rogue.Assassinate");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Rogue_SandToss,			"Animation.Montage.Skill.Enemy.Skeleton.Rogue.SandToss");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Rogue_LegSweep,			"Animation.Montage.Skill.Enemy.Skeleton.Rogue.LegSweep");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Ranger_RapidFire,			"Animation.Montage.Skill.Enemy.Skeleton.Ranger.RapidFire");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Ranger_SnipeShot,			"Animation.Montage.Skill.Enemy.Skeleton.Ranger.SnipeShot");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Ranger_InDirectShot,		"Animation.Montage.Skill.Enemy.Skeleton.Ranger.InDirectShot");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Zombie_Bite,						"Animation.Montage.Skill.Enemy.Zombie.Bite");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Zombie_Claw,						"Animation.Montage.Skill.Enemy.Zombie.Claw");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghoul_Bite,						"Animation.Montage.Skill.Enemy.Ghoul.Bite");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghoul_FlurryofClaws,				"Animation.Montage.Skill.Enemy.Ghoul.FlurryofClaws");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_DemonicBargain,				"Animation.Montage.Skill.Enemy.Demon.DemonicBargain");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Slash,						"Animation.Montage.Skill.Enemy.Demon.Slash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Offering,					"Animation.Montage.Skill.Enemy.Demon.Offering");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Fireball,					"Animation.Montage.Skill.Enemy.Demon.Fireball");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_ScytheSwing,				"Animation.Montage.Skill.Enemy.Reaper.ScytheSwing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_Harvest,					"Animation.Montage.Skill.Enemy.Reaper.Harvest");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_Execution,					"Animation.Montage.Skill.Enemy.Reaper.Execution");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_Hook,						"Animation.Montage.Skill.Enemy.Reaper.Hook");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_BlackHole,					"Animation.Montage.Skill.Enemy.Reaper.BlackHole");
+
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Attack,				"Animation.Montage.Skill.Enemy.Necromancer.Attack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Curse,					"Animation.Montage.Skill.Enemy.Necromancer.Curse");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Nether,				"Animation.Montage.Skill.Enemy.Necromancer.Nether");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Absorption,			"Animation.Montage.Skill.Enemy.Necromancer.Absorption");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Reconstitution,		"Animation.Montage.Skill.Enemy.Necromancer.Reconstitution");
+
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Damage,									"Animation.Montage.Hit.Damage");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_Buff,										"Animation.Montage.Hit.Buff");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Hit_DeBuff,									"Animation.Montage.Hit.DeBuff");

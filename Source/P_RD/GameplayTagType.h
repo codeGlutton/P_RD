@@ -245,6 +245,68 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl);
 #pragma endregion
 
+	// 스테이지 3
+#pragma region Skeleton_Warrior
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Whirlwind);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_PushAttack);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Rage);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_HeavyStrike);
+#pragma endregion
+
+#pragma region Skeleton_Mage
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Mage_FireBall);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Mage_EldritchBlast);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Mage_Blizarrd);
+#pragma endregion
+
+#pragma region Skeleton_Rogue
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_Assassinate);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_SandToss);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_LegSweep);
+#pragma endregion
+
+#pragma region Skeleton_Ranger
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranger_RapidFire);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranger_SnipeShot);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranger_InDirectShot);
+#pragma endregion
+
+#pragma region Zombie
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Zombie_Bite);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Zombie_Claw);
+#pragma endregion
+
+#pragma region Ghoul
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghoul_Bite);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghoul_FlurryofClaws);
+#pragma endregion
+
+#pragma region Demon
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_DemonicBargain);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_Slash);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_Offering);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_Fireball);
+
+#pragma endregion
+
+#pragma region Reaper
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Reaper_ScytheSwing);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Reaper_Harvest);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Reaper_Execution);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Reaper_Hook);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Reaper_BlackHole);
+
+#pragma endregion
+
+#pragma region Necromancer
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Necromancer_Attack);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Necromancer_Curse);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Necromancer_Nether);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Necromancer_Absorption);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Necromancer_Reconstitution);
+
+#pragma endregion
+
 #pragma endregion
 
 
