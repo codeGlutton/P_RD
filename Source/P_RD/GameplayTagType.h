@@ -367,6 +367,13 @@ namespace EffectTags
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect);
 
+	/* 즉발 처리되는 상태 이상 태그들 */
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Instant);
+
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Instant_Debuff_Pull);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Instant_Debuff_Push);
+
 	/* 전투 종료 시까지 유지되는 상태 이상 태그들 */
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite);

@@ -54,4 +54,11 @@ public:
 
 	UPROPERTY(Config, Category = ActionPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RechargedActionPointLimits", ToolTip = "액션 포인트 충전값 최소 최댓 값"))
 	FInt32Interval mRechargedActionPointLimits = {1, 20};
+
+	/* 힐 구성 */
+public:
+	UPROPERTY(Config, Category = SystemHeal, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "BreakTimeHealRatio", ToolTip = "휴식 시, 회복되는 힐 비율"))
+	float mBreakTimeHealRatio = 0.5f;
+	UPROPERTY(Config, Category = SystemHeal, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "StageClearHealRatio", ToolTip = "클리어 시, 회복되는 힐 비율"))
+	float mStageClearHealRatio = 1.f;
 };

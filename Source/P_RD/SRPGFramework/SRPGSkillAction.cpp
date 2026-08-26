@@ -66,6 +66,14 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
 
+        // 밀치기 등으로 인해 명령을 만든 시점과 현재 시점의 위치가 다를 수 있음
+        // 현재 위치에서 조준할 수 없는 타일인 지 한 번 더 확인하고, 조준 불가능하면 액션 취소
+        if (SkillCompModel->GetAimableTiles(TileMap, SkillCastCommand.mSkillIndex).Contains(SkillCastCommand.mTargetIndex) == false)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+        }
+
         FOnEndSkillUI Callback;
         Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* PreSkillData) {
             MarkActionCompleted(ESRPGActionResult::Succeeded);

@@ -42,6 +42,90 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }
 
+void UTacticalEffectExecutionCalculation_SystemHeal::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+	checkf(TargetAttributeSetCompModel != nullptr, TEXT("소스 컴포넌트 모델 nullptr"));
+
+	const float MaxHP = TargetAttributeSetCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
+	const float BaseHeal = MaxHP * FMath::Max(0.f, GetHealRatio());
+
+	// 최종 힐
+	const int32 TotalHeal =
+		FMath::Floor(
+			ExecutionParams.GetOwningSpec().GetStackCount() *
+			ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+			BaseHeal
+		);
+
+	/* 체력 힐 */
+	{
+		const float HPDiff = TotalHeal;
+		if (HPDiff > 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::AddBase, HPDiff));
+		}
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+float UTacticalEffectExecutionCalculation_SystemHeal::GetHealRatio() const
+{
+	return 0.f;
+}
+
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetStaticHealRatio()
+{
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	return GameBalanceSettings->mBreakTimeHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
+}
+
+UTacticalEffect_BreakTimeHeal::UTacticalEffect_BreakTimeHeal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_BreakTimeHeal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetStaticHealRatio()
+{
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	return GameBalanceSettings->mStageClearHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
+}
+
+UTacticalEffect_StageClearHeal::UTacticalEffect_StageClearHeal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_StageClearHeal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
 void UTacticalEffectExecutionCalculation_Heal::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
 {
 	Super::Execute(ExecutionParams, OutExecutionOutput);
@@ -49,7 +133,7 @@ void UTacticalEffectExecutionCalculation_Heal::Execute(const FTacticalEffectCust
 	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
 	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
 
-	// 최종 공격력과 방어력
+	// 최종 힐
 	const int32 TotalHeal =
 		FMath::Floor(
 			ExecutionParams.GetOwningSpec().GetStackCount() *

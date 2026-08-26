@@ -263,6 +263,11 @@ namespace EffectTags
 
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect,										"GameplayEffect.StatusEffect");
 	
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Instant,								"GameplayEffect.StatusEffect.Instant");
+
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Instant_Debuff_Pull,					"GameplayEffect.StatusEffect.Instant.Debuff.Pull");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Instant_Debuff_Push,					"GameplayEffect.StatusEffect.Instant.Debuff.Push");
+
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite,							"GameplayEffect.StatusEffect.Infinite");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Strength,				"GameplayEffect.StatusEffect.Infinite.Buff.Strength");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Dexterity,				"GameplayEffect.StatusEffect.Infinite.Buff.Dexterity");

@@ -479,7 +479,7 @@ private:
  * @brief 라운드 이벤트를 LayerIndex 순서로 관리하며, Lock/Unlock 기반 지연 추가/삭제를 지원하는 컨테이너
  */
 USTRUCT(BlueprintType)
-struct FSRPGCombatRoundEventContainer
+struct P_RD_API FSRPGCombatRoundEventContainer
 {
     GENERATED_BODY()
 

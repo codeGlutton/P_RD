@@ -61,7 +61,7 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 				[](const FStatusEffectUI& Status)
 				{
 					return Status.mTag.MatchesTag(FGameplayTag::RequestGameplayTag(
-						TEXT("GameplayEffect.StatusEffect.TurnDuration.Buff")));
+						TEXT("GameplayEffect.StatusEffect.RoundDuration.Buff")));
 				}));
 		}
 		if (SideIndex == 1 || SideIndex == 2)
@@ -70,7 +70,7 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 				[](const FStatusEffectUI& Status)
 				{
 					return Status.mTag.MatchesTag(FGameplayTag::RequestGameplayTag(
-						TEXT("GameplayEffect.StatusEffect.TurnDuration.Debuff")));
+						TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff")));
 				}));
 		}
 	}
