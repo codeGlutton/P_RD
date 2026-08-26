@@ -166,6 +166,8 @@ private:
 	float mCurrentMoveSpeed = 0.0f;
 	// @brief 현재 이동 속도 벡터 (cm/초). 소유 액터의 GetVelocity()로 사용
 	FVector mCurrentMoveVelocity = FVector::ZeroVector;
+	// @brief 현재 이동 모드. 강제 이동(밀림/끌림) 중에는 애니메이션에 속도를 알리지 않아 걷기/달리기 대신 서 있는 포즈로 미끄러짐
+	EBoardMoveMode mMoveMode = EBoardMoveMode::Normal;
 	// @brief 이번 스텝 목표 도착 후 최종 목적지까지 남은 경로 거리 (cm). 0이면 이번 목표가 최종 목적지
 	float mRemainingPathDistance = 0.0f;
 
