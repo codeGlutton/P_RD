@@ -23,6 +23,11 @@ bool UBoardMovementComponentModel::PushAlongPath(const TArray<FTileIndex>& PathT
 	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Push, OnFinished);
 }
 
+bool UBoardMovementComponentModel::PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+{
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Pull, OnFinished);
+}
+
 bool UBoardMovementComponentModel::TryRegisterPendingPush(const FTileIndex& TrapTileIndex, const TArray<FTileIndex>& PushPathTileIndexes)
 {
 	// 이동 루프 밖에서는 소비 지점이 없으므로 등록 불가 (정지 대상은 PushAlongPath 사용)

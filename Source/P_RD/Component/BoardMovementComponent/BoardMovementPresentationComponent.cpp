@@ -59,9 +59,9 @@ void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
 
 void UBoardMovementPresentationComponent::OnStartMovePath(const TArray<FVector>& PathWorldLocations, EBoardMoveMode MoveMode)
 {
-	// 밀치기는 코너링 없이 직선 이동 (폴리라인을 만들지 않으면 직선 이동모드로 동작)
-	// 회전도 목표 회전으로 보간하는데, 밀치기는 모델이 방향을 유지하므로 자연스럽게 무회전
-	if (MoveMode == EBoardMoveMode::Push)
+	// 밀치기/당기기는 코너링 없이 직선 이동 (폴리라인을 만들지 않으면 직선 이동모드로 동작)
+	// 회전도 목표 회전으로 보간하는데, 강제 이동은 모델이 방향을 유지하므로 자연스럽게 무회전
+	if (MoveMode != EBoardMoveMode::Normal)
 	{
 		ResetPolyLineState();
 		return;

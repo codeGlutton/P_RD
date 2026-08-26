@@ -51,6 +51,15 @@ public:
 	bool PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
 
 	/**
+	 * @brief 확정 경로를 따라 당기기(강제 이동) 시작
+	 * @details 밀치기와 같은 규칙 (바라보는 방향 유지, AP 미차감). 이동 모드만 당기기로 구분
+	 * @param PathTileIndexes 시작→목표 경로 (양 끝 포함, 인덱스 0 = 현재 타일). 어디서 멈출지는 미리 계산해서 경로로 줘야한다
+	 * @param OnFinished 이동 완료 통지
+	 * @return 시작 성공 여부 (이동 중 재호출이거나 경로가 2칸 미만이면 false)
+	 */
+	bool PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
+
+	/**
 	 * @brief 이동 루프 안(도착 오버랩 통지 중)에서 함정이 보류 밀치기 경로를 등록
 	 * @details 직접 이동을 시작하는 재진입 대신 등록만 하고, 현재 스텝 마무리 지점에서 루프가 소비.
 	 *          정지 상태의 대상을 미는 경우는 이 함수가 아니라 PushAlongPath 사용
@@ -84,7 +93,7 @@ protected:
 
 	/* 스텝 처리 */
 private:
-	// @brief 공용 이동 시작 (MoveAlongPath/PushAlongPath의 실제 구현)
+	// @brief 공용 이동 시작 (MoveAlongPath/PushAlongPath/PullAlongPath의 실제 구현)
 	bool StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished);
 	// @brief 전체 경로를 월드 좌표로 변환해서 뷰에 통지 (이동 시작/경로 교체 공용)
 	void BroadcastStartMovePath();
