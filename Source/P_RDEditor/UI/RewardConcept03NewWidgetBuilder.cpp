@@ -57,8 +57,9 @@ namespace RewardConcept03NewWidgetBuilder
 		TEXT("T_RCN_Header"), TEXT("T_RCN_MainFrame"), TEXT("T_RCN_Tab"),
 		TEXT("T_RCN_Button"), TEXT("T_RCN_ParchmentLarge"),
 		TEXT("T_RCN_ParchmentMedium"), TEXT("T_RCN_ChoiceCard"),
-		TEXT("T_RCN_ProgressTrack"), TEXT("T_RCN_ProgressFill"),
+		TEXT("T_RCN_ProgressTrack"),
 		TEXT("T_RCN_ProgressFilledLayerV3"),
+		TEXT("T_RCN_RewardBackground"),
 		TEXT("T_RCN_StepCircle"), TEXT("T_RCN_StepActiveRing"),
 		TEXT("T_RCN_SelectionOutline"), TEXT("T_RCN_ChestClosed"),
 		TEXT("T_RCN_ChestOpen25"), TEXT("T_RCN_ChestOpen50"),
@@ -102,14 +103,22 @@ namespace RewardConcept03NewWidgetBuilder
 		auto QueueTextureImport = [&SourceFiles, &ImportedNames](
 			const FString& Name, const FString& SourceFile)
 		{
-			checkf(FPaths::FileExists(SourceFile),
-				TEXT("Missing RewardConcept03 texture source: %s"), *SourceFile);
 			const FString PackageName = FString::Printf(
 				TEXT("%s/%s"), ArtPackagePath, *Name);
 			const FString PackageFile = FPackageName::LongPackageNameToFilename(
 				PackageName, FPackageName::GetAssetPackageExtension());
 			IFileManager& FileManager = IFileManager::Get();
 			const bool bMissingAsset = !FileManager.FileExists(*PackageFile);
+			const bool bHasSource = FPaths::FileExists(SourceFile);
+			// 커밋된 uasset만 있는 기존 그림은 그대로 쓸 수 있다. 새 그림을
+			// 추가하거나 uasset이 없을 때만 원본 PNG를 필수로 요구한다.
+			checkf(bHasSource || !bMissingAsset,
+				TEXT("Missing RewardConcept03 texture source and asset: %s"),
+				*SourceFile);
+			if (!bHasSource)
+			{
+				return;
+			}
 			const bool bSourceIsNewer = !bMissingAsset
 				&& FileManager.GetTimeStamp(*SourceFile)
 					> FileManager.GetTimeStamp(*PackageFile);
@@ -125,9 +134,11 @@ namespace RewardConcept03NewWidgetBuilder
 				SourceDirectory(), FString(Name) + TEXT(".png"));
 			QueueTextureImport(Name, SourceFile);
 		}
-		for (int32 Index = 0; Index < ChestTripleBurstFrameCount; ++Index)
+		// 런타임은 아틀라스를 재생하고 WBP에는 마지막 버스트 프레임 한 장만
+		// 정지 미리보기로 굽는다. 삭제된 00..31 원본을 다시 요구하지 않는다.
 		{
-			const FString Name = ChestTripleBurstTextureName(Index);
+			const FString Name = ChestTripleBurstTextureName(
+				ChestTripleBurstFrameCount - 1);
 			const FString SourceFile = FPaths::Combine(SourceDirectory(),
 				TEXT("ChestTripleBurstFrames"), Name + TEXT(".png"));
 			QueueTextureImport(Name, SourceFile);
@@ -139,15 +150,20 @@ namespace RewardConcept03NewWidgetBuilder
 			QueueTextureImport(Name, SourceFile);
 		}
 
-		if (!SourceFiles.IsEmpty())
+		auto ImportTextures = [](const TArray<FString>& Files,
+			const TCHAR* DestinationPath)
 		{
+			if (Files.IsEmpty())
+			{
+				return;
+			}
 			UE_LOG(LogTemp, Display,
 				TEXT("RD_REWARD_CONCEPT03_TEXTURE_IMPORT begin count=%d"),
-				SourceFiles.Num());
+				Files.Num());
 			UAutomatedAssetImportData* ImportData =
 				NewObject<UAutomatedAssetImportData>();
-			ImportData->DestinationPath = ArtPackagePath;
-			ImportData->Filenames = SourceFiles;
+			ImportData->DestinationPath = DestinationPath;
+			ImportData->Filenames = Files;
 			ImportData->bReplaceExisting = true;
 			ImportData->bSkipReadOnly = true;
 			FAssetToolsModule& AssetTools =
@@ -155,8 +171,9 @@ namespace RewardConcept03NewWidgetBuilder
 			AssetTools.Get().ImportAssetsAutomated(ImportData);
 			UE_LOG(LogTemp, Display,
 				TEXT("RD_REWARD_CONCEPT03_TEXTURE_IMPORT complete count=%d"),
-				SourceFiles.Num());
-		}
+				Files.Num());
+		};
+		ImportTextures(SourceFiles, ArtPackagePath);
 
 		auto ConfigureTexture = [&ImportedNames](const FString& Name)
 		{
@@ -187,11 +204,8 @@ namespace RewardConcept03NewWidgetBuilder
 		{
 			ConfigureTexture(Name);
 		}
-		for (int32 Index = 0; Index < ChestTripleBurstFrameCount; ++Index)
-		{
-			const FString Name = ChestTripleBurstTextureName(Index);
-			ConfigureTexture(Name);
-		}
+		ConfigureTexture(ChestTripleBurstTextureName(
+			ChestTripleBurstFrameCount - 1));
 		for (const TCHAR* Name : EffectTextureNames)
 		{
 			ConfigureTexture(Name);
@@ -609,16 +623,16 @@ namespace RewardConcept03NewWidgetBuilder
 
 			UOverlay* ProgressZone = AddOverlayPanel(Blueprint, Row,
 				*FString::Printf(TEXT("NewProgressZone_%d"), Index),
-				FVector2D(166.f, 23.f), FVector2D(454.f, 44.f), 1);
+				FVector2D(156.f, 18.f), FVector2D(484.f, 56.f), 1);
 			ProgressZone->SetClipping(EWidgetClipping::ClipToBounds);
 			UCanvasPanel* BarLayer = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
 				UCanvasPanel::StaticClass(),
 				*FString::Printf(TEXT("NewExperienceBarLayer_%d"), Index));
 			BarLayer->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			AddOverlayChild(ProgressZone, BarLayer);
-			constexpr float FullFillWidth = 454.f;
-			constexpr float FillHeight = 26.f;
-			constexpr float BarY = 9.f;
+			constexpr float FullFillWidth = 484.f;
+			constexpr float FillHeight = 36.f;
+			constexpr float BarY = 10.f;
 			AddImage(Blueprint, BarLayer,
 				*FString::Printf(TEXT("NewTrack_%d"), Index), Track,
 				FVector2D(0.f, BarY), FVector2D(FullFillWidth, FillHeight), 1);
@@ -634,7 +648,7 @@ namespace RewardConcept03NewWidgetBuilder
 				FVector2D(FullFillWidth, FillHeight), 0);
 			AddOverlayText(Blueprint, ProgressZone,
 				*FString::Printf(TEXT("NewProgress_%d"), Index),
-				FText::FromString(Progress[Index]), 18, FMargin(24.f, 2.f));
+				FText::FromString(Progress[Index]), 19, FMargin(18.f, 4.f));
 		}
 
 		UOverlay* Summary = AddOverlayPanel(Blueprint, Layout,
@@ -979,6 +993,7 @@ namespace RewardConcept03NewWidgetBuilder
 		UTexture2D* ChoiceCard = Texture(TEXT("T_RCN_ChoiceCard"));
 		UTexture2D* StepTrack = Texture(TEXT("T_RCN_ProgressTrack"));
 		UTexture2D* StepFill = Texture(TEXT("T_RCN_ProgressFilledLayerV3"));
+		UTexture2D* RewardBackground = Texture(TEXT("T_RCN_RewardBackground"));
 		UTexture2D* StepCircle = Texture(TEXT("T_RCN_StepCircle"));
 		UTexture2D* ActiveRing = Texture(TEXT("T_RCN_StepActiveRing"));
 		UTexture2D* Selection = Texture(TEXT("T_RCN_SelectionOutline"));
@@ -1012,12 +1027,8 @@ namespace RewardConcept03NewWidgetBuilder
 			&& !PreviewPortraits.Contains(nullptr),
 			TEXT("Missing shared KitA portrait cell or preview portraits"));
 		TArray<UTexture2D*> ChestTripleBurstFrames;
-		ChestTripleBurstFrames.Reserve(ChestTripleBurstFrameCount);
-		for (int32 Index = 0; Index < ChestTripleBurstFrameCount; ++Index)
-		{
-			const FString Name = ChestTripleBurstTextureName(Index);
-			ChestTripleBurstFrames.Add(Texture(*Name));
-		}
+		ChestTripleBurstFrames.Add(Texture(*ChestTripleBurstTextureName(
+			ChestTripleBurstFrameCount - 1)));
 		UE_LOG(LogTemp, Display,
 			TEXT("RD_REWARD_CONCEPT03_NEW_BUILD texture references ready"));
 
@@ -1049,20 +1060,28 @@ namespace RewardConcept03NewWidgetBuilder
 		Root->AddChildToOverlay(Viewport);
 		CastChecked<UOverlaySlot>(Viewport->Slot)->SetHorizontalAlignment(HAlign_Fill);
 		CastChecked<UOverlaySlot>(Viewport->Slot)->SetVerticalAlignment(VAlign_Fill);
+		UImage* RewardBackgroundImage =
+			Blueprint->WidgetTree->ConstructWidget<UImage>(
+				UImage::StaticClass(), TEXT("NewRewardBackgroundImage"));
+		RewardBackgroundImage->SetBrush(TextureBrush(RewardBackground));
+		RewardBackgroundImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		Anchor(Viewport, RewardBackgroundImage, FAnchors(0.f, 0.f, 1.f, 1.f),
+			FMargin(0.f), 0);
+
 		UBorder* ModalScrim = Blueprint->WidgetTree->ConstructWidget<UBorder>(
 			UBorder::StaticClass(), TEXT("NewRewardModalScrim"));
 		ModalScrim->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, .58f));
 		ModalScrim->SetPadding(FMargin(0.f));
 		ModalScrim->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		Anchor(Viewport, ModalScrim, FAnchors(0.f, 0.f, 1.f, 1.f),
-			FMargin(0.f), 0);
+			FMargin(0.f), 1);
 
 		UScaleBox* MasterScale = Blueprint->WidgetTree->ConstructWidget<UScaleBox>(
 			UScaleBox::StaticClass(), TEXT("NewRewardMasterScale"));
 		MasterScale->SetStretch(EStretch::ScaleToFit);
 		MasterScale->SetStretchDirection(EStretchDirection::Both);
 		MasterScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
-		Anchor(Viewport, MasterScale, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 1);
+		Anchor(Viewport, MasterScale, FAnchors(0.f, 0.f, 1.f, 1.f), FMargin(0.f), 2);
 
 		USizeBox* DesignSize = Blueprint->WidgetTree->ConstructWidget<USizeBox>(
 			USizeBox::StaticClass(), TEXT("NewRewardDesignSize"));

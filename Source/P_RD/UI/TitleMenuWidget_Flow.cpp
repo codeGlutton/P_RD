@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
 #include "GameMode/FrontendGameMode.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/SettingsPanelWidget.h"
 
@@ -138,6 +139,9 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SetWidgetAndGeneratedParentVisibility(StartButtonText, ESlateVisibility::Collapsed);
 		SetWidgetAndGeneratedParentVisibility(ContinueButtonText, ESlateVisibility::Collapsed);
 		SetWidgetAndGeneratedParentVisibility(SettingsButtonText, ESlateVisibility::Collapsed);
+		// 프로필 레이아웃을 쓰면 레거시 EXIT 버튼도 함께 접는다. 안 접으면
+		// 같은 자리에 안 보이는 두 번째 종료 버튼이 겹쳐 남는다.
+		SetWidgetAndGeneratedParentVisibility(ExitButton, ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("TitleLogoImage"), ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("StartButtonFrameImage"), ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("ContinueButtonFrameImage"), ESlateVisibility::Collapsed);
@@ -215,6 +219,13 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 		SettingsButton->SetIsEnabled(true);
 	}
+
+	// 프로필 레이아웃이 없는 구형 WBP도 EXIT을 눌러 끌 수 있어야 한다.
+	if (ExitButton != nullptr)
+	{
+		ExitButton->SetVisibility(ESlateVisibility::Visible);
+		ExitButton->SetIsEnabled(true);
+	}
 }
 
 /** @brief 현재 프론트엔드 GameMode가 이어가기 가능한 활성 Run을 갖는지 확인한다. */
@@ -277,6 +288,17 @@ void UTitleMenuWidget::HandleContinueButtonClicked()
 void UTitleMenuWidget::HandleSettingsButtonClicked()
 {
 	OpenSettingsPanel();
+}
+
+/** @brief EXIT 버튼 입력으로 게임을 끝낸다. */
+// 타이틀은 런 밖이라 저장할 진행이 없다. 확인 창 없이 바로 종료한다 --
+// 런 안에서의 "저장 후 종료"는 설정판(SaveAndExitButton)이 따로 맡는다.
+// 종료 요청은 컨트롤러 소유의 QuitGame으로 보낸다. 플랫폼별 실제 동작
+// (모바일 백그라운드 전환 포함)은 엔진이 정한다.
+void UTitleMenuWidget::HandleExitButtonClicked()
+{
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(),
+		EQuitPreference::Quit, /*bIgnorePlatformRestrictions=*/false);
 }
 
 /** @brief 설정 화면 Back 요청을 타이틀 메인 복귀로 처리한다. */

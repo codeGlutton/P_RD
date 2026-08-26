@@ -279,7 +279,7 @@ void USettingsPanelWidget::HandleMasterVolumeChanged(float Value)
 	}
 }
 
-/** @brief FPS 30 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+/** @brief FPS 30 선택. 프로필과 UGameUserSettings에 즉시 적용한다. */
 void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 {
 	mValueModel.mFpsLimit = 30;
@@ -294,7 +294,7 @@ void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 	}
 }
 
-/** @brief FPS 60 선택. 수신 시스템이 아직 없어 값 보관 + 이벤트 발신까지만 한다. */
+/** @brief FPS 60 선택. 프로필과 UGameUserSettings에 즉시 적용한다. */
 void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
 {
 	mValueModel.mFpsLimit = 60;
@@ -347,7 +347,7 @@ void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
 	UpdateGraphicsSelectionIndicators();
 }
 
-/** @brief 전투 이펙트 표시 체크 상태를 이벤트로 올린다(수신 VFX 시스템 미구현 - 값 전달만). */
+/** @brief 전투 이펙트 표시 체크 상태를 프로필에 저장해 VFX 생성 경로에 적용한다. */
 void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
 {
 	mValueModel.mEffectsEnabled = bChecked;

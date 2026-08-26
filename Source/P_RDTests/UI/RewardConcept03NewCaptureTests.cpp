@@ -331,6 +331,8 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 		GrantAllWidget->OpenRewardChest();
 		GrantAllWidget->SkipRewardPresentation();
 		GrantAllWidget->SkipRewardPresentation();
+		// 골드가 나온 뒤에는 사용자의 다음 터치를 기다린다.
+		GrantAllWidget->AdvanceRewardFlow();
 		GrantAllWidget->SkipRewardPresentation();
 		TestEqual(TEXT("일괄 지급 아티팩트 단계 도달"),
 			GrantAllWidget->GetCurrentStepIndex(), 3);
@@ -437,7 +439,7 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 			&& TestNotNull(TEXT("경험치 채움 바 Canvas 슬롯"), FillSlot))
 		{
 			TestEqual(TEXT("경험치 빈 바 표시 크기"),
-				TrackSlot->GetSize(), FVector2D(454.f, 26.f));
+				TrackSlot->GetSize(), FVector2D(484.f, 36.f));
 			TestEqual(TEXT("경험치 채움 바 표시 크기"),
 				FillSlot->GetSize(), TrackSlot->GetSize());
 		}
@@ -574,7 +576,10 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 		Widget->GetCurrentStepIndex(), 2);
 	TestTrue(TEXT("골드 연출 재생"), Widget->IsRewardPresentationPlaying());
 	Widget->SkipRewardPresentation();
-	TestEqual(TEXT("골드 후 아티팩트 단계 자동 이동"),
+	TestEqual(TEXT("골드 공개 뒤 다음 터치 대기"),
+		Widget->GetCurrentStepIndex(), 2);
+	Widget->AdvanceRewardFlow();
+	TestEqual(TEXT("골드 확인 터치 후 아티팩트 단계 이동"),
 		Widget->GetCurrentStepIndex(), 3);
 	Widget->SkipRewardPresentation();
 	TestFalse(TEXT("카드 등장 후 입력 대기"),

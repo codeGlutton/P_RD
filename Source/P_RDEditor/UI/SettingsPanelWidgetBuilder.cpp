@@ -1411,10 +1411,18 @@ namespace SettingsPanelWidgetBuilder
 		};
 		for (const FTextFitSpec& Fit : TextFits)
 		{
-			// 버튼 이름이 길어질 때 ScaleBox가 전체 클릭 영역을 기준으로만
-			// 축소하도록 라벨 영역을 버튼과 정확히 일치시킨다. 이미지 안쪽 면을
-			// 다시 여백으로 적용하면 언어마다 보이는 중심이 달라진다.
-			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, FMargin(0.f));
+			// 확인창의 최종 실행 버튼은 투명 클릭 영역보다 실제 판 그림이 훨씬
+			// 좁다. 전체 클릭 영역을 기준으로 맞추면 "저장 후 종료"가 판 밖으로
+			// 넘친다. 이 버튼만 AspectFit 된 원화의 실제 외곽을 기준으로 축소한다.
+			FMargin SafePadding(0.f);
+			if (FCString::Strcmp(Fit.Text, TEXT("ConfirmAbandonButtonText")) == 0)
+			{
+				const FVector2D Fitted = AspectFitSize(
+					TextureNativeSize(Fit.Texture), Fit.Bounds);
+				const FVector2D Offset = (Fit.Bounds - Fitted) * .5f;
+				SafePadding = FMargin(Offset.X, Offset.Y, Offset.X, Offset.Y);
+			}
+			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, SafePadding);
 		}
 	}
 
@@ -1425,12 +1433,17 @@ namespace SettingsPanelWidgetBuilder
 		{
 			return Name.Contains(TEXT("AbandonConfirmTitle")) ? 40 : 50;
 		}
+		// 같은 좁은 확인 판에서 "포기"와 "저장 후 종료"를 번갈아 쓴다.
+		// 긴 쪽도 금속 테두리 안에 남도록 이 공용 라벨만 한 단계 줄인다.
+		if (Name.Contains(TEXT("ConfirmAbandonButtonText")))
+		{
+			return 25;
+		}
 
 		if (Name.Contains(TEXT("BackButtonText"))
 			|| Name.Contains(TEXT("ResetButtonText"))
 			|| Name.Contains(TEXT("SaveAndExitButtonText"))
 			|| Name.Contains(TEXT("AbandonRunButtonText"))
-			|| Name.Contains(TEXT("ConfirmAbandonButtonText"))
 			|| Name.Contains(TEXT("CancelAbandonButtonText")))
 		{
 			return 30;

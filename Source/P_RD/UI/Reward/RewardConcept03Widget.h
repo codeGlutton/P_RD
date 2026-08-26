@@ -136,6 +136,7 @@ private:
 		ChestAwaitInput,
 		ChestOpening,
 		GoldReveal,
+		AwaitGoldContinue,
 		ArtifactReveal,
 		AwaitArtifactChoice,
 		AwaitConfirm,
@@ -157,6 +158,8 @@ private:
 	void StartArtifactReveal();
 	void UpdateArtifactReveal(float NormalizedTime);
 	void FinishArtifactReveal();
+	void InitializeExperienceAnimation();
+	void UpdateExperienceAnimation(float DeltaSeconds);
 	void ResetPresentationVisuals();
 	void UnbindUIModel();
 	void RefreshRewardData();
@@ -365,6 +368,11 @@ private:
 	int32 PressedArtifactIndex = INDEX_NONE;
 	FTimerHandle ArtifactLongPressTimer;
 	int32 DisplayedGoldAmount = 350;
+	bool bExperienceAnimationInitialized = false;
+	float ExperienceAnimationElapsed = 0.f;
+	float ExperienceStartValues[3] = { 0.f, 0.f, 0.f };
+	float ExperienceTargetValues[3] = { 0.f, 0.f, 0.f };
+	float ExperienceMaximumValues[3] = { 1.f, 1.f, 1.f };
 };
 
 /** Three-step variant used when the reward payload has no artifact choice. */

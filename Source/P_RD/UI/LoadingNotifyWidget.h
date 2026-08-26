@@ -20,6 +20,7 @@
 
 class UTextBlock;
 class UWidget;
+class URunOptionsRailWidget;
 
 /**
  * @brief 최소 표시 시간, 로딩중/로딩완료 문구, 점멸 인디케이터를 관리한다.
@@ -64,6 +65,7 @@ protected:
 	 * @param InDeltaTime 이전 프레임 이후 경과 시간
 	 */
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	void NativeDestruct() override;
 
 	/**
 	 * @brief OpenUI() 요청을 로딩 중 상태 진입으로 해석한다.
@@ -120,6 +122,10 @@ private:
 	 */
 	void FinishCompletedState();
 
+	/** Hide every options rail while the transition layer owns the screen. */
+	void SuppressRunOptionsRails();
+	void RestoreRunOptionsRails();
+
 private:
 	/**
 	 * @brief 기본 WBP 또는 native fallback에서 점멸시킬 로딩 인디케이터
@@ -174,4 +180,7 @@ private:
 
 	/** @brief 현재 로딩 알림 표시 단계 */
 	ELoadingNotifyState mLoadingState = ELoadingNotifyState::None;
+
+	TMap<TWeakObjectPtr<URunOptionsRailWidget>, ESlateVisibility>
+		mSuppressedRunOptionsRails;
 };

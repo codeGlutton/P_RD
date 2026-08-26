@@ -11,11 +11,13 @@ namespace
 		TEXT("rd.Debug.CombatUIFixture"), GCombatUIFixtureMode,
 		TEXT("Combat UI fixture: 0=off, 1=display-only HP one, 2=buff/debuff/both statuses, 3=all."));
 
-	int32 GForceCombatHPOne = 0;
+	// Development 테스트 패키지는 모든 전투 유닛을 한 대에 처치할 수 있게
+	// 기본 활성화한다. Shipping에서는 아래 함수가 항상 false라 영향이 없다.
+	int32 GForceCombatHPOne = 1;
 	FAutoConsoleVariableRef CForceCombatHPOne(
 		TEXT("rd.Debug.ForceCombatHPOne"), GForceCombatHPOne,
-		TEXT("Explicit opt-in: 1 mutates enemy combat units' actual HP to 1. "
-			"The -EnemyHPOne command-line switch enables the same fixture."));
+		TEXT("Development fixture: 1 mutates every combat unit's current HP to 1. "
+			"Set 0 to disable. -AllHPOne/-EnemyHPOne also enables it."));
 }
 
 int32 CombatUIDebugFixture::GetMode()
@@ -35,7 +37,19 @@ bool CombatUIDebugFixture::ShouldMutateActualHPOne()
 	// Deliberately independent from CombatUIFixture mode. The normal UI fixture
 	// must not alter combat outcome or the HP tracked by RunPersistData.
 	return GForceCombatHPOne != 0
+		|| FParse::Param(FCommandLine::Get(), TEXT("AllHPOne"))
 		|| FParse::Param(FCommandLine::Get(), TEXT("EnemyHPOne"));
+#endif
+}
+
+bool CombatUIDebugFixture::ShouldMutatePlayerHPOne()
+{
+#if UE_BUILD_SHIPPING
+	return false;
+#else
+	// 아군까지 건드리는 것은 명시적으로 2를 넣었을 때만이다. -EnemyHPOne은
+	// 이름 그대로 적만 바꾼다.
+	return GForceCombatHPOne >= 2;
 #endif
 }
 

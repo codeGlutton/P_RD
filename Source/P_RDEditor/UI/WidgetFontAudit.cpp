@@ -388,6 +388,11 @@ namespace WidgetFontAudit
 		{
 			return false;
 		}
+		// 세로로는 자르지 않는다. 가로는 ScaleToFitX + DownOnly 가 이미 막고
+		// 있어서, 자르기가 하는 일은 아래꼬리와 외곽선을 1~2px 깎는 것뿐이었다
+		// (0824 검수: "글자 짤리는거"). 런타임의
+		// URDUserWidget::NormalizeAutoFitTextClipping 과 같은 값이다.
+		constexpr EWidgetClipping AutoFitClipping = EWidgetClipping::Inherit;
 
 		// 이 명령은 여러 번 실행해도 같은 결과가 나와야 한다. 예전 구현은 이미
 		// AutoFit 안에 든 TextBlock을 통째로 건너뛰어, 과거의 RenderTransform,
@@ -407,7 +412,7 @@ namespace WidgetFontAudit
 			}
 			ExistingScale->SetStretch(EStretch::ScaleToFitX);
 			ExistingScale->SetStretchDirection(EStretchDirection::DownOnly);
-			ExistingScale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			ExistingScale->SetClipping(AutoFitClipping);
 			ExistingScale->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 			if (UOverlaySlot* OuterOverlay = Cast<UOverlaySlot>(ExistingScale->Slot))
 			{
@@ -428,6 +433,11 @@ namespace WidgetFontAudit
 			}
 			Text->SetMargin(FMargin(0.f));
 			Text->SetJustification(ETextJustify::Center);
+			Text->SetClipping(AutoFitClipping);
+			if (UWidget* Center = ExistingScale->GetParent())
+			{
+				Center->SetClipping(AutoFitClipping);
+			}
 			Text->SetRenderTransform(FWidgetTransform());
 			Text->SetRenderTransformPivot(FVector2D(.5f));
 			Text->SetAutoWrapText(false);
@@ -482,7 +492,7 @@ namespace WidgetFontAudit
 
 		Scale->SetStretch(EStretch::ScaleToFitX);
 		Scale->SetStretchDirection(EStretchDirection::DownOnly);
-		Scale->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Scale->SetClipping(AutoFitClipping);
 		Scale->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		Scale->SetContent(Text);
 		if (UScaleBoxSlot* TextSlot = Cast<UScaleBoxSlot>(Text->Slot))

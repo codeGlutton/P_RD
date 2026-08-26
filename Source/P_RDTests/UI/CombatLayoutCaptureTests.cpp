@@ -31,6 +31,7 @@
 #include "Slate/WidgetRenderer.h"
 #include "TextureCompiler.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatUIModel.h"
 #include "UI/Hire/MercenaryHireWidget.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "UI/Reward/RewardUIModel.h"
@@ -235,6 +236,12 @@ namespace CombatLayoutCapture
 		// URDUserWidget은 OpenUI() 전까지 Collapsed다. 여기서는 뷰포트에 올리지
 		// 않고 그리기만 하므로 표시 상태를 직접 세운다.
 		Layout->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		const bool bShowTargetingControls =
+			FCString::Strcmp(AdditionalSuffix, TEXT("_Targeting")) == 0;
+		const bool bShowWaitingConfirm =
+			FCString::Strcmp(AdditionalSuffix, TEXT("_WaitingConfirm")) == 0;
+		const bool bShowCommandCards =
+			FCString::Strcmp(AdditionalSuffix, TEXT("_Commands")) == 0;
 
 		// 몬스터 탭 WBP 에는 번역 키 없이 구워진 라벨이 남아 있고, 실게임은
 		// EnsureMonsterTabWidget() 이 로컬라이즈 텍스트로 갈아 끼운다. 캡처는
@@ -251,6 +258,65 @@ namespace CombatLayoutCapture
 			BackText->SetText(NSLOCTEXT("CombatHUD", "MercenaryBack", "닫기"));
 		}
 		const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+		// 기본 HUD 캡처에도 실제 플레이어 턴을 흘린다. 그래야 렌더 틱에서
+		// 퀵바가 다시 접히지 않고, 런타임과 같은 경로로 쿨타임 숫자까지 남는다.
+		if (!bShowMercenaryPanel)
+		{
+			if (UCombatLayoutHUDWidget* CombatHUD = Cast<UCombatLayoutHUDWidget>(Layout))
+			{
+				UCombatUIModel* PreviewModel = NewObject<UCombatUIModel>(CombatHUD);
+				CombatHUD->BindUIModel(PreviewModel);
+				FUnitUI Player;
+				Player.mUnitId = 1;
+				Player.mIsPlayer = true;
+				Player.mActionPoints = 3;
+				Player.mMaxActionPoints = 4;
+				Player.mMovementPoint = 3.f;
+				Player.mMaxMovementPoint = 4.f;
+				PreviewModel->SetUnitUIs({ Player });
+
+				const TCHAR* SkillIconPaths[] = {
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Barrier.T_SkillIcon_Barrier"),
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Slash.T_SkillIcon_Slash"),
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Whirlwind.T_SkillIcon_Whirlwind"),
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_HeavySmash.T_SkillIcon_HeavySmash"),
+					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/SkillIcons/T_SkillIcon_Charge.T_SkillIcon_Charge") };
+				TArray<FSkillUI> Skills;
+				for (int32 Index = 0; Index < UE_ARRAY_COUNT(SkillIconPaths); ++Index)
+				{
+					FSkillUI Skill;
+					Skill.mSkillIndex = Index;
+					Skill.mIcon = LoadObject<UTexture2D>(nullptr, SkillIconPaths[Index]);
+					Skill.mIsUsable = Index != 3;
+					Skill.mCooldownTurns = Index == 3 ? 4 : 0;
+					Skill.mRemainingCooldown = Index == 3 ? 2 : 0;
+					Skills.Add(Skill);
+				}
+				PreviewModel->SetSkillUIs(Skills);
+				FCombatPendingActionUI PendingAction;
+				PendingAction.mType = ECombatPendingActionType::Skill;
+				PendingAction.mActionPointCost = 1;
+				PreviewModel->SetPendingAction(PendingAction);
+				FTurnUI Turn;
+				Turn.mCurrentUnitId = Player.mUnitId;
+				Turn.mTurnOrderUnitIds = { Player.mUnitId };
+				Turn.mPhase = bShowTargetingControls
+					? ECombatBuildPhaseUI::Preview
+					: bShowWaitingConfirm
+						? ECombatBuildPhaseUI::AimSelection
+						: ECombatBuildPhaseUI::None;
+				PreviewModel->SetTurnUI(Turn);
+				PreviewModel->OnBeginAnyTurn.Broadcast(nullptr);
+				if (bShowCommandCards)
+				{
+					if (UButton* SkillToggle = Cast<UButton>(
+						CombatHUD->GetWidgetFromName(TEXT("SkillToggleButton"))))
+					{
+						SkillToggle->OnClicked.Broadcast();
+					}
+				}
+			}
+		}
 		if (bUseDirectViewportSize)
 		{
 			if (UMercenaryHireWidget* Hire = Cast<UMercenaryHireWidget>(Layout))
@@ -812,6 +878,45 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 		{
 			AddError(FString::Printf(TEXT("%s: %s"), ClassPath, *Error));
 		}
+		// 고정 1672 시안 캡처만 보면 720p DPI에서 카드가 한 번 더 줄어드는
+		// 회귀를 볼 수 없다. 실제 플레이 창과 같은 크기를 WBP에 직접 할당한다.
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			1280, 720, true, TEXT("_1280x720")))
+		{
+			AddError(FString::Printf(TEXT("%s 1280x720: %s"), ClassPath, *Error));
+		}
+		// 실제 720p PIE는 1920x1080 저작 위젯을 0.667 DPI로 표현한다.
+		// 직접 720 좌표를 할당하는 위 캡처와 별도로 그 경로도 남긴다.
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			1280, 720, false, TEXT("_PIE1280x720")))
+		{
+			AddError(FString::Printf(TEXT("%s PIE 1280x720: %s"), ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			1280, 720, false, TEXT("_Targeting")))
+		{
+			AddError(FString::Printf(TEXT("%s 조준 조작부: %s"), ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			1280, 720, false, TEXT("_WaitingConfirm")))
+		{
+			AddError(FString::Printf(TEXT("%s 확정 대기 조작부: %s"), ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			1280, 720, false, TEXT("_Commands")))
+		{
+			AddError(FString::Printf(TEXT("%s 스킬 카드: %s"), ClassPath, *Error));
+		}
 		Error.Reset();
 		if (!CaptureLayout(*World, ClassPath, Error, true))
 		{
@@ -1064,6 +1169,56 @@ bool FMonsterTabLayoutCaptureTest::RunTest(const FString& Parameters)
 			IFileManager::Get().FileSize(*CapturePath) > 100000);
 	}
 	return true;
+}
+
+/**
+ * @brief 틱 없이 한 프레임만 그려도 스킬 카드가 제 모습으로 나오는지 본다.
+ *
+ * @details 카드 등장 연출(0824)은 시작 상태가 "투명 + 0.86배"다. 편집기
+ * 캡처는 한 프레임만 그리고 끝나 연출이 앞으로 가지 않으므로, 연출을
+ * 아무 데서나 걸면 그 시작 상태로 굳어 캡처에서 카드가 통째로 사라진다 --
+ * 실제로 한 번 그렇게 나왔다. 연출은 게임 월드에서만 걸어야 한다.
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCombatLayoutCardTransformTest,
+	"P_RD.UI.CombatLayout.CardsSurviveSingleFrame",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCombatLayoutCardTransformTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	UClass* LayoutClass = LoadClass<UUserWidget>(nullptr,
+		TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"));
+	if (!TestNotNull(TEXT("에디터 월드"), World)
+		|| !TestNotNull(TEXT("전투 HUD 클래스"), LayoutClass))
+	{
+		return false;
+	}
+	UUserWidget* Layout = CreateWidget<UUserWidget>(World, LayoutClass);
+	if (!TestNotNull(TEXT("전투 HUD 인스턴스"), Layout))
+	{
+		return false;
+	}
+	const TSharedRef<SWidget> LayoutSlate = Layout->TakeWidget();
+
+	int32 AuditedCards = 0;
+	for (int32 Index = 0; Index < 6; ++Index)
+	{
+		UWidget* Card = Layout->GetWidgetFromName(
+			FName(*FString::Printf(TEXT("CommandCard_%d"), Index)));
+		if (Card == nullptr)
+		{
+			continue;
+		}
+		++AuditedCards;
+		TestEqual(*FString::Printf(TEXT("카드 %d 불투명"), Index),
+			Card->GetRenderOpacity(), 1.f);
+		TestEqual(*FString::Printf(TEXT("카드 %d 원본 배율"), Index),
+			Card->GetRenderTransform().Scale, FVector2D(1.f, 1.f));
+	}
+	TestTrue(TEXT("카드를 실제로 검사함"), AuditedCards > 0);
+	return !HasAnyErrors();
 }
 
 #endif // WITH_EDITOR

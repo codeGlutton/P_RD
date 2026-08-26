@@ -124,6 +124,7 @@ public:
 	void NormalizeCommonUIContractForTest()
 	{
 		NormalizeCommonInputLayers();
+		NormalizeAutoFitTextClipping();
 	}
 #endif
 
@@ -202,6 +203,21 @@ private:
 	 *          SelfHitTestInvisible로 정규화한다.
 	 */
 	void NormalizeCommonInputLayers();
+
+	/**
+	 * @brief AutoFit 글자 상자가 글리프를 세로로 자르지 않게 한다.
+	 *
+	 * @details 글자는 ``Xxx_AutoFit`` ScaleBox 안에 들어간다. 그 상자는
+	 * ``ScaleToFitX`` + ``DownOnly`` 라 **가로는 이미 넘칠 수 없다**. 그런데
+	 * 상자에 ClipToBoundsAlways가 걸려 있어, 저작된 칸 높이가 글꼴 줄 높이와
+	 * 비슷하면 아래꼬리(y·g·받침)와 외곽선이 1~2px 잘렸다(0824 검수: "글자
+	 * 짤리는거"). 가로 보호는 배율이 이미 하고 있으므로 자르기는 잃을 것만
+	 * 있다 -- 세로로 새는 것을 허용한다.
+	 *
+	 * 이미 구워진 자산까지 고치려고 런타임에서 정규화한다. 새로 굽는 쪽
+	 * (WidgetFontAudit / 각 빌더)도 같은 값으로 맞춰 두었다.
+	 */
+	void NormalizeAutoFitTextClipping();
 
 	/** @brief 이 위젯 트리의 버튼들을 찾아 누름 효과를 설정하고 눌림/뗌 이벤트를 연결한다. */
 	void SetupCommonButtonFeedback();

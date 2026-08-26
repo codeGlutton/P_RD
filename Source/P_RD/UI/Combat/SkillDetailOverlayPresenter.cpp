@@ -180,6 +180,7 @@ namespace SkillVisualLayout
 	const FVector2D SelectButtonPosition(368.f, 690.f);
 	const FVector2D EffectButtonPosition(368.f, 752.f);
 	const FVector2D RangeButtonSize(316.f, 56.f);
+	const FMargin RangeTextSafePadding(40.f, 0.f, 40.f, 0.f);
 	const FVector2D DescriptionPosition(724.f, 278.f);
 	const FVector2D DescriptionSize(778.f, 494.f);
 	const FVector2D DividerPosition(694.f, 274.f);
@@ -202,6 +203,16 @@ namespace SkillVisualLayout
 			const FIntPoint ImportedSize = Texture->GetImportedSize();
 			Brush.ImageSize = FVector2D(ImportedSize.X, ImportedSize.Y);
 			Brush.DrawAs = ESlateBrushDrawType::Image;
+			// 소스의 투명 캔버스를 UV 단계에서 잘라, 그림과 라벨이 같은
+			// 보이는 사각형을 기준으로 중앙을 계산하게 한다.
+			const bool bSelected = Texture->GetName().Contains(TEXT("Selected"));
+			const FVector2f Min = bSelected
+				? FVector2f(33.f / 1024.f, 0.f)
+				: FVector2f(32.f / 1024.f, 0.f);
+			const FVector2f Max = bSelected
+				? FVector2f(992.f / 1024.f, 121.f / 128.f)
+				: FVector2f(994.f / 1024.f, 118.f / 128.f);
+			Brush.SetUVRegion(FBox2f(Min, Max));
 		}
 		else
 		{
@@ -263,7 +274,7 @@ USkillDetailOverlayPresenter::USkillDetailOverlayPresenter()
 	RD_LOAD_TEX(mSkillVisualAPIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cost_badge.KK_HUD04_zone_cost_badge");
 	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCooldownIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
-	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1");
 	RD_LOAD_TEX(mSkillVisualCasterIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph");
 	RD_LOAD_TEX(mSkillVisualTargetIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph");
 	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
@@ -1372,10 +1383,16 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 			Slot->SetSize(SkillVisualLayout::RangeButtonSize);
 			Slot->SetZOrder(12);
 		}
-		// 별도 생성한 얇은 투명 PNG를 실제 버튼 브러시로 쓴다. 원본의 가로형
-		// 비율을 유지한 316x56으로 키워 초광폭 모바일에서도 읽을 높이를 확보한다.
-		Button->SetStyle(SkillVisualLayout::MakeRangeButtonStyle(
-			mSkillRangeButtonTexture, mSkillRangeButtonSelectedTexture, false));
+		// 장식판은 아래의 별도 Image가 원본 8:1 비율로 그린다. Button은 56px
+		// 터치 표면만 맡아 PNG를 세로로 늘이지 않는다.
+		FButtonStyle InvisibleStyle;
+		InvisibleStyle.Normal.DrawAs = ESlateBrushDrawType::NoDrawType;
+		InvisibleStyle.Hovered.DrawAs = ESlateBrushDrawType::NoDrawType;
+		InvisibleStyle.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
+		InvisibleStyle.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
+		InvisibleStyle.SetNormalPadding(FMargin(0.f));
+		InvisibleStyle.SetPressedPadding(FMargin(0.f));
+		Button->SetStyle(InvisibleStyle);
 		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
 		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
 		Button->SetVisibility(ESlateVisibility::Visible);
@@ -1392,7 +1409,7 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 		{
 			AutoFitSlot->SetHorizontalAlignment(HAlign_Fill);
 			AutoFitSlot->SetVerticalAlignment(VAlign_Fill);
-			AutoFitSlot->SetPadding(FMargin(0.f));
+			AutoFitSlot->SetPadding(SkillVisualLayout::RangeTextSafePadding);
 		}
 
 		OutText = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TextName);
@@ -1414,6 +1431,21 @@ void USkillDetailOverlayPresenter::BuildSkillVisualPreview()
 		}
 		return Button;
 	};
+	const float RuntimeRangePlateHeight = SkillVisualLayout::RangeButtonSize.X / 8.f;
+	const float RuntimeRangePlateYOffset =
+		(SkillVisualLayout::RangeButtonSize.Y - RuntimeRangePlateHeight) * .5f;
+	mSkillSelectRangePlate = AddImage(TEXT("RuntimeSkillSelectRangePlate"),
+		mSkillRangeButtonTexture,
+		SkillVisualLayout::SelectButtonPosition + FVector2D(0.f, RuntimeRangePlateYOffset),
+		FVector2D(SkillVisualLayout::RangeButtonSize.X, RuntimeRangePlateHeight), 11);
+	mSkillEffectRangePlate = AddImage(TEXT("RuntimeSkillEffectRangePlate"),
+		mSkillRangeButtonTexture,
+		SkillVisualLayout::EffectButtonPosition + FVector2D(0.f, RuntimeRangePlateYOffset),
+		FVector2D(SkillVisualLayout::RangeButtonSize.X, RuntimeRangePlateHeight), 11);
+	mSkillSelectRangePlate->SetBrush(SkillVisualLayout::MakeRangeButtonBrush(
+		mSkillRangeButtonTexture));
+	mSkillEffectRangePlate->SetBrush(SkillVisualLayout::MakeRangeButtonBrush(
+		mSkillRangeButtonTexture));
 	mSkillSelectRangeButton = AddRangeButton(TEXT("RuntimeSkillSelectRangeButton"),
 		TEXT("RuntimeSkillSelectRangeText"), SkillVisualLayout::SelectButtonPosition,
 		mSkillSelectRangeText);
@@ -1575,9 +1607,9 @@ void USkillDetailOverlayPresenter::RefreshSkillRangeButtonStyles()
 		&& mSkillTacticalDiagramWidget->IsEffectRangePreviewShown();
 	if (mSkillSelectRangePlate != nullptr)
 	{
-		mSkillSelectRangePlate->SetBrushFromTexture(
+		mSkillSelectRangePlate->SetBrush(SkillVisualLayout::MakeRangeButtonBrush(
 			bSelectActive && mSkillRangeButtonSelectedTexture != nullptr
-				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture, false);
+				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture));
 	}
 	else if (mSkillSelectRangeButton != nullptr)
 	{
@@ -1587,9 +1619,9 @@ void USkillDetailOverlayPresenter::RefreshSkillRangeButtonStyles()
 	}
 	if (mSkillEffectRangePlate != nullptr)
 	{
-		mSkillEffectRangePlate->SetBrushFromTexture(
+		mSkillEffectRangePlate->SetBrush(SkillVisualLayout::MakeRangeButtonBrush(
 			bEffectActive && mSkillRangeButtonSelectedTexture != nullptr
-				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture, false);
+				? mSkillRangeButtonSelectedTexture : mSkillRangeButtonTexture));
 	}
 	else if (mSkillEffectRangeButton != nullptr)
 	{

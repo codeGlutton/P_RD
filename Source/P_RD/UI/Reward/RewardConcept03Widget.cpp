@@ -35,8 +35,10 @@ namespace RewardConcept03
 	constexpr float DefaultChestRevealDuration = 1.15f;
 	// 33장을 약 24fps로 한 번만 보여 준다. 기존 4.06초는 보상 흐름을
 	// 지나치게 늦추고 밝은 프레임의 중첩을 더 눈에 띄게 했다.
-	constexpr float TripleBurstRevealDuration = 1.35f;
+	constexpr float TripleBurstRevealDuration = 1.85f;
 	constexpr float GoldRevealDuration = 1.65f;
+	constexpr float ExperienceFillDuration = 1.10f;
+	constexpr float ChestShakeEnd = .32f;
 	constexpr float ArtifactRevealDuration = 1.20f;
 	constexpr float ArtifactStagger = .12f;
 	const FVector2D ArtifactStartTranslations[] = {
@@ -217,6 +219,7 @@ void URewardConcept03Widget::BindUIModel(URewardUIModel* InUIModel)
 			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
 	RefreshRewardData();
+	InitializeExperienceAnimation();
 }
 
 void URewardConcept03Widget::UnbindUIModel()
@@ -277,6 +280,7 @@ void URewardConcept03Widget::NativeTick(
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	if (!bManualPresentationTick)
 	{
+		UpdateExperienceAnimation(InDeltaTime);
 		AdvanceRewardPresentation(InDeltaTime);
 	}
 }
@@ -536,6 +540,76 @@ void URewardConcept03Widget::RefreshRewardData()
 	ApplyArtifactSelection();
 }
 
+void URewardConcept03Widget::InitializeExperienceAnimation()
+{
+	if (UIModel == nullptr)
+	{
+		bExperienceAnimationInitialized = false;
+		return;
+	}
+	const FRewardUI& Reward = UIModel->GetReward();
+	ExperienceAnimationElapsed = 0.f;
+	bExperienceAnimationInitialized = true;
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		if (Reward.mMercenaryExp.IsValidIndex(Index))
+		{
+			const FRewardMercenaryExpUI& Mercenary = Reward.mMercenaryExp[Index];
+			ExperienceStartValues[Index] = FMath::Max(0.f, Mercenary.mExpBefore);
+			ExperienceTargetValues[Index] = FMath::Max(0.f, Mercenary.mExpAfter);
+			ExperienceMaximumValues[Index] = FMath::Max(1.f, Mercenary.mMaxExp);
+		}
+		else
+		{
+			ExperienceStartValues[Index] = 0.f;
+			ExperienceTargetValues[Index] = 0.f;
+			ExperienceMaximumValues[Index] = 1.f;
+		}
+	}
+	UpdateExperienceAnimation(0.f);
+}
+
+void URewardConcept03Widget::UpdateExperienceAnimation(const float DeltaSeconds)
+{
+	if (!bExperienceAnimationInitialized
+		|| CurrentStepIndex != RewardConcept03::FirstStep)
+	{
+		return;
+	}
+	ExperienceAnimationElapsed = FMath::Min(
+		ExperienceAnimationElapsed + FMath::Max(0.f, DeltaSeconds),
+		RewardConcept03::ExperienceFillDuration);
+	const float LinearT = FMath::Clamp(ExperienceAnimationElapsed
+		/ RewardConcept03::ExperienceFillDuration, 0.f, 1.f);
+	const float T = 1.f - FMath::Pow(1.f - LinearT, 3.f);
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		const float Current = FMath::Lerp(ExperienceStartValues[Index],
+			ExperienceTargetValues[Index], T);
+		if (UTextBlock* Progress = Cast<UTextBlock>(GetWidgetFromName(
+			*FString::Printf(TEXT("NewProgress_%d"), Index))))
+		{
+			Progress->SetText(FText::FromString(FString::Printf(TEXT("%.0f / %.0f"),
+				Current, ExperienceMaximumValues[Index])));
+		}
+		UCanvasPanel* FillClip = Cast<UCanvasPanel>(GetWidgetFromName(
+			*FString::Printf(TEXT("NewFillClip_%d"), Index)));
+		UImage* FullFill = Cast<UImage>(GetWidgetFromName(
+			*FString::Printf(TEXT("NewFill_%d"), Index)));
+		UCanvasPanelSlot* ClipSlot = FillClip != nullptr
+			? Cast<UCanvasPanelSlot>(FillClip->Slot) : nullptr;
+		const UCanvasPanelSlot* FullFillSlot = FullFill != nullptr
+			? Cast<UCanvasPanelSlot>(FullFill->Slot) : nullptr;
+		if (ClipSlot != nullptr && FullFillSlot != nullptr)
+		{
+			FVector2D ClipSize = ClipSlot->GetSize();
+			ClipSize.X = FullFillSlot->GetSize().X * FMath::Clamp(Current
+				/ ExperienceMaximumValues[Index], 0.f, 1.f);
+			ClipSlot->SetSize(ClipSize);
+		}
+	}
+}
+
 FText URewardConcept03Widget::GetRewardChoiceTypeText(
 	const int32 ChoiceIndex) const
 {
@@ -678,8 +752,11 @@ void URewardConcept03Widget::ResetRewardFlow()
 	PendingRewardId = FPrimaryAssetId();
 	PresentationState = EPresentationState::Idle;
 	PresentationElapsed = 0.f;
+	bExperienceAnimationInitialized = false;
+	ExperienceAnimationElapsed = 0.f;
 	HideArtifactDetails();
 	RefreshRewardData();
+	InitializeExperienceAnimation();
 	ResetPresentationVisuals();
 	ApplyVisualState();
 }
@@ -699,7 +776,18 @@ void URewardConcept03Widget::AdvanceRewardFlow()
 		SetCurrentStep(RewardConcept03::ChestStep);
 		break;
 	case RewardConcept03::GoldStep:
-		if (PresentationState == EPresentationState::AwaitConfirm)
+		if (PresentationState == EPresentationState::AwaitGoldContinue)
+		{
+			if (UsesArtifactStep())
+			{
+				StartArtifactReveal();
+			}
+			else
+			{
+				CompleteRewardFlow();
+			}
+		}
+		else if (PresentationState == EPresentationState::AwaitConfirm)
 		{
 			CompleteRewardFlow();
 		}
@@ -816,7 +904,9 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 	const bool bUsesTripleBurstFrames = bUsesAtlas || (ChestVisualSwitcher != nullptr
 		&& ChestVisualSwitcher->GetNumWidgets()
 			== RewardConcept03::TripleBurstFrameCount);
-	const float FramePosition = T * static_cast<float>(
+	const float SequenceT = bUsesTripleBurstFrames
+		? RewardConcept03::Segment(T, RewardConcept03::ChestShakeEnd, 1.f) : T;
+	const float FramePosition = SequenceT * static_cast<float>(
 		RewardConcept03::TripleBurstFrameCount - 1);
 	if (bUsesAtlas)
 	{
@@ -874,9 +964,26 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 		float VerticalKick = 0.f;
 		if (bUsesTripleBurstFrames)
 		{
-			// 아틀라스 안에 이미 카메라 확대와 광량 변화가 들어 있다. UMG에서
-			// 다시 흔들거나 확대하지 않고 8% 여백을 둬 가장자리 잘림을 막는다.
-			Scale = .92f;
+			// Hold the closed frame while the shake builds, then release the atlas in
+			// one clear impact. The previous sequence began opening immediately.
+			const float ShakeT = RewardConcept03::Segment(T, 0.f,
+				RewardConcept03::ChestShakeEnd);
+			if (T < RewardConcept03::ChestShakeEnd)
+			{
+				const float Amplitude = FMath::Lerp(2.f, 15.f, ShakeT * ShakeT);
+				Shake = FMath::Sin(T * 155.f) * Amplitude;
+				VerticalKick = -FMath::Abs(FMath::Sin(T * 77.5f))
+					* FMath::Lerp(0.f, 5.f, ShakeT);
+				Scale = FMath::Lerp(.94f, .89f, ShakeT);
+			}
+			else
+			{
+				const float BangT = RewardConcept03::Segment(T,
+					RewardConcept03::ChestShakeEnd,
+					RewardConcept03::ChestShakeEnd + .16f);
+				Scale = FMath::Lerp(1.08f, .92f, BangT);
+				VerticalKick = FMath::Lerp(-18.f, 0.f, BangT);
+			}
 		}
 		else
 		{
@@ -946,8 +1053,11 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 				: T < .70f ? RewardConcept03::Segment(T, .58f, .70f)
 				: 1.f - RewardConcept03::Segment(T, .70f, .94f);
 		// Frameless 연출은 전체 화면 사각 플래시를 사용하지 않는다.
+		const float AtlasBang = bUsesTripleBurstFrames
+			? RewardConcept03::ImpactPulse(T,
+				RewardConcept03::ChestShakeEnd + .035f, .055f) : 0.f;
 		PresentationFlash->SetRenderOpacity(
-			bUsesTripleBurstFrames ? 0.f : Flash * .72f);
+			bUsesTripleBurstFrames ? AtlasBang * .70f : Flash * .72f);
 	}
 }
 
@@ -1052,16 +1162,11 @@ void URewardConcept03Widget::FinishGoldReveal()
 {
 	UpdateGoldReveal(1.f);
 	ClaimGoldReward();
-	if (UsesArtifactStep())
-	{
-		StartArtifactReveal();
-	}
-	else
-	{
-		PresentationState = EPresentationState::AwaitConfirm;
-		PresentationElapsed = 0.f;
-		ApplyVisualState();
-	}
+	// Keep the awarded amount on screen until an explicit tap. Auto-advancing here
+	// made the gold reward unreadable on a fast device.
+	PresentationState = EPresentationState::AwaitGoldContinue;
+	PresentationElapsed = 0.f;
+	ApplyVisualState();
 }
 
 void URewardConcept03Widget::StartArtifactReveal()
@@ -1228,6 +1333,14 @@ void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 	{
 		return;
 	}
+	const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
+	if (Choices.Num() == 1)
+	{
+		SelectedArtifactIndex = 0;
+		ApplyArtifactSelection();
+		ShowArtifactDetails(0);
+		return;
+	}
 	SelectedArtifactIndex = ArtifactIndex;
 	ApplyArtifactSelection();
 	OnArtifactSelected.Broadcast(SelectedArtifactIndex);
@@ -1245,6 +1358,12 @@ void URewardConcept03Widget::BeginArtifactPress(const int32 ArtifactIndex)
 		return;
 	}
 	PressedArtifactIndex = ArtifactIndex;
+	// With one artifact a normal tap opens details. Long press remains the
+	// inspection gesture only when a tap is needed to choose among several cards.
+	if (UIModel->GetRewardChoices().Num() <= 1)
+	{
+		return;
+	}
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().SetTimer(ArtifactLongPressTimer,
@@ -1608,6 +1727,7 @@ void URewardConcept03Widget::ApplyVisualState()
 
 	const bool bBottomVisible =
 		PresentationState == EPresentationState::Idle
+		|| PresentationState == EPresentationState::AwaitGoldContinue
 		|| PresentationState == EPresentationState::AwaitConfirm
 		|| PresentationState == EPresentationState::AwaitArtifactChoice;
 	if (BottomButtonPanel != nullptr)

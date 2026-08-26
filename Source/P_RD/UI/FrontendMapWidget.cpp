@@ -137,7 +137,7 @@ namespace
 		}
 		if (FCString::Strcmp(Key, TEXT("EnterText")) == 0)
 		{
-			return NSLOCTEXT("FrontendMapWidget", "EnterText", "ENTER");
+			return NSLOCTEXT("FrontendMapWidget", "EnterText", "입장");
 		}
 		if (FCString::Strcmp(Key, TEXT("LegendText")) == 0)
 		{

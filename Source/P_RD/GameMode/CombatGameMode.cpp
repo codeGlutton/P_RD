@@ -469,6 +469,15 @@ void ACombatGameMode::InitializeCombat()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
+		// 맞은 자리에 피해 숫자를 띄운다. 턴이 끝날 때 한꺼번에 내리면
+		// 때린 연출은 이미 끝난 뒤라 어느 타격의 숫자인지 못 읽는다
+		// (0824 검수: "데미지 스킨 띄우기"). 행동 하나가 끝날 때마다
+		// 그동안 쌓인 로그를 비워 그 행동의 결과만 그 자리에 뜨게 한다.
+		if (USimulationSubsystem* SimulationSubsystem
+			= GetWorld()->GetSubsystem<USimulationSubsystem>())
+		{
+			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+		}
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
@@ -1211,25 +1220,28 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	if (CombatUIDebugFixture::ShouldMutateActualHPOne()
-		&& Unit->IsPlayerUnitModel() == false)
+	if (CombatUIDebugFixture::ShouldMutateActualHPOne())
 	{
-		AttributeSetComponentModel->SetAttributeBaseValue(
-			UUnitAttributeSet::GetHPAttribute(), 1.f);
+		AttributeSetComponentModel->ApplyModToAttribute(
+			UUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, 1.f);
 
-		// 방어도가 데미지를 전부 흡수하면 HP 1이어도 일격에 죽지 않으므로,
-		// 픽스처 활성 시 적 방어도는 획득 즉시 0으로 되돌린다.
-		AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
-			UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
-			[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
-			(const FTacticalAttributeChangeData& Data)
-			{
-				if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
+		// 기존 적 원킬 픽스처의 방어도 0 규약은 적에게만 유지한다. 아군은
+		// 요청받은 현재 HP만 1로 바꾸고 나머지 전투 속성은 건드리지 않는다.
+		if (Unit->IsPlayerUnitModel() == false)
+		{
+			AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
+				UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
+				[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
+				(const FTacticalAttributeChangeData& Data)
 				{
-					WeakAttributeSet->ApplyModToAttribute(
-						UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
-				}
-			});
+					if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
+					{
+						WeakAttributeSet->ApplyModToAttribute(
+							UUnitAttributeSet::GetDefenseAttribute(),
+							ETacticalModOp::Override, 0.f);
+					}
+				});
+		}
 	}
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩
@@ -1336,6 +1348,8 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 
 void ACombatGameMode::PushTurnUIData() const
 {
+	static constexpr uint32 TurnForecastRoundCount = 10;
+
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -1353,6 +1367,7 @@ void ACombatGameMode::PushTurnUIData() const
 		RoundTransitionUI.mRound = CombatModel->GetRoundCount();
 		RoundTransitionUI.mCurrentRoundRemainingTurnCount = 0;
 		RoundTransitionUI.mTurnOrderUnitIds.Reset();
+		RoundTransitionUI.mPredictedRounds.Reset();
 		RoundTransitionUI.mNextRoundUnitIds.Reset();
 		RoundTransitionUI.mNextRoundOffset = 1;
 		mCombatUIModel->SetTurnUI(RoundTransitionUI);
@@ -1369,12 +1384,29 @@ void ACombatGameMode::PushTurnUIData() const
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	TArray<FSRPGTurnCandidate> ValidTurnCandidates = CombatModel->GetOrderedTurnCandidates();
-	for (const FSRPGTurnCandidate& ValidTurnCandidate : ValidTurnCandidates)
+	const TArray<FSRPGPredictedRound> PredictedRounds =
+		CombatModel->GetPredictedTurnRounds(TurnForecastRoundCount);
+	for (const FSRPGPredictedRound& PredictedRound : PredictedRounds)
 	{
-		TurnUI.mNextRoundUnitIds.Add(ValidTurnCandidate.mOwner->GetModelId());
+		FTurnRoundForecastUI& ForecastUI =
+			TurnUI.mPredictedRounds.AddDefaulted_GetRef();
+		ForecastUI.mRoundOffset = PredictedRound.mRoundOffset;
+		for (const FSRPGTurnCandidate& Candidate : PredictedRound.mCandidates)
+		{
+			if (Candidate.mOwner != nullptr)
+			{
+				ForecastUI.mTurnOrderUnitIds.Add(Candidate.mOwner->GetModelId());
+			}
+		}
 	}
-	TurnUI.mNextRoundOffset = 1;
+
+	// 구형 WBP/테스트도 첫 예측 라운드는 계속 읽을 수 있게 호환 필드를 채운다.
+	if (TurnUI.mPredictedRounds.IsEmpty() == false)
+	{
+		TurnUI.mNextRoundUnitIds =
+			TurnUI.mPredictedRounds[0].mTurnOrderUnitIds;
+		TurnUI.mNextRoundOffset = TurnUI.mPredictedRounds[0].mRoundOffset;
+	}
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 
@@ -2024,6 +2056,12 @@ void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorMod
 				SkillIcon.mSkillIndex = Index;
 				SkillIcon.mName = StaticSkillData->mName;
 				SkillIcon.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+				if (const UStaticUnitSkillData* UnitSkill =
+					Cast<UStaticUnitSkillData>(StaticSkillData))
+				{
+					SkillIcon.mActionPointCost = FMath::Max(
+						UnitSkill->mRequiredActionPoint, 0);
+				}
 			}
 		}
 	}
