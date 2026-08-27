@@ -1220,28 +1220,25 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	UAttributeSetComponentModel* AttributeSetComponentModel = Unit->GetAttributeComponentModel();
 	checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	if (CombatUIDebugFixture::ShouldMutateActualHPOne())
+	if (CombatUIDebugFixture::ShouldMutateActualHPOne()
+		&& Unit->IsPlayerUnitModel() == false)
 	{
-		AttributeSetComponentModel->ApplyModToAttribute(
-			UUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, 1.f);
+		AttributeSetComponentModel->SetAttributeBaseValue(
+			UUnitAttributeSet::GetHPAttribute(), 1.f);
 
-		// 기존 적 원킬 픽스처의 방어도 0 규약은 적에게만 유지한다. 아군은
-		// 요청받은 현재 HP만 1로 바꾸고 나머지 전투 속성은 건드리지 않는다.
-		if (Unit->IsPlayerUnitModel() == false)
-		{
-			AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
-				UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
-				[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
-				(const FTacticalAttributeChangeData& Data)
+		// 방어도가 데미지를 전부 흡수하면 HP 1이어도 일격에 죽지 않으므로,
+		// 픽스처 활성 시 적 방어도는 획득 즉시 0으로 되돌린다.
+		AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(
+			UUnitAttributeSet::GetDefenseAttribute()).AddWeakLambda(this,
+			[WeakAttributeSet = TWeakObjectPtr<UAttributeSetComponentModel>(AttributeSetComponentModel)]
+			(const FTacticalAttributeChangeData& Data)
+			{
+				if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
 				{
-					if (Data.mNewValue > 0.f && WeakAttributeSet.IsValid() == true)
-					{
-						WeakAttributeSet->ApplyModToAttribute(
-							UUnitAttributeSet::GetDefenseAttribute(),
-							ETacticalModOp::Override, 0.f);
-					}
-				});
-		}
+					WeakAttributeSet->ApplyModToAttribute(
+						UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
+				}
+			});
 	}
 
 	// 각 속성이 변경될 때마다 OnRefreshUnitUI를 브로드캐스트하도록 바인딩

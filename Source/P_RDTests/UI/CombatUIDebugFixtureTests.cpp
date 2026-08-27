@@ -18,14 +18,14 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 		return false;
 	}
 	const int32 OriginalMode = Fixture->GetInt();
-	IConsoleVariable* ActualHPFixture = IConsoleManager::Get().FindConsoleVariable(
+	IConsoleVariable* LegacyActualHP = IConsoleManager::Get().FindConsoleVariable(
 		TEXT("rd.Debug.ForceCombatHPOne"));
-	if (TestNotNull(TEXT("all-unit actual HP console variable"), ActualHPFixture) == false)
+	if (TestNotNull(TEXT("legacy actual HP console variable"), LegacyActualHP) == false)
 	{
 		return false;
 	}
-	const int32 OriginalActualHPFixture = ActualHPFixture->GetInt();
-	ActualHPFixture->Set(0, ECVF_SetByConsole);
+	const int32 OriginalLegacyActualHP = LegacyActualHP->GetInt();
+	LegacyActualHP->Set(0, ECVF_SetByConsole);
 	Fixture->Set(3, ECVF_SetByConsole);
 	TestEqual(TEXT("fixture mode 3"), CombatUIDebugFixture::GetMode(), 3);
 	TestFalse(TEXT("mode 3 never mutates actual HP/persist state"),
@@ -74,10 +74,10 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 	}
 
 	Fixture->Set(0, ECVF_SetByConsole);
-	ActualHPFixture->Set(1, ECVF_SetByConsole);
-	TestTrue(TEXT("development fixture can mutate every unit's actual HP"),
+	LegacyActualHP->Set(1, ECVF_SetByConsole);
+	TestTrue(TEXT("legacy explicit opt-in can mutate actual HP"),
 		CombatUIDebugFixture::ShouldMutateActualHPOne());
-	ActualHPFixture->Set(0, ECVF_SetByConsole);
+	LegacyActualHP->Set(0, ECVF_SetByConsole);
 	FUnitUI DisabledUnitUI;
 	DisabledUnitUI.mHP = 37.f;
 	CombatUIDebugFixture::ApplyDisplayHPOne(true, OUT DisabledUnitUI);
@@ -86,7 +86,7 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 	CombatUIDebugFixture::AppendStatuses(false, 2, OUT DisabledStatuses);
 	TestTrue(TEXT("mode 0 does not mutate production DTO"), DisabledStatuses.IsEmpty());
 	Fixture->Set(OriginalMode, ECVF_SetByConsole);
-	ActualHPFixture->Set(OriginalActualHPFixture, ECVF_SetByConsole);
+	LegacyActualHP->Set(OriginalLegacyActualHP, ECVF_SetByConsole);
 	return true;
 }
 
