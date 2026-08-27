@@ -34,8 +34,8 @@ public:
 	FTacticalEffectQuery& operator=(FTacticalEffectQuery&& Other) = default;
 	FTacticalEffectQuery& operator=(const FTacticalEffectQuery& Other) = default;
 
-	bool operator==(const FTacticalEffectQuery& Other) const = default;
-	bool operator!=(const FTacticalEffectQuery& Other) const = default;
+	bool operator==(const FTacticalEffectQuery& Other) const;
+	bool operator!=(const FTacticalEffectQuery& Other) const;
 
 public:
 	bool Matches(const FActiveTacticalEffect& Effect) const;
