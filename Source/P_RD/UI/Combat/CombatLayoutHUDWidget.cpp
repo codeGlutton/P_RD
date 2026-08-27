@@ -182,6 +182,8 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 
 namespace
 {
+	constexpr float QuickSkillBarOffsetX = 80.f;
+
 	/**
 	 * @brief 초상을 칸에 맞춰 윗부분만 잘라 그린다.
 	 *
@@ -589,6 +591,13 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Disabled = Find<UWidget>(WidgetTree, TEXT("CommandDisabled") + Suffix);
 	}
 	mQuickSkillBar = Find<UWidget>(WidgetTree, TEXT("QuickSkillBar"));
+	if (UCanvasPanelSlot* QuickBarSlot = mQuickSkillBar != nullptr
+		? Cast<UCanvasPanelSlot>(mQuickSkillBar->Slot) : nullptr)
+	{
+		// 현재 WBP가 이전 좌표로 구워져 있어도 AP 바와 겹치지 않도록
+		// 런타임 계약을 함께 적용한다. 빌더와 같은 1920 설계 좌표다.
+		QuickBarSlot->SetPosition(FVector2D(QuickSkillBarOffsetX, -26.f));
+	}
 	mQuickSkillSlots.SetNum(CommandSlotCount);
 	for (int32 Index = 0; Index < mQuickSkillSlots.Num(); ++Index)
 	{

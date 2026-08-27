@@ -49,6 +49,8 @@ namespace CombatHUDWidgetBuilder
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1");
 	constexpr TCHAR APGemFlashMaterialPath[] =
 		TEXT("/Game/UI/CombatLayouts/M_APGemFlash.M_APGemFlash");
+	// 1920 설계 좌표에서 AP 바 오른쪽(666)과 퀵바 왼쪽 사이에 24px를 둔다.
+	constexpr float QuickSkillBarOffsetX = 80.f;
 	// 보유 용병 패널은 자기 판을 쓴다. 왜 나눴는지는 BuildMercenaryPanel 참고.
 	constexpr TCHAR MercenaryPackagePath[] = TEXT("/Game/UI/CombatLayouts");
 	constexpr TCHAR MercenaryAssetName[] = TEXT("WBP_MercenaryPanel");
@@ -1607,7 +1609,8 @@ namespace CombatHUDWidgetBuilder
 			QuickSlotSize + QuickSlotStep * (QuickSkillCount - 1), QuickSlotSize);
 		UCanvasPanel* QuickBar = FindOrCreate<UCanvasPanel>(
 			Blueprint, TEXT("QuickSkillBar"));
-		PlaceCanvas(Root, QuickBar, FVector2D(0.f, -26.f), QuickBarSize, 42);
+		PlaceCanvas(Root, QuickBar,
+			FVector2D(QuickSkillBarOffsetX, -26.f), QuickBarSize, 42);
 		if (UCanvasPanelSlot* QuickBarSlot = CastChecked<UCanvasPanelSlot>(QuickBar->Slot))
 		{
 			QuickBarSlot->SetAnchors(FAnchors(.5f, 1.f));

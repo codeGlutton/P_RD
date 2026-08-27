@@ -1,6 +1,7 @@
 ﻿#include "Misc/AutomationTest.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
@@ -49,6 +50,26 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	}
 	HUD->mUsePreviewData = false;
 	HUD->TakeWidget();
+
+	UWidget* TurnAPScale = HUD->WidgetTree->FindWidget(TEXT("TurnAPScale"));
+	UWidget* QuickSkillBar = HUD->WidgetTree->FindWidget(TEXT("QuickSkillBar"));
+	const UCanvasPanelSlot* TurnAPSlot = TurnAPScale != nullptr
+		? Cast<UCanvasPanelSlot>(TurnAPScale->Slot) : nullptr;
+	const UCanvasPanelSlot* QuickBarSlot = QuickSkillBar != nullptr
+		? Cast<UCanvasPanelSlot>(QuickSkillBar->Slot) : nullptr;
+	if (!TestNotNull(TEXT("AP 바 캔버스 슬롯"), TurnAPSlot)
+		|| !TestNotNull(TEXT("하단 퀵 스킬 바 캔버스 슬롯"), QuickBarSlot))
+	{
+		return false;
+	}
+	constexpr float DesignWidth = 1920.f;
+	const float APBarRight = TurnAPSlot->GetPosition().X
+		+ TurnAPSlot->GetSize().X;
+	const float QuickBarLeft = DesignWidth * QuickBarSlot->GetAnchors().Minimum.X
+		+ QuickBarSlot->GetPosition().X
+		- QuickBarSlot->GetAlignment().X * QuickBarSlot->GetSize().X;
+	TestTrue(TEXT("하단 퀵 스킬 바가 AP 바와 20px 이상 떨어짐"),
+		QuickBarLeft - APBarRight >= 20.f);
 
 	UCombatUIModel* Model = NewObject<UCombatUIModel>(HUD);
 	HUD->BindUIModel(Model);
