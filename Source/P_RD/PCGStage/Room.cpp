@@ -26,7 +26,7 @@ void FTreasureRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<FPri
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardArtifactDataId);
+	AdditionalAssetIds.Append(mRewardArtifactDataIds);
 }
 
 FShopRoom::FShopRoom()
@@ -90,7 +90,7 @@ void FEliteMonsterRoom::CollectAssetIds(OUT FPrimaryAssetId& RoomId, OUT TArray<
 {
 	Super::CollectAssetIds(RoomId, AdditionalAssetIds);
 
-	AdditionalAssetIds.Add(mRewardArtifactDataId);
+	AdditionalAssetIds.Append(mRewardArtifactDataIds);
 }
 
 FBossMonsterRoom::FBossMonsterRoom()

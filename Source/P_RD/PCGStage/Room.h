@@ -74,9 +74,9 @@ public:
 	// 상자 개봉 시 지급될 골드
 	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardMoney"))
 	int32 mRewardMoney = 0;
-	// 상자 개봉 시 지급될 아티팩트
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataId"))
-	FPrimaryAssetId mRewardArtifactDataId;
+	// 상자 개봉 시 지급될 아티팩트 후보들
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataIds"))
+	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 };
 
 USTRUCT(BlueprintType)
@@ -188,8 +188,8 @@ public:
 	FText GetDisplayName() const override;
 
 public:
-	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentDataId"))
-	FPrimaryAssetId mRewardArtifactDataId;
+	UPROPERTY(Category = Asset, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardArtifactDataIds"))
+	TArray<FPrimaryAssetId> mRewardArtifactDataIds;
 };
 
 /**
