@@ -257,7 +257,8 @@ void UUnitModel::OnStartUsingSkill(const FActiveSkillContext& Context, int32 Ski
 	PassiveContext.mOwnerSnapshot = Snapshot;
 	PassiveContext.mTargets.Add(this);
 	PassiveContext.mTargetSnapshots.Add(Snapshot);
-
+	PassiveContext.mSkillData = mSkillCompModel->GetSkill(SkillIndex)->mData;
+	
 	for (UTacticalPassive*& Passive : Passives)
 	{
 		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
@@ -281,6 +282,7 @@ void UUnitModel::OnEndUsingSkill(int32 SkillIndex)
 	PassiveContext.mOwnerSnapshot = Snapshot;
 	PassiveContext.mTargets.Add(this);
 	PassiveContext.mTargetSnapshots.Add(Snapshot);
+	PassiveContext.mSkillData = mSkillCompModel->GetSkill(SkillIndex)->mData;
 
 	for (UTacticalPassive*& Passive : Passives)
 	{
@@ -303,6 +305,7 @@ void UUnitModel::OnStartApplyingEffects(const FActiveSkillContext& Context, int3
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mSkillData = Context.mInstigator->GetSkillComponentModel()->GetSkill(Context.mSkillIndex)->mData;
 
 	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
 	OtherSnapshots.Reserve(Context.mFinalCombatTargets.Num());
@@ -338,6 +341,7 @@ void UUnitModel::OnEndApplyingEffects(const FActiveSkillContext& Context, int32 
 	FPassiveActivateContext PassiveContext;
 	PassiveContext.mOwner = this;
 	PassiveContext.mOwnerSnapshot = Snapshot;
+	PassiveContext.mSkillData = Context.mInstigator->GetSkillComponentModel()->GetSkill(Context.mSkillIndex)->mData;
 
 	TArray<UBoardCombatTargetSnapshotData*> OtherSnapshots;
 	OtherSnapshots.Reserve(Context.mFinalCombatTargets.Num());
@@ -376,6 +380,7 @@ void UUnitModel::OnStartReceivingEffects(UBoardCombatTargetSnapshotData* Instiga
 	PassiveContext.mOwnerSnapshot = Snapshot;
 	PassiveContext.mTargets.Add(InstigatorBoardActorModel);
 	PassiveContext.mTargetSnapshots.Add(InstigatorSnapshot);
+	PassiveContext.mSkillData = Context.mInstigator->GetSkillComponentModel()->GetSkill(Context.mSkillIndex)->mData;
 
 	for (UTacticalPassive* Passive : Passives)
 	{
@@ -402,6 +407,7 @@ void UUnitModel::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* Instigato
 	PassiveContext.mOwnerSnapshot = Snapshot;
 	PassiveContext.mTargets.Add(InstigatorBoardActorModel);
 	PassiveContext.mTargetSnapshots.Add(InstigatorSnapshot);
+	PassiveContext.mSkillData = Context.mInstigator->GetSkillComponentModel()->GetSkill(Context.mSkillIndex)->mData;
 
 	for (UTacticalPassive* Passive : Passives)
 	{

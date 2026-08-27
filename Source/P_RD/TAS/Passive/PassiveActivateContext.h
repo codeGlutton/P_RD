@@ -11,6 +11,7 @@
 
 class UBoardActorModel;
 class UBoardCombatTargetSnapshotData;
+class UStaticSkillData;
 
 /**
  * @brief 패시브 계산 입력 컨텍스트
@@ -35,4 +36,7 @@ struct FPassiveActivateContext
 
 	// 타겟들 스탭샷 (mTargets와 짝이 맞아야 됨)
 	TArray<const UBoardCombatTargetSnapshotData*> mTargetSnapshots;
+
+	// 사용 스킬 정보 (연관없는 패시브에서는 nullptr)
+	const UStaticSkillData* mSkillData;
 };
