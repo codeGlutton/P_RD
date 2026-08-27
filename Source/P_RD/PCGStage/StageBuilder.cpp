@@ -408,10 +408,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		// 개봉 보상 아티팩트 선정 (해당 희귀도 에셋이 없으면 골드만 지급)
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		if (ArtifactIdArray.IsEmpty() == false)
-		{
-			NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
-		}
+		NewRoom.mRewardArtifactDataIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, ArtifactIdArray, 3);
 
 		NewRoomPtr = &NewRoom;
 		break;
@@ -503,7 +500,7 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 		const uint8 RarityTypeIndex = GetRandomRarityIndex(mParams.mArtifactRarityRate);
 
 		const TArray<FPrimaryAssetId>& ArtifactIdArray = mArtifactAssetIds[RarityTypeIndex];
-		NewRoom.mRewardArtifactDataId = URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, ArtifactIdArray);
+		NewRoom.mRewardArtifactDataIds = URandomStreamFunctionLibrary::GetRandomUniqueItemsUsingNonCopiedArray(mBuildStream, ArtifactIdArray, 3);
 
 		NewRoomPtr = &NewRoom;
 		break;

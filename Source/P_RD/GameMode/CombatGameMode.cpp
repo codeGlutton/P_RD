@@ -852,7 +852,7 @@ bool ACombatGameMode::ClaimCombatSelectedArtifact(
 	switch (CurrentRoom.mType)
 	{
 	case ERoomType::EliteMonster:
-		CandidateIds.Add(static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataId);
+		CandidateIds = static_cast<const FEliteMonsterRoom&>(CurrentRoom).mRewardArtifactDataIds;
 		break;
 	case ERoomType::BossMonster:
 		CandidateIds = static_cast<const FBossMonsterRoom&>(CurrentRoom).mRewardArtifactDataIds;
@@ -2735,12 +2735,13 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	case ERoomType::EliteMonster:
 	{
 		const FEliteMonsterRoom& EliteRoom = static_cast<const FEliteMonsterRoom&>(CurrentRoom);
+		for (const FPrimaryAssetId& ArtifactId : EliteRoom.mRewardArtifactDataIds)
 		{
 			if (Choices.Num() >= 3)
 			{
 				break;
 			}
-			AddEquipmentReward(EliteRoom.mRewardArtifactDataId);
+			AddEquipmentReward(ArtifactId);
 		}
 		break;
 	}
