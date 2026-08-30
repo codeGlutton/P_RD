@@ -71,6 +71,14 @@ struct FShopItemUI
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 	UPROPERTY(BlueprintReadOnly) bool mIsAffordable = true;
 	UPROPERTY(BlueprintReadOnly) bool mIsSoldOut = false;
+	/**
+	 * @brief 이 상품을 이미 가진 파티 유닛 index 목록. 없으면 비어 있다.
+	 *
+	 * @details 같은 스킬을 두 번 사는 사고를 막는다. 판정(무엇이 "같은
+	 * 스킬"인가)은 게임플레이 몫이라 화면은 이 목록만 읽는다. 스킬은 유닛
+	 * 소유라 파티 전체가 아니라 **어느 유닛이** 가졌는지까지 담는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mOwnedByUnitIndices;
 };
 
 /**
@@ -124,6 +132,8 @@ struct FShopOwnedUnitUI
 	UPROPERTY(BlueprintReadOnly) int32 mUnitIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) EUnitJobType mJobType = EUnitJobType::None;
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	/** 실제 파티 용병이면 참. 거짓인 직업 카드는 회색으로 보되 상품 상세 조회는 허용한다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsOwned = true;
 	// 스킬 슬롯 전체. 배열 위치 = 스킬 슬롯 index
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedSkillSlotUI> mSkillSlots;
 };
@@ -201,6 +211,8 @@ struct FShopUI
 	UPROPERTY(BlueprintReadOnly) TArray<FShopItemUI> mItems;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedArtifactUI> mOwnedArtifacts;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedUnitUI> mOwnedUnits;
+	/** 스킬 탭 대상 카드. 여섯 직업을 모두 포함하며 미보유 직업은 mIsOwned=false다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FShopOwnedUnitUI> mSkillTargetUnits;
 	UPROPERTY(BlueprintReadOnly) FShopRestUI mRest;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopMercenaryUI> mMercenaries;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopMercenaryPartySlotUI> mMercenaryPartySlots;

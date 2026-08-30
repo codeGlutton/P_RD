@@ -107,7 +107,7 @@ namespace RewardConcept03NewCapture
 
 	bool Capture(UUserWidget& Widget, const TSharedRef<SWidget>& SlateWidget,
 		const TCHAR* FileName, FString& OutError,
-		const int32 ExpectedTextureCount = 22)
+		const int32 ExpectedTextureCount = 23)
 	{
 		Widget.SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		Widget.ForceLayoutPrepass();
@@ -256,6 +256,66 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 			OptionsRail->GetWidgetFromName(TEXT("MenuButton_3")));
 	}
 	URewardUIModel* RewardModel = NewObject<URewardUIModel>(Widget);
+	FRewardUI ExpReward;
+	ExpReward.mExpGained = 50;
+	FRewardMercenaryExpUI& LevelingMercenary =
+		ExpReward.mMercenaryExp.AddDefaulted_GetRef();
+	LevelingMercenary.mName = FText::FromString(TEXT("레벨업 시험 용병"));
+	LevelingMercenary.mLevel = 2;
+	LevelingMercenary.mLevelBefore = 1;
+	LevelingMercenary.mLevelAfter = 2;
+	LevelingMercenary.mExpBefore = 90.f;
+	LevelingMercenary.mExpAfter = 40.f;
+	LevelingMercenary.mMaxExp = 300.f;
+	FRewardExpProgressStepUI& FirstExpStep =
+		LevelingMercenary.mProgressSteps.AddDefaulted_GetRef();
+	FirstExpStep.mLevelBefore = 1;
+	FirstExpStep.mLevelAfter = 2;
+	FirstExpStep.mExpBefore = 90.f;
+	FirstExpStep.mExpAfter = 100.f;
+	FirstExpStep.mMaxExp = 100.f;
+	FRewardExpProgressStepUI& SecondExpStep =
+		LevelingMercenary.mProgressSteps.AddDefaulted_GetRef();
+	SecondExpStep.mLevelBefore = 2;
+	SecondExpStep.mLevelAfter = 2;
+	SecondExpStep.mExpBefore = 0.f;
+	SecondExpStep.mExpAfter = 40.f;
+	SecondExpStep.mMaxExp = 300.f;
+	FRewardMercenaryExpUI& MultiLevelMercenary =
+		ExpReward.mMercenaryExp.AddDefaulted_GetRef();
+	MultiLevelMercenary.mName = FText::FromString(TEXT("다중 레벨업 시험 용병"));
+	MultiLevelMercenary.mLevel = 3;
+	MultiLevelMercenary.mLevelBefore = 1;
+	MultiLevelMercenary.mLevelAfter = 3;
+	MultiLevelMercenary.mExpBefore = 90.f;
+	MultiLevelMercenary.mExpAfter = 50.f;
+	MultiLevelMercenary.mMaxExp = 300.f;
+	auto AddMultiLevelStep = [&MultiLevelMercenary](const int32 LevelBefore,
+		const int32 LevelAfter, const float ExpBefore, const float ExpAfter,
+		const float MaxExp)
+	{
+		FRewardExpProgressStepUI& Step =
+			MultiLevelMercenary.mProgressSteps.AddDefaulted_GetRef();
+		Step.mLevelBefore = LevelBefore;
+		Step.mLevelAfter = LevelAfter;
+		Step.mExpBefore = ExpBefore;
+		Step.mExpAfter = ExpAfter;
+		Step.mMaxExp = MaxExp;
+	};
+	AddMultiLevelStep(1, 2, 90.f, 100.f, 100.f);
+	AddMultiLevelStep(2, 3, 0.f, 200.f, 200.f);
+	AddMultiLevelStep(3, 3, 0.f, 50.f, 300.f);
+	FRewardMercenaryExpUI& LegacyLevelingMercenary =
+		ExpReward.mMercenaryExp.AddDefaulted_GetRef();
+	LegacyLevelingMercenary.mName = FText::FromString(
+		TEXT("구형 레벨업 시험 용병"));
+	LegacyLevelingMercenary.mLevel = 2;
+	LegacyLevelingMercenary.mLevelBefore = 1;
+	LegacyLevelingMercenary.mLevelAfter = 2;
+	LegacyLevelingMercenary.mExpBefore = 90.f;
+	LegacyLevelingMercenary.mExpAfter = 40.f;
+	LegacyLevelingMercenary.mMaxExp = 300.f;
+	RewardModel->SetReward(ExpReward);
 	TArray<FRewardChoiceUI> TestChoices;
 	for (int32 Index = 0; Index < 3; ++Index)
 	{
@@ -270,6 +330,81 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	}
 	RewardModel->SetRewardChoices(TestChoices);
 	Widget->BindUIModel(RewardModel);
+	UTextBlock* LevelingLevel = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevel_0")));
+	UTextBlock* LevelingProgress = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewProgress_0")));
+	UTextBlock* LevelUpBadge = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevelUp_0")));
+	if (TestNotNull(TEXT("레벨업 대상 레벨 문구"), LevelingLevel)
+		&& TestNotNull(TEXT("레벨업 대상 경험치 문구"), LevelingProgress)
+		&& TestNotNull(TEXT("용병별 레벨업 배지"), LevelUpBadge))
+	{
+		TestEqual(TEXT("롤오버 전 레벨"), LevelingLevel->GetText().ToString(),
+			FString(TEXT("Lv.1")));
+		TestEqual(TEXT("롤오버 전 경험치"), LevelingProgress->GetText().ToString(),
+			FString(TEXT("90 / 100")));
+		TestEqual(TEXT("임계치 전 레벨업 배지 숨김"),
+			LevelUpBadge->GetVisibility(), ESlateVisibility::Collapsed);
+	}
+	UTextBlock* LegacyLevel = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevel_2")));
+	UTextBlock* LegacyLevelBadge = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevelUp_2")));
+	if (TestNotNull(TEXT("구형 레벨업 레벨 문구"), LegacyLevel)
+		&& TestNotNull(TEXT("구형 레벨업 배지"), LegacyLevelBadge))
+	{
+		// 모든 용병 행은 같은 타임라인으로 움직이므로 최초 상태는 첫 Advance
+		// 전에 확인해야 한다.
+		TestEqual(TEXT("구형 1→2 payload 시작 레벨"),
+			LegacyLevel->GetText().ToString(), FString(TEXT("Lv.1")));
+		TestEqual(TEXT("구형 payload 시작 시 배지 숨김"),
+			LegacyLevelBadge->GetVisibility(), ESlateVisibility::Collapsed);
+	}
+
+	if (LevelingLevel != nullptr && LevelingProgress != nullptr
+		&& LevelUpBadge != nullptr)
+	{
+		Widget->AdvanceExperienceAnimationForTest(1.10f);
+		TestEqual(TEXT("임계치 도달 후 레벨 증가"),
+			LevelingLevel->GetText().ToString(), FString(TEXT("Lv.2")));
+		TestEqual(TEXT("임계치 도달 진행도"),
+			LevelingProgress->GetText().ToString(), FString(TEXT("100 / 100")));
+		TestEqual(TEXT("실제 레벨업 대상 배지 표시"),
+			LevelUpBadge->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+
+		Widget->AdvanceExperienceAnimationForTest(1.38f);
+		TestEqual(TEXT("다음 레벨 최종 잔여 경험치"),
+			LevelingProgress->GetText().ToString(), FString(TEXT("40 / 300")));
+		TestEqual(TEXT("최종 레벨 유지"), LevelingLevel->GetText().ToString(),
+			FString(TEXT("Lv.2")));
+	}
+	UTextBlock* MultiLevel = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevel_1")));
+	UTextBlock* MultiProgress = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewProgress_1")));
+	UTextBlock* MultiLevelBadge = Cast<UTextBlock>(
+		Widget->GetWidgetFromName(TEXT("NewLevelUp_1")));
+	Widget->AdvanceExperienceAnimationForTest(3.f);
+	if (LegacyLevel != nullptr && LegacyLevelBadge != nullptr)
+	{
+		TestEqual(TEXT("구형 1→2 payload 최종 레벨"),
+			LegacyLevel->GetText().ToString(), FString(TEXT("Lv.2")));
+		TestEqual(TEXT("구형 1→2 payload 레벨업 배지"),
+			LegacyLevelBadge->GetVisibility(),
+			ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (TestNotNull(TEXT("다중 레벨 최종 레벨 문구"), MultiLevel)
+		&& TestNotNull(TEXT("다중 레벨 최종 경험치 문구"), MultiProgress)
+		&& TestNotNull(TEXT("다중 레벨업 배지"), MultiLevelBadge))
+	{
+		TestEqual(TEXT("다중 레벨 최종 레벨"), MultiLevel->GetText().ToString(),
+			FString(TEXT("Lv.3")));
+		TestEqual(TEXT("다중 레벨 최종 잔여 경험치"),
+			MultiProgress->GetText().ToString(), FString(TEXT("50 / 300")));
+		TestEqual(TEXT("다중 레벨업 횟수 표시"),
+			MultiLevelBadge->GetText().ToString(), FString(TEXT("레벨 업! ×2")));
+	}
 	auto TestChoiceLayout = [this, Widget, RewardModel, &TestChoices](
 		const int32 ChoiceCount, const TArray<double>& ExpectedXs)
 	{
@@ -331,6 +466,8 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 		GrantAllWidget->OpenRewardChest();
 		GrantAllWidget->SkipRewardPresentation();
 		GrantAllWidget->SkipRewardPresentation();
+		// 골드가 나온 뒤에는 사용자의 다음 터치를 기다린다.
+		GrantAllWidget->AdvanceRewardFlow();
 		GrantAllWidget->SkipRewardPresentation();
 		TestEqual(TEXT("일괄 지급 아티팩트 단계 도달"),
 			GrantAllWidget->GetCurrentStepIndex(), 3);
@@ -437,7 +574,7 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 			&& TestNotNull(TEXT("경험치 채움 바 Canvas 슬롯"), FillSlot))
 		{
 			TestEqual(TEXT("경험치 빈 바 표시 크기"),
-				TrackSlot->GetSize(), FVector2D(454.f, 26.f));
+				TrackSlot->GetSize(), FVector2D(484.f, 36.f));
 			TestEqual(TEXT("경험치 채움 바 표시 크기"),
 				FillSlot->GetSize(), TrackSlot->GetSize());
 		}
@@ -574,7 +711,10 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 		Widget->GetCurrentStepIndex(), 2);
 	TestTrue(TEXT("골드 연출 재생"), Widget->IsRewardPresentationPlaying());
 	Widget->SkipRewardPresentation();
-	TestEqual(TEXT("골드 후 아티팩트 단계 자동 이동"),
+	TestEqual(TEXT("골드 공개 뒤 다음 터치 대기"),
+		Widget->GetCurrentStepIndex(), 2);
+	Widget->AdvanceRewardFlow();
+	TestEqual(TEXT("골드 확인 터치 후 아티팩트 단계 이동"),
 		Widget->GetCurrentStepIndex(), 3);
 	Widget->SkipRewardPresentation();
 	TestFalse(TEXT("카드 등장 후 입력 대기"),
@@ -830,12 +970,12 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	Widget->AdvanceRewardPresentation(.06f);
 	if (ChestSequence != nullptr && ChestBlendSequence != nullptr)
 	{
-		TestTrue(TEXT("현재 상자 프레임이 크로스페이드 중"),
-			ChestSequence->GetRenderOpacity() > 0.f
-			&& ChestSequence->GetRenderOpacity() < 1.f);
-		TestTrue(TEXT("다음 상자 프레임이 크로스페이드 중"),
-			ChestBlendSequence->GetRenderOpacity() > 0.f
-			&& ChestBlendSequence->GetRenderOpacity() < 1.f);
+		TestEqual(TEXT("현재 아틀라스 프레임은 불투명하게 표시"),
+			ChestSequence->GetRenderOpacity(), 1.f);
+		TestEqual(TEXT("보조 크로스페이드 레이어는 사용하지 않음"),
+			ChestBlendSequence->GetVisibility(), ESlateVisibility::Collapsed);
+		TestEqual(TEXT("보조 크로스페이드 레이어 투명도"),
+			ChestBlendSequence->GetRenderOpacity(), 0.f);
 	}
 	Widget->ResetRewardFlow();
 	StepSwitcher->SetActiveWidgetIndex(1);
@@ -1029,7 +1169,7 @@ bool FRewardConcept03NewNoArtifactRenderedCaptureTest::RunTest(
 		TEXT("_NoArtifactWarmup.png"), TEXT("_NoArtifactWarmup2.png") })
 	{
 		FString CaptureError;
-		if (!Capture(*Widget, SlateWidget, WarmupName, CaptureError, 20))
+		if (!Capture(*Widget, SlateWidget, WarmupName, CaptureError, 21))
 		{
 			AddError(CaptureError);
 			return false;
@@ -1052,7 +1192,7 @@ bool FRewardConcept03NewNoArtifactRenderedCaptureTest::RunTest(
 		TabSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		ButtonSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		FString CaptureError;
-		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 20))
+		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 21))
 		{
 			AddError(CaptureError);
 			return false;

@@ -46,19 +46,25 @@ void UPlayerUnitAttributeSet::PostAttributeChange(const FTacticalAttribute& Attr
 {
 	Super::PostAttributeChange(Attribute, OldValue, NewValue);
 
-	/* 경험치 초과 시, 레벨 증가 */
-	if (Attribute == GetExpAttribute())
+	if (Attribute != GetExpAttribute())
 	{
-		// 현재 Exp가 레벨업 임계치(MaxExp) 이상이면 레벨업 처리 진입.
-		if (NewValue >= GetMaxExp())
-		{
-			UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
-			ASC->ApplyModToAttribute(GetExpAttribute(), ETacticalModOp::AddBase, -GetMaxExp());
-
-			UPlayerUnitModel* PlayerModel = ASC->GetOwnerModel<UPlayerUnitModel>();
-			PlayerModel->LevelUp();
-		}
+		return;
 	}
+
+	UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
+	if (ASC == nullptr)
+	{
+		return;
+	}
+
+	UPlayerUnitModel* PlayerModel = ASC->GetOwnerModel<UPlayerUnitModel>();
+	if (PlayerModel == nullptr)
+	{
+		return;
+	}
+
+	// 실제 지급과 UI 미리보기가 동일한 진행 계산을 사용한다. MaxExp가 0인 경우에도 재귀하지 않는다.
+	PlayerModel->ResolveExperienceChange(OldValue, NewValue);
 }
 
 

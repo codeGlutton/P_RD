@@ -64,6 +64,10 @@ private:
 	 */
 	void FillOwnedItems(FShopUI& ShopUIData) const;
 
+	/** @brief 판매 스킬을 이미 가진 파티 유닛을 슬롯마다 표시한다. */
+	// 판매 목록과 파티가 모두 채워진 다음에 불러야 한다.
+	void MarkOwnedSaleItems(FShopUI& ShopUIData) const;
+
 	/** @brief 한 칸을 샀다. 돈을 깎고 품절로 매긴 뒤 다시 내린다. */
 	UFUNCTION() void HandleBuyRequested(int32 SlotIndex);
 

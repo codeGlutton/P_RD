@@ -6,19 +6,67 @@
 #include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
+#include "Sound/AudioSettings.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "Editor.h"
 #include "Internationalization/Internationalization.h"
 #include "Misc/AutomationTest.h"
+#include "Setting/GamePlaySettings.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
+#include "Sound/SoundClass.h"
+#include "Sound/SoundMix.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/SettingsPanelWidget.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Widgets/SWidget.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsPanelApplyPathContractTest,
+	"P_RD.UI.Settings.ApplyPathContract",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FSettingsPanelApplyPathContractTest::RunTest(const FString& Parameters)
+{
+	const UAudioSettings* AudioSettings = GetDefault<UAudioSettings>();
+	if (TestNotNull(TEXT("엔진 오디오 설정"), AudioSettings))
+	{
+		TestNotNull(TEXT("기본 SoundMix가 실제로 로드됨"),
+			Cast<USoundMix>(AudioSettings->DefaultBaseSoundMix.TryLoad()));
+	}
+
+	const UGamePlaySettings* GameSettings = GetDefault<UGamePlaySettings>();
+	if (!TestNotNull(TEXT("게임플레이 설정"), GameSettings))
+	{
+		return false;
+	}
+	for (int32 Index = 0; Index < StaticCast<int32>(EGameVolumeType::Count); ++Index)
+	{
+		TestNotNull(*FString::Printf(TEXT("볼륨 SoundClass %d 로드"), Index),
+			GameSettings->mSoundClasses[Index].LoadSynchronous());
+	}
+
+	// 화면 흔들림/VFX는 UI 값만 바꾸는 임시 토글이 아니라, 카메라/VFX
+	// 라이브러리가 읽는 영속 옵션의 실제 getter/setter를 사용한다.
+	UOptionPersistData* Options = NewObject<UOptionPersistData>();
+	if (!TestNotNull(TEXT("옵션 영속 데이터"), Options))
+	{
+		return false;
+	}
+	Options->SetCameraShakeEnabled(false);
+	Options->SetEffectVFXEnabled(false);
+	TestFalse(TEXT("화면 흔들림 OFF 저장"), Options->IsCameraShakeEnabled());
+	TestFalse(TEXT("전투 VFX OFF 저장"), Options->IsEffectVFXEnabled());
+	Options->SetCameraShakeEnabled(true);
+	Options->SetEffectVFXEnabled(true);
+	TestTrue(TEXT("화면 흔들림 ON 저장"), Options->IsCameraShakeEnabled());
+	TestTrue(TEXT("전투 VFX ON 저장"), Options->IsEffectVFXEnabled());
+	return !HasAnyErrors();
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSettingsPanelWbpTextDefaultsTest,
 	"P_RD.UI.Settings.WBPTextDefaults",
@@ -323,8 +371,14 @@ bool FSettingsPanelBackLifecycleTest::RunTest(const FString& Parameters)
 			static_cast<UPanelWidget*>(OptionsRailFrameMount));
 		if (UOverlaySlot* GearSlot = Cast<UOverlaySlot>(GearButton->Slot))
 		{
+			// 기대값은 화면과 같은 원본에서 만든다. 레일 배율이 바뀌어도
+			// 여기만 따로 갈라지지 않는다.
+			const FVector2D GearPosition = RunOptionsRail::ButtonPosition(3);
+			const FVector2D GearSize = RunOptionsRail::ButtonSize();
 			TestEqual(TEXT("설정 톱니 런타임 여백"), GearSlot->GetPadding(),
-				FMargin(344.f, 36.f, 42.5f, 35.f));
+				FMargin(GearPosition.X, GearPosition.Y,
+					RunOptionsRail::Width - GearPosition.X - GearSize.X,
+					RunOptionsRail::Height - GearPosition.Y - GearSize.Y));
 		}
 		else
 		{

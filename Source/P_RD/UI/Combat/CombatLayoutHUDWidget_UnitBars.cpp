@@ -419,7 +419,10 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	// 지도(풀스크린) 열림 중에는 유닛 머리 위 HP바를 숨긴다 — 탑바만 남기는 뷰.
 	// 이 함수가 매 틱 HP바를 강제 표시(라인 283)하므로, SetCombatPlayControlsVisible에서 한 번 숨기는 것으로는
 	// 다음 틱에 되살아난다. 여기서 게이트해야 지도 뷰 동안 계속 숨겨진다.
-	if (GetVisibility() == ESlateVisibility::Collapsed)
+	// 스킬 카드가 펼쳐진 동안에도 같은 원칙이다. 카드보다 낮은 ZOrder의 HP
+	// 숫자가 카드 사이로 일부만 비쳐 "1/100"이 잘린 글자처럼 보였으므로,
+	// 카드 화면을 닫을 때까지 월드 바 전체를 접는다.
+	if (GetVisibility() == ESlateVisibility::Collapsed || mCommandsShown == true)
 	{
 		for (FCombatUnitHpBarWidget& Bar : mUnitHpBars)
 		{
@@ -508,9 +511,13 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 				FMath::RoundToInt(Unit.mMaxHP))));
 		}
 
-		// 전투 HUD의 공개 수치는 HP/AP/속도뿐이다. 구형 방어도 슬롯이
-		// 남아 있더라도 월드 HP바에서는 항상 감춘다.
-		const ESlateVisibility DefenseVisibility = ESlateVisibility::Collapsed;
+		// 방어도는 HP 앞(바 왼쪽 바깥)에 방패로 붙인다. 남은 피해 흡수량은
+		// HP 숫자만 봐서는 알 수 없어, 때려도 안 닳는 것처럼 읽혔다
+		// (0824 검수: "HP 앞에 방패"). 0이면 자리까지 비워 바를 가리지 않는다.
+		const int32 DefenseValue = FMath::RoundToInt(Unit.mDefensePoint);
+		const ESlateVisibility DefenseVisibility = DefenseValue > 0
+			? ESlateVisibility::HitTestInvisible
+			: ESlateVisibility::Collapsed;
 		if (Bar.mDefenseIcon != nullptr)
 		{
 			Bar.mDefenseIcon->SetVisibility(DefenseVisibility);
@@ -518,6 +525,10 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 		if (Bar.mDefenseText != nullptr)
 		{
 			Bar.mDefenseText->SetVisibility(DefenseVisibility);
+			if (DefenseValue > 0)
+			{
+				Bar.mDefenseText->SetText(FText::AsNumber(DefenseValue));
+			}
 		}
 
 		// 유닛 월드 위치를 화면(위젯) 좌표로 투영. 화면 밖이면 숨긴다.

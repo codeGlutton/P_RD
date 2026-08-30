@@ -91,7 +91,13 @@ public:
 		ResolveWidgets();
 		BindInput();
 		RefreshRewardData();
+		InitializeExperienceAnimation();
 		ApplyVisualState();
+	}
+
+	void AdvanceExperienceAnimationForTest(const float DeltaSeconds)
+	{
+		UpdateExperienceAnimation(DeltaSeconds);
 	}
 #endif
 
@@ -136,6 +142,7 @@ private:
 		ChestAwaitInput,
 		ChestOpening,
 		GoldReveal,
+		AwaitGoldContinue,
 		ArtifactReveal,
 		AwaitArtifactChoice,
 		AwaitConfirm,
@@ -157,6 +164,8 @@ private:
 	void StartArtifactReveal();
 	void UpdateArtifactReveal(float NormalizedTime);
 	void FinishArtifactReveal();
+	void InitializeExperienceAnimation();
+	void UpdateExperienceAnimation(float DeltaSeconds);
 	void ResetPresentationVisuals();
 	void UnbindUIModel();
 	void RefreshRewardData();
@@ -365,6 +374,10 @@ private:
 	int32 PressedArtifactIndex = INDEX_NONE;
 	FTimerHandle ArtifactLongPressTimer;
 	int32 DisplayedGoldAmount = 350;
+	bool bExperienceAnimationInitialized = false;
+	float ExperienceAnimationElapsed = 0.f;
+	TArray<FRewardExpProgressStepUI> ExperienceSteps[3];
+	bool bExperienceLevelUpRevealed[3] = { false, false, false };
 };
 
 /** Three-step variant used when the reward payload has no artifact choice. */

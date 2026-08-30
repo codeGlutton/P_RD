@@ -152,7 +152,8 @@ void URunOptionsRailWidget::BuildRuntimeTree()
 		RailSlot->SetAnchors(FAnchors(1.f, 0.f));
 		RailSlot->SetAlignment(FVector2D(1.f, 0.f));
 		RailSlot->SetPosition(FVector2D(-8.f, 4.f));
-		RailSlot->SetSize(FVector2D(470.f, 173.f));
+		RailSlot->SetSize(FVector2D(
+			RunOptionsRail::Width, RunOptionsRail::Height));
 		RailSlot->SetZOrder(1);
 	}
 	FWidgetTransform Transform;
@@ -187,20 +188,27 @@ void URunOptionsRailWidget::BuildRuntimeTree()
 		return Button;
 	};
 
+	// 좌표는 RunOptionsRail 한 곳에서만 온다 -- 전투 HUD를 굽는 편집기 빌더도
+	// 같은 값을 쓴다. 여기에 숫자를 다시 적으면 두 화면이 또 갈라진다.
 	AddImage(TEXT("OptionsRailFrame"), OptionsFrameTexture,
-		FVector2D::ZeroVector, FVector2D(470.f, 173.f), 1);
+		FVector2D::ZeroVector,
+		FVector2D(RunOptionsRail::Width, RunOptionsRail::Height), 1);
 	MapIcon = AddImage(TEXT("MenuMapIcon"), MapIconTexture,
-		FVector2D(45.f, 44.f), FVector2D(80.f, 81.f), 31);
+		RunOptionsRail::IconPosition(0), RunOptionsRail::IconSize(0), 31);
 	AddImage(TEXT("MenuMercenaryIcon"), MercenaryIconTexture,
-		FVector2D(154.f, 36.f), FVector2D(63.f, 96.f), 31);
+		RunOptionsRail::IconPosition(1), RunOptionsRail::IconSize(1), 31);
 	UImage* MonsterIcon = AddImage(TEXT("MenuMonsterIcon"), MonsterIconTexture,
-		FVector2D(248.f, 48.f), FVector2D(77.f, 83.f), 31);
+		RunOptionsRail::IconPosition(2), RunOptionsRail::IconSize(2), 31);
 	AddImage(TEXT("MenuSettingsIcon"), SettingsIconTexture,
-		FVector2D(348.f, 48.f), FVector2D(77.f, 80.f), 31);
-	MapButton = AddButton(TEXT("MenuButton_0"), FVector2D(37.f, 31.f), FVector2D(94.f, 112.f));
-	MercenaryButton = AddButton(TEXT("MenuButton_1"), FVector2D(138.f, 31.f), FVector2D(94.f, 112.f));
-	MonsterButton = AddButton(TEXT("MenuButton_2"), FVector2D(242.f, 31.f), FVector2D(94.f, 112.f));
-	SettingsButton = AddButton(TEXT("MenuButton_3"), FVector2D(343.f, 31.f), FVector2D(94.f, 112.f));
+		RunOptionsRail::IconPosition(3), RunOptionsRail::IconSize(3), 31);
+	MapButton = AddButton(TEXT("MenuButton_0"),
+		RunOptionsRail::ButtonPosition(0), RunOptionsRail::ButtonSize());
+	MercenaryButton = AddButton(TEXT("MenuButton_1"),
+		RunOptionsRail::ButtonPosition(1), RunOptionsRail::ButtonSize());
+	MonsterButton = AddButton(TEXT("MenuButton_2"),
+		RunOptionsRail::ButtonPosition(2), RunOptionsRail::ButtonSize());
+	SettingsButton = AddButton(TEXT("MenuButton_3"),
+		RunOptionsRail::ButtonPosition(3), RunOptionsRail::ButtonSize());
 	// 비전투 방에는 생존 몬스터 데이터가 없다. 자리/아이콘은 같은 레일 계약을
 	// 유지하되 가짜 상세를 열지 않도록 명시적으로 잠근다.
 	MonsterButton->SetIsEnabled(false);
@@ -501,11 +509,36 @@ void URunOptionsRailWidget::SetInventoryPageShown(const bool bShown)
 		TEXT("MercenaryNamePlate"), TEXT("MercenaryDetailName"),
 		TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
 		TEXT("MercenaryDetailSpeed"), TEXT("MercenaryCritPlate"),
+		TEXT("MercenaryCritIcon"),
 		TEXT("MercenaryCritLabel"), TEXT("MercenaryCritValue"),
 		TEXT("MercenarySkillHeading"), TEXT("MercenarySkillDivider") };
 	for (const TCHAR* Name : DetailNames)
 	{
 		SetShown(FindWidget<UWidget>(MercenaryPanelWidget, Name), !bShown);
+	}
+	if (UWidget* Plate = FindWidget<UWidget>(MercenaryPanelWidget,
+		TEXT("MercenaryInventoryTabPlate")))
+	{
+		UWidget* Center = FindWidget<UWidget>(MercenaryPanelWidget,
+			TEXT("MercenaryInventoryTabText_Center"));
+		if (UCanvasPanelSlot* PlateSlot = Cast<UCanvasPanelSlot>(Plate->Slot))
+		{
+			if (UCanvasPanelSlot* CenterSlot = Center != nullptr
+				? Cast<UCanvasPanelSlot>(Center->Slot) : nullptr)
+			{
+				constexpr float LabelHeight = 46.f;
+				CenterSlot->SetPosition(PlateSlot->GetPosition() + FVector2D(0.f,
+					(PlateSlot->GetSize().Y - LabelHeight) * .5f));
+				CenterSlot->SetSize(FVector2D(PlateSlot->GetSize().X, LabelHeight));
+				Center->SetRenderTransform(FWidgetTransform());
+			}
+		}
+	}
+	if (UTextBlock* InventoryText = FindWidget<UTextBlock>(MercenaryPanelWidget,
+		TEXT("MercenaryInventoryTabText")))
+	{
+		InventoryText->SetJustification(ETextJustify::Center);
+		InventoryText->SetRenderTransform(FWidgetTransform());
 	}
 	if (bShown)
 	{
@@ -799,7 +832,16 @@ void URunOptionsRailWidget::ShowSkillDetail(const int32 SlotIndex)
 	if (GameMode == nullptr || GameMode->BuildPartyUnitSkillDetailUI(
 		MemberIndex, ShownSkillSlotIndices[SlotIndex], OUT Detail) == false)
 	{
-		return;
+		// 방 전환 직후 모델 상세가 아직 준비되지 않았더라도 빈 창/무반응 대신
+		// 이미 그려진 로스터 View의 기본 정보를 즉시 보여 준다.
+		if (!ShownSkillViews.IsValidIndex(SlotIndex)) return;
+		const FPartyRosterSkillView& Skill = ShownSkillViews[SlotIndex];
+		Detail.mSkillIndex = Skill.mSlotIndex;
+		Detail.mName = Skill.mName;
+		Detail.mIcon = Skill.mIcon;
+		Detail.mActionPointCost = FMath::Max(Skill.mActionPointCost, 0);
+		Detail.mDescription = LOCTEXT("SkillDetailFallback",
+			"보유 용병이 장착한 스킬입니다.");
 	}
 	if (EnsureSkillDetailPresenter() == false
 		|| SkillDetailPresenter->EnsureOverlayWidget(GetOwningPlayer()) == false)

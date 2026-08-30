@@ -175,6 +175,28 @@ namespace ShopUITests
 				Slot.mIcon = LoadTexture(SkillPaths[SkillIndex]);
 			}
 		}
+		// 실제 ShopGameMode와 같은 고정 6직업 탐색 목록. 미보유 직업도
+		// 선택/상세 확인은 가능하지만 구매 대상은 될 수 없다.
+		const EUnitJobType TargetJobs[] = {
+			EUnitJobType::Knight, EUnitJobType::Ranger, EUnitJobType::Mage,
+			EUnitJobType::Barbarian, EUnitJobType::Rogue, EUnitJobType::Druid
+		};
+		for (const EUnitJobType TargetJob : TargetJobs)
+		{
+			if (const FShopOwnedUnitUI* Owned = Shop.mOwnedUnits.FindByPredicate(
+				[TargetJob](const FShopOwnedUnitUI& Unit)
+				{
+					return Unit.mJobType == TargetJob;
+				}))
+			{
+				Shop.mSkillTargetUnits.Add(*Owned);
+				continue;
+			}
+			FShopOwnedUnitUI& Preview = Shop.mSkillTargetUnits.AddDefaulted_GetRef();
+			Preview.mUnitIndex = INDEX_NONE;
+			Preview.mJobType = TargetJob;
+			Preview.mIsOwned = false;
+		}
 
 		Shop.mRest.mPrice = 100;
 		Shop.mRest.mIsAffordable = true;
@@ -782,7 +804,8 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	// 화면 0..3은 실제 모델의 교체 가능한 슬롯 2..5로 왕복해야 한다.
+	// 이동은 모델 밖의 공용 명령이다. 화면 0..3은 기본 공격(0번) 다음의
+	// 실제 모델 교체 슬롯 1..4로 왕복해야 한다.
 	UShopUITestListener* Listener = NewObject<UShopUITestListener>(Widget);
 	Model->OnBuySkillRequested.AddDynamic(
 		Listener, &UShopUITestListener::HandleBuySkillRequested);
@@ -798,13 +821,17 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	LastSkillSlot->OnClicked.Broadcast();
+	// 스킬 슬롯은 Clicked 가 아니라 Pressed/Released 로 동작한다 -- 길게
+	// 누르면 상세, 그냥 떼면 선택이다. Clicked 만 쏘면 아무 일도 안 일어나
+	// 선택이 0번에 머문 채 구매가 나간다.
+	LastSkillSlot->OnPressed.Broadcast();
+	LastSkillSlot->OnReleased.Broadcast();
 	BuyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("스킬 구매 요청 1회"), Listener->CallCount, 1);
 	TestEqual(TEXT("판매 슬롯 payload"), Listener->LastSlotIndex, 100);
 	TestEqual(TEXT("선택 유닛 payload"), Listener->LastUnitIndex, 0);
-	TestEqual(TEXT("화면 4번째는 실제 스킬 슬롯 5"),
-		Listener->LastSkillSlotIndex, 5);
+	TestEqual(TEXT("화면 4번째는 실제 스킬 슬롯 4"),
+		Listener->LastSkillSlotIndex, 4);
 
 	TArray<FColor> SkillPixels;
 	CaptureError.Reset();
@@ -815,7 +842,9 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 직업 스킬은 선택한 용병에게만, Common 스킬은 모든 용병에게 보여야 한다.
+	// 0824 합의: 스킬 목록은 직업으로 거르지 않는다. 어느 용병을 골라도 이
+	// 상점이 파는 스킬 전부가 같은 순서로 보이고, 고른 용병이 못 쓰는 것만
+	// 상태 줄과 구매 버튼에서 갈린다.
 	FShopUI JobFilteredShop = SyntheticShop;
 	const EUnitJobType RequiredJobs[] = {
 		EUnitJobType::Knight, EUnitJobType::Mage, EUnitJobType::Rogue,
@@ -835,38 +864,86 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	Model->SetShop(JobFilteredShop);
 	TestEqual(TEXT("직업 필터 스냅샷 Trade 알림 1회"),
 		Listener->TradeChangeCount, TradeChangesBeforeFilterPush + 1);
-	UButton* MageUnitButton = Cast<UButton>(
+	UButton* RangerUnitButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("mUnitSelectButton_1")));
-	UButton* RogueUnitButton = Cast<UButton>(
+	UButton* MageUnitButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("mUnitSelectButton_2")));
+	UButton* RogueUnitButton = Cast<UButton>(
+		Tree->FindWidget(TEXT("mUnitSelectButton_4")));
 	UButton* NextButton = Cast<UButton>(Tree->FindWidget(TEXT("mNextButton")));
-	if (!TestNotNull(TEXT("마법사 선택 버튼"), MageUnitButton)
+	if (!TestNotNull(TEXT("미보유 레인저 선택 버튼"), RangerUnitButton)
+		|| !TestNotNull(TEXT("마법사 선택 버튼"), MageUnitButton)
 		|| !TestNotNull(TEXT("도적 선택 버튼"), RogueUnitButton)
 		|| !TestNotNull(TEXT("다음 상품 버튼"), NextButton))
 	{
 		return false;
 	}
-	MageUnitButton->OnClicked.Broadcast();
-	TestEqual(TEXT("마법사는 마법사 전용 스킬부터 표시"),
-		SelectedName->GetText().ToString(), FString(TEXT("회전 베기")));
-	int32 VisibleRailButtons = 0;
-	for (int32 Index = 0; Index < 5; ++Index)
+	UTextBlock* SelectedNote = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("mSelectedItemDescriptionText")));
+	UTextBlock* BuyLabel = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("mBuyButtonText")));
+	if (!TestNotNull(TEXT("선택 상품 상태 줄"), SelectedNote)
+		|| !TestNotNull(TEXT("구매 버튼 라벨"), BuyLabel))
 	{
-		if (const UButton* RailButton = Cast<UButton>(Tree->FindWidget(FName(
-			*FString::Printf(TEXT("ShopRailButton_%d"), Index))));
-			RailButton != nullptr && RailButton->GetVisibility() == ESlateVisibility::Visible)
+		return false;
+	}
+	auto CountVisibleRailButtons = [Tree]()
+	{
+		int32 Visible = 0;
+		for (int32 Index = 0; Index < 5; ++Index)
 		{
-			++VisibleRailButtons;
+			if (const UButton* RailButton = Cast<UButton>(Tree->FindWidget(FName(
+				*FString::Printf(TEXT("ShopRailButton_%d"), Index))));
+				RailButton != nullptr
+				&& RailButton->GetVisibility() == ESlateVisibility::Visible)
+			{
+				++Visible;
+			}
+		}
+		return Visible;
+	};
+
+	RangerUnitButton->OnClicked.Broadcast();
+	TestTrue(TEXT("미보유 용병도 상세 확인용 선택 가능"),
+		RangerUnitButton->GetIsEnabled());
+	TestEqual(TEXT("미보유 레인저는 공용 스킬만 표시"),
+		CountVisibleRailButtons(), 2);
+	TestTrue(TEXT("미보유 대상은 구매 상태에 표시"),
+		SelectedNote->GetText().ToString().Contains(TEXT("미보유")));
+	TestTrue(TEXT("미보유 용병은 회색 처리"),
+		RangerUnitButton->GetRenderOpacity() < .5f);
+
+	MageUnitButton->OnClicked.Broadcast();
+	TestEqual(TEXT("마법사는 전용+공용 스킬만 표시"),
+		CountVisibleRailButtons(), 3);
+	TestEqual(TEXT("마법사 선택 시 마법사 전용 스킬이 첫 상품"),
+		SelectedName->GetText().ToString(), FString(TEXT("회전 베기")));
+	TestFalse(TEXT("자기 직업 전용 스킬은 막지 않는다"),
+		SelectedNote->GetText().ToString().Contains(TEXT("불가")));
+	RogueUnitButton->OnClicked.Broadcast();
+	TestEqual(TEXT("도적도 전용+공용 스킬만 표시"),
+		CountVisibleRailButtons(), 3);
+	TestEqual(TEXT("도적 선택 시 도적 전용 스킬이 첫 상품"),
+		SelectedName->GetText().ToString(), FString(TEXT("칼날 폭풍")));
+
+	// 이미 가진 스킬은 직업 필터 목록에는 남기되 "보유"로 갈라 두 번
+	// 사지 않게 한다.
+	FShopUI OwnedMarkedShop = JobFilteredShop;
+	for (FShopItemUI& Item : OwnedMarkedShop.mItems)
+	{
+		if (Item.mKind == EShopItemKind::Skill)
+		{
+			Item.mOwnedByUnitIndices.Add(
+				OwnedMarkedShop.mOwnedUnits[2].mUnitIndex);
 		}
 	}
-	TestEqual(TEXT("마법사 전용 1개 + 공용 2개만 레일 표시"),
-		VisibleRailButtons, 3);
-	NextButton->OnClicked.Broadcast();
-	TestEqual(TEXT("마법사도 Common 스킬 표시"),
-		SelectedName->GetText().ToString(), FString(TEXT("강타")));
-	RogueUnitButton->OnClicked.Broadcast();
-	TestEqual(TEXT("도적은 도적 전용 스킬부터 표시"),
-		SelectedName->GetText().ToString(), FString(TEXT("칼날 폭풍")));
+	Model->SetShop(OwnedMarkedShop);
+	TestEqual(TEXT("보유 스킬도 목록에서 빠지지 않는다"),
+		CountVisibleRailButtons(), 3);
+	TestTrue(TEXT("보유 스킬은 상태 줄에 보유로 적힌다"),
+		SelectedNote->GetText().ToString().Contains(TEXT("이미 보유")));
+	TestEqual(TEXT("보유 스킬은 구매 버튼에서 막힌다"),
+		BuyLabel->GetText().ToString(), FString(TEXT("이미 보유")));
 
 	// 휴식 탭은 파티 전원의 회복 전/후 값을 그리고, 단일 요청만 모델에 전달한다.
 	Model->SetShop(SyntheticShop);

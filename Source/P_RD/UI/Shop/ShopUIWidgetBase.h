@@ -116,6 +116,9 @@ private:
 	UFUNCTION() void HandleUnitClicked0();
 	UFUNCTION() void HandleUnitClicked1();
 	UFUNCTION() void HandleUnitClicked2();
+	UFUNCTION() void HandleUnitClicked3();
+	UFUNCTION() void HandleUnitClicked4();
+	UFUNCTION() void HandleUnitClicked5();
 	UFUNCTION() void HandleSkillSlotClicked0();
 	UFUNCTION() void HandleSkillSlotClicked1();
 	UFUNCTION() void HandleSkillSlotClicked2();
@@ -170,6 +173,26 @@ private:
 	/** @brief Detail 도메인 알림 처리 — 밀려온 상세 DTO를 그리거나 플레인 폴백을 연다. */
 	void PresentPushedDetail();
 	const FShopItemUI* GetSelectedItem(const FShopUI& Shop) const;
+
+	/**
+	 * @brief 지금 고른 용병 기준으로 이 상품을 살 수 있는지 가른다.
+	 *
+	 * @details 스킬 목록은 직업으로 거르지 않고 전부 늘어놓는다(0824 합의:
+	 * "상점 스킬은 모든 직업 전용 스킬을 볼 수 있도록"). 대신 고른 용병이
+	 * 못 쓰는 스킬은 살 수 없다는 것을 여기서 가려 낸다.
+	 */
+	enum class EShopSkillAvailability : uint8
+	{
+		Available,   // 고른 용병에게 장착/교체할 수 있다
+		OtherJob,    // 다른 직업 전용이라 이 용병은 못 쓴다
+		AlreadyOwned, // 이 용병이 이미 가지고 있다
+		UnownedTarget // 직업 미리보기 카드라 상세만 확인할 수 있다
+	};
+	EShopSkillAvailability GetSkillAvailability(const FShopUI& Shop,
+		const FShopItemUI& Item) const;
+	/** @brief 상품 한 칸에 덧붙일 상태 문구. 없으면 빈 FText. */
+	FText MakeSkillAvailabilityNote(const FShopUI& Shop,
+		const FShopItemUI& Item) const;
 	bool EnsureShopDetailOverlay();
 	bool EnsureShopSkillDetailPresenter();
 	void ReleaseShopDetailOverlay();

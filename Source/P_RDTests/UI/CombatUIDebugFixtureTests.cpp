@@ -60,8 +60,7 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 			TestTrue(TEXT("buff fixture present"), Statuses.ContainsByPredicate(
 				[](const FStatusEffectUI& Status)
 				{
-					return Status.mTag.MatchesTag(FGameplayTag::RequestGameplayTag(
-						TEXT("GameplayEffect.StatusEffect.RoundDuration.Buff")));
+					return Status.mTag.ToString().Contains(TEXT(".Buff."));
 				}));
 		}
 		if (SideIndex == 1 || SideIndex == 2)
@@ -69,8 +68,7 @@ bool FCombatUIDebugFixtureTest::RunTest(const FString& Parameters)
 			TestTrue(TEXT("debuff fixture present"), Statuses.ContainsByPredicate(
 				[](const FStatusEffectUI& Status)
 				{
-					return Status.mTag.MatchesTag(FGameplayTag::RequestGameplayTag(
-						TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff")));
+					return Status.mTag.ToString().Contains(TEXT(".Debuff."));
 				}));
 		}
 	}

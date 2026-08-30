@@ -195,6 +195,23 @@ private:
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/** @brief EXIT 버튼 클릭을 게임 종료로 연결한다. */
+	// 타이틀에는 저장할 런 상태가 없으므로 확인 없이 바로 종료한다. 실제 종료
+	// 방식(모바일의 백그라운드 전환 포함)은 QuitGame이 플랫폼별로 처리한다.
+	UFUNCTION()
+	void HandleExitButtonClicked();
+
+	/**
+	 * @brief EXIT 줄에 실제로 누를 수 있는 버튼이 있게 만든다.
+	 *
+	 * @details 저작된 WBP는 EXIT 줄에 테두리 그림과 글자만 두고 버튼을
+	 * 빠뜨렸다 -- START/CONTINUE/SETTING 세 줄에는 있다. 그래서 EXIT은
+	 * 보이기만 하고 눌러도 아무 일이 없었다(0824 검수: "종료 버튼 확인").
+	 * 자산을 다시 굽기 전에도 동작하도록, 테두리와 같은 자리에 투명 버튼을
+	 * 얹는다 -- 전투 HUD의 EnsureMercenarySkillButtons와 같은 수법이다.
+	 */
+	void EnsureExitButton();
+
 	/** @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다. */
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
@@ -211,6 +228,12 @@ private:
 	/** @brief 설정 화면으로 넘어가는 SETTING 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SettingsButton;
+
+	/** @brief 게임을 끝내는 EXIT 버튼 */
+	// 레이아웃 프로필 WBP는 같은 이름 뒤에 프로필 접미사를 붙인 버튼을 따로
+	// 들고 있다. 그쪽은 BindMainMenuButtons()가 이름으로 찾아 함께 잇는다.
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> ExitButton;
 
 	/** @brief (레거시) 게임 타이틀명 TextBlock. 이제 WBP의 TitleLogoImage가 타이틀을 대체하므로 Optional. */
 	UPROPERTY(meta = (BindWidgetOptional))

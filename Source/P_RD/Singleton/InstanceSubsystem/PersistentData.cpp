@@ -157,6 +157,9 @@ void UPlayerUnitPersistData::ClearUnit()
 {
 	mPlayerUnitId = FPrimaryAssetId();
 	mPlayerLevel = 1;
+	mMaxHP = 0.f;
+	mHP = 0.f;
+	mExp = 0.f;
 
 	mTagCountMap.Empty();
 	mSkillIds.Empty();
@@ -187,6 +190,11 @@ int32 UPlayerUnitPersistData::GetPlayerLevel() const
 	return mPlayerLevel;
 }
 
+float UPlayerUnitPersistData::GetExperience() const
+{
+	return mExp;
+}
+
 const TArray<FPrimaryAssetId>& UPlayerUnitPersistData::GetSkillIds() const
 {
 	return mSkillIds;
@@ -205,6 +213,10 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetMaxHPAttribute(), ETacticalModOp::Override, mMaxHP);
 	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
 	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
+
+	// 손상되었거나 구버전인 저장값이 상한/임계치를 넘으면 모델의 공통 규칙으로 보정된 값을 다시 보관한다.
+	mPlayerLevel = PlayerUnit->GetPlayerLevel();
+	mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
 
 	// 플레이어 태그 동기화
 	for (auto& Pair : mTagCountMap)

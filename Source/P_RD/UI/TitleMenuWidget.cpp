@@ -255,6 +255,8 @@ void UTitleMenuWidget::NativeConstruct()
 	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize(), CanContinueRun());
 	StartTitleBackgroundVideo();
 
+	// 버튼이 없으면 이을 것도 없다. 배선보다 먼저 EXIT 줄을 채운다.
+	EnsureExitButton();
 	BindMainMenuButtons();
 
 	if (USettingsPanelWidget* TitleSettingsPanel = GetTitleSettingsPanel())
@@ -347,6 +349,92 @@ void UTitleMenuWidget::SyncMainText()
 }
 
 /** @brief 화면비에 따라 WBP 안의 프로필별 레이아웃 캔버스 중 하나만 활성화한다. */
+/**
+ * @brief EXIT 줄에 누를 수 있는 버튼을 보장한다.
+ *
+ * @details 저작 자산의 EXIT 줄에는 ``ExitButtonFrameImage__base_16_9`` 와
+ * ``ExitButtonText__base_16_9`` 만 있고 버튼이 없다. 이미 있는 자산에서는
+ * 아무 일도 하지 않는다.
+ */
+void UTitleMenuWidget::EnsureExitButton()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	auto AddOverlayButton = [this](const FName ButtonName, UWidget* Frame) -> UButton*
+	{
+		UCanvasPanel* CanvasParent = Cast<UCanvasPanel>(Frame->GetParent());
+		UOverlay* OverlayParent = Cast<UOverlay>(Frame->GetParent());
+		if (CanvasParent == nullptr && OverlayParent == nullptr)
+		{
+			return nullptr;
+		}
+
+		UButton* Button = WidgetTree->ConstructWidget<UButton>(
+			UButton::StaticClass(), ButtonName);
+		// 테두리 그림이 이미 단추처럼 보인다. 버튼 자신은 그리지 않는다.
+		FButtonStyle Style = Button->GetStyle();
+		Style.Normal.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Hovered.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Button->SetStyle(Style);
+		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+
+		if (CanvasParent != nullptr)
+		{
+			UCanvasPanelSlot* ButtonSlot = CanvasParent->AddChildToCanvas(Button);
+			if (const UCanvasPanelSlot* FrameSlot = Cast<UCanvasPanelSlot>(Frame->Slot))
+			{
+				ButtonSlot->SetAnchors(FrameSlot->GetAnchors());
+				ButtonSlot->SetAlignment(FrameSlot->GetAlignment());
+				ButtonSlot->SetAutoSize(false);
+				ButtonSlot->SetPosition(FrameSlot->GetPosition());
+				ButtonSlot->SetSize(FrameSlot->GetSize());
+				// 글자/테두리가 입력을 안 받으므로 위에 얹어도 가리지 않는다.
+				ButtonSlot->SetZOrder(FrameSlot->GetZOrder() + 20);
+			}
+			return Button;
+		}
+
+		if (UOverlaySlot* ButtonSlot = OverlayParent->AddChildToOverlay(Button))
+		{
+			ButtonSlot->SetPadding(FMargin(0.f));
+			ButtonSlot->SetHorizontalAlignment(HAlign_Fill);
+			ButtonSlot->SetVerticalAlignment(VAlign_Fill);
+		}
+		return Button;
+	};
+
+	for (const FName ProfileName : TitleLayoutProfiles)
+	{
+		const FName ButtonName = MakeProfileWidgetName(TEXT("ExitButton"), ProfileName);
+		if (WidgetTree->FindWidget(ButtonName) != nullptr)
+		{
+			continue;
+		}
+		UWidget* Frame = WidgetTree->FindWidget(
+			MakeProfileWidgetName(TEXT("ExitButtonFrameImage"), ProfileName));
+		if (Frame == nullptr)
+		{
+			continue;
+		}
+		AddOverlayButton(ButtonName, Frame);
+	}
+
+	// 프로필 레이아웃이 없는 구형 자산도 같은 규칙으로 채운다.
+	if (ExitButton == nullptr && WidgetTree->FindWidget(TEXT("ExitButton")) == nullptr)
+	{
+		if (UWidget* Frame = WidgetTree->FindWidget(TEXT("ExitButtonFrameImage")))
+		{
+			ExitButton = AddOverlayButton(TEXT("ExitButton"), Frame);
+		}
+	}
+}
+
 /** @brief 레거시 단일 버튼과 프로필별 버튼을 같은 입력 핸들러에 연결한다. */
 void UTitleMenuWidget::BindMainMenuButtons()
 {
@@ -362,6 +450,10 @@ void UTitleMenuWidget::BindMainMenuButtons()
 	{
 		SettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
+	if (ExitButton != nullptr)
+	{
+		ExitButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
+	}
 
 	for (const FName ProfileName : TitleLayoutProfiles)
 	{
@@ -376,6 +468,10 @@ void UTitleMenuWidget::BindMainMenuButtons()
 		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
 		{
 			ProfileSettingsButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+		if (UButton* ProfileExitButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButton"), ProfileName))))
+		{
+			ProfileExitButton->OnClicked.AddUniqueDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
 		}
 	}
 }
@@ -395,6 +491,10 @@ void UTitleMenuWidget::UnbindMainMenuButtons()
 	{
 		SettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
 	}
+	if (ExitButton != nullptr)
+	{
+		ExitButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
+	}
 
 	for (const FName ProfileName : TitleLayoutProfiles)
 	{
@@ -409,6 +509,10 @@ void UTitleMenuWidget::UnbindMainMenuButtons()
 		if (UButton* ProfileSettingsButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("SettingsButton"), ProfileName))))
 		{
 			ProfileSettingsButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleSettingsButtonClicked);
+		}
+		if (UButton* ProfileExitButton = Cast<UButton>(GetWidgetFromName(MakeProfileWidgetName(TEXT("ExitButton"), ProfileName))))
+		{
+			ProfileExitButton->OnClicked.RemoveDynamic(this, &UTitleMenuWidget::HandleExitButtonClicked);
 		}
 	}
 }
