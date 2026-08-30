@@ -827,7 +827,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		// 그대로라 공용 중앙 정렬 계약을 깨지 않는다.
 		mTurnAPText->SetMargin(FMargin(16.f, 0.f, 0.f, 0.f));
 		FSlateFontInfo APFont = mTurnAPText->GetFont();
-		APFont.Size = 42;
+		// 800x97로 압축된 ScaleBox에서도 기존 화면 크기를 유지한다.
+		APFont.Size = 46;
 		mTurnAPText->SetFont(APFont);
 	}
 	mTurnAPPips.Reset();

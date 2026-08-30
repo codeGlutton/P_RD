@@ -1545,15 +1545,15 @@ namespace CombatHUDWidgetBuilder
 			Blueprint->WidgetTree->RootWidget);
 		RemoveRetiredQuickSkillWidgets(Blueprint);
 
-		// ROUND/턴 바 바로 아래의 좌상단에 고정한다. 15칸을 늘려도
-		// 110px 높이는 그대로라 다른 HUD와 DPI 비율이 달라지지 않는다.
+		// ROUND/턴 바 바로 아래의 좌상단에 고정한다. 중앙 Move 카드와
+		// 겹치지 않도록 원본 판 비율을 유지한 채 800x97 안에 맞춘다.
 		if (UWidget* TurnAPScale = Blueprint->WidgetTree->FindWidget(
 			TEXT("TurnAPScale")))
 		{
 			if (UScaleBox* ScaleBox = Cast<UScaleBox>(TurnAPScale))
 			{
-				// 568.421x68.8995 authored 판을 904x110 바깥 슬롯에 기존과
-				// 같은 약 1.59배로 맞춘다. 비균일 확대는 사용하지 않는다.
+				// 568.421x68.8995 authored 판을 약 1.408배로 맞춘다.
+				// 비균일 확대는 사용하지 않는다.
 				ScaleBox->SetStretch(EStretch::ScaleToFit);
 				ScaleBox->SetStretchDirection(EStretchDirection::Both);
 			}
@@ -1563,7 +1563,7 @@ namespace CombatHUDWidgetBuilder
 				Slot->SetAlignment(FVector2D::ZeroVector);
 				Slot->SetAutoSize(false);
 				Slot->SetPosition(FVector2D(18.f, 164.f));
-				Slot->SetSize(FVector2D(904.f, 110.f));
+				Slot->SetSize(FVector2D(800.f, 97.f));
 				Slot->SetZOrder(2);
 			}
 		}
@@ -1572,22 +1572,24 @@ namespace CombatHUDWidgetBuilder
 		{
 			TurnAPText->SetMargin(FMargin(16.f, 0.f, 0.f, 0.f));
 			TurnAPText->SetFont(UIFont::MakeProjectExact(
-				TurnAPText->GetFont(), 42));
+				TurnAPText->GetFont(), 46));
 			TurnAPText->SetRenderTransform(FWidgetTransform());
 		}
 
-		// 10칸 authored 보석의 크기/간격을 그대로 연장한 15칸 계약.
-		// 실제 에셋에서 읽은 0.0478 원점, 32.1531 간격, 29.8565x35.9966
-		// 크기를 사용해 리빌드를 반복해도 좌표가 누적되지 않는다.
+		// 15칸을 5 | 5 | 5로 읽을 수 있도록 각 묶음 사이에 12px 여백과
+		// 황동 구분선을 둔다. 보석과 점등 레이어는 같은 고정 좌표를 쓴다.
 		if (UCanvasPanel* PipRow = Cast<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPPipRow"))))
 		{
 			constexpr int32 PipCount = 15;
-			constexpr float PipStep = 32.1531f;
-			const FVector2D PipOrigin(0.0478f, 0.4515f);
-			const FVector2D PipSize(29.8565f, 35.9966f);
+			constexpr int32 PipsPerGroup = 5;
+			constexpr float PipStep = 29.f;
+			constexpr float GroupGap = 10.f;
+			const FVector2D PipOrigin(.5f, 1.f);
+			const FVector2D PipSize(27.f, 34.f);
 			constexpr float PipRowWidth = 480.f;
 			constexpr float PlateWidth = 568.421f;
+			constexpr float NumberAreaWidth = 88.f;
 
 			// 수동 편집이나 이전 시안에서 16칸 이상이 남아 있어도 빌더 한 번으로
 			// 정확히 15칸 계약으로 돌아오게 한다.
@@ -1617,9 +1619,40 @@ namespace CombatHUDWidgetBuilder
 			}
 			DeleteWidgetsCompletely(Blueprint, OverflowPips);
 
+			// 이전 시안의 여분 묶음/구분선이 남더라도 정확히 3개 묶음과
+			// 2개 구분선만 남긴다.
+			TSet<UWidget*> OverflowGroups;
+			for (UWidget* Widget : Blueprint->GetAllSourceWidgets())
+			{
+				if (Widget == nullptr)
+				{
+					continue;
+				}
+				const FString WidgetName = Widget->GetName();
+				for (const TCHAR* Prefix : { TEXT("TurnAPGroupWell"),
+					TEXT("TurnAPGroupSeparatorShadow"),
+					TEXT("TurnAPGroupSeparator") })
+				{
+					const FString PrefixWithSeparator = FString(Prefix) + TEXT("_");
+					if (WidgetName.StartsWith(PrefixWithSeparator) == false)
+					{
+						continue;
+					}
+					const FString Suffix = WidgetName.RightChop(
+						PrefixWithSeparator.Len());
+					const int32 MaxCount = FString(Prefix) == TEXT("TurnAPGroupWell")
+						? 3 : 2;
+					if (Suffix.IsNumeric() && FCString::Atoi(*Suffix) >= MaxCount)
+					{
+						OverflowGroups.Add(Widget);
+					}
+				}
+			}
+			DeleteWidgetsCompletely(Blueprint, OverflowGroups);
+
 			if (UCanvasPanelSlot* RowSlot = Cast<UCanvasPanelSlot>(PipRow->Slot))
 			{
-				RowSlot->SetPosition(FVector2D(78.f, 15.f));
+				RowSlot->SetPosition(FVector2D(NumberAreaWidth, 15.f));
 				RowSlot->SetSize(FVector2D(PipRowWidth, 36.f));
 			}
 			if (UWidget* PlateMount = Blueprint->WidgetTree->FindWidget(
@@ -1636,9 +1669,9 @@ namespace CombatHUDWidgetBuilder
 						if (UOverlaySlot* TextSlot = Cast<UOverlaySlot>(TextCenter->Slot))
 						{
 							FMargin Padding = TextSlot->GetPadding();
-							// 첫 78px은 숫자, 그 뒤는 보석이다. 절대값으로 써야
+							// 첫 88px은 숫자, 그 뒤는 보석이다. 절대값으로 써야
 							// 같은 빌더를 반복 실행해도 Right가 누적되지 않는다.
-							Padding.Right = PlateWidth - 78.f;
+							Padding.Right = PlateWidth - NumberAreaWidth;
 							TextSlot->SetPadding(Padding);
 						}
 					}
@@ -1652,10 +1685,55 @@ namespace CombatHUDWidgetBuilder
 			UImage* UsedTemplate = Cast<UImage>(Blueprint->WidgetTree->FindWidget(
 				TEXT("TurnAPPipUsed_0")));
 			check(PipTemplate != nullptr && UsedTemplate != nullptr);
+
+			// 각 5칸을 하나의 어두운 홈으로 묶고, 홈 사이에는 ROUND/턴 바의
+			// 금속 장식과 같은 계열의 어두운 받침 + 황동선을 겹친다.
+			constexpr float GroupWellWidth = 145.f;
+			for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
+			{
+				const float GroupX = PipOrigin.X
+					+ GroupIndex * (PipStep * PipsPerGroup + GroupGap);
+				UBorder* GroupWell = FindOrCreate<UBorder>(Blueprint,
+					FName(*FString::Printf(TEXT("TurnAPGroupWell_%d"), GroupIndex)));
+				PlaceCanvas(PipRow, GroupWell, FVector2D(GroupX - 2.f, .5f),
+					FVector2D(GroupWellWidth, 35.f), 5);
+				GroupWell->SetBrushColor(FLinearColor(.015f, .035f, .055f, .34f));
+				GroupWell->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+
+			for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
+			{
+				const int32 NextPipIndex = (SeparatorIndex + 1) * PipsPerGroup;
+				const float NextPipX = PipOrigin.X + PipStep * NextPipIndex
+					+ GroupGap * (SeparatorIndex + 1);
+				const float PreviousPipRight = PipOrigin.X
+					+ PipStep * (NextPipIndex - 1)
+					+ GroupGap * SeparatorIndex + PipSize.X;
+				const float SeparatorCenter = (PreviousPipRight + NextPipX) * .5f;
+
+				UBorder* SeparatorShadow = FindOrCreate<UBorder>(Blueprint,
+					FName(*FString::Printf(
+						TEXT("TurnAPGroupSeparatorShadow_%d"), SeparatorIndex)));
+				PlaceCanvas(PipRow, SeparatorShadow,
+					FVector2D(SeparatorCenter - 3.5f, 1.f), FVector2D(7.f, 34.f), 14);
+				SeparatorShadow->SetBrushColor(
+					FLinearColor(.025f, .012f, .004f, .95f));
+				SeparatorShadow->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+				UBorder* Separator = FindOrCreate<UBorder>(Blueprint,
+					FName(*FString::Printf(
+						TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex)));
+				PlaceCanvas(PipRow, Separator,
+					FVector2D(SeparatorCenter - 1.5f, 3.f), FVector2D(3.f, 30.f), 15);
+				Separator->SetBrushColor(FLinearColor(.92f, .56f, .16f, 1.f));
+				Separator->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+
 			for (int32 PipIndex = 0; PipIndex < PipCount; ++PipIndex)
 			{
 				const FVector2D Position = PipOrigin
-					+ FVector2D(PipStep * PipIndex, 0.f);
+					+ FVector2D(PipStep * PipIndex
+						+ GroupGap * (PipIndex / PipsPerGroup), 0.f);
 				UImage* UsedPip = FindOrCreate<UImage>(Blueprint,
 					FName(*FString::Printf(TEXT("TurnAPPipUsed_%d"), PipIndex)));
 				PlaceCanvas(PipRow, UsedPip, Position, PipSize, 10);

@@ -2116,8 +2116,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("AP 바 좌상단 위치"), APSlot->GetPosition(),
 				FVector2D(18.f, 164.f));
-			TestEqual(TEXT("15칸 AP 바 크기"), APSlot->GetSize(),
-				FVector2D(904.f, 110.f));
+			TestEqual(TEXT("5x3 AP 바 압축 크기"), APSlot->GetSize(),
+				FVector2D(800.f, 97.f));
 			TestEqual(TEXT("AP 바 상단 앵커"), APSlot->GetAnchors().Minimum,
 				FVector2D::ZeroVector);
 			TestEqual(TEXT("AP 바 상단 앵커 최대값"), APSlot->GetAnchors().Maximum,
@@ -2136,7 +2136,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	if (UTextBlock* TurnAPText = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("TurnAPText"))))
 	{
-		TestEqual(TEXT("AP 숫자 추가 확대"), TurnAPText->GetFont().Size, 42.f);
+		TestEqual(TEXT("압축 후 AP 숫자 가독성 보정"),
+			TurnAPText->GetFont().Size, 46.f);
 		TestEqual(TEXT("AP 숫자는 개별 좌표 이동을 쓰지 않음"),
 			TurnAPText->GetRenderTransform().Translation, FVector2D::ZeroVector);
 	}
@@ -2153,6 +2154,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	{
 		if (const UCanvasPanelSlot* RowSlot = Cast<UCanvasPanelSlot>(PipRow->Slot))
 		{
+			TestEqual(TEXT("AP 숫자와 첫 보석 사이 여백"),
+				RowSlot->GetPosition(), FVector2D(88.f, 15.f));
 			TestEqual(TEXT("15칸 AP 보석 행 폭"), RowSlot->GetSize(),
 				FVector2D(480.f, 36.f));
 		}
@@ -2162,7 +2165,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (const UOverlaySlot* TextSlot = Cast<UOverlaySlot>(TextCenter->Slot))
 		{
 			TestEqual(TEXT("AP 숫자 영역 패딩은 절대값으로 고정"),
-				TextSlot->GetPadding().Right, 490.421f);
+				TextSlot->GetPadding().Right, 480.421f);
 		}
 	}
 	for (int32 Index = 0; Index < 15; ++Index)
@@ -2181,6 +2184,22 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("TurnAPPipUsed_15")));
 	TestNull(TEXT("AP 점등 레이어도 15칸에서 끝남"),
 		Tree->FindWidget(TEXT("TurnAPPipGlow_15")));
+	for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
+	{
+		TestNotNull(*FString::Printf(TEXT("AP 5칸 묶음 %d"), GroupIndex),
+			Tree->FindWidget(FName(*FString::Printf(
+				TEXT("TurnAPGroupWell_%d"), GroupIndex))));
+	}
+	for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
+	{
+		TestNotNull(*FString::Printf(TEXT("AP 묶음 구분선 %d"), SeparatorIndex),
+			Tree->FindWidget(FName(*FString::Printf(
+				TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex))));
+	}
+	TestNull(TEXT("AP 묶음은 정확히 세 개"),
+		Tree->FindWidget(TEXT("TurnAPGroupWell_3")));
+	TestNull(TEXT("AP 구분선은 정확히 두 개"),
+		Tree->FindWidget(TEXT("TurnAPGroupSeparator_2")));
 	for (const TCHAR* NextSkillName : { TEXT("EnemyNextSkillFrame"),
 		TEXT("EnemyNextSkillIcon"), TEXT("EnemyNextSkillButton") })
 	{

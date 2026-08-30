@@ -59,8 +59,60 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	}
 	TestEqual(TEXT("AP 바 좌상단 좌표"), TurnAPSlot->GetPosition(),
 		FVector2D(18.f, 164.f));
-	TestEqual(TEXT("AP 바 15칸 폭과 기존 높이"), TurnAPSlot->GetSize(),
-		FVector2D(904.f, 110.f));
+	TestEqual(TEXT("AP 바는 중앙 스킬 카드 전에서 끝나는 압축 크기"),
+		TurnAPSlot->GetSize(), FVector2D(800.f, 97.f));
+	const UTextBlock* InitialTurnAPText = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPText")));
+	if (TestNotNull(TEXT("AP 숫자"), InitialTurnAPText))
+	{
+		TestEqual(TEXT("압축 후에도 AP 숫자 크기를 유지"),
+			InitialTurnAPText->GetFont().Size, 46.f);
+	}
+	const UWidget* MoveCard = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
+	const UCanvasPanelSlot* MoveCardSlot = MoveCard != nullptr
+		? Cast<UCanvasPanelSlot>(MoveCard->Slot) : nullptr;
+	if (TestNotNull(TEXT("중앙 이동 카드 슬롯"), MoveCardSlot))
+	{
+		const float APBarRight = TurnAPSlot->GetPosition().X
+			+ TurnAPSlot->GetSize().X;
+		const float MoveCardLeft = 1920.f * MoveCardSlot->GetAnchors().Minimum.X
+			+ MoveCardSlot->GetPosition().X
+			- MoveCardSlot->GetAlignment().X * MoveCardSlot->GetSize().X;
+		TestTrue(TEXT("AP 바와 중앙 이동 카드 사이에 40px 이상 여백"),
+			MoveCardLeft - APBarRight >= 40.f);
+	}
+	for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
+	{
+		UWidget* GroupWell = HUD->WidgetTree->FindWidget(*FString::Printf(
+			TEXT("TurnAPGroupWell_%d"), GroupIndex));
+		TestNotNull(*FString::Printf(TEXT("AP 5칸 묶음 %d"), GroupIndex),
+			GroupWell);
+		TestTrue(*FString::Printf(TEXT("AP 5칸 묶음 %d 부모"), GroupIndex),
+			GroupWell != nullptr && GroupWell->GetParent()
+				== HUD->WidgetTree->FindWidget(TEXT("TurnAPPipRow")));
+	}
+	for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
+	{
+		UWidget* Separator = HUD->WidgetTree->FindWidget(*FString::Printf(
+			TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex));
+		TestNotNull(*FString::Printf(TEXT("AP 묶음 구분선 %d"), SeparatorIndex),
+			Separator);
+		const UCanvasPanelSlot* SeparatorSlot = Separator != nullptr
+			? Cast<UCanvasPanelSlot>(Separator->Slot) : nullptr;
+		if (TestNotNull(*FString::Printf(TEXT("AP 묶음 구분선 슬롯 %d"),
+			SeparatorIndex), SeparatorSlot))
+		{
+			TestEqual(*FString::Printf(TEXT("AP 묶음 구분선 위치 %d"),
+				SeparatorIndex), SeparatorSlot->GetPosition(),
+				FVector2D(148.f + 155.f * SeparatorIndex, 3.f));
+			TestEqual(*FString::Printf(TEXT("AP 묶음 구분선 크기 %d"),
+				SeparatorIndex), SeparatorSlot->GetSize(), FVector2D(3.f, 30.f));
+		}
+	}
+	TestNull(TEXT("AP 묶음은 정확히 세 개"),
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPGroupWell_3")));
+	TestNull(TEXT("AP 묶음 구분선은 정확히 두 개"),
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPGroupSeparator_2")));
 	for (int32 PipIndex = 0; PipIndex < 15; ++PipIndex)
 	{
 		TestNotNull(*FString::Printf(TEXT("AP 활성 아이콘 %d"), PipIndex),
@@ -75,6 +127,25 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	}
 	TestNull(TEXT("AP 아이콘은 15칸을 넘기지 않음"),
 		HUD->WidgetTree->FindWidget(TEXT("TurnAPPip_15")));
+	for (const TPair<int32, int32>& Boundary : {
+		TPair<int32, int32>(4, 5), TPair<int32, int32>(9, 10) })
+	{
+		const UWidget* LeftPip = HUD->WidgetTree->FindWidget(*FString::Printf(
+			TEXT("TurnAPPip_%d"), Boundary.Key));
+		const UWidget* RightPip = HUD->WidgetTree->FindWidget(*FString::Printf(
+			TEXT("TurnAPPip_%d"), Boundary.Value));
+		const UCanvasPanelSlot* LeftSlot = LeftPip != nullptr
+			? Cast<UCanvasPanelSlot>(LeftPip->Slot) : nullptr;
+		const UCanvasPanelSlot* RightSlot = RightPip != nullptr
+			? Cast<UCanvasPanelSlot>(RightPip->Slot) : nullptr;
+		if (TestNotNull(TEXT("AP 묶음 왼쪽 경계 슬롯"), LeftSlot)
+			&& TestNotNull(TEXT("AP 묶음 오른쪽 경계 슬롯"), RightSlot))
+		{
+			const float BoundaryGap = RightSlot->GetPosition().X
+				- LeftSlot->GetPosition().X - LeftSlot->GetSize().X;
+			TestEqual(TEXT("AP 5칸 묶음 사이 12px 여백"), BoundaryGap, 12.f);
+		}
+	}
 
 	UCombatUIModel* Model = NewObject<UCombatUIModel>(HUD);
 	HUD->BindUIModel(Model);
