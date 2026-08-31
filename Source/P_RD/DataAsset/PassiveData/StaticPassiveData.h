@@ -25,19 +25,6 @@ enum class EPassiveTargetQuantifier : uint8
 	All		UMETA(DisplayName = "All"),		// 모든 타겟이 자격을 갖춰야 발동
 };
 
-USTRUCT(BlueprintType)
-struct FPassiveCondition
-{
-    GENERATED_BODY()
-
-public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FGameplayTag mConditionTag;     // 조건 태그
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float mThresholdValue = 0.f;    // 기준 수치 (예: 데미지 10, HP 30%)
-};
-
 /**
  *
  */
@@ -78,16 +65,6 @@ public:
     */
 	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing"))
 	FGameplayTag mDeactivateTimingTag;
-
-    /**
-    * @brief 패시브 발동 조건
-    *
-    * @details
-    * 패시브의 발동 조건(mConditionTag),
-    * 패시브의 발동 조건 수치(mThresholdValue)
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Condition"))
-    TArray<FPassiveCondition> mPassiveTriggerCondition;
 
     /**
     * @brief 수량 조건
