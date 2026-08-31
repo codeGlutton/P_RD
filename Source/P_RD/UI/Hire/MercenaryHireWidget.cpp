@@ -276,8 +276,17 @@ void UMercenaryHireWidget::SetShopMode(
 	ApplyMarchboundPortraits();
 	mChosen.Reset();
 	mPartySize = 3;
-	mShopTargetPartyViewIndex = FMath::Clamp(
-		mShopTargetPartyViewIndex, 0, FMath::Max(0, PartySlots.Num() - 1));
+	const int32 FirstEmptySlot = PartySlots.IndexOfByPredicate(
+		[](const FShopMercenaryPartySlotUI& PartySlot)
+		{
+			return !PartySlot.mIsOccupied;
+		});
+	mShopTargetPartyViewIndex = FirstEmptySlot != INDEX_NONE ? FirstEmptySlot
+		: FMath::Clamp(mShopTargetPartyViewIndex, 0,
+			FMath::Max(0, PartySlots.Num() - 1));
+	mPendingReplaceCandidateSlotIndex = INDEX_NONE;
+	mPendingReplacePartyUnitIndex = INDEX_NONE;
+	SetReplaceConfirmationShown(false);
 	mReviewing = mCrew.IsEmpty() ? INDEX_NONE : 0;
 	Refresh();
 }
@@ -288,6 +297,9 @@ void UMercenaryHireWidget::ClearShopMode()
 	mShopCandidates.Reset();
 	mShopPartySlots.Reset();
 	mShopTargetPartyViewIndex = 0;
+	mPendingReplaceCandidateSlotIndex = INDEX_NONE;
+	mPendingReplacePartyUnitIndex = INDEX_NONE;
+	SetReplaceConfirmationShown(false);
 	mShopGold = 0;
 }
 
@@ -433,7 +445,9 @@ void UMercenaryHireWidget::ApplyResponsiveLayout(const FVector2D& ViewportSize)
 	SetTranslation(TEXT("HireLeftTopGroup"), 0.0f);
 	SetTranslation(TEXT("HireCenterTopGroup"), 0.0f);
 	SetTranslation(TEXT("HireCenterMiddleGroup"), CenterEdgeOffset);
-	SetTranslation(TEXT("HireRightTopGroup"), 0.0f);
+	// 상점 우상단 설정 레일 아래로 파티 패널을 내린다. 고용 WBP를 단독으로
+	// 쓸 때는 원래 위치를 유지한다.
+	SetTranslation(TEXT("HireRightTopGroup"), mIsShopMode ? 118.0f : 0.0f);
 	SetTranslation(TEXT("HireBackHolder"), LeftEdgeOffset);
 	SetTranslation(TEXT("HireAddHolder"), CenterEdgeOffset);
 	SetTranslation(TEXT("DepartHolder"), RightEdgeOffset);
@@ -526,12 +540,39 @@ void UMercenaryHireWidget::CacheWidgets()
 	}
 
 	mPartyCountText = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("PartyCountText"));
+	// 파티 머리칸은 약 45px라 영문 y의 아래꼬리와 외곽선/그림자를 전부
+	// 담지 못한다. 중심은 그대로 두고 제목 영역만 위아래 4px씩 넓힌다.
+	// 이미 넓힌 인스턴스를 다시 Construct해도 계속 커지지 않도록 원래 높이에
+	// 가까운 경우에만 적용한다.
+	// 자르기 자체는 URDUserWidget::NormalizeAutoFitTextClipping 이 화면
+	// 전체에서 푼다. 여기서는 이 제목 칸만 위아래로 조금 넓혀, 배율이
+	// 줄어들기 전에 글리프가 들어갈 자리를 먼저 만들어 준다.
+	if (UWidget* PartyCountCenter = MercenaryHireDetail::Find<UWidget>(
+		WidgetTree, TEXT("PartyCountText_Center")))
+	{
+		if (UCanvasPanelSlot* CenterSlot = Cast<UCanvasPanelSlot>(PartyCountCenter->Slot);
+			CenterSlot != nullptr && CenterSlot->GetSize().Y < 50.0f)
+		{
+			FVector2D Position = CenterSlot->GetPosition();
+			FVector2D Size = CenterSlot->GetSize();
+			Position.Y -= 4.0f;
+			Size.Y += 8.0f;
+			CenterSlot->SetPosition(Position);
+			CenterSlot->SetSize(Size);
+		}
+	}
 
 	mAddButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("HireAddButton"));
 	mAddLabel = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireAddLabel"));
 	mDepartButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("DepartButton"));
 	mDepartLabel = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("DepartLabel"));
 	mBackButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("HireBackButton"));
+	mReplaceConfirmLayer = MercenaryHireDetail::Find<UWidget>(WidgetTree,
+		TEXT("HireReplaceConfirmLayer"));
+	mReplaceAcceptButton = MercenaryHireDetail::Find<UButton>(WidgetTree,
+		TEXT("HireReplaceAcceptButton"));
+	mReplaceCancelButton = MercenaryHireDetail::Find<UButton>(WidgetTree,
+		TEXT("HireReplaceCancelButton"));
 	mDetailName = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailName"));
 	mDetailHP = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailHP"));
 	mDetailAP = MercenaryHireDetail::Find<UTextBlock>(WidgetTree, TEXT("HireDetailAP"));
@@ -642,6 +683,16 @@ void UMercenaryHireWidget::CacheWidgets()
 		mBackButton->OnClicked.AddUniqueDynamic(
 			this, &UMercenaryHireWidget::HandleBackClicked);
 	}
+	if (mReplaceAcceptButton != nullptr)
+	{
+		mReplaceAcceptButton->OnClicked.AddUniqueDynamic(
+			this, &UMercenaryHireWidget::HandleReplaceAccepted);
+	}
+	if (mReplaceCancelButton != nullptr)
+	{
+		mReplaceCancelButton->OnClicked.AddUniqueDynamic(
+			this, &UMercenaryHireWidget::HandleReplaceCancelled);
+	}
 }
 
 EMercenaryCardState UMercenaryHireWidget::StateOf(const int32 CardIndex) const
@@ -717,12 +768,61 @@ void UMercenaryHireWidget::ClickAdd()
 		{
 			return;
 		}
-		mOnShopHireRequested.Broadcast(Candidate.mSlotIndex,
-			mShopPartySlots[mShopTargetPartyViewIndex].mUnitIndex);
+		const int32 FirstEmptySlot = mShopPartySlots.IndexOfByPredicate(
+			[](const FShopMercenaryPartySlotUI& PartySlot)
+			{
+				return !PartySlot.mIsOccupied;
+			});
+		if (FirstEmptySlot != INDEX_NONE)
+		{
+			mShopTargetPartyViewIndex = FirstEmptySlot;
+			mOnShopHireRequested.Broadcast(Candidate.mSlotIndex,
+				mShopPartySlots[FirstEmptySlot].mUnitIndex);
+			return;
+		}
+
+		const FShopMercenaryPartySlotUI& Target =
+			mShopPartySlots[mShopTargetPartyViewIndex];
+		if (Target.mIsOccupied)
+		{
+			mPendingReplaceCandidateSlotIndex = Candidate.mSlotIndex;
+			mPendingReplacePartyUnitIndex = Target.mUnitIndex;
+			SetReplaceConfirmationShown(true);
+			return;
+		}
+		mOnShopHireRequested.Broadcast(Candidate.mSlotIndex, Target.mUnitIndex);
 		return;
 	}
 	ToggleChoice(mReviewing);
 	Refresh();
+}
+
+void UMercenaryHireWidget::SetReplaceConfirmationShown(const bool bShown)
+{
+	MercenaryHireDetail::SetShown(mReplaceConfirmLayer, bShown);
+}
+
+void UMercenaryHireWidget::HandleReplaceAccepted()
+{
+	if (!mIsShopMode || mPendingReplaceCandidateSlotIndex == INDEX_NONE
+		|| mPendingReplacePartyUnitIndex == INDEX_NONE)
+	{
+		SetReplaceConfirmationShown(false);
+		return;
+	}
+	const int32 Candidate = mPendingReplaceCandidateSlotIndex;
+	const int32 PartyUnit = mPendingReplacePartyUnitIndex;
+	mPendingReplaceCandidateSlotIndex = INDEX_NONE;
+	mPendingReplacePartyUnitIndex = INDEX_NONE;
+	SetReplaceConfirmationShown(false);
+	mOnShopHireRequested.Broadcast(Candidate, PartyUnit);
+}
+
+void UMercenaryHireWidget::HandleReplaceCancelled()
+{
+	mPendingReplaceCandidateSlotIndex = INDEX_NONE;
+	mPendingReplacePartyUnitIndex = INDEX_NONE;
+	SetReplaceConfirmationShown(false);
 }
 
 void UMercenaryHireWidget::ClickPartySlot(const int32 SlotIndex)
@@ -1207,8 +1307,11 @@ void UMercenaryHireWidget::RefreshBottomBar()
 			mDepartButton->SetIsEnabled(false);
 		}
 		MercenaryHireDetail::SetDimmed(mDepartLabel, false);
+		// 값만 적으면 이 판이 무슨 값인지 알 수 없다 -- 옆의 소지 골드와
+		// 같은 모양이라 "내 돈"으로 읽혔다(0824 검수: 상점 용병 UI 다듬기).
+		// 무엇의 값인지 함께 적는다.
 		MercenaryHireDetail::SetTextIfPresent(mDepartLabel, Candidate != nullptr
-			? FText::Format(LOCTEXT("ShopHireCost", "{0}G"),
+			? FText::Format(LOCTEXT("ShopHireCost", "고용비용 {0}G"),
 				FText::AsNumber(Candidate->mPrice))
 			: FText::GetEmpty());
 		if (mDepartLabel != nullptr)
