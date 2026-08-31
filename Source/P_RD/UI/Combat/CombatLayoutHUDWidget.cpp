@@ -22,6 +22,7 @@
 #include "Components/ScrollBox.h"
 #include "Components/ScrollBoxSlot.h"
 #include "Components/TextBlock.h"
+#include "Framework/Application/SlateApplication.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
 #include "Engine/Font.h"
@@ -32,6 +33,8 @@
 #include "Internationalization/Internationalization.h"
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
@@ -233,26 +236,63 @@ namespace
 		Image->SetBrush(Brush);
 	}
 
-	/**
-	 * @brief 턴바가 실제로 투영할 순서 수.
-	 *
-	 * 이번 라운드 잔여분 뒤에 다음 라운드 한 바퀴를 반드시 붙이고, 유닛이
-	 * 적어도 열 칸은 미래 순서로 채운다.
-	 */
-	/** @brief 다음 턴 라운드 앞에 낀 빈 라운드 수. 칸 하나씩 표기한다(0807). */
-	int32 EmptyRoundCellCount(const FTurnUI& Turn)
+	struct FProjectedTurnToken
 	{
-		// 보여 줄 다음 턴이 없으면 빈 라운드 예고도 무의미하다.
-		return Turn.mNextRoundUnitIds.IsEmpty()
-			? 0 : FMath::Max(Turn.mNextRoundOffset - 1, 0);
-	}
+		int32 mUnitId = INDEX_NONE;
+		int32 mRoundOffset = 0;
+		bool mStartsRound = false;
+		bool mEmptyRound = false;
+	};
 
-	int32 ProjectedTurnCount(const FTurnUI& Turn, const int32 SlotRoom)
+	/** @brief 현재 잔여 턴과 모델이 계산한 미래 라운드를 한 줄로 펼친다. */
+	TArray<FProjectedTurnToken> BuildProjectedTurnTokens(const FTurnUI& Turn)
 	{
-		// 이번 라운드 잔여 + 빈 라운드 칸 + 다음 턴 라운드 미리보기. 그보다
-		// 먼 미래는 속도 변화로 얼마든지 뒤집혀서 안 그린다(0806 합의).
-		return Turn.mTurnOrderUnitIds.Num() + EmptyRoundCellCount(Turn)
-			+ Turn.mNextRoundUnitIds.Num();
+		TArray<FProjectedTurnToken> Tokens;
+		for (const int32 UnitId : Turn.mTurnOrderUnitIds)
+		{
+			FProjectedTurnToken& Token = Tokens.AddDefaulted_GetRef();
+			Token.mUnitId = UnitId;
+		}
+
+		if (Turn.mPredictedRounds.IsEmpty() == false)
+		{
+			for (const FTurnRoundForecastUI& Round : Turn.mPredictedRounds)
+			{
+				bool StartsRound = true;
+				for (const int32 UnitId : Round.mTurnOrderUnitIds)
+				{
+					FProjectedTurnToken& Token = Tokens.AddDefaulted_GetRef();
+					Token.mUnitId = UnitId;
+					Token.mRoundOffset = FMath::Max(Round.mRoundOffset, 1);
+					Token.mStartsRound = StartsRound;
+					StartsRound = false;
+				}
+			}
+			return Tokens;
+		}
+
+		// 구형 데이터 호환. 예전 계약은 다음 턴 전의 빈 라운드도 한 칸씩 썼다.
+		if (Turn.mNextRoundUnitIds.IsEmpty() == false)
+		{
+			const int32 NextRoundOffset = FMath::Max(Turn.mNextRoundOffset, 1);
+			for (int32 RoundOffset = 1; RoundOffset < NextRoundOffset; ++RoundOffset)
+			{
+				FProjectedTurnToken& Token = Tokens.AddDefaulted_GetRef();
+				Token.mRoundOffset = RoundOffset;
+				Token.mStartsRound = true;
+				Token.mEmptyRound = true;
+			}
+			bool StartsRound = true;
+			for (const int32 UnitId : Turn.mNextRoundUnitIds)
+			{
+				FProjectedTurnToken& Token = Tokens.AddDefaulted_GetRef();
+				Token.mUnitId = UnitId;
+				Token.mRoundOffset = NextRoundOffset;
+				Token.mStartsRound = StartsRound;
+				StartsRound = false;
+			}
+		}
+		return Tokens;
 	}
 
 	/** @brief 이름으로 위젯을 찾되 중첩 UserWidget 안까지 내려간다. */
@@ -532,11 +572,22 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		Widgets.Cost = Find<UTextBlock>(WidgetTree, TEXT("CommandCost") + Suffix);
 		Widgets.CostLine = Find<UTextBlock>(WidgetTree, TEXT("CommandCostLine") + Suffix);
 		Widgets.Cooldown = Find<UTextBlock>(WidgetTree, TEXT("CommandCooldown") + Suffix);
-		Widgets.CooldownIcon = Find<UWidget>(WidgetTree, TEXT("CommandCooldownIcon") + Suffix);
+		// 현재 저작 WBP는 Badge 이름을 쓴다. 구형 Icon 이름도 받아 오래된
+		// 전투 배치에서 빈 원형 배지가 다시 남지 않게 한다.
+		Widgets.CooldownIcon = Find<UWidget>(
+			WidgetTree, TEXT("CommandCooldownBadge") + Suffix);
+		if (Widgets.CooldownIcon == nullptr)
+		{
+			Widgets.CooldownIcon = Find<UWidget>(
+				WidgetTree, TEXT("CommandCooldownIcon") + Suffix);
+		}
+		Widgets.CooldownOverlayRoot = Find<UWidget>(
+			WidgetTree, TEXT("CommandCooldownOverlayRoot") + Suffix);
+		Widgets.CooldownOverlay = Find<UTextBlock>(
+			WidgetTree, TEXT("CommandCooldownOverlay") + Suffix);
 		Widgets.Damage = Find<UTextBlock>(WidgetTree, TEXT("CommandDamage") + Suffix);
 		Widgets.Disabled = Find<UWidget>(WidgetTree, TEXT("CommandDisabled") + Suffix);
 	}
-
 	mTurnSlots.SetNum(TurnSlotCount);
 	for (int32 Index = 0; Index < TurnSlotCount; ++Index)
 	{
@@ -564,6 +615,65 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
+	// 머리 위 월드 HP바와 같은 값을 좁은 요약판에서 반복하지 않는다.
+	// 비운 한 줄만큼 AP/속도/상태를 위로 당기고, 작은 화면에서도 얼굴과
+	// 상태 아이콘이 한눈에 읽히도록 시각 크기를 키운다.
+	const auto ConfigureCompactSummary = [this](const TCHAR* Prefix)
+	{
+		for (const TCHAR* Suffix : { TEXT("HPBack"), TEXT("HPBar"), TEXT("HPText") })
+		{
+			SetShown(Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), false);
+		}
+		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
+		{
+			if (UWidget* Widget = Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("%s%s"), Prefix, Suffix)))
+			{
+				FWidgetTransform Transform;
+				Transform.Scale = FVector2D(1.22f, 1.22f);
+				Widget->SetRenderTransform(Transform);
+				Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+			}
+		}
+		// TextBlock 자체는 AutoFit ScaleBox 안에서 클리핑된다. 잎 TextBlock을
+		// 이동하면 래퍼의 클립 사각 밖으로 빠져 글자가 통째로 사라지므로,
+		// 텍스트 행은 바깥 Center 래퍼를 이동한다.
+		for (const TCHAR* Suffix : { TEXT("APPlate"), TEXT("APText_Center"),
+			TEXT("SpeedPlate"), TEXT("SpeedIcon"), TEXT("SpeedText_Center"),
+			TEXT("StatusLabel"), TEXT("Status") })
+		{
+			if (UWidget* Widget = Find<UWidget>(WidgetTree,
+				FString::Printf(TEXT("%s%s"), Prefix, Suffix)))
+			{
+				FWidgetTransform Transform;
+				Transform.Translation = FVector2D(0.f, -52.f);
+				if (FString(Suffix).EndsWith(TEXT("Icon")))
+				{
+					Transform.Scale = FVector2D(1.2f, 1.2f);
+				}
+				Widget->SetRenderTransform(Transform);
+				Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+			}
+		}
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			for (const TCHAR* Kind : { TEXT("Frame"), TEXT("Icon"),
+				TEXT("Count"), TEXT("Button") })
+			{
+				if (UWidget* Widget = Find<UWidget>(WidgetTree, FString::Printf(
+					TEXT("%sStatus%s_%d"), Prefix, Kind, Index)))
+				{
+					FWidgetTransform Transform;
+					Transform.Translation = FVector2D(0.f, -52.f);
+					Transform.Scale = FVector2D(1.18f, 1.18f);
+					Widget->SetRenderTransform(Transform);
+					Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+				}
+			}
+		}
+	};
+	ConfigureCompactSummary(TEXT("Enemy"));
 	// 0823 확정: 요약판 AP 는 문구("AP n/n")로만 보여 준다. 보석 아이콘
 	// 행만 걷는다(WBP 에 구워져 있으므로 이름으로 찾아 접는다).
 	mEnemyAPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyAPText"));
@@ -571,22 +681,17 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	{
 		PipRow->SetVisibility(ESlateVisibility::Collapsed);
 	}
-	// 0823 확정: 보석 행이 쓰던 바닥 띠(y 348~430)가 비었으니 요약판의 그
-	// 바닥을 잘라낸다. 판 그림을 줄이면 무늬가 세로로 눌리므로(1차 시안 반려),
-	// 그림은 원본 크기 그대로 두고 패널을 345 에서 끊어 아래를 클리핑한다.
-	// 남은 내용물의 바닥은 상태 단추/다음 스킬 칸(~329)이다.
-	// WBP 는 600x430 그대로 두고(에셋 계약 보존) 런타임에서만 자른다.
+	// 세로 전용 범용 프레임의 저작 크기를 런타임에서 덮어쓰지 않는다.
 	for (const TCHAR* SummaryName : { TEXT("EnemyPanel"), TEXT("AllyPanel") })
 	{
 		if (UWidget* Summary = Find<UWidget>(WidgetTree, SummaryName))
 		{
-			if (UCanvasPanelSlot* SummarySlot = Cast<UCanvasPanelSlot>(Summary->Slot))
-			{
-				SummarySlot->SetSize(FVector2D(600.f, 345.f));
-			}
-			Summary->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			Summary->SetClipping(EWidgetClipping::Inherit);
 		}
 	}
+	SetShown(mEnemyNextSkillFrame, false);
+	SetShown(mEnemyNextSkillIcon, false);
+	SetInteractiveShown(Find<UButton>(WidgetTree, TEXT("EnemyNextSkillButton")), false);
 	// WBP 에 번역 키 없이(구형 bake) 박힌 라벨을 로컬라이즈 텍스트로 갈아
 	// 끼운다. 빌더는 이미 NSLOCTEXT 를 쓰지만 마지막 리베이크가 그 이전이다.
 	{
@@ -629,6 +734,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
+	ConfigureCompactSummary(TEXT("Ally"));
 	mAllyStatusFrames.Reset();
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
@@ -647,6 +753,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 	mSkillToggleButton = Find<UButton>(WidgetTree, TEXT("SkillToggleButton"));
+	mSkillTogglePanel = Find<UWidget>(WidgetTree, TEXT("SkillTogglePanel"));
 	mSkillTogglePlate = Find<UWidget>(WidgetTree, TEXT("SkillTogglePlate"));
 	mSkillToggleLabel = Find<UWidget>(WidgetTree, TEXT("SkillToggleLabel"));
 
@@ -706,11 +813,26 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	}
 	mConfirmPanel = Find<UWidget>(WidgetTree, TEXT("ConfirmPanel"));
 	mConfirmButton = Find<UButton>(WidgetTree, TEXT("ConfirmButton"));
+	mEndTurnPanel = Find<UWidget>(WidgetTree, TEXT("EndTurnPanel"));
 	mEndTurnLabel = Find<UTextBlock>(WidgetTree, TEXT("EndTurnLabel"));
+	mCancelPanel = Find<UWidget>(WidgetTree, TEXT("CancelPanel"));
+	mCancelButton = Find<UButton>(WidgetTree, TEXT("CancelButton"));
+	mCancelLabel = Find<UTextBlock>(WidgetTree, TEXT("CancelLabel"));
 	mTurnAPRoot = Find<UWidget>(WidgetTree, TEXT("TurnAPScale"));
 	mTurnAPText = Find<UTextBlock>(WidgetTree, TEXT("TurnAPText"));
+	if (mTurnAPText != nullptr)
+	{
+		// 왼쪽 전용 AP 배지 안에서 두 번째 줄을 채운다.
+		mTurnAPText->SetMargin(FMargin(0.f));
+		FSlateFontInfo APFont = mTurnAPText->GetFont();
+		APFont.Size = 19;
+		mTurnAPText->SetFont(APFont);
+	}
 	mTurnAPPips.Reset();
 	mTurnAPPipsUsed.Reset();
+	mTurnAPPipGlows.Reset();
+	UMaterialInterface* APGemFlashMaterial = LoadObject<UMaterialInterface>(
+		nullptr, TEXT("/Game/UI/CombatLayouts/M_APGemFlash.M_APGemFlash"));
 	for (int32 Pip = 0; ; ++Pip)
 	{
 		UWidget* Found = Find<UWidget>(WidgetTree,
@@ -722,6 +844,34 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		mTurnAPPips.Add(Found);
 		mTurnAPPipsUsed.Add(Find<UWidget>(WidgetTree,
 			FString::Printf(TEXT("TurnAPPipUsed_%d"), Pip)));
+		UWidget* FlashWidget = Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("TurnAPPipGlow_%d"), Pip));
+		if (UImage* FlashImage = Cast<UImage>(FlashWidget))
+		{
+			// 단색 브러시는 위젯 사각형 전체를 칠해 원본 AP 보석과 다른
+			// 다이아로 보였다. UI 재질이 원본 브러시의 알파만 마스크로 써서
+			// 보석 외곽 그대로 백청색으로 점등하게 한다.
+			if (APGemFlashMaterial != nullptr)
+			{
+				FlashImage->SetBrushFromMaterial(APGemFlashMaterial);
+				if (UMaterialInstanceDynamic* FlashMID = FlashImage->GetDynamicMaterial())
+				{
+					if (const UImage* PipImage = Cast<UImage>(Found))
+					{
+						if (UTexture* PipTexture = Cast<UTexture>(
+							PipImage->GetBrush().GetResourceObject()))
+						{
+							FlashMID->SetTextureParameterValue(
+								TEXT("PipTexture"), PipTexture);
+						}
+					}
+				}
+			}
+			FlashImage->SetColorAndOpacity(FLinearColor::White);
+			FlashImage->SetRenderTransformPivot(FVector2D(.5f));
+			FlashImage->SetRenderTransformAngle(0.f);
+		}
+		mTurnAPPipGlows.Add(FlashWidget);
 	}
 	mArtifactButtons.SetNum(ArtifactSlotCount);
 	for (int32 Index = 0; Index < ArtifactSlotCount; ++Index)
@@ -747,6 +897,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mTurnPageRight = Find<UButton>(WidgetTree, TEXT("TurnPageRight"));
 	mTurnPageLeftText = Find<UTextBlock>(WidgetTree, TEXT("TurnPageLeftText"));
 	mTurnPageRightText = Find<UTextBlock>(WidgetTree, TEXT("TurnPageRightText"));
+	mTurnPanel = Find<UWidget>(WidgetTree, TEXT("TurnPanel"));
 
 	// 눌림을 삼킬 묶음들. 카드는 안 넣는다 -- 카드는 제 버튼이 가져간다.
 	//
@@ -757,7 +908,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	for (const TCHAR* Name : { TEXT("RoundPanel"), TEXT("TurnPanel"),
 		TEXT("ObjectivePanel"), TEXT("EnemyPanel"), TEXT("AllyPanel"), TEXT("EndTurnPanel"),
 		TEXT("PartyCard_0"), TEXT("PartyCard_1"), TEXT("PartyCard_2"),
-		TEXT("MercenaryPanel"), TEXT("ConfirmPanel") })
+		TEXT("MercenaryPanel"), TEXT("ConfirmPanel"), TEXT("CancelPanel") })
 	{
 		if (UWidget* Found = Find<UWidget>(WidgetTree, Name))
 		{
@@ -933,6 +1084,12 @@ void UCombatLayoutHUDWidget::WireCommands()
 		mConfirmButton->OnClicked.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleConfirmClicked);
 		BindPressFeedback(mConfirmButton, mConfirmPanel);
+	}
+	if (mCancelButton != nullptr)
+	{
+		mCancelButton->OnClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleCancelClicked);
+		BindPressFeedback(mCancelButton, mCancelPanel);
 	}
 
 	if (mTurnPageLeft != nullptr)
@@ -1429,11 +1586,18 @@ void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
 	{
 		return;
 	}
-	// 용병 탭에서 골라 둔 용병이 있으면 그 쪽이 기준이다. 없으면 차례인 유닛.
+	// 지금 들여다보는 용병이 기준이다. 목록에서 고른 줄이 먼저고, 판에서
+	// 직접 누른 아군이 그 다음, 둘 다 없을 때만 차례인 유닛으로 간다.
+	// 판 탭은 목록 줄을 안 건드리므로 그 경로를 빼면 남의 카드를 보다
+	// 상세를 열 때 카메라만 차례 유닛으로 튄다(0824 검수).
 	int32 FocusUnitId = INDEX_NONE;
 	if (mMercenarySelectedSlot != INDEX_NONE)
 	{
 		FocusUnitId = PartyUnitIdAt(mMercenarySelectedSlot);
+	}
+	if (FocusUnitId == INDEX_NONE)
+	{
+		FocusUnitId = mInspectedAllyUnitId;
 	}
 	if (FocusUnitId == INDEX_NONE)
 	{
@@ -1470,8 +1634,9 @@ void UCombatLayoutHUDWidget::HandleTurnPageRightClicked()
 	}
 	const FTurnUI& Turn = mUIModel->GetTurnUI();
 	const int32 SlotRoom = mTurnSlots.Num();
+	const int32 ProjectedCount = BuildProjectedTurnTokens(Turn).Num();
 	const int32 LastStart = FMath::Max(
-		ProjectedTurnCount(Turn, SlotRoom) - SlotRoom, 0);
+		ProjectedCount - SlotRoom, 0);
 	mTurnWindowStart = FMath::Min(
 		mTurnWindowStart + SlotRoom, LastStart);
 	RefreshTurnOrder();
@@ -1511,9 +1676,8 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 	}
 	if (bAll || Domain == ECombatUIDomain::Turn)
 	{
-		// 차례가 **바뀌었을 때만** 편다. 갱신이 올 때마다 펴면 접자마자 다시
-		// 펴져서 접기가 안 먹는 것처럼 보인다 -- 실제로 그랬다. Turn 갱신은
-		// 차례가 그대로여도 여러 번 온다.
+		// 차례가 바뀌면 지난 카드 상태를 접는다. 큰 카드 고리는 사용자가
+		// 좌하단 스킬 버튼을 눌렀을 때만 연다.
 		const int32 TurnUnitId = mUIModel != nullptr
 			? mUIModel->GetTurnUI().mCurrentUnitId : INDEX_NONE;
 		const int32 TurnRound = mUIModel->GetTurnUI().mRound;
@@ -1525,10 +1689,8 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 			// 스킬은 새 턴 유닛 것으로 바뀌어도 용병 강조/후속 롱프레스 초점은
 			// 지난 선택을 계속 가리켜 한 화면에서 두 용병이 현재처럼 보인다.
 			mMercenarySelectedSlot = INDEX_NONE;
-			// 아군 차례가 오면 조종할 용병과 그 명령을 한 번에 보여 준다.
-			// 적 차례에는 지난 아군 카드가 남지 않게 즉시 접는다.
-			const bool bPlayerTurn = IsPlayerTurn();
-			SetCommandsShown(bPlayerTurn);
+			mInspectedAllyUnitId = INDEX_NONE;
+			SetCommandsShown(false);
 			// 카메라 이동은 이어지는 OnBeginAnyTurn 프레젠테이션에서 한 번만
 			// 요청한다. SetTurnUI 알림에서도 움직이면 같은 턴에 트윈이 두 번
 			// 시작돼 폴더블 기기에서 짧게 튀는 현상이 생긴다.
@@ -1594,6 +1756,10 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 			// "용병 상세 필요 없다"(0806). 값은 이미 모델에 들어와 있어
 			// 용병 패널 오른쪽이 그대로 쓴다.
 			mSuppressNextUnitDetailOverlay = false;
+			// 비동기 상세 응답이 들어온 바로 그 프레임에 오른쪽 스킬 목록도
+			// 선택한 용병 것으로 갈아 끼운다. 요청 전에 한 RefreshParty는
+			// 이전 UnitDetail을 읽으므로 이것이 없으면 한 번 늦게 바뀐다.
+			RefreshParty();
 		}
 		else
 		{
@@ -1784,6 +1950,9 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	// 0번 이동 + 스킬 다섯 칸(첫 스킬이 평타)으로, 전투 레일과 같은 순서라
 	// 메뉴를 닫은 뒤 카드 위치가 바뀌지 않는다.
 	const TArray<FSkillUI>& Skills = mUIModel->GetSkillUIs();
+	const FUnitDetailUI& InspectedDetail = mUIModel->GetUnitDetail();
+	const bool bUseInspectedSkills = FocusUnit != nullptr
+		&& InspectedDetail.mUnitId == FocusUnit->mUnitId;
 	for (int32 Index = 0; Index < CommandSlotCount; ++Index)
 	{
 		UWidget* Frame = Find<UWidget>(WidgetTree,
@@ -1794,13 +1963,32 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			FString::Printf(TEXT("MercenarySkillName_%d"), Index));
 		UTextBlock* Cost = Find<UTextBlock>(WidgetTree,
 			FString::Printf(TEXT("MercenarySkillCost_%d"), Index));
+		UButton* Button = Find<UButton>(WidgetTree,
+			FString::Printf(TEXT("MercenarySkillButton_%d"), Index));
 
+		const int32 SkillIndex = Index - 1;
+		const FUnitDetailSkillUI* InspectedSkill = Index > 0
+			? InspectedDetail.mSkills.FindByPredicate(
+				[SkillIndex](const FUnitDetailSkillUI& Skill)
+				{
+					return Skill.mSkillIndex == SkillIndex;
+				})
+			: nullptr;
+		const FSkillUI* TurnSkill = Index > 0
+			? Skills.FindByPredicate([SkillIndex](const FSkillUI& Skill)
+				{
+					return Skill.mSkillIndex == SkillIndex;
+				})
+			: nullptr;
+		const bool bHasSkill = Index > 0
+			&& (bUseInspectedSkills ? InspectedSkill != nullptr : TurnSkill != nullptr);
 		const bool bHasCommand = bShowMercenaryDetail
-			&& (Index == 0 || Skills.IsValidIndex(Index - 1));
+			&& (Index == 0 || bHasSkill);
 		SetShown(Frame, bShowMercenaryDetail);
 		SetShown(Icon, bHasCommand);
 		SetShown(Name, bHasCommand);
 		SetShown(Cost, bHasCommand);
+		SetInteractiveShown(Button, bHasCommand);
 		if (bHasCommand == false)
 		{
 			continue;
@@ -1815,10 +2003,21 @@ void UCombatLayoutHUDWidget::RefreshParty()
 		}
 		else
 		{
-			const FSkillUI& Skill = Skills[Index - 1];
-			SetTextIfPresent(Name, Skill.mName);
-			SetTextIfPresent(Cost, FText::AsNumber(Skill.mActionPointCost));
-			CommandIcon = Skill.mIcon;
+			if (bUseInspectedSkills)
+			{
+				const FUnitDetailSkillUI& Skill = *InspectedSkill;
+				SetTextIfPresent(Name, Skill.mName);
+				SetTextIfPresent(Cost, Skill.mActionPointCost >= 0
+					? FText::AsNumber(Skill.mActionPointCost) : FText::GetEmpty());
+				CommandIcon = Skill.mIcon;
+			}
+			else
+			{
+				const FSkillUI& Skill = *TurnSkill;
+				SetTextIfPresent(Name, Skill.mName);
+				SetTextIfPresent(Cost, FText::AsNumber(Skill.mActionPointCost));
+				CommandIcon = Skill.mIcon;
+			}
 		}
 		// 목업/구형 데이터는 Skill.mIcon이 비어 있을 수 있다. 전투 카드가 이미
 		// 들고 있는 기본 아이콘을 복사해 요약 칸만 텅 비는 것을 막는다.
@@ -2029,17 +2228,18 @@ void UCombatLayoutHUDWidget::RefreshPartyActionPoints(
 }
 
 /**
- * @brief 현재 라운드 잔여분 뒤에 다음 라운드 순서를 이어 턴바에 그린다.
+ * @brief 현재 라운드 잔여분 뒤에 미래 열 라운드 순서를 이어 턴바에 그린다.
  *
  * @details
- * 순서 배열은 현재 유닛부터 한 바퀴다. 이번 라운드에 남은 앞부분 뒤로 배열을
- * 순환 반복하면 다음 라운드 전체가 자연스럽게 이어진다. 미래 라운드는
- * 반투명으로, 경계에는 세로 막대와 R#을 표시한다.
+ * 전투 모델이 계산한 라운드별 순서를 한 줄로 펼친다. 미래 라운드는
+ * 반투명으로, 각 라운드 경계에는 세로 막대와 R#을 표시한다. 화면에는
+ * 열 턴씩 보이고 양끝 버튼 또는 가로 스와이프로 다음 페이지를 연다.
  */
 void UCombatLayoutHUDWidget::RefreshTurnOrder()
 {
 	const FTurnUI& Turn = mUIModel->GetTurnUI();
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
+	const TArray<FProjectedTurnToken> ProjectedTurns = BuildProjectedTurnTokens(Turn);
 
 	// 일부 원본 WBP는 편집 중 방해되지 않도록 독립 라운드 패널을
 	// Collapsed로 저장한다. 런타임에서는 부모 패널까지 명시적으로 켠다.
@@ -2050,8 +2250,7 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 		FString::Printf(TEXT("%02d"), Turn.mRound)));
 
 	const int32 SlotRoom = mTurnSlots.Num();
-	const int32 RemainingThisRound = Turn.mTurnOrderUnitIds.Num();
-	const int32 Total = ProjectedTurnCount(Turn, SlotRoom);
+	const int32 Total = ProjectedTurns.Num();
 	const int32 Start = FMath::Clamp(mTurnWindowStart, 0,
 		FMath::Max(Total - SlotRoom, 0));
 	mTurnWindowStart = Start;
@@ -2082,11 +2281,8 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			SetShown(Widgets.RoundLabel, false);
 			continue;
 		}
-		// 앞쪽은 이번 라운드 잔여, 가운데는 빈 라운드 칸, 뒤는 다음 턴
-		// 라운드 미리보기다.
-		const int32 EmptyRounds = EmptyRoundCellCount(Turn);
-		const int32 EmptyIndex = ProjectedIndex - RemainingThisRound;
-		if (EmptyIndex >= 0 && EmptyIndex < EmptyRounds)
+		const FProjectedTurnToken& ProjectedTurn = ProjectedTurns[ProjectedIndex];
+		if (ProjectedTurn.mEmptyRound)
 		{
 			/*
 			 * 아무도 턴을 못 차는 라운드. 칸 하나를 비워 "이런 라운드가
@@ -2107,14 +2303,11 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			SetShown(Widgets.RoundLabel, true);
 			SetTextIfPresent(Widgets.RoundLabel,
 				FText::FromString(FString::Printf(TEXT("R%d"),
-					Turn.mRound + 1 + EmptyIndex)));
+					Turn.mRound + ProjectedTurn.mRoundOffset)));
 			continue;
 		}
 
-		const bool bNextRound = ProjectedIndex >= RemainingThisRound + EmptyRounds;
-		const int32 UnitId = bNextRound
-			? Turn.mNextRoundUnitIds[ProjectedIndex - RemainingThisRound - EmptyRounds]
-			: Turn.mTurnOrderUnitIds[ProjectedIndex];
+		const int32 UnitId = ProjectedTurn.mUnitId;
 		const FUnitUI* Unit = Units.FindByPredicate(
 			[UnitId](const FUnitUI& Candidate) { return Candidate.mUnitId == UnitId; });
 		if (Unit == nullptr)
@@ -2126,14 +2319,14 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 			continue;
 		}
 
-		// 빈 라운드는 건너뛰므로 "다음" 이 mRound+1이 아닐 수 있다.
-		const int32 RoundOffset = bNextRound
-			? FMath::Max(Turn.mNextRoundOffset, 1) : 0;
-		// 현재 라운드는 왼쪽의 독립 RoundPanel이 맡는다. 첫 턴 카드에도 R#을
-		// 다시 달면 같은 정보가 두 번 보이고 초상 위에 배지가 얹힌다.
-		// 슬롯 배지는 다음 라운드가 시작되는 경계에만 표시한다.
-		const bool bStartsShownRound = bNextRound
-			&& ProjectedIndex == RemainingThisRound + EmptyRounds;
+		const int32 RoundOffset = ProjectedTurn.mRoundOffset;
+		// 라운드가 바뀌는 자리마다 배지를 단다 -- **이번 라운드가 시작되는
+		// 첫 칸도 포함**이다. 전에는 다음 라운드 경계에만 달아, 턴바에 R2는
+		// 있는데 R1이 없어 "이 줄이 어느 라운드부터인가"를 알 수 없었다
+		// (0824 검수 2번). 왼쪽 ROUND 배지와 겹치는 정보이긴 하지만, 턴바를
+		// 읽는 눈이 왼쪽까지 다녀오지 않아도 되게 한다.
+		const bool bStartsShownRound = ProjectedIndex == 0
+			|| ProjectedTurn.mStartsRound;
 
 		mTurnSlotUnitIds[Index] = UnitId;
 		SetShown(Widgets.Root, true);
@@ -2189,6 +2382,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetTextIfPresent(Widgets.CostLine, LOCTEXT("MoveCost", "AP 1/칸"));
 			SetShown(Widgets.Cooldown, false);
 			SetShown(Widgets.CooldownIcon, false);
+			SetShown(Widgets.CooldownOverlayRoot, false);
 			SetShown(Widgets.Damage, false);
 			// 이동 카드도 아이콘을 갖는다. 스킬 카드만 그림이 생기니 이
 			// 칸만 비어 보였다. (판 기본이 NoDraw라 DrawAs 도 되돌린다.)
@@ -2246,17 +2440,29 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			SetShown(Widgets.Icon, Skill.mIcon != nullptr);
 		}
 
-		// 쿨타임: 남은 턴이 있으면 그 숫자를, 없으면 설정된 쿨타임을 알려준다.
+		// 기존 우하단 배지의 남은 턴 표기는 그대로 유지한다. 아이콘 중앙
+		// 숫자는 먼 거리에서도 쿨타임을 읽게 하는 추가 피드백이지,
+		// 기존 카드 정보를 대체하지 않는다.
+		const bool bOnCooldown = Skill.mRemainingCooldown > 0;
+		SetShown(Widgets.Cooldown, bOnCooldown);
+		SetShown(Widgets.CooldownIcon, bOnCooldown);
 		if (Widgets.Cooldown != nullptr)
 		{
-			const bool bOnCooldown = Skill.mRemainingCooldown > 0;
-			const bool bShowCooldown = bOnCooldown || Skill.mCooldownTurns > 0;
-			SetShown(Widgets.Cooldown, bShowCooldown);
-			SetShown(Widgets.CooldownIcon, bShowCooldown);
-			// 숫자만 적는다. 옆에 모래시계가 붙어 있어서 "쿨"도 "턴"도
-			// 같은 말을 두 번 하는 것이 된다.
-			Widgets.Cooldown->SetText(FText::AsNumber(
-				bOnCooldown ? Skill.mRemainingCooldown : Skill.mCooldownTurns));
+			Widgets.Cooldown->SetText(
+				FText::AsNumber(Skill.mRemainingCooldown));
+		}
+		SetShown(Widgets.CooldownOverlayRoot, bOnCooldown);
+		if (Widgets.CooldownOverlay != nullptr)
+		{
+			Widgets.CooldownOverlay->SetText(
+				FText::AsNumber(Skill.mRemainingCooldown));
+		}
+		if (Widgets.Icon != nullptr)
+		{
+			const float Brightness = bOnCooldown
+				? .22f : (Skill.mIsUsable ? 1.f : .46f);
+			Widgets.Icon->SetColorAndOpacity(FLinearColor(
+				Brightness, Brightness, Brightness, 1.f));
 		}
 
 		if (Widgets.Damage != nullptr)
@@ -2273,7 +2479,9 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 			}
 		}
 
-		SetShown(Widgets.Disabled, !Skill.mIsUsable);
+		// 쿨타임은 어두운 원본 아이콘+숫자가 직접 설명한다. 이때 옛 교차검
+		// 비활성 겹까지 덮으면 어떤 스킬인지 다시 사라진다.
+		SetShown(Widgets.Disabled, !Skill.mIsUsable && !bOnCooldown);
 		if (Widgets.Button != nullptr)
 		{
 			// 못 쓰는 카드도 **누를 수는 있어야** 한다. 끄면 Slate 가 눌림
@@ -2467,25 +2675,14 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		}
 	}
 
-	// 확정 시안: 예상 피해 줄은 없앴다. 대신 다음 스킬 소켓에 아이콘을 건다.
+	// 세로 요약판은 상태이상 여부까지만 보여 준다. 다음 행동을 미리 알려 주는
+	// 데이터는 전투 모델에 남겨도 이 화면에서는 의도적으로 소비하지 않는다.
 	SetShown(mEnemyForecastText, false);
 	mEnemyShownUnitId = Shown->mUnitId;                     // 소켓 클릭 → 상세용
-	mEnemyShownNextSkillIndex = Shown->mNextSkillIndex;
-	const bool bHasNextSkill = Shown->mNextSkillIcon != nullptr;
-	SetShown(mEnemyNextSkillFrame, bHasNextSkill);
-	SetShown(mEnemyNextSkillIcon, bHasNextSkill);
-	// 눌러야 하는 단추라 SetShown(=SelfHitTestInvisible)을 쓰면 안 된다.
-	// 그렇게 두면 그림은 보여도 눌림이 안 닿는다 (0806: 소켓 클릭이 죽었다).
-	SetInteractiveShown(Find<UButton>(WidgetTree, TEXT("EnemyNextSkillButton")),
-		bHasNextSkill);
-	if (mEnemyNextSkillIcon != nullptr && bHasNextSkill)
-	{
-		mEnemyNextSkillIcon->SetBrushFromTexture(Shown->mNextSkillIcon.Get(), false);
-		// SetBrushFromTexture 는 DrawAs 를 안 바꾼다 — NoDraw 판이면 영영 안 그려진다.
-		FSlateBrush IconBrush = mEnemyNextSkillIcon->GetBrush();
-		IconBrush.DrawAs = ESlateBrushDrawType::Image;
-		mEnemyNextSkillIcon->SetBrush(IconBrush);
-	}
+	mEnemyShownNextSkillIndex = INDEX_NONE;
+	SetShown(mEnemyNextSkillFrame, false);
+	SetShown(mEnemyNextSkillIcon, false);
+	SetInteractiveShown(Find<UButton>(WidgetTree, TEXT("EnemyNextSkillButton")), false);
 }
 
 void UCombatLayoutHUDWidget::RefreshMeta()
@@ -2596,6 +2793,7 @@ void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
 		TEXT("MercenaryNamePlate"), TEXT("MercenaryDetailName"),
 		TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
 		TEXT("MercenaryDetailSpeed"), TEXT("MercenaryCritPlate"),
+		TEXT("MercenaryCritIcon"),
 		TEXT("MercenaryCritLabel"), TEXT("MercenaryCritValue"),
 		TEXT("MercenarySkillHeading"), TEXT("MercenarySkillDivider") };
 	for (const TCHAR* WidgetName : DetailWidgetNames)
@@ -2641,6 +2839,7 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 		// 열 때는 지금 차례인 용병부터 보여 준다. 지난번에 고른 줄이
 		// 남아 있으면 누구를 보는지 알 수 없다.
 		mMercenarySelectedSlot = INDEX_NONE;
+		mInspectedAllyUnitId = INDEX_NONE;
 		SetMercenaryInventoryShown(false);
 	}
 
@@ -2750,6 +2949,10 @@ void UCombatLayoutHUDWidget::SetCommandsShown(const bool bShown)
 {
 	mCommandsShown = bShown;
 	RefreshCommandVisibility();
+	// 카드가 열리는 즉시 좌하단 Skill을 비활성 Confirm으로 교체하고, 카드가
+	// 닫히면 원래 Skill로 되돌린다. 전투 단계 변화가 없어도 UI 상태가 바로
+	// 반영되어야 하므로 TurnUI 갱신을 기다리지 않는다.
+	RefreshActionButtons();
 }
 
 const FUnitUI* UCombatLayoutHUDWidget::FindTurnUnit() const
@@ -2889,15 +3092,14 @@ void UCombatLayoutHUDWidget::CompleteTurnPresentationBegin()
 {
 	mIsTurnActive = true;
 
-	// SetTurnUI와 턴 시작 프레젠테이션은 별도 알림이다. 로딩/재바인딩으로
-	// Turn 도메인 갱신을 먼저 놓쳤더라도 실제 아군 입력 구간이 열리는 이
-	// 지점에서 카드와 카메라 초점을 반드시 복구한다.
+	// 큰 카드 고리는 자동으로 열지 않는다. 좌하단 스킬 버튼을 누를 때만
+	// RefreshCommandVisibility가 큰 카드 고리를 연다.
 	const bool bPlayerTurn = IsPlayerTurn();
-	SetCommandsShown(bPlayerTurn);
+	SetCommandsShown(false);
 	if (bPlayerTurn == true && mUIModel != nullptr)
 	{
 		const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
-		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
+		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/false);
 	}
 }
 
@@ -2911,8 +3113,7 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
 	mIsTurnActive = false;
 	// 상태까지 접는다. 가리기만 하면 다음 턴이 열리는 순간 카드가 저절로
 	// 되살아난다 -- 카드는 스킬 단추로만 연다는 계약(0807)이 깨진다.
-	mCommandsShown = false;
-	RefreshCommandVisibility();
+	SetCommandsShown(false);
 }
 
 void UCombatLayoutHUDWidget::HandleActionPresentationBegin(
@@ -3162,15 +3363,12 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 }
 
 /**
- * @brief 확정 단추와 턴 종료 글자를 지금 단계에 맞춘다.
+ * @brief 확정·취소·턴 종료 단추를 지금 단계에 맞춘다.
  *
  * @details
- * 확정은 **공격 범위가 뜬 그때만** 뜬다. 늘 떠 있으면 무엇을 확정하는
- * 단추인지 읽히지 않는다.
- *
- * 턴 종료는 그 사이 "취소" 가 된다. 무르는 길이 판 밖을 누르는 것뿐이면
- * 판이 화면을 거의 다 덮고 있어 무를 자리가 없다 -- 늘 같은 자리에 있는
- * 단추가 그 길이 된다.
+ * 스킬을 고른 즉시 확정을 최종 위치에 회색으로 보여 주고, 대상·방향 선택이
+ * 끝나 Preview가 된 뒤에만 활성화한다. 조준 중 턴 종료는 숨기며, 그 자리를
+ * 취소로 바꾸지 않고 확정 오른쪽의 별도 붉은 취소 단추를 사용한다.
  */
 /**
  * @brief 창 크기가 바뀌면 다시 잰다.
@@ -3181,6 +3379,7 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	PollTurnBarMouseSwipe();
 	if (mSkillWorldPreviewActive)
 	{
 		SyncSkillWorldPreviewCamera(false);
@@ -3192,6 +3391,7 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	}
 	// 머리 위 바는 월드 자리를 따라가야 하므로 매 프레임 다시 붙인다.
 	UpdateUnitHpBars();
+	UpdateCommandRevealAnimation(DeltaTime);
 	RefreshPendingAPGlow(DeltaTime);
 	UpdateFloatingCombatLogQueue(DeltaTime);
 	UpdateFloatingCombatLogs(DeltaTime);
@@ -3209,23 +3409,94 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	}
 }
 
+FReply UCombatLayoutHUDWidget::NativeOnPreviewMouseButtonDown(
+	const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	mTurnSwipeTracking = false;
+	mTurnSwipeConsumed = false;
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton
+		&& mTurnPanel != nullptr
+		&& mTurnPanel->GetVisibility() != ESlateVisibility::Collapsed
+		&& mTurnPanel->GetVisibility() != ESlateVisibility::Hidden)
+	{
+		mTurnSwipeOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
+		mTurnSwipeTracking = mTurnPanel->GetCachedGeometry().IsUnderLocation(
+			mTurnSwipeOrigin);
+	}
+	// Do not steal a tap: turn-token buttons still open their normal detail action.
+	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
+}
+
+FReply UCombatLayoutHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry,
+	const FPointerEvent& InMouseEvent)
+{
+	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)
+		&& TryConsumeTurnSwipe(FVector2D(InMouseEvent.GetScreenSpacePosition())))
+	{
+		return FReply::Handled();
+	}
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+bool UCombatLayoutHUDWidget::TryConsumeTurnSwipe(
+	const FVector2D& ScreenPosition)
+{
+	if (!mTurnSwipeTracking || mTurnSwipeConsumed)
+	{
+		return false;
+	}
+	const FVector2D Delta = ScreenPosition - mTurnSwipeOrigin;
+	if (FMath::Abs(Delta.X) < TurnSwipeSlack
+		|| FMath::Abs(Delta.X) <= FMath::Abs(Delta.Y))
+	{
+		return false;
+	}
+	mTurnSwipeConsumed = true;
+	mTurnSwipeTracking = false;
+	if (Delta.X < 0.f)
+	{
+		HandleTurnPageRightClicked();
+	}
+	else
+	{
+		HandleTurnPageLeftClicked();
+	}
+	return true;
+}
+
+void UCombatLayoutHUDWidget::PollTurnBarMouseSwipe()
+{
+	if (!mTurnSwipeTracking || mTurnSwipeConsumed
+		|| !FSlateApplication::IsInitialized())
+	{
+		return;
+	}
+	const TSet<FKey>& PressedButtons =
+		FSlateApplication::Get().GetPressedMouseButtons();
+	if (!PressedButtons.Contains(EKeys::LeftMouseButton))
+	{
+		mTurnSwipeTracking = false;
+		return;
+	}
+	// PIE에서는 토큰 SButton이 마우스를 캡처해 부모 NativeOnMouseMove가 오지
+	// 않을 수 있다. Slate의 실제 커서 좌표를 Tick에서 같이 읽어 같은 판정을
+	// 수행하면 자식 캡처 여부와 무관하게 드래그가 동작한다.
+	TryConsumeTurnSwipe(FSlateApplication::Get().GetCursorPos());
+}
+
 void UCombatLayoutHUDWidget::RefreshScreenScale()
 {
 	/*
-	 * 좁은 화면 배율 보정은 전역 DPI 룰(RDHUDScalingRule)이 맡는다.
-	 *
-	 * 이 함수는 예전 ShortestSide DPI 시절에 "좁은 화면에서 카드가 잘린다"를
-	 * 카드/파티 레이어만 키워서 메꾸던 장치였다. 전역 룰이 모자란 축에 맞춰
-	 * 전체를 줄이는 방식(Custom)으로 바뀐 뒤에도 남아, 좁은 창에서 카드만
-	 * 도로 커지는 이중 보정이 됐다 -- 카드는 원본 크기, 나머지는 축소라
-	 * 배율이 제각각으로 보였다(0811). 이제 배율은 전역 룰 한 곳만 만진다.
+	 * 카드/파티는 WBP 저작 크기를 그대로 쓴다. 해상도 대응은 전역 DPI 규칙
+	 * 하나만 맡고 이 레이어에는 어떤 추가 배율도 적용하지 않는다.
 	 */
-	for (UScaleBox* Layer : { mCommandLayer.Get(), mPartyLayer.Get() })
+	if (mCommandLayer != nullptr)
 	{
-		if (Layer != nullptr)
-		{
-			Layer->SetUserSpecifiedScale(1.f);
-		}
+		mCommandLayer->SetUserSpecifiedScale(1.f);
+	}
+	if (mPartyLayer != nullptr)
+	{
+		mPartyLayer->SetUserSpecifiedScale(1.f);
 	}
 }
 
@@ -3235,20 +3506,44 @@ void UCombatLayoutHUDWidget::RefreshActionButtons()
 
 	const ECombatBuildPhaseUI Phase = mUIModel != nullptr
 		? mUIModel->GetTurnUI().mPhase : ECombatBuildPhaseUI::None;
+	const bool bBrowsing = Phase == ECombatBuildPhaseUI::None;
+	const bool bTargeting = !bBrowsing;
+	// 열기 요청만으로는 부족하다. 적 턴, 행동 연출, 용병/몬스터 패널처럼
+	// 실제 카드 표시 조건에서 막힌 경우에는 Skill을 Confirm으로 바꾸지 않는다.
+	const bool bSkillSelectionOpen = bBrowsing && mCommandsVisibleLastFrame;
+	const bool bCanConfirm = Phase == ECombatBuildPhaseUI::Preview;
 
-	SetShown(mConfirmPanel, Phase == ECombatBuildPhaseUI::Preview);
+	// 스킬을 고른 순간부터 확정 단추의 최종 위치를 보여 준다. 대상/방향 등
+	// 필요한 선택이 덜 끝난 동안에는 패널 전체를 비활성화해 회색으로 그리고,
+	// 실제 Preview 단계에 들어온 뒤에만 누를 수 있게 한다.
+	SetShown(mConfirmPanel, bTargeting || bSkillSelectionOpen);
 	// 판은 장식이라 SelfHitTestInvisible 로 두지만, 그 안의 확정 단추는
 	// 실제로 눌려야 한다. 에셋 기본값이 무엇이든 여기서 히트를 살린다 --
 	// 안 살리면 눌림이 뿌리로 새어 판 탭(무르기)이 되어, 확정을 눌렀는데
 	// 경로만 사라진다.
-	SetInteractiveShown(mConfirmButton, Phase == ECombatBuildPhaseUI::Preview);
-	SetInteractiveShown(mEndTurnButton, true);
-	SetTextIfPresent(mEndTurnLabel, Phase == ECombatBuildPhaseUI::None
-		? LOCTEXT("EndTurn", "턴 종료") : LOCTEXT("CancelAim", "취소"));
+	SetInteractiveShown(mConfirmButton, bTargeting || bSkillSelectionOpen);
+	if (mConfirmPanel != nullptr)
+	{
+		mConfirmPanel->SetIsEnabled(bCanConfirm);
+	}
+	if (mConfirmButton != nullptr)
+	{
+		mConfirmButton->SetIsEnabled(bCanConfirm);
+	}
+	// 턴 종료는 어떤 상태에서도 취소로 변신하지 않는다. 조준 중에는 통째로
+	// 숨기고, 좌하단 확정 오른쪽의 붉은 전용 취소 단추만 켜 근육 기억
+	// 실수를 막는다.
+	SetShown(mEndTurnPanel, bBrowsing);
+	SetInteractiveShown(mEndTurnButton, bBrowsing);
+	SetTextIfPresent(mEndTurnLabel, LOCTEXT("EndTurn", "턴 종료"));
+	SetShown(mCancelPanel, bTargeting);
+	SetInteractiveShown(mCancelButton, bTargeting);
+	SetTextIfPresent(mCancelLabel, LOCTEXT("CancelAim", "취소"));
 
 	// 조준에 들어가면 스킬 단추는 비킨다 -- 같은 자리에 확정 단추가 선다
 	// (0807 검수: 둘이 겹침). 조준 중 카드 여닫기는 어차피 막혀 있다.
-	const bool bSkillButtonShown = Phase == ECombatBuildPhaseUI::None;
+	const bool bSkillButtonShown = bBrowsing && !bSkillSelectionOpen;
+	SetShown(mSkillTogglePanel, bSkillButtonShown);
 	SetInteractiveShown(mSkillToggleButton, bSkillButtonShown);
 	SetShown(mSkillTogglePlate, bSkillButtonShown);
 	SetShown(mSkillToggleLabel, bSkillButtonShown);
@@ -3281,6 +3576,7 @@ void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignment()
 
 	ApplyOffset(mSkillToggleLabel);
 	ApplyOffset(mEndTurnLabel);
+	ApplyOffset(mCancelLabel);
 }
 
 #if WITH_EDITOR
@@ -3291,7 +3587,7 @@ void UCombatLayoutHUDWidget::ApplyActionLabelOpticalAlignmentForCapture()
 }
 #endif
 
-/** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
+/** @brief 좌상단 AP 막대를 지금 차례인 유닛으로 채운다. */
 void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 {
 	const FUnitUI* TurnUnit = FindTurnUnit();
@@ -3300,7 +3596,9 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 	if (bShowPlayerActionPoints == false)
 	{
 		mShownAPLeft = 0;
+		mShownAPTotal = 0;
 		mPendingAPCost = 0;
+		RefreshPendingAPGlow(0.f);
 		return;
 	}
 	const int32 Left = TurnUnit != nullptr
@@ -3313,20 +3611,31 @@ void UCombatLayoutHUDWidget::RefreshTurnActionPoints()
 	mShownAPLeft = Left;
 
 	// 고른 카드가 가져갈 몫. 남은 것보다 크면 남은 만큼만 빛낸다.
-	mPendingAPCost = FMath::Clamp(GetPendingActionCost(), 0, Left);
+	const int32 NewPendingAPCost = FMath::Clamp(GetPendingActionCost(), 0, Left);
+	if (NewPendingAPCost > 0 && NewPendingAPCost != mPendingAPCost)
+	{
+		// 고른 몫 전체를 먼저 어둡게 보여 개수를 고정해 둔다. 첫 칸부터
+		// 어두움 -> 보통 -> 빛남 순서로 진행하고 마지막 뒤에는 짧게 쉰다.
+		mAPGlowElapsed = 0.f;
+	}
+	mPendingAPCost = NewPendingAPCost;
 
 	/*
 	 * 칸보다 AP 가 많으면 **칸 수에서 멈춘다**(0806 합의, 0811 재확인).
-	 * 칸은 10개까지만 보여 주고 넘치는 몫은 옆의 숫자가 말한다 -- 전에는
-	 * 넘치면 아이콘을 전부 접었는데, 그러면 12/12 인데 빈 막대만 남아
+	 * 칸은 15개까지만 보여 주고 넘치는 몫은 옆의 숫자가 말한다 -- 전에는
+	 * 넘치면 아이콘을 전부 접었는데, 그러면 18/18 인데 빈 막대만 남아
 	 * "AP 없음" 으로 읽혔다.
 	 */
 	const int32 Room = mTurnAPPips.Num();
 	const int32 ShownTotal = FMath::Min(Total, Room);
 	const int32 ShownLeft = FMath::Min(Left, Room);
+	mShownAPTotal = ShownTotal;
 	for (int32 Pip = 0; Pip < Room; ++Pip)
 	{
 		const bool bHasPip = Pip < ShownTotal;
+		// 소모 예정 강조는 왼쪽부터 진행하지만 실제 AP가 줄 때는 오른쪽
+		// 보석부터 빈 보석으로 바뀐다. 남은 개수가 항상 왼쪽에 붙어 있어
+		// 현재 보유량을 바로 셀 수 있다.
 		SetShown(mTurnAPPips[Pip], bHasPip && Pip < ShownLeft);
 		if (mTurnAPPipsUsed.IsValidIndex(Pip))
 		{
@@ -3350,27 +3659,39 @@ int32 UCombatLayoutHUDWidget::GetPendingActionCost() const
 }
 
 /**
- * @brief 가져갈 몫만큼 칸을 숨쉬듯 빛낸다.
+ * @brief 가져갈 몫을 어둡게 고정하고 왼쪽부터 차례로 번쩍인다.
  *
  * @details
- * 남은 칸의 **뒤에서부터** 빛낸다 -- 쓰면 뒤부터 없어지므로, 없어질 그 칸이
- * 빛나야 "이만큼 나간다" 로 읽힌다.
+ * 예정 비용은 **왼쪽부터** 빛내 빠르게 셀 수 있게 한다. 확정 뒤 실제 AP는
+ * 오른쪽부터 빈 보석으로 바뀌어 남은 보석이 항상 왼쪽에 붙는다.
  *
- * 밝기만 흔든다. 크기를 흔들면 그린 그림을 다시 샘플링해서 지글거린다 --
- * 글자에서 이미 같은 일을 겪었다.
+ * 예정된 칸은 모두 어두워서 비용 개수가 계속 보인다. 위치와 크기는
+ * 움직이지 않고 각 칸의 원본 보석이 어두움 -> 보통 -> 빛남 순서로만
+ * 변한다. 별도 기호나 파티클은 사용하지 않는다.
  *
  * @param DeltaTime 지난 시간. 0 이면 위상은 그대로 두고 다시 칠하기만 한다
  */
 void UCombatLayoutHUDWidget::RefreshPendingAPGlow(const float DeltaTime)
 {
-	mAPGlowPhase = FMath::Fmod(mAPGlowPhase + DeltaTime * APGlowSpeed, TWO_PI);
-
-	// 0.55 ~ 1.0 사이를 오간다. 완전히 어두워지면 칸이 사라진 것처럼 보인다.
-	const float Wave = 0.5f * (1.f - FMath::Cos(mAPGlowPhase));
-	const float Glow = FMath::Lerp(0.55f, 1.0f, Wave);
-
 	const int32 Room = mTurnAPPips.Num();
 	const int32 Left = mShownAPLeft;
+	const int32 ShownLeft = FMath::Min(Left, Room);
+	// 15칸을 넘는 AP는 숫자만 맡지만 예정 비용 피드백까지 숨기면 안 된다.
+	// 예: 18/18에서 비용 1~2인 이동도 실제 칸 감소 여부와 별개로 보이는 묶음의
+	// 왼쪽부터 비용만큼 강조해 사용량을 항상 읽을 수 있게 한다.
+	const int32 VisiblePending = FMath::Clamp(mPendingAPCost, 0, ShownLeft);
+	if (VisiblePending > 0)
+	{
+		const float CycleDuration = (VisiblePending - 1) * APGlowStagger
+			+ APGlowFlashDuration + APGlowRepeatGap;
+		mAPGlowElapsed = FMath::Fmod(
+			mAPGlowElapsed + FMath::Max(DeltaTime, 0.f), CycleDuration);
+	}
+	else
+	{
+		mAPGlowElapsed = 0.f;
+	}
+
 	for (int32 Pip = 0; Pip < Room; ++Pip)
 	{
 		UWidget* PipWidget = mTurnAPPips[Pip];
@@ -3378,16 +3699,75 @@ void UCombatLayoutHUDWidget::RefreshPendingAPGlow(const float DeltaTime)
 		{
 			continue;
 		}
-		const bool bWillSpend = mPendingAPCost > 0
-			&& Pip < Left && Pip >= Left - mPendingAPCost;
-		PipWidget->SetRenderOpacity(bWillSpend ? Glow : 1.f);
+		const bool bWillSpend = VisiblePending > 0 && Pip < VisiblePending;
+		const int32 PendingIndex = Pip;
+		const float FlashAge = bWillSpend
+			? mAPGlowElapsed - PendingIndex * APGlowStagger : -1.f;
+		float FlashIntensity = 0.f;
+		float NormalIntensity = 0.f;
+		if (FlashAge >= 0.f && FlashAge < APGlowFlashDuration)
+		{
+			if (FlashAge < APGlowNormalTime)
+			{
+				NormalIntensity = FlashAge / APGlowNormalTime;
+			}
+			else if (FlashAge <= APGlowFlashPeakTime)
+			{
+				NormalIntensity = 1.f;
+				FlashIntensity = (FlashAge - APGlowNormalTime)
+					/ (APGlowFlashPeakTime - APGlowNormalTime);
+			}
+			else
+			{
+				const float Fade = 1.f - (FlashAge - APGlowFlashPeakTime)
+					/ (APGlowFlashDuration - APGlowFlashPeakTime);
+				NormalIntensity = FMath::Clamp(Fade, 0.f, 1.f);
+				FlashIntensity = FMath::Square(NormalIntensity);
+			}
+		}
+
+		const bool bEffectVisible = bWillSpend && FlashIntensity > KINDA_SMALL_NUMBER;
+		// 제곱 감쇠된 원 파형을 그대로 쓰면 최고 밝기가 몇 프레임뿐이다.
+		// 밝기만 제곱근으로 넓혀 01안의 짧고 확실한 플래시를 남긴다.
+		const float FlashOpacity = FMath::Sqrt(FlashIntensity);
+
+		// 소모 예정 칸 전체는 같은 어두운 색으로 유지해 비용 개수가 한눈에
+		// 보인다. 현재 순서의 칸만 보통 밝기를 거쳐 점등한다. 크기와 위치는
+		// 절대 바꾸지 않는다.
+		PipWidget->SetRenderOpacity(1.f);
+		PipWidget->SetRenderTransformPivot(FVector2D(.5f));
+		PipWidget->SetRenderScale(FVector2D(1.f));
+		PipWidget->SetRenderTranslation(FVector2D::ZeroVector);
+		if (UImage* PipImage = Cast<UImage>(PipWidget))
+		{
+			const FLinearColor PendingDark(.34f, .42f, .56f, 1.f);
+			PipImage->SetColorAndOpacity(bWillSpend
+				? FMath::Lerp(PendingDark, FLinearColor::White, NormalIntensity)
+				: FLinearColor::White);
+		}
+		UWidget* GlowWidget = mTurnAPPipGlows.IsValidIndex(Pip)
+			? mTurnAPPipGlows[Pip].Get() : nullptr;
+		SetShown(GlowWidget, bEffectVisible);
+		if (GlowWidget != nullptr)
+		{
+			GlowWidget->SetRenderOpacity(bEffectVisible ? FlashOpacity : 0.f);
+			GlowWidget->SetRenderScale(FVector2D(1.f));
+			GlowWidget->SetRenderTranslation(FVector2D::ZeroVector);
+			if (UImage* GlowImage = Cast<UImage>(GlowWidget))
+			{
+				GlowImage->SetColorAndOpacity(FLinearColor::White);
+			}
+		}
 	}
 }
 
 /** @brief 확정 단추를 눌렀다. 겨냥한 칸을 그대로 확정한다. */
 void UCombatLayoutHUDWidget::HandleConfirmClicked()
 {
-	if (mUIModel != nullptr)
+	// 비활성 버튼의 델리게이트를 코드나 자동화에서 직접 호출해도, 대상 선택이
+	// 끝나기 전에는 Confirm 의도가 게임플레이로 새지 않게 이중으로 막는다.
+	if (mUIModel != nullptr
+		&& mUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::Preview)
 	{
 		HideDetailOverlay(/*bNotifyGameplay=*/false);
 		mUIModel->RequestConfirm();
@@ -3405,20 +3785,104 @@ void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 		&& IsMercenaryPanelShown() == false
 		&& IsMonsterTabShown() == false;
 
-	// [진단] 카드 표시 결정이 바뀌는 순간의 조건을 남긴다. 카드가 안 돌아오는
-	// 버그를 잡으면 지운다.
-	static bool bLastVisible = true;
-	if (bVisible != bLastVisible)
+	// 접혀 있다가 다시 펴지는 순간마다 등장 연출을 처음부터 재생한다.
+	if (bVisible == true && mCommandsVisibleLastFrame == false)
 	{
-		bLastVisible = bVisible;
-		UE_LOG(LogRD, Log, TEXT("[카드진단] 표시=%d (펴둠=%d 조준중=%d 아군턴=%d 턴열림=%d 연출중=%d 용병패널=%d)"),
-			bVisible, mCommandsShown, IsAiming(), IsPlayerTurn(),
-			mIsTurnActive, mIsActionPlaying, IsMercenaryPanelShown());
+		RestartCommandRevealAnimation();
 	}
+	mCommandsVisibleLastFrame = bVisible;
 
 	for (const FCommandSlotWidgets& Widgets : mCommandSlots)
 	{
 		SetShown(Widgets.Root, bVisible);
+	}
+	if (bVisible == false)
+	{
+		// 접힌 카드는 다음에 펼 때까지 연출 값을 들고 있을 필요가 없다.
+		mCommandRevealElapsed = -1.f;
+		return;
+	}
+	// 켜는 프레임에 첫 값을 미리 발라 둔다. 다음 Tick 까지 한 프레임 동안
+	// 제 크기로 번쩍 떴다가 줄어드는 것을 막는다. 연출을 안 거는 곳
+	// (편집기 캡처)에서는 아무 값도 건드리지 않는다.
+	UpdateCommandRevealAnimation(0.f);
+}
+
+/**
+ * @brief 다음 표시에서 카드 등장 연출을 처음부터 재생한다.
+ *
+ * @details 틱이 도는 곳에서만 재생한다. 편집기 캡처는 한 프레임만 그리고
+ * 끝나므로, 거기서 연출을 걸면 카드가 시작 상태(투명 + 0.86배)로 굳어
+ * 찍힌 그림에서 사라진다 -- 실제로 그렇게 나왔다(0824). 연출은 눈으로
+ * 보는 값이지 배치가 아니므로, 못 돌릴 곳에서는 아예 걸지 않는다.
+ */
+void UCombatLayoutHUDWidget::RestartCommandRevealAnimation()
+{
+	const UWorld* World = GetWorld();
+	if (World == nullptr || World->IsGameWorld() == false)
+	{
+		mCommandRevealElapsed = -1.f;
+		return;
+	}
+	mCommandRevealElapsed = 0.f;
+}
+
+/**
+ * @brief 카드 등장 연출 한 프레임.
+ *
+ * @details 카드마다 CommandRevealStagger 만큼 늦게 시작해
+ * CommandRevealDuration 동안 0.86배 -> 1배로 커지며 투명도가 0 -> 1 이 된다.
+ * 크기는 카드 한가운데를 축으로 바꾼다 -- 카드 고리의 자리는 그대로 두고
+ * 카드만 부푼다.
+ *
+ * 연출이 끝나면 값을 원본(불투명, 배율 1)으로 되돌리고 더는 만지지 않는다.
+ * 그래야 눌림 축소 같은 다른 연출과 다투지 않는다.
+ */
+void UCombatLayoutHUDWidget::UpdateCommandRevealAnimation(const float InDeltaTime)
+{
+	if (mCommandRevealElapsed < 0.f)
+	{
+		return;
+	}
+	mCommandRevealElapsed += InDeltaTime;
+
+	bool bAnyPlaying = false;
+	for (int32 SlotIndex = 0; SlotIndex < mCommandSlots.Num(); ++SlotIndex)
+	{
+		UWidget* Root = mCommandSlots[SlotIndex].Root;
+		if (Root == nullptr)
+		{
+			continue;
+		}
+		const float SlotElapsed = mCommandRevealElapsed
+			- CommandRevealStagger * SlotIndex;
+		const float Alpha = FMath::Clamp(SlotElapsed / CommandRevealDuration, 0.f, 1.f);
+		if (Alpha < 1.f)
+		{
+			bAnyPlaying = true;
+		}
+		// 뒤로 갈수록 느려지는 곡선. 마지막에 제자리에 앉는 느낌이 난다.
+		const float Eased = 1.f - FMath::Pow(1.f - Alpha, 3.f);
+		Root->SetRenderOpacity(Eased);
+		FWidgetTransform Transform;
+		const float Scale = FMath::Lerp(CommandRevealStartScale, 1.f, Eased);
+		Transform.Scale = FVector2D(Scale, Scale);
+		Root->SetRenderTransformPivot(FVector2D(.5f, .5f));
+		Root->SetRenderTransform(Transform);
+	}
+
+	if (bAnyPlaying == false)
+	{
+		// 다 앉았다. 원본 값으로 돌려 놓고 연출을 끈다.
+		for (const FCommandSlotWidgets& Widgets : mCommandSlots)
+		{
+			if (Widgets.Root != nullptr)
+			{
+				Widgets.Root->SetRenderOpacity(1.f);
+				Widgets.Root->SetRenderTransform(FWidgetTransform());
+			}
+		}
+		mCommandRevealElapsed = -1.f;
 	}
 }
 
@@ -3613,6 +4077,12 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	{
 		World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
 	}
+	if (mTurnSwipeConsumed)
+	{
+		mPressActive = false;
+		mPressMoved = false;
+		return;
+	}
 
 	if (mPressActive == false)
 	{
@@ -3620,11 +4090,33 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	}
 	mPressActive = false;
 
+	const FVector2D DragDelta = ScreenPosition - mPressOrigin;
 	const bool bDragged = mPressMoved
 		|| ScreenPosition.Equals(mPressOrigin, BoardTapSlack) == false;
+	const bool bStartedOnTurnPanel = mTurnPanel != nullptr
+		&& mTurnPanel->GetVisibility() != ESlateVisibility::Collapsed
+		&& mTurnPanel->GetVisibility() != ESlateVisibility::Hidden
+		&& mTurnPanel->GetCachedGeometry().IsUnderLocation(mPressOrigin);
 	mPressMoved = false;
 	if (bDragged == true)
 	{
+		// 턴바 위의 가로 끌기는 전장을 미는 입력이 아니라 턴 예측 페이지
+		// 슬라이드다. 세로 끌기와 짧은 흔들림은 페이지를 바꾸지 않는다.
+		if (bStartedOnTurnPanel
+			&& FMath::Abs(DragDelta.X) >= TurnSwipeSlack
+			&& FMath::Abs(DragDelta.X) > FMath::Abs(DragDelta.Y))
+		{
+			if (DragDelta.X < 0.f)
+			{
+				HandleTurnPageRightClicked();
+			}
+			else
+			{
+				HandleTurnPageLeftClicked();
+			}
+			return;
+		}
+
 		// 0823 확정: 지도를 끄는 것도 판을 만진 것이다. 펴 둔 카드는 접는다.
 		// 조준 중(끌며 겨냥 확인)·연출 중·HUD 위에서 시작한 끌기는 건드리지
 		// 않는다 -- 탭의 예외 규칙과 같다.
@@ -3738,7 +4230,13 @@ void UCombatLayoutHUDWidget::HandleBoardPressed(const FVector2D& ScreenPosition)
 			{
 				// 카드만 갈아 끼운다. 상세 겹은 안 띄운다.
 				mSuppressNextUnitDetailOverlay = true;
+				mInspectedAllyUnitId = TappedId;
 				mUIModel->RequestInspectUnit(TappedId);
+			}
+			else
+			{
+				// 적을 짚으면 아군 카드가 접히므로 살펴보던 아군도 놓는다.
+				mInspectedAllyUnitId = INDEX_NONE;
 			}
 			SetCommandsShown(bIsAlly);
 		}
@@ -3830,6 +4328,7 @@ void UCombatLayoutHUDWidget::HandlePartyClicked(const int32 SlotIndex)
 	// GameMode 살펴보기 유닛과 어긋나 엉뚱한 스킬 상세가 떴다). 상세 겹은
 	// 안 띄운다.
 	mSuppressNextUnitDetailOverlay = true;
+	mInspectedAllyUnitId = UnitId;
 	mUIModel->RequestInspectUnit(UnitId);
 
 	// 전투 화면에서 아군 칸을 누른 것은 "이 용병 스킬을 보겠다"다. 차례가
@@ -4372,6 +4871,14 @@ void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
  */
 void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 {
+	// 미리보기 단계에서 드래그로 페이지를 넘긴 손은 자식 Button의 release/click이
+	// 뒤늦게 도착할 수 있다. 그 클릭을 한 번 삼켜 카메라가 엉뚱한 토큰으로
+	// 이동하지 않게 한다.
+	if (mTurnSwipeConsumed)
+	{
+		mTurnSwipeConsumed = false;
+		return;
+	}
 	if (mUIModel == nullptr || mTurnSlotUnitIds.IsValidIndex(SlotIndex) == false)
 	{
 		return;
@@ -4951,6 +5458,7 @@ void UCombatLayoutHUDWidget::HandleSkillToggleClicked()
 	}
 	// 다른 용병을 살펴보던 중이었어도 카드는 차례 유닛 것으로 되돌린다.
 	mSuppressNextUnitDetailOverlay = true;
+	mInspectedAllyUnitId = TurnUnitId;
 	mUIModel->RequestInspectUnit(TurnUnitId);
 	RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
 	SetCommandsShown(true);
@@ -4958,19 +5466,14 @@ void UCombatLayoutHUDWidget::HandleSkillToggleClicked()
 
 void UCombatLayoutHUDWidget::HandleEndTurnClicked()
 {
-	if (mUIModel == nullptr)
+	if (mUIModel == nullptr || IsAiming())
 	{
 		return;
 	}
 
-	// 어느 쪽이든 상세를 볼 시간은 끝났다. 위협 범위 칠은 명령에서 걷는다.
+	// 턴 종료는 턴 종료만 수행한다. 조준 취소는 별도 CancelButton이 맡아
+	// 같은 화면 위치가 상태에 따라 정반대 의미로 바뀌지 않는다.
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
-
-	if (mUIModel->GetTurnUI().mPhase != ECombatBuildPhaseUI::None)
-	{
-		mUIModel->RequestCancel();
-		return;
-	}
 	mUIModel->RequestEndTurn();
 }
 
@@ -5715,6 +6218,16 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 		return;
 	}
 	ShowSkillDetailOverlay(Detail);
+}
+
+void UCombatLayoutHUDWidget::HandleCancelClicked()
+{
+	if (mUIModel == nullptr || !IsAiming())
+	{
+		return;
+	}
+	HideDetailOverlay(/*bNotifyGameplay=*/false);
+	mUIModel->RequestCancel();
 }
 
 void UCombatLayoutHUDWidget::ShowSkillDetailOverlay(const FSkillDetailUI& Detail)

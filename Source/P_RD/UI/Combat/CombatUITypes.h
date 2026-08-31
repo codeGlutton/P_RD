@@ -332,6 +332,8 @@ struct FUnitDetailSkillUI
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	/** 상세 로스터에서 즉시 비용까지 교체할 수 있도록 유닛 스킬의 AP 비용을 함께 보낸다. */
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = INDEX_NONE;
 };
 
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
@@ -628,6 +630,17 @@ struct FPlayerMetaUI
 	UPROPERTY(BlueprintReadOnly) TArray<FCombatArtifactUI> mArtifacts;
 };
 
+/** @brief 턴바에 표시할 한 개 미래 라운드의 순서. */
+USTRUCT(BlueprintType)
+struct FTurnRoundForecastUI
+{
+	GENERATED_BODY()
+
+	/** @brief 현재 라운드 다음을 1로 세는 유효 라운드 거리. */
+	UPROPERTY(BlueprintReadOnly) int32 mRoundOffset = 1;
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
+};
+
 /** @brief 현재 턴/라운드/페이즈 상태. */
 // UI 필요값:
 // - mCurrentUnitId: 현재 조작/행동 주체 표시.
@@ -654,20 +667,23 @@ struct FTurnUI
 	 */
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
 	/**
-	 * @brief 다음 라운드 순서 미리보기(속도 기준 재계산).
+	 * @brief 현재 라운드 뒤로 이어지는 미래 유효 라운드 순서.
 	 *
-	 * @details 표기는 다음 라운드까지만 하기로 했다(0806 합의). 속도가 모자라
-	 *          다음 라운드에 턴을 못 받는 유닛은 여기 없다.
+	 * @details 전투 모델이 계산을 끝낸 결과다. 위젯은 이 배열을 평탄화해
+	 *          페이지/스와이프로 보여 줄 뿐 속도나 턴을 다시 계산하지 않는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<FTurnRoundForecastUI> mPredictedRounds;
+	/**
+	 * @brief 구형 위젯 호환용 첫 미래 라운드 순서.
+	 *
+	 * @details 새 코드는 mPredictedRounds를 사용한다.
 	 */
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mNextRoundUnitIds;
 	/** @brief mTurnOrderUnitIds 원소 수와 같다(전부 이번 라운드 잔여분). */
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentRoundRemainingTurnCount = 0;
 	/**
-	 * @brief 다음 턴이 실제로 서는 라운드까지의 거리(라운드 수).
-	 *
-	 * @details 충전 5·비용 10이면 턴은 두 라운드에 한 번 서고, 사이의 빈
-	 *          라운드는 모델이 즉시 건너뛴다. 그래서 "다음" 이 mRound+1이
-	 *          아닐 수 있다 -- 표기는 이 거리를 더한 라운드 번호로 한다.
+	 * @brief 구형 위젯 호환용 첫 미래 라운드 거리.
+	 * @details 새 코드는 mPredictedRounds 각 원소의 mRoundOffset을 사용한다.
 	 */
 	UPROPERTY(BlueprintReadOnly) int32 mNextRoundOffset = 1;
 };

@@ -1336,6 +1336,8 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 
 void ACombatGameMode::PushTurnUIData() const
 {
+	static constexpr uint32 TurnForecastRoundCount = 10;
+
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -1353,6 +1355,7 @@ void ACombatGameMode::PushTurnUIData() const
 		RoundTransitionUI.mRound = CombatModel->GetRoundCount();
 		RoundTransitionUI.mCurrentRoundRemainingTurnCount = 0;
 		RoundTransitionUI.mTurnOrderUnitIds.Reset();
+		RoundTransitionUI.mPredictedRounds.Reset();
 		RoundTransitionUI.mNextRoundUnitIds.Reset();
 		RoundTransitionUI.mNextRoundOffset = 1;
 		mCombatUIModel->SetTurnUI(RoundTransitionUI);
@@ -1369,12 +1372,29 @@ void ACombatGameMode::PushTurnUIData() const
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	TArray<FSRPGTurnCandidate> ValidTurnCandidates = CombatModel->GetOrderedTurnCandidates();
-	for (const FSRPGTurnCandidate& ValidTurnCandidate : ValidTurnCandidates)
+	const TArray<FSRPGPredictedRound> PredictedRounds =
+		CombatModel->GetPredictedTurnRounds(TurnForecastRoundCount);
+	for (const FSRPGPredictedRound& PredictedRound : PredictedRounds)
 	{
-		TurnUI.mNextRoundUnitIds.Add(ValidTurnCandidate.mOwner->GetModelId());
+		FTurnRoundForecastUI& ForecastUI =
+			TurnUI.mPredictedRounds.AddDefaulted_GetRef();
+		ForecastUI.mRoundOffset = PredictedRound.mRoundOffset;
+		for (const FSRPGTurnCandidate& Candidate : PredictedRound.mCandidates)
+		{
+			if (Candidate.mOwner != nullptr)
+			{
+				ForecastUI.mTurnOrderUnitIds.Add(Candidate.mOwner->GetModelId());
+			}
+		}
 	}
-	TurnUI.mNextRoundOffset = 1;
+
+	// 구형 WBP/테스트도 첫 예측 라운드는 계속 읽을 수 있게 호환 필드를 채운다.
+	if (TurnUI.mPredictedRounds.IsEmpty() == false)
+	{
+		TurnUI.mNextRoundUnitIds =
+			TurnUI.mPredictedRounds[0].mTurnOrderUnitIds;
+		TurnUI.mNextRoundOffset = TurnUI.mPredictedRounds[0].mRoundOffset;
+	}
 	mCombatUIModel->SetTurnUI(TurnUI);
 }
 
@@ -2024,6 +2044,12 @@ void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorMod
 				SkillIcon.mSkillIndex = Index;
 				SkillIcon.mName = StaticSkillData->mName;
 				SkillIcon.mIcon = StaticSkillData->mIcon.LoadSynchronous();
+				if (const UStaticUnitSkillData* UnitSkill =
+					Cast<UStaticUnitSkillData>(StaticSkillData))
+				{
+					SkillIcon.mActionPointCost = FMath::Max(
+						UnitSkill->mRequiredActionPoint, 0);
+				}
 			}
 		}
 	}
