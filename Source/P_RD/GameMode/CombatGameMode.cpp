@@ -469,6 +469,15 @@ void ACombatGameMode::InitializeCombat()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
+		// 맞은 자리에 피해 숫자를 띄운다. 턴이 끝날 때 한꺼번에 내리면
+		// 때린 연출은 이미 끝난 뒤라 어느 타격의 숫자인지 못 읽는다
+		// (0824 검수: "데미지 스킨 띄우기"). 행동 하나가 끝날 때마다
+		// 그동안 쌓인 로그를 비워 그 행동의 결과만 그 자리에 뜨게 한다.
+		if (USimulationSubsystem* SimulationSubsystem
+			= GetWorld()->GetSubsystem<USimulationSubsystem>())
+		{
+			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+		}
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
