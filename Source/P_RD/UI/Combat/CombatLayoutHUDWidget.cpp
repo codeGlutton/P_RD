@@ -37,6 +37,7 @@
 #include "Materials/MaterialInterface.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/SimulationPreviewUIModel.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/DetailOverlayInputShield.h"
@@ -6217,7 +6218,26 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	{
 		return;
 	}
-	ShowSkillDetailOverlay(Detail);
+	if (!Detail.mName.IsEmpty() || Detail.mIcon != nullptr)
+	{
+		ShowSkillDetailOverlay(Detail);
+		return;
+	}
+
+	// 데이터 생산자가 스킬 index만 채운 경우, 이미 받은 전투 카드 View의
+	// 같은 슬롯에서 표시 식별 정보만 보완한다. 모델은 다시 조회하지 않는다.
+	FSkillDetailUI Fallback = Detail;
+	const FSkillUI* Skill = mUIModel->GetSkillUIs().FindByPredicate(
+		[&Detail](const FSkillUI& Candidate)
+		{
+			return Candidate.mSkillIndex == Detail.mSkillIndex;
+		});
+	if (Skill != nullptr
+		&& SkillDetailUIBuilder::FillFallbackFromCombatSkillView(
+			*Skill, OUT Fallback))
+	{
+		ShowSkillDetailOverlay(Fallback);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandleCancelClicked()
