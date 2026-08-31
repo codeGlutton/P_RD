@@ -1545,8 +1545,8 @@ namespace CombatHUDWidgetBuilder
 			Blueprint->WidgetTree->RootWidget);
 		RemoveRetiredQuickSkillWidgets(Blueprint);
 
-		// ROUND/턴 바 바로 아래의 좌상단에 고정한다. 중앙 Move 카드와
-		// 겹치지 않도록 원본 판 비율을 유지한 채 800x97 안에 맞춘다.
+		// ROUND/턴 바 바로 아래의 좌상단에 고정한다. 왼쪽 AP 전용 배지와
+		// 오른쪽 15칸 레일을 800x97 안에 함께 넣어 중앙 Move 카드와 겹치지 않는다.
 		if (UWidget* TurnAPScale = Blueprint->WidgetTree->FindWidget(
 			TEXT("TurnAPScale")))
 		{
@@ -1570,26 +1570,30 @@ namespace CombatHUDWidgetBuilder
 		if (UTextBlock* TurnAPText = Cast<UTextBlock>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPText"))))
 		{
-			TurnAPText->SetMargin(FMargin(16.f, 0.f, 0.f, 0.f));
+			TurnAPText->SetMargin(FMargin(0.f));
 			TurnAPText->SetFont(UIFont::MakeProjectExact(
-				TurnAPText->GetFont(), 46));
+				TurnAPText->GetFont(), 30));
 			TurnAPText->SetRenderTransform(FWidgetTransform());
 		}
 
-		// 15칸을 5 | 5 | 5로 읽을 수 있도록 각 묶음 사이에 12px 여백과
-		// 황동 구분선을 둔다. 보석과 점등 레이어는 같은 고정 좌표를 쓴다.
+		// 15칸을 5 | 5 | 5로 읽을 수 있도록 각 묶음 사이에 11px 여백과
+		// 밝은 금속 구분선을 둔다. 보석과 점등 레이어는 같은 고정 좌표를 쓴다.
 		if (UCanvasPanel* PipRow = Cast<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPPipRow"))))
 		{
 			constexpr int32 PipCount = 15;
 			constexpr int32 PipsPerGroup = 5;
-			constexpr float PipStep = 29.f;
-			constexpr float GroupGap = 10.f;
+			constexpr float PipStep = 27.f;
+			constexpr float GroupGap = 9.f;
 			const FVector2D PipOrigin(.5f, 1.f);
-			const FVector2D PipSize(27.f, 34.f);
-			constexpr float PipRowWidth = 480.f;
+			const FVector2D PipSize(25.f, 32.f);
+			constexpr float PipRowWidth = 424.f;
 			constexpr float PlateWidth = 568.421f;
-			constexpr float NumberAreaWidth = 88.f;
+			constexpr float RailX = 116.f;
+			constexpr float RailY = 5.5f;
+			constexpr float RailHeight = 58.f;
+			constexpr float BadgeWidth = 132.f;
+			constexpr float BadgeHeight = 68.8995f;
 
 			// 수동 편집이나 이전 시안에서 16칸 이상이 남아 있어도 빌더 한 번으로
 			// 정확히 15칸 계약으로 돌아오게 한다.
@@ -1619,8 +1623,8 @@ namespace CombatHUDWidgetBuilder
 			}
 			DeleteWidgetsCompletely(Blueprint, OverflowPips);
 
-			// 이전 시안의 여분 묶음/구분선이 남더라도 정확히 3개 묶음과
-			// 2개 구분선만 남긴다.
+			// 참고안은 하나의 연속 레일에 선만 둔다. 이전 시안의 어두운
+			// 그룹 홈은 모두 지우고 구분선은 정확히 2개만 남긴다.
 			TSet<UWidget*> OverflowGroups;
 			for (UWidget* Widget : Blueprint->GetAllSourceWidgets())
 			{
@@ -1641,7 +1645,7 @@ namespace CombatHUDWidgetBuilder
 					const FString Suffix = WidgetName.RightChop(
 						PrefixWithSeparator.Len());
 					const int32 MaxCount = FString(Prefix) == TEXT("TurnAPGroupWell")
-						? 3 : 2;
+						? 0 : 2;
 					if (Suffix.IsNumeric() && FCString::Atoi(*Suffix) >= MaxCount)
 					{
 						OverflowGroups.Add(Widget);
@@ -1652,31 +1656,77 @@ namespace CombatHUDWidgetBuilder
 
 			if (UCanvasPanelSlot* RowSlot = Cast<UCanvasPanelSlot>(PipRow->Slot))
 			{
-				RowSlot->SetPosition(FVector2D(NumberAreaWidth, 15.f));
-				RowSlot->SetSize(FVector2D(PipRowWidth, 36.f));
+				RowSlot->SetPosition(FVector2D(136.f, 17.f));
+				RowSlot->SetSize(FVector2D(PipRowWidth, 34.f));
 			}
-			if (UWidget* PlateMount = Blueprint->WidgetTree->FindWidget(
-				TEXT("TurnAPPlateMount")))
+			UOverlay* PlateMount = Cast<UOverlay>(Blueprint->WidgetTree->FindWidget(
+				TEXT("TurnAPPlateMount")));
+			UCanvasPanel* TurnAPPanel = Cast<UCanvasPanel>(
+				Blueprint->WidgetTree->FindWidget(TEXT("TurnAPPanel")));
+			if (PlateMount != nullptr && TurnAPPanel != nullptr)
 			{
 				if (UCanvasPanelSlot* PlateSlot = Cast<UCanvasPanelSlot>(PlateMount->Slot))
 				{
-					PlateSlot->SetPosition(FVector2D::ZeroVector);
-					PlateSlot->SetSize(FVector2D(PlateWidth, 68.8995f));
-					// 숫자 영역의 폭은 유지하고 오른쪽 보석 영역만 늘린다.
-					if (UWidget* TextCenter = Blueprint->WidgetTree->FindWidget(
-						TEXT("TurnAPText_Center")))
-					{
-						if (UOverlaySlot* TextSlot = Cast<UOverlaySlot>(TextCenter->Slot))
-						{
-							FMargin Padding = TextSlot->GetPadding();
-							// 첫 88px은 숫자, 그 뒤는 보석이다. 절대값으로 써야
-							// 같은 빌더를 반복 실행해도 Right가 누적되지 않는다.
-							Padding.Right = PlateWidth - NumberAreaWidth;
-							TextSlot->SetPadding(Padding);
-						}
-					}
+					PlateSlot->SetPosition(FVector2D(RailX, RailY));
+					PlateSlot->SetSize(FVector2D(PlateWidth - RailX, RailHeight));
+				}
+
+				// ROUND의 좌우 금속 캡과 주황 테두리 전체를 재사용해
+				// AP 전용 배지를 만든다. 긴 AP 원화를 배지로 찌그러뜨리지 않는다.
+				UOverlay* BadgeMount = FindOrCreate<UOverlay>(Blueprint,
+					TEXT("TurnAPBadgeMount"));
+				PlaceCanvas(TurnAPPanel, BadgeMount, FVector2D::ZeroVector,
+					FVector2D(BadgeWidth, BadgeHeight), 20);
+				BadgeMount->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+				UImage* BadgePlate = FindOrCreate<UImage>(Blueprint,
+					TEXT("TurnAPBadgePlate"));
+				EnsureParent(BadgeMount, BadgePlate);
+				SetOverlayLayout(BadgePlate, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+				if (UImage* RoundPlate = Cast<UImage>(
+					Blueprint->WidgetTree->FindWidget(TEXT("RoundPlate"))))
+				{
+					FSlateBrush BadgeBrush = RoundPlate->GetBrush();
+					// ROUND 원본(1839x573)의 장식 전체를 작은 AP 배지 안에 보인다.
+					// Box 9-slice는 실제 원본 크기로 테두리를 계산해 작은 배지의
+					// 중앙을 접으므로 이 전용 배지만 전체 이미지 축소를 사용한다.
+					BadgeBrush.DrawAs = ESlateBrushDrawType::Image;
+					BadgeBrush.Margin = FMargin(0.f);
+					BadgePlate->SetBrush(BadgeBrush);
+				}
+				BadgePlate->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+				UOverlay* LabelCenter = FindOrCreate<UOverlay>(Blueprint,
+					TEXT("TurnAPLabel_Center"));
+				EnsureParent(BadgeMount, LabelCenter);
+				SetOverlayLayout(LabelCenter, FMargin(12.f, 6.f, 12.f, 40.f),
+					HAlign_Fill, VAlign_Fill);
+				UTextBlock* APLabel = FindOrCreate<UTextBlock>(Blueprint,
+					TEXT("TurnAPLabel"));
+				EnsureParent(LabelCenter, APLabel);
+				SetOverlayLayout(APLabel, FMargin(0.f), HAlign_Fill, VAlign_Fill);
+				APLabel->SetText(FText::FromString(TEXT("AP")));
+				FSlateFontInfo LabelFont = UIFont::MakeProjectExact(
+					APLabel->GetFont(), 18);
+				LabelFont.OutlineSettings.OutlineSize = 1;
+				LabelFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+				APLabel->SetFont(LabelFont);
+				APLabel->SetJustification(ETextJustify::Center);
+				APLabel->SetColorAndOpacity(FSlateColor(
+					FLinearColor(.82f, .58f, .31f, 1.f)));
+				APLabel->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+				if (UWidget* TextCenter = Blueprint->WidgetTree->FindWidget(
+					TEXT("TurnAPText_Center")))
+				{
+					EnsureParent(BadgeMount, TextCenter);
+					SetOverlayLayout(TextCenter, FMargin(10.f, 32.f, 10.f, 5.f),
+						HAlign_Fill, VAlign_Fill);
 				}
 			}
+			// 위에서 새로 만든 AP 라벨도 다른 HUD 문구와 같은
+			// Center -> AutoFit -> Text 계약에 편입한다.
+			NormalizeCenteredTextBounds(Blueprint);
 
 			UMaterialInterface* APGemFlashMaterial = LoadObject<UMaterialInterface>(
 				nullptr, APGemFlashMaterialPath);
@@ -1685,21 +1735,6 @@ namespace CombatHUDWidgetBuilder
 			UImage* UsedTemplate = Cast<UImage>(Blueprint->WidgetTree->FindWidget(
 				TEXT("TurnAPPipUsed_0")));
 			check(PipTemplate != nullptr && UsedTemplate != nullptr);
-
-			// 각 5칸을 하나의 어두운 홈으로 묶고, 홈 사이에는 ROUND/턴 바의
-			// 금속 장식과 같은 계열의 어두운 받침 + 황동선을 겹친다.
-			constexpr float GroupWellWidth = 145.f;
-			for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
-			{
-				const float GroupX = PipOrigin.X
-					+ GroupIndex * (PipStep * PipsPerGroup + GroupGap);
-				UBorder* GroupWell = FindOrCreate<UBorder>(Blueprint,
-					FName(*FString::Printf(TEXT("TurnAPGroupWell_%d"), GroupIndex)));
-				PlaceCanvas(PipRow, GroupWell, FVector2D(GroupX - 2.f, .5f),
-					FVector2D(GroupWellWidth, 35.f), 5);
-				GroupWell->SetBrushColor(FLinearColor(.015f, .035f, .055f, .34f));
-				GroupWell->SetVisibility(ESlateVisibility::HitTestInvisible);
-			}
 
 			for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
 			{
@@ -1715,7 +1750,7 @@ namespace CombatHUDWidgetBuilder
 					FName(*FString::Printf(
 						TEXT("TurnAPGroupSeparatorShadow_%d"), SeparatorIndex)));
 				PlaceCanvas(PipRow, SeparatorShadow,
-					FVector2D(SeparatorCenter - 3.5f, 1.f), FVector2D(7.f, 34.f), 14);
+					FVector2D(SeparatorCenter - 3.5f, .5f), FVector2D(7.f, 33.f), 14);
 				SeparatorShadow->SetBrushColor(
 					FLinearColor(.025f, .012f, .004f, .95f));
 				SeparatorShadow->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -1724,8 +1759,8 @@ namespace CombatHUDWidgetBuilder
 					FName(*FString::Printf(
 						TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex)));
 				PlaceCanvas(PipRow, Separator,
-					FVector2D(SeparatorCenter - 1.5f, 3.f), FVector2D(3.f, 30.f), 15);
-				Separator->SetBrushColor(FLinearColor(.92f, .56f, .16f, 1.f));
+					FVector2D(SeparatorCenter - 2.f, 2.f), FVector2D(4.f, 30.f), 15);
+				Separator->SetBrushColor(FLinearColor(.78f, .72f, .61f, 1.f));
 				Separator->SetVisibility(ESlateVisibility::HitTestInvisible);
 			}
 

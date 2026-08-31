@@ -2116,7 +2116,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(TEXT("AP 바 좌상단 위치"), APSlot->GetPosition(),
 				FVector2D(18.f, 164.f));
-			TestEqual(TEXT("5x3 AP 바 압축 크기"), APSlot->GetSize(),
+			TestEqual(TEXT("한 줄 15칸 AP 바 압축 크기"), APSlot->GetSize(),
 				FVector2D(800.f, 97.f));
 			TestEqual(TEXT("AP 바 상단 앵커"), APSlot->GetAnchors().Minimum,
 				FVector2D::ZeroVector);
@@ -2136,8 +2136,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	if (UTextBlock* TurnAPText = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("TurnAPText"))))
 	{
-		TestEqual(TEXT("압축 후 AP 숫자 가독성 보정"),
-			TurnAPText->GetFont().Size, 46.f);
+		TestEqual(TEXT("전용 AP 배지 숫자 크기"),
+				TurnAPText->GetFont().Size, 30.f);
 		TestEqual(TEXT("AP 숫자는 개별 좌표 이동을 쓰지 않음"),
 			TurnAPText->GetRenderTransform().Translation, FVector2D::ZeroVector);
 	}
@@ -2146,27 +2146,45 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		if (const UCanvasPanelSlot* PlateSlot =
 			Cast<UCanvasPanelSlot>(PlateMount->Slot))
 		{
-			TestEqual(TEXT("15칸 AP 내부 판 폭"), PlateSlot->GetSize(),
-				FVector2D(568.421f, 68.8995f));
+			TestEqual(TEXT("AP 레일 위치"), PlateSlot->GetPosition(),
+				FVector2D(116.f, 5.5f));
+			TestTrue(TEXT("AP 레일 크기"), PlateSlot->GetSize().Equals(
+				FVector2D(452.421f, 58.f), .001f));
 		}
+	}
+	if (UWidget* BadgeMount = Tree->FindWidget(TEXT("TurnAPBadgeMount")))
+	{
+		if (const UCanvasPanelSlot* BadgeSlot =
+			Cast<UCanvasPanelSlot>(BadgeMount->Slot))
+		{
+			TestEqual(TEXT("AP 전용 배지 위치"), BadgeSlot->GetPosition(),
+				FVector2D::ZeroVector);
+			TestEqual(TEXT("AP 전용 배지 크기"), BadgeSlot->GetSize(),
+				FVector2D(132.f, 68.8995f));
+		}
+	}
+	if (UImage* BadgePlate = Cast<UImage>(
+		Tree->FindWidget(TEXT("TurnAPBadgePlate"))))
+	{
+		TestEqual(TEXT("AP 배지는 ROUND 원본 전체를 축소 표시"),
+			BadgePlate->GetBrush().DrawAs, ESlateBrushDrawType::Image);
+		TestEqual(TEXT("AP 배지는 원본 크기 9-slice를 쓰지 않음"),
+			BadgePlate->GetBrush().Margin, FMargin(0.f));
 	}
 	if (UWidget* PipRow = Tree->FindWidget(TEXT("TurnAPPipRow")))
 	{
 		if (const UCanvasPanelSlot* RowSlot = Cast<UCanvasPanelSlot>(PipRow->Slot))
 		{
-			TestEqual(TEXT("AP 숫자와 첫 보석 사이 여백"),
-				RowSlot->GetPosition(), FVector2D(88.f, 15.f));
+			TestEqual(TEXT("AP 배지 뒤 보석 레일 위치"),
+				RowSlot->GetPosition(), FVector2D(136.f, 17.f));
 			TestEqual(TEXT("15칸 AP 보석 행 폭"), RowSlot->GetSize(),
-				FVector2D(480.f, 36.f));
+				FVector2D(424.f, 34.f));
 		}
 	}
 	if (UWidget* TextCenter = Tree->FindWidget(TEXT("TurnAPText_Center")))
 	{
-		if (const UOverlaySlot* TextSlot = Cast<UOverlaySlot>(TextCenter->Slot))
-		{
-			TestEqual(TEXT("AP 숫자 영역 패딩은 절대값으로 고정"),
-				TextSlot->GetPadding().Right, 480.421f);
-		}
+		TestTrue(TEXT("AP 숫자는 전용 배지 안"), TextCenter->GetParent()
+			== Tree->FindWidget(TEXT("TurnAPBadgeMount")));
 	}
 	for (int32 Index = 0; Index < 15; ++Index)
 	{
@@ -2184,20 +2202,14 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("TurnAPPipUsed_15")));
 	TestNull(TEXT("AP 점등 레이어도 15칸에서 끝남"),
 		Tree->FindWidget(TEXT("TurnAPPipGlow_15")));
-	for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
-	{
-		TestNotNull(*FString::Printf(TEXT("AP 5칸 묶음 %d"), GroupIndex),
-			Tree->FindWidget(FName(*FString::Printf(
-				TEXT("TurnAPGroupWell_%d"), GroupIndex))));
-	}
+	TestNull(TEXT("연속 AP 레일에는 그룹 홈이 없음"),
+		Tree->FindWidget(TEXT("TurnAPGroupWell_0")));
 	for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
 	{
 		TestNotNull(*FString::Printf(TEXT("AP 묶음 구분선 %d"), SeparatorIndex),
 			Tree->FindWidget(FName(*FString::Printf(
 				TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex))));
 	}
-	TestNull(TEXT("AP 묶음은 정확히 세 개"),
-		Tree->FindWidget(TEXT("TurnAPGroupWell_3")));
 	TestNull(TEXT("AP 구분선은 정확히 두 개"),
 		Tree->FindWidget(TEXT("TurnAPGroupSeparator_2")));
 	for (const TCHAR* NextSkillName : { TEXT("EnemyNextSkillFrame"),

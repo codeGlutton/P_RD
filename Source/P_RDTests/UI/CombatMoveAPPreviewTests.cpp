@@ -65,8 +65,36 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("TurnAPText")));
 	if (TestNotNull(TEXT("AP 숫자"), InitialTurnAPText))
 	{
-		TestEqual(TEXT("압축 후에도 AP 숫자 크기를 유지"),
-			InitialTurnAPText->GetFont().Size, 46.f);
+		TestEqual(TEXT("전용 AP 배지 숫자 크기"),
+			InitialTurnAPText->GetFont().Size, 30.f);
+	}
+	UWidget* BadgeMount = HUD->WidgetTree->FindWidget(TEXT("TurnAPBadgeMount"));
+	const UCanvasPanelSlot* BadgeSlot = BadgeMount != nullptr
+		? Cast<UCanvasPanelSlot>(BadgeMount->Slot) : nullptr;
+	if (TestNotNull(TEXT("왼쪽 AP 전용 배지"), BadgeSlot))
+	{
+		TestEqual(TEXT("AP 배지 위치"), BadgeSlot->GetPosition(),
+			FVector2D::ZeroVector);
+		TestEqual(TEXT("AP 배지 크기"), BadgeSlot->GetSize(),
+			FVector2D(132.f, 68.8995f));
+	}
+	const UImage* BadgePlate = Cast<UImage>(
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPBadgePlate")));
+	if (TestNotNull(TEXT("AP 전용 배지 프레임"), BadgePlate))
+	{
+		TestEqual(TEXT("작은 AP 배지는 ROUND 전체 이미지를 표시"),
+			BadgePlate->GetBrush().DrawAs, ESlateBrushDrawType::Image);
+		TestEqual(TEXT("AP 배지는 9-slice 절단을 쓰지 않음"),
+			BadgePlate->GetBrush().Margin, FMargin(0.f));
+		TestTrue(TEXT("AP 프레임은 전용 배지 안"),
+			BadgePlate->GetParent() == BadgeMount);
+	}
+	const UTextBlock* APLabel = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPLabel")));
+	if (TestNotNull(TEXT("AP 배지 제목"), APLabel))
+	{
+		TestEqual(TEXT("AP 배지 제목 문구"), APLabel->GetText().ToString(),
+			FString(TEXT("AP")));
 	}
 	const UWidget* MoveCard = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	const UCanvasPanelSlot* MoveCardSlot = MoveCard != nullptr
@@ -81,16 +109,8 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("AP 바와 중앙 이동 카드 사이에 40px 이상 여백"),
 			MoveCardLeft - APBarRight >= 40.f);
 	}
-	for (int32 GroupIndex = 0; GroupIndex < 3; ++GroupIndex)
-	{
-		UWidget* GroupWell = HUD->WidgetTree->FindWidget(*FString::Printf(
-			TEXT("TurnAPGroupWell_%d"), GroupIndex));
-		TestNotNull(*FString::Printf(TEXT("AP 5칸 묶음 %d"), GroupIndex),
-			GroupWell);
-		TestTrue(*FString::Printf(TEXT("AP 5칸 묶음 %d 부모"), GroupIndex),
-			GroupWell != nullptr && GroupWell->GetParent()
-				== HUD->WidgetTree->FindWidget(TEXT("TurnAPPipRow")));
-	}
+	TestNull(TEXT("연속 레일에는 어두운 그룹 홈을 쓰지 않음"),
+		HUD->WidgetTree->FindWidget(TEXT("TurnAPGroupWell_0")));
 	for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
 	{
 		UWidget* Separator = HUD->WidgetTree->FindWidget(*FString::Printf(
@@ -104,13 +124,11 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 		{
 			TestEqual(*FString::Printf(TEXT("AP 묶음 구분선 위치 %d"),
 				SeparatorIndex), SeparatorSlot->GetPosition(),
-				FVector2D(148.f + 155.f * SeparatorIndex, 3.f));
+				FVector2D(137.f + 144.f * SeparatorIndex, 2.f));
 			TestEqual(*FString::Printf(TEXT("AP 묶음 구분선 크기 %d"),
-				SeparatorIndex), SeparatorSlot->GetSize(), FVector2D(3.f, 30.f));
+				SeparatorIndex), SeparatorSlot->GetSize(), FVector2D(4.f, 30.f));
 		}
 	}
-	TestNull(TEXT("AP 묶음은 정확히 세 개"),
-		HUD->WidgetTree->FindWidget(TEXT("TurnAPGroupWell_3")));
 	TestNull(TEXT("AP 묶음 구분선은 정확히 두 개"),
 		HUD->WidgetTree->FindWidget(TEXT("TurnAPGroupSeparator_2")));
 	for (int32 PipIndex = 0; PipIndex < 15; ++PipIndex)
@@ -143,7 +161,7 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 		{
 			const float BoundaryGap = RightSlot->GetPosition().X
 				- LeftSlot->GetPosition().X - LeftSlot->GetSize().X;
-			TestEqual(TEXT("AP 5칸 묶음 사이 12px 여백"), BoundaryGap, 12.f);
+			TestEqual(TEXT("AP 5칸 묶음 사이 11px 여백"), BoundaryGap, 11.f);
 		}
 	}
 

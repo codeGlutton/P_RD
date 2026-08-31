@@ -822,13 +822,10 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mTurnAPText = Find<UTextBlock>(WidgetTree, TEXT("TurnAPText"));
 	if (mTurnAPText != nullptr)
 	{
-		// AP 판의 금속 모서리 바로 옆에서 외곽선 첫 픽셀이 잘리지 않도록
-		// 글자 내부 안전 여백을 둔다. 판/보석 행 좌표와 Text RenderTransform은
-		// 그대로라 공용 중앙 정렬 계약을 깨지 않는다.
-		mTurnAPText->SetMargin(FMargin(16.f, 0.f, 0.f, 0.f));
+		// 왼쪽 전용 AP 배지 안에서 두 번째 줄을 채운다.
+		mTurnAPText->SetMargin(FMargin(0.f));
 		FSlateFontInfo APFont = mTurnAPText->GetFont();
-		// 800x97로 압축된 ScaleBox에서도 기존 화면 크기를 유지한다.
-		APFont.Size = 46;
+		APFont.Size = 30;
 		mTurnAPText->SetFont(APFont);
 	}
 	mTurnAPPips.Reset();
