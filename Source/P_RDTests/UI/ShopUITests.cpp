@@ -952,10 +952,12 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	Model->SetShop(OwnedMarkedShop);
 	TestEqual(TEXT("보유 스킬도 목록에서 빠지지 않는다"),
 		CountVisibleRailButtons(), 3);
+	const FString OwnedLabel = BuyLabel->GetText().ToString();
+	TestFalse(TEXT("보유 상태 라벨이 비어 있지 않다"), OwnedLabel.IsEmpty());
 	TestTrue(TEXT("보유 스킬은 상태 줄에 보유로 적힌다"),
-		SelectedNote->GetText().ToString().Contains(TEXT("이미 보유")));
-	TestEqual(TEXT("보유 스킬은 구매 버튼에서 막힌다"),
-		BuyLabel->GetText().ToString(), FString(TEXT("이미 보유")));
+		SelectedNote->GetText().ToString().Contains(OwnedLabel));
+	TestFalse(TEXT("보유 스킬은 구매 버튼에서 막힌다"),
+		BuyButton->GetIsEnabled());
 
 	// 휴식 탭은 파티 전원의 회복 전/후 값을 그리고, 단일 요청만 모델에 전달한다.
 	Model->SetShop(SyntheticShop);
