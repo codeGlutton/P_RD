@@ -2137,7 +2137,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("TurnAPText"))))
 	{
 		TestEqual(TEXT("전용 AP 배지 숫자 크기"),
-				TurnAPText->GetFont().Size, 30.f);
+			TurnAPText->GetFont().Size, 19.f);
 		TestEqual(TEXT("AP 숫자는 개별 좌표 이동을 쓰지 않음"),
 			TurnAPText->GetRenderTransform().Translation, FVector2D::ZeroVector);
 	}

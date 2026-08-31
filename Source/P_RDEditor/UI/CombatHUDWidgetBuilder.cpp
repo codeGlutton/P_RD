@@ -1572,7 +1572,7 @@ namespace CombatHUDWidgetBuilder
 		{
 			TurnAPText->SetMargin(FMargin(0.f));
 			TurnAPText->SetFont(UIFont::MakeProjectExact(
-				TurnAPText->GetFont(), 30));
+				TurnAPText->GetFont(), 19));
 			TurnAPText->SetRenderTransform(FWidgetTransform());
 		}
 
@@ -1707,7 +1707,7 @@ namespace CombatHUDWidgetBuilder
 				SetOverlayLayout(APLabel, FMargin(0.f), HAlign_Fill, VAlign_Fill);
 				APLabel->SetText(FText::FromString(TEXT("AP")));
 				FSlateFontInfo LabelFont = UIFont::MakeProjectExact(
-					APLabel->GetFont(), 18);
+					APLabel->GetFont(), 14);
 				LabelFont.OutlineSettings.OutlineSize = 1;
 				LabelFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 				APLabel->SetFont(LabelFont);

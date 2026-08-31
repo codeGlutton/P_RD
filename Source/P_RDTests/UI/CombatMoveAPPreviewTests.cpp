@@ -66,7 +66,7 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	if (TestNotNull(TEXT("AP 숫자"), InitialTurnAPText))
 	{
 		TestEqual(TEXT("전용 AP 배지 숫자 크기"),
-			InitialTurnAPText->GetFont().Size, 30.f);
+			InitialTurnAPText->GetFont().Size, 19.f);
 	}
 	UWidget* BadgeMount = HUD->WidgetTree->FindWidget(TEXT("TurnAPBadgeMount"));
 	const UCanvasPanelSlot* BadgeSlot = BadgeMount != nullptr
@@ -95,6 +95,7 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	{
 		TestEqual(TEXT("AP 배지 제목 문구"), APLabel->GetText().ToString(),
 			FString(TEXT("AP")));
+		TestEqual(TEXT("AP 배지 제목 크기"), APLabel->GetFont().Size, 14.f);
 	}
 	const UWidget* MoveCard = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	const UCanvasPanelSlot* MoveCardSlot = MoveCard != nullptr

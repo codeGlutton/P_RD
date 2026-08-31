@@ -825,7 +825,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 		// 왼쪽 전용 AP 배지 안에서 두 번째 줄을 채운다.
 		mTurnAPText->SetMargin(FMargin(0.f));
 		FSlateFontInfo APFont = mTurnAPText->GetFont();
-		APFont.Size = 30;
+		APFont.Size = 19;
 		mTurnAPText->SetFont(APFont);
 	}
 	mTurnAPPips.Reset();
