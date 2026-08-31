@@ -19,6 +19,11 @@ void URewardFlowTestListener::HandleClaimConfirmed(ERewardClaimKind ClaimKind, i
 	mLastConfirmationChoiceIndex = ChoiceIndex;
 }
 
+void URewardFlowTestListener::HandlePresentationFinished()
+{
+	++mPresentationFinishedCount;
+}
+
 #if WITH_DEV_AUTOMATION_TESTS
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -48,6 +53,36 @@ bool FRewardClaimAcknowledgementTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("게임플레이 성공 확정이 한 번 전달된다"), Listener->mConfirmationCount, 1);
 	TestEqual(TEXT("확정의 보상 종류가 유지된다"), Listener->mLastConfirmationKind, ERewardClaimKind::Choice);
 	TestEqual(TEXT("확정의 선택 인덱스가 유지된다"), Listener->mLastConfirmationChoiceIndex, 2);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardPresentationFinishUniqueBindingTest,
+	"P_RD.UI.Reward.PresentationFinishUniqueBinding",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRewardPresentationFinishUniqueBindingTest::RunTest(
+	const FString& Parameters)
+{
+	TStrongObjectPtr<URewardUIModel> UIModel(NewObject<URewardUIModel>());
+	TStrongObjectPtr<URewardFlowTestListener> Listener(
+		NewObject<URewardFlowTestListener>());
+
+	// InitializeCombat가 같은 객체에 다시 호출되어도 저장 수신기는 중복되지 않는다.
+	UIModel->OnRewardClaimed.AddUniqueDynamic(
+		Listener.Get(), &URewardFlowTestListener::HandlePresentationFinished);
+	UIModel->OnRewardClaimed.AddUniqueDynamic(
+		Listener.Get(), &URewardFlowTestListener::HandlePresentationFinished);
+
+	// 개별 행 지급 요청은 완료 신호가 아니므로 체크포인트 저장을 일으키지 않는다.
+	UIModel->RequestClaimReward(ERewardClaimKind::Exp);
+	UIModel->RequestClaimReward(ERewardClaimKind::Gold);
+	TestEqual(TEXT("개별 행 요청에서는 연출 완료 신호 없음"),
+		Listener->mPresentationFinishedCount, 0);
+
+	UIModel->RequestFinishPresentation();
+	TestEqual(TEXT("전체 연출 완료는 중복 바인딩 없이 한 번 전달"),
+		Listener->mPresentationFinishedCount, 1);
 	return true;
 }
 
