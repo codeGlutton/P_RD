@@ -3,6 +3,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -96,6 +97,22 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("AP 배지 제목 문구"), APLabel->GetText().ToString(),
 			FString(TEXT("AP")));
 		TestEqual(TEXT("AP 배지 제목 크기"), APLabel->GetFont().Size, 14.f);
+	}
+	const UWidget* APLabelCenter = HUD->WidgetTree->FindWidget(
+		TEXT("TurnAPLabel_Center"));
+	const UWidget* APValueCenter = HUD->WidgetTree->FindWidget(
+		TEXT("TurnAPText_Center"));
+	const UOverlaySlot* APLabelCenterSlot = APLabelCenter != nullptr
+		? Cast<UOverlaySlot>(APLabelCenter->Slot) : nullptr;
+	const UOverlaySlot* APValueCenterSlot = APValueCenter != nullptr
+		? Cast<UOverlaySlot>(APValueCenter->Slot) : nullptr;
+	if (TestNotNull(TEXT("AP 제목 배치 슬롯"), APLabelCenterSlot)
+		&& TestNotNull(TEXT("AP 숫자 배치 슬롯"), APValueCenterSlot))
+	{
+		TestEqual(TEXT("AP 제목과 숫자는 빈 줄 없이 붙여 배치"),
+			APLabelCenterSlot->GetPadding(), FMargin(12.f, 6.f, 12.f, 34.f));
+		TestEqual(TEXT("AP 숫자는 제목 바로 아래 배치"),
+			APValueCenterSlot->GetPadding(), FMargin(10.f, 26.f, 10.f, 5.f));
 	}
 	const UWidget* MoveCard = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	const UCanvasPanelSlot* MoveCardSlot = MoveCard != nullptr

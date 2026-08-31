@@ -1699,7 +1699,7 @@ namespace CombatHUDWidgetBuilder
 				UOverlay* LabelCenter = FindOrCreate<UOverlay>(Blueprint,
 					TEXT("TurnAPLabel_Center"));
 				EnsureParent(BadgeMount, LabelCenter);
-				SetOverlayLayout(LabelCenter, FMargin(12.f, 6.f, 12.f, 40.f),
+				SetOverlayLayout(LabelCenter, FMargin(12.f, 6.f, 12.f, 34.f),
 					HAlign_Fill, VAlign_Fill);
 				UTextBlock* APLabel = FindOrCreate<UTextBlock>(Blueprint,
 					TEXT("TurnAPLabel"));
@@ -1720,7 +1720,7 @@ namespace CombatHUDWidgetBuilder
 					TEXT("TurnAPText_Center")))
 				{
 					EnsureParent(BadgeMount, TextCenter);
-					SetOverlayLayout(TextCenter, FMargin(10.f, 32.f, 10.f, 5.f),
+					SetOverlayLayout(TextCenter, FMargin(10.f, 26.f, 10.f, 5.f),
 						HAlign_Fill, VAlign_Fill);
 				}
 			}
