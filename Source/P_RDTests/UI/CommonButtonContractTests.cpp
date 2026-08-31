@@ -1,6 +1,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
+#include "Components/ScaleBox.h"
 #include "Components/TextBlock.h"
 #include "Editor.h"
 #include "Misc/AutomationTest.h"
@@ -177,6 +178,66 @@ bool FCommonPassiveLayerContractTest::RunTest(const FString& Parameters)
 
 	TestTrue(TEXT("메인 화면 장식 레이어를 실제로 검사함"),
 		AuditedDecorationCount > 100);
+	return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCommonTextClippingContractTest,
+	"P_RD.UI.Common.AutoFitTextIsNotClipped",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCommonTextClippingContractTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = GEditor != nullptr
+		? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("에디터 월드"), World))
+	{
+		return false;
+	}
+
+	int32 AuditedScaleBoxCount = 0;
+	for (const FScreenContract& Screen : MainScreens)
+	{
+		UClass* WidgetClass = LoadClass<UUserWidget>(nullptr, Screen.ClassPath);
+		if (WidgetClass == nullptr
+			|| !WidgetClass->IsChildOf(URDUserWidget::StaticClass()))
+		{
+			continue;
+		}
+		URDUserWidget* Widget = CreateWidget<URDUserWidget>(World, WidgetClass);
+		if (Widget == nullptr || Widget->WidgetTree == nullptr)
+		{
+			AddError(FString::Printf(TEXT("%s: instance creation failed"), Screen.Label));
+			continue;
+		}
+		const TSharedRef<SWidget> Slate = Widget->TakeWidget();
+		Widget->NormalizeCommonUIContractForTest();
+
+		Widget->WidgetTree->ForEachWidgetAndDescendants(
+			[this, &AuditedScaleBoxCount, &Screen](UWidget* Child)
+				{
+					UScaleBox* Scale = Cast<UScaleBox>(Child);
+					if (Scale == nullptr)
+					{
+						return;
+					}
+					const FString Name = Scale->GetName();
+					if (!Name.EndsWith(TEXT("_AutoFit")) && !Name.EndsWith(TEXT("_Fit")))
+					{
+						return;
+					}
+					++AuditedScaleBoxCount;
+					if (Scale->GetClipping() != EWidgetClipping::Inherit)
+					{
+						AddError(FString::Printf(
+							TEXT("%s: text scale box '%s' still clips glyphs"),
+							Screen.Label, *Name));
+					}
+				});
+	}
+
+	TestTrue(TEXT("글자 배율 상자를 실제로 검사함"), AuditedScaleBoxCount > 20);
+	AddInfo(FString::Printf(TEXT("Audited %d text scale boxes"), AuditedScaleBoxCount));
 	return !HasAnyErrors();
 }
 

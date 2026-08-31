@@ -217,6 +217,7 @@ void URDUserWidget::NativeOnInitialized()
 	Super::NativeOnInitialized();
 
 	NormalizeCommonInputLayers();
+	NormalizeAutoFitTextClipping();
 	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
 	SetupCommonButtonFeedback();
 }
@@ -229,6 +230,7 @@ void URDUserWidget::NativeConstruct()
 	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
 	// 현재 호출과 다음 틱 재검사를 함께 두면 두 종류 모두 같은 소리를 쓴다.
 	NormalizeCommonInputLayers();
+	NormalizeAutoFitTextClipping();
 	SetupCommonButtonFeedback();
 	if (UWorld* World = GetWorld())
 	{
@@ -236,6 +238,7 @@ void URDUserWidget::NativeConstruct()
 			FTimerDelegate::CreateWeakLambda(this, [this]()
 				{
 					NormalizeCommonInputLayers();
+					NormalizeAutoFitTextClipping();
 					SetupCommonButtonFeedback();
 				}));
 	}
@@ -267,6 +270,42 @@ void URDUserWidget::NormalizeCommonInputLayers()
 				&& Widget->GetVisibility() == ESlateVisibility::Visible)
 			{
 				Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+		});
+}
+
+void URDUserWidget::NormalizeAutoFitTextClipping()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			// 글자 배율 상자의 이름 규칙은 둘이다 -- 전투/공용 화면은 _AutoFit,
+			// 고용판은 _Fit 을 쓴다. 둘 다 같은 계약으로 다룬다.
+			UScaleBox* AutoFit = Cast<UScaleBox>(Widget);
+			if (AutoFit == nullptr)
+			{
+				return;
+			}
+			const FString ScaleName = AutoFit->GetName();
+			if (ScaleName.EndsWith(TEXT("_AutoFit")) == false
+				&& ScaleName.EndsWith(TEXT("_Fit")) == false)
+			{
+				return;
+			}
+			AutoFit->SetClipping(EWidgetClipping::Inherit);
+			// 글자를 감싼 가운데맞춤 판이 대신 자르면 같은 증상이 남는다.
+			if (UWidget* Center = AutoFit->GetParent();
+				Center != nullptr && Center->GetName().EndsWith(TEXT("_Center")))
+			{
+				Center->SetClipping(EWidgetClipping::Inherit);
+			}
+			if (UWidget* Content = AutoFit->GetContent())
+			{
+				Content->SetClipping(EWidgetClipping::Inherit);
 			}
 		});
 }
