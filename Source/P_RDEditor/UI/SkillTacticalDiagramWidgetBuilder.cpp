@@ -215,7 +215,8 @@ namespace SkillTacticalDiagramWidgetBuilder
 		// 피해/치명타는 작은 모바일 수치 행에서도 한 번에 읽히도록 단순화한
 		// 전용 에셋을 런타임이 하드 참조한다. 존재 확인만 한다.
 		ArtTexture(TEXT("T_SkillStat_Damage_Simple_v2"));
-		ArtTexture(TEXT("T_SkillStat_Critical_Simple_v2"));
+		Texture(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
+			"T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1"));
 
 		UWidgetBlueprint* Blueprint = EnsureBlueprint();
 		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
