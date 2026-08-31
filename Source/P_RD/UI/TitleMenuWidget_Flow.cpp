@@ -6,6 +6,7 @@
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
 #include "GameMode/FrontendGameMode.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "UI/SettingsPanelWidget.h"
 
@@ -138,6 +139,7 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SetWidgetAndGeneratedParentVisibility(StartButtonText, ESlateVisibility::Collapsed);
 		SetWidgetAndGeneratedParentVisibility(ContinueButtonText, ESlateVisibility::Collapsed);
 		SetWidgetAndGeneratedParentVisibility(SettingsButtonText, ESlateVisibility::Collapsed);
+		SetWidgetAndGeneratedParentVisibility(ExitButton, ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("TitleLogoImage"), ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("StartButtonFrameImage"), ESlateVisibility::Collapsed);
 		SetNamedWidgetAndGeneratedParentVisibility(this, TEXT("ContinueButtonFrameImage"), ESlateVisibility::Collapsed);
@@ -215,6 +217,12 @@ void UTitleMenuWidget::RefreshMainMenuState() const
 		SettingsButton->SetVisibility(ESlateVisibility::Visible);
 		SettingsButton->SetIsEnabled(true);
 	}
+
+	if (ExitButton != nullptr)
+	{
+		ExitButton->SetVisibility(ESlateVisibility::Visible);
+		ExitButton->SetIsEnabled(true);
+	}
 }
 
 /** @brief 현재 프론트엔드 GameMode가 이어가기 가능한 활성 Run을 갖는지 확인한다. */
@@ -277,6 +285,13 @@ void UTitleMenuWidget::HandleContinueButtonClicked()
 void UTitleMenuWidget::HandleSettingsButtonClicked()
 {
 	OpenSettingsPanel();
+}
+
+/** @brief EXIT 버튼 입력으로 게임을 끝낸다. */
+void UTitleMenuWidget::HandleExitButtonClicked()
+{
+	UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(),
+		EQuitPreference::Quit, /*bIgnorePlatformRestrictions=*/false);
 }
 
 /** @brief 설정 화면 Back 요청을 타이틀 메인 복귀로 처리한다. */
