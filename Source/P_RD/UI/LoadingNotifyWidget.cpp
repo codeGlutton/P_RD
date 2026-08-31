@@ -7,7 +7,9 @@
 #include "Engine/World.h"
 #include "Math/UnrealMathUtility.h"
 #include "TimerManager.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "UI/ViewportZOrderType.h"
+#include "UObject/UObjectIterator.h"
 
 #define LOCTEXT_NAMESPACE "LoadingNotifyWidget"
 
@@ -21,6 +23,16 @@ ULoadingNotifyWidget::ULoadingNotifyWidget(const FObjectInitializer& ObjectIniti
 {
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::LoadingNotify);
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+void ULoadingNotifyWidget::SetVisibleDurationsForTest(float MinimumVisibleSeconds,
+	float CompletedVisibleSeconds, float CloseAnimationSeconds)
+{
+	mMinimumVisibleSeconds = MinimumVisibleSeconds;
+	mCompletedVisibleSeconds = CompletedVisibleSeconds;
+	mCloseAnimationSeconds = CloseAnimationSeconds;
+}
+#endif
 
 /**
  * WBP 루트가 없을 때 네이티브 최소 화면을 만든다.
@@ -54,7 +66,13 @@ void ULoadingNotifyWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	if (mLoadingState != ELoadingNotifyState::Loading || mLoadingIndicator == nullptr)
+	if (mLoadingState != ELoadingNotifyState::Loading)
+	{
+		return;
+	}
+
+	SuppressRunOptionsRails();
+	if (mLoadingIndicator == nullptr)
 	{
 		return;
 	}
@@ -86,6 +104,7 @@ void ULoadingNotifyWidget::PlayOpenUIAnimation_Implementation()
 	}
 
 	SetLoadingState(ELoadingNotifyState::Loading);
+	SuppressRunOptionsRails();
 	ApplyIndicatorAlpha(1.0f);
 	FinishOpenUI();
 }
@@ -242,7 +261,47 @@ void ULoadingNotifyWidget::ShowCompletedState()
 void ULoadingNotifyWidget::FinishCompletedState()
 {
 	SetLoadingState(ELoadingNotifyState::None);
+	RestoreRunOptionsRails();
 	FinishCloseUI();
+}
+
+void ULoadingNotifyWidget::NativeDestruct()
+{
+	RestoreRunOptionsRails();
+	Super::NativeDestruct();
+}
+
+void ULoadingNotifyWidget::SuppressRunOptionsRails()
+{
+	UWorld* ThisWorld = GetWorld();
+	for (TObjectIterator<URunOptionsRailWidget> It; It; ++It)
+	{
+		URunOptionsRailWidget* Rail = *It;
+		if (Rail == nullptr || Rail->GetWorld() != ThisWorld
+			|| Rail->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			continue;
+		}
+
+		if (!mSuppressedRunOptionsRails.Contains(Rail))
+		{
+			mSuppressedRunOptionsRails.Add(Rail, Rail->GetVisibility());
+		}
+		Rail->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void ULoadingNotifyWidget::RestoreRunOptionsRails()
+{
+	for (const TPair<TWeakObjectPtr<URunOptionsRailWidget>, ESlateVisibility>& Entry
+		: mSuppressedRunOptionsRails)
+	{
+		if (URunOptionsRailWidget* Rail = Entry.Key.Get())
+		{
+			Rail->SetVisibility(Entry.Value);
+		}
+	}
+	mSuppressedRunOptionsRails.Reset();
 }
 
 #undef LOCTEXT_NAMESPACE
