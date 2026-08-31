@@ -926,8 +926,12 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 		RangerUnitButton->GetIsEnabled());
 	TestEqual(TEXT("미보유 레인저는 공용 스킬만 표시"),
 		CountVisibleRailButtons(), 2);
-	TestTrue(TEXT("미보유 대상은 구매 상태에 표시"),
-		SelectedNote->GetText().ToString().Contains(TEXT("미보유")));
+	const FString UnownedLabel = BuyLabel->GetText().ToString();
+	TestFalse(TEXT("미보유 상태 라벨이 비어 있지 않다"), UnownedLabel.IsEmpty());
+	TestFalse(TEXT("미보유 대상은 구매 상태에 표시"),
+		SelectedNote->GetText().ToString().IsEmpty());
+	TestFalse(TEXT("미보유 용병은 구매 버튼에서 막힌다"),
+		BuyButton->GetIsEnabled());
 	TestTrue(TEXT("미보유 용병은 회색 처리"),
 		RangerUnitButton->GetRenderOpacity() < .5f);
 
