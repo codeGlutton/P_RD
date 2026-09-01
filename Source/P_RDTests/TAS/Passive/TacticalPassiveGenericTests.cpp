@@ -21,6 +21,9 @@
 #include "TAS/Effect/Stat/TacticalEffect_HealFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
+#include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
+#include "TAS/Effect/TacticalEffectQuery.h"
+#include "GameplayTagType.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
@@ -205,6 +208,10 @@ bool FPassiveGenericBasicTest::RunTest(const FString& Parameters)
 	Ctx.mOwner = Actor;
 	Ctx.mTargets.Add(Actor);
 
+	// 미등록 타이밍: 반응 없음
+	DriveTiming(Passive, PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn")), Ctx);
+	TestEqual(TEXT("미등록 타이밍: HealFactor 1 유지"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute()), 1.f);
+
 	// 발동: 힐 배율 1.25 적용
 	DriveTiming(Passive, OnStartRoom, Ctx);
 	TestEqual(TEXT("OnStartRoom 발동: HealFactor 1.25"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute()), 1.25f);
@@ -351,6 +358,38 @@ bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 			TestEqual(FString::Printf(TEXT("리셋 후 %d번째 사용, 기대 AttackFactor %.0f"), Hit, ExpectedOnHit), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), ExpectedOnHit);
 			DriveTiming(Passive, OnEndUsingSkill, Ctx);
 		}
+	}
+
+	// 카운터 전진 검증: 다른 조건에 막혀 미발동이어도 카운터는 매번 증가
+	{
+		UStaticPassiveData* Data = MakeCounterData();
+		Data->mConditions.Add(MakeCondition(
+			MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Self),
+			EPassiveCompareOp::Less,
+			MakeConstOperand(50.f)));
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+
+		// Self 조건은 소유자 스냅샷으로 판정하므로 HP 변경 시마다 스냅샷 갱신
+		FPassiveActivateContext SnapshotCtx;
+		SnapshotCtx.mOwner = Actor;
+		SnapshotCtx.mTargets.Add(Actor);
+
+		// HP 80: 조건 통과하지 못해서 1, 2회째는 발동 안함 (카운터는 쌓임)
+		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
+		SnapshotCtx.mOwnerSnapshot = Actor->MakeSnapshotData();
+		for (int32 Hit = 1; Hit <= 2; ++Hit)
+		{
+			DriveTiming(Passive, OnStartUsingSkill, SnapshotCtx);
+			TestEqual(FString::Printf(TEXT("HP 조건 불통과 %d번째: 미발동"), Hit), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
+			DriveTiming(Passive, OnEndUsingSkill, SnapshotCtx);
+		}
+
+		// HP 40으로 조건 해소: 막힌 회차도 세었으므로 3회째에 바로 발동
+		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 40.f);
+		SnapshotCtx.mOwnerSnapshot = Actor->MakeSnapshotData();
+		DriveTiming(Passive, OnStartUsingSkill, SnapshotCtx);
+		TestEqual(TEXT("조건 해소 후 3회째: 발동"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
+		DriveTiming(Passive, OnEndUsingSkill, SnapshotCtx);
 	}
 
 	return true;
@@ -644,6 +683,78 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 		DriveTiming(Passive, OnEndTurn, Ctx);
 		TestEqual(TEXT("해제: AttackFactor 10"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 10.f);
 		TestEqual(TEXT("해제: HealFactor 1"), Comp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetHealFactorAttribute()), 1.f);
+	}
+
+	return true;
+}
+
+/**
+ * @brief 태그형 이펙트 테스트
+ * 상태이상 스택 부여와 Infinite 태그의 부여/회수가 제네릭 경로로 동작하는지 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveGenericTagTest,
+	"P_RD.TAS.Passive.Generic.Tag",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
+{
+	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
+	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
+
+	// 검증 대상 태그: 취약
+	const FGameplayTag VulnerabilityTag = EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability;
+
+	// 상태이상 스택: 수치가 스택 수로 들어감
+	{
+		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		if (Actor == nullptr)
+		{
+			return false;
+		}
+		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+		TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+		// 취약 3스택을 주는 DA
+		UStaticPassiveData* Data = MakeGenericData(OnEndTurn, FGameplayTag(), UTacticalEffect_GetVulnerability::StaticClass(), MakeConstOperand(3.f));
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Actor;
+		Ctx.mTargets.Add(Actor);
+
+		DriveTiming(Passive, OnEndTurn, Ctx);
+		TestTrue(TEXT("발동: 취약 태그 보유"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+		const FTacticalEffectQuery VulnerabilityQuery = FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(FGameplayTagContainer(VulnerabilityTag));
+		TestEqual(TEXT("취약 스택은 3"), Comp->GetAggregatedStackCount(VulnerabilityQuery), 3);
+	}
+
+	// Infinite 태그 부여: 해제 시 태그 회수
+	{
+		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		if (Actor == nullptr)
+		{
+			return false;
+		}
+		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+		TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+		// GrantedTags 목 이펙트를 턴 동안 유지하는 DA
+		UStaticPassiveData* Data = MakeGenericData(OnStartTurn, OnEndTurn, UMockGrantedTagTacticalEffect::StaticClass(), MakeConstOperand(1.f));
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Actor;
+		Ctx.mTargets.Add(Actor);
+
+		// 발동: 태그 부여
+		DriveTiming(Passive, OnStartTurn, Ctx);
+		TestTrue(TEXT("발동: 취약 태그 보유"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
+
+		// 해제: 핸들 제거와 함께 태그 회수
+		DriveTiming(Passive, OnEndTurn, Ctx);
+		TestFalse(TEXT("해제: 취약 태그 회수"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 	}
 
 	return true;
