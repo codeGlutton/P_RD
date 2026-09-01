@@ -18,12 +18,8 @@ public:
 	UFUNCTION()
 	void HandleClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
-	UFUNCTION()
-	void HandlePresentationFinished();
-
 	int32 mRequestCount = 0;
 	int32 mConfirmationCount = 0;
-	int32 mPresentationFinishedCount = 0;
 	ERewardClaimKind mLastRequestKind = ERewardClaimKind::Gold;
 	ERewardClaimKind mLastConfirmationKind = ERewardClaimKind::Gold;
 	int32 mLastRequestChoiceIndex = INDEX_NONE;

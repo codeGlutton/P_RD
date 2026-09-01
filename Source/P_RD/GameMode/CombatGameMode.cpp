@@ -510,8 +510,6 @@ void ACombatGameMode::InitializeCombat()
 	// HUD가 먼저 만들어져 앵커를 등록한 경우에도 구독 직후 같은 값을 카메라에 적용한다.
 	HandleChangeFocusScreenAnchor(mCombatUIModel->GetFocusScreenAnchor());
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
-	mRewardUIModel->OnRewardClaimed.AddUniqueDynamic(
-		this, &ACombatGameMode::HandleRewardPresentationFinished);
 	mRewardUIModel->OnRewardSelectionRequested.AddUniqueDynamic(
 		this, &ACombatGameMode::HandleRewardSelectionRequested);
 
@@ -824,14 +822,6 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 	{
 		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
 	}
-}
-
-void ACombatGameMode::HandleRewardPresentationFinished()
-{
-	// 전투 종료 직후의 저장은 보상을 누르기 전에 실행된다. 각 행을 누를 때마다
-	// 비동기 저장을 겹치지 않고, 전체 보상 연출이 끝난 시점에 최종 레벨/EXP,
-	// 골드와 선택 보상을 한 번만 체크포인트로 남긴다.
-	SaveRunWithUIAsync();
 }
 
 void ACombatGameMode::HandleRewardSelectionRequested(
