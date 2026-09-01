@@ -84,6 +84,8 @@ class P_RD_API UStaticPassiveData : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
+	UStaticPassiveData();
+
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
 		return FPrimaryAssetId(SkillPrimaryAssetTypes::GetPassiveType(), GetFName());

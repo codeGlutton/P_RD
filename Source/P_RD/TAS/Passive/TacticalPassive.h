@@ -163,6 +163,18 @@ protected:
 	virtual void OnCapture(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) {}
 
 	/**
+	 * @brief 발동 시점 처리 (게이트 → 계산 → 적용)
+	 *
+	 * @details
+	 * 기본은 수량 게이트 통과 시 EvaluateActivate로 수치를 계산해 멤버 이펙트를 적용.
+	 * 발동 순서가 다른 패시브(Generic)가 통째로 override.
+	 *
+	 * @param Ctx          소유자/대상 및 스냅샷
+	 * @param PassiveState [in,out] 패시브 내부 상태
+	 */
+	virtual void OnActivate(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState);
+
+	/**
 	 * @brief 내부 상태 최초 생성
 	 *
 	 * @details
@@ -194,16 +206,18 @@ protected:
 	 * EffectTarget이 Self면 소유자에게만, Targets면 Ctx.mTargets 전부에 적용.
 	 * 적용한 핸들은 mActiveHandles에 저장.
 	 *
-	 * @param Ctx          소유자/대상 및 스냅샷
-	 * @param EffectClass  적용할 이펙트 클래스
-	 * @param Magnitude    적용 수치
-	 * @param EffectTarget 적용 대상 (Self / Targets)
+	 * @param Ctx              소유자/대상 및 스냅샷
+	 * @param EffectClass      적용할 이펙트 클래스
+	 * @param Magnitude        적용 수치
+	 * @param EffectTarget     적용 대상 (Self / Targets)
+	 * @param bRefreshPrevious 적용 전에 이전 핸들 배치를 제거할지 (효과 배열은 첫 적용 전 1회만 제거해야 하므로 false로 호출)
 	 */
 	void NotifyPassive(
 		IN const FPassiveActivateContext& Ctx,
 		IN TSubclassOf<UTacticalEffect> EffectClass,
 		IN float Magnitude,
-		IN EPassiveEffectTarget EffectTarget);
+		IN EPassiveEffectTarget EffectTarget,
+		IN bool bRefreshPrevious = true);
 
 	/**
 	 * @brief 수량 조건 판정

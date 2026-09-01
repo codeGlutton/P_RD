@@ -47,29 +47,38 @@ void UTacticalPassive::ActivatePassive(
 		OnCapture(Ctx, PassiveState);
 	}
 
-	// 발동 시점: 적용 여부를 묻고 참이면 이펙트 적용
+	// 발동 시점: 발동 경로 처리 (게이트 → 계산 → 적용)
 	if (TimingTag == mActivateTimingTag)
 	{
-		// 수량 조건(quantifier) 게이트: 자격 타겟 수가 기준 미달이면 발동하지 않음
-		if (PassesTargetQuantifier(Ctx, PassiveState))
-		{
-			// 발동 시 대상에게 가할 기여값(크기)
-			float ContributionMagnitude = 0.f;
-
-			// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
-			// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
-			if (EvaluateActivate(Ctx, PassiveState, ContributionMagnitude))
-			{
-				// 계산된 수치를 이펙트로 적용
-				NotifyPassive(Ctx, ContributionMagnitude);
-			}
-		}
+		OnActivate(Ctx, PassiveState);
 	}
 
 	// 해제 시점: 적용 중인 이펙트를 제거 (핸들 없으면 내부에서 no-op)
 	if (TimingTag == mDeactivateTimingTag)
 	{
 		DeactivatePassive();
+	}
+}
+
+void UTacticalPassive::OnActivate(
+	const FPassiveActivateContext& Ctx,
+	TInstancedStruct<FDynamicPassiveData>& PassiveState)
+{
+	// 수량 조건(quantifier) 게이트: 자격 타겟 수가 기준 미달이면 발동하지 않음
+	if (PassesTargetQuantifier(Ctx, PassiveState) == false)
+	{
+		return;
+	}
+
+	// 발동 시 대상에게 가할 기여값(크기)
+	float ContributionMagnitude = 0.f;
+
+	// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
+	// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
+	if (EvaluateActivate(Ctx, PassiveState, ContributionMagnitude))
+	{
+		// 계산된 수치를 이펙트로 적용
+		NotifyPassive(Ctx, ContributionMagnitude);
 	}
 }
 
@@ -108,7 +117,8 @@ void UTacticalPassive::NotifyPassive(
 	const FPassiveActivateContext& Ctx,
 	TSubclassOf<UTacticalEffect> EffectClass,
 	const float Magnitude,
-	const EPassiveEffectTarget EffectTarget)
+	const EPassiveEffectTarget EffectTarget,
+	const bool bRefreshPrevious)
 {
 	// 적용할 이펙트가 없으면(계산 전용/무상태 등) 적용하지 않음
 	if (EffectClass == nullptr)
@@ -150,8 +160,8 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
-	// 이전 핸들이 남아있으면 먼저 제거
-	if (mActiveHandles.Num() > 0)
+	// 이전 핸들이 남아있으면 먼저 제거 (효과 배열 적용 중에는 호출자가 false로 끔)
+	if (bRefreshPrevious && mActiveHandles.Num() > 0)
 	{
 		DeactivatePassive();
 	}
