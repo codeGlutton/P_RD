@@ -59,33 +59,44 @@ TArray<FRarityRate> ULevelAttributeSet::GetRarityRates(const UObject* WorldConte
 FRarityRate ULevelAttributeSet::GetRarityRate(const UObject* WorldContextObject, int32 Level)
 {
 	FRarityRate Rate;
-
-	if (WorldContextObject == nullptr)
-	{
-		return Rate;
-	}
-
-	const UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(WorldContextObject);
-	if (TacticalFrameworkModel == nullptr)
-	{
-		return Rate;
-	}
-
-	FTacticalAttributeSetInitter* Initter = const_cast<UTacticalFrameworkModel*>(TacticalFrameworkModel)->GetAttributeSetInitter();
-	if (Initter == nullptr)
-	{
-		return Rate;
-	}
-
-	const float CommonWeight = Initter->GetAttributeSetValue(ULevelAttributeSet::StaticClass(), GetCommonSkillWeightAttribute().GetUProperty(), KEY_NAME, Level);
-	const float RareWeight = Initter->GetAttributeSetValue(ULevelAttributeSet::StaticClass(), GetRareSkillWeightAttribute().GetUProperty(), KEY_NAME, Level);
-	const float EpicWeight = Initter->GetAttributeSetValue(ULevelAttributeSet::StaticClass(), GetEpicSkillWeightAttribute().GetUProperty(), KEY_NAME, Level);
-
-	Rate.mWeights[static_cast<uint8>(ERarityType::Common)] = CommonWeight;
-	Rate.mWeights[static_cast<uint8>(ERarityType::Rare)] = RareWeight;
-	Rate.mWeights[static_cast<uint8>(ERarityType::Epic)] = EpicWeight;
-
+	TryGetRarityRate(WorldContextObject, Level, OUT Rate);
 	return Rate;
+}
+
+bool ULevelAttributeSet::TryGetRarityRate(const UObject* WorldContextObject, int32 Level, OUT FRarityRate& OutRate)
+{
+	OutRate = FRarityRate();
+	if (WorldContextObject == nullptr || Level < 1)
+	{
+		return false;
+	}
+
+	const TArray<FRarityRate> RarityRates = GetRarityRates(WorldContextObject);
+	const int32 LevelIndex = Level - 1;
+	if (RarityRates.IsValidIndex(LevelIndex) == false)
+	{
+		return false;
+	}
+
+	const FRarityRate& Candidate = RarityRates[LevelIndex];
+	bool HasPositiveWeight = false;
+	for (uint8 RarityIndex = 0; RarityIndex < static_cast<uint8>(ERarityType::Count); ++RarityIndex)
+	{
+		const float Weight = Candidate.mWeights[RarityIndex];
+		if (FMath::IsFinite(Weight) == false || Weight < 0.f)
+		{
+			return false;
+		}
+		HasPositiveWeight |= Weight > 0.f;
+	}
+
+	if (HasPositiveWeight == false)
+	{
+		return false;
+	}
+
+	OutRate = Candidate;
+	return true;
 }
 
 TArray<float> ULevelAttributeSet::GetPrices(const UObject* WorldContextObject)
