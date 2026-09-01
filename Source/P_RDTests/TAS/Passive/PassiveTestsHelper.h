@@ -23,6 +23,7 @@
 #include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
 #include "TAS/Passive/TacticalPassive_AddStat.h"
+#include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "GameplayTagType.h"
 #include "PassiveTestsHelper.generated.h"
@@ -114,8 +115,11 @@ public:
 	float mQualifyHPBelow = 50.f;
 
 protected:
-	virtual bool IsTargetQualified(const UBoardCombatTargetSnapshotData* Snapshot) const override
+	virtual bool IsTargetQualified(const FPassiveActivateContext& Ctx, int32 TargetIndex, const TInstancedStruct<FDynamicPassiveData>& State) const override
 	{
+		// 스냅샷이 짝으로 있으면 사용, 없으면 스냅샷과 실제객체가 다르므로 자격 없음
+		const UBoardCombatTargetSnapshotData* Snapshot =
+			Ctx.mTargetSnapshots.IsValidIndex(TargetIndex) ? Ctx.mTargetSnapshots[TargetIndex] : nullptr;
 		if (Snapshot == nullptr)
 		{
 			return false;
