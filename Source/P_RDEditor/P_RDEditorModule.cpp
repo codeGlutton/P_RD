@@ -2,6 +2,7 @@
 #include "PropertyEditorModule.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 #include "DataAsset/SkillData/StaticSkillDataPropertyCustomization.h"
+#include "DataAsset/TacticalAttributePropertyDetails.h"
 #include "UI/MarchboundHireWidgetBuilder.h"
 #include "UI/CombatHUDWidgetBuilder.h"
 #include "UI/RewardSettlementWidgetBuilder.h"
@@ -59,8 +60,12 @@ void FP_RDEditorModule::StartupModule()
 			FOnGetDetailCustomizationInstance::CreateStatic(&FStaticSkillDataPropertyCustomization::MakeInstance)
 		);
 		PropertyModule.RegisterCustomPropertyTypeLayout(
-			"BoardEventTriggerData", 
+			"BoardEventTriggerData",
 			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FBoardEventChannelDetailsCustomization::MakeInstance)
+		);
+		PropertyModule.RegisterCustomPropertyTypeLayout(
+			"TacticalAttribute",
+			FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FTacticalAttributePropertyDetails::MakeInstance)
 		);
 	}
 
@@ -113,6 +118,7 @@ void FP_RDEditorModule::ShutdownModule()
 	{
 		FPropertyEditorModule& PropertyModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyModule.UnregisterCustomClassLayout(UStaticSkillData::StaticClass()->GetFName());
+		PropertyModule.UnregisterCustomPropertyTypeLayout("TacticalAttribute");
 	}
 
 	/* 보드 이벤트 트랙 등록 해제 */
