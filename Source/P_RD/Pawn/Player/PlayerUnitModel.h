@@ -96,7 +96,7 @@ public:
 	void PostChangeExperience(float OldExp, float NewExp);
 
 protected:
-	TArray<FPlayerLevelUpData> CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain);
+	TArray<FPlayerLevelUpData> CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain) const;
 	void LevelUp(const FPlayerLevelUpData& LevelUpData);
 
 public:

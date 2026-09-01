@@ -106,7 +106,7 @@ void UPlayerUnitModel::PostChangeExperience(float OldExp, float NewExp)
 	}
 }
 
-TArray<FPlayerLevelUpData> UPlayerUnitModel::CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain)
+TArray<FPlayerLevelUpData> UPlayerUnitModel::CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain) const
 {
 	TArray<FPlayerLevelUpData> Result;
 
