@@ -81,6 +81,15 @@ int32 UPlayerUnitModel::GetPlayerLevel() const
     return mPlayerLevel;
 }
 
+TArray<FPlayerLevelUpData> UPlayerUnitModel::PredictLevelChange(float ExpGain) const
+{
+	UAttributeSetComponentModel* AttributeSetCompModel = GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	TArray<FPlayerLevelUpData> LevelUpDatas = CalculateLevelChange(mPlayerLevel, AttributeSetCompModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute()), ExpGain);
+	return LevelUpDatas;
+}
+
 void UPlayerUnitModel::PostChangeExperience(float OldExp, float NewExp)
 {
 	UAttributeSetComponentModel* AttributeSetCompModel = GetAttributeComponentModel();

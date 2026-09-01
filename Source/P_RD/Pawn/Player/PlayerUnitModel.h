@@ -92,6 +92,7 @@ public:
 	UArtifactComponentModel* GetArtifactComponentModel() const;
 
 public:
+	TArray<FPlayerLevelUpData> PredictLevelChange(float ExpGain) const;
 	void PostChangeExperience(float OldExp, float NewExp);
 
 protected:
