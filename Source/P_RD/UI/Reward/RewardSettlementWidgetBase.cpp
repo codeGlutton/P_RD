@@ -890,8 +890,13 @@ void URewardSettlementWidgetBase::RefreshMercenaryRow(const int32 RowIndex,
 	if (UTextBlock* Level = FindIndexedWidget<UTextBlock>(
 		this, TEXT("SettlementMercenaryLevel"), RowIndex))
 	{
-		Level->SetText(FText::Format(LOCTEXT("Level", "Lv.{0}"),
-			FText::AsNumber(Mercenary.mLevel)));
+		const int32 FinalLevel = Mercenary.mLevelAfter > 1
+			? Mercenary.mLevelAfter : Mercenary.mLevel;
+		Level->SetText(Mercenary.GetLevelUpCount() > 0
+			? FText::Format(LOCTEXT("LevelUpResult", "Lv.{0} ↑"),
+				FText::AsNumber(FinalLevel))
+			: FText::Format(LOCTEXT("Level", "Lv.{0}"),
+				FText::AsNumber(FinalLevel)));
 	}
 
 	const float Percent = Mercenary.mMaxExp > 0.0f
@@ -920,8 +925,12 @@ void URewardSettlementWidgetBase::RefreshMercenaryRow(const int32 RowIndex,
 	if (UTextBlock* XP = FindIndexedWidget<UTextBlock>(
 		this, TEXT("SettlementXPText"), RowIndex))
 	{
-		XP->SetText(FText::Format(LOCTEXT("XPBadge", "+{0} XP"),
-			FText::AsNumber(ExpGained)));
+		XP->SetText(Mercenary.GetLevelUpCount() > 0
+			? FText::Format(LOCTEXT("XPLevelUpBadge", "+{0} XP · ↑{1}"),
+				FText::AsNumber(ExpGained),
+				FText::AsNumber(Mercenary.GetLevelUpCount()))
+			: FText::Format(LOCTEXT("XPBadge", "+{0} XP"),
+				FText::AsNumber(ExpGained)));
 	}
 }
 

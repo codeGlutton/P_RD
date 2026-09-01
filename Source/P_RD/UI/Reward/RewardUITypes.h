@@ -4,14 +4,32 @@
 // @file RewardUITypes.h
 // 전투 뷰모델과 같은 원칙: UI는 게임플레이 객체를 직접 알지 않고 표시값만 받아 그린다.
 // 돈(골드), 경험치, 룸이 지급하는 항목 보상을 같은 패턴으로 표시한다.
-// 보상 화면에는 시간 기반 카운트업/막대 애니메이션을 사용하지 않는다.
-// 전/후 값은 정적인 결과 문구(현재 잔액, 레벨과 EXP 진행도)를 즉시 그리는 용도다.
+// 정산 화면은 전/후 값을 즉시 그릴 수 있고, RewardConcept03은 같은 데이터를
+// 레벨 구간별 게이지 애니메이션으로 재생한다.
 
 #include "RDMinimal.h"
 
 #include "RewardUITypes.generated.h"
 
 class UTexture2D;
+
+/** @brief 경험치 보상 한 번이 한 레벨 구간에서 이동하는 진행도. */
+USTRUCT(BlueprintType)
+struct FRewardExpProgressStepUI
+{
+	GENERATED_BODY()
+
+	/** 이 구간을 시작할 때의 레벨. */
+	UPROPERTY(BlueprintReadOnly) int32 mLevelBefore = 1;
+	/** 이 구간을 마친 뒤의 레벨. 임계치를 넘지 않으면 mLevelBefore와 같다. */
+	UPROPERTY(BlueprintReadOnly) int32 mLevelAfter = 1;
+	UPROPERTY(BlueprintReadOnly) float mExpBefore = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mExpAfter = 0.f;
+	/** 이 구간 레벨의 실제 필요 경험치. */
+	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+
+	bool IsLevelUp() const { return mLevelAfter > mLevelBefore; }
+};
 
 /** @brief 경험치 보상을 받는 용병 한 명의 지급 전/후 표시값. */
 USTRUCT(BlueprintType)
@@ -22,10 +40,25 @@ struct FRewardMercenaryExpUI
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	/** @brief 정산 행에 표시할 실제 용병 얼굴 아이콘. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
+	/** 구형 WBP 호환 필드. 새 데이터에서는 최종 레벨과 같다. */
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 1;
+	/** 0은 구형 단일 레벨 payload에서 범위가 지정되지 않았다는 뜻이다. */
+	UPROPERTY(BlueprintReadOnly) int32 mLevelBefore = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mLevelAfter = 0;
 	UPROPERTY(BlueprintReadOnly) float mExpBefore = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mExpAfter = 0.f;
+	/** 최종 레벨에서 다음 레벨까지 필요한 경험치. */
 	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+	/**
+	 * 레벨업 rollover를 포함한 표시 구간. 비어 있으면 위 구형 단일 구간
+	 * 필드로 그려 기존 Blueprint/테스트 데이터를 계속 지원한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<FRewardExpProgressStepUI> mProgressSteps;
+
+	int32 GetLevelUpCount() const
+	{
+		return FMath::Max(0, mLevelAfter - mLevelBefore);
+	}
 };
 
 /** @brief 전투 결과 보상 한 건의 표시값(돈·경험치). */
