@@ -15,8 +15,6 @@ UPlayerUnitModel::UPlayerUnitModel()
     SetGenericTeamId(EGameTeamType::Adventurer);
     
     mUnitAttributeSet = CreateDefaultSubobject<UPlayerUnitAttributeSet>(TEXT("PlayerUnitAttributeSet"));
-
-    // 아티펙트 컴포넌트 모델 등록
     mArtifactCompModel = CreateDefaultSubobject<UArtifactComponentModel>(TEXT("ArtifactComponentModel"));
 }
 
@@ -58,24 +56,16 @@ void UPlayerUnitModel::SetOwnerParty(UPartyModel* PartyModel)
         checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
 
         TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
-		RefreshMaxExperienceThreshold();
     }
 }
 
 void UPlayerUnitModel::SetPlayerLevel(int32 PlayerLevel)
 {
-	int32 NormalizedLevel = FMath::Max(1, PlayerLevel);
-	const int32 MaxPlayerLevel = GetMaxPlayerLevel();
-	if (MaxPlayerLevel > 0)
-	{
-		NormalizedLevel = FMath::Min(NormalizedLevel, MaxPlayerLevel);
-	}
+	int32 PrePlayerLevel = mPlayerLevel;
+	mPlayerLevel = PlayerLevel;
 
-	const bool LevelChanged = mPlayerLevel != NormalizedLevel;
-	mPlayerLevel = NormalizedLevel;
-	RefreshMaxExperienceThreshold();
-
-	if (LevelChanged)
+	const bool IsLevelChanged = mPlayerLevel != PrePlayerLevel;
+	if (IsLevelChanged == true)
 	{
 		OnChangePlayerLevel.Broadcast(this, mPlayerLevel);
 	}
@@ -91,253 +81,79 @@ int32 UPlayerUnitModel::GetPlayerLevel() const
     return mPlayerLevel;
 }
 
-TArray<float> UPlayerUnitModel::GetExperienceThresholds() const
+void UPlayerUnitModel::PostChangeExperience(float OldExp, float NewExp)
 {
-	TArray<float> Thresholds;
-	if (mStaticSpawnData == nullptr)
-	{
-		return Thresholds;
-	}
+	UAttributeSetComponentModel* AttributeSetCompModel = GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	const UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
-	if (TacticalFrameworkModel == nullptr)
+	const TArray<FPlayerLevelUpData> LevelUpDatas = CalculateLevelChange(mPlayerLevel, OldExp, NewExp - OldExp);
+	if (LevelUpDatas.IsEmpty() == false)
 	{
-		return Thresholds;
-	}
-
-	FTacticalAttributeSetInitter* Initter = const_cast<UTacticalFrameworkModel*>(TacticalFrameworkModel)->GetAttributeSetInitter();
-	if (Initter == nullptr)
-	{
-		return Thresholds;
-	}
-
-	const TArray<float> ConfiguredValues = Initter->GetAttributeSetValues(
-		UPlayerUnitAttributeSet::StaticClass(),
-		UPlayerUnitAttributeSet::GetMaxExpAttribute().GetUProperty(),
-		GetBoardActorKeyName());
-
-	Thresholds.Reserve(ConfiguredValues.Num());
-	for (const float Value : ConfiguredValues)
-	{
-		// 레벨 테이블은 1레벨부터 연속이어야 한다. 중간의 잘못된 값 이후는 사용하지 않는다.
-		if (FMath::IsFinite(Value) == false || Value <= 0.f)
+		AttributeSetCompModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, LevelUpDatas.Last().mCarryExp);
+		for (const FPlayerLevelUpData& Data : LevelUpDatas)
 		{
-			break;
+			LevelUp(Data);
 		}
-		Thresholds.Add(Value);
 	}
-	return Thresholds;
 }
 
-float UPlayerUnitModel::GetMaxExpForPlayerLevel(int32 PlayerLevel) const
+TArray<FPlayerLevelUpData> UPlayerUnitModel::CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain)
 {
-	const TArray<float> Thresholds = GetExperienceThresholds();
-	const int32 LevelIndex = PlayerLevel - 1;
-	return Thresholds.IsValidIndex(LevelIndex) ? Thresholds[LevelIndex] : 0.f;
-}
+	TArray<FPlayerLevelUpData> Result;
 
-int32 UPlayerUnitModel::GetMaxPlayerLevel() const
-{
-	return GetExperienceThresholds().Num();
-}
-
-FPlayerExpProgression UPlayerUnitModel::PreviewExperienceGain(float ExperienceGain) const
-{
-	float CurrentExp = 0.f;
-	if (const UAttributeSetComponentModel* ASC = GetAttributeComponentModel())
+	if (ExpGain <= 0.f)
 	{
-		CurrentExp = ASC->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-	}
-
-	return CalculateExperienceProgression(mPlayerLevel, CurrentExp, ExperienceGain, GetExperienceThresholds());
-}
-
-FPlayerExpProgression UPlayerUnitModel::CalculateExperienceProgression(
-	int32 StartingLevel,
-	float StartingExp,
-	float ExperienceGain,
-	const TArray<float>& Thresholds)
-{
-	FPlayerExpProgression Result;
-
-	TArray<float> ValidThresholds;
-	ValidThresholds.Reserve(Thresholds.Num());
-	for (const float Threshold : Thresholds)
-	{
-		if (FMath::IsFinite(Threshold) == false || Threshold <= 0.f)
-		{
-			break;
-		}
-		ValidThresholds.Add(Threshold);
-	}
-
-	const float SafeStartingExp = FMath::IsFinite(StartingExp) ? FMath::Max(0.f, StartingExp) : 0.f;
-	const float SafeExperienceGain = FMath::IsFinite(ExperienceGain) ? FMath::Max(0.f, ExperienceGain) : 0.f;
-	const int32 RequestedStartingLevel = FMath::Max(1, StartingLevel);
-
-	Result.mExperienceGain = SafeExperienceGain;
-	Result.mExpBefore = SafeStartingExp;
-
-	if (ValidThresholds.IsEmpty())
-	{
-		Result.mLevelBefore = RequestedStartingLevel;
-		Result.mLevelAfter = RequestedStartingLevel;
-		Result.mExpAfter = SafeStartingExp + SafeExperienceGain;
-		Result.mMaxExpAfter = 0.f;
-
-		FPlayerExpProgressStep& Step = Result.mSteps.AddDefaulted_GetRef();
-		Step.mLevelBefore = RequestedStartingLevel;
-		Step.mLevelAfter = RequestedStartingLevel;
-		Step.mExpBefore = SafeStartingExp;
-		Step.mExpAfter = Result.mExpAfter;
 		return Result;
 	}
 
-	const int32 MaxPlayerLevel = ValidThresholds.Num();
-	int32 CurrentLevel = FMath::Clamp(RequestedStartingLevel, 1, MaxPlayerLevel);
-	float CurrentExp = SafeStartingExp;
-	float RemainingExperience = SafeExperienceGain;
+	const int32 SafeMaxLevel = FMath::Max(1, ULevelAttributeSet::GetMaxLevel(this));
 
-	Result.mLevelBefore = CurrentLevel;
-	Result.mExpBefore = CurrentExp;
+	const int32 SafeStartLevel = FMath::Max(1, StartLevel);
+	const float SafeStartExp = FMath::Max(0.f, StartExp);
+	const float SafeExpGain = FMath::Max(0.f, ExpGain);
 
-	while (true)
+	int32 CurLevel = SafeStartLevel;
+	float CurStartExp = SafeStartExp;
+	float CurCarryExp = SafeStartExp + SafeExpGain;
+
+	while (SafeMaxLevel > CurLevel)
 	{
-		const float CurrentMaxExp = ValidThresholds[CurrentLevel - 1];
-		const float TotalExp = CurrentExp + RemainingExperience;
-
-		FPlayerExpProgressStep Step;
-		Step.mLevelBefore = CurrentLevel;
-		Step.mLevelAfter = CurrentLevel;
-		Step.mExpBefore = CurrentExp;
-		Step.mMaxExp = CurrentMaxExp;
-
-		if (CurrentLevel < MaxPlayerLevel && TotalExp >= CurrentMaxExp)
+		float CurMaxExp = ULevelAttributeSet::GetMaxExp(this, CurLevel);
+		if (FMath::IsWithinInclusive(CurMaxExp, 1.f, CurCarryExp) == false)
 		{
-			Step.mDidLevelUp = true;
-			Step.mLevelAfter = CurrentLevel + 1;
-			Step.mExpAfter = CurrentMaxExp;
-			Step.mCarryExp = FMath::Max(0.f, TotalExp - CurrentMaxExp);
-			Result.mSteps.Add(Step);
-
-			CurrentLevel = Step.mLevelAfter;
-			CurrentExp = 0.f;
-			RemainingExperience = Step.mCarryExp;
-			continue;
+			break;
 		}
 
-		// 마지막 레벨에서는 더 이상 레벨을 올리지 않고 막대를 최대치에서 고정한다.
-		Step.mExpAfter = FMath::Min(TotalExp, CurrentMaxExp);
-		Result.mSteps.Add(Step);
-		CurrentExp = Step.mExpAfter;
-		RemainingExperience = 0.f;
-		break;
+		FPlayerLevelUpData LevelUpData;
+		LevelUpData.mMaxExp = CurMaxExp;
+
+		LevelUpData.mPreLevel = CurLevel;
+		LevelUpData.mPreExp = CurStartExp;
+
+		{
+			++CurLevel;
+			CurCarryExp -= CurMaxExp;
+			CurStartExp = 0.f;
+		}
+
+		LevelUpData.mCurLevel = CurLevel;
+		LevelUpData.mCurExp = CurMaxExp;
+		LevelUpData.mCarryExp = CurCarryExp;
+
+		Result.Add(LevelUpData);
 	}
 
-	Result.mLevelAfter = CurrentLevel;
-	Result.mExpAfter = CurrentExp;
-	Result.mMaxExpAfter = ValidThresholds[CurrentLevel - 1];
-	Result.mReachedLevelCap = CurrentLevel >= MaxPlayerLevel;
 	return Result;
 }
 
-void UPlayerUnitModel::ResolveExperienceChange(float OldValue, float NewValue)
+void UPlayerUnitModel::LevelUp(const FPlayerLevelUpData& LevelUpData)
 {
-	if (mIsResolvingExperience || NewValue < OldValue)
-	{
-		return;
-	}
-
-	const TArray<float> Thresholds = GetExperienceThresholds();
-	if (Thresholds.IsEmpty())
-	{
-		// MaxExp가 0이거나 커브가 없을 때는 값을 다시 쓰지 않아 재귀를 원천 차단한다.
-		return;
-	}
-
-	const FPlayerExpProgression Progression = CalculateExperienceProgression(
-		mPlayerLevel,
-		OldValue,
-		NewValue - OldValue,
-		Thresholds);
-
-	TGuardValue<bool> ResolvingGuard(mIsResolvingExperience, true);
-	UAttributeSetComponentModel* ASC = GetAttributeComponentModel();
-	if (ASC == nullptr)
-	{
-		return;
-	}
-
-	if (mPlayerLevel != Progression.mLevelBefore)
-	{
-		SetPlayerLevel(Progression.mLevelBefore);
-	}
-
-	if (FMath::IsNearlyEqual(NewValue, Progression.mExpAfter) == false)
-	{
-		ASC->ApplyModToAttribute(
-			UPlayerUnitAttributeSet::GetExpAttribute(),
-			ETacticalModOp::Override,
-			Progression.mExpAfter);
-	}
-
-	for (const FPlayerExpProgressStep& Step : Progression.mSteps)
-	{
-		if (Step.mDidLevelUp)
-		{
-			LevelUp(Step.mCarryExp);
-		}
-	}
-
-	RefreshMaxExperienceThreshold();
-}
-
-bool UPlayerUnitModel::LevelUp(float RemainingExperience)
-{
-	const int32 MaxPlayerLevel = GetMaxPlayerLevel();
-	if (MaxPlayerLevel <= 0 || mPlayerLevel >= MaxPlayerLevel)
-	{
-		return false;
-	}
-
 	FPlayerLevelUpEvent Event;
-	Event.mPreviousLevel = mPlayerLevel;
-	Event.mConsumedExpThreshold = GetMaxExpForPlayerLevel(mPlayerLevel);
-	Event.mRemainingExperience = FMath::Max(0.f, RemainingExperience);
+	Event.mData = LevelUpData;
+	Event.mHasRarityRate = ULevelAttributeSet::GetRarityRate(this, Event.mData.mCurLevel, OUT Event.mSkillRarityRate);
 
-	SetPlayerLevel(mPlayerLevel + 1);
-	Event.mNewLevel = mPlayerLevel;
-	Event.mNextMaxExp = GetMaxExpForPlayerLevel(mPlayerLevel);
-	Event.mHasSkillRarityRate = ULevelAttributeSet::TryGetRarityRate(this, mPlayerLevel, OUT Event.mSkillRarityRate);
+	SetPlayerLevel(Event.mData.mCurLevel);
 	OnPlayerLevelUp.Broadcast(this, Event);
-	return true;
-}
-
-void UPlayerUnitModel::RefreshMaxExperienceThreshold()
-{
-	UAttributeSetComponentModel* ASC = GetAttributeComponentModel();
-	const float NewMaxExp = GetMaxExpForPlayerLevel(mPlayerLevel);
-	if (ASC == nullptr || FMath::IsFinite(NewMaxExp) == false || NewMaxExp <= 0.f)
-	{
-		return;
-	}
-	// Deferred 생성 중에는 컴포넌트 기본 서브오브젝트만 존재하고
-	// Initialize()가 아직 AttributeSet을 등록하지 않았다. 이 구간에서
-	// ApplyModToAttribute를 호출하면 활성 효과 컨테이너의 Set 조회가 실패한다.
-	// 파티에 들어갈 때 SetOwnerParty()가 다시 이 함수를 호출하므로 여기서는
-	// 레벨 값만 보존하고 실제 MaxExp 반영을 초기화 이후로 미룬다.
-	const FTacticalAttribute MaxExpAttribute =
-		UPlayerUnitAttributeSet::GetMaxExpAttribute();
-	if (ASC->HasAttributeSetForAttribute(MaxExpAttribute) == false)
-	{
-		return;
-	}
-
-	const float CurrentMaxExp = ASC->GetAttributeCurrentValue(MaxExpAttribute);
-	if (FMath::IsNearlyEqual(CurrentMaxExp, NewMaxExp) == false)
-	{
-		ASC->ApplyModToAttribute(MaxExpAttribute, ETacticalModOp::Override, NewMaxExp);
-	}
 }
 
 UArtifactComponentModel* UPlayerUnitModel::GetArtifactComponentModel() const

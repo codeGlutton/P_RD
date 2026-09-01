@@ -46,6 +46,10 @@ public:
 	FGlobalStatusEffectBalanceSetting mGlobalStatusEffectSetting;
 
 public:
+	UPROPERTY(Config, Category = Level, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerMaxLevel", ToolTip = "플레이어 최대 레벨 설정 값"))
+	int32 mPlayerMaxLevel = 10;
+
+public:
 	UPROPERTY(Config, Category = SpeedPoint, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "RequiredSpeedPointForTurn", ToolTip = "턴을 소유하기 위해 소모되는 스피드 포인트 값"))
 	int32 mRequiredSpeedPointForTurn = 10;
 

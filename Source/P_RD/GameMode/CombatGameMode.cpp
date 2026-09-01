@@ -50,6 +50,7 @@
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/LevelAttributeSet.h"
 #include "Setting/GameBalanceSettings.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
@@ -2161,7 +2162,7 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	PlayerMetaUIData.mLevel = PlayerUnitModel->GetPlayerLevel();
 	PlayerMetaUIData.mGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
 	PlayerMetaUIData.mExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-	PlayerMetaUIData.mMaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	PlayerMetaUIData.mMaxExp = ULevelAttributeSet::GetMaxExp(this, PlayerUnitModel->GetPlayerLevel());
 
 	if (const UPartyArtifactComponentModel* PartyArtifacts =
 		PartyModel->GetPartyArtifactComponentModel())
@@ -2640,8 +2641,7 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			UPlayerUnitAttributeSet::GetExpAttribute());
 		MercenaryExp.mExpAfter = MercenaryExp.mExpBefore
 			+ StaticCast<float>(RewardUIData.mExpGained);
-		MercenaryExp.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetMaxExpAttribute());
+		MercenaryExp.mMaxExp = ULevelAttributeSet::GetMaxExp(this, PlayerUnitModel->GetPlayerLevel());
 	}
 
 	// 기존 WBP/Blueprint가 단일 진행도 필드를 읽는 경우에는 첫 용병을
