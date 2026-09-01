@@ -20,49 +20,44 @@ class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
 
+struct FPlayerLevelUpEvent;
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*NewPlayerLevel*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerLevelUp, UPlayerUnitModel* /*Model*/, const FPlayerLevelUpEvent& /*Event*/);
 
-/** @brief 경험치가 한 레벨 구간에서 어떻게 소비되는지 나타내는 비변경 계산 결과. */
-struct P_RD_API FPlayerExpProgressStep
+/**
+ * @brief 한 번의 레벨 증가에 대한 데이터
+ */
+USTRUCT()
+struct P_RD_API FPlayerLevelUpData
 {
-	int32 mLevelBefore = 1;
-	int32 mLevelAfter = 1;
-	float mExpBefore = 0.f;
-	float mExpAfter = 0.f;
+	GENERATED_BODY()
+
+public:
+	int32 mPreLevel = 1;
+	int32 mCurLevel = 1;
 	float mMaxExp = 0.f;
+	float mPreExp = 0.f;
+	float mCurExp = 0.f;
 	float mCarryExp = 0.f;
-	bool mDidLevelUp = false;
-};
-
-/** @brief 현재 경험치에 보상 경험치를 더했을 때의 전체 진행 결과. */
-struct P_RD_API FPlayerExpProgression
-{
-	int32 mLevelBefore = 1;
-	int32 mLevelAfter = 1;
-	float mExpBefore = 0.f;
-	float mExpAfter = 0.f;
-	float mMaxExpAfter = 0.f;
-	float mExperienceGain = 0.f;
-	bool mReachedLevelCap = false;
-	TArray<FPlayerExpProgressStep> mSteps;
 };
 
 /**
- * @brief 한 번의 레벨 증가 알림에 필요한 완결된 데이터.
- * @details 희귀도 커브가 없거나 유효하지 않으면 mHasSkillRarityRate가 false다.
+ * @brief 한 번의 레벨 증가 알림에 필요한 완결된 데이터
+ * @details 희귀도 커브가 없거나 유효하지 않으면 mHasRarityRate가 false
  */
+USTRUCT()
 struct P_RD_API FPlayerLevelUpEvent
 {
-	int32 mPreviousLevel = 1;
-	int32 mNewLevel = 1;
-	float mConsumedExpThreshold = 0.f;
-	float mRemainingExperience = 0.f;
-	float mNextMaxExp = 0.f;
-	bool mHasSkillRarityRate = false;
+	GENERATED_BODY()
+
+public:
+	FPlayerLevelUpData mData;
+
+public:
+	bool mHasRarityRate = false;
 	FRarityRate mSkillRarityRate;
 };
-
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerLevelUp, UPlayerUnitModel* /*Model*/, const FPlayerLevelUpEvent& /*Event*/);
 
 /**
  * @brief 플레이어 베이스 유닛 모델 입니다.
@@ -92,32 +87,17 @@ public:
 public:
 	UPartyModel* GetOwnerParty() const;
 	int32 GetPlayerLevel() const;
-	float GetMaxExpForPlayerLevel(int32 PlayerLevel) const;
-	int32 GetMaxPlayerLevel() const;
-	TArray<float> GetExperienceThresholds() const;
-
-public:
-	/** @brief 현재 상태를 변경하지 않고 경험치 보상 적용 결과를 계산한다. */
-	FPlayerExpProgression PreviewExperienceGain(float ExperienceGain) const;
-
-	/**
-	 * @brief 명시적인 임계치 배열로 경험치 진행 결과를 계산하는 순수 함수.
-	 * @details Thresholds[N-1]은 N레벨의 최대 경험치이며 마지막 항목의 레벨이 상한이다.
-	 */
-	static FPlayerExpProgression CalculateExperienceProgression(
-		int32 StartingLevel,
-		float StartingExp,
-		float ExperienceGain,
-		const TArray<float>& Thresholds);
-
-	/** @brief AttributeSet에 반영된 Exp를 공통 진행 규칙으로 정규화한다. */
-	void ResolveExperienceChange(float OldValue, float NewValue);
-
-	/** @brief 상한을 검사한 뒤 한 레벨 올리고 완결된 이벤트를 방송한다. */
-	bool LevelUp(float RemainingExperience = 0.f);
 
 public:
 	UArtifactComponentModel* GetArtifactComponentModel() const;
+
+public:
+	TArray<FPlayerLevelUpData> PredictLevelChange(float ExpGain) const;
+	void PostChangeExperience(float OldExp, float NewExp);
+
+protected:
+	TArray<FPlayerLevelUpData> CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain) const;
+	void LevelUp(const FPlayerLevelUpData& LevelUpData);
 
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
@@ -139,8 +119,4 @@ protected:
 protected:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))
 	int32 mPlayerLevel = 1;
-
-private:
-	void RefreshMaxExperienceThreshold();
-	bool mIsResolvingExperience = false;
 };

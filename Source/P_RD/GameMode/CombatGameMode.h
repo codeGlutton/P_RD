@@ -89,6 +89,10 @@ public:
 	UFUNCTION()
 	void HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
+	/** @brief 보상 연출이 모두 끝난 뒤 지급 결과를 런 체크포인트에 저장한다. */
+	UFUNCTION()
+	void HandleRewardPresentationFinished();
+
 	/** @brief 엘리트·보스 SelectOne 정책 요청을 실제 아티팩트 지급으로 연결한다. */
 	UFUNCTION()
 	void HandleRewardSelectionRequested(FPrimaryAssetId RewardId);
