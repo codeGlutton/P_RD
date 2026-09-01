@@ -76,6 +76,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_ManaDrain,				"Animation.Montage.Skill.Mercenary.Mage.ManaDrain");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_MagicBarrier,				"Animation.Montage.Skill.Mercenary.Mage.MagicBarrier");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_ManaBolt,					"Animation.Montage.Skill.Mercenary.Mage.ManaBolt");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_BlackFlame,				"Animation.Montage.Skill.Mercenary.Mage.BlackFlame");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_Absorption,				"Animation.Montage.Skill.Mercenary.Mage.Absorption");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_Nether,					"Animation.Montage.Skill.Mercenary.Mage.Nether");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_Annihilation,				"Animation.Montage.Skill.Mercenary.Mage.Annihilation");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_GodOfDice,				"Animation.Montage.Skill.Mercenary.Mage.GodOfDice");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_ThunderStorm,				"Animation.Montage.Skill.Mercenary.Mage.ThunderStorm");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_NormalSlash,			"Animation.Montage.Skill.Mercenary.Barbarian.NormalSlash");
