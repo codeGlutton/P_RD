@@ -48,6 +48,15 @@ public:
 	 */
 	static FRarityRate GetRarityRate(const UObject* WorldContextObject, int32 Level);
 
+	/**
+	 * @brief 요청 레벨에 실제로 사용할 수 있는 스킬 희귀도 가중치가 있는지 확인한다.
+	 * @param WorldContextObject 월드 컨텍스트 객체
+	 * @param Level 대상 레벨(1-indexed)
+	 * @param OutRate 성공 시 해당 레벨의 가중치
+	 * @return 레벨이 커브 범위 안이고 가중치가 유효하면 true
+	 */
+	static bool TryGetRarityRate(const UObject* WorldContextObject, int32 Level, OUT FRarityRate& OutRate);
+
 	/*
 	 * @brief 레벨별 가격(Price) 배열을 추출합니다.
 	 * @param WorldContextObject 월드 컨텍스트 객체
