@@ -25,6 +25,7 @@ public class P_RDEditor : ModuleRules
             "PropertyEditor",
             "Slate",
             "SlateCore",
+            "ToolWidgets",
 
             /* Sequencer & MovieScene Modules */
             "MovieScene",
