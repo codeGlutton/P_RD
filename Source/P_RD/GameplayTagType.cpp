@@ -35,6 +35,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HolyStrike_Agility,		"Animation.Montage.Skill.Mercenary.Knight.HolyStrike.Agility")		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_BlessedShield_Vigor,	"Animation.Montage.Skill.Mercenary.Knight.BlessedShield.Vigor")			
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Blessing,				"Animation.Montage.Skill.Mercenary.Knight.Blessing")
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_FuriousSlash,			"Animation.Montage.Skill.Mercenary.Knight.FuriousSlash");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Justice,				"Animation.Montage.Skill.Mercenary.Knight.Justice");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_EmergencyGuard,			"Animation.Montage.Skill.Mercenary.Knight.EmergencyGuard");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HolyShield,				"Animation.Montage.Skill.Mercenary.Knight.HolyShield");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Baptism,				"Animation.Montage.Skill.Mercenary.Knight.Baptism");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Sanctuary,				"Animation.Montage.Skill.Mercenary.Knight.Sanctuary");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_NormalShot,				"Animation.Montage.Skill.Mercenary.Ranger.NormalShot");
