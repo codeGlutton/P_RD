@@ -17,7 +17,7 @@
 ## 구성
 | 파일 | 역할 |
 |------|------|
-| `RewardUITypes.h` | `FRewardUI` — 돈(번 양·잔액) + 경험치(번 양·레벨 전/후·막대 전/후·최대) |
+| `RewardUITypes.h` | `FRewardUI` — 돈(번 양·잔액) + 용병별 경험치 전/후와 레벨 구간 배열 |
 | `RewardUIModel.h/.cpp` | 경계. `SetReward`/`GetReward`+`OnUIChanged`(읽기) · `RequestClaim`→`OnRewardClaimed`(주기) |
 | `RewardSettlementWidgetBase.h/.cpp` | WBP 베이스(`WBP_RewardSettlement_Runtime`). `BindUIModel` 후 Model 데이터로 정산 화면을 그린다 |
 | `RewardPreviewCommand.cpp` | 에디터에서 정산 화면 프리뷰 콘솔 명령 |
@@ -39,4 +39,4 @@ Mock 자리에 어댑터만(위젯 무수정): 전투 종료 시 보상 계산 �
 
 ## 확장 메모
 - 아이템 보상: `FRewardUI`에 배열 도메인 추가 + 선택 의도(`RequestPick(index)`)만 늘리면 됨(지금은 미구현).
-- 레벨업 다단계: 현재 `mLevelBefore/After` + 한 막대(`mExpBefore→After`/`mMaxExp`). 다중 레벨업 연출이 필요하면 단계 배열로 확장.
+- 레벨업 다단계: `FRewardMercenaryExpUI::mProgressSteps`를 순서대로 재생한다. 각 구간은 해당 레벨의 시작/끝 EXP와 임계치, 전/후 레벨을 보관하며 배열이 비어 있으면 구형 단일 막대 필드로 표시한다.

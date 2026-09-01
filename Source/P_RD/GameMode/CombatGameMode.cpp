@@ -944,7 +944,13 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 				continue;
 			}
 
-			AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardExp));
+			// Attribute 변경/레벨 변경 delegate는 동기 방송된다. 반환 시점에는
+			// UPlayerUnitPersistData의 레벨과 잔여 EXP도 함께 갱신되어 기존
+			// 다음 방 진입/저장 후 종료 체크포인트가 동일한 값을 저장한다.
+			AttributeSetComponentModel->ApplyModToAttribute(
+				UPlayerUnitAttributeSet::GetExpAttribute(),
+				ETacticalModOp::AddBase,
+				StaticCast<float>(CurrentRoom->mRewardExp));
 			bGrantedToAnyPlayer = true;
 		}
 
@@ -954,6 +960,9 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		}
 
 		mExpRewardClaimed = true;
+		// 보상창을 열 때 만든 예측 단계는 유지하되, 지급 직후 최종 레벨/EXP를
+		// 실제 모델 값으로 다시 밀어 예측과 claim 결과의 불일치를 남기지 않는다.
+		PushCombatRewardUIData();
 		PushPlayerMetaUIData();
 		return true;
 	}
@@ -2596,10 +2605,12 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
 	}
 
+	const FRewardUI PreviousReward = mRewardUIModel->GetReward();
 	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
 	RewardUIData.mMercenaryExp.Reserve(PlayerUnitModels.Num());
-	for (const UPlayerUnitModel* PlayerUnitModel : PlayerUnitModels)
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerUnitModels.Num(); ++PlayerIndex)
 	{
+		const UPlayerUnitModel* PlayerUnitModel = PlayerUnitModels[PlayerIndex];
 		if (PlayerUnitModel == nullptr)
 		{
 			continue;
@@ -2612,6 +2623,7 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			continue;
 		}
 
+		const int32 RewardIndex = RewardUIData.mMercenaryExp.Num();
 		FRewardMercenaryExpUI& MercenaryExp =
 			RewardUIData.mMercenaryExp.AddDefaulted_GetRef();
 		MercenaryExp.mName = PlayerUnitModel->GetBoardActorDisplayName();
@@ -2635,13 +2647,47 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			MercenaryExp.mPortrait = ResolveTurnPortraitFallback(PlayerUnitModel);
 		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
-		MercenaryExp.mLevel = PlayerLevel;
-		MercenaryExp.mExpBefore = PlayerAttributes->GetAttributeCurrentValue(
+		const float CurrentExp = PlayerAttributes->GetAttributeCurrentValue(
 			UPlayerUnitAttributeSet::GetExpAttribute());
-		MercenaryExp.mExpAfter = MercenaryExp.mExpBefore
-			+ StaticCast<float>(RewardUIData.mExpGained);
-		MercenaryExp.mMaxExp = PlayerAttributes->GetAttributeCurrentValue(
+		const float CurrentMaxExp = PlayerAttributes->GetAttributeCurrentValue(
 			UPlayerUnitAttributeSet::GetMaxExpAttribute());
+		if (mExpRewardClaimed
+			&& PreviousReward.mMercenaryExp.IsValidIndex(RewardIndex))
+		{
+			// 지급 전 단계 목록은 애니메이션/정산 근거이므로 보존한다.
+			const FRewardMercenaryExpUI& Previous =
+				PreviousReward.mMercenaryExp[RewardIndex];
+			MercenaryExp.mLevelBefore = Previous.mLevelBefore;
+			MercenaryExp.mExpBefore = Previous.mExpBefore;
+			MercenaryExp.mProgressSteps = Previous.mProgressSteps;
+			MercenaryExp.mLevel = PlayerLevel;
+			MercenaryExp.mLevelAfter = PlayerLevel;
+			MercenaryExp.mExpAfter = CurrentExp;
+			MercenaryExp.mMaxExp = CurrentMaxExp;
+		}
+		else
+		{
+			const FPlayerExpProgression Progression =
+				PlayerUnitModel->PreviewExperienceGain(
+					StaticCast<float>(RewardUIData.mExpGained));
+			MercenaryExp.mLevelBefore = Progression.mLevelBefore;
+			MercenaryExp.mLevelAfter = Progression.mLevelAfter;
+			MercenaryExp.mLevel = Progression.mLevelAfter;
+			MercenaryExp.mExpBefore = Progression.mExpBefore;
+			MercenaryExp.mExpAfter = Progression.mExpAfter;
+			MercenaryExp.mMaxExp = Progression.mMaxExpAfter;
+			MercenaryExp.mProgressSteps.Reserve(Progression.mSteps.Num());
+			for (const FPlayerExpProgressStep& PlayerStep : Progression.mSteps)
+			{
+				FRewardExpProgressStepUI& UIStep =
+					MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+				UIStep.mLevelBefore = PlayerStep.mLevelBefore;
+				UIStep.mLevelAfter = PlayerStep.mLevelAfter;
+				UIStep.mExpBefore = PlayerStep.mExpBefore;
+				UIStep.mExpAfter = PlayerStep.mExpAfter;
+				UIStep.mMaxExp = PlayerStep.mMaxExp;
+			}
+		}
 	}
 
 	// 기존 WBP/Blueprint가 단일 진행도 필드를 읽는 경우에는 첫 용병을
@@ -2649,8 +2695,8 @@ void ACombatGameMode::PushCombatRewardUIData() const
 	if (RewardUIData.mMercenaryExp.IsEmpty() == false)
 	{
 		const FRewardMercenaryExpUI& First = RewardUIData.mMercenaryExp[0];
-		RewardUIData.mLevelBefore = First.mLevel;
-		RewardUIData.mLevelAfter = First.mLevel;
+		RewardUIData.mLevelBefore = First.mLevelBefore;
+		RewardUIData.mLevelAfter = First.mLevelAfter;
 		RewardUIData.mExpBefore = First.mExpBefore;
 		RewardUIData.mExpAfter = First.mExpAfter;
 		RewardUIData.mMaxExp = First.mMaxExp;
