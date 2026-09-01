@@ -95,12 +95,9 @@ public:
 	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
 
 public:
-	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, MaxExp)
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Exp)
 
 protected:
-	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
-	FTacticalAttributeData MaxExp;
 	UPROPERTY(Category = Attribute, EditAnywhere, BlueprintReadWrite)
 	FTacticalAttributeData Exp;
 };

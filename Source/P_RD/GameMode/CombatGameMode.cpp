@@ -50,6 +50,7 @@
 #include "TAS/Passive/TacticalPassive.h"
 #include "AttributeSet/PartyAttributeSet.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/LevelAttributeSet.h"
 #include "Setting/GameBalanceSettings.h"
 
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
@@ -2180,7 +2181,7 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	PlayerMetaUIData.mLevel = PlayerUnitModel->GetPlayerLevel();
 	PlayerMetaUIData.mGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
 	PlayerMetaUIData.mExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-	PlayerMetaUIData.mMaxExp = PlayerAttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxExpAttribute());
+	PlayerMetaUIData.mMaxExp = ULevelAttributeSet::GetMaxExp(this, PlayerUnitModel->GetPlayerLevel());
 
 	if (const UPartyArtifactComponentModel* PartyArtifacts =
 		PartyModel->GetPartyArtifactComponentModel())
@@ -2657,16 +2658,12 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			MercenaryExp.mPortrait = ResolveTurnPortraitFallback(PlayerUnitModel);
 		}
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
-		const float CurrentExp = PlayerAttributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetExpAttribute());
-		const float CurrentMaxExp = PlayerAttributes->GetAttributeCurrentValue(
-			UPlayerUnitAttributeSet::GetMaxExpAttribute());
-		if (mExpRewardClaimed
-			&& PreviousReward.mMercenaryExp.IsValidIndex(RewardIndex))
+		const float CurrentExp = PlayerAttributes->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+		const float CurrentMaxExp = ULevelAttributeSet::GetMaxExp(this, PlayerUnitModel->GetPlayerLevel());
+		if (mExpRewardClaimed && PreviousReward.mMercenaryExp.IsValidIndex(RewardIndex))
 		{
 			// 지급 전 단계 목록은 애니메이션/정산 근거이므로 보존한다.
-			const FRewardMercenaryExpUI& Previous =
-				PreviousReward.mMercenaryExp[RewardIndex];
+			const FRewardMercenaryExpUI& Previous = PreviousReward.mMercenaryExp[RewardIndex];
 			MercenaryExp.mLevelBefore = Previous.mLevelBefore;
 			MercenaryExp.mExpBefore = Previous.mExpBefore;
 			MercenaryExp.mProgressSteps = Previous.mProgressSteps;
@@ -2677,25 +2674,46 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		}
 		else
 		{
-			const FPlayerExpProgression Progression =
-				PlayerUnitModel->PreviewExperienceGain(
-					StaticCast<float>(RewardUIData.mExpGained));
-			MercenaryExp.mLevelBefore = Progression.mLevelBefore;
-			MercenaryExp.mLevelAfter = Progression.mLevelAfter;
-			MercenaryExp.mLevel = Progression.mLevelAfter;
-			MercenaryExp.mExpBefore = Progression.mExpBefore;
-			MercenaryExp.mExpAfter = Progression.mExpAfter;
-			MercenaryExp.mMaxExp = Progression.mMaxExpAfter;
-			MercenaryExp.mProgressSteps.Reserve(Progression.mSteps.Num());
-			for (const FPlayerExpProgressStep& PlayerStep : Progression.mSteps)
+			const TArray<FPlayerLevelUpData> PredictDatas = PlayerUnitModel->PredictLevelChange(StaticCast<float>(RewardUIData.mExpGained));
+			if (PredictDatas.IsEmpty() == false)
 			{
-				FRewardExpProgressStepUI& UIStep =
-					MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
-				UIStep.mLevelBefore = PlayerStep.mLevelBefore;
-				UIStep.mLevelAfter = PlayerStep.mLevelAfter;
-				UIStep.mExpBefore = PlayerStep.mExpBefore;
-				UIStep.mExpAfter = PlayerStep.mExpAfter;
-				UIStep.mMaxExp = PlayerStep.mMaxExp;
+				const FPlayerLevelUpData& FirstData = PredictDatas[0];
+				const FPlayerLevelUpData& LastData = PredictDatas[PredictDatas.Num() - 1];
+
+				MercenaryExp.mLevelBefore = FirstData.mPreLevel;
+				MercenaryExp.mLevelAfter = LastData.mCurLevel;
+				MercenaryExp.mLevel = LastData.mCurLevel;
+				MercenaryExp.mExpBefore = FirstData.mPreExp;
+				MercenaryExp.mExpAfter = LastData.mCarryExp;
+				MercenaryExp.mMaxExp = ULevelAttributeSet::GetMaxExp(this, LastData.mCurLevel);
+				MercenaryExp.mProgressSteps.Reserve(PredictDatas.Num());
+				for (const FPlayerLevelUpData& PredictData : PredictDatas)
+				{
+					FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+					UIStep.mLevelBefore = PredictData.mPreLevel;
+					UIStep.mLevelAfter = PredictData.mCurLevel;
+					UIStep.mExpBefore = PredictData.mPreExp;
+					UIStep.mExpAfter = PredictData.mCurExp;
+					UIStep.mMaxExp = PredictData.mMaxExp;
+				}
+
+				{
+					FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+					UIStep.mLevelBefore = LastData.mCurLevel;
+					UIStep.mLevelAfter = LastData.mCurLevel;
+					UIStep.mExpBefore = 0.f;
+					UIStep.mExpAfter = LastData.mCarryExp;
+					UIStep.mMaxExp = ULevelAttributeSet::GetMaxExp(this, LastData.mCurLevel);
+				}
+			}
+			else
+			{
+				FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+				UIStep.mLevelBefore = PlayerLevel;
+				UIStep.mLevelAfter = PlayerLevel;
+				UIStep.mExpBefore = CurrentExp;
+				UIStep.mExpAfter = CurrentExp + RewardUIData.mExpGained;
+				UIStep.mMaxExp = CurrentMaxExp;
 			}
 		}
 	}
