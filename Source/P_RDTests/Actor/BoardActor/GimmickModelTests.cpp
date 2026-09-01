@@ -1,6 +1,6 @@
 ﻿/*****************************************************************//**
  * @file   GimmickModelTests.cpp
- * @brief  기믹 유닛테스트 — 진입 트리거(발동/수명/필터/밀치기), 장판(라운드 끝 발동/교체/일괄 발동 이벤트)
+ * @brief  기믹 유닛테스트 — 진입 트리거(발동/수명/필터/밀치기/당기기 중 발판), 장판(라운드 끝 발동/교체/일괄 발동 이벤트)
  * @details
  *  베리어 구독자가 없는 시뮬레이션모드에서는 스킬이 동기로 완주하므로,
  *  Mock 기믹에 타일맵을 주입해서 트리거/수명/효과 적용을 자동화로 검증
@@ -22,6 +22,7 @@
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Stun.h"
 #include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.h"
 #include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
+#include "TAS/Effect/Tag/TacticalEffect_Pull.h"
 #include "TAS/Effect/TacticalEffectQuery.h"
 
 #include "Engine/World.h"
@@ -409,6 +410,82 @@ bool FGimmickPlaceAndPushTests::RunTest(const FString& Parameters)
 
 		TestTrue(TEXT("[Case3] 배치 즉시 밀린 위치 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(5, 4));
 		TestEqual(TEXT("[Case3] 발판 수명 차감"), Fixture.Gimmick->GetRemainingTriggerCount(), 0);
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FGimmickPullThroughTrapTests,
+	"P_RD.SRPG.Gimmick.PullThroughTrap",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+/**
+ * @brief 당기기 이펙트 검증 (시전자 유닛이 당기기 이펙트를 직접 적용)
+ *  1) 정지 대상을 시전자 앞까지 당김, 방향 유지
+ *  2) 당겨지는 도중 밀치기 발판을 밟으면 남은 당기기 경로를 폐기하고 발판 방향으로 밀림
+ *     (이펙트 적용 락 안에서 이동이 동기 완주되며 발판 이펙트가 같은 대상에 중첩 적용되는 경로)
+ */
+bool FGimmickPullThroughTrapTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForGimmickTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	// @brief 시전자 유닛을 배치하고 대상에게 당기기 이펙트 적용
+	auto ApplyPull = [World](UTileMapModel* TileMap, const FTileIndex& CasterTile, UMockGimmickVictimUnitModel* Victim)
+	{
+		UMockEnemyUnitModel* Caster = NewObject<UMockEnemyUnitModel>(World);
+		Caster->Initialize();
+		Caster->BeginPlay();
+		TileMap->PlaceActor(FTileTransform(CasterTile, ETileActorDirection::Forward), Caster);
+
+		UAttributeSetComponentModel* CasterAttr = Caster->GetAttributeComponentModel();
+		TSharedPtr<FTacticalEffectSpec> Spec = CasterAttr->MakeOutgoingSpec(UTacticalEffect_GetPull::StaticClass(), CasterAttr->MakeEffectContext());
+		Spec->mDynamicMagnitude = 1.f;
+		CasterAttr->ApplyTacticalEffectSpecToTarget(*Spec, Victim->GetAttributeComponentModel());
+	};
+
+	/* Case1: 발판 없는 직선 당기기 */
+	AddInfo(TEXT("=== Case1: (2,1) 대상을 (2,5) 시전자가 당김 -> (2,4) 도착, 방향 유지 ==="));
+	{
+		// 발판은 경로 밖 (7,7)에 두어 관여하지 않게 함
+		FGimmickFixture Fixture = MakeGimmickFixture(
+			World,
+			FTileTransform(FTileIndex(7, 7), ETileActorDirection::Forward),
+			FTileTransform(FTileIndex(2, 1), ETileActorDirection::Backward),
+			MakePushSkillData(World, 2),
+			1);
+
+		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit);
+
+		TestTrue(TEXT("[Case1] 시전자 앞 (2,4) 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(2, 4));
+		TestTrue(TEXT("[Case1] 당겨지는 동안 바라보는 방향 유지"), Fixture.Unit->GetTileTransform().mDirection == ETileActorDirection::Backward);
+		TestFalse(TEXT("[Case1] 이동 종료 상태"), Fixture.Movement->IsMoving());
+	}
+
+	/* Case2: 당겨지는 도중 발판 -> 경로 교체 */
+	AddInfo(TEXT("=== Case2: 당기기 경로 위 (2,3) 발판(Left, -Y) -> 발판에서 -Y로 2칸 밀려 (2,1) 도착 ==="));
+	{
+		FGimmickFixture Fixture = MakeGimmickFixture(
+			World,
+			FTileTransform(FTileIndex(2, 3), ETileActorDirection::Left),
+			FTileTransform(FTileIndex(2, 1), ETileActorDirection::Backward),
+			MakePushSkillData(World, 2),
+			1);
+
+		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit);
+
+		TestTrue(TEXT("[Case2] 발판 방향으로 밀려난 위치 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(2, 1));
+		TestEqual(TEXT("[Case2] 발판 수명 차감"), Fixture.Gimmick->GetRemainingTriggerCount(), 0);
+		TestFalse(TEXT("[Case2] 이동 종료 상태"), Fixture.Movement->IsMoving());
 	}
 
 	return true;

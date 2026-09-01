@@ -98,6 +98,7 @@ public:
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
 	int32 GetPlayerLevel() const;
+	float GetExperience() const;
 
 public:
 	const TArray<FPrimaryAssetId>& GetSkillIds() const;

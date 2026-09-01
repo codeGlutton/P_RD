@@ -7,6 +7,24 @@ FTacticalEffectQuery::FTacticalEffectQuery(FActiveTacticalEffectQueryCustomMatch
 {
 }
 
+bool FTacticalEffectQuery::operator==(const FTacticalEffectQuery& Other) const
+{
+	// TDelegate에는 값 비교 연산자가 없다. 쿼리의 직렬화 가능한 조건은 값으로
+	// 비교하고, 런타임 콜백은 동일성을 정의할 수 없으므로 바인딩 여부만 본다.
+	return mCustomMatchDelegate.IsBound() == Other.mCustomMatchDelegate.IsBound()
+		&& mOwningTagQuery == Other.mOwningTagQuery
+		&& mEffectTagQuery == Other.mEffectTagQuery
+		&& mModifyingAttribute == Other.mModifyingAttribute
+		&& mEffectSource == Other.mEffectSource
+		&& mEffectDefinition == Other.mEffectDefinition
+		&& mIgnoreHandles == Other.mIgnoreHandles;
+}
+
+bool FTacticalEffectQuery::operator!=(const FTacticalEffectQuery& Other) const
+{
+	return !(*this == Other);
+}
+
 bool FTacticalEffectQuery::Matches(const FActiveTacticalEffect& Effect) const
 {
 	/* 무시할 핸들 포함 검사 */

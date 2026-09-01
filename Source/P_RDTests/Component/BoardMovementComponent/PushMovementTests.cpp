@@ -137,6 +137,25 @@ bool FPushMovementBasicTests::RunTest(const FString& Parameters)
 		TestEqual(TEXT("[Case2] 밀치기 2스텝은 AP 불변"), AfterPush, AfterWalk);
 	}
 
+	/* Case3: 당기기 (밀치기와 같은 규칙, 모드만 Pull) */
+	AddInfo(TEXT("=== Case3: PullAlongPath -> 도착, 방향 불변, AP 불변, 마지막 모드 Pull ==="));
+	{
+		// (5,2)에서 Left를 바라보는 유닛을 -X로 2칸 당김
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+
+		UAttributeSetComponentModel* AttrComp = Fixture.Unit->GetAttributeComponentModel();
+		const float BeforePull = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
+
+		const bool Started = Fixture.Movement->PullAlongPath({ FTileIndex(5, 2), FTileIndex(4, 2), FTileIndex(3, 2) });
+		const float AfterPull = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
+
+		TestTrue(TEXT("[Case3] 시작 성공"), Started);
+		TestTrue(TEXT("[Case3] 목표 타일 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
+		TestTrue(TEXT("[Case3] 바라보는 방향 불변 (Left 유지)"), Fixture.Unit->GetTileTransform().mDirection == ETileActorDirection::Left);
+		TestEqual(TEXT("[Case3] 당기기 2스텝은 AP 불변"), AfterPull, BeforePull);
+		TestTrue(TEXT("[Case3] 마지막 모드는 Pull"), Fixture.Movement->GetMoveMode() == EBoardMoveMode::Pull);
+	}
+
 	return true;
 }
 

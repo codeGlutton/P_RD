@@ -165,16 +165,13 @@ bool ATreasureGameMode::OpenRewardPresentation()
 	}
 	const FTreasureRoom& TreasureRoom =
 		static_cast<const FTreasureRoom&>(CurrentRoom);
-	const FPrimaryAssetId ArtifactId =
-		TreasureRoom.mRewardArtifactDataId;
-	const bool bHasArtifact = ArtifactId.IsValid() == false;
-	// 클래스 지정은 BP 디자이너 몫(EditDefaultsOnly) -- 코드에는 경로 리터럴을 두지 않는다.
-	UClass* WidgetClass = bHasArtifact
-		? mRewardWidgetClass.Get() : mRewardWidgetClassNoArtifact.Get();
+	const TArray<FPrimaryAssetId>& ArtifactIds =
+		TreasureRoom.mRewardArtifactDataIds;
+	const bool bHasArtifact = ArtifactIds.IsEmpty() == false;
+	UClass* WidgetClass = bHasArtifact ? mRewardWidgetClass.Get() : mRewardWidgetClassNoArtifact.Get();
 	if (WidgetClass == nullptr)
 	{
-		UE_LOG(LogRD, Warning,
-			TEXT("보물방 공용 보상 WBP 클래스 미설정 (bHasArtifact=%d)"), bHasArtifact);
+		UE_LOG(LogRD, Warning, TEXT("보물방 공용 보상 WBP 클래스 미설정 (bHasArtifact=%d)"), bHasArtifact);
 		return false;
 	}
 
@@ -187,6 +184,7 @@ bool ATreasureGameMode::OpenRewardPresentation()
 
 	TArray<FRewardChoiceUI> Choices;
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
+	for (const FPrimaryAssetId& ArtifactId : ArtifactIds)
 	{
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = 0;
@@ -384,14 +382,14 @@ FRewardGrantBundleResultUI ATreasureGameMode::GrantTreasureArtifactBundle()
 
 	const FTreasureRoom& TreasureRoom = static_cast<const FTreasureRoom&>(
 		RunPersistData->GetCurrentRoom());
-	const FPrimaryAssetId ArtifactId =
-		TreasureRoom.mRewardArtifactDataId;
+	const TArray<FPrimaryAssetId>& ArtifactIds =
+		TreasureRoom.mRewardArtifactDataIds;
 	UPartyModel* PartyModel = GetPartyModel();
 	UPartyArtifactComponentModel* ArtifactModel = PartyModel != nullptr
 		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
 
-	Result = ArtifactRewardPolicy::GrantOne(
-		ArtifactId,
+	Result = ArtifactRewardPolicy::GrantAll(
+		ArtifactIds,
 		[ArtifactModel](const FPrimaryAssetId& ArtifactId)
 		{
 			return ArtifactModel != nullptr

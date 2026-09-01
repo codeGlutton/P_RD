@@ -21,13 +21,13 @@ void UTacticalEffectExecutionCalculation_Pull::Execute(const FTacticalEffectCust
 	checkf(TargetAttributeSetCompModel != nullptr, TEXT("타겟 컴포넌트 모델 nullptr"));
 
 	UBoardActorModel* SourceModel = SourceAttributeSetCompModel->GetOwnerModel<UBoardActorModel>();
-	checkf(SourceModel != nullptr, TEXT("밀치기 시전자가 보드 액터가 아님"));
+	checkf(SourceModel != nullptr, TEXT("당기기 시전자가 보드 액터가 아님"));
 
 	UBoardActorModel* TargetModel = TargetAttributeSetCompModel->GetOwnerModel<UBoardActorModel>();
-	checkf(TargetModel != nullptr, TEXT("밀치기 대상자가 보드 액터가 아님"));
+	checkf(TargetModel != nullptr, TEXT("당기기 대상자가 보드 액터가 아님"));
 
 	IBoardCombatTarget* TargetCombatTarget = Cast<IBoardCombatTarget>(TargetModel);
-	checkf(TargetCombatTarget != nullptr, TEXT("밀치기 대상자가 전투 대상이 아님"));
+	checkf(TargetCombatTarget != nullptr, TEXT("당기기 대상자가 전투 대상이 아님"));
 
 	UBoardMovementComponentModel* TargetMoveCompModel = TargetCombatTarget->GetBoardMovementComponentModel();
 	checkf(TargetMoveCompModel != nullptr, TEXT("타겟 움직임 컴포넌트 모델 nullptr"));
@@ -36,39 +36,28 @@ void UTacticalEffectExecutionCalculation_Pull::Execute(const FTacticalEffectCust
 	UTileMapModel* TileMap = TargetMoveCompModel->GetTileMap();
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
+	// 당겨지는 경로 계산 (시전자에 붙거나 중간이 막히면 그 앞까지로 짧아짐)
+	const TArray<FTileIndex> PullPath = TileMap->GetPullPath(SourceModel->GetTileTransform().mIndex, TargetModel->GetTileTransform().mIndex);
 
-	//const FTileIndex SourceTileIndex = SourceModel->GetTileTransform().mIndex;
-	//const ETileActorDirection PushDirection = SourceModel->GetTileTransform().mDirection;
+	// 한 칸도 당기지 못하거나 대상이 이동 중이면 아무것도 안 함 (이동 중 당기기는 지원하지 않음)
+	const int32 PathNum = PullPath.Num();
+	if (PathNum >= 2 && TargetMoveCompModel->IsMoving() == false)
+	{
+		// 정지 상태 대상: 즉시 당기기 시작
+		TargetMoveCompModel->PullAlongPath(PullPath);
 
-	//// 밀리는 경로 계산 (앞이 막히면 막히기 직전까지로 짧아짐)
-	//const TArray<FTileIndex> PushPath = TileMap->GetPushPath(TargetModel->GetTileTransform().mIndex, PushDirection, ExecutionParams.GetOwningSpec().GetStackCount());
+		/* 로그 작성 */
 
-	//// 한 칸도 당기지 못하면 아무것도 안 함
-	//if (PushPath.Num() >= 2)
-	//{
-	//	if (TargetMoveCompModel->IsMoving() == true)
-	//	{
-	//		// 이동 중인 대상: 등록만 하고, 이동 루프가 현재 스텝을 마무리하며 남은 경로를 당기기 경로로 교체
-	//		TargetMoveCompModel->TryRegisterPendingPull(SourceTileIndex, PushPath);
-	//	}
-	//	else
-	//	{
-	//		// 정지 상태 대상: 즉시 당기기 시작 (방 시작 시 발판 위 배치 발동 등)
-	//		TargetMoveCompModel->PullAlongPath(PushPath);
-	// 
-	//		/* 로그 작성 */
-	//		
-	//		for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
-	//		{
-	//			FSRPGTileEffectEventLog Log;
-	//			Log.mOccupancyState = ESRPGTileOccupancyState::Move;
-	//			Log.mPreTileIndex = PushPath[PathIndex - 1];
-	//			Log.mNextTileIndex = PushPath[PathIndex];
-	//		
-	//			GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
-	//		}
-	//	}
-	//}
+		for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
+		{
+			FSRPGTileEffectEventLog Log;
+			Log.mOccupancyState = ESRPGTileOccupancyState::Move;
+			Log.mPreTileIndex = PullPath[PathIndex - 1];
+			Log.mNextTileIndex = PullPath[PathIndex];
+
+			GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
+		}
+	}
 
 	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
 	OutExecutionOutput.MarkStackCountHandledManually();

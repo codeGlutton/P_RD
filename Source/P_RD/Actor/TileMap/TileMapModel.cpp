@@ -1106,6 +1106,62 @@ TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pushed, ETileAct
 	return BuildPushPath(Pushed, DirectionToTileStep(Direction), MaxDistance);
 }
 
+bool UTileMapModel::IsPullAdjacent(const FTileIndex& Tile, const FTileIndex& Puller)
+{
+	// 4방향 면 접촉 = 한 축으로만 정확히 한 칸 차이
+	const FTileIndex Delta = Puller - Tile;
+	return FMath::Abs(Delta.mX) + FMath::Abs(Delta.mY) == 1;
+}
+
+TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled) const
+{
+	// 경로는 최소한 당겨지는 칸 자신을 포함 (못 당기면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pulled);
+
+	// 당겨지는 칸이 맵 밖이면 그대로 둔다
+	if (!IsValidIndex(Pulled))
+		return Path;
+
+	// 당기는 쪽과 당겨지는 쪽 사이에 장애물이 있으면 당길 수 없음 (유닛은 관통, 밀치기와 같은 규칙)
+	if (HasLineOfSight(Puller, Pulled, nullptr, ETileLayerFlag::Obstacle) == false)
+		return Path;
+
+	// 당겨지는 쪽→당기는 쪽 방향을 가장 가까운 8방향 단위 스텝으로 양자화
+	const FTileIndex Step = TileDeltaToStep(Pulled, Puller);
+
+	// 같은 칸이라 방향이 없으면 당길 수 없음
+	if (Step == FTileIndex::Zero)
+		return Path;
+
+	// 붙을 때까지 한 칸씩 전진하며 지나가는 칸을 기록
+	FTileIndex Current = Pulled;
+	while (IsPullAdjacent(Current, Puller) == false)
+	{
+		const FTileIndex Next = Current + Step;
+
+		// 맵 밖으로는 당겨지지 않음
+		if (!IsValidIndex(Next))
+			break;
+
+		// 장애물/유닛에 걸리면 더 당겨지지 않고 직전 칸에서 멈춤
+		if (IsOccupied(Next))
+			break;
+
+		// 다음 칸이 시전자를 지나치면 멈춤 (남은 벡터와 진행 방향의 내적이 음수 = 시전자 옆을 지나 멀어지는 중)
+		// 비스듬한 위치라 직선으로는 면에 못 붙는 경우 여기서 대각선 옆이 최종
+		const FTileIndex Remaining = Puller - Next;
+		if (Remaining.mX * Step.mX + Remaining.mY * Step.mY < 0)
+			break;
+
+		// 빈 칸이면 거기까지 당겨짐
+		Current = Next;
+		Path.Add(Current);
+	}
+
+	return Path;
+}
+
 TArray<FTileIndex> UTileMapModel::BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const
 {
 	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)

@@ -21,4 +21,6 @@ enum class EBoardMoveMode : uint8
 	Normal,
 	// @brief 강제 밀려남 (바라보는 방향 유지, AP 미차감)
 	Push,
+	// @brief 강제 끌려옴 (밀려남과 같은 규칙이지만 연출/기록할 때 구분하기 위해 따로 추가)
+	Pull,
 };
