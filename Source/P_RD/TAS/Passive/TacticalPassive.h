@@ -18,6 +18,8 @@ class UTacticalEffect;
 class UStaticPassiveData;
 enum class EPassiveEffectTarget : uint8;
 
+DECLARE_LOG_CATEGORY_EXTERN(LogPassive, Log, All)
+
 /**
  * @brief 패시브 베이스 클래스
  *

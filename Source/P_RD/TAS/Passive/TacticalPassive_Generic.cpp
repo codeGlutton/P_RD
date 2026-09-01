@@ -7,11 +7,11 @@
 
 #include "TAS/Passive/TacticalPassive_Generic.h"
 
-#include "P_RD.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Passive/DynamicPassiveData_Generic.h"
 #include "TAS/Passive/PassiveCondition.h"
 #include "TAS/Effect/TacticalEffect.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
@@ -47,9 +47,12 @@ void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& Ctx, TI
 	// 카운터는 트리거 횟수이므로 조건 통과 여부와 무관하게 증가
 	State->mCounter += 1;
 
+	UE_LOG(LogPassive, Verbose, TEXT("발동 시점 진입: %s (소유자 %s, 카운터 %d)"), *GetNameSafe(mStaticData), *GetNameSafe(Ctx.mOwner.Get()), State->mCounter);
+
 	// 수량 조건 게이트
 	if (PassesTargetQuantifier(Ctx, PassiveState) == false)
 	{
+		UE_LOG(LogPassive, Verbose, TEXT("수량 조건 탈락: %s"), *GetNameSafe(mStaticData));
 		return;
 	}
 
@@ -65,7 +68,7 @@ void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& Ctx, TI
 		float Magnitude = 0.f;
 		if (Entry.mMagnitude.Resolve(Ctx, 0, *State, Magnitude) == false)
 		{
-			UE_LOG(LogRD, Warning, TEXT("패시브 효과 수치 계산 실패: %s"), *GetNameSafe(mStaticData));
+			UE_LOG(LogPassive, Warning, TEXT("패시브 효과 수치 계산 실패: %s"), *GetNameSafe(mStaticData));
 			continue;
 		}
 		if (FMath::IsNearlyZero(Magnitude))
@@ -83,6 +86,7 @@ void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& Ctx, TI
 	// 적용할 효과가 없으면 이전 배치도 그대로 유지
 	if (ResolvedEffects.Num() == 0)
 	{
+		UE_LOG(LogPassive, Verbose, TEXT("적용할 효과 없음: %s"), *GetNameSafe(mStaticData));
 		return;
 	}
 
@@ -153,7 +157,7 @@ void UTacticalPassive_Generic::OnCapture(const FPassiveActivateContext& Ctx, TIn
 		}
 		else
 		{
-			UE_LOG(LogRD, Warning, TEXT("패시브 캡처 실패: %s (키 %s)"), *GetNameSafe(mStaticData), *Entry.mKey.ToString());
+			UE_LOG(LogPassive, Warning, TEXT("패시브 캡처 실패: %s (키 %s)"), *GetNameSafe(mStaticData), *Entry.mKey.ToString());
 		}
 	}
 

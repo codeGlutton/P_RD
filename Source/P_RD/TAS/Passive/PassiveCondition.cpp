@@ -6,6 +6,7 @@
  *********************************************************************/
 
 #include "TAS/Passive/PassiveCondition.h"
+#include "TAS/Passive/TacticalPassive.h"
 #include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Passive/DynamicPassiveData_Generic.h"
 #include "Actor/BoardActor/BoardActorModel.h"
@@ -16,10 +17,11 @@ namespace PassiveConditionUtils
 	bool EvaluateAll(const TArray<FPassiveCondition>& Conditions, const FPassiveActivateContext& Ctx, int32 TargetIndex, const FDynamicPassiveData_Generic& State)
 	{
 		// 배열의 모든 원소에 대해서 AND 판정 (배열이 비어있으면 루프를 안 도니까 true)
-		for (const FPassiveCondition& Condition : Conditions)
+		for (int32 Index = 0; Index < Conditions.Num(); ++Index)
 		{
-			if (Condition.Evaluate(Ctx, TargetIndex, State) == false)
+			if (Conditions[Index].Evaluate(Ctx, TargetIndex, State) == false)
 			{
+				UE_LOG(LogPassive, Verbose, TEXT("조건[%d] 탈락 (대상 인덱스 %d)"), Index, TargetIndex);
 				return false;
 			}
 		}
@@ -72,12 +74,32 @@ bool FPassiveCondition::Compare(float Lhs, EPassiveCompareOp Op, float Rhs)
 	}
 }
 
+namespace
+{
+	// 로그 표기용 연산자 문자열
+	const TCHAR* ToOpString(EPassiveCompareOp Op)
+	{
+		switch (Op)
+		{
+		case EPassiveCompareOp::Less:         return TEXT("<");
+		case EPassiveCompareOp::LessEqual:    return TEXT("<=");
+		case EPassiveCompareOp::Equal:        return TEXT("==");
+		case EPassiveCompareOp::NotEqual:     return TEXT("!=");
+		case EPassiveCompareOp::GreaterEqual: return TEXT(">=");
+		case EPassiveCompareOp::Greater:      return TEXT(">");
+		case EPassiveCompareOp::ModuloZero:   return TEXT("%");
+		default:                              return TEXT("?");
+		}
+	}
+}
+
 bool FPassiveCondition::Evaluate(const FPassiveActivateContext& Ctx, int32 TargetIndex, const FDynamicPassiveData_Generic& State) const
 {
 	// 좌변 계산
 	float LhsValue = 0.f;
 	if (mLhs.Resolve(Ctx, TargetIndex, State, LhsValue) == false)
 	{
+		UE_LOG(LogPassive, VeryVerbose, TEXT("조건식 좌변 계산 실패"));
 		return false;
 	}
 
@@ -85,10 +107,13 @@ bool FPassiveCondition::Evaluate(const FPassiveActivateContext& Ctx, int32 Targe
 	float RhsValue = 0.f;
 	if (mRhs.Resolve(Ctx, TargetIndex, State, RhsValue) == false)
 	{
+		UE_LOG(LogPassive, VeryVerbose, TEXT("조건식 우변 계산 실패"));
 		return false;
 	}
 
-	return Compare(LhsValue, mOp, RhsValue);
+	const bool bPassed = Compare(LhsValue, mOp, RhsValue);
+	UE_LOG(LogPassive, VeryVerbose, TEXT("조건식 %.1f %s %.1f → %s"), LhsValue, ToOpString(mOp), RhsValue, bPassed ? TEXT("통과") : TEXT("탈락"));
+	return bPassed;
 }
 
 bool FPassiveOperand::Resolve(const FPassiveActivateContext& Ctx, int32 TargetIndex, const FDynamicPassiveData_Generic& State, float& OutValue) const

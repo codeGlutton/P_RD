@@ -15,6 +15,8 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
+DEFINE_LOG_CATEGORY(LogPassive)
+
 void UTacticalPassive::ActivatePassive(
 	const FGameplayTag& TimingTag,
 	const FPassiveActivateContext& Ctx,
@@ -136,6 +138,7 @@ void UTacticalPassive::NotifyPassive(
 	}
 
 	// 대상마다 이펙트 적용하면서 핸들을 배열에 저장
+	int32 AppliedNum = 0;
 	for (const TWeakObjectPtr<UBoardActorModel>& TargetPtr : ApplyTargets)
 	{
 		// 대상의 속성 컴포넌트 획득.
@@ -159,7 +162,10 @@ void UTacticalPassive::NotifyPassive(
 		Spec->mDynamicMagnitude = Magnitude;
 
 		mActiveHandles.Add(OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp));
+		++AppliedNum;
 	}
+
+	UE_LOG(LogPassive, Log, TEXT("이펙트 적용: %s → %s (수치 %.1f, 대상 %d)"), *GetNameSafe(mStaticData), *GetNameSafe(EffectClass), Magnitude, AppliedNum);
 }
 
 void UTacticalPassive::DeactivatePassive()
@@ -182,6 +188,8 @@ void UTacticalPassive::DeactivatePassive()
 			OwningComp->RemoveActiveTacticalEffect(Handle);
 		}
 	}
+
+	UE_LOG(LogPassive, Verbose, TEXT("이펙트 해제: %s (핸들 %d)"), *GetNameSafe(mStaticData), mActiveHandles.Num());
 
 	// 배치 핸들 전체 비움
 	mActiveHandles.Reset();
