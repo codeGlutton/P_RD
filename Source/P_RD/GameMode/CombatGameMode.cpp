@@ -2668,13 +2668,13 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			if (PredictDatas.IsEmpty() == false)
 			{
 				const FPlayerLevelUpData& FirstData = PredictDatas[0];
-				const FPlayerLevelUpData& LastData = PredictDatas[PredictDatas.Num()];
+				const FPlayerLevelUpData& LastData = PredictDatas[PredictDatas.Num() - 1];
 
 				MercenaryExp.mLevelBefore = FirstData.mPreLevel;
 				MercenaryExp.mLevelAfter = LastData.mCurLevel;
 				MercenaryExp.mLevel = LastData.mCurLevel;
 				MercenaryExp.mExpBefore = FirstData.mPreExp;
-				MercenaryExp.mExpAfter = LastData.mCurExp;
+				MercenaryExp.mExpAfter = LastData.mCarryExp;
 				MercenaryExp.mMaxExp = LastData.mMaxExp;
 				MercenaryExp.mProgressSteps.Reserve(PredictDatas.Num());
 				for (const FPlayerLevelUpData& PredictData : PredictDatas)
@@ -2686,6 +2686,24 @@ void ACombatGameMode::PushCombatRewardUIData() const
 					UIStep.mExpAfter = PredictData.mCurExp;
 					UIStep.mMaxExp = PredictData.mMaxExp;
 				}
+
+				{
+					FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+					UIStep.mLevelBefore = LastData.mCurLevel;
+					UIStep.mLevelAfter = LastData.mCurLevel;
+					UIStep.mExpBefore = 0.f;
+					UIStep.mExpAfter = LastData.mCarryExp;
+					UIStep.mMaxExp = LastData.mMaxExp;
+				}
+			}
+			else
+			{
+				FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
+				UIStep.mLevelBefore = PlayerLevel;
+				UIStep.mLevelAfter = PlayerLevel;
+				UIStep.mExpBefore = CurrentExp;
+				UIStep.mExpAfter = CurrentExp + RewardUIData.mExpGained;
+				UIStep.mMaxExp = CurrentMaxExp;
 			}
 		}
 	}
