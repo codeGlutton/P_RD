@@ -99,6 +99,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_BloodWall,			"Animation.Montage.Skill.Mercenary.Barbarian.BloodWall");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_VampiricBite,		"Animation.Montage.Skill.Mercenary.Barbarian.VampiricBite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Taunt,				"Animation.Montage.Skill.Mercenary.Barbarian.Taunt");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_BloodFlow,			"Animation.Montage.Skill.Mercenary.Barbarian.BloodFlow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Capture,				"Animation.Montage.Skill.Mercenary.Barbarian.Capture");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Guillotine,			"Animation.Montage.Skill.Mercenary.Barbarian.Guillotine");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_AxeThrow,			"Animation.Montage.Skill.Mercenary.Barbarian.AxeThrow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Cleave,				"Animation.Montage.Skill.Mercenary.Barbarian.Cleave");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_BloodRush,			"Animation.Montage.Skill.Mercenary.Barbarian.BloodRush");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_NormalDoubleSlash,		"Animation.Montage.Skill.Mercenary.Rogue.NormalDoubleSlash");
