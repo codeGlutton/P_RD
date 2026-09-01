@@ -22,13 +22,4 @@ USTRUCT()
 struct FDynamicPassiveData
 {
 	GENERATED_BODY()
-
-	/**
-	 * @brief 현재 이펙트가 발동했는 지 여부
-	 *
-	 * @details
-	 * 패시브는 해제 타이밍에, 발동했으면 해제, 발동 안했으면 무시 선택
-	 */
-	UPROPERTY()
-	bool mIsActive = false;
 };

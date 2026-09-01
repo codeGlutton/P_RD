@@ -41,10 +41,6 @@ class P_RD_API UTacticalPassive : public UObject
 	 * @note 릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음
 	 */
 	friend class FPassiveComponentModelTests;
-	
-	friend class FTacticalPassiveAddStatTests;
-	friend class FTacticalPassiveNthAddStatCalcTests;
-	friend class FTacticalPassiveNthAddStatCommitTests;
 
 public:
 	/**
@@ -56,8 +52,7 @@ public:
 	 * 진입 시 상태 작업본을 준비(커밋본 복사 또는 InitializeState)한 뒤, 들어온 타이밍이
 	 * - 카운터 리셋 시점(mCounterResetTimingTag)이면 OnCounterReset.
 	 * - 캡처 시점(mCaptureTimingTag)이면 OnCapture.
-	 * - 발동 시점(mActivateTimingTag)이면 EvaluateActivate로 적용 여부를 묻고,
-	 *   참이면 NotifyPassive(발동=적용).
+	 * - 발동 시점(mActivateTimingTag)이면 OnActivate.
 	 * - 해제 시점(mDeactivateTimingTag)이면 DeactivatePassive(해제=제거).
 	 * 같은 태그가 여러 시점에 걸릴 수 있으므로 위 순서대로 전부 처리.
 	 *
@@ -115,31 +110,13 @@ public:
 
 protected:
 	/**
-	 * @brief 정적 데이터로 공통 필드(이펙트 클래스/타이밍 태그) 초기화
+	 * @brief 정적 데이터로 공통 필드(타이밍 태그) 초기화
 	 *
 	 * @details
-	 * 기본은 mStaticData를 베이스 멤버로 복사.
-	 * 패시브별 추가 파라미터(임계 등)는 각자 EvaluateActivate에서 mStaticData를 직접 읽음.
+	 * 기본은 mStaticData의 시점 태그를 베이스 멤버로 복사.
+	 * 조건/효과 등 나머지는 각자 mStaticData를 직접 읽음.
 	 */
 	virtual void InitializeFromData();
-
-	/**
-	 * @brief 발동 시점에서 적용 여부 결정 + 다음 상태 계산 + 기여값 산출
-	 *
-	 * @details
-	 * 발동 시점(mActivateTimingTag)에 베이스가 호출. 해제는 베이스가 라우팅하므로 여기선 발동만 판단.
-	 * 내부상태는 인자로 받은 PassiveState를 사용하고 다음 내부상태도 여기에 써서 돌려줌.
-	 *
-	 * @param Ctx          소유자/대상 및 스냅샷
-	 * @param PassiveState [in,out] 패시브 내부 상태
-	 * @param OutMagnitude [out] 적용 시 대상에게 가할 수치 변화
-	 * @return 이펙트를 적용하면 true, 스킵이면 false
-	 */
-	virtual bool EvaluateActivate(
-		IN const FPassiveActivateContext& Ctx,
-		IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState,
-		OUT float& OutMagnitude)
-		PURE_VIRTUAL(UTacticalPassive::EvaluateActivate, return false;);
 
 	/**
 	 * @brief 카운터 리셋 시점 처리
@@ -166,13 +143,12 @@ protected:
 	 * @brief 발동 시점 처리 (게이트 → 계산 → 적용)
 	 *
 	 * @details
-	 * 기본은 수량 게이트 통과 시 EvaluateActivate로 수치를 계산해 멤버 이펙트를 적용.
-	 * 발동 순서가 다른 패시브(Generic)가 통째로 override.
+	 * 발동 경로 전체를 파생 클래스(Generic)가 구현. 기본은 아무것도 안 함.
 	 *
 	 * @param Ctx          소유자/대상 및 스냅샷
 	 * @param PassiveState [in,out] 패시브 내부 상태
 	 */
-	virtual void OnActivate(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState);
+	virtual void OnActivate(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) {}
 
 	/**
 	 * @brief 내부 상태 최초 생성
@@ -184,20 +160,6 @@ protected:
 	 * @param PassiveState [out] 초기화할 내부 상태
 	 */
 	virtual void InitializeState(OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) const {}
-
-	/**
-	 * @brief 계산된 기여값을 드라이버가 원하는 형태로 출력
-	 *
-	 * @details
-	 * 기본은 OUT 모드(TargetDelta를 그대로 둠). 이펙트 발사 등 출력 방식이
-	 * 달라지면 베이스에서 이 함수만 교체하면 되고, 서브클래스는 영향 없음.
-	 *
-	 * @param Ctx         소유자/대상 및 현재 스냅샷
-	 * @param Magnitude [in,out] 계산된 수치 변화
-	 */
-	virtual void NotifyPassive(
-		IN const FPassiveActivateContext& Ctx,
-		IN float Magnitude);
 
 	/**
 	 * @brief 이펙트 적용 (이펙트 클래스/대상 지정)
@@ -248,17 +210,6 @@ protected:
 	virtual bool IsTargetQualified(IN const FPassiveActivateContext& Ctx, IN int32 TargetIndex, IN const TInstancedStruct<FDynamicPassiveData>& State) const { return true; }
 
 	/**
-	 * @brief 이 패시브가 적용할 이펙트
-	 *
-	 * @details
-	 * - 대상 속성, 연산(op), 지속정책(Infinite/Instant)은 이 이펙트가 정의하고,
-	 *   패시브 계산은 크기(magnitude)만 공급한다.
-	 * - 모디파이어가 없는 태그형 이펙트는 태그의 값을 크기로 사용
-	 */
-	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "Effect"))
-	TSubclassOf<UTacticalEffect> mEffectClass;
-
-	/**
 	 * @brief 적용 중인 이펙트 핸들들 (대상별)
 	 *
 	 * @details
@@ -273,7 +224,7 @@ protected:
 	 * @details
 	 * 이 패시브가 발동(이펙트 적용)할 시점(예: OnStartAttacking).
 	 * 드라이버가 HasTimingTag로 모아서 ActivatePassive 호출 시,
-	 * 이 태그와 일치하면 EvaluateActivate로 분기.
+	 * 이 태그와 일치하면 OnActivate로 분기.
 	 */
 	UPROPERTY(Category = "Passive", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "ActivateTiming"))
 	FGameplayTag mActivateTimingTag;

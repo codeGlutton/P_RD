@@ -60,28 +60,6 @@ void UTacticalPassive::ActivatePassive(
 	}
 }
 
-void UTacticalPassive::OnActivate(
-	const FPassiveActivateContext& Ctx,
-	TInstancedStruct<FDynamicPassiveData>& PassiveState)
-{
-	// 수량 조건(quantifier) 게이트: 자격 타겟 수가 기준 미달이면 발동하지 않음
-	if (PassesTargetQuantifier(Ctx, PassiveState) == false)
-	{
-		return;
-	}
-
-	// 발동 시 대상에게 가할 기여값(크기)
-	float ContributionMagnitude = 0.f;
-
-	// 내부상태로 적용 여부를 판단하고 다음 상태를 PassiveState에 기록
-	// 여기서는 아직 내부상태가 변경되진 않음 (CommitPassive 해야 변경됨)
-	if (EvaluateActivate(Ctx, PassiveState, ContributionMagnitude))
-	{
-		// 계산된 수치를 이펙트로 적용
-		NotifyPassive(Ctx, ContributionMagnitude);
-	}
-}
-
 void UTacticalPassive::SetStaticData(UStaticPassiveData* InStaticData)
 {
 	// 정적 데이터 주입 후, 공통 필드(이펙트/타이밍)를 데이터에서 채움
@@ -97,20 +75,11 @@ void UTacticalPassive::InitializeFromData()
 		return;
 	}
 
-	// 이펙트 종류와 시점 태그 4종(발동/해제/리셋/캡처)을 데이터에서 베이스 멤버로 복사
-	mEffectClass = mStaticData->mEffectClass.LoadSynchronous();
+	// 시점 태그 4종(발동/해제/리셋/캡처)을 데이터에서 베이스 멤버로 복사
 	mActivateTimingTag = mStaticData->mActivateTimingTag;
 	mDeactivateTimingTag = mStaticData->mDeactivateTimingTag;
 	mCounterResetTimingTag = mStaticData->mCounterResetTimingTag;
 	mCaptureTimingTag = mStaticData->mCaptureTimingTag;
-}
-
-void UTacticalPassive::NotifyPassive(
-	const FPassiveActivateContext& Ctx,
-	const float Magnitude)
-{
-	// 구 경로 호환: 베이스 멤버 이펙트를 타겟들에게 적용
-	NotifyPassive(Ctx, mEffectClass, Magnitude, EPassiveEffectTarget::Targets);
 }
 
 void UTacticalPassive::NotifyPassive(

@@ -17,18 +17,11 @@
  * 조건(mConditions)/수치(mEffects)/대상(mEffectTarget)을 전부 UStaticPassiveData에서 읽음.
  * 런타임 상태는 FDynamicPassiveData_Generic 하나(카운터 + 캡처값).
  * 패시브 종류가 늘어도 클래스 추가 없이 DA만 만들면 됨.
- *
- * EvaluateActivate는 쓰지 않음 — 발동 경로 전체를 OnActivate로 대체.
  */
 UCLASS()
 class P_RD_API UTacticalPassive_Generic : public UTacticalPassive
 {
 	GENERATED_BODY()
-
-	/**
-	 * @brief 유닛테스트 모듈이 내부 상태를 검증하기 위해 friend 선언
-	 */
-	friend class FTacticalPassiveGenericTests;
 
 public:
 	virtual void CommitPassive(IN const TInstancedStruct<FDynamicPassiveData>& PassiveState) override;

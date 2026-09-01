@@ -17,7 +17,7 @@
 #include "DataAsset/EquipmentData/StaticEquipmentData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 #include "TAS/Passive/TacticalPassive.h"
-#include "TAS/Passive/TacticalPassive_AddStat.h"
+#include "TAS/Passive/TacticalPassive_Generic.h"
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 
 namespace
@@ -48,11 +48,12 @@ bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 패시브 DA (코드 구성): AddStat 패시브 + AttackPoint 이펙트 + 수치 5 + OnStartTurn 시점
+	// 패시브 DA (코드 구성): 제네릭 패시브 + AttackFactor 이펙트 + 수치 5 + OnStartTurn 시점
 	UStaticPassiveData* PassiveData = NewObject<UStaticPassiveData>();
-	PassiveData->mPassiveClass = UTacticalPassive_AddStat::StaticClass();
-	PassiveData->mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
-	PassiveData->mMagnitude = 5.f;
+	PassiveData->mPassiveClass = UTacticalPassive_Generic::StaticClass();
+	FPassiveEffectEntry& Effect = PassiveData->mEffects.AddDefaulted_GetRef();
+	Effect.mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
+	Effect.mMagnitude.mConst = 5.f;
 	PassiveData->mActivateTimingTag = StartTiming;
 
 	// 무기 DA (코드 구성): 위 패시브를 참조

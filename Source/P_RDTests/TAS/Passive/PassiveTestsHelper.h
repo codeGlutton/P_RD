@@ -22,8 +22,6 @@
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
-#include "TAS/Passive/TacticalPassive_AddStat.h"
-#include "TAS/Passive/PassiveActivateContext.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "GameplayTagType.h"
 #include "PassiveTestsHelper.generated.h"
@@ -96,35 +94,5 @@ public:
 
 		// 활성 중 부여 태그: 취약 (모디파이어 없음 = 순수 태그형)
 		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
-	}
-};
-
-/**
- * @brief 수량 조건 테스트용 목 패시브 (AddStat + HP 자격 조건)
- *
- * @details
- *  자격 조건에 체력 조건 판정을 구현한 목 패시브
- */
-UCLASS()
-class UMockConditionAddStatPassive : public UTacticalPassive_AddStat
-{
-	GENERATED_BODY()
-
-public:
-	// 이 값 미만 HP면 자격 있음!
-	float mQualifyHPBelow = 50.f;
-
-protected:
-	virtual bool IsTargetQualified(const FPassiveActivateContext& Ctx, int32 TargetIndex, const TInstancedStruct<FDynamicPassiveData>& State) const override
-	{
-		// 스냅샷이 짝으로 있으면 사용, 없으면 스냅샷과 실제객체가 다르므로 자격 없음
-		const UBoardCombatTargetSnapshotData* Snapshot =
-			Ctx.mTargetSnapshots.IsValidIndex(TargetIndex) ? Ctx.mTargetSnapshots[TargetIndex] : nullptr;
-		if (Snapshot == nullptr)
-		{
-			return false;
-		}
-		const float* HP = Snapshot->mAttributes.Find(UCombatTargetAttributeSet::GetHPAttribute());
-		return (HP != nullptr) && (*HP < mQualifyHPBelow);
 	}
 };

@@ -183,33 +183,9 @@ public:
 	* @brief 패시브 클래스
 	*
 	* @details
-	* 고정형은 제네릭(UTacticalPassive_AddStat), 계산형은 Nth 등.
+	* 기본은 제네릭(UTacticalPassive_Generic).
 	* 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다.
 	*/
 	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PassiveClass", AssetBundles = "Actor"))
 	TSoftClassPtr<UTacticalPassive> mPassiveClass;
-
-	/**
-	* @brief 적용할 이펙트 "종류" 클래스
-	*
-	* @details
-	* 속성·연산(op)·지속정책은 이 이펙트 클래스가 정의. 양(magnitude)은 mMagnitude로 공급.
-	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectClass", AssetBundles = "Actor"))
-	TSoftClassPtr<UTacticalEffect> mEffectClass;
-
-	/**
-	* @brief 적용 수치(양)
-	*
-	* @details
-	* '+5' vs '+10'은 서로 다른 DA. 등급/레벨 스케일이 필요해지면 커브로 확장.
-	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
-	float mMagnitude = 0.f;
-
-	/**
-	* @brief 계산형 패시브의 파라미터(예: 매 N회 발동). 고정형은 미사용.
-	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Threshold"))
-	int32 mThreshold = 0;
 };
