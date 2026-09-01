@@ -195,6 +195,18 @@ private:
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/** @brief EXIT 버튼 클릭을 게임 종료로 연결한다. */
+	UFUNCTION()
+	void HandleExitButtonClicked();
+
+	/**
+	 * @brief EXIT 줄에 실제로 누를 수 있는 버튼이 있게 만든다.
+	 *
+	 * @details 저작된 WBP의 EXIT 줄에 프레임과 글자만 있고 버튼이 없는 경우,
+	 * 같은 위치에 투명 입력 영역을 추가한다. 이미 버튼이 있으면 재사용한다.
+	 */
+	void EnsureExitButton();
+
 	/** @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다. */
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
@@ -211,6 +223,10 @@ private:
 	/** @brief 설정 화면으로 넘어가는 SETTING 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SettingsButton;
+
+	/** @brief 게임을 끝내는 EXIT 버튼 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> ExitButton;
 
 	/** @brief (레거시) 게임 타이틀명 TextBlock. 이제 WBP의 TitleLogoImage가 타이틀을 대체하므로 Optional. */
 	UPROPERTY(meta = (BindWidgetOptional))
