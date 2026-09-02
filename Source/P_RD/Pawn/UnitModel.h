@@ -22,6 +22,17 @@ class UUnitSkillComponentModel;
 class UUnitMovementComponentModel;
 class UPassiveComponentModel;
 
+UENUM(BlueprintType)
+enum class EUnitCombatCondition : uint8
+{
+	Bad = 0				UMETA(ToolTip = "최소 데미지 확정"),
+	Normal				UMETA(ToolTip = "평균 데미지 확정"),
+	Good				UMETA(ToolTip = "최대 데미지 확정"),
+	Excellent			UMETA(ToolTip = "최대 데미지와 치명타 확정"),
+
+	Count				UMETA(Hidden),
+};
+
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
  */
@@ -71,11 +82,15 @@ public:
 	/* 자체 함수 */
 public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
+	EUnitCombatCondition GetCombatCondition() const;
 
 public:
 	virtual EUnitJobType GetUnitJobType() const PURE_VIRTUAL(UUnitModel::GetUnitJobType, return EUnitJobType::None;)
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
+
+private:
+	void RefreshCombatCondition();
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
@@ -92,4 +107,7 @@ private:
 private:
 	// @brief 팀 ID
 	FGenericTeamId mTeamId;
+	// @brief 전투 컨디션
+	UPROPERTY(Category = "Combat", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CombatCondition"))
+	EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
 };
