@@ -59,6 +59,13 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_AP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.AP");		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_FlyingKick_SP,			"Animation.Montage.Skill.Mercenary.Ranger.FlyingKick.SP");		
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_StunningKick,			"Animation.Montage.Skill.Mercenary.Ranger.StunningKick");		
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_LassoArrow,				"Animation.Montage.Skill.Mercenary.Ranger.LassoArrow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_KnockbackArrow,			"Animation.Montage.Skill.Mercenary.Ranger.KnockbackArrow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_ShatterArrow,			"Animation.Montage.Skill.Mercenary.Ranger.ShatterArrow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_Takedown,				"Animation.Montage.Skill.Mercenary.Ranger.Takedown");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_BarrageKick,			"Animation.Montage.Skill.Mercenary.Ranger.BarrageKick");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_AgileMovement,			"Animation.Montage.Skill.Mercenary.Ranger.AgileMovement");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Ranger_Shockwave,				"Animation.Montage.Skill.Mercenary.Ranger.Shockwave");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_NormalEnergyBall,			"Animation.Montage.Skill.Mercenary.Mage.NormalEnergyBall");
