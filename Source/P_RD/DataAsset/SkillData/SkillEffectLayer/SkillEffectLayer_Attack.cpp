@@ -7,37 +7,37 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "Component/SkillComponent/SkillComponentModel.h"
+
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
-
-#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
+    USkillComponentModel* SkillComponentModel = ActorModel->GetSkillComponentModel();
+    checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
 
+    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
     TArray<FActiveTacticalEffectHandle> EffectHandles;
 
     /* 기본 데미지를 Factor에 임시 추가 */
     {
-        const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(AttributeSetComponentModel);
-
         int32 StatusDamage = (
             Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength, 0) -
             Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength, 0)
             );
-        int32 SkillDamage = RandomStream.RandRange(mMinDamage, mMaxDamage);
+        int32 SkillDamage = SkillComponentModel->GetRandomDamage(mMinDamage, mMaxDamage);
 
-        int32 StatusCriticalPercent = (
+        int32 StatusCriticalThreshold = (
             Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny, 0) -
             Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny, 0)
             );
-        const float CriticalPercent = RandomStream.FRand() * 100.f;
+        int32 AttributeCriticalThreshold = FMath::Floor<int32>(Snapshot->mAttributes[UCombatTargetAttributeSet::GetCriticalFactorAttribute()]);
 
-        const bool IsCritical = (CriticalPercent + StatusCriticalPercent) < AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
+        const bool IsCritical = SkillComponentModel->IsCritical(StatusCriticalThreshold + AttributeCriticalThreshold);
         if (IsCritical == true)
         {
             SkillDamage = mMaxDamage;

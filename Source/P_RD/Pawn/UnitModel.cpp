@@ -19,6 +19,8 @@
 #include "TAS/Effect/Stat/TacticalEffect_SpeedPointFactor.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
@@ -155,6 +157,10 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartTurn, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	/* 컨디션 변경 */
+
+	RefreshCombatCondition();
 
 	/* 자기 자신에게 MovePoint 부여 */
 
@@ -421,5 +427,35 @@ void UUnitModel::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* Instigato
 UPassiveComponentModel* UUnitModel::GetPassiveComponentModel() const
 {
 	return mPassiveCompModel;
+}
+
+EUnitCombatCondition UUnitModel::GetCombatCondition() const
+{
+	return mCombatCondition;
+}
+
+void UUnitModel::RefreshCombatCondition()
+{
+	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
+
+	mCombatCondition = StaticCast<EUnitCombatCondition>(
+		RandomStream.RandRange(
+			0,
+			StaticCast<int32>(EUnitCombatCondition::Good)
+		)
+	);
+
+	int32 StatusCriticalThreshild = {
+		GetAttributeComponentModel()->GetAggregatedStackCountWithAllTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny)) +
+		GetAttributeComponentModel()->GetAggregatedStackCountWithAllTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny))
+	};
+	int32 AttributeCriticalThreshold = GetAttributeComponentModel()->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
+	float CriticalPercent = RandomStream.FRand() * 100.f;
+
+	const bool IsCritical = CriticalPercent < (AttributeCriticalThreshold + StatusCriticalThreshild);
+	if (IsCritical == true)
+	{
+		mCombatCondition = EUnitCombatCondition::Excellent;
+	}
 }
 

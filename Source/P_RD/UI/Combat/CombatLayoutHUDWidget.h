@@ -145,7 +145,7 @@ public:
 	/** @brief 턴 순서에 표시할 최대 인원. */
 	static constexpr int32 TurnSlotCount = 10;
 
-	/** @brief 좌하단 AP 위에 한 줄로 보이는 파티 공용 아티팩트 수. */
+	/** @brief 구형 전투 HUD 호환용 파티 공용 아티팩트 슬롯 수. */
 	static constexpr int32 ArtifactSlotCount = 6;
 
 	/** @brief 커맨드 레일 칸 수. 이동 + 기본공격 + 스킬 4개. */
@@ -153,6 +153,14 @@ public:
 
 	/** @brief 누른 동안 줄어드는 정도. 더 줄이면 눌린 게 아니라 튄 것으로 보인다. */
 	static constexpr float PressedScale = 0.95f;
+
+	/** @brief 카드 한 장이 다 뜨는 데 걸리는 시간(초). */
+	// 0.18초를 넘기면 펴자마자 누르려는 손이 연출을 기다리게 된다.
+	static constexpr float CommandRevealDuration = 0.16f;
+	/** @brief 카드 사이 시차(초). 여섯 장이 차례로 앉는 것이 읽힐 만큼만. */
+	static constexpr float CommandRevealStagger = 0.035f;
+	/** @brief 등장 시작 배율. 더 작게 하면 카드가 멀리서 날아오는 것처럼 보인다. */
+	static constexpr float CommandRevealStartScale = 0.86f;
 
 	/** @brief PR457 상세 겹이 현재 열려 있는가. 입력 흐름과 자동화 검증이 함께 쓴다. */
 	bool IsDetailOverlayShown() const;
@@ -190,7 +198,6 @@ public:
 	}
 	FString GetDetailChipValueForTest(int32 ChipIndex) const;
 	FString GetDetailSubtitleForTest() const;
-
 	/** @brief 상태 소켓 타이머를 기다리지 않고 발화시켜 상세 왕복을 검증한다. */
 	void TriggerStatusLongPressForTest(bool bAlly, int32 SlotIndex);
 	/** @brief 상태 소켓 긴 누름 타이머가 실제로 대기 중인지. */
@@ -240,6 +247,11 @@ public:
 	void SetVictoryWorldMapForTest(class UFrontendMapWidget* InWorldMap)
 	{
 		mVictoryWorldMap = InWorldMap;
+	}
+	/** @brief 예정 AP 글로우가 시간에 따라 실제로 펄스하는지 자동화에서 전진시킨다. */
+	void AdvancePendingAPGlowForTest(float DeltaTime)
+	{
+		RefreshPendingAPGlow(DeltaTime);
 	}
 #endif
 
@@ -377,6 +389,21 @@ private:
 	 */
 	void RefreshCommandVisibility();
 
+	/**
+	 * @brief 카드가 펴지는 순간을 눈으로 따라갈 수 있게 한다.
+	 *
+	 * @details 카드 여섯 장이 한 프레임에 통째로 나타나면 무엇이 새로
+	 * 생겼는지 읽히지 않는다(0824 검수: "스킬UI 뜨는거 애니메이션 해보기").
+	 * 이동 카드부터 시계 방향으로 한 장씩 조금씩 늦게, 살짝 작은 상태에서
+	 * 제 크기로 커지며 밝아진다. 접을 때는 즉시 사라진다 -- 접기는 다음
+	 * 조작을 막지 않아야 한다.
+	 *
+	 * 연출용 상태는 화면에만 있다. UIModel 은 카드가 뜨는지도 모른다.
+	 */
+	void UpdateCommandRevealAnimation(float InDeltaTime);
+	/** @brief 다음 표시에서 등장 연출을 처음부터 다시 재생하게 한다. */
+	void RestartCommandRevealAnimation();
+
 	/** @brief 지금 조준 중인가. 조준 중에는 카드가 비켜 있다. */
 	bool IsAiming() const;
 
@@ -435,6 +462,8 @@ private:
 
 	/** @brief 이만큼 안에서 움직였으면 톡 친 것으로 본다(px). */
 	static constexpr float BoardTapSlack = 24.f;
+	/** @brief 턴바를 이만큼 가로로 밀면 다음/이전 페이지로 넘긴다(px). */
+	static constexpr float TurnSwipeSlack = 48.f;
 
 	FVector2D mPressOrigin = FVector2D::ZeroVector;
 	bool mPressMoved = false;
@@ -489,10 +518,19 @@ private:
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mChromeWidgets;
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	bool TryConsumeTurnSwipe(const FVector2D& ScreenPosition);
+	void PollTurnBarMouseSwipe();
+
+	/** Child turn-token buttons consume pointer down/up, so the parent tracks the swipe in preview. */
+	bool mTurnSwipeTracking = false;
+	bool mTurnSwipeConsumed = false;
+	FVector2D mTurnSwipeOrigin = FVector2D::ZeroVector;
 
 	UFUNCTION() void HandleCommandClicked_0();
 	UFUNCTION() void HandleCommandClicked_1();
@@ -549,12 +587,17 @@ private:
 	int32 PartyUnitIdAt(int32 SlotIndex) const;
 
 	/**
-	 * @brief 사용자가 카드를 펴 두었나. 턴이 시작되면 펴진다.
+	 * @brief 사용자가 스킬 버튼으로 카드를 펴 두었나.
 	 *
 	 * 이것이 곧 보이는 여부는 아니다. 조준 중에는 펴 둔 채로도 안 보인다 --
 	 * RefreshCommandVisibility() 를 보라.
 	 */
-	bool mCommandsShown = true;
+	bool mCommandsShown = false;
+
+	/** @brief 카드 등장 연출 경과(초). 음수면 아직 안 뜬 상태다. */
+	float mCommandRevealElapsed = -1.f;
+	/** @brief 직전 프레임에 카드가 실제로 보였나. 뜨는 순간을 잡는 기준. */
+	bool mCommandsVisibleLastFrame = false;
 
 	/** @brief 직전 차례의 유닛. 차례가 바뀔 때만 카드를 편다. */
 	int32 mLastTurnUnitId = INDEX_NONE;
@@ -577,6 +620,8 @@ private:
 	UPROPERTY() TObjectPtr<UButton> mTurnPageRight;
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnPageLeftText;
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnPageRightText;
+	/** @brief 가로 스와이프 시작 위치를 판정할 턴바 전체 영역. */
+	UPROPERTY() TObjectPtr<UWidget> mTurnPanel;
 
 	UFUNCTION() void HandleTurnPageLeftClicked();
 	UFUNCTION() void HandleTurnPageRightClicked();
@@ -693,39 +738,37 @@ private:
 	UPROPERTY() TObjectPtr<class UScaleBox> mPartyLayer;
 
 
-	/** @brief 확정 단추 묶음. 공격 범위가 뜬 그때만 편다. */
+	/** @brief 스킬 선택 즉시 보이고 Preview 단계에서만 활성화되는 확정 묶음. */
 	UPROPERTY() TObjectPtr<UWidget> mConfirmPanel;
 	UPROPERTY() TObjectPtr<UButton> mConfirmButton;
 
-	/** @brief 턴 종료 글자. 무르는 중에는 "취소" 로 바뀐다. */
+	/** @brief 턴 종료는 평상시에만 고정 위치/의미로 보인다. */
+	UPROPERTY() TObjectPtr<UWidget> mEndTurnPanel;
 	UPROPERTY() TObjectPtr<UTextBlock> mEndTurnLabel;
+	/** @brief 조준 취소 전용 단추. 턴 종료와 다른 위치·색·크기를 쓴다. */
+	UPROPERTY() TObjectPtr<UWidget> mCancelPanel;
+	UPROPERTY() TObjectPtr<UButton> mCancelButton;
+	UPROPERTY() TObjectPtr<UTextBlock> mCancelLabel;
 
-	/** @brief 가운데 AP 막대. 지금 차례인 유닛 것을 그린다. */
+	/** @brief 좌상단 AP 막대. 지금 차례인 유닛 것을 최대 15칸으로 그린다. */
 	UPROPERTY() TObjectPtr<UWidget> mTurnAPRoot;
 	UPROPERTY() TObjectPtr<UTextBlock> mTurnAPText;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPips;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipsUsed;
+	/** @brief 소모 예정 칸 위에만 켜는 별도 밝은 펄스. 기본 보석은 흔들지 않는다. */
+	UPROPERTY() TArray<TObjectPtr<UWidget>> mTurnAPPipGlows;
 
 	/** @brief WBP_MercenaryPanel의 3인 목록 아래 인벤토리 탭. */
 	UPROPERTY() TObjectPtr<UButton> mMercenaryInventoryButton;
 
-	/** @brief 좌하단 AP 위의 파티 공용 아티팩트 그림. 별도 프레임은 쓰지 않는다. */
+	/** @brief 구형 전투 HUD 호환용 파티 공용 아티팩트 그림. 별도 프레임은 쓰지 않는다. */
 	UPROPERTY() TArray<TObjectPtr<UImage>> mArtifactIcons;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mArtifactFrames;
 
 	UFUNCTION() void HandleConfirmClicked();
+	UFUNCTION() void HandleCancelClicked();
 
-	/**
-	 * @brief 좁은 화면에서 HUD 를 키운다.
-	 *
-	 * @details
-	 * 16:9 보다 좁아질수록(폴드처럼 세로로 긴 화면) 판이 작아 보인다. 가로가
-	 * 기준인데 그 가로가 줄기 때문이다.
-	 *
-	 * 그래서 **얼마나 좁아졌나**를 그대로 배율로 쓴다. 16:9 면 1.0 이고,
-	 * 4:3 이면 1.33 이다. 위쪽 줄(라운드·턴 순서·메뉴)은 안 건드린다 -- 그쪽은
-	 * 가로로 길어서 키우면 서로 부딪힌다.
-	 */
+	/** @brief 전역 DPI 외 별도 카드/파티 배율이 남지 않게 정리한다. */
 	void RefreshScreenScale();
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
@@ -1041,6 +1084,16 @@ private:
 	/** @brief 용병 목록에서 고른 줄. INDEX_NONE 이면 지금 차례인 용병을 본다. */
 	int32 mMercenarySelectedSlot = INDEX_NONE;
 
+	/**
+	 * @brief 지금 들여다보는 아군 유닛 id. INDEX_NONE 이면 차례인 유닛이 기준.
+	 *
+	 * @details 용병 목록에서 고른 줄(mMercenarySelectedSlot)과 달리, **판에서
+	 * 직접 누른** 아군까지 담는다. 판 탭은 목록 줄을 안 건드리므로 이 값이
+	 * 없으면 카드 롱프레스 초점이 차례 유닛으로 되돌아가, 남의 카드를 보다
+	 * 상세를 열면 카메라만 차례 유닛으로 튀었다(0824 검수).
+	 */
+	int32 mInspectedAllyUnitId = INDEX_NONE;
+
 	// 상태 아이콘 긴 누름이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
 	TArray<FStatusEffectUI> mAllyShownStatuses;
 	TArray<FStatusEffectUI> mEnemyShownStatuses;
@@ -1310,8 +1363,8 @@ private:
 
 	/* ── 쓸 행동력 미리 보이기 ────────────────────────────────────────────
 	 *
-	 * 카드를 고르면 그 몫만큼 칸이 숨쉬듯 빛난다. 쓰면 뒤부터 없어지므로
-	 * 뒤에서부터 빛낸다.
+	 * 카드를 고르면 그 몫만큼 칸이 숨쉬듯 빛난다. AP는 왼쪽부터 소모되므로
+	 * 현재 남은 묶음의 왼쪽부터 빛낸다.
 	 *
 	 * 스킬 비용과 이동 경로 비용은 게임플레이가 pending action으로 내려 준다.
 	 * 화면은 경로나 스킬 데이터를 다시 계산하지 않는다.
@@ -1319,14 +1372,23 @@ private:
 	int32 GetPendingActionCost() const;
 	void RefreshPendingAPGlow(float DeltaTime);
 
-	/** @brief 한 번 숨쉬는 데 걸리는 빠르기(라디안/초). */
-	static constexpr float APGlowSpeed = 4.2f;
+	/** @brief 한 AP 칸이 어두움에서 빛남을 거쳐 다시 어두워지는 시간. */
+	static constexpr float APGlowFlashDuration = .42f;
+	/** @brief 어두운 소모 예정 칸이 원래 밝기에 도달하는 시각. */
+	static constexpr float APGlowNormalTime = .12f;
+	/** @brief 원래 밝기를 지나 가장 밝아지는 시각. */
+	static constexpr float APGlowFlashPeakTime = .20f;
+	/** @brief 왼쪽 칸에서 다음 칸으로 넘어가는 간격. */
+	static constexpr float APGlowStagger = .20f;
+	/** @brief 마지막 칸이 끝난 뒤 다음 반복까지 쉬는 시간. */
+	static constexpr float APGlowRepeatGap = .55f;
 
 	int32 mPendingAPCost = 0;
 	int32 mShownAPLeft = 0;
-	float mAPGlowPhase = 0.f;
+	int32 mShownAPTotal = 0;
+	float mAPGlowElapsed = 0.f;
 
-	/** @brief 가운데 AP 막대를 지금 차례인 유닛으로 채운다. */
+	/** @brief 좌상단 AP 막대를 지금 차례인 유닛으로 채운다. */
 	void RefreshTurnActionPoints();
 
 private:
@@ -1377,6 +1439,9 @@ private:
 		TObjectPtr<UTextBlock> Cooldown;
 		/** @brief 쿨타임 글자 옆 아이콘. 글자와 같이 켜지고 꺼진다. */
 		TObjectPtr<UWidget> CooldownIcon;
+		/** @brief 스킬 그림 정중앙을 덮는 남은 쿨타임 겹. */
+		TObjectPtr<UWidget> CooldownOverlayRoot;
+		TObjectPtr<UTextBlock> CooldownOverlay;
 		TObjectPtr<UTextBlock> Damage;
 		TObjectPtr<UWidget> Disabled;
 	};
@@ -1439,6 +1504,7 @@ private:
 
 	TObjectPtr<UButton> mEndTurnButton;
 	TObjectPtr<UButton> mSkillToggleButton;
+	TObjectPtr<UWidget> mSkillTogglePanel;
 	TObjectPtr<UWidget> mSkillTogglePlate;
 	TObjectPtr<UWidget> mSkillToggleLabel;
 

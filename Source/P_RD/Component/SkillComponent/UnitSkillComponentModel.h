@@ -27,4 +27,8 @@ protected:
 public:
 	bool HasRequiredActionPoint(int32 SkillIndex) const;
 	int32 GetRequiredActionPoint(int32 SkillIndex) const;
+
+public:
+	int32 GetRandomDamage(int32 Min, int32 Max) const override;
+	bool IsCritical(int32 Threshold) const override;
 };

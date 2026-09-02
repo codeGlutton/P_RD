@@ -166,6 +166,23 @@ protected:
 
 	void DeactivateSkill();
 
+	/* 랜덤 데미지 연관 */
+public:
+	/**
+	 * @brief 랜덤 확률을 데미지를 추출하는 함수
+	 * @param Min 최소 데미지
+	 * @param Max 최대 데미지
+	 * @return Min, Max 사이의 랜덤한 값
+	 */
+	virtual int32 GetRandomDamage(int32 Min, int32 Max) const;
+	/**
+	 * @brief 크리티컬 여부를 확인하는 함수
+	 * @param Threshold 크리티컬 확정 커트 라인
+	 * @return 크리티컬 여부
+	 */
+	virtual bool IsCritical(int32 Threshold) const;
+
+	/* 추가 API */
 public:
 	bool IsAnySkillActivated() const;
 	const FActiveSkillContext& GetActiveSkillContext() const;
