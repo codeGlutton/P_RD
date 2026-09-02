@@ -122,7 +122,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_PoisonDart,				"Animation.Montage.Skill.Mercenary.Rogue.PoisonDart");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_HookAndPull,				"Animation.Montage.Skill.Mercenary.Rogue.HookAndPull");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_LegSweep,				"Animation.Montage.Skill.Mercenary.Rogue.LegSweep");
-
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_Ambush,					"Animation.Montage.Skill.Mercenary.Rogue.Ambush");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_BloodiedBlade,			"Animation.Montage.Skill.Mercenary.Rogue.BloodiedBlade");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_Poison,					"Animation.Montage.Skill.Mercenary.Rogue.Poison");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_Doping,					"Animation.Montage.Skill.Mercenary.Rogue.Doping");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_PoisonBomb,				"Animation.Montage.Skill.Mercenary.Rogue.PoisonBomb");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_Evasion,					"Animation.Montage.Skill.Mercenary.Rogue.Evasion");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_NormalAttack,			"Animation.Montage.Skill.Mercenary.Druid.NormalAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Longstrider,				"Animation.Montage.Skill.Mercenary.Druid.Longstrider");
