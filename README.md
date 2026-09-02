@@ -15,22 +15,20 @@ It features a tactical turn-based action queue system powered by unit attributes
 | :--- | :--- | :--- |
 | **생성 팩토리** | `UGameObjectModelFactory` | `USimulationObjectModelFactory` |
 | **뷰/액터 구성** | `Model` + `AObjectView` (양방향 바인딩) | 뷰 액터 없음 (Pure C++ 데이터 모델 상주) |
-| **시각 연출** | 3D 레벨 스폰, 메시 렌더링 & VFX 연출 | No-Rendering (월드 스폰 오버헤드 0%) |
-| **실행 목적 & 성능** | 실시간 플레이어 조작 & 화면 표현 | 백그라운드 100배 고속 연산, AI 예측 & 밸런스 검증 |
+| **시각 연출** | 3D 레벨 스폰, 메시 렌더링 & VFX 연출 | No-Rendering (랜더링 오버헤드 제거) |
+| **실행 목적 & 성능** | 실시간 플레이어 조작 & 화면 표현 | 턴 진행, 스킬 결과 예측 |
 | **이벤트 처리** | 화면 연출용 이벤트 실시간 소모 | `USimulationEventLogger`에 상세 턴/액션 로그 축적 |
 
-* **컴포넌트 데이터 모델 (`UComponentModel`)**: 패시브, 장비, 스탯 메커니즘을 유연하게 확장 및 조립할 수 있도록 모듈화된 컴포넌트 모델 구조를 제공합니다.
-
 ### 2. SRPG 턴 프레임워크 & Action Queue (`SRPGFramework`)
-유닛의 스피드 포인트(Speed Point) 충전 및 요구치 달성에 따라 라운드별 턴 후보(`FSRPGTurnCandidate`)를 동적으로 선출하고 턴 예보(Turn Forecast)를 지원하는 5단계 파이프라인 시스템입니다.
+유닛의 스피드 포인트(Speed Point) 충전 및 요구치 달성에 따라 라운드별 턴 후보(`FSRPGTurnCandidate`)를 동적으로 선출하고 차례로 진행하는 5단계 파이프라인 시스템입니다.
 
 | 단계 | 파이프라인 | 주요 수행 내용 |
 | :--- | :--- | :--- |
 | **STEP 1** | **Round Evaluation** | 라운드 시작 시 유닛별 스피드 포인트(`SpeedPoint`) 평가 및 누적 충전 |
 | **STEP 2** | **Turn Candidate Selection** | 턴 요구 수치 달성 유닛을 턴 후보(`FSRPGTurnCandidate`)로 선출 및 정렬 (동률 발생 시 Random Tie-Breaker 적용) |
 | **STEP 3** | **Turn Registration & Cost** | 턴 후보의 스피드 포인트 차감(`UTacticalEffect_SpeedPoint`) 및 라운드 턴 큐(`RegisterTurn`) 등록 |
-| **STEP 4** | **Turn Start & Action Queue** | 턴 시작 시 패시브 능력 트리거 후, 플레이어/AI 라우터(`CommandRouterModel`)를 통해 이동(`SRPGMoveAction`) 및 스킬(`SRPGSkillAction`) 행동 적재 |
-| **STEP 5** | **Async Execution & State Check** | 스탯 스냅샷/패시브 연산, 행동 비동기 연출 실행, 턴 종료 처리(`OnEndTurn`) 및 전투 상태 평가(`EvaluateCombatStates`) |
+| **STEP 4** | **Turn Start & Action Queue** | 턴 진행 및 플레이어/AI 라우터(`CommandRouterModel`)를 통해 입력된 이동(`SRPGMoveAction`) 및 스킬(`SRPGSkillAction`) 행동 적재 |
+| **STEP 5** | **Async Execution & State Check** | 액션 및 턴 종료 처리(`OnEndTurn`)시에 전투 상태 평가(`EvaluateCombatStates`)로 전투 종료 판단 |
 
 ### 3. 절차적 노드 방 생성 (PCG Stage System)
 * `StageBuilder`를 활용해 보물(Treasure), 상점(Shop), 일반/엘리트 몬스터, 보스(Boss) 방 노드를 동적으로 구성하여 플레이어 선택에 따른 분기형 탐색 경로를 제공합니다.
