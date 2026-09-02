@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "TAS/Passive/PassiveCondition.h"
 #include "StaticPassiveData.generated.h"
 
 class UTacticalPassive;
@@ -25,17 +26,53 @@ enum class EPassiveTargetQuantifier : uint8
 	All		UMETA(DisplayName = "All"),		// 모든 타겟이 자격을 갖춰야 발동
 };
 
-USTRUCT(BlueprintType)
-struct FPassiveCondition
+/**
+ * @brief 효과 적용 대상
+ */
+UENUM(BlueprintType)
+enum class EPassiveEffectTarget : uint8
 {
-    GENERATED_BODY()
+	Self	UMETA(DisplayName = "자신"),	// 패시브 소유자에게만 적용
+	Targets	UMETA(DisplayName = "대상"),	// Ctx.mTargets 전부에 적용
+};
 
-public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FGameplayTag mConditionTag;     // 조건 태그
+/**
+ * @brief 캡처 엔트리 (캡처 타이밍에 저장할 값 하나)
+ *
+ * @details
+ * 캡처 타이밍 도달 시 피연산자를 평가해 키별로 저장.
+ * 발동 조건의 Captured 피연산자가 같은 키로 읽음.
+ * 피연산자 종류는 Attribute / TagCount만 허용.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FPassiveCaptureEntry
+{
+	GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float mThresholdValue = 0.f;    // 기준 수치 (예: 데미지 10, HP 30%)
+	// 저장 키 (Captured 피연산자의 캡처 키와 짝)
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "키"))
+	FName mKey;
+
+	// 저장할 값 정의
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "피연산자"))
+	FPassiveOperand mOperand;
+};
+
+/**
+ * @brief 효과 엔트리 (적용할 이펙트 하나)
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FPassiveEffectEntry
+{
+	GENERATED_BODY()
+
+	// 이펙트 종류 클래스 (속성, 연산, 지속정책은 이 클래스가 정의)
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "이펙트 클래스", AssetBundles = "Actor"))
+	TSoftClassPtr<UTacticalEffect> mEffectClass;
+
+	// 적용 수치 (피연산자로 계산. 고정값이면 Const)
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "수치"))
+	FPassiveOperand mMagnitude;
 };
 
 /**
@@ -47,89 +84,126 @@ class P_RD_API UStaticPassiveData : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-    FPrimaryAssetId GetPrimaryAssetId() const override
-    {
-        return FPrimaryAssetId(SkillPrimaryAssetTypes::GetPassiveType(), GetFName());
-    }
+	UStaticPassiveData();
+
+	FPrimaryAssetId GetPrimaryAssetId() const override
+	{
+		return FPrimaryAssetId(SkillPrimaryAssetTypes::GetPassiveType(), GetFName());
+	}
+
+#if WITH_EDITOR
+	/**
+	* @brief 에디터 저장/검증 시 데이터 오류 검사
+	*
+	* @details
+	* - 타이밍 태그, 피연산자 필수 필드, 캡처 짝, 이펙트 제약을 검사
+	* - 잘못 구성한 DA를 저장 시점에 에러/경고로 알림
+	*/
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
 
 public:
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
-    FText mDescription;
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
+	FText mDescription;
 
-    UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
-    TSoftObjectPtr<UTexture2D> mIcon;
+	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
+	TSoftObjectPtr<UTexture2D> mIcon;
 
 public:
-    /**
-    * @brief 패시브 발동 시점 (단일)
-    *
-    * @details
-    * 이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등).
-    * 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다.
-    */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing"))
+	/**
+	* @brief 패시브 발동 시점 (단일)
+	*
+	* @details
+	* 이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등).
+	* 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다.
+	* 시점에 따라 조건/효과의 "대상"이 달라짐:
+	* - Room/Turn/UsingSkill: 자기 자신
+	* - ApplyingEffect: 스킬 최종 타겟들
+	* - ReceivingEffect: 시전자
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing", ToolTip = "이펙트를 적용할 시점"))
 	FGameplayTag mActivateTimingTag;
 
-    /**
-    * @brief 패시브 해제 시점 (단일)
-    *
-    * @details
-    * 적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝).
-    */
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing"))
+	/**
+	* @brief 패시브 해제 시점 (단일)
+	*
+	* @details
+	* 적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝).
+	* Instant 이펙트는 적용 순간 끝나므로 해제 대상이 아님. 이때는 비워 둠.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing", ToolTip = "적용 중인 이펙트를 제거할 시점"))
 	FGameplayTag mDeactivateTimingTag;
 
-    /**
-    * @brief 패시브 발동 조건
-    *
-    * @details
-    * 패시브의 발동 조건(mConditionTag),
-    * 패시브의 발동 조건 수치(mThresholdValue)
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Passive Trigger Condition"))
-    TArray<FPassiveCondition> mPassiveTriggerCondition;
+	/**
+	* @brief 카운터 리셋 시점 (단일)
+	*
+	* @details
+	* 도달 시 내부 카운터를 0으로 초기화. 비우면 리셋 없음.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Counter Reset Timing"))
+	FGameplayTag mCounterResetTimingTag;
 
-    /**
-    * @brief 수량 조건
-    *
-    * @details
-    * 발동 조건을 통과한 타겟이 얼마나 있어야 발동하는지 여부.
-    * Any=하나라도, All=전부.
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Target Quantifier"))
-    EPassiveTargetQuantifier mTargetQuantifier = EPassiveTargetQuantifier::Any;
+	/**
+	* @brief 캡처 시점 (단일)
+	*
+	* @details
+	* 도달 시 mCaptureOperands를 평가해 값을 저장. 비우면 캡처 없음.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Capture Timing"))
+	FGameplayTag mCaptureTimingTag;
 
-    /**
-    * @brief 패시브 클래스
-    *
-    * @details
-    * 고정형은 제네릭(UTacticalPassive_AddStat), 계산형은 Nth 등.
-    * 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다.
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PassiveClass", AssetBundles = "Actor"))
-    TSoftClassPtr<UTacticalPassive> mPassiveClass;
+	/**
+	* @brief 캡처 목록
+	*
+	* @details
+	* 캡처 시점에 저장할 값 정의. 발동 조건의 Captured 피연산자가 키로 읽음.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Capture Operands"))
+	TArray<FPassiveCaptureEntry> mCaptureOperands;
 
-    /**
-    * @brief 적용할 이펙트 "종류" 클래스
-    *
-    * @details
-    * 속성·연산(op)·지속정책은 이 이펙트 클래스가 정의. 양(magnitude)은 mMagnitude로 공급.
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectClass", AssetBundles = "Actor"))
-    TSoftClassPtr<UTacticalEffect> mEffectClass;
+	/**
+	* @brief 발동 조건 (AND)
+	*
+	* @details
+	* 전부 통과해야 발동. 빈 배열 = 무조건 발동.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Conditions"))
+	TArray<FPassiveCondition> mConditions;
 
-    /**
-    * @brief 적용 수치(양)
-    *
-    * @details
-    * '+5' vs '+10'은 서로 다른 DA. 등급/레벨 스케일이 필요해지면 커브로 확장.
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
-    float mMagnitude = 0.f;
+	/**
+	* @brief 수량 조건
+	*
+	* @details
+	* 발동 조건을 통과한 타겟이 얼마나 있어야 발동하는지 여부.
+	* Any=하나라도, All=전부.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Target Quantifier"))
+	EPassiveTargetQuantifier mTargetQuantifier = EPassiveTargetQuantifier::Any;
 
-    /**
-    * @brief 계산형 패시브의 파라미터(예: 매 N회 발동). 고정형은 미사용.
-    */
-    UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Threshold"))
-    int32 mThreshold = 0;
+	/**
+	* @brief 효과 목록
+	*
+	* @details
+	* 발동 시 순서대로 전부 적용. 수치는 피연산자로 계산.
+	* Instant 이펙트는 발동할 때마다 온전히 적용됨.
+	* Infinite 이펙트는 재발동 시 이전 적용을 지우고 새로 적용. 수치가 쌓이지 않음.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Effects", ToolTip = "발동 시 적용할 이펙트 목록"))
+	TArray<FPassiveEffectEntry> mEffects;
+
+	/**
+	* @brief 효과 적용 대상
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Effect Target"))
+	EPassiveEffectTarget mEffectTarget = EPassiveEffectTarget::Self;
+
+	/**
+	* @brief 패시브 클래스
+	*
+	* @details
+	* 기본은 제네릭(UTacticalPassive_Generic).
+	* 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PassiveClass", AssetBundles = "Actor"))
+	TSoftClassPtr<UTacticalPassive> mPassiveClass;
 };

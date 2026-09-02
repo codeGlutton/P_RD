@@ -1,5 +1,15 @@
 ﻿#include "AttributeSet/LevelAttributeCache.h"
 
+float FLevelAttributeCache::GetMaxExp(int32 Level) const
+{
+	const int32 Index = Level - 1;
+	if (mMaxExps.IsValidIndex(Index) == true)
+	{
+		return mMaxExps[Index];
+	}
+	return 0.f;
+}
+
 FRarityRate FLevelAttributeCache::GetRarityRate(int32 Level) const
 {
 	const int32 Index = Level - 1;

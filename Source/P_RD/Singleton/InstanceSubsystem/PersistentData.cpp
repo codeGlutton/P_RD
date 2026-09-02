@@ -214,10 +214,6 @@ void UPlayerUnitPersistData::SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit)
 	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetHPAttribute(), ETacticalModOp::Override, mHP);
 	AttributeSetComponentModel->ApplyModToAttribute(UPlayerUnitAttributeSet::GetExpAttribute(), ETacticalModOp::Override, mExp);
 
-	// 손상되었거나 구버전인 저장값이 상한/임계치를 넘으면 모델의 공통 규칙으로 보정된 값을 다시 보관한다.
-	mPlayerLevel = PlayerUnit->GetPlayerLevel();
-	mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
-
 	// 플레이어 태그 동기화
 	for (auto& Pair : mTagCountMap)
 	{
