@@ -35,9 +35,6 @@ namespace SkillDetailContentWidgetBuilder
 	constexpr TCHAR AssetName[] = TEXT("WBP_SkillDetailContent");
 	constexpr TCHAR AssetPath[] =
 		TEXT("/Game/UI/CombatDetail/WBP_SkillDetailContent.WBP_SkillDetailContent");
-	constexpr TCHAR RingPath[] =
-		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/"
-			"T_KitA_StatChip_Ring.T_KitA_StatChip_Ring");
 	constexpr TCHAR RangeNormalPath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
 			"T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
@@ -55,9 +52,12 @@ namespace SkillDetailContentWidgetBuilder
 			"KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
 	constexpr TCHAR CriticalPath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
-			"T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+			"T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1");
 
 	const FVector2D ContentSize(1230.f, 563.f);
+	// 투명 캔버스는 브러시 UV에서 제거한다. 글자 상자는 보이는 판을 기준으로
+	// 좌우 같은 여백을 사용해야 라벨의 중심과 판의 중심이 일치한다.
+	const FMargin RangeTextSafePadding(40.f, 0.f, 40.f, 0.f);
 	const FVector2D StatIconPositions[] = {
 		FVector2D(42.f, 272.f), FVector2D(42.f, 314.f),
 		FVector2D(42.f, 356.f), FVector2D(42.f, 398.f) };
@@ -96,6 +96,26 @@ namespace SkillDetailContentWidgetBuilder
 			const FIntPoint Imported = Source->GetImportedSize();
 			Brush.ImageSize = FVector2D(Imported.X, Imported.Y);
 		}
+		return Brush;
+	}
+
+	FSlateBrush RangeButtonBrush(UTexture2D* Source)
+	{
+		FSlateBrush Brush = ImageBrush(Source);
+		if (Source == nullptr)
+		{
+			return Brush;
+		}
+		// 원본 소스 알파 실측값. Normal 1024x128=(32,0)-(994,118),
+		// Selected=(33,0)-(992,121). 투명 캔버스를 Slate 배치에 남기지 않는다.
+		const bool bSelected = Source->GetName().Contains(TEXT("Selected"));
+		const FVector2f Min = bSelected
+			? FVector2f(33.f / 1024.f, 0.f)
+			: FVector2f(32.f / 1024.f, 0.f);
+		const FVector2f Max = bSelected
+			? FVector2f(992.f / 1024.f, 121.f / 128.f)
+			: FVector2f(994.f / 1024.f, 118.f / 128.f);
+		Brush.SetUVRegion(FBox2f(Min, Max));
 		return Brush;
 	}
 
@@ -176,9 +196,10 @@ namespace SkillDetailContentWidgetBuilder
 		const float PlateHeight = ButtonSize.X / 8.f;
 		const FVector2D PlatePosition(Position.X,
 			Position.Y + (ButtonSize.Y - PlateHeight) * .5f);
-		AddImage(Blueprint, Parent,
+		UImage* Plate = AddImage(Blueprint, Parent,
 			FName(*FString::Printf(TEXT("%sPlate"), Stem)), NormalTexture,
 			PlatePosition, FVector2D(ButtonSize.X, PlateHeight), 20);
+		Plate->SetBrush(RangeButtonBrush(NormalTexture));
 
 		UButton* Button = Blueprint->WidgetTree->ConstructWidget<UButton>(
 			UButton::StaticClass(), FName(*FString::Printf(TEXT("%sButton"), Stem)));
@@ -205,7 +226,7 @@ namespace SkillDetailContentWidgetBuilder
 		Button->SetContent(AutoFit);
 		if (UButtonSlot* Slot = CastChecked<UButtonSlot>(AutoFit->Slot))
 		{
-			Slot->SetPadding(FMargin(0.f));
+			Slot->SetPadding(RangeTextSafePadding);
 			Slot->SetHorizontalAlignment(HAlign_Fill);
 			Slot->SetVerticalAlignment(VAlign_Fill);
 		}
@@ -240,7 +261,6 @@ namespace SkillDetailContentWidgetBuilder
 
 	void Build()
 	{
-		UTexture2D* Ring = Texture(RingPath);
 		UTexture2D* RangeNormal = Texture(RangeNormalPath);
 		Texture(RangeSelectedPath);
 		UTexture2D* StatTextures[] = {
@@ -281,8 +301,8 @@ namespace SkillDetailContentWidgetBuilder
 		Backdrop->SetVisibility(ESlateVisibility::HitTestInvisible);
 		Place(Root, Backdrop, FVector2D::ZeroVector, ContentSize, 0);
 
-		AddImage(Blueprint, Root, TEXT("SkillIconFrame"), Ring,
-			FVector2D(30.f, 10.f), FVector2D(264.f, 264.f), 5);
+		// 스킬 아이콘은 원본 실루엣만 보여 준다. 아이콘별 외곽 형태를 가리는
+		// 공용 원형 프레임은 두지 않는다.
 		AddImage(Blueprint, Root, TEXT("SkillIconImage"), nullptr,
 			FVector2D(72.f, 52.f), FVector2D(180.f, 180.f), 6);
 		AddRule(Blueprint, Root, TEXT("SkillColumnDivider"),

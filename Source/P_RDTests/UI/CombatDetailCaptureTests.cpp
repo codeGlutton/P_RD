@@ -831,8 +831,13 @@ bool FRelatedWidgetTextBoundsContractTest::RunTest(const FString& Parameters)
 						OuterSlot->GetHorizontalAlignment(), HAlign_Fill);
 					TestEqual(Prefix + TEXT(" 버튼 라벨 상자 세로 전체"),
 						OuterSlot->GetVerticalAlignment(), VAlign_Fill);
-					TestEqual(Prefix + TEXT(" 버튼 내부 여백 0"),
-						OuterSlot->GetPadding(), FMargin(0.f));
+					const bool bRangeSafeArea = Text->GetFName()
+						== TEXT("SkillSelectRangeText")
+						|| Text->GetFName() == TEXT("SkillEffectRangeText");
+					TestEqual(Prefix + (bRangeSafeArea
+						? TEXT(" 범위판 장식 안전 여백") : TEXT(" 버튼 내부 여백 0")),
+						OuterSlot->GetPadding(), bRangeSafeArea
+							? FMargin(40.f, 0.f, 40.f, 0.f) : FMargin(0.f));
 				}
 			}
 		});
@@ -1030,6 +1035,8 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 			TestEqual(TEXT("통합 스킬 상세 레이아웃 표시"), Preview->GetVisibility(),
 				ESlateVisibility::SelfHitTestInvisible);
 		}
+		TestNull(TEXT("스킬 아이콘 공용 원형 프레임 제거"),
+			SkillContent->GetWidgetFromName(TEXT("SkillIconFrame")));
 		UWidget* DescriptionScroll = SkillContent->GetWidgetFromName(
 			TEXT("SkillDescriptionScroll"));
 		if (TestNotNull(TEXT("긴 설명용 스크롤 영역"), DescriptionScroll))
@@ -1051,6 +1058,13 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 					AutoFit->GetStretch(), EStretch::ScaleToFitX);
 				TestEqual(TEXT("사정 범위 글자는 확대하지 않음"),
 					AutoFit->GetStretchDirection(), EStretchDirection::DownOnly);
+				if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(AutoFit->Slot))
+				{
+					TestEqual(TEXT("범위 라벨 왼쪽 장식 안전 여백"),
+						ContentSlot->GetPadding().Left, 40.f);
+					TestEqual(TEXT("범위 라벨 좌우 대칭 안전 여백"),
+						ContentSlot->GetPadding().Right, 40.f);
+				}
 			}
 			if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(
 				RuntimeSelectButton->Slot))
@@ -1183,7 +1197,7 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 		{
 			UTexture2D* ExpectedCritical = LoadTexture(TEXT(
 				"/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
-				"T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2"));
+				"T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1"));
 			if (TestNotNull(TEXT("모바일용 단순 치명타 에셋"), ExpectedCritical))
 			{
 				TestEqual(TEXT("치명타 행이 단순 전용 에셋 사용"),
