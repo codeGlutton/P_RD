@@ -144,7 +144,12 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Web,						"Animation.Montage.Skill.Mercenary.Druid.Web");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_VineMire,				"Animation.Montage.Skill.Mercenary.Druid.VineMire");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_ExplosiveFruit,			"Animation.Montage.Skill.Mercenary.Druid.ExplosiveFruit");
-
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Reconstruction,			"Animation.Montage.Skill.Mercenary.Druid.Reconstruction");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Faith,					"Animation.Montage.Skill.Mercenary.Druid.Faith");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Decay,					"Animation.Montage.Skill.Mercenary.Druid.Decay");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_EssenceDrain,			"Animation.Montage.Skill.Mercenary.Druid.EssenceDrain");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_AcidRain,				"Animation.Montage.Skill.Mercenary.Druid.AcidRain");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Invincibility,			"Animation.Montage.Skill.Mercenary.Druid.Invincibility");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mushroom_Bodyslam,					"Animation.Montage.Skill.Enemy.Mushroom.Bodyslam");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mushroom_Spore_Exhaustion,			"Animation.Montage.Skill.Enemy.Mushroom.Spore.Exhaustion");
