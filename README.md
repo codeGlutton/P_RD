@@ -1,4 +1,4 @@
-# :computer: P_RD (Rogue the dice)
+# :computer: P_RD (폐허왕국 용병단)
 <div align="center">
 <img src="https://github.com/user-attachments/assets/placeholder-banner.png"/>
 </div>
@@ -29,7 +29,4 @@ It features a tactical action-building mechanism based on dice rolls and an opti
 * `StageBuilder`를 활용해 보물(Treasure), 상점(Shop), 일반/엘리트 몬스터, 보스(Boss) 방 노드를 동적으로 구성하여 플레이어 선택에 따른 분기형 탐색 경로를 제공합니다.
 
 ## :wrench: Tools & Technologies (사용한 기술)
-- **Engine** : Unreal Engine 5
-- **Language** : C++, Blueprint
-- **Architecture** : Model-View Pattern, Component Model System, Simulation Subsystem
-- **Framework** : Gameplay Ability System (GAS), PCG Stage System
+- **Engine** : Unreal Engine 5.7
