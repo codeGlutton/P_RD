@@ -123,7 +123,7 @@ struct P_RD_API FPassiveOperand
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "속성", EditCondition = "mKind == EPassiveOperandKind::Attribute", EditConditionHides))
 	FTacticalAttribute mAttribute;
 
-	// 셀 태그 (TagCount, 하위 태그 포함)
+	// 집계할 태그 (TagCount, 하위 태그 포함)
 	UPROPERTY(EditAnywhere, meta = (DisplayName = "태그", EditCondition = "mKind == EPassiveOperandKind::TagCount", EditConditionHides))
 	FGameplayTag mTag;
 

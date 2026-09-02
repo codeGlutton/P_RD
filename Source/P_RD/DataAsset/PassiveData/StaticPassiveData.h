@@ -91,6 +91,17 @@ public:
 		return FPrimaryAssetId(SkillPrimaryAssetTypes::GetPassiveType(), GetFName());
 	}
 
+#if WITH_EDITOR
+	/**
+	* @brief 에디터 저장/검증 시 데이터 오류 검사
+	*
+	* @details
+	* - 타이밍 태그, 피연산자 필수 필드, 캡처 짝, 이펙트 제약을 검사
+	* - 잘못 구성한 DA를 저장 시점에 에러/경고로 알림
+	*/
+	virtual EDataValidationResult IsDataValid(FDataValidationContext& Context) const override;
+#endif
+
 public:
 	UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
 	FText mDescription;
@@ -105,8 +116,12 @@ public:
 	* @details
 	* 이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등).
 	* 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다.
+	* 시점에 따라 조건/효과의 "대상"이 달라짐:
+	* - Room/Turn/UsingSkill: 자기 자신
+	* - ApplyingEffect: 스킬 최종 타겟들
+	* - ReceivingEffect: 시전자
 	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing"))
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate Timing", ToolTip = "이펙트를 적용할 시점"))
 	FGameplayTag mActivateTimingTag;
 
 	/**
@@ -114,8 +129,9 @@ public:
 	*
 	* @details
 	* 적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝).
+	* Instant 이펙트는 적용 순간 끝나므로 해제 대상이 아님. 이때는 비워 둠.
 	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing"))
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Deactivate Timing", ToolTip = "적용 중인 이펙트를 제거할 시점"))
 	FGameplayTag mDeactivateTimingTag;
 
 	/**
@@ -169,8 +185,10 @@ public:
 	*
 	* @details
 	* 발동 시 순서대로 전부 적용. 수치는 피연산자로 계산.
+	* Instant 이펙트는 발동할 때마다 온전히 적용됨.
+	* Infinite 이펙트는 재발동 시 이전 적용을 지우고 새로 적용. 수치가 쌓이지 않음.
 	*/
-	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Effects"))
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Effects", ToolTip = "발동 시 적용할 이펙트 목록"))
 	TArray<FPassiveEffectEntry> mEffects;
 
 	/**
