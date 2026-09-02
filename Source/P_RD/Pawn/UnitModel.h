@@ -108,5 +108,6 @@ private:
 	// @brief 팀 ID
 	FGenericTeamId mTeamId;
 	// @brief 전투 컨디션
+	UPROPERTY(Category = "Combat", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CombatCondition"))
 	EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
 };
