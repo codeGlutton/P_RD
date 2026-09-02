@@ -1,10 +1,7 @@
 # :computer: P_RD (폐허왕국 용병단)
 
-This project is a Rogue-lite SRPG developed using Unreal Engine 5.7.
-It features a tactical turn-based action queue system powered by unit attributes and an optimized dual Model-View architecture for both real-time gameplay and high-speed background simulation.
-
 이 프로젝트는 언리얼 엔진 5.7(Unreal Engine 5.7)을 사용하여 개발한 로그라이트 SRPG 게임입니다.
-유닛 속성 기반의 전략적 행동 큐 시스템과, 실시간 인게임 연출 및 백그라운드 고속 시뮬레이션을 동시에 지원하는 이원화 Model-View 아키텍처를 구현했습니다.
+Slay the Spire를 모티브로 한 방 탐색 구조에 턴제 기반 SRPG 전투 시스템을 융합했습니다.
 
 ## :pushpin: Main Architecture (핵심 아키텍처)
 
@@ -31,7 +28,7 @@ It features a tactical turn-based action queue system powered by unit attributes
 | **STEP 5** | **Async Execution & State Check** | 액션 및 턴 종료 처리(`OnEndTurn`)시에 전투 상태 평가(`EvaluateCombatStates`)로 전투 종료 판단 |
 
 ### 3. 절차적 노드 방 생성 (PCG Stage System)
-* `StageBuilder`를 활용해 보물(Treasure), 상점(Shop), 일반/엘리트 몬스터, 보스(Boss) 방 노드를 동적으로 구성하여 플레이어 선택에 따른 분기형 탐색 경로를 제공합니다.
+* `StageBuilder`를 활용해 보물(Treasure), 상점(Shop), 일반/엘리트 몬스터, 보스(Boss) 방 노드로 절차적으로 월드맵을 구성하여 플레이어가 선택가능한 다양한 경로를 제공합니다.
 
 ## :wrench: Tools & Technologies (사용한 기술)
 - **Engine** : Unreal Engine 5.7
