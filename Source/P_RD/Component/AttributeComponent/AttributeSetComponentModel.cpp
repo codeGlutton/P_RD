@@ -471,6 +471,11 @@ int32 UAttributeSetComponentModel::GetAggregatedStackCount(const FTacticalEffect
     return mActiveAttributeEffects.GetActiveEffectCount(Query);
 }
 
+int32 UAttributeSetComponentModel::GetAggregatedStackCountWithAllTags(FGameplayTagContainer Tags) const
+{
+    return mActiveAttributeEffects.GetActiveEffectCount(FTacticalEffectQuery::MakeQuery_MatchAllEffectTags(Tags));
+}
+
 void UAttributeSetComponentModel::CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType)
 {
     mActiveAttributeEffects.CheckDurationExpired(Time, UnitType);

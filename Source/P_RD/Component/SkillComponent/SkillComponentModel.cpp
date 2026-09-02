@@ -21,6 +21,8 @@
 #include "Animation/Notify/EventTriggerPayload.h"
 #include "Animation/SkillAnimationMetaData.h"
 
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
 namespace
 {
 	UStaticSkillData* LoadStaticSkillData(const FPrimaryAssetId& SkillId)
@@ -587,6 +589,19 @@ void USkillComponentModel::DeactivateSkill()
 	mActiveSkillContext.Clear();
 }
 
+int32 USkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
+{
+	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
+	return RandomStream.RandRange(Min, Max);
+}
+
+bool USkillComponentModel::IsCritical(int32 Threshold) const
+{
+	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
+	const float CriticalPercent = RandomStream.FRand() * 100.f;
+	return CriticalPercent < Threshold;
+}
+
 bool USkillComponentModel::IsAnySkillActivated() const
 {
 	return mActiveSkillContext.IsValid() == true;
@@ -739,3 +754,5 @@ int32 USkillComponentModel::GetRemainingCooldownTime(int32 SkillIndex) const
 	}
 	return AttributeSetCompModel->GetActiveEffectsTimeRemaining(SkillEntry->mCooldownHandle);
 }
+
+

@@ -103,3 +103,28 @@ int32 UUnitSkillComponentModel::GetRequiredActionPoint(int32 SkillIndex) const
 	return StaticCast<UStaticUnitSkillData*>(SkillEntry->mData)->mRequiredActionPoint;
 }
 
+int32 UUnitSkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
+{
+	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	switch (OwnerUnitModel->GetCombatCondition())
+	{
+	case EUnitCombatCondition::Excellent:
+	case EUnitCombatCondition::Good:
+		return Max;
+	case EUnitCombatCondition::Normal:
+		return (Min + Max) / 2;
+	default:
+		return Min;
+	}
+}
+
+bool UUnitSkillComponentModel::IsCritical(int32 Threshold) const
+{
+	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
+	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	return OwnerUnitModel->GetCombatCondition() == EUnitCombatCondition::Excellent;
+}
+

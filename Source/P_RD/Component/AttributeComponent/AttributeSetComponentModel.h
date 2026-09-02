@@ -236,6 +236,7 @@ public:
     float GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const;
     int32 GetCurrentStackCount(FActiveTacticalEffectHandle Handle) const;
     int32 GetAggregatedStackCount(const FTacticalEffectQuery& Query) const;
+    int32 GetAggregatedStackCountWithAllTags(FGameplayTagContainer Tags) const;
 
 public:
     /**
