@@ -18,6 +18,7 @@
 
 #include "Frontend/CharacterSelectTypes.h"
 #include "UI/Combat/CombatUITypes.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "Blueprint/GameViewportSubsystem.h"
@@ -28,6 +29,7 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
@@ -1167,7 +1169,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("설정 바 기본 표시"), ObjectivePanel->GetVisibility(),
 			ESlateVisibility::SelfHitTestInvisible);
 		CheckCanvasContract(TEXT("설정 바 루트"), ObjectivePanel,
-			FVector2D(-570.f, 2.f), FVector2D(564.f, 207.6f),
+			FVector2D(-570.f, 2.f),
+			FVector2D(RunOptionsRail::Width, RunOptionsRail::Height),
 			FVector2D(1.f, 0.f), FVector2D(1.f, 0.f),
 			FVector2D::ZeroVector, 90);
 		CheckRenderContract(TEXT("설정 바 루트"), ObjectivePanel,
@@ -1245,12 +1248,26 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	const FMargin MenuButtonPadding[] = {
-		FMargin(37.f, 31.f, 339.f, 30.f),
-		FMargin(138.f, 31.f, 238.f, 30.f),
-		FMargin(242.f, 31.f, 140.f, 30.f),
-	};
-	for (int32 Index = 0; Index < UE_ARRAY_COUNT(MenuButtonPadding); ++Index)
+	// 눌리는 사각형은 아이콘과 같은 배율로 움직인다. 기대값을 여기 다시 적으면
+	// 레일을 키울 때 또 갈라지므로, 화면과 같은 원본(RunOptionsRail)에서 만든다.
+	// 네 칸이 서로 겹치지 않는지도 함께 본다 -- 겹치면 아이콘 위 커서가 옆 칸을
+	// 잡는다(0824 검수 4번).
+	FMargin MenuButtonPadding[RunOptionsRail::SlotCount];
+	for (int32 Index = 0; Index < RunOptionsRail::SlotCount; ++Index)
+	{
+		const FVector2D Position = RunOptionsRail::ButtonPosition(Index);
+		const FVector2D Size = RunOptionsRail::ButtonSize();
+		MenuButtonPadding[Index] = FMargin(Position.X, Position.Y,
+			RunOptionsRail::Width - Position.X - Size.X,
+			RunOptionsRail::Height - Position.Y - Size.Y);
+		if (Index > 0)
+		{
+			const FVector2D Previous = RunOptionsRail::ButtonPosition(Index - 1);
+			TestTrue(*FString::Printf(TEXT("메뉴 %d 버튼이 앞 칸과 안 겹침"), Index),
+				Position.X >= Previous.X + Size.X);
+		}
+	}
+	for (int32 Index = 0; Index < RunOptionsRail::SlotCount; ++Index)
 	{
 		UButton* Button = Cast<UButton>(Tree->FindWidget(FName(
 			*FString::Printf(TEXT("MenuButton_%d"), Index))));
@@ -1262,15 +1279,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 				Button, MenuButtonPadding[Index], HAlign_Fill, VAlign_Fill);
 		}
 	}
-	if (UButton* SettingsButton = Cast<UButton>(
-		Tree->FindWidget(TEXT("MenuButton_3"))))
-	{
-		TestEqual(TEXT("설정 버튼은 옵션 Overlay 안"),
-			SettingsButton->GetParent(),
-			static_cast<UPanelWidget*>(OptionsRailFrameMount));
-		CheckOverlayContract(TEXT("설정 버튼"), SettingsButton,
-			FMargin(344.f, 36.f, 42.5f, 35.f), HAlign_Fill, VAlign_Fill);
-	}
+	// 설정 톱니(MenuButton_3)는 위 루프가 앞의 세 칸과 같은 규칙으로 검사한다.
 	for (const TCHAR* Name : {
 		TEXT("MenuMercenaryMaskLabel"), TEXT("MenuEmptyMaskLabel") })
 	{
@@ -1282,7 +1291,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	// 전장 유닛 탭은 상세창을 열지 않고 같은 크기의 요약판 두 종류로 읽는다.
+	// 전장 유닛 탭은 설정 바와 행동 단추 사이의 같은 세로 요약판으로 읽는다.
 	// 아군/적 중 하나만 선택되지만 WBP에는 두 계약이 모두 있어야 한다.
 	for (const TCHAR* Prefix : { TEXT("Enemy"), TEXT("Ally") })
 	{
@@ -1295,7 +1304,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s 요약판 기본값은 닫힘"), Prefix),
 				SummaryPanel->GetVisibility(), ESlateVisibility::Collapsed);
 			CheckCanvasContract(FString::Printf(TEXT("%s 요약판"), Prefix),
-				SummaryPanel, FVector2D(0.f, 140.f), FVector2D(575.f, 430.f),
+				SummaryPanel, FVector2D(0.f, 150.f), FVector2D(168.f, 550.f),
 				FVector2D(1.f, 0.f), FVector2D(1.f, 0.f),
 				FVector2D(1.f, 0.f), 60);
 			CheckRenderContract(FString::Printf(TEXT("%s 요약판"), Prefix),
@@ -1305,14 +1314,14 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			*FString::Printf(TEXT("%sPlate"), Prefix)))))
 		{
 			UObject* Resource = SummaryPlate->GetBrush().GetResourceObject();
-			if (TestNotNull(*FString::Printf(TEXT("%s 하단 없는 요약판 에셋"),
+			if (TestNotNull(*FString::Printf(TEXT("%s 범용 세로 요약판 에셋"),
 				Prefix), Resource))
 			{
-				TestEqual(TEXT("요약판은 하단 빈 바 제거 에셋 사용"),
+				TestEqual(TEXT("요약판은 내부 구획 없는 범용 세로 프레임 사용"),
 					Resource->GetPathName(), FString(TEXT(
-						"/Game/UI/Generated/CombatHUD/"
-						"T_MB_GenericDetailPanel_NoFooter_v1."
-						"T_MB_GenericDetailPanel_NoFooter_v1")));
+						"/Game/SVN/OutSideAsset/AICreation/UI/HUD04/"
+						"T_SummaryVerticalReferenceStyle_v5."
+						"T_SummaryVerticalReferenceStyle_v5")));
 			}
 		}
 		for (const TCHAR* Suffix : {
@@ -1321,6 +1330,21 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		{
 			const FString WidgetName = FString::Printf(TEXT("%s%s"), Prefix, Suffix);
 			TestNotNull(*WidgetName, Tree->FindWidget(FName(*WidgetName)));
+		}
+		for (const TCHAR* Suffix : { TEXT("HPBack"), TEXT("HPBar"), TEXT("HPText") })
+		{
+			const FString WidgetName = FString::Printf(TEXT("%s%s"), Prefix, Suffix);
+			if (UWidget* HPWidget = Tree->FindWidget(FName(*WidgetName)))
+			{
+				TestEqual(*FString::Printf(TEXT("%s 중복 HP 행 제거"), *WidgetName),
+					HPWidget->GetVisibility(), ESlateVisibility::Collapsed);
+			}
+		}
+		if (UWidget* Portrait = Tree->FindWidget(FName(
+			*FString::Printf(TEXT("%sPortrait"), Prefix))))
+		{
+			TestTrue(*FString::Printf(TEXT("%s 초상 확대"), Prefix),
+				Portrait->GetRenderTransform().Scale.X >= 1.2f);
 		}
 		for (int32 StatusIndex = 0; StatusIndex < 3; ++StatusIndex)
 		{
@@ -1347,7 +1371,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 	}
 
-	// 우하단 두 버튼은 같은 authored 396.172241x181.435410 판을 쓴다.
+	// 양쪽 하단 버튼은 같은 authored 396.172241x150 판을 쓴다.
 	// 버튼/그림/중앙 문구가 별도 Canvas 좌표로 흩어지면 한 요소만 줄어드는
 	// 회귀가 다시 생기므로, 동일 크기 Overlay 계보 전체를 함께 확인한다.
 	struct FActionPanelContract
@@ -1359,17 +1383,21 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		const TCHAR* LabelCenterName;
 		const TCHAR* LabelName;
 		FVector2D Position;
+		FVector2D Anchor;
+		FVector2D Alignment;
 	};
-	const FVector2D ActionPanelSize(396.172241f, 181.435410f);
+	const FVector2D ActionPanelSize(396.172241f, 150.f);
 	const FActionPanelContract ActionPanels[] = {
 		{ TEXT("SkillTogglePanel"), TEXT("SkillTogglePlateMount"),
 			TEXT("SkillTogglePlate"), TEXT("SkillToggleButton"),
 			TEXT("SkillToggleLabel_Center"), TEXT("SkillToggleLabel"),
-			FVector2D(-10.334961f, -202.f) },
+			FVector2D(18.f, -26.f), FVector2D(0.f, 1.f),
+			FVector2D(0.f, 1.f) },
 		{ TEXT("EndTurnPanel"), TEXT("EndTurnPlateMount"),
 			TEXT("EndTurnPlate"), TEXT("EndTurnButton"),
 			TEXT("EndTurnLabel_Center"), TEXT("EndTurnLabel"),
-			FVector2D(-10.334961f, -26.f) },
+			FVector2D(-10.334961f, -26.f), FVector2D(1.f, 1.f),
+			FVector2D(1.f, 1.f) },
 	};
 	TArray<FVector2D> AuthoredActionSizes;
 	for (const FActionPanelContract& Expected : ActionPanels)
@@ -1389,7 +1417,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		UScaleBox* LabelFit = Cast<UScaleBox>(Tree->FindWidget(FName(
 			*FString::Printf(TEXT("%s_AutoFit"), Expected.LabelName))));
 
-		if (TestNotNull(*FString::Printf(TEXT("%s 우하단 루트"),
+		if (TestNotNull(*FString::Printf(TEXT("%s 하단 루트"),
 			Expected.PanelName), Panel))
 		{
 			TestEqual(*FString::Printf(TEXT("%s는 HUD 루트 직계 자식"),
@@ -1397,15 +1425,14 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			TestEqual(*FString::Printf(TEXT("%s 기본 표시"), Expected.PanelName),
 				Panel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 			if (UCanvasPanelSlot* Slot = CheckCanvasContract(
-				FString::Printf(TEXT("%s 우하단 루트"), Expected.PanelName),
+				FString::Printf(TEXT("%s 하단 루트"), Expected.PanelName),
 				Panel, Expected.Position, ActionPanelSize,
-				FVector2D(1.f, 1.f), FVector2D(1.f, 1.f),
-				FVector2D(1.f, 1.f), 60))
+				Expected.Anchor, Expected.Anchor, Expected.Alignment, 60))
 			{
 				AuthoredActionSizes.Add(Slot->GetSize());
 			}
 			CheckRenderContract(
-				FString::Printf(TEXT("%s 우하단 루트"), Expected.PanelName),
+				FString::Printf(TEXT("%s 하단 루트"), Expected.PanelName),
 				Panel, FVector2D(1.f, 1.f), FVector2D(0.5f, 0.5f));
 		}
 		if (TestNotNull(*FString::Printf(TEXT("%s Overlay"), Expected.MountName),
@@ -1469,7 +1496,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("스킬/턴 종료 루트는 정확히 같은 크기"),
 			AuthoredActionSizes[0], AuthoredActionSizes[1]);
 	}
-	// 조준 확정은 평상시 스킬 단추와 자리를 바꾸지만 동일한 단일 문구
+	// 조준 확정은 좌하단 스킬 단추와 자리를 바꾸지만 동일한 단일 문구
 	// 버튼이다. 숨겨져 있어도 라벨/클릭 영역 계약은 같아야 한다.
 	UOverlay* ConfirmMount = Cast<UOverlay>(
 		Tree->FindWidget(TEXT("ConfirmPlateMount")));
@@ -1481,6 +1508,15 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("ConfirmLabel_AutoFit")));
 	UButton* ConfirmButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("ConfirmButton")));
+	UCanvasPanel* ConfirmPanel = Cast<UCanvasPanel>(
+		Tree->FindWidget(TEXT("ConfirmPanel")));
+	if (TestNotNull(TEXT("확정 좌하단 패널"), ConfirmPanel))
+	{
+		CheckCanvasContract(TEXT("확정 좌하단 패널"), ConfirmPanel,
+			FVector2D(18.f, -26.f), ActionPanelSize,
+			FVector2D(0.f, 1.f), FVector2D(0.f, 1.f),
+			FVector2D(0.f, 1.f), 60);
+	}
 	if (TestNotNull(TEXT("확정 버튼 Overlay"), ConfirmMount)
 		&& TestNotNull(TEXT("확정 전체 라벨"), ConfirmCenter)
 		&& TestNotNull(TEXT("확정 클릭 영역"), ConfirmButton))
@@ -1515,6 +1551,43 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			SkillPlate->GetBrush().GetResourceObject(),
 			EndTurnPlate->GetBrush().GetResourceObject());
 	}
+	// 취소는 턴 종료 라벨을 바꿔 쓰지 않고, 확정 오른쪽의 별도 붉은 소형
+	// 버튼으로 존재한다. 같은 위치에서 의미가 바뀌는 회귀를 구조로 막는다.
+	UCanvasPanel* CancelPanel = Cast<UCanvasPanel>(
+		Tree->FindWidget(TEXT("CancelPanel")));
+	UOverlay* CancelMount = Cast<UOverlay>(
+		Tree->FindWidget(TEXT("CancelPlateMount")));
+	UImage* CancelPlate = Cast<UImage>(Tree->FindWidget(TEXT("CancelPlate")));
+	UTextBlock* CancelLabel = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("CancelLabel")));
+	UButton* CancelButton = Cast<UButton>(Tree->FindWidget(TEXT("CancelButton")));
+	if (TestNotNull(TEXT("취소 전용 패널"), CancelPanel))
+	{
+		TestEqual(TEXT("취소 전용 패널 기본 숨김"),
+			CancelPanel->GetVisibility(), ESlateVisibility::Collapsed);
+		CheckCanvasContract(TEXT("취소 전용 패널"), CancelPanel,
+			FVector2D(430.f, -45.f), FVector2D(190.f, 112.f),
+			FVector2D(0.f, 1.f), FVector2D(0.f, 1.f),
+			FVector2D(0.f, 1.f), 61);
+	}
+	if (TestNotNull(TEXT("취소 전용 Overlay"), CancelMount)
+		&& CancelPanel != nullptr)
+	{
+		TestEqual(TEXT("취소 Overlay 부모"), CancelMount->GetParent(),
+			static_cast<UPanelWidget*>(CancelPanel));
+	}
+	if (TestNotNull(TEXT("취소 전용 판"), CancelPlate)
+		&& EndTurnPlate != nullptr)
+	{
+		TestEqual(TEXT("취소는 같은 목재 판 계열"),
+			CancelPlate->GetBrush().GetResourceObject(),
+			EndTurnPlate->GetBrush().GetResourceObject());
+		TestTrue(TEXT("취소 판은 붉은 색으로 구분"),
+			CancelPlate->GetColorAndOpacity().R
+				> CancelPlate->GetColorAndOpacity().G * 2.f);
+	}
+	TestNotNull(TEXT("취소 전용 문구"), CancelLabel);
+	TestNotNull(TEXT("취소 전용 클릭 영역"), CancelButton);
 
 	// 우측 HUD 수술이 좌상단 사용자 배치와 용병 탭을 건드리지 않았는지
 	// 같은 자산에서 대표 좌표를 함께 잠근다. 세부 계약은 전용 테스트가 이어서
@@ -1570,9 +1643,9 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Cast<UCanvasPanel>(EnemyAPPipRow));
 		if (UWidget* LegacyAPBar = Tree->FindWidget(TEXT("EnemyCritPlate")))
 		{
-			TestEqual(TEXT("몬스터 치명타 프레임은 용병 요약판과 같이 표시"),
+			TestEqual(TEXT("세로 요약판은 치명타 프레임을 쓰지 않는다"),
 				LegacyAPBar->GetVisibility(),
-				ESlateVisibility::SelfHitTestInvisible);
+				ESlateVisibility::Collapsed);
 		}
 		for (int32 Index = 0; Index < 10; ++Index)
 		{
@@ -1611,6 +1684,67 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	TestNotNull(TEXT("보유 용병 판"), MercenaryBoard);
 	TestNotNull(TEXT("보유 골드 글자"),
 		Cast<UTextBlock>(Tree->FindWidget(TEXT("MercenaryGoldText"))));
+
+	// 치명타 행은 앞의 세 능력치 행과 같은 FrameMount 계보를 쓰고 마지막
+	// 행 바로 아래에 선다. 이미지를 캔버스에 직접 놓으면 원화 희망 크기로
+	// 오른쪽에 길게 튀어나오는 회귀가 생긴다.
+	UWidget* SpeedFrameMount = Tree->FindWidget(TEXT("MercenaryChip2FrameMount"));
+	UWidget* CritFrameMount = Tree->FindWidget(TEXT("MercenaryCritPlateMount"));
+	UImage* CritFrame = Cast<UImage>(Tree->FindWidget(TEXT("MercenaryCritPlate")));
+	if (TestNotNull(TEXT("속도 행 프레임 마운트"), SpeedFrameMount)
+		&& TestNotNull(TEXT("치명타 행 프레임 마운트"), CritFrameMount))
+	{
+		const UCanvasPanelSlot* SpeedSlot =
+			Cast<UCanvasPanelSlot>(SpeedFrameMount->Slot);
+		const UCanvasPanelSlot* CritSlot =
+			Cast<UCanvasPanelSlot>(CritFrameMount->Slot);
+		if (TestNotNull(TEXT("속도 행 캔버스 슬롯"), SpeedSlot)
+			&& TestNotNull(TEXT("치명타 행 캔버스 슬롯"), CritSlot))
+		{
+			TestEqual(TEXT("치명타 행은 속도 행과 같은 폭"),
+				CritSlot->GetSize(), SpeedSlot->GetSize());
+			TestEqual(TEXT("치명타 행은 속도 행과 같은 X 정렬"),
+				CritSlot->GetPosition().X, SpeedSlot->GetPosition().X);
+			TestEqual(TEXT("치명타 행은 속도 행 바로 아래"),
+				CritSlot->GetPosition().Y, SpeedSlot->GetPosition().Y + 82.f);
+		}
+	}
+	if (TestNotNull(TEXT("치명타 행 프레임"), CritFrame)
+		&& CritFrameMount != nullptr)
+	{
+		TestEqual(TEXT("치명타 프레임은 마운트 자식"),
+			CritFrame->GetParent(), Cast<UPanelWidget>(CritFrameMount));
+	}
+	UWidget* CritIcon = Tree->FindWidget(TEXT("MercenaryCritIcon"));
+	const UCanvasPanelSlot* CritIconSlot = CritIcon != nullptr
+		? Cast<UCanvasPanelSlot>(CritIcon->Slot) : nullptr;
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		UWidget* StatMount = Tree->FindWidget(FName(*FString::Printf(
+			TEXT("MercenaryChip%dFrameMount"), Index)));
+		UWidget* StatIcon = Tree->FindWidget(FName(*FString::Printf(
+			TEXT("MercenaryStatIcon_%d"), Index)));
+		const UCanvasPanelSlot* StatMountSlot = StatMount != nullptr
+			? Cast<UCanvasPanelSlot>(StatMount->Slot) : nullptr;
+		const UCanvasPanelSlot* StatIconSlot = StatIcon != nullptr
+			? Cast<UCanvasPanelSlot>(StatIcon->Slot) : nullptr;
+		if (TestNotNull(*FString::Printf(TEXT("능력치 %d 아이콘"), Index),
+			StatIcon) && TestNotNull(*FString::Printf(
+				TEXT("능력치 %d 아이콘 슬롯"), Index), StatIconSlot)
+			&& TestNotNull(*FString::Printf(
+				TEXT("능력치 %d 프레임 슬롯"), Index), StatMountSlot))
+		{
+			TestEqual(*FString::Printf(TEXT("능력치 %d 아이콘 X 시각 보정"), Index),
+				StatIconSlot->GetPosition().X - StatMountSlot->GetPosition().X, 36.0);
+			TestEqual(*FString::Printf(TEXT("능력치 %d 아이콘 Y 여백"), Index),
+				StatIconSlot->GetPosition().Y - StatMountSlot->GetPosition().Y, 10.0);
+			if (CritIconSlot != nullptr)
+			{
+				TestEqual(*FString::Printf(TEXT("능력치 %d/치명타 아이콘 크기"), Index),
+					StatIconSlot->GetSize(), CritIconSlot->GetSize());
+			}
+		}
+	}
 	UButton* MercenaryCloseButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("MercenaryCloseButton")));
 	UOverlay* MercenaryCloseCenter = Cast<UOverlay>(
@@ -1822,13 +1956,15 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			UWidget* Part = Tree->FindWidget(FName(Name));
 			if (TestNotNull(*FString::Printf(TEXT("%s WBP 부품"), Name), Part))
 			{
-				UPanelWidget* VisualParent = Part->GetParent();
-				if (UScaleBox* AutoFit = Cast<UScaleBox>(VisualParent))
+				UWidget* VisualRoot = Part;
+				while (VisualRoot != nullptr
+					&& VisualRoot->GetParent() != InventoryTab)
 				{
-					VisualParent = AutoFit->GetParent();
+					VisualRoot = VisualRoot->GetParent();
 				}
 				TestEqual(*FString::Printf(TEXT("%s 는 인벤토리 탭 안"), Name),
-					VisualParent, InventoryTab);
+					VisualRoot != nullptr ? VisualRoot->GetParent() : nullptr,
+					InventoryTab);
 			}
 		}
 		if (UImage* Icon = Cast<UImage>(
@@ -1836,6 +1972,18 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		{
 			TestNotNull(TEXT("인벤토리 탭 아이콘 텍스처"),
 				Cast<UTexture2D>(Icon->GetBrush().GetResourceObject()));
+		}
+		UTextBlock* InventoryTabText = Cast<UTextBlock>(
+			Tree->FindWidget(TEXT("MercenaryInventoryTabText")));
+		TestNotNull(TEXT("인벤토리 탭 중앙 문구"), InventoryTabText);
+		UHorizontalBox* InventoryContent = Cast<UHorizontalBox>(
+			Tree->FindWidget(TEXT("MercenaryInventoryTabContent")));
+		if (TestNotNull(TEXT("아이콘+문구 중앙 묶음"), InventoryContent)
+			&& InventoryTabText != nullptr)
+		{
+			TestEqual(TEXT("문구는 아이콘과 같은 중앙 묶음 안"),
+				InventoryTabText->GetParent(),
+				static_cast<UPanelWidget*>(InventoryContent));
 		}
 		UImage* InventoryPlate = Cast<UImage>(
 			Tree->FindWidget(TEXT("MercenaryInventoryTabPlate")));
@@ -1857,6 +2005,33 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			{
 				TestEqual(TEXT("인벤토리 입력면은 판 전체와 동일"),
 					InventoryButtonSlot->GetSize(), InventoryPlateSlot->GetSize());
+				UWidget* TextLayoutRoot = InventoryTabText;
+				while (TextLayoutRoot != nullptr
+					&& TextLayoutRoot->GetParent() != InventoryTab)
+				{
+					TextLayoutRoot = TextLayoutRoot->GetParent();
+				}
+				const UCanvasPanelSlot* TextSlot = TextLayoutRoot != nullptr
+					? Cast<UCanvasPanelSlot>(TextLayoutRoot->Slot) : nullptr;
+				if (TestNotNull(TEXT("인벤토리 문구 슬롯"), TextSlot))
+				{
+					const float TextCenterX = TextSlot->GetPosition().X
+						+ TextSlot->GetSize().X * .5f;
+					const float PlateCenterX = InventoryPlateSlot->GetPosition().X
+						+ InventoryPlateSlot->GetSize().X * .5f;
+					TestTrue(*FString::Printf(TEXT(
+						"인벤토리 문구 박스 중심은 카드 중심 (text=%.2f plate=%.2f)"),
+						TextCenterX, PlateCenterX),
+						FMath::IsNearlyEqual(TextCenterX, PlateCenterX, .5f));
+					const float TextCenterY = TextSlot->GetPosition().Y
+						+ TextSlot->GetSize().Y * .5f;
+					const float PlateCenterY = InventoryPlateSlot->GetPosition().Y
+						+ InventoryPlateSlot->GetSize().Y * .5f;
+					TestTrue(*FString::Printf(TEXT(
+						"인벤토리 문구 박스 세로 중심은 카드 중심 (text=%.2f plate=%.2f)"),
+						TextCenterY, PlateCenterY),
+						FMath::IsNearlyEqual(TextCenterY, PlateCenterY, .5f));
+				}
 			}
 		}
 	}
@@ -1882,6 +2057,24 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			Tree->FindWidget(TEXT("MercenaryInventoryGoldText")));
 		TestNotNull(TEXT("인벤토리 페이지 골드 실에셋"),
 			Tree->FindWidget(TEXT("MercenaryInventoryGoldIcon")));
+		UWidget* GoldFrame = Tree->FindWidget(TEXT("MercenaryInventoryGoldFrame"));
+		UWidget* GoldIcon = Tree->FindWidget(TEXT("MercenaryInventoryGoldIcon"));
+		const UCanvasPanelSlot* GoldFrameSlot = GoldFrame != nullptr
+			? Cast<UCanvasPanelSlot>(GoldFrame->Slot) : nullptr;
+		const UCanvasPanelSlot* GoldIconSlot = GoldIcon != nullptr
+			? Cast<UCanvasPanelSlot>(GoldIcon->Slot) : nullptr;
+		if (TestNotNull(TEXT("골드 프레임 슬롯"), GoldFrameSlot)
+			&& TestNotNull(TEXT("골드 아이콘 슬롯"), GoldIconSlot))
+		{
+			const FVector2D FrameCenter = GoldFrameSlot->GetPosition()
+				+ GoldFrameSlot->GetSize() * .5f;
+			const FVector2D IconCenter = GoldIconSlot->GetPosition()
+				+ GoldIconSlot->GetSize() * .5f;
+			TestTrue(*FString::Printf(TEXT(
+				"골드 아이콘은 프레임 정중앙 (frame=%s icon=%s)"),
+				*FrameCenter.ToString(), *IconCenter.ToString()),
+				FrameCenter.Equals(IconCenter, .5f));
+		}
 		// 0809 확정: 설명 띠는 접어 둔다 -- 상세는 칸 클릭 팝업으로 본다.
 		for (const TCHAR* Retired : { TEXT("MercenaryInventoryDescriptionPlate"),
 			TEXT("MercenaryInventoryDescriptionText") })
@@ -1911,12 +2104,164 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 
 	UPanelWidget* TurnAPScale =
 		Cast<UPanelWidget>(Tree->FindWidget(TEXT("TurnAPScale")));
+	UScaleBox* TurnAPScaleBox = Cast<UScaleBox>(TurnAPScale);
 	UWidget* TurnAPPanel = Tree->FindWidget(TEXT("TurnAPPanel"));
-	if (TestNotNull(TEXT("좌하단 AP 크기 래퍼"), TurnAPScale)
-		&& TestNotNull(TEXT("좌하단 AP 판"), TurnAPPanel))
+	if (TestNotNull(TEXT("좌상단 AP 크기 래퍼"), TurnAPScale)
+		&& TestNotNull(TEXT("좌상단 AP 판"), TurnAPPanel))
 	{
 		TestEqual(TEXT("AP 판은 크기 래퍼 안"),
 			TurnAPPanel->GetParent(), TurnAPScale);
+		if (const UCanvasPanelSlot* APSlot =
+			Cast<UCanvasPanelSlot>(TurnAPScale->Slot))
+		{
+			TestEqual(TEXT("AP 바 좌상단 위치"), APSlot->GetPosition(),
+				FVector2D(18.f, 164.f));
+			TestEqual(TEXT("한 줄 15칸 AP 바 압축 크기"), APSlot->GetSize(),
+				FVector2D(800.f, 97.f));
+			TestEqual(TEXT("AP 바 상단 앵커"), APSlot->GetAnchors().Minimum,
+				FVector2D::ZeroVector);
+			TestEqual(TEXT("AP 바 상단 앵커 최대값"), APSlot->GetAnchors().Maximum,
+				FVector2D::ZeroVector);
+			TestEqual(TEXT("AP 바 좌상단 정렬"), APSlot->GetAlignment(),
+				FVector2D::ZeroVector);
+		}
+	}
+	if (TestNotNull(TEXT("AP ScaleBox"), TurnAPScaleBox))
+	{
+		TestEqual(TEXT("AP 바는 비율 유지 ScaleToFit"),
+			TurnAPScaleBox->GetStretch(), EStretch::ScaleToFit);
+		TestEqual(TEXT("AP 바는 확대·축소 모두 허용"),
+			TurnAPScaleBox->GetStretchDirection(), EStretchDirection::Both);
+	}
+	if (UTextBlock* TurnAPText = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("TurnAPText"))))
+	{
+		TestEqual(TEXT("전용 AP 배지 숫자 크기"),
+			TurnAPText->GetFont().Size, 19.f);
+		TestEqual(TEXT("AP 숫자는 개별 좌표 이동을 쓰지 않음"),
+			TurnAPText->GetRenderTransform().Translation, FVector2D::ZeroVector);
+	}
+	if (UWidget* PlateMount = Tree->FindWidget(TEXT("TurnAPPlateMount")))
+	{
+		if (const UCanvasPanelSlot* PlateSlot =
+			Cast<UCanvasPanelSlot>(PlateMount->Slot))
+		{
+			TestEqual(TEXT("AP 레일 위치"), PlateSlot->GetPosition(),
+				FVector2D(116.f, 5.5f));
+			TestTrue(TEXT("AP 레일 크기"), PlateSlot->GetSize().Equals(
+				FVector2D(452.421f, 58.f), .001f));
+		}
+	}
+	if (UWidget* BadgeMount = Tree->FindWidget(TEXT("TurnAPBadgeMount")))
+	{
+		if (const UCanvasPanelSlot* BadgeSlot =
+			Cast<UCanvasPanelSlot>(BadgeMount->Slot))
+		{
+			TestEqual(TEXT("AP 전용 배지 위치"), BadgeSlot->GetPosition(),
+				FVector2D::ZeroVector);
+			TestEqual(TEXT("AP 전용 배지 크기"), BadgeSlot->GetSize(),
+				FVector2D(132.f, 68.8995f));
+		}
+	}
+	if (UImage* BadgePlate = Cast<UImage>(
+		Tree->FindWidget(TEXT("TurnAPBadgePlate"))))
+	{
+		TestEqual(TEXT("AP 배지는 ROUND 원본 전체를 축소 표시"),
+			BadgePlate->GetBrush().DrawAs, ESlateBrushDrawType::Image);
+		TestEqual(TEXT("AP 배지는 원본 크기 9-slice를 쓰지 않음"),
+			BadgePlate->GetBrush().Margin, FMargin(0.f));
+	}
+	if (UWidget* PipRow = Tree->FindWidget(TEXT("TurnAPPipRow")))
+	{
+		if (const UCanvasPanelSlot* RowSlot = Cast<UCanvasPanelSlot>(PipRow->Slot))
+		{
+			TestEqual(TEXT("AP 배지 뒤 보석 레일 위치"),
+				RowSlot->GetPosition(), FVector2D(136.f, 17.f));
+			TestEqual(TEXT("15칸 AP 보석 행 폭"), RowSlot->GetSize(),
+				FVector2D(424.f, 34.f));
+		}
+	}
+	if (UWidget* TextCenter = Tree->FindWidget(TEXT("TurnAPText_Center")))
+	{
+		TestTrue(TEXT("AP 숫자는 전용 배지 안"), TextCenter->GetParent()
+			== Tree->FindWidget(TEXT("TurnAPBadgeMount")));
+	}
+	for (int32 Index = 0; Index < 15; ++Index)
+	{
+		for (const TCHAR* Prefix : { TEXT("TurnAPPip"),
+			TEXT("TurnAPPipUsed"), TEXT("TurnAPPipGlow") })
+		{
+			TestNotNull(*FString::Printf(TEXT("AP 15칸 계약 %s_%d"),
+				Prefix, Index), Tree->FindWidget(FName(*FString::Printf(
+				TEXT("%s_%d"), Prefix, Index))));
+		}
+	}
+	TestNull(TEXT("AP 아이콘은 15칸에서 끝남"),
+		Tree->FindWidget(TEXT("TurnAPPip_15")));
+	TestNull(TEXT("AP 소모 아이콘도 15칸에서 끝남"),
+		Tree->FindWidget(TEXT("TurnAPPipUsed_15")));
+	TestNull(TEXT("AP 점등 레이어도 15칸에서 끝남"),
+		Tree->FindWidget(TEXT("TurnAPPipGlow_15")));
+	TestNull(TEXT("연속 AP 레일에는 그룹 홈이 없음"),
+		Tree->FindWidget(TEXT("TurnAPGroupWell_0")));
+	for (int32 SeparatorIndex = 0; SeparatorIndex < 2; ++SeparatorIndex)
+	{
+		TestNotNull(*FString::Printf(TEXT("AP 묶음 구분선 %d"), SeparatorIndex),
+			Tree->FindWidget(FName(*FString::Printf(
+				TEXT("TurnAPGroupSeparator_%d"), SeparatorIndex))));
+	}
+	TestNull(TEXT("AP 구분선은 정확히 두 개"),
+		Tree->FindWidget(TEXT("TurnAPGroupSeparator_2")));
+	for (const TCHAR* NextSkillName : { TEXT("EnemyNextSkillFrame"),
+		TEXT("EnemyNextSkillIcon"), TEXT("EnemyNextSkillButton") })
+	{
+		if (UWidget* NextSkill = Tree->FindWidget(FName(NextSkillName)))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 다음 스킬 표기 제거"), NextSkillName),
+				NextSkill->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	}
+
+	const FVector2D AuthoredCommandPositions[] = {
+		FVector2D(-95.9809f, -327.8756f), FVector2D(-376.1722f, -184.3349f),
+		FVector2D(168.1340f, -184.3349f), FVector2D(-376.1722f, 90.1148f),
+		FVector2D(168.1340f, 90.1148f), FVector2D(-95.9809f, 232.5072f) };
+	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::CommandSlotCount; ++Index)
+	{
+		UWidget* Card = Tree->FindWidget(FName(*FString::Printf(
+			TEXT("CommandCard_%d"), Index)));
+		TestNull(*FString::Printf(TEXT("스킬 카드 %d 크기 래퍼 제거"), Index),
+			Tree->FindWidget(FName(*FString::Printf(
+				TEXT("CommandCardScale_%d"), Index))));
+		if (TestNotNull(*FString::Printf(TEXT("스킬 카드 %d"), Index), Card))
+		{
+			if (const UCanvasPanelSlot* CardSlot = Cast<UCanvasPanelSlot>(Card->Slot))
+			{
+				TestEqual(*FString::Printf(TEXT("스킬 카드 %d 원본 위치"), Index),
+					CardSlot->GetPosition(), AuthoredCommandPositions[Index]);
+				TestEqual(*FString::Printf(TEXT("스킬 카드 %d 원본 크기"), Index),
+					CardSlot->GetSize(), FVector2D(200.f, 228.f));
+			}
+		}
+	}
+	TestNull(TEXT("채택되지 않은 중앙 하단 퀵바 제거"),
+		Tree->FindWidget(TEXT("QuickSkillBar")));
+	for (int32 Index = 0; Index < 6; ++Index)
+	{
+		for (const TCHAR* Prefix : { TEXT("QuickSkillSlot"),
+			TEXT("QuickSkillFrame"), TEXT("QuickSkillIcon"),
+			TEXT("QuickSkillCooldown"), TEXT("QuickSkillButton") })
+		{
+			TestNull(*FString::Printf(TEXT("폐기 퀵바 위젯 제거 %s_%d"),
+				Prefix, Index), Tree->FindWidget(FName(*FString::Printf(
+				TEXT("%s_%d"), Prefix, Index))));
+		}
+	}
+	for (int32 Index = 1; Index < UCombatLayoutHUDWidget::CommandSlotCount; ++Index)
+	{
+		TestNotNull(*FString::Printf(TEXT("큰 스킬 카드 %d 중앙 쿨타임 겹"), Index),
+			Tree->FindWidget(FName(*FString::Printf(
+				TEXT("CommandCooldownOverlay_%d"), Index))));
 	}
 
 	TestNull(TEXT("전투 화면 독립 아티팩트 WBP 줄 제거"),
@@ -2168,6 +2513,16 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	UWidget* DetailSection = HUD->WidgetTree->FindWidget(TEXT("MercDetailSection"));
 	UButton* MercenarySkillButton1 = Cast<UButton>(HUD->WidgetTree->FindWidget(
 		TEXT("MercenarySkillButton_1")));
+	UButton* MercenarySkillButton2 = Cast<UButton>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillButton_2")));
+	UButton* MercenarySkillButton3 = Cast<UButton>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillButton_3")));
+	UTextBlock* MercenarySkillName2 = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillName_2")));
+	UTextBlock* MercenarySkillName3 = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillName_3")));
+	UTextBlock* MercenarySkillCost3 = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
+		TEXT("MercenarySkillCost_3")));
 	UTextBlock* InventoryGold = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("MercenaryInventoryGoldText")));
 	UImage* InventoryArtifact0 = Cast<UImage>(HUD->WidgetTree->FindWidget(
@@ -2195,6 +2550,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("용병 내부 인벤토리 페이지"), InventoryPage)
 		|| !TestNotNull(TEXT("용병 상세 구역"), DetailSection)
 		|| !TestNotNull(TEXT("용병 첫 스킬 탭 영역"), MercenarySkillButton1)
+		|| !TestNotNull(TEXT("용병 둘째 스킬 탭 영역"), MercenarySkillButton2)
+		|| !TestNotNull(TEXT("용병 셋째 스킬 탭 영역"), MercenarySkillButton3)
+		|| !TestNotNull(TEXT("용병 둘째 스킬 이름"), MercenarySkillName2)
+		|| !TestNotNull(TEXT("용병 셋째 스킬 이름"), MercenarySkillName3)
+		|| !TestNotNull(TEXT("용병 셋째 스킬 비용"), MercenarySkillCost3)
 		|| !TestNotNull(TEXT("내부 인벤토리 골드"), InventoryGold)
 		|| !TestNotNull(TEXT("내부 인벤토리 첫 아티팩트"), InventoryArtifact0)
 		|| !TestNotNull(TEXT("내부 인벤토리 둘째 선택 버튼"), InventoryArtifactButton1)
@@ -2560,6 +2920,36 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("오른쪽 상세가 고른 용병으로 갈린다"),
 			DetailName->GetText().ToString(), PartyUnit.mName.ToString());
 	}
+
+	// 상세 DTO는 비어 있는 실제 슬롯을 생략해 압축될 수 있다. 배열의 두 번째
+	// 원소를 1번 스킬로 오해하지 않고 DTO가 가진 mSkillIndex=2 위치에 그린다.
+	FUnitDetailUI SparseDetail;
+	SparseDetail.mUnitId = PartyUnit.mUnitId;
+	FUnitDetailSkillUI& SparseSkill = SparseDetail.mSkills.AddDefaulted_GetRef();
+	SparseSkill.mSkillIndex = 2;
+	SparseSkill.mName = FText::FromString(TEXT("희소 슬롯 스킬"));
+	SparseSkill.mActionPointCost = 4;
+	SparseSkill.mIcon = NewObject<UTexture2D>(HUD);
+	Model->SetUnitDetail(SparseDetail);
+	// UnitDetail 알림은 실제 선택 응답 경로에서 suppress flag가 소비하며
+	// RefreshParty를 부른다. fixture의 직접 주입은 Unit 갱신으로 같은 렌더를 연다.
+	Model->SetUnitUIs({ PartyUnit, MonsterUnit });
+	TestEqual(TEXT("비어 있는 실제 1번 스킬 슬롯은 입력 불가"),
+		MercenarySkillButton2->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("mSkillIndex=2 스킬은 셋째 스킬 슬롯에 표시"),
+		MercenarySkillButton3->GetVisibility(), ESlateVisibility::Visible);
+	TestEqual(TEXT("희소 스킬 이름도 실제 슬롯을 따름"),
+		MercenarySkillName3->GetText().ToString(), FString(TEXT("희소 슬롯 스킬")));
+	TestEqual(TEXT("압축 배열 위치에는 희소 스킬 이름을 그리지 않음"),
+		MercenarySkillName2->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("희소 스킬 AP 비용"),
+		MercenarySkillCost3->GetText().ToString(), FString(TEXT("4")));
+	MercenarySkillButton3->OnClicked.Broadcast();
+	TestEqual(TEXT("희소 스킬 탭은 실제 DTO index를 전달"),
+		DetailResponder->mLastPayload, 2);
+
+	// 뒤의 기존 첫 스킬 상세 왕복 검증을 위해 응답 fixture를 다시 받는다.
+	PartyButton->OnClicked.Broadcast();
 	MercenarySkillButton1->OnClicked.Broadcast();
 	TestEqual(TEXT("용병 스킬 한 번 탭은 카드 상세 경로를 사용한다"),
 		DetailResponder->mLastType, ECombatInputType::LongPressSkill);
@@ -2910,6 +3300,30 @@ bool FCombatHUDTurnBarStructureTest::RunTest(const FString& Parameters)
 		{
 			return;
 		}
+		// 인벤토리 탭은 가방과 문구를 합친 묶음 자체를 중앙에 둔다.
+		// 일반 문구처럼 Text만 ScaleBox에 넣으면 아이콘 폭이 중앙 계산에서
+		// 빠지므로 이 한 쌍은 의도적으로 HorizontalBox 계약을 쓴다.
+		if (Text->GetFName() == TEXT("MercenaryInventoryTabText"))
+		{
+			UHorizontalBox* Content = Cast<UHorizontalBox>(CenterChild);
+			if (TestNotNull(TEXT("인벤토리 아이콘+문구 가로 묶음"), Content))
+			{
+				TestEqual(TEXT("인벤토리 문구는 가방과 같은 묶음"),
+					Text->GetParent(), static_cast<UPanelWidget*>(Content));
+				if (UOverlaySlot* ContentSlot =
+					Cast<UOverlaySlot>(Content->Slot))
+				{
+					TestEqual(TEXT("인벤토리 묶음 가로 중앙"),
+						ContentSlot->GetHorizontalAlignment(), HAlign_Center);
+					TestEqual(TEXT("인벤토리 묶음 세로 중앙"),
+						ContentSlot->GetVerticalAlignment(), VAlign_Center);
+				}
+			}
+			TestEqual(TEXT("인벤토리 문구 개별 좌표 보정 없음"),
+				Text->GetRenderTransform().Translation, FVector2D::ZeroVector);
+			++CenterPairCount;
+			return;
+		}
 		UScaleBox* AutoFit = Cast<UScaleBox>(CenterChild);
 		if (TestNotNull(*FString::Printf(TEXT("%s 자동 축소 래퍼"),
 			*Text->GetName()), AutoFit))
@@ -3009,11 +3423,15 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		Unit.mSpeedPoint = 10.f + Index;
 		Turn.mTurnOrderUnitIds.Add(Unit.mUnitId);
 	}
-	// 새 계약(0806): mTurnOrderUnitIds = 이번 라운드 잔여분,
-	// mNextRoundUnitIds = 다음 라운드 미리보기. 표기는 거기까지만.
-	for (const FUnitUI& Unit : Units)
+	// 현재 잔여분 뒤에 모델이 계산한 여러 미래 라운드를 이어 붙인다.
+	Turn.mPredictedRounds.SetNum(2);
+	FTurnRoundForecastUI& Round4 = Turn.mPredictedRounds[0];
+	Round4.mRoundOffset = 1;
+	FTurnRoundForecastUI& Round5 = Turn.mPredictedRounds[1];
+	Round5.mRoundOffset = 2;
+	for (int32 Index = 0; Index < Units.Num(); ++Index)
 	{
-		Turn.mNextRoundUnitIds.Add(Unit.mUnitId);
+		(Index < 6 ? Round4 : Round5).mTurnOrderUnitIds.Add(Units[Index].mUnitId);
 	}
 	Turn.mCurrentUnitId = Units[0].mUnitId;
 	Turn.mRound = 3;
@@ -3073,15 +3491,24 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("TurnRoundDivider_0"));
 	UWidget* CurrentRoundLabel =
 		HUD->WidgetTree->FindWidget(TEXT("TurnRoundLabel_0"));
+	// 0824 검수 2번: 턴바에 R2는 있는데 R1이 없어 이 줄이 어느 라운드부터인지
+	// 알 수 없었다. 이제 라운드가 시작되는 자리마다 배지를 단다 -- 첫 칸 포함.
 	if (TestNotNull(TEXT("현재 슬롯 라운드 배지"), CurrentRoundDivider))
 	{
-		TestEqual(TEXT("현재 라운드는 독립 패널만 사용"),
+		TestNotEqual(TEXT("이번 라운드 시작 칸에도 배지 표시"),
 			CurrentRoundDivider->GetVisibility(), ESlateVisibility::Collapsed);
 	}
 	if (TestNotNull(TEXT("현재 슬롯 라운드 라벨"), CurrentRoundLabel))
 	{
-		TestEqual(TEXT("현재 슬롯 R# 중복 방지"),
+		TestNotEqual(TEXT("이번 라운드 시작 칸에도 R# 표시"),
 			CurrentRoundLabel->GetVisibility(), ESlateVisibility::Collapsed);
+		if (UTextBlock* Label = Cast<UTextBlock>(CurrentRoundLabel))
+		{
+			// 왼쪽 ROUND 배지와 같은 숫자를 가리켜야 한다.
+			TestEqual(TEXT("첫 칸 배지는 현재 라운드 번호"),
+				Label->GetText().ToString(),
+				FString::Printf(TEXT("R%d"), Turn.mRound));
+		}
 	}
 	UWidget* RoundPanel = HUD->WidgetTree->FindWidget(TEXT("RoundPanel"));
 	UTextBlock* RoundText = Cast<UTextBlock>(
@@ -3151,6 +3578,19 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("다음 라운드는 간결한 R4"),
 			RoundLabel2->GetText().ToString(), FString(TEXT("R4")));
 	}
+	UWidget* Divider8 = HUD->WidgetTree->FindWidget(TEXT("TurnRoundDivider_8"));
+	UTextBlock* RoundLabel8 = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("TurnRoundLabel_8")));
+	if (TestNotNull(TEXT("두 번째 미래 라운드 구분선"), Divider8))
+	{
+		TestEqual(TEXT("두 번째 미래 라운드 앞 구분선 표시"),
+			Divider8->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	}
+	if (TestNotNull(TEXT("두 번째 미래 라운드 라벨"), RoundLabel8))
+	{
+		TestEqual(TEXT("두 번째 미래 라운드는 R5"),
+			RoundLabel8->GetText().ToString(), FString(TEXT("R5")));
+	}
 	for (int32 Index = 0; Index < UCombatLayoutHUDWidget::TurnSlotCount; ++Index)
 	{
 		UWidget* Token = HUD->WidgetTree->FindWidget(FName(
@@ -3195,9 +3635,38 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("턴 변경 뒤 오른쪽 페이지가 다시 열린다"),
 		Right->GetVisibility(), ESlateVisibility::Visible);
 
+	// 실제 계약은 미래 10라운드다. 각 라운드에 한 명만 두어 마지막 R14가
+	// 오른쪽 끝까지 도달하는지 확인한다(현재 R4 + 미래 offset 10).
+	Turn.mTurnOrderUnitIds = { Units[0].mUnitId };
+	Turn.mPredictedRounds.Reset();
+	for (int32 RoundOffset = 1; RoundOffset <= 10; ++RoundOffset)
+	{
+		FTurnRoundForecastUI& Forecast =
+			Turn.mPredictedRounds.AddDefaulted_GetRef();
+		Forecast.mRoundOffset = RoundOffset;
+		Forecast.mTurnOrderUnitIds = { Units[RoundOffset % Units.Num()].mUnitId };
+	}
+	Turn.mCurrentUnitId = Units[0].mUnitId;
+	Turn.mRound = 4;
+	Turn.mCurrentRoundRemainingTurnCount = 1;
+	Model->SetTurnUI(Turn);
+	Right->OnClicked.Broadcast();
+	UTextBlock* LastForecastRound = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("TurnRoundLabel_9")));
+	if (TestNotNull(TEXT("10라운드 예측 라벨"), LastForecastRound))
+	{
+		TestEqual(TEXT("미래 10라운드까지 페이지 이동"),
+			LastForecastRound->GetText().ToString(), FString(TEXT("R14")));
+		TestEqual(TEXT("10라운드 예측 라벨 표시"),
+			LastForecastRound->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	}
+	TestEqual(TEXT("10라운드 예측 끝에서는 오른쪽 페이지 없음"),
+		Right->GetVisibility(), ESlateVisibility::Collapsed);
+
 	// 클릭 받이는 토큰의 자식이 아니므로, 빈 라운드 칸과 범위 밖 칸도 별도로
 	// 접어야 한다. 앞/뒤의 실제 유닛 칸만 입력을 받는다.
 	Turn.mTurnOrderUnitIds = { Units[0].mUnitId };
+	Turn.mPredictedRounds.Reset();
 	Turn.mNextRoundUnitIds = { Units[1].mUnitId };
 	Turn.mCurrentUnitId = Units[0].mUnitId;
 	Turn.mRound = 4;
@@ -3296,6 +3765,8 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 	FUnitUI PlayerUnit;
 	PlayerUnit.mUnitId = 101;
 	PlayerUnit.mIsPlayer = true;
+	PlayerUnit.mMovementPoint = 3.f;
+	PlayerUnit.mMaxMovementPoint = 5.f;
 	Model->SetUnitUIs({ PlayerUnit });
 	FTurnUI PlayerTurn;
 	PlayerTurn.mCurrentUnitId = PlayerUnit.mUnitId;
@@ -3309,21 +3780,17 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 아군 차례가 시작되면 해당 용병의 카드가 먼저 열린다. 아군 칸은
-	// 뒤집기가 아니라 열린 카드를 그 용병 것으로 유지하는 손이다.
-	//
-	// 같은 아군 칸을 몇 번 눌러도 접히지 않는다 -- 스킬을 보러 눌렀는데
-	// 접히면 아무 일도 안 일어난 것처럼 보인다.
-	TestEqual(TEXT("아군 턴 시작에는 카드가 자동으로 펴진다"), Card->GetVisibility(),
-		ESlateVisibility::SelfHitTestInvisible);
+	// 턴 시작에는 큰 카드를 자동으로 펴지 않고 사용자가 요청할 때만 연다.
+	TestEqual(TEXT("아군 턴 시작에는 큰 카드가 접혀 있다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
 	TestEqual(TEXT("아군 턴 시작은 현재 용병 포커스를 요청한다"),
 		Responder->mLastType, ECombatInputType::FocusUnit);
 	TestEqual(TEXT("아군 턴 포커스 대상은 현재 용병이다"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("아군 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("아군 턴 포커스는 커맨드 고리 중심을 쓴다"),
-		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
+	TestEqual(TEXT("큰 카드가 닫힌 턴 포커스는 화면 중앙을 쓴다"),
+		LastFocusAnchor, FVector2D(.5f, .5f));
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("누르면 카드가 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
@@ -3402,10 +3869,21 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	FUnitUI PlayerUnit;
 	PlayerUnit.mUnitId = 101;
 	PlayerUnit.mIsPlayer = true;
+	PlayerUnit.mMovementPoint = 3.f;
+	PlayerUnit.mMaxMovementPoint = 5.f;
 	FUnitUI EnemyUnit;
 	EnemyUnit.mUnitId = 202;
 	EnemyUnit.mIsPlayer = false;
 	Model->SetUnitUIs({ PlayerUnit, EnemyUnit });
+	UTexture2D* SkillIconTexture = NewObject<UTexture2D>(HUD);
+	FSkillUI CoolingSkill;
+	CoolingSkill.mSkillIndex = 0;
+	CoolingSkill.mName = FText::FromString(TEXT("쿨타임 시험"));
+	CoolingSkill.mIcon = SkillIconTexture;
+	CoolingSkill.mCooldownTurns = 4;
+	CoolingSkill.mRemainingCooldown = 2;
+	CoolingSkill.mIsUsable = false;
+	Model->SetSkillUIs({ CoolingSkill });
 
 	FTurnUI PlayerTurn;
 	PlayerTurn.mCurrentUnitId = PlayerUnit.mUnitId;
@@ -3418,48 +3896,152 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("SkillToggleButton")));
 	UButton* ConfirmButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("ConfirmButton")));
+	UButton* CancelButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("CancelButton")));
+	UButton* EndTurnButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("EndTurnButton")));
+	UWidget* ConfirmPanel = HUD->WidgetTree->FindWidget(TEXT("ConfirmPanel"));
+	UWidget* CancelPanel = HUD->WidgetTree->FindWidget(TEXT("CancelPanel"));
+	UWidget* EndTurnPanel = HUD->WidgetTree->FindWidget(TEXT("EndTurnPanel"));
+	UWidget* SkillPanel = HUD->WidgetTree->FindWidget(TEXT("SkillTogglePanel"));
 	if (!TestNotNull(TEXT("전투 UI 모델"), Model)
 		|| !TestNotNull(TEXT("명령 카드"), Card)
 		|| !TestNotNull(TEXT("스킬 단추"), SkillButton)
-		|| !TestNotNull(TEXT("확정 단추"), ConfirmButton))
+		|| !TestNotNull(TEXT("확정 단추"), ConfirmButton)
+		|| !TestNotNull(TEXT("취소 전용 단추"), CancelButton)
+		|| !TestNotNull(TEXT("턴 종료 단추"), EndTurnButton)
+		|| !TestNotNull(TEXT("확정 패널"), ConfirmPanel)
+		|| !TestNotNull(TEXT("취소 전용 패널"), CancelPanel)
+		|| !TestNotNull(TEXT("턴 종료 패널"), EndTurnPanel)
+		|| !TestNotNull(TEXT("스킬 패널"), SkillPanel))
 	{
 		return false;
 	}
 
-	// 아군 차례가 열리면 현재 용병의 카드를 자동으로 보여 준다.
-	TestEqual(TEXT("플레이어 턴 시작에 카드가 자동으로 펴진다"), Card->GetVisibility(),
-		ESlateVisibility::SelfHitTestInvisible);
+	UWidget* CardCooldownRoot = HUD->WidgetTree->FindWidget(
+		TEXT("CommandCooldownOverlayRoot_1"));
+	UTextBlock* CardCooldown = Cast<UTextBlock>(HUD->WidgetTree->FindWidget(
+		TEXT("CommandCooldownOverlay_1")));
+	UWidget* CardCooldownBadge = HUD->WidgetTree->FindWidget(
+		TEXT("CommandCooldownBadge_1"));
+	UTextBlock* CardCooldownOriginal = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("CommandCooldown_1")));
+	TestEqual(TEXT("플레이어 턴 시작에 큰 카드는 접혀 있다"), Card->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	TestNull(TEXT("플레이 중에도 폐기 퀵바가 존재하지 않음"),
+		HUD->WidgetTree->FindWidget(TEXT("QuickSkillBar")));
 	TestEqual(TEXT("플레이어 턴 시작은 현재 용병 포커스를 요청한다"),
 		Responder->mLastType, ECombatInputType::FocusUnit);
 	TestEqual(TEXT("플레이어 턴 포커스 대상"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("플레이어 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("플레이어 턴은 커맨드 고리 중심에 포커스한다"),
-		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
-
-	// 확정 버튼은 조준 중 표시 여부와 별개로 클릭 델리게이트가 모델의
-	// Confirm 의도로 이어져야 한다. 바인딩이 빠지면 실제 전투에서 무반응이다.
+	TestEqual(TEXT("플레이어 턴은 큰 카드 없이 화면 중앙에 포커스한다"),
+		LastFocusAnchor, FVector2D(.5f, .5f));
+	// 평상시에는 확정 버튼이 숨겨져 있고, 델리게이트를 직접 불러도 Confirm이
+	// 새지 않는다.
 	Responder->mLastType = ECombatInputType::Cancel;
 	ConfirmButton->OnClicked.Broadcast();
-	TestEqual(TEXT("확정 단추가 전투 Confirm 명령을 보낸다"),
+	TestEqual(TEXT("평상시 숨은 확정 단추는 명령을 보내지 않는다"),
+		Responder->mLastType, ECombatInputType::Cancel);
+
+	// 스킬을 고른 첫 상태부터 확정은 최종 위치에 회색으로 나타난다. 턴 종료는
+	// 취소로 바뀌지 않고 사라지며, 확정 오른쪽의 전용 취소만 열린다.
+	PlayerTurn.mPhase = ECombatBuildPhaseUI::SkillSelected;
+	Model->SetTurnUI(PlayerTurn);
+	TestEqual(TEXT("스킬 선택 즉시 턴 종료 패널 숨김"), EndTurnPanel->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	TestEqual(TEXT("스킬 선택 즉시 전용 취소 패널 표시"), CancelPanel->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("스킬 선택 즉시 확정 패널 표시"), ConfirmPanel->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("스킬 선택 즉시 스킬 패널 숨김"), SkillPanel->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	TestFalse(TEXT("대상 선택 전 확정 패널 회색 비활성"),
+		ConfirmPanel->GetIsEnabled());
+	TestFalse(TEXT("대상 선택 전 확정 단추 클릭 불가"),
+		ConfirmButton->GetIsEnabled());
+	Responder->mLastType = ECombatInputType::FocusUnit;
+	ConfirmButton->OnClicked.Broadcast();
+	TestEqual(TEXT("대상 선택 전 확정 명령 차단"),
+		Responder->mLastType, ECombatInputType::FocusUnit);
+	Responder->mLastType = ECombatInputType::EndTurn;
+	CancelButton->OnClicked.Broadcast();
+	TestEqual(TEXT("전용 취소 단추가 Cancel 명령을 보낸다"),
+		Responder->mLastType, ECombatInputType::Cancel);
+	Responder->mLastType = ECombatInputType::FocusUnit;
+	EndTurnButton->OnClicked.Broadcast();
+	TestEqual(TEXT("조준 중 숨은 턴 종료는 명령을 보내지 않는다"),
+		Responder->mLastType, ECombatInputType::FocusUnit);
+
+	PlayerTurn.mPhase = ECombatBuildPhaseUI::AimSelection;
+	Model->SetTurnUI(PlayerTurn);
+	TestEqual(TEXT("대상 선택 중에도 확정 패널 표시 유지"),
+		ConfirmPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestFalse(TEXT("대상 선택 중에도 확정 단추 비활성"),
+		ConfirmButton->GetIsEnabled());
+
+	PlayerTurn.mPhase = ECombatBuildPhaseUI::Preview;
+	Model->SetTurnUI(PlayerTurn);
+	TestTrue(TEXT("대상 선택 완료 뒤 확정 패널 활성"),
+		ConfirmPanel->GetIsEnabled());
+	TestTrue(TEXT("대상 선택 완료 뒤 확정 단추 클릭 가능"),
+		ConfirmButton->GetIsEnabled());
+	Responder->mLastType = ECombatInputType::Cancel;
+	ConfirmButton->OnClicked.Broadcast();
+	TestEqual(TEXT("활성 확정 단추가 전투 Confirm 명령을 보낸다"),
 		Responder->mLastType, ECombatInputType::Confirm);
 
-	// 자동 표시 뒤에도 스킬 단추는 수동 접기/다시 열기의 역할을 유지한다.
-	SkillButton->OnClicked.Broadcast();
-	TestEqual(TEXT("스킬 단추로 자동 카드를 접을 수 있다"), Card->GetVisibility(),
+	PlayerTurn.mPhase = ECombatBuildPhaseUI::None;
+	Model->SetTurnUI(PlayerTurn);
+	TestEqual(TEXT("평상시 전용 취소 패널 숨김"), CancelPanel->GetVisibility(),
 		ESlateVisibility::Collapsed);
-	SkillButton->OnClicked.Broadcast();
-	TestEqual(TEXT("스킬 단추로 다시 편다"), Card->GetVisibility(),
+	TestEqual(TEXT("평상시 턴 종료 패널 복귀"), EndTurnPanel->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 
+	// 큰 카드가 필요할 때만 스킬 단추로 열고 다시 접는다.
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("스킬 단추로 큰 카드를 편다"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("스킬 UI가 열리면 스킬 패널 숨김"), SkillPanel->GetVisibility(),
+		ESlateVisibility::Collapsed);
+	TestEqual(TEXT("스킬 UI가 열리면 확정 패널을 즉시 표시"),
+		ConfirmPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestFalse(TEXT("스킬을 정하기 전 확정 패널은 회색 비활성"),
+		ConfirmPanel->GetIsEnabled());
+	TestFalse(TEXT("스킬을 정하기 전 확정 단추는 클릭 불가"),
+		ConfirmButton->GetIsEnabled());
+	if (TestNotNull(TEXT("큰 카드 중앙 쿨타임 겹"), CardCooldownRoot)
+		&& TestNotNull(TEXT("큰 카드 중앙 쿨타임 숫자"), CardCooldown))
+	{
+		TestEqual(TEXT("큰 카드에서도 남은 쿨타임을 표시"),
+			CardCooldownRoot->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+		TestEqual(TEXT("큰 카드 남은 쿨타임 값"),
+			CardCooldown->GetText().ToString(), FString(TEXT("2")));
+	}
+	if (TestNotNull(TEXT("기존 큰 카드 쿨타임 배지"), CardCooldownBadge)
+		&& TestNotNull(TEXT("기존 큰 카드 쿨타임 숫자"), CardCooldownOriginal))
+	{
+		TestEqual(TEXT("기존 우하단 쿨타임 배지 유지"),
+			CardCooldownBadge->GetVisibility(),
+			ESlateVisibility::SelfHitTestInvisible);
+		TestEqual(TEXT("기존 우하단 남은 쿨타임 값"),
+			CardCooldownOriginal->GetText().ToString(), FString(TEXT("2")));
+	}
+	// 카드가 열린 채 턴이 끝나는 실제 흐름에서도 카드와 버튼 상태를 같은 틱에
+	// 함께 정리해야 한다. 숨은 Skill 버튼의 델리게이트로 먼저 접으면 이 회귀를
+	// 놓치므로 턴 종료 알림을 바로 보낸다.
 	Model->OnEndAnyTurn.Broadcast(nullptr);
 	TestEqual(TEXT("턴 종료 알림 즉시 카드를 내린다"), Card->GetVisibility(),
 		ESlateVisibility::Collapsed);
+	TestEqual(TEXT("턴 종료 알림 즉시 확정 패널도 숨긴다"),
+		ConfirmPanel->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("턴 종료 알림 즉시 스킬 패널을 복구한다"),
+		SkillPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
-	TestEqual(TEXT("다음 플레이어 턴 시작에도 다시 편다"), Card->GetVisibility(),
-		ESlateVisibility::SelfHitTestInvisible);
+	TestEqual(TEXT("다음 플레이어 턴도 큰 카드를 자동으로 펴지 않는다"),
+		Card->GetVisibility(), ESlateVisibility::Collapsed);
 
 	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
 	TestEqual(TEXT("행동 시작부터 카드를 감춘다"), Card->GetVisibility(),
@@ -3488,6 +4070,15 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		Responder->mLastType, ECombatInputType::Cancel);
 	TestEqual(TEXT("몬스터 턴에는 카드 고리 앵커를 보내지 않는다"),
 		FocusAnchorCount, 0);
+	// 열기 요청 플래그가 켜져도 실제 카드는 적 턴 조건에서 보이지 않는다.
+	// 이때 회색 Confirm이 잘못 나타나거나 Skill이 사라져서는 안 된다.
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("몬스터 턴의 열기 요청에도 카드는 숨김"),
+		Card->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("몬스터 턴의 열기 요청에도 확정 패널은 숨김"),
+		ConfirmPanel->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("몬스터 턴의 열기 요청에는 스킬 패널 유지"),
+		SkillPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	Model->OnEndAnyTurn.Broadcast(nullptr);
 	Model->OnChangeFocusScreenAnchor.Remove(FocusAnchorHandle);
 	return true;

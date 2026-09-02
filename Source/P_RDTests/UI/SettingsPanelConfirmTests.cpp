@@ -14,6 +14,7 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Widgets/SWidget.h"
@@ -323,8 +324,12 @@ bool FSettingsPanelBackLifecycleTest::RunTest(const FString& Parameters)
 			static_cast<UPanelWidget*>(OptionsRailFrameMount));
 		if (UOverlaySlot* GearSlot = Cast<UOverlaySlot>(GearButton->Slot))
 		{
+			const FVector2D GearPosition = RunOptionsRail::ButtonPosition(3);
+			const FVector2D GearSize = RunOptionsRail::ButtonSize();
 			TestEqual(TEXT("설정 톱니 런타임 여백"), GearSlot->GetPadding(),
-				FMargin(344.f, 36.f, 42.5f, 35.f));
+				FMargin(GearPosition.X, GearPosition.Y,
+					RunOptionsRail::Width - GearPosition.X - GearSize.X,
+					RunOptionsRail::Height - GearPosition.Y - GearSize.Y));
 		}
 		else
 		{
