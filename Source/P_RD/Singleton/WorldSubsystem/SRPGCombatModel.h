@@ -80,6 +80,16 @@ public:
 };
 
 /**
+ * @brief 현재 전투 상태를 변경하지 않고 계산한 한 개 미래 라운드의 턴 순서.
+ */
+struct FSRPGPredictedRound
+{
+	/** @brief 현재 라운드 다음을 1로 세는 유효 라운드 거리. */
+	int32 mRoundOffset = 1;
+	TArray<FSRPGTurnCandidate> mCandidates;
+};
+
+/**
  * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템 모델
  */
 UCLASS()
@@ -171,7 +181,6 @@ protected:
 	void EvaluateRound();
 
 	bool CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
-	bool PredictOrderedTurnCandidatesOnNewRound(int32 RoundOffset, OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
 	void ApplyOrderedTurnCandidates(const TArray<FSRPGTurnCandidate>& Candidates, int32 NextRoundRandomSeed);
 
 	/* 유닛 등록 및 해제 함수 */
@@ -214,7 +223,21 @@ public:
 	USRPGTurnContext* GetCurrentTurnContext() const;
 	USRPGTurnContext* GetTurnContext(const UUnitModel* Owner) const;
 	TArray<TObjectPtr<USRPGTurnContext>> GetOrderedTurnContexts() const;
+	/**
+	 * @brief 현재 속도 스냅샷에서 앞으로 발생할 유효 라운드를 순서대로 예측한다.
+	 *
+	 * @details 각 미래 라운드는 실제 진행과 똑같이 먼저 속도를 충전한다. 아무도
+	 *          턴 비용에 도달하지 못한 충전 주기는 라운드로 세지 않는다.
+	 */
+	TArray<FSRPGPredictedRound> GetPredictedTurnRounds(uint32 RoundCount) const;
 	TArray<FSRPGTurnCandidate> GetOrderedTurnCandidates(uint32 RoundOffset = 0) const;
+
+	/** @brief 속도 스냅샷만으로 예측하는 순수 계산부. 자동화 시험에서도 사용한다. */
+	static TArray<FSRPGPredictedRound> PredictTurnRounds(
+		const TArray<FSRPGTurnCandidate>& CurrentCandidates,
+		int32 RequiredSpeedPointForTurn,
+		int32 InitialRandomSeed,
+		uint32 RoundCount);
 	UTileMapModel* GetTileMap() const;
 
 	const TArray<TObjectPtr<UUnitModel>>& GetPlayerUnits() const;
