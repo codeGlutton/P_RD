@@ -998,6 +998,12 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			&& TestNotNull(*FString::Printf(TEXT("%s 컨테이너"), Expected.TextName), Container)
 			&& TestNotNull(*FString::Printf(TEXT("%s 기준 이미지"), Expected.TextName), Plate))
 		{
+			if (FCString::Strcmp(Expected.TextName,
+				TEXT("ConfirmAbandonButtonText")) == 0)
+			{
+				TestEqual(TEXT("공용 확인 실행 라벨 긴 문구 대응 크기"),
+					Text->GetFont().Size, 25.f);
+			}
 			TestTrue(*FString::Printf(TEXT("%s ScaleBox 자식"), Expected.TextName),
 				Text->GetParent() == Scale);
 			TestTrue(*FString::Printf(TEXT("%s 지정 컨테이너 안"), Expected.TextName),
@@ -1015,14 +1021,35 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				if (TestTrue(*FString::Printf(TEXT("%s 기준 이미지 크기"), Expected.TextName),
 					Fitted.X > 0. && Fitted.Y > 0.))
 				{
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Left"), Expected.TextName),
-						ActualPadding.Left, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Top"), Expected.TextName),
-						ActualPadding.Top, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Right"), Expected.TextName),
-						ActualPadding.Right, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Bottom"), Expected.TextName),
-						ActualPadding.Bottom, 0.f, .02f);
+					const bool bConfirmAction = FCString::Strcmp(Expected.TextName,
+						TEXT("ConfirmAbandonButtonText")) == 0;
+					if (bConfirmAction)
+					{
+						const FVector2D Offset = (Expected.Bounds - Fitted) * .5f;
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Left"),
+							ActualPadding.Left,
+							StaticCast<float>(Offset.X), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Top"),
+							ActualPadding.Top,
+							StaticCast<float>(Offset.Y), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Right"),
+							ActualPadding.Right,
+							StaticCast<float>(Offset.X), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Bottom"),
+							ActualPadding.Bottom,
+							StaticCast<float>(Offset.Y), .02f);
+					}
+					else
+					{
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Left"), Expected.TextName),
+							ActualPadding.Left, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Top"), Expected.TextName),
+							ActualPadding.Top, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Right"), Expected.TextName),
+							ActualPadding.Right, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Bottom"), Expected.TextName),
+							ActualPadding.Bottom, 0.f, .02f);
+					}
 				}
 				TestEqual(*FString::Printf(TEXT("%s 가로 Fill"), Expected.TextName),
 					ScaleSlot->GetHorizontalAlignment(), HAlign_Fill);
