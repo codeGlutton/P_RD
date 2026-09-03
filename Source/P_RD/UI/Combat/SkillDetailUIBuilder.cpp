@@ -1,6 +1,7 @@
 #include "UI/Combat/SkillDetailUIBuilder.h"
 
 #include "UI/Combat/CombatUITypes.h"
+#include "UI/RoomViewTypes.h"
 #include "Frontend/CharacterSelectTypes.h"
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
@@ -142,6 +143,41 @@ void SkillDetailUIBuilder::FillFromFrontendOption(const FFrontendSkillOption& Op
 	OutDetail.mTargeting.mAimBlockerMask = Option.mAimBlockerMask;
 	OutDetail.mTargeting.mEffectBlockerMask = Option.mEffectBlockerMask;
 	OutDetail.mTargeting.mTargetPattern = ToTargetPattern(Option.mTargetPattern);
+}
+
+bool SkillDetailUIBuilder::FillFallbackFromPartyRosterSkillView(
+	const FPartyRosterSkillView& Skill, FSkillDetailUI& OutDetail)
+{
+	if (Skill.mSlotIndex == INDEX_NONE)
+	{
+		return false;
+	}
+
+	OutDetail.mSkillIndex = Skill.mSlotIndex;
+	OutDetail.mName = Skill.mName;
+	OutDetail.mIcon = Skill.mIcon;
+	OutDetail.mActionPointCost = FMath::Max(Skill.mActionPointCost, 0);
+	OutDetail.mDescription = NSLOCTEXT("RunOptionsRailWidget", "SkillDetailFallback",
+		"보유 용병이 장착한 스킬입니다.");
+	return true;
+}
+
+bool SkillDetailUIBuilder::FillFallbackFromCombatSkillView(
+	const FSkillUI& Skill, FSkillDetailUI& OutDetail)
+{
+	if (OutDetail.mSkillIndex == INDEX_NONE
+		|| Skill.mSkillIndex != OutDetail.mSkillIndex)
+	{
+		return false;
+	}
+
+	OutDetail.mName = Skill.mName;
+	OutDetail.mIcon = Skill.mIcon;
+	OutDetail.mActionPointCost = Skill.mActionPointCost;
+	OutDetail.mDescription = NSLOCTEXT("CombatLayoutHUD",
+		"SkillDetailFallbackDescription",
+		"현재 전투에서 사용할 수 있는 스킬입니다.");
+	return true;
 }
 
 void SkillDetailUIBuilder::FillFromArtifactData(const UStaticArtifactData* ArtifactData,

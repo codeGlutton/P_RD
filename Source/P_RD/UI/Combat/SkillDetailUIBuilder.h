@@ -8,6 +8,8 @@
 class UStaticArtifactData;
 class UStaticSkillData;
 struct FCombatArtifactUI;
+struct FPartyRosterSkillView;
+struct FSkillUI;
 struct FSkillDetailUI;
 struct FFrontendSkillOption;
 
@@ -41,6 +43,20 @@ namespace SkillDetailUIBuilder
 
 	/** @brief 캐릭터 선택/고용 옵션 값에서 채운다. 변환 규칙은 FillFromSkillData와 같다. */
 	P_RD_API void FillFromFrontendOption(const FFrontendSkillOption& Option,
+		FSkillDetailUI& OutDetail);
+
+	/**
+	 * @brief 방 전환 중 상세 생산자가 준비되지 않았을 때 파티 명단 View로 최소 상세 DTO를 보완한다.
+	 * @return 유효한 스킬 슬롯 View를 보완했는지 여부
+	 */
+	P_RD_API bool FillFallbackFromPartyRosterSkillView(
+		const FPartyRosterSkillView& Skill, FSkillDetailUI& OutDetail);
+
+	/**
+	 * @brief 전투 상세 생산자가 식별 정보를 비운 경우 같은 슬롯의 전투 카드 View로 보완한다.
+	 * @return 두 DTO가 같은 스킬을 가리켜 보완했는지 여부
+	 */
+	P_RD_API bool FillFallbackFromCombatSkillView(const FSkillUI& Skill,
 		FSkillDetailUI& OutDetail);
 
 	/**

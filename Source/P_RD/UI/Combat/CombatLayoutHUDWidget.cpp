@@ -37,6 +37,7 @@
 #include "Materials/MaterialInterface.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "UI/Combat/SimulationPreviewUIModel.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/DetailOverlayInputShield.h"
@@ -114,7 +115,7 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mSkillVisualAPIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cost_badge.KK_HUD04_zone_cost_badge");
 	RD_LOAD_TEX(mSkillVisualDamageIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Damage_Simple_v2.T_SkillStat_Damage_Simple_v2");
 	RD_LOAD_TEX(mSkillVisualCooldownIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/HUD04/KK_HUD04_zone_cooldown_badge.KK_HUD04_zone_cooldown_badge");
-	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Simple_v2.T_SkillStat_Critical_Simple_v2");
+	RD_LOAD_TEX(mSkillVisualCriticalIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1");
 	RD_LOAD_TEX(mSkillVisualCasterIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MercenaryGlyph.T_MB_OptionsIcon_MercenaryGlyph");
 	RD_LOAD_TEX(mSkillVisualTargetIconTexture, "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_OptionsIcon_MonsterGlyph.T_MB_OptionsIcon_MonsterGlyph");
 	RD_LOAD_TEX(mSkillRangeButtonTexture, "/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/T_SkillRangeButton_Normal_v1.T_SkillRangeButton_Normal_v1");
@@ -6217,7 +6218,26 @@ void UCombatLayoutHUDWidget::ShowSkillDetailOverlay()
 	{
 		return;
 	}
-	ShowSkillDetailOverlay(Detail);
+	if (!Detail.mName.IsEmpty() || Detail.mIcon != nullptr)
+	{
+		ShowSkillDetailOverlay(Detail);
+		return;
+	}
+
+	// 데이터 생산자가 스킬 index만 채운 경우, 이미 받은 전투 카드 View의
+	// 같은 슬롯에서 표시 식별 정보만 보완한다. 모델은 다시 조회하지 않는다.
+	FSkillDetailUI Fallback = Detail;
+	const FSkillUI* Skill = mUIModel->GetSkillUIs().FindByPredicate(
+		[&Detail](const FSkillUI& Candidate)
+		{
+			return Candidate.mSkillIndex == Detail.mSkillIndex;
+		});
+	if (Skill != nullptr
+		&& SkillDetailUIBuilder::FillFallbackFromCombatSkillView(
+			*Skill, OUT Fallback))
+	{
+		ShowSkillDetailOverlay(Fallback);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandleCancelClicked()
