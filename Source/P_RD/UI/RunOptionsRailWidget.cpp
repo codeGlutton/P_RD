@@ -17,6 +17,7 @@
 #include "UI/FrontendMapWidget.h"
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/SettingsPanelWidget.h"
@@ -832,7 +833,14 @@ void URunOptionsRailWidget::ShowSkillDetail(const int32 SlotIndex)
 	if (GameMode == nullptr || GameMode->BuildPartyUnitSkillDetailUI(
 		MemberIndex, ShownSkillSlotIndices[SlotIndex], OUT Detail) == false)
 	{
-		return;
+		// 방 전환 직후 상세 생산자가 아직 준비되지 않았더라도, 이미 화면에
+		// 내려온 파티 명단 View만으로 최소 상세를 보여 준다.
+		if (!ShownSkillViews.IsValidIndex(SlotIndex)
+			|| !SkillDetailUIBuilder::FillFallbackFromPartyRosterSkillView(
+				ShownSkillViews[SlotIndex], OUT Detail))
+		{
+			return;
+		}
 	}
 	if (EnsureSkillDetailPresenter() == false
 		|| SkillDetailPresenter->EnsureOverlayWidget(GetOwningPlayer()) == false)
