@@ -116,6 +116,9 @@ private:
 	UFUNCTION() void HandleUnitClicked0();
 	UFUNCTION() void HandleUnitClicked1();
 	UFUNCTION() void HandleUnitClicked2();
+	UFUNCTION() void HandleUnitClicked3();
+	UFUNCTION() void HandleUnitClicked4();
+	UFUNCTION() void HandleUnitClicked5();
 	UFUNCTION() void HandleSkillSlotClicked0();
 	UFUNCTION() void HandleSkillSlotClicked1();
 	UFUNCTION() void HandleSkillSlotClicked2();
@@ -166,10 +169,34 @@ private:
 	void EndSkillSlotPress(int32 SkillSlotIndex);
 	void ShowHeldSkillDetails(int32 SkillSlotIndex);
 	void RestoreSelectedShopItemDetails();
+	/** @brief 선택한 직업 카드가 실제로 가리키는 파티 유닛을 찾는다. */
+	const FShopOwnedUnitUI* GetSelectedSkillTarget(const FShopUI& Shop) const;
+	/** @brief 스냅샷이 바뀌어도 같은 유닛을 유지하고, 없으면 해당 직업의 첫 유닛을 고른다. */
+	void NormalizeSelectedSkillTarget(const FShopUI& Shop);
 
 	/** @brief Detail 도메인 알림 처리 — 밀려온 상세 DTO를 그리거나 플레인 폴백을 연다. */
 	void PresentPushedDetail();
 	const FShopItemUI* GetSelectedItem(const FShopUI& Shop) const;
+
+	/**
+	 * @brief 지금 고른 용병 기준으로 이 상품을 살 수 있는지 가른다.
+	 *
+	 * @details 스킬 목록은 직업으로 거르지 않고 전부 늘어놓는다(0824 합의:
+	 * "상점 스킬은 모든 직업 전용 스킬을 볼 수 있도록"). 대신 고른 용병이
+	 * 못 쓰는 스킬은 살 수 없다는 것을 여기서 가려 낸다.
+	 */
+	enum class EShopSkillAvailability : uint8
+	{
+		Available,   // 고른 용병에게 장착/교체할 수 있다
+		OtherJob,    // 다른 직업 전용이라 이 용병은 못 쓴다
+		AlreadyOwned, // 이 용병이 이미 가지고 있다
+		UnownedTarget // 직업 미리보기 카드라 상세만 확인할 수 있다
+	};
+	EShopSkillAvailability GetSkillAvailability(const FShopUI& Shop,
+		const FShopItemUI& Item) const;
+	/** @brief 상품 한 칸에 덧붙일 상태 문구. 없으면 빈 FText. */
+	FText MakeSkillAvailabilityNote(const FShopUI& Shop,
+		const FShopItemUI& Item) const;
 	bool EnsureShopDetailOverlay();
 	bool EnsureShopSkillDetailPresenter();
 	void ReleaseShopDetailOverlay();
@@ -360,6 +387,10 @@ protected:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mUnitSelectIcons;
 
+	/** 같은 직업 용병이 여럿일 때 현재 대상/전체 수를 보여 주는 배지. */
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UTextBlock>> mUnitSelectCountTexts;
+
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UButton>> mSkillSlotButtons;
 
@@ -421,6 +452,8 @@ protected:
 	EShopItemKind mActiveItemKind = EShopItemKind::Artifact;
 	int32 mSelectedFilteredIndex = 0;
 	int32 mSelectedUnitViewIndex = 0;
+	/** 직업 카드와 별개인 실제 파티 유닛 index. 같은 직업 카드를 다시 누르면 순환한다. */
+	int32 mSelectedSkillTargetUnitIndex = INDEX_NONE;
 	int32 mSelectedSkillSlotIndex = 0;
 	bool mIsArtifactInventoryOpen = false;
 

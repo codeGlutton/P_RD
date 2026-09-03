@@ -30,7 +30,9 @@
 namespace
 {
 	constexpr int32 ShopRestPrice = 100;
-	constexpr int32 ReplaceableSkillStartIndex = 2;
+	// 이동은 SkillModel 슬롯을 차지하지 않는다. 0번 기본 공격 뒤의 1..4가
+	// 상점에서 교체 가능한 네 스킬이다.
+	constexpr int32 ReplaceableSkillStartIndex = 1;
 	constexpr int32 ReplaceableSkillSlotCount = 4;
 
 	FText ShopMercenaryName(const EUnitJobType JobType)
@@ -396,7 +398,75 @@ void AShopGameMode::PushShopUIData()
 		}
 	}
 
+	// 판매 목록과 파티가 모두 채워진 뒤에야 "이미 가졌나"를 가릴 수 있다.
+	MarkOwnedSaleItems(ShopUIData);
+
 	mShopUIModel->SetShop(ShopUIData);
+}
+
+/**
+ * @brief 판매 중인 스킬을 이미 가진 파티 유닛을 슬롯마다 표시한다.
+ *
+ * @details
+ * 화면은 모든 직업의 전용 스킬을 함께 늘어놓는다(0824 합의). 그래서 이미
+ * 장착한 스킬이 목록에 그대로 다시 보이고, 눌러 사면 같은 스킬이 두 번
+ * 붙는다. "같은 스킬"의 판정은 규칙이므로 게임플레이가 여기서 끝내고,
+ * 화면에는 유닛 index 목록만 내린다.
+ *
+ * 판정 기준은 스킬 자산 하나(PrimaryAssetId)다. 이름 비교는 지역화가
+ * 바뀌면 갈라지고, 다른 자산이 같은 이름을 쓰면 오탐이 난다.
+ */
+void AShopGameMode::MarkOwnedSaleItems(FShopUI& ShopUIData) const
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	// 유닛 index -> 그 유닛이 가진 스킬 자산 집합.
+	TMap<int32, TSet<FPrimaryAssetId>> OwnedSkillIds;
+	const TArray<TObjectPtr<UPlayerUnitModel>>& UnitModels =
+		PartyModel->GetPlayerUnitModels();
+	for (int32 UnitIndex = 0; UnitIndex < UnitModels.Num(); ++UnitIndex)
+	{
+		const UPlayerUnitModel* UnitModel = UnitModels[UnitIndex];
+		const USkillComponentModel* SkillModel = UnitModel != nullptr
+			? UnitModel->GetSkillComponentModel() : nullptr;
+		if (SkillModel == nullptr)
+		{
+			continue;
+		}
+		TSet<FPrimaryAssetId>& Owned = OwnedSkillIds.FindOrAdd(UnitIndex);
+		for (const FSkillEntry& Entry : SkillModel->GetSkills())
+		{
+			if (Entry.mData != nullptr)
+			{
+				Owned.Add(Entry.mData->GetPrimaryAssetId());
+			}
+		}
+	}
+
+	for (FShopItemUI& Item : ShopUIData.mItems)
+	{
+		if (Item.mKind != EShopItemKind::Skill)
+		{
+			continue;
+		}
+		const FShopSlotSource* Source = mSlotSources.Find(Item.mSlotIndex);
+		if (Source == nullptr || Source->mItemId.IsValid() == false)
+		{
+			continue;
+		}
+		for (const TPair<int32, TSet<FPrimaryAssetId>>& Pair : OwnedSkillIds)
+		{
+			if (Pair.Value.Contains(Source->mItemId))
+			{
+				Item.mOwnedByUnitIndices.Add(Pair.Key);
+			}
+		}
+		Item.mOwnedByUnitIndices.Sort();
+	}
 }
 
 /**
@@ -497,8 +567,31 @@ void AShopGameMode::FillOwnedItems(FShopUI& ShopUIData) const
 				OwnedUnit.mSkillSlots.Add(SkillSlot);
 			}
 		}
+		// 이동은 SkillModel 밖에 있고, 기본 공격 다음 교체 가능 네 칸(1..4)은 빈 칸도 반드시 DTO에 남긴다.
+		// 모델 배열이 마지막 빈 칸을 생략하던 경우 4번째 보유/장착 칸 자체가
+		// UI에서 사라졌다.
+		OwnedUnit.mSkillSlots.SetNum(FMath::Max(6, OwnedUnit.mSkillSlots.Num()));
 
 		ShopUIData.mOwnedUnits.Add(OwnedUnit);
+	}
+
+	// 스킬 상점에서는 현재 파티 3명만이 아니라 여섯 직업을 모두 탐색한다.
+	// 이 배열은 직업 카드 전용이다. 실제 구매 대상은 mOwnedUnits에서 별도로
+	// 고르므로 같은 직업 용병이 여럿이어도 첫 유닛으로 고정되지 않는다.
+	for (int32 JobIndex = 0;
+		JobIndex < static_cast<int32>(EUnitJobType::PlayerJobCount); ++JobIndex)
+	{
+		const EUnitJobType JobType = static_cast<EUnitJobType>(JobIndex);
+		const FShopOwnedUnitUI* Owned = ShopUIData.mOwnedUnits.FindByPredicate(
+			[JobType](const FShopOwnedUnitUI& Candidate)
+			{
+				return Candidate.mJobType == JobType;
+			});
+		FShopOwnedUnitUI JobCard;
+		JobCard.mJobType = JobType;
+		JobCard.mIsOwned = Owned != nullptr;
+		JobCard.mUnitIndex = INDEX_NONE;
+		ShopUIData.mSkillTargetUnits.Add(JobCard);
 	}
 }
 
@@ -623,6 +716,17 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, in
 	{
 		UE_LOG(LogRD, Log, TEXT("스킬 구매 거절: 스킬 데이터 로드 실패 (Slot=%d)"), SlotIndex);
 		return;
+	}
+	for (const FSkillEntry& ExistingSkill : Skills)
+	{
+		if (ExistingSkill.mData != nullptr
+			&& ExistingSkill.mData->GetPrimaryAssetId() == Source->mItemId)
+		{
+			UE_LOG(LogRD, Log,
+				TEXT("스킬 구매 거절: 대상 유닛이 이미 보유한 스킬 (Slot=%d, Unit=%d)"),
+				SlotIndex, UnitIndex);
+			return;
+		}
 	}
 
 	// 지급. SetSkill의 직업 검사(IsAcquirableSkill)가 거부하면 과금하지 않음
