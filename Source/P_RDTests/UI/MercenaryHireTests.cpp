@@ -2728,6 +2728,23 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("전용 행에 상태 이름도 표시"),
 		EnemyStatusName0->GetText().ToString(), FString(TEXT("취약")));
 
+	// 실제 상태가 없으면 대체 문구나 빈 소켓을 남기지 않는다. 상태가
+	// 다시 생겼을 때는 같은 ScrollBox가 정상적으로 복구되어야 한다.
+	MonsterUnit.mStatusEffects.Reset();
+	Model->SetUnitUIs({ MonsterUnit });
+	TestEqual(TEXT("상태가 없으면 상태 스크롤 전체 숨김"),
+		EnemyStatusScroll->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("상태가 없으면 첫 상태 행도 숨김"),
+		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Collapsed);
+	TestTrue(TEXT("상태가 없으면 대체 문구도 비움"),
+		EnemyStatusName0->GetText().IsEmpty());
+	MonsterUnit.mStatusEffects.Add(MonsterStatus);
+	Model->SetUnitUIs({ MonsterUnit });
+	TestEqual(TEXT("상태가 생기면 상태 스크롤 복구"),
+		EnemyStatusScroll->GetVisibility(), ESlateVisibility::Visible);
+	TestEqual(TEXT("상태가 생기면 첫 상태 행 복구"),
+		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Visible);
+
 	// 짧은 탭은 상세를 열지 않고 타이머를 취소한다.
 	EnemyStatusButton0->OnPressed.Broadcast();
 	TestTrue(TEXT("상태 아이콘 누름은 롱프레스 후보를 예약"),

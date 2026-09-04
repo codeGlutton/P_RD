@@ -601,6 +601,32 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			SetShown(Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
 		}
+		// HP는 뒷판보다 위에서 차오르고, 금속 프레임은 다시 HP 위를 덮어야
+		// 한다. 기존 순서(프레임→HP→글자)는 HP를 키우면 금속까지 덮었으므로
+		// HP→프레임→글자 순서로 바꿔 프레임 자체를 마스크처럼 사용한다.
+		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
+			FString::Printf(TEXT("%sHPBar"), Prefix)))
+		{
+			if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
+			{
+				HPSlot->SetPadding(FMargin(8.f));
+				if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+				{
+					UWidget* Frame = Find<UWidget>(WidgetTree,
+						FString::Printf(TEXT("%sHPBack"), Prefix));
+					const int32 FrameIndex = Mount->GetChildIndex(Frame);
+					const int32 BarIndex = Mount->GetChildIndex(HPBar);
+					if (Frame != nullptr && FrameIndex != INDEX_NONE
+						&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+					{
+						UPanelSlot* FrameSlot = Frame->Slot;
+						Mount->RemoveChildAt(FrameIndex);
+						Mount->InsertChildAt(
+							Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+					}
+				}
+			}
+		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
 		{
 			if (UWidget* Widget = Find<UWidget>(WidgetTree,
@@ -2318,7 +2344,10 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 
 	if (Scroll != nullptr)
 	{
+		const bool bHasStatus = ShownStatuses.IsEmpty() == false;
 		const bool bScrollable = ShownStatuses.Num() >= 4;
+		Scroll->SetVisibility(bHasStatus
+			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetScrollBarVisibility(bScrollable
 			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetAlwaysShowScrollbar(bScrollable);
@@ -2332,8 +2361,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 	for (int32 Index = 0; Index < Rows.Num(); ++Index)
 	{
 		const bool bHasStatus = ShownStatuses.IsValidIndex(Index);
-		const bool bEmptyRow = Index == 0 && ShownStatuses.IsEmpty();
-		SetShown(Rows[Index], bHasStatus || bEmptyRow);
+		SetShown(Rows[Index], bHasStatus);
 		SetShown(Frames.IsValidIndex(Index) ? Frames[Index].Get() : nullptr,
 			bHasStatus);
 		SetInteractiveShown(Buttons.IsValidIndex(Index)
@@ -2346,13 +2374,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 		{
 			SetShown(Icon, false);
 			SetShown(Count, false);
-			SetTextIfPresent(Name, bEmptyRow
-				? LOCTEXT("SummaryNoStatus", "상태 없음") : FText::GetEmpty());
-			if (Name != nullptr)
-			{
-				Name->SetColorAndOpacity(FSlateColor(
-					FLinearColor(.72f, .72f, .72f, 1.f)));
-			}
+			SetTextIfPresent(Name, FText::GetEmpty());
 			continue;
 		}
 

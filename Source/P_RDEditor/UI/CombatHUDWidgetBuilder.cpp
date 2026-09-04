@@ -1014,6 +1014,32 @@ namespace CombatHUDWidgetBuilder
 					Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
+			// HP→금속 프레임→글자 순으로 그리면 HP는 넓게 차오르되 금속
+			// 테두리를 덮지 않는다. 프레임을 시각적 마스크로 사용한다.
+			if (UProgressBar* HPBar = Cast<UProgressBar>(
+				Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + TEXT("HPBar")))))
+			{
+				if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
+				{
+					HPSlot->SetPadding(FMargin(8.f));
+					if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+					{
+						UWidget* Frame = Blueprint->WidgetTree->FindWidget(
+							FName(FString(Prefix) + TEXT("HPBack")));
+						const int32 FrameIndex = Mount->GetChildIndex(Frame);
+						const int32 BarIndex = Mount->GetChildIndex(HPBar);
+						if (Frame != nullptr && FrameIndex != INDEX_NONE
+							&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+						{
+							UPanelSlot* FrameSlot = Frame->Slot;
+							Mount->RemoveChildAt(FrameIndex);
+							Mount->InsertChildAt(
+								Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+						}
+					}
+				}
+			}
 
 			// HP를 없앴던 판이 AP/속도 행을 위로 당겨 저장했을 수 있다.
 			for (const TCHAR* Suffix : { TEXT("APPlateMount"), TEXT("APPlate"),
