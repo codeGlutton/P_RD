@@ -598,23 +598,18 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			SetShown(Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
 		}
-		// HP 프레임 그림은 테두리만 있고 가운데가 투명하다. WBP에 밝은
-		// ProgressBar 배경이 남아 있더라도 잃은 체력 구간은 어두운 트랙으로
-		// 보이게 런타임에서도 계약을 고정한다.
+		// 구형 세로 요약판을 168px 폭으로 줄인 뒤에도 HPBar Overlay 슬롯의
+		// 좌우 패딩(25.43px)이 그대로 남아 있었다. 그 결과 HP가 100%여도
+		// 프레임 양끝까지 차지 않았다. 세로 여백은 보존하고 좌우만 안쪽
+		// 테두리 폭으로 줄인다.
 		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
 			FString::Printf(TEXT("%sHPBar"), Prefix)))
 		{
-			FProgressBarStyle Style = HPBar->GetWidgetStyle();
-			FSlateBrush Track = Style.FillImage;
-			if (Track.DrawAs == ESlateBrushDrawType::NoDrawType)
+			if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 			{
-				Track.DrawAs = ESlateBrushDrawType::Box;
+				const FMargin Padding = HPSlot->GetPadding();
+				HPSlot->SetPadding(FMargin(8.f, Padding.Top, 8.f, Padding.Bottom));
 			}
-			Track.TintColor = FSlateColor(FString(Prefix) == TEXT("Ally")
-				? FLinearColor(.025f, .045f, .025f, 1.f)
-				: FLinearColor(.05f, .018f, .014f, 1.f));
-			Style.SetBackgroundImage(Track);
-			HPBar->SetWidgetStyle(Style);
 		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
 		{

@@ -17,6 +17,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Image.h"
+#include "Components/OverlaySlot.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -273,7 +274,7 @@ namespace CombatLayoutCapture
 				Player.mIsPlayer = true;
 				Player.mName = bShowStatuslessSummary
 					? FText::FromString(TEXT("Ranger")) : FText::GetEmpty();
-				Player.mHP = bShowStatuslessSummary ? 40.f : 0.f;
+				Player.mHP = bShowStatuslessSummary ? 80.f : 0.f;
 				Player.mMaxHP = bShowStatuslessSummary ? 80.f : 0.f;
 				Player.mActionPoints = bShowStatuslessSummary ? 0 : 12;
 				Player.mMaxActionPoints = bShowStatuslessSummary ? 12 : 15;
@@ -324,20 +325,13 @@ namespace CombatLayoutCapture
 				{
 					UProgressBar* HPBar = Cast<UProgressBar>(
 						CombatHUD->GetWidgetFromName(TEXT("AllyHPBar")));
-					if (HPBar == nullptr)
+					UOverlaySlot* HPSlot = HPBar != nullptr
+						? Cast<UOverlaySlot>(HPBar->Slot) : nullptr;
+					if (HPSlot == nullptr
+						|| HPSlot->GetPadding().Left > 8.01f
+						|| HPSlot->GetPadding().Right > 8.01f)
 					{
-						OutError = TEXT("아군 요약판 HP 바가 없음");
-						return false;
-					}
-					const FSlateBrush& Track =
-						HPBar->GetWidgetStyle().BackgroundImage;
-					const FLinearColor TrackColor =
-						Track.TintColor.GetSpecifiedColor();
-					if (Track.DrawAs == ESlateBrushDrawType::NoDrawType
-						|| TrackColor.A < .99f
-						|| TrackColor.GetLuminance() >= .08f)
-					{
-						OutError = TEXT("아군 HP 미충전 트랙이 불투명한 어두운 색이 아님");
+						OutError = TEXT("HP 바 좌우 패딩 때문에 100%가 프레임을 채우지 못함");
 						return false;
 					}
 				}
