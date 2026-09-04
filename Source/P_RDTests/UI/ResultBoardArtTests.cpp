@@ -998,6 +998,12 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			&& TestNotNull(*FString::Printf(TEXT("%s 컨테이너"), Expected.TextName), Container)
 			&& TestNotNull(*FString::Printf(TEXT("%s 기준 이미지"), Expected.TextName), Plate))
 		{
+			if (FCString::Strcmp(Expected.TextName,
+				TEXT("ConfirmAbandonButtonText")) == 0)
+			{
+				TestEqual(TEXT("공용 확인 실행 라벨 긴 문구 대응 크기"),
+					Text->GetFont().Size, 25.f);
+			}
 			TestTrue(*FString::Printf(TEXT("%s ScaleBox 자식"), Expected.TextName),
 				Text->GetParent() == Scale);
 			TestTrue(*FString::Printf(TEXT("%s 지정 컨테이너 안"), Expected.TextName),
@@ -1015,14 +1021,45 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 				if (TestTrue(*FString::Printf(TEXT("%s 기준 이미지 크기"), Expected.TextName),
 					Fitted.X > 0. && Fitted.Y > 0.))
 				{
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Left"), Expected.TextName),
-						ActualPadding.Left, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Top"), Expected.TextName),
-						ActualPadding.Top, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Right"), Expected.TextName),
-						ActualPadding.Right, 0.f, .02f);
-					TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Bottom"), Expected.TextName),
-						ActualPadding.Bottom, 0.f, .02f);
+					const bool bConfirmAction = FCString::Strcmp(Expected.TextName,
+						TEXT("ConfirmAbandonButtonText")) == 0;
+					const bool bMainRunAction =
+						FCString::Strcmp(Expected.TextName, TEXT("BackButtonText")) == 0
+						|| FCString::Strcmp(Expected.TextName, TEXT("ResetButtonText")) == 0
+						|| FCString::Strcmp(Expected.TextName, TEXT("SaveAndExitButtonText")) == 0
+						|| FCString::Strcmp(Expected.TextName, TEXT("AbandonRunButtonText")) == 0;
+					const bool bModalAction = bConfirmAction
+						|| FCString::Strcmp(Expected.TextName,
+							TEXT("CancelAbandonButtonText")) == 0;
+					const float AuthoredBottomInset = bMainRunAction
+						? 30.f : (bModalAction ? 20.f : 0.f);
+					if (bConfirmAction)
+					{
+						const FVector2D Offset = (Expected.Bounds - Fitted) * .5f;
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Left"),
+							ActualPadding.Left,
+							StaticCast<float>(Offset.X), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Top"),
+							ActualPadding.Top,
+							StaticCast<float>(Offset.Y), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Right"),
+							ActualPadding.Right,
+							StaticCast<float>(Offset.X), .02f);
+						TestEqual(TEXT("확인 실행 라벨 원화 외곽 Bottom"),
+							ActualPadding.Bottom,
+							StaticCast<float>(Offset.Y) + AuthoredBottomInset, .02f);
+					}
+					else
+					{
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Left"), Expected.TextName),
+							ActualPadding.Left, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Top"), Expected.TextName),
+							ActualPadding.Top, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Right"), Expected.TextName),
+							ActualPadding.Right, 0.f, .02f);
+						TestEqual(*FString::Printf(TEXT("%s 버튼 전체 면 Bottom"), Expected.TextName),
+							ActualPadding.Bottom, AuthoredBottomInset, .02f);
+					}
 				}
 				TestEqual(*FString::Printf(TEXT("%s 가로 Fill"), Expected.TextName),
 					ScaleSlot->GetHorizontalAlignment(), HAlign_Fill);
@@ -1171,9 +1208,14 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 	}
 	UTextBlock* ConfirmHeader = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("RunConfirmHeaderText")));
+	UOverlay* ConfirmHeaderBox = Cast<UOverlay>(
+		Tree->FindWidget(TEXT("RunConfirmHeaderText_CenterBox")));
 	if (TestNotNull(TEXT("확인 모달 상단 명패 텍스트"), ConfirmHeader))
 	{
-		UCanvasPanelSlot* HeaderSlot = Cast<UCanvasPanelSlot>(ConfirmHeader->Slot);
+		TestTrue(TEXT("확인 명패 텍스트는 중앙 정렬 박스 자식"),
+			ConfirmHeaderBox != nullptr && ConfirmHeader->GetParent() == ConfirmHeaderBox);
+		UCanvasPanelSlot* HeaderSlot = ConfirmHeaderBox != nullptr
+			? Cast<UCanvasPanelSlot>(ConfirmHeaderBox->Slot) : nullptr;
 		if (TestNotNull(TEXT("확인 명패 디자인 캔버스 슬롯"), HeaderSlot))
 		{
 			TestTrue(TEXT("확인 명패 위치"),
@@ -1183,8 +1225,19 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			TestTrue(TEXT("확인 명패가 모달 내부 장식보다 앞"),
 				HeaderSlot->GetZOrder() > 2);
 		}
-		TestEqual(TEXT("확인 명패 경계 클립"), ConfirmHeader->GetClipping(),
-			EWidgetClipping::ClipToBoundsAlways);
+		if (TestNotNull(TEXT("확인 명패 중앙 정렬 박스"), ConfirmHeaderBox))
+		{
+			TestEqual(TEXT("확인 명패 경계 클립"), ConfirmHeaderBox->GetClipping(),
+				EWidgetClipping::ClipToBoundsAlways);
+			if (UOverlaySlot* HeaderTextSlot =
+				Cast<UOverlaySlot>(ConfirmHeader->Slot))
+			{
+				TestEqual(TEXT("확인 명패 글자 가로 Fill"),
+					HeaderTextSlot->GetHorizontalAlignment(), HAlign_Fill);
+				TestEqual(TEXT("확인 명패 글자 세로 중앙"),
+					HeaderTextSlot->GetVerticalAlignment(), VAlign_Center);
+			}
+		}
 	}
 
 	for (const TCHAR* RibbonName : { TEXT("SettingsAudioRibbonArt"),
