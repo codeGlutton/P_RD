@@ -711,7 +711,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	}
 	mEnemyStatusFrames.Reset();
 	mEnemyStatusIcons.Reset();
-	mEnemyStatusNames.Reset();
 	mEnemyStatusCounts.Reset();
 	mEnemyStatusButtons.Reset();
 	mEnemyStatusRows.Reset();
@@ -729,7 +728,6 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	ConfigureCompactSummary(TEXT("Ally"));
 	mAllyStatusFrames.Reset();
 	mAllyStatusIcons.Reset();
-	mAllyStatusNames.Reset();
 	mAllyStatusCounts.Reset();
 	mAllyStatusButtons.Reset();
 	mAllyStatusRows.Reset();
@@ -2194,8 +2192,6 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		? mAllyStatusFrames : mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>>& Icons = bAlly
 		? mAllyStatusIcons : mEnemyStatusIcons;
-	TArray<TObjectPtr<UTextBlock>>& Names = bAlly
-		? mAllyStatusNames : mEnemyStatusNames;
 	TArray<TObjectPtr<UTextBlock>>& Counts = bAlly
 		? mAllyStatusCounts : mEnemyStatusCounts;
 	TArray<TObjectPtr<UButton>>& Buttons = bAlly
@@ -2208,7 +2204,7 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		const FString Stem = FString::Printf(TEXT("%sScrollStatus"), *Prefix);
 		USizeBox* Row = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 			FName(*FString::Printf(TEXT("%sRow_%d"), *Stem, Index)));
-		Row->SetWidthOverride(132.f);
+		Row->SetWidthOverride(56.f);
 		Row->SetHeightOverride(56.f);
 		Row->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		Row->SetVisibility(ESlateVisibility::Collapsed);
@@ -2233,39 +2229,25 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 
 		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
 			FName(*FString::Printf(TEXT("%sIcon_%d"), *Stem, Index)));
-		Icon->SetDesiredSizeOverride(FVector2D(38.f, 38.f));
+		Icon->SetDesiredSizeOverride(FVector2D(42.f, 42.f));
 		Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Icon))
 		{
-			OverlaySlot->SetPadding(FMargin(7.f, 0.f, 0.f, 0.f));
-			OverlaySlot->SetHorizontalAlignment(HAlign_Left);
+			OverlaySlot->SetPadding(FMargin(0.f));
+			OverlaySlot->SetHorizontalAlignment(HAlign_Center);
 			OverlaySlot->SetVerticalAlignment(VAlign_Center);
 		}
 
-		UTextBlock* Name = WidgetTree->ConstructWidget<UTextBlock>(
-			UTextBlock::StaticClass(),
-			FName(*FString::Printf(TEXT("%sName_%d"), *Stem, Index)));
-		FSlateFontInfo NameFont = (bAlly && mAllyName != nullptr)
+		FSlateFontInfo CountFont = (bAlly && mAllyName != nullptr)
 			? mAllyName->GetFont()
-			: (mEnemyName != nullptr ? mEnemyName->GetFont() : Name->GetFont());
-		NameFont.Size = 16;
-		NameFont.OutlineSettings.OutlineSize = 1;
-		NameFont.OutlineSettings.OutlineColor = FLinearColor::Black;
-		Name->SetFont(NameFont);
-		Name->SetJustification(ETextJustify::Left);
-		Name->SetVisibility(ESlateVisibility::HitTestInvisible);
-		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Name))
-		{
-			OverlaySlot->SetPadding(FMargin(50.f, 0.f, 22.f, 0.f));
-			OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
-			OverlaySlot->SetVerticalAlignment(VAlign_Center);
-		}
+			: (mEnemyName != nullptr ? mEnemyName->GetFont() : FSlateFontInfo());
+		CountFont.Size = 14;
+		CountFont.OutlineSettings.OutlineSize = 1;
+		CountFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 
 		UTextBlock* Count = WidgetTree->ConstructWidget<UTextBlock>(
 			UTextBlock::StaticClass(),
 			FName(*FString::Printf(TEXT("%sCount_%d"), *Stem, Index)));
-		FSlateFontInfo CountFont = NameFont;
-		CountFont.Size = 14;
 		Count->SetFont(CountFont);
 		Count->SetJustification(ETextJustify::Center);
 		Count->SetVisibility(ESlateVisibility::Collapsed);
@@ -2303,13 +2285,12 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		if (UScrollBoxSlot* ScrollSlot = Cast<UScrollBoxSlot>(Scroll->AddChild(Row)))
 		{
 			ScrollSlot->SetPadding(FMargin(2.f, 1.f));
-			ScrollSlot->SetHorizontalAlignment(HAlign_Fill);
+			ScrollSlot->SetHorizontalAlignment(HAlign_Center);
 			ScrollSlot->SetVerticalAlignment(VAlign_Top);
 		}
 		Rows.Add(Row);
 		Frames.Add(Frame);
 		Icons.Add(Icon);
-		Names.Add(Name);
 		Counts.Add(Count);
 		Buttons.Add(Button);
 	}
@@ -2331,8 +2312,6 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 		? mAllyStatusFrames : mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>>& Icons = bAlly
 		? mAllyStatusIcons : mEnemyStatusIcons;
-	TArray<TObjectPtr<UTextBlock>>& Names = bAlly
-		? mAllyStatusNames : mEnemyStatusNames;
 	TArray<TObjectPtr<UTextBlock>>& Counts = bAlly
 		? mAllyStatusCounts : mEnemyStatusCounts;
 	TArray<TObjectPtr<UButton>>& Buttons = bAlly
@@ -2365,13 +2344,11 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 			? Buttons[Index].Get() : nullptr, bHasStatus);
 
 		UImage* Icon = Icons.IsValidIndex(Index) ? Icons[Index].Get() : nullptr;
-		UTextBlock* Name = Names.IsValidIndex(Index) ? Names[Index].Get() : nullptr;
 		UTextBlock* Count = Counts.IsValidIndex(Index) ? Counts[Index].Get() : nullptr;
 		if (bHasStatus == false)
 		{
 			SetShown(Icon, false);
 			SetShown(Count, false);
-			SetTextIfPresent(Name, FText::GetEmpty());
 			continue;
 		}
 
@@ -2387,11 +2364,6 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 			? Frames[Index].Get() : nullptr))
 		{
 			Frame->SetColorAndOpacity(Accent);
-		}
-		SetTextIfPresent(Name, Presentation.mDisplayName);
-		if (Name != nullptr)
-		{
-			Name->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		}
 		if (Icon != nullptr)
 		{
@@ -2812,8 +2784,8 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
 			FMath::RoundToInt(AllyShown->mSpeedPoint)));
 
-		// 상태는 세로 스크롤 행으로 모두 보여 준다. 이름이 함께 있어 전용
-		// 아이콘이 없는 신규 상태도 식별할 수 있다.
+		// 상태는 아이콘과 잔여 턴/중첩 숫자로만 보여 준다. 이름과 설명은
+		// 아이콘 롱프레스 상세에서 확인한다.
 		SetShown(mAllyStatusText, false);
 		RefreshSummaryStatusList(true, AllyShown->mUnitId,
 			AllyShown->mStatusEffects);
