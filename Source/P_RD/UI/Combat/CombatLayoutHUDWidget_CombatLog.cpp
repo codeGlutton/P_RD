@@ -7,9 +7,12 @@
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Font.h"
 #include "Engine/Texture2D.h"
+#include "Styling/SlateBrush.h"
 #include "UI/Combat/CombatUIModel.h"
 
 /**
@@ -48,16 +51,133 @@
 
 namespace
 {
-	constexpr float FloatingLogLifetime = 1.2f;       // 플로팅 로그 표시 수명(초)
-	constexpr float FloatingLogQueueInterval = 0.28f; // 순차 로그 간 표시 간격(초)
-	constexpr float FloatingLogRiseSpeed = 46.0f;     // 초당 상승 픽셀
+	constexpr float FloatingLogLifetime = 1.45f;      // 읽을 시간을 확보한 플로팅 로그 표시 수명(초)
+	constexpr float FloatingLogQueueInterval = 0.18f; // 연타는 타격 템포를 유지하되 같은 프레임에는 겹치지 않는다
+	constexpr float FloatingLogRiseSpeed = 34.0f;     // 숫자가 너무 빨리 도망가지 않도록 완만하게 상승
 	constexpr float FloatingLogBaseOffsetY = -96.0f;  // 머리 위 HP바(-70)보다 위에서 시작
-	constexpr float FloatingLogFadePortion = 0.6f;    // 수명의 이 비율 이후부터 페이드아웃
+	constexpr float FloatingLogFadePortion = 0.72f;   // 일반 텍스트 로그의 페이드 시작 비율
+	constexpr float DamageNumberImpactEnd = 0.18f;    // 숫자 팝이 끝나 제자리에 안착하는 시점
+	constexpr float DamageNumberExitStart = 0.92f;    // 숫자를 충분히 읽힌 뒤 퇴장을 시작하는 시점
+	constexpr float DamageNumberStackSpacing = 30.0f;// 같은 대상에 동시에 뜬 결과 사이 간격(px)
 	constexpr float FloatingLogPreviewRowSpacing = 30.0f; // 미리보기 로그가 같은 위치에 겹칠 때 위로 쌓는 간격(px)
 	constexpr float FloatingLogDismissDuration = 0.4f;    // 모션 종료 퇴장 연출 길이(초)
 	constexpr float FloatingLogDismissSlideSpeed = 140.0f;// 퇴장 시 초당 오른쪽 이동 픽셀
 	constexpr float TurnBannerLifetime = 1.6f;        // 배너 표시 수명(초)
 	constexpr float TurnBannerFadePortion = 0.55f;    // 배너 페이드 시작 비율
+	constexpr int32 DamageNumberAtlasColumns = 4;
+	constexpr int32 DamageNumberAtlasRows = 3;
+	constexpr float DamageSlashCoreLength = 126.0f;
+	constexpr float DamageSlashGlowLength = 142.0f;
+
+	UImage* AddDamageSlashLayer(UWidgetTree* WidgetTree, UOverlay* Parent,
+		UTexture2D* WhiteTexture, const FVector2D& Size, const float Angle,
+		const FLinearColor& Color)
+	{
+		if (WidgetTree == nullptr || Parent == nullptr || WhiteTexture == nullptr)
+		{
+			return nullptr;
+		}
+
+		UImage* Slash = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
+		if (Slash == nullptr)
+		{
+			return nullptr;
+		}
+
+		Slash->SetBrushFromTexture(WhiteTexture, false);
+		Slash->SetDesiredSizeOverride(Size);
+		Slash->SetColorAndOpacity(Color);
+		Slash->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+		Slash->SetRenderTransformAngle(Angle);
+		Slash->SetRenderOpacity(0.0f);
+		Slash->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UOverlaySlot* Slot = Parent->AddChildToOverlay(Slash))
+		{
+			Slot->SetHorizontalAlignment(HAlign_Center);
+			Slot->SetVerticalAlignment(VAlign_Center);
+		}
+		return Slash;
+	}
+
+	int32 DamageNumberGlyphIndex(const TCHAR Character)
+	{
+		if (Character >= TEXT('0') && Character <= TEXT('9'))
+		{
+			return Character - TEXT('0');
+		}
+		if (Character == TEXT('+'))
+		{
+			return 10;
+		}
+		if (Character == TEXT('-'))
+		{
+			return 11;
+		}
+		return INDEX_NONE;
+	}
+
+	bool AddDamageNumberGlyphs(UWidgetTree* WidgetTree, UHorizontalBox* Parent,
+		UTexture2D* Atlas, const FText& NumberText, const bool bCritical)
+	{
+		if (WidgetTree == nullptr || Parent == nullptr || Atlas == nullptr)
+		{
+			return false;
+		}
+
+		const FString Characters = NumberText.ToString();
+		if (Characters.IsEmpty())
+		{
+			return false;
+		}
+		for (const TCHAR Character : Characters)
+		{
+			if (DamageNumberGlyphIndex(Character) == INDEX_NONE)
+			{
+				return false;
+			}
+		}
+
+		const FIntPoint ImportedSize = Atlas->GetImportedSize();
+		const float CellAspect = ImportedSize.Y > 0
+			? (static_cast<float>(ImportedSize.X) / DamageNumberAtlasColumns)
+				/ (static_cast<float>(ImportedSize.Y) / DamageNumberAtlasRows)
+			: 0.8f;
+		const float GlyphHeight = bCritical ? 72.0f : 60.0f;
+		const float GlyphWidth = GlyphHeight * CellAspect;
+
+		for (const TCHAR Character : Characters)
+		{
+			const int32 GlyphIndex = DamageNumberGlyphIndex(Character);
+			const int32 Column = GlyphIndex % DamageNumberAtlasColumns;
+			const int32 Row = GlyphIndex / DamageNumberAtlasColumns;
+			const FVector2f UVMin(
+				static_cast<float>(Column) / DamageNumberAtlasColumns,
+				static_cast<float>(Row) / DamageNumberAtlasRows);
+			const FVector2f UVMax(
+				static_cast<float>(Column + 1) / DamageNumberAtlasColumns,
+				static_cast<float>(Row + 1) / DamageNumberAtlasRows);
+
+			UImage* Glyph = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
+			if (Glyph == nullptr)
+			{
+				return false;
+			}
+			FSlateBrush Brush;
+			Brush.SetResourceObject(Atlas);
+			Brush.DrawAs = ESlateBrushDrawType::Image;
+			Brush.ImageSize = FVector2D(GlyphWidth, GlyphHeight);
+			Brush.SetUVRegion(FBox2f(UVMin, UVMax));
+			Glyph->SetBrush(Brush);
+			Glyph->SetDesiredSizeOverride(FVector2D(GlyphWidth, GlyphHeight));
+			Glyph->SetVisibility(ESlateVisibility::HitTestInvisible);
+			if (UHorizontalBoxSlot* GlyphSlot = Parent->AddChildToHorizontalBox(Glyph))
+			{
+				GlyphSlot->SetVerticalAlignment(VAlign_Center);
+				GlyphSlot->SetPadding(FMargin(-5.0f, 0.0f, -5.0f, 0.0f));
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * @brief 색 의미(enum) → 실제 화면 색. "어떤 빨강이냐" 같은 디자인 값은 게임플레이가 아니라 여기서 정한다.
@@ -120,17 +240,10 @@ UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType 
  */
 void UCombatLayoutHUDWidget::HandleCombatFloatingLog(FCombatFloatingLogRequest Request)
 {
-	// 미리보기 로그는 스태거 없이 즉시 띄운다(조준 시 목록이 한꺼번에 나열돼야 하므로).
-	if (Request.mIsPreview == true)
-	{
-		SpawnFloatingCombatLogAtWorld(Request);
-		return;
-	}
-
-	FQueuedFloatingCombatLogEntry Entry;
-	Entry.mRequest = Request;
-	Entry.mArrivalOrder = mNextFloatingCombatLogArrivalOrder++;
-	mPendingFloatingCombatLogs.Add(Entry);
+	// 실전 로그도 이제 애니메이션의 실제 타격 이벤트마다 들어온다. 여기서 다시
+	// 0.18초씩 지연하면 광역기의 같은 타격이 대상마다 따로 맞는 것처럼 보이므로
+	// 미리보기와 마찬가지로 받은 프레임에 즉시 스폰한다.
+	SpawnFloatingCombatLogAtWorld(Request);
 }
 
 /**
@@ -292,51 +405,121 @@ void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloating
 		return;
 	}
 
-	// 아이콘+텍스트를 한 덩어리로 움직이게 가로 박스에 담는다(아이콘 없으면 텍스트만).
+	// 아이콘+텍스트 또는 이미지 숫자를 한 덩어리로 움직이게 가로 박스에 담는다.
 	UHorizontalBox* LogBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
-	UTextBlock* LogText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-	if (LogBox == nullptr || LogText == nullptr)
+	if (LogBox == nullptr)
 	{
 		return;
 	}
 	LogBox->SetVisibility(ESlateVisibility::HitTestInvisible);
+	LogBox->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 
-	UTexture2D* Icon = ResolveFloatingLogIcon(Request.mIconType, Request.mColorType);
-	if (Icon != nullptr)
+	UTexture2D* DamageNumberAtlas = nullptr;
+	if (Request.mIsPreview == false && Request.mIconType == EFloatingLogIconType::HP)
 	{
-		if (UImage* LogIcon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
+		if (Request.mColorType == EFloatingLogColorType::Heal)
 		{
-			LogIcon->SetBrushFromTexture(Icon, false);
-			LogIcon->SetDesiredSizeOverride(FVector2D(26.0f, 26.0f));
-			if (UHorizontalBoxSlot* IconSlot = LogBox->AddChildToHorizontalBox(LogIcon))
+			DamageNumberAtlas = mDamageNumberHealAtlas;
+		}
+		else if (Request.mColorType == EFloatingLogColorType::Damage)
+		{
+			DamageNumberAtlas = Request.mIsCritical
+				? mDamageNumberCriticalAtlas : mDamageNumberNormalAtlas;
+		}
+	}
+	const bool bUsesDamageNumberSkin = AddDamageNumberGlyphs(
+		WidgetTree, LogBox, DamageNumberAtlas, Request.mText, Request.mIsCritical);
+
+	if (bUsesDamageNumberSkin == false)
+	{
+		UTexture2D* Icon = ResolveFloatingLogIcon(Request.mIconType, Request.mColorType);
+		if (Icon != nullptr)
+		{
+			if (UImage* LogIcon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass()))
 			{
-				IconSlot->SetVerticalAlignment(VAlign_Center);
-				IconSlot->SetPadding(FMargin(0.0f, 0.0f, 4.0f, 0.0f));
+				LogIcon->SetBrushFromTexture(Icon, false);
+				LogIcon->SetDesiredSizeOverride(FVector2D(26.0f, 26.0f));
+				if (UHorizontalBoxSlot* IconSlot = LogBox->AddChildToHorizontalBox(LogIcon))
+				{
+					IconSlot->SetVerticalAlignment(VAlign_Center);
+					IconSlot->SetPadding(FMargin(0.0f, 0.0f, 4.0f, 0.0f));
+				}
 			}
+		}
+
+		UTextBlock* LogText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+		if (LogText == nullptr)
+		{
+			return;
+		}
+		LogText->SetJustification(ETextJustify::Center);
+		LogText->SetText(Request.mText);
+		LogText->SetColorAndOpacity(FSlateColor(ResolveFloatingLogColor(Request.mColorType)));
+		FSlateFontInfo LogFont = LogText->GetFont();
+		if (mFloatingLogFont != nullptr)
+		{
+			LogFont.FontObject = mFloatingLogFont;
+		}
+		LogFont.Size = 22;
+		LogFont.OutlineSettings.OutlineSize = 2;
+		LogFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+		LogText->SetFont(LogFont);
+		if (UHorizontalBoxSlot* TextSlot = LogBox->AddChildToHorizontalBox(LogText))
+		{
+			TextSlot->SetVerticalAlignment(VAlign_Center);
 		}
 	}
 
-	LogText->SetJustification(ETextJustify::Center);
-	LogText->SetText(Request.mText);
-	LogText->SetColorAndOpacity(FSlateColor(ResolveFloatingLogColor(Request.mColorType)));
-	// HUD 공용 숫자 글꼴로 통일한다. 한 게임에서 글꼴이 둘이면 같은 값도
-	// 다른 화면처럼 읽힌다. 글꼴을 못 물어 왔으면 기본 글꼴로 크기만 키운다.
-	FSlateFontInfo LogFont = LogText->GetFont();
-	if (mFloatingLogFont != nullptr)
+	UWidget* LogRoot = LogBox;
+	UImage* SlashGlowA = nullptr;
+	UImage* SlashGlowB = nullptr;
+	UImage* SlashCoreA = nullptr;
+	UImage* SlashCoreB = nullptr;
+	if (bUsesDamageNumberSkin)
 	{
-		LogFont.FontObject = mFloatingLogFont;
-	}
-	LogFont.Size = 22;
-	// 밝은 배경(모래/눈밭) 위에서도 읽히도록 검은 윤곽선을 두른다.
-	LogFont.OutlineSettings.OutlineSize = 2;
-	LogFont.OutlineSettings.OutlineColor = FLinearColor::Black;
-	LogText->SetFont(LogFont);
-	if (UHorizontalBoxSlot* TextSlot = LogBox->AddChildToHorizontalBox(LogText))
-	{
-		TextSlot->SetVerticalAlignment(VAlign_Center);
+		// 숫자는 전경에 고정하고, 짧게 터지는 X자 접촉광만 별도 레이어로 움직인다.
+		// 흰 사각 엔진 텍스처를 가늘게 늘여 쓰므로 별도 VFX 에셋 없이도 색/길이 조절이 가능하다.
+		UOverlay* EffectRoot = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+		UTexture2D* WhiteTexture = LoadObject<UTexture2D>(
+			nullptr, TEXT("/Engine/EngineResources/WhiteSquareTexture.WhiteSquareTexture"));
+		if (EffectRoot != nullptr && WhiteTexture != nullptr)
+		{
+			EffectRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
+			EffectRoot->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+
+			const bool bHeal = Request.mColorType == EFloatingLogColorType::Heal;
+			const FLinearColor GlowColor = bHeal
+				? FLinearColor(0.35f, 1.0f, 0.08f, 0.38f)
+				: (Request.mIsCritical
+					? FLinearColor(1.0f, 0.06f, 0.01f, 0.58f)
+					: FLinearColor(1.0f, 0.16f, 0.01f, 0.42f));
+			const FLinearColor CoreColor = bHeal
+				? FLinearColor(0.92f, 1.0f, 0.32f, 0.90f)
+				: (Request.mIsCritical
+					? FLinearColor(1.0f, 0.90f, 0.34f, 1.0f)
+					: FLinearColor(1.0f, 0.48f, 0.08f, 0.96f));
+			const float Angle = bHeal ? 24.0f : 34.0f;
+			const float LengthMultiplier = Request.mIsCritical ? 1.22f : 1.0f;
+
+			SlashGlowA = AddDamageSlashLayer(WidgetTree, EffectRoot, WhiteTexture,
+				FVector2D(DamageSlashGlowLength * LengthMultiplier, bHeal ? 8.0f : 12.0f), Angle, GlowColor);
+			SlashGlowB = AddDamageSlashLayer(WidgetTree, EffectRoot, WhiteTexture,
+				FVector2D(DamageSlashGlowLength * LengthMultiplier, bHeal ? 8.0f : 12.0f), -Angle, GlowColor);
+			SlashCoreA = AddDamageSlashLayer(WidgetTree, EffectRoot, WhiteTexture,
+				FVector2D(DamageSlashCoreLength * LengthMultiplier, bHeal ? 2.0f : 4.0f), Angle, CoreColor);
+			SlashCoreB = AddDamageSlashLayer(WidgetTree, EffectRoot, WhiteTexture,
+				FVector2D(DamageSlashCoreLength * LengthMultiplier, bHeal ? 2.0f : 4.0f), -Angle, CoreColor);
+
+			if (UOverlaySlot* NumberSlot = EffectRoot->AddChildToOverlay(LogBox))
+			{
+				NumberSlot->SetHorizontalAlignment(HAlign_Center);
+				NumberSlot->SetVerticalAlignment(VAlign_Center);
+			}
+			LogRoot = EffectRoot;
+		}
 	}
 
-	if (UCanvasPanelSlot* LogSlot = mRootCanvas->AddChildToCanvas(LogBox))
+	if (UCanvasPanelSlot* LogSlot = mRootCanvas->AddChildToCanvas(LogRoot))
 	{
 		LogSlot->SetAutoSize(true);
 		LogSlot->SetAlignment(FVector2D(0.5f, 1.0f)); // 바닥-중앙 기준으로 머리 위에 선다.
@@ -344,13 +527,22 @@ void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloating
 	}
 
 	FFloatingCombatLogEntry Entry;
-	Entry.mRoot = LogBox;
+	Entry.mRoot = LogRoot;
+	Entry.mNumberRoot = LogBox;
+	Entry.mSlashGlowA = SlashGlowA;
+	Entry.mSlashGlowB = SlashGlowB;
+	Entry.mSlashCoreA = SlashCoreA;
+	Entry.mSlashCoreB = SlashCoreB;
 	Entry.mWorldLocation = Request.mWorldLocation;
 	Entry.mTurnIndex = Request.mTurnIndex;
 	Entry.mActionIndex = Request.mActionIndex;
 	Entry.mMotionIndex = Request.mMotionIndex;
 	Entry.mElapsed = 0.0f;
 	Entry.mIsPreview = Request.mIsPreview;
+	Entry.mUsesDamageNumberSkin = bUsesDamageNumberSkin;
+	Entry.mIsCritical = Request.mIsCritical;
+	Entry.mIsHeal = bUsesDamageNumberSkin
+		&& Request.mColorType == EFloatingLogColorType::Heal;
 
 	if (Request.mIsPreview == true)
 	{
@@ -369,8 +561,8 @@ void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloating
 	}
 	mFloatingCombatLogs.Add(Entry);
 
-	// (실행 로그 전용) 같은 위치에 로그가 연달아 뜰 때(예: 데미지+쓰러짐) 겹치지 않게 기존 로그를 위로 민다.
-	// 미리보기는 위 StackOffset으로 처리하므로 여기서 건드리지 않는다.
+	// 같은 타격에서 한 대상에게 피해와 상태 결과가 함께 떠도 겹치지 않게
+	// 먼저 뜬 로그를 한 줄 위로 민다. 시간값을 강제로 당기지 않아 충돌 연출은 보존한다.
 	if (Request.mIsPreview == false)
 	{
 		for (int32 LogIndex = 0; LogIndex < mFloatingCombatLogs.Num() - 1; ++LogIndex)
@@ -378,7 +570,7 @@ void UCombatLayoutHUDWidget::SpawnFloatingCombatLogAtWorld(const FCombatFloating
 			FFloatingCombatLogEntry& Existing = mFloatingCombatLogs[LogIndex];
 			if (Existing.mIsPreview == false && Existing.mWorldLocation.Equals(Entry.mWorldLocation, 1.0f))
 			{
-				Existing.mElapsed = FMath::Max(Existing.mElapsed, 0.35f);
+				Existing.mStackOffsetY += DamageNumberStackSpacing;
 			}
 		}
 	}
@@ -452,18 +644,97 @@ void UCombatLayoutHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 		}
 		LogRoot->SetVisibility(ESlateVisibility::HitTestInvisible);
 
+		float DamageNumberOffsetX = 0.0f;
+		float DamageNumberOffsetY = 0.0f;
+
+		// 이미지 숫자는 타격점에서 팝→정착한 뒤 움직이지 않는다.
+		// 충격의 방향과 속도는 숫자가 아니라 뒤쪽 X자 접촉광이 담당한다.
+		if (Entry.mUsesDamageNumberSkin == true && Entry.mIsPreview == false)
+		{
+			UWidget* NumberRoot = Entry.mNumberRoot != nullptr ? Entry.mNumberRoot.Get() : LogRoot;
+			FVector2D NumberScale = FVector2D::UnitVector;
+			const float PeakScale = Entry.mIsCritical ? 1.18f : (Entry.mIsHeal ? 1.08f : 1.10f);
+			if (Entry.mElapsed < 0.065f)
+			{
+				const float Alpha = FMath::SmoothStep(0.0f, 1.0f, Entry.mElapsed / 0.065f);
+				const float ScaleValue = FMath::Lerp(0.82f, PeakScale, Alpha);
+				NumberScale = FVector2D(ScaleValue, ScaleValue);
+			}
+			else if (Entry.mElapsed < DamageNumberImpactEnd)
+			{
+				const float Alpha = FMath::SmoothStep(0.0f, 1.0f,
+					(Entry.mElapsed - 0.065f) / (DamageNumberImpactEnd - 0.065f));
+				const float ScaleValue = FMath::Lerp(PeakScale, 1.0f, Alpha);
+				NumberScale = FVector2D(ScaleValue, ScaleValue);
+			}
+
+			if (Entry.mElapsed >= DamageNumberExitStart)
+			{
+				const float ExitAlpha = FMath::Clamp((Entry.mElapsed - DamageNumberExitStart)
+					/ (FloatingLogLifetime - DamageNumberExitStart), 0.0f, 1.0f);
+				const float ScaleValue = FMath::Lerp(1.0f, 0.96f, ExitAlpha);
+				NumberScale = FVector2D(ScaleValue, ScaleValue);
+			}
+			NumberRoot->SetRenderScale(NumberScale);
+			NumberRoot->SetRenderTransformAngle(0.0f);
+
+			// X자 참격은 0.06초에 터지고, 약 0.3초 동안 길이 잔상만 남긴다.
+			const float EffectEnd = Entry.mIsCritical ? 0.40f : (Entry.mIsHeal ? 0.46f : 0.32f);
+			float SlashLengthScale = 0.0f;
+			float SlashCoreOpacity = 0.0f;
+			float SlashGlowOpacity = 0.0f;
+			if (Entry.mElapsed < 0.06f)
+			{
+				const float Alpha = FMath::SmoothStep(0.0f, 1.0f, Entry.mElapsed / 0.06f);
+				SlashLengthScale = FMath::Lerp(0.05f, 1.15f, Alpha);
+				SlashCoreOpacity = Alpha;
+				SlashGlowOpacity = Alpha * (Entry.mIsHeal ? 0.65f : 1.0f);
+			}
+			else if (Entry.mElapsed < EffectEnd)
+			{
+				const float Alpha = FMath::Clamp((Entry.mElapsed - 0.06f)
+					/ (EffectEnd - 0.06f), 0.0f, 1.0f);
+				SlashLengthScale = FMath::Lerp(1.15f, 1.0f, Alpha);
+				SlashCoreOpacity = 1.0f - FMath::SmoothStep(0.0f, 0.62f, Alpha);
+				SlashGlowOpacity = 1.0f - FMath::SmoothStep(0.18f, 1.0f, Alpha);
+			}
+
+			for (UWidget* Slash : { Entry.mSlashGlowA.Get(), Entry.mSlashGlowB.Get() })
+			{
+				if (Slash != nullptr)
+				{
+					Slash->SetRenderScale(FVector2D(SlashLengthScale, 1.0f));
+					Slash->SetRenderOpacity(SlashGlowOpacity);
+				}
+			}
+			for (UWidget* Slash : { Entry.mSlashCoreA.Get(), Entry.mSlashCoreB.Get() })
+			{
+				if (Slash != nullptr)
+				{
+					Slash->SetRenderScale(FVector2D(SlashLengthScale, 1.0f));
+					Slash->SetRenderOpacity(SlashCoreOpacity);
+				}
+			}
+
+			// 숫자 전체는 월드 타격점에 고정한다. 마지막까지 Y 이동을 주지 않는다.
+			DamageNumberOffsetY = -10.0f;
+		}
+
 		// 퇴장 중에는 진행률만큼 오른쪽으로 밀리는 X 오프셋이 붙는다.
-		const float DismissOffsetX = Entry.mIsDismissing == true
+		const float DismissOffsetX = Entry.mIsDismissing == true && Entry.mUsesDamageNumberSkin == false
 			? FloatingLogDismissSlideSpeed * Entry.mDismissElapsed
 			: 0.0f;
 
 		if (UCanvasPanelSlot* LogSlot = Cast<UCanvasPanelSlot>(LogRoot->Slot))
 		{
-			// 미리보기: 고정 위치(겹치면 위로 쌓기) / 실행: 시간에 따라 상승.
+			// 미리보기: 고정 / 이미지 숫자: 충돌 곡선 / 일반 텍스트: 기존 선형 상승.
 			const float OffsetY = Entry.mIsPreview == true
 				? (FloatingLogBaseOffsetY - Entry.mStackOffsetY)
-				: (FloatingLogBaseOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
-			LogSlot->SetPosition(ScreenPosition + FVector2D(DismissOffsetX, OffsetY));
+				: (Entry.mUsesDamageNumberSkin
+					? FloatingLogBaseOffsetY - Entry.mStackOffsetY + DamageNumberOffsetY
+					: FloatingLogBaseOffsetY - Entry.mStackOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
+			LogSlot->SetPosition(ScreenPosition
+				+ FVector2D(DismissOffsetX + DamageNumberOffsetX, OffsetY));
 		}
 
 		// 퇴장 중에는 진행률에 따라 서서히 투명해진다(미리보기/실행 공통).
@@ -481,7 +752,9 @@ void UCombatLayoutHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 		}
 
 		// (실행 로그) 수명 후반부에 서서히 사라진다.
-		const float FadeStart = FloatingLogLifetime * FloatingLogFadePortion;
+		const float FadeStart = Entry.mUsesDamageNumberSkin
+			? DamageNumberExitStart
+			: FloatingLogLifetime * FloatingLogFadePortion;
 		const float Opacity = Entry.mElapsed <= FadeStart
 			? 1.0f
 			: 1.0f - (Entry.mElapsed - FadeStart) / (FloatingLogLifetime - FadeStart);

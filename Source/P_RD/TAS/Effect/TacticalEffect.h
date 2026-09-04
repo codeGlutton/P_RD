@@ -202,6 +202,10 @@ public:
 	UPROPERTY()
 	float mDynamicMagnitude = 1.f;
 
+	/** @brief 이 Spec이 치명타 공격에서 생성됐는지 여부. 실행 로그/UI 전달용 메타데이터. */
+	UPROPERTY()
+	bool mIsCritical = false;
+
 private:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "Duration"))
 	int32 mDuration = 0;

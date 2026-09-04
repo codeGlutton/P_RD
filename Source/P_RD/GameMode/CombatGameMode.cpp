@@ -349,6 +349,25 @@ void ACombatGameMode::InitializeCombat()
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
+	// 실제 효과 계산은 애니메이션의 Apply 이벤트에서 모션 단위로 끝난다.
+	// 액션 종료까지 기다리지 않고 그 순간의 로그만 받아 피해 숫자를 표시한다.
+	if (USimulationSubsystem* SimulationSubsystem =
+		GetWorld()->GetSubsystem<USimulationSubsystem>())
+	{
+		if (UGameEventLogger* GameEventLogger =
+			Cast<UGameEventLogger>(&SimulationSubsystem->GetEventLogger()))
+		{
+			GameEventLogger->OnMotionLogReady.RemoveAll(this);
+			GameEventLogger->OnMotionLogReady.AddWeakLambda(this,
+				[this](const FSRPGTurnEventLog& MotionTurnLog)
+				{
+					TArray<FSRPGTurnEventLog> MotionLogs;
+					MotionLogs.Add(MotionTurnLog);
+					PushCombatEventUIData(MotionLogs);
+				});
+		}
+	}
+
 	/*
 	 * UI와 전투 로직을 여기서 연결한다.
 	 * - 게임 상태가 바뀌면 UIModel에 새 값을 넣는다.
@@ -427,7 +446,8 @@ void ACombatGameMode::InitializeCombat()
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		if (USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>())
 		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+			// 모션 결과는 타격 순간 이미 표시했다. 보관 로그만 비운다.
+			SimulationSubsystem->ConsumeGameEventLogs();
 		}
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
@@ -447,14 +467,12 @@ void ACombatGameMode::InitializeCombat()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
-		// 맞은 자리에 피해 숫자를 띄운다. 턴이 끝날 때 한꺼번에 내리면
-		// 때린 연출은 이미 끝난 뒤라 어느 타격의 숫자인지 못 읽는다
-		// (0824 검수: "데미지 스킨 띄우기"). 행동 하나가 끝날 때마다
-		// 그동안 쌓인 로그를 비워 그 행동의 결과만 그 자리에 뜨게 한다.
+		// 모션 결과는 애니메이션의 실제 타격 이벤트에서 이미 표시했다.
+		// 여기서는 누적 보관 로그만 비워 같은 숫자가 다시 뜨지 않게 한다.
 		if (USimulationSubsystem* SimulationSubsystem
 			= GetWorld()->GetSubsystem<USimulationSubsystem>())
 		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+			SimulationSubsystem->ConsumeGameEventLogs();
 		}
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
@@ -2279,7 +2297,11 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 		auto MakeLogRequest = [bBindMotionIndices, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
-			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+			// HP는 피해/치명타/회복 이미지 자체로 의미가 구분되므로 부호 없이
+			// 숫자만 그린다. AP·방어도 등 텍스트 로그는 기존 증감 부호를 유지한다.
+			Request.mText = IconType == EFloatingLogIconType::HP
+				? FText::AsNumber(FMath::Abs(Amount))
+				: FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
@@ -2310,13 +2332,15 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 				continue;
 			}
 
-			Requests.Add(MakeLogRequest(
+			FCombatFloatingLogRequest Request = MakeLogRequest(
 				FMath::Floor(AttrLog.mMagnitude),
 				IconType,
 				ColorType,
 				ViewActorLocation,
 				Sequence++
-			));
+			);
+			Request.mIsCritical = AttrLog.mIsCritical;
+			Requests.Add(MoveTemp(Request));
 		}
 		for (const FSRPGTagEffectEventLog& TagLog : EventLog.mTagEffectEventLogs)
 		{

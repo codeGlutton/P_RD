@@ -85,6 +85,8 @@ void FSkillEffectLayer_Attack::CommitEffect(const FSkillEffectCommitParams& Para
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Attack::StaticClass(), EffectContext);
         EffectSpec->SetInstigatorSnapshotData(Params.mInstigatorSnapshot);
         EffectSpec->SetTargetSnapshotData(Params.mTargetSnapshots[i]);
+		EffectSpec->mIsCritical = Params.mInstigatorSnapshot != nullptr
+			&& Params.mInstigatorSnapshot->mIsCriticalAttack;
         AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }

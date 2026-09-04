@@ -1,6 +1,8 @@
 #include "UI/CombatFloatingLogTests.h"
 
 #include "Misc/AutomationTest.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
+#include "Simulation/Logger/EventLog.h"
 #include "UObject/StrongObjectPtr.h"
 
 void UCombatFloatingLogTestListener::HandleFloatingLog(FCombatFloatingLogRequest Request)
@@ -33,12 +35,14 @@ bool FCombatFloatingLogIndexContractTest::RunTest(const FString& Parameters)
 	Request.mTurnIndex = 1;
 	Request.mActionIndex = 2;
 	Request.mMotionIndex = 3;
+	Request.mIsCritical = true;
 	UIModel->NotifyCombatFloatingLog(Request);
 
 	TestEqual(TEXT("플로팅 로그가 한 번 전달된다"), Listener->mFloatingLogCallCount, 1);
 	TestEqual(TEXT("TurnIndex가 유지된다"), Listener->mLastRequest.mTurnIndex, 1);
 	TestEqual(TEXT("ActionIndex가 유지된다"), Listener->mLastRequest.mActionIndex, 2);
 	TestEqual(TEXT("MotionIndex가 유지된다"), Listener->mLastRequest.mMotionIndex, 3);
+	TestTrue(TEXT("치명타 플래그가 유지된다"), Listener->mLastRequest.mIsCritical);
 
 	TArray<FCombatFloatingLogRequest> BatchRequests{ Request };
 	UIModel->SetCombatEventBatch(ECombatEventDataSourceUI::SimulationPreview, BatchRequests);
@@ -59,5 +63,28 @@ bool FCombatFloatingLogIndexContractTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("초점 앵커 Y가 위젯 생성 등록 범위로 제한된다"),
 		UIModel->GetFocusScreenAnchor().Y, 1.0);
 
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCombatFloatingLogCriticalAggregationKeyTest,
+	"P_RD.UI.Combat.FloatingLogCriticalAggregationKey",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FCombatFloatingLogCriticalAggregationKeyTest::RunTest(const FString& Parameters)
+{
+	FSRPGAttributeEffectEventLog Normal;
+	Normal.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+	Normal.mMagnitude = -10.0f;
+
+	FSRPGAttributeEffectEventLog Critical = Normal;
+	Critical.mIsCritical = true;
+
+	TSet<FSRPGAttributeEffectEventLog> Logs;
+	Logs.Add(Normal);
+	Logs.Add(Critical);
+	TestEqual(TEXT("같은 모션의 일반 피해와 치명타 피해는 별도 로그로 보존된다"),
+		Logs.Num(), 2);
 	return true;
 }

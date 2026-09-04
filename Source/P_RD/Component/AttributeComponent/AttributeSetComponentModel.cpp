@@ -2,6 +2,7 @@
 #include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Effect/TacticalEffectQuery.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Aggregator/TacticalAggregator.h"
 
 #include "Actor/ActorModel.h"
@@ -142,6 +143,12 @@ void UAttributeSetComponentModel::CaptureAllStates(UBoardCombatTargetSnapshotDat
     mActiveAttributeEffects.CaptureAllEffectStacks(Snapshot);
     // 태그 카운트 캡처
     mTacticalTagCountContainer.CaptureAllTags(Snapshot);
+
+	// 치명타 판정 때 붙는 배율 이펙트가 살아 있는 동안 스냅샷을 찍는다.
+	// 결과 로그까지 이 한 비트를 운반해 UI가 치명타 전용 숫자 아틀라스를 선택한다.
+	FTacticalEffectQuery CriticalQuery;
+	CriticalQuery.mEffectDefinition = UTacticalEffect_AttackFactor_MultiplyCompound::StaticClass();
+	Snapshot->mIsCriticalAttack = GetActiveEffects(CriticalQuery).IsEmpty() == false;
 
     // 타일 위치 캡처
     UBoardActorModel* OwnerActorModel = GetOwnerModel<UBoardActorModel>();
