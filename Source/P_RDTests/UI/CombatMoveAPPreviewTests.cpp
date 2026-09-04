@@ -58,6 +58,8 @@ bool FCombatMoveAPPreviewTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
+	TestTrue(TEXT("AP 바는 해상도 이동 레이어가 아닌 최상위 캔버스 직속"),
+		TurnAPScale->GetParent() == HUD->WidgetTree->RootWidget);
 	TestEqual(TEXT("AP 바 좌상단 좌표"), TurnAPSlot->GetPosition(),
 		FVector2D(18.f, 164.f));
 	TestEqual(TEXT("AP 바는 중앙 스킬 카드 전에서 끝나는 압축 크기"),

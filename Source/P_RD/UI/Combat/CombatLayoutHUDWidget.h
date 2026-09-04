@@ -101,6 +101,7 @@ class UMockCombatDriver;
 class UImage;
 class UProgressBar;
 class URewardUIModel;
+class UScrollBox;
 class USkillDetailOverlayPresenter;
 class UTextBlock;
 class UWidget;
@@ -665,8 +666,15 @@ private:
 	 */
 	void RefreshPartyStatus(const FPartySlotWidgets& Widgets,
 		const FUnitUI& Unit) const;
+	/** @brief 세로 요약판에 동적 상태 행과 터치 스크롤을 준비한다. */
+	void EnsureSummaryStatusScroll(bool bAlly);
+	/** @brief 필요한 수만큼 상태 행을 늘린다. 행은 줄이지 않고 숨겨 재사용한다. */
+	void EnsureSummaryStatusCapacity(bool bAlly, int32 RequiredCount);
+	/** @brief 상태를 우선순위 정렬해 요약판 스크롤에 모두 그린다. */
+	void RefreshSummaryStatusList(bool bAlly, int32 UnitId,
+		const TArray<FStatusEffectUI>& Statuses);
 
-	/** @brief 상태이상 태그에 맞는 그림. 없으면 nullptr. */
+	/** @brief 상태이상 태그에 맞는 그림. 전용 그림이 없으면 범용 표식. */
 	static UTexture2D* StatusIconFor(const FGameplayTag& StatusTag);
 
 	/** @brief 아군 칸 하나에 AP 를 그린다. 숫자판 + 낱개 열. */
@@ -928,7 +936,7 @@ private:
 	/** @brief 버프/디버프 프레임 글로우(흰색 원본, 런타임에 금/보라로 물들인다). */
 	UPROPERTY() TObjectPtr<UTexture2D> mUnitHpGlowTexture;
 
-	/** @brief 상태이상 딱지 그림. 전용 그림이 없는 태그는 빈 칸으로 둔다. */
+	/** @brief 상태이상 딱지의 범용 프레임. 전용 그림이 없는 태그의 표식에도 쓴다. */
 	/**
 	 * @brief 이동 커맨드 그림.
 	 *
@@ -945,6 +953,8 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconFortification;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconVulnerability;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconPoison;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconStun;
 	/** @brief 플로팅 로그 글꼴(F_HUD_Oswald). 없으면 엔진 기본 글꼴로 남는다. */
 	UPROPERTY(Transient) TObjectPtr<class UFont> mFloatingLogFont;
 
@@ -1007,18 +1017,10 @@ private:
 	void EndStatusPress(bool bAlly, int32 SlotIndex);
 	void HandleStatusLongPress(bool bAlly, int32 SlotIndex);
 	void CancelStatusPress();
-	UFUNCTION() void HandleAllyStatusPressed_0();
-	UFUNCTION() void HandleAllyStatusPressed_1();
-	UFUNCTION() void HandleAllyStatusPressed_2();
-	UFUNCTION() void HandleEnemyStatusPressed_0();
-	UFUNCTION() void HandleEnemyStatusPressed_1();
-	UFUNCTION() void HandleEnemyStatusPressed_2();
-	UFUNCTION() void HandleAllyStatusReleased_0();
-	UFUNCTION() void HandleAllyStatusReleased_1();
-	UFUNCTION() void HandleAllyStatusReleased_2();
-	UFUNCTION() void HandleEnemyStatusReleased_0();
-	UFUNCTION() void HandleEnemyStatusReleased_1();
-	UFUNCTION() void HandleEnemyStatusReleased_2();
+	UFUNCTION() void HandleScrollableStatusPressed(bool bAlly, int32 SlotIndex);
+	UFUNCTION() void HandleScrollableStatusReleased(bool bAlly, int32 SlotIndex);
+	UFUNCTION() void HandleAllyStatusScrolled(float CurrentOffset);
+	UFUNCTION() void HandleEnemyStatusScrolled(float CurrentOffset);
 
 	/** @brief 상세 판의 명시적인 닫기 버튼 처리. */
 	UFUNCTION() void HandleDetailCloseCatchClicked();
@@ -1099,6 +1101,8 @@ private:
 	TArray<FStatusEffectUI> mEnemyShownStatuses;
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mAllyStatusButtons;
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mEnemyStatusButtons;
+	int32 mAllyStatusListUnitId = INDEX_NONE;
+	int32 mEnemyStatusListUnitId = INDEX_NONE;
 	FTimerHandle mStatusLongPressTimerHandle;
 	int32 mStatusPressedSlot = INDEX_NONE;
 	bool mStatusPressedAlly = false;
@@ -1486,8 +1490,11 @@ private:
 	TObjectPtr<UTextBlock> mEnemyForecastText;
 	TObjectPtr<UWidget> mEnemyNextSkillFrame;
 	TObjectPtr<UImage> mEnemyNextSkillIcon;
+	TObjectPtr<UScrollBox> mEnemyStatusScroll;
+	TArray<TObjectPtr<UWidget>> mEnemyStatusRows;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>> mEnemyStatusNames;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
 
 	TObjectPtr<UWidget> mAllyPanel;
@@ -1498,8 +1505,11 @@ private:
 	TObjectPtr<UTextBlock> mAllyAPText;
 	TObjectPtr<UTextBlock> mAllySpeedText;
 	TObjectPtr<UTextBlock> mAllyStatusText;
+	TObjectPtr<UScrollBox> mAllyStatusScroll;
+	TArray<TObjectPtr<UWidget>> mAllyStatusRows;
 	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;
 	TArray<TObjectPtr<UImage>> mAllyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>> mAllyStatusNames;
 	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
 	TObjectPtr<UButton> mEndTurnButton;
