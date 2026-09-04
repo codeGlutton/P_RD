@@ -329,9 +329,11 @@ namespace CombatLayoutCapture
 						? Cast<UOverlaySlot>(HPBar->Slot) : nullptr;
 					if (HPSlot == nullptr
 						|| HPSlot->GetPadding().Left > 8.01f
-						|| HPSlot->GetPadding().Right > 8.01f)
+						|| HPSlot->GetPadding().Right > 8.01f
+						|| HPSlot->GetPadding().Top > 5.01f
+						|| HPSlot->GetPadding().Bottom > 5.01f)
 					{
-						OutError = TEXT("HP 바 좌우 패딩 때문에 100%가 프레임을 채우지 못함");
+						OutError = TEXT("HP 바 패딩 때문에 100%가 프레임 안쪽을 채우지 못함");
 						return false;
 					}
 				}

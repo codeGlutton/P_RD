@@ -1014,17 +1014,15 @@ namespace CombatHUDWidgetBuilder
 					Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
-			// 축소 전 요약판의 좌우 패딩이 남으면 HP 100%도 프레임 끝까지
-			// 차지 않는다. 세로 여백은 그림에 맞춘 저작값을 보존한다.
+			// 축소 전 요약판의 패딩이 남으면 HP 100%도 프레임 안쪽의 폭과
+			// 높이를 채우지 못한다. 금속 테두리만 피하는 여백으로 줄인다.
 			if (UProgressBar* HPBar = Cast<UProgressBar>(
 				Blueprint->WidgetTree->FindWidget(
 					FName(FString(Prefix) + TEXT("HPBar")))))
 			{
 				if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 				{
-					const FMargin Padding = HPSlot->GetPadding();
-					HPSlot->SetPadding(FMargin(
-						8.f, Padding.Top, 8.f, Padding.Bottom));
+					HPSlot->SetPadding(FMargin(8.f, 5.f, 8.f, 5.f));
 				}
 			}
 

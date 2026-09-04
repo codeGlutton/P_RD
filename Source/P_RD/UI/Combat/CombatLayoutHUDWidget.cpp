@@ -599,16 +599,15 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
 		}
 		// 구형 세로 요약판을 168px 폭으로 줄인 뒤에도 HPBar Overlay 슬롯의
-		// 좌우 패딩(25.43px)이 그대로 남아 있었다. 그 결과 HP가 100%여도
-		// 프레임 양끝까지 차지 않았다. 세로 여백은 보존하고 좌우만 안쪽
-		// 테두리 폭으로 줄인다.
+		// 좌우 25.43px·상하 10.88px 패딩이 그대로 남아 있었다. 그 결과
+		// HP가 100%여도 프레임 안쪽을 폭과 높이 모두 채우지 못했다.
+		// 금속 테두리만 피하는 여백으로 줄인다.
 		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
 			FString::Printf(TEXT("%sHPBar"), Prefix)))
 		{
 			if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 			{
-				const FMargin Padding = HPSlot->GetPadding();
-				HPSlot->SetPadding(FMargin(8.f, Padding.Top, 8.f, Padding.Bottom));
+				HPSlot->SetPadding(FMargin(8.f, 5.f, 8.f, 5.f));
 			}
 		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
