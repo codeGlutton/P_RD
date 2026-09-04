@@ -36,6 +36,7 @@
 #include "Components/PanelWidget.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
+#include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
@@ -1326,7 +1327,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 		}
 		for (const TCHAR* Suffix : {
 			TEXT("Portrait"), TEXT("Name"), TEXT("HPBar"), TEXT("HPText"),
-			TEXT("APText"), TEXT("SpeedText"), TEXT("Status") })
+			TEXT("APText"), TEXT("SpeedText") })
 		{
 			const FString WidgetName = FString::Printf(TEXT("%s%s"), Prefix, Suffix);
 			TestNotNull(*WidgetName, Tree->FindWidget(FName(*WidgetName)));
@@ -1336,9 +1337,25 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 			const FString WidgetName = FString::Printf(TEXT("%s%s"), Prefix, Suffix);
 			if (UWidget* HPWidget = Tree->FindWidget(FName(*WidgetName)))
 			{
-				TestEqual(*FString::Printf(TEXT("%s 중복 HP 행 제거"), *WidgetName),
-					HPWidget->GetVisibility(), ESlateVisibility::Collapsed);
+				TestEqual(*FString::Printf(TEXT("%s 전투 중 HP 행 유지"), *WidgetName),
+					HPWidget->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 			}
+		}
+		UScrollBox* StatusScroll = Cast<UScrollBox>(Tree->FindWidget(FName(
+			*FString::Printf(TEXT("%sStatusScroll"), Prefix))));
+		if (TestNotNull(*FString::Printf(TEXT("%s 상태 스크롤"), Prefix),
+			StatusScroll))
+		{
+			TestEqual(*FString::Printf(TEXT("%s 상태 스크롤 직계 부모"), Prefix),
+				StatusScroll->GetParent(), Cast<UPanelWidget>(SummaryPanel));
+			CheckCanvasContract(FString::Printf(TEXT("%s 상태 스크롤"), Prefix),
+				StatusScroll, FVector2D(14.f, 352.f), FVector2D(140.f, 190.f),
+				FVector2D::ZeroVector, FVector2D::ZeroVector,
+				FVector2D::ZeroVector, 15);
+			TestEqual(*FString::Printf(TEXT("%s authored 스크롤은 빈 컨테이너"), Prefix),
+				StatusScroll->GetChildrenCount(), 0);
+			TestEqual(*FString::Printf(TEXT("%s 3개 이하는 스크롤바 숨김"), Prefix),
+				StatusScroll->GetScrollBarVisibility(), ESlateVisibility::Collapsed);
 		}
 		if (UWidget* Portrait = Tree->FindWidget(FName(
 			*FString::Printf(TEXT("%sPortrait"), Prefix))))
@@ -1637,7 +1654,7 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	}
 	UPanelWidget* EnemyAPPipRow = Cast<UPanelWidget>(
 		Tree->FindWidget(TEXT("EnemyAPPipRow")));
-	if (TestNotNull(TEXT("몬스터 요약판 AP 보석 WBP 행"), EnemyAPPipRow))
+	if (EnemyAPPipRow != nullptr)
 	{
 		TestNotNull(TEXT("몬스터 AP 보석 행은 배경 없는 Canvas"),
 			Cast<UCanvasPanel>(EnemyAPPipRow));
@@ -2501,10 +2518,15 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	UWidget* EnemyPanel = HUD->WidgetTree->FindWidget(TEXT("EnemyPanel"));
 	UTextBlock* EnemyAPText = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("EnemyAPText")));
+	UWidget* EnemyHPBar = HUD->WidgetTree->FindWidget(TEXT("EnemyHPBar"));
+	UScrollBox* EnemyStatusScroll = Cast<UScrollBox>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyStatusScroll")));
 	UButton* EnemyStatusButton0 = Cast<UButton>(
-		HUD->WidgetTree->FindWidget(TEXT("EnemyStatusButton_0")));
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_0")));
 	UButton* EnemyStatusButton1 = Cast<UButton>(
-		HUD->WidgetTree->FindWidget(TEXT("EnemyStatusButton_1")));
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_1")));
+	UTextBlock* EnemyStatusName0 = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusName_0")));
 	UWidget* AllyPanel = HUD->WidgetTree->FindWidget(TEXT("AllyPanel"));
 	UTextBlock* AllyName = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("AllyName")));
@@ -2543,8 +2565,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("공용 AP 막대"), TurnAPScale)
 		|| !TestNotNull(TEXT("몬스터 요약판"), EnemyPanel)
 		|| !TestNotNull(TEXT("몬스터 요약판 AP"), EnemyAPText)
+		|| !TestNotNull(TEXT("몬스터 요약판 HP"), EnemyHPBar)
+		|| !TestNotNull(TEXT("몬스터 상태 스크롤"), EnemyStatusScroll)
 		|| !TestNotNull(TEXT("몬스터 첫 상태 상세 버튼"), EnemyStatusButton0)
 		|| !TestNotNull(TEXT("몬스터 빈 상태 상세 버튼"), EnemyStatusButton1)
+		|| !TestNotNull(TEXT("몬스터 첫 상태 이름"), EnemyStatusName0)
 		|| !TestNotNull(TEXT("용병 요약판"), AllyPanel)
 		|| !TestNotNull(TEXT("용병 요약판 이름"), AllyName)
 		|| !TestNotNull(TEXT("용병 내부 인벤토리 페이지"), InventoryPage)
@@ -2690,12 +2715,18 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		AllyPanel->GetVisibility(), ESlateVisibility::Collapsed);
 	TestEqual(TEXT("몬스터 AP는 요약판에서 읽는다"),
 		EnemyAPText->GetText().ToString(), FString(TEXT("AP 3/5")));
+	TestEqual(TEXT("스킬 카드와 함께 읽을 요약판 HP는 표시"),
+		EnemyHPBar->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("상태가 있는 요약판 버튼만 입력 가능"),
 		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Visible);
 	TestEqual(TEXT("빈 상태 소켓 버튼은 입력을 막지 않음"),
 		EnemyStatusButton1->GetVisibility(), ESlateVisibility::Collapsed);
 	TestTrue(TEXT("상태 버튼 누름 배선"), EnemyStatusButton0->OnPressed.IsBound());
 	TestTrue(TEXT("상태 버튼 뗌 배선"), EnemyStatusButton0->OnReleased.IsBound());
+	TestEqual(TEXT("상태 1개면 스크롤바 숨김"),
+		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("전용 행에 상태 이름도 표시"),
+		EnemyStatusName0->GetText().ToString(), FString(TEXT("취약")));
 
 	// 짧은 탭은 상세를 열지 않고 타이머를 취소한다.
 	EnemyStatusButton0->OnPressed.Broadcast();
@@ -2721,6 +2752,40 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("다른 모달을 열면 상태 상세도 정리됨"),
 		HUD->IsDetailOverlayShown());
 	MercenaryMenu->OnClicked.Broadcast();
+
+	// 네 개부터 실제 콘텐츠가 viewport를 넘고 스크롤바가 생긴다. 행동을
+	// 막는 기절/속박은 첫 화면에 남으며 다섯째 행도 잘리지 않는다.
+	MonsterUnit.mStatusEffects.Reset();
+	for (const TCHAR* TagName : {
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Buff.Vigor"),
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Buff.Fortification"),
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Weakness"),
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Root"),
+		TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Stun") })
+	{
+		FStatusEffectUI& Status = MonsterUnit.mStatusEffects.AddDefaulted_GetRef();
+		Status.mTag = FGameplayTag::RequestGameplayTag(TagName);
+		Status.mStackCount = 1;
+	}
+	Model->SetUnitUIs({ MonsterUnit });
+	UButton* EnemyStatusButton4 = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_4")));
+	TestTrue(TEXT("상태 5개 행을 동적으로 생성"),
+		EnemyStatusScroll->GetChildrenCount() >= 5);
+	TestEqual(TEXT("상태 4개 이상이면 스크롤바 표시"),
+		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Visible);
+	if (TestNotNull(TEXT("다섯째 상태도 입력 행 보유"), EnemyStatusButton4))
+	{
+		TestEqual(TEXT("다섯째 상태 행도 표시"),
+			EnemyStatusButton4->GetVisibility(), ESlateVisibility::Visible);
+	}
+	TestEqual(TEXT("행동 불가 상태를 첫 화면에 우선 표시"),
+		EnemyStatusName0->GetText().ToString(), FString(TEXT("기절")));
+	EnemyStatusButton0->OnPressed.Broadcast();
+	EnemyStatusScroll->OnUserScrolled.Broadcast(8.f);
+	TestFalse(TEXT("상태 스크롤을 시작하면 롱프레스 취소"),
+		HUD->IsStatusLongPressPendingForTest());
+
 	// 0823 확정: AP 는 문구로만 남기고 보석 아이콘 행은 걷었다.
 	if (UWidget* PipRow = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipRow")))
 	{
@@ -3894,6 +3959,9 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	UWidget* Card = HUD->WidgetTree->FindWidget(TEXT("CommandCard_0"));
 	UButton* SkillButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("SkillToggleButton")));
+	UButton* MoveButton = Cast<UButton>(
+		HUD->WidgetTree->FindWidget(TEXT("CommandButton_0")));
+	UWidget* MoveDisabled = HUD->WidgetTree->FindWidget(TEXT("CommandDisabled_0"));
 	UButton* ConfirmButton = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("ConfirmButton")));
 	UButton* CancelButton = Cast<UButton>(
@@ -3907,6 +3975,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	if (!TestNotNull(TEXT("전투 UI 모델"), Model)
 		|| !TestNotNull(TEXT("명령 카드"), Card)
 		|| !TestNotNull(TEXT("스킬 단추"), SkillButton)
+		|| !TestNotNull(TEXT("이동 카드 단추"), MoveButton)
+		|| !TestNotNull(TEXT("이동 불가 표시"), MoveDisabled)
 		|| !TestNotNull(TEXT("확정 단추"), ConfirmButton)
 		|| !TestNotNull(TEXT("취소 전용 단추"), CancelButton)
 		|| !TestNotNull(TEXT("턴 종료 단추"), EndTurnButton)
@@ -3938,6 +4008,21 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		FocusAnchorCount, 1);
 	TestEqual(TEXT("플레이어 턴은 큰 카드 없이 화면 중앙에 포커스한다"),
 		LastFocusAnchor, FVector2D(.5f, .5f));
+
+	// 속박/기절 판정은 AP가 남아 있어도 이동을 막는다. Unit 도메인 갱신만
+	// 들어와도 카드 표식과 실제 클릭 차단이 함께 바뀌어야 한다.
+	PlayerUnit.mCanMove = false;
+	Model->SetUnitUIs({ PlayerUnit, EnemyUnit });
+	TestEqual(TEXT("이동 불가 상태면 AP가 남아도 이동 카드 잠금"),
+		MoveDisabled->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	Responder->mLastType = ECombatInputType::Cancel;
+	MoveButton->OnClicked.Broadcast();
+	TestEqual(TEXT("이동 불가 상태에서 이동 명령 차단"),
+		Responder->mLastType, ECombatInputType::Cancel);
+	PlayerUnit.mCanMove = true;
+	Model->SetUnitUIs({ PlayerUnit, EnemyUnit });
+	TestEqual(TEXT("이동 가능 상태가 되면 카드 잠금 해제"),
+		MoveDisabled->GetVisibility(), ESlateVisibility::Collapsed);
 	// 평상시에는 확정 버튼이 숨겨져 있고, 델리게이트를 직접 불러도 Confirm이
 	// 새지 않는다.
 	Responder->mLastType = ECombatInputType::Cancel;

@@ -85,7 +85,9 @@ enum class EFloatingLogIconType : uint8
 	Fortification,		// 요새화 (버프)
 	Vigor,				// 활력 (버프)
 
+	Status,				// 전용 그림이 없는 범용 상태(문구와 버프/디버프 색을 함께 표시)
 	Poison,				// 독
+	Stun,				// 기절
 	Fire,				// 화염
 	Move				// 이동
 };
@@ -290,6 +292,8 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxMovementPoint = 0.f;   // STEP으로 확보한 이동 가능 총량(현재/최대 표시용)
+	/** @brief 속박/기절 등 실제 이동 컴포넌트 규칙까지 반영한 이동 가능 여부. */
+	UPROPERTY(BlueprintReadOnly) bool mCanMove = true;
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
 
