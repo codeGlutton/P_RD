@@ -255,14 +255,14 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 		 });
 
 	 // 스텟 추적
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
-	 	mMaxHP = Data.mNewValue;
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetMaxHPAttribute()).AddWeakLambda(this, [this, AttributeSetComponentModel](const FTacticalAttributeChangeData& Data) {
+		mMaxHP = AttributeSetComponentModel->GetAttributeBaseValue(Data.mAttribute);
 	 	});
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
-	 	mHP = Data.mNewValue;
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetHPAttribute()).AddWeakLambda(this, [this, AttributeSetComponentModel](const FTacticalAttributeChangeData& Data) {
+		 mHP = AttributeSetComponentModel->GetAttributeBaseValue(Data.mAttribute);
 	 	});
-	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddWeakLambda(this, [this](const FTacticalAttributeChangeData& Data) {
-	 	mExp = Data.mNewValue;
+	 AttributeSetComponentModel->GetTacticalAttributeValueChangeDelegate(UPlayerUnitAttributeSet::GetExpAttribute()).AddWeakLambda(this, [this, AttributeSetComponentModel](const FTacticalAttributeChangeData& Data) {
+		 mExp = AttributeSetComponentModel->GetAttributeBaseValue(Data.mAttribute);
 	 	});
 
 	 // 패시브 스택 비용 태그의 개수 변화를 추적
