@@ -1022,7 +1022,7 @@ namespace CombatHUDWidgetBuilder
 			{
 				if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 				{
-					HPSlot->SetPadding(FMargin(2.f));
+					HPSlot->SetPadding(FMargin(8.f));
 					if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
 					{
 						UWidget* Frame = Blueprint->WidgetTree->FindWidget(

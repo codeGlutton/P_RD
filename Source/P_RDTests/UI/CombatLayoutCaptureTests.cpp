@@ -334,7 +334,7 @@ namespace CombatLayoutCapture
 					UWidget* HPText = CombatHUD->GetWidgetFromName(TEXT("AllyHPText_Center"));
 					if (HPSlot == nullptr || HPMount == nullptr
 						|| HPFrame == nullptr || HPText == nullptr
-						|| HPSlot->GetPadding() != FMargin(2.f)
+						|| HPSlot->GetPadding() != FMargin(8.f)
 						|| HPMount->GetChildIndex(HPBar) >= HPMount->GetChildIndex(HPFrame)
 						|| HPMount->GetChildIndex(HPFrame) >= HPMount->GetChildIndex(HPText))
 					{
