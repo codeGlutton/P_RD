@@ -36,6 +36,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatStatusButton.h"
+#include "UI/Combat/CombatStatusPresentation.h"
 #include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
@@ -95,6 +97,8 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconFortification, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Fortification.T_Status_Fortification");
 	RD_LOAD_TEX(mLogIconVulnerability, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Vulnerability.T_Status_Vulnerability");
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
+	RD_LOAD_TEX(mLogIconPoison,        "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Poison.T_Status_Poison");
+	RD_LOAD_TEX(mLogIconStun,          "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Stun.T_Status_Stun");
 	// 플로팅 로그 글꼴. 새로 만든 TextBlock 은 엔진 기본 Roboto 로 남으므로
 	// HUD 공용 숫자 글꼴(F_HUD_Oswald)을 여기서 물어 둔다(UIFont::ProjectFont 짝).
 	{
@@ -368,40 +372,7 @@ namespace
 	 */
 	FText StatusDisplayName(const FGameplayTag& Tag)
 	{
-		FString Full = Tag.GetTagName().ToString();
-		if (Full.IsEmpty())
-		{
-			return NSLOCTEXT("CombatLayoutHUD", "StatusUnknown", "이상");
-		}
-
-		FString Leaf = Full;
-		int32 Dot = INDEX_NONE;
-		if (Full.FindLastChar(TEXT('.'), Dot))
-		{
-			Leaf = Full.Mid(Dot + 1);
-		}
-
-		static const TMap<FString, FText> Names = {
-			{ TEXT("Weakness"),      NSLOCTEXT("CombatLayoutHUD", "StatusWeakness", "약화") },
-			{ TEXT("Vulnerability"), NSLOCTEXT("CombatLayoutHUD", "StatusVulnerability", "취약") },
-			{ TEXT("Vigor"),         NSLOCTEXT("CombatLayoutHUD", "StatusVigor", "활력") },
-			{ TEXT("Fortification"), NSLOCTEXT("CombatLayoutHUD", "StatusFortification", "강화") },
-			{ TEXT("Haste"),         NSLOCTEXT("CombatLayoutHUD", "StatusHaste", "신속") },
-			{ TEXT("Exhaustion"),    NSLOCTEXT("CombatLayoutHUD", "StatusExhaustion", "탈진") },
-			{ TEXT("Slow"),          NSLOCTEXT("CombatLayoutHUD", "StatusSlow", "둔화") },
-			{ TEXT("Frail"),         NSLOCTEXT("CombatLayoutHUD", "StatusFrail", "쇠약") },
-			{ TEXT("Root"),          NSLOCTEXT("CombatLayoutHUD", "StatusRoot", "속박") },
-			{ TEXT("Poison"),        NSLOCTEXT("CombatLayoutHUD", "StatusPoison", "중독") },
-			{ TEXT("Bleed"),         NSLOCTEXT("CombatLayoutHUD", "StatusBleed", "출혈") },
-			{ TEXT("Stun"),          NSLOCTEXT("CombatLayoutHUD", "StatusStun", "기절") },
-			{ TEXT("Stealth"),       NSLOCTEXT("CombatLayoutHUD", "StatusStealth", "은신") },
-			{ TEXT("Dead"),          NSLOCTEXT("CombatLayoutHUD", "StatusDead", "전투불능") },
-		};
-		if (const FText* Found = Names.Find(Leaf))
-		{
-			return *Found;
-		}
-		return FText::FromString(Leaf);
+		return CombatStatusUI::Resolve(Tag).mDisplayName;
 	}
 }
 
@@ -616,15 +587,42 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
 	mEnemyNextSkillFrame = Find<UWidget>(WidgetTree, TEXT("EnemyNextSkillFrame"));
 	mEnemyNextSkillIcon = Find<UImage>(WidgetTree, TEXT("EnemyNextSkillIcon"));
-	// 머리 위 월드 HP바와 같은 값을 좁은 요약판에서 반복하지 않는다.
-	// 비운 한 줄만큼 AP/속도/상태를 위로 당기고, 작은 화면에서도 얼굴과
-	// 상태 아이콘이 한눈에 읽히도록 시각 크기를 키운다.
+	// 세로 요약판에서도 HP를 유지한다. 카드가 펼쳐진 동안 월드 HP바까지
+	// 감추는 정책이 있었으므로 이 행을 접으면 전투 중 체력을 볼 곳이 없다.
+	// 상태는 아래의 동적 스크롤 목록이 맡고, 과거 3칸 소켓은 호환용으로만
+	// 남겨 둔 채 화면에서는 접는다.
 	const auto ConfigureCompactSummary = [this](const TCHAR* Prefix)
 	{
 		for (const TCHAR* Suffix : { TEXT("HPBack"), TEXT("HPBar"), TEXT("HPText") })
 		{
 			SetShown(Find<UWidget>(WidgetTree,
-				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), false);
+				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
+		}
+		// HP는 뒷판보다 위에서 차오르고, 금속 프레임은 다시 HP 위를 덮어야
+		// 한다. 기존 순서(프레임→HP→글자)는 HP를 키우면 금속까지 덮었으므로
+		// HP→프레임→글자 순서로 바꿔 프레임 자체를 마스크처럼 사용한다.
+		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
+			FString::Printf(TEXT("%sHPBar"), Prefix)))
+		{
+			if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
+			{
+				HPSlot->SetPadding(FMargin(8.f));
+				if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+				{
+					UWidget* Frame = Find<UWidget>(WidgetTree,
+						FString::Printf(TEXT("%sHPBack"), Prefix));
+					const int32 FrameIndex = Mount->GetChildIndex(Frame);
+					const int32 BarIndex = Mount->GetChildIndex(HPBar);
+					if (Frame != nullptr && FrameIndex != INDEX_NONE
+						&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+					{
+						UPanelSlot* FrameSlot = Frame->Slot;
+						Mount->RemoveChildAt(FrameIndex);
+						Mount->InsertChildAt(
+							Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+					}
+				}
+			}
 		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
 		{
@@ -637,18 +635,16 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 				Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
 			}
 		}
-		// TextBlock 자체는 AutoFit ScaleBox 안에서 클리핑된다. 잎 TextBlock을
-		// 이동하면 래퍼의 클립 사각 밖으로 빠져 글자가 통째로 사라지므로,
-		// 텍스트 행은 바깥 Center 래퍼를 이동한다.
+		// 예전 HP 제거본이 AP/속도를 위로 52px 당겨 저장했을 수 있다. 이제
+		// 원래 행을 되살렸으므로 번역값도 원점으로 돌린다.
 		for (const TCHAR* Suffix : { TEXT("APPlate"), TEXT("APText_Center"),
-			TEXT("SpeedPlate"), TEXT("SpeedIcon"), TEXT("SpeedText_Center"),
-			TEXT("StatusLabel"), TEXT("Status") })
+			TEXT("APText"), TEXT("SpeedPlate"), TEXT("SpeedIcon"),
+			TEXT("SpeedText_Center"), TEXT("SpeedText") })
 		{
 			if (UWidget* Widget = Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)))
 			{
 				FWidgetTransform Transform;
-				Transform.Translation = FVector2D(0.f, -52.f);
 				if (FString(Suffix).EndsWith(TEXT("Icon")))
 				{
 					Transform.Scale = FVector2D(1.2f, 1.2f);
@@ -657,6 +653,10 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 				Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
 			}
 		}
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("%sStatusLabel"), Prefix)), false);
+		SetShown(Find<UWidget>(WidgetTree,
+			FString::Printf(TEXT("%sStatus"), Prefix)), false);
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			for (const TCHAR* Kind : { TEXT("Frame"), TEXT("Icon"),
@@ -665,11 +665,8 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 				if (UWidget* Widget = Find<UWidget>(WidgetTree, FString::Printf(
 					TEXT("%sStatus%s_%d"), Prefix, Kind, Index)))
 				{
-					FWidgetTransform Transform;
-					Transform.Translation = FVector2D(0.f, -52.f);
-					Transform.Scale = FVector2D(1.18f, 1.18f);
-					Widget->SetRenderTransform(Transform);
-					Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+					Widget->SetRenderTransform(FWidgetTransform());
+					Widget->SetVisibility(ESlateVisibility::Collapsed);
 				}
 			}
 		}
@@ -716,17 +713,10 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyStatusIcons.Reset();
 	mEnemyStatusCounts.Reset();
 	mEnemyStatusButtons.Reset();
-	for (int32 Index = 0; Index < 3; ++Index)
-	{
-		mEnemyStatusFrames.Add(Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("EnemyStatusFrame_%d"), Index)));
-		mEnemyStatusIcons.Add(Find<UImage>(WidgetTree,
-			FString::Printf(TEXT("EnemyStatusIcon_%d"), Index)));
-		mEnemyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
-			FString::Printf(TEXT("EnemyStatusCount_%d"), Index)));
-		mEnemyStatusButtons.Add(Find<UButton>(WidgetTree,
-			FString::Printf(TEXT("EnemyStatusButton_%d"), Index)));
-	}
+	mEnemyStatusRows.Reset();
+	mEnemyStatusScroll = nullptr;
+	EnsureSummaryStatusScroll(false);
+	EnsureSummaryStatusCapacity(false, 4);
 	mAllyPanel = Find<UWidget>(WidgetTree, TEXT("AllyPanel"));
 	mAllyPortrait = Find<UImage>(WidgetTree, TEXT("AllyPortrait"));
 	mAllyName = Find<UTextBlock>(WidgetTree, TEXT("AllyName"));
@@ -740,17 +730,10 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
 	mAllyStatusButtons.Reset();
-	for (int32 Index = 0; Index < 3; ++Index)
-	{
-		mAllyStatusFrames.Add(Find<UWidget>(WidgetTree,
-			FString::Printf(TEXT("AllyStatusFrame_%d"), Index)));
-		mAllyStatusIcons.Add(Find<UImage>(WidgetTree,
-			FString::Printf(TEXT("AllyStatusIcon_%d"), Index)));
-		mAllyStatusCounts.Add(Find<UTextBlock>(WidgetTree,
-			FString::Printf(TEXT("AllyStatusCount_%d"), Index)));
-		mAllyStatusButtons.Add(Find<UButton>(WidgetTree,
-			FString::Printf(TEXT("AllyStatusButton_%d"), Index)));
-	}
+	mAllyStatusRows.Reset();
+	mAllyStatusScroll = nullptr;
+	EnsureSummaryStatusScroll(true);
+	EnsureSummaryStatusCapacity(true, 4);
 
 	mEndTurnButton = Find<UButton>(WidgetTree, TEXT("EndTurnButton"));
 	mSkillToggleButton = Find<UButton>(WidgetTree, TEXT("SkillToggleButton"));
@@ -1222,56 +1205,8 @@ void UCombatLayoutHUDWidget::WireCommands()
 		BindPressFeedback(mMercenaryCloseButton, mMercenaryCloseButton);
 	}
 
-	// 요약판 상태 아이콘 긴 누름 → 상태 상세. 판이 소켓 위에 투명 단추를
-	// 깔아 둔다. 단순 탭은 아무 일도 하지 않으며, 0.5초를 채운 한 번만 연다.
-	{
-		using FStatusHandler = void (UCombatLayoutHUDWidget::*)();
-		static const FStatusHandler PressHandlers[2][3] = {
-			{ &UCombatLayoutHUDWidget::HandleAllyStatusPressed_0,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusPressed_1,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusPressed_2 },
-			{ &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_0,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_1,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusPressed_2 } };
-		static const FStatusHandler ReleaseHandlers[2][3] = {
-			{ &UCombatLayoutHUDWidget::HandleAllyStatusReleased_0,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusReleased_1,
-			  &UCombatLayoutHUDWidget::HandleAllyStatusReleased_2 },
-			{ &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_0,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_1,
-			  &UCombatLayoutHUDWidget::HandleEnemyStatusReleased_2 } };
-		static const TCHAR* const PressHandlerNames[2][3] = {
-			{ TEXT("HandleAllyStatusPressed_0"), TEXT("HandleAllyStatusPressed_1"),
-			  TEXT("HandleAllyStatusPressed_2") },
-			{ TEXT("HandleEnemyStatusPressed_0"), TEXT("HandleEnemyStatusPressed_1"),
-			  TEXT("HandleEnemyStatusPressed_2") } };
-		static const TCHAR* const ReleaseHandlerNames[2][3] = {
-			{ TEXT("HandleAllyStatusReleased_0"), TEXT("HandleAllyStatusReleased_1"),
-			  TEXT("HandleAllyStatusReleased_2") },
-			{ TEXT("HandleEnemyStatusReleased_0"), TEXT("HandleEnemyStatusReleased_1"),
-			  TEXT("HandleEnemyStatusReleased_2") } };
-		const TArray<TObjectPtr<UButton>>* Buttons[2] = {
-			&mAllyStatusButtons, &mEnemyStatusButtons };
-		for (int32 Side = 0; Side < 2; ++Side)
-		{
-			for (int32 Index = 0; Index < 3; ++Index)
-			{
-				UButton* Button = Buttons[Side]->IsValidIndex(Index)
-					? (*Buttons[Side])[Index].Get() : nullptr;
-				if (Button != nullptr)
-				{
-					// 손가락이 요약판 밖으로 드래그되면 눌림을 즉시 풀어,
-					// 떠난 아이콘의 상세가 0.5초 뒤 열리지 않게 한다.
-					Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
-					Button->SetClickMethod(EButtonClickMethod::PreciseClick);
-					Button->OnPressed.__Internal_AddUniqueDynamic(
-						this, PressHandlers[Side][Index], PressHandlerNames[Side][Index]);
-					Button->OnReleased.__Internal_AddUniqueDynamic(
-						this, ReleaseHandlers[Side][Index], ReleaseHandlerNames[Side][Index]);
-				}
-			}
-		}
-	}
+	// 요약판 상태 버튼은 EnsureSummaryStatusCapacity()가 행과 함께 동적으로
+	// 만들며 진영/index를 자체 델리게이트에 실어 보낸다.
 
 	// 턴 칸 클릭 → 그 유닛을 화면 가운데로 + (아군이면) 카드 펴기.
 	{
@@ -1729,6 +1664,13 @@ void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 		{
 			RefreshMonsterTab();
 		}
+		// 속박/기절은 상태 태그 변경으로 Unit 도메인만 갱신될 수 있다. 이동과
+		// 스킬 카드의 비활성 표시도 같은 프레임에 다시 계산한다.
+		if (Domain == ECombatUIDomain::Unit)
+		{
+			RefreshCommands();
+			RefreshCommandVisibility();
+		}
 	}
 	if (bAll || Domain == ECombatUIDomain::Skill)
 	{
@@ -2129,41 +2071,320 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
  */
 UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 {
-	struct FStatusArt
-	{
-		FGameplayTag Tag;
-		TObjectPtr<UTexture2D> Texture;
-	};
-
-	// 한 번만 읽는다. 카드 셋 x 홈 셋이 매 갱신마다 부르는 자리라 매번 읽으면
-	// 같은 그림을 아홉 번 찾는다.
-	static TArray<FStatusArt> Loaded;
+	// 한 번만 읽는다. 카드 셋과 요약판 행이 매 갱신마다 부르는 자리라 매번
+	// 같은 그림을 찾지 않는다. 게임 태그가 아직 없는 선행 자산도 잎 이름으로
+	// 연결해 둘 수 있다.
+	static TMap<FString, TObjectPtr<UTexture2D>> Loaded;
+	static TObjectPtr<UTexture2D> GenericStatusIcon;
 	if (Loaded.IsEmpty())
 	{
 		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
-		const TPair<FGameplayTag, const TCHAR*> Pairs[] = {
+		const TPair<const TCHAR*, const TCHAR*> Pairs[] = {
 			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
 			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
-			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor, TEXT("T_Status_Agility") },
-			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification, TEXT("T_Status_Fortification") },
-			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability, TEXT("T_Status_Vulnerability") },
-			{ EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness, TEXT("T_Status_Weakness") },
+			{ TEXT("Vigor"), TEXT("T_Status_Agility") },
+			{ TEXT("Fortification"), TEXT("T_Status_Fortification") },
+			{ TEXT("Vulnerability"), TEXT("T_Status_Vulnerability") },
+			{ TEXT("Weakness"), TEXT("T_Status_Weakness") },
+			{ TEXT("Poison"), TEXT("T_Status_Poison") },
+			{ TEXT("Stun"), TEXT("T_Status_Stun") },
+			{ TEXT("Bleed"), TEXT("T_Status_Bleed") },
+			{ TEXT("Stealth"), TEXT("T_Status_Stealth") },
 		};
-		for (const TPair<FGameplayTag, const TCHAR*>& Pair : Pairs)
+		for (const TPair<const TCHAR*, const TCHAR*>& Pair : Pairs)
 		{
 			const FString Path = FString::Printf(TEXT("%s%s.%s"), Root, Pair.Value, Pair.Value);
-			Loaded.Add({ Pair.Key, LoadObject<UTexture2D>(nullptr, *Path) });
+			Loaded.Add(Pair.Key, LoadObject<UTexture2D>(nullptr, *Path));
 		}
+		GenericStatusIcon = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/"
+				"T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"));
 	}
 
-	for (const FStatusArt& Art : Loaded)
+	FString Leaf = StatusTag.GetTagName().ToString();
+	int32 LastDot = INDEX_NONE;
+	if (Leaf.FindLastChar(TEXT('.'), LastDot))
 	{
-		if (StatusTag.MatchesTag(Art.Tag))
+		Leaf = Leaf.Mid(LastDot + 1);
+	}
+	if (const TObjectPtr<UTexture2D>* Art = Loaded.Find(Leaf))
+	{
+		return Art->Get() != nullptr ? Art->Get() : GenericStatusIcon.Get();
+	}
+	// 새 상태가 추가돼도 행이 빈칸으로 보이지 않게 범용 표식을 돌려준다.
+	return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect)
+		? GenericStatusIcon.Get() : nullptr;
+}
+
+/** @brief 아군/적 세로 요약판에 상태 스크롤 컨테이너를 하나씩 준비한다. */
+void UCombatLayoutHUDWidget::EnsureSummaryStatusScroll(const bool bAlly)
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	TObjectPtr<UScrollBox>& Scroll = bAlly
+		? mAllyStatusScroll : mEnemyStatusScroll;
+	const FString Prefix = bAlly ? TEXT("Ally") : TEXT("Enemy");
+	UCanvasPanel* Panel = Cast<UCanvasPanel>(bAlly ? mAllyPanel.Get() : mEnemyPanel.Get());
+	if (Panel == nullptr)
+	{
+		return;
+	}
+
+	if (Scroll == nullptr)
+	{
+		Scroll = Find<UScrollBox>(WidgetTree, Prefix + TEXT("StatusScroll"));
+	}
+	if (Scroll == nullptr)
+	{
+		Scroll = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(),
+			FName(*(Prefix + TEXT("StatusScroll"))));
+		if (UCanvasPanelSlot* CanvasSlot = Panel->AddChildToCanvas(Scroll))
 		{
-			return Art.Texture;
+			CanvasSlot->SetPosition(FVector2D(14.f, 352.f));
+			CanvasSlot->SetSize(FVector2D(140.f, 190.f));
+			CanvasSlot->SetZOrder(15);
 		}
 	}
-	return nullptr;
+	else if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Scroll->Slot))
+	{
+		CanvasSlot->SetPosition(FVector2D(14.f, 352.f));
+		CanvasSlot->SetSize(FVector2D(140.f, 190.f));
+		CanvasSlot->SetZOrder(15);
+	}
+
+	Scroll->SetOrientation(EOrientation::Orient_Vertical);
+	Scroll->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+	Scroll->SetScrollBarVisibility(ESlateVisibility::Collapsed);
+	Scroll->SetScrollbarThickness(FVector2D(4.f, 4.f));
+	Scroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+	Scroll->SetAnimateWheelScrolling(true);
+	Scroll->SetAllowOverscroll(false);
+	Scroll->SetAlwaysShowScrollbar(false);
+	Scroll->SetVisibility(ESlateVisibility::Visible);
+	if (bAlly)
+	{
+		Scroll->OnUserScrolled.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleAllyStatusScrolled);
+	}
+	else
+	{
+		Scroll->OnUserScrolled.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleEnemyStatusScrolled);
+	}
+}
+
+/** @brief 스크롤 상태 행을 필요한 만큼 만든다. */
+void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
+	const bool bAlly, const int32 RequiredCount)
+{
+	EnsureSummaryStatusScroll(bAlly);
+	UScrollBox* Scroll = bAlly ? mAllyStatusScroll.Get() : mEnemyStatusScroll.Get();
+	if (WidgetTree == nullptr || Scroll == nullptr)
+	{
+		return;
+	}
+
+	TArray<TObjectPtr<UWidget>>& Rows = bAlly ? mAllyStatusRows : mEnemyStatusRows;
+	TArray<TObjectPtr<UWidget>>& Frames = bAlly
+		? mAllyStatusFrames : mEnemyStatusFrames;
+	TArray<TObjectPtr<UImage>>& Icons = bAlly
+		? mAllyStatusIcons : mEnemyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>>& Counts = bAlly
+		? mAllyStatusCounts : mEnemyStatusCounts;
+	TArray<TObjectPtr<UButton>>& Buttons = bAlly
+		? mAllyStatusButtons : mEnemyStatusButtons;
+	const FString Prefix = bAlly ? TEXT("Ally") : TEXT("Enemy");
+
+	while (Rows.Num() < FMath::Max(RequiredCount, 1))
+	{
+		const int32 Index = Rows.Num();
+		const FString Stem = FString::Printf(TEXT("%sScrollStatus"), *Prefix);
+		USizeBox* Row = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
+			FName(*FString::Printf(TEXT("%sRow_%d"), *Stem, Index)));
+		Row->SetWidthOverride(56.f);
+		Row->SetHeightOverride(56.f);
+		Row->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Row->SetVisibility(ESlateVisibility::Collapsed);
+
+		UOverlay* Layer = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),
+			FName(*FString::Printf(TEXT("%sLayer_%d"), *Stem, Index)));
+		Row->SetContent(Layer);
+
+		UImage* Frame = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
+			FName(*FString::Printf(TEXT("%sFrame_%d"), *Stem, Index)));
+		if (mUnitStatusSlotTexture != nullptr)
+		{
+			Frame->SetBrushFromTexture(mUnitStatusSlotTexture, false);
+		}
+		Frame->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Frame))
+		{
+			OverlaySlot->SetPadding(FMargin(1.f));
+			OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+			OverlaySlot->SetVerticalAlignment(VAlign_Fill);
+		}
+
+		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
+			FName(*FString::Printf(TEXT("%sIcon_%d"), *Stem, Index)));
+		Icon->SetDesiredSizeOverride(FVector2D(42.f, 42.f));
+		Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Icon))
+		{
+			OverlaySlot->SetPadding(FMargin(0.f));
+			OverlaySlot->SetHorizontalAlignment(HAlign_Center);
+			OverlaySlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		FSlateFontInfo CountFont = (bAlly && mAllyName != nullptr)
+			? mAllyName->GetFont()
+			: (mEnemyName != nullptr ? mEnemyName->GetFont() : FSlateFontInfo());
+		CountFont.Size = 14;
+		CountFont.OutlineSettings.OutlineSize = 1;
+		CountFont.OutlineSettings.OutlineColor = FLinearColor::Black;
+
+		UTextBlock* Count = WidgetTree->ConstructWidget<UTextBlock>(
+			UTextBlock::StaticClass(),
+			FName(*FString::Printf(TEXT("%sCount_%d"), *Stem, Index)));
+		Count->SetFont(CountFont);
+		Count->SetJustification(ETextJustify::Center);
+		Count->SetVisibility(ESlateVisibility::Collapsed);
+		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Count))
+		{
+			OverlaySlot->SetPadding(FMargin(0.f, 0.f, 5.f, 4.f));
+			OverlaySlot->SetHorizontalAlignment(HAlign_Right);
+			OverlaySlot->SetVerticalAlignment(VAlign_Bottom);
+		}
+
+		UCombatStatusButton* Button = WidgetTree->ConstructWidget<UCombatStatusButton>(
+			UCombatStatusButton::StaticClass(),
+			FName(*FString::Printf(TEXT("%sButton_%d"), *Stem, Index)));
+		FButtonStyle Style = Button->GetStyle();
+		Style.Normal.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Hovered.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Pressed.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Style.Disabled.DrawAs = ESlateBrushDrawType::NoDrawType;
+		Button->SetStyle(Style);
+		Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+		Button->SetClickMethod(EButtonClickMethod::PreciseClick);
+		Button->Configure(bAlly, Index);
+		Button->OnStatusPressed.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleScrollableStatusPressed);
+		Button->OnStatusReleased.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleScrollableStatusReleased);
+		Button->SetVisibility(ESlateVisibility::Collapsed);
+		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Button))
+		{
+			OverlaySlot->SetPadding(FMargin(0.f));
+			OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+			OverlaySlot->SetVerticalAlignment(VAlign_Fill);
+		}
+
+		if (UScrollBoxSlot* ScrollSlot = Cast<UScrollBoxSlot>(Scroll->AddChild(Row)))
+		{
+			ScrollSlot->SetPadding(FMargin(2.f, 1.f));
+			ScrollSlot->SetHorizontalAlignment(HAlign_Center);
+			ScrollSlot->SetVerticalAlignment(VAlign_Top);
+		}
+		Rows.Add(Row);
+		Frames.Add(Frame);
+		Icons.Add(Icon);
+		Counts.Add(Count);
+		Buttons.Add(Button);
+	}
+}
+
+/** @brief 한 유닛의 상태를 정렬해 요약판 스크롤에 빠짐없이 그린다. */
+void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
+	const int32 UnitId, const TArray<FStatusEffectUI>& Statuses)
+{
+	TArray<FStatusEffectUI>& ShownStatuses = bAlly
+		? mAllyShownStatuses : mEnemyShownStatuses;
+	ShownStatuses = Statuses;
+	CombatStatusUI::SortForDisplay(ShownStatuses);
+	EnsureSummaryStatusCapacity(bAlly, FMath::Max(ShownStatuses.Num(), 4));
+
+	UScrollBox* Scroll = bAlly ? mAllyStatusScroll.Get() : mEnemyStatusScroll.Get();
+	TArray<TObjectPtr<UWidget>>& Rows = bAlly ? mAllyStatusRows : mEnemyStatusRows;
+	TArray<TObjectPtr<UWidget>>& Frames = bAlly
+		? mAllyStatusFrames : mEnemyStatusFrames;
+	TArray<TObjectPtr<UImage>>& Icons = bAlly
+		? mAllyStatusIcons : mEnemyStatusIcons;
+	TArray<TObjectPtr<UTextBlock>>& Counts = bAlly
+		? mAllyStatusCounts : mEnemyStatusCounts;
+	TArray<TObjectPtr<UButton>>& Buttons = bAlly
+		? mAllyStatusButtons : mEnemyStatusButtons;
+	int32& PreviousUnitId = bAlly ? mAllyStatusListUnitId : mEnemyStatusListUnitId;
+
+	if (Scroll != nullptr)
+	{
+		const bool bHasStatus = ShownStatuses.IsEmpty() == false;
+		const bool bScrollable = ShownStatuses.Num() >= 4;
+		Scroll->SetVisibility(bHasStatus
+			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		Scroll->SetScrollBarVisibility(bScrollable
+			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		Scroll->SetAlwaysShowScrollbar(bScrollable);
+		if (PreviousUnitId != UnitId)
+		{
+			Scroll->ScrollToStart();
+		}
+	}
+	PreviousUnitId = UnitId;
+
+	for (int32 Index = 0; Index < Rows.Num(); ++Index)
+	{
+		const bool bHasStatus = ShownStatuses.IsValidIndex(Index);
+		SetShown(Rows[Index], bHasStatus);
+		SetShown(Frames.IsValidIndex(Index) ? Frames[Index].Get() : nullptr,
+			bHasStatus);
+		SetInteractiveShown(Buttons.IsValidIndex(Index)
+			? Buttons[Index].Get() : nullptr, bHasStatus);
+
+		UImage* Icon = Icons.IsValidIndex(Index) ? Icons[Index].Get() : nullptr;
+		UTextBlock* Count = Counts.IsValidIndex(Index) ? Counts[Index].Get() : nullptr;
+		if (bHasStatus == false)
+		{
+			SetShown(Icon, false);
+			SetShown(Count, false);
+			continue;
+		}
+
+		const FStatusEffectUI& Status = ShownStatuses[Index];
+		const CombatStatusUI::FPresentation Presentation =
+			CombatStatusUI::Resolve(Status.mTag);
+		const FLinearColor Accent = Presentation.mIsDebuff
+			? FLinearColor(.78f, .24f, .34f, 1.f)
+			: (Presentation.mIsBuff
+				? FLinearColor(.35f, .72f, 1.f, 1.f)
+				: FLinearColor(.84f, .76f, .54f, 1.f));
+		if (UImage* Frame = Cast<UImage>(Frames.IsValidIndex(Index)
+			? Frames[Index].Get() : nullptr))
+		{
+			Frame->SetColorAndOpacity(Accent);
+		}
+		if (Icon != nullptr)
+		{
+			if (UTexture2D* Art = StatusIconFor(Status.mTag))
+			{
+				Icon->SetBrushFromTexture(Art, false);
+				Icon->SetColorAndOpacity(FLinearColor::White);
+				SetShown(Icon, true);
+			}
+			else
+			{
+				SetShown(Icon, false);
+			}
+		}
+		SetShown(Count, Status.mStackCount > 1);
+		if (Count != nullptr && Status.mStackCount > 1)
+		{
+			Count->SetText(FText::AsNumber(Status.mStackCount));
+			Count->SetColorAndOpacity(FSlateColor(Accent));
+		}
+	}
 }
 
 /**
@@ -2404,6 +2625,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 				const FUnitUI* TurnUnit = FindTurnUnit();
 				const bool bCanMove = mUIModel->IsSkillRailOwnTurn()
 					&& TurnUnit != nullptr
+					&& TurnUnit->mCanMove
 					&& FMath::RoundToInt(TurnUnit->mMovementPoint) > 0;
 				SetShown(Widgets.Disabled, !bCanMove);
 			}
@@ -2535,11 +2757,7 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	SetShown(mAllyPanel, AllyShown != nullptr);
 	if (AllyShown == nullptr)
 	{
-		mAllyShownStatuses.Reset();
-		for (const TObjectPtr<UButton>& Button : mAllyStatusButtons)
-		{
-			SetInteractiveShown(Button.Get(), false);
-		}
+		RefreshSummaryStatusList(true, INDEX_NONE, {});
 	}
 	if (AllyShown != nullptr)
 	{
@@ -2566,47 +2784,17 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
 			FMath::RoundToInt(AllyShown->mSpeedPoint)));
 
-		// 확정 시안: 상태는 아이콘으로만 보여 준다. 글줄은 걷는다.
+		// 상태는 아이콘과 잔여 턴/중첩 숫자로만 보여 준다. 이름과 설명은
+		// 아이콘 롱프레스 상세에서 확인한다.
 		SetShown(mAllyStatusText, false);
-		mAllyShownStatuses = AllyShown->mStatusEffects;   // 아이콘 클릭 → 상태 상세용
-
-		for (int32 Index = 0; Index < mAllyStatusFrames.Num(); ++Index)
-		{
-			const bool bHasStatus = AllyShown->mStatusEffects.IsValidIndex(Index);
-			SetShown(mAllyStatusFrames[Index], bHasStatus);
-			if (mAllyStatusButtons.IsValidIndex(Index))
-			{
-				SetInteractiveShown(mAllyStatusButtons[Index].Get(), bHasStatus);
-			}
-			UImage* Icon = mAllyStatusIcons.IsValidIndex(Index)
-				? mAllyStatusIcons[Index].Get() : nullptr;
-			UTextBlock* Count = mAllyStatusCounts.IsValidIndex(Index)
-				? mAllyStatusCounts[Index].Get() : nullptr;
-			UTexture2D* Art = bHasStatus
-				? StatusIconFor(AllyShown->mStatusEffects[Index].mTag) : nullptr;
-			SetShown(Icon, Art != nullptr);
-			if (Icon != nullptr && Art != nullptr)
-			{
-				Icon->SetBrushFromTexture(Art, false);
-			}
-			const int32 StackCount = bHasStatus
-				? AllyShown->mStatusEffects[Index].mStackCount : 0;
-			SetShown(Count, StackCount > 1);
-			if (Count != nullptr && StackCount > 1)
-			{
-				Count->SetText(FText::AsNumber(StackCount));
-			}
-		}
+		RefreshSummaryStatusList(true, AllyShown->mUnitId,
+			AllyShown->mStatusEffects);
 	}
 
 	SetShown(mEnemyPanel, Shown != nullptr);
 	if (Shown == nullptr)
 	{
-		mEnemyShownStatuses.Reset();
-		for (const TObjectPtr<UButton>& Button : mEnemyStatusButtons)
-		{
-			SetInteractiveShown(Button.Get(), false);
-		}
+		RefreshSummaryStatusList(false, INDEX_NONE, {});
 		return;
 	}
 
@@ -2642,39 +2830,9 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	// 용병 요약판과 짝인 프레임은 보이고 미지원 값은 명시적으로 '-'다.
 	SetTextIfPresent(mEnemyCritText, FText::FromString(TEXT("-")));
 
-	// 확정 시안: 상태는 아이콘으로만 보여 준다. 글줄은 걷는다.
+	// 상태는 아군 요약과 같은 스크롤 계약으로 그린다.
 	SetShown(mEnemyStatusText, false);
-	mEnemyShownStatuses = Shown->mStatusEffects;   // 아이콘 클릭 → 상태 상세용
-
-	for (int32 Index = 0; Index < mEnemyStatusFrames.Num(); ++Index)
-	{
-		const bool bHasStatus = Shown->mStatusEffects.IsValidIndex(Index);
-		SetShown(mEnemyStatusFrames[Index], bHasStatus);
-		if (mEnemyStatusButtons.IsValidIndex(Index))
-		{
-			SetInteractiveShown(mEnemyStatusButtons[Index].Get(), bHasStatus);
-		}
-
-		UImage* Icon = mEnemyStatusIcons.IsValidIndex(Index)
-			? mEnemyStatusIcons[Index].Get() : nullptr;
-		UTextBlock* Count = mEnemyStatusCounts.IsValidIndex(Index)
-			? mEnemyStatusCounts[Index].Get() : nullptr;
-		UTexture2D* Art = bHasStatus
-			? StatusIconFor(Shown->mStatusEffects[Index].mTag) : nullptr;
-		SetShown(Icon, Art != nullptr);
-		if (Icon != nullptr && Art != nullptr)
-		{
-			Icon->SetBrushFromTexture(Art, false);
-		}
-
-		const int32 StackCount = bHasStatus
-			? Shown->mStatusEffects[Index].mStackCount : 0;
-		SetShown(Count, StackCount > 1);
-		if (Count != nullptr && StackCount > 1)
-		{
-			Count->SetText(FText::AsNumber(StackCount));
-		}
-	}
+	RefreshSummaryStatusList(false, Shown->mUnitId, Shown->mStatusEffects);
 
 	// 세로 요약판은 상태이상 여부까지만 보여 준다. 다음 행동을 미리 알려 주는
 	// 데이터는 전투 모델에 남겨도 이 화면에서는 의도적으로 소비하지 않는다.
@@ -2908,7 +3066,8 @@ void UCombatLayoutHUDWidget::RequestCommand(const int32 SlotIndex)
 		// 행동력이 없으면 이동 모드에 들어가지 않는다. 갈 칸이 없는데
 		// 조준만 열리면 취소밖에 할 게 없다.
 		const FUnitUI* TurnUnit = FindTurnUnit();
-		if (TurnUnit == nullptr || FMath::RoundToInt(TurnUnit->mMovementPoint) <= 0)
+		if (TurnUnit == nullptr || TurnUnit->mCanMove == false
+			|| FMath::RoundToInt(TurnUnit->mMovementPoint) <= 0)
 		{
 			return;
 		}
@@ -4687,6 +4846,9 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 
 	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
 	static const TMap<FString, FText> Descriptions = {
+		{ TEXT("Strength"),      LOCTEXT("StatusDescStrength", "공격 관련 능력이 강화된다.") },
+		{ TEXT("Dexterity"),     LOCTEXT("StatusDescDexterity", "기교 관련 능력이 강화된다.") },
+		{ TEXT("Acumeny"),       LOCTEXT("StatusDescAcumeny", "판단 관련 능력이 강화된다.") },
 		{ TEXT("Fortification"), LOCTEXT("StatusDescFortification", "받는 피해가 줄어든다.") },
 		{ TEXT("Vulnerability"), LOCTEXT("StatusDescVulnerability", "받는 피해가 늘어난다.") },
 		{ TEXT("Weakness"),      LOCTEXT("StatusDescWeakness", "주는 피해가 줄어든다.") },
@@ -4698,7 +4860,7 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 		{ TEXT("Root"),          LOCTEXT("StatusDescRoot", "이동할 수 없다.") },
 		{ TEXT("Poison"),        LOCTEXT("StatusDescPoison", "턴마다 피해를 입는다.") },
 		{ TEXT("Bleed"),         LOCTEXT("StatusDescBleed", "턴마다 피해를 입는다.") },
-		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "턴을 진행할 수 없다.") },
+		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
 		{ TEXT("Stealth"),       LOCTEXT("StatusDescStealth", "적의 대상이 되지 않는다.") },
 	};
 	FString Leaf = StatusTag.GetTagName().ToString();
@@ -4708,11 +4870,19 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 		Leaf = Leaf.Mid(Dot + 1);
 	}
 	const FText* Description = Descriptions.Find(Leaf);
+	const CombatStatusUI::FPresentation Presentation =
+		CombatStatusUI::Resolve(StatusTag);
+	const FText DurationText = Presentation.mIsInfinite
+		? LOCTEXT("StatusDurationInfinite", "전투가 끝날 때까지 지속된다.")
+		: (Presentation.mIsRoundDuration
+			? LOCTEXT("StatusDurationRound", "라운드가 지나면 1중첩씩 사라진다.")
+			: LOCTEXT("StatusDurationOther", "효과 조건이 끝날 때까지 지속된다."));
 	SetTextIfPresent(mDetailBodyText, FText::Format(
-		LOCTEXT("StatusDescBodyFmt", "{0}\n턴이 지나면 사라진다."),
+		LOCTEXT("StatusDescBodyFmt", "{0}\n{1}"),
 		Description != nullptr
 			? *Description
-			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다.")));
+			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다."),
+		DurationText));
 
 	SetPortraitCropped(mDetailIconImage, StatusIconFor(StatusTag));
 
@@ -4831,18 +5001,29 @@ bool UCombatLayoutHUDWidget::IsStatusPressActiveForTest(
 }
 #endif
 
-void UCombatLayoutHUDWidget::HandleAllyStatusPressed_0() { BeginStatusPress(true, 0); }
-void UCombatLayoutHUDWidget::HandleAllyStatusPressed_1() { BeginStatusPress(true, 1); }
-void UCombatLayoutHUDWidget::HandleAllyStatusPressed_2() { BeginStatusPress(true, 2); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_0() { BeginStatusPress(false, 0); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_1() { BeginStatusPress(false, 1); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusPressed_2() { BeginStatusPress(false, 2); }
-void UCombatLayoutHUDWidget::HandleAllyStatusReleased_0() { EndStatusPress(true, 0); }
-void UCombatLayoutHUDWidget::HandleAllyStatusReleased_1() { EndStatusPress(true, 1); }
-void UCombatLayoutHUDWidget::HandleAllyStatusReleased_2() { EndStatusPress(true, 2); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_0() { EndStatusPress(false, 0); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_1() { EndStatusPress(false, 1); }
-void UCombatLayoutHUDWidget::HandleEnemyStatusReleased_2() { EndStatusPress(false, 2); }
+void UCombatLayoutHUDWidget::HandleScrollableStatusPressed(
+	const bool bAlly, const int32 SlotIndex)
+{
+	BeginStatusPress(bAlly, SlotIndex);
+}
+
+void UCombatLayoutHUDWidget::HandleScrollableStatusReleased(
+	const bool bAlly, const int32 SlotIndex)
+{
+	EndStatusPress(bAlly, SlotIndex);
+}
+
+void UCombatLayoutHUDWidget::HandleAllyStatusScrolled(const float CurrentOffset)
+{
+	(void)CurrentOffset;
+	CancelStatusPress();
+}
+
+void UCombatLayoutHUDWidget::HandleEnemyStatusScrolled(const float CurrentOffset)
+{
+	(void)CurrentOffset;
+	CancelStatusPress();
+}
 
 /** @brief 용병탭 스킬 소켓 클릭. 0번은 이동, 나머지는 전투 레일과 같은 스킬 번호. */
 void UCombatLayoutHUDWidget::HandleMercenarySkillClicked(const int32 SlotIndex)
