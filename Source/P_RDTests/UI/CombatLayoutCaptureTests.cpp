@@ -242,6 +242,8 @@ namespace CombatLayoutCapture
 			FCString::Strcmp(AdditionalSuffix, TEXT("_WaitingConfirm")) == 0;
 		const bool bShowCommandCards =
 			FCString::Strcmp(AdditionalSuffix, TEXT("_Commands")) == 0;
+		const bool bShowStatuslessSummary =
+			FCString::Strcmp(AdditionalSuffix, TEXT("_NoStatus")) == 0;
 
 		// 몬스터 탭 WBP 에는 번역 키 없이 구워진 라벨이 남아 있고, 실게임은
 		// EnsureMonsterTabWidget() 이 로컬라이즈 텍스트로 갈아 끼운다. 캡처는
@@ -269,10 +271,21 @@ namespace CombatLayoutCapture
 				FUnitUI Player;
 				Player.mUnitId = 1;
 				Player.mIsPlayer = true;
-				Player.mActionPoints = 12;
-				Player.mMaxActionPoints = 15;
-				Player.mMovementPoint = 12.f;
-				Player.mMaxMovementPoint = 15.f;
+				Player.mName = bShowStatuslessSummary
+					? FText::FromString(TEXT("Ranger")) : FText::GetEmpty();
+				Player.mHP = bShowStatuslessSummary ? 80.f : 0.f;
+				Player.mMaxHP = bShowStatuslessSummary ? 80.f : 0.f;
+				Player.mActionPoints = bShowStatuslessSummary ? 0 : 12;
+				Player.mMaxActionPoints = bShowStatuslessSummary ? 12 : 15;
+				Player.mSpeedPoint = bShowStatuslessSummary ? 8.f : 0.f;
+				Player.mMovementPoint = bShowStatuslessSummary ? 0.f : 12.f;
+				Player.mMaxMovementPoint = bShowStatuslessSummary ? 12.f : 15.f;
+				if (bShowStatuslessSummary)
+				{
+					Player.mPortrait = LoadObject<UTexture2D>(nullptr,
+						TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/"
+							"Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"));
+				}
 				PreviewModel->SetUnitUIs({ Player });
 
 				const TCHAR* SkillIconPaths[] = {
@@ -916,6 +929,14 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 			1280, 720, false, TEXT("_Commands")))
 		{
 			AddError(FString::Printf(TEXT("%s 스킬 카드: %s"), ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			CaptureWidth, CaptureHeight, false, TEXT("_NoStatus")))
+		{
+			AddError(FString::Printf(TEXT("%s 상태 없는 요약판: %s"),
+				ClassPath, *Error));
 		}
 		Error.Reset();
 		if (!CaptureLayout(*World, ClassPath, Error, true))

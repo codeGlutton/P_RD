@@ -2315,7 +2315,10 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 
 	if (Scroll != nullptr)
 	{
+		const bool bHasStatus = ShownStatuses.IsEmpty() == false;
 		const bool bScrollable = ShownStatuses.Num() >= 4;
+		Scroll->SetVisibility(bHasStatus
+			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetScrollBarVisibility(bScrollable
 			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetAlwaysShowScrollbar(bScrollable);
@@ -2329,8 +2332,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 	for (int32 Index = 0; Index < Rows.Num(); ++Index)
 	{
 		const bool bHasStatus = ShownStatuses.IsValidIndex(Index);
-		const bool bEmptyRow = Index == 0 && ShownStatuses.IsEmpty();
-		SetShown(Rows[Index], bHasStatus || bEmptyRow);
+		SetShown(Rows[Index], bHasStatus);
 		SetShown(Frames.IsValidIndex(Index) ? Frames[Index].Get() : nullptr,
 			bHasStatus);
 		SetInteractiveShown(Buttons.IsValidIndex(Index)
@@ -2343,13 +2345,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 		{
 			SetShown(Icon, false);
 			SetShown(Count, false);
-			SetTextIfPresent(Name, bEmptyRow
-				? LOCTEXT("SummaryNoStatus", "상태 없음") : FText::GetEmpty());
-			if (Name != nullptr)
-			{
-				Name->SetColorAndOpacity(FSlateColor(
-					FLinearColor(.72f, .72f, .72f, 1.f)));
-			}
+			SetTextIfPresent(Name, FText::GetEmpty());
 			continue;
 		}
 
