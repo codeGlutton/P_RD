@@ -273,7 +273,7 @@ namespace CombatLayoutCapture
 				Player.mIsPlayer = true;
 				Player.mName = bShowStatuslessSummary
 					? FText::FromString(TEXT("Ranger")) : FText::GetEmpty();
-				Player.mHP = bShowStatuslessSummary ? 80.f : 0.f;
+				Player.mHP = bShowStatuslessSummary ? 40.f : 0.f;
 				Player.mMaxHP = bShowStatuslessSummary ? 80.f : 0.f;
 				Player.mActionPoints = bShowStatuslessSummary ? 0 : 12;
 				Player.mMaxActionPoints = bShowStatuslessSummary ? 12 : 15;
@@ -320,6 +320,27 @@ namespace CombatLayoutCapture
 						: ECombatBuildPhaseUI::None;
 				PreviewModel->SetTurnUI(Turn);
 				PreviewModel->OnBeginAnyTurn.Broadcast(nullptr);
+				if (bShowStatuslessSummary)
+				{
+					UProgressBar* HPBar = Cast<UProgressBar>(
+						CombatHUD->GetWidgetFromName(TEXT("AllyHPBar")));
+					if (HPBar == nullptr)
+					{
+						OutError = TEXT("아군 요약판 HP 바가 없음");
+						return false;
+					}
+					const FSlateBrush& Track =
+						HPBar->GetWidgetStyle().BackgroundImage;
+					const FLinearColor TrackColor =
+						Track.TintColor.GetSpecifiedColor();
+					if (Track.DrawAs == ESlateBrushDrawType::NoDrawType
+						|| TrackColor.A < .99f
+						|| TrackColor.GetLuminance() >= .08f)
+					{
+						OutError = TEXT("아군 HP 미충전 트랙이 불투명한 어두운 색이 아님");
+						return false;
+					}
+				}
 				if (bShowCommandCards)
 				{
 					if (UButton* SkillToggle = Cast<UButton>(

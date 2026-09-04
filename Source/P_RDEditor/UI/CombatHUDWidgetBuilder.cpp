@@ -1014,6 +1014,25 @@ namespace CombatHUDWidgetBuilder
 					Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
+			// 프레임 전용 HP 뒷판은 가운데가 투명하다. ProgressBar의 밝은
+			// 기본 배경을 그대로 두면 잃은 체력 구간이 빈 구멍처럼 보이므로,
+			// 채움과 같은 형상의 어두운 트랙을 먼저 깐다.
+			if (UProgressBar* HPBar = Cast<UProgressBar>(
+				Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + TEXT("HPBar")))))
+			{
+				FProgressBarStyle Style = HPBar->GetWidgetStyle();
+				FSlateBrush Track = Style.FillImage;
+				if (Track.DrawAs == ESlateBrushDrawType::NoDrawType)
+				{
+					Track.DrawAs = ESlateBrushDrawType::Box;
+				}
+				Track.TintColor = FSlateColor(FString(Prefix) == TEXT("Ally")
+					? FLinearColor(.025f, .045f, .025f, 1.f)
+					: FLinearColor(.05f, .018f, .014f, 1.f));
+				Style.SetBackgroundImage(Track);
+				HPBar->SetWidgetStyle(Style);
+			}
 
 			// HP를 없앴던 판이 AP/속도 행을 위로 당겨 저장했을 수 있다.
 			for (const TCHAR* Suffix : { TEXT("APPlateMount"), TEXT("APPlate"),

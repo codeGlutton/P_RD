@@ -598,6 +598,24 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			SetShown(Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
 		}
+		// HP 프레임 그림은 테두리만 있고 가운데가 투명하다. WBP에 밝은
+		// ProgressBar 배경이 남아 있더라도 잃은 체력 구간은 어두운 트랙으로
+		// 보이게 런타임에서도 계약을 고정한다.
+		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
+			FString::Printf(TEXT("%sHPBar"), Prefix)))
+		{
+			FProgressBarStyle Style = HPBar->GetWidgetStyle();
+			FSlateBrush Track = Style.FillImage;
+			if (Track.DrawAs == ESlateBrushDrawType::NoDrawType)
+			{
+				Track.DrawAs = ESlateBrushDrawType::Box;
+			}
+			Track.TintColor = FSlateColor(FString(Prefix) == TEXT("Ally")
+				? FLinearColor(.025f, .045f, .025f, 1.f)
+				: FLinearColor(.05f, .018f, .014f, 1.f));
+			Style.SetBackgroundImage(Track);
+			HPBar->SetWidgetStyle(Style);
+		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
 		{
 			if (UWidget* Widget = Find<UWidget>(WidgetTree,
