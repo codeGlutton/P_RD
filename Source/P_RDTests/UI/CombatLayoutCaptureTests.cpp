@@ -246,6 +246,9 @@ namespace CombatLayoutCapture
 			FCString::Strcmp(AdditionalSuffix, TEXT("_Commands")) == 0;
 		const bool bShowStatuslessSummary =
 			FCString::Strcmp(AdditionalSuffix, TEXT("_NoStatus")) == 0;
+		const bool bShowStatusSummary =
+			FCString::Strcmp(AdditionalSuffix, TEXT("_Statuses")) == 0;
+		const bool bShowSummaryFixture = bShowStatuslessSummary || bShowStatusSummary;
 
 		// 몬스터 탭 WBP 에는 번역 키 없이 구워진 라벨이 남아 있고, 실게임은
 		// EnsureMonsterTabWidget() 이 로컬라이즈 텍스트로 갈아 끼운다. 캡처는
@@ -273,20 +276,38 @@ namespace CombatLayoutCapture
 				FUnitUI Player;
 				Player.mUnitId = 1;
 				Player.mIsPlayer = true;
-				Player.mName = bShowStatuslessSummary
-					? FText::FromString(TEXT("Ranger")) : FText::GetEmpty();
-				Player.mHP = bShowStatuslessSummary ? 80.f : 0.f;
-				Player.mMaxHP = bShowStatuslessSummary ? 80.f : 0.f;
+				Player.mName = bShowStatusSummary
+					? FText::FromString(TEXT("상태 UI 검증 용병"))
+					: (bShowStatuslessSummary
+						? FText::FromString(TEXT("Ranger")) : FText::GetEmpty());
+				Player.mHP = bShowStatusSummary ? 73.f
+					: (bShowStatuslessSummary ? 80.f : 0.f);
+				Player.mMaxHP = bShowStatusSummary ? 100.f
+					: (bShowStatuslessSummary ? 80.f : 0.f);
 				Player.mActionPoints = bShowStatuslessSummary ? 0 : 12;
 				Player.mMaxActionPoints = bShowStatuslessSummary ? 12 : 15;
-				Player.mSpeedPoint = bShowStatuslessSummary ? 8.f : 0.f;
-				Player.mMovementPoint = bShowStatuslessSummary ? 0.f : 12.f;
-				Player.mMaxMovementPoint = bShowStatuslessSummary ? 12.f : 15.f;
-				if (bShowStatuslessSummary)
+				Player.mSpeedPoint = bShowSummaryFixture ? 8.f : 0.f;
+				Player.mMovementPoint = bShowSummaryFixture ? 12.f : 12.f;
+				Player.mMaxMovementPoint = bShowSummaryFixture ? 15.f : 15.f;
+				if (bShowSummaryFixture)
 				{
 					Player.mPortrait = LoadObject<UTexture2D>(nullptr,
 						TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/"
 							"Mercenaries/T_MB_HireIcon_Ranger.T_MB_HireIcon_Ranger"));
+				}
+				if (bShowStatusSummary)
+				{
+					const TPair<const TCHAR*, int32> StatusFixtures[] = {
+						{ TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Stun"), 2 },
+						{ TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Root"), 1 },
+						{ TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.Weakness"), 3 },
+					};
+					for (const TPair<const TCHAR*, int32>& Fixture : StatusFixtures)
+					{
+						FStatusEffectUI& Status = Player.mStatusEffects.AddDefaulted_GetRef();
+						Status.mTag = FGameplayTag::RequestGameplayTag(Fixture.Key);
+						Status.mStackCount = Fixture.Value;
+					}
 				}
 				PreviewModel->SetUnitUIs({ Player });
 
@@ -958,6 +979,14 @@ bool FCombatLayoutCaptureTest::RunTest(const FString& Parameters)
 			CaptureWidth, CaptureHeight, false, TEXT("_NoStatus")))
 		{
 			AddError(FString::Printf(TEXT("%s 상태 없는 요약판: %s"),
+				ClassPath, *Error));
+		}
+		Error.Reset();
+		if (!CaptureLayout(*World, ClassPath, Error,
+			false, false, false, false, false,
+			CaptureWidth, CaptureHeight, false, TEXT("_Statuses")))
+		{
+			AddError(FString::Printf(TEXT("%s 아이콘 상태 요약판: %s"),
 				ClassPath, *Error));
 		}
 		Error.Reset();

@@ -2525,8 +2525,10 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_0")));
 	UButton* EnemyStatusButton1 = Cast<UButton>(
 		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_1")));
-	UTextBlock* EnemyStatusName0 = Cast<UTextBlock>(
-		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusName_0")));
+	UImage* EnemyStatusIcon0 = Cast<UImage>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusIcon_0")));
+	UTextBlock* EnemyStatusCount0 = Cast<UTextBlock>(
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusCount_0")));
 	UWidget* AllyPanel = HUD->WidgetTree->FindWidget(TEXT("AllyPanel"));
 	UTextBlock* AllyName = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("AllyName")));
@@ -2569,7 +2571,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("몬스터 상태 스크롤"), EnemyStatusScroll)
 		|| !TestNotNull(TEXT("몬스터 첫 상태 상세 버튼"), EnemyStatusButton0)
 		|| !TestNotNull(TEXT("몬스터 빈 상태 상세 버튼"), EnemyStatusButton1)
-		|| !TestNotNull(TEXT("몬스터 첫 상태 이름"), EnemyStatusName0)
+		|| !TestNotNull(TEXT("몬스터 첫 상태 아이콘"), EnemyStatusIcon0)
+		|| !TestNotNull(TEXT("몬스터 첫 상태 턴 수"), EnemyStatusCount0)
 		|| !TestNotNull(TEXT("용병 요약판"), AllyPanel)
 		|| !TestNotNull(TEXT("용병 요약판 이름"), AllyName)
 		|| !TestNotNull(TEXT("용병 내부 인벤토리 페이지"), InventoryPage)
@@ -2725,8 +2728,12 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("상태 버튼 뗌 배선"), EnemyStatusButton0->OnReleased.IsBound());
 	TestEqual(TEXT("상태 1개면 스크롤바 숨김"),
 		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("전용 행에 상태 이름도 표시"),
-		EnemyStatusName0->GetText().ToString(), FString(TEXT("취약")));
+	TestNull(TEXT("상태 이름 TextBlock은 만들지 않음"),
+		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusName_0")));
+	TestEqual(TEXT("잔여 턴/중첩 숫자는 유지"),
+		EnemyStatusCount0->GetText().ToString(), FString(TEXT("2")));
+	TestEqual(TEXT("잔여 턴/중첩 숫자는 표시"),
+		EnemyStatusCount0->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	// 실제 상태가 없으면 대체 문구나 빈 소켓을 남기지 않는다. 상태가
 	// 다시 생겼을 때는 같은 ScrollBox가 정상적으로 복구되어야 한다.
@@ -2736,8 +2743,8 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		EnemyStatusScroll->GetVisibility(), ESlateVisibility::Collapsed);
 	TestEqual(TEXT("상태가 없으면 첫 상태 행도 숨김"),
 		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Collapsed);
-	TestTrue(TEXT("상태가 없으면 대체 문구도 비움"),
-		EnemyStatusName0->GetText().IsEmpty());
+	TestEqual(TEXT("상태가 없으면 아이콘도 숨김"),
+		EnemyStatusIcon0->GetVisibility(), ESlateVisibility::Collapsed);
 	MonsterUnit.mStatusEffects.Add(MonsterStatus);
 	Model->SetUnitUIs({ MonsterUnit });
 	TestEqual(TEXT("상태가 생기면 상태 스크롤 복구"),
@@ -2796,8 +2803,11 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("다섯째 상태 행도 표시"),
 			EnemyStatusButton4->GetVisibility(), ESlateVisibility::Visible);
 	}
-	TestEqual(TEXT("행동 불가 상태를 첫 화면에 우선 표시"),
-		EnemyStatusName0->GetText().ToString(), FString(TEXT("기절")));
+	UTexture2D* FirstStatusTexture = Cast<UTexture2D>(
+		EnemyStatusIcon0->GetBrush().GetResourceObject());
+	TestTrue(TEXT("행동 불가 상태를 첫 화면에 우선 표시"),
+		FirstStatusTexture != nullptr
+		&& FirstStatusTexture->GetName() == TEXT("T_Status_Stun"));
 	EnemyStatusButton0->OnPressed.Broadcast();
 	EnemyStatusScroll->OnUserScrolled.Broadcast(8.f);
 	TestFalse(TEXT("상태 스크롤을 시작하면 롱프레스 취소"),

@@ -1506,7 +1506,6 @@ private:
 	TArray<TObjectPtr<UWidget>> mEnemyStatusRows;
 	TArray<TObjectPtr<UWidget>> mEnemyStatusFrames;
 	TArray<TObjectPtr<UImage>> mEnemyStatusIcons;
-	TArray<TObjectPtr<UTextBlock>> mEnemyStatusNames;
 	TArray<TObjectPtr<UTextBlock>> mEnemyStatusCounts;
 
 	TObjectPtr<UWidget> mAllyPanel;
@@ -1521,7 +1520,6 @@ private:
 	TArray<TObjectPtr<UWidget>> mAllyStatusRows;
 	TArray<TObjectPtr<UWidget>> mAllyStatusFrames;
 	TArray<TObjectPtr<UImage>> mAllyStatusIcons;
-	TArray<TObjectPtr<UTextBlock>> mAllyStatusNames;
 	TArray<TObjectPtr<UTextBlock>> mAllyStatusCounts;
 
 	TObjectPtr<UButton> mEndTurnButton;
