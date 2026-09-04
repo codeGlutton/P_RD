@@ -27,6 +27,7 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatUIDebugFixture.h"
 #include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatStatusPresentation.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
 #include "UI/Combat/SimulationPreviewUIModel.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
@@ -45,6 +46,7 @@
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
+#include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
 
 #include "TAS/Passive/TacticalPassive.h"
@@ -277,39 +279,12 @@ namespace
 		return Cast<AssetType>(AssetPath.TryLoad());
 	}
 
-	void ConvertFloatingLogUITypes(const FSRPGTileEffectEventLog& TileLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
-	{
-		IconType = EFloatingLogIconType::Move;
-		ColorType = EFloatingLogColorType::Move;
-		if (TileLog.mOccupancyState != ESRPGTileOccupancyState::Move)
-		{
-			// 스폰이나 죽음
-			ColorType = EFloatingLogColorType::Warning;
-		}
-	}
-
 	void ConvertFloatingLogUITypes(const FSRPGTagEffectEventLog& TagLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
 	{
-		if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor))
-		{
-			IconType = EFloatingLogIconType::Vigor;
-			ColorType = EFloatingLogColorType::Buff;
-		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification))
-		{
-			IconType = EFloatingLogIconType::Fortification;
-			ColorType = EFloatingLogColorType::Buff;
-		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability))
-		{
-			IconType = EFloatingLogIconType::Vulnerability;
-			ColorType = EFloatingLogColorType::Debuff;
-		}
-		else if (TagLog.mEffectTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness))
-		{
-			IconType = EFloatingLogIconType::Weakness;
-			ColorType = EFloatingLogColorType::Debuff;
-		}
+		const CombatStatusUI::FPresentation Presentation =
+			CombatStatusUI::Resolve(TagLog.mEffectTag);
+		IconType = Presentation.mFloatingIcon;
+		ColorType = Presentation.mColor;
 	}
 
 	void ConvertFloatingLogUITypes(const FSRPGAttributeEffectEventLog& AttrLog, OUT EFloatingLogIconType& IconType, OUT EFloatingLogColorType& ColorType)
@@ -322,12 +297,14 @@ namespace
 		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetActionPointAttribute())
 		{
 			IconType = EFloatingLogIconType::GetMove;
-			ColorType = EFloatingLogColorType::PointUp;
+			ColorType = AttrLog.mMagnitude >= 0.f
+				? EFloatingLogColorType::PointUp : EFloatingLogColorType::Damage;
 		}
 		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
 		{
 			IconType = EFloatingLogIconType::GetDefense;
-			ColorType = EFloatingLogColorType::PointUp;
+			ColorType = AttrLog.mMagnitude >= 0.f
+				? EFloatingLogColorType::PointUp : EFloatingLogColorType::Damage;
 		}
 	}
 }
@@ -371,6 +348,25 @@ void ACombatGameMode::InitializeCombat()
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	// 실제 효과 계산은 애니메이션의 Apply 이벤트에서 모션 단위로 끝난다.
+	// 액션 종료까지 기다리지 않고 그 순간의 로그만 받아 피해 숫자를 표시한다.
+	if (USimulationSubsystem* SimulationSubsystem =
+		GetWorld()->GetSubsystem<USimulationSubsystem>())
+	{
+		if (UGameEventLogger* GameEventLogger =
+			Cast<UGameEventLogger>(&SimulationSubsystem->GetEventLogger()))
+		{
+			GameEventLogger->OnMotionLogReady.RemoveAll(this);
+			GameEventLogger->OnMotionLogReady.AddWeakLambda(this,
+				[this](const FSRPGTurnEventLog& MotionTurnLog)
+				{
+					TArray<FSRPGTurnEventLog> MotionLogs;
+					MotionLogs.Add(MotionTurnLog);
+					PushCombatEventUIData(MotionLogs);
+				});
+		}
+	}
 
 	/*
 	 * UI와 전투 로직을 여기서 연결한다.
@@ -450,7 +446,8 @@ void ACombatGameMode::InitializeCombat()
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		if (USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>())
 		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+			// 모션 결과는 타격 순간 이미 표시했다. 보관 로그만 비운다.
+			SimulationSubsystem->ConsumeGameEventLogs();
 		}
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
@@ -470,14 +467,12 @@ void ACombatGameMode::InitializeCombat()
 		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
-		// 맞은 자리에 피해 숫자를 띄운다. 턴이 끝날 때 한꺼번에 내리면
-		// 때린 연출은 이미 끝난 뒤라 어느 타격의 숫자인지 못 읽는다
-		// (0824 검수: "데미지 스킨 띄우기"). 행동 하나가 끝날 때마다
-		// 그동안 쌓인 로그를 비워 그 행동의 결과만 그 자리에 뜨게 한다.
+		// 모션 결과는 애니메이션의 실제 타격 이벤트에서 이미 표시했다.
+		// 여기서는 누적 보관 로그만 비워 같은 숫자가 다시 뜨지 않게 한다.
 		if (USimulationSubsystem* SimulationSubsystem
 			= GetWorld()->GetSubsystem<USimulationSubsystem>())
 		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
+			SimulationSubsystem->ConsumeGameEventLogs();
 		}
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
@@ -1275,6 +1270,7 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 	// 상태 이상 태그 변경 시에도 UI 갱신 바인딩
 	AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_StatusEffect, ETacticalTagEventType::AnyCountChange).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
 		PushUnitUIData();
+		PushSkillUIData();
 		});
 
 	USkillComponentModel* SkillComponentModel = Unit->GetSkillComponentModel();
@@ -1531,6 +1527,11 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedActionPointAttribute());
+		if (const UUnitMovementComponentModel* MovementComponent =
+			Cast<UUnitMovementComponentModel>(UnitModel->GetBoardMovementComponentModel()))
+		{
+			UnitUIData.mCanMove = MovementComponent->IsMoveable();
+		}
 		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
 		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);
 		UnitUIData.mMaxActionPoints = FMath::RoundToInt(UnitUIData.mMaxMovementPoint);
@@ -1558,6 +1559,7 @@ void ACombatGameMode::PushUnitUIData() const
 			? PlayerFixtureIndex++ : EnemyFixtureIndex++;
 		CombatUIDebugFixture::AppendStatuses(UnitUIData.mIsPlayer, FixtureSideIndex,
 			OUT UnitUIData.mStatusEffects);
+		CombatStatusUI::SortForDisplay(OUT UnitUIData.mStatusEffects);
 
 		// 적 요약판의 "다음 스킬" 소켓: 장착 스킬 중 첫 유효 슬롯 아이콘을 대표로 건다.
 		if (UnitUIData.mIsPlayer == false)
@@ -1839,8 +1841,7 @@ void ACombatGameMode::PushSkillUIData() const
 			// 유닛의 스킬도 멀쩡히 켜져 있었다. 화면은 이 판정을 안 한다 --
 			// 사거리를 두 곳에서 세면 어긋나는 날이 온다.
 			SkillUIData.mIsUsable = bIsOwnTurn
-				&& SkillComponentModel->IsCooldown(i) == false
-				&& SkillComponentModel->HasRequiredActionPoint(i) == true
+				&& SkillComponentModel->CanActiveSkill(i)
 				&& IsSkillUsableOnTarget(PlayerUnitModel, *StaticSkillData);
 			// 모양 변환은 화면 공용 변환표(SkillDetailUIBuilder) 하나만 쓴다.
 			SkillUIData.mTargeting.mSelectShape = SkillDetailUIBuilder::ToSelectShape(StaticSkillData->mAimPattern);
@@ -2296,7 +2297,11 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 		auto MakeLogRequest = [bBindMotionIndices, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
-			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+			// HP는 피해/치명타/회복 이미지 자체로 의미가 구분되므로 부호 없이
+			// 숫자만 그린다. AP·방어도 등 텍스트 로그는 기존 증감 부호를 유지한다.
+			Request.mText = IconType == EFloatingLogIconType::HP
+				? FText::AsNumber(FMath::Abs(Amount))
+				: FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
@@ -2305,6 +2310,15 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 			Request.mMotionIndex = bBindMotionIndices == true ? MotionIndex : INDEX_NONE;
 			// mIsPreview는 여기서 정하지 않는다 — 표시 경로(예측/실전)는 호출자가 정한다.
 			return Request;
+			};
+		auto MakeTextLogRequest = [&MakeLogRequest](const FText& Text,
+			EFloatingLogIconType IconType, EFloatingLogColorType ColorType,
+			const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest
+			{
+				FCombatFloatingLogRequest Request = MakeLogRequest(
+					0, IconType, ColorType, ViewLocation, Sequence);
+				Request.mText = Text;
+				return Request;
 			};
 
 		for (const FSRPGAttributeEffectEventLog& AttrLog : EventLog.mAttributeEffectEventLogs)
@@ -2318,13 +2332,15 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 				continue;
 			}
 
-			Requests.Add(MakeLogRequest(
+			FCombatFloatingLogRequest Request = MakeLogRequest(
 				FMath::Floor(AttrLog.mMagnitude),
 				IconType,
 				ColorType,
 				ViewActorLocation,
 				Sequence++
-			));
+			);
+			Request.mIsCritical = AttrLog.mIsCritical;
+			Requests.Add(MoveTemp(Request));
 		}
 		for (const FSRPGTagEffectEventLog& TagLog : EventLog.mTagEffectEventLogs)
 		{
@@ -2337,34 +2353,63 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 				continue;
 			}
 
-			Requests.Add(MakeLogRequest(
-				TagLog.mCount,
-				IconType,
-				ColorType,
-				ViewActorLocation,
-				Sequence++
-			));
+			Requests.Add(MakeTextLogRequest(
+				CombatStatusUI::FormatDelta(TagLog.mEffectTag, TagLog.mCount),
+				IconType, ColorType, ViewActorLocation, Sequence++));
 		}
+
+		// 밀치기처럼 한 모션에 Move 로그가 칸마다 쌓이는 경우, 숫자 로그를
+		// 여러 장 도배하지 않고 한 줄로 합친다. 등장/퇴장은 별도 사건이다.
+		int32 MoveTileCount = 0;
+		bool bEnteredBoard = false;
+		bool bExitedBoard = false;
 		for (const FSRPGTileEffectEventLog& TileLog : EventLog.mTileEffectEventLogs)
 		{
-			EFloatingLogIconType IconType = EFloatingLogIconType::None;
-			EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
-			ConvertFloatingLogUITypes(TileLog, OUT IconType, OUT ColorType);
-
-			if (IconType == EFloatingLogIconType::None && ColorType == EFloatingLogColorType::Neutral)
+			switch (TileLog.mOccupancyState)
 			{
-				continue;
+			case ESRPGTileOccupancyState::Move:
+				if (TileLog.mPreTileIndex != FTileIndex::Invalid
+					&& TileLog.mNextTileIndex != FTileIndex::Invalid)
+				{
+					MoveTileCount += FMath::Max(1, FMath::Max(
+						FMath::Abs(TileLog.mNextTileIndex.mX - TileLog.mPreTileIndex.mX),
+						FMath::Abs(TileLog.mNextTileIndex.mY - TileLog.mPreTileIndex.mY)));
+				}
+				else
+				{
+					++MoveTileCount;
+				}
+				break;
+			case ESRPGTileOccupancyState::Enter:
+				bEnteredBoard = true;
+				break;
+			case ESRPGTileOccupancyState::Exit:
+				bExitedBoard = true;
+				break;
+			default:
+				break;
 			}
-
-			// TODO : 
-			// 어디서 어디로 이동했다는 정보는 어떻게 알려야하나
-			/*Requests.Add(MakeLogRequest(
-				TagLog.mCount,
-				IconType,
-				ColorType,
-				ViewActorLocation,
-				Sequence++
-			));*/
+		}
+		if (MoveTileCount > 0)
+		{
+			Requests.Add(MakeTextLogRequest(FText::Format(
+				NSLOCTEXT("CombatFloatingLog", "MovedTiles", "이동 {0}칸"),
+				FText::AsNumber(MoveTileCount)), EFloatingLogIconType::Move,
+				EFloatingLogColorType::Move, ViewActorLocation, Sequence++));
+		}
+		if (bEnteredBoard)
+		{
+			Requests.Add(MakeTextLogRequest(
+				NSLOCTEXT("CombatFloatingLog", "EnteredBoard", "등장"),
+				EFloatingLogIconType::Move, EFloatingLogColorType::PointUp,
+				ViewActorLocation, Sequence++));
+		}
+		if (bExitedBoard)
+		{
+			Requests.Add(MakeTextLogRequest(
+				NSLOCTEXT("CombatFloatingLog", "ExitedBoard", "전투불능"),
+				EFloatingLogIconType::HP, EFloatingLogColorType::Warning,
+				ViewActorLocation, Sequence++));
 		}
 		};
 

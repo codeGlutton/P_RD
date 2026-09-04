@@ -46,6 +46,10 @@ public:
 	// @brief 타일 위치
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
 	FTileTransform mTileTransform;
+
+	/** @brief 이번 공격 계수 계산에서 치명타 배율이 적용됐는지 여부. */
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	bool mIsCriticalAttack = false;
 };
 
 UINTERFACE(MinimalAPI)

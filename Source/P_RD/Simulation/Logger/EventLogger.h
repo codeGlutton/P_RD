@@ -16,6 +16,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogEventLogger, Log, All)
 
 struct FRoomContext;
 
+/** @brief 실제 전투에서 한 모션의 효과 계산이 끝난 즉시 UI에 전달하는 이벤트. */
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnGameMotionLogReady, const FSRPGTurnEventLog& /*TurnLog*/)
+
 UCLASS(abstract)
 class P_RD_API UEventLogger : public UObject
 {
@@ -69,6 +72,9 @@ public:
 
 public:
 	TArray<FSRPGTurnEventLog> PopSRPGLogs() override;
+
+	/** @brief 애니메이션 이벤트가 실행한 한 모션의 결과를 그 타격 프레임에 알린다. */
+	FOnGameMotionLogReady OnMotionLogReady;
 
 protected:
 	TArray<FSRPGTurnEventLog> mTurnEventLogs;

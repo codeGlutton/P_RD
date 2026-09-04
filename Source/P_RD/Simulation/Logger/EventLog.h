@@ -37,16 +37,17 @@ public:
 public:
 	bool operator==(const FSRPGAttributeEffectEventLog& Other) const
 	{
-		return mEffectAttribute == Other.mEffectAttribute;
+		return mEffectAttribute == Other.mEffectAttribute
+			&& mIsCritical == Other.mIsCritical;
 	}
 	bool operator!=(const FSRPGAttributeEffectEventLog& Other) const
 	{
-		return mEffectAttribute != Other.mEffectAttribute;
+		return !(*this == Other);
 	}
 
 	friend uint32 GetTypeHash(const FSRPGAttributeEffectEventLog& Log)
 	{
-		return GetTypeHash(Log.mEffectAttribute);
+		return HashCombine(GetTypeHash(Log.mEffectAttribute), GetTypeHash(Log.mIsCritical));
 	}
 
 public:
@@ -57,6 +58,10 @@ public:
 	// @brief 보드 액터의 수치 변화량
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
 	float													mMagnitude = 0.f;
+
+	// @brief 공격 피해가 치명타 판정에서 발생했는지 여부. 피해 숫자 스킨 선택에 사용한다.
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsCritical"))
+	bool													mIsCritical = false;
 };
 
 /**

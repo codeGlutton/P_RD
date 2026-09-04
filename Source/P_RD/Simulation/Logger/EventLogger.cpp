@@ -88,6 +88,25 @@ void UGameEventLogger::BeginMotionLog()
 
 void UGameEventLogger::EndMotionLog()
 {
+	// 스킬 효과는 애니메이션의 Apply 이벤트에서 계산된다. 이 시점의 모션만
+	// 작은 로그 묶음으로 복제해 UI에 즉시 전달하면, 액션 전체 연출이 끝난 뒤가
+	// 아니라 실제 타격 프레임에 피해 숫자를 띄울 수 있다.
+	if (mCurrentTurnEventLog != nullptr
+		&& mCurrentActionEventLog != nullptr
+		&& mCurrentMotionEventLog != nullptr)
+	{
+		FSRPGActionEventLog CompletedActionLog;
+		CompletedActionLog.mSourceTileIndex = mCurrentActionEventLog->mSourceTileIndex;
+		CompletedActionLog.mMotionEventLogs.Add(*mCurrentMotionEventLog);
+
+		FSRPGTurnEventLog CompletedTurnLog;
+		CompletedTurnLog.mSourceUnitID = mCurrentTurnEventLog->mSourceUnitID;
+		CompletedTurnLog.mUnitActorModelClass = mCurrentTurnEventLog->mUnitActorModelClass;
+		CompletedTurnLog.mActionEventLogs.Add(MoveTemp(CompletedActionLog));
+
+		OnMotionLogReady.Broadcast(CompletedTurnLog);
+	}
+
 	mCurrentMotionEventLog = nullptr;
 
 	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
