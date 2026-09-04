@@ -1014,15 +1014,30 @@ namespace CombatHUDWidgetBuilder
 					Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
-			// 축소 전 요약판의 패딩이 남으면 HP 100%도 프레임 안쪽의 폭과
-			// 높이를 채우지 못한다. 금속 테두리만 피하는 여백으로 줄인다.
+			// HP→금속 프레임→글자 순으로 그리면 HP는 넓게 차오르되 금속
+			// 테두리를 덮지 않는다. 프레임을 시각적 마스크로 사용한다.
 			if (UProgressBar* HPBar = Cast<UProgressBar>(
 				Blueprint->WidgetTree->FindWidget(
 					FName(FString(Prefix) + TEXT("HPBar")))))
 			{
 				if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 				{
-					HPSlot->SetPadding(FMargin(8.f, 5.f, 8.f, 5.f));
+					HPSlot->SetPadding(FMargin(2.f));
+					if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+					{
+						UWidget* Frame = Blueprint->WidgetTree->FindWidget(
+							FName(FString(Prefix) + TEXT("HPBack")));
+						const int32 FrameIndex = Mount->GetChildIndex(Frame);
+						const int32 BarIndex = Mount->GetChildIndex(HPBar);
+						if (Frame != nullptr && FrameIndex != INDEX_NONE
+							&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+						{
+							UPanelSlot* FrameSlot = Frame->Slot;
+							Mount->RemoveChildAt(FrameIndex);
+							Mount->InsertChildAt(
+								Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+						}
+					}
 				}
 			}
 

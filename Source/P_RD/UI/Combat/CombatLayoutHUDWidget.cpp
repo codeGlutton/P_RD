@@ -598,16 +598,30 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 			SetShown(Find<UWidget>(WidgetTree,
 				FString::Printf(TEXT("%s%s"), Prefix, Suffix)), true);
 		}
-		// 구형 세로 요약판을 168px 폭으로 줄인 뒤에도 HPBar Overlay 슬롯의
-		// 좌우 25.43px·상하 10.88px 패딩이 그대로 남아 있었다. 그 결과
-		// HP가 100%여도 프레임 안쪽을 폭과 높이 모두 채우지 못했다.
-		// 금속 테두리만 피하는 여백으로 줄인다.
+		// HP는 뒷판보다 위에서 차오르고, 금속 프레임은 다시 HP 위를 덮어야
+		// 한다. 기존 순서(프레임→HP→글자)는 HP를 키우면 금속까지 덮었으므로
+		// HP→프레임→글자 순서로 바꿔 프레임 자체를 마스크처럼 사용한다.
 		if (UProgressBar* HPBar = Find<UProgressBar>(WidgetTree,
 			FString::Printf(TEXT("%sHPBar"), Prefix)))
 		{
 			if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
 			{
-				HPSlot->SetPadding(FMargin(8.f, 5.f, 8.f, 5.f));
+				HPSlot->SetPadding(FMargin(2.f));
+				if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+				{
+					UWidget* Frame = Find<UWidget>(WidgetTree,
+						FString::Printf(TEXT("%sHPBack"), Prefix));
+					const int32 FrameIndex = Mount->GetChildIndex(Frame);
+					const int32 BarIndex = Mount->GetChildIndex(HPBar);
+					if (Frame != nullptr && FrameIndex != INDEX_NONE
+						&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+					{
+						UPanelSlot* FrameSlot = Frame->Slot;
+						Mount->RemoveChildAt(FrameIndex);
+						Mount->InsertChildAt(
+							Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+					}
+				}
 			}
 		}
 		for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })

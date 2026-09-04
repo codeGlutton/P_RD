@@ -17,6 +17,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/Button.h"
 #include "Components/ProgressBar.h"
@@ -327,13 +328,17 @@ namespace CombatLayoutCapture
 						CombatHUD->GetWidgetFromName(TEXT("AllyHPBar")));
 					UOverlaySlot* HPSlot = HPBar != nullptr
 						? Cast<UOverlaySlot>(HPBar->Slot) : nullptr;
-					if (HPSlot == nullptr
-						|| HPSlot->GetPadding().Left > 8.01f
-						|| HPSlot->GetPadding().Right > 8.01f
-						|| HPSlot->GetPadding().Top > 5.01f
-						|| HPSlot->GetPadding().Bottom > 5.01f)
+					UOverlay* HPMount = HPBar != nullptr
+						? Cast<UOverlay>(HPBar->GetParent()) : nullptr;
+					UWidget* HPFrame = CombatHUD->GetWidgetFromName(TEXT("AllyHPBack"));
+					UWidget* HPText = CombatHUD->GetWidgetFromName(TEXT("AllyHPText_Center"));
+					if (HPSlot == nullptr || HPMount == nullptr
+						|| HPFrame == nullptr || HPText == nullptr
+						|| HPSlot->GetPadding() != FMargin(2.f)
+						|| HPMount->GetChildIndex(HPBar) >= HPMount->GetChildIndex(HPFrame)
+						|| HPMount->GetChildIndex(HPFrame) >= HPMount->GetChildIndex(HPText))
 					{
-						OutError = TEXT("HP 바 패딩 때문에 100%가 프레임 안쪽을 채우지 못함");
+						OutError = TEXT("HP 바가 프레임 아래에서 차오르는 레이어 계약이 깨짐");
 						return false;
 					}
 				}
