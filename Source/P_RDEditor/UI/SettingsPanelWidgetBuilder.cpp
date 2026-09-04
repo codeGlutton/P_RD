@@ -33,6 +33,7 @@ namespace SettingsPanelWidgetBuilder
 {
 	TUniquePtr<FAutoConsoleCommand> BuildCommand;
 	TUniquePtr<FAutoConsoleCommand> TextDefaultsCommand;
+	TUniquePtr<FAutoConsoleCommand> CenterAuthoredTextCommand;
 
 	constexpr const TCHAR* SettingsLedgerAssetRoot =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger");
@@ -1046,6 +1047,159 @@ namespace SettingsPanelWidgetBuilder
 		Text->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	}
 
+	/**
+	 * Center a label inside its already-authored box without changing that box.
+	 *
+	 * A TextBlock placed directly on a Canvas has no vertical content alignment. Keep
+	 * its Canvas rectangle on a generated Overlay and center the original TextBlock in
+	 * that rectangle. Labels that already have a centering parent only need their
+	 * child-slot alignment normalized.
+	 */
+	bool CenterTextInsideAuthoredBox(UWidgetBlueprint* Blueprint,
+		const TCHAR* TextName)
+	{
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			return false;
+		}
+
+		UTextBlock* Text = Cast<UTextBlock>(
+			Blueprint->WidgetTree->FindWidget(FName(TextName)));
+		if (Text == nullptr)
+		{
+			UE_LOG(LogTemp, Warning,
+				TEXT("RD_SETTINGS_TEXT_CENTER missing text %s"), TextName);
+			return false;
+		}
+
+		const FName CenterBoxName(*(FString(TextName) + TEXT("_CenterBox")));
+		UOverlay* CenterBox = Cast<UOverlay>(Text->GetParent());
+		if (CenterBox == nullptr || CenterBox->GetFName() != CenterBoxName)
+		{
+			UCanvasPanel* AuthoredCanvas = Cast<UCanvasPanel>(Text->GetParent());
+			UCanvasPanelSlot* AuthoredSlot = Cast<UCanvasPanelSlot>(Text->Slot);
+			if (AuthoredCanvas != nullptr && AuthoredSlot != nullptr)
+			{
+				FAnchorData AuthoredLayout = AuthoredSlot->GetLayout();
+				bool bAuthoredAutoSize = AuthoredSlot->GetAutoSize();
+				const int32 AuthoredZOrder = AuthoredSlot->GetZOrder();
+
+				// Repair the one intermediate revision that converted the known
+				// 580x76 confirmation-header rectangle to an auto-size center point.
+				// Its point is the original rectangle's center, so no authored
+				// position is guessed or shifted here.
+				if (bAuthoredAutoSize
+					&& FCString::Strcmp(TextName, TEXT("RunConfirmHeaderText")) == 0)
+				{
+					AuthoredLayout.Anchors = FAnchors(0.f, 0.f, 0.f, 0.f);
+					AuthoredLayout.Offsets = FMargin(670.f, 210.f, 580.f, 76.f);
+					AuthoredLayout.Alignment = FVector2D::ZeroVector;
+					bAuthoredAutoSize = false;
+				}
+
+				// A previously generated box can remain empty when the full builder
+				// first moves the text back to its design Canvas. Reuse it so repeated
+				// builds never create duplicate widgets or GUIDs.
+				CenterBox = Cast<UOverlay>(
+					Blueprint->WidgetTree->FindWidget(CenterBoxName));
+				if (CenterBox == nullptr)
+				{
+					CenterBox = Blueprint->WidgetTree->ConstructWidget<UOverlay>(
+						UOverlay::StaticClass(), CenterBoxName);
+				}
+				if (!Blueprint->WidgetVariableNameToGuidMap.Contains(CenterBoxName))
+				{
+					Blueprint->OnVariableAdded(CenterBoxName);
+				}
+
+				if (UPanelWidget* PreviousParent = CenterBox->GetParent())
+				{
+					PreviousParent->RemoveChild(CenterBox);
+				}
+				AuthoredCanvas->RemoveChild(Text);
+				UCanvasPanelSlot* CenterCanvasSlot =
+					AuthoredCanvas->AddChildToCanvas(CenterBox);
+				CenterCanvasSlot->SetLayout(AuthoredLayout);
+				CenterCanvasSlot->SetAutoSize(bAuthoredAutoSize);
+				CenterCanvasSlot->SetZOrder(AuthoredZOrder);
+				CenterBox->AddChildToOverlay(Text);
+			}
+		}
+
+		if (CenterBox != nullptr && CenterBox->GetFName() == CenterBoxName)
+		{
+			if (!Blueprint->WidgetVariableNameToGuidMap.Contains(CenterBoxName))
+			{
+				Blueprint->OnVariableAdded(CenterBoxName);
+			}
+			if (FCString::Strcmp(TextName, TEXT("RunConfirmHeaderText")) == 0)
+			{
+				if (UCanvasPanelSlot* HeaderBoxSlot =
+					Cast<UCanvasPanelSlot>(CenterBox->Slot))
+				{
+					HeaderBoxSlot->SetAnchors(FAnchors(0.f, 0.f, 0.f, 0.f));
+					HeaderBoxSlot->SetAlignment(FVector2D::ZeroVector);
+					HeaderBoxSlot->SetPosition(FVector2D(670.f, 210.f));
+					HeaderBoxSlot->SetSize(FVector2D(580.f, 76.f));
+					HeaderBoxSlot->SetAutoSize(false);
+				}
+			}
+			CenterBox->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			CenterBox->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			if (UOverlaySlot* OverlayTextSlot = Cast<UOverlaySlot>(Text->Slot))
+			{
+				OverlayTextSlot->SetPadding(FMargin(0.f));
+				OverlayTextSlot->SetHorizontalAlignment(HAlign_Fill);
+				OverlayTextSlot->SetVerticalAlignment(VAlign_Center);
+			}
+			// The wrapper owns the authored clipping rectangle. Inheriting here
+			// prevents an auto-size child clip from collapsing to zero.
+			Text->SetClipping(EWidgetClipping::Inherit);
+		}
+
+		Text->SetJustification(ETextJustify::Center);
+		Text->SetMargin(FMargin(0.f));
+		Text->SetRenderTransform(FWidgetTransform());
+		Text->SetRenderTransformPivot(FVector2D(.5f, .5f));
+		Text->SetAutoWrapText(false);
+		Text->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+
+		if (UOverlaySlot* OverlayTextSlot = Cast<UOverlaySlot>(Text->Slot))
+		{
+			OverlayTextSlot->SetPadding(FMargin(0.f));
+			OverlayTextSlot->SetHorizontalAlignment(
+				CenterBox != nullptr ? HAlign_Fill : HAlign_Center);
+			OverlayTextSlot->SetVerticalAlignment(VAlign_Center);
+		}
+		else if (UScaleBoxSlot* ScaleTextSlot = Cast<UScaleBoxSlot>(Text->Slot))
+		{
+			ScaleTextSlot->SetHorizontalAlignment(HAlign_Center);
+			ScaleTextSlot->SetVerticalAlignment(VAlign_Center);
+		}
+		else if (UButtonSlot* ButtonTextSlot = Cast<UButtonSlot>(Text->Slot))
+		{
+			ButtonTextSlot->SetPadding(FMargin(0.f));
+			ButtonTextSlot->SetHorizontalAlignment(HAlign_Center);
+			ButtonTextSlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		return true;
+	}
+
+	int32 CenterAuthoredSettingsTextBoxes(UWidgetBlueprint* Blueprint)
+	{
+		int32 CenteredCount = 0;
+		for (const TCHAR* TextName : {
+			TEXT("BackButtonText"), TEXT("ResetButtonText"),
+			TEXT("SaveAndExitButtonText"), TEXT("AbandonRunButtonText"),
+			TEXT("CancelAbandonButtonText"), TEXT("ConfirmAbandonButtonText"),
+			TEXT("RunConfirmHeaderText") })
+		{
+			CenteredCount += CenterTextInsideAuthoredBox(Blueprint, TextName) ? 1 : 0;
+		}
+		return CenteredCount;
+	}
+
 	void LayoutSettingsContent(UWidgetBlueprint* Blueprint)
 	{
 		const FSettingsLedgerTextures Art;
@@ -1422,8 +1576,24 @@ namespace SettingsPanelWidgetBuilder
 				const FVector2D Offset = (Fit.Bounds - Fitted) * .5f;
 				SafePadding = FMargin(Offset.X, Offset.Y, Offset.X, Offset.Y);
 			}
+			// These are the authored label areas approved in the WBP capture. The
+			// lower inset moves the available text area up without moving or scaling
+			// the visible button plate.
+			if (FCString::Strcmp(Fit.Text, TEXT("BackButtonText")) == 0
+				|| FCString::Strcmp(Fit.Text, TEXT("ResetButtonText")) == 0
+				|| FCString::Strcmp(Fit.Text, TEXT("SaveAndExitButtonText")) == 0
+				|| FCString::Strcmp(Fit.Text, TEXT("AbandonRunButtonText")) == 0)
+			{
+				SafePadding.Bottom += 30.f;
+			}
+			else if (FCString::Strcmp(Fit.Text, TEXT("CancelAbandonButtonText")) == 0
+				|| FCString::Strcmp(Fit.Text, TEXT("ConfirmAbandonButtonText")) == 0)
+			{
+				SafePadding.Bottom += 20.f;
+			}
 			EnsureButtonTextFit(Blueprint, Fit.Text, Fit.Container, SafePadding);
 		}
+		CenterAuthoredSettingsTextBoxes(Blueprint);
 	}
 
 	int32 ExactFontSize(const FString& Name)
@@ -1608,6 +1778,31 @@ namespace SettingsPanelWidgetBuilder
 			FSavePackageArgs());
 	}
 
+	/** 사용자가 잡아 둔 텍스트 박스의 중심점을 보존해 텍스트를 중앙화한다. */
+	void CenterAuthoredTextOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr,
+			TEXT("/Game/UI/WBP_SettingsPanel.WBP_SettingsPanel"));
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_SETTINGS_TEXT_CENTER missing WBP"));
+			return;
+		}
+
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		const int32 CenteredCount = CenterAuthoredSettingsTextBoxes(Blueprint);
+		if (!SaveCompiledBlueprint(Blueprint))
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_SETTINGS_TEXT_CENTER save failed"));
+			return;
+		}
+
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_SETTINGS_TEXT_CENTER success count=%d authored-box-centers-preserved=true"),
+			CenteredCount);
+	}
+
 	/** 설정판의 좌표/아트는 보존하고 C++ localization 기본값만 WBP에 동기화한다. */
 	void SyncTextDefaultsOnly()
 	{
@@ -1782,10 +1977,15 @@ void RegisterSettingsPanelWidgetBuilderCommands()
 		TEXT("RD.Editor.SyncSettingsTextDefaults"),
 		TEXT("Sync WBP_SettingsPanel text defaults to the runtime localization keys."),
 		FConsoleCommandDelegate::CreateStatic(&SyncTextDefaultsOnly));
+	CenterAuthoredTextCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.CenterSettingsTextInAuthoredBoxes"),
+		TEXT("Center settings labels without changing their authored box layouts."),
+		FConsoleCommandDelegate::CreateStatic(&CenterAuthoredTextOnly));
 }
 
 void UnregisterSettingsPanelWidgetBuilderCommands()
 {
 	SettingsPanelWidgetBuilder::BuildCommand.Reset();
 	SettingsPanelWidgetBuilder::TextDefaultsCommand.Reset();
+	SettingsPanelWidgetBuilder::CenterAuthoredTextCommand.Reset();
 }
