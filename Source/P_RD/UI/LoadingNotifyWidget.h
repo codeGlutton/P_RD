@@ -20,6 +20,7 @@
 
 class UTextBlock;
 class UWidget;
+class URunOptionsRailWidget;
 
 /**
  * @brief 최소 표시 시간, 로딩중/로딩완료 문구, 점멸 인디케이터를 관리한다.
@@ -44,6 +45,12 @@ public:
 	 */
 	ULoadingNotifyWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 자동화 테스트에서 닫힘 수명주기를 즉시 검증할 수 있게 표시 시간을 설정한다. */
+	void SetVisibleDurationsForTest(float MinimumVisibleSeconds,
+		float CompletedVisibleSeconds, float CloseAnimationSeconds);
+#endif
+
 protected:
 	/**
 	 * @brief 런타임에서 WBP 루트가 없을 때 최소 기본 화면을 준비한다.
@@ -64,6 +71,9 @@ protected:
 	 * @param InDeltaTime 이전 프레임 이후 경과 시간
 	 */
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+	/** @brief 위젯이 수명주기 도중 제거돼도 숨겼던 공용 옵션 레일을 복구한다. */
+	void NativeDestruct() override;
 
 	/**
 	 * @brief OpenUI() 요청을 로딩 중 상태 진입으로 해석한다.
@@ -120,6 +130,12 @@ private:
 	 */
 	void FinishCompletedState();
 
+	/** @brief 로딩 레이어가 열린 동안 같은 월드의 공용 옵션 레일을 숨긴다. */
+	void SuppressRunOptionsRails();
+
+	/** @brief 로딩 전에 저장한 각 공용 옵션 레일의 표시 상태를 복구한다. */
+	void RestoreRunOptionsRails();
+
 private:
 	/**
 	 * @brief 기본 WBP 또는 native fallback에서 점멸시킬 로딩 인디케이터
@@ -174,4 +190,8 @@ private:
 
 	/** @brief 현재 로딩 알림 표시 단계 */
 	ELoadingNotifyState mLoadingState = ELoadingNotifyState::None;
+
+	/** @brief 로딩 중 숨긴 공용 옵션 레일과 로딩 전 표시 상태 */
+	TMap<TWeakObjectPtr<URunOptionsRailWidget>, ESlateVisibility>
+		mSuppressedRunOptionsRails;
 };

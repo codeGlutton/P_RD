@@ -242,6 +242,9 @@ private:
 	UFUNCTION() void HandleSkillClicked_4();
 	UFUNCTION() void HandleSkillClicked_5();
 	UFUNCTION() void HandleSkillDetailCloseClicked();
+	UFUNCTION() void HandleReplaceAccepted();
+	UFUNCTION() void HandleReplaceCancelled();
+	void SetReplaceConfirmationShown(bool bShown);
 
 	/** @brief 화면에 걸린 후보들. 비어 있으면 시안 값이 그대로 남는다. */
 	UPROPERTY() TArray<FFrontendCharacterOption> mCrew;
@@ -259,6 +262,9 @@ private:
 	/** 상점 고용비용 표기가 폰트를 줄이므로, 복원할 원래 폰트를 첫 변경 전에 보관한다. */
 	TOptional<FSlateFontInfo> mDepartLabelBaseFont;
 	UPROPERTY() TObjectPtr<UButton> mBackButton = nullptr;
+	UPROPERTY() TObjectPtr<UWidget> mReplaceConfirmLayer = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mReplaceAcceptButton = nullptr;
+	UPROPERTY() TObjectPtr<UButton> mReplaceCancelButton = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailName = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailHP = nullptr;
 	UPROPERTY() TObjectPtr<UTextBlock> mDetailAP = nullptr;
@@ -292,6 +298,8 @@ private:
 
 	int32 mPartySize = 3;
 	int32 mShopTargetPartyViewIndex = 0;
+	int32 mPendingReplaceCandidateSlotIndex = INDEX_NONE;
+	int32 mPendingReplacePartyUnitIndex = INDEX_NONE;
 	int32 mShopGold = 0;
 	bool mIsShopMode = false;
 
