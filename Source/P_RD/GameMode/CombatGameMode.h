@@ -269,6 +269,10 @@ protected:
 	void PushPlayerMetaUIData() const;
 
 private:
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const;
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const;
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTileEffectEventLog& Log) const;
+
 	/**
 	 * @brief 턴 이벤트 로그를 플로팅 로그 요청 목록으로 변환한다(예측/실전 공용 빌더).
 	 *
@@ -297,9 +301,6 @@ public:
 	 * 실전 뷰모델의 표시 상태는 건드리지 않는다.
 	 */
 	void PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
-
-	/** @brief 끝난 실전 턴의 이벤트 로그를 실전 뷰모델(UCombatUIModel)로 내린다. */
-	void PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
 
 protected:
 	void PushCombatRewardUIData() const;

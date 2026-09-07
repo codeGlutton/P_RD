@@ -4,11 +4,9 @@
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
-#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 
 #include "Engine/AssetManager.h"
 #include "Engine/Texture2D.h"
-#include "TimerManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
@@ -62,6 +60,8 @@
 
 #include "Actor/BoardActor/BoardSelectionTargetView.h"
 #include "Actor/TileMap/TileMapModel.h"
+
+#include "Simulation/Factory/ObjectModelFactory.h"
 
 DEFINE_LOG_CATEGORY(LogCombatGameMode);
 
@@ -378,7 +378,25 @@ void ACombatGameMode::InitializeCombat()
 	 * - UI 버튼/터치 입력은 전투 명령으로 보낸다.
 	 */
 
-	 /* 전투 모델 대리자 연결 */
+	/* 전투 로그 연결 */
+
+	GetWorldEventLogger(this)->OnLogTagEffect.AddWeakLambda(this, [this](int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log) {
+		TArray<FCombatFloatingLogRequest> Requests;
+		Requests.Add(BuildCombatFloatingLogRequest(TargetActorID, Log));
+		mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::LiveCombat, Requests);
+		});
+	GetWorldEventLogger(this)->OnLogAttributeEffect.AddWeakLambda(this, [this](int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log) {
+		TArray<FCombatFloatingLogRequest> Requests;
+		Requests.Add(BuildCombatFloatingLogRequest(TargetActorID, Log));
+		mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::LiveCombat, Requests);
+		});
+	GetWorldEventLogger(this)->OnLogTileEffect.AddWeakLambda(this, [this](int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log) {
+		TArray<FCombatFloatingLogRequest> Requests;
+		Requests.Add(BuildCombatFloatingLogRequest(TargetActorID, Log));
+		mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::LiveCombat, Requests);
+		});
+
+	/* 전투 모델 대리자 연결 */
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
@@ -448,10 +466,6 @@ void ACombatGameMode::InitializeCombat()
 		CancelPendingActionEndAfterCameraReturn();
 		// 턴이 실제로 끝났다 — 남은 미리보기는 전제부터 낡았으니 예측 쪽만 통째로 버린다.
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
-		if (USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>())
-		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
-		}
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
@@ -463,22 +477,8 @@ void ACombatGameMode::InitializeCombat()
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
-		// 방금 쓴 스킬에 쿨타임이 걸렸다. 다시 안 내리면 카드가 옛 숫자를 그대로
-		// 들고 있어, 쓴 스킬이 아직 쓸 수 있는 것처럼 보인다.
-		//
-		// 행동력도 줄었으므로 유닛도 같이 내린다 -- 속성 델리게이트가 잡아
-		// 주기는 하지만, 취소로 끝난 행동은 속성이 안 바뀌어 안 온다.
 		PushSkillUIData();
 		PushUnitUIData();
-		// 맞은 자리에 피해 숫자를 띄운다. 턴이 끝날 때 한꺼번에 내리면
-		// 때린 연출은 이미 끝난 뒤라 어느 타격의 숫자인지 못 읽는다
-		// (0824 검수: "데미지 스킨 띄우기"). 행동 하나가 끝날 때마다
-		// 그동안 쌓인 로그를 비워 그 행동의 결과만 그 자리에 뜨게 한다.
-		if (USimulationSubsystem* SimulationSubsystem
-			= GetWorld()->GetSubsystem<USimulationSubsystem>())
-		{
-			PushCombatEventUIData(SimulationSubsystem->ConsumeGameEventLogs());
-		}
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		});
@@ -2281,6 +2281,61 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
 
+FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const
+{
+	const AActor* TargetActor = GetWorldModelFactory(this)->FindModel<AActor>(TargetActorID);
+	if (TargetActor == nullptr)
+	{
+		return FCombatFloatingLogRequest();
+	}
+
+	EFloatingLogIconType IconType = EFloatingLogIconType::None;
+	EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
+	ConvertFloatingLogUITypes(Log, OUT IconType, OUT ColorType);
+
+	FCombatFloatingLogRequest Request;
+	Request.mWorldLocation = TargetActor->GetActorLocation();
+	Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Log.mCount));
+	Request.mIconType = IconType;
+	Request.mColorType = ColorType;
+	Request.mSequence = 0;
+	Request.mTurnIndex = INDEX_NONE;
+	Request.mActionIndex = INDEX_NONE;
+	Request.mMotionIndex = INDEX_NONE;
+
+	return Request;
+}
+
+FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const
+{
+	const AActor* TargetActor = GetWorldModelFactory(this)->FindModel<AActor>(TargetActorID);
+	if (TargetActor == nullptr)
+	{
+		return FCombatFloatingLogRequest();
+	}
+
+	EFloatingLogIconType IconType = EFloatingLogIconType::None;
+	EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
+	ConvertFloatingLogUITypes(Log, OUT IconType, OUT ColorType);
+
+	FCombatFloatingLogRequest Request;
+	Request.mWorldLocation = TargetActor->GetActorLocation();
+	Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), FMath::FloorToInt(Log.mMagnitude)));
+	Request.mIconType = IconType;
+	Request.mColorType = ColorType;
+	Request.mSequence = 0;
+	Request.mTurnIndex = INDEX_NONE;
+	Request.mActionIndex = INDEX_NONE;
+	Request.mMotionIndex = INDEX_NONE;
+
+	return Request;
+}
+
+FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTileEffectEventLog& Log) const
+{
+	return FCombatFloatingLogRequest();
+}
+
 void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEventLog>& TurnEventLogs, const bool bBindMotionIndices, OUT TArray<FCombatFloatingLogRequest>& OutRequests) const
 {
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
@@ -2532,17 +2587,6 @@ void ACombatGameMode::PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog
 
 	SimulationPreviewUIModel->SetPreviewEventBatch(PreviewGeneration, Requests);
 	SimulationPreviewUIModel->SetPredictedUnits(PreviewGeneration, BuildUnitPredictions(TurnEventLogs));
-}
-
-void ACombatGameMode::PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const
-{
-	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
-
-	TArray<FCombatFloatingLogRequest> Requests;
-	BuildCombatFloatingLogRequests(TurnEventLogs, /*bBindMotionIndices=*/false, OUT Requests);
-
-	// 실전 juice 로그다. mIsPreview는 빌더 기본값(false) 그대로 둔다.
-	mCombatUIModel->SetCombatEventBatch(ECombatEventDataSourceUI::LiveCombat, Requests);
 }
 
 void ACombatGameMode::ShowSkillDetailPreview(UUnitModel* UnitModel,
