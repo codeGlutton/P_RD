@@ -100,20 +100,30 @@ namespace
 			: FString();
 	}
 
-	/**
-	 * @brief Marchbound가 새로 그린 용병 전용 얼굴/히어로 그림을 직업으로 찾는다.
-	 *
-	 * 데이터에셋의 mIcon/mPortrait는 아직 구형 픽셀 초상을 가리키는 것이 있다.
-	 * 용병 UI만 새 그림을 쓰도록 어댑터에서 한 번 정규화하면 턴바·목록·상세가
-	 * 각자 다른 폴백 규칙을 갖지 않는다.
-	 */
-	UTexture2D* ResolveMarchboundMercenaryPortrait(const UUnitModel* UnitModel,
-		const bool bHeroIllustration)
+	UTexture2D* ResolveUnitTexture(const UUnitModel* UnitModel, const bool NeedPortrait)
 	{
-		if (UnitModel == nullptr || UnitModel->IsPlayerUnitModel() == false)
+		if (UnitModel == nullptr)
 		{
 			return nullptr;
 		}
+
+		if (NeedPortrait == true)
+		{
+			UTexture2D* Portrait = UnitModel->GetBoardActorPortrait();
+			if (Portrait != nullptr)
+			{
+				return Portrait;
+			}
+		}
+		else
+		{
+			UTexture2D* Icon = UnitModel->GetBoardActorIcon();
+			if (Icon != nullptr)
+			{
+				return Icon;
+			}
+		}
+
 		const FString Identity = CombatPortraitIdentity(UnitModel);
 		struct FMercenaryPortraitRule
 		{
@@ -135,83 +145,32 @@ namespace
 				|| Identity.Contains(Rule.EnglishNeedle, ESearchCase::IgnoreCase))
 			{
 				const FString AssetName = FString::Printf(TEXT("T_MB_Hire%s_%s"),
-					bHeroIllustration ? TEXT("Hero") : TEXT("Icon"), Rule.AssetStem);
+					NeedPortrait ? TEXT("Hero") : TEXT("Icon"), Rule.AssetStem);
 				const FString AssetPath = FString::Printf(
 					TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
 					*AssetName, *AssetName);
 				return LoadObject<UTexture2D>(nullptr, *AssetPath);
 			}
 		}
-		return nullptr;
-	}
 
-	UTexture2D* ResolveTurnPortraitFallback(const UUnitModel* UnitModel)
-	{
-		if (UnitModel == nullptr)
-		{
-			return nullptr;
-		}
-		if (UTexture2D* MercenaryPortrait =
-			ResolveMarchboundMercenaryPortrait(UnitModel, false))
-		{
-			return MercenaryPortrait;
-		}
-		const FString Identity = CombatPortraitIdentity(UnitModel);
-
-		struct FPortraitRule
-		{
-			const TCHAR* Needle;
-			const TCHAR* Path;
-		};
-		static const FPortraitRule Rules[] = {
-			{ TEXT("독수리"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
-			{ TEXT("Eagle"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2") },
-			{ TEXT("Werewolf"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Werewolf_HeadV2.KK_Face_Enemy_Werewolf_HeadV2") },
-			{ TEXT("Leshy"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Leshy_HeadV2.KK_Face_Enemy_Leshy_HeadV2") },
-			{ TEXT("Mushroom"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Mushroom_HeadV2.KK_Face_Enemy_Mushroom_HeadV2") },
-			{ TEXT("Necromancer"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Necromancer_HeadV2.KK_Face_Enemy_Necromancer_HeadV2") },
-			{ TEXT("SkeletonGolem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonGolem_HeadV2.KK_Face_Enemy_SkeletonGolem_HeadV2") },
-			{ TEXT("SkeletonMinionRanged"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionRanged_HeadV2.KK_Face_Enemy_SkeletonMinionRanged_HeadV2") },
-			{ TEXT("SkeletonMinionMelee"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinionMelee_HeadV2.KK_Face_Enemy_SkeletonMinionMelee_HeadV2") },
-			{ TEXT("SkeletonMinion"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_SkeletonMinion_HeadV2.KK_Face_Enemy_SkeletonMinion_HeadV2") },
-			{ TEXT("Slime"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Slime_HeadV2.KK_Face_Enemy_Slime_HeadV2") },
-			{ TEXT("Spider"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Spider_HeadV2.KK_Face_Enemy_Spider_HeadV2") },
-			{ TEXT("Golem"), TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Golem_HeadV2.KK_Face_Enemy_Golem_HeadV2") },
-		};
-		for (const FPortraitRule& Rule : Rules)
-		{
-			if (Identity.Contains(Rule.Needle, ESearchCase::IgnoreCase))
-			{
-				return LoadObject<UTexture2D>(nullptr, Rule.Path);
-			}
-		}
 		return LoadObject<UTexture2D>(nullptr,
 			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Eagle_HeadV2.KK_Face_Enemy_Eagle_HeadV2"));
 	}
 
 	/** @brief 결과판용 용병 초상화를 기존 우선순위대로 해상한다. */
-	UTexture2D* ResolveCombatPartyPortrait(const UPlayerUnitModel* PlayerUnitModel)
+	UTexture2D* ResolveCombatPartyIcon(const UPlayerUnitModel* PlayerUnitModel)
 	{
 		if (PlayerUnitModel == nullptr)
 		{
 			return nullptr;
 		}
 
-		UTexture2D* Portrait = ResolveMarchboundMercenaryPortrait(
-			PlayerUnitModel, false);
-		if (Portrait == nullptr)
+		UTexture2D* Icon = ResolveUnitTexture(PlayerUnitModel, false);
+		if (Icon == nullptr)
 		{
-			Portrait = PlayerUnitModel->GetBoardActorIcon();
+			Icon = ResolveUnitTexture(PlayerUnitModel, false);
 		}
-		if (Portrait == nullptr)
-		{
-			Portrait = PlayerUnitModel->GetBoardActorPortrait();
-		}
-		if (Portrait == nullptr)
-		{
-			Portrait = ResolveTurnPortraitFallback(PlayerUnitModel);
-		}
-		return Portrait;
+		return Icon;
 	}
 
 	FLinearColor GetRarityColor(ERarityType RarityType)
@@ -296,13 +255,19 @@ namespace
 		}
 		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetActionPointAttribute())
 		{
-			IconType = EFloatingLogIconType::GetMove;
+			IconType = EFloatingLogIconType::GetActionPoint;
 			ColorType = AttrLog.mMagnitude >= 0.f
 				? EFloatingLogColorType::PointUp : EFloatingLogColorType::Damage;
 		}
 		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetDefenseAttribute())
 		{
 			IconType = EFloatingLogIconType::GetDefense;
+			ColorType = AttrLog.mMagnitude >= 0.f
+				? EFloatingLogColorType::PointUp : EFloatingLogColorType::Damage;
+		}
+		else if (AttrLog.mEffectAttribute == UUnitAttributeSet::GetSpeedPointAttribute())
+		{
+			IconType = EFloatingLogIconType::GetSpeedPoint;
 			ColorType = AttrLog.mMagnitude >= 0.f
 				? EFloatingLogColorType::PointUp : EFloatingLogColorType::Damage;
 		}
@@ -519,16 +484,16 @@ void ACombatGameMode::InitializeCombat()
 
 	// 사망 태그는 용병을 PartyModel에서 즉시 제거한다. 결과 데이터를 전투가
 	// 끝난 뒤 조립해도 참가자 초상화가 남도록, 전투 진입 전에 따로 보존한다.
-	mCombatStartPartyPortraits.Reset();
-	mCombatStartPartyPortraits.Reserve(3);
+	mCombatStartPartyIcons.Reset();
+	mCombatStartPartyIcons.Reserve(3);
 	for (const UPlayerUnitModel* PlayerUnitModel : GetPlayerUnitModels())
 	{
 		if (PlayerUnitModel == nullptr)
 		{
 			continue;
 		}
-		mCombatStartPartyPortraits.Add(ResolveCombatPartyPortrait(PlayerUnitModel));
-		if (mCombatStartPartyPortraits.Num() >= 3)
+		mCombatStartPartyIcons.Add(ResolveCombatPartyIcon(PlayerUnitModel));
+		if (mCombatStartPartyIcons.Num() >= 3)
 		{
 			break;
 		}
@@ -591,6 +556,7 @@ void ACombatGameMode::CancelPendingActionEndAfterCameraReturn()
 	}*/
 	mPendingActionEndAfterCameraReturnHandle.Reset();
 }
+
 bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
@@ -1273,8 +1239,8 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		{
 			Request.bIsPlayerCaster = CasterUnit->IsPlayerUnitModel();
 			Request.UnitId = CasterUnit->GetModelId();
-			Request.ShortCut = CasterUnit->GetBoardActorShortCut();
-			Request.Portrait = CasterUnit->GetBoardActorPortrait();
+			Request.ShortCut = CasterUnit->GetUnitShortCut();
+			Request.Portrait = ResolveUnitTexture(CasterUnit, false);
 			Request.ViewActor = CasterUnit->GetView<AActor>();
 		}
 
@@ -1327,7 +1293,7 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 	CombatResultUIData.mDefeatedMonsterCount = mDefeatedMonsterCount;
 	CombatResultUIData.mGoldGained = 0;
 	CombatResultUIData.mExpGained = 0;
-	CombatResultUIData.mPartyPortraits = mCombatStartPartyPortraits;
+	CombatResultUIData.mPartyPortraits = mCombatStartPartyIcons;
 	mCombatUIModel->SetCombatResultUI(CombatResultUIData);
 }
 
@@ -1473,29 +1439,8 @@ void ACombatGameMode::PushUnitUIData() const
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
-		UnitUIData.mPortrait = UnitModel->GetBoardActorPortrait();
-		if (UTexture2D* MarchboundHero =
-			ResolveMarchboundMercenaryPortrait(UnitModel, true))
-		{
-			UnitUIData.mPortrait = MarchboundHero;
-		}
-		// 큰 카드의 972x1619 세로 초상을 턴 칩에 억지로 눌러 넣지 않는다.
-		// DA mIcon에는 256x256 HeadV2 얼굴판을 두며, 아직 아이콘이 없는
-		// 신규/임시 유닛만 기존 초상으로 안전하게 폴백한다.
-		UnitUIData.mTurnPortrait = ResolveMarchboundMercenaryPortrait(
-			UnitModel, false);
-		if (UnitUIData.mTurnPortrait == nullptr)
-		{
-			UnitUIData.mTurnPortrait = UnitModel->GetBoardActorIcon();
-		}
-		if (UnitUIData.mTurnPortrait == nullptr)
-		{
-			UnitUIData.mTurnPortrait = ResolveTurnPortraitFallback(UnitModel);
-		}
-		if (UnitUIData.mTurnPortrait == nullptr)
-		{
-			UnitUIData.mTurnPortrait = UnitUIData.mPortrait;
-		}
+		UnitUIData.mPortrait = ResolveUnitTexture(UnitModel, false);
+		UnitUIData.mTurnPortrait = UnitUIData.mPortrait;
 		UnitUIData.mTile = UnitModel->GetTileTransform().mIndex;
 		UnitUIData.mLevel = UnitModel->GetBoardActorLevel();
 		UnitUIData.mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetHPAttribute());
@@ -2005,18 +1950,14 @@ void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorMod
 		return;
 	}
 
+	UUnitModel* UnitModel = Cast<UUnitModel>(BoardActorModel);
+
 	FUnitDetailUI UnitDetailUIData;
 	UnitDetailUIData.mUnitId = BoardActorModel->GetModelId();
 	UnitDetailUIData.mName = BoardActorModel->GetBoardActorDisplayName();
 	UnitDetailUIData.mLevel = BoardActorModel->GetBoardActorLevel();
-	UnitDetailUIData.mPortrait = BoardActorModel->GetBoardActorPortrait();
+	UnitDetailUIData.mPortrait = ResolveUnitTexture(UnitModel, false);
 
-	UUnitModel* UnitModel = Cast<UUnitModel>(BoardActorModel);
-	if (UTexture2D* MarchboundHero =
-		ResolveMarchboundMercenaryPortrait(UnitModel, true))
-	{
-		UnitDetailUIData.mPortrait = MarchboundHero;
-	}
 	// 상세창 스킬 칸 탭을 되짚을 기준이다. 유닛이 아닌 것(장애물)을 골랐으면 비운다.
 	mDetailUnitModel = UnitModel;
 	if (UnitModel != nullptr)
@@ -2743,20 +2684,7 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			MercenaryExp.mName = NSLOCTEXT(
 				"CombatGameMode", "UnknownRewardMercenary", "Mercenary");
 		}
-		MercenaryExp.mPortrait = ResolveMarchboundMercenaryPortrait(
-			PlayerUnitModel, false);
-		if (MercenaryExp.mPortrait == nullptr)
-		{
-			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorIcon();
-		}
-		if (MercenaryExp.mPortrait == nullptr)
-		{
-			MercenaryExp.mPortrait = PlayerUnitModel->GetBoardActorPortrait();
-		}
-		if (MercenaryExp.mPortrait == nullptr)
-		{
-			MercenaryExp.mPortrait = ResolveTurnPortraitFallback(PlayerUnitModel);
-		}
+		MercenaryExp.mPortrait = ResolveUnitTexture(PlayerUnitModel, false);
 		const int32 PlayerLevel = PlayerUnitModel->GetPlayerLevel();
 		const float CurrentExp = PlayerAttributes->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
 		const float CurrentMaxExp = ULevelAttributeSet::GetMaxExp(this, PlayerUnitModel->GetPlayerLevel());

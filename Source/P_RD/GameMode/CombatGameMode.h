@@ -172,7 +172,7 @@ protected:
 	 * 제거된 뒤에도 패배 결과판에는 이번 전투에 참가한 파티를 보여 준다.
 	 */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyPortraits;
+	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyIcons;
 
 	/**
 	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
