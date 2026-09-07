@@ -1,6 +1,7 @@
 ﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Actor/TileMap/TileLayer.h"
+#include "UI/Combat/CombatConditionWidget.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
@@ -726,6 +727,23 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	ConfigureCompactSummary(TEXT("Ally"));
+	// Keep the condition badge outside the portrait's clipping container.
+	for (const TCHAR* Prefix : {TEXT("Ally"), TEXT("Enemy")})
+	{
+		const FName BadgeName(*FString::Printf(TEXT("%sCondition"), Prefix));
+		if (WidgetTree->FindWidget(BadgeName) == nullptr)
+		{
+			if (UCanvasPanel* Panel = Find<UCanvasPanel>(WidgetTree,FString::Printf(TEXT("%sPanel"),Prefix)))
+			{
+				UCombatConditionWidget* Badge=WidgetTree->ConstructWidget<UCombatConditionWidget>(UCombatConditionWidget::StaticClass(),BadgeName);
+				UCanvasPanelSlot* BadgeSlot = Panel->AddChildToCanvas(Badge);
+				BadgeSlot->SetPosition(FVector2D(112.f, 88.f));
+				BadgeSlot->SetSize(FVector2D(48.f, 48.f));
+				BadgeSlot->SetZOrder(30);
+				Badge->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+	}
 	mAllyStatusFrames.Reset();
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
@@ -2755,6 +2773,15 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	}
 
 	SetShown(mAllyPanel, AllyShown != nullptr);
+	for (const auto& Entry : {TPair<const TCHAR*,const FUnitUI*>(TEXT("AllyCondition"),AllyShown),
+		TPair<const TCHAR*,const FUnitUI*>(TEXT("EnemyCondition"),Shown)})
+	{
+		if (UCombatConditionWidget* Badge=Cast<UCombatConditionWidget>(WidgetTree->FindWidget(FName(Entry.Key))))
+		{
+			Badge->SetVisibility(Entry.Value ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+			Badge->SetCondition(Entry.Value ? Entry.Value->mCombatCondition : EUnitCombatCondition::Normal);
+		}
+	}
 	if (AllyShown == nullptr)
 	{
 		RefreshSummaryStatusList(true, INDEX_NONE, {});
@@ -5486,6 +5513,14 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		TEXT("%d/%d"), Monster.mActionPoints, Monster.mMaxActionPoints)));
 	SetTabText(TEXT("MonsterDetailSpeedText"), FText::AsNumber(
 		FMath::RoundToInt(Monster.mSpeedPoint)));
+	// 몬스터 상세 WBP의 네 번째 스탯 아이콘은 구형 임시 브러시를 품고 있다.
+	// 용병 상세와 같은 치명타 전용 원화를 런타임의 단일 출처로 덮어써서,
+	// WBP가 다시 저장되더라도 두 상세 화면의 의미 표식이 갈라지지 않게 한다.
+	if (UImage* CriticalIcon = Cast<UImage>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterStatIcon_3"))))
+	{
+		CriticalIcon->SetBrushFromTexture(mSkillVisualCriticalIconTexture, false);
+	}
 	if (UImage* DetailPortrait = Cast<UImage>(
 		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
 	{

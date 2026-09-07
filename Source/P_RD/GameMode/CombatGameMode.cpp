@@ -1437,6 +1437,7 @@ void ACombatGameMode::PushUnitUIData() const
 		checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
+		UnitUIData.mCombatCondition = UnitModel->GetCombatCondition();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = ResolveUnitTexture(UnitModel, false);
