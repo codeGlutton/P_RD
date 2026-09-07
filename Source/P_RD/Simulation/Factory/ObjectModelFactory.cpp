@@ -14,6 +14,22 @@ void UObjectModelFactory::SetContext(FRoomContext& RoomContext)
 	mRoomContext = &RoomContext;
 }
 
+UObjectModel* UObjectModelFactory::FindModel_Internal(int32 ModelId) const
+{
+	if (mRoomContext == nullptr || mRoomContext->mRoomInstance == nullptr)
+	{
+		return nullptr;
+	}
+
+	TObjectPtr<UObjectModel>* FoundModel = mRoomContext->mRoomInstance->mAliveWorldModels.Find(ModelId);
+	if (FoundModel == nullptr)
+	{
+		return nullptr;
+	}
+
+	return *FoundModel;
+}
+
 UObjectModel* UObjectModelFactory::NewModel_Internal(const UClass* Class, const FTransform& ViewTransform, FName Name, EObjectFlags Flags, UObject* Template, bool CopyTransientsFromClassDefaults, FObjectInstancingGraph* InInstanceGraph, UPackage* InExternalPackage)
 {
 	UObjectModel* Model = NewModelDeferred_Internal(Class, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage);
