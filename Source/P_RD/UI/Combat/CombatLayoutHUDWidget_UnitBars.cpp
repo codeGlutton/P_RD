@@ -419,9 +419,6 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	// 지도(풀스크린) 열림 중에는 유닛 머리 위 HP바를 숨긴다 — 탑바만 남기는 뷰.
 	// 이 함수가 매 틱 HP바를 강제 표시(라인 283)하므로, SetCombatPlayControlsVisible에서 한 번 숨기는 것으로는
 	// 다음 틱에 되살아난다. 여기서 게이트해야 지도 뷰 동안 계속 숨겨진다.
-	// 스킬 카드가 펼쳐진 동안에도 같은 원칙이다. 카드보다 낮은 ZOrder의 HP
-	// 숫자가 카드 사이로 일부만 비쳐 "1/100"이 잘린 글자처럼 보였으므로,
-	// 카드 화면을 닫을 때까지 월드 바 전체를 접는다.
 	// 스킬 카드를 펼쳐도 전투 판단에 필요한 체력/상태는 계속 보여 준다.
 	// 카드와 겹치는 유닛은 아래 화면 가장자리 보정에서 위치만 조정된다.
 	if (GetVisibility() == ESlateVisibility::Collapsed)
