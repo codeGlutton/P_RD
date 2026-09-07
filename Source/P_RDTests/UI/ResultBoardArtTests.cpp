@@ -1218,10 +1218,12 @@ bool FSettingsPanelLayoutContractTest::RunTest(const FString& Parameters)
 			? Cast<UCanvasPanelSlot>(ConfirmHeaderBox->Slot) : nullptr;
 		if (TestNotNull(TEXT("확인 명패 디자인 캔버스 슬롯"), HeaderSlot))
 		{
-			TestTrue(TEXT("확인 명패 위치"),
-				HeaderSlot->GetPosition().Equals(FVector2D(670.f, 210.f), 0.01));
-			TestTrue(TEXT("확인 명패 580x76"),
-				HeaderSlot->GetSize().Equals(FVector2D(580.f, 76.f), 0.01));
+			// Current authored Marchbound header: visually checked at landscape
+			// and Fold aspect ratios. The old 210/76 box predates the art alignment.
+			TestTrue(FString::Printf(TEXT("확인 명패 위치 (actual %s)"), *HeaderSlot->GetPosition().ToString()),
+				HeaderSlot->GetPosition().Equals(FVector2D(670.f, 222.f), 0.01));
+			TestTrue(FString::Printf(TEXT("확인 명패 580x107.5 (actual %s)"), *HeaderSlot->GetSize().ToString()),
+				HeaderSlot->GetSize().Equals(FVector2D(580.f, 107.5f), 0.01));
 			TestTrue(TEXT("확인 명패가 모달 내부 장식보다 앞"),
 				HeaderSlot->GetZOrder() > 2);
 		}
