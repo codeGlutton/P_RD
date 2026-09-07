@@ -77,7 +77,8 @@ enum class EFloatingLogIconType : uint8
 	None,				// 아이콘 없음(텍스트만)
 	HP,					// 체력
 
-	GetMove,			// 이동력 획득
+	GetActionPoint,		// 행동력 획득
+	GetSpeedPoint,		// 속도 획득
 	GetDefense,			// 방어력 획득
 
 	Weakness,			// 약화 (디버프)

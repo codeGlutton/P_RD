@@ -38,20 +38,20 @@ public:
 
     // @brief 스킬 타입
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "SkillType"))
-    ESkillType mSkillType;
+    ESkillType mSkillType = ESkillType::Attack;
 
     // @brief 스킬 희귀도
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "RarityType"))
-    ERarityType mRarityType;
+    ERarityType mRarityType = ERarityType::Common;
 
     // @brief 구매 시 가격
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
-    int32 mPrice;
+    int32 mPrice = 0;
 
     /* 논리적 설정값들 */
 public:
     // @brief 필요 행동력
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredActionPoint"))
-    int32 mRequiredActionPoint;
+    int32 mRequiredActionPoint = 0;
 };
 

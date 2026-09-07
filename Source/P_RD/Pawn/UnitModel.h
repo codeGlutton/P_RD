@@ -81,6 +81,9 @@ public:
 
 	/* 자체 함수 */
 public:
+	UTexture2D* GetUnitShortCut() const;
+
+public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
 	EUnitCombatCondition GetCombatCondition() const;
 

@@ -131,22 +131,6 @@ bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition Rea
     return true;
 }
 
-/**
- * @brief 방 좌표를 받아 방 전환 준비를 시작한다.
- *
- * @details
- * 이 함수는 방 좌표로 FRoomTransitionRequest를 만든 뒤 실제 처리 함수로 넘깁니다.
- * 여기서 중요한 점은 RequireExternalReady와 IsAutoTransition을 둘 다 그대로 넘기는 것입니다.
- * 하나가 빠지면 "외부 준비를 기다릴지"와 "자동으로 이동할지"가 서로 잘못 해석될 수 있습니다.
- *
- * @param RoomRowIndex 전환할 방의 행 index.
- * @param RoomColumnIndex 전환할 방의 열 index.
- * @param ReadyToTransitionCallback 전환 준비 완료 시 호출할 콜백.
- * @param PreTransitionCallback 실제 전환 직전 호출할 콜백.
- * @param RequireExternalReady 에셋 로드 후 외부 준비 신호까지 기다릴지 여부.
- * @param IsAutoTransition 준비 완료 후 자동으로 전환을 시작할지 여부.
- * @return 전환 준비 요청을 받았으면 true, 이미 다른 전환 중이면 false.
- */
 bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     FRoomTransitionRequest Request;
@@ -156,7 +140,6 @@ bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomCo
     Request.OnReadyToTransition = ReadyToTransitionCallback;
     Request.OnPreTransitNextRoom = PreTransitionCallback;
 
-    // 두 옵션을 모두 넘겨야 "기다릴지/자동 이동할지"가 바뀌지 않는다.
     return PreloadRoomAsync(MoveTemp(Request), RequireExternalReady, IsAutoTransition);
 }
 
@@ -279,17 +262,6 @@ bool URoomTransitionSubsystem::MarkExternalReady()
     return true;
 }
 
-/**
- * @brief 준비만 끝난 방 전환을 실제로 시작한다.
- *
- * @details
- * AutoTransition=false로 준비한 방은 에셋 로드가 끝나도 바로 이동하지 않습니다.
- * GameMode가 로딩 UI나 닫힘 애니메이션을 끝낸 뒤 이 함수를 호출해 실제 이동을 시작합니다.
- *
- * ReadyToTransition이 없으면 아직 이동할 방 정보가 완성되지 않은 상태라서 이동하지 않습니다.
- *
- * @return 실제 이동을 시작했으면 true, 아직 준비 전이거나 이미 이동 중이면 false.
- */
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {
     // 아직 준비가 끝나지 않았으면 OpenLevel을 시작하면 안 된다.

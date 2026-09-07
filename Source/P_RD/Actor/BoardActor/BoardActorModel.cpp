@@ -68,14 +68,6 @@ UTexture2D* UBoardActorModel::GetBoardActorPortrait() const
 	return mStaticSpawnData->mPortrait.LoadSynchronous();
 }
 
-TSoftObjectPtr<UTexture2D> UBoardActorModel::GetBoardActorShortCut() const
-{
-	const UStaticUnitSpawnData* UnitSpawnData = Cast<UStaticUnitSpawnData>(mStaticSpawnData);
-	return UnitSpawnData != nullptr
-		? UnitSpawnData->mShortCut
-		: TSoftObjectPtr<UTexture2D>();
-}
-
 const FTransform& UBoardActorModel::GetWorldTransform() const
 {
 	if (OnGetBoardActorWorldTransform.IsBound() == false)
