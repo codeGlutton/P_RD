@@ -101,6 +101,19 @@ namespace MarchboundHireWidgetBuilder
 		}
 	}
 
+	/** 재사용한 기존 위젯도 컴파일러 변수 GUID를 반드시 갖게 한다. */
+	void RepairLiveVariableGuids(UWidgetBlueprint* Blueprint)
+	{
+		Blueprint->WidgetTree->ForEachWidget([Blueprint](UWidget* Widget)
+		{
+			if (Widget != nullptr && Widget->bIsVariable
+				&& !Blueprint->WidgetVariableNameToGuidMap.Contains(Widget->GetFName()))
+			{
+				Blueprint->OnVariableAdded(Widget->GetFName());
+			}
+		});
+	}
+
 	void PlaceCanvas(UPanelWidget* Parent, UWidget* Child,
 		const FVector2D Position, const FVector2D Size, const int32 ZOrder)
 	{
@@ -121,10 +134,21 @@ namespace MarchboundHireWidgetBuilder
 		const FName CenterName(*FString::Printf(TEXT("%s_Center"), *Text->GetName()));
 		UOverlay* Center = FindOrCreate<UOverlay>(Blueprint, CenterName);
 		PlaceCanvas(Parent, Center, Position, Size, ZOrder);
-		EnsureParent(Center, Text);
-		UOverlaySlot* TextSlot = CastChecked<UOverlaySlot>(Text->Slot);
-		TextSlot->SetPadding(FMargin(0.0f));
-		TextSlot->SetHorizontalAlignment(HAlign_Fill);
+		const FName FitName(*FString::Printf(TEXT("%s_AutoFit"), *Text->GetName()));
+		UScaleBox* Fit = FindOrCreate<UScaleBox>(Blueprint, FitName);
+		Fit->SetStretch(EStretch::ScaleToFitX);
+		Fit->SetStretchDirection(EStretchDirection::DownOnly);
+		Fit->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		Fit->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		EnsureParent(Center, Fit);
+		UOverlaySlot* FitSlot = CastChecked<UOverlaySlot>(Fit->Slot);
+		FitSlot->SetPadding(FMargin(0.0f));
+		FitSlot->SetHorizontalAlignment(HAlign_Fill);
+		FitSlot->SetVerticalAlignment(VAlign_Fill);
+
+		EnsureParent(Fit, Text);
+		UScaleBoxSlot* TextSlot = CastChecked<UScaleBoxSlot>(Text->Slot);
+		TextSlot->SetHorizontalAlignment(HAlign_Center);
 		TextSlot->SetVerticalAlignment(VAlign_Center);
 		Text->SetJustification(ETextJustify::Center);
 		// 이 빌더는 기존 WBP를 재사용한다. 옛 시안에서 넣은 여백과 렌더
@@ -142,11 +166,13 @@ namespace MarchboundHireWidgetBuilder
 		const FName CenterName(*FString::Printf(TEXT("%s_Center"), *Text->GetName()));
 		UOverlay* Center = FindOrCreate<UOverlay>(Blueprint, CenterName);
 		PlaceCanvas(Parent, Center, Position, Size, ZOrder);
-		Center->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		// 세로로는 자르지 않는다. 배율이 이미 칸 안에 맞춰 주므로, 자르기가
+		// 깎는 것은 아래꼬리와 외곽선뿐이다(0824 검수: "글자 짤리는거").
+		Center->SetClipping(EWidgetClipping::Inherit);
 
 		const FName FitName(*FString::Printf(TEXT("%s_Fit"), *Text->GetName()));
 		UScaleBox* Fit = FindOrCreate<UScaleBox>(Blueprint, FitName);
-		Fit->SetStretch(EStretch::ScaleToFit);
+		Fit->SetStretch(EStretch::ScaleToFitX);
 		Fit->SetStretchDirection(EStretchDirection::DownOnly);
 		Fit->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		Fit->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
@@ -798,8 +824,18 @@ namespace MarchboundHireWidgetBuilder
 			FVector2D::ZeroVector, PartySize, false, 1);
 
 		UTextBlock* PartyCount = FindOrCreate<UTextBlock>(Blueprint, TEXT("PartyCountText"));
+		// 머리칸 검출 사각형은 약 45px라 영문 y의 아래꼬리와 외곽선이
+		// 잘린다. 시각적 중심은 유지하면서 위아래만 4px씩 더 허용한다.
+		const FVector2D PartyCountBleed(0.0f, 4.0f);
 		PlaceCenteredText(Blueprint, PartyPanel, PartyCount,
-			PartyHead.Min, PartyHead.GetSize(), 15);
+			PartyHead.Min - PartyCountBleed,
+			PartyHead.GetSize() + PartyCountBleed * 2.0f, 15);
+		if (UWidget* PartyCountCenter = Blueprint->WidgetTree->FindWidget(
+			TEXT("PartyCountText_Center")))
+		{
+			PartyCountCenter->SetClipping(EWidgetClipping::Inherit);
+		}
+		PartyCount->SetClipping(EWidgetClipping::Inherit);
 		PartyCount->SetText(NSLOCTEXT("MarchboundHire", "PartyDefault", "파티 0/3"));
 		PartyCount->SetJustification(ETextJustify::Center);
 		SetLightFont(PartyCount, Font, 32);
@@ -862,9 +898,9 @@ namespace MarchboundHireWidgetBuilder
 			SetTransparentButton(SlotButton);
 		}
 
-		// 옛 안내 문구는 삭제하지 않고 숨겨 이전 WBP 구조를 보존한다.
-		FindOrCreate<UTextBlock>(Blueprint, TEXT("NoticeText"))->SetVisibility(
-			ESlateVisibility::Collapsed);
+		// 옛 안내 문구는 어느 패널에도 붙지 않은 고아 변수였다. 숨긴 채 다시
+		// 생성하면 컴파일러 GUID 맵에만 남으므로 재빌드 때 제거한다.
+		DeleteWidgetIfPresent(Blueprint, TEXT("NoticeText"));
 
 		UCanvasPanel* Depart = FindOrCreate<UCanvasPanel>(Blueprint, TEXT("DepartHolder"));
 		PlaceCanvas(RightRegion, Depart, FVector2D(148.0f, 962.0f), FVector2D(224.0f, 106.0f), 30);
@@ -890,7 +926,69 @@ namespace MarchboundHireWidgetBuilder
 		FillSingleLabelButton(Blueprint, Back, BackLabel, BackButton,
 			FVector2D(270.0f, 106.0f));
 
+		// 상점에서 찬 파티 칸을 교체할 때 사용하는 명시적 확인창. 기존 용병
+		// 선택 WBP를 재사용하되, 교체가 즉시 실행되어 실수로 파티가 바뀌는 흐름은
+		// 막는다. 빈 칸 고용에는 이 창을 띄우지 않는다.
+		UCanvasPanel* ReplaceConfirmLayer = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireReplaceConfirmLayer"));
+		PlaceCanvas(Root, ReplaceConfirmLayer, FVector2D::ZeroVector, DesignSize, 200);
+		if (UCanvasPanelSlot* LayerSlot = Cast<UCanvasPanelSlot>(ReplaceConfirmLayer->Slot))
+		{
+			LayerSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			LayerSlot->SetOffsets(FMargin(0.f));
+		}
+		ReplaceConfirmLayer->SetVisibility(ESlateVisibility::Collapsed);
+		UBorder* ReplaceDim = FindOrCreate<UBorder>(Blueprint, TEXT("HireReplaceConfirmDim"));
+		ReplaceDim->SetBrush(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, .68f)));
+		PlaceCanvas(ReplaceConfirmLayer, ReplaceDim, FVector2D::ZeroVector, DesignSize, 0);
+		UCanvasPanel* ReplacePanel = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireReplaceConfirmPanel"));
+		PlaceCanvas(ReplaceConfirmLayer, ReplacePanel,
+			FVector2D(610.f, 360.f), FVector2D(700.f, 340.f), 10);
+		AddImage(Blueprint, ReplacePanel, TEXT("HireReplaceConfirmPlate"), TitlePlate,
+			FVector2D::ZeroVector, FVector2D(700.f, 340.f), 0);
+		UTextBlock* ReplaceTitle = AddText(Blueprint, ReplacePanel,
+			TEXT("HireReplaceConfirmTitle"),
+			NSLOCTEXT("MarchboundHire", "ReplaceTitle", "용병 교체"), Font, 38,
+			FVector2D(80.f, 48.f), FVector2D(540.f, 64.f), 15);
+		SetLightFont(ReplaceTitle, Font, 38);
+		UTextBlock* ReplaceBody = AddText(Blueprint, ReplacePanel,
+			TEXT("HireReplaceConfirmBody"),
+			NSLOCTEXT("MarchboundHire", "ReplaceBody",
+				"선택한 파티 용병을 새 용병으로 교체할까요?"), Font, 26,
+			FVector2D(55.f, 122.f), FVector2D(590.f, 70.f), 15);
+		SetLightFont(ReplaceBody, Font, 26);
+		UCanvasPanel* ReplaceAcceptHolder = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireReplaceAcceptHolder"));
+		PlaceCanvas(ReplacePanel, ReplaceAcceptHolder,
+			FVector2D(70.f, 220.f), FVector2D(250.f, 92.f), 20);
+		AddImage(Blueprint, ReplaceAcceptHolder, TEXT("HireReplaceAcceptArt"),
+			DepartPlate, FVector2D::ZeroVector, FVector2D(250.f, 92.f), 0);
+		UTextBlock* ReplaceAcceptLabel = AddText(Blueprint, ReplaceAcceptHolder,
+			TEXT("HireReplaceAcceptLabel"), NSLOCTEXT("MarchboundHire", "Replace", "교체"),
+			Font, 30, FVector2D::ZeroVector, FVector2D(250.f, 92.f), 15);
+		SetLightFont(ReplaceAcceptLabel, Font, 30);
+		UButton* ReplaceAcceptButton = FindOrCreate<UButton>(
+			Blueprint, TEXT("HireReplaceAcceptButton"));
+		FillSingleLabelButton(Blueprint, ReplaceAcceptHolder, ReplaceAcceptLabel,
+			ReplaceAcceptButton, FVector2D(250.f, 92.f));
+		UCanvasPanel* ReplaceCancelHolder = FindOrCreate<UCanvasPanel>(
+			Blueprint, TEXT("HireReplaceCancelHolder"));
+		PlaceCanvas(ReplacePanel, ReplaceCancelHolder,
+			FVector2D(380.f, 220.f), FVector2D(250.f, 92.f), 20);
+		AddImage(Blueprint, ReplaceCancelHolder, TEXT("HireReplaceCancelArt"),
+			BackPlate, FVector2D::ZeroVector, FVector2D(250.f, 92.f), 0);
+		UTextBlock* ReplaceCancelLabel = AddText(Blueprint, ReplaceCancelHolder,
+			TEXT("HireReplaceCancelLabel"), NSLOCTEXT("MarchboundHire", "Cancel", "취소"),
+			Font, 30, FVector2D::ZeroVector, FVector2D(250.f, 92.f), 15);
+		SetLightFont(ReplaceCancelLabel, Font, 30);
+		UButton* ReplaceCancelButton = FindOrCreate<UButton>(
+			Blueprint, TEXT("HireReplaceCancelButton"));
+		FillSingleLabelButton(Blueprint, ReplaceCancelHolder, ReplaceCancelLabel,
+			ReplaceCancelButton, FVector2D(250.f, 92.f));
+
 		PruneStaleVariables(Blueprint);
+		RepairLiveVariableGuids(Blueprint);
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Blueprint);
 		FKismetEditorUtilities::CompileBlueprint(Blueprint);
 		if (!UPackage::SavePackage(Blueprint->GetPackage(), Blueprint,
