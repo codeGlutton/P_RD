@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /**
  * @brief 배치안 평가용 전투 HUD.
@@ -24,6 +24,7 @@
 
 #include "UI/Combat/CombatUITypes.h"
 
+#include "Tutorial/GuidedTutorial.h"
 #include "CombatLayoutHUDWidget.generated.h"
 
 struct FPresentationBarrier;
@@ -112,6 +113,12 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+	bool IsGuidedOverlayObscured() const;
+	bool IsGuidedBoardInputAt(const FVector2D& Position) const;
+	bool HasGuidedArtifact() const;
+	bool HasGuidedMonster() const;
+	EGuidedLesson GuidedLessonContext() const;
+	UWidget* ResolveGuidedTarget(EGuidedStage Stage, EGuidedStage& Next, bool& Board, bool& Retry);
 #if WITH_EDITOR
 	/** @brief 오프스크린 WBP 감사도 실제 게임과 같은 글자 보정을 적용한다. */
 	void ApplyActionLabelOpticalAlignmentForCapture();

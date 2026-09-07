@@ -7,6 +7,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"   // FTileIndex
 #include "GameplayTagContainer.h"
+#include "Pawn/UnitCombatCondition.h"
 
 #include "CombatUITypes.generated.h"
 
@@ -280,6 +281,8 @@ struct FUnitUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
+	/** Actual turn condition; independent of HP and status-effect icons. */
+	UPROPERTY(BlueprintReadOnly) EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
 	/** @brief 유닛 세로 초상화(DA mPortrait). 파티·적·상세 카드용. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
 	/**

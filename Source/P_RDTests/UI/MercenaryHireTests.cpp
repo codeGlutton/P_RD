@@ -3644,18 +3644,18 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		ESlateVisibility::Collapsed);
 	TestEqual(TEXT("첫 창 오른쪽은 누를 수 있다"), Right->GetVisibility(),
 		ESlateVisibility::Visible);
-	TestEqual(TEXT("오른쪽에 열네 순서가 더 있다"),
-		RightText->GetText().ToString(), FString(TEXT("14")));
+	TestEqual(TEXT("숨은 차례 수 대신 다음 화살표를 표시한다"),
+		RightText->GetText().ToString(), FString(TEXT(">")));
 
 	Right->OnClicked.Broadcast();
 	TestEqual(TEXT("둘째 창 왼쪽은 누를 수 있다"), Left->GetVisibility(),
 		ESlateVisibility::Visible);
 	TestEqual(TEXT("둘째 창 오른쪽도 누를 수 있다"), Right->GetVisibility(),
 		ESlateVisibility::Visible);
-	TestEqual(TEXT("둘째 창 왼쪽에 열 순서가 숨었다"),
-		LeftText->GetText().ToString(), FString(TEXT("10")));
-	TestEqual(TEXT("둘째 창 오른쪽에 네 순서가 더 있다"),
-		RightText->GetText().ToString(), FString(TEXT("4")));
+	TestEqual(TEXT("둘째 창은 이전 화살표를 표시한다"),
+		LeftText->GetText().ToString(), FString(TEXT("<")));
+	TestEqual(TEXT("둘째 창은 다음 화살표를 표시한다"),
+		RightText->GetText().ToString(), FString(TEXT(">")));
 
 	UWidget* Divider2 = HUD->WidgetTree->FindWidget(TEXT("TurnRoundDivider_2"));
 	UTextBlock* RoundLabel2 = Cast<UTextBlock>(
@@ -3707,12 +3707,12 @@ bool FCombatHUDTurnBarPagingTest::RunTest(const FString& Parameters)
 		ESlateVisibility::Visible);
 	TestEqual(TEXT("마지막 창 오른쪽은 없다"), Right->GetVisibility(),
 		ESlateVisibility::Collapsed);
-	TestEqual(TEXT("마지막 창 왼쪽에 열네 순서가 숨었다"),
-		LeftText->GetText().ToString(), FString(TEXT("14")));
+	TestEqual(TEXT("마지막 창은 이전 화살표를 표시한다"),
+		LeftText->GetText().ToString(), FString(TEXT("<")));
 
 	Left->OnClicked.Broadcast();
 	TestEqual(TEXT("마지막에서 왼쪽은 둘째 창으로 이동"),
-		LeftText->GetText().ToString(), FString(TEXT("10")));
+		LeftText->GetText().ToString(), FString(TEXT("<")));
 	TestEqual(TEXT("둘째 창은 오른쪽 페이지가 있다"),
 		Right->GetVisibility(), ESlateVisibility::Visible);
 

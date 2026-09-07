@@ -39,6 +39,7 @@ public class P_RDTests : ModuleRules
             "UMG",
             "Slate",
             "SlateCore",
+            "InputCore",
             "RenderCore",
             "RHI",
             "ImageCore",
