@@ -4,6 +4,7 @@
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLog.h"
 #include "UObject/StrongObjectPtr.h"
+#include "GameMode/CombatGameMode.h"
 
 void UCombatFloatingLogTestListener::HandleFloatingLog(FCombatFloatingLogRequest Request)
 {
@@ -87,4 +88,37 @@ bool FCombatFloatingLogCriticalAggregationKeyTest::RunTest(const FString& Parame
 	TestEqual(TEXT("같은 모션의 일반 피해와 치명타 피해는 별도 로그로 보존된다"),
 		Logs.Num(), 2);
 	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatFloatingLogAttributeConversionTest,
+	"P_RD.UI.Combat.FloatingLogAttributeConversion",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FCombatFloatingLogAttributeConversionTest::RunTest(const FString&)
+{
+	FSRPGAttributeEffectEventLog Log;
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+	Log.mMagnitude = -12.f;
+	Log.mIsCritical = true;
+	const FVector Position(10, 20, 30);
+	auto Request = ACombatGameMode::BuildAttributeFloatingLogRequest(Log, Position);
+	TestTrue(TEXT("Live attribute conversion preserves critical flag"), Request.mIsCritical);
+	TestEqual(TEXT("HP damage uses unsigned digits"), Request.mText.ToString(), FString(TEXT("12")));
+	TestEqual(TEXT("Damage icon"), Request.mIconType, EFloatingLogIconType::HP);
+	TestEqual(TEXT("Damage color"), Request.mColorType, EFloatingLogColorType::Damage);
+	TestEqual(TEXT("World anchor retained"), Request.mWorldLocation, Position);
+	TestEqual(TEXT("Live request does not wait for a motion index"), Request.mMotionIndex, INDEX_NONE);
+	Log.mIsCritical = false;
+	Request = ACombatGameMode::BuildAttributeFloatingLogRequest(Log, Position);
+	TestFalse(TEXT("Normal hit does not inherit critical flag"), Request.mIsCritical);
+	Log.mMagnitude = 8.f;
+	Request = ACombatGameMode::BuildAttributeFloatingLogRequest(Log, Position);
+	TestEqual(TEXT("Healing digits"), Request.mText.ToString(), FString(TEXT("8")));
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+	Request = ACombatGameMode::BuildAttributeFloatingLogRequest(Log, Position);
+	TestEqual(TEXT("Non-HP gain retains sign"), Request.mText.ToString(), FString(TEXT("+8")));
+	Log.mMagnitude = -3.f;
+	Request = ACombatGameMode::BuildAttributeFloatingLogRequest(Log, Position);
+	TestEqual(TEXT("Non-HP loss retains sign"), Request.mText.ToString(), FString(TEXT("-3")));
+	return !HasAnyErrors();
 }

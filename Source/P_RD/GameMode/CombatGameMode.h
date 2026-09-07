@@ -269,6 +269,9 @@ protected:
 	void PushPlayerMetaUIData() const;
 
 private:
+	friend class FCombatFloatingLogAttributeConversionTest;
+	static FCombatFloatingLogRequest BuildAttributeFloatingLogRequest(
+		const FSRPGAttributeEffectEventLog& Log, const FVector& WorldLocation);
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const;
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const;
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTileEffectEventLog& Log) const;

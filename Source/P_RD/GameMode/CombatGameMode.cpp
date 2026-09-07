@@ -2248,14 +2248,23 @@ FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 T
 	{
 		return FCombatFloatingLogRequest();
 	}
+	return BuildAttributeFloatingLogRequest(Log, TargetActor->GetActorLocation());
+}
 
+FCombatFloatingLogRequest ACombatGameMode::BuildAttributeFloatingLogRequest(
+	const FSRPGAttributeEffectEventLog& Log, const FVector& WorldLocation)
+{
 	EFloatingLogIconType IconType = EFloatingLogIconType::None;
 	EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 	ConvertFloatingLogUITypes(Log, OUT IconType, OUT ColorType);
 
 	FCombatFloatingLogRequest Request;
-	Request.mWorldLocation = TargetActor->GetActorLocation();
-	Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), FMath::FloorToInt(Log.mMagnitude)));
+	Request.mWorldLocation = WorldLocation;
+	const int32 Amount = FMath::FloorToInt(Log.mMagnitude);
+	Request.mText = IconType == EFloatingLogIconType::HP
+		? FText::AsNumber(FMath::Abs(Amount))
+		: FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+	Request.mIsCritical = Log.mIsCritical;
 	Request.mIconType = IconType;
 	Request.mColorType = ColorType;
 	Request.mSequence = 0;
@@ -2321,14 +2330,11 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 				continue;
 			}
 
-			FCombatFloatingLogRequest Request = MakeLogRequest(
-				FMath::Floor(AttrLog.mMagnitude),
-				IconType,
-				ColorType,
-				ViewActorLocation,
-				Sequence++
-			);
-			Request.mIsCritical = AttrLog.mIsCritical;
+			FCombatFloatingLogRequest Request = BuildAttributeFloatingLogRequest(AttrLog, ViewActorLocation);
+			Request.mSequence = Sequence++;
+			Request.mTurnIndex = bBindMotionIndices ? TurnIndex : INDEX_NONE;
+			Request.mActionIndex = bBindMotionIndices ? ActionIndex : INDEX_NONE;
+			Request.mMotionIndex = bBindMotionIndices ? MotionIndex : INDEX_NONE;
 			Requests.Add(MoveTemp(Request));
 		}
 		for (const FSRPGTagEffectEventLog& TagLog : EventLog.mTagEffectEventLogs)
