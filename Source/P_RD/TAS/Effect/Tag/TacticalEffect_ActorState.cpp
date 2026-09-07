@@ -32,18 +32,18 @@ void UTacticalEffect_AddActorState::OnExecuted(FActiveTacticalEffectsContainer& 
 	NewSpec->SetStackCount(TagCount);
 	AttributeSetCompModelInstance->ApplyTacticalEffectSpecToSelf(*NewSpec);
 
-	/* 로그 작성 */
+	/* 로그 작성 생략 */
 
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
-	const FGameplayTagContainer& StateTags = GetDefault<UTacticalEffect>(mActorStateEffect)->GetAssetTags();
-	for (const FGameplayTag& StateTag : StateTags)
-	{
-		FSRPGTagEffectEventLog Log;
-		Log.mEffectTag = StateTag;
-		Log.mCount = TagCount;
-
-		GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
-	}
+	//const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	//const FGameplayTagContainer& StateTags = GetDefault<UTacticalEffect>(mActorStateEffect)->GetAssetTags();
+	//for (const FGameplayTag& StateTag : StateTags)
+	//{
+	//	FSRPGTagEffectEventLog Log;
+	//	Log.mEffectTag = StateTag;
+	//	Log.mCount = TagCount;
+	//
+	//	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	//}
 }
 
 bool UTacticalEffect_GetActorState::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const

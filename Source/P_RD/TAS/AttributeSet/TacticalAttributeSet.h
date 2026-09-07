@@ -79,7 +79,7 @@ protected:
 USTRUCT(BlueprintType)
 struct P_RD_API FTacticalAttribute
 {
-	GENERATED_USTRUCT_BODY()
+	GENERATED_BODY()
 
 	friend class FTacticalAttributePropertyDetails;
 

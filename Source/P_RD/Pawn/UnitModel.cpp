@@ -424,6 +424,12 @@ void UUnitModel::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* Instigato
 	}
 }
 
+UTexture2D* UUnitModel::GetUnitShortCut() const
+{
+	const UStaticUnitSpawnData* UnitSpawnData = Cast<UStaticUnitSpawnData>(mStaticSpawnData);
+	return UnitSpawnData != nullptr ? UnitSpawnData->mShortCut.LoadSynchronous() : nullptr;
+}
+
 UPassiveComponentModel* UUnitModel::GetPassiveComponentModel() const
 {
 	return mPassiveCompModel;
