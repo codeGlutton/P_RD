@@ -87,8 +87,7 @@ namespace
  * @brief 아이콘 의미(종류+색) → 실제 텍스처. None이면 아이콘 없이 텍스트만 띄운다.
  * @param IconType 게임플레이가 넘긴 아이콘 종류(HP/GetMove/GetDefense/Agility/Fortification/Vulnerability/Weakness 등).
  * @param ColorType 색 의미. HP는 이 값으로 피해(Damage)/회복(Heal) 아이콘을 가른다.
- * @return 해당 텍스처. None이거나 전용 아이콘이 아직 없는 종류(Poison/Fire/Move)면 nullptr.
- * @note StatusIcons 8종 연결됨. Poison/Fire/Move는 발행 배선도 아직 없어 아이콘이 준비돼도 지금은 안 뜬다.
+ * @return 해당 텍스처. 전용 그림이 없는 상태는 범용 상태 프레임을 쓴다.
  */
 UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const
 {
@@ -103,8 +102,12 @@ UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType 
 	case EFloatingLogIconType::Fortification: return mLogIconFortification;
 	case EFloatingLogIconType::Vulnerability: return mLogIconVulnerability;
 	case EFloatingLogIconType::Weakness:      return mLogIconWeakness;
+	case EFloatingLogIconType::Status:        return mUnitStatusSlotTexture;
+	case EFloatingLogIconType::Poison:        return mLogIconPoison;
+	case EFloatingLogIconType::Stun:          return mLogIconStun;
+	case EFloatingLogIconType::Move:          return mLogIconGetMove;
 	default:
-		// None + 아직 전용 아이콘이 없는 Poison/Fire/Move는 아이콘 없이 텍스트만 띄운다.
+		// None과 아직 정의되지 않은 원소는 문구만 띄운다.
 		return nullptr;
 	}
 }

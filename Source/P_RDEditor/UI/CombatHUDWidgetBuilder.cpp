@@ -19,6 +19,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/ScaleBox.h"
 #include "Components/ScaleBoxSlot.h"
+#include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
@@ -63,6 +64,8 @@ namespace CombatHUDWidgetBuilder
 	TUniquePtr<FAutoConsoleCommand> MercenaryPortraitFrameRepairCommand;
 	TUniquePtr<FAutoConsoleCommand> DetailResponsiveRepairCommand;
 	TUniquePtr<FAutoConsoleCommand> WidgetTreeContractRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> APPlacementRepairCommand;
+	TUniquePtr<FAutoConsoleCommand> StatusScrollRepairCommand;
 	TUniquePtr<FAutoConsoleCommand> SlotDumpCommand;
 
 	UTexture2D* EnsureSummaryVerticalTexture()
@@ -975,6 +978,122 @@ namespace CombatHUDWidgetBuilder
 	}
 
 	/**
+	 * @brief 세로 요약판의 고정 3칸 상태 소켓을 런타임 스크롤 자리로 교체한다.
+	 *
+	 * 행은 실제 상태 수만큼 HUD가 동적으로 만든다. WBP에는 클리핑/입력 영역인
+	 * ScrollBox만 굽고, 과거 소켓은 이름 호환을 위해 접어 둔다.
+	 */
+	void RepairAuthoredSummaryStatusScrolls(UWidgetBlueprint* Blueprint)
+	{
+		check(Blueprint != nullptr && Blueprint->WidgetTree != nullptr);
+		for (const TCHAR* Prefix : { TEXT("Enemy"), TEXT("Ally") })
+		{
+			UCanvasPanel* Panel = CastChecked<UCanvasPanel>(
+				Blueprint->WidgetTree->FindWidget(FName(FString(Prefix) + TEXT("Panel"))));
+			UScrollBox* Scroll = FindOrCreate<UScrollBox>(Blueprint,
+				FName(FString(Prefix) + TEXT("StatusScroll")));
+			PlaceCanvas(Panel, Scroll, FVector2D(14.f, 352.f),
+				FVector2D(140.f, 190.f), 15);
+			Scroll->SetOrientation(EOrientation::Orient_Vertical);
+			Scroll->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+			Scroll->SetScrollBarVisibility(ESlateVisibility::Collapsed);
+			Scroll->SetScrollbarThickness(FVector2D(4.f, 4.f));
+			Scroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+			Scroll->SetAnimateWheelScrolling(true);
+			Scroll->SetAllowOverscroll(false);
+			Scroll->SetAlwaysShowScrollbar(false);
+			Scroll->SetVisibility(ESlateVisibility::Visible);
+
+			// 카드가 펼쳐져도 체력을 읽을 수 있어야 하므로 요약판 HP도 남긴다.
+			for (const TCHAR* Suffix : { TEXT("HPBackMount"), TEXT("HPBack"),
+				TEXT("HPBar"), TEXT("HPText_Center"), TEXT("HPText") })
+			{
+				if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + Suffix)))
+				{
+					Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+				}
+			}
+			// HP→금속 프레임→글자 순으로 그리면 HP는 넓게 차오르되 금속
+			// 테두리를 덮지 않는다. 프레임을 시각적 마스크로 사용한다.
+			if (UProgressBar* HPBar = Cast<UProgressBar>(
+				Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + TEXT("HPBar")))))
+			{
+				if (UOverlaySlot* HPSlot = Cast<UOverlaySlot>(HPBar->Slot))
+				{
+					HPSlot->SetPadding(FMargin(8.f));
+					if (UOverlay* Mount = Cast<UOverlay>(HPBar->GetParent()))
+					{
+						UWidget* Frame = Blueprint->WidgetTree->FindWidget(
+							FName(FString(Prefix) + TEXT("HPBack")));
+						const int32 FrameIndex = Mount->GetChildIndex(Frame);
+						const int32 BarIndex = Mount->GetChildIndex(HPBar);
+						if (Frame != nullptr && FrameIndex != INDEX_NONE
+							&& BarIndex != INDEX_NONE && FrameIndex < BarIndex)
+						{
+							UPanelSlot* FrameSlot = Frame->Slot;
+							Mount->RemoveChildAt(FrameIndex);
+							Mount->InsertChildAt(
+								Mount->GetChildIndex(HPBar) + 1, Frame, FrameSlot);
+						}
+					}
+				}
+			}
+
+			// HP를 없앴던 판이 AP/속도 행을 위로 당겨 저장했을 수 있다.
+			for (const TCHAR* Suffix : { TEXT("APPlateMount"), TEXT("APPlate"),
+				TEXT("APText_Center"), TEXT("APText"), TEXT("SpeedPlateMount"),
+				TEXT("SpeedPlate"), TEXT("SpeedIcon"), TEXT("SpeedText_Center"),
+				TEXT("SpeedText") })
+			{
+				if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + Suffix)))
+				{
+					FWidgetTransform Transform;
+					if (FString(Suffix).EndsWith(TEXT("Icon")))
+					{
+						Transform.Scale = FVector2D(1.2f, 1.2f);
+					}
+					Widget->SetRenderTransform(Transform);
+					Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+				}
+			}
+
+			for (const TCHAR* Suffix : { TEXT("StatusLabel"),
+				TEXT("StatusLabel_Center"), TEXT("Status"), TEXT("Status_Center") })
+			{
+				if (UWidget* Legacy = Blueprint->WidgetTree->FindWidget(
+					FName(FString(Prefix) + Suffix)))
+				{
+					Legacy->SetVisibility(ESlateVisibility::Collapsed);
+				}
+			}
+			for (int32 Index = 0; Index < 3; ++Index)
+			{
+				const FString Base = FString::Printf(TEXT("%sStatus"), Prefix);
+				const FName LegacyNames[] = {
+					FName(*FString::Printf(TEXT("%sFrame_%dMount"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sFrame_%d"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sIcon_%d"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sCount_%d_Center"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sCount_%d_AutoFit"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sCount_%d"), *Base, Index)),
+					FName(*FString::Printf(TEXT("%sButton_%d"), *Base, Index)),
+				};
+				for (const FName LegacyName : LegacyNames)
+				{
+					if (UWidget* Legacy = Blueprint->WidgetTree->FindWidget(LegacyName))
+					{
+						Legacy->SetRenderTransform(FWidgetTransform());
+						Legacy->SetVisibility(ESlateVisibility::Collapsed);
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * 디자이너가 관리하는 인라인 용병 상세판에도 치명타 아이콘을 직접 굽는다.
 	 * 별도 WBP_MercenaryPanel만 수정하면 실제 HUD에서는 그 Host가 Collapsed라
 	 * 화면에 아무 변화가 없다.
@@ -1286,15 +1405,15 @@ namespace CombatHUDWidgetBuilder
 			Panel->SetVisibility(ESlateVisibility::Collapsed);
 			ResetVisualTransform(Panel, FVector2D(1.f, 0.f));
 			const FString Prefix = PanelName.ToString().LeftChop(5);
-			// 월드 HP바가 같은 값을 더 가까이 보여 주므로 좁은 요약판의 HP 행은
-			// 없앤다. 아래 행들은 빈 높이만큼 위로 당겨 상태이상까지 클립 안에
-			// 들어오게 하고, 초상/상태 표식은 작은 해상도에서도 읽히게 키운다.
-			for (const TCHAR* Suffix : { TEXT("HPBack"), TEXT("HPBar"), TEXT("HPText") })
+			// 스킬 카드가 열린 동안에도 체력을 읽을 수 있도록 요약판 HP 행을
+			// 유지한다. 상태 목록은 아래 전용 스크롤이 차지한다.
+			for (const TCHAR* Suffix : { TEXT("HPBackMount"), TEXT("HPBack"),
+				TEXT("HPBar"), TEXT("HPText_Center"), TEXT("HPText") })
 			{
 				if (UWidget* HPWidget = Blueprint->WidgetTree->FindWidget(FName(
 					*FString::Printf(TEXT("%s%s"), *Prefix, Suffix))))
 				{
-					HPWidget->SetVisibility(ESlateVisibility::Collapsed);
+					HPWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 				}
 			}
 			for (const TCHAR* Suffix : { TEXT("PortraitFrame"), TEXT("Portrait") })
@@ -1308,15 +1427,15 @@ namespace CombatHUDWidgetBuilder
 					Widget->SetRenderTransformPivot(FVector2D(.5f, .5f));
 				}
 			}
-			for (const TCHAR* Suffix : { TEXT("APPlate"), TEXT("APText"),
-				TEXT("SpeedPlate"), TEXT("SpeedIcon"), TEXT("SpeedText"),
-				TEXT("StatusLabel"), TEXT("Status") })
+			for (const TCHAR* Suffix : { TEXT("APPlateMount"), TEXT("APPlate"),
+				TEXT("APText_Center"), TEXT("APText"), TEXT("SpeedPlateMount"),
+				TEXT("SpeedPlate"), TEXT("SpeedIcon"), TEXT("SpeedText_Center"),
+				TEXT("SpeedText") })
 			{
 				if (UWidget* Widget = Blueprint->WidgetTree->FindWidget(FName(
 					*FString::Printf(TEXT("%s%s"), *Prefix, Suffix))))
 				{
 					FWidgetTransform Transform;
-					Transform.Translation = FVector2D(0.f, -52.f);
 					if (FString(Suffix).EndsWith(TEXT("Icon")))
 					{
 						Transform.Scale = FVector2D(1.2f, 1.2f);
@@ -1334,11 +1453,8 @@ namespace CombatHUDWidgetBuilder
 						*FString::Printf(TEXT("%sStatus%s_%d"),
 							*Prefix, Kind, Index))))
 					{
-						FWidgetTransform Transform;
-						Transform.Translation = FVector2D(0.f, -52.f);
-						Transform.Scale = FVector2D(1.18f, 1.18f);
-						StatusWidget->SetRenderTransform(Transform);
-						StatusWidget->SetRenderTransformPivot(FVector2D(.5f, .5f));
+						StatusWidget->SetRenderTransform(FWidgetTransform());
+						StatusWidget->SetVisibility(ESlateVisibility::Collapsed);
 					}
 				}
 				if (UWidget* StatusButton = Blueprint->WidgetTree->FindWidget(FName(
@@ -1349,6 +1465,7 @@ namespace CombatHUDWidgetBuilder
 				}
 			}
 		}
+		RepairAuthoredSummaryStatusScrolls(Blueprint);
 
 		// 버튼 그림의 authored 크기는 보존하고 화면 모서리 배치만 새 계약으로
 		// 정한다. 스킬/확정은 좌하단, 턴 종료는 우하단이다.
@@ -1537,6 +1654,28 @@ namespace CombatHUDWidgetBuilder
 		NormalizeCenteredTextBounds(Blueprint);
 	}
 
+	/** @brief AP 바를 해상도에 따라 움직이는 파티 레이어에서 떼어 좌상단에 고정한다. */
+	bool RepairTurnAPPlacement(UWidgetBlueprint* Blueprint)
+	{
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			return false;
+		}
+		UCanvasPanel* Root = Cast<UCanvasPanel>(Blueprint->WidgetTree->RootWidget);
+		UScaleBox* TurnAPScale = Cast<UScaleBox>(
+			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPScale")));
+		if (Root == nullptr || TurnAPScale == nullptr)
+		{
+			return false;
+		}
+
+		TurnAPScale->SetStretch(EStretch::ScaleToFit);
+		TurnAPScale->SetStretchDirection(EStretchDirection::Both);
+		PlaceCanvas(Root, TurnAPScale, FVector2D(18.f, 164.f),
+			FVector2D(800.f, 97.f), 2);
+		return true;
+	}
+
 	/** @brief 좌상단 15칸 AP 바와 원본 스킬 카드 배치를 복구한다. */
 	void RepairAuthoredPrimaryCombatControls(UWidgetBlueprint* Blueprint)
 	{
@@ -1547,26 +1686,7 @@ namespace CombatHUDWidgetBuilder
 
 		// ROUND/턴 바 바로 아래의 좌상단에 고정한다. 왼쪽 AP 전용 배지와
 		// 오른쪽 15칸 레일을 800x97 안에 함께 넣어 중앙 Move 카드와 겹치지 않는다.
-		if (UWidget* TurnAPScale = Blueprint->WidgetTree->FindWidget(
-			TEXT("TurnAPScale")))
-		{
-			if (UScaleBox* ScaleBox = Cast<UScaleBox>(TurnAPScale))
-			{
-				// 568.421x68.8995 authored 판을 약 1.408배로 맞춘다.
-				// 비균일 확대는 사용하지 않는다.
-				ScaleBox->SetStretch(EStretch::ScaleToFit);
-				ScaleBox->SetStretchDirection(EStretchDirection::Both);
-			}
-			if (UCanvasPanelSlot* Slot = Cast<UCanvasPanelSlot>(TurnAPScale->Slot))
-			{
-				Slot->SetAnchors(FAnchors(0.f, 0.f));
-				Slot->SetAlignment(FVector2D::ZeroVector);
-				Slot->SetAutoSize(false);
-				Slot->SetPosition(FVector2D(18.f, 164.f));
-				Slot->SetSize(FVector2D(800.f, 97.f));
-				Slot->SetZOrder(2);
-			}
-		}
+		check(RepairTurnAPPlacement(Blueprint));
 		if (UTextBlock* TurnAPText = Cast<UTextBlock>(
 			Blueprint->WidgetTree->FindWidget(TEXT("TurnAPText"))))
 		{
@@ -2915,6 +3035,7 @@ namespace CombatHUDWidgetBuilder
 		RepairAuthoredRoundTurnLayout(Blueprint, RoundBadgeTexture,
 			TurnTokenFrameTexture);
 		RepairAuthoredSummaryFrames(Blueprint, SummaryPanelTexture);
+		RepairAuthoredSummaryStatusScrolls(Blueprint);
 		RepairAuthoredActionButtonArt(Blueprint, ActionButtonTexture);
 		PruneStaleVariables(Blueprint);
 		if (SaveCompiledBlueprint(Blueprint) == false)
@@ -2978,6 +3099,50 @@ namespace CombatHUDWidgetBuilder
 			++Printed;
 		});
 		UE_LOG(LogTemp, Display, TEXT("RD_SLOT_DUMP done count=%d"), Printed);
+	}
+
+	/** @brief 다른 HUD 저작값은 보존하고 AP 바의 부모와 좌표만 복구한다. */
+	void RepairTurnAPPlacementOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_AP_PLACEMENT missing WBP"));
+			return;
+		}
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		if (RepairTurnAPPlacement(Blueprint) == false
+			|| SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("RD_COMBAT_HUD_AP_PLACEMENT save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_AP_PLACEMENT success parent=RootCanvas pos=18,164 size=800,97"));
+	}
+
+	/** @brief 다른 WBP 편집은 보존하고 요약판 HP/상태 스크롤 계약만 굽는다. */
+	void RepairSummaryStatusScrollOnly()
+	{
+		UWidgetBlueprint* Blueprint = LoadObject<UWidgetBlueprint>(nullptr, AssetPath);
+		if (Blueprint == nullptr || Blueprint->WidgetTree == nullptr)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_STATUS_SCROLL missing WBP"));
+			return;
+		}
+		Blueprint->Modify();
+		Blueprint->WidgetTree->Modify();
+		RepairAuthoredSummaryStatusScrolls(Blueprint);
+		if (SaveCompiledBlueprint(Blueprint) == false)
+		{
+			UE_LOG(LogTemp, Error,
+				TEXT("RD_COMBAT_HUD_STATUS_SCROLL save failed"));
+			return;
+		}
+		UE_LOG(LogTemp, Display,
+			TEXT("RD_COMBAT_HUD_STATUS_SCROLL success rows=runtime viewport=140x190"));
 	}
 
 	/** @brief 전투 HUD의 불필요한 속도 위젯과 모든 Xxx_Center/Text 범위를 정리한다. */
@@ -3831,6 +3996,14 @@ void RegisterCombatHUDWidgetBuilderCommands()
 		TEXT("RD.Editor.RepairCombatHUDWidgetTreeContracts"),
 		TEXT("Remove obsolete turn-speed widgets and make every Xxx text fill Xxx_Center."),
 		FConsoleCommandDelegate::CreateStatic(&RepairCombatHUDWidgetTreeContracts));
+	APPlacementRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDAPPlacement"),
+		TEXT("Reparent the combat AP bar to RootCanvas and restore its authored bounds."),
+		FConsoleCommandDelegate::CreateStatic(&RepairTurnAPPlacementOnly));
+	StatusScrollRepairCommand = MakeUnique<FAutoConsoleCommand>(
+		TEXT("RD.Editor.RepairCombatHUDStatusScroll"),
+		TEXT("Bake only the summary HP visibility and runtime status scroll viewport."),
+		FConsoleCommandDelegate::CreateStatic(&RepairSummaryStatusScrollOnly));
 	SlotDumpCommand = MakeUnique<FAutoConsoleCommand>(
 		TEXT("RD.Editor.DumpWidgetSlots"),
 		TEXT("Log authored canvas-slot values of combat HUD widgets (optional name filter)."),
@@ -3847,5 +4020,7 @@ void UnregisterCombatHUDWidgetBuilderCommands()
 	CombatHUDWidgetBuilder::MercenaryPortraitFrameRepairCommand.Reset();
 	CombatHUDWidgetBuilder::DetailResponsiveRepairCommand.Reset();
 	CombatHUDWidgetBuilder::WidgetTreeContractRepairCommand.Reset();
+	CombatHUDWidgetBuilder::APPlacementRepairCommand.Reset();
+	CombatHUDWidgetBuilder::StatusScrollRepairCommand.Reset();
 	CombatHUDWidgetBuilder::SlotDumpCommand.Reset();
 }
