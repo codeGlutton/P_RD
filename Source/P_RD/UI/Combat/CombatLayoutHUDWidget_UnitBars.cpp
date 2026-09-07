@@ -422,7 +422,9 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	// 스킬 카드가 펼쳐진 동안에도 같은 원칙이다. 카드보다 낮은 ZOrder의 HP
 	// 숫자가 카드 사이로 일부만 비쳐 "1/100"이 잘린 글자처럼 보였으므로,
 	// 카드 화면을 닫을 때까지 월드 바 전체를 접는다.
-	if (GetVisibility() == ESlateVisibility::Collapsed || mCommandsShown == true)
+	// 스킬 카드를 펼쳐도 전투 판단에 필요한 체력/상태는 계속 보여 준다.
+	// 카드와 겹치는 유닛은 아래 화면 가장자리 보정에서 위치만 조정된다.
+	if (GetVisibility() == ESlateVisibility::Collapsed)
 	{
 		for (FCombatUnitHpBarWidget& Bar : mUnitHpBars)
 		{
