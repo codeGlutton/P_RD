@@ -330,6 +330,16 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	}
 	RewardModel->SetRewardChoices(TestChoices);
 	Widget->BindUIModel(RewardModel);
+	for (int32 Index = 0; Index < TestChoices.Num(); ++Index)
+	{
+		UTextBlock* Description = Cast<UTextBlock>(Widget->GetWidgetFromName(
+			*FString::Printf(TEXT("NewChoiceDescription_%d"), Index)));
+		if (TestNotNull(TEXT("각 카드 효과 설명 연결"), Description))
+		{
+			TestEqual(TEXT("카드 효과는 해당 후보 데이터 사용"),
+				Description->GetText().ToString(), TestChoices[Index].mDescription.ToString());
+		}
+	}
 	UTextBlock* LevelingLevel = Cast<UTextBlock>(
 		Widget->GetWidgetFromName(TEXT("NewLevel_0")));
 	UTextBlock* LevelingProgress = Cast<UTextBlock>(
@@ -740,7 +750,15 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	Widget->AdvanceRewardFlow();
 	TestFalse(TEXT("지급 confirmation 전에는 보상 흐름을 확정하지 않음"),
 		Widget->IsRewardFlowCompleted());
+	Widget->SelectArtifact(0);
+	TestEqual(TEXT("지급 응답 대기 중 선택 변경 차단"), Widget->GetSelectedArtifactIndex(), 2);
+	RewardModel->OnRewardSelectionRejected.Broadcast(TestChoices[2].mSourceAssetId);
+	TestFalse(TEXT("지급 실패 후에도 보상 흐름 미완료"), Widget->IsRewardFlowCompleted());
+	Widget->SelectArtifact(1);
+	Widget->AdvanceRewardFlow();
 	RewardModel->ConfirmSelectedReward(TestChoices[2].mSourceAssetId);
+	TestFalse(TEXT("다른 후보의 확인은 무시"), Widget->IsRewardFlowCompleted());
+	RewardModel->ConfirmSelectedReward(TestChoices[1].mSourceAssetId);
 	TestTrue(TEXT("지급 confirmation 후 보상 흐름 확정"),
 		Widget->IsRewardFlowCompleted());
 	return true;

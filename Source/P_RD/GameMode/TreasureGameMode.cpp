@@ -1,4 +1,4 @@
-﻿#include "GameMode/TreasureGameMode.h"
+#include "GameMode/TreasureGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -187,7 +187,7 @@ bool ATreasureGameMode::OpenRewardPresentation()
 	for (const FPrimaryAssetId& ArtifactId : ArtifactIds)
 	{
 		FRewardChoiceUI Choice;
-		Choice.mChoiceIndex = 0;
+		Choice.mChoiceIndex = Choices.Num();
 		Choice.mKind = ERewardChoiceKind::Artifact;
 		Choice.mSourceAssetId = ArtifactId;
 		Choice.mName = FText::FromName(ArtifactId.PrimaryAssetName);
@@ -212,13 +212,11 @@ bool ATreasureGameMode::OpenRewardPresentation()
 		}
 		Choices.Add(Choice);
 	}
-	FRewardGrantBundleUI GrantBundle;
-	GrantBundle.mItems = MoveTemp(Choices);
-	mRewardUIModel->SetGrantBundle(GrantBundle);
+	mRewardUIModel->SetRewardChoices(Choices);
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(
 		this, &ATreasureGameMode::HandleRewardClaimRequested);
-	mRewardUIModel->OnRewardGrantBundleRequested.AddUniqueDynamic(
-		this, &ATreasureGameMode::HandleRewardGrantBundleRequested);
+	mRewardUIModel->OnRewardSelectionRequested.AddUniqueDynamic(
+		this, &ATreasureGameMode::HandleRewardSelectionRequested);
 
 	mRewardWidget = CreateWidget<URewardConcept03Widget>(
 		PlayerController, WidgetClass);
@@ -329,24 +327,11 @@ void ATreasureGameMode::PushTreasureUIData()
 	mTreasureUIModel->SetTreasure(TreasureUIData);
 }
 
-/**
- * @brief 상자 개봉 및 보상 전부 지급
- * @details 재개봉 불가. 아티팩트 지급 실패는 로그만 남기고 나머지 지급은 계속 진행
- */
+// 구형 상자 입력도 선택 화면으로 연결한다. 개봉만으로 아티팩트를 지급하지 않는다.
 void ATreasureGameMode::HandleOpenRequested()
 {
-	if (mOpened == true)
-	{
-		return;
-	}
-
-	if (GetRunPersistData() == nullptr)
-	{
-		return;
-	}
-
-	FRewardGrantBundleResultUI IgnoredResult;
-	GrantTreasureRewards(IgnoredResult);
+	if (mOpened || mRewardWidget != nullptr) return;
+	OpenRewardPresentation();
 }
 
 bool ATreasureGameMode::GrantTreasureGold()
@@ -370,90 +355,47 @@ bool ATreasureGameMode::GrantTreasureGold()
 	return true;
 }
 
-FRewardGrantBundleResultUI ATreasureGameMode::GrantTreasureArtifactBundle()
+void ATreasureGameMode::HandleRewardSelectionRequested(FPrimaryAssetId RewardId)
 {
-	FRewardGrantBundleResultUI Result;
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr
-		|| RunPersistData->GetCurrentRoom().mType != ERoomType::Treasure)
+	if (mOpened) return;
+	auto Reject = [this, RewardId]()
 	{
-		return Result;
+		if (mRewardUIModel) mRewardUIModel->OnRewardSelectionRejected.Broadcast(RewardId);
+	};
+	const URunPersistData* Run = GetRunPersistData();
+	if (!Run || Run->GetCurrentRoom().mType != ERoomType::Treasure)
+	{
+		Reject();
+		return;
 	}
-
-	const FTreasureRoom& TreasureRoom = static_cast<const FTreasureRoom&>(
-		RunPersistData->GetCurrentRoom());
-	const TArray<FPrimaryAssetId>& ArtifactIds =
-		TreasureRoom.mRewardArtifactDataIds;
-	UPartyModel* PartyModel = GetPartyModel();
-	UPartyArtifactComponentModel* ArtifactModel = PartyModel != nullptr
-		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
-
-	Result = ArtifactRewardPolicy::GrantAll(
-		ArtifactIds,
-		[ArtifactModel](const FPrimaryAssetId& ArtifactId)
-		{
-			return ArtifactModel != nullptr
-				&& ArtifactModel->AddArtifact(ArtifactId);
-		});
-
+	const FTreasureRoom& Room = static_cast<const FTreasureRoom&>(Run->GetCurrentRoom());
+	FPrimaryAssetId SelectedId;
+	if (!ArtifactRewardPolicy::TrySelectOne(Room.mRewardArtifactDataIds, RewardId, SelectedId))
+	{
+		Reject();
+		return;
+	}
+	UPartyModel* Party = GetPartyModel();
+	UPartyArtifactComponentModel* Artifacts = Party ? Party->GetPartyArtifactComponentModel() : nullptr;
+	if (!Artifacts || !GrantTreasureGold())
+	{
+		Reject();
+		return;
+	}
+	// 지급 중 재진입도 차단한다. 실패하면 선택 화면에서 다시 시도할 수 있다.
+	mOpened = true;
+	const FRewardGrantBundleResultUI Result = ArtifactRewardPolicy::GrantOne(SelectedId,
+		[Artifacts](const FPrimaryAssetId& Id) { return Artifacts->AddArtifact(Id); });
+	if (Result.mGrantedItemIds.IsEmpty())
+	{
+		mOpened = false;
+		Reject();
+		return;
+	}
 	mGrantedArtifactIds = Result.mGrantedItemIds;
-	mFailedArtifactIds = Result.mFailedItemIds;
-	for (const FPrimaryAssetId& FailedArtifactId : Result.mFailedItemIds)
-	{
-		UE_LOG(LogRD, Log, TEXT("보물방 아티팩트 지급 실패: %s"),
-			*FailedArtifactId.ToString());
-	}
-	return Result;
-}
-
-void ATreasureGameMode::GrantTreasureRewards(
-	OUT FRewardGrantBundleResultUI& OutResult)
-{
-	if (mOpened)
-	{
-		OutResult.mGrantedItemIds = mGrantedArtifactIds;
-		OutResult.mFailedItemIds = mFailedArtifactIds;
-		return;
-	}
-
-	const URunPersistData* RunPersistData = GetRunPersistData();
-	if (RunPersistData == nullptr
-		|| RunPersistData->GetCurrentRoom().mType != ERoomType::Treasure)
-	{
-		return;
-	}
-	const FTreasureRoom& TreasureRoom = static_cast<const FTreasureRoom&>(
-		RunPersistData->GetCurrentRoom());
-	const int32 PreGold = GetPartyGold();
-	GrantTreasureGold();
-	OutResult = GrantTreasureArtifactBundle();
-
-	// 전체 지급 처리가 끝난 뒤에만 구형 HUD와 다음 방 전환이 보상 완료로 본다.
-	mOpened = true;
+	mFailedArtifactIds.Reset();
 	PushTreasureUIData();
-
-	UE_LOG(LogRD, Log,
-		TEXT("보물상자 개봉: 골드 %d 지급 (잔액 %d → %d), 아티팩트 %d/%d개 지급"),
-		TreasureRoom.mRewardMoney, PreGold, GetPartyGold(),
-		OutResult.mGrantedItemIds.Num(),
-		OutResult.mGrantedItemIds.Num() + OutResult.mFailedItemIds.Num());
-}
-
-void ATreasureGameMode::HandleRewardGrantBundleRequested()
-{
-	if (mOpened || GetRunPersistData() == nullptr)
-	{
-		return;
-	}
-
-	GrantTreasureGold();
-	FRewardGrantBundleResultUI Result = GrantTreasureArtifactBundle();
-	mOpened = true;
-	PushTreasureUIData();
-	if (mRewardUIModel != nullptr)
-	{
-		mRewardUIModel->ConfirmGrantBundle(Result);
-	}
+	if (mRewardUIModel) mRewardUIModel->ConfirmSelectedReward(SelectedId);
 }
 
 /** @brief 나가기 의도 처리. 다음 방 선택은 지도(월드맵) 담당 */
@@ -506,25 +448,26 @@ void ATreasureGameMode::HandleRewardClaimRequested(
 		return;
 	}
 
-	// 구형 Settlement 위젯은 Choice 한 건을 직접 요청할 수 있다. 신규
-	// Concept03은 GrantAll delegate를 사용하므로 이 호환 경로만 전체 지급
-	// 어댑터를 유지한다.
-	if (ClaimKind == ERewardClaimKind::Choice && !mOpened)
+	// 구형 인덱스 요청도 동일한 단일 지급 검증을 거친다.
+	if (ClaimKind == ERewardClaimKind::Choice && mRewardUIModel
+		&& mRewardUIModel->GetRewardChoices().IsValidIndex(ChoiceIndex))
 	{
-		FRewardGrantBundleResultUI Result;
-		GrantTreasureRewards(Result);
-		if (mRewardUIModel != nullptr)
-		{
-			mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
-		}
+		HandleRewardSelectionRequested(
+			mRewardUIModel->GetRewardChoices()[ChoiceIndex].mSourceAssetId);
 	}
+
 }
 
 void ATreasureGameMode::HandleRewardPresentationCompleted(int32 ArtifactIndex)
 {
 	if (!mOpened)
 	{
-		HandleOpenRequested();
+		const URunPersistData* Run = GetRunPersistData();
+		if (!Run || Run->GetCurrentRoom().mType != ERoomType::Treasure
+			|| !static_cast<const FTreasureRoom&>(Run->GetCurrentRoom()).mRewardArtifactDataIds.IsEmpty()
+			|| !GrantTreasureGold()) return;
+		mOpened = true;
+		PushTreasureUIData();
 	}
 	if (mRewardWidget != nullptr)
 	{
