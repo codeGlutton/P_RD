@@ -2266,7 +2266,12 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 
 FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const
 {
-	const AActor* TargetActor = GetWorldModelFactory(this)->FindModel<AActor>(TargetActorID);
+	const UObjectModel* TargetModel = GetWorldModelFactory(this)->FindModel<UObjectModel>(TargetActorID);
+	if (TargetModel == nullptr)
+	{
+		return FCombatFloatingLogRequest();
+	}
+	const AActor* TargetActor = TargetModel->GetView<AActor>();
 	if (TargetActor == nullptr)
 	{
 		return FCombatFloatingLogRequest();
@@ -2291,7 +2296,12 @@ FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 T
 
 FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const
 {
-	const AActor* TargetActor = GetWorldModelFactory(this)->FindModel<AActor>(TargetActorID);
+	const UObjectModel* TargetModel = GetWorldModelFactory(this)->FindModel<UObjectModel>(TargetActorID);
+	if (TargetModel == nullptr)
+	{
+		return FCombatFloatingLogRequest();
+	}
+	const AActor* TargetActor = TargetModel->GetView<AActor>();
 	if (TargetActor == nullptr)
 	{
 		return FCombatFloatingLogRequest();
