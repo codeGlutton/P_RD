@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TreasureGameMode.h
  * @brief  보상 방에 대한 GameMode 정의 헤더
  * @author 모호재
@@ -76,8 +76,8 @@ private:
 	bool OpenRewardPresentation();
 
 	/**
-	 * @brief 상자 개봉 및 보상 전부 지급
-	 * @details 골드와 아티팩트를 순서대로 지급 후 개봉 상태로 갱신. 재개봉 불가
+	 * @brief 상자 선택 화면 열기
+	 * @details 개봉 입력은 선택 화면으로 연결하며 자동 지급하지 않는다.
 	 */
 	UFUNCTION() void HandleOpenRequested();
 
@@ -87,9 +87,9 @@ private:
 	UFUNCTION()
 	void HandleRewardClaimRequested(ERewardClaimKind ClaimKind, int32 ChoiceIndex);
 
-	/** @brief 보물방 GrantAll 정책 요청을 실제 Room 보상 전체 지급으로 연결한다. */
+	/** @brief 후보 검증 후 선택한 아티팩트 하나만 지급한다. */
 	UFUNCTION()
-	void HandleRewardGrantBundleRequested();
+	void HandleRewardSelectionRequested(FPrimaryAssetId RewardId);
 
 	UFUNCTION()
 	void HandleRewardPresentationCompleted(int32 ArtifactIndex);
@@ -103,11 +103,6 @@ private:
 	/** @brief 골드만 한 번 지급한다. 아티팩트 bundle과 독립된 단계다. */
 	bool GrantTreasureGold();
 
-	/** @brief Room의 유효 아티팩트 목록을 모두 시도하고 결과를 반환한다. */
-	FRewardGrantBundleResultUI GrantTreasureArtifactBundle();
-
-	/** @brief 구형 보물방 진입점용 전체 지급 어댑터. */
-	void GrantTreasureRewards(OUT FRewardGrantBundleResultUI& OutResult);
 
 private:
 	UPROPERTY(Transient)
