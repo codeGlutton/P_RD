@@ -7,6 +7,9 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Engine/Texture2D.h"
+#if WITH_EDITOR
+#include "TextureCompiler.h"
+#endif
 
 namespace
 {
@@ -98,7 +101,9 @@ void USkillCutInWidget::EnsureNativeWidgetTree()
 
 	PanelCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(
 		UCanvasPanel::StaticClass(), TEXT("SkillCutInPanel"));
-	PanelCanvas->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+	// Character motion can lift hats, horns and weapons beyond the backdrop band.
+	// Keep those silhouettes intact; the fixed background/FX retain their own clips.
+	PanelCanvas->SetClipping(EWidgetClipping::Inherit);
 	PanelCanvas->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
 	if (UCanvasPanelSlot* PanelSlot = RootCanvas->AddChildToCanvas(PanelCanvas))
 	{
@@ -218,6 +223,11 @@ void USkillCutInWidget::SetLayerTexture(
 
 	if (UTexture2D* LoadedTexture = Texture.LoadSynchronous())
 	{
+#if WITH_EDITOR
+		// A loaded UObject may still have a placeholder render resource in PIE.
+		// Finish its editor compilation before the presentation clock starts.
+		FTextureCompilingManager::Get().FinishCompilation({ LoadedTexture });
+#endif
 		Layer->SetBrushFromTexture(LoadedTexture, false);
 		Layer->SetColorAndOpacity(FLinearColor::White);
 		Layer->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
@@ -345,14 +355,17 @@ bool USkillCutInWidget::PlayCutIn(
 	ActiveFailSafeSeconds = FMath::Max(ActiveDurationSeconds, Presentation.FailSafeSeconds);
 	FinishedCallback = MoveTemp(OnFinished);
 	ElapsedSeconds = 0.0f;
-	StartedAtRealTimeSeconds = FPlatformTime::Seconds();
 	bCompletionDispatched = false;
 	bCutInPlaying = true;
 	ApplyPresentation(ActivePresentation);
+	// Synchronous asset loads belong to setup, not the visible animation clock.
+	StartedAtRealTimeSeconds = FPlatformTime::Seconds();
+	bAwaitingFirstPresentationTick = true;
 	// The short presentation is modal: consume pointer input so commands and
 	// world clicks cannot slip through while the pre-skill barrier is held.
-	SetVisibility(ESlateVisibility::Visible);
 	ApplyMotion(0.0f);
+	SetRenderOpacity(1.0f);
+	SetVisibility(ESlateVisibility::Visible);
 	return true;
 }
 
@@ -371,9 +384,10 @@ void USkillCutInWidget::StopCutIn(const bool bNotifyCompletion)
 
 	bCutInPlaying = false;
 	ElapsedSeconds = 0.0f;
+	bAwaitingFirstPresentationTick = false;
 	FinishedCallback.Unbind();
+	SetRenderOpacity(0.0f);
 	SetVisibility(ESlateVisibility::Collapsed);
-	ResetLayerTransforms();
 }
 
 void USkillCutInWidget::NativeTick(
@@ -386,7 +400,17 @@ void USkillCutInWidget::NativeTick(
 		return;
 	}
 
-	ElapsedSeconds += FMath::Max(0.0f, InDeltaTime);
+	// The first Slate delta may include the entire frame that loaded the art.
+	// Start at the first presentation tick so a cold load cannot skip the cut-in.
+	if (bAwaitingFirstPresentationTick)
+	{
+		bAwaitingFirstPresentationTick = false;
+		StartedAtRealTimeSeconds = FPlatformTime::Seconds();
+	}
+	else
+	{
+		ElapsedSeconds += FMath::Max(0.0f, InDeltaTime);
+	}
 	const double RealElapsedSeconds = FPlatformTime::Seconds() - StartedAtRealTimeSeconds;
 	const float NormalizedTime = FMath::Clamp(
 		ElapsedSeconds / FMath::Max(0.01f, ActiveDurationSeconds), 0.0f, 1.0f);
@@ -446,10 +470,11 @@ void USkillCutInWidget::ApplyMotion(const float NormalizedTime)
 	// Fixed canvases participate in visibility only. They never inherit PanelX,
 	// caster rotation, squash or overshoot.
 	FixedBackgroundCanvas->SetRenderTranslation(FVector2D::ZeroVector);
-	FixedBackgroundCanvas->SetRenderOpacity(PanelOpacity);
+	const float FixedLayerOpacity = PanelOpacity * Smooth01(FMath::Clamp(T / 0.10f, 0.0f, 1.0f));
+	FixedBackgroundCanvas->SetRenderOpacity(FixedLayerOpacity);
 	FixedBackgroundCanvas->SetRenderTransformAngle(0.0f);
 	FixedFrontFXCanvas->SetRenderTranslation(FVector2D::ZeroVector);
-	FixedFrontFXCanvas->SetRenderOpacity(PanelOpacity);
+	FixedFrontFXCanvas->SetRenderOpacity(FixedLayerOpacity);
 	FixedFrontFXCanvas->SetRenderTransformAngle(0.0f);
 
 	const float EnterProgress = EaseOutCubic(FMath::Clamp(T / ActiveEnterEnd, 0.0f, 1.0f));
@@ -750,8 +775,11 @@ void USkillCutInWidget::FinishCutIn()
 
 	bCompletionDispatched = true;
 	bCutInPlaying = false;
+	// Slate may already be painting this widget when its tick finishes. Keep the
+	// completed pose and make the root transparent instead of restoring an opaque
+	// centered frame. ApplyPresentation resets transforms on the next explicit play.
+	SetRenderOpacity(0.0f);
 	SetVisibility(ESlateVisibility::Collapsed);
-	ResetLayerTransforms();
 
 	// Blueprint listeners are still part of presentation cleanup. Notify them
 	// before the native HUD callback releases the gameplay barrier and may
