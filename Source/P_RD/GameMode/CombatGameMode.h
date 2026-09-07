@@ -172,7 +172,7 @@ protected:
 	 * 제거된 뒤에도 패배 결과판에는 이번 전투에 참가한 파티를 보여 준다.
 	 */
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyPortraits;
+	TArray<TObjectPtr<UTexture2D>> mCombatStartPartyIcons;
 
 	/**
 	 * @brief 길게 눌러 고른 대상의 상세를 UI 에 내린다.
@@ -269,6 +269,10 @@ protected:
 	void PushPlayerMetaUIData() const;
 
 private:
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const;
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const;
+	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTileEffectEventLog& Log) const;
+
 	/**
 	 * @brief 턴 이벤트 로그를 플로팅 로그 요청 목록으로 변환한다(예측/실전 공용 빌더).
 	 *
@@ -297,9 +301,6 @@ public:
 	 * 실전 뷰모델의 표시 상태는 건드리지 않는다.
 	 */
 	void PushSimulationPreviewUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
-
-	/** @brief 끝난 실전 턴의 이벤트 로그를 실전 뷰모델(UCombatUIModel)로 내린다. */
-	void PushCombatEventUIData(const TArray<FSRPGTurnEventLog>& TurnEventLogs) const;
 
 protected:
 	void PushCombatRewardUIData() const;

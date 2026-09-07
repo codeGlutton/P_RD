@@ -95,8 +95,9 @@ private:
 USTRUCT(BlueprintType)
 struct FTacticalModifierEvaluatedData
 {
-    GENERATED_USTRUCT_BODY()
+    GENERATED_BODY()
 
+public:
     FTacticalModifierEvaluatedData() :
         mAttribute(),
         mModifierOp(ETacticalModOp::AddBase),

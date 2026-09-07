@@ -25,6 +25,16 @@ public:
 
 public:
 	template<typename T>
+	T* FindModel(int32 ModelId) const
+	{
+		return Cast<T>(FindModel_Internal(ModelId));
+	}
+
+protected:
+	UObjectModel* FindModel_Internal(int32 ModelId) const;
+
+public:
+	template<typename T>
 	T* NewModel(const UClass* Class, const FTransform& ViewTransform = FTransform::Identity, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
 		T* Result = Cast<T>(NewModel_Internal(Class, ViewTransform, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
@@ -51,10 +61,7 @@ public:
 	T* NewModelDeferred(const UClass* Class, FName Name = NAME_None, EObjectFlags Flags = RF_NoFlags, UObject* Template = nullptr, bool CopyTransientsFromClassDefaults = false, FObjectInstancingGraph* InInstanceGraph = nullptr, UPackage* InExternalPackage = nullptr)
 	{
 		static_assert(TIsDerivedFrom<T, UObjectModel>::IsDerived, "UObjectModel를 상속해야 함");
-		// 전달받은 구체 Class(예: BP_KnightPlayerUnitModel_C)를 그대로 넘긴다.
-		// 이전엔 T::StaticClass()를 넘겨, 추상 베이스(UPlayerUnitModel 등)로 생성 시도 → 크래시했다.
-		const UClass* ClassToUse = (Class != nullptr) ? Class : T::StaticClass();
-		T* Result = Cast<T>(NewModelDeferred_Internal(ClassToUse, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
+		T* Result = Cast<T>(NewModelDeferred_Internal(Class, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage));
 		return Result;
 	}
 

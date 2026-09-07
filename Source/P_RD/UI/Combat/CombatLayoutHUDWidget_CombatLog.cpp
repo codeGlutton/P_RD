@@ -216,7 +216,7 @@ UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType 
 	case EFloatingLogIconType::HP:
 		// HP는 색으로 피해/회복을 가른다(Heal=회복, 그 외=피해).
 		return ColorType == EFloatingLogColorType::Heal ? mLogIconHpRecovery : mLogIconHpDamage;
-	case EFloatingLogIconType::GetMove:       return mLogIconGetMove;
+	case EFloatingLogIconType::GetActionPoint:       return mLogIconGetMove;
 	case EFloatingLogIconType::GetDefense:    return mLogIconGetDefense;
 	case EFloatingLogIconType::Vigor:			return mLogIconVigor;
 	case EFloatingLogIconType::Fortification: return mLogIconFortification;
