@@ -300,6 +300,7 @@ protected:
 
 
 private:
+	friend class FCombatWorldHpVisibilityTest;
 	/** @brief WBP에서 이름으로 위젯을 찾아 캐시한다. 없는 것은 null로 둔다. */
 	void CacheAuthoredWidgets();
 
