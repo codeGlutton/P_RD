@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   PersistentData.h
  * @brief  영구적 플레이 데이터 구현 헤더
  * @author 모호재
@@ -12,6 +12,8 @@
 #include "PCGStage/Stage.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
+#include "Tutorial/FirstPlayProgress.h"
+#include "Tutorial/GuidedTutorial.h"
 #include "PersistentData.generated.h"
 
 class UPartyModel;
@@ -274,6 +276,10 @@ class P_RD_API UUserPersistData : public UObject
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(SaveGame)
+	FFirstPlayProgress TutorialProgress;
+	UPROPERTY(SaveGame) FGuidedTutorialProgress GuidedTutorial;
+
 	void MakeUser(const FText& Name);
 	void ClearUser();
 	void UpdateLog(const FRunLog& RunLog);

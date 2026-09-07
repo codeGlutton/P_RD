@@ -1,4 +1,5 @@
-﻿#include "GameMode/FrontendGameMode.h"
+#include "GameMode/FrontendGameMode.h"
+#include "Tutorial/FirstPlayTutorialSubsystem.h"
 
 #include "GameFramework/PlayerController.h"
 
@@ -251,7 +252,10 @@ void AFrontendGameMode::InitializeCommonRoom()
 {
 	Super::InitializeCommonRoom();
 
-	/* 저장 */
+	// Capture first-install eligibility before frontend autosaves create User/Run slots.
+ GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->PrepareFirstProfile();
+
+ /* 저장 */
 
 	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
 

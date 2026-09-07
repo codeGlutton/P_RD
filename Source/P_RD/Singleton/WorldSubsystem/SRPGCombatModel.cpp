@@ -79,8 +79,9 @@ TStatId USRPGCombatModel::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(USRPGCombatModel, STATGROUP_Tickables);
 }
 
-void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData)
+void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData, bool FixedPlayerOpening)
 {
+	mFixedPlayerOpening = FixedPlayerOpening;
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
@@ -198,7 +199,8 @@ void USRPGCombatModel::InitBoardActorModels(UStaticCombatRoomSpawnData* RoomSpaw
 		TransformIndexes.Add(PlayerIndex);
 	}
 	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
-	URandomStreamFunctionLibrary::ShuffleArray(RandomStream, TransformIndexes);
+	if (!mFixedPlayerOpening)
+		URandomStreamFunctionLibrary::ShuffleArray(RandomStream, TransformIndexes);
 
 	/* 플레이어 유닛 스폰 */
 
@@ -662,6 +664,19 @@ void USRPGCombatModel::EvaluateRound()
 		}
 
 		/* 현 상태 평가 */
+		if (mFixedPlayerOpening && mRoundCount == 0 && !mPlayerUnitModels.IsEmpty())
+		{
+			// The scripted opening always belongs to party slot 0, regardless of speed rolls.
+			auto* Attributes = mPlayerUnitModels[0]->GetAttributeComponentModel();
+			const float Required = GetDefault<UGameBalanceSettings>()->mRequiredSpeedPointForTurn;
+			const float Missing = Required - Attributes->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute());
+			if (Missing > 0)
+			{
+				auto Spec = Attributes->MakeOutgoingSpec(UTacticalEffect_SpeedPoint::StaticClass(), Attributes->MakeEffectContext());
+				Spec->mDynamicMagnitude = Missing;
+				Attributes->ApplyTacticalEffectSpecToSelf(*Spec);
+			}
+		}
 
 		TArray<FSRPGTurnCandidate> Candidates;
 		int32 NextRoundRandomSeed = INDEX_NONE;
@@ -731,6 +746,17 @@ bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>
 	}
 
 	Candidates.Sort(TGreater<FSRPGTurnCandidate>());
+	if (mFixedPlayerOpening && mRoundCount == 0 && !mPlayerUnitModels.IsEmpty())
+	{
+		const int32 Opening = Candidates.IndexOfByPredicate([this](const FSRPGTurnCandidate& Candidate)
+			{ return Candidate.mOwner == mPlayerUnitModels[0]; });
+		if (Opening > 0)
+		{
+			const auto First = Candidates[Opening];
+			Candidates.RemoveAt(Opening);
+			Candidates.Insert(First, 0);
+		}
+	}
 	NextRoundRandomSeed = RandomStream.GetCurrentSeed();
 
 	return true;

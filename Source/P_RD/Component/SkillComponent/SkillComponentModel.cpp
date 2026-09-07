@@ -102,8 +102,13 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
 	{
-		const bool IsSettingSkill = SetSkill(NextSkillIndex++, Skill.Get());
-		checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당"));
+		// Runtime room overrides can introduce skills outside the preloaded room bundle.
+		// Get() only resolves resident assets; load the soft reference before validating it.
+		UStaticSkillData* SkillData = Skill.LoadSynchronous();
+		const bool IsSettingSkill = SetSkill(NextSkillIndex++, SkillData);
+		checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당: %s (owner=%s, slot=%d, loaded=%s)"),
+			*Skill.ToSoftObjectPath().ToString(), *GetNameSafe(GetOwnerModel()), NextSkillIndex - 1,
+			*GetNameSafe(SkillData));
 	}
 }
 
