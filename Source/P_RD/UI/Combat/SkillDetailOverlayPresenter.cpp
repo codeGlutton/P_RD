@@ -1,4 +1,5 @@
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
+#include "Tutorial/GuidedTutorial.h"
 
 #include "Actor/TileMap/TileLayer.h"
 
@@ -2152,3 +2153,18 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 }
 
 #undef LOCTEXT_NAMESPACE
+
+UWidget* USkillDetailOverlayPresenter::GetGuidedSystemTarget(EGuidedStage Stage) const
+{
+	switch (Stage)
+	{
+	case EGuidedStage::ReadSkillCost:
+		return mSkillVisualStatTexts.IsValidIndex(0) ? mSkillVisualStatTexts[0].Get() : nullptr;
+	case EGuidedStage::ReadSkillCooldown:
+		return mSkillVisualStatTexts.IsValidIndex(2) ? mSkillVisualStatTexts[2].Get() : nullptr;
+	case EGuidedStage::SelectRange: return mSkillSelectRangeButton;
+	case EGuidedStage::EffectRange: return mSkillEffectRangeButton;
+	case EGuidedStage::ReadEnemySkill: return mSkillDescriptionScrollBox;
+	default: return nullptr;
+	}
+}

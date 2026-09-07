@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SaveGameSubsystem.h
  * @brief  게임 저장을 위한 Subsystem 구현 헤더
  * @author 모호재
@@ -27,6 +27,7 @@ class P_RD_API USaveGameSubsystem : public UGameInstanceSubsystem, public IUserD
 	GENERATED_BODY()
 
 public:
+	bool HasPlaySave() const;
 	bool SaveUser() const;
 	void SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const;
 	bool LoadUser() const;
