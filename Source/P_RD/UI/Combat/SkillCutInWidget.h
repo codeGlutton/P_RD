@@ -153,6 +153,7 @@ protected:
 	virtual void PlayCloseUIAnimation_Implementation() override;
 
 private:
+	friend class FSkillCutInColdFrameTest;
 	void EnsureNativeWidgetTree();
 	void ApplyPresentation(const FSkillCutInPresentationData& Presentation);
 	void ApplyMotion(float NormalizedTime);
@@ -212,4 +213,5 @@ private:
 	float ActiveFailSafeSeconds = 0.90f;
 	bool bCutInPlaying = false;
 	bool bCompletionDispatched = false;
+	bool bAwaitingFirstPresentationTick = false;
 };
