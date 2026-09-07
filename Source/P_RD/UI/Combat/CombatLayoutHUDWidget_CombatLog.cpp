@@ -1,4 +1,5 @@
-﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatStatusPresentation.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -91,6 +92,11 @@ namespace
  */
 UTexture2D* UCombatLayoutHUDWidget::ResolveFloatingLogIcon(EFloatingLogIconType IconType, EFloatingLogColorType ColorType) const
 {
+	if (UTexture2D* StatusArt = CombatStatusUI::ResolveIcon(IconType))
+	{
+		return StatusArt;
+	}
+
 	switch (IconType)
 	{
 	case EFloatingLogIconType::HP:

@@ -1,9 +1,55 @@
 #include "UI/Combat/CombatStatusPresentation.h"
 
 #include "GameplayTagType.h"
+#include "Engine/Texture2D.h"
+#include "UObject/StrongObjectPtr.h"
 
 namespace
 {
+	struct FStatusArt
+	{
+		const TCHAR* Leaf;
+		EFloatingLogIconType Icon;
+		const TCHAR* Asset;
+	};
+	const FStatusArt StatusArt[] = {
+		{TEXT("Vigor"), EFloatingLogIconType::Vigor, TEXT("Agility")},
+		{TEXT("Fortification"), EFloatingLogIconType::Fortification, TEXT("Fortification")},
+		{TEXT("Weakness"), EFloatingLogIconType::Weakness, TEXT("Weakness")},
+		{TEXT("Vulnerability"), EFloatingLogIconType::Vulnerability, TEXT("Vulnerability")},
+		{TEXT("Poison"), EFloatingLogIconType::Poison, TEXT("Poison")},
+		{TEXT("Stun"), EFloatingLogIconType::Stun, TEXT("Stun")},
+		{TEXT("Strength"), EFloatingLogIconType::Strength, TEXT("Strength")},
+		{TEXT("Dexterity"), EFloatingLogIconType::Dexterity, TEXT("Dexterity")},
+		{TEXT("Acumeny"), EFloatingLogIconType::Acumeny, TEXT("Acumeny")},
+		{TEXT("Haste"), EFloatingLogIconType::Haste, TEXT("Haste")},
+		{TEXT("Exhaustion"), EFloatingLogIconType::Exhaustion, TEXT("Exhaustion")},
+		{TEXT("Slow"), EFloatingLogIconType::Slow, TEXT("Slow")},
+		{TEXT("Frail"), EFloatingLogIconType::Frail, TEXT("Frail")},
+		{TEXT("Root"), EFloatingLogIconType::Root, TEXT("Root")},
+		{TEXT("Bleed"), EFloatingLogIconType::Status, TEXT("Bleed")},
+		{TEXT("Stealth"), EFloatingLogIconType::Status, TEXT("Stealth")},
+	};
+
+	UTexture2D* LoadStatusArt(const FStatusArt& Art)
+	{
+		// Static UObject pointers alone are not GC roots. Keep cached UI art alive.
+		static TMap<FString, TStrongObjectPtr<UTexture2D>> Cache;
+		const FString Path = FString::Printf(TEXT("%sT_Status_%s.T_Status_%s"),
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/"),
+			Art.Asset, Art.Asset);
+		if (const TStrongObjectPtr<UTexture2D>* Existing = Cache.Find(Path))
+		{
+			return Existing->Get();
+		}
+		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *Path);
+		if (Texture)
+		{
+			Cache.Add(Path, TStrongObjectPtr<UTexture2D>(Texture));
+		}
+		return Texture;
+	}
+
 	FString StatusLeafName(const FGameplayTag& Tag)
 	{
 		const FString FullName = Tag.GetTagName().ToString();
@@ -87,40 +133,17 @@ CombatStatusUI::FPresentation CombatStatusUI::Resolve(
 			: EFloatingLogColorType::Neutral);
 	Result.mSortPriority = StatusPriority(Leaf, Result.mIsDebuff, Result.mIsBuff);
 
-	if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor))
+	if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect))
 	{
-		Result.mFloatingIcon = EFloatingLogIconType::Vigor;
-	}
-	else if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification))
-	{
-		Result.mFloatingIcon = EFloatingLogIconType::Fortification;
-	}
-	else if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability))
-	{
-		Result.mFloatingIcon = EFloatingLogIconType::Vulnerability;
-	}
-	else if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness))
-	{
-		Result.mFloatingIcon = EFloatingLogIconType::Weakness;
-	}
-	else if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Poison))
-	{
-		Result.mFloatingIcon = EFloatingLogIconType::Poison;
-	}
-	else if (StatusTag.MatchesTag(
-		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun))
-	{
-		Result.mFloatingIcon = EFloatingLogIconType::Stun;
-	}
-	else if (StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect))
-	{
-		// 전용 그림이 없는 상태도 이름+색+범용 표식으로 반드시 표시한다.
 		Result.mFloatingIcon = EFloatingLogIconType::Status;
+		for (const FStatusArt& Art : StatusArt)
+		{
+			if (Leaf == Art.Leaf)
+			{
+				Result.mFloatingIcon = Art.Icon;
+				break;
+			}
+		}
 	}
 	return Result;
 }
@@ -153,4 +176,40 @@ void CombatStatusUI::SortForDisplay(TArray<FStatusEffectUI>& Statuses)
 		}
 		return A.mTag.GetTagName().LexicalLess(B.mTag.GetTagName());
 	});
+}
+
+UTexture2D* CombatStatusUI::ResolveIcon(const FGameplayTag& StatusTag)
+{
+	if (!StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect))
+	{
+		return nullptr;
+	}
+	const FString Leaf = StatusLeafName(StatusTag);
+	for (const FStatusArt& Art : StatusArt)
+	{
+		if (Leaf == Art.Leaf)
+		{
+			if (UTexture2D* Texture = LoadStatusArt(Art))
+			{
+				return Texture;
+			}
+		}
+	}
+	return nullptr;
+}
+
+UTexture2D* CombatStatusUI::ResolveIcon(const EFloatingLogIconType IconType)
+{
+	if (IconType == EFloatingLogIconType::Status || IconType == EFloatingLogIconType::None)
+	{
+		return nullptr;
+	}
+	for (const FStatusArt& Art : StatusArt)
+	{
+		if (Art.Icon == IconType)
+		{
+			return LoadStatusArt(Art);
+		}
+	}
+	return nullptr;
 }
