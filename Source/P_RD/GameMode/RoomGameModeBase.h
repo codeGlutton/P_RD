@@ -102,6 +102,10 @@ public:
 	UFUNCTION(Category = Room, BlueprintCallable)
 	bool AbandonRunFromRoom();
 
+	/** Finish a cleared final boss room and persist the closed run before returning to title. */
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	bool CompleteRunFromRoom();
+
 	/** @brief 현재 런 저장 성공 뒤에만 Frontend 전환을 시작한다. */
 	void SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete Completion);
 	bool IsSaveAndExitPending() const { return mSaveAndExitPending; }
@@ -191,4 +195,5 @@ protected:
 private:
 	FName mSelectedRoomSpawnSettingName = NAME_None;
 	bool mSaveAndExitPending = false;
+	bool mFinalRunClosed = false;
 };

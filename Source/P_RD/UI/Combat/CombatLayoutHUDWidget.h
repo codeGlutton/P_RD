@@ -801,6 +801,7 @@ private:
 	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin);
 	USoundBase* SelectCombatResultJingle(bool bPlayerWin) const;
 	void StartCombatResultCinematic();
+	void CompleteFinalRunAfterRewards();
 	void EnsureCombatResultWidgets();
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
 	UFUNCTION() void HandleCombatResultOpenRequested();
@@ -1337,6 +1338,10 @@ private:
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
 
 	UPROPERTY(Transient) TObjectPtr<class UCinematicWidget> mCombatResultCinematicWidget;
+	UPROPERTY(Transient) TObjectPtr<class UBossCollapseWidget> mBossCollapseWidget;
+	bool mBossCollapsePlayed = false;
+	bool mResultRewardsOpened = false;
+	FTimerHandle mFinalRunCompletionTimerHandle;
 	UPROPERTY(Transient) TObjectPtr<class UCombatResultOverlayWidget> mCombatResultOverlayWidget;
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
 	FTimerHandle mCombatResultStartDelayTimerHandle;

@@ -1,4 +1,4 @@
-﻿#include "GameMode/RoomGameModeBase.h"
+#include "GameMode/RoomGameModeBase.h"
 #include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -443,6 +443,33 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 	checkf(IsTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
 
 	return IsTransitionStarted;
+}
+
+bool ARoomGameModeBase::CompleteRunFromRoom()
+{
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested) return false;
+	if (!mFinalRunClosed)
+	{
+		if (!HasActiveRun()) return false;
+		const FStage& Stage = GetRunPersistData()->GetStage();
+		if (Stage.mStageLevel != EStageLevelType::Stage3 || !Stage.mClearData.mIsCleared
+			|| Stage.GetCurrentRoom().mType != ERoomType::BossMonster) return false;
+	}
+	auto* Saves = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	if (!Saves) return false;
+	if (!mFinalRunClosed)
+	{
+		ClearRunPersistData();
+		mFinalRunClosed = true;
+	}
+	// Retry saving without counting the run twice or leaving for the title on failure.
+	if (!Saves->SaveUser() || !Saves->SaveRun())
+	{
+		UE_LOG(LogRDGameMode, Error, TEXT("Final run save failed; waiting for retry"));
+		return false;
+	}
+	UE_LOG(LogRDGameMode, Display, TEXT("RD_STAGE_VICTORY final run saved and closed"));
+	return PreloadAndTransitionFrontendRoomAsync();
 }
 
 void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(

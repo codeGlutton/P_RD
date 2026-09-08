@@ -1,4 +1,4 @@
-﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
@@ -19,6 +19,8 @@
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "GameMode/RoomGameModeBase.h"
+#include "UI/StageVictory/BossCollapseWidget.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 
 namespace
 {
@@ -32,6 +34,10 @@ void UCombatLayoutHUDWidget::BeginCombatResultPresentation(TSharedPtr<FPresentat
 	mCombatResultBarrier = MoveTemp(Barrier);
 	mVictoryWorldMapLocked = false;
 	mVictoryWorldMap = nullptr;
+	mBossCollapsePlayed = false;
+	mResultRewardsOpened = false;
+	if (mBossCollapseWidget) { mBossCollapseWidget->Cancel(); mBossCollapseWidget = nullptr; }
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
 
 	// 마지막 타격 직후에는 쓰러짐 애니메이션과 디졸브를 먼저 보여 준다.
 	// 배리어를 쥔 채 기다리므로 보상/패배 UI가 전장을 덮지 않는다.
@@ -57,17 +63,10 @@ USoundBase* UCombatLayoutHUDWidget::SelectCombatResultJingle(const bool bPlayerW
 /** @brief 쓰러짐 대기 후 결과 데이터를 열 수 있게 하고 보상/패배 UI를 준비한다. */
 void UCombatLayoutHUDWidget::StartCombatResultCinematic()
 {
-	// 현재 검증된 결과 징글은 승리용만 있다. 패배이면 선택 함수가 nullptr을 준다.
-	USoundBase* ResultJingle = SelectCombatResultJingle(mIsPlayerWin);
-	if (ResultJingle != nullptr)
-	{
-		UGameplayStatics::PlaySound2D(this, ResultJingle);
-	}
-
 	EnsureCombatResultWidgets();
 	SetCombatResultViewActive(true);
 	// 결과 위젯을 먼저 준비한 뒤 배리어를 놓으면 전투 모델이 결과 데이터를
-	// 밀고 OpenRequested를 방송한다. 결과 영상은 사용하지 않는다.
+	// 밀고 OpenRequested를 방송한다. 보스 처치 만화는 그 뒤 보상 화면보다 먼저 열린다.
 	mCombatResultBarrier.Reset();
 }
 
@@ -152,15 +151,45 @@ void UCombatLayoutHUDWidget::HandleCombatResultVideoFinished(UCinematicWidget* C
 
 void UCombatLayoutHUDWidget::HandleCombatResultOpenRequested()
 {
+	if (mBossCollapseWidget || mResultRewardsOpened) return;
 	if (mIsPlayerWin == true)
 	{
+		if (!mBossCollapsePlayed)
+		{
+			mBossCollapsePlayed = true;
+			auto* Mode = GetWorld() ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+			const int32 Stage = Mode && Mode->GetRunPersistData()
+				? static_cast<int32>(Mode->GetRunPersistData()->GetStage().mStageLevel) : 0;
+			if (UBossCollapseWidget::ShouldPlay(mIsPlayerWin, mUIModel && mUIModel->GetCombatResultUI().mIsClearStage, Stage))
+			{
+				mBossCollapseWidget = UBossCollapseWidget::Show(GetOwningPlayer(), Stage,
+					FSimpleDelegate::CreateWeakLambda(this, [this]()
+					{
+						mBossCollapseWidget = nullptr;
+						HandleCombatResultOpenRequested();
+					}));
+				if (mBossCollapseWidget) return;
+				UE_LOG(LogRD, Warning, TEXT("RD_BOSS_COLLAPSE unavailable stage=%d; continuing to rewards"), Stage);
+			}
+		}
 		EnsureCombatResultWidgets();
 		if (mCombatRewardConceptWidget != nullptr
 			&& mCombatRewardUIModel != nullptr)
 		{
+			mResultRewardsOpened = true;
+			if (USoundBase* Jingle = SelectCombatResultJingle(true)) UGameplayStatics::PlaySound2D(this, Jingle);
 			mCombatRewardConceptWidget->BindUIModel(mCombatRewardUIModel);
 			mCombatRewardConceptWidget->ResetRewardFlow();
 			mCombatRewardConceptWidget->AddToViewport(10000);
+			mCombatRewardConceptWidget->SetStageClearBackground(0);
+			if (mUIModel && mUIModel->GetCombatResultUI().mIsClearStage)
+			{
+				auto* Mode = GetWorld() ? GetWorld()->GetAuthGameMode<ARoomGameModeBase>() : nullptr;
+				const int32 Stage = Mode && Mode->GetRunPersistData()
+					? static_cast<int32>(Mode->GetRunPersistData()->GetStage().mStageLevel) : 0;
+				mCombatRewardConceptWidget->SetStageClearBackground(Stage);
+			}
+
 			if (APlayerController* PlayerController = GetOwningPlayer())
 			{
 				FInputModeUIOnly InputMode;
@@ -203,7 +232,9 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 		{
 			if (ResultUI.mIsLastStage == true)
 			{
-				// 게임 클리어 시
+				// The stage-three boss comic has already played before rewards.
+				// Settle the run without showing the obsolete mercenary ending again.
+				CompleteFinalRunAfterRewards();
 			}
 			else
 			{
@@ -217,6 +248,21 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 			OpenWorldMapForNextRoom();
 		}
 	}));
+}
+
+void UCombatLayoutHUDWidget::CompleteFinalRunAfterRewards()
+{
+	UWorld* World = GetWorld();
+	if (!World) return;
+	World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
+	auto* Mode = World->GetAuthGameMode<ARoomGameModeBase>();
+	if (!Mode) return;
+	if (!Mode->CompleteRunFromRoom())
+	{
+		// A transient save failure must not lose final settlement or replay the comic.
+		World->GetTimerManager().SetTimer(mFinalRunCompletionTimerHandle, this,
+			&UCombatLayoutHUDWidget::CompleteFinalRunAfterRewards, 3.f, false);
+	}
 }
 
 void UCombatLayoutHUDWidget::HandleCombatRewardClaimConfirmed(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
