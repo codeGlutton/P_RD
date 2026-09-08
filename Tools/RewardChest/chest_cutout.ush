@@ -1,0 +1,12 @@
+// Original 682 x 455 color cells, with an independent object silhouette.
+// No radial halo, edge-darkening or light is composited into the chest.
+float2 cell = clamp(UV, float2(0.5 / 682.0, 0.5 / 455.0),
+    float2(1.0 - 0.5 / 682.0, 1.0 - 0.5 / 455.0));
+float2 atlasUV = (cell + Frame.xy) / 6.0;
+float4 source = Texture2DSample(Atlas, AtlasSampler, atlasUV);
+float silhouette = Texture2DSample(Silhouette, SilhouetteSampler, atlasUV).r;
+// Only guard the cell boundary against neighbouring sprites, not the chest.
+float edge = min(min(UV.x, UV.y), min(1.0 - UV.x, 1.0 - UV.y));
+float alpha = silhouette
+    * smoothstep(0.002, 0.012, edge);
+return float4(source.rgb, alpha);

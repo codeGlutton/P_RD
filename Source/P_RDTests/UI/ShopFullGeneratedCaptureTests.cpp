@@ -865,6 +865,16 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("비용 라벨은 흰색"),
 		RestCostLabel->GetColorAndOpacity().GetSpecifiedColor().Equals(
 			FLinearColor::White, 0.01f));
+	Tree->ForEachWidget([this](UWidget* Child)
+	{
+		if (Child->GetName().StartsWith(TEXT("RestUnitAP")))
+		{
+			TestEqual(*FString::Printf(TEXT("휴식 AP 표시 제거: %s"), *Child->GetName()),
+				Child->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	});
+	TestEqual(TEXT("HP 행을 초상화 중앙에 배치"),
+		RestHPBefore->GetRenderTransform().Translation.Y, 24.0);
 	TArray<FColor> RestPixels;
 	CaptureError.Reset();
 	if (!Capture(*Widget, ShopSlate,

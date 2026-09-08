@@ -104,6 +104,7 @@ public:
 
 	/** @brief 현재 런 저장 성공 뒤에만 Frontend 전환을 시작한다. */
 	void SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete Completion);
+	bool IsSaveAndExitPending() const { return mSaveAndExitPending; }
 
 public:
 	/**

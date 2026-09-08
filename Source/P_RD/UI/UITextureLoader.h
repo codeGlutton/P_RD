@@ -15,4 +15,10 @@ namespace RDUITexture
 {
 	/** @brief mp4 등 raw 미디어의 Content 상대경로를 MediaPlayer가 열 수 있는 디스크 절대경로로 변환한다. */
 	FString ResolveContentFilePath(const FString& RelativeContentPath);
+
+	/** Validates content bytes, including equal-length updates, before reusing a media cache. */
+	P_RD_API bool EnsureCachedMediaFile(const FString& SourcePath, const FString& CachePath);
+
+	/** Reads MP4 track dimensions by seeking over media payloads instead of loading the entire movie. */
+	P_RD_API FVector2D ReadMediaFileDimensions(const FString& FilePath);
 }

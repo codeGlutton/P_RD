@@ -11,6 +11,8 @@
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "DynamicPassiveData_Generic.generated.h"
 
+class UBoardActorModel;
+
 /**
  * @brief 캡처 슬롯 (캡처 키 하나에 대한 저장값)
  *
@@ -39,6 +41,7 @@ struct FPassiveCaptureSlot
  * UTacticalPassive_Generic이 쓰는 단일 상태 구조체.
  * - 카운터: 발동 타이밍 도달 횟수. 리셋 없이 증가만 하고, 리셋 타이밍 태그에서만 0으로 초기화
  * - 캡처: 캡처 타이밍에 저장한 값(키별) + 타일 위치(이동 여부 판정용)
+ * - 타겟 참조: 캡처 시점의 타겟들. 발동 시 그 타겟들에게 판정과 효과 적용
  */
 USTRUCT()
 struct FDynamicPassiveData_Generic : public FDynamicPassiveData
@@ -60,4 +63,8 @@ struct FDynamicPassiveData_Generic : public FDynamicPassiveData
 	// 캡처 시점의 타겟별 타일 위치 (Ctx.mTargets 인덱스와 짝)
 	UPROPERTY()
 	TArray<FTileIndex> mCapturedTargetTiles;
+
+	// 캡처 시점에 있던 타겟들. 발동 시 Ctx 타겟을 이걸로 바꾸는 패시브만 사용
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UBoardActorModel>> mCapturedTargets;
 };

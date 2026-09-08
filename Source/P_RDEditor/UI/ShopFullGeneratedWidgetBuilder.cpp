@@ -598,7 +598,6 @@ namespace ShopFullGeneratedWidgetBuilder
 		// transaction; the builder only supplies stable, named UImage/UTextBlock
 		// targets matching that contract. Existing shop/mercenary chrome is reused.
 		const int32 RestHPBefore[3] = { 42, 31, 58 };
-		const int32 RestAPBefore[3] = { 6, 3, 8 };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const float RowY = 8.f + Index * 190.f;
@@ -615,7 +614,7 @@ namespace ShopFullGeneratedWidgetBuilder
 				FLinearColor(.54f, .66f, .78f, 1.f));
 
 			// Keep the panel chrome independent from its data. The content canvas is the
-			// tight 938x153 authored bounding box of name, portrait and HP/AP ledger,
+			// tight 938x153 authored bounding box of name, portrait and HP ledger,
 			// centered inside the 1220x183 row. This prevents the former left/top bias
 			// and keeps the complete unit block centered when the master ScaleBox adapts.
 			UCanvasPanel* ContentHolder = Blueprint->WidgetTree->ConstructWidget<UCanvasPanel>(
@@ -667,37 +666,6 @@ namespace ShopFullGeneratedWidgetBuilder
 				FVector2D(638.f, 49.f), FVector2D(300.f, 40.f), 10,
 				FLinearColor::White);
 
-			AddText(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPLabel_%d"), Index)), FText::FromString(TEXT("AP")), 20,
-				FVector2D(190.f, 101.f), FVector2D(56.f, 40.f), 9,
-				FLinearColor(.38f, .72f, 1.f, 1.f));
-			AddImage(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeTrack_%d"), Index)),
-				MeterTrack, FVector2D(258.f, 108.f), FVector2D(300.f, 28.125f), 8, true);
-			AddImage(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeFill_%d"), Index)),
-				MeterFill, FVector2D(262.f, 108.375f), FVector2D(292.f, 27.375f), 9,
-				true, FLinearColor(.16f, .56f, 1.f, 1.f));
-			AddText(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeText_%d"), Index)),
-				FText::FromString(FString::Printf(TEXT("%d/12"), RestAPBefore[Index])), 17,
-				FVector2D(258.f, 100.f), FVector2D(300.f, 40.f), 10,
-				FLinearColor::White);
-			AddText(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPArrow_%d"), Index)), FText::FromString(TEXT("→")), 28,
-				FVector2D(568.f, 99.f), FVector2D(60.f, 42.f), 10,
-				FLinearColor(.85f, .88f, .9f, 1.f));
-			AddImage(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterTrack_%d"), Index)),
-				MeterTrack, FVector2D(638.f, 108.f), FVector2D(300.f, 28.125f), 8, true);
-			AddImage(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterFill_%d"), Index)),
-				MeterFill, FVector2D(642.f, 108.375f), FVector2D(292.f, 27.375f), 9,
-				true, FLinearColor(.16f, .56f, 1.f, 1.f));
-			AddText(Blueprint, ContentHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterText_%d"), Index)), FText::FromString(TEXT("12/12")), 17,
-				FVector2D(638.f, 100.f), FVector2D(300.f, 40.f), 10,
-				FLinearColor::White);
 		}
 
 		AddImage(Blueprint, RestBottomContextPanel, TEXT("RestCostPlate"), RestCostPlateArt,

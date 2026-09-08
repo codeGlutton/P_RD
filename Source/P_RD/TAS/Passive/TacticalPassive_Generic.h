@@ -30,6 +30,6 @@ protected:
 	virtual void InitializeState(OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) const override;
 	virtual void OnCounterReset(IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
 	virtual void OnCapture(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
-	virtual void OnActivate(IN const FPassiveActivateContext& Ctx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
+	virtual void OnActivate(IN const FPassiveActivateContext& InCtx, IN OUT TInstancedStruct<FDynamicPassiveData>& PassiveState) override;
 	virtual bool IsTargetQualified(IN const FPassiveActivateContext& Ctx, IN int32 TargetIndex, IN const TInstancedStruct<FDynamicPassiveData>& State) const override;
 };

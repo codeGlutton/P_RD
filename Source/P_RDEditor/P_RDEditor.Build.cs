@@ -40,6 +40,9 @@ public class P_RDEditor : ModuleRules
             "DataValidation",
             "Niagara",
             "NiagaraEditor",
+
+            /* Gameplay Tag Modules (DA 임포트 커맨드릿이 타이밍 태그를 다룸) */
+            "GameplayTags",
         });
 
         PrivateIncludePaths.AddRange(new string[] {

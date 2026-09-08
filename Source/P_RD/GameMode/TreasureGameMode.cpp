@@ -1,6 +1,7 @@
 #include "GameMode/TreasureGameMode.h"
 
 #include "Engine/AssetManager.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "DataAsset/RoomSpawnData/StaticTreasureRoomSpawnData.h"
@@ -102,9 +103,11 @@ void ATreasureGameMode::InitGame(const FString& MapName, const FString& Options,
 void ATreasureGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
-	mOpened = false;
-	mGoldRewardGranted = false;
+	const FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactions();
+	mOpened = Transactions.TreasureOpened;
+	mGoldRewardGranted = Transactions.GoldClaimed;
 	mGrantedArtifactIds.Reset();
+	if (Transactions.SelectedArtifact.IsValid()) mGrantedArtifactIds.Add(Transactions.SelectedArtifact);
 	mFailedArtifactIds.Reset();
 
 	SpawnTreasureBox();
@@ -179,13 +182,14 @@ bool ATreasureGameMode::OpenRewardPresentation()
 	FRewardUI Reward;
 	Reward.mTitle = LOCTEXT("TreasureRewardTitle", "보상");
 	Reward.mGoldGained = FMath::Max(0, TreasureRoom.mRewardMoney);
-	Reward.mGoldBalance = GetPartyGold() + Reward.mGoldGained;
+	Reward.mGoldBalance = GetPartyGold() + (mGoldRewardGranted ? 0 : Reward.mGoldGained);
 	mRewardUIModel->SetReward(Reward);
 
 	TArray<FRewardChoiceUI> Choices;
 	UAssetManager* AssetManager = UAssetManager::GetIfInitialized();
 	for (const FPrimaryAssetId& ArtifactId : ArtifactIds)
 	{
+		if (mOpened && !mGrantedArtifactIds.Contains(ArtifactId)) continue;
 		FRewardChoiceUI Choice;
 		Choice.mChoiceIndex = Choices.Num();
 		Choice.mKind = ERewardChoiceKind::Artifact;
@@ -352,12 +356,18 @@ bool ATreasureGameMode::GrantTreasureGold()
 		RunPersistData->GetCurrentRoom());
 	GivePartyGold(TreasureRoom.mRewardMoney);
 	mGoldRewardGranted = true;
+	GetRunPersistData()->GetRoomTransactionsMutable().GoldClaimed = true;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	return true;
 }
 
 void ATreasureGameMode::HandleRewardSelectionRequested(FPrimaryAssetId RewardId)
 {
-	if (mOpened) return;
+	if (mOpened)
+	{
+		if (mRewardUIModel && mGrantedArtifactIds.Contains(RewardId)) mRewardUIModel->ConfirmSelectedReward(RewardId);
+		return;
+	}
 	auto Reject = [this, RewardId]()
 	{
 		if (mRewardUIModel) mRewardUIModel->OnRewardSelectionRejected.Broadcast(RewardId);
@@ -394,6 +404,10 @@ void ATreasureGameMode::HandleRewardSelectionRequested(FPrimaryAssetId RewardId)
 	}
 	mGrantedArtifactIds = Result.mGrantedItemIds;
 	mFailedArtifactIds.Reset();
+	FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactionsMutable();
+	Transactions.TreasureOpened = true;
+	Transactions.SelectedArtifact = SelectedId;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushTreasureUIData();
 	if (mRewardUIModel) mRewardUIModel->ConfirmSelectedReward(SelectedId);
 }
@@ -467,6 +481,8 @@ void ATreasureGameMode::HandleRewardPresentationCompleted(int32 ArtifactIndex)
 			|| !static_cast<const FTreasureRoom&>(Run->GetCurrentRoom()).mRewardArtifactDataIds.IsEmpty()
 			|| !GrantTreasureGold()) return;
 		mOpened = true;
+		GetRunPersistData()->GetRoomTransactionsMutable().TreasureOpened = true;
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		PushTreasureUIData();
 	}
 	if (mRewardWidget != nullptr)
