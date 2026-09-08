@@ -190,6 +190,28 @@ public:
 	TArray<TObjectPtr<UCurveBase>> mEffectCurves;
 };
 
+/** Claim and purchase state travels in the same payload as the granted items and money. */
+USTRUCT()
+struct FRoomTransactionState
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) bool GoldClaimed = false;
+	UPROPERTY(SaveGame) bool ExpClaimed = false;
+	UPROPERTY(SaveGame) bool TreasureOpened = false;
+	UPROPERTY(SaveGame) bool RestUsed = false;
+	UPROPERTY(SaveGame) FPrimaryAssetId SelectedArtifact;
+	UPROPERTY(SaveGame) TSet<int32> ClaimedChoices;
+	UPROPERTY(SaveGame) TSet<int32> SoldShopSlots;
+};
+
+USTRUCT()
+struct FPendingCompletedRun
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) FGuid TransactionId;
+	UPROPERTY(SaveGame) FRunLog Log;
+};
+
 /**
  * @brief 이번 런의 영구적 데이터
  */
@@ -210,6 +232,11 @@ public:
 	void ClearRun();
 	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
 	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
+	const FRoomTransactionState& GetRoomTransactions() const { return mRoomTransactions; }
+	FRoomTransactionState& GetRoomTransactionsMutable() { return mRoomTransactions; }
+	void QueueCompletedRunLog(const FRunLog& Log);
+	const TArray<FPendingCompletedRun>& GetPendingCompletedRuns() const { return mPendingCompletedRuns; }
+	void ClearCompletedRunLogs() { mPendingCompletedRuns.Reset(); }
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
@@ -261,6 +288,12 @@ protected:
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunLog"))
 	FRunLog mRunLog;
 
+	UPROPERTY(SaveGame)
+	FRoomTransactionState mRoomTransactions;
+	// Intentionally retained by ClearRun/StartRun until the User slot confirms a durable commit.
+	UPROPERTY(SaveGame)
+	TArray<FPendingCompletedRun> mPendingCompletedRuns;
+
 	/* 캐싱 */
 private:
 	UPROPERTY()
@@ -283,6 +316,7 @@ public:
 	void MakeUser(const FText& Name);
 	void ClearUser();
 	void UpdateLog(const FRunLog& RunLog);
+	bool ApplyRunLogOnce(const FGuid& TransactionId, const FRunLog& RunLog);
 
 public:
 	const FText& GetUserName() const;
@@ -299,6 +333,8 @@ protected:
 
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserLog"))
 	FUserLog mUserLog;
+	UPROPERTY(SaveGame)
+	TSet<FGuid> mAppliedRunTransactions;
 };
 
 USTRUCT()

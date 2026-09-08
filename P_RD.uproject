@@ -33,6 +33,11 @@
 	"Plugins": [
 		{ "Name": "Effekseer", "Enabled": true },
 		{
+			"Name": "CascadeToNiagaraConverter",
+			"Enabled": true,
+			"TargetAllowList": [ "Editor" ]
+		},
+		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
 			"TargetAllowList": [

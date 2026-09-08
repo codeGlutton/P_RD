@@ -59,10 +59,10 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-			if (!(Target.Platform == UnrealTargetPlatform.Win64))
-			{
-				PrivateDefinitions.Add("__EFFEKSEER_NETWORK_ENABLED__");
-			}
+			// Live editing/profiling over the network is not used by this project.
+			// Leave __EFFEKSEER_NETWORK_ENABLED__ undefined on every platform:
+			// the vendored runtime does not include its optional FlatBuffers dependency.
+			// In particular, Android must use the same offline runtime as Win64.
 
 			PrivateDefinitions.Add("__EFFEKSEER_FOR_UE4__");
 		}

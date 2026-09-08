@@ -2,6 +2,8 @@
 
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
+#include "Engine/GameInstance.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "SettingsPanelWidget"
 
@@ -24,9 +26,11 @@ void USettingsPanelWidget::SyncRunConfirmText() const
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
+		const auto* Instance = GetGameInstance();
+		const auto* Saver = Instance ? Instance->GetSubsystem<USaveGameSubsystem>() : nullptr;
 		AbandonConfirmBodyText->SetText(bSaveAndExit
-			? LOCTEXT("SaveAndExitConfirmBody",
-				"Current progress will be saved before returning to the title.")
+			? (Saver ? Saver->GetRunResumeDescription() : LOCTEXT("SaveAndExitConfirmBody",
+				"Current progress will be saved before returning to the title."))
 			: LOCTEXT("AbandonConfirmBody",
 				"Current progress will be deleted and you will return to the title."));
 	}

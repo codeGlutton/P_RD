@@ -35,6 +35,9 @@ class P_RD_API UShopUIWidgetBase : public URDUserWidget
 public:
 	/** @brief 상점 화면이 다른 UI 위에 뜨도록 팝업 ZOrder를 설정한다. */
 	UShopUIWidgetBase(const FObjectInitializer& ObjectInitializer);
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
+	virtual UUserWidget* GetBackNavigationLayer() const override;
 
 	/** @brief 상점 뷰모델에 연결하고 갱신 알림을 구독한다. */
 	UFUNCTION(BlueprintCallable, Category = "Shop|UI")

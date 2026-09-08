@@ -99,6 +99,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "UI|Toggleable")
 	virtual bool IsOpened() const;
 
+	/** Handle one navigation step. Modal owners close their innermost layer first. */
+	virtual bool HandleBackNavigation() { return false; }
+	virtual UUserWidget* GetBackNavigationLayer() const;
+	virtual bool UsesMobileSafeArea() const { return false; }
+	bool ShouldWrapMobileSafeArea() const;
+
 	/**
 	 * @brief 열기 애니메이션 완료를 C++ 생명주기에 알린다.
 	 *
@@ -129,6 +135,10 @@ public:
 #endif
 
 protected:
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeDestruct() override;
+	/** Geometry inside the safe area; authored responsive layouts should use this. */
+	FGeometry GetContentGeometry() const;
 	/**
 	 * @brief 열기 애니메이션을 재생한다.
 	 *
@@ -197,6 +207,7 @@ protected:
 	void ApplyCommonButtonPressSound(UButton* Button) const;
 
 private:
+	void RegisterBackNavigation();
 	/**
 	 * @brief 장식 위젯이 버튼 입력을 가로막지 않도록 입력 레이어를 정규화한다.
 	 * @details Image/Text는 입력 대상이 아니므로 HitTestInvisible로, 순수 배치 패널은

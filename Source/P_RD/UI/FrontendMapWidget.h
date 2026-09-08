@@ -87,6 +87,8 @@ public:
 	 * @brief 지도 팝업의 기본 ZOrder와 기본 문구 캐시를 준비한다.
 	 */
 	UFrontendMapWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
 
 	/**
 	 * @brief 현재 RunPersistData 기반 지도 View를 다시 가져와 노드/선을 갱신한다.

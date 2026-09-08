@@ -235,7 +235,7 @@ void UMercenaryHireWidget::NativeTick(const FGeometry& MyGeometry, const float I
 		return;
 	}
 
-	const FVector2D ViewportSize = MyGeometry.GetLocalSize();
+	const FVector2D ViewportSize = GetContentGeometry().GetLocalSize();
 	if (ViewportSize.X > 1.0f && ViewportSize.Y > 1.0f
 		&& !ViewportSize.Equals(mLastResponsiveSize, 1.0f))
 	{
@@ -1410,6 +1410,20 @@ void UMercenaryHireWidget::HandleBackClicked()
 		return;
 	}
 	CloseUI();
+}
+
+UUserWidget* UMercenaryHireWidget::GetBackNavigationLayer() const
+{
+	return mSkillDetailOverlay && mSkillDetailOverlay->IsInViewport() && mSkillDetailOverlay->IsVisible()
+		? mSkillDetailOverlay.Get() : Super::GetBackNavigationLayer();
+}
+
+bool UMercenaryHireWidget::HandleBackNavigation()
+{
+	if (mSkillDetailOverlay && mSkillDetailOverlay->IsVisible()) HideSkillDetailOverlay();
+	else if (mReplaceConfirmLayer && mReplaceConfirmLayer->IsVisible()) HandleReplaceCancelled();
+	else HandleBackClicked();
+	return true;
 }
 
 void UMercenaryHireWidget::HandleAddClicked()

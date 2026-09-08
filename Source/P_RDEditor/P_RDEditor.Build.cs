@@ -39,6 +39,8 @@ public class P_RDEditor : ModuleRules
 
             /* Asset Validator Modules */
             "DataValidation",
+            "Niagara",
+            "NiagaraEditor",
         });
 
         PrivateIncludePaths.AddRange(new string[] {

@@ -122,6 +122,9 @@ class P_RD_API UMercenaryHireWidget : public URDUserWidget
 
 public:
 	UMercenaryHireWidget(const FObjectInitializer& ObjectInitializer);
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
+	virtual UUserWidget* GetBackNavigationLayer() const override;
 
 	/**
 	 * @brief 게시판에 걸 후보를 넣는다.

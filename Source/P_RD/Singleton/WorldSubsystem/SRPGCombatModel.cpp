@@ -292,6 +292,7 @@ void USRPGCombatModel::AdvanceTurn()
 
 		/* 필요 시 전투 강제 중단 */
 
+		if (mCombatPhase != ESRPGCombatRoomPhase::CombatPlay || !HasAnyTurnContext()) return;
 		const bool IsPlayerTurn = GetCurrentTurnContext()->GetOwner()->IsPlayerUnitModel() == true;
 		if (mShouldTerminateBeforePlayerTurnStart == true && IsPlayerTurn == true)
 		{
@@ -331,7 +332,7 @@ void USRPGCombatModel::AdvanceRoundIfNeeded(TSharedPtr<FPresentationBarrier> Rou
 		
 		/* 새로운 턴 채우기 */
 
-		EvaluateRound();
+		if (!EvaluateRound()) return;
 
 		/* 새 라운드 실행 */
 
@@ -648,9 +649,11 @@ bool USRPGCombatModel::UnregisterTurn(UUnitModel* Owner, bool IgnoreCurTurn)
 	return true;
 }
 
-void USRPGCombatModel::EvaluateRound()
+bool USRPGCombatModel::EvaluateRound()
 {
-	while (true)
+	// A corrupted or stalled speed configuration must not block the game thread in Shipping.
+	constexpr int32 MaxRechargePasses = 1024;
+	for (int32 RechargePass = 0; RechargePass < MaxRechargePasses; ++RechargePass)
 	{
 		/* 스피드 포인트 충전 */
 
@@ -682,16 +685,20 @@ void USRPGCombatModel::EvaluateRound()
 		int32 NextRoundRandomSeed = INDEX_NONE;
 
 		const bool IsValid = CheckOrderedTurnCandidates(OUT Candidates, OUT NextRoundRandomSeed);
-		checkf(IsValid == true, TEXT("라운드에 관계없이 영구적으로 턴이 생성될 수 없음"));
+		if (!IsValid) break;
 
 		/* 유효 라운드 발견 */
 
 		if (Candidates.IsEmpty() == false)
 		{
 			ApplyOrderedTurnCandidates(Candidates, NextRoundRandomSeed);
-			break;
+			return true;
 		}
 	}
+	UE_LOG(LogSRPGCombat, Warning, TEXT("Combat speed cannot produce a turn; retaining room entry checkpoint."));
+	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
+	OnCombatProgressBlocked.Broadcast();
+	return false;
 }
 
 bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const
@@ -705,31 +712,29 @@ bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>
 	/* 현재 스피드 수집 */
 
 	TArray<FSRPGTurnCandidate> CurTurnCandidates;
+	bool bCanGenerateTurn = false;
 	for (const TObjectPtr<UUnitModel>& UnitModel : mUnitModels)
 	{
-		const int32 SpeedPoint = StaticCast<int32>(FMath::Floor(
-			UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute())
-		));
+		const float Remaining = UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute());
+		const float Recharge = UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute());
+		if (!FMath::IsFinite(Remaining) || !FMath::IsFinite(Recharge)
+			|| Remaining >= static_cast<float>(MAX_int32) || Remaining <= static_cast<float>(MIN_int32)
+			|| Recharge >= static_cast<float>(MAX_int32) || Recharge <= static_cast<float>(MIN_int32)) return false;
+		const int32 SpeedPoint = FMath::FloorToInt(Remaining);
 
 		FSRPGTurnCandidate CurTurnCandidate;
 		CurTurnCandidate.mOwner = UnitModel;
 		CurTurnCandidate.mRemainSpeedPoint = SpeedPoint;
-		CurTurnCandidate.mRechargedSpeedPoint = StaticCast<int32>(FMath::Floor(
-			UnitModel->GetAttributeComponentModel()->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute())
-		));
+		CurTurnCandidate.mRechargedSpeedPoint = FMath::FloorToInt(Recharge);
 
-#if !UE_BUILD_SHIPPING
-		/* 영구 라운드 진행 방지 체크 */
-
-		if (CurTurnCandidate.mRechargedSpeedPoint <= 0)
-		{
-			return false;
-		}
-#endif
+		bCanGenerateTurn |= CanAccumulateTurn(
+			Remaining, Recharge,
+			GameBalanceSettings->mRequiredSpeedPointForTurn);
 
 		CurTurnCandidates.Add(CurTurnCandidate);
 	}
 
+	if (!bCanGenerateTurn || GameBalanceSettings->mRequiredSpeedPointForTurn <= 0) return false;
 	/* 후보 추가 */
 
 	const FRandomStream RandomStream(mNextRoundRandomSeed);
@@ -760,6 +765,12 @@ bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>
 	NextRoundRandomSeed = RandomStream.GetCurrentSeed();
 
 	return true;
+}
+
+bool USRPGCombatModel::CanAccumulateTurn(float Remaining, float Recharge, float Required)
+{
+	return FMath::IsFinite(Remaining) && FMath::IsFinite(Recharge) && FMath::IsFinite(Required)
+		&& Required > 0.f && (Recharge > 0.f || Remaining >= Required);
 }
 
 TArray<FSRPGPredictedRound> USRPGCombatModel::PredictTurnRounds(

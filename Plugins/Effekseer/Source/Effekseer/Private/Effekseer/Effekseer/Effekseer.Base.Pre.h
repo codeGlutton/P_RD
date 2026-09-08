@@ -21,7 +21,7 @@
 #include <thread>
 #include <vector>
 
-#if _WIN32
+#if defined(_WIN32)
 #undef min
 #undef max
 #endif
