@@ -15,6 +15,10 @@
 #include "UI/Reward/RewardUITypes.h"
 #include "UI/RunOptionsRailWidget.h"
 
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "UObject/ConstructorHelpers.h"
+
 #define LOCTEXT_NAMESPACE "RewardConcept03Widget"
 
 namespace RewardConcept03
@@ -127,6 +131,12 @@ namespace RewardConcept03
 		const int32 Frame = FMath::Clamp(FrameIndex, 0, TripleBurstFrameCount - 1);
 		const int32 Column = Frame % TripleBurstAtlasColumns;
 		const int32 Row = Frame / TripleBurstAtlasColumns;
+		if (UMaterialInstanceDynamic* Material = Image->GetDynamicMaterial())
+		{
+			Material->SetVectorParameterValue(TEXT("Frame"), FLinearColor(Column, Row, 0.f, 0.f));
+			return;
+		}
+
 		const FVector2f Min(
 			static_cast<float>(Column) / TripleBurstAtlasColumns,
 			static_cast<float>(Row) / TripleBurstAtlasRows);
@@ -137,6 +147,13 @@ namespace RewardConcept03
 		Brush.SetUVRegion(FBox2f(Min, Max));
 		Image->SetBrush(Brush);
 	}
+}
+
+URewardConcept03Widget::URewardConcept03Widget(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/UI/Reward/M_RewardChestSoftAtlas"));
+	mChestAtlasMaterial = Material.Object;
 }
 
 void URewardConcept03Widget::NativeOnInitialized()
@@ -327,6 +344,19 @@ void URewardConcept03Widget::ResolveWidgets()
 		GetWidgetFromName(TEXT("NewChestSequenceImage")));
 	ChestSequenceBlendImage = Cast<UImage>(
 		GetWidgetFromName(TEXT("NewChestSequenceBlendImage")));
+	for (UImage* Image : { ChestSequenceImage.Get(), ChestSequenceBlendImage.Get() })
+	{
+		if (!Image || !mChestAtlasMaterial || Image->GetDynamicMaterial()) continue;
+		UTexture2D* Atlas = Cast<UTexture2D>(Image->GetBrush().GetResourceObject());
+		if (!Atlas) continue;
+		UMaterialInstanceDynamic* Material = UMaterialInstanceDynamic::Create(mChestAtlasMaterial, this);
+		Material->SetTextureParameterValue(TEXT("Atlas"), Atlas);
+		Image->SetBrushFromMaterial(Material);
+		FSlateBrush Brush = Image->GetBrush();
+		Brush.ImageSize = FVector2D(682.f, 455.f);
+		Brush.SetUVRegion(FBox2f(FVector2f(0.f, 0.f), FVector2f(1.f, 1.f)));
+		Image->SetBrush(Brush);
+	}
 	BottomActionButton = Cast<UButton>(
 		GetWidgetFromName(TEXT("NewBottomActionButton")));
 	BottomButtonArt = Cast<UImage>(
@@ -348,7 +378,8 @@ void URewardConcept03Widget::ResolveWidgets()
 	{
 		if (SequenceWidget != nullptr)
 		{
-			SequenceWidget->SetClipping(EWidgetClipping::Inherit);
+			for (UWidget* Ancestor = SequenceWidget; Ancestor != nullptr; Ancestor = Ancestor->GetParent())
+				Ancestor->SetClipping(EWidgetClipping::Inherit);
 		}
 	}
 	for (int32 Wave = 0; Wave < 3; ++Wave)

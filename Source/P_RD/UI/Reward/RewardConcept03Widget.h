@@ -7,6 +7,7 @@
 
 #include "RewardConcept03Widget.generated.h"
 
+class UMaterialInterface;
 class UButton;
 class UBackgroundBlur;
 class UImage;
@@ -36,6 +37,7 @@ class P_RD_API URewardConcept03Widget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	URewardConcept03Widget(const FObjectInitializer& ObjectInitializer);
 	/** Connects the generated WBP to the real combat reward payload/claim flow. */
 	UFUNCTION(BlueprintCallable, Category = "Reward Concept 03")
 	void BindUIModel(URewardUIModel* InUIModel);
@@ -149,6 +151,7 @@ private:
 		Completed
 	};
 
+	UPROPERTY() TObjectPtr<UMaterialInterface> mChestAtlasMaterial;
 	void ResolveWidgets();
 	void BindInput();
 	void UnbindInput();

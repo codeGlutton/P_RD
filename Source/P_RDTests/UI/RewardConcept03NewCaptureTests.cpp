@@ -6,6 +6,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
@@ -32,6 +33,7 @@
 
 #if WITH_EDITOR
 #include "Editor.h"
+#include "ShaderCompiler.h"
 #endif
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
@@ -62,6 +64,8 @@ namespace RewardConcept03NewCapture
 		TSet<UTexture2D*> Textures;
 		auto CollectBrush = [&Textures](const FSlateBrush& Brush)
 		{
+			if (UMaterialInstanceDynamic* Material = Cast<UMaterialInstanceDynamic>(Brush.GetResourceObject()))
+				if (UTexture2D* Atlas = Cast<UTexture2D>(Material->K2_GetTextureParameterValue(TEXT("Atlas")))) Textures.Add(Atlas);
 			if (UTexture2D* Texture = Cast<UTexture2D>(Brush.GetResourceObject()))
 			{
 				Textures.Add(Texture);
@@ -112,6 +116,7 @@ namespace RewardConcept03NewCapture
 		Widget.SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 		Widget.ForceLayoutPrepass();
 		const int32 TextureCount = MakeTexturesResident(Widget);
+		if (GShaderCompilingManager) GShaderCompilingManager->FinishAllCompilation();
 		if (TextureCount != ExpectedTextureCount)
 		{
 			OutError = FString::Printf(
@@ -183,6 +188,21 @@ namespace RewardConcept03NewCapture
 		}
 
 		TArray64<uint8> Png;
+		if (FString(FileName).Contains(TEXT("Frameless_Glow")))
+		{
+			int32 GoldPixels = 0;
+			for (int32 Y = 380; Y < 650; ++Y)
+				for (int32 X = 650; X < 1000; ++X)
+				{
+					const FColor& P = Pixels[Y * CaptureWidth + X];
+					if (P.R > 100 && P.G > 55 && P.R > P.B * 1.3f) ++GoldPixels;
+				}
+			if (GoldPixels < 5000)
+			{
+				OutError = TEXT("Chest and gold glow did not render in the center of the reward screen");
+				return false;
+			}
+		}
 		FImageUtils::PNGCompressImageArray(CaptureWidth, CaptureHeight, Pixels, Png);
 		IFileManager::Get().MakeDirectory(*OutputDirectory(), true);
 		const FString OutputPath = FPaths::Combine(OutputDirectory(), FileName);
@@ -968,6 +988,7 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 		Widget->GetWidgetFromName(TEXT("NewGoldChestBlur")));
 	TestNotNull(TEXT("중앙 골드 금액 영역"),
 		Widget->GetWidgetFromName(TEXT("NewGoldMainZone")));
+	const TSharedRef<SWidget> SlateWidget = Widget->TakeWidget();
 	UImage* ChestSequence = Cast<UImage>(
 		Widget->GetWidgetFromName(TEXT("NewChestSequenceImage")));
 	UImage* ChestBlendSequence = Cast<UImage>(
@@ -977,13 +998,23 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 			ChestBlendSequence))
 	{
 		TestTrue(TEXT("두 레이어가 같은 상주 텍스처 사용"),
-			ChestSequence->GetBrush().GetResourceObject()
-			== ChestBlendSequence->GetBrush().GetResourceObject());
+			ChestSequence->GetDynamicMaterial() && ChestBlendSequence->GetDynamicMaterial()
+			&& ChestSequence->GetDynamicMaterial()->K2_GetTextureParameterValue(TEXT("Atlas"))
+			== ChestBlendSequence->GetDynamicMaterial()->K2_GetTextureParameterValue(TEXT("Atlas")));
 	}
 
-	const TSharedRef<SWidget> SlateWidget = Widget->TakeWidget();
+	for (UWidget* Parent = ChestSequence; Parent != nullptr; Parent = Parent->GetParent())
+		TestEqual(*FString::Printf(TEXT("Chest glow may overflow %s"), *Parent->GetName()),
+			Parent->GetClipping(), EWidgetClipping::Inherit);
 	Widget->SetRewardPresentationManualTick(true);
 	Widget->AdvanceRewardFlow();
+	FString ChestPrimerError;
+	if (!Capture(*Widget, SlateWidget, TEXT("_ChestPrimer.png"), ChestPrimerError, 21))
+	{
+		AddError(ChestPrimerError);
+		return false;
+	}
+	IFileManager::Get().Delete(*FPaths::Combine(OutputDirectory(), TEXT("_ChestPrimer.png")), false, true);
 	Widget->OpenRewardChest();
 	Widget->AdvanceRewardPresentation(.06f);
 	if (ChestSequence != nullptr && ChestBlendSequence != nullptr)
@@ -995,6 +1026,9 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 		TestEqual(TEXT("보조 크로스페이드 레이어 투명도"),
 			ChestBlendSequence->GetRenderOpacity(), 0.f);
 	}
+	Widget->AdvanceRewardPresentation(1.25f);
+	FString GlowError;
+	if (!Capture(*Widget, SlateWidget, TEXT("WBP_RewardConcept03_Frameless_Glow.png"), GlowError, 21)) AddError(GlowError);
 	Widget->ResetRewardFlow();
 	StepSwitcher->SetActiveWidgetIndex(1);
 	ProgressSwitcher->SetActiveWidgetIndex(1);
