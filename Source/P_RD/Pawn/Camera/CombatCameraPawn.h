@@ -111,9 +111,14 @@ public:
 
 private:
 	friend class FCombatCameraPointerInputTest;
+	friend class FCombatCameraSlowPinchTest;
 	void UpdatePointerGestures(const FTouchState& FirstTouch, const FTouchState& SecondTouch,
 		bool bMousePressed, const FVector2D& MousePosition);
 	bool mUsingMouseGesture = false;
+	bool mPinchActive = false;
+	bool mPanActive = false;
+	bool mHadTwoTouches = false;
+	float mPinchStartDistance = 0.f;
 
 	/*
 	* @brief Drag 중인지 나타내는 함수
