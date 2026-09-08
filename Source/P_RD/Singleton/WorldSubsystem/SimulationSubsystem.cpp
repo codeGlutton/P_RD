@@ -11,6 +11,7 @@
 #include "ObjectModel.h"
 
 #include "SRPGFramework/SRPGCommand.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 DEFINE_LOG_CATEGORY(LogSimulation)
 
@@ -52,6 +53,7 @@ void USimulationSubsystem::PreDeinitialize()
 
 TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewAction);
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
@@ -67,6 +69,7 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction(TInstanc
 
 TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewTurn);
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
@@ -90,6 +93,7 @@ void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 	}
 	else
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewDuplicate);
 		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mGameRoomContext.mRoomInstance, this));
 		mSimulationRoomContext.mRoomInstance->CollectSimulationDatas();
 		mCurrentRoomContext = &mSimulationRoomContext;
