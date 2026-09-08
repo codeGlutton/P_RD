@@ -4,6 +4,7 @@
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
@@ -307,15 +308,15 @@ void ACombatGameMode::InitializeRoom()
 
 void ACombatGameMode::InitializeCombat()
 {
-	mGoldRewardClaimed = false;
-	mExpRewardClaimed = false;
-	mClaimedRewardChoiceIndices.Reset();
-	mRewardSelectionClaimed = false;
-	mSelectedRewardArtifactId = FPrimaryAssetId();
+	const FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactions();
+	mGoldRewardClaimed = Transactions.GoldClaimed;
+	mExpRewardClaimed = Transactions.ExpClaimed;
+	mClaimedRewardChoiceIndices = Transactions.ClaimedChoices;
+	mRewardSelectionClaimed = Transactions.SelectedArtifact.IsValid();
+	mSelectedRewardArtifactId = Transactions.SelectedArtifact;
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
 
 	/*
 	 * UI와 전투 로직을 여기서 연결한다.
@@ -345,6 +346,13 @@ void ACombatGameMode::InitializeCombat()
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
+	CombatModel->OnCombatProgressBlocked.AddWeakLambda(this, [this]()
+	{
+		const USimulationSubsystem* Simulation = GetWorld()->GetSubsystem<USimulationSubsystem>();
+		if (!Simulation || Simulation->GetSimulationState() != ESRPGSimulationState::RunningGame) return;
+		// Recover without awarding a win or recording a defeat for an invalid speed state.
+		SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete());
+	});
 
 	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this](const TArray<TObjectPtr<UUnitModel>>& PlayerModels, int32 RoundCount, int32 TurnCount) {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
@@ -369,6 +377,7 @@ void ACombatGameMode::InitializeCombat()
 		}
 
 		GameProfileSubsystem->SetRoomClearData(RoomClearData);
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->CompleteCombatCheckpoint();
 		SaveRunWithUIAsync();
 		});
 	CombatModel->OnShowCombatResultUI.AddWeakLambda(this, [this](ESRPGCombatResult Result) {
@@ -628,6 +637,7 @@ bool ACombatGameMode::EndTurn()
 
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
+	if (mSettingsRunActionPending || IsSaveAndExitPending()) return;
 	if (!GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->IsScenarioCommandAllowed(Type, IntPayload)) return;
 	switch (Type)
 	{
@@ -729,6 +739,7 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
+	if (mSettingsRunActionPending || IsSaveAndExitPending()) return;
 	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
 	if (Tutorial->IsScenarioGuiding())
 	{
@@ -811,7 +822,8 @@ void ACombatGameMode::HandleRewardSelectionRequested(
 bool ACombatGameMode::ClaimCombatSelectedArtifact(
 	const FPrimaryAssetId& RewardId)
 {
-	if (mRewardSelectionClaimed || RewardId.IsValid() == false)
+	if (mRewardSelectionClaimed) return RewardId == mSelectedRewardArtifactId;
+	if (RewardId.IsValid() == false)
 	{
 		return false;
 	}
@@ -853,6 +865,8 @@ bool ACombatGameMode::ClaimCombatSelectedArtifact(
 
 	mRewardSelectionClaimed = true;
 	mSelectedRewardArtifactId = SelectedId;
+	RunPersistData->GetRoomTransactionsMutable().SelectedArtifact = SelectedId;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	return true;
 }
 
@@ -874,7 +888,8 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 
 	if (ClaimKind == ERewardClaimKind::Gold)
 	{
-		if (mGoldRewardClaimed || CurrentRoom->mRewardMoney <= 0)
+		if (mGoldRewardClaimed) return true;
+		if (CurrentRoom->mRewardMoney <= 0)
 		{
 			return false;
 		}
@@ -893,13 +908,16 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 
 		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
 		mGoldRewardClaimed = true;
+		RunPersistData->GetRoomTransactionsMutable().GoldClaimed = true;
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		PushPlayerMetaUIData();
 		return true;
 	}
 
 	if (ClaimKind == ERewardClaimKind::Exp)
 	{
-		if (mExpRewardClaimed || CurrentRoom->mRewardExp <= 0)
+		if (mExpRewardClaimed) return true;
+		if (CurrentRoom->mRewardExp <= 0)
 		{
 			return false;
 		}
@@ -935,6 +953,8 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		}
 
 		mExpRewardClaimed = true;
+		RunPersistData->GetRoomTransactionsMutable().ExpClaimed = true;
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		// 보상창을 열 때 만든 예측 단계는 유지하되, 지급 직후 최종 레벨/EXP를
 		// 실제 모델 값으로 다시 밀어 예측과 claim 결과의 불일치를 남기지 않는다.
 		PushCombatRewardUIData();
@@ -942,6 +962,7 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		return true;
 	}
 
+	if (ClaimKind == ERewardClaimKind::Choice && mClaimedRewardChoiceIndices.Contains(ChoiceIndex)) return true;
 	if (ClaimKind != ERewardClaimKind::Choice
 		|| ChoiceIndex == INDEX_NONE
 		|| mClaimedRewardChoiceIndices.Contains(ChoiceIndex)
@@ -979,6 +1000,8 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 	if (bClaimed)
 	{
 		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
+		RunPersistData->GetRoomTransactionsMutable().ClaimedChoices.Add(ChoiceIndex);
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	}
 	return bClaimed;
 }
@@ -2664,6 +2687,22 @@ void ACombatGameMode::ClearSkillDetailPreview()
 	mSkillDetailPreviewActive = false;
 }
 
+void ACombatGameMode::FillRewardExpWithoutLevelUp(FRewardUI& Reward, FRewardMercenaryExpUI& Mercenary,
+	int32 CurrentLevel, float CurrentExp, float CurrentMaxExp, bool bAlreadyClaimed)
+{
+	if (bAlreadyClaimed) Reward.mExpGained = 0;
+	Mercenary.mLevel = Mercenary.mLevelBefore = Mercenary.mLevelAfter = CurrentLevel;
+	Mercenary.mExpBefore = CurrentExp;
+	Mercenary.mExpAfter = CurrentExp + Reward.mExpGained;
+	Mercenary.mMaxExp = CurrentMaxExp;
+	Mercenary.mProgressSteps.Reset();
+	FRewardExpProgressStepUI& Step = Mercenary.mProgressSteps.AddDefaulted_GetRef();
+	Step.mLevelBefore = Step.mLevelAfter = CurrentLevel;
+	Step.mExpBefore = CurrentExp;
+	Step.mExpAfter = Mercenary.mExpAfter;
+	Step.mMaxExp = CurrentMaxExp;
+}
+
 void ACombatGameMode::PushCombatRewardUIData() const
 {
 	checkf(mRewardUIModel != nullptr, TEXT("전투 UI Model nullptr"));
@@ -2689,10 +2728,12 @@ void ACombatGameMode::PushCombatRewardUIData() const
 
 	{
 		const float CurrentGold = PartyAttributeSetComponentModel->GetAttributeCurrentValue(UPartyAttributeSet::GetMoneyAttribute());
-		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + RewardUIData.mGoldGained;
+		RewardUIData.mGoldBalance = FMath::RoundToInt(CurrentGold) + (mGoldRewardClaimed ? 0 : RewardUIData.mGoldGained);
 	}
 
 	const FRewardUI PreviousReward = mRewardUIModel->GetReward();
+	// A resumed presentation has no pending gain; keep that state on later UI refreshes too.
+	if (mExpRewardClaimed && PreviousReward.mExpGained == 0) RewardUIData.mExpGained = 0;
 	const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnitModels = GetPlayerUnitModels();
 	RewardUIData.mMercenaryExp.Reserve(PlayerUnitModels.Num());
 	for (int32 PlayerIndex = 0; PlayerIndex < PlayerUnitModels.Num(); ++PlayerIndex)
@@ -2737,7 +2778,8 @@ void ACombatGameMode::PushCombatRewardUIData() const
 		}
 		else
 		{
-			const TArray<FPlayerLevelUpData> PredictDatas = PlayerUnitModel->PredictLevelChange(StaticCast<float>(RewardUIData.mExpGained));
+			const TArray<FPlayerLevelUpData> PredictDatas = PlayerUnitModel->PredictLevelChange(
+				mExpRewardClaimed ? 0.f : StaticCast<float>(RewardUIData.mExpGained));
 			if (PredictDatas.IsEmpty() == false)
 			{
 				const FPlayerLevelUpData& FirstData = PredictDatas[0];
@@ -2771,12 +2813,8 @@ void ACombatGameMode::PushCombatRewardUIData() const
 			}
 			else
 			{
-				FRewardExpProgressStepUI& UIStep = MercenaryExp.mProgressSteps.AddDefaulted_GetRef();
-				UIStep.mLevelBefore = PlayerLevel;
-				UIStep.mLevelAfter = PlayerLevel;
-				UIStep.mExpBefore = CurrentExp;
-				UIStep.mExpAfter = CurrentExp + RewardUIData.mExpGained;
-				UIStep.mMaxExp = CurrentMaxExp;
+				FillRewardExpWithoutLevelUp(RewardUIData, MercenaryExp, PlayerLevel,
+					CurrentExp, CurrentMaxExp, mExpRewardClaimed);
 			}
 		}
 	}
@@ -2900,6 +2938,10 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	}
 
 	FRewardSelectionOfferUI SelectionOffer;
+	if (mSelectedRewardArtifactId.IsValid())
+	{
+		Choices.RemoveAll([this](const FRewardChoiceUI& Choice) { return Choice.mSourceAssetId != mSelectedRewardArtifactId; });
+	}
 	SelectionOffer.mOptions = MoveTemp(Choices);
 	SelectionOffer.mSelectionCount = 1;
 	mRewardUIModel->SetSelectionOffer(SelectionOffer);
