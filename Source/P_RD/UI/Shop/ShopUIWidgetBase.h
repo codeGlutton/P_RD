@@ -400,7 +400,7 @@ protected:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mSkillSlotIcons;
 
-	/** @brief 휴식 화면의 3인 전/후 HP/AP 표시. 이름은 RestUnit<Field>_0..2 계약을 따른다. */
+	/** @brief 휴식 화면의 3인 전/후 HP 표시. 이름은 RestUnit<Field>_0..2 계약을 따른다. */
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UWidget>> mRestUnitRowHolders;
 
@@ -417,22 +417,10 @@ protected:
 	TArray<TObjectPtr<UTextBlock>> mRestUnitHPAfterTexts;
 
 	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextBlock>> mRestUnitAPBeforeTexts;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UTextBlock>> mRestUnitAPAfterTexts;
-
-	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mRestUnitHPBeforeFills;
 
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UImage>> mRestUnitHPAfterFills;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UImage>> mRestUnitAPBeforeFills;
-
-	UPROPERTY(Transient)
-	TArray<TObjectPtr<UImage>> mRestUnitAPAfterFills;
 
 	/** 전투 HUD와 같은 공용 상세 WBP. 상점 본문에는 설명을 중복 표시하지 않는다. */
 	UPROPERTY(Transient)
