@@ -12,6 +12,7 @@ public class P_RDEditor : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
+            "ImageCore",
             "InputCore",
             "EnhancedInput",
             "UMG",

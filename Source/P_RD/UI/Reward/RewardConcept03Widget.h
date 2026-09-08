@@ -352,6 +352,13 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<URewardUIModel> UIModel;
 
+	// Generated art lives in the already-cooked RewardConcept03New directory.
+	UPROPERTY(Transient)
+	TObjectPtr<class UTexture2D> GeneratedChestLight;
+
+	UPROPERTY(Transient)
+	TObjectPtr<class UTexture2D> GeneratedChestAtlas;
+
 	UPROPERTY(VisibleAnywhere, Category = "Reward Concept 03")
 	int32 CurrentStepIndex = 0;
 

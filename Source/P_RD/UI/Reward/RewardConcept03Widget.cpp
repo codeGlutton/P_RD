@@ -351,6 +351,24 @@ void URewardConcept03Widget::ResolveWidgets()
 			SequenceWidget->SetClipping(EWidgetClipping::Inherit);
 		}
 	}
+	// Effects may extend beyond the layout. Remove clipping along this branch,
+	// leaving unrelated progress bars and card content clips untouched.
+	for (UWidget* Parent = ChestVisualPanel; Parent != nullptr; Parent = Parent->GetParent())
+	{
+		Parent->SetClipping(EWidgetClipping::Inherit);
+	}
+	if (ChestSequenceImage != nullptr)
+	{
+		GeneratedChestLight = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/UI/RewardConcept03New/Generated/T_ChestGoldDome_V2.T_ChestGoldDome_V2"));
+		GeneratedChestAtlas = LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/UI/RewardConcept03New/Generated/T_ChestCleanAtlas_V2.T_ChestCleanAtlas_V2"));
+		if (GeneratedChestAtlas != nullptr)
+		{
+			ChestSequenceImage->SetBrushFromTexture(GeneratedChestAtlas, false);
+			if (ChestSequenceBlendImage) ChestSequenceBlendImage->SetBrushFromTexture(GeneratedChestAtlas, false);
+		}
+	}
 	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
 		ChestBurstGlows[Wave] = Cast<UImage>(GetWidgetFromName(
@@ -362,6 +380,21 @@ void URewardConcept03Widget::ResolveWidgets()
 		ChestBurstSparks[Wave] = Cast<UImage>(GetWidgetFromName(
 			*FString::Printf(TEXT("NewChestBurstSpark_%d"), Wave)));
 	}
+	if (UImage* Light = ChestBurstGlows[0]; Light && GeneratedChestLight)
+	{
+		Light->SetBrushFromTexture(GeneratedChestLight, false);
+		Light->SetClipping(EWidgetClipping::Inherit);
+		Light->SetRenderTransformPivot(FVector2D(.5f, .70f));
+		if (UCanvasPanelSlot* LightSlot = Cast<UCanvasPanelSlot>(Light->Slot))
+		{
+			LightSlot->SetZOrder(0); // Chest stays in front of the luminous dome.
+			LightSlot->SetAnchors(FAnchors(0.f, 0.f));
+			LightSlot->SetAlignment(FVector2D::ZeroVector);
+			LightSlot->SetAutoSize(false);
+			LightSlot->SetPosition(FVector2D(80.f, -230.f));
+			LightSlot->SetSize(FVector2D(1000.f, 666.67f));
+		}
+	}
 	for (int32 Index = 0; Index < UE_ARRAY_COUNT(ChestBurstForegroundCoins);
 		++Index)
 	{
@@ -372,6 +405,11 @@ void URewardConcept03Widget::ResolveWidgets()
 	GoldVisualPanel = GetWidgetFromName(TEXT("NewGoldVisualPanel"));
 	GoldBackgroundChestImage = Cast<UImage>(
 		GetWidgetFromName(TEXT("NewGoldBackgroundChestImage")));
+	if (GoldBackgroundChestImage && GeneratedChestAtlas)
+	{
+		GoldBackgroundChestImage->SetBrushFromTexture(GeneratedChestAtlas, false);
+		RewardConcept03::SetAtlasFrame(GoldBackgroundChestImage, RewardConcept03::TripleBurstFrameCount - 1);
+	}
 	GoldChestBlur = Cast<UBackgroundBlur>(
 		GetWidgetFromName(TEXT("NewGoldChestBlur")));
 	GoldInfoPanel = GetWidgetFromName(TEXT("NewGoldPanel"));
@@ -1153,28 +1191,24 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 			}
 		}
 	}
-	// Atlas 자체에 빛과 코인이 들어 있으므로 모든 UMG 보조광을 끈다.
+	// Generated VFX art has its own transparent margin; expand around the light source.
+	const float LightT = RewardConcept03::Segment(T,
+		bUsesTripleBurstFrames ? RewardConcept03::ChestShakeEnd : .24f, 1.f);
+	const float LightOpacity = RewardConcept03::Segment(LightT, 0.f, .13f)
+		* (1.f - RewardConcept03::Segment(LightT, .65f, 1.f));
 	for (int32 Wave = 0; Wave < 3; ++Wave)
 	{
 		if (UImage* Glow = ChestBurstGlows[Wave])
 		{
-			Glow->SetVisibility(ESlateVisibility::Collapsed);
-			Glow->SetRenderOpacity(0.f);
+			const bool bVisible = Wave == 0 && GeneratedChestLight != nullptr && LightOpacity > 0.f;
+			Glow->SetVisibility(bVisible ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			Glow->SetRenderOpacity(bVisible ? LightOpacity : 0.f);
+			Glow->SetRenderScale(FVector2D(1.f));
+			Glow->SetRenderTranslation(FVector2D::ZeroVector);
 		}
-		if (UImage* Ring = ChestBurstRings[Wave])
+		for (UImage* OldEffect : { ChestBurstRings[Wave].Get(), ChestBurstRays[Wave].Get(), ChestBurstSparks[Wave].Get() })
 		{
-			Ring->SetVisibility(ESlateVisibility::Collapsed);
-			Ring->SetRenderOpacity(0.f);
-		}
-		if (UImage* Rays = ChestBurstRays[Wave])
-		{
-			Rays->SetVisibility(ESlateVisibility::Collapsed);
-			Rays->SetRenderOpacity(0.f);
-		}
-		if (UImage* Spark = ChestBurstSparks[Wave])
-		{
-			Spark->SetVisibility(ESlateVisibility::Collapsed);
-			Spark->SetRenderOpacity(0.f);
+			if (OldEffect) { OldEffect->SetVisibility(ESlateVisibility::Collapsed); OldEffect->SetRenderOpacity(0.f); }
 		}
 	}
 	for (UImage* Coin : ChestBurstForegroundCoins)
