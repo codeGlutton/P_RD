@@ -135,3 +135,7 @@ Tools/UI/
 
 # 로컬 확인용 설정 (개인 스위치)
 Config/UserEngine.ini
+
+# Status texture assets are managed in SVN; preserve the import sources in Git.
+!SourceArt/UI/StatusIcons/*_v1.png
+!SourceArt/UI/ArtifactIcons/*_v1.png
