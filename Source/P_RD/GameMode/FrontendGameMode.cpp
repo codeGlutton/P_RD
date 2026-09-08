@@ -259,6 +259,11 @@ void AFrontendGameMode::InitializeCommonRoom()
 
 	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
 
+	if (!SaveGameSubsystem->PrepareFrontend())
+	{
+		UE_LOG(LogFrontendGameMode, Error, TEXT("Could not restore the combat entry checkpoint."));
+		return;
+	}
 	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate());
 	SaveGameSubsystem->SaveUserAsync(FAsyncSaveGameToSlotDelegate());
 	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate());
@@ -417,8 +422,7 @@ bool AFrontendGameMode::AbandonRunFromTitle()
 		return false;
 	}
 
-	ClearRunPersistData();
-	return true;
+	return GetGameInstance()->GetSubsystem<UGameProfileSubsystem>()->EndRun();
 }
 
 bool AFrontendGameMode::GetCharacterOptions(TArray<FFrontendCharacterOption>& OutOptions) const

@@ -49,6 +49,7 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresent
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSaveCombatPlay, const TArray<TObjectPtr<UUnitModel>>& /*PlayerModels*/, int32 /*RoundCount*/, int32 /*TurnCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
+DECLARE_MULTICAST_DELEGATE(FOnCombatProgressBlocked);
 
 /**
  * @brief 턴 후보 데이터
@@ -110,6 +111,7 @@ public:
 	/* 생명 주기 함수 */
 public:
 	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData, bool FixedPlayerOpening = false);
+	static bool CanAccumulateTurn(float Remaining, float Recharge, float Required);
 	void BeginCombat();
 	void EndCombat();
 
@@ -178,7 +180,7 @@ protected:
 	bool UnregisterTurn(UUnitModel* Owner, bool IncludeCurTurn = true);
 
 protected:
-	void EvaluateRound();
+	bool EvaluateRound();
 
 	bool CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>& Candidates, OUT int32& NextRoundRandomSeed) const;
 	void ApplyOrderedTurnCandidates(const TArray<FSRPGTurnCandidate>& Candidates, int32 NextRoundRandomSeed);
@@ -279,6 +281,7 @@ public:
 	 * @brief 전투 결과 확인 타이밍 대리자
 	 */
 	FOnShowCombatResultUI OnShowCombatResultUI;
+	FOnCombatProgressBlocked OnCombatProgressBlocked;
 
 public:
 	/**

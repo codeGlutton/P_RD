@@ -267,11 +267,14 @@ void UPlayerUnitPersistData::BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit)
 
 	 // 패시브 스택 비용 태그의 개수 변화를 추적
 	 AttributeSetComponentModel->RegisterTacticalTagEvent(EffectTags::GameplayEffect_Cost_PassiveStack, ETacticalTagEventType::AnyCountChange).AddWeakLambda(this, [this](const FGameplayTag Tag, int32 Count) {
-	 	mTagCountMap[Tag] = Count;
-	 	if (Count == 0)
-	 	{
-	 		mTagCountMap.Remove(Tag);
-	 	}
+		if (Count <= 0)
+		{
+			mTagCountMap.Remove(Tag);
+		}
+		else
+		{
+			mTagCountMap.Add(Tag, Count);
+		}
 	 	});
 
 	 // 플레이어 스킬 추적
@@ -551,6 +554,7 @@ void URunPersistData::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int
 
 void URunPersistData::ClearRun()
 {
+	mRoomTransactions = FRoomTransactionState();
 	mDifficulty = 1;
 	mMoney = 0;
 
@@ -611,6 +615,7 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 		mStage.InitializeAs<FStage>(
 			FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, LevelAttributeCache).SetParams(BuilderParams).Build()
 		);
+		mRoomTransactions = FRoomTransactionState();
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
 		}));
@@ -618,6 +623,10 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 
 void URunPersistData::SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex)
 {
+	if (mStage.Get().mCurRow != RowIndex || mStage.Get().mCurColumn != ColumnIndex)
+	{
+		mRoomTransactions = FRoomTransactionState();
+	}
 	mStage.GetMutable().SetCurrentRoom(RowIndex, ColumnIndex);
 }
 
@@ -713,6 +722,22 @@ void UUserPersistData::ClearUser()
 	GuidedTutorial = FGuidedTutorialProgress();
 	mUserName = FText();
 	mUserLog.Clear();
+	mAppliedRunTransactions.Reset();
+}
+
+void URunPersistData::QueueCompletedRunLog(const FRunLog& Log)
+{
+	FPendingCompletedRun& Pending = mPendingCompletedRuns.AddDefaulted_GetRef();
+	Pending.TransactionId = FGuid::NewGuid();
+	Pending.Log = Log;
+}
+
+bool UUserPersistData::ApplyRunLogOnce(const FGuid& TransactionId, const FRunLog& RunLog)
+{
+	if (!TransactionId.IsValid() || mAppliedRunTransactions.Contains(TransactionId)) return false;
+	UpdateLog(RunLog);
+	mAppliedRunTransactions.Add(TransactionId);
+	return true;
 }
 
 void UUserPersistData::UpdateLog(const FRunLog& RunLog)

@@ -271,6 +271,9 @@ protected:
 
 private:
 	friend class FCombatFloatingLogAttributeConversionTest;
+	friend class FCompletedRoomRewardExpPresentationTest;
+	static void FillRewardExpWithoutLevelUp(FRewardUI& Reward, FRewardMercenaryExpUI& Mercenary,
+		int32 CurrentLevel, float CurrentExp, float CurrentMaxExp, bool bAlreadyClaimed);
 	static FCombatFloatingLogRequest BuildAttributeFloatingLogRequest(
 		const FSRPGAttributeEffectEventLog& Log, const FVector& WorldLocation);
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const;

@@ -1,305 +1,259 @@
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-
-#include "SaveGame/SaveGameArchive.h"
-
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "SaveGame/BinarySaveGame.h"
+#include "Misc/CoreDelegates.h"
+#include "UObject/StrongObjectPtr.h"
 
-DEFINE_LOG_CATEGORY(LogSave)
+DEFINE_LOG_CATEGORY(LogSave);
+#define LOCTEXT_NAMESPACE "RunSave"
+
+void USaveGameSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+	Collection.InitializeDependency<UPersistentDataSubsystem>();
+	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &USaveGameSubsystem::FlushForBackground);
+	FCoreDelegates::GetApplicationWillTerminateDelegate().AddUObject(this, &USaveGameSubsystem::FlushForBackground);
+	mRetryTicker = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateUObject(this, &USaveGameSubsystem::RetryFailedSaves), 5.f);
+}
+
+void USaveGameSubsystem::Deinitialize()
+{
+	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.RemoveAll(this);
+	FCoreDelegates::GetApplicationWillTerminateDelegate().RemoveAll(this);
+	FTSTicker::GetCoreTicker().RemoveTicker(mRetryTicker);
+	Super::Deinitialize();
+}
 
 bool USaveGameSubsystem::HasPlaySave() const
 {
- return UGameplayStatics::DoesSaveGameExist(USER_SLOT_NAME, 0)
-     || UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0);
+	return RDCheckpoint::DoesSlotExist(USER_SLOT_NAME) || RDCheckpoint::DoesSlotExist(RUN_SLOT_NAME);
 }
 
-bool USaveGameSubsystem::SaveUser() const
+bool USaveGameSubsystem::MakePayload(const FString& Slot, UObject* Object, TArray<uint8>& OutData) const
 {
-	if (mUserSaveGame == nullptr)
+	return Slot == RUN_SLOT_NAME ? mRoomCheckpoint.MakeSaveData(Object, OutData) : RDCheckpoint::Serialize(Object, OutData);
+}
+
+void USaveGameSubsystem::ReportSave(const FString& Slot, uint64 Revision, const bool bSuccess) const
+{
+	if (mRevisions.FindRef(Slot) != Revision) return;
+	if (bSuccess)
 	{
-		CreateUser();
+		mFailedSlots.Remove(Slot);
+		mRetryPayloads.Remove(Slot);
 	}
+	else
+	{
+		mFailedSlots.Add(Slot);
+		UE_LOG(LogSave, Warning, TEXT("Save failed for %s; last valid checkpoint retained, retry scheduled."), *Slot);
+	}
+	OnSaveStatusChanged.Broadcast();
+}
 
-	SerializeObject(GetUserMutableData(), OUT mUserSaveGame->mData);
-	const bool bSaved = UGameplayStatics::SaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0);
-	ClearUser();
-
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 저장"));
-
+bool USaveGameSubsystem::SaveObject(const FString& Slot, UObject* Object) const
+{
+	const uint64 Revision = ++mRevisions.FindOrAdd(Slot);
+	TArray<uint8> Data;
+	const bool bPrepared = !mBlockedSlots.Contains(Slot) && MakePayload(Slot, Object, Data);
+	if (bPrepared) mRetryPayloads.Add(Slot, Data);
+	const bool bSaved = bPrepared && RDCheckpoint::SaveSlot(Slot, Data);
+	ReportSave(Slot, Revision, bSaved);
 	return bSaved;
 }
 
-void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const
+void USaveGameSubsystem::SaveObjectAsync(const FString& Slot, UObject* Object, FAsyncSaveGameToSlotDelegate Callback) const
 {
-	if (mUserSaveGame == nullptr)
+	const uint64 Revision = ++mRevisions.FindOrAdd(Slot);
+	TArray<uint8> Data;
+	if (mBlockedSlots.Contains(Slot) || !MakePayload(Slot, Object, Data))
 	{
-		CreateUser();
+		ReportSave(Slot, Revision, false);
+		Callback.ExecuteIfBound(Slot, 0, false);
+		return;
 	}
-
-	SerializeObject(GetUserMutableData(), OUT mUserSaveGame->mData);
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 저장 시도"));
-	UGameplayStatics::AsyncSaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
-		ClearUser();
-
-		UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 저장 완료"));
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
-		}));
-}
-
-bool USaveGameSubsystem::LoadUser() const
-{
-	if (UGameplayStatics::DoesSaveGameExist(USER_SLOT_NAME, 0) == false)
+	mRetryPayloads.Add(Slot, Data);
+	TWeakObjectPtr<const USaveGameSubsystem> WeakThis(this);
+	RDCheckpoint::SaveSlotAsync(Slot, MoveTemp(Data), [WeakThis, Slot, Revision, Callback = MoveTemp(Callback)](bool bSaved) mutable
 	{
-		UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 미발견으로 로드 실패"));
-		return false;
-	}
-
-	mUserSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(USER_SLOT_NAME, 0));
-	checkf(mUserSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-	DeserializeObject(mUserSaveGame->mData, OUT GetUserMutableData());
-	ClearUser();
-
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 로드"));
-
-	return true;
-}
-
-void USaveGameSubsystem::LoadUserAsync(FAsyncLoadGameFromSlotDelegate Callback) const
-{
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 로드 시도"));
-	UGameplayStatics::AsyncLoadGameFromSlot(USER_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
-
-		if (LoadedSaveGame != nullptr)
+		if (const USaveGameSubsystem* Self = WeakThis.Get())
 		{
-			mUserSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
-			checkf(mUserSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-			DeserializeObject(mUserSaveGame->mData, OUT GetUserMutableData());
-			ClearUser();
-			UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 비동기 로드 완료"));
+			Self->ReportSave(Slot, Revision, bSaved);
+			Callback.ExecuteIfBound(Slot, 0, bSaved);
 		}
-		else
+	});
+}
+
+bool USaveGameSubsystem::LoadObject(const FString& Slot, UObject* Object) const
+{
+	TArray<uint8> Data;
+	const bool bFound = RDCheckpoint::LoadSlot(Slot, Data);
+	return ApplyLoadedObject(Slot, Object, bFound, Data);
+}
+
+bool USaveGameSubsystem::ApplyLoadedObject(const FString& Slot, UObject* Object, bool bFound, const TArray<uint8>& Data) const
+{
+	mLoadedSlots.Add(Slot);
+	if (bFound)
+	{
+		// Failed migrations must not partly change live progress.
+		TStrongObjectPtr<UObject> Candidate(NewObject<UObject>(GetTransientPackage(), Object->GetClass()));
+		if (RDCheckpoint::Deserialize(Data, Candidate.Get()) && RDCheckpoint::Deserialize(Data, Object))
 		{
-			UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 미발견으로 로드 실패"));
+			mBlockedSlots.Remove(Slot);
+			mFailedSlots.Remove(Slot);
+			return true;
 		}
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
-		}));
-}
-
-void USaveGameSubsystem::ClearUser() const
-{
-	if (mUserSaveGame == nullptr)
-	{
-		CreateUser();
 	}
-
-	mUserSaveGame->mData.Empty();
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 초기화"));
-}
-
-bool USaveGameSubsystem::SaveRun() const
-{
-	if (mRunSaveGame == nullptr)
+	if (RDCheckpoint::DoesSlotExist(Slot))
 	{
-		CreateRun();
+		// Never replace an unreadable installation with blank frontend autosaves.
+		mBlockedSlots.Add(Slot);
+		mFailedSlots.Add(Slot);
+		UE_LOG(LogSave, Warning, TEXT("No valid checkpoint could be loaded for %s; existing files preserved."), *Slot);
+		OnSaveStatusChanged.Broadcast();
 	}
-
-	SerializeObject(GetRunMutableData(), OUT mRunSaveGame->mData);
-	UGameplayStatics::SaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0);
-	ClearRun();
-
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 저장"));
-
-	return true;
+	return false;
 }
 
-void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const
+void USaveGameSubsystem::LoadObjectAsync(const FString& Slot, UObject* Object, FAsyncLoadGameFromSlotDelegate Callback) const
 {
-	if (mRunSaveGame == nullptr)
+	TWeakObjectPtr<const USaveGameSubsystem> WeakThis(this);
+	TWeakObjectPtr<UObject> WeakObject(Object);
+	RDCheckpoint::LoadSlotAsync(Slot, [WeakThis, WeakObject, Slot, Callback = MoveTemp(Callback)](bool bFound, TArray<uint8> Data) mutable
 	{
-		CreateRun();
-	}
-
-	SerializeObject(GetRunMutableData(), OUT mRunSaveGame->mData);
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 시도"));
-	UGameplayStatics::AsyncSaveGameToSlot(mRunSaveGame, RUN_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
-		ClearRun();
-
-		UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 저장 완료"));
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
-		}));
+		const USaveGameSubsystem* Self = WeakThis.Get();
+		UObject* Target = WeakObject.Get();
+		if (!Self || !Target) return;
+		const bool bLoaded = Self->ApplyLoadedObject(Slot, Target, bFound, Data);
+		TStrongObjectPtr<UBinarySaveGame> Loaded(bLoaded ? NewObject<UBinarySaveGame>() : nullptr);
+		if (bLoaded) Loaded->mData = MoveTemp(Data);
+		Callback.ExecuteIfBound(Slot, 0, Loaded.Get());
+	});
 }
 
-bool USaveGameSubsystem::LoadRun() const
-{
-	if (UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0) == false)
-	{
-		return false;
-	}
-
-	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(RUN_SLOT_NAME, 0));
-	checkf(mRunSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-	DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
-	ClearRun();
-
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 로드"));
-
-	return true;
-}
-
-void USaveGameSubsystem::LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const
-{
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 시도"));
-	UGameplayStatics::AsyncLoadGameFromSlot(RUN_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
-
-		if (LoadedSaveGame != nullptr)
-		{
-			mRunSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
-			checkf(mRunSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-			DeserializeObject(mRunSaveGame->mData, OUT GetRunMutableData());
-			ClearRun();
-			UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 비동기 로드 완료"));
-		}
-		else
-		{
-			UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 미발견으로 로드 실패"));
-		}
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
-		}));
-}
-
-void USaveGameSubsystem::ClearRun() const
-{
-	if (mRunSaveGame == nullptr)
-	{
-		CreateRun();
-	}
-
-	mRunSaveGame->mData.Empty();
-	UE_LOG(LogSave, Log, TEXT("런 데이터 초기화"));
-}
-
-bool USaveGameSubsystem::SaveOption() const
-{
-	if (mOptionSaveGame == nullptr)
-	{
-		CreateOption();
-	}
-
-	SerializeObject(GetOptionMutableData(), OUT mOptionSaveGame->mData);
-	UGameplayStatics::SaveGameToSlot(mOptionSaveGame, OPTION_SLOT_NAME, 0);
-	ClearOption();
-
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 저장"));
-
-	return true;
-}
-
-void USaveGameSubsystem::SaveOptionAsync(FAsyncSaveGameToSlotDelegate Callback) const
-{
-	if (mOptionSaveGame == nullptr)
-	{
-		CreateOption();
-	}
-
-	SerializeObject(GetOptionMutableData(), OUT mOptionSaveGame->mData);
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 저장 시도"));
-	UGameplayStatics::AsyncSaveGameToSlot(mOptionSaveGame, OPTION_SLOT_NAME, 0, FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, bool IsSuccess) {
-		ClearOption();
-
-		UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 저장 완료"));
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, IsSuccess);
-		}));
-}
-
+bool USaveGameSubsystem::SaveUser() const { return SaveObject(USER_SLOT_NAME, GetUserMutableData()); }
+void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const { SaveObjectAsync(USER_SLOT_NAME, GetUserMutableData(), MoveTemp(Callback)); }
+bool USaveGameSubsystem::LoadUser() const { return LoadObject(USER_SLOT_NAME, GetUserMutableData()); }
+void USaveGameSubsystem::LoadUserAsync(FAsyncLoadGameFromSlotDelegate Callback) const { LoadObjectAsync(USER_SLOT_NAME, GetUserMutableData(), MoveTemp(Callback)); }
+void USaveGameSubsystem::ClearUser() const {}
+bool USaveGameSubsystem::SaveRun() const { return SaveObject(RUN_SLOT_NAME, GetRunMutableData()); }
+void USaveGameSubsystem::SaveRunAsync(FAsyncSaveGameToSlotDelegate Callback) const { SaveObjectAsync(RUN_SLOT_NAME, GetRunMutableData(), MoveTemp(Callback)); }
+bool USaveGameSubsystem::LoadRun() const { return LoadObject(RUN_SLOT_NAME, GetRunMutableData()); }
+void USaveGameSubsystem::LoadRunAsync(FAsyncLoadGameFromSlotDelegate Callback) const { LoadObjectAsync(RUN_SLOT_NAME, GetRunMutableData(), MoveTemp(Callback)); }
+void USaveGameSubsystem::ClearRun() const {}
+bool USaveGameSubsystem::SaveOption() const { return SaveObject(OPTION_SLOT_NAME, GetOptionMutableData()); }
+void USaveGameSubsystem::SaveOptionAsync(FAsyncSaveGameToSlotDelegate Callback) const { SaveObjectAsync(OPTION_SLOT_NAME, GetOptionMutableData(), MoveTemp(Callback)); }
 bool USaveGameSubsystem::LoadOption() const
 {
-	if (UGameplayStatics::DoesSaveGameExist(OPTION_SLOT_NAME, 0) == false)
-	{
-		GetOptionMutableData()->ApplyCurrentOptions();
-		return false;
-	}
-
-	mOptionSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::LoadGameFromSlot(OPTION_SLOT_NAME, 0));
-	checkf(mOptionSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-	DeserializeObject(mOptionSaveGame->mData, OUT GetOptionMutableData());
-	ClearOption();
-
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 로드"));
-
+	const bool bLoaded = LoadObject(OPTION_SLOT_NAME, GetOptionMutableData());
 	GetOptionMutableData()->ApplyCurrentOptions();
+	return bLoaded;
+}
+void USaveGameSubsystem::LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback) const
+{
+	LoadObjectAsync(OPTION_SLOT_NAME, GetOptionMutableData(), FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this,
+		[this, Callback = MoveTemp(Callback)](const FString& Slot, int32 Index, USaveGame* Save) mutable
+		{
+			GetOptionMutableData()->ApplyCurrentOptions();
+			Callback.ExecuteIfBound(Slot, Index, Save);
+		}));
+}
+void USaveGameSubsystem::ClearOption() const {}
+
+bool USaveGameSubsystem::BeginRoomCheckpoint(const bool bIncompleteCombat)
+{
+	mRestoreOnFrontend = false;
+	return mRoomCheckpoint.Capture(GetRunMutableData(), bIncompleteCombat);
+}
+void USaveGameSubsystem::CompleteCombatCheckpoint() { mRoomCheckpoint.CompleteCombat(mRestoreOnFrontend); }
+void USaveGameSubsystem::ResetRunCheckpoint() { mRoomCheckpoint.Reset(); mRestoreOnFrontend = false; }
+bool USaveGameSubsystem::SaveEndedRun(const TArray<uint8>& PreviousRunData)
+{
+	FRunRoomCheckpoint PreviousCheckpoint = mRoomCheckpoint;
+	ResetRunCheckpoint();
+	if (SaveRun()) return true;
+	// The caller rolls back RAM. Do not retry a rejected abandonment later in the background.
+	mRoomCheckpoint = MoveTemp(PreviousCheckpoint);
+	++mRevisions.FindOrAdd(RUN_SLOT_NAME);
+	TArray<uint8> RetryData = PreviousRunData;
+	if (mRoomCheckpoint.IsCombatEntry()) mRoomCheckpoint.MakeSaveData(nullptr, RetryData);
+	mRetryPayloads.Add(RUN_SLOT_NAME, MoveTemp(RetryData));
+	return false;
+}
+void USaveGameSubsystem::RequestRunAutosave() const { SaveRunAsync(FAsyncSaveGameToSlotDelegate()); }
+void USaveGameSubsystem::CommitPendingRunLogs()
+{
+	URunPersistData* Run = GetRunMutableData();
+	if (Run->GetPendingCompletedRuns().IsEmpty() || mBlockedSlots.Contains(USER_SLOT_NAME)) return;
+	UUserPersistData* User = GetUserMutableData();
+	for (const FPendingCompletedRun& Pending : Run->GetPendingCompletedRuns())
+	{
+		User->ApplyRunLogOnce(Pending.TransactionId, Pending.Log);
+	}
+	// Keep the journal across future runs when User cannot be written. Replaying is idempotent.
+	if (SaveUser())
+	{
+		Run->ClearCompletedRunLogs();
+		RequestRunAutosave();
+	}
+}
+void USaveGameSubsystem::RestoreCheckpointOnNextFrontend() { mRestoreOnFrontend = mRoomCheckpoint.IsCombatEntry(); }
+void USaveGameSubsystem::CancelCheckpointFrontendRestore()
+{
+	mRestoreOnFrontend = false;
+	if (mRoomCheckpoint.CancelExit()) RequestRunAutosave();
+}
+bool USaveGameSubsystem::PrepareFrontend()
+{
+	if (mRestoreOnFrontend && !mRoomCheckpoint.Restore(GetRunMutableData())) return false;
+	ResetRunCheckpoint();
+	CommitPendingRunLogs();
 	return true;
 }
 
-void USaveGameSubsystem::LoadOptionAsync(FAsyncLoadGameFromSlotDelegate Callback) const
+void USaveGameSubsystem::FlushForBackground()
 {
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 로드 시도"));
-	UGameplayStatics::AsyncLoadGameFromSlot(OPTION_SLOT_NAME, 0, FAsyncLoadGameFromSlotDelegate::CreateWeakLambda(this, [this, MovedCallback = MoveTemp(Callback)](const FString& SlotName, const int32 UserIndex, USaveGame* LoadedSaveGame) {
-
-		if (LoadedSaveGame != nullptr)
-		{
-			mOptionSaveGame = Cast<UBinarySaveGame>(LoadedSaveGame);
-			checkf(mOptionSaveGame != nullptr, TEXT("잘못된 세이브 파일 캐스팅"));
-			DeserializeObject(mOptionSaveGame->mData, OUT GetOptionMutableData());
-			ClearOption();
-			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 비동기 로드 완료"));
-		}
-		else
-		{
-			UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 미발견으로 로드 실패"));
-		}
-		GetOptionMutableData()->ApplyCurrentOptions();
-		MovedCallback.ExecuteIfBound(SlotName, UserIndex, LoadedSaveGame);
-		}));
+	if (!IsInGameThread() || mLoadedSlots.Num() < 3) return;
+	// These writes wait behind older requests before the lifecycle callback returns.
+	SaveRun();
+	SaveUser();
+	SaveOption();
+	CommitPendingRunLogs();
 }
 
-void USaveGameSubsystem::ClearOption() const
+bool USaveGameSubsystem::RetryFailedSaves(float DeltaTime)
 {
-	if (mOptionSaveGame == nullptr)
+	const TSet<FString> Failed = mFailedSlots;
+	for (const FString& Slot : Failed)
 	{
-		CreateOption();
+		const TArray<uint8>* Payload = mRetryPayloads.Find(Slot);
+		if (!Payload || mBlockedSlots.Contains(Slot) || mRetryPending.Contains(Slot)) continue;
+		const uint64 Revision = mRevisions.FindRef(Slot);
+		mRetryPending.Add(Slot);
+		TWeakObjectPtr<USaveGameSubsystem> WeakThis(this);
+		RDCheckpoint::SaveSlotAsync(Slot, *Payload, [WeakThis, Slot, Revision](bool bSaved)
+		{
+			if (USaveGameSubsystem* Self = WeakThis.Get())
+			{
+				Self->mRetryPending.Remove(Slot);
+				Self->ReportSave(Slot, Revision, bSaved);
+			}
+		});
 	}
-
-	mOptionSaveGame->mData.Empty();
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 초기화"));
+	return true;
 }
 
-void USaveGameSubsystem::CreateUser() const
+FText USaveGameSubsystem::GetRunResumeDescription() const
 {
-	mUserSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
-	checkf(mUserSaveGame != nullptr, TEXT("유저 데이터 저장 객체 생성 실패"));
-	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 생성"));
+	return IsUsingCombatEntryCheckpoint()
+		? LOCTEXT("RestartCombat", "현재 전투는 방 입장 시점부터 다시 시작하며, 아군 상태와 소지품도 함께 복원됩니다.")
+		: LOCTEXT("ResumeProgress", "현재 진행을 저장한 뒤 타이틀로 돌아갑니다.");
 }
 
-void USaveGameSubsystem::CreateRun() const
+FText USaveGameSubsystem::GetSaveStatusText() const
 {
-	mRunSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
-	checkf(mRunSaveGame != nullptr, TEXT("런 데이터 저장 객체 생성 실패"));
-	UE_LOG(LogSave, Log, TEXT("런 데이터 세이브 파일 생성"));
+	if (!mBlockedSlots.IsEmpty()) return LOCTEXT("UnreadableSave", "저장 데이터를 읽을 수 없습니다. 기존 파일은 보존되며 새 저장은 중단되었습니다.");
+	return HasSaveFailure() ? LOCTEXT("SaveFailed", "저장하지 못했습니다. 자동으로 다시 시도합니다.") : FText::GetEmpty();
 }
-
-void USaveGameSubsystem::CreateOption() const
-{
-	mOptionSaveGame = Cast<UBinarySaveGame>(UGameplayStatics::CreateSaveGameObject(UBinarySaveGame::StaticClass()));
-	checkf(mOptionSaveGame != nullptr, TEXT("옵션 데이터 저장 객체 생성 실패"));
-	UE_LOG(LogSave, Log, TEXT("옵션 데이터 세이브 파일 생성"));
-}
-
-void USaveGameSubsystem::SerializeObject(UObject* Object, OUT TArray<uint8>& Data) const
-{
-	checkf(Object != nullptr, TEXT("오브젝트 nullptr로, 직렬화 실패"));
-
-	FMemoryWriter Writer = FMemoryWriter(OUT Data, true);
-	FSaveGameArchive Archive = FSaveGameArchive(Writer);
-
-	Object->Serialize(Archive);
-}
-
-void USaveGameSubsystem::DeserializeObject(const TArray<uint8>& Data, OUT UObject* Object) const
-{
-	checkf(Object != nullptr, TEXT("오브젝트 nullptr로, 역직렬화 실패"));
-
-	FMemoryReader Reader = FMemoryReader(Data, true);
-	FSaveGameArchive Archive = FSaveGameArchive(Reader);
-
-	Object->Serialize(Archive);
-}
+#undef LOCTEXT_NAMESPACE
