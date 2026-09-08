@@ -90,7 +90,15 @@ enum class EFloatingLogIconType : uint8
 	Poison,				// 독
 	Stun,				// 기절
 	Fire,				// 화염
-	Move				// 이동
+	Move,				// 이동
+	Strength,
+	Dexterity,
+	Acumeny,
+	Haste,
+	Exhaustion,
+	Slow,
+	Frail,
+	Root
 };
 
 /**

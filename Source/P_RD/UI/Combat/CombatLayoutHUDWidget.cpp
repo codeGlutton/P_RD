@@ -2074,49 +2074,15 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
  */
 UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 {
-	// 한 번만 읽는다. 카드 셋과 요약판 행이 매 갱신마다 부르는 자리라 매번
-	// 같은 그림을 찾지 않는다. 게임 태그가 아직 없는 선행 자산도 잎 이름으로
-	// 연결해 둘 수 있다.
-	static TMap<FString, TObjectPtr<UTexture2D>> Loaded;
-	static TObjectPtr<UTexture2D> GenericStatusIcon;
-	if (Loaded.IsEmpty())
+	if (UTexture2D* Art = CombatStatusUI::ResolveIcon(StatusTag))
 	{
-		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
-		const TPair<const TCHAR*, const TCHAR*> Pairs[] = {
-			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
-			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
-			{ TEXT("Vigor"), TEXT("T_Status_Agility") },
-			{ TEXT("Fortification"), TEXT("T_Status_Fortification") },
-			{ TEXT("Vulnerability"), TEXT("T_Status_Vulnerability") },
-			{ TEXT("Weakness"), TEXT("T_Status_Weakness") },
-			{ TEXT("Poison"), TEXT("T_Status_Poison") },
-			{ TEXT("Stun"), TEXT("T_Status_Stun") },
-			{ TEXT("Bleed"), TEXT("T_Status_Bleed") },
-			{ TEXT("Stealth"), TEXT("T_Status_Stealth") },
-		};
-		for (const TPair<const TCHAR*, const TCHAR*>& Pair : Pairs)
-		{
-			const FString Path = FString::Printf(TEXT("%s%s.%s"), Root, Pair.Value, Pair.Value);
-			Loaded.Add(Pair.Key, LoadObject<UTexture2D>(nullptr, *Path));
-		}
-		GenericStatusIcon = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/"
-				"T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"));
+		return Art;
 	}
-
-	FString Leaf = StatusTag.GetTagName().ToString();
-	int32 LastDot = INDEX_NONE;
-	if (Leaf.FindLastChar(TEXT('.'), LastDot))
-	{
-		Leaf = Leaf.Mid(LastDot + 1);
-	}
-	if (const TObjectPtr<UTexture2D>* Art = Loaded.Find(Leaf))
-	{
-		return Art->Get() != nullptr ? Art->Get() : GenericStatusIcon.Get();
-	}
-	// 새 상태가 추가돼도 행이 빈칸으로 보이지 않게 범용 표식을 돌려준다.
+	// Unknown future states retain the existing fallback.
 	return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect)
-		? GenericStatusIcon.Get() : nullptr;
+		? LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"))
+		: nullptr;
 }
 
 /** @brief 아군/적 세로 요약판에 상태 스크롤 컨테이너를 하나씩 준비한다. */

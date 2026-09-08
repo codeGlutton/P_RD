@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 
 #include "GameplayTagType.h"
+#include "Engine/Texture2D.h"
 #include "Internationalization/Internationalization.h"
 #include "UI/Combat/CombatStatusPresentation.h"
 
@@ -28,6 +29,9 @@ bool FCombatStatusPresentationCoverageTest::RunTest(const FString& Parameters)
 		EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength,
 		EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Dexterity,
 		EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny,
+		EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength,
+		EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity,
+		EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny,
 		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor,
 		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification,
 		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Haste,
@@ -49,7 +53,24 @@ bool FCombatStatusPresentationCoverageTest::RunTest(const FString& Parameters)
 		TestNotEqual(*FString::Printf(TEXT("%s 플로팅 아이콘"),
 			*StatusTag.ToString()), Presentation.mFloatingIcon,
 			EFloatingLogIconType::None);
+		UTexture2D* Icon = CombatStatusUI::ResolveIcon(StatusTag);
+		TestNotNull(*FString::Printf(TEXT("%s dedicated texture exists"),
+			*StatusTag.ToString()), Icon);
+		if (Icon)
+		{
+			TestTrue(TEXT("Status textures are loaded from SVN"), Icon->GetPathName().StartsWith(
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/")));
+		}
+		TestNotEqual(TEXT("Known statuses do not use generic log art"),
+			Presentation.mFloatingIcon, EFloatingLogIconType::Status);
+		TestTrue(TEXT("HUD and floating log use the same texture"),
+			Icon == CombatStatusUI::ResolveIcon(Presentation.mFloatingIcon));
 	}
+	TestNull(TEXT("Invalid tags have no status icon"), CombatStatusUI::ResolveIcon(FGameplayTag()));
+	TestTrue(TEXT("Strength reduction remains a debuff"), CombatStatusUI::Resolve(
+		EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength).mIsDebuff);
+	TestTrue(TEXT("Strength increase remains a buff"), CombatStatusUI::Resolve(
+		EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength).mIsBuff);
 
 	TestEqual(TEXT("기절 한글 이름"), CombatStatusUI::Resolve(
 		EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun)
