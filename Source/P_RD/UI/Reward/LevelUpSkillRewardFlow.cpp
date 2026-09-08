@@ -66,6 +66,19 @@ TArray<FPrimaryAssetId> LevelUpSkillReward::ChooseCandidates(const TArray<UStati
 	return Result;
 }
 
+int32 LevelUpSkillReward::FindPendingReward(const TArray<FLevelUpSkillReward>& Rewards, int32 UnitIndex)
+{
+	return Rewards.IndexOfByPredicate([UnitIndex](const FLevelUpSkillReward& Reward)
+		{ return !Reward.Completed && (UnitIndex == INDEX_NONE || Reward.UnitIndex == UnitIndex); });
+}
+
+bool LevelUpSkillReward::Skip(FLevelUpSkillReward& Reward)
+{
+	if (Reward.Completed || !Reward.Offered) return false;
+	Reward.Completed = true;
+	return true;
+}
+
 bool LevelUpSkillReward::TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel* Unit,
 	const FPrimaryAssetId& SkillId, int32 SkillSlot)
 {
@@ -94,6 +107,7 @@ void ULevelUpSkillRewardFlow::Open(URunPersistData* Run, UPartyModel* Party, APl
 	if (!mUIModel)
 	{
 		mUIModel = NewObject<UShopUIModel>(this);
+		mUIModel->OnRewardUnitRequested.AddDynamic(this, &ULevelUpSkillRewardFlow::SelectRewardUnit);
 		mUIModel->OnBuySkillRequested.AddDynamic(this, &ULevelUpSkillRewardFlow::Select);
 		mUIModel->OnLeaveRequested.AddDynamic(this, &ULevelUpSkillRewardFlow::ContinueWithoutCandidate);
 		mUIModel->OnItemDetailRequested.AddDynamic(this, &ULevelUpSkillRewardFlow::ShowDetail);
@@ -114,10 +128,11 @@ void ULevelUpSkillRewardFlow::Close()
 	mActiveReward = INDEX_NONE;
 }
 
-void ULevelUpSkillRewardFlow::ShowNext()
+void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 {
 	TArray<FLevelUpSkillReward>& Rewards = mRun->GetRoomTransactionsMutable().LevelUpSkills;
-	mActiveReward = Rewards.IndexOfByPredicate([](const FLevelUpSkillReward& Reward) { return !Reward.Completed; });
+	mActiveReward = LevelUpSkillReward::FindPendingReward(Rewards, PreferredUnit);
+	if (mActiveReward == INDEX_NONE) mActiveReward = LevelUpSkillReward::FindPendingReward(Rewards);
 	if (mActiveReward == INDEX_NONE) { Close(); return; }
 	FLevelUpSkillReward& Reward = Rewards[mActiveReward];
 	const auto& Units = mParty->GetPlayerUnitModels();
@@ -148,23 +163,29 @@ void ULevelUpSkillRewardFlow::ShowNext()
 	View.mRewardTitle = FText::Format(NSLOCTEXT("LevelUpReward", "Target", "{0} · Lv.{1}"),
 		Unit->GetBoardActorDisplayName(), FText::AsNumber(Reward.Level));
 	View.mRewardOfferId = mActiveReward;
-	FShopOwnedUnitUI Target;
-	Target.mUnitIndex = Reward.UnitIndex;
-	Target.mJobType = Unit->GetUnitJobType();
-	Target.mLevel = Reward.Level;
-	for (const FSkillEntry& Entry : Skills->GetSkills())
+	View.mRewardUnitIndex = Reward.UnitIndex;
+	for (int32 UnitIndex = 0; UnitIndex < Units.Num(); ++UnitIndex)
 	{
-		FShopOwnedSkillSlotUI& Slot = Target.mSkillSlots.AddDefaulted_GetRef();
-		Slot.mIsEmpty = !Entry.mData;
-		if (Entry.mData)
+		const int32 Pending = LevelUpSkillReward::FindPendingReward(Rewards, UnitIndex);
+		if (Pending == INDEX_NONE || !Units[UnitIndex]) continue;
+		FShopOwnedUnitUI Target;
+		Target.mUnitIndex = UnitIndex;
+		Target.mJobType = Units[UnitIndex]->GetUnitJobType();
+		Target.mLevel = Rewards[Pending].Level;
+		for (const FSkillEntry& Entry : Units[UnitIndex]->GetSkillComponentModel()->GetSkills())
 		{
-			Slot.mName = Entry.mData->mName;
-			Slot.mIcon = Entry.mData->mIcon.LoadSynchronous();
-			Slot.mDescription = Entry.mData->mDescription;
+			FShopOwnedSkillSlotUI& Slot = Target.mSkillSlots.AddDefaulted_GetRef();
+			Slot.mIsEmpty = !Entry.mData;
+			if (Entry.mData)
+			{
+				Slot.mName = Entry.mData->mName;
+				Slot.mIcon = Entry.mData->mIcon.LoadSynchronous();
+				Slot.mDescription = Entry.mData->mDescription;
+			}
 		}
+		View.mOwnedUnits.Add(Target);
+		View.mSkillTargetUnits.Add(Target);
 	}
-	View.mOwnedUnits.Add(Target);
-	View.mSkillTargetUnits.Add(Target);
 	for (int32 Index = 0; Index < Reward.Candidates.Num(); ++Index)
 	{
 		const UStaticUnitSkillData* Skill = LoadSkill(Reward.Candidates[Index]);
@@ -196,23 +217,33 @@ void ULevelUpSkillRewardFlow::Select(int32 Choice, int32 UnitIndex, int32 SkillS
 	if (!Units.IsValidIndex(UnitIndex)) return;
 	if (LevelUpSkillReward::TryEquip(Reward, Units[UnitIndex], Reward.Candidates[Choice % 3], SkillSlot))
 	{
-		Save();
-		// Retire this input before displaying another offer on the following frame.
-		mWidget->SetIsEnabled(false);
-		mActiveReward = INDEX_NONE;
-		mController->GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]()
-			{ mWidget->SetIsEnabled(true); ShowNext(); }));
+		FinishActiveReward();
 	}
+}
+
+void ULevelUpSkillRewardFlow::FinishActiveReward()
+{
+	const int32 UnitIndex = mRun->GetRoomTransactions().LevelUpSkills[mActiveReward].UnitIndex;
+	Save();
+	// Retire this offer immediately, including skip, before accepting another tap.
+	mActiveReward = INDEX_NONE;
+	mWidget->SetIsEnabled(false);
+	mController->GetWorldTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this, UnitIndex]()
+		{ if (mWidget) mWidget->SetIsEnabled(true); ShowNext(UnitIndex); }));
+}
+
+void ULevelUpSkillRewardFlow::SelectRewardUnit(int32 UnitIndex)
+{
+	if (!mRun || mActiveReward == INDEX_NONE
+		|| LevelUpSkillReward::FindPendingReward(mRun->GetRoomTransactions().LevelUpSkills, UnitIndex) == INDEX_NONE) return;
+	ShowNext(UnitIndex);
 }
 
 void ULevelUpSkillRewardFlow::ContinueWithoutCandidate()
 {
 	if (!mRun || mActiveReward == INDEX_NONE) return;
-	FLevelUpSkillReward& Reward = mRun->GetRoomTransactionsMutable().LevelUpSkills[mActiveReward];
-	if (!Reward.Offered || !Reward.Candidates.IsEmpty()) return;
-	Reward.Completed = true;
-	Save();
-	ShowNext();
+	if (LevelUpSkillReward::Skip(mRun->GetRoomTransactionsMutable().LevelUpSkills[mActiveReward]))
+		FinishActiveReward();
 }
 
 void ULevelUpSkillRewardFlow::ShowDetail(int32 Choice)
