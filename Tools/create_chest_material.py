@@ -7,7 +7,6 @@ if material is not None:
     shader = unreal.MaterialEditingLibrary.get_material_property_input_node(
         material, unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     assert isinstance(shader, unreal.MaterialExpressionCustom), 'Unexpected existing material graph'
-    unreal.log('Reward chest material already exists; keeping the reviewed graph.')
 else:
     material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
         'M_RewardChestSoftAtlas', '/Game/UI/Reward', unreal.Material, unreal.MaterialFactoryNew())
@@ -29,10 +28,6 @@ else:
         item.set_editor_property('input_name', name)
         inputs.append(item)
     shader.set_editor_property('inputs', inputs)
-    shader.set_editor_property('code', '''float2 cellUV = (UV + Frame.xy) / 6.0;
-    float4 color = Texture2DSample(Atlas, AtlasSampler, cellUV);
-    float2 fade = smoothstep(0.0, 0.08, min(UV, 1.0 - UV));
-    return float4(color.rgb, color.a * fade.x * fade.y);''')
     for node,name in [(uv,'UV'), (frame,'Frame'), (atlas,'Atlas')]:
         assert lib.connect_material_expressions(node, '', shader, name), name
     alpha = lib.create_material_expression(material, unreal.MaterialExpressionComponentMask, 0, 180)
@@ -41,5 +36,24 @@ else:
     assert lib.connect_material_expressions(shader, '', alpha, '')
     assert lib.connect_material_property(shader, '', unreal.MaterialProperty.MP_EMISSIVE_COLOR)
     assert lib.connect_material_property(alpha, '', unreal.MaterialProperty.MP_OPACITY)
-    lib.recompile_material(material)
-    unreal.EditorAssetLibrary.save_loaded_asset(material)
+
+# Keep the source chest at its original on-screen size, inside a larger canvas.
+# A radial halo fills the space outside the atlas instead of exposing its box.
+shader.set_editor_property('code', '''
+float2 sourceUV = (UV - 0.5) * 1.5 + 0.5;
+float2 cellUV = (clamp(sourceUV, float2(0.5/682.0, 0.5/455.0),
+    float2(1.0-0.5/682.0, 1.0-0.5/455.0)) + Frame.xy) / 6.0;
+float4 source = Texture2DSample(Atlas, AtlasSampler, cellUV);
+float radius = length((sourceUV - 0.5) * 2.0);
+float sourceAlpha = source.a * (1.0 - smoothstep(0.72, 1.0, radius));
+float frameIndex = Frame.x + Frame.y * 6.0;
+float burst = smoothstep(3.0, 9.0, frameIndex)
+    * (1.0 - 0.6 * smoothstep(20.0, 32.0, frameIndex));
+float halo = 0.65 * burst * pow(saturate(1.0 - length((UV - 0.5) * 2.0)), 2.0);
+float alpha = sourceAlpha + halo * (1.0 - sourceAlpha);
+float3 rgb = (source.rgb * sourceAlpha
+    + float3(1.0, 0.42, 0.055) * halo * (1.0 - sourceAlpha)) / max(alpha, 0.0001);
+return float4(rgb, alpha);
+''')
+unreal.MaterialEditingLibrary.recompile_material(material)
+unreal.EditorAssetLibrary.save_loaded_asset(material)

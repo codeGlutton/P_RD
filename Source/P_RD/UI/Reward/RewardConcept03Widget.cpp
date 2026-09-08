@@ -36,6 +36,9 @@ namespace RewardConcept03
 	constexpr int32 TripleBurstFrameCount = 33;
 	constexpr int32 TripleBurstAtlasColumns = 6;
 	constexpr int32 TripleBurstAtlasRows = 6;
+	// Match the padded UV canvas in M_RewardChestSoftAtlas. The chest stays
+	// the same size while the glow can extend beyond the source atlas cell.
+	constexpr float ChestGlowCanvasScale = 1.5f;
 	constexpr float ArtifactLongPressSeconds = .5f;
 	constexpr float DefaultChestRevealDuration = 1.15f;
 	// 33장을 약 24fps로 한 번만 보여 준다. 기존 4.06초는 보상 흐름을
@@ -403,6 +406,24 @@ void URewardConcept03Widget::ResolveWidgets()
 	GoldVisualPanel = GetWidgetFromName(TEXT("NewGoldVisualPanel"));
 	GoldBackgroundChestImage = Cast<UImage>(
 		GetWidgetFromName(TEXT("NewGoldBackgroundChestImage")));
+	// Keep the same padded final frame during the gold reward. The old
+	// separate texture still contained coins cut off at its rectangular edge.
+	if (GoldBackgroundChestImage && ChestSequenceImage && !GoldBackgroundChestImage->GetDynamicMaterial())
+	{
+		if (UMaterialInstanceDynamic* Sequence = ChestSequenceImage->GetDynamicMaterial())
+		{
+			UMaterialInstanceDynamic* Material = UMaterialInstanceDynamic::Create(mChestAtlasMaterial, this);
+			Material->SetTextureParameterValue(TEXT("Atlas"), Sequence->K2_GetTextureParameterValue(TEXT("Atlas")));
+			GoldBackgroundChestImage->SetBrushFromMaterial(Material);
+			FSlateBrush Brush = GoldBackgroundChestImage->GetBrush();
+			Brush.ImageSize = FVector2D(682.f, 455.f);
+			Brush.SetUVRegion(FBox2f(FVector2f(0.f, 0.f), FVector2f(1.f, 1.f)));
+			GoldBackgroundChestImage->SetBrush(Brush);
+			RewardConcept03::SetAtlasFrame(GoldBackgroundChestImage, RewardConcept03::TripleBurstFrameCount - 1);
+		}
+	}
+	for (UWidget* Ancestor = GoldBackgroundChestImage; Ancestor; Ancestor = Ancestor->GetParent())
+		Ancestor->SetClipping(EWidgetClipping::Inherit);
 	GoldChestBlur = Cast<UBackgroundBlur>(
 		GetWidgetFromName(TEXT("NewGoldChestBlur")));
 	GoldInfoPanel = GetWidgetFromName(TEXT("NewGoldPanel"));
@@ -1179,7 +1200,7 @@ void URewardConcept03Widget::UpdateChestOpening(const float NormalizedTime)
 			if (SequenceLayer != nullptr)
 			{
 				SequenceLayer->SetRenderTransformPivot(FVector2D(.5f, .5f));
-				SequenceLayer->SetRenderScale(FVector2D(Scale));
+				SequenceLayer->SetRenderScale(FVector2D(Scale * (bUsesAtlas ? RewardConcept03::ChestGlowCanvasScale : 1.f)));
 				SequenceLayer->SetRenderTranslation(FVector2D(Shake, VerticalKick));
 			}
 		}
@@ -1264,7 +1285,8 @@ void URewardConcept03Widget::UpdateGoldReveal(const float NormalizedTime)
 		GoldBackgroundChestImage->SetRenderOpacity(
 			FMath::Lerp(.96f, .82f, BlurT));
 		GoldBackgroundChestImage->SetRenderScale(FVector2D(
-			FMath::Lerp(1.f, .98f, BlurT)));
+			FMath::Lerp(1.f, .98f, BlurT) * (GoldBackgroundChestImage->GetDynamicMaterial()
+				? RewardConcept03::ChestGlowCanvasScale : 1.f)));
 		GoldBackgroundChestImage->SetRenderTranslation(FVector2D::ZeroVector);
 
 		if (GoldVisualPanel != nullptr)
@@ -1431,6 +1453,10 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 			Widget->SetRenderTransformAngle(0.f);
 		}
 	}
+	for (UImage* Image : { ChestSequenceImage.Get(), ChestSequenceBlendImage.Get() })
+		if (Image) Image->SetRenderScale(FVector2D(RewardConcept03::ChestGlowCanvasScale));
+	if (GoldBackgroundChestImage && GoldBackgroundChestImage->GetDynamicMaterial())
+		GoldBackgroundChestImage->SetRenderScale(FVector2D(RewardConcept03::ChestGlowCanvasScale));
 	// 보조 레이어는 새 개봉이 시작될 때까지 완전히 숨긴다.
 	if (ChestBlendSwitcher != nullptr)
 	{

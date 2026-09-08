@@ -1006,10 +1006,14 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	for (UWidget* Parent = ChestSequence; Parent != nullptr; Parent = Parent->GetParent())
 		TestEqual(*FString::Printf(TEXT("Chest glow may overflow %s"), *Parent->GetName()),
 			Parent->GetClipping(), EWidgetClipping::Inherit);
+	for (UWidget* Parent = Widget->GetWidgetFromName(TEXT("NewGoldBackgroundChestImage"));
+		Parent; Parent = Parent->GetParent())
+		TestEqual(*FString::Printf(TEXT("Gold chest may overflow %s"), *Parent->GetName()),
+			Parent->GetClipping(), EWidgetClipping::Inherit);
 	Widget->SetRewardPresentationManualTick(true);
 	Widget->AdvanceRewardFlow();
 	FString ChestPrimerError;
-	if (!Capture(*Widget, SlateWidget, TEXT("_ChestPrimer.png"), ChestPrimerError, 21))
+	if (!Capture(*Widget, SlateWidget, TEXT("_ChestPrimer.png"), ChestPrimerError, 20))
 	{
 		AddError(ChestPrimerError);
 		return false;
@@ -1028,14 +1032,24 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	}
 	Widget->AdvanceRewardPresentation(1.25f);
 	FString GlowError;
-	if (!Capture(*Widget, SlateWidget, TEXT("WBP_RewardConcept03_Frameless_Glow.png"), GlowError, 21)) AddError(GlowError);
+	if (!Capture(*Widget, SlateWidget, TEXT("WBP_RewardConcept03_Frameless_Glow.png"), GlowError, 20)) AddError(GlowError);
+	// Check the bright opening frames, not only the quieter tail of the burst.
+	for (int32 Frame : { 9, 12, 20, 32 })
+	{
+		ChestSequence->GetDynamicMaterial()->SetVectorParameterValue(TEXT("Frame"),
+			FLinearColor(Frame % 6, Frame / 6, 0.f, 0.f));
+		FString FrameError;
+		if (!Capture(*Widget, SlateWidget,
+			*FString::Printf(TEXT("WBP_RewardConcept03_Frameless_Glow_%02d.png"), Frame), FrameError, 20))
+			AddError(FrameError);
+	}
 	Widget->ResetRewardFlow();
 	StepSwitcher->SetActiveWidgetIndex(1);
 	ProgressSwitcher->SetActiveWidgetIndex(1);
 	ButtonSwitcher->SetActiveWidgetIndex(1);
 	FString PrimerError;
 	if (!Capture(*Widget, SlateWidget, TEXT("_FramelessWarmup.png"),
-		PrimerError, 21))
+		PrimerError, 20))
 	{
 		AddError(PrimerError);
 		return false;
@@ -1057,7 +1071,7 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 		ProgressSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		ButtonSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		FString CaptureError;
-		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 21))
+		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 20))
 		{
 			AddError(CaptureError);
 			return false;
