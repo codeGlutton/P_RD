@@ -10,7 +10,7 @@
 #include "Commandlet/DataAssetImportUtils.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
-namespace
+namespace ImportPassiveDataPrivate
 {
 	// 노션 CSV 헤더 이름
 	// 괄호와 공백은 제거되며 문서에서 컬럼 이름을 바꾸면 여기도 수정 필요
@@ -54,6 +54,7 @@ UImportPassiveDataCommandlet::UImportPassiveDataCommandlet()
 
 int32 UImportPassiveDataCommandlet::Main(const FString& Params)
 {
+	using namespace ImportPassiveDataPrivate;
 	// -csv 는 필수, -ids 는 선택
 	FString CsvPath;
 	if (FParse::Value(*Params, TEXT("csv="), CsvPath) == false)
@@ -153,6 +154,7 @@ int32 UImportPassiveDataCommandlet::Main(const FString& Params)
 
 bool UImportPassiveDataCommandlet::FillPassiveData(const FImportCsvTable& Table, int32 RowIndex, UStaticPassiveData* Data) const
 {
+	using namespace ImportPassiveDataPrivate;
 	const FString Id = Table.Get(RowIndex, Column::Id).TrimStartAndEnd();
 
 	// 설명: 제목에서 앞의 ID를 뗌
