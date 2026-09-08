@@ -1,5 +1,6 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "UI/StageVictory/BossCollapseWidget.h"
 #include "Engine/GameInstance.h"
 
 #include "Actor/TileMap/TileLayer.h"
@@ -3455,6 +3456,12 @@ void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
 
 void UCombatLayoutHUDWidget::UnbindUIModel()
 {
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
+	if (mBossCollapseWidget)
+	{
+		mBossCollapseWidget->Cancel();
+		mBossCollapseWidget = nullptr;
+	}
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	if (mUIModel != nullptr)
 	{

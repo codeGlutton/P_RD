@@ -152,6 +152,29 @@ URewardConcept03Widget::URewardConcept03Widget(const FObjectInitializer& ObjectI
 	ChestLightMaterial = Light.Object;
 }
 
+bool URewardConcept03Widget::SetStageClearBackground(int32 Stage)
+{
+    UImage* Image=Cast<UImage>(GetWidgetFromName(TEXT("NewRewardBackgroundImage")));
+    if(!Image) return false;
+    if(!bHasDefaultRewardBackground)
+    {
+        DefaultRewardBackground=Image->GetBrush();
+        bHasDefaultRewardBackground=true;
+    }
+    if(Stage<1 || Stage>3)
+    {
+        Image->SetBrush(DefaultRewardBackground);
+        bStageClearBackground=false;
+        return true;
+    }
+    const FString Path=FString::Printf(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/StageVictory/T_StageReward%d.T_StageReward%d"),Stage,Stage);
+    UTexture2D* Texture=LoadObject<UTexture2D>(nullptr,*Path);
+    if(!Texture) { Image->SetBrush(DefaultRewardBackground); bStageClearBackground=false; return false; }
+    Image->SetBrushFromTexture(Texture,false);
+    bStageClearBackground=true;
+    return true;
+}
+
 void URewardConcept03Widget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
@@ -315,6 +338,26 @@ void URewardConcept03Widget::NativeTick(
 	const FGeometry& MyGeometry, const float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+    if(bStageClearBackground)
+    {
+        UImage* Image=Cast<UImage>(GetWidgetFromName(TEXT("NewRewardBackgroundImage")));
+        UTexture2D* Texture=Image?Cast<UTexture2D>(Image->GetBrush().GetResourceObject()):nullptr;
+        const FVector2D Size=Image?Image->GetCachedGeometry().GetLocalSize():FVector2D::ZeroVector;
+        if(Texture && Size.X>0 && Size.Y>0)
+        {
+            const FIntPoint ImportedSize = Texture->GetImportedSize();
+            const float SourceAspect = ImportedSize.Y > 0 ? float(ImportedSize.X) / ImportedSize.Y : 1.f;
+            const float ViewAspect=Size.X/Size.Y;
+            FVector2f UVSize(1,1);
+            if(ViewAspect>SourceAspect) UVSize.Y=SourceAspect/ViewAspect;
+            else UVSize.X=ViewAspect/SourceAspect;
+            const FVector2f UVMin=(FVector2f(1,1)-UVSize)*.5f;
+            FSlateBrush Brush=Image->GetBrush();
+            Brush.SetUVRegion(FBox2f(UVMin,UVMin+UVSize));
+            Image->SetBrush(Brush);
+        }
+    }
+
 	if (!bManualPresentationTick)
 	{
 		UpdateExperienceAnimation(InDeltaTime);
@@ -921,6 +964,7 @@ void URewardConcept03Widget::UnbindInput()
 
 void URewardConcept03Widget::ResetRewardFlow()
 {
+    if(StepSwitcher) StepSwitcher->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	CancelArtifactPress();
 	bSuppressNextArtifactClick = false;
 	CurrentStepIndex = RewardConcept03::FirstStep;
