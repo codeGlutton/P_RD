@@ -5,6 +5,9 @@
  *********************************************************************/
 
 #include "Blueprint/UserWidget.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
+#include "UI/Combat/CombatUITypes.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
@@ -32,6 +35,7 @@
 
 #if WITH_EDITOR
 #include "Editor.h"
+#include "AssetCompilingManager.h"
 #endif
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
@@ -981,6 +985,29 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 			== ChestBlendSequence->GetBrush().GetResourceObject());
 	}
 
+
+	URewardUIModel* ActualModel = NewObject<URewardUIModel>(Widget);
+	TArray<FRewardChoiceUI> ActualChoices;
+	for (const TCHAR* AssetName : { TEXT("DA_Artifact_Common_Sword"),
+		TEXT("DA_Artifact_Common_Dagger"), TEXT("DA_Artifact_Common_BrokenBow") })
+	{
+		const FString AssetPath = FString::Printf(TEXT("/Game/BP/DataAsset/Artifact/%s.%s"), AssetName, AssetName);
+		UStaticArtifactData* Data = LoadObject<UStaticArtifactData>(nullptr, *AssetPath);
+		if (!TestNotNull(TEXT("실제 아티팩트 후보"), Data)) return false;
+		FRewardChoiceUI& Choice = ActualChoices.AddDefaulted_GetRef();
+		Choice.mChoiceIndex = ActualChoices.Num() - 1;
+		Choice.mKind = ERewardChoiceKind::Artifact;
+		Choice.mSourceAssetId = Data->GetPrimaryAssetId();
+		Choice.mName = Data->mName;
+		Choice.mIcon = Data->mIcon.LoadSynchronous();
+		FCombatArtifactUI Detail;
+		SkillDetailUIBuilder::FillFromArtifactData(Data, Detail);
+		TArray<FString> EffectLines;
+		for (const FText& Effect : Detail.mEffectDescriptions) EffectLines.Add(Effect.ToString());
+		Choice.mDescription = FText::FromString(FString::Join(EffectLines, TEXT("\n")));
+	}
+	ActualModel->SetRewardChoices(ActualChoices);
+	Widget->BindUIModel(ActualModel);
 	const TSharedRef<SWidget> SlateWidget = Widget->TakeWidget();
 	Widget->SetRewardPresentationManualTick(true);
 	Widget->AdvanceRewardFlow();
@@ -1001,7 +1028,7 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	ButtonSwitcher->SetActiveWidgetIndex(1);
 	FString PrimerError;
 	if (!Capture(*Widget, SlateWidget, TEXT("_FramelessWarmup.png"),
-		PrimerError, 21))
+		PrimerError, 24)) // 21 existing textures + 3 production artifact icons.
 	{
 		AddError(PrimerError);
 		return false;
@@ -1023,11 +1050,78 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 		ProgressSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		ButtonSwitcher->SetActiveWidgetIndex(SwitcherIndex);
 		FString CaptureError;
-		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 21))
+		if (!Capture(*Widget, SlateWidget, FileNames[Step], CaptureError, 24))
 		{
 			AddError(CaptureError);
 			return false;
 		}
+	}
+
+	FAssetCompilingManager::Get().FinishAllCompilation();
+	for (const TCHAR* AssetName : { TEXT("T_ChestGoldDome_V2"), TEXT("T_ChestCleanAtlas_V2") })
+	{
+		const FString Path = FString::Printf(TEXT("/Game/UI/RewardConcept03New/Generated/%s.%s"), AssetName, AssetName);
+		UTexture2D* Art = LoadObject<UTexture2D>(nullptr, *Path);
+		if (!TestNotNull(TEXT("Generated chest art is packaged"), Art)) return false;
+		TArray64<uint8> Raw;
+		if (!TestTrue(TEXT("Generated chest art has source pixels"), Art->Source.GetMipData(Raw, 0))) return false;
+		const int32 Width = Art->Source.GetSizeX(), Height = Art->Source.GetSizeY();
+		const int32 Grid = FString(AssetName).Contains(TEXT("Atlas")) ? 6 : 1;
+		bool bTransparentEdges = true;
+		for (int32 Boundary = 0; Boundary <= Grid; ++Boundary)
+		{
+			const int32 X = FMath::Min(Width - 1, FMath::RoundToInt(float(Boundary) * Width / Grid));
+			const int32 Y = FMath::Min(Height - 1, FMath::RoundToInt(float(Boundary) * Height / Grid));
+			for (int32 Row = 0; Row < Height; ++Row) bTransparentEdges &= Raw[(int64(Row) * Width + X) * 4 + 3] <= 1;
+			for (int32 Column = 0; Column < Width; ++Column) bTransparentEdges &= Raw[(int64(Y) * Width + Column) * 4 + 3] <= 1;
+		}
+		TestTrue(TEXT("No opaque sprite edge or atlas cell bleed"), bTransparentEdges);
+	}
+	Widget->ResetRewardFlow();
+	Widget->AdvanceRewardFlow();
+	Widget->OpenRewardChest();
+	for (UWidget* Parent = Widget->GetWidgetFromName(TEXT("NewChestVisualPanel")); Parent; Parent = Parent->GetParent())
+	{
+		TestEqual(*FString::Printf(TEXT("Chest effect ancestor %s does not clip"), *Parent->GetName()),
+			Parent->GetClipping(), EWidgetClipping::Inherit);
+	}
+	const float LightCaptureDeltas[] = { .40f, .36f, .30f, .50f, .25f };
+	for (int32 Frame = 0; Frame < UE_ARRAY_COUNT(LightCaptureDeltas); ++Frame)
+	{
+		Widget->AdvanceRewardPresentation(LightCaptureDeltas[Frame]);
+		FString LightCaptureError;
+		const FString FileName = FString::Printf(TEXT("ChestGeneratedV2_%d.png"), Frame);
+		if (!Capture(*Widget, SlateWidget, *FileName, LightCaptureError, 24))
+		{
+			AddError(LightCaptureError);
+			return false;
+		}
+
+	}
+	Widget->SkipRewardPresentation();
+	for (const TCHAR* Name : { TEXT("NewChestBurstGlow_0"),
+		TEXT("NewChestBurstRing_0"), TEXT("NewChestBurstSpark_0") })
+	{
+		if (UWidget* Light = Widget->GetWidgetFromName(Name))
+		{
+			TestEqual(TEXT("개봉 스킵 후 빛 잔상 없음"), Light->GetVisibility(),
+				ESlateVisibility::Collapsed);
+		}
+	}
+	Widget->ResetRewardFlow();
+	Widget->AdvanceRewardFlow();
+	Widget->OpenRewardChest();
+	Widget->SkipRewardPresentation();
+	Widget->SkipRewardPresentation();
+	Widget->AdvanceRewardFlow();
+	Widget->SkipRewardPresentation();
+	Widget->SelectArtifact(1);
+	TestEqual(TEXT("실제 데이터 캡처는 아티팩트 선택 단계"), Widget->GetCurrentStepIndex(), 3);
+	FString SelectionCaptureError;
+	if (!Capture(*Widget, SlateWidget, TEXT("ArtifactSelectOne_ActualData.png"), SelectionCaptureError, 24))
+	{
+		AddError(SelectionCaptureError);
+		return false;
 	}
 	for (const TCHAR* FileName : FileNames)
 	{

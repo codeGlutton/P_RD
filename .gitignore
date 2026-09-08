@@ -51,6 +51,8 @@ GEMINI.md
 
 # Precompiled Assets
 SourceArt/**/*.png
+!SourceArt/UI/GeneratedChest/gold_dome_v2.png
+!SourceArt/UI/GeneratedChest/chest_clean_atlas_v2.png
 SourceArt/**/*.tga
 
 # Binary Files
@@ -87,6 +89,8 @@ DerivedDataCache/*
 # Imported resource assets are stored in SVN, not Git.
 /Content/Audio/
 /Content/**/T_*.uasset
+!/Content/UI/RewardConcept03New/Generated/T_ChestGoldDome_V2.uasset
+!/Content/UI/RewardConcept03New/Generated/T_ChestCleanAtlas_V2.uasset
 /Content/**/S_*.uasset
 # 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
 !/Content/UI/Art/RunFlow/T_*.uasset
@@ -135,3 +139,10 @@ Tools/UI/
 
 # 로컬 확인용 설정 (개인 스위치)
 Config/UserEngine.ini
+
+# CC0 particle source textures must travel with the import script.
+!SourceArt/ThirdParty/EffekseerHoly/Effects/Textures/*.png
+
+# Status texture assets are managed in SVN; preserve the import sources in Git.
+!SourceArt/UI/StatusIcons/*_v1.png
+!SourceArt/UI/ArtifactIcons/*_v1.png

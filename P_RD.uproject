@@ -31,6 +31,7 @@
 		}
 	],
 	"Plugins": [
+		{ "Name": "Effekseer", "Enabled": true },
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,

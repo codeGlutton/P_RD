@@ -216,6 +216,7 @@ namespace RewardConcept03Preview
 		if (Controller != nullptr)
 		{
 			FInputModeUIOnly InputMode;
+			Widget->SetIsFocusable(true);
 			InputMode.SetWidgetToFocus(Widget->TakeWidget());
 			Controller->SetInputMode(InputMode);
 			Controller->SetShowMouseCursor(true);

@@ -2833,6 +2833,21 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		TestFalse(TEXT("몬스터 탭이 열리면 PR457 상세 겹은 뜨지 않는다"),
 			HUD->IsDetailOverlayShown());
 		UUserWidget* MonsterTab = HUD->GetMonsterTabWidgetForTest();
+		UImage* MonsterCriticalIcon = MonsterTab != nullptr
+			? Cast<UImage>(MonsterTab->GetWidgetFromName(TEXT("MonsterStatIcon_3")))
+			: nullptr;
+		if (TestNotNull(TEXT("몬스터 상세 치명타 아이콘"), MonsterCriticalIcon))
+		{
+			UTexture2D* MercenaryCriticalTexture = LoadObject<UTexture2D>(nullptr,
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatDetail/SkillTactical/"
+					"T_SkillStat_Critical_Clear_v1.T_SkillStat_Critical_Clear_v1"));
+			if (TestNotNull(TEXT("용병 상세 치명타 텍스처"), MercenaryCriticalTexture))
+			{
+				TestEqual(TEXT("몬스터 상세 치명타 아이콘은 용병 상세와 동일"),
+					MonsterCriticalIcon->GetBrush().GetResourceObject(),
+					static_cast<UObject*>(MercenaryCriticalTexture));
+			}
+		}
 		UButton* MonsterSkillButton0 = MonsterTab != nullptr
 			? Cast<UButton>(MonsterTab->GetWidgetFromName(TEXT("MonsterSkillButton_0")))
 			: nullptr;

@@ -38,6 +38,7 @@ public class P_RD : ModuleRules
             "SlateCore",
 
             /* VFX */
+			"Effekseer",
             "NiagaraAnimNotifies",
 
             /* Gameplay Tag Modules */
