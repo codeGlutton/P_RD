@@ -8,6 +8,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Algo/Reverse.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 namespace
 {
@@ -403,14 +404,16 @@ void ATileMap::OnRootTransformUpdated(USceneComponent* UpdatedComponent, EUpdate
 void ATileMap::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDTileHighlightPulse);
 
 	// Effect 하이라이트는 알파가 시간에 따라 진동(펄스)하므로, 매 프레임 재합성
 	// Effect 플래그를 가진 타일만 갱신 (나머지는 정적이라 Set/Clear 때만 갱신됨)
-	for (int32 Index = 0; Index < mHighlights.Num(); ++Index)
+	for (int32 Index : mPulsingHighlights)
 	{
-		if (EnumHasAnyFlags(mHighlights[Index], ETileHighlightFlag::Effect))
-			RefreshTileCustomData(Index);
+		RefreshTileCustomData(Index, false);
 	}
+	if (!mPulsingHighlights.IsEmpty() && mTileMeshComponent)
+		mTileMeshComponent->MarkRenderStateDirty();
 
 	// 경로 화살표/도착 마커 알파도 펄스 — 표시 중인 세트만 갱신
 	if (mMovePathSet.mPathCount > 0)
@@ -437,6 +440,7 @@ void ATileMap::RebuildTileInstances()
 
 void ATileMap::RefreshTileVisuals()
 {
+	mPulsingHighlights.Reset();
 	// 컴포넌트가 없으면 처리 불가
 	if (mTileMeshComponent == nullptr)
 	{
@@ -592,7 +596,7 @@ FTileIndex ATileMap::WorldToTileIndex(const FVector& WorldLocation) const
  * - Effect는 [아래 레이어(Aim/타일)] ↔ [자기 색]을 펄스로 크로스페이드
  * - 알파까지 계산에 포함시켜서, 출력단에서 알파 합성을 따로 안해도 되게끔 최적화
  */
-void ATileMap::RefreshTileCustomData(int32 LinearIndex)
+void ATileMap::RefreshTileCustomData(int32 LinearIndex, bool bUpdatePulseMembership)
 {
 	// 컴포넌트/인덱스 유효성 (인스턴스 인덱스 = 타일 1D 인덱스)
 	if (mTileMeshComponent == nullptr || !mHighlights.IsValidIndex(LinearIndex))
@@ -604,6 +608,11 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	const bool bHasAim    = EnumHasAnyFlags(Flags, ETileHighlightFlag::Aim);
 	const bool bHasSelect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Select);
 	const bool bHasEffect = EnumHasAnyFlags(Flags, ETileHighlightFlag::Effect) && !bHasSelect;
+	if (bUpdatePulseMembership)
+	{
+		if (bHasEffect) mPulsingHighlights.Add(LinearIndex);
+		else mPulsingHighlights.Remove(LinearIndex);
+	}
 
 	// 스타일 색을 프리멀티플라이드(알파 곱한 RGB + 커버리지 알파)로 변환 — 타일 위 Mix용
 	auto Premultiply = [](const FTileHighlightStyle& Style)
@@ -629,7 +638,7 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 
 		// 펄스 파동(0~1)으로 저점↔고점 보간
 		const float Time = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
-		const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / mPulsePeriod);
+		const float PulseWave = 0.5f - 0.5f * FMath::Cos(2.0f * PI * Time / FMath::Max(mPulsePeriod, KINDA_SMALL_NUMBER));
 		Accum = FMath::Lerp(Low, High, PulseWave);
 	}
 	else if (bHasAim)
@@ -642,7 +651,7 @@ void ATileMap::RefreshTileCustomData(int32 LinearIndex)
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 0, Accum.R);
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 1, Accum.G);
 	mTileMeshComponent->SetCustomDataValue(LinearIndex, 2, Accum.B);
-	mTileMeshComponent->SetCustomDataValue(LinearIndex, 3, Accum.A, /*bMarkRenderStateDirty=*/true);
+	mTileMeshComponent->SetCustomDataValue(LinearIndex, 3, Accum.A, /*bMarkRenderStateDirty=*/bUpdatePulseMembership);
 }
 
 void ATileMap::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
