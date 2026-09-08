@@ -1033,11 +1033,13 @@ bool FRewardConcept03FramelessRenderedCaptureTest::RunTest(
 	Widget->AdvanceRewardPresentation(1.25f);
 	FString GlowError;
 	if (!Capture(*Widget, SlateWidget, TEXT("WBP_RewardConcept03_Frameless_Glow.png"), GlowError, 20)) AddError(GlowError);
-	// Check the bright opening frames, not only the quieter tail of the burst.
+	// Replay actual time: changing only the atlas cell misses timed overlays.
 	for (int32 Frame : { 9, 12, 20, 32 })
 	{
-		ChestSequence->GetDynamicMaterial()->SetVectorParameterValue(TEXT("Frame"),
-			FLinearColor(Frame % 6, Frame / 6, 0.f, 0.f));
+		Widget->ResetRewardFlow();
+		Widget->AdvanceRewardFlow();
+		Widget->OpenRewardChest();
+		Widget->AdvanceRewardPresentation((.32f + .68f * Frame / 32.f) * 1.85f);
 		FString FrameError;
 		if (!Capture(*Widget, SlateWidget,
 			*FString::Printf(TEXT("WBP_RewardConcept03_Frameless_Glow_%02d.png"), Frame), FrameError, 20))

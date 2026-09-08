@@ -135,3 +135,7 @@ Tools/UI/
 
 # 로컬 확인용 설정 (개인 스위치)
 Config/UserEngine.ini
+
+# Project-owned reward mask; the original color atlas remains in SVN.
+!SourceArt/UI/RewardChest/chest_silhouette_v1.png
+!/Content/UI/Reward/Separated/T_RewardChestSilhouette.uasset

@@ -152,6 +152,11 @@ private:
 	};
 
 	UPROPERTY() TObjectPtr<UMaterialInterface> mChestAtlasMaterial;
+	UPROPERTY() TObjectPtr<UMaterialInterface> ChestLightMaterial;
+	UPROPERTY(Transient) TObjectPtr<UImage> ChestLightImage;
+	UPROPERTY(Transient) TObjectPtr<UImage> GoldLightImage;
+	void EnsureChestLightWidgets();
+	void UpdateChestLight(UImage* Image, float Progress, float Energy);
 	void ResolveWidgets();
 	void BindInput();
 	void UnbindInput();
