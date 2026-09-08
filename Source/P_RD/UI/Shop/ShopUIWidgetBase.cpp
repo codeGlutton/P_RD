@@ -30,8 +30,10 @@
 
 namespace
 {
-	/** 상점에서 교체 가능한 네 칸은 두 기본 행동 뒤의 실제 스킬 슬롯 2..5다. */
-	constexpr int32 ReplaceableSkillStartIndex = 2;
+	/** 이동은 SkillModel 밖에 있고, 상점에서 교체 가능한 네 칸은 기본 공격 다음 실제 스킬 슬롯 1..4다. */
+	// 이동은 SkillModel 바깥의 전투 공용 명령이고, 모델 안에서는 0번 기본
+	// 공격만 고정이다. 따라서 상점의 네 칸은 실제 스킬 1..4와 대응한다.
+	constexpr int32 ReplaceableSkillStartIndex = 1;
 	constexpr int32 ReplaceableSkillSlotCount = 4;
 	constexpr float SkillDetailLongPressSeconds = 0.45f;
 
@@ -62,6 +64,28 @@ namespace
 			return Item.mIcon;
 		}
 		return LoadObject<UTexture2D>(nullptr, ShopKindIconPath(Item.mKind));
+	}
+
+	/**
+	 * @brief 화면에 적을 직업 이름.
+	 *
+	 * @details EUnitJobType 에는 DisplayName 메타가 없어 UEnum 기본 표기가 곧
+	 * C++ 식별자("Knight")다. 한글 화면에 영문 직업명이 섞여 나오므로 고용
+	 * 화면(MercenaryHireWidget)과 같은 문구를 여기서도 쓴다.
+	 */
+	FText ShopJobDisplayName(EUnitJobType JobType)
+	{
+		switch (JobType)
+		{
+		case EUnitJobType::Knight: return LOCTEXT("ShopJobKnight", "기사");
+		case EUnitJobType::Ranger: return LOCTEXT("ShopJobRanger", "레인저");
+		case EUnitJobType::Mage: return LOCTEXT("ShopJobMage", "마법사");
+		case EUnitJobType::Barbarian: return LOCTEXT("ShopJobBarbarian", "야만전사");
+		case EUnitJobType::Rogue: return LOCTEXT("ShopJobRogue", "도적");
+		case EUnitJobType::Druid: return LOCTEXT("ShopJobDruid", "드루이드");
+		case EUnitJobType::Common: return LOCTEXT("ShopJobCommon", "공용");
+		default: return LOCTEXT("ShopJobUnknown", "용병");
+		}
 	}
 
 	/** @brief 스킬 탭 대상 선택기에 사용할 기존 용병 직업 아이콘. */
@@ -262,6 +286,7 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 	mUnitSelectButtons.Reset();
 	mUnitSelectPlates.Reset();
 	mUnitSelectIcons.Reset();
+	mUnitSelectCountTexts.Reset();
 	mSkillSlotButtons.Reset();
 	mSkillSlotPlates.Reset();
 	mSkillSlotIcons.Reset();
@@ -310,7 +335,7 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 			FName(*FString::Printf(TEXT("ShopRailPriceText_%d"), Index)))));
 	}
 
-	for (int32 Index = 0; Index < 3; ++Index)
+	for (int32 Index = 0; Index < 6; ++Index)
 	{
 		mUnitSelectButtons.Add(Cast<UButton>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("mUnitSelectButton_%d"), Index)))));
@@ -318,7 +343,13 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 			FName(*FString::Printf(TEXT("UnitSelectPlate_%d"), Index)))));
 		mUnitSelectIcons.Add(Cast<UImage>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("mUnitSelectIcon_%d"), Index)))));
+		mUnitSelectCountTexts.Add(Cast<UTextBlock>(WidgetTree->FindWidget(
+			FName(*FString::Printf(TEXT("UnitSelectCountText_%d"), Index)))));
 
+		if (Index >= 3)
+		{
+			continue;
+		}
 		mRestUnitRowHolders.Add(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("RestUnitRowHolder_%d"), Index))));
 		mRestUnitPlates.Add(Cast<UImage>(WidgetTree->FindWidget(
@@ -480,6 +511,18 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 	{
 		mUnitSelectButtons[2]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleUnitClicked2);
 	}
+	if (mUnitSelectButtons.IsValidIndex(3) && mUnitSelectButtons[3] != nullptr)
+	{
+		mUnitSelectButtons[3]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleUnitClicked3);
+	}
+	if (mUnitSelectButtons.IsValidIndex(4) && mUnitSelectButtons[4] != nullptr)
+	{
+		mUnitSelectButtons[4]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleUnitClicked4);
+	}
+	if (mUnitSelectButtons.IsValidIndex(5) && mUnitSelectButtons[5] != nullptr)
+	{
+		mUnitSelectButtons[5]->OnClicked.AddUniqueDynamic(this, &UShopUIWidgetBase::HandleUnitClicked5);
+	}
 
 	auto BindSkillHold = [](UButton* Button, UObject* Owner,
 		const FName PressedFunction, const FName ReleasedFunction)
@@ -607,16 +650,19 @@ void UShopUIWidgetBase::HandleBuyClicked()
 		return;
 	}
 
-	if (Item->mKind == EShopItemKind::Skill
-		&& Shop.mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex))
+	if (Item->mKind == EShopItemKind::Skill)
 	{
-		const FShopOwnedUnitUI& Unit = Shop.mOwnedUnits[mSelectedUnitViewIndex];
+		const FShopOwnedUnitUI* Unit = GetSelectedSkillTarget(Shop);
+		if (Unit == nullptr || !Unit->mIsOwned || Unit->mUnitIndex == INDEX_NONE)
+		{
+			return;
+		}
 		const int32 ModelSkillSlotIndex = ReplaceableSkillStartIndex
 			+ mSelectedSkillSlotIndex;
-		if (Unit.mSkillSlots.IsValidIndex(ModelSkillSlotIndex))
+		if (Unit->mSkillSlots.IsValidIndex(ModelSkillSlotIndex))
 		{
 			mUIModel->RequestBuySkill(
-				Item->mSlotIndex, Unit.mUnitIndex, ModelSkillSlotIndex);
+				Item->mSlotIndex, Unit->mUnitIndex, ModelSkillSlotIndex);
 		}
 	}
 }
@@ -639,6 +685,9 @@ void UShopUIWidgetBase::HandleRailReleased4() { EndRailSlotPress(4); }
 void UShopUIWidgetBase::HandleUnitClicked0() { SelectUnitSlot(0); }
 void UShopUIWidgetBase::HandleUnitClicked1() { SelectUnitSlot(1); }
 void UShopUIWidgetBase::HandleUnitClicked2() { SelectUnitSlot(2); }
+void UShopUIWidgetBase::HandleUnitClicked3() { SelectUnitSlot(3); }
+void UShopUIWidgetBase::HandleUnitClicked4() { SelectUnitSlot(4); }
+void UShopUIWidgetBase::HandleUnitClicked5() { SelectUnitSlot(5); }
 void UShopUIWidgetBase::HandleSkillSlotClicked0() { SelectSkillSlot(0); }
 void UShopUIWidgetBase::HandleSkillSlotClicked1() { SelectSkillSlot(1); }
 void UShopUIWidgetBase::HandleSkillSlotClicked2() { SelectSkillSlot(2); }
@@ -704,17 +753,17 @@ void UShopUIWidgetBase::ShowHeldSkillDetails(const int32 SkillSlotIndex)
 		return;
 	}
 	const FShopUI& Shop = mUIModel->GetShop();
-	if (!Shop.mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex))
+	const FShopOwnedUnitUI* Unit = GetSelectedSkillTarget(Shop);
+	if (Unit == nullptr)
 	{
 		return;
 	}
 	const int32 ActualSlotIndex = ReplaceableSkillStartIndex + SkillSlotIndex;
-	const FShopOwnedUnitUI& Unit = Shop.mOwnedUnits[mSelectedUnitViewIndex];
-	if (!Unit.mSkillSlots.IsValidIndex(ActualSlotIndex))
+	if (!Unit->mSkillSlots.IsValidIndex(ActualSlotIndex))
 	{
 		return;
 	}
-	const FShopOwnedSkillSlotUI& Skill = Unit.mSkillSlots[ActualSlotIndex];
+	const FShopOwnedSkillSlotUI& Skill = Unit->mSkillSlots[ActualSlotIndex];
 	if (Skill.mIsEmpty)
 	{
 		return;
@@ -733,10 +782,10 @@ void UShopUIWidgetBase::ShowHeldSkillDetails(const int32 SkillSlotIndex)
 		: Skill.mDescription;
 	mPendingDetailIcon = Skill.mIcon;
 	mPendingDetailIsArtifact = false;
-	mPendingDetailJob = Unit.mJobType;
+	mPendingDetailJob = Unit->mJobType;
 	if (mUIModel->OnOwnedSkillDetailRequested.IsBound())
 	{
-		mUIModel->RequestOwnedSkillDetail(Unit.mUnitIndex, ActualSlotIndex);
+		mUIModel->RequestOwnedSkillDetail(Unit->mUnitIndex, ActualSlotIndex);
 		return;
 	}
 	/* 게임모드 미연결(자동화 등)이면 응답이 안 오므로 즉시 플레인 상세로 폴백. */
@@ -866,12 +915,39 @@ void UShopUIWidgetBase::ShowHeldRailItemDetails(const int32 RailSlotIndex)
 void UShopUIWidgetBase::SelectUnitSlot(int32 UnitViewIndex)
 {
 	if (mUIModel == nullptr
-		|| !mUIModel->GetShop().mOwnedUnits.IsValidIndex(UnitViewIndex))
+		|| !mUIModel->GetShop().mSkillTargetUnits.IsValidIndex(UnitViewIndex))
 	{
 		return;
 	}
 
+	const FShopUI& Shop = mUIModel->GetShop();
+	const EUnitJobType JobType = Shop.mSkillTargetUnits[UnitViewIndex].mJobType;
+	TArray<int32> MatchingUnitIndices;
+	for (const FShopOwnedUnitUI& Unit : Shop.mOwnedUnits)
+	{
+		if (Unit.mIsOwned && Unit.mUnitIndex != INDEX_NONE && Unit.mJobType == JobType)
+		{
+			MatchingUnitIndices.Add(Unit.mUnitIndex);
+		}
+	}
+
+	const bool bSameJobCard = mSelectedUnitViewIndex == UnitViewIndex;
 	mSelectedUnitViewIndex = UnitViewIndex;
+	if (MatchingUnitIndices.IsEmpty())
+	{
+		mSelectedSkillTargetUnitIndex = INDEX_NONE;
+	}
+	else if (bSameJobCard)
+	{
+		const int32 CurrentPosition = MatchingUnitIndices.IndexOfByKey(
+			mSelectedSkillTargetUnitIndex);
+		mSelectedSkillTargetUnitIndex = MatchingUnitIndices[
+			(CurrentPosition + 1) % MatchingUnitIndices.Num()];
+	}
+	else
+	{
+		mSelectedSkillTargetUnitIndex = MatchingUnitIndices[0];
+	}
 	mSelectedSkillSlotIndex = 0;
 	mSelectedFilteredIndex = 0;
 	RefreshView();
@@ -879,16 +955,54 @@ void UShopUIWidgetBase::SelectUnitSlot(int32 UnitViewIndex)
 
 void UShopUIWidgetBase::SelectSkillSlot(int32 SkillSlotIndex)
 {
-	if (mUIModel == nullptr
-		|| !mUIModel->GetShop().mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex)
-		|| !mUIModel->GetShop().mOwnedUnits[mSelectedUnitViewIndex]
-			.mSkillSlots.IsValidIndex(ReplaceableSkillStartIndex + SkillSlotIndex))
+	if (mUIModel == nullptr)
+	{
+		return;
+	}
+	const FShopOwnedUnitUI* SelectedUnit = GetSelectedSkillTarget(mUIModel->GetShop());
+	if (SelectedUnit == nullptr || !SelectedUnit->mSkillSlots.IsValidIndex(
+		ReplaceableSkillStartIndex + SkillSlotIndex))
 	{
 		return;
 	}
 
 	mSelectedSkillSlotIndex = SkillSlotIndex;
 	RefreshView();
+}
+
+const FShopOwnedUnitUI* UShopUIWidgetBase::GetSelectedSkillTarget(
+	const FShopUI& Shop) const
+{
+	if (!Shop.mSkillTargetUnits.IsValidIndex(mSelectedUnitViewIndex))
+	{
+		return nullptr;
+	}
+
+	const EUnitJobType JobType =
+		Shop.mSkillTargetUnits[mSelectedUnitViewIndex].mJobType;
+	const FShopOwnedUnitUI* Selected = Shop.mOwnedUnits.FindByPredicate(
+		[this, JobType](const FShopOwnedUnitUI& Candidate)
+		{
+			return Candidate.mIsOwned
+				&& Candidate.mUnitIndex == mSelectedSkillTargetUnitIndex
+				&& Candidate.mJobType == JobType;
+		});
+	if (Selected != nullptr)
+	{
+		return Selected;
+	}
+	return Shop.mOwnedUnits.FindByPredicate(
+		[JobType](const FShopOwnedUnitUI& Candidate)
+		{
+			return Candidate.mIsOwned && Candidate.mJobType == JobType;
+		});
+}
+
+void UShopUIWidgetBase::NormalizeSelectedSkillTarget(const FShopUI& Shop)
+{
+	const FShopOwnedUnitUI* Selected = GetSelectedSkillTarget(Shop);
+	mSelectedSkillTargetUnitIndex = Selected != nullptr
+		? Selected->mUnitIndex : INDEX_NONE;
 }
 
 /** @brief 새 UIModel을 구독하고 이미 들어온 상점 스냅샷도 즉시 한 번 그린다. */
@@ -1003,22 +1117,80 @@ void UShopUIWidgetBase::PresentPushedDetail()
 		mPendingDetailIcon, mPendingDetailIsArtifact, mPendingDetailJob);
 }
 
+/**
+ * @brief 지금 고른 용병이 이 스킬을 살 수 있는지 가른다.
+ *
+ * @details 목록은 선택 직업의 전용+공용으로 먼저 거르고, 여기서는 보유
+ * 여부와 구매 가능 여부를 한 번 더 판정한다. 판매 슬롯의 직업과 보유
+ * 유닛 목록은 게임플레이가 정해 내려 준 값이라 화면은 견주기만 한다.
+ */
+UShopUIWidgetBase::EShopSkillAvailability
+UShopUIWidgetBase::GetSkillAvailability(const FShopUI& Shop,
+	const FShopItemUI& Item) const
+{
+	if (Item.mKind != EShopItemKind::Skill
+		|| Shop.mSkillTargetUnits.IsValidIndex(mSelectedUnitViewIndex) == false)
+	{
+		return EShopSkillAvailability::Available;
+	}
+	const FShopOwnedUnitUI* SelectedUnit = GetSelectedSkillTarget(Shop);
+	if (SelectedUnit == nullptr)
+	{
+		return EShopSkillAvailability::UnownedTarget;
+	}
+	if (Item.mOwnedByUnitIndices.Contains(SelectedUnit->mUnitIndex))
+	{
+		return EShopSkillAvailability::AlreadyOwned;
+	}
+	if (Item.mRequiredJobType != EUnitJobType::Common
+		&& Item.mRequiredJobType != SelectedUnit->mJobType)
+	{
+		return EShopSkillAvailability::OtherJob;
+	}
+	return EShopSkillAvailability::Available;
+}
+
+/** @brief 상품 칸 아래에 붙일 한 줄. 살 수 있으면 직업만 알린다. */
+FText UShopUIWidgetBase::MakeSkillAvailabilityNote(const FShopUI& Shop,
+	const FShopItemUI& Item) const
+{
+	if (Item.mKind != EShopItemKind::Skill)
+	{
+		return FText::GetEmpty();
+	}
+	const FText JobName = ShopJobDisplayName(Item.mRequiredJobType);
+	switch (GetSkillAvailability(Shop, Item))
+	{
+	case EShopSkillAvailability::AlreadyOwned:
+		return FText::Format(LOCTEXT("SkillNoteOwned", "{0} 전용 · 이미 보유"),
+			JobName);
+	case EShopSkillAvailability::OtherJob:
+		return FText::Format(LOCTEXT("SkillNoteOtherJob", "{0} 전용 · 장착 불가"),
+			JobName);
+	case EShopSkillAvailability::UnownedTarget:
+		return FText::Format(LOCTEXT("SkillNoteUnowned", "{0} 전용 · 미보유 용병"),
+			JobName);
+	default:
+		break;
+	}
+	return Item.mRequiredJobType == EUnitJobType::Common
+		? LOCTEXT("SkillNoteCommon", "공용 스킬")
+		: FText::Format(LOCTEXT("SkillNoteJob", "{0} 전용"), JobName);
+}
+
 void UShopUIWidgetBase::RebuildFilteredItems(const FShopUI& Shop)
 {
+	const FShopOwnedUnitUI* SelectedTarget =
+		Shop.mSkillTargetUnits.IsValidIndex(mSelectedUnitViewIndex)
+		? &Shop.mSkillTargetUnits[mSelectedUnitViewIndex] : nullptr;
 	mFilteredShopItemIndices.Reset();
 	for (int32 ShopItemIndex = 0; ShopItemIndex < Shop.mItems.Num(); ++ShopItemIndex)
 	{
 		const FShopItemUI& Item = Shop.mItems[ShopItemIndex];
-		bool bMatches = Item.mKind == mActiveItemKind;
-		if (bMatches && mActiveItemKind == EShopItemKind::Skill
-			&& Shop.mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex))
-		{
-			const EUnitJobType SelectedJob =
-				Shop.mOwnedUnits[mSelectedUnitViewIndex].mJobType;
-			bMatches = Item.mRequiredJobType == EUnitJobType::Common
-				|| Item.mRequiredJobType == SelectedJob;
-		}
-		if (bMatches)
+		const bool bMatchesSelectedJob = mActiveItemKind != EShopItemKind::Skill
+			|| SelectedTarget == nullptr || Item.mRequiredJobType == EUnitJobType::Common
+			|| Item.mRequiredJobType == SelectedTarget->mJobType;
+		if (Item.mKind == mActiveItemKind && bMatchesSelectedJob)
 		{
 			mFilteredShopItemIndices.Add(ShopItemIndex);
 		}
@@ -1247,37 +1419,60 @@ void UShopUIWidgetBase::RefreshRailView(const FShopUI& Shop)
 		}
 
 		const FShopItemUI& Item = Shop.mItems[ShopItemIndex];
+		// 못 사는 칸(품절·골드 부족·이미 보유)은 흐리게 둔다. 다른 직업
+		// 전용은 이미 필터에서 빠졌고, 미보유 직업은 상세 확인만 가능하다.
+		const EShopSkillAvailability Availability =
+			GetSkillAvailability(Shop, Item);
+		const bool bDimmed = Item.mIsSoldOut || !Item.mIsAffordable
+			|| Availability != EShopSkillAvailability::Available;
 		if (Button != nullptr)
 		{
+			// 눌러서 상세는 볼 수 있어야 하므로 입력은 살려 둔다.
 			Button->SetIsEnabled(true);
 			Button->SetRenderScale(FVector2D(1.f, 1.f));
-			Button->SetRenderOpacity((Item.mIsSoldOut || !Item.mIsAffordable)
-				? 0.62f : 1.f);
+			Button->SetRenderOpacity(bDimmed ? 0.62f : 1.f);
 		}
 		if (Plate != nullptr)
 		{
-			Plate->SetColorAndOpacity(FLinearColor::White);
+			const bool bExclusiveSkill = Item.mKind == EShopItemKind::Skill
+				&& Item.mRequiredJobType != EUnitJobType::Common;
+			// 전용 스킬은 같은 프레임을 유지하되 내부 전체에 보라/남색 톤을
+			// 입혀 공용 스킬과 카드를 보는 순간 구분되게 한다.
+			Plate->SetColorAndOpacity(bExclusiveSkill
+				? FLinearColor(.55f, .40f, .88f, bDimmed ? .66f : 1.f)
+				: FLinearColor::White);
 		}
 		if (!bCenterSlot)
 		{
 			SetShopImage(Icon, ResolveItemIcon(Item));
 			if (Icon != nullptr)
 			{
-				Icon->SetColorAndOpacity((Item.mIsSoldOut || !Item.mIsAffordable)
+				Icon->SetColorAndOpacity(bDimmed
 					? FLinearColor(1.f, 1.f, 1.f, 0.42f)
 					: FLinearColor::White);
 			}
 		}
 		if (PriceText != nullptr && !bCenterSlot)
 		{
-			PriceText->SetText(Item.mIsSoldOut
-				? LOCTEXT("SoldOut", "품절")
-				: FText::Format(LOCTEXT("RailPrice", "{0} G"),
-					FText::AsNumber(Item.mPrice)));
-			PriceText->SetColorAndOpacity(FSlateColor(
-				Item.mIsAffordable && !Item.mIsSoldOut
-					? FLinearColor(1.f, 0.83f, 0.30f, 1.f)
-					: FLinearColor(0.85f, 0.42f, 0.38f, 1.f)));
+			// 이미 가진 스킬은 값보다 그 사실이 먼저 읽혀야 한다.
+			FText RailLabel;
+			if (Item.mIsSoldOut)
+			{
+				RailLabel = LOCTEXT("SoldOut", "품절");
+			}
+			else if (Availability == EShopSkillAvailability::AlreadyOwned)
+			{
+				RailLabel = LOCTEXT("RailOwned", "보유");
+			}
+			else
+			{
+				RailLabel = FText::Format(LOCTEXT("RailPrice", "{0} G"),
+					FText::AsNumber(Item.mPrice));
+			}
+			PriceText->SetText(RailLabel);
+			PriceText->SetColorAndOpacity(FSlateColor(bDimmed
+				? FLinearColor(0.85f, 0.42f, 0.38f, 1.f)
+				: FLinearColor(1.f, 0.83f, 0.30f, 1.f)));
 		}
 	}
 
@@ -1295,55 +1490,86 @@ void UShopUIWidgetBase::RefreshRailView(const FShopUI& Shop)
 void UShopUIWidgetBase::RefreshSkillTargetView(const FShopUI& Shop)
 {
 	const bool bSkillMode = mActiveItemKind == EShopItemKind::Skill;
-	if (Shop.mOwnedUnits.IsEmpty())
+	if (Shop.mSkillTargetUnits.IsEmpty())
 	{
 		mSelectedUnitViewIndex = 0;
 	}
 	else
 	{
 		mSelectedUnitViewIndex = FMath::Clamp(
-			mSelectedUnitViewIndex, 0, Shop.mOwnedUnits.Num() - 1);
+			mSelectedUnitViewIndex, 0, Shop.mSkillTargetUnits.Num() - 1);
 	}
+	NormalizeSelectedSkillTarget(Shop);
 
-	for (int32 UnitViewIndex = 0; UnitViewIndex < 3; ++UnitViewIndex)
+	for (int32 UnitViewIndex = 0; UnitViewIndex < 6; ++UnitViewIndex)
 	{
 		const bool bHasUnit = bSkillMode
-			&& Shop.mOwnedUnits.IsValidIndex(UnitViewIndex);
+			&& Shop.mSkillTargetUnits.IsValidIndex(UnitViewIndex);
 		UButton* Button = mUnitSelectButtons.IsValidIndex(UnitViewIndex)
 			? mUnitSelectButtons[UnitViewIndex] : nullptr;
 		UImage* Plate = mUnitSelectPlates.IsValidIndex(UnitViewIndex)
 			? mUnitSelectPlates[UnitViewIndex] : nullptr;
 		UImage* Icon = mUnitSelectIcons.IsValidIndex(UnitViewIndex)
 			? mUnitSelectIcons[UnitViewIndex] : nullptr;
+		UTextBlock* CountText = mUnitSelectCountTexts.IsValidIndex(UnitViewIndex)
+			? mUnitSelectCountTexts[UnitViewIndex] : nullptr;
 		SetShopButtonShown(Button, bHasUnit);
 		SetShopWidgetShown(Plate, bHasUnit);
 		SetShopWidgetShown(Icon, bHasUnit);
+		SetShopWidgetShown(CountText, false);
 		if (!bHasUnit)
 		{
 			continue;
 		}
 
-		const FShopOwnedUnitUI& Unit = Shop.mOwnedUnits[UnitViewIndex];
+		const FShopOwnedUnitUI& Unit = Shop.mSkillTargetUnits[UnitViewIndex];
 		if (Button != nullptr)
 		{
 			Button->SetIsEnabled(true);
-			Button->SetRenderOpacity(UnitViewIndex == mSelectedUnitViewIndex
-				? 1.f : 0.62f);
+			Button->SetRenderOpacity(!Unit.mIsOwned ? .42f
+				: (UnitViewIndex == mSelectedUnitViewIndex ? 1.f : 0.62f));
 		}
 		const bool bSelected = UnitViewIndex == mSelectedUnitViewIndex;
 		SetShopImage(Plate, ResolveUnitSelectionPlate(bSelected));
 		if (Plate != nullptr)
 		{
-			Plate->SetColorAndOpacity(bSelected
-				? FLinearColor::White
-				: FLinearColor(.58f, .62f, .66f, .82f));
+			Plate->SetColorAndOpacity(!Unit.mIsOwned
+				? FLinearColor(.35f, .35f, .38f, .72f)
+				: (bSelected ? FLinearColor::White
+					: FLinearColor(.58f, .62f, .66f, .82f)));
 		}
 		SetShopImage(Icon, ResolveUnitIcon(Unit.mJobType));
+		if (Icon != nullptr)
+		{
+			Icon->SetColorAndOpacity(Unit.mIsOwned
+				? FLinearColor::White : FLinearColor(.28f, .28f, .30f, .9f));
+		}
+
+		TArray<int32> MatchingUnitIndices;
+		for (const FShopOwnedUnitUI& OwnedUnit : Shop.mOwnedUnits)
+		{
+			if (OwnedUnit.mIsOwned && OwnedUnit.mUnitIndex != INDEX_NONE
+				&& OwnedUnit.mJobType == Unit.mJobType)
+			{
+				MatchingUnitIndices.Add(OwnedUnit.mUnitIndex);
+			}
+		}
+		if (CountText != nullptr && MatchingUnitIndices.Num() > 1)
+		{
+			const int32 CurrentPosition = bSelected
+				? MatchingUnitIndices.IndexOfByKey(mSelectedSkillTargetUnitIndex)
+				: INDEX_NONE;
+			CountText->SetText(bSelected
+				? FText::Format(LOCTEXT("SelectedJobUnitCount", "{0}/{1}"),
+					FText::AsNumber(FMath::Max(0, CurrentPosition) + 1),
+					FText::AsNumber(MatchingUnitIndices.Num()))
+				: FText::AsNumber(MatchingUnitIndices.Num()));
+			SetShopWidgetShown(CountText, true);
+		}
 	}
 
 	const FShopOwnedUnitUI* SelectedUnit = bSkillMode
-		&& Shop.mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex)
-		? &Shop.mOwnedUnits[mSelectedUnitViewIndex] : nullptr;
+		? GetSelectedSkillTarget(Shop) : nullptr;
 	if (SelectedUnit == nullptr || SelectedUnit->mSkillSlots.IsEmpty())
 	{
 		mSelectedSkillSlotIndex = 0;
@@ -1566,6 +1792,8 @@ void UShopUIWidgetBase::RefreshSelectedItemView(const FShopUI& Shop)
 		return;
 	}
 
+	const EShopSkillAvailability SelectedAvailability =
+		GetSkillAvailability(Shop, *Item);
 	SetShopImage(mSelectedItemIcon, ResolveItemIcon(*Item));
 	if (mSelectedItemIcon != nullptr)
 	{
@@ -1578,10 +1806,20 @@ void UShopUIWidgetBase::RefreshSelectedItemView(const FShopUI& Shop)
 		mSelectedItemNameText->SetText(Item->mName);
 		mSelectedItemNameText->SetColorAndOpacity(FSlateColor(Item->mRarityColor));
 	}
+	// 이 칸은 오래 설명을 안 그렸다. 스킬 탭이 모든 직업을 함께 늘어놓게
+	// 되면서(0824) "이건 누구 스킬인가 / 이미 가졌나"를 알려 줄 자리가
+	// 필요해져, 상태 한 줄로 되살린다. 스킬이 아니면 그대로 접는다.
 	if (mSelectedItemDescriptionText != nullptr)
 	{
-		mSelectedItemDescriptionText->SetText(FText::GetEmpty());
-		mSelectedItemDescriptionText->SetVisibility(ESlateVisibility::Collapsed);
+		const FText Note = MakeSkillAvailabilityNote(Shop, *Item);
+		mSelectedItemDescriptionText->SetText(Note);
+		mSelectedItemDescriptionText->SetVisibility(Note.IsEmpty()
+			? ESlateVisibility::Collapsed
+			: ESlateVisibility::HitTestInvisible);
+		mSelectedItemDescriptionText->SetColorAndOpacity(FSlateColor(
+			SelectedAvailability == EShopSkillAvailability::Available
+				? FLinearColor(0.82f, 0.78f, 0.66f, 1.f)
+				: FLinearColor(0.90f, 0.55f, 0.42f, 1.f)));
 	}
 	if (mSelectedItemPriceText != nullptr)
 	{
@@ -1592,14 +1830,18 @@ void UShopUIWidgetBase::RefreshSelectedItemView(const FShopUI& Shop)
 	}
 
 	bool bHasSkillTarget = true;
+	const FShopOwnedUnitUI* SelectedSkillTarget = GetSelectedSkillTarget(Shop);
 	if (Item->mKind == EShopItemKind::Skill)
 	{
-		bHasSkillTarget = Shop.mOwnedUnits.IsValidIndex(mSelectedUnitViewIndex)
-			&& Shop.mOwnedUnits[mSelectedUnitViewIndex]
-				.mSkillSlots.IsValidIndex(
+		bHasSkillTarget = SelectedSkillTarget != nullptr
+			&& SelectedSkillTarget->mSkillSlots.IsValidIndex(
 					ReplaceableSkillStartIndex + mSelectedSkillSlotIndex);
 	}
-	const bool bCanBuy = !Item->mIsSoldOut && Item->mIsAffordable && bHasSkillTarget;
+	// 다른 직업 전용이거나 이미 가진 스킬은 목록에는 남지만 살 수는 없다.
+	const bool bAvailable =
+		SelectedAvailability == EShopSkillAvailability::Available;
+	const bool bCanBuy = !Item->mIsSoldOut && Item->mIsAffordable
+		&& bHasSkillTarget && bAvailable;
 	if (mBuyButton != nullptr)
 	{
 		mBuyButton->SetIsEnabled(bCanBuy);
@@ -1618,13 +1860,24 @@ void UShopUIWidgetBase::RefreshSelectedItemView(const FShopUI& Shop)
 		{
 			mBuyButtonText->SetText(LOCTEXT("BuySelectTarget", "대상 선택"));
 		}
+		else if (SelectedAvailability == EShopSkillAvailability::AlreadyOwned)
+		{
+			mBuyButtonText->SetText(LOCTEXT("BuyAlreadyOwned", "이미 보유"));
+		}
+		else if (SelectedAvailability == EShopSkillAvailability::OtherJob)
+		{
+			mBuyButtonText->SetText(LOCTEXT("BuyOtherJob", "직업 불일치"));
+		}
+		else if (SelectedAvailability == EShopSkillAvailability::UnownedTarget)
+		{
+			mBuyButtonText->SetText(LOCTEXT("BuyUnownedTarget", "미보유 용병"));
+		}
 		else
 		{
 			if (Item->mKind == EShopItemKind::Skill)
 			{
 				const FShopOwnedSkillSlotUI& TargetSlot =
-					Shop.mOwnedUnits[mSelectedUnitViewIndex]
-						.mSkillSlots[ReplaceableSkillStartIndex
+					SelectedSkillTarget->mSkillSlots[ReplaceableSkillStartIndex
 							+ mSelectedSkillSlotIndex];
 				mBuyButtonText->SetText(TargetSlot.mIsEmpty
 					? LOCTEXT("EquipSelectedSkill", "장착")
@@ -2115,7 +2368,7 @@ void UShopUIWidgetBase::ShowShopDetail(const FText& Name,
 	SetText(TEXT("DetailSubtitleText"), bArtifact
 		? LOCTEXT("ArtifactDetailType", "아티팩트 · 파티 공용")
 		: FText::Format(LOCTEXT("SkillDetailType", "스킬 · {0}"),
-			UEnum::GetDisplayValueAsText(RequiredJob)));
+			ShopJobDisplayName(RequiredJob)));
 	SetText(TEXT("DetailExtraHeading"), bArtifact
 		? LOCTEXT("ArtifactEffectHeading", "효과")
 		: LOCTEXT("SkillEffectHeading", "스킬 효과"));

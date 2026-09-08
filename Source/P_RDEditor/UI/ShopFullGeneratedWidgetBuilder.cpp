@@ -540,9 +540,9 @@ namespace ShopFullGeneratedWidgetBuilder
 			FVector2D(378.f, 136.f), 30);
 
 		AddImage(Blueprint, TopZone, TEXT("GoldPlate"), GoldPlateArt,
-			FVector2D(1296.f, 120.f), FVector2D(280.f, 87.243f), 10);
+			FVector2D(1296.f, 136.f), FVector2D(280.f, 68.f), 10);
 		AddText(Blueprint, TopZone, TEXT("mGoldText"), FText::FromString(TEXT("0 G")), 26,
-			FVector2D(1296.f, 120.f), FVector2D(280.f, 87.243f), 12);
+			FVector2D(1296.f, 136.f), FVector2D(280.f, 68.f), 12);
 
 		// Existing contract boxes remain real widgets with their exact legacy types.
 		// The horizontal-rail runtime uses the fixed controls below; these boxes stay
@@ -570,11 +570,12 @@ namespace ShopFullGeneratedWidgetBuilder
 			FVector2D(530.f, 110.f), 4);
 		OwnedUnitBox->SetVisibility(ESlateVisibility::Collapsed);
 
-		// Skill target rail: select a party member before replacing one of four slots.
-		for (int32 Index = 0; Index < 3; ++Index)
+		// 여섯 직업을 모두 보여 준다. 미보유 직업은 런타임이 회색 처리하지만
+		// 눌러 전용 상품의 상세를 살펴볼 수 있다.
+		for (int32 Index = 0; Index < 6; ++Index)
 		{
-			const FVector2D Position(604.f + Index * 138.f, 94.f);
-			const FVector2D Extent(120.f, 110.f);
+			const FVector2D Position(424.f + Index * 128.f, 94.f);
+			const FVector2D Extent(110.f, 106.f);
 			AddImage(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("UnitSelectPlate_%d"), Index)),
 				Index == 0 ? UnitSlotSelected : UnitSlotNormal, Position, Extent, 8,
@@ -582,7 +583,12 @@ namespace ShopFullGeneratedWidgetBuilder
 					: FLinearColor(.58f, .62f, .66f, .82f));
 			AddImage(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("mUnitSelectIcon_%d"), Index)), nullptr,
-				Position + FVector2D(16.f, 12.774f), FVector2D(88.f), 10);
+				Position + FVector2D(13.f, 10.f), FVector2D(84.f), 10);
+			UTextBlock* CountText = AddText(Blueprint, SkillTopContextPanel,
+				FName(*FString::Printf(TEXT("UnitSelectCountText_%d"), Index)),
+				FText::GetEmpty(), 18, Position + FVector2D(72.f, 2.f),
+				FVector2D(34.f, 28.f), 11, FLinearColor::White);
+			CountText->SetVisibility(ESlateVisibility::Collapsed);
 			AddButton(Blueprint, SkillTopContextPanel,
 				FName(*FString::Printf(TEXT("mUnitSelectButton_%d"), Index)),
 				Position, Extent, 12);
@@ -765,19 +771,24 @@ namespace ShopFullGeneratedWidgetBuilder
 
 		AddImage(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemIcon"), nullptr,
 			FVector2D(697.5f, 121.f), FVector2D(205.f, 205.f), 25);
+		// 가운데 카드는 이름 -> 상태 한 줄 -> 값 순서로 읽힌다. 상태 줄은 예전에
+		// 늘 접혀 있어서 이름/값과 겹친 자리에 남아 있었다. 스킬 탭이 모든 직업의
+		// 전용 스킬을 함께 늘어놓게 되면서(0824) 이 줄이 "누구 스킬인가 / 이미
+		// 가졌나"를 알리는 자리가 되므로, 셋이 겹치지 않게 다시 쌓는다.
 		AddText(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemNameText"),
 			NSLOCTEXT("ShopHorizontalRail", "PreviewName", "피의 성배"), 29,
-			FVector2D(610.f, 343.f), FVector2D(380.f, 52.f), 27);
+			FVector2D(610.f, 336.f), FVector2D(380.f, 52.f), 27);
 		UTextBlock* Description = AddText(Blueprint, ItemCarouselPanel,
 			TEXT("mSelectedItemDescriptionText"),
 			FText::GetEmpty(), 19,
-			FVector2D(650.f, 371.f), FVector2D(300.f, 76.f), 27,
+			FVector2D(590.f, 392.f), FVector2D(420.f, 40.f), 27,
 			FLinearColor(.89f, .92f, .94f, 1.f));
-		Description->SetAutoWrapText(true);
+		// 한 줄짜리 상태 문구다. 줄바꿈 대신 AutoFit 배율로 줄인다.
+		Description->SetAutoWrapText(false);
 		Description->SetVisibility(ESlateVisibility::Collapsed);
 		AddText(Blueprint, ItemCarouselPanel, TEXT("mSelectedItemPriceText"),
 			NSLOCTEXT("ShopHorizontalRail", "SelectedPrice", "75 G"), 24,
-			FVector2D(650.f, 408.f), FVector2D(300.f, 52.f), 27,
+			FVector2D(650.f, 436.f), FVector2D(300.f, 52.f), 27,
 			FLinearColor(1.f, .82f, .35f, 1.f));
 
 		AddLabeledButton(Blueprint, ItemCarouselPanel, TEXT("PreviousHolder"),

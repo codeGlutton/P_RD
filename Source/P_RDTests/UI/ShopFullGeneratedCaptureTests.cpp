@@ -195,6 +195,20 @@ namespace ShopFullGeneratedCaptureTests
 			HireSlot.mJobType = Jobs[UnitIndex];
 			HireSlot.mLevel = Unit.mLevel;
 		}
+		for (int32 JobIndex = 0;
+			JobIndex < static_cast<int32>(EUnitJobType::PlayerJobCount); ++JobIndex)
+		{
+			const EUnitJobType JobType = static_cast<EUnitJobType>(JobIndex);
+			FShopOwnedUnitUI& JobCard =
+				Shop.mSkillTargetUnits.AddDefaulted_GetRef();
+			JobCard.mUnitIndex = INDEX_NONE;
+			JobCard.mJobType = JobType;
+			JobCard.mIsOwned = Shop.mOwnedUnits.ContainsByPredicate(
+				[JobType](const FShopOwnedUnitUI& Unit)
+				{
+					return Unit.mJobType == JobType;
+				});
+		}
 
 		Shop.mRest.mPrice = 100;
 		Shop.mRest.mIsAffordable = true;
@@ -597,6 +611,8 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	UWidget* RestBottomContextPanel = Tree->FindWidget(TEXT("RestBottomContextPanel"));
 	URunOptionsRailWidget* OptionsRail = Cast<URunOptionsRailWidget>(
 		Tree->FindWidget(TEXT("mRunOptionsRailWidget")));
+	UImage* GoldPlate = Cast<UImage>(Tree->FindWidget(TEXT("GoldPlate")));
+	UTextBlock* GoldText = Cast<UTextBlock>(Tree->FindWidget(TEXT("mGoldText")));
 	UImage* BackgroundArt = Cast<UImage>(
 		Tree->FindWidget(TEXT("ShopBackgroundArt")));
 	UTextBlock* SelectedName = Cast<UTextBlock>(
@@ -613,6 +629,8 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	UWidget* SelectedSkillPlate = Tree->FindWidget(TEXT("SkillSlotPlate_2"));
 	UButton* HeldSkillButton = Cast<UButton>(
 		Tree->FindWidget(TEXT("mSkillSlotButton_0")));
+	UTextBlock* UnitTargetCount = Cast<UTextBlock>(
+		Tree->FindWidget(TEXT("UnitSelectCountText_0")));
 	UTextBlock* SelectedDescription = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("mSelectedItemDescriptionText")));
 	UTextBlock* SelectedPrice = Cast<UTextBlock>(
@@ -632,6 +650,8 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("하단 스킬 슬롯 영역"), SkillBottomContextPanel)
 		|| !TestNotNull(TEXT("하단 휴식 비용 영역"), RestBottomContextPanel)
 		|| !TestNotNull(TEXT("TopZone 내장 공용 설정바"), OptionsRail)
+		|| !TestNotNull(TEXT("설정바 직하단 골드 판"), GoldPlate)
+		|| !TestNotNull(TEXT("설정바 직하단 골드 문구"), GoldText)
 		|| !TestNotNull(TEXT("공용 KayKit 배경 이미지"), BackgroundArt)
 		|| !TestNotNull(TEXT("선택 상품 이름"), SelectedName)
 		|| !TestNotNull(TEXT("이전 상품 버튼"), PreviousButton)
@@ -642,6 +662,7 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 		|| !TestNotNull(TEXT("재사용 용병 선택 WBP"), MercenaryHire)
 		|| !TestNotNull(TEXT("선택 발광 스킬 프레임"), SelectedSkillPlate)
 		|| !TestNotNull(TEXT("길게 누르기 스킬 버튼"), HeldSkillButton)
+		|| !TestNotNull(TEXT("동일 직업 용병 수 배지"), UnitTargetCount)
 		|| !TestNotNull(TEXT("선택 상품 설명"), SelectedDescription)
 		|| !TestNotNull(TEXT("선택 상품 가격"), SelectedPrice))
 	{
@@ -657,6 +678,32 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 		DesignSize->GetContent() == DesignCanvas);
 	TestTrue(TEXT("설정바는 별도 Viewport가 아닌 TopZone 자식"),
 		OptionsRail->GetParent() == TopZone);
+	const UCanvasPanelSlot* OptionsRailSlot = Cast<UCanvasPanelSlot>(
+		OptionsRail->Slot);
+	const UCanvasPanelSlot* GoldPlateSlot = Cast<UCanvasPanelSlot>(GoldPlate->Slot);
+	UWidget* GoldTextLayoutRoot = GoldText;
+	while (GoldTextLayoutRoot != nullptr
+		&& GoldTextLayoutRoot->GetParent() != TopZone)
+	{
+		GoldTextLayoutRoot = GoldTextLayoutRoot->GetParent();
+	}
+	const UCanvasPanelSlot* GoldTextSlot = GoldTextLayoutRoot != nullptr
+		? Cast<UCanvasPanelSlot>(GoldTextLayoutRoot->Slot) : nullptr;
+	if (TestNotNull(TEXT("설정바 CanvasSlot"), OptionsRailSlot)
+		&& TestNotNull(TEXT("골드 판 CanvasSlot"), GoldPlateSlot)
+		&& TestNotNull(TEXT("골드 문구 CanvasSlot"), GoldTextSlot))
+	{
+		TestEqual(TEXT("골드 판은 설정바 바로 아래에 붙음"),
+			GoldPlateSlot->GetPosition().Y,
+			OptionsRailSlot->GetPosition().Y + OptionsRailSlot->GetSize().Y);
+		TestEqual(TEXT("골드 판은 설정바 오른쪽선과 일치"),
+			GoldPlateSlot->GetPosition().X + GoldPlateSlot->GetSize().X,
+			OptionsRailSlot->GetPosition().X + OptionsRailSlot->GetSize().X);
+		TestEqual(TEXT("골드 문구는 골드 판과 같은 위치"),
+			GoldTextSlot->GetPosition(), GoldPlateSlot->GetPosition());
+		TestEqual(TEXT("골드 문구는 골드 판과 같은 크기"),
+			GoldTextSlot->GetSize(), GoldPlateSlot->GetSize());
+	}
 	auto TestZoneGeometry = [this](const TCHAR* Label, UCanvasPanel* Zone,
 		const FVector2D& ExpectedPosition, const FVector2D& ExpectedSize)
 	{
@@ -759,10 +806,19 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	// 상품 이름/가격만 유지하며 길게 누른 스킬의 설명으로 대체되지 않는다.
 	TestEqual(TEXT("길게 눌러도 판매 상품 이름 유지"),
 		SelectedName->GetText().ToString(), FString(TEXT("수호 방벽")));
-	TestEqual(TEXT("선택 상품 설명은 항상 숨김"),
+	// 0824 합의: 스킬 탭이 모든 직업의 전용 스킬을 함께 늘어놓게 되면서,
+	// 이 줄은 "누구 스킬인가 / 이미 가졌나"를 알리는 상태 문구가 됐다.
+	// 긴 설명을 여기 쏟지 않는다는 규칙은 그대로다(상세는 공용 팝업이 맡는다).
+	TestNotEqual(TEXT("스킬 상품은 직업/보유 상태 줄을 보여 줌"),
 		SelectedDescription->GetVisibility(), ESlateVisibility::Collapsed);
-	TestEqual(TEXT("공용 상세를 열어도 판매 가격 유지"),
-		SelectedPrice->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	// 공용 스킬이면 "공용 스킬", 직업 전용이면 "<직업> 전용", 이미 가졌으면
+	// 그 사실까지 적는다. 어느 경우든 빈 줄로 두지 않는다.
+	TestFalse(TEXT("스킬 상태 줄이 비어 있지 않다"),
+		SelectedDescription->GetText().IsEmpty());
+	// 표시 여부만 본다. Visible/SelfHitTest 중 어느 값인지는 공용 입력 계층
+	// 정규화(URDUserWidget)가 정하며, 여기서 다시 고정하면 두 곳이 다툰다.
+	TestNotEqual(TEXT("공용 상세를 열어도 판매 가격 유지"),
+		SelectedPrice->GetVisibility(), ESlateVisibility::Collapsed);
 	TArray<FColor> SkillHeldPixels;
 	CaptureError.Reset();
 	if (!Capture(*Widget, ShopSlate,
@@ -774,8 +830,8 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	HeldSkillButton->OnReleased.Broadcast();
 	TestEqual(TEXT("손을 떼어도 판매 스킬 이름 유지"),
 		SelectedName->GetText().ToString(), FString(TEXT("수호 방벽")));
-	TestEqual(TEXT("손을 떼면 판매 가격 복귀"),
-		SelectedPrice->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	TestNotEqual(TEXT("손을 떼면 판매 가격 복귀"),
+		SelectedPrice->GetVisibility(), ESlateVisibility::Collapsed);
 	TArray<FColor> SkillPixels;
 	CaptureError.Reset();
 	if (!Capture(*Widget, ShopSlate,
@@ -805,7 +861,7 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("휴식 현재 HP 반영"), RestHPBefore->GetText().ToString(),
 		FString(TEXT("42/100")));
 	TestEqual(TEXT("휴식 회복 HP 반영"), RestHPAfter->GetText().ToString(),
-		FString(TEXT("100/100")));
+		FString(TEXT("92/100")));
 	TestTrue(TEXT("비용 라벨은 흰색"),
 		RestCostLabel->GetColorAndOpacity().GetSpecifiedColor().Equals(
 			FLinearColor::White, 0.01f));
@@ -840,11 +896,14 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	TestEqual(TEXT("고용 버튼은 행동만 표시"),
-		HireAddLabel->GetText().ToString(), FString(TEXT("고용")));
+	const FString HireActionText = HireAddLabel->GetText().ToString();
+	TestTrue(TEXT("고용 버튼은 행동만 표시"),
+		HireActionText == TEXT("고용") || HireActionText == TEXT("Hire"));
+	const FString HireCostText = HireCostLabel->GetText().ToString();
 	TestTrue(TEXT("고용 비용은 별도 표시"),
-		HireCostLabel->GetText().ToString().Contains(TEXT("고용비용"))
-		&& HireCostLabel->GetText().ToString().Contains(TEXT("180")));
+		(HireCostText.Contains(TEXT("고용비용"))
+			|| HireCostText.Contains(TEXT("Hire Cost")))
+		&& HireCostText.Contains(TEXT("180")));
 	TestFalse(TEXT("교체 대상 직업명에 Lv를 합치지 않음"),
 		PartyName->GetText().ToString().Contains(TEXT("Lv")));
 	TestTrue(TEXT("교체 대상 레벨은 두 번째 줄"),

@@ -99,6 +99,9 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
 	RD_LOAD_TEX(mLogIconPoison,        "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Poison.T_Status_Poison");
 	RD_LOAD_TEX(mLogIconStun,          "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Stun.T_Status_Stun");
+	RD_LOAD_TEX(mDamageNumberNormalAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Normal.T_CombatDamageNumbers_Normal");
+	RD_LOAD_TEX(mDamageNumberCriticalAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Critical.T_CombatDamageNumbers_Critical");
+	RD_LOAD_TEX(mDamageNumberHealAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Heal.T_CombatDamageNumbers_Heal");
 	// 플로팅 로그 글꼴. 새로 만든 TextBlock 은 엔진 기본 Roboto 로 남으므로
 	// HUD 공용 숫자 글꼴(F_HUD_Oswald)을 여기서 물어 둔다(UIFont::ProjectFont 짝).
 	{

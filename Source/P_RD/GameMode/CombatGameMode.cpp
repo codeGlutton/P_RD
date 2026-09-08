@@ -314,6 +314,7 @@ void ACombatGameMode::InitializeCombat()
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
+
 	/*
 	 * UI와 전투 로직을 여기서 연결한다.
 	 * - 게임 상태가 바뀌면 UIModel에 새 값을 넣는다.
@@ -2247,14 +2248,23 @@ FCombatFloatingLogRequest ACombatGameMode::BuildCombatFloatingLogRequest(int32 T
 	{
 		return FCombatFloatingLogRequest();
 	}
+	return BuildAttributeFloatingLogRequest(Log, TargetActor->GetActorLocation());
+}
 
+FCombatFloatingLogRequest ACombatGameMode::BuildAttributeFloatingLogRequest(
+	const FSRPGAttributeEffectEventLog& Log, const FVector& WorldLocation)
+{
 	EFloatingLogIconType IconType = EFloatingLogIconType::None;
 	EFloatingLogColorType ColorType = EFloatingLogColorType::Neutral;
 	ConvertFloatingLogUITypes(Log, OUT IconType, OUT ColorType);
 
 	FCombatFloatingLogRequest Request;
-	Request.mWorldLocation = TargetActor->GetActorLocation();
-	Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), FMath::FloorToInt(Log.mMagnitude)));
+	Request.mWorldLocation = WorldLocation;
+	const int32 Amount = FMath::FloorToInt(Log.mMagnitude);
+	Request.mText = IconType == EFloatingLogIconType::HP
+		? FText::AsNumber(FMath::Abs(Amount))
+		: FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+	Request.mIsCritical = Log.mIsCritical;
 	Request.mIconType = IconType;
 	Request.mColorType = ColorType;
 	Request.mSequence = 0;
@@ -2285,7 +2295,11 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 		auto MakeLogRequest = [bBindMotionIndices, TurnIndex, ActionIndex, MotionIndex](int32 Amount, EFloatingLogIconType IconType, EFloatingLogColorType ColorType, const FVector& ViewLocation, int32 Sequence) -> FCombatFloatingLogRequest {
 			FCombatFloatingLogRequest Request;
 			Request.mWorldLocation = ViewLocation;
-			Request.mText = FText::FromString(FString::Printf(TEXT("%+d"), Amount));
+			// HP는 피해/치명타/회복 이미지 자체로 의미가 구분되므로 부호 없이
+			// 숫자만 그린다. AP·방어도 등 텍스트 로그는 기존 증감 부호를 유지한다.
+			Request.mText = IconType == EFloatingLogIconType::HP
+				? FText::AsNumber(FMath::Abs(Amount))
+				: FText::FromString(FString::Printf(TEXT("%+d"), Amount));
 			Request.mIconType = IconType;
 			Request.mColorType = ColorType;
 			Request.mSequence = Sequence;
@@ -2316,13 +2330,12 @@ void ACombatGameMode::BuildCombatFloatingLogRequests(const TArray<FSRPGTurnEvent
 				continue;
 			}
 
-			Requests.Add(MakeLogRequest(
-				FMath::Floor(AttrLog.mMagnitude),
-				IconType,
-				ColorType,
-				ViewActorLocation,
-				Sequence++
-			));
+			FCombatFloatingLogRequest Request = BuildAttributeFloatingLogRequest(AttrLog, ViewActorLocation);
+			Request.mSequence = Sequence++;
+			Request.mTurnIndex = bBindMotionIndices ? TurnIndex : INDEX_NONE;
+			Request.mActionIndex = bBindMotionIndices ? ActionIndex : INDEX_NONE;
+			Request.mMotionIndex = bBindMotionIndices ? MotionIndex : INDEX_NONE;
+			Requests.Add(MoveTemp(Request));
 		}
 		for (const FSRPGTagEffectEventLog& TagLog : EventLog.mTagEffectEventLogs)
 		{
