@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /**
  * @brief 배치안 평가용 전투 HUD.
@@ -24,6 +24,7 @@
 
 #include "UI/Combat/CombatUITypes.h"
 
+#include "Tutorial/GuidedTutorial.h"
 #include "CombatLayoutHUDWidget.generated.h"
 
 struct FPresentationBarrier;
@@ -112,6 +113,12 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 	GENERATED_BODY()
 
 public:
+	bool IsGuidedOverlayObscured() const;
+	bool IsGuidedBoardInputAt(const FVector2D& Position) const;
+	bool HasGuidedArtifact() const;
+	bool HasGuidedMonster() const;
+	EGuidedLesson GuidedLessonContext() const;
+	UWidget* ResolveGuidedTarget(EGuidedStage Stage, EGuidedStage& Next, bool& Board, bool& Retry);
 #if WITH_EDITOR
 	/** @brief 오프스크린 WBP 감사도 실제 게임과 같은 글자 보정을 적용한다. */
 	void ApplyActionLabelOpticalAlignmentForCapture();
@@ -293,6 +300,7 @@ protected:
 
 
 private:
+	friend class FCombatWorldHpVisibilityTest;
 	/** @brief WBP에서 이름으로 위젯을 찾아 캐시한다. 없는 것은 null로 둔다. */
 	void CacheAuthoredWidgets();
 
@@ -841,12 +849,20 @@ private:
 	struct FFloatingCombatLogEntry
 	{
 		TObjectPtr<UWidget> mRoot;
+		TObjectPtr<UWidget> mNumberRoot;     // 숫자만 팝/정착시키기 위한 전경 레이어
+		TObjectPtr<UWidget> mSlashGlowA;     // X자 참격의 넓은 잔광 레이어
+		TObjectPtr<UWidget> mSlashGlowB;
+		TObjectPtr<UWidget> mSlashCoreA;     // X자 참격의 밝은 중심선 레이어
+		TObjectPtr<UWidget> mSlashCoreB;
 		FVector mWorldLocation = FVector::ZeroVector;
 		int32 mTurnIndex = INDEX_NONE;
 		int32 mActionIndex = INDEX_NONE;
 		int32 mMotionIndex = INDEX_NONE;
 		float mElapsed = 0.0f;
 		bool mIsPreview = false;      // 참이면 저절로 안 사라진다
+		bool mUsesDamageNumberSkin = false;
+		bool mIsCritical = false;
+		bool mIsHeal = false;
 		float mStackOffsetY = 0.0f;   // 미리보기끼리 안 겹치게 쌓는 값
 		bool mIsDismissing = false;
 		float mDismissElapsed = 0.0f;
@@ -955,6 +971,10 @@ private:
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconWeakness;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconPoison;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mLogIconStun;
+	/** @brief 실전 HP 증감에 사용하는 4x3(0-9,+,-) 숫자 아틀라스. */
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mDamageNumberNormalAtlas;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mDamageNumberCriticalAtlas;
+	UPROPERTY(Transient) TObjectPtr<UTexture2D> mDamageNumberHealAtlas;
 	/** @brief 플로팅 로그 글꼴(F_HUD_Oswald). 없으면 엔진 기본 글꼴로 남는다. */
 	UPROPERTY(Transient) TObjectPtr<class UFont> mFloatingLogFont;
 

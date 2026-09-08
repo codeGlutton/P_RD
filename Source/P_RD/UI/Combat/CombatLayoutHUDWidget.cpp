@@ -1,6 +1,9 @@
-﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "Actor/TileMap/TileLayer.h"
+#include "UI/Combat/CombatConditionWidget.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 
@@ -99,6 +102,9 @@ UCombatLayoutHUDWidget::UCombatLayoutHUDWidget(const FObjectInitializer& ObjectI
 	RD_LOAD_TEX(mLogIconWeakness,      "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Weakness.T_Status_Weakness");
 	RD_LOAD_TEX(mLogIconPoison,        "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Poison.T_Status_Poison");
 	RD_LOAD_TEX(mLogIconStun,          "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/T_Status_Stun.T_Status_Stun");
+	RD_LOAD_TEX(mDamageNumberNormalAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Normal.T_CombatDamageNumbers_Normal");
+	RD_LOAD_TEX(mDamageNumberCriticalAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Critical.T_CombatDamageNumbers_Critical");
+	RD_LOAD_TEX(mDamageNumberHealAtlas, "/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/DamageNumbers/T_CombatDamageNumbers_Heal.T_CombatDamageNumbers_Heal");
 	// 플로팅 로그 글꼴. 새로 만든 TextBlock 은 엔진 기본 Roboto 로 남으므로
 	// HUD 공용 숫자 글꼴(F_HUD_Oswald)을 여기서 물어 둔다(UIFont::ProjectFont 짝).
 	{
@@ -726,6 +732,23 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	ConfigureCompactSummary(TEXT("Ally"));
+	// Keep the condition badge outside the portrait's clipping container.
+	for (const TCHAR* Prefix : {TEXT("Ally"), TEXT("Enemy")})
+	{
+		const FName BadgeName(*FString::Printf(TEXT("%sCondition"), Prefix));
+		if (WidgetTree->FindWidget(BadgeName) == nullptr)
+		{
+			if (UCanvasPanel* Panel = Find<UCanvasPanel>(WidgetTree,FString::Printf(TEXT("%sPanel"),Prefix)))
+			{
+				UCombatConditionWidget* Badge=WidgetTree->ConstructWidget<UCombatConditionWidget>(UCombatConditionWidget::StaticClass(),BadgeName);
+				UCanvasPanelSlot* BadgeSlot = Panel->AddChildToCanvas(Badge);
+				BadgeSlot->SetPosition(FVector2D(112.f, 88.f));
+				BadgeSlot->SetSize(FVector2D(48.f, 48.f));
+				BadgeSlot->SetZOrder(30);
+				Badge->SetVisibility(ESlateVisibility::Visible);
+			}
+		}
+	}
 	mAllyStatusFrames.Reset();
 	mAllyStatusIcons.Reset();
 	mAllyStatusCounts.Reset();
@@ -2071,49 +2094,15 @@ void UCombatLayoutHUDWidget::ClearPartySlot(const FPartySlotWidgets& Widgets)
  */
 UTexture2D* UCombatLayoutHUDWidget::StatusIconFor(const FGameplayTag& StatusTag)
 {
-	// 한 번만 읽는다. 카드 셋과 요약판 행이 매 갱신마다 부르는 자리라 매번
-	// 같은 그림을 찾지 않는다. 게임 태그가 아직 없는 선행 자산도 잎 이름으로
-	// 연결해 둘 수 있다.
-	static TMap<FString, TObjectPtr<UTexture2D>> Loaded;
-	static TObjectPtr<UTexture2D> GenericStatusIcon;
-	if (Loaded.IsEmpty())
+	if (UTexture2D* Art = CombatStatusUI::ResolveIcon(StatusTag))
 	{
-		const TCHAR* Root = TEXT("/Game/SVN/OutSideAsset/AICreation/UI/CombatHUD/StatusIcons/");
-		const TPair<const TCHAR*, const TCHAR*> Pairs[] = {
-			// 게임 태그 명칭은 Vigor로 바뀌었지만 기존 런타임 그림 파일명은
-			// T_Status_Agility다. 생성되지 않은 새 파일명을 요청하지 않는다.
-			{ TEXT("Vigor"), TEXT("T_Status_Agility") },
-			{ TEXT("Fortification"), TEXT("T_Status_Fortification") },
-			{ TEXT("Vulnerability"), TEXT("T_Status_Vulnerability") },
-			{ TEXT("Weakness"), TEXT("T_Status_Weakness") },
-			{ TEXT("Poison"), TEXT("T_Status_Poison") },
-			{ TEXT("Stun"), TEXT("T_Status_Stun") },
-			{ TEXT("Bleed"), TEXT("T_Status_Bleed") },
-			{ TEXT("Stealth"), TEXT("T_Status_Stealth") },
-		};
-		for (const TPair<const TCHAR*, const TCHAR*>& Pair : Pairs)
-		{
-			const FString Path = FString::Printf(TEXT("%s%s.%s"), Root, Pair.Value, Pair.Value);
-			Loaded.Add(Pair.Key, LoadObject<UTexture2D>(nullptr, *Path));
-		}
-		GenericStatusIcon = LoadObject<UTexture2D>(nullptr,
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/"
-				"T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"));
+		return Art;
 	}
-
-	FString Leaf = StatusTag.GetTagName().ToString();
-	int32 LastDot = INDEX_NONE;
-	if (Leaf.FindLastChar(TEXT('.'), LastDot))
-	{
-		Leaf = Leaf.Mid(LastDot + 1);
-	}
-	if (const TObjectPtr<UTexture2D>* Art = Loaded.Find(Leaf))
-	{
-		return Art->Get() != nullptr ? Art->Get() : GenericStatusIcon.Get();
-	}
-	// 새 상태가 추가돼도 행이 빈칸으로 보이지 않게 범용 표식을 돌려준다.
+	// Unknown future states retain the existing fallback.
 	return StatusTag.MatchesTag(EffectTags::GameplayEffect_StatusEffect)
-		? GenericStatusIcon.Get() : nullptr;
+		? LoadObject<UTexture2D>(nullptr,
+			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Combat/T_MB_StatusSlot_Frame.T_MB_StatusSlot_Frame"))
+		: nullptr;
 }
 
 /** @brief 아군/적 세로 요약판에 상태 스크롤 컨테이너를 하나씩 준비한다. */
@@ -2485,8 +2474,10 @@ void UCombatLayoutHUDWidget::RefreshTurnOrder()
 	SetShown(mTurnPageLeftText, HiddenLeft > 0);
 	SetInteractiveShown(mTurnPageRight, HiddenRight > 0);
 	SetShown(mTurnPageRightText, HiddenRight > 0);
-	SetTextIfPresent(mTurnPageLeftText, FText::AsNumber(HiddenLeft));
-	SetTextIfPresent(mTurnPageRightText, FText::AsNumber(HiddenRight));
+	SetTextIfPresent(mTurnPageLeftText, FText::FromString(TEXT("<")));
+	if (mTurnPageLeft) mTurnPageLeft->SetToolTipText(LOCTEXT("PreviousTurns", "이전 차례 보기"));
+	SetTextIfPresent(mTurnPageRightText, FText::FromString(TEXT(">")));
+	if (mTurnPageRight) mTurnPageRight->SetToolTipText(LOCTEXT("NextTurns", "다음 차례 보기"));
 
 	// 어느 칸이 누구인지 기억해 둔다 -- 칸을 누르면 그 유닛을 잡아야 한다.
 	mTurnSlotUnitIds.Init(INDEX_NONE, SlotRoom);
@@ -2755,6 +2746,15 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 	}
 
 	SetShown(mAllyPanel, AllyShown != nullptr);
+	for (const auto& Entry : {TPair<const TCHAR*,const FUnitUI*>(TEXT("AllyCondition"),AllyShown),
+		TPair<const TCHAR*,const FUnitUI*>(TEXT("EnemyCondition"),Shown)})
+	{
+		if (UCombatConditionWidget* Badge=Cast<UCombatConditionWidget>(WidgetTree->FindWidget(FName(Entry.Key))))
+		{
+			Badge->SetVisibility(Entry.Value ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+			Badge->SetCondition(Entry.Value ? Entry.Value->mCombatCondition : EUnitCombatCondition::Normal);
+		}
+	}
 	if (AllyShown == nullptr)
 	{
 		RefreshSummaryStatusList(true, INDEX_NONE, {});
@@ -2980,6 +2980,8 @@ void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
 		SetInteractiveShown(Find<UButton>(WidgetTree,
 			FString::Printf(TEXT("MercenarySkillButton_%d"), Index)), bShown == false);
 	}
+
+
 }
 
 void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
@@ -3026,6 +3028,8 @@ void UCombatLayoutHUDWidget::SetMercenaryPanelShown(const bool bShown)
 	}
 	RefreshCommandVisibility();
 	RefreshWorldGestureInputBlock();
+
+
 }
 
 bool UCombatLayoutHUDWidget::IsMercenaryPanelShown() const
@@ -3175,7 +3179,8 @@ void UCombatLayoutHUDWidget::RefreshWorldGestureInputBlock()
 	}
 	if (CameraPawn != nullptr)
 	{
-		CameraPawn->SetTouchGestureInputEnabled(IsWorldInputModalShown() == false);
+		const auto* Tutorial = GetGameInstance() ? GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>() : nullptr;
+		CameraPawn->SetTouchGestureInputEnabled(!IsWorldInputModalShown() && (!Tutorial || !Tutorial->IsInputRestricted()));
 	}
 }
 
@@ -3539,6 +3544,7 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	if(auto* GI=GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->UpdateGuidedHUD(this);
 	PollTurnBarMouseSwipe();
 	if (mSkillWorldPreviewActive)
 	{
@@ -4126,6 +4132,9 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
  */
 void UCombatLayoutHUDWidget::HandleBoardLongPress()
 {
+	if (const auto* GI = GetGameInstance())
+		if (const auto* Tutorial = GI->GetSubsystem<UFirstPlayTutorialSubsystem>())
+			if (Tutorial->IsInputRestricted()) return;
 	if (mPressActive == false || mPressMoved == true || mUIModel == nullptr
 		|| IsWorldInputModalShown())
 	{
@@ -5285,6 +5294,8 @@ void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
 	}
 	RefreshCommandVisibility();
 	RefreshWorldGestureInputBlock();
+
+
 }
 
 bool UCombatLayoutHUDWidget::IsMonsterTabShown() const
@@ -5486,6 +5497,14 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		TEXT("%d/%d"), Monster.mActionPoints, Monster.mMaxActionPoints)));
 	SetTabText(TEXT("MonsterDetailSpeedText"), FText::AsNumber(
 		FMath::RoundToInt(Monster.mSpeedPoint)));
+	// 몬스터 상세 WBP의 네 번째 스탯 아이콘은 구형 임시 브러시를 품고 있다.
+	// 용병 상세와 같은 치명타 전용 원화를 런타임의 단일 출처로 덮어써서,
+	// WBP가 다시 저장되더라도 두 상세 화면의 의미 표식이 갈라지지 않게 한다.
+	if (UImage* CriticalIcon = Cast<UImage>(
+		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterStatIcon_3"))))
+	{
+		CriticalIcon->SetBrushFromTexture(mSkillVisualCriticalIconTexture, false);
+	}
 	if (UImage* DetailPortrait = Cast<UImage>(
 		mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
 	{
@@ -6534,3 +6553,125 @@ bool UCombatLayoutHUDWidget::IsDetailOverlayShown() const
 }
 
 #undef LOCTEXT_NAMESPACE
+
+UWidget* UCombatLayoutHUDWidget::ResolveGuidedTarget(EGuidedStage S, EGuidedStage& Next, bool& Board, bool& Retry)
+{
+ Next=S;Board=false;Retry=false;
+ if(!mUIModel)return nullptr;
+ const auto Phase=mUIModel->GetTurnUI().mPhase;
+ const auto Pending=mUIModel->GetPendingAction().mType;
+ const bool Detail=IsDetailOverlayShown();
+ auto Named=[this](const TCHAR* Name)->UWidget*{return GetWidgetFromName(Name);};
+ auto Command=[this](int32 I)->UWidget*{return mCommandSlots.IsValidIndex(I)?mCommandSlots[I].Button.Get():nullptr;};
+ const auto* Tutorial = GetGameInstance() ? GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>() : nullptr;
+ const int32 FixedSkill = Tutorial && Tutorial->IsScenarioGuiding() ? Tutorial->GetScenarioSkillIndex() : INDEX_NONE;
+ auto SkillIndex=[this, FixedSkill]()->int32{if(FixedSkill!=INDEX_NONE)return FixedSkill+1;const auto& Skills=mUIModel->GetSkillUIs();for(int32 I=0;I<Skills.Num();++I)if(Skills[I].mIsUsable)return I+1;return INDEX_NONE;};
+ auto Advance=[&](){Next=FGuidedTutorialProgress::NextStage(S);};
+ // A long press on the instructed move/attack card may open its details instead of selecting it.
+ // Keep a close target available so forced guidance never traps the player behind that modal.
+ if (Detail && (S == EGuidedStage::SelectMove || S == EGuidedStage::SelectSkill))
+ {
+  Retry = true;
+  return mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton"));
+ }
+ switch(S){
+ case EGuidedStage::ReadTurnOrder:return Named(TEXT("TurnPanel"));
+ case EGuidedStage::ReadAP:return mTurnAPRoot;
+ case EGuidedStage::ReadStatus:return Named(TEXT("AllyPanel"));
+ case EGuidedStage::ReadCondition:return Named(TEXT("AllyCondition"));
+ case EGuidedStage::ReadMercenaryStats:return mMercenaryDetailHP;
+ case EGuidedStage::ReadInventory:return mMercenaryInventoryPage;
+ case EGuidedStage::ReadEnemy:return mMonsterTabWidget?mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailHPText")):nullptr;
+ case EGuidedStage::ReadSkillCost:case EGuidedStage::ReadSkillCooldown:
+ case EGuidedStage::SelectRange:case EGuidedStage::EffectRange:case EGuidedStage::ReadEnemySkill:
+  if(!Detail) return nullptr;
+  return mDetailPresenter ? mDetailPresenter->GetGuidedSystemTarget(S) : nullptr;
+ case EGuidedStage::OpenSkills:
+  if(mCommandsShown){Advance();return nullptr;}return Named(TEXT("SkillToggleButton"));
+ case EGuidedStage::HoldSkill:
+  if(Detail){Advance();return nullptr;}
+  if(IsAiming()){Retry=true;return Named(TEXT("CancelButton"));}
+  if(!mCommandsShown)return Named(TEXT("SkillToggleButton"));
+  return Command(FixedSkill != INDEX_NONE ? FixedSkill + 1 : (mUIModel->GetSkillUIs().Num()>0?1:INDEX_NONE));
+ case EGuidedStage::CloseSkill:case EGuidedStage::CloseMercenarySkill:case EGuidedStage::CloseMonsterSkill:case EGuidedStage::CloseArtifact:
+  if(!Detail){Advance();return nullptr;}return mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton"));
+ case EGuidedStage::SelectMove:
+  if(const auto* U=FindTurnUnit(); !U || !U->mCanMove || U->mMovementPoint<1)return Named(TEXT("EndTurnButton"));
+  if(Pending==ECombatPendingActionType::Move && Phase!=ECombatBuildPhaseUI::None){Advance();return nullptr;}
+  if(!mCommandsShown)return Named(TEXT("SkillToggleButton"));return Command(0);
+ case EGuidedStage::MoveTile:
+  if(Pending!=ECombatPendingActionType::Move){Next=EGuidedStage::SelectMove;return nullptr;}
+  if(Phase==ECombatBuildPhaseUI::Preview){Advance();return nullptr;}Board=true;return nullptr;
+ case EGuidedStage::ConfirmMove:
+  if(Pending!=ECombatPendingActionType::Move){Next=EGuidedStage::SelectMove;return nullptr;}
+  if(Phase!=ECombatBuildPhaseUI::Preview){Next=EGuidedStage::MoveTile;return nullptr;}return mConfirmButton;
+ case EGuidedStage::SelectSkill:
+  if(SkillIndex()==INDEX_NONE)return Named(TEXT("EndTurnButton"));
+  if(Pending==ECombatPendingActionType::Skill && Phase!=ECombatBuildPhaseUI::None){Advance();return nullptr;}
+  if(!mCommandsShown)return Named(TEXT("SkillToggleButton"));return Command(SkillIndex());
+ case EGuidedStage::SkillTarget:
+  if(Pending!=ECombatPendingActionType::Skill){Next=EGuidedStage::SelectSkill;return nullptr;}
+  if(Phase==ECombatBuildPhaseUI::Preview){Advance();return nullptr;}Board=true;return nullptr;
+ case EGuidedStage::ConfirmSkill:
+  if(Pending!=ECombatPendingActionType::Skill){Next=EGuidedStage::SelectSkill;return nullptr;}
+  if(Phase!=ECombatBuildPhaseUI::Preview){Next=EGuidedStage::SkillTarget;return nullptr;}return mConfirmButton;
+ case EGuidedStage::EndTurn:return Named(TEXT("EndTurnButton"));
+ case EGuidedStage::OpenMercenary:
+  if(IsMercenaryPanelShown()){Advance();return nullptr;}return Named(TEXT("MenuButton_1"));
+ case EGuidedStage::SelectMercenary:return Named(TEXT("PartyButton_0"));
+ case EGuidedStage::MercenarySkill:
+  if(Detail){Advance();return nullptr;}return Named(TEXT("MercenarySkillButton_1"));
+ case EGuidedStage::OpenInventory:
+  if(mMercenaryInventoryShown){Advance();return nullptr;}return mMercenaryInventoryButton;
+ case EGuidedStage::Artifact:
+  if(mUIModel->GetPlayerMeta().mArtifacts.IsEmpty()){Next=EGuidedStage::CloseMercenary;return nullptr;}
+  if(Detail){Advance();return nullptr;}return mMercenaryInventoryArtifactButtons.IsValidIndex(0)?mMercenaryInventoryArtifactButtons[0].Get():nullptr;
+ case EGuidedStage::CloseMercenary:return mMercenaryCloseButton;
+ case EGuidedStage::OpenMonster:
+  if(IsMonsterTabShown()){Advance();return nullptr;}
+  if(!mUIModel->GetUnitUIs().ContainsByPredicate([](const FUnitUI& U){return !U.mIsPlayer && U.mHP>0;})){return nullptr;}
+  return Named(TEXT("MenuButton_2"));
+ case EGuidedStage::SelectMonster:return mMonsterTabWidget?mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterRowButton_0")):nullptr;
+ case EGuidedStage::HoldMonsterSkill:
+  if(Detail){Advance();return nullptr;}
+  if(mMonsterTabWidget)for(int32 I=0;I<mMonsterTabSkillIndices.Num();++I)if(mMonsterTabSkillIndices[I]!=INDEX_NONE)return mMonsterTabWidget->GetWidgetFromName(*FString::Printf(TEXT("MonsterSkillButton_%d"),I));
+  Next=EGuidedStage::CloseMonster;return nullptr;
+ case EGuidedStage::CloseMonster:return mMonsterTabWidget?mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterBackButton")):nullptr;
+ default:return nullptr;
+ }
+}
+
+bool UCombatLayoutHUDWidget::HasGuidedArtifact() const
+{
+	return mUIModel && !mUIModel->GetPlayerMeta().mArtifacts.IsEmpty();
+}
+bool UCombatLayoutHUDWidget::HasGuidedMonster() const
+{
+	return mUIModel &&
+	       mUIModel->GetUnitUIs().ContainsByPredicate([](const FUnitUI &U) { return !U.mIsPlayer && U.mHP > 0; });
+}
+EGuidedLesson UCombatLayoutHUDWidget::GuidedLessonContext() const
+{
+	if (IsMonsterTabShown())
+		return EGuidedLesson::Monster;
+	if (IsMercenaryPanelShown())
+		return mMercenaryInventoryShown ? EGuidedLesson::Artifact : EGuidedLesson::Mercenary;
+	return EGuidedLesson::None;
+}
+
+bool UCombatLayoutHUDWidget::IsGuidedOverlayObscured() const
+{
+	if (mCombatResultFlowActive || mCombatReviewWorldMapOpen ||
+	    mCombatAnnouncementKind != ECombatAnnouncementKind::None)
+		return true;
+	if (auto *World = GetWorld())
+		if (auto *Widgets = World->GetSubsystem<UWorldWidgetSubsystem>())
+			if (auto *Settings = Widgets->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings))
+				return Settings->IsOpened();
+	return false;
+}
+
+bool UCombatLayoutHUDWidget::IsGuidedBoardInputAt(const FVector2D& Position) const
+{
+	return GetCachedGeometry().IsUnderLocation(Position) && !IsWorldInputModalShown() && !IsOverChrome(Position);
+}

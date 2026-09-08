@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   CombatGameMode.h
  * @brief  전투 방에 대한 GameMode 정의 헤더
  * @author 모호재
@@ -51,6 +51,7 @@ public:
 	void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 
 protected:
+	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	void InitializeRoom() override;
 	void BeginRoom() override;
 
@@ -269,6 +270,9 @@ protected:
 	void PushPlayerMetaUIData() const;
 
 private:
+	friend class FCombatFloatingLogAttributeConversionTest;
+	static FCombatFloatingLogRequest BuildAttributeFloatingLogRequest(
+		const FSRPGAttributeEffectEventLog& Log, const FVector& WorldLocation);
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTagEffectEventLog& Log) const;
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGAttributeEffectEventLog& Log) const;
 	FCombatFloatingLogRequest BuildCombatFloatingLogRequest(int32 TargetActorID, const FSRPGTileEffectEventLog& Log) const;

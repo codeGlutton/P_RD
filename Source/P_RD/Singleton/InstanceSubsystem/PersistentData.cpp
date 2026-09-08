@@ -1,4 +1,4 @@
-﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/PersistentData.h"
 
 #include "Containers/Ticker.h"
 #include "AttributeSet/PartyAttributeSet.h"
@@ -699,13 +699,18 @@ bool URunPersistData::IsActive() const
 
 void UUserPersistData::MakeUser(const FText& Name)
 {
-	ClearUser();
+ // Naming a newly created profile must preserve enrollment captured before autosave.
+ const bool Enrolled = GuidedTutorial.Enrolled;
+ ClearUser();
+ GuidedTutorial.Enrolled = Enrolled;
 
 	mUserName = Name;
 }
 
 void UUserPersistData::ClearUser()
 {
+	TutorialProgress = FFirstPlayProgress();
+	GuidedTutorial = FGuidedTutorialProgress();
 	mUserName = FText();
 	mUserLog.Clear();
 }

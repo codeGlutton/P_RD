@@ -36,16 +36,28 @@ class P_RD_API UStaticEnemyUnitSpawnData : public UStaticUnitSpawnData
 	GENERATED_BODY()
 
 public:
+	void PostLoad() override;
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
 		return FPrimaryAssetId(UnitPrimaryAssetTypes::GetEnemyUnitType(), GetFName());
 	}
 
+public:
 	// @brief 기본 이동 성향: 멀어짐 / 사거리 유지(정지) / 붙음 중 택1
-	// @note 사거리는 스킬(추후 스킬+장비+패시브)에서 나오므로 여기엔 눈금값을 두지 않는다.
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
 
+	// @brief mSkillDatas 항목별 AI 우선순위 가중치
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, EditFixedSize, meta = (DisplayName = "SkillPriorities"))
+	TArray<int32> mSkillPriorities;
+
+public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = "PAD"))
 	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
 };

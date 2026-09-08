@@ -109,7 +109,7 @@ public:
 
 	/* 생명 주기 함수 */
 public:
-	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData);
+	void InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData, bool FixedPlayerOpening = false);
 	void BeginCombat();
 	void EndCombat();
 
@@ -338,6 +338,7 @@ protected:
 	// @brief 진행 라운드
 	UPROPERTY(Category = Round, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "RoundCount"))
 	int32 mRoundCount = 0;
+	UPROPERTY() bool mFixedPlayerOpening = false;
 	// @brief 진행 턴
 	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TurnCount"))
 	int32 mTurnCount = 0;

@@ -7,6 +7,7 @@
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"   // FTileIndex
 #include "GameplayTagContainer.h"
+#include "Pawn/UnitCombatCondition.h"
 
 #include "CombatUITypes.generated.h"
 
@@ -90,7 +91,15 @@ enum class EFloatingLogIconType : uint8
 	Poison,				// 독
 	Stun,				// 기절
 	Fire,				// 화염
-	Move				// 이동
+	Move,				// 이동
+	Strength,
+	Dexterity,
+	Acumeny,
+	Haste,
+	Exhaustion,
+	Slow,
+	Frail,
+	Root
 };
 
 /**
@@ -160,6 +169,9 @@ struct FCombatFloatingLogRequest
 
 	/** @brief HUD가 실제 색상으로 변환할 색상 의미값. */
 	UPROPERTY(BlueprintReadWrite) EFloatingLogColorType mColorType = EFloatingLogColorType::Neutral;
+
+	/** @brief true면 치명타 전용 숫자 스킨과 펀치 연출을 사용한다. */
+	UPROPERTY(BlueprintReadWrite) bool mIsCritical = false;
 
 	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
 	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
@@ -269,6 +281,8 @@ struct FUnitUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
+	/** Actual turn condition; independent of HP and status-effect icons. */
+	UPROPERTY(BlueprintReadOnly) EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
 	/** @brief 유닛 세로 초상화(DA mPortrait). 파티·적·상세 카드용. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
 	/**

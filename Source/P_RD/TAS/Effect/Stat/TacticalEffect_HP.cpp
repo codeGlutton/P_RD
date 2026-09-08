@@ -259,6 +259,7 @@ void UTacticalEffectExecutionCalculation_Attack::Execute(const FTacticalEffectCu
 			FSRPGAttributeEffectEventLog Log;
 			Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
 			Log.mMagnitude = HPDiff;
+			Log.mIsCritical = ExecutionParams.GetOwningSpec().mIsCritical;
 
 			UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
 			const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();

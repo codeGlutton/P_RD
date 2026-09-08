@@ -4,10 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "InputAction.h"
-#include "InputMappingContext.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
 #include "CombatCameraPawn.generated.h"
 
 class USpringArmComponent;
@@ -19,9 +15,9 @@ class USceneComponent;
 struct FTouchState
 {
 	bool bIsCurrentlyPressed = false;
-	FVector2D StartTouchPos;
-	FVector2D PreTouchPos;
-	FVector2D CurTouchPos;
+	FVector2D StartTouchPos = FVector2D::ZeroVector;
+	FVector2D PreTouchPos = FVector2D::ZeroVector;
+	FVector2D CurTouchPos = FVector2D::ZeroVector;
 
 };
 
@@ -114,6 +110,11 @@ public:
 	bool IsTouchGestureInputEnabled() const { return mTouchGestureInputEnabled; }
 
 private:
+	friend class FCombatCameraPointerInputTest;
+	void UpdatePointerGestures(const FTouchState& FirstTouch, const FTouchState& SecondTouch,
+		bool bMousePressed, const FVector2D& MousePosition);
+	bool mUsingMouseGesture = false;
+
 	/*
 	* @brief Drag 중인지 나타내는 함수
 	* @return true 시 드래그 중, false 시 드래그 아님

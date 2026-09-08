@@ -49,6 +49,8 @@ public:
 
 	/** @brief 화면에 올라오기 전 타이틀 배경 영상을 미리 열어 둔다. */
 	void PrimeTitleBackgroundVideo();
+	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
+	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
 
 protected:
 	/** @brief 타이틀 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */

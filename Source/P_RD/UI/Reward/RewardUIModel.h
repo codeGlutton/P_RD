@@ -69,6 +69,9 @@ public:
 	FOnRewardSelectionConfirmed OnRewardSelectionConfirmed;
 
 	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
+	FOnRewardSelectionConfirmed OnRewardSelectionRejected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
 	FOnRewardGrantBundleConfirmed OnRewardGrantBundleConfirmed;
 
 	/* ───────── UI → gameplay : 의도만 보낸다 ───────── */

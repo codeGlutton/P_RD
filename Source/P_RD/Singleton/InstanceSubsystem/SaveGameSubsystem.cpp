@@ -1,4 +1,4 @@
-﻿#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
 #include "SaveGame/SaveGameArchive.h"
@@ -6,6 +6,12 @@
 #include "SaveGame/BinarySaveGame.h"
 
 DEFINE_LOG_CATEGORY(LogSave)
+
+bool USaveGameSubsystem::HasPlaySave() const
+{
+ return UGameplayStatics::DoesSaveGameExist(USER_SLOT_NAME, 0)
+     || UGameplayStatics::DoesSaveGameExist(RUN_SLOT_NAME, 0);
+}
 
 bool USaveGameSubsystem::SaveUser() const
 {
@@ -15,12 +21,12 @@ bool USaveGameSubsystem::SaveUser() const
 	}
 
 	SerializeObject(GetUserMutableData(), OUT mUserSaveGame->mData);
-	UGameplayStatics::SaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0);
+	const bool bSaved = UGameplayStatics::SaveGameToSlot(mUserSaveGame, USER_SLOT_NAME, 0);
 	ClearUser();
 
 	UE_LOG(LogSave, Log, TEXT("유저 데이터 세이브 파일 저장"));
 
-	return true;
+	return bSaved;
 }
 
 void USaveGameSubsystem::SaveUserAsync(FAsyncSaveGameToSlotDelegate Callback) const
