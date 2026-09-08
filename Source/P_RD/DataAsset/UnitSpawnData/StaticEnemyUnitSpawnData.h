@@ -28,6 +28,23 @@ enum class EMoveTendency : uint8
 };
 
 /**
+ * @brief  적 스킬 선택 우선순위
+ *
+ * @details
+ * 플래너가 배치와 무관하게 높은 순으로 사용 가능한 스킬을 고름 (동순위는 랜덤).
+ * 열거값이 작을수록 높은 우선순위.
+ */
+UENUM(BlueprintType)
+enum class ESkillPriority : uint8
+{
+	Highest         UMETA(DisplayName = "Highest", ToolTip = "사용 가능하면 가장 먼저 선택"),
+	High            UMETA(DisplayName = "High"),
+	Normal          UMETA(DisplayName = "Normal",  ToolTip = "기본"),
+	Low             UMETA(DisplayName = "Low"),
+	Lowest          UMETA(DisplayName = "Lowest",  ToolTip = "상위 스킬이 전부 사용 불가일 때만 선택"),
+};
+
+/**
  * @brief  적 유닛 생성 시 사용되는 정적 Primary Data Asset
  */
 UCLASS()
@@ -53,9 +70,9 @@ public:
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
 
-	// @brief mSkillDatas 항목별 AI 우선순위 가중치
+	// @brief mSkillDatas 항목별 AI 선택 우선순위 (인덱스 = 스킬 슬롯)
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, EditFixedSize, meta = (DisplayName = "SkillPriorities"))
-	TArray<int32> mSkillPriorities;
+	TArray<ESkillPriority> mSkillPriorities;
 
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = "PAD"))

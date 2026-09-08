@@ -19,6 +19,7 @@ class UEnemyUnitModel;
 class UUnitModel;
 class UTileMapModel;
 class UBoardActorModel;
+class USkillComponentModel;
 class FTacticalTileTable;
 struct FTacticalTileInfo;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
@@ -30,9 +31,10 @@ enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
  * 플레이어가 쓰는 것과 동일한 최종 커맨드(이동/스킬시전/턴종료)를 순서대로 만들어 반환
  *
  * 전제: 턴당 스킬 시전은 1회
- *   - Attack 스킬은 공격 후보, Spell 스킬은 자기 버프로 취급
- *   - 공격 가능하면 공격, 불가능하면 행동력 전부로 이동을 먼저 정하고 남는 행동력으로 버프
- *   - 공격 스킬이 없으면 버프 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡음
+ *   - 스킬은 배치와 무관하게 우선순위와 사용 가능 여부(쿨다운/행동력)만으로 먼저 확정 (동순위는 랜덤)
+ *     -> 플레이어 턴에 보여주는 예상 스킬과 실제 시전 스킬이 항상 일치
+ *   - Attack: 확정 스킬로 시전 가능한 타겟이 있으면 시전, 없으면 다른 스킬로 바꾸지 않고 이동만
+ *   - Spell: 시전 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡은 뒤 시전
  * @note
  * 턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로
  * 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함
@@ -61,6 +63,21 @@ public:
 		const FString& LogTag = FString());
 
 private:
+	/**
+	 * @brief 이번 턴에 시전할 스킬 슬롯 확정
+	 * @details
+	 * 장착돼 있고 사용 가능한(쿨다운/기절/행동력) 슬롯 중 우선순위가 가장 높은 것.
+	 * 동순위가 여럿이면 EventStream 랜덤 (시뮬/라이브 동일 결과 보장)
+	 * @param Enemy 슬롯별 우선순위를 가진 적 유닛
+	 * @param SkillComp 슬롯 상태 조회용 스킬 컴포넌트
+	 * @param EventStream 동순위 추첨용 스트림
+	 * @return 확정된 슬롯 인덱스 (사용 가능한 슬롯이 없으면 INDEX_NONE)
+	 */
+	static int32 ChooseSkillByPriority(
+		const UEnemyUnitModel* Enemy,
+		const USkillComponentModel* SkillComp,
+		const FRandomStream& EventStream);
+
 	/**
 	 * @brief 후보 타겟 중 최근접 타겟 선택
 	 * @details 경로 거리가 가장 짧은 타겟, 동률이면 EventStream 랜덤 (시뮬/라이브 동일 결과 보장)
