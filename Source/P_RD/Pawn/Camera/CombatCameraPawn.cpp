@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
+#include "InputCoreTypes.h"
+#include "EnhancedInputComponent.h"
 
 #if !UE_BUILD_SHIPPING
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -99,12 +101,49 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		return;
 	}
 
-	// 터치 상태를 보고 제스처를 판단한다.
+	FTouchState Touches[2];
+	for (int32 Index = 0; Index < 2; ++Index)
+	{
+		PlayerController->GetInputTouchState(static_cast<ETouchIndex::Type>(Index),
+			Touches[Index].CurTouchPos.X, Touches[Index].CurTouchPos.Y,
+			Touches[Index].bIsCurrentlyPressed);
+	}
+	FVector2D MousePosition = FVector2D::ZeroVector;
+	const bool bMousePressed = PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y)
+		&& PlayerController->IsInputKeyDown(EKeys::LeftMouseButton);
+	UpdatePointerGestures(Touches[0], Touches[1], bMousePressed, MousePosition);
+}
+
+void ACombatCameraPawn::UpdatePointerGestures(const FTouchState& FirstTouch,
+	const FTouchState& SecondTouch, bool bMousePressed, const FVector2D& MousePosition)
+{
+	mTouchStates.SetNum(2);
+	if (!mTouchGestureInputEnabled)
+	{
+		for (FTouchState& State : mTouchStates) State = FTouchState();
+		return;
+	}
+	// Real/emulated touch wins, so mouse-for-touch never produces two gestures.
+	const bool bUseMouse = !FirstTouch.bIsCurrentlyPressed && !SecondTouch.bIsCurrentlyPressed
+		&& bMousePressed;
+	if (bUseMouse != mUsingMouseGesture)
+	{
+		for (FTouchState& State : mTouchStates) State = FTouchState();
+	}
+	mUsingMouseGesture = bUseMouse;
+	FTouchState Samples[2] = { FirstTouch, SecondTouch };
+	if (bUseMouse)
+	{
+		Samples[0].bIsCurrentlyPressed = true;
+		Samples[0].CurTouchPos = MousePosition;
+	}
+	// Mouse and touch share the same camera projection, bounds and modal gate.
 	for (int i = 0; i < 2; ++i)
 	{
 		mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
 		bool bPreTickTouch = mTouchStates[i].bIsCurrentlyPressed;
-		PlayerController->GetInputTouchState((ETouchIndex::Type)i, mTouchStates[i].CurTouchPos.X, mTouchStates[i].CurTouchPos.Y, mTouchStates[i].bIsCurrentlyPressed);
+		mTouchStates[i].CurTouchPos = Samples[i].CurTouchPos;
+		mTouchStates[i].bIsCurrentlyPressed = Samples[i].bIsCurrentlyPressed;
 
 		if (bPreTickTouch == 0 && mTouchStates[i].bIsCurrentlyPressed)
 		{
@@ -175,7 +214,9 @@ void ACombatCameraPawn::SetTouchGestureInputEnabled(const bool bEnabled)
 bool ACombatCameraPawn::IsDrag()
 {
 	return mTouchStates[0].bIsCurrentlyPressed &&
-		mImageStabilization < FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[0].CurTouchPos);
+		!mTouchStates[1].bIsCurrentlyPressed &&
+		mImageStabilization < FVector2D::Distance(mTouchStates[0].StartTouchPos, mTouchStates[0].CurTouchPos) &&
+		!mTouchStates[0].PreTouchPos.Equals(mTouchStates[0].CurTouchPos, 0.01f);
 }
 
 bool ACombatCameraPawn::IsPinch()
