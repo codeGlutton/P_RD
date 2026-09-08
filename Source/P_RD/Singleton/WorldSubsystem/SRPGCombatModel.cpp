@@ -25,6 +25,7 @@
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 #include "Setting/GameBalanceSettings.h"
+#include "Setting/GamePlaySettings.h"
 
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
@@ -884,7 +885,7 @@ void USRPGCombatModel::RegisterPlayerUnitModel(UUnitModel* PlayerUnitModel, cons
 	OnRegisterUnitUI.Broadcast(PlayerUnitModel);
 }
 
-void USRPGCombatModel::RegisterEnemyUnitModel(FEnemyUnitPlacementData& EnemyPlacementData)
+void USRPGCombatModel::RegisterEnemyUnitModel(const FEnemyUnitPlacementData& EnemyPlacementData)
 {
 	checkf(mTileMapModel != nullptr, TEXT("타일맵 미존재"));
 
@@ -917,7 +918,7 @@ void USRPGCombatModel::RegisterEnemyUnitModel(FEnemyUnitPlacementData& EnemyPlac
 	OnRegisterUnitUI.Broadcast(EnemyUnitModel);
 }
 
-void USRPGCombatModel::RegisterObstacleModel(FObstaclePlacementData& ObstaclePlacementData)
+void USRPGCombatModel::RegisterObstacleModel(const FObstaclePlacementData& ObstaclePlacementData)
 {
 	checkf(mTileMapModel != nullptr, TEXT("타일맵 미존재"));
 
@@ -944,6 +945,20 @@ void USRPGCombatModel::RegisterObstacleModel(FObstaclePlacementData& ObstaclePla
 
 	PlaceBoardActorModel(ObstacleModel, ObstaclePlacementData.mTransform);
 	OnRegisterObstacleUI.Broadcast(ObstacleModel);
+
+	/* 차지 공간에 빈 장애물 스폰 */
+
+	if (ObstacleSpawnData->mRequiredEmptyTiles.IsEmpty() == false)
+	{
+		FObstaclePlacementData EmptyObstaclePlacementData;
+		EmptyObstaclePlacementData.mSpawnData = GetDefault<UGamePlaySettings>()->mEmptyObstacleData;
+
+		for (const FTileIndex& EmptyTile : ObstacleSpawnData->mRequiredEmptyTiles)
+		{
+			EmptyObstaclePlacementData.mTransform = LocalToTileMapTransform(FTileTransform(EmptyTile), ObstaclePlacementData.mTransform);
+			RegisterObstacleModel(EmptyObstaclePlacementData);
+		}
+	}
 }
 
 void USRPGCombatModel::UnregisterUnitModel(UUnitModel* UnitModel)

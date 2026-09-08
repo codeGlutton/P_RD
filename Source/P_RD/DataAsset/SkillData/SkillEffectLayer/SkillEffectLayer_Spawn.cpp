@@ -62,25 +62,23 @@ void FSkillEffectLayer_Spawn::CommitEffect(const FSkillEffectCommitParams& Param
 		const UStaticObstacleSpawnData* ObstacleSpawnData = SpawnData.mSpawnData.LoadSynchronous();
 		const TSubclassOf<UBoardActorModel> BoardActorModelClass = ObstacleSpawnData->mModelClass.LoadSynchronous();
 
-		if (TileMapModel->CanPlace(FinalTileIndex, GetDefault<UBoardActorModel>(BoardActorModelClass)) == false)
+		if (TileMapModel->CanPlace(FinalTileIndex, GetDefault<UBoardActorModel>(BoardActorModelClass)) == true)
 		{
-			continue;
-		}
-
-		if (SpawnData.IsUnit())
-		{
-			FEnemyUnitPlacementData EnemyPlacement = SpawnData.MakeEnemyUnitPlacementData(FTileTransform(FinalTileIndex, OriginTileTransform.mDirection));
-			if (CombatModel != nullptr)
+			if (SpawnData.IsUnit())
 			{
-				CombatModel->RegisterEnemyUnitModel(EnemyPlacement);
+				FEnemyUnitPlacementData EnemyPlacement = SpawnData.MakeEnemyUnitPlacementData(FTileTransform(FinalTileIndex, OriginTileTransform.mDirection));
+				if (CombatModel != nullptr)
+				{
+					CombatModel->RegisterEnemyUnitModel(EnemyPlacement);
+				}
 			}
-		}
-		else
-		{
-			FObstaclePlacementData ObstaclePlacement = SpawnData.MakeObstaclePlacementData(FTileTransform(FinalTileIndex, OriginTileTransform.mDirection));
-			if (CombatModel != nullptr)
+			else
 			{
-				CombatModel->RegisterObstacleModel(ObstaclePlacement);
+				FObstaclePlacementData ObstaclePlacement = SpawnData.MakeObstaclePlacementData(FTileTransform(FinalTileIndex, OriginTileTransform.mDirection));
+				if (CombatModel != nullptr)
+				{
+					CombatModel->RegisterObstacleModel(ObstaclePlacement);
+				}
 			}
 		}
 

@@ -26,12 +26,24 @@ enum class ETileActorDirection : uint8
     Count UMETA(Hidden)
 };
 
+/**
+ * @brief 타일 맵 기준 좌표계에서 로컬 맵 좌표계로 방향 전환
+ * @param TileMapDirection 변환하고자 하는 타일 맵 기준 좌표계 방향
+ * @param FacingTileMapDirection 로컬 좌표계의 타일 맵 기준 좌표계 방향
+ * @return 변환된 로컬 좌표계 기준 방향
+ */
 inline ETileActorDirection TileMapToLocalDirection(ETileActorDirection TileMapDirection, ETileActorDirection FacingTileMapDirection)
 {
     const int32 LocalDir = (StaticCast<int32>(TileMapDirection) - StaticCast<int32>(FacingTileMapDirection) + 4) % 4;
     return StaticCast<ETileActorDirection>(LocalDir);
 }
 
+/**
+ * @brief 로컬 맵 좌표계에서 타일 맵 기준 좌표계로 방향 전환
+ * @param LocalDirection 변환하고자 하는 로컬 좌표계 기준 방향
+ * @param FacingTileMapDirection 로컬 좌표계의 타일 맵 기준 좌표계 방향
+ * @return 변환된 타일 맵 좌표계 기준 방향
+ */
 inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDirection, ETileActorDirection FacingTileMapDirection)
 {
     const int32 TileMapDir = (StaticCast<int32>(LocalDirection) + StaticCast<int32>(FacingTileMapDirection)) % 4;
@@ -104,6 +116,52 @@ inline const FTileIndex FTileIndex::Invalid = FTileIndex(-1, -1);
 inline const FTileIndex FTileIndex::Zero = FTileIndex(0, 0);
 
 /**
+ * @brief 타일 맵 좌표계 방향을 고려하여 로컬 좌표계 타일 오프셋을 타일 맵 좌표계 타일 오프셋으로 변환
+ * @param LocalIndex 로컬 좌표계의 상대 타일 인덱스 (X: 전방, Y: 우측)
+ * @param FacingTileMapDirection 기준이 되는 타일 맵 좌표계 방향
+ * @return 타일 맵 좌표계 타일 인덱스 Offset
+ */
+inline FTileIndex LocalToTileMapIndexOffset(const FTileIndex& LocalIndex, ETileActorDirection FacingTileMapDirection)
+{
+    switch (FacingTileMapDirection)
+    {
+    case ETileActorDirection::Forward:
+        return FTileIndex(LocalIndex.mX, LocalIndex.mY);
+    case ETileActorDirection::Right:
+        return FTileIndex(-LocalIndex.mY, LocalIndex.mX);
+    case ETileActorDirection::Backward:
+        return FTileIndex(-LocalIndex.mX, -LocalIndex.mY);
+    case ETileActorDirection::Left:
+        return FTileIndex(LocalIndex.mY, -LocalIndex.mX);
+    default:
+        return LocalIndex;
+    }
+}
+
+/**
+ * @brief 타일 맵 좌표계 방향을 고려하여 타일 맵 좌표계 타일 오프셋을 로컬 좌표계 타일 오프셋으로 변환
+ * @param TileMapIndex 타일 맵 좌표계의 상대 타일 인덱스 (X: 전방, Y: 우측)
+ * @param FacingTileMapDirection 기준이 되는 타일 맵 좌표계 방향
+ * @return 로컬 좌표계 타일 인덱스 Offset
+ */
+inline FTileIndex TileMapToLocalIndexOffset(const FTileIndex& TileMapIndex, ETileActorDirection FacingTileMapDirection)
+{
+    switch (FacingTileMapDirection)
+    {
+    case ETileActorDirection::Forward:
+        return FTileIndex(TileMapIndex.mX, TileMapIndex.mY);
+    case ETileActorDirection::Right:
+        return FTileIndex(TileMapIndex.mY, -TileMapIndex.mX);
+    case ETileActorDirection::Backward:
+        return FTileIndex(-TileMapIndex.mX, -TileMapIndex.mY);
+    case ETileActorDirection::Left:
+        return FTileIndex(-TileMapIndex.mY, TileMapIndex.mX);
+    default:
+        return TileMapIndex;
+    }
+}
+
+/**
  * @brief 타일 맵 상 위치
  */
 USTRUCT(BlueprintType)
@@ -141,6 +199,36 @@ public:
 
 // @brief 무효 트랜스폼 정의: 인덱스가 무효
 inline const FTileTransform FTileTransform::Invalid = FTileTransform(FTileIndex::Invalid);
+
+/**
+ * @brief 타일 맵 좌표계 TileTransform을 바탕으로 로컬 좌표계 TileTransform을 타일 맵 좌표계 TileTransform으로 변환
+ * @param LocalTransform 로컬 좌표계 TileTransform
+ * @param FacingTileMapTransfrom 기준이 되는 타일 맵 좌표계 TileTransform
+ * @return 타일 맵 좌표계 TileTransform
+ */
+inline FTileTransform LocalToTileMapTransform(const FTileTransform& LocalTransform, const FTileTransform& FacingTileMapTransfrom)
+{
+    const FTileIndex WorldOffset = LocalToTileMapIndexOffset(LocalTransform.mIndex, FacingTileMapTransfrom.mDirection);
+    const FTileIndex WorldIndex = FacingTileMapTransfrom.mIndex + WorldOffset;
+    const ETileActorDirection WorldDirection = LocalToTileMapDirection(LocalTransform.mDirection, FacingTileMapTransfrom.mDirection);
+
+    return FTileTransform(WorldIndex, WorldDirection);
+}
+
+/**
+ * @brief 타일 맵 좌표계 TileTransform을 바탕으로 타일 맵 좌표계 TileTransform을 로컬 좌표계 TileTransform으로 변환
+ * @param WorldTransform 타일 맵 좌표계 TileTransform
+ * @param FacingTileMapTransfrom 기준이 되는 타일 맵 좌표계 TileTransform
+ * @return 로컬 좌표계 TileTransform
+ */
+inline FTileTransform TileMapToLocalTransform(const FTileTransform& WorldTransform, const FTileTransform& FacingTileMapTransfrom)
+{
+    const FTileIndex WorldOffset = WorldTransform.mIndex - FacingTileMapTransfrom.mIndex;
+    const FTileIndex LocalIndex = TileMapToLocalIndexOffset(WorldOffset, FacingTileMapTransfrom.mDirection);
+    const ETileActorDirection LocalDirection = TileMapToLocalDirection(WorldTransform.mDirection, FacingTileMapTransfrom.mDirection);
+
+    return FTileTransform(LocalIndex, LocalDirection);
+}
 
 /**
  * @brief 방 클리어 데이터

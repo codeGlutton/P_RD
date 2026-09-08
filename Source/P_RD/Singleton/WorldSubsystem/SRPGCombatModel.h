@@ -187,8 +187,8 @@ protected:
 public:
 	void RegisterTileMapModel(const FTransform& RoomStartTransform);
 	void RegisterPlayerUnitModel(UUnitModel* PlayerUnitModel, const FTileTransform& Transform);
-	void RegisterEnemyUnitModel(FEnemyUnitPlacementData& EnemyPlacementData);
-	void RegisterObstacleModel(FObstaclePlacementData& ObstaclePlacementDatas);
+	void RegisterEnemyUnitModel(const FEnemyUnitPlacementData& EnemyPlacementData);
+	void RegisterObstacleModel(const FObstaclePlacementData& ObstaclePlacementDatas);
 
 public:
 	void UnregisterUnitModel(UUnitModel* UnitModel);
