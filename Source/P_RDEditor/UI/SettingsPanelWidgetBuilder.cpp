@@ -1084,15 +1084,14 @@ namespace SettingsPanelWidgetBuilder
 				bool bAuthoredAutoSize = AuthoredSlot->GetAutoSize();
 				const int32 AuthoredZOrder = AuthoredSlot->GetZOrder();
 
-				// Repair the one intermediate revision that converted the known
-				// 580x76 confirmation-header rectangle to an auto-size center point.
-				// Its point is the original rectangle's center, so no authored
-				// position is guessed or shifted here.
+				// Restore the current Marchbound nameplate rectangle if an older
+				// revision stored only an auto-size center point. Keep this aligned
+				// with the authored WBP and the layout contract (#623).
 				if (bAuthoredAutoSize
 					&& FCString::Strcmp(TextName, TEXT("RunConfirmHeaderText")) == 0)
 				{
 					AuthoredLayout.Anchors = FAnchors(0.f, 0.f, 0.f, 0.f);
-					AuthoredLayout.Offsets = FMargin(670.f, 210.f, 580.f, 76.f);
+					AuthoredLayout.Offsets = FMargin(670.f, 222.f, 580.f, 107.5f);
 					AuthoredLayout.Alignment = FVector2D::ZeroVector;
 					bAuthoredAutoSize = false;
 				}
@@ -1139,8 +1138,8 @@ namespace SettingsPanelWidgetBuilder
 				{
 					HeaderBoxSlot->SetAnchors(FAnchors(0.f, 0.f, 0.f, 0.f));
 					HeaderBoxSlot->SetAlignment(FVector2D::ZeroVector);
-					HeaderBoxSlot->SetPosition(FVector2D(670.f, 210.f));
-					HeaderBoxSlot->SetSize(FVector2D(580.f, 76.f));
+					HeaderBoxSlot->SetPosition(FVector2D(670.f, 222.f));
+					HeaderBoxSlot->SetSize(FVector2D(580.f, 107.5f));
 					HeaderBoxSlot->SetAutoSize(false);
 				}
 			}
@@ -1270,7 +1269,7 @@ namespace SettingsPanelWidgetBuilder
 		UCanvasPanel* ConfirmCanvas = Cast<UCanvasPanel>(
 			Blueprint->WidgetTree->FindWidget(TEXT("Set_confirm_canvas")));
 		PlaceWidgetInSettingsCanvas(ConfirmCanvas, Header,
-			FVector2D(670.f, 210.f), FVector2D(580.f, 76.f), 103,
+			FVector2D(670.f, 222.f), FVector2D(580.f, 107.5f), 103,
 			ESlateVisibility::SelfHitTestInvisible);
 
 		UCanvasPanel* Canvas = EnsureSettingsContentCanvas(Blueprint);
