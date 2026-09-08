@@ -90,6 +90,7 @@ public:
 
 public:
     virtual FText MakeDescription() const;
+	virtual void PostLoad() override;
 
 #if WITH_EDITOR
 public:

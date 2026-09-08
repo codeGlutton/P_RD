@@ -22,6 +22,7 @@
 #include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "TAS/Effect/Tag/TacticalEffect_Vulnerability.h"
+#include "TAS/Effect/Tag/TacticalEffect_Strength.h"
 #include "TAS/Effect/TacticalEffectQuery.h"
 #include "GameplayTagType.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
@@ -756,6 +757,167 @@ bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 		DriveTiming(Passive, OnEndTurn, Ctx);
 		TestFalse(TEXT("해제: 취약 태그 회수"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 	}
+
+	return true;
+}
+
+/**
+ * @brief 상태이상 스택 단위 적용/해제 테스트
+ * 상태이상 클래스를 직접 걸면 수치가 스택 수가 되고, 해제 시 다른 출처의 스택은 남는지 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveGenericStatusStackTest,
+	"P_RD.TAS.Passive.Generic.StatusStack",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveGenericStatusStackTest::RunTest(const FString& Parameters)
+{
+	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
+	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
+	const FTacticalEffectQuery StrengthQuery = FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength));
+
+	// 완력 버프 3스택을 턴 동안 유지하는 DA
+	auto MakeStrengthData = [&]() -> UStaticPassiveData*
+	{
+		return MakeGenericData(OnStartTurn, OnEndTurn, UTacticalEffect_Buff_Strength::StaticClass(), MakeConstOperand(3.f));
+	};
+
+	// 다른 출처의 2스택 위에 3스택을 얹고, 해제하면 3스택만 빠지는지
+	{
+		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		if (Actor == nullptr)
+		{
+			return false;
+		}
+		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+
+		// 다른 출처: 완력 버프 2스택
+		TSharedPtr<FTacticalEffectSpec> OtherSpec = Comp->MakeOutgoingSpec(UTacticalEffect_Buff_Strength::StaticClass(), nullptr);
+		OtherSpec->SetStackCount(2);
+		Comp->ApplyTacticalEffectSpecToSelf(*OtherSpec);
+		TestEqual(TEXT("적용 전: 다른 출처 2스택"), Comp->GetAggregatedStackCount(StrengthQuery), 2);
+
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(MakeStrengthData());
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Actor;
+		Ctx.mTargets.Add(Actor);
+
+		DriveTiming(Passive, OnStartTurn, Ctx);
+		TestEqual(TEXT("발동: 2 + 3 = 5스택"), Comp->GetAggregatedStackCount(StrengthQuery), 5);
+
+		DriveTiming(Passive, OnEndTurn, Ctx);
+		TestEqual(TEXT("해제: 패시브 3스택만 빠져 2스택"), Comp->GetAggregatedStackCount(StrengthQuery), 2);
+	}
+
+	// 면역 대상에게는 걸리지 않는지
+	{
+		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		if (Actor == nullptr)
+		{
+			return false;
+		}
+		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
+		Comp->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Immunity);
+
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(MakeStrengthData());
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Actor;
+		Ctx.mTargets.Add(Actor);
+
+		DriveTiming(Passive, OnStartTurn, Ctx);
+		TestEqual(TEXT("면역: 0스택"), Comp->GetAggregatedStackCount(StrengthQuery), 0);
+	}
+
+	return true;
+}
+
+/**
+ * @brief 캡처한 타겟에게 발동 테스트
+ * 페이즈마다 캡처한 타겟이 모이고, 처음 캡처값이 유지되며, 발동 후 비워지는지 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveGenericCapturedTargetsTest,
+	"P_RD.TAS.Passive.Generic.CapturedTargets",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveGenericCapturedTargetsTest::RunTest(const FString& Parameters)
+{
+	const FGameplayTag OnStartApplyingEffect = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartApplyingEffect"));
+	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
+
+	UMockBoardActorModel* Owner = MakeMockActor(*this);
+	UMockBoardActorModel* Target1 = MakeMockActor(*this);
+	UMockBoardActorModel* Target2 = MakeMockActor(*this);
+	UMockBoardActorModel* Target3 = MakeMockActor(*this);
+	if (Owner == nullptr || Target1 == nullptr || Target2 == nullptr || Target3 == nullptr)
+	{
+		return false;
+	}
+	UAttributeSetComponentModel* OwnerComp = Owner->GetAttributeComponentModel();
+	UAttributeSetComponentModel* TargetComp1 = Target1->GetAttributeComponentModel();
+	UAttributeSetComponentModel* TargetComp2 = Target2->GetAttributeComponentModel();
+	TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
+	TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
+	Target3->GetAttributeComponentModel()->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
+
+	// 이펙트 적용 시점에 대상 HP를 캡처하고, 스킬 종료 시 캡처한 대상 중 HP가 줄어든 게 있으면 방어도 4를 얻는 DA
+	UStaticPassiveData* Data = MakeGenericData(OnEndUsingSkill, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
+	Data->mCaptureTimingTag = OnStartApplyingEffect;
+	Data->mActivateOnCapturedTargets = true;
+	FPassiveCaptureEntry CaptureEntry;
+	CaptureEntry.mKey = FName(TEXT("HP"));
+	CaptureEntry.mOperand = MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Target);
+	Data->mCaptureOperands.Add(CaptureEntry);
+	Data->mConditions.Add(MakeCondition(
+		MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Target),
+		EPassiveCompareOp::Less,
+		MakeCapturedOperand(FName(TEXT("HP")), EPassiveOperandSource::Target)));
+	UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+
+	// 페이즈 Ctx: 스킬 대상들과 스냅샷
+	auto Capture = [&](std::initializer_list<UMockBoardActorModel*> Targets)
+	{
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Owner;
+		Ctx.mOwnerSnapshot = Owner->MakeSnapshotData();
+		for (UMockBoardActorModel* Target : Targets)
+		{
+			Ctx.mTargets.Add(Target);
+			Ctx.mTargetSnapshots.Add(Target->MakeSnapshotData());
+		}
+		DriveTiming(Passive, OnStartApplyingEffect, Ctx);
+	};
+
+	// 스킬 종료 Ctx: 실제 OnEndUsingSkill처럼 대상은 자기 자신만
+	auto Activate = [&]() -> float
+	{
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Owner;
+		Ctx.mTargets.Add(Owner);
+		Ctx.mOwnerSnapshot = Owner->MakeSnapshotData();
+		DriveTiming(Passive, OnEndUsingSkill, Ctx);
+		return OwnerComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetDefenseAttribute());
+	};
+
+	// 합집합: 1페이즈 T1, 2페이즈 T2 캡처 후 T2만 깎임 → T2가 모여 있어야 발동
+	Capture({ Target1 });
+	Capture({ Target2 });
+	TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 60.f);
+	TestEqual(TEXT("합집합: 2페이즈 대상 HP 감소로 발동, Defense 4"), Activate(), 4.f);
+
+	// 처음 캡처값 유지: T1 80 캡처 → 60으로 깎고 다시 캡처 → 60 < 80이라 발동. 덮어썼다면 60 < 60으로 미발동
+	OwnerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetDefenseAttribute(), 0.f);
+	Capture({ Target1 });
+	TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 60.f);
+	Capture({ Target1 });
+	TestEqual(TEXT("처음 캡처값 유지: 발동, Defense 4"), Activate(), 4.f);
+
+	// 소비: 발동 후 HP 변화 없는 T3만 캡처 → 이전 대상이 남아 있지 않아야 미발동
+	OwnerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetDefenseAttribute(), 0.f);
+	Capture({ Target3 });
+	TestEqual(TEXT("소비: 이전 대상 없이 미발동, Defense 0"), Activate(), 0.f);
 
 	return true;
 }

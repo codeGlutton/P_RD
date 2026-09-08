@@ -31,7 +31,7 @@ void UTacticalPassive_Generic::OnCounterReset(TInstancedStruct<FDynamicPassiveDa
 	}
 }
 
-void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& Ctx, TInstancedStruct<FDynamicPassiveData>& PassiveState)
+void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& InCtx, TInstancedStruct<FDynamicPassiveData>& PassiveState)
 {
 	// 데이터나 상태가 없으면 발동할 수 없음
 	if (mStaticData == nullptr)
@@ -43,6 +43,26 @@ void UTacticalPassive_Generic::OnActivate(const FPassiveActivateContext& Ctx, TI
 	{
 		return;
 	}
+
+	// 캡처한 타겟에게 발동하는 패시브면, 모아 둔 타겟을 대상으로 삼고 목록은 비움
+	FPassiveActivateContext CapturedCtx;
+	if (mStaticData->mActivateOnCapturedTargets)
+	{
+		CapturedCtx = InCtx;
+		CapturedCtx.mTargets = State->mCapturedTargets;
+		CapturedCtx.mTargetSnapshots.Reset();
+
+		// 캡처값과 비교할 수 있도록 현재값 저장. 사라진 타겟은 nullptr
+		for (const TWeakObjectPtr<UBoardActorModel>& Target : CapturedCtx.mTargets)
+		{
+			const IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(Target.Get());
+			CapturedCtx.mTargetSnapshots.Add(CombatTarget != nullptr ? CombatTarget->MakeSnapshotData() : nullptr);
+		}
+		State->mCapturedTargets.Reset();
+	}
+
+	// 캡처한 타겟을 대상으로 하면 CapturedCtx를, 아니면 기본값인 InCtx를 사용
+	const FPassiveActivateContext& Ctx = mStaticData->mActivateOnCapturedTargets ? CapturedCtx : InCtx;
 
 	// 카운터는 트리거 횟수이므로 조건 통과 여부와 무관하게 증가
 	State->mCounter += 1;
@@ -129,45 +149,76 @@ void UTacticalPassive_Generic::OnCapture(const FPassiveActivateContext& Ctx, TIn
 		return;
 	}
 
-	// 캡처 엔트리마다 Self 값과 타겟별 값을 모두 평가해 키로 저장
-	// (읽는 쪽(Captured)의 출처(Source)가 어느 쪽을 쓸지 고르므로 양쪽 다 저장)
-	for (const FPassiveCaptureEntry& Entry : mStaticData->mCaptureOperands)
+	// 캡처한 타겟에게 발동하는 패시브는, 페이즈마다 캡처되는 타겟을 발동 전까지 모음
+	const bool bAccumulate = mStaticData->mActivateOnCapturedTargets;
+	const bool bFirstCapture = (bAccumulate == false) || State->mCapturedTargets.Num() == 0;
+
+	// 첫 캡처: 키마다 Self 값을 새로 저장. 타겟 값은 아래에서 뒤에 붙임
+	// Self와 타겟 값을 모두 저장해서, 읽는 쪽에서 선택해서 사용하게 함
+	if (bFirstCapture)
 	{
-		// 출처를 강제로 바꿔가며 평가하기 위한 복사본
-		FPassiveOperand Operand = Entry.mOperand;
-		FPassiveCaptureSlot Slot;
-
-		// Self 값
-		Operand.mSource = EPassiveOperandSource::Self;
-		bool bResolved = Operand.Resolve(Ctx, INDEX_NONE, *State, Slot.mSelf);
-
-		// 타겟별 값 (mTargets 인덱스와 짝)
-		Operand.mSource = EPassiveOperandSource::Target;
-		for (int32 Index = 0; bResolved && Index < Ctx.mTargets.Num(); ++Index)
+		for (const FPassiveCaptureEntry& Entry : mStaticData->mCaptureOperands)
 		{
-			float Value = 0.f;
-			bResolved = Operand.Resolve(Ctx, Index, *State, Value);
-			Slot.mTargets.Add(Value);
+			// 출처를 Self로 바꿔 평가하기 위한 복사본
+			FPassiveOperand Operand = Entry.mOperand;
+			Operand.mSource = EPassiveOperandSource::Self;
+
+			// 실패하면 키 자체를 지움 -> 발동 시 Captured 조회 실패: 조건 실패
+			FPassiveCaptureSlot Slot;
+			if (Operand.Resolve(Ctx, INDEX_NONE, *State, Slot.mSelf))
+			{
+				State->mCaptures.Add(Entry.mKey, Slot);
+			}
+			else
+			{
+				State->mCaptures.Remove(Entry.mKey);
+				UE_LOG(LogPassive, Warning, TEXT("패시브 캡처 실패: %s (키 %s)"), *GetNameSafe(mStaticData), *Entry.mKey.ToString());
+			}
 		}
 
-		// 하나라도 실패하면 키 자체를 저장하지 않음 → 발동 시 Captured 조회 실패 = 조건 불통과
-		if (bResolved)
-		{
-			State->mCaptures.Add(Entry.mKey, Slot);
-		}
-		else
-		{
-			UE_LOG(LogPassive, Warning, TEXT("패시브 캡처 실패: %s (키 %s)"), *GetNameSafe(mStaticData), *Entry.mKey.ToString());
-		}
+		// 타일 위치는 항상 저장 (이동 거리 판정용). 스냅샷 없으면 Invalid
+		State->mCapturedSelfTile = (Ctx.mOwnerSnapshot != nullptr) ? Ctx.mOwnerSnapshot->mTileTransform.mIndex : FTileIndex::Invalid;
+		State->mCapturedTargetTiles.Reset();
+		State->mCapturedTargets.Reset();
 	}
 
-	// 타일 위치는 항상 저장 (이동 거리 판정용). 스냅샷 없으면 Invalid
-	State->mCapturedSelfTile = (Ctx.mOwnerSnapshot != nullptr) ? Ctx.mOwnerSnapshot->mTileTransform.mIndex : FTileIndex::Invalid;
-	State->mCapturedTargetTiles.Reset();
+	// 타겟마다 캡처값과 타일을 뒤에 붙임. 이미 수집된 타겟은 처음 캡처값 유지
 	for (int32 Index = 0; Index < Ctx.mTargets.Num(); ++Index)
 	{
+		const TWeakObjectPtr<UBoardActorModel>& Target = Ctx.mTargets[Index];
+		if (bAccumulate && State->mCapturedTargets.Contains(Target))
+		{
+			continue;
+		}
+
+		// 키마다 타겟 값 추가. 오류로 계산에 실패하면 키 자체를 지워서 조건 실패하게 함
+		for (const FPassiveCaptureEntry& Entry : mStaticData->mCaptureOperands)
+		{
+			FPassiveCaptureSlot* Slot = State->mCaptures.Find(Entry.mKey);
+			if (Slot == nullptr)
+			{
+				continue;
+			}
+
+			FPassiveOperand Operand = Entry.mOperand;
+			Operand.mSource = EPassiveOperandSource::Target;
+
+			float Value = 0.f;
+			if (Operand.Resolve(Ctx, Index, *State, Value))
+			{
+				Slot->mTargets.Add(Value);
+			}
+			else
+			{
+				State->mCaptures.Remove(Entry.mKey);
+				UE_LOG(LogPassive, Warning, TEXT("패시브 캡처 실패: %s (키 %s)"), *GetNameSafe(mStaticData), *Entry.mKey.ToString());
+			}
+		}
+
+		// 타일 위치는 항상 저장 (이동 거리 판정용). 스냅샷 없으면 Invalid
 		const UBoardCombatTargetSnapshotData* Snapshot = Ctx.mTargetSnapshots.IsValidIndex(Index) ? Ctx.mTargetSnapshots[Index] : nullptr;
 		State->mCapturedTargetTiles.Add(Snapshot != nullptr ? Snapshot->mTileTransform.mIndex : FTileIndex::Invalid);
+		State->mCapturedTargets.Add(Target);
 	}
 }
 

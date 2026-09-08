@@ -44,6 +44,10 @@ public:
 	UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
 	FText mName;
 
+	// 상점/인벤토리 등 UI에 노출할 설명
+	UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Description", MultiLine = true))
+	FText mDescription;
+
 	UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Icon", AssetBundles = "UI"))
 	TSoftObjectPtr<UTexture2D> mIcon;
 

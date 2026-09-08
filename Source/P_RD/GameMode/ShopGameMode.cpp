@@ -1,6 +1,7 @@
 ﻿#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "DataAsset/StageSpawnData/StaticStageSpawnData.h"
 #include "Simulation/Factory/ObjectModelFactory.h"
@@ -97,6 +98,8 @@ void AShopGameMode::InitGame(const FString& MapName, const FString& Options, FSt
 void AShopGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
+	mSoldSlots = GetRunPersistData()->GetRoomTransactions().SoldShopSlots;
+	mRestUsed = GetRunPersistData()->GetRoomTransactions().RestUsed;
 
 	SpawnTileMap();
 
@@ -637,6 +640,8 @@ void AShopGameMode::HandleBuyRequested(int32 SlotIndex)
 	// 과금 + 품절 처리
 	SpendPartyGold(Item->mPrice);
 	mSoldSlots.Add(SlotIndex);
+	GetRunPersistData()->GetRoomTransactionsMutable().SoldShopSlots = mSoldSlots;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 
@@ -742,6 +747,8 @@ void AShopGameMode::HandleBuySkillRequested(int32 SlotIndex, int32 UnitIndex, in
 	// 과금 + 품절 처리
 	SpendPartyGold(Item->mPrice);
 	mSoldSlots.Add(SlotIndex);
+	GetRunPersistData()->GetRoomTransactionsMutable().SoldShopSlots = mSoldSlots;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 
@@ -845,6 +852,8 @@ void AShopGameMode::HandleHireMercenaryRequested(
 
 	SpendPartyGold(DisplayCandidate->mPrice);
 	mSoldSlots.Add(SlotIndex);
+	GetRunPersistData()->GetRoomTransactionsMutable().SoldShopSlots = mSoldSlots;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 
@@ -870,6 +879,7 @@ void AShopGameMode::HandleDiscardArtifactRequested(int32 ArtifactIndex)
 
 	// RemoveArtifact가 전 구성원 해제 배포와 저장 추적(OnChangeArtifact)까지 처리한다
 	ArtifactModel->RemoveArtifact(Artifacts[ArtifactIndex]);
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 
@@ -905,6 +915,7 @@ void AShopGameMode::HandleDiscardSkillRequested(int32 UnitIndex, int32 SlotIndex
 
 	// 슬롯 비우기 (OnChangeSkillUI에서 저장 처리)
 	SkillModel->RemoveSkill(SlotIndex);
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 
@@ -960,6 +971,8 @@ void AShopGameMode::HandleRestRequested()
 
 	SpendPartyGold(ShopRestPrice);
 	mRestUsed = true;
+	GetRunPersistData()->GetRoomTransactionsMutable().RestUsed = true;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushShopUIData();
 }
 

@@ -1,0 +1,19 @@
+// Texture-free additive UI light. Frame.x is opening progress, Frame.y energy.
+// An explicit timeline keeps pause, skip, reset and captures deterministic.
+float2 p = (UV - float2(0.5, 0.5)) * float2(2.4, 2.0);
+float radius = length(p);
+float angle = atan2(p.y, p.x + 0.00001);
+float progress = saturate(Frame.x);
+float edge = 1.0 - smoothstep(0.66, 0.90, radius);
+float halo = exp(-radius * radius * 8.0) * 0.42;
+float beamA = pow(saturate(sin(angle * 11.0 + progress * 1.8)), 10.0);
+float beamB = pow(saturate(sin(angle * 17.0 - progress * 1.1 + 0.8)), 20.0);
+float reach = lerp(0.38, 0.84, smoothstep(0.0, 0.28, progress));
+float rays = (beamA * 0.52 + beamB * 0.24)
+    * smoothstep(0.10, 0.24, radius)
+    * (1.0 - smoothstep(reach * 0.42, reach, radius));
+float fadeRays = 1.0 - smoothstep(0.35, 1.0, progress);
+float alpha = saturate((halo + rays * fadeRays) * edge * Frame.y);
+float3 warm = lerp(float3(1.0, 0.27, 0.025), float3(1.0, 0.78, 0.30),
+    exp(-radius * radius * 12.0));
+return float4(warm, alpha);
