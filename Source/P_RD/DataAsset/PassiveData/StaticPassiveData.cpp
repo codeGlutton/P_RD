@@ -12,6 +12,7 @@
 #if WITH_EDITOR
 #include "Misc/DataValidation.h"
 #include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #endif
 
 UStaticPassiveData::UStaticPassiveData()
@@ -139,6 +140,12 @@ EDataValidationResult UStaticPassiveData::IsDataValid(FDataValidationContext& Co
 		Context.AddError(FText::FromString(TEXT("캡처 목록이 있는데 캡처 시점이 비어있음")));
 	}
 
+	// 캡처한 타겟에게 발동한다면, 타겟을 모을 캡처 타이밍 태그가 있는 지 확인
+	if (mActivateOnCapturedTargets && mCaptureTimingTag.IsValid() == false)
+	{
+		Context.AddError(FText::FromString(TEXT("캡처한 타겟에게 발동하는데 캡처 시점이 비어있음")));
+	}
+
 	// 캡처 엔트리 검사
 	for (int32 Index = 0; Index < mCaptureOperands.Num(); ++Index)
 	{
@@ -185,6 +192,9 @@ EDataValidationResult UStaticPassiveData::IsDataValid(FDataValidationContext& Co
 		Context.AddWarning(FText::FromString(TEXT("효과 목록이 비어있음")));
 	}
 
+	// 해제 시점 있으면 이펙트를 직접 사용해야 함: 그래야 건 것만큼 뺄 수 있음
+	bool bHasRemovableEffect = false;
+
 	// 효과 검사
 	for (int32 Index = 0; Index < mEffects.Num(); ++Index)
 	{
@@ -206,9 +216,36 @@ EDataValidationResult UStaticPassiveData::IsDataValid(FDataValidationContext& Co
 			{
 				Context.AddError(FText::FromString(Prefix + TEXT(": 실시간 계산형 이펙트는 패시브에서 사용 불가")));
 			}
+
+			// 즉시형이 아닌 효과는 활성 이펙트로 남아 해제 가능
+			if (EffectCDO != nullptr && EffectCDO->mDurationPolicy != ETacticalEffectDurationType::Instant)
+			{
+				bHasRemovableEffect = true;
+			}
+
+			// 해제 시점 없으면 Get* 형태의 이펙트를 사용해야 함
+			if (EffectCDO != nullptr && EffectCDO->IsA<UTacticalEffect_Status>())
+			{
+				if (mDeactivateTimingTag.IsValid() == false)
+				{
+					Context.AddWarning(FText::FromString(Prefix + TEXT(": 해제 시점 없이 상태이상 클래스 직접 지정. Get 계열 이펙트 사용")));
+				}
+
+				// 상태이상은 수치가 스택 수가 됨. 고정값이면 1 이상인지 확인
+				if (Entry.mMagnitude.mKind == EPassiveOperandKind::Const && FMath::FloorToInt(Entry.mMagnitude.mConst) <= 0)
+				{
+					Context.AddError(FText::FromString(Prefix + TEXT(": 상태이상 스택 수는 1 이상")));
+				}
+			}
 		}
 
 		ValidateOperand(Entry.mMagnitude, Prefix + TEXT(" 수치"), *this, Context);
+	}
+
+	// 해제 시점이 있는데 효과가 전부 즉시형이면 해제할 것이 없으므로 경고
+	if (mDeactivateTimingTag.IsValid() && mEffects.Num() > 0 && bHasRemovableEffect == false)
+	{
+		Context.AddWarning(FText::FromString(TEXT("해제 시점이 있는데 효과가 전부 즉시형이라 해제할 것이 없음")));
 	}
 
 	// 패시브 클래스 필수
