@@ -458,7 +458,6 @@ namespace ShopWidgetBuilder
 		// transaction; the builder only supplies stable, named UImage/UTextBlock
 		// targets matching that contract. Existing shop/mercenary chrome is reused.
 		const int32 RestHPBefore[3] = { 42, 31, 58 };
-		const int32 RestAPBefore[3] = { 6, 3, 8 };
 		for (int32 Index = 0; Index < 3; ++Index)
 		{
 			const float RowY = 142.f + Index * 196.f;
@@ -518,40 +517,6 @@ namespace ShopWidgetBuilder
 				FVector2D(846.f, RowY + 56.f), FVector2D(420.f, 40.f), 10,
 				FLinearColor::White);
 
-			AddText(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPLabel_%d"), Index)), FText::FromString(TEXT("AP")), 20,
-				FVector2D(382.f, RowY + 108.f), FVector2D(58.f, 40.f), 9,
-				FLinearColor(.38f, .72f, 1.f, 1.f));
-			AddSolidImage(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeTrack_%d"), Index)),
-				FLinearColor(.025f, .04f, .055f, .96f),
-				FVector2D(450.f, RowY + 115.f), FVector2D(310.f, 24.f), 8);
-			AddSolidImage(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeFill_%d"), Index)),
-				FLinearColor(.06f, .38f, .72f, 1.f),
-				FVector2D(454.f, RowY + 119.f),
-				FVector2D(302.f, 16.f), 9);
-			AddText(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPBeforeText_%d"), Index)),
-				FText::FromString(FString::Printf(TEXT("%d/12"), RestAPBefore[Index])), 17,
-				FVector2D(450.f, RowY + 107.f), FVector2D(310.f, 40.f), 10,
-				FLinearColor::White);
-			AddText(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPArrow_%d"), Index)), FText::FromString(TEXT("→")), 28,
-				FVector2D(772.f, RowY + 106.f), FVector2D(62.f, 42.f), 10,
-				FLinearColor(.85f, .88f, .9f, 1.f));
-			AddSolidImage(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterTrack_%d"), Index)),
-				FLinearColor(.025f, .04f, .055f, .96f),
-				FVector2D(846.f, RowY + 115.f), FVector2D(420.f, 24.f), 8);
-			AddSolidImage(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterFill_%d"), Index)),
-				FLinearColor(.08f, .5f, .92f, 1.f),
-				FVector2D(850.f, RowY + 119.f), FVector2D(412.f, 16.f), 9);
-			AddText(Blueprint, RowHolder,
-				FName(*FString::Printf(TEXT("RestUnitAPAfterText_%d"), Index)), FText::FromString(TEXT("12/12")), 17,
-				FVector2D(846.f, RowY + 107.f), FVector2D(420.f, 40.f), 10,
-				FLinearColor::White);
 		}
 
 		AddImage(Blueprint, RestPanel, TEXT("RestCostPlate"), CellSelected,
