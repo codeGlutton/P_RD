@@ -334,6 +334,15 @@ void ARoomGameModeBase::InitializeCommonRoom()
 {
 	Super::InitializeCommonRoom();
 
+	const URunPersistData* Run = GetRunPersistData();
+	const bool bHasRoom = Run && Run->IsActive()
+		&& Run->GetStage().HasRoom(Run->GetStage().mCurRow, Run->GetStage().mCurColumn);
+	const ERoomType RoomType = bHasRoom ? Run->GetCurrentRoom().mType : ERoomType::None;
+	const bool bCombatRoom = RoomType == ERoomType::Monster
+		|| RoomType == ERoomType::EliteMonster || RoomType == ERoomType::BossMonster;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->BeginRoomCheckpoint(
+		bCombatRoom && bHasRoom && !Run->GetStage().mClearData.mIsCleared);
+
 	// 플레이어 복원
 	RestorePlayerUnit();
 	// 방 전환 즉시 저장
@@ -429,7 +438,7 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 		return false;
 	}
 
-	ClearRunPersistData();
+	if (!GetGameInstance()->GetSubsystem<UGameProfileSubsystem>()->EndRun()) return false;
 	const bool IsTransitionStarted = PreloadAndTransitionFrontendRoomAsync();
 	checkf(IsTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
 
@@ -454,6 +463,7 @@ void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(
 	}
 
 	mSaveAndExitPending = true;
+	SaveGameSubsystem->RestoreCheckpointOnNextFrontend();
 	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
 		this,
 		[this, MovedCompletion = MoveTemp(Completion)](
@@ -464,6 +474,7 @@ void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(
 			if (!bTransitionStarted)
 			{
 				mSaveAndExitPending = false;
+				GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->CancelCheckpointFrontendRestore();
 			}
 			MovedCompletion.ExecuteIfBound(bTransitionStarted);
 		}));
@@ -614,9 +625,7 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 
 void ARoomGameModeBase::SaveRunWithUIAsync() const
 {
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
-		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
-		}));
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 }
 
 void ARoomGameModeBase::ApplyStageClearHeal() const

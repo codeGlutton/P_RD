@@ -13,6 +13,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
 DEFINE_LOG_CATEGORY(LogPassive)
@@ -131,8 +132,16 @@ void UTacticalPassive::NotifyPassive(
 		return;
 	}
 
+	// 상태이상 클래스면 수치를 스택 수로 넣음 (스태킹 검사 때문에 mDynamicMagnitude는 기본값 유지)
+	const bool bIsStatus = EffectClass->IsChildOf(UTacticalEffect_Status::StaticClass());
+	const int32 Stacks = bIsStatus ? FMath::FloorToInt(Magnitude) : -1;
+	if (bIsStatus && Stacks <= 0)
+	{
+		return;
+	}
+
 	// 이전 핸들이 남아있으면 먼저 제거 (효과 배열 적용 중에는 호출자가 false로 끔)
-	if (bRefreshPrevious && mActiveHandles.Num() > 0)
+	if (bRefreshPrevious && mAppliedEffects.Num() > 0)
 	{
 		DeactivatePassive();
 	}
@@ -154,14 +163,27 @@ void UTacticalPassive::NotifyPassive(
 			continue;
 		}
 
-		// 소유자를 시전자로 spec 생성 -> 계산된 크기를 배율로 주입 -> 대상에 적용 -> 핸들 저장
+		// 상태이상은 GetStatus 계열을 거치지 않으므로 면역 검사를 여기서 함
+		if (bIsStatus && TargetComp->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Immunity))
+		{
+			continue;
+		}
+
+		// 소유자를 시전자로 spec 생성 -> 계산된 크기를 배율(상태이상은 스택 수)로 주입 -> 대상에 적용 -> 핸들 저장
 		UTacticalEffectContext* EffectContext = OwnerComp->MakeEffectContext();
 		EffectContext->SetAbility(this);
 
 		TSharedPtr<FTacticalEffectSpec> Spec = OwnerComp->MakeOutgoingSpec(EffectClass, EffectContext);
-		Spec->mDynamicMagnitude = Magnitude;
+		if (bIsStatus)
+		{
+			Spec->SetStackCount(Stacks);
+		}
+		else
+		{
+			Spec->mDynamicMagnitude = Magnitude;
+		}
 
-		mActiveHandles.Add(OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp));
+		mAppliedEffects.Add({ OwnerComp->ApplyTacticalEffectSpecToTarget(*Spec, TargetComp), Stacks });
 		++AppliedNum;
 	}
 
@@ -170,29 +192,30 @@ void UTacticalPassive::NotifyPassive(
 
 void UTacticalPassive::DeactivatePassive()
 {
-	if (mActiveHandles.Num() == 0)
+	if (mAppliedEffects.Num() == 0)
 	{
 		return;
 	}
 
 	// 핸들마다 이펙트를 활성 집합에서 제거 -> TAS가 base에서 재계산(기여분을 산술로 되돌리지 않음)
-	for (FActiveTacticalEffectHandle& Handle : mActiveHandles)
+	// 상태이상은 저장한 스택 수만 제거, 일반 이펙트는 -1이라 통째로 제거
+	for (const FPassiveAppliedEffect& Applied : mAppliedEffects)
 	{
-		if (Handle.IsValid() == false)
+		if (Applied.mHandle.IsValid() == false)
 		{
 			continue;
 		}
-		UAttributeSetComponentModel* OwningComp = Handle.GetOwningAttributeSetComponentModel();
+		UAttributeSetComponentModel* OwningComp = Applied.mHandle.GetOwningAttributeSetComponentModel();
 		if (OwningComp != nullptr)
 		{
-			OwningComp->RemoveActiveTacticalEffect(Handle);
+			OwningComp->RemoveActiveTacticalEffect(Applied.mHandle, Applied.mStacks);
 		}
 	}
 
-	UE_LOG(LogPassive, Verbose, TEXT("이펙트 해제: %s (핸들 %d)"), *GetNameSafe(mStaticData), mActiveHandles.Num());
+	UE_LOG(LogPassive, Verbose, TEXT("이펙트 해제: %s (핸들 %d)"), *GetNameSafe(mStaticData), mAppliedEffects.Num());
 
-	// 배치 핸들 전체 비움
-	mActiveHandles.Reset();
+	// 핸들 목록 전체 비움
+	mAppliedEffects.Reset();
 }
 
 bool UTacticalPassive::PassesTargetQuantifier(

@@ -657,7 +657,7 @@ private:
 	 * 모든 색은 타일 위에 자기 알파로 Mix(프리멀티). 슬롯 0~2=알파 곱해진 RGB, 3=커버리지 알파.
 	 * @param[in] LinearIndex 타일/인스턴스 1차원 인덱스
 	 */
-	void RefreshTileCustomData(int32 LinearIndex);
+	void RefreshTileCustomData(int32 LinearIndex, bool bUpdatePulseMembership = true);
 
 	/**
 	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
@@ -666,6 +666,10 @@ private:
 	 */
 	UPROPERTY(Transient)
 	TArray<ETileHighlightFlag> mHighlights;
+
+	// Only visible, animated effects participate in per-frame updates.
+	TSet<int32> mPulsingHighlights;
+	friend class FTileHighlightPulseMembershipTest;
 
 	/**
 	 * @brief 경로 하나를 세트의 메시/색으로 기존 표시에 추가

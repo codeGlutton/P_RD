@@ -84,6 +84,7 @@ public:
 	 *
 	 * @details
 	 * NotifyPassive에서 저장해 둔 핸들로 이펙트를 활성 집합에서 제거한다.
+	 * 상태이상은 이 패시브가 넣은 스택 수만 제거해 다른 출처의 스택은 남김.
 	 * 되돌리는 수치 계산은 없으며, 제거 후 TAS가 base에서 재계산해 기여가 빠진 값이 된다.
 	 * 조건을 따지지 않고 즉시 내린다(예: 장비 장착 해제).
 	 */
@@ -168,7 +169,8 @@ protected:
 	 *
 	 * @details
 	 * EffectTarget이 Self면 소유자에게만, Targets면 Ctx.mTargets 전부에 적용.
-	 * 적용한 핸들은 mActiveHandles에 저장.
+	 * 적용한 핸들은 mAppliedEffects에 저장.
+	 * 상태이상 클래스(UTacticalEffect_Status)는 수치를 스택 수로 넣고 면역 검사를 직접 함.
 	 *
 	 * @param Ctx              소유자/대상 및 스냅샷
 	 * @param EffectClass      적용할 이펙트 클래스
@@ -212,13 +214,27 @@ protected:
 	virtual bool IsTargetQualified(IN const FPassiveActivateContext& Ctx, IN int32 TargetIndex, IN const TInstancedStruct<FDynamicPassiveData>& State) const { return true; }
 
 	/**
-	 * @brief 적용 중인 이펙트 핸들들 (대상별)
+	 * @brief 적용해서 받은 핸들 하나 (핸들 + 해제할 스택 수)
 	 *
 	 * @details
-	 * NotifyPassive 적용 시 대상마다 하나씩 저장하고 DeactivatePassive 제거 시 전부 비움.
-	 * 한 배치는 통째로 적용/해제된다는 전제(직렬 apply/deactivate).
+	 * 상태이상은 한 유닛의 같은 상태이상이 활성 이펙트 하나에 스택으로 합쳐지므로,
+	 * 해제 시 이 패시브가 넣은 스택 수만 빼야 남의 스택이 보존됨.
+	 * 일반 이펙트는 mStacks가 -1(이펙트 통째로 제거).
 	 */
-	TArray<FActiveTacticalEffectHandle> mActiveHandles;
+	struct FPassiveAppliedEffect
+	{
+		FActiveTacticalEffectHandle mHandle;
+		int32 mStacks = -1;
+	};
+
+	/**
+	 * @brief 적용해서 받은 핸들 목록 (해제용)
+	 *
+	 * @details
+	 * 발동 시 정의(mStaticData->mEffects)를 대상에게 적용할 때마다 핸들 하나씩 저장.
+	 * 다음 발동이나 해제 시점에 전부 제거하고 비움.
+	 */
+	TArray<FPassiveAppliedEffect> mAppliedEffects;
 
 	/**
 	 * @brief 발동 시점 태그 (단일)
