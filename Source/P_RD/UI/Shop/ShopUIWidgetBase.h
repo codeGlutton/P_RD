@@ -63,6 +63,7 @@ public:
 #endif
 
 protected:
+	virtual int32 GetViewportZOrder() const override;
 	/** @brief 상점값이 들어왔을 때 호출. WBP가 추가 연출을 하고 싶으면 여기서 한다(선택). */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Shop|UI")
 	void OnShopRefreshed();
@@ -143,6 +144,8 @@ private:
 
 	/** @brief 현재 모델의 골드/판매 슬롯을 BindWidget 위젯에 반영한다. */
 	void RefreshView();
+	void RefreshLevelUpRewardView(const FShopUI& Shop);
+	int32 mLastRewardOfferId = INDEX_NONE;
 
 	/** @brief 확정된 가로형 상점 WBP가 있는지 확인한다. */
 	bool HasFinalShopLayout() const;

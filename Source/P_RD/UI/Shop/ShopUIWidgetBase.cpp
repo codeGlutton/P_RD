@@ -1025,6 +1025,11 @@ void UShopUIWidgetBase::BindUIModel(UShopUIModel* InUIModel)
 
 void UShopUIWidgetBase::HandleCloseClicked()
 {
+	if (mUIModel && mUIModel->GetShop().mIsLevelUpReward)
+	{
+		mUIModel->RequestLeave();
+		return;
+	}
 	if (mUIModel != nullptr)
 	{
 		mUIModel->RequestLeave();
@@ -1918,6 +1923,22 @@ void UShopUIWidgetBase::RefreshView()
 	}
 
 	const FShopUI& Shop = mUIModel->GetShop();
+	if (Shop.mIsLevelUpReward)
+	{
+		mActiveItemKind = EShopItemKind::Skill;
+		if (mLastRewardOfferId != Shop.mRewardOfferId)
+		{
+			mLastRewardOfferId = Shop.mRewardOfferId;
+			mSelectedUnitViewIndex = 0;
+			mSelectedFilteredIndex = 0;
+			mSelectedSkillSlotIndex = 0;
+			mSelectedSkillTargetUnitIndex = INDEX_NONE;
+			if (!Shop.mOwnedUnits.IsEmpty())
+				for (int32 SkillSlot = 1; SkillSlot <= 4; ++SkillSlot)
+					if (Shop.mOwnedUnits[0].mSkillSlots.IsValidIndex(SkillSlot) && Shop.mOwnedUnits[0].mSkillSlots[SkillSlot].mIsEmpty)
+					{ mSelectedSkillSlotIndex = SkillSlot - 1; break; }
+		}
+	}
 
 	if (mGoldText != nullptr)
 	{
@@ -1930,6 +1951,7 @@ void UShopUIWidgetBase::RefreshView()
 	if (HasFinalShopLayout())
 	{
 		RefreshFinalShopView(Shop);
+		if (Shop.mIsLevelUpReward) RefreshLevelUpRewardView(Shop);
 		return;
 	}
 
@@ -2458,6 +2480,43 @@ void UShopUIWidgetBase::NativeDestruct()
 	}
 	UnbindUIModel();
 	Super::NativeDestruct();
+}
+
+int32 UShopUIWidgetBase::GetViewportZOrder() const
+{
+	return mUIModel && mUIModel->GetShop().mIsLevelUpReward ? 10005 : Super::GetViewportZOrder();
+}
+
+void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)
+{
+	if (mTitleText) mTitleText->SetText(LOCTEXT("LevelUpTitle", "레벨업"));
+	if (mGoldText)
+	{
+		mGoldText->SetText(Shop.mRewardTitle);
+		FSlateFontInfo Font = mGoldText->GetFont();
+		Font.Size = 20;
+		mGoldText->SetFont(Font);
+	}
+	for (UWidget* Widget : TArray<UWidget*>{ mArtifactTabButton.Get(), mSkillTabButton.Get(),
+		mRestTabButton.Get(), mMercenaryTabButton.Get(), mArtifactTabPlate.Get(), mSkillTabPlate.Get(),
+		mRestTabPlate.Get(), mMercenaryTabPlate.Get(), mArtifactTabText.Get(), mSkillTabText.Get(),
+		mRestTabText.Get(), mMercenaryTabText.Get(), mRunOptionsRailWidget.Get() })
+		if (Widget) Widget->SetVisibility(ESlateVisibility::Collapsed);
+	for (UTextBlock* Price : mRailPriceTexts)
+		if (Price) Price->SetVisibility(ESlateVisibility::Collapsed);
+	if (mSelectedItemPriceText)
+	{
+		mSelectedItemPriceText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		mSelectedItemPriceText->SetText(Shop.mItems.IsEmpty()
+			? LOCTEXT("LevelUpNoCandidates", "배울 수 있는 새 스킬이 없습니다")
+			: LOCTEXT("LevelUpChooseOne", "1개 선택"));
+	}
+	if (WidgetTree)
+		if (UWidget* Holder = WidgetTree->FindWidget(TEXT("CloseHolder")))
+			Holder->SetVisibility(Shop.mItems.IsEmpty() ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+	if (mCloseButtonText) mCloseButtonText->SetText(LOCTEXT("LevelUpContinue", "계속"));
+	if (mBuyButtonText && mBuyButton && mBuyButton->GetIsEnabled())
+		mBuyButtonText->SetText(LOCTEXT("LevelUpEquip", "선택하여 장착"));
 }
 
 #undef LOCTEXT_NAMESPACE
