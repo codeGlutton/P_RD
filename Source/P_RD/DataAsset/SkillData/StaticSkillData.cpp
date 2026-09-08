@@ -1,4 +1,5 @@
 ﻿#include "DataAsset/SkillData/StaticSkillData.h"
+#include "Engine/Texture2D.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
@@ -115,3 +116,11 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
 
 #undef LOCTEXT_NAMESPACE
 
+
+void UStaticSkillData::PostLoad()
+{
+	Super::PostLoad();
+	// Legacy skills without authored artwork use a neutral skill symbol in every UI.
+	if (mIcon.IsNull())
+		mIcon = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Concept02/T_nav_skill_icon.T_nav_skill_icon")));
+}
