@@ -1,19 +1,79 @@
-// Texture-free additive UI light. Frame.x is opening progress, Frame.y energy.
-// An explicit timeline keeps pause, skip, reset and captures deterministic.
-float2 p = (UV - float2(0.5, 0.5)) * float2(2.4, 2.0);
+// Review prototype V2: layered opening pulse, golden rays and travelling sparks.
+float t = saturate(Frame.x);
+float2 p = (UV - 0.5) * float2(2.4, 2.0);
+p.y += 0.09;
 float radius = length(p);
 float angle = atan2(p.y, p.x + 0.00001);
-float progress = saturate(Frame.x);
-float edge = 1.0 - smoothstep(0.66, 0.90, radius);
-float halo = exp(-radius * radius * 8.0) * 0.42;
-float beamA = pow(saturate(sin(angle * 11.0 + progress * 1.8)), 10.0);
-float beamB = pow(saturate(sin(angle * 17.0 - progress * 1.1 + 0.8)), 20.0);
-float reach = lerp(0.38, 0.84, smoothstep(0.0, 0.28, progress));
-float rays = (beamA * 0.52 + beamB * 0.24)
-    * smoothstep(0.10, 0.24, radius)
-    * (1.0 - smoothstep(reach * 0.42, reach, radius));
-float fadeRays = 1.0 - smoothstep(0.35, 1.0, progress);
-float alpha = saturate((halo + rays * fadeRays) * edge * Frame.y);
-float3 warm = lerp(float3(1.0, 0.27, 0.025), float3(1.0, 0.78, 0.30),
-    exp(-radius * radius * 12.0));
-return float4(warm, alpha);
+float bounds = (1.0 - smoothstep(1.00, 1.17, abs(p.x)))
+             * (1.0 - smoothstep(0.77, 0.90, abs(p.y)));
+
+float a = saturate((t - 0.11) / 0.56);
+float ringRadius = lerp(0.13, 0.79, 1.0 - pow(1.0 - a, 2.6));
+float ringLife = smoothstep(0.11, 0.19, t) * (1.0 - smoothstep(0.42, 0.83, t));
+float d = abs(radius - ringRadius);
+float ringCore = exp(-pow(d / 0.010, 2.0));
+float ringGlow = exp(-pow(d / 0.043, 2.0)) * 1.10
+               + exp(-pow(d / 0.100, 2.0)) * 0.32;
+float ripple = 0.90 + 0.10 * sin(angle * 9.0 + t * 21.0);
+
+float b = saturate((t - 0.18) / 0.58);
+float ovalRadius = lerp(0.18, 1.01, 1.0 - pow(1.0 - b, 2.3));
+float ovalLife = smoothstep(0.18, 0.26, t) * (1.0 - smoothstep(0.50, 0.90, t));
+float ovalDistance = abs(length(float2(p.x, (p.y - 0.06) / 0.34)) - ovalRadius);
+float ovalCore = exp(-pow(ovalDistance / 0.012, 2.0));
+float ovalGlow = exp(-pow(ovalDistance / 0.065, 2.0)) * 0.95;
+
+// A delayed inner wave expands through the first ring.
+float c = saturate((t - 0.27) / 0.56);
+float echoRadius = lerp(0.18, 0.83, 1.0 - pow(1.0 - c, 2.0));
+float echoLife = smoothstep(0.27, 0.35, t) * (1.0 - smoothstep(0.47, 0.87, t));
+float echoDistance = abs(radius - echoRadius);
+float echoCore = exp(-pow(echoDistance / 0.007, 2.0));
+float echoGlow = exp(-pow(echoDistance / 0.041, 2.0)) * 0.60;
+
+float opening = smoothstep(0.03, 0.20, t);
+float burst = opening * (1.0 - smoothstep(0.32, 0.76, t));
+float flash = smoothstep(0.13, 0.20, t) * (1.0 - smoothstep(0.21, 0.34, t));
+float halo = exp(-radius * radius * 10.0) * (0.20 + burst * 0.65);
+float up = 1.0 - smoothstep(0.0, 0.36, p.y);
+float rayShape = pow(saturate(sin(angle * 11.0 + t * 1.2)), 36.0)
+               + 0.35 * pow(saturate(sin(angle * 17.0 - t * 0.8)), 60.0);
+float rayReach = lerp(0.27, 0.89, smoothstep(0.12, 0.39, t));
+float beams = rayShape * smoothstep(0.10, 0.24, radius)
+            * (1.0 - smoothstep(rayReach * 0.48, rayReach, radius))
+            * up * burst * 1.10;
+float openingCore = exp(-radius * radius * 42.0) * flash * 0.85;
+
+// Deterministic spark trajectories: small fast flecks and larger four-point stars.
+float stars = 0.0;
+float sparkGlow = 0.0;
+for (int i = 0; i < 16; ++i)
+{
+    float seed = (float)i;
+    float variation = frac(seed * 0.618034);
+    float theta = -3.12 + seed * 0.405;
+    float travel = saturate((t - 0.18 - variation * 0.13) / 0.64);
+    float distance = lerp(0.19, 0.67 + variation * 0.22, 1.0 - pow(1.0 - travel, 1.6));
+    float2 direction = float2(cos(theta), sin(theta));
+    float2 center = direction * distance;
+    center.y -= travel * travel * 0.08;
+    float2 delta = p - center;
+    float2 q = abs(delta);
+    float life = smoothstep(0.0, 0.12, travel) * (1.0 - smoothstep(0.55, 1.0, travel));
+    float twinkle = 0.70 + 0.30 * pow(sin(travel * 13.0 + seed), 2.0);
+    float size = lerp(0.65, 1.25, variation);
+    float cross = exp((-q.x * 240.0 - q.y * 34.0) / size)
+                + exp((-q.x * 34.0 - q.y * 240.0) / size);
+    float along = dot(delta, direction);
+    float across = abs(delta.x * direction.y - delta.y * direction.x);
+    float tail = exp(-across * 330.0) * exp(-abs(along + 0.025) * 38.0)
+               * (1.0 - smoothstep(-0.006, 0.012, along));
+    stars += (cross * 1.05 + tail * 0.20) * life * twinkle;
+    sparkGlow += exp(-dot(delta, delta) * 1400.0) * life * 0.26;
+}
+float gold = halo + beams + sparkGlow + ringGlow * ringLife * ripple
+           + ovalGlow * ovalLife + echoGlow * echoLife;
+float core = openingCore + ringCore * ringLife * 1.15
+           + ovalCore * ovalLife * 0.90 + echoCore * echoLife * 0.60 + stars;
+float3 color = float3(1.0, 0.43, 0.045) * gold + float3(1.0, 0.88, 0.48) * core;
+return float4(color, bounds * saturate(Frame.y));
