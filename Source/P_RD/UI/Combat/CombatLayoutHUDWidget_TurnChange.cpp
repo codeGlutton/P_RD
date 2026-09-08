@@ -114,10 +114,8 @@ bool UCombatLayoutHUDWidget::PlayCombatAnnouncement(const FText& Text,
 		break;
 	}
 	mCombatAnnouncementPlaying = true;
-	// 라운드/턴 고지는 글자만 표시한다. 재사용 시 전투 시작 배경도 복원한다.
-	mCombatAnnouncementRoot->SetBrushColor(Kind == ECombatAnnouncementKind::CombatStart
-		? FLinearColor(0.015f, 0.01f, 0.025f, 0.72f)
-		: FLinearColor::Transparent);
+	// 전투/라운드/턴 모두 기존 검은 띠를 유지한다.
+	mCombatAnnouncementRoot->SetBrushColor(FLinearColor(0.015f, 0.01f, 0.025f, 0.72f));
 	mCombatAnnouncementText->SetText(Text);
 	mCombatAnnouncementRoot->SetRenderOpacity(0.0f);
 	mCombatAnnouncementRoot->SetRenderScale(FVector2D(0.92f, 1.0f));
