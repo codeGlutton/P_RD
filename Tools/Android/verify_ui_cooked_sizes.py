@@ -5,7 +5,7 @@ from pathlib import Path
 import re
 import sys
 
-from ui_policy import TARGETS
+from ui_policy import TARGETS, MINIMUMS
 
 
 def verify_log(text):
@@ -22,6 +22,9 @@ def verify_log(text):
                 dimensions = [int(match[1]), int(match[2])]
                 if max(dimensions) > maximum:
                     raise ValueError(f"{asset}: cooked size {dimensions} exceeds {maximum}")
+                minimum = MINIMUMS.get(asset, (1, 1))
+                if any(actual < required for actual, required in zip(dimensions, minimum)):
+                    raise ValueError(f"{asset}: cooked size {dimensions} is below required frame resolution {minimum}")
                 observed[asset] = dimensions
     missing = set(TARGETS) - set(observed)
     if missing:
