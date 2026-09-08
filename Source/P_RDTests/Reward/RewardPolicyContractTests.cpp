@@ -91,4 +91,32 @@ bool FRewardGrantAllPartialFailureContractTest::RunTest(
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FRewardSelectOneGrantTest,
+	"P_RD.Reward.Policy.ThreeCandidatesGrantOnlySelected",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FRewardSelectOneGrantTest::RunTest(const FString& Parameters)
+{
+	const TArray<FPrimaryAssetId> Candidates = {
+		FPrimaryAssetId(TEXT("Artifact"), TEXT("A")),
+		FPrimaryAssetId(TEXT("Artifact"), TEXT("B")),
+		FPrimaryAssetId(TEXT("Artifact"), TEXT("C")) };
+	FPrimaryAssetId Selected;
+	TestTrue(TEXT("가운데 후보 선택 검증"),
+		ArtifactRewardPolicy::TrySelectOne(Candidates, Candidates[1], Selected));
+	TArray<FPrimaryAssetId> Granted;
+	const auto Result = ArtifactRewardPolicy::GrantOne(Selected,
+		[&Granted](const FPrimaryAssetId& Id) { Granted.Add(Id); return true; });
+	TestEqual(TEXT("B 하나만 지급하고 A와 C는 지급하지 않음"),
+		Granted, TArray<FPrimaryAssetId>({ Candidates[1] }));
+	TestEqual(TEXT("지급 성공 결과도 하나"), Result.mGrantedItemIds, Granted);
+	TestFalse(TEXT("후보 외 요청은 거절"), ArtifactRewardPolicy::TrySelectOne(
+		Candidates, FPrimaryAssetId(TEXT("Artifact"), TEXT("Unknown")), Selected));
+	const auto Failed = ArtifactRewardPolicy::GrantOne(Candidates[0],
+		[](const FPrimaryAssetId&) { return false; });
+	TestTrue(TEXT("실패 시 수령 완료 항목 없음"), Failed.mGrantedItemIds.IsEmpty());
+	return true;
+}
+
 #endif

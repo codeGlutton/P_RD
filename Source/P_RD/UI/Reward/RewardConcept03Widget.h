@@ -231,6 +231,9 @@ private:
 	void HandleRewardSelectionConfirmed(FPrimaryAssetId RewardId);
 
 	UFUNCTION()
+	void HandleRewardSelectionRejected(FPrimaryAssetId RewardId);
+
+	UFUNCTION()
 	void HandleRewardGrantBundleConfirmed(FRewardGrantBundleResultUI Result);
 
 	UPROPERTY(Transient)

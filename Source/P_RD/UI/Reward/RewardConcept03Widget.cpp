@@ -1,4 +1,5 @@
 #include "UI/Reward/RewardConcept03Widget.h"
+#include "Blueprint/WidgetTree.h"
 #include "UI/DetailOverlayInputShield.h"
 
 #include "Components/BackgroundBlur.h"
@@ -220,6 +221,8 @@ void URewardConcept03Widget::BindUIModel(URewardUIModel* InUIModel)
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnRewardSelectionConfirmed.AddUniqueDynamic(
 			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardSelectionRejected.AddUniqueDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionRejected);
 		UIModel->OnRewardGrantBundleConfirmed.AddUniqueDynamic(
 			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
@@ -237,6 +240,8 @@ void URewardConcept03Widget::UnbindUIModel()
 			this, &URewardConcept03Widget::HandleRewardDataChanged);
 		UIModel->OnRewardSelectionConfirmed.RemoveDynamic(
 			this, &URewardConcept03Widget::HandleRewardSelectionConfirmed);
+		UIModel->OnRewardSelectionRejected.RemoveDynamic(
+			this, &URewardConcept03Widget::HandleRewardSelectionRejected);
 		UIModel->OnRewardGrantBundleConfirmed.RemoveDynamic(
 			this, &URewardConcept03Widget::HandleRewardGrantBundleConfirmed);
 	}
@@ -266,6 +271,15 @@ void URewardConcept03Widget::HandleRewardSelectionConfirmed(
 
 	bRewardRequestPending = false;
 	FinishRewardFlowAfterConfirmation();
+}
+
+void URewardConcept03Widget::HandleRewardSelectionRejected(FPrimaryAssetId RewardId)
+{
+	if (!bRewardRequestPending || PendingRewardId != RewardId) return;
+	bRewardRequestPending = false;
+	PendingRewardId = FPrimaryAssetId();
+	ApplyVisualState();
+	if (ConfirmButtonText) ConfirmButtonText->SetText(LOCTEXT("SelectionRetry", "지급 실패 · 다시 시도"));
 }
 
 void URewardConcept03Widget::HandleRewardGrantBundleConfirmed(
@@ -532,6 +546,45 @@ void URewardConcept03Widget::RefreshRewardData()
 		{
 			continue;
 		}
+		if (UCanvasPanel* Content = Cast<UCanvasPanel>(GetWidgetFromName(
+			*FString::Printf(TEXT("NewChoiceContent_%d"), Index))))
+		{
+			const FName IconName(*FString::Printf(TEXT("NewChoiceIcon_%d"), Index));
+			UImage* Icon = Cast<UImage>(GetWidgetFromName(IconName));
+			if (!Icon)
+			{
+				Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), IconName);
+				Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
+				UCanvasPanelSlot* ContentSlot = Content->AddChildToCanvas(Icon);
+				ContentSlot->SetPosition(FVector2D(66.f, 76.f));
+				ContentSlot->SetSize(FVector2D(100.f, 100.f));
+			}
+			Icon->SetBrushFromTexture(Choices[Index].mIcon.Get());
+			Icon->SetVisibility(Choices[Index].mIcon ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+			const FName DescName(*FString::Printf(TEXT("NewChoiceDescription_%d"), Index));
+			UTextBlock* Desc = Cast<UTextBlock>(GetWidgetFromName(DescName));
+			if (!Desc)
+			{
+				Desc = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), DescName);
+				Desc->SetVisibility(ESlateVisibility::HitTestInvisible);
+				Desc->SetAutoWrapText(true);
+				Desc->SetJustification(ETextJustify::Center);
+				FSlateFontInfo Font = Desc->GetFont(); Font.Size = 12; Desc->SetFont(Font);
+				Desc->SetColorAndOpacity(FSlateColor(FLinearColor(.21f, .12f, .06f, 1.f)));
+				Desc->SetClipping(EWidgetClipping::ClipToBounds);
+				UCanvasPanelSlot* ContentSlot = Content->AddChildToCanvas(Desc);
+				ContentSlot->SetPosition(FVector2D(8.f, 179.f));
+				ContentSlot->SetSize(FVector2D(216.f, 46.f));
+			}
+			Desc->SetText(Choices[Index].mDescription);
+			if (UCanvasPanelSlot* DescriptionSlot = Cast<UCanvasPanelSlot>(Desc->Slot))
+			{
+				const bool bHasIcon = Choices[Index].mIcon != nullptr;
+				DescriptionSlot->SetPosition(FVector2D(8.f, bHasIcon ? 179.f : 88.f));
+				DescriptionSlot->SetSize(FVector2D(216.f, bHasIcon ? 46.f : 128.f));
+			}
+		}
+
 		if (UTextBlock* Name = Cast<UTextBlock>(GetWidgetFromName(
 			*FString::Printf(TEXT("NewChoiceName_%d"), Index))))
 		{
@@ -1407,6 +1460,7 @@ void URewardConcept03Widget::ResetPresentationVisuals()
 
 void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 {
+	if (bRewardRequestPending || bFlowCompleted) return;
 	if (bSuppressNextArtifactClick)
 	{
 		bSuppressNextArtifactClick = false;
@@ -1811,7 +1865,8 @@ void URewardConcept03Widget::ApplyVisualState()
 	}
 	if (ConfirmButtonText != nullptr && !bFlowCompleted)
 	{
-		ConfirmButtonText->SetText(LOCTEXT("Confirm", "확정"));
+		ConfirmButtonText->SetText(UIModel && UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne
+			? LOCTEXT("ClaimSelectedOne", "선택한 1개 받기") : LOCTEXT("Confirm", "확정"));
 	}
 
 	const bool bBottomVisible =
@@ -1854,6 +1909,18 @@ void URewardConcept03Widget::ApplyVisualState()
 
 void URewardConcept03Widget::ApplyArtifactSelection()
 {
+	if (UIModel && UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::SelectOne)
+	{
+		for (int32 Index = 0; Index < 3; ++Index)
+		{
+			if (UTextBlock* TypeText = Cast<UTextBlock>(GetWidgetFromName(
+				*FString::Printf(TEXT("NewChoiceType_%d"), Index))))
+			{
+				TypeText->SetText(Index == SelectedArtifactIndex
+					? LOCTEXT("SelectedArtifact", "선택됨") : GetRewardChoiceTypeText(Index));
+			}
+		}
+	}
 	if (SelectionOutline == nullptr)
 	{
 		return;
