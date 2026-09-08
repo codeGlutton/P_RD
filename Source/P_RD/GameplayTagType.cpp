@@ -19,6 +19,21 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_GetDeBuff,							"Animation.Montage.Skill.ETC.GetDeBuff");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_ETC_Spawn,								"Animation.Montage.Skill.ETC.Spawn");
 
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_Guard,					"Animation.Montage.Skill.Mercenary.Common.Guard");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_StoneThrow,				"Animation.Montage.Skill.Mercenary.Common.StoneThrow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_Bind,					"Animation.Montage.Skill.Mercenary.Common.Bind");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_Empower,				"Animation.Montage.Skill.Mercenary.Common.Empower");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_AdvancePayment,			"Animation.Montage.Skill.Mercenary.Common.AdvancePayment");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_Tranquility,			"Animation.Montage.Skill.Mercenary.Common.Tranquility");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_SelfDestruct,			"Animation.Montage.Skill.Mercenary.Common.SelfDestruct");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_BlackHole,				"Animation.Montage.Skill.Mercenary.Common.BlackHole");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_WhiteHole,				"Animation.Montage.Skill.Mercenary.Common.WhiteHole");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_LastStand,				"Animation.Montage.Skill.Mercenary.Common.LastStand");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_FancyFootwork,			"Animation.Montage.Skill.Mercenary.Common.FancyFootwork");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_CoveringFire,			"Animation.Montage.Skill.Mercenary.Common.CoveringFire");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_SupportBlast,			"Animation.Montage.Skill.Mercenary.Common.SupportBlast");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_PyrrhicStrike,			"Animation.Montage.Skill.Mercenary.Common.PyrrhicStrike");
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_NormalSlash,			"Animation.Montage.Skill.Mercenary.Knight.NormalSlash")
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HeavyStrike,			"Animation.Montage.Skill.Mercenary.Knight.HeavyStrike")	
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_Protection,				"Animation.Montage.Skill.Mercenary.Knight.Protection")
