@@ -1,4 +1,6 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
+#include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "Tutorial/FirstBattleScenario.h"
 
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -389,6 +391,7 @@ void ACombatGameMode::InitializeCombat()
 		FadeOutMainBGM(CombatResultBGMFadeOutSeconds);
 		PushPlayerMetaUIData();
 		PushCombatResultUIData(Result);
+		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->CombatEnded();
 		mCombatUIModel->OnEndCombat.Broadcast(Barrier);
 		});
 	CombatModel->OnBeginAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext) {
@@ -400,6 +403,7 @@ void ACombatGameMode::InitializeCombat()
 		PushSkillUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
 		mCombatUIModel->OnBeginAnyTurn.Broadcast(Barrier);
+		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->TurnStarted(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel());
 		});
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
 		PushTurnUIData();
@@ -410,6 +414,7 @@ void ACombatGameMode::InitializeCombat()
 		// 턴이 실제로 끝났다 — 남은 미리보기는 전제부터 낡았으니 예측 쪽만 통째로 버린다.
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
 		mCombatUIModel->OnEndAnyTurn.Broadcast(Barrier);
+		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->TurnEnded(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel(), Result == ESRPGTurnResult::Succeeded);
 		});
 	CombatModel->OnBeginAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action) {
 		// 이전 액션의 카메라 복귀 대기가 남아 있어도 새 액션을 끝내면 안 된다.
@@ -417,6 +422,7 @@ void ACombatGameMode::InitializeCombat()
 		// 행동이 시작되면 그 전의 예측 전제는 낡았다 — 미리보기만 통째로 버린다.
 		// (실전 juice 로그는 수명 규칙으로 스스로 사라진다.)
 		mCombatUIModel->GetSimulationPreviewUIModel()->ClearPreview();
+		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->ActionStarted(Action);
 		mCombatUIModel->OnBeginAnyTurnAction.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnActionUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result) {
@@ -424,6 +430,7 @@ void ACombatGameMode::InitializeCombat()
 		PushUnitUIData();
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
+		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->ActionEnded(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel(), Action, Result == ESRPGActionResult::Succeeded);
 		});
 
 	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
@@ -499,7 +506,10 @@ void ACombatGameMode::InitializeCombat()
 			break;
 		}
 	}
-	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mClearData);
+	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
+	if (CurStage.mStageLevel == EStageLevelType::Stage1 && CurStage.mCurRow == 0 && !CurStage.mClearData.mIsCleared)
+		StaticRoomData = Tutorial->PrepareScenario(StaticRoomData, GetPlayerUnitModels());
+	CombatModel->InitCombat(StaticRoomData, GetPlayerUnitModels(), SpawnPointTransform, CurStage.mClearData, Tutorial->HasScenario());
 }
 
 void ACombatGameMode::BeginRoom()
@@ -618,6 +628,7 @@ bool ACombatGameMode::EndTurn()
 
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
+	if (!GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->IsScenarioCommandAllowed(Type, IntPayload)) return;
 	switch (Type)
 	{
 	// 스킬/이동을 골라도 켜 둔 위협 범위는 걷지 않는다. "저기까지 오는데
@@ -718,6 +729,15 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
+	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
+	if (Tutorial->IsScenarioGuiding())
+	{
+		if (bLongPress || !Tutorial->IsScenarioPointerAllowed(ScreenPosition)) return;
+		const FTileIndex Goal = Tutorial->IsScenarioTileAllowed(FFirstBattleScenario::Move())
+			? FFirstBattleScenario::Move() : FFirstBattleScenario::Enemy();
+		ResolveWorldTouchEvent(ScreenPosition, Goal);
+		return;
+	}
 	/*
 	 * 플레이어 턴이 아닐 때는 무시한다.
 	 * 턴이 비어 있거나 적 턴일 때 넘기면 프리뷰 시뮬레이션에서 크래시가 날 수 있다.
@@ -754,6 +774,7 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
  */
 void ACombatGameMode::ConfirmTargetTile()
 {
+	if (!GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->IsScenarioTileAllowed(mPendingConfirmTile)) return;
 	// 재탭할 칸은 빌드 프리뷰가 챙겨 둔 칸이 우선이다. UI Target(살펴보기
 	// 대상)은 빈 칸으로 경로를 그으면 갱신되지 않아, 그걸 재탭하면 확정이
 	// 아니라 무르기가 된다(0810).
@@ -1438,6 +1459,7 @@ void ACombatGameMode::PushUnitUIData() const
 		checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
 		UnitUIData.mIsPlayer = UnitModel->IsPlayerUnitModel();
+		UnitUIData.mCombatCondition = UnitModel->GetCombatCondition();
 		UnitUIData.mUnitId = UnitModel->GetModelId();
 		UnitUIData.mName = UnitModel->GetBoardActorDisplayName();      // 아군 칸·턴 순서 칩이 읽는다. 안 채우면 빈칸으로 나온다.
 		UnitUIData.mPortrait = ResolveUnitTexture(UnitModel, false);
@@ -2881,4 +2903,10 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	SelectionOffer.mOptions = MoveTemp(Choices);
 	SelectionOffer.mSelectionCount = 1;
 	mRewardUIModel->SetSelectionOffer(SelectionOffer);
+}
+
+void ACombatGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+ if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->CombatEnded(false);
+ Super::EndPlay(EndPlayReason);
 }

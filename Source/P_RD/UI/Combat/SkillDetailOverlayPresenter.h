@@ -27,6 +27,7 @@
 
 #include "SkillDetailOverlayPresenter.generated.h"
 
+enum class EGuidedStage : uint8;
 class UButton;
 class UCanvasPanel;
 class UFont;
@@ -88,6 +89,7 @@ public:
 	 * 사라진다 -- 실제 기기에서 그렇게 나왔다.
 	 */
 	USkillDetailOverlayPresenter();
+	UWidget* GetGuidedSystemTarget(EGuidedStage Stage) const;
 
 	/**
 	 * @brief 지연 생성에 필요한 값을 넣는다. 위젯은 아직 만들지 않는다.

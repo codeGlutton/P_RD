@@ -8,6 +8,8 @@
  * @date 2026-06-26
  */
 #include "UI/TitleMenuWidget.h"
+#include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "UI/TitleMenuWidgetPrivate.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -294,6 +296,8 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 // AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
 void UTitleMenuWidget::NativeDestruct()
 {
+	if (auto* GI = GetGameInstance())
+		GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleClosed(this);
 	StopTitleBackgroundVideo();
 
 	UnbindMainMenuButtons();
@@ -688,4 +692,15 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 	}
 
 	SetStatusText(FText::GetEmpty());
+}
+
+void UTitleMenuWidget::OpenUI(FOnEndUIOpenAnimation Callback)
+{
+ Super::OpenUI(MoveTemp(Callback));
+ if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleOpened(this);
+}
+void UTitleMenuWidget::CloseUI(FOnEndUICloseAnimation Callback)
+{
+ if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleClosed(this);
+ Super::CloseUI(MoveTemp(Callback));
 }
