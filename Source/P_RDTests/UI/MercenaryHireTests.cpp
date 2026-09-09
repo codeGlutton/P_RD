@@ -2725,7 +2725,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("빈 상태 소켓 버튼은 입력을 막지 않음"),
 		EnemyStatusButton1->GetVisibility(), ESlateVisibility::Collapsed);
 	TestTrue(TEXT("상태 버튼 누름 배선"), EnemyStatusButton0->OnPressed.IsBound());
-	TestTrue(TEXT("상태 버튼 뗌 배선"), EnemyStatusButton0->OnReleased.IsBound());
+	TestTrue(TEXT("상태 버튼 클릭 배선"), EnemyStatusButton0->OnClicked.IsBound());
 	TestEqual(TEXT("상태 1개면 스크롤바 숨김"),
 		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Collapsed);
 	TestNull(TEXT("상태 이름 TextBlock은 만들지 않음"),
@@ -2752,24 +2752,19 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("상태가 생기면 첫 상태 행 복구"),
 		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Visible);
 
-	// 짧은 탭은 상세를 열지 않고 타이머를 취소한다.
+	// A single precise tap opens the authored skill detail content; pressing alone does not.
 	EnemyStatusButton0->OnPressed.Broadcast();
-	TestTrue(TEXT("상태 아이콘 누름은 롱프레스 후보를 예약"),
-		HUD->IsStatusLongPressPendingForTest());
-	TestTrue(TEXT("적 상태 0번이 현재 후보"),
-		HUD->IsStatusPressActiveForTest(false, 0));
+	TestFalse(TEXT("Press alone does not open details"), HUD->IsDetailOverlayShown());
 	EnemyStatusButton0->OnReleased.Broadcast();
-	TestFalse(TEXT("짧게 떼면 상태 롱프레스 취소"),
-		HUD->IsStatusLongPressPendingForTest());
-	TestFalse(TEXT("짧은 탭은 상세를 열지 않음"), HUD->IsDetailOverlayShown());
-
-	// 0.5초를 채운 것과 같은 테스트 발화는 기존 공용 상세 겹을 한 번 연다.
-	EnemyStatusButton0->OnPressed.Broadcast();
-	HUD->TriggerStatusLongPressForTest(false, 0);
-	TestTrue(TEXT("상태 아이콘 롱프레스는 상세를 연다"),
-		HUD->IsDetailOverlayShown());
-	TestFalse(TEXT("상태 상세 발화 뒤 예약 타이머 제거"),
-		HUD->IsStatusLongPressPendingForTest());
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestTrue(TEXT("Single tap opens status details"), HUD->IsDetailOverlayShown());
+	TestFalse(TEXT("Tap consumes its candidate"), HUD->IsStatusPressActiveForTest(false, 0));
+	UUserWidget* StatusContent = HUD->GetSkillDetailContentForTest();
+	if (TestNotNull(TEXT("Status uses WBP_SkillDetailContent"), StatusContent))
+	{
+		TestEqual(TEXT("Status has no AP icon"), StatusContent->GetWidgetFromName(TEXT("SkillStatIcon_0"))->GetVisibility(), ESlateVisibility::Collapsed);
+		TestEqual(TEXT("Status has no targeting button"), StatusContent->GetWidgetFromName(TEXT("SkillSelectRangeButton"))->GetVisibility(), ESlateVisibility::Collapsed);
+	}
 	// 뒤쪽 몬스터 탭 검증은 상세가 닫힌 기본 상태에서 시작한다. 항상 WBP가
 	// 있는 용병 패널을 써서, 몬스터 탭 fallback 상세가 다시 열리는 경우를 피한다.
 	MercenaryMenu->OnClicked.Broadcast();
@@ -2777,7 +2772,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->IsDetailOverlayShown());
 	MercenaryMenu->OnClicked.Broadcast();
 
-	// 네 개부터 실제 콘텐츠가 viewport를 넘고 스크롤바가 생긴다. 행동을
+	// 세 개부터 실제 콘텐츠가 viewport를 넘고 스크롤바가 생긴다. 행동을
 	// 막는 기절/속박은 첫 화면에 남으며 다섯째 행도 잘리지 않는다.
 	MonsterUnit.mStatusEffects.Reset();
 	for (const TCHAR* TagName : {
@@ -2796,7 +2791,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_4")));
 	TestTrue(TEXT("상태 5개 행을 동적으로 생성"),
 		EnemyStatusScroll->GetChildrenCount() >= 5);
-	TestEqual(TEXT("상태 4개 이상이면 스크롤바 표시"),
+	TestEqual(TEXT("큰 상태 아이콘이 넘치면 스크롤바 표시"),
 		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Visible);
 	if (TestNotNull(TEXT("다섯째 상태도 입력 행 보유"), EnemyStatusButton4))
 	{
@@ -2810,8 +2805,20 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		&& FirstStatusTexture->GetName() == TEXT("T_Status_Stun"));
 	EnemyStatusButton0->OnPressed.Broadcast();
 	EnemyStatusScroll->OnUserScrolled.Broadcast(8.f);
-	TestFalse(TEXT("상태 스크롤을 시작하면 롱프레스 취소"),
-		HUD->IsStatusLongPressPendingForTest());
+	TestFalse(TEXT("Scrolling cancels the status tap"),
+		HUD->IsStatusPressActiveForTest(false, 0));
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("A scroll does not open status details"), HUD->IsDetailOverlayShown());
+	EnemyStatusButton0->OnPressed.Broadcast();
+	Model->SetUnitUIs({ MonsterUnit });
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("Changed summary invalidates a held status tap"), HUD->IsDetailOverlayShown());
+	EnemyStatusButton0->OnPressed.Broadcast();
+	EnemyStatusButton0->OnClicked.Broadcast();
+	HUD->CloseDetailOverlayForTest();
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("A duplicate click cannot reopen the closed detail"), HUD->IsDetailOverlayShown());
+
 
 	// 0823 확정: AP 는 문구로만 남기고 보석 아이콘 행은 걷었다.
 	if (UWidget* PipRow = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipRow")))
