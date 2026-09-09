@@ -2284,7 +2284,8 @@ bool FCombatHUDMercenaryTabStructureTest::RunTest(const FString& Parameters)
 	TestNull(TEXT("전투 화면 독립 아티팩트 WBP 줄 제거"),
 		Tree->FindWidget(TEXT("ArtifactStrip")));
 
-	constexpr TCHAR CanonicalPortraitFramePath[] =
+	// 지역 배열이면 아래 람다가 캡처해야 하므로, static으로 두어 캡처 없이 참조되게 함
+	static constexpr TCHAR CanonicalPortraitFramePath[] =
 		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/KitA/"
 			"T_KitA_Cell_Normal.T_KitA_Cell_Normal");
 	auto TestPortraitFrame = [this](UWidgetTree* WidgetTree,

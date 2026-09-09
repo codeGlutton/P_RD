@@ -1,4 +1,5 @@
 #include "FunctionLibrary/CameraFunctionLibrary.h"
+#include "Engine/GameInstance.h"	// GetSubsystem 호출을 위한 완전 타입 필요 (유니티 빌드 밖에서는 미포함)
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
