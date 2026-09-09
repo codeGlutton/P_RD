@@ -1087,6 +1087,7 @@ bool FLevelUpShopReuseTest::RunTest(const FString& Parameters)
 	FShopUI View = MakeSyntheticShop();
 	View.mIsLevelUpReward = true;
 	View.mRewardOfferId = 0;
+	View.mRewardUnitIndex = 0;
 	View.mRewardTitle = FText::FromString(TEXT("기사 · Lv.2"));
 	View.mItems.RemoveAll([](const FShopItemUI& Item) { return Item.mKind != EShopItemKind::Skill; });
 	View.mItems.SetNum(FMath::Min(3, View.mItems.Num()));
@@ -1114,7 +1115,7 @@ bool FLevelUpShopReuseTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Only recipient receives the skill"), Listener->LastUnitIndex, View.mOwnedUnits[0].mUnitIndex);
 	TestEqual(TEXT("First empty slot selected, basic attack protected"), Listener->LastSkillSlotIndex, 1);
 	if (UWidget* Close = Widget->WidgetTree->FindWidget(TEXT("CloseHolder")))
-		TestEqual(TEXT("Cannot dismiss an unclaimed choice"), Close->GetVisibility(), ESlateVisibility::Collapsed);
+		TestEqual(TEXT("May skip an unclaimed choice"), Close->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 	if (UTextBlock* Title = Cast<UTextBlock>(Widget->WidgetTree->FindWidget(TEXT("mTitleText"))))
 		TestEqual(TEXT("Level-up title fits the shop title plate"), Title->GetText().ToString(), FString(TEXT("레벨업")));
 	if (!GUsingNullRHI)
@@ -1123,6 +1124,38 @@ bool FLevelUpShopReuseTest::RunTest(const FString& Parameters)
 		FString Error;
 		if (!Capture(*Widget, Slate, TEXT("WBP_LevelUp_SkillChoice.png"), Pixels, Error)) AddError(Error);
 	}
+	if (UWidget* Background = Widget->WidgetTree->FindWidget(TEXT("ShopBackgroundScale")))
+		TestEqual(TEXT("Level-up hides the shop background"), Background->GetVisibility(), ESlateVisibility::Collapsed);
+	UButton* CandidateButton = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("ShopRailButton_2")));
+	if (TestNotNull(TEXT("Candidate long-press button"), CandidateButton))
+	{
+		CandidateButton->OnPressed.Broadcast();
+		++GFrameCounter;
+		World->GetTimerManager().Tick(0.f);
+		++GFrameCounter;
+		World->GetTimerManager().Tick(.5f);
+		TestNotNull(TEXT("Holding a candidate opens its description before release"), Widget->GetShopDetailOverlayForTest());
+		CandidateButton->OnReleased.Broadcast();
+		Widget->HandleBackNavigation();
+	}
+	// Same-job allies must be separate recipient portraits, not a job carousel.
+	FShopOwnedUnitUI Second = View.mOwnedUnits[0];
+	Second.mUnitIndex = 1;
+	View.mOwnedUnits.Add(Second);
+	View.mSkillTargetUnits = View.mOwnedUnits;
+	Model->OnRewardUnitRequested.AddDynamic(Listener, &UShopUITestListener::HandleRewardUnitRequested);
+	Model->SetShop(View);
+	if (UButton* Portrait = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("mUnitSelectButton_1"))))
+	{
+		Portrait->OnClicked.Broadcast();
+		TestEqual(TEXT("Portrait selects the actual party slot"), Listener->LastRewardUnitIndex, 1);
+	}
+	else AddError(TEXT("Missing second recipient portrait"));
+	View.mRewardOfferId = 1;
+	View.mRewardUnitIndex = 1;
+	Model->SetShop(View);
+	Buy->OnClicked.Broadcast();
+	TestEqual(TEXT("Equipment target follows the selected same-job ally"), Listener->LastUnitIndex, 1);
 	View.mItems.Reset();
 	Model->SetShop(View);
 	if (UWidget* Close = Widget->WidgetTree->FindWidget(TEXT("CloseHolder")))

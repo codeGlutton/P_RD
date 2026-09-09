@@ -538,6 +538,21 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 		ReleasedDelegate.BindUFunction(Owner, ReleasedFunction);
 		Button->OnReleased.AddUnique(ReleasedDelegate);
 	};
+	BindSkillHold(mRailButtons.IsValidIndex(0) ? mRailButtons[0].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed0),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased0));
+	BindSkillHold(mRailButtons.IsValidIndex(1) ? mRailButtons[1].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed1),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased1));
+	BindSkillHold(mRailButtons.IsValidIndex(2) ? mRailButtons[2].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed2),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased2));
+	BindSkillHold(mRailButtons.IsValidIndex(3) ? mRailButtons[3].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed3),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased3));
+	BindSkillHold(mRailButtons.IsValidIndex(4) ? mRailButtons[4].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed4),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased4));
 	BindSkillHold(mSkillSlotButtons.IsValidIndex(0) ? mSkillSlotButtons[0].Get() : nullptr,
 		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotPressed0),
 		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotReleased0));
@@ -921,6 +936,11 @@ void UShopUIWidgetBase::SelectUnitSlot(int32 UnitViewIndex)
 	}
 
 	const FShopUI& Shop = mUIModel->GetShop();
+	if (Shop.mIsLevelUpReward)
+	{
+		mUIModel->OnRewardUnitRequested.Broadcast(Shop.mSkillTargetUnits[UnitViewIndex].mUnitIndex);
+		return;
+	}
 	const EUnitJobType JobType = Shop.mSkillTargetUnits[UnitViewIndex].mJobType;
 	TArray<int32> MatchingUnitIndices;
 	for (const FShopOwnedUnitUI& Unit : Shop.mOwnedUnits)
@@ -977,6 +997,10 @@ const FShopOwnedUnitUI* UShopUIWidgetBase::GetSelectedSkillTarget(
 	{
 		return nullptr;
 	}
+
+	if (Shop.mIsLevelUpReward)
+		return Shop.mOwnedUnits.FindByPredicate([&Shop](const FShopOwnedUnitUI& Unit)
+			{ return Unit.mUnitIndex == Shop.mRewardUnitIndex; });
 
 	const EUnitJobType JobType =
 		Shop.mSkillTargetUnits[mSelectedUnitViewIndex].mJobType;
@@ -1039,6 +1063,10 @@ void UShopUIWidgetBase::HandleCloseClicked()
 
 UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 {
+	if (mShopSkillDetailPresenter)
+		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
+			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
+
 	if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible())
 		if (auto* Layer = mMercenaryHireWidget->GetBackNavigationLayer())
 			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
@@ -1048,6 +1076,10 @@ UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 
 bool UShopUIWidgetBase::HandleBackNavigation()
 {
+	if (mShopSkillDetailPresenter)
+		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
+			if (Layer->IsVisible()) { mShopSkillDetailPresenter->Dismiss(); return true; }
+
 	if (mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsVisible()) HandleShopDetailCloseClicked();
 	else if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible()) mMercenaryHireWidget->HandleBackNavigation();
 	else if (mIsArtifactInventoryOpen) SetArtifactInventoryOpen(false);
@@ -1577,7 +1609,7 @@ void UShopUIWidgetBase::RefreshSkillTargetView(const FShopUI& Shop)
 				MatchingUnitIndices.Add(OwnedUnit.mUnitIndex);
 			}
 		}
-		if (CountText != nullptr && MatchingUnitIndices.Num() > 1)
+		if (!Shop.mIsLevelUpReward && CountText != nullptr && MatchingUnitIndices.Num() > 1)
 		{
 			const int32 CurrentPosition = bSelected
 				? MatchingUnitIndices.IndexOfByKey(mSelectedSkillTargetUnitIndex)
@@ -1929,13 +1961,14 @@ void UShopUIWidgetBase::RefreshView()
 		if (mLastRewardOfferId != Shop.mRewardOfferId)
 		{
 			mLastRewardOfferId = Shop.mRewardOfferId;
-			mSelectedUnitViewIndex = 0;
+			mSelectedUnitViewIndex = FMath::Max(0, Shop.mSkillTargetUnits.IndexOfByPredicate(
+				[&Shop](const FShopOwnedUnitUI& Unit) { return Unit.mUnitIndex == Shop.mRewardUnitIndex; }));
 			mSelectedFilteredIndex = 0;
 			mSelectedSkillSlotIndex = 0;
 			mSelectedSkillTargetUnitIndex = INDEX_NONE;
-			if (!Shop.mOwnedUnits.IsEmpty())
+			if (const FShopOwnedUnitUI* Target = GetSelectedSkillTarget(Shop))
 				for (int32 SkillSlot = 1; SkillSlot <= 4; ++SkillSlot)
-					if (Shop.mOwnedUnits[0].mSkillSlots.IsValidIndex(SkillSlot) && Shop.mOwnedUnits[0].mSkillSlots[SkillSlot].mIsEmpty)
+					if (Target->mSkillSlots.IsValidIndex(SkillSlot) && Target->mSkillSlots[SkillSlot].mIsEmpty)
 					{ mSelectedSkillSlotIndex = SkillSlot - 1; break; }
 		}
 	}
@@ -2489,6 +2522,10 @@ int32 UShopUIWidgetBase::GetViewportZOrder() const
 
 void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)
 {
+	if (WidgetTree)
+		for (const TCHAR* Name : { TEXT("ShopBackgroundScale"), TEXT("ShopBackgroundArt") })
+			if (UWidget* Background = WidgetTree->FindWidget(Name))
+				Background->SetVisibility(ESlateVisibility::Collapsed);
 	if (mTitleText) mTitleText->SetText(LOCTEXT("LevelUpTitle", "레벨업"));
 	if (mGoldText)
 	{
@@ -2513,8 +2550,8 @@ void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)
 	}
 	if (WidgetTree)
 		if (UWidget* Holder = WidgetTree->FindWidget(TEXT("CloseHolder")))
-			Holder->SetVisibility(Shop.mItems.IsEmpty() ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
-	if (mCloseButtonText) mCloseButtonText->SetText(LOCTEXT("LevelUpContinue", "계속"));
+			Holder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	if (mCloseButtonText) mCloseButtonText->SetText(LOCTEXT("LevelUpSkip", "받지 않기"));
 	if (mBuyButtonText && mBuyButton && mBuyButton->GetIsEnabled())
 		mBuyButtonText->SetText(LOCTEXT("LevelUpEquip", "선택하여 장착"));
 }

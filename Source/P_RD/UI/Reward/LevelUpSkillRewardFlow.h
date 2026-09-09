@@ -17,6 +17,8 @@ namespace LevelUpSkillReward
 {
 	P_RD_API TArray<FPrimaryAssetId> ChooseCandidates(const TArray<UStaticUnitSkillData*>& Pool,
 		const FRarityRate& Rate, const FRandomStream& Stream);
+	P_RD_API int32 FindPendingReward(const TArray<FLevelUpSkillReward>& Rewards, int32 UnitIndex = INDEX_NONE);
+	P_RD_API bool Skip(FLevelUpSkillReward& Reward);
 	P_RD_API bool TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel* Unit,
 		const FPrimaryAssetId& SkillId, int32 SkillSlot);
 }
@@ -31,7 +33,9 @@ public:
 	void Open(URunPersistData* Run, UPartyModel* Party, APlayerController* Controller);
 	void Close();
 private:
-	void ShowNext();
+	void ShowNext(int32 PreferredUnit = INDEX_NONE);
+	void FinishActiveReward();
+	UFUNCTION() void SelectRewardUnit(int32 UnitIndex);
 	void Save();
 	UFUNCTION() void Select(int32 Choice, int32 UnitIndex, int32 SkillSlot);
 	UFUNCTION() void ContinueWithoutCandidate();

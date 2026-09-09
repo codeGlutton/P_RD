@@ -498,8 +498,8 @@ bool FShopFullGeneratedSingleTapDetailTest::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-	TestFalse(TEXT("판매 카드는 롱프레스 입력을 사용하지 않음"),
-		SecondRail->OnPressed.IsBound() || SecondRail->OnReleased.IsBound());
+	TestTrue(TEXT("판매 카드도 길게 눌러 상세 표시"),
+		SecondRail->OnPressed.IsBound() && SecondRail->OnReleased.IsBound());
 	SecondRail->OnClicked.Broadcast();
 	UUserWidget* Detail = Widget->GetShopDetailOverlayForTest();
 	TestTrue(TEXT("아티팩트 한 번 터치로 상세 표시"), Detail != nullptr

@@ -107,3 +107,45 @@ bool FLevelUpSkillSaveTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("Next offer waits until earlier equipment is applied"), State.LevelUpSkills[2].Offered);
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpRewardRecipientTest,
+	"P_RD.Reward.LevelUp.RecipientAndSkip", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelUpRewardRecipientTest::RunTest(const FString& Parameters)
+{
+	TStrongObjectPtr<URunPersistData> Run(NewObject<URunPersistData>());
+	auto& Rewards = Run->GetRoomTransactionsMutable().LevelUpSkills;
+	for (int32 UnitIndex : {0, 0, 1})
+	{
+		auto& Reward = Rewards.AddDefaulted_GetRef();
+		Reward.UnitIndex = UnitIndex;
+		Reward.Offered = true;
+		Reward.Candidates.Add(FPrimaryAssetId(TEXT("Skill"), TEXT("SavedChoice")));
+	}
+	TestEqual(TEXT("Second ally can be chosen before first ally"), LevelUpSkillReward::FindPendingReward(Rewards, 1), 2);
+	TestTrue(TEXT("A nonempty offer may be skipped"), LevelUpSkillReward::Skip(Rewards[2]));
+	TestFalse(TEXT("Skip cannot complete the same offer twice"), LevelUpSkillReward::Skip(Rewards[2]));
+	TestEqual(TEXT("Other ally keeps earliest unclaimed level"), LevelUpSkillReward::FindPendingReward(Rewards, 0), 0);
+	TestEqual(TEXT("Completed ally has no pending reward"), LevelUpSkillReward::FindPendingReward(Rewards, 1), INDEX_NONE);
+	TArray<uint8> Bytes;
+	TStrongObjectPtr<URunPersistData> Restored(NewObject<URunPersistData>());
+	TestTrue(TEXT("Save out-of-order skip"), RDCheckpoint::Serialize(Run.Get(), Bytes));
+	TestTrue(TEXT("Restore out-of-order skip"), RDCheckpoint::Deserialize(Bytes, Restored.Get()));
+	const auto& Loaded = Restored->GetRoomTransactions().LevelUpSkills;
+	TestTrue(TEXT("Skipped offer remains complete"), Loaded[2].Completed);
+	TestTrue(TEXT("Changing recipients preserves candidates"), Loaded[0].Candidates == Rewards[0].Candidates);
+	TestEqual(TEXT("Unfinished first ally survives restart"), LevelUpSkillReward::FindPendingReward(Loaded, 0), 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpSkillIconTest,
+	"P_RD.Reward.LevelUp.SkillIcons", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelUpSkillIconTest::RunTest(const FString& Parameters)
+{
+	TArray<FPrimaryAssetId> Ids;
+	UAssetManager::Get().GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetActiveType(), Ids);
+	TestTrue(TEXT("Real player skills are registered"), Ids.Num() > 0);
+	for (const auto& Id : Ids)
+		if (auto* Skill = Cast<UStaticUnitSkillData>(UAssetManager::Get().GetPrimaryAssetPath(Id).TryLoad()))
+			TestNotNull(*FString::Printf(TEXT("Skill icon loads: %s"), *Id.ToString()), Skill->mIcon.LoadSynchronous());
+	return true;
+}
