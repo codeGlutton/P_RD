@@ -46,6 +46,9 @@ class P_RD_API UFadeInOutWidget : public URDUserWidget
 	GENERATED_BODY()
 
 public:
+#if WITH_DEV_AUTOMATION_TESTS
+	friend class FLoadingTransitionLayerTest;
+#endif
 	/**
 	 * @brief 페이드 위젯의 기본 뷰포트 ZOrder를 전환 레이어로 초기화한다.
 	 *
@@ -68,6 +71,9 @@ public:
 	void StartFadeOut(FOnEndFadeOutAnimation OnEndFadeOutAnimation = FOnEndFadeOutAnimation());
 
 protected:
+	/** Existing WBPs may still serialize the old low transition Z order. */
+	int32 GetViewportZOrder() const override;
+
 	/**
 	 * @brief 런타임에서 WBP 루트가 없을 때 최소 기본 화면을 준비한다.
 	 *

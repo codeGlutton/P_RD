@@ -1293,4 +1293,19 @@ bool FCombatLayoutCardTransformTest::RunTest(const FString& Parameters)
 	return !HasAnyErrors();
 }
 
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatSummaryStatusSizeCapture,
+    "P_RD.UI.CombatLayout.StatusSizeCapture",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCombatSummaryStatusSizeCapture::RunTest(const FString&)
+{
+    if (GUsingNullRHI) return false;
+    using namespace CombatLayoutCapture;
+    FString Error;
+    if (!CaptureLayout(*GEditor->GetEditorWorldContext().World(), LayoutClassPaths[0], Error,
+        false, false, false, false, false, CaptureWidth, CaptureHeight, false, TEXT("_Statuses")))
+    { AddError(Error); return false; }
+    return true;
+}
+
 #endif // WITH_EDITOR

@@ -15,6 +15,11 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "TimerManager.h"
+#include "UI/SCenteredSafeZone.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Layout/ArrangedChildren.h"
+#include "Misc/CoreDelegates.h"
+#include "Widgets/Layout/SSpacer.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatBoardMultitouchTest, "P_RD.UI.Mobile.BoardPointerSessions",
@@ -121,6 +126,51 @@ bool FRDMobileSafeAreaAndDPITest::RunTest(const FString&)
 		TestTrue(TEXT("Design fits both axes on phone/fold/tablet"), 1920.f * Scale <= Size.X + .01f && 1080.f * Scale <= Size.Y + .01f);
 	}
 	TestEqual(TEXT("Invalid viewport has a finite neutral scale"), Rule->GetDPIScaleBasedOnSize({0,0}), 1.f);
+	return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRDCenteredNotchTest, "P_RD.UI.Mobile.CenteredNotchLayout",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FRDCenteredNotchTest::RunTest(const FString&)
+{
+	auto& App = FSlateApplication::Get();
+	const bool HadCustom = App.IsCustomSafeZoneSet();
+	const FMargin Previous = App.GetCustomSafeZone();
+	const auto GlobalScale = SSafeZone::GetGlobalSafeZoneScale();
+	SSafeZone::SetGlobalSafeZoneScale(TOptional<float>());
+	int32 Cases = 0;
+	for (const FVector2D Pixels : {FVector2D(1920,1080), FVector2D(2400,1080), FVector2D(3200,1440)})
+	for (const float Dpi : {1.f, 1.5f, 2.f})
+	{
+		const auto Child = SNew(SSpacer).Size(FVector2D(100, 50));
+		const auto Safe = SNew(SCenteredSafeZone).OverrideScreenSize(Pixels)[Child];
+		const FGeometry Viewport = FGeometry::MakeRoot(Pixels / Dpi, FSlateLayoutTransform(Dpi, FVector2D(37,19)));
+		// Reuse the same widget as the device rotates or system bars change.
+		for (const FMargin Inset : {FMargin(96,0,0,0), FMargin(0,0,96,0),
+			FMargin(96,0,24,48), FMargin(0), FMargin(48,24,48,24)})
+		{
+			App.SetCustomSafeZone(FMargin(2*Inset.Left/Pixels.X, 2*Inset.Top/Pixels.Y,
+				2*Inset.Right/Pixels.X, 2*Inset.Bottom/Pixels.Y));
+			FCoreDelegates::OnSafeFrameChangedEvent.Broadcast();
+			Safe->SlatePrepass(Dpi);
+			FArrangedChildren Arranged(EVisibility::Visible);
+			Safe->ArrangeChildren(Viewport, Arranged);
+			if (!TestEqual(TEXT("One safe content root"), Arranged.Num(), 1)) continue;
+			const FGeometry& Content = Arranged[0].Geometry;
+			const FVector2D Origin = Viewport.AbsoluteToLocal(Content.LocalToAbsolute(FVector2D::ZeroVector)) * Dpi;
+			const FVector2D Extent = Content.GetLocalSize() * Dpi;
+			TestTrue(TEXT("HUD center stays at viewport center with either notch orientation"),
+				(Origin + Extent*.5).Equals(Pixels*.5, .1));
+			TestTrue(TEXT("All four physical unsafe edges are excluded"), Origin.X >= Inset.Left-1 && Origin.Y >= Inset.Top-1
+				&& Origin.X+Extent.X <= Pixels.X-Inset.Right+1 && Origin.Y+Extent.Y <= Pixels.Y-Inset.Bottom+1);
+			if (Inset == FMargin(0))
+				TestTrue(TEXT("No cutout leaves the full viewport available"), Origin.IsNearlyZero() && Extent.Equals(Pixels,.1));
+			++Cases;
+		}
+	}
+	if (HadCustom) App.SetCustomSafeZone(Previous); else App.ResetCustomSafeZone();
+	SSafeZone::SetGlobalSafeZoneScale(GlobalScale);
+	AddInfo(FString::Printf(TEXT("Checked %d live safe-area arrangements across resolutions, DPI and notch rotation."), Cases));
 	return !HasAnyErrors();
 }
 

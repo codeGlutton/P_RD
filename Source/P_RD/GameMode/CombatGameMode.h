@@ -22,6 +22,7 @@ class IBoardSelectionTargetView;
 
 class UCombatUIModel;
 class URewardUIModel;
+class ULevelUpSkillRewardFlow;
 class UPlayerUnitModel;
 class UTexture2D;
 class USkillComponentModel;
@@ -321,6 +322,7 @@ public:
 	TObjectPtr<UCombatUIModel> mCombatUIModel;
 	UPROPERTY(Category = "UI", VisibleAnywhere, DuplicateTransient, meta = (DisplayName = "RewardUIModel"))
 	TObjectPtr<URewardUIModel> mRewardUIModel;
+	UPROPERTY() TObjectPtr<ULevelUpSkillRewardFlow> mLevelUpSkillRewardFlow;
 
 private:
 	/** @brief 다음 액션/턴이 시작돼 더 이상 유효하지 않은 카메라 복귀 대기를 취소한다. */

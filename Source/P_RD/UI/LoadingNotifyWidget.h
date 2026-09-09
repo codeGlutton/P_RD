@@ -46,12 +46,17 @@ public:
 	ULoadingNotifyWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 #if WITH_DEV_AUTOMATION_TESTS
+	friend class FLoadingNotifyOptionsRailVisibilityLifecycleTest;
+	friend class FLoadingTransitionLayerTest;
 	/** @brief 자동화 테스트에서 닫힘 수명주기를 즉시 검증할 수 있게 표시 시간을 설정한다. */
 	void SetVisibleDurationsForTest(float MinimumVisibleSeconds,
 		float CompletedVisibleSeconds, float CloseAnimationSeconds);
 #endif
 
 protected:
+	/** The loading message stays above the full-screen transition fade. */
+	int32 GetViewportZOrder() const override;
+
 	/**
 	 * @brief 런타임에서 WBP 루트가 없을 때 최소 기본 화면을 준비한다.
 	 *

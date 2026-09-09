@@ -132,6 +132,9 @@ public:
 	/** @brief 스킬 상세 DTO 하나로 풍부한 상세 화면 전체를 그린다. */
 	void Present(const FSkillDetailUI& Detail);
 
+	/** Status details use the authored skill WBP, without skill costs or targeting controls. */
+	void PresentStatus(const FText& Name, UTexture2D* Icon, int32 StackCount, const FText& Description);
+
 	/**
 	 * @brief 아티팩트 상세 DTO 하나로 아티팩트 전용 2열 화면을 그린다.
 	 *
@@ -219,6 +222,7 @@ public:
 	void RefreshResponsiveLayout();
 
 private:
+	void SetSkillControlsShown(bool bShown);
 	/* ── 이미지 시안 기반 통합 스킬 미리보기 ─────────────────────────────
 	 * 수치 메달과 선택/효과 범위를 한 정보면에 겹쳐 그린다. 실제 전투의
 	 * FSkillTargetingUI만 소비하며, 장애물 판정까지 지어내지는 않는다.

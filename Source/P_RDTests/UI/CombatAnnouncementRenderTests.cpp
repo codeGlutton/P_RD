@@ -30,6 +30,13 @@ bool FCombatAnnouncementRenderTest::RunTest(const FString&)
     HUD->BindUIModel(Model);
     // Bind before construction so the editor's automatic combat preview stays off.
     const TSharedRef<SWidget> SlateHUD = HUD->TakeWidget();
+    FUnitUI Player;
+    Player.mUnitId = 10;
+    Player.mIsPlayer = true;
+    Model->SetUnitUIs({Player});
+    FTurnUI Turn;
+    Turn.mCurrentUnitId = Player.mUnitId;
+    Model->SetTurnUI(Turn);
     auto* Band = Cast<UBorder>(HUD->GetWidgetFromName(TEXT("CombatAnnouncementRoot")));
     auto* Blocker = Cast<UButton>(HUD->GetWidgetFromName(TEXT("CombatAnnouncementInputBlocker")));
     if (!TestNotNull(TEXT("Band"), Band) || !TestNotNull(TEXT("Input blocker"), Blocker)) return false;
@@ -86,6 +93,8 @@ bool FCombatAnnouncementRenderTest::RunTest(const FString&)
         if (Kind == 0) Model->OnBeginCombat.Broadcast(Barrier);
         if (Kind == 1) Model->OnBeginAnyRound.Broadcast(Barrier);
         if (Kind == 2) Model->OnBeginAnyTurn.Broadcast(Barrier);
+        if (Kind == 2) TestEqual(TEXT("Skills remain hidden during turn announcement"),
+            HUD->GetWidgetFromName(TEXT("CommandCard_0"))->GetVisibility(), ESlateVisibility::Collapsed);
         Barrier.Reset();
         SlateHUD->Tick(Geometry, 1.0, .25f);
         TestEqual(TEXT("Announcement visible"), Band->GetVisibility(), ESlateVisibility::HitTestInvisible);
@@ -107,6 +116,8 @@ bool FCombatAnnouncementRenderTest::RunTest(const FString&)
         World->GetTimerManager().Tick(2.f);
         for (const auto& Released : Releases) TestTrue(TEXT("Announcement releases gameplay barrier"), *Released);
         TestEqual(TEXT("Input blocker hidden after announcement"), Blocker->GetVisibility(), ESlateVisibility::Collapsed);
+        TestEqual(TEXT("Current mercenary skills open after announcement finishes"),
+            HUD->GetWidgetFromName(TEXT("CommandCard_0"))->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
         HUD->RemoveFromRoot();
         return true;
     }));

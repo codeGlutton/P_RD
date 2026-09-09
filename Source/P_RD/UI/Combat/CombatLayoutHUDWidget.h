@@ -210,10 +210,6 @@ public:
 	}
 	FString GetDetailChipValueForTest(int32 ChipIndex) const;
 	FString GetDetailSubtitleForTest() const;
-	/** @brief 상태 소켓 타이머를 기다리지 않고 발화시켜 상세 왕복을 검증한다. */
-	void TriggerStatusLongPressForTest(bool bAlly, int32 SlotIndex);
-	/** @brief 상태 소켓 긴 누름 타이머가 실제로 대기 중인지. */
-	bool IsStatusLongPressPendingForTest() const;
 	/** @brief 멀티터치/늦은 Release 검증용 현재 후보 식별자. */
 	bool IsStatusPressActiveForTest(bool bAlly, int32 SlotIndex) const;
 
@@ -1042,7 +1038,7 @@ private:
 	void HideDetailOverlay(bool bNotifyGameplay);
 
 	/**
-	 * @brief 요약판의 상태 아이콘을 오래 누르면 뜨는 상태이상 상세.
+	 * @brief 요약판의 상태 아이콘을 한 번 터치하면 뜨는 상태이상 상세.
 	 *
 	 * 스킬 상세와 같은 판을 쓴다: 제목 띠에 상태 이름, 소켓에 상태 아이콘,
 	 * 설명 칸에 효과 글. 격자·칩은 걷는다.
@@ -1050,11 +1046,9 @@ private:
 	void ShowStatusDetailOverlay(const FGameplayTag& StatusTag, int32 StackCount);
 	void HandleStatusClicked(bool bAlly, int32 SlotIndex);
 	void BeginStatusPress(bool bAlly, int32 SlotIndex);
-	void EndStatusPress(bool bAlly, int32 SlotIndex);
-	void HandleStatusLongPress(bool bAlly, int32 SlotIndex);
 	void CancelStatusPress();
 	UFUNCTION() void HandleScrollableStatusPressed(bool bAlly, int32 SlotIndex);
-	UFUNCTION() void HandleScrollableStatusReleased(bool bAlly, int32 SlotIndex);
+	UFUNCTION() void HandleScrollableStatusClicked(bool bAlly, int32 SlotIndex);
 	UFUNCTION() void HandleAllyStatusScrolled(float CurrentOffset);
 	UFUNCTION() void HandleEnemyStatusScrolled(float CurrentOffset);
 
@@ -1132,14 +1126,13 @@ private:
 	 */
 	int32 mInspectedAllyUnitId = INDEX_NONE;
 
-	// 상태 아이콘 긴 누름이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
+	// 상태 아이콘의 탭이 어느 상태를 가리키는지 -- 요약판 갱신 때 채운다.
 	TArray<FStatusEffectUI> mAllyShownStatuses;
 	TArray<FStatusEffectUI> mEnemyShownStatuses;
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mAllyStatusButtons;
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mEnemyStatusButtons;
 	int32 mAllyStatusListUnitId = INDEX_NONE;
 	int32 mEnemyStatusListUnitId = INDEX_NONE;
-	FTimerHandle mStatusLongPressTimerHandle;
 	int32 mStatusPressedSlot = INDEX_NONE;
 	bool mStatusPressedAlly = false;
 	bool mStatusPressActive = false;

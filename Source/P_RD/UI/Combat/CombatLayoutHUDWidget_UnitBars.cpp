@@ -1,4 +1,5 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatWorldWidgetPosition.h"
 
 #include "GameFramework/Actor.h"   // FUnitUI.mViewActor->GetActorLocation() (HP바 라이브 투영)
 #include "Camera/PlayerCameraManager.h"   // 카메라 줌(OrthoWidth) 비례 HP바 스케일
@@ -546,7 +547,10 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 
 		if (UCanvasPanelSlot* RootSlot = Cast<UCanvasPanelSlot>(Bar.mRoot->Slot))
 		{
-			RootSlot->SetPosition(ScreenPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));   // 유닛 머리 위로 띄운다.
+			const FVector2D CanvasPosition = CombatWorldWidgetPosition::ViewportToCanvas(
+				ScreenPosition, UWidgetLayoutLibrary::GetViewportWidgetGeometry(this),
+				mRootCanvas->GetCachedGeometry());
+			RootSlot->SetPosition(CanvasPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));
 		}
 
 		// [RDBOT] 유닛 한 칸. sx/sy 는 유닛 발밑(=탭해야 하는 타일) 기준 위젯 좌표.

@@ -1905,11 +1905,53 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	DetailSetTextIfPresent(mSkillDescriptionText, FText::FromString(Body));
 	DetailSetShown(mDetailBodyText, false);
 	SetSkillVisualPreviewShown(true);
+	SetSkillControlsShown(true);
 
 	DetailSetPortraitCropped(mSkillIconImage, Detail.mIcon);
 	// 자기는 눌림을 안 받고 스킬 칸만 받는다. 그래서 칸 밖을 톡 치면 눌림이
 	// 호스트까지 내려가 패널이 닫힌다.
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+}
+
+void USkillDetailOverlayPresenter::SetSkillControlsShown(const bool bShown)
+{
+	if (mSkillContentWidget && mSkillContentWidget->WidgetTree)
+	{
+		TArray<UWidget*> Widgets;
+		mSkillContentWidget->WidgetTree->GetAllWidgets(Widgets);
+		for (UWidget* Widget : Widgets)
+		{
+			const FString Name = Widget->GetName();
+			if (Name.StartsWith(TEXT("SkillStat")) || Name.StartsWith(TEXT("SkillSelectRange"))
+				|| Name.StartsWith(TEXT("SkillEffectRange")))
+			{
+				Widget->SetVisibility(!bShown ? ESlateVisibility::Collapsed
+					: Widget->IsA<UButton>() ? ESlateVisibility::Visible : ESlateVisibility::HitTestInvisible);
+			}
+		}
+	}
+}
+
+void USkillDetailOverlayPresenter::PresentStatus(const FText& Name, UTexture2D* Icon,
+	const int32 StackCount, const FText& Description)
+{
+	FSkillDetailUI Content;
+	Content.mName = Name;
+	Content.mIcon = Icon;
+	Content.mDescription = Description;
+	Present(Content);
+	if (!mDetailOverlayWidget) return;
+	ClearDetailChips();
+	SetSkillControlsShown(false);
+	if (mSkillTacticalDiagramWidget) mSkillTacticalDiagramWidget->SetVisibility(ESlateVisibility::Collapsed);
+	if (mSkillContentSwitcher) mSkillContentSwitcher->SetActiveWidgetIndex(0);
+	const FText Labels[] = { LOCTEXT("StatusType", "상태이상"),
+		FText::Format(LOCTEXT("StatusStackCount", "{0}중첩"), FMath::Max(StackCount, 1)) };
+	for (int32 Index = 0; Index < 2 && mSkillVisualStatTexts.IsValidIndex(Index); ++Index)
+	{
+		DetailSetTextIfPresent(mSkillVisualStatTexts[Index], Labels[Index]);
+		DetailSetShown(mSkillVisualStatTexts[Index], true);
+	}
 }
 
 /** @brief 아티팩트 효과 본문 전용 ScrollBox 묶음을 처음 한 번 짓는다. */

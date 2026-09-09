@@ -1,5 +1,6 @@
 ﻿#include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/DetailOverlayInputShield.h"
+#include "UI/Shop/SkillReplacementDialog.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -524,6 +525,21 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 		ReleasedDelegate.BindUFunction(Owner, ReleasedFunction);
 		Button->OnReleased.AddUnique(ReleasedDelegate);
 	};
+	BindSkillHold(mRailButtons.IsValidIndex(0) ? mRailButtons[0].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed0),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased0));
+	BindSkillHold(mRailButtons.IsValidIndex(1) ? mRailButtons[1].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed1),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased1));
+	BindSkillHold(mRailButtons.IsValidIndex(2) ? mRailButtons[2].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed2),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased2));
+	BindSkillHold(mRailButtons.IsValidIndex(3) ? mRailButtons[3].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed3),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased3));
+	BindSkillHold(mRailButtons.IsValidIndex(4) ? mRailButtons[4].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailPressed4),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleRailReleased4));
 	BindSkillHold(mSkillSlotButtons.IsValidIndex(0) ? mSkillSlotButtons[0].Get() : nullptr,
 		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotPressed0),
 		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotReleased0));
@@ -618,7 +634,7 @@ void UShopUIWidgetBase::HandleNextClicked()
 
 void UShopUIWidgetBase::HandleBuyClicked()
 {
-	if (mUIModel == nullptr)
+	if (mUIModel == nullptr || mPendingReplacementItem != INDEX_NONE)
 	{
 		return;
 	}
@@ -638,6 +654,7 @@ void UShopUIWidgetBase::HandleBuyClicked()
 
 	if (Item->mKind == EShopItemKind::Skill)
 	{
+		if (GetSkillAvailability(Shop, *Item) != EShopSkillAvailability::Available) return;
 		const FShopOwnedUnitUI* Unit = GetSelectedSkillTarget(Shop);
 		if (Unit == nullptr || !Unit->mIsOwned || Unit->mUnitIndex == INDEX_NONE)
 		{
@@ -647,10 +664,67 @@ void UShopUIWidgetBase::HandleBuyClicked()
 			+ mSelectedSkillSlotIndex;
 		if (Unit->mSkillSlots.IsValidIndex(ModelSkillSlotIndex))
 		{
+			if (!Unit->mSkillSlots[ModelSkillSlotIndex].mIsEmpty)
+			{
+				ShowSkillReplacementConfirmation(*Item, *Unit, ModelSkillSlotIndex);
+				return;
+			}
 			mUIModel->RequestBuySkill(
 				Item->mSlotIndex, Unit->mUnitIndex, ModelSkillSlotIndex);
 		}
 	}
+}
+
+void UShopUIWidgetBase::ShowSkillReplacementConfirmation(const FShopItemUI& Item,
+	const FShopOwnedUnitUI& Unit, int32 ModelSlot)
+{
+	if (!mSkillReplacementDialog)
+	{
+		mSkillReplacementDialog = GetOwningPlayer()
+			? CreateWidget<USkillReplacementDialog>(GetOwningPlayer(), USkillReplacementDialog::StaticClass())
+			: CreateWidget<USkillReplacementDialog>(GetWorld(), USkillReplacementDialog::StaticClass());
+	}
+	if (!mSkillReplacementDialog) return;
+	mPendingReplacementItem = Item.mSlotIndex;
+	mPendingReplacementUnit = Unit.mUnitIndex;
+	mPendingReplacementSlot = ModelSlot;
+	mWasEnabledBeforeReplacement = GetIsEnabled();
+	mSkillReplacementDialog->OnConfirmed.BindUObject(this, &UShopUIWidgetBase::ConfirmSkillReplacement);
+	mSkillReplacementDialog->OnCancelled.BindUObject(this, &UShopUIWidgetBase::CancelSkillReplacement);
+	mSkillReplacementDialog->SetSkills(Unit.mSkillSlots[ModelSlot].mName, Item.mName,
+		mBuyButtonText ? mBuyButtonText->GetFont() : FSlateFontInfo());
+	mSkillReplacementDialog->OpenUI();
+	SetIsEnabled(false);
+}
+
+void UShopUIWidgetBase::CancelSkillReplacement()
+{
+	const bool HadPending = mPendingReplacementItem != INDEX_NONE;
+	mPendingReplacementItem = mPendingReplacementUnit = mPendingReplacementSlot = INDEX_NONE;
+	if (mSkillReplacementDialog)
+	{
+		mSkillReplacementDialog->OnConfirmed.Unbind();
+		mSkillReplacementDialog->OnCancelled.Unbind();
+		mSkillReplacementDialog->CloseUI();
+	}
+	if (HadPending) SetIsEnabled(mWasEnabledBeforeReplacement);
+}
+
+void UShopUIWidgetBase::ConfirmSkillReplacement()
+{
+	const int32 ItemSlot = mPendingReplacementItem;
+	const int32 UnitIndex = mPendingReplacementUnit;
+	const int32 SkillSlot = mPendingReplacementSlot;
+	CancelSkillReplacement(); // Retire the confirmation before synchronous gameplay/model callbacks.
+	if (!mUIModel || ItemSlot == INDEX_NONE) return;
+	const FShopUI& Shop = mUIModel->GetShop();
+	const FShopItemUI* Item = GetSelectedItem(Shop);
+	const FShopOwnedUnitUI* Unit = GetSelectedSkillTarget(Shop);
+	if (!Item || !Unit || Item->mSlotIndex != ItemSlot || Unit->mUnitIndex != UnitIndex
+		|| SkillSlot != ReplaceableSkillStartIndex + mSelectedSkillSlotIndex
+		|| !Unit->mSkillSlots.IsValidIndex(SkillSlot) || Item->mIsSoldOut || !Item->mIsAffordable
+		|| GetSkillAvailability(Shop, *Item) != EShopSkillAvailability::Available) return;
+	mUIModel->RequestBuySkill(ItemSlot, UnitIndex, SkillSlot);
 }
 
 void UShopUIWidgetBase::HandleRailClicked0() { SelectRailSlot(0); }
@@ -907,6 +981,11 @@ void UShopUIWidgetBase::SelectUnitSlot(int32 UnitViewIndex)
 	}
 
 	const FShopUI& Shop = mUIModel->GetShop();
+	if (Shop.mIsLevelUpReward)
+	{
+		mUIModel->OnRewardUnitRequested.Broadcast(Shop.mSkillTargetUnits[UnitViewIndex].mUnitIndex);
+		return;
+	}
 	const EUnitJobType JobType = Shop.mSkillTargetUnits[UnitViewIndex].mJobType;
 	TArray<int32> MatchingUnitIndices;
 	for (const FShopOwnedUnitUI& Unit : Shop.mOwnedUnits)
@@ -964,6 +1043,10 @@ const FShopOwnedUnitUI* UShopUIWidgetBase::GetSelectedSkillTarget(
 		return nullptr;
 	}
 
+	if (Shop.mIsLevelUpReward)
+		return Shop.mOwnedUnits.FindByPredicate([&Shop](const FShopOwnedUnitUI& Unit)
+			{ return Unit.mUnitIndex == Shop.mRewardUnitIndex; });
+
 	const EUnitJobType JobType =
 		Shop.mSkillTargetUnits[mSelectedUnitViewIndex].mJobType;
 	const FShopOwnedUnitUI* Selected = Shop.mOwnedUnits.FindByPredicate(
@@ -1011,6 +1094,11 @@ void UShopUIWidgetBase::BindUIModel(UShopUIModel* InUIModel)
 
 void UShopUIWidgetBase::HandleCloseClicked()
 {
+	if (mUIModel && mUIModel->GetShop().mIsLevelUpReward)
+	{
+		mUIModel->RequestLeave();
+		return;
+	}
 	if (mUIModel != nullptr)
 	{
 		mUIModel->RequestLeave();
@@ -1020,6 +1108,11 @@ void UShopUIWidgetBase::HandleCloseClicked()
 
 UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 {
+	if (mSkillReplacementDialog && mSkillReplacementDialog->IsVisible()) return mSkillReplacementDialog;
+	if (mShopSkillDetailPresenter)
+		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
+			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
+
 	if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible())
 		if (auto* Layer = mMercenaryHireWidget->GetBackNavigationLayer())
 			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
@@ -1029,6 +1122,11 @@ UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 
 bool UShopUIWidgetBase::HandleBackNavigation()
 {
+	if (mPendingReplacementItem != INDEX_NONE) { CancelSkillReplacement(); return true; }
+	if (mShopSkillDetailPresenter)
+		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
+			if (Layer->IsVisible()) { mShopSkillDetailPresenter->Dismiss(); return true; }
+
 	if (mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsVisible()) HandleShopDetailCloseClicked();
 	else if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible()) mMercenaryHireWidget->HandleBackNavigation();
 	else if (mIsArtifactInventoryOpen) SetArtifactInventoryOpen(false);
@@ -1057,6 +1155,7 @@ void UShopUIWidgetBase::Leave()
 /** @brief 현재 UIModel 구독을 해제해 화면 파괴 후 OnUIChanged가 들어오지 않게 한다. */
 void UShopUIWidgetBase::UnbindUIModel()
 {
+	CancelSkillReplacement();
 	if (mUIModel != nullptr)
 	{
 		mUIModel->OnUIChanged.RemoveDynamic(this, &UShopUIWidgetBase::HandleUIChanged);
@@ -1080,6 +1179,8 @@ void UShopUIWidgetBase::HandleUIChanged(EShopUIDomain Domain)
 		return;
 	}
 
+	// Any changed offer, recipient, price or owned skill invalidates the open confirmation.
+	CancelSkillReplacement();
 	RefreshView();
 	OnShopRefreshed();
 }
@@ -1558,7 +1659,7 @@ void UShopUIWidgetBase::RefreshSkillTargetView(const FShopUI& Shop)
 				MatchingUnitIndices.Add(OwnedUnit.mUnitIndex);
 			}
 		}
-		if (CountText != nullptr && MatchingUnitIndices.Num() > 1)
+		if (!Shop.mIsLevelUpReward && CountText != nullptr && MatchingUnitIndices.Num() > 1)
 		{
 			const int32 CurrentPosition = bSelected
 				? MatchingUnitIndices.IndexOfByKey(mSelectedSkillTargetUnitIndex)
@@ -1908,6 +2009,23 @@ void UShopUIWidgetBase::RefreshView()
 	}
 
 	const FShopUI& Shop = mUIModel->GetShop();
+	if (Shop.mIsLevelUpReward)
+	{
+		mActiveItemKind = EShopItemKind::Skill;
+		if (mLastRewardOfferId != Shop.mRewardOfferId)
+		{
+			mLastRewardOfferId = Shop.mRewardOfferId;
+			mSelectedUnitViewIndex = FMath::Max(0, Shop.mSkillTargetUnits.IndexOfByPredicate(
+				[&Shop](const FShopOwnedUnitUI& Unit) { return Unit.mUnitIndex == Shop.mRewardUnitIndex; }));
+			mSelectedFilteredIndex = 0;
+			mSelectedSkillSlotIndex = 0;
+			mSelectedSkillTargetUnitIndex = INDEX_NONE;
+			if (const FShopOwnedUnitUI* Target = GetSelectedSkillTarget(Shop))
+				for (int32 SkillSlot = 1; SkillSlot <= 4; ++SkillSlot)
+					if (Target->mSkillSlots.IsValidIndex(SkillSlot) && Target->mSkillSlots[SkillSlot].mIsEmpty)
+					{ mSelectedSkillSlotIndex = SkillSlot - 1; break; }
+		}
+	}
 
 	if (mGoldText != nullptr)
 	{
@@ -1920,6 +2038,7 @@ void UShopUIWidgetBase::RefreshView()
 	if (HasFinalShopLayout())
 	{
 		RefreshFinalShopView(Shop);
+		if (Shop.mIsLevelUpReward) RefreshLevelUpRewardView(Shop);
 		return;
 	}
 
@@ -2448,6 +2567,53 @@ void UShopUIWidgetBase::NativeDestruct()
 	}
 	UnbindUIModel();
 	Super::NativeDestruct();
+}
+
+void UShopUIWidgetBase::ApplyCloseUI()
+{
+	CancelSkillReplacement();
+	Super::ApplyCloseUI();
+}
+
+int32 UShopUIWidgetBase::GetViewportZOrder() const
+{
+	return mUIModel && mUIModel->GetShop().mIsLevelUpReward ? 10005 : Super::GetViewportZOrder();
+}
+
+void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)
+{
+	if (WidgetTree)
+		for (const TCHAR* Name : { TEXT("ShopBackgroundScale"), TEXT("ShopBackgroundArt") })
+			if (UWidget* Background = WidgetTree->FindWidget(Name))
+				Background->SetVisibility(ESlateVisibility::Collapsed);
+	if (mTitleText) mTitleText->SetText(LOCTEXT("LevelUpTitle", "레벨업"));
+	if (mGoldText)
+	{
+		mGoldText->SetText(Shop.mRewardTitle);
+		FSlateFontInfo Font = mGoldText->GetFont();
+		Font.Size = 20;
+		mGoldText->SetFont(Font);
+	}
+	for (UWidget* Widget : TArray<UWidget*>{ mArtifactTabButton.Get(), mSkillTabButton.Get(),
+		mRestTabButton.Get(), mMercenaryTabButton.Get(), mArtifactTabPlate.Get(), mSkillTabPlate.Get(),
+		mRestTabPlate.Get(), mMercenaryTabPlate.Get(), mArtifactTabText.Get(), mSkillTabText.Get(),
+		mRestTabText.Get(), mMercenaryTabText.Get(), mRunOptionsRailWidget.Get() })
+		if (Widget) Widget->SetVisibility(ESlateVisibility::Collapsed);
+	for (UTextBlock* Price : mRailPriceTexts)
+		if (Price) Price->SetVisibility(ESlateVisibility::Collapsed);
+	if (mSelectedItemPriceText)
+	{
+		mSelectedItemPriceText->SetVisibility(ESlateVisibility::HitTestInvisible);
+		mSelectedItemPriceText->SetText(Shop.mItems.IsEmpty()
+			? LOCTEXT("LevelUpNoCandidates", "배울 수 있는 새 스킬이 없습니다")
+			: LOCTEXT("LevelUpChooseOne", "1개 선택"));
+	}
+	if (WidgetTree)
+		if (UWidget* Holder = WidgetTree->FindWidget(TEXT("CloseHolder")))
+			Holder->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	if (mCloseButtonText) mCloseButtonText->SetText(LOCTEXT("LevelUpSkip", "받지 않기"));
+	if (mBuyButtonText && mBuyButton && mBuyButton->GetIsEnabled())
+		mBuyButtonText->SetText(LOCTEXT("LevelUpEquip", "선택하여 장착"));
 }
 
 #undef LOCTEXT_NAMESPACE

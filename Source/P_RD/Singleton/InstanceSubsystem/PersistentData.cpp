@@ -28,6 +28,10 @@
 #include "HAL/IConsoleManager.h"
 #include "Internationalization/TextLocalizationManager.h"
 #include "Sound/SoundClass.h"
+#include "Sound/SoundBase.h"
+#include "Audio/RDSoundRouting.h"
+#include "UObject/UObjectIterator.h"
+#include "GameFramework/PlayerController.h"
 
 #if !UE_BUILD_SHIPPING
 
@@ -802,6 +806,41 @@ void UOptionPersistData::MakeCaches()
 	}
 
 	FViewport::ViewportResizedEvent.AddUObject(this, &UOptionPersistData::OnResizeViewport);
+	for (TObjectIterator<USoundBase> It; It; ++It) RouteLoadedSound(*It);
+}
+
+void UOptionPersistData::RouteLoadedSound(UObject* Asset)
+{
+	USoundBase* Sound = Cast<USoundBase>(Asset);
+	if (!Sound || !Sound->GetPathName().StartsWith(TEXT("/Game/"))) return;
+	// Respect intentionally authored game buses (including voice and custom buses).
+	if (Sound->SoundClassObject && Sound->SoundClassObject->GetPathName().StartsWith(TEXT("/Game/"))) return;
+	const int32 Index = static_cast<int32>(RDSoundRouting::Category(Sound->GetPathName()));
+	if (mOptionPersistDataCache.mSoundClassObjects.IsValidIndex(Index))
+		Sound->SoundClassObject = mOptionPersistDataCache.mSoundClassObjects[Index];
+}
+
+void UOptionPersistData::BeginDestroy()
+{
+	FViewport::ViewportResizedEvent.RemoveAll(this);
+	Super::BeginDestroy();
+}
+
+void UOptionPersistData::ApplyAudioOptions()
+{
+	if (!GetWorld()) return; // Profile loading can precede creation of the first world.
+	if (mOptionPersistDataCache.mSoundMixObject)
+		UGameplayStatics::SetBaseSoundMix(this, mOptionPersistDataCache.mSoundMixObject);
+	for (int32 Index = 0; Index < static_cast<int32>(EGameVolumeType::Count); ++Index)
+		SetVolume(static_cast<EGameVolumeType>(Index), GetVolume(static_cast<EGameVolumeType>(Index)));
+}
+
+void UOptionPersistData::SetVibrationEnabled(bool IsEnabled)
+{
+	mVibrationEnabled = IsEnabled;
+	if (UWorld* World = GetWorld())
+		for (auto It = World->GetPlayerControllerIterator(); It; ++It)
+			if (APlayerController* PC = It->Get()) PC->bForceFeedbackEnabled = IsEnabled;
 }
 
 void UOptionPersistData::MakeOption()
@@ -818,12 +857,16 @@ void UOptionPersistData::ClearOption()
 	mFpsLimit = CDO->mFpsLimit;
 	mCameraShakeEnabled = CDO->mCameraShakeEnabled;
 	mEffectVFXEnabled = CDO->mEffectVFXEnabled;
+	mVibrationEnabled = CDO->mVibrationEnabled;
 
 	ApplyCurrentOptions();
 }
 
 void UOptionPersistData::SetVolume(EGameVolumeType VolumeType, float Volume)
 {
+	const int32 Index = static_cast<int32>(VolumeType);
+	if (Index < 0 || Index >= static_cast<int32>(EGameVolumeType::Count)) return;
+	while (mVolumes.Num() < static_cast<int32>(EGameVolumeType::Count)) mVolumes.Add(1.f);
 	Volume = FMath::Clamp(Volume, 0.f, 1.f);
 
 	mVolumes[StaticCast<int32>(VolumeType)] = Volume;
@@ -914,21 +957,19 @@ void UOptionPersistData::SetEffectVFXEnabled(bool IsEnabled)
 
 void UOptionPersistData::ApplyCurrentOptions()
 {
-	const int32 MaxGameVolumeType = StaticCast<int32>(EGameVolumeType::Count);
-	for (int32 i = 0; i < MaxGameVolumeType; ++i)
-	{
-		SetVolume(StaticCast<EGameVolumeType>(i), mVolumes[i]);
-	}
+	ApplyAudioOptions();
 	SetLanguage(mLanguageType);
 	SetOverallQuality(mOverallQuality);
 	SetFpsLimit(mFpsLimit);
 	SetCameraShakeEnabled(mCameraShakeEnabled);
 	SetEffectVFXEnabled(mEffectVFXEnabled);
+	SetVibrationEnabled(mVibrationEnabled);
 }
 
 float UOptionPersistData::GetVolume(EGameVolumeType VolumeType) const
 {
-	return mVolumes[StaticCast<int32>(VolumeType)];
+	const int32 Index = static_cast<int32>(VolumeType);
+	return mVolumes.IsValidIndex(Index) ? mVolumes[Index] : 1.f;
 }
 
 ELanguageType UOptionPersistData::GetLanguage() const

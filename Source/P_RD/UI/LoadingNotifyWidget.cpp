@@ -24,6 +24,11 @@ ULoadingNotifyWidget::ULoadingNotifyWidget(const FObjectInitializer& ObjectIniti
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::LoadingNotify);
 }
 
+int32 ULoadingNotifyWidget::GetViewportZOrder() const
+{
+	return FMath::Max(Super::GetViewportZOrder(), RDViewportLayers::TransitionLoading);
+}
+
 #if WITH_DEV_AUTOMATION_TESTS
 void ULoadingNotifyWidget::SetVisibleDurationsForTest(float MinimumVisibleSeconds,
 	float CompletedVisibleSeconds, float CloseAnimationSeconds)
@@ -66,12 +71,17 @@ void ULoadingNotifyWidget::NativeTick(const FGeometry& MyGeometry, float InDelta
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
+	// New room rails can be created during the Completed/closing interval too.
+	if (mLoadingState != ELoadingNotifyState::None)
+	{
+		SuppressRunOptionsRails();
+	}
+
 	if (mLoadingState != ELoadingNotifyState::Loading)
 	{
 		return;
 	}
 
-	SuppressRunOptionsRails();
 	if (mLoadingIndicator == nullptr)
 	{
 		return;

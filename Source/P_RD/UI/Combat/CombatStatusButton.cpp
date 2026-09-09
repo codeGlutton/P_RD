@@ -6,9 +6,9 @@ void UCombatStatusButton::Configure(const bool bInAlly, const int32 InSlotIndex)
 	mSlotIndex = InSlotIndex;
 
 	OnPressed.RemoveDynamic(this, &UCombatStatusButton::ForwardPressed);
-	OnReleased.RemoveDynamic(this, &UCombatStatusButton::ForwardReleased);
+	OnClicked.RemoveDynamic(this, &UCombatStatusButton::ForwardClicked);
 	OnPressed.AddUniqueDynamic(this, &UCombatStatusButton::ForwardPressed);
-	OnReleased.AddUniqueDynamic(this, &UCombatStatusButton::ForwardReleased);
+	OnClicked.AddUniqueDynamic(this, &UCombatStatusButton::ForwardClicked);
 }
 
 void UCombatStatusButton::ForwardPressed()
@@ -16,7 +16,7 @@ void UCombatStatusButton::ForwardPressed()
 	OnStatusPressed.Broadcast(mAlly, mSlotIndex);
 }
 
-void UCombatStatusButton::ForwardReleased()
+void UCombatStatusButton::ForwardClicked()
 {
-	OnStatusReleased.Broadcast(mAlly, mSlotIndex);
+	OnStatusClicked.Broadcast(mAlly, mSlotIndex);
 }
