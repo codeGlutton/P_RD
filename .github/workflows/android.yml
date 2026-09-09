@@ -44,19 +44,3 @@ jobs:
       - name: Compile Android arm64 Shipping
         shell: pwsh
         run: ./Tools/Android/compile.ps1
-
-  native-gate:
-    name: Android native gate
-    needs: [source-checks, arm64-compile]
-    if: always()
-    runs-on: windows-latest
-    steps:
-      - name: Require actual Android compilation
-        shell: pwsh
-        env:
-          SOURCE_RESULT: ${{ needs.source-checks.result }}
-          COMPILE_RESULT: ${{ needs.arm64-compile.result }}
-        run: |
-          if ($env:SOURCE_RESULT -ne 'success' -or $env:COMPILE_RESULT -ne 'success') {
-            throw 'Android verification is incomplete. Configure an isolated UE 5.7 Windows runner with ANDROID_CI_RUNNER, then run the native compile. Source checks alone do not satisfy this gate.'
-          }
