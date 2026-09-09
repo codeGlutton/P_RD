@@ -88,24 +88,15 @@ An optional reproducible trial is included:
 python Tools/Android/build_release.py --version-code 2 --output outputs/android-release-ui-trial-v2 --prepare-ui
 ```
 
-This first builds the copied Editor target and runs `prepare_release_ui.py` in the disposable project. It applies an Android `Downscale` floor only to `T_RCN_ChestTripleBurst_Atlas` (audited source 4092×2730) and `T_StageMap_Scroll_Flat` (1024×3072), targeting a longest side of 2048. Existing stronger limits and all other platforms are preserved. The script refuses to run without the builder's copy marker and refuses assets whose resolved files point outside the copy. It does not mutate the shared SVN junction, ordinary icons, or text. This opt-in trial is not yet a measured final art policy.
+The reward chest is a 6×6 animation atlas. Its 4092×2730 source contains 682×455 frames; the old Android Downscale of 5.328125 reduced each frame to about 128×85. `RewardTextureQuality` now restores the atlas's Android scale to 1 on editor/cooker load. Other platforms and other textures retain their existing values. The correction is applied in memory and does not modify the shared SVN file.
 
-On 2026-09-08, a full Editor build of an isolated validation copy and a real Unreal execution of `prepare_release_ui.py` both succeeded. The generated report found stronger existing Android overrides and preserved both values:
-
-| Asset | Editor dimensions | Android Downscale before → after |
-| --- | --- | --- |
-| `T_RCN_ChestTripleBurst_Atlas` | 4092×2730 | 5.328125 → 5.328125 |
-| `T_StageMap_Scroll_Flat` | 1024×3072 | 4.0 → 4.0 |
-
-This run did not further reduce either texture. Large source dimensions and `MaxTextureSize=0` alone do not establish oversized Android allocations: the existing per-platform overrides must also be considered. This validates the preparation step and preservation behavior; actual cooked dimensions and device appearance remain unverified. It does not establish completion of the signed AAB release pipeline.
-
-`ui-preparation.json` records the requested ratios and explicitly marks cooked-size verification incomplete. Editor dimensions are not cooked dimensions. In a **packaged Android Development build made from the same prepared copy**, display both the map and chest effect, capture `ListTextures` output (not CSV), and run:
+The optional preparation step still adjusts only the marked disposable project copy. The chest budget is now 4096 with a **minimum** of 4092×2730, while the map retains its 2048 maximum and any stronger existing downscale. A lower-resolution chest now fails cooked-size verification instead of passing merely because it is small.
 
 ```powershell
 python Tools/Android/verify_ui_cooked_sizes.py path/to/android-listtextures.log
 ```
 
-The verifier requires the cooked-data header and both asset rows, and fails if either cooked dimension exceeds 2048. Shipping builds normally omit the debugging console, so collect this diagnostic in a Development cook using the same prepared content/platform settings, then retain the report with the release and inspect the actual release UI visually. No actual device/cooked-size success is asserted until those captures exist.
+Use a packaged Android Development run with both textures loaded for this command. It requires the `Cooked/OnDisk:` header from `ListTextures`; editor dimensions alone are not cooked-size evidence. Shipping omits the diagnostic console. Check the actual chest animation visually on the device as well.
 
 ## References
 

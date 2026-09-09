@@ -1,8 +1,11 @@
-"""Narrow Android release policy for the two oversized NoMipmaps UI assets."""
+"""Android UI budgets: preserve chest animation frames and cap the map."""
 TARGETS = {
-    "/Game/SVN/OutSideAsset/AICreation/UI/RewardConcept03New/T_RCN_ChestTripleBurst_Atlas": 2048,
+    "/Game/SVN/OutSideAsset/AICreation/UI/RewardConcept03New/T_RCN_ChestTripleBurst_Atlas": 4096,
     "/Game/SVN/OutSideAsset/AICreation/UI/RunFlow/T_StageMap_Scroll_Flat": 2048,
 }
+
+# This is a 6x6 animation atlas, not one image. Retain its 682x455 source frames.
+MINIMUMS = {"/Game/SVN/OutSideAsset/AICreation/UI/RewardConcept03New/T_RCN_ChestTripleBurst_Atlas": (4092, 2730)}
 
 
 def android_downscale(width: int, height: int, maximum: int, previous: float) -> float:

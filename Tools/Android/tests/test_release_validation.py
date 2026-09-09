@@ -80,12 +80,15 @@ class ReleaseValidationTests(unittest.TestCase):
     def test_cooked_ui_requires_both_assets_within_budget(self):
         lines = ['Cooked/OnDisk: Width x Height']
         for asset in TARGETS:
-            lines.append(f'2048x1368 (11000 KB, ?), 2048x1368 (11000 KB), PF_ASTC_4x4, TEXTUREGROUP_UI, {asset}, NO')
+            size = '4092x2730' if 'ChestTripleBurst' in asset else '2048x1368'
+            lines.append(f'{size} (11000 KB, ?), {size} (11000 KB), PF_ASTC_4x4, TEXTUREGROUP_UI, {asset}, NO')
         self.assertTrue(verify_log('\n'.join(lines))['passed'])
         with self.assertRaisesRegex(ValueError, 'exceeds'):
             verify_log('\n'.join(lines).replace('2048x1368', '4092x2730'))
         with self.assertRaisesRegex(ValueError, 'missing'):
             verify_log('\n'.join(lines[:-1]))
+        with self.assertRaisesRegex(ValueError, 'below required frame resolution'):
+            verify_log('\n'.join(lines).replace('4092x2730', '768x512'))
 
 
 if __name__ == '__main__':

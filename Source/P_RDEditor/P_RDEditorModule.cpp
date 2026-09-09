@@ -20,6 +20,7 @@
 #include "UI/SkillDetailContentWidgetBuilder.h"
 #include "UI/WidgetFontAudit.h"
 #include "VFX/DungeonNiagaraCompatibility.h"
+#include "UI/RewardTextureQuality.h"
 
 #include "ISequencerModule.h"
 #include "Animation/Track/BoardEventTrackEditor.h"
@@ -35,6 +36,7 @@ IMPLEMENT_GAME_MODULE(FP_RDEditorModule, P_RDEditor);
 void FP_RDEditorModule::StartupModule()
 {
 	RegisterDungeonNiagaraCompatibility();
+	RegisterRewardTextureQuality();
 	RegisterMarchboundHireWidgetBuilderCommands();
 	RegisterCombatHUDWidgetBuilderCommands();
 	RegisterRewardSettlementWidgetBuilderCommands();
@@ -98,6 +100,7 @@ void FP_RDEditorModule::StartupModule()
 void FP_RDEditorModule::ShutdownModule()
 {
 	UnregisterDungeonNiagaraCompatibility();
+	UnregisterRewardTextureQuality();
 	UnregisterMarchboundHireWidgetBuilderCommands();
 	UnregisterCombatHUDWidgetBuilderCommands();
 	UnregisterRewardSettlementWidgetBuilderCommands();
