@@ -15,7 +15,7 @@ python -m unittest discover -s Tools/Android/tests -v
 
 The `Android verification` workflow runs source checks and release-validator unit tests on GitHub-hosted Windows for every PR to develop/main, including Draft PRs. Native compilation requires an isolated Windows x64 self-hosted runner with UE 5.7/Android installed and `UE_ROOT` configured. Set repository variable `ANDROID_CI_RUNNER` to that runner's additional label. Do not put release signing credentials on the PR runner. Fork PRs only run hosted source checks until their code is reviewed and built in a trusted branch.
 
-The final `Android native gate` **fails** if the native job did not succeed, including when no runner is configured. A skipped native job is not accepted as successful Android validation. After the real runner has completed a build, make `Android native gate` a required develop check through repository rules. This change does not edit branch rules or register a runner automatically.
+Native compilation is optional while no runner is configured: the job is skipped without failing the workflow. The separate `Android native gate` has been removed. Source checks and release-validator tests still run; a configured native build still reports its actual success or failure. A source-only pass does not mean Android was compiled; local APK builds provide that verification until CI is configured. This change does not edit branch rules or register a runner automatically.
 
 At implementation time (2026-09-08), the repository runner inventory API returned HTTP 403, so an available native runner could not be verified. The pre-existing develop rule required two approving reviews and last-push approval, but no Android status check.
 
