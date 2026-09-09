@@ -22,6 +22,8 @@ public:
 	UFUNCTION()
 	void HandleUIChanged(EShopUIDomain Domain);
 
+	UFUNCTION() void HandleRewardUnitRequested(int32 UnitIndex) { LastRewardUnitIndex = UnitIndex; }
+	int32 LastRewardUnitIndex = INDEX_NONE;
 	int32 CallCount = 0;
 	int32 LastSlotIndex = INDEX_NONE;
 	int32 LastUnitIndex = INDEX_NONE;

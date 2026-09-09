@@ -30,6 +30,7 @@
 #include "Styling/SlateTypes.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Shop/ShopUIWidgetBase.h"
+#include "UI/Shop/SkillReplacementDialog.h"
 #include "UI/ShopUITestListener.h"
 #include "Widgets/Colors/SColorBlock.h"
 #include "Widgets/SOverlay.h"
@@ -819,6 +820,16 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	LastSkillSlot->OnPressed.Broadcast();
 	LastSkillSlot->OnReleased.Broadcast();
 	BuyButton->OnClicked.Broadcast();
+	TestEqual(TEXT("교체 확인 전에는 구매하지 않음"), Listener->CallCount, 0);
+	auto AcceptReplacement = [this, Widget]()
+	{
+		USkillReplacementDialog* Dialog = Widget->GetSkillReplacementDialogForTest();
+		if (!TestNotNull(TEXT("찬 슬롯 교체 확인창"), Dialog)) return;
+		if (UButton* Confirm = Cast<UButton>(Dialog->GetWidgetFromName(TEXT("ReplaceConfirm"))))
+			Confirm->OnClicked.Broadcast();
+		else AddError(TEXT("Missing skill replacement confirm button"));
+	};
+	AcceptReplacement();
 	TestEqual(TEXT("스킬 구매 요청 1회"), Listener->CallCount, 1);
 	TestEqual(TEXT("판매 슬롯 payload"), Listener->LastSlotIndex, 100);
 	TestEqual(TEXT("선택 유닛 payload"), Listener->LastUnitIndex, 0);
@@ -842,10 +853,12 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	}
 	KnightUnitButton->OnClicked.Broadcast();
 	BuyButton->OnClicked.Broadcast();
+	AcceptReplacement();
 	TestEqual(TEXT("같은 직업 카드 재선택은 다음 실제 용병을 대상으로 함"),
 		Listener->LastUnitIndex, 7);
 	KnightUnitButton->OnClicked.Broadcast();
 	BuyButton->OnClicked.Broadcast();
+	AcceptReplacement();
 	TestEqual(TEXT("같은 직업 대상 선택은 끝에서 처음으로 순환"),
 		Listener->LastUnitIndex, 0);
 	TestEqual(TEXT("동일 직업 두 대상에 구매 요청 전달"), Listener->CallCount, 3);
@@ -1064,6 +1077,187 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("인벤토리 캡처 파일 생성"), IFileManager::Get().FileExists(
 		*FPaths::Combine(OutputDirectory(), TEXT("WBP_Shop_Inventory.png"))));
 	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpShopReuseTest,
+	"P_RD.Reward.LevelUp.ShopScreen", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelUpShopReuseTest::RunTest(const FString& Parameters)
+{
+	using namespace ShopUITests;
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	UClass* Class = LoadClass<UShopUIWidgetBase>(nullptr,
+		TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated.WBP_Shop_FullGenerated_C"));
+	if (!TestNotNull(TEXT("Existing generated shop class"), Class)) return false;
+	UShopUIWidgetBase* Widget = CreateWidget<UShopUIWidgetBase>(World, Class);
+	const auto Slate = Widget->TakeWidget();
+	UShopUIModel* Model = NewObject<UShopUIModel>(Widget);
+	FShopUI View = MakeSyntheticShop();
+	View.mIsLevelUpReward = true;
+	View.mRewardOfferId = 0;
+	View.mRewardUnitIndex = 0;
+	View.mRewardTitle = FText::FromString(TEXT("기사 · Lv.2"));
+	View.mItems.RemoveAll([](const FShopItemUI& Item) { return Item.mKind != EShopItemKind::Skill; });
+	View.mItems.SetNum(FMath::Min(3, View.mItems.Num()));
+	View.mOwnedUnits.SetNum(1);
+	View.mOwnedUnits[0].mSkillSlots.SetNum(5);
+	View.mOwnedUnits[0].mSkillSlots[1].mIsEmpty = true;
+	View.mSkillTargetUnits = View.mOwnedUnits;
+	for (int32 Index = 0; Index < View.mItems.Num(); ++Index)
+	{
+		View.mItems[Index].mSlotIndex = Index;
+		View.mItems[Index].mRequiredJobType = View.mOwnedUnits[0].mJobType;
+		View.mItems[Index].mOwnedByUnitIndices.Reset();
+		View.mItems[Index].mPrice = 0;
+		View.mItems[Index].mIsAffordable = true;
+		View.mItems[Index].mIsSoldOut = false;
+	}
+	Model->SetShop(View);
+	Widget->BindUIModel(Model);
+	UShopUITestListener* Listener = NewObject<UShopUITestListener>(Widget);
+	Model->OnBuySkillRequested.AddDynamic(Listener, &UShopUITestListener::HandleBuySkillRequested);
+	UButton* Buy = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("mBuyButton")));
+	if (!TestNotNull(TEXT("Existing shop equip button"), Buy)) return false;
+	Buy->OnClicked.Broadcast();
+	TestEqual(TEXT("Choice routed through existing shop input"), Listener->CallCount, 1);
+	TestEqual(TEXT("Only recipient receives the skill"), Listener->LastUnitIndex, View.mOwnedUnits[0].mUnitIndex);
+	TestEqual(TEXT("First empty slot selected, basic attack protected"), Listener->LastSkillSlotIndex, 1);
+	if (UWidget* Close = Widget->WidgetTree->FindWidget(TEXT("CloseHolder")))
+		TestEqual(TEXT("May skip an unclaimed choice"), Close->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+	if (UTextBlock* Title = Cast<UTextBlock>(Widget->WidgetTree->FindWidget(TEXT("mTitleText"))))
+		TestEqual(TEXT("Level-up title fits the shop title plate"), Title->GetText().ToString(), FString(TEXT("레벨업")));
+	if (!GUsingNullRHI)
+	{
+		TArray<FColor> Pixels;
+		FString Error;
+		if (!Capture(*Widget, Slate, TEXT("WBP_LevelUp_SkillChoice.png"), Pixels, Error)) AddError(Error);
+	}
+	if (UWidget* Background = Widget->WidgetTree->FindWidget(TEXT("ShopBackgroundScale")))
+		TestEqual(TEXT("Level-up hides the shop background"), Background->GetVisibility(), ESlateVisibility::Collapsed);
+	UButton* CandidateButton = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("ShopRailButton_2")));
+	if (TestNotNull(TEXT("Candidate long-press button"), CandidateButton))
+	{
+		CandidateButton->OnPressed.Broadcast();
+		++GFrameCounter;
+		World->GetTimerManager().Tick(0.f);
+		++GFrameCounter;
+		World->GetTimerManager().Tick(.5f);
+		TestNotNull(TEXT("Holding a candidate opens its description before release"), Widget->GetShopDetailOverlayForTest());
+		CandidateButton->OnReleased.Broadcast();
+		Widget->HandleBackNavigation();
+	}
+	// Same-job allies must be separate recipient portraits, not a job carousel.
+	FShopOwnedUnitUI Second = View.mOwnedUnits[0];
+	Second.mUnitIndex = 1;
+	View.mOwnedUnits.Add(Second);
+	View.mSkillTargetUnits = View.mOwnedUnits;
+	Model->OnRewardUnitRequested.AddDynamic(Listener, &UShopUITestListener::HandleRewardUnitRequested);
+	Model->SetShop(View);
+	if (UButton* Portrait = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("mUnitSelectButton_1"))))
+	{
+		Portrait->OnClicked.Broadcast();
+		TestEqual(TEXT("Portrait selects the actual party slot"), Listener->LastRewardUnitIndex, 1);
+	}
+	else AddError(TEXT("Missing second recipient portrait"));
+	View.mRewardOfferId = 1;
+	View.mRewardUnitIndex = 1;
+	Model->SetShop(View);
+	Buy->OnClicked.Broadcast();
+	TestEqual(TEXT("Equipment target follows the selected same-job ally"), Listener->LastUnitIndex, 1);
+	View.mItems.Reset();
+	Model->SetShop(View);
+	if (UWidget* Close = Widget->WidgetTree->FindWidget(TEXT("CloseHolder")))
+		TestTrue(TEXT("Exhausted skill pool has a continue button"), Close->GetVisibility() != ESlateVisibility::Collapsed);
+	Widget->RemoveFromParent();
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSkillReplacementConfirmationTest,
+	"P_RD.UI.Shop.SkillReplacementConfirmation", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FSkillReplacementConfirmationTest::RunTest(const FString& Parameters)
+{
+	using namespace ShopUITests;
+	UWorld* World = GEditor->GetEditorWorldContext().World();
+	UClass* Class = LoadClass<UShopUIWidgetBase>(nullptr,
+		TEXT("/Game/UI/Shop/WBP_Shop_FullGenerated.WBP_Shop_FullGenerated_C"));
+	if (!TestNotNull(TEXT("Shop class"), Class)) return false;
+	for (bool IsLevelUp : {false, true})
+	{
+		UShopUIWidgetBase* Widget = CreateWidget<UShopUIWidgetBase>(World, Class);
+		const auto Slate = Widget->TakeWidget();
+		UShopUIModel* Model = NewObject<UShopUIModel>(Widget);
+		UShopUITestListener* Listener = NewObject<UShopUITestListener>(Widget);
+		Model->OnBuySkillRequested.AddDynamic(Listener, &UShopUITestListener::HandleBuySkillRequested);
+		FShopUI View = MakeSyntheticShop();
+		View.mIsLevelUpReward = IsLevelUp;
+		View.mRewardOfferId = 0;
+		View.mRewardUnitIndex = 0;
+		View.mRewardTitle = FText::FromString(TEXT("기사 · Lv.2"));
+		View.mItems.RemoveAll([](const FShopItemUI& Item) { return Item.mKind != EShopItemKind::Skill; });
+		View.mItems.SetNum(FMath::Min(3, View.mItems.Num()));
+		View.mOwnedUnits.SetNum(1);
+		View.mOwnedUnits[0].mSkillSlots.SetNum(5);
+		View.mOwnedUnits[0].mSkillSlots[1].mIsEmpty = true;
+		View.mSkillTargetUnits = View.mOwnedUnits;
+		for (auto& Item : View.mItems)
+		{
+			Item.mRequiredJobType = View.mOwnedUnits[0].mJobType;
+			Item.mOwnedByUnitIndices.Reset();
+			Item.mPrice = 0;
+			Item.mIsAffordable = true;
+			Item.mIsSoldOut = false;
+		}
+		Model->SetShop(View);
+		Widget->BindUIModel(Model);
+		if (!IsLevelUp)
+			CastChecked<UButton>(Widget->GetWidgetFromName(TEXT("mSkillTabButton")))->OnClicked.Broadcast();
+		UButton* Buy = CastChecked<UButton>(Widget->GetWidgetFromName(TEXT("mBuyButton")));
+		Buy->OnClicked.Broadcast();
+		TestEqual(TEXT("Empty slot equips immediately"), Listener->CallCount, 1);
+		TestNull(TEXT("Empty slot has no deletion warning"), Widget->GetSkillReplacementDialogForTest());
+
+		View.mOwnedUnits[0].mSkillSlots[1].mIsEmpty = false;
+		View.mOwnedUnits[0].mSkillSlots[1].mName = FText::FromString(TEXT("기존 방패술"));
+		View.mSkillTargetUnits = View.mOwnedUnits;
+		Model->SetShop(View);
+		Buy->OnClicked.Broadcast();
+		TestEqual(TEXT("Occupied slot waits for confirmation"), Listener->CallCount, 1);
+		USkillReplacementDialog* Dialog = Widget->GetSkillReplacementDialogForTest();
+		if (!TestNotNull(TEXT("Replacement dialog created"), Dialog)) return false;
+		TestFalse(TEXT("Underlying shop input is blocked"), Widget->GetIsEnabled());
+		UTextBlock* Body = CastChecked<UTextBlock>(Dialog->GetWidgetFromName(TEXT("ReplaceBody")));
+		TestTrue(TEXT("Warns that the named old skill is deleted"), Body->GetText().ToString().Contains(TEXT("기존 방패술’이 삭제됩니다")));
+		UButton* Confirm = CastChecked<UButton>(Dialog->GetWidgetFromName(TEXT("ReplaceConfirm")));
+		UButton* Cancel = CastChecked<UButton>(Dialog->GetWidgetFromName(TEXT("ReplaceCancel")));
+		if (!GUsingNullRHI)
+		{
+			TArray<FColor> Pixels;
+			FString Error;
+			const TSharedRef<SWidget> Combined = SNew(SOverlay)
+				+ SOverlay::Slot()[Slate] + SOverlay::Slot()[Dialog->TakeWidget()];
+			if (!Capture(*Widget, Combined, IsLevelUp ? TEXT("SkillReplaceConfirm_LevelUp.png") : TEXT("SkillReplaceConfirm_Shop.png"), Pixels, Error)) AddError(Error);
+		}
+		Cancel->OnClicked.Broadcast();
+		TestEqual(TEXT("Cancel preserves the skill and does not spend the choice"), Listener->CallCount, 1);
+		TestTrue(TEXT("Cancel restores shop input"), Widget->GetIsEnabled());
+		Buy->OnClicked.Broadcast();
+		Dialog->HandleBackNavigation();
+		TestEqual(TEXT("Android back also cancels without replacing"), Listener->CallCount, 1);
+		Buy->OnClicked.Broadcast();
+		Confirm->OnClicked.Broadcast();
+		TestEqual(TEXT("Confirm issues exactly one equip request"), Listener->CallCount, 2);
+		TestEqual(TEXT("Confirmed target slot is retained"), Listener->LastSkillSlotIndex, 1);
+		Confirm->OnClicked.Broadcast();
+		TestEqual(TEXT("Double tap does not issue another request"), Listener->CallCount, 2);
+		Buy->OnClicked.Broadcast();
+		View.mRewardOfferId = 1;
+		View.mItems[0].mIsSoldOut = true;
+		Model->SetShop(View);
+		Confirm->OnClicked.Broadcast();
+		TestEqual(TEXT("Changed offers invalidate an open confirmation"), Listener->CallCount, 2);
+		TestTrue(TEXT("Snapshot invalidation restores input"), Widget->GetIsEnabled());
+		Widget->RemoveFromParent();
+	}
+	return !HasAnyErrors();
 }
 
 #endif // WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
