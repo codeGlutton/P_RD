@@ -35,9 +35,11 @@ void USkillReplacementDialog::BuildContent()
 	WidgetTree->RootWidget = Root;
 	UButton* Shield = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("ReplaceInputShield"));
 	FButtonStyle ShieldStyle;
-	ShieldStyle.SetNormal(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, .72f)));
+	// Keep the modal input shield without dimming the screen behind the dialog.
+	ShieldStyle.SetNormal(FSlateColorBrush(FLinearColor::Transparent));
 	ShieldStyle.SetHovered(ShieldStyle.Normal);
 	ShieldStyle.SetPressed(ShieldStyle.Normal);
+	ShieldStyle.SetDisabled(ShieldStyle.Normal);
 	Shield->SetStyle(ShieldStyle);
 	UOverlaySlot* ShieldSlot = Root->AddChildToOverlay(Shield);
 	ShieldSlot->SetHorizontalAlignment(HAlign_Fill);
