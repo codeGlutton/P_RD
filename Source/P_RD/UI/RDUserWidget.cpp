@@ -1,7 +1,7 @@
 #include "UI/RDUserWidget.h"
 #include "UI/RDUIInputSubsystem.h"
 #include "Engine/GameInstance.h"
-#include "Widgets/Layout/SSafeZone.h"
+#include "UI/SCenteredSafeZone.h"
 
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
@@ -255,7 +255,7 @@ TSharedRef<SWidget> URDUserWidget::RebuildWidget()
 	TSharedRef<SWidget> Content = Super::RebuildWidget();
 	if (!ShouldWrapMobileSafeArea()) return Content;
 	// Wrap Slate content, leaving the asset's WidgetTree/root and bindings intact.
-	return SNew(SSafeZone).IsTitleSafe(true).Visibility(EVisibility::SelfHitTestInvisible)[Content];
+	return SNew(SCenteredSafeZone).IsTitleSafe(true).Visibility(EVisibility::SelfHitTestInvisible)[Content];
 }
 
 bool URDUserWidget::ShouldWrapMobileSafeArea() const
