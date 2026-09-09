@@ -3308,14 +3308,13 @@ void UCombatLayoutHUDWidget::CompleteTurnPresentationBegin()
 {
 	mIsTurnActive = true;
 
-	// 큰 카드 고리는 자동으로 열지 않는다. 좌하단 스킬 버튼을 누를 때만
-	// RefreshCommandVisibility가 큰 카드 고리를 연다.
+	// Turn announcements finish before opening the current mercenary's skills.
 	const bool bPlayerTurn = IsPlayerTurn();
-	SetCommandsShown(false);
+	SetCommandsShown(bPlayerTurn);
 	if (bPlayerTurn == true && mUIModel != nullptr)
 	{
 		const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
-		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/false);
+		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
 	}
 }
 
@@ -3327,8 +3326,7 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
 	++mActionPresentationSerial;
 	mIsActionPlaying = false;
 	mIsTurnActive = false;
-	// 상태까지 접는다. 가리기만 하면 다음 턴이 열리는 순간 카드가 저절로
-	// 되살아난다 -- 카드는 스킬 단추로만 연다는 계약(0807)이 깨진다.
+	// Clear the previous unit's cards immediately; only the next turn may reopen them.
 	SetCommandsShown(false);
 }
 

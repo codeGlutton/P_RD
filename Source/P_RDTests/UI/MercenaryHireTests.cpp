@@ -3872,17 +3872,17 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 턴 시작에는 큰 카드를 자동으로 펴지 않고 사용자가 요청할 때만 연다.
-	TestEqual(TEXT("아군 턴 시작에는 큰 카드가 접혀 있다"), Card->GetVisibility(),
-		ESlateVisibility::Collapsed);
+	// 아군 턴 시작 안내가 끝나면 스킬 카드를 자동으로 펼친다.
+	TestEqual(TEXT("아군 턴 시작에 큰 카드 자동 표시"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("아군 턴 시작은 현재 용병 포커스를 요청한다"),
 		Responder->mLastType, ECombatInputType::FocusUnit);
 	TestEqual(TEXT("아군 턴 포커스 대상은 현재 용병이다"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("아군 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("큰 카드가 닫힌 턴 포커스는 화면 중앙을 쓴다"),
-		LastFocusAnchor, FVector2D(.5f, .5f));
+	TestEqual(TEXT("턴 시작 포커스는 카드 고리 중심을 쓴다"),
+		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("누르면 카드가 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
@@ -4023,8 +4023,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		TEXT("CommandCooldownBadge_1"));
 	UTextBlock* CardCooldownOriginal = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("CommandCooldown_1")));
-	TestEqual(TEXT("플레이어 턴 시작에 큰 카드는 접혀 있다"), Card->GetVisibility(),
-		ESlateVisibility::Collapsed);
+	TestEqual(TEXT("플레이어 턴 시작에 큰 카드 자동 표시"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	TestNull(TEXT("플레이 중에도 폐기 퀵바가 존재하지 않음"),
 		HUD->WidgetTree->FindWidget(TEXT("QuickSkillBar")));
 	TestEqual(TEXT("플레이어 턴 시작은 현재 용병 포커스를 요청한다"),
@@ -4033,8 +4033,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("플레이어 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("플레이어 턴은 큰 카드 없이 화면 중앙에 포커스한다"),
-		LastFocusAnchor, FVector2D(.5f, .5f));
+	TestEqual(TEXT("플레이어 턴은 카드 고리 중심에 포커스한다"),
+		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
 
 	// 속박/기절 판정은 AP가 남아 있어도 이동을 막는다. Unit 도메인 갱신만
 	// 들어와도 카드 표식과 실제 클릭 차단이 함께 바뀌어야 한다.
@@ -4111,7 +4111,9 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("평상시 턴 종료 패널 복귀"), EndTurnPanel->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 
-	// 큰 카드가 필요할 때만 스킬 단추로 열고 다시 접는다.
+	// 자동으로 열린 카드도 사용자가 접었다가 다시 열 수 있다.
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("자동으로 열린 카드 수동 접기"), Card->GetVisibility(), ESlateVisibility::Collapsed);
 	SkillButton->OnClicked.Broadcast();
 	TestEqual(TEXT("스킬 단추로 큰 카드를 편다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
@@ -4152,8 +4154,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		SkillPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
-	TestEqual(TEXT("다음 플레이어 턴도 큰 카드를 자동으로 펴지 않는다"),
-		Card->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("다음 플레이어 턴에도 큰 카드를 자동으로 연다"),
+		Card->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
 	TestEqual(TEXT("행동 시작부터 카드를 감춘다"), Card->GetVisibility(),
