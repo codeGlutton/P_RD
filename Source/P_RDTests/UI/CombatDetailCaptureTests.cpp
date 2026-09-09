@@ -1485,4 +1485,48 @@ bool FCombatDetailCaptureTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStatusDetailSkillCaptureTest,
+    "P_RD.UI.CombatDetails.StatusSkillCapture",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FStatusDetailSkillCaptureTest::RunTest(const FString&)
+{
+    using namespace CombatDetailCaptureTests;
+    if (GUsingNullRHI) return false;
+    UWorld* World = GEditor->GetEditorWorldContext().World();
+    FDetailFixture Fixture = MakeFixture(*World);
+    if (!TestNotNull(TEXT("Current HUD WBP"), Fixture.HUD.Get())) return false;
+    FCaptureSlateCache Cache;
+    for (const TCHAR* Leaf : { TEXT("Stun"), TEXT("Poison") })
+    {
+        Fixture.HUD->CloseDetailOverlayForTest();
+        Fixture.Knight.mStatusEffects.Reset();
+        FStatusEffectUI& Status = Fixture.Knight.mStatusEffects.AddDefaulted_GetRef();
+        Status.mTag = FGameplayTag::RequestGameplayTag(FName(*FString::Printf(
+            TEXT("GameplayEffect.StatusEffect.RoundDuration.Debuff.%s"), Leaf)));
+        Status.mStackCount = 2;
+        Fixture.Model->SetUnitUIs({Fixture.Knight});
+        auto* Button = Cast<UButton>(Fixture.HUD->WidgetTree->FindWidget(TEXT("AllyScrollStatusButton_0")));
+        if (!TestNotNull(TEXT("Summary status button"), Button)) return false;
+        Button->OnPressed.Broadcast();
+        Button->OnReleased.Broadcast();
+        Button->OnClicked.Broadcast();
+        if (!TestTrue(TEXT("Current status detail opens"), Fixture.HUD->IsDetailOverlayShown())) return false;
+        FString Error;
+        const FString Name = FString::Printf(TEXT("CombatDetail_StatusSkillWBP_%s_20260909.png"), Leaf);
+        if (!Capture(*Fixture.HUD, Fixture.HUD->GetDetailOverlayWidgetForTest(), Cache, *Name, Error))
+        { AddError(Error); return false; }
+    }
+    Fixture.HUD->CloseDetailOverlayForTest();
+    Fixture.Model->SetSkillDetail(Fixture.SkillDetail);
+    UUserWidget* Content = Fixture.HUD->GetSkillDetailContentForTest();
+    if (!TestNotNull(TEXT("Shared skill content remains available"), Content)) return false;
+    TestTrue(TEXT("Normal skill restores its AP icon"), Content->GetWidgetFromName(TEXT("SkillStatIcon_0"))->IsVisible());
+    TestTrue(TEXT("Normal skill restores range interaction"), Content->GetWidgetFromName(TEXT("SkillSelectRangeButton"))->IsVisible());
+    if (auto* Cost = Cast<UTextBlock>(Content->GetWidgetFromName(TEXT("SkillStatText_0"))))
+        TestTrue(TEXT("Normal skill replaces status label with actual AP"), Cost->GetText().ToString().Contains(TEXT("4")));
+    Fixture.HUD->CloseDetailOverlayForTest();
+    return true;
+}
+
 #endif
