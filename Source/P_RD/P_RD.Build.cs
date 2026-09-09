@@ -28,6 +28,7 @@ public class P_RD : ModuleRules
 
             /* Media Modules */
             "MediaAssets",
+            "AudioMixer",
             "LevelSequence",
             "MovieScene",
             "MovieSceneTracks",
@@ -70,6 +71,9 @@ public class P_RD : ModuleRules
                 "UnrealEd",
             });
         }
+
+        for (int Stage = 1; Stage <= 3; ++Stage)
+            RuntimeDependencies.Add("$(ProjectDir)/Content/SVN/OutSideAsset/AICreation/UI/StageVictory/BossEntrance/BossEntrance" + Stage + ".mp4", StagedFileType.NonUFS);
 
         // 온라인 기능을 사용할 때만 OnlineSubsystem을 추가한다.
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");

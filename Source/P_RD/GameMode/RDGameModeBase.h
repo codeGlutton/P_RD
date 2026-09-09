@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   RDGameModeBase.h
  * @brief  RD 프로젝트 게임 모드 베이스 정의 헤더
  * @author 모호재, 박용수
@@ -223,6 +223,7 @@ protected:
 	 * 겹치지 않도록 쓰는 작은 명시 API다. 0 이하이면 즉시 정지한다.
 	 */
 	void FadeOutMainBGM(float FadeOutDurationSeconds) const;
+	void SetMainBGMPaused(bool bPaused) const;
 
 protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))

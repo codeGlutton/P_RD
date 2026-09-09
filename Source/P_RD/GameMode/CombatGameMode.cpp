@@ -1,4 +1,5 @@
 #include "GameMode/CombatGameMode.h"
+#include "UI/StageVictory/BossEntranceWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "Tutorial/FirstBattleScenario.h"
 
@@ -548,7 +549,35 @@ void ACombatGameMode::BeginRoom()
 		}
 	}
 
-	CombatModel->BeginCombat();
+	const auto* Run = GetRunPersistData();
+	const int32 Stage = static_cast<int32>(Run->GetStage().mStageLevel);
+	if (UBossEntranceWidget::ShouldPlay(Run->GetCurrentRoom().mType == ERoomType::BossMonster,
+		Run->GetStage().mClearData.mIsCleared, Stage))
+	{
+		mBossEntranceWidget = UBossEntranceWidget::Show(GetWorld()->GetFirstPlayerController(), Stage,
+			FSimpleDelegate::CreateWeakLambda(this, [this]() { BeginCombatAfterEntrance(); }));
+		if (mBossEntranceWidget) { SetMainBGMPaused(true); return; }
+	}
+	BeginCombatAfterEntrance();
+}
+
+void ACombatGameMode::BeginCombatAfterEntrance()
+{
+	if (mCombatStartedAfterEntrance || IsActorBeingDestroyed()) return;
+	mCombatStartedAfterEntrance = true;
+	const bool bHadEntrance = mBossEntranceWidget != nullptr;
+	mBossEntranceWidget = nullptr;
+	if (bHadEntrance)
+	{
+		SetMainBGMPaused(false);
+		if (auto* Player = GetWorld()->GetFirstPlayerController())
+		{
+			Player->SetInputMode(FInputModeGameAndUI());
+			Player->SetShowMouseCursor(true);
+		}
+	}
+	UE_LOG(LogCombatGameMode, Display, TEXT("RD_BOSS_ENTRANCE combat begins after entrance=%d"), bHadEntrance);
+	if (auto* Combat = GetWorldSubsystemModel<USRPGCombatModel>(this)) Combat->BeginCombat();
 }
 
 UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
@@ -2949,6 +2978,8 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 
 void ACombatGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+ mCombatStartedAfterEntrance = true;
+ if (mBossEntranceWidget) { mBossEntranceWidget->CancelCinematic(); mBossEntranceWidget = nullptr; }
  if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->CombatEnded(false);
  Super::EndPlay(EndPlayReason);
 }

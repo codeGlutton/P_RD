@@ -57,6 +57,9 @@ protected:
 
 private:
 	void InitializeCombat();
+	void BeginCombatAfterEntrance();
+	UPROPERTY(Transient) TObjectPtr<class UBossEntranceWidget> mBossEntranceWidget;
+	bool mCombatStartedAfterEntrance = false;
 
 public:
 	UCombatUIModel* GetCombatUIModel() const;

@@ -1,4 +1,4 @@
-﻿#include "GameMode/RDGameModeBase.h"
+#include "GameMode/RDGameModeBase.h"
 #include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
@@ -578,6 +578,11 @@ void ARDGameModeBase::FadeOutMainBGM(const float FadeOutDurationSeconds) const
 	}
 
 	mBgmComponent->FadeOut(FadeOutDurationSeconds, 0.f);
+}
+
+void ARDGameModeBase::SetMainBGMPaused(bool bPaused) const
+{
+	if (IsValid(mBgmComponent)) mBgmComponent->SetPaused(bPaused);
 }
 
 void ARDGameModeBase::SetMainBGM(USoundBase* BGM, bool IsOverride)
