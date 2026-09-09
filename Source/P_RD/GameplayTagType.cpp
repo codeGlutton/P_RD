@@ -179,6 +179,8 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Stump_Bodyslam,					"Animation.Montage.Skill.Enemy.Stump.Bodyslam");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Stump_Grow,						"Animation.Montage.Skill.Enemy.Stump.Grow");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Stump_TreeOfLife,					"Animation.Montage.Skill.Enemy.Stump.TreeOfLife");
+
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Spider_Bite,						"Animation.Montage.Skill.Enemy.Spider.Bite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Spider_PoisonSting,				"Animation.Montage.Skill.Enemy.Spider.PoisonSting");
