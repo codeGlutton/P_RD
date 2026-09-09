@@ -8,6 +8,7 @@
 #include "UI/TextOpticalAlignment.h"
 
 #include "Components/Button.h"
+#include "Components/Border.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Components/ScaleBox.h"
@@ -569,6 +570,11 @@ void UMercenaryHireWidget::CacheWidgets()
 	mBackButton = MercenaryHireDetail::Find<UButton>(WidgetTree, TEXT("HireBackButton"));
 	mReplaceConfirmLayer = MercenaryHireDetail::Find<UWidget>(WidgetTree,
 		TEXT("HireReplaceConfirmLayer"));
+	// Also update existing cooked WBPs; rebuilding the editor asset is not required.
+	if (UBorder* Dim = MercenaryHireDetail::Find<UBorder>(WidgetTree, TEXT("HireReplaceConfirmDim")))
+	{
+		Dim->SetBrushColor(FLinearColor::Transparent);
+	}
 	mReplaceAcceptButton = MercenaryHireDetail::Find<UButton>(WidgetTree,
 		TEXT("HireReplaceAcceptButton"));
 	mReplaceCancelButton = MercenaryHireDetail::Find<UButton>(WidgetTree,
