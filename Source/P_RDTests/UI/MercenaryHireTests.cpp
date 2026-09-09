@@ -2726,7 +2726,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("빈 상태 소켓 버튼은 입력을 막지 않음"),
 		EnemyStatusButton1->GetVisibility(), ESlateVisibility::Collapsed);
 	TestTrue(TEXT("상태 버튼 누름 배선"), EnemyStatusButton0->OnPressed.IsBound());
-	TestTrue(TEXT("상태 버튼 뗌 배선"), EnemyStatusButton0->OnReleased.IsBound());
+	TestTrue(TEXT("상태 버튼 클릭 배선"), EnemyStatusButton0->OnClicked.IsBound());
 	TestEqual(TEXT("상태 1개면 스크롤바 숨김"),
 		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Collapsed);
 	TestNull(TEXT("상태 이름 TextBlock은 만들지 않음"),
@@ -2753,24 +2753,19 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("상태가 생기면 첫 상태 행 복구"),
 		EnemyStatusButton0->GetVisibility(), ESlateVisibility::Visible);
 
-	// 짧은 탭은 상세를 열지 않고 타이머를 취소한다.
+	// A single precise tap opens the authored skill detail content; pressing alone does not.
 	EnemyStatusButton0->OnPressed.Broadcast();
-	TestTrue(TEXT("상태 아이콘 누름은 롱프레스 후보를 예약"),
-		HUD->IsStatusLongPressPendingForTest());
-	TestTrue(TEXT("적 상태 0번이 현재 후보"),
-		HUD->IsStatusPressActiveForTest(false, 0));
+	TestFalse(TEXT("Press alone does not open details"), HUD->IsDetailOverlayShown());
 	EnemyStatusButton0->OnReleased.Broadcast();
-	TestFalse(TEXT("짧게 떼면 상태 롱프레스 취소"),
-		HUD->IsStatusLongPressPendingForTest());
-	TestFalse(TEXT("짧은 탭은 상세를 열지 않음"), HUD->IsDetailOverlayShown());
-
-	// 0.5초를 채운 것과 같은 테스트 발화는 기존 공용 상세 겹을 한 번 연다.
-	EnemyStatusButton0->OnPressed.Broadcast();
-	HUD->TriggerStatusLongPressForTest(false, 0);
-	TestTrue(TEXT("상태 아이콘 롱프레스는 상세를 연다"),
-		HUD->IsDetailOverlayShown());
-	TestFalse(TEXT("상태 상세 발화 뒤 예약 타이머 제거"),
-		HUD->IsStatusLongPressPendingForTest());
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestTrue(TEXT("Single tap opens status details"), HUD->IsDetailOverlayShown());
+	TestFalse(TEXT("Tap consumes its candidate"), HUD->IsStatusPressActiveForTest(false, 0));
+	UUserWidget* StatusContent = HUD->GetSkillDetailContentForTest();
+	if (TestNotNull(TEXT("Status uses WBP_SkillDetailContent"), StatusContent))
+	{
+		TestEqual(TEXT("Status has no AP icon"), StatusContent->GetWidgetFromName(TEXT("SkillStatIcon_0"))->GetVisibility(), ESlateVisibility::Collapsed);
+		TestEqual(TEXT("Status has no targeting button"), StatusContent->GetWidgetFromName(TEXT("SkillSelectRangeButton"))->GetVisibility(), ESlateVisibility::Collapsed);
+	}
 	// 뒤쪽 몬스터 탭 검증은 상세가 닫힌 기본 상태에서 시작한다. 항상 WBP가
 	// 있는 용병 패널을 써서, 몬스터 탭 fallback 상세가 다시 열리는 경우를 피한다.
 	MercenaryMenu->OnClicked.Broadcast();
@@ -2778,7 +2773,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->IsDetailOverlayShown());
 	MercenaryMenu->OnClicked.Broadcast();
 
-	// 네 개부터 실제 콘텐츠가 viewport를 넘고 스크롤바가 생긴다. 행동을
+	// 세 개부터 실제 콘텐츠가 viewport를 넘고 스크롤바가 생긴다. 행동을
 	// 막는 기절/속박은 첫 화면에 남으며 다섯째 행도 잘리지 않는다.
 	MonsterUnit.mStatusEffects.Reset();
 	for (const TCHAR* TagName : {
@@ -2797,7 +2792,7 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		HUD->WidgetTree->FindWidget(TEXT("EnemyScrollStatusButton_4")));
 	TestTrue(TEXT("상태 5개 행을 동적으로 생성"),
 		EnemyStatusScroll->GetChildrenCount() >= 5);
-	TestEqual(TEXT("상태 4개 이상이면 스크롤바 표시"),
+	TestEqual(TEXT("큰 상태 아이콘이 넘치면 스크롤바 표시"),
 		EnemyStatusScroll->GetScrollBarVisibility(), ESlateVisibility::Visible);
 	if (TestNotNull(TEXT("다섯째 상태도 입력 행 보유"), EnemyStatusButton4))
 	{
@@ -2811,8 +2806,20 @@ bool FCombatHUDMercenaryTabBehaviorTest::RunTest(const FString& Parameters)
 		&& FirstStatusTexture->GetName() == TEXT("T_Status_Stun"));
 	EnemyStatusButton0->OnPressed.Broadcast();
 	EnemyStatusScroll->OnUserScrolled.Broadcast(8.f);
-	TestFalse(TEXT("상태 스크롤을 시작하면 롱프레스 취소"),
-		HUD->IsStatusLongPressPendingForTest());
+	TestFalse(TEXT("Scrolling cancels the status tap"),
+		HUD->IsStatusPressActiveForTest(false, 0));
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("A scroll does not open status details"), HUD->IsDetailOverlayShown());
+	EnemyStatusButton0->OnPressed.Broadcast();
+	Model->SetUnitUIs({ MonsterUnit });
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("Changed summary invalidates a held status tap"), HUD->IsDetailOverlayShown());
+	EnemyStatusButton0->OnPressed.Broadcast();
+	EnemyStatusButton0->OnClicked.Broadcast();
+	HUD->CloseDetailOverlayForTest();
+	EnemyStatusButton0->OnClicked.Broadcast();
+	TestFalse(TEXT("A duplicate click cannot reopen the closed detail"), HUD->IsDetailOverlayShown());
+
 
 	// 0823 확정: AP 는 문구로만 남기고 보석 아이콘 행은 걷었다.
 	if (UWidget* PipRow = HUD->WidgetTree->FindWidget(TEXT("EnemyAPPipRow")))
@@ -3873,17 +3880,17 @@ bool FCombatHUDCardToggleTest::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 턴 시작에는 큰 카드를 자동으로 펴지 않고 사용자가 요청할 때만 연다.
-	TestEqual(TEXT("아군 턴 시작에는 큰 카드가 접혀 있다"), Card->GetVisibility(),
-		ESlateVisibility::Collapsed);
+	// 아군 턴 시작 안내가 끝나면 스킬 카드를 자동으로 펼친다.
+	TestEqual(TEXT("아군 턴 시작에 큰 카드 자동 표시"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	TestEqual(TEXT("아군 턴 시작은 현재 용병 포커스를 요청한다"),
 		Responder->mLastType, ECombatInputType::FocusUnit);
 	TestEqual(TEXT("아군 턴 포커스 대상은 현재 용병이다"),
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("아군 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("큰 카드가 닫힌 턴 포커스는 화면 중앙을 쓴다"),
-		LastFocusAnchor, FVector2D(.5f, .5f));
+	TestEqual(TEXT("턴 시작 포커스는 카드 고리 중심을 쓴다"),
+		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
 	PartyButton->OnClicked.Broadcast();
 	TestEqual(TEXT("누르면 카드가 펴진다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
@@ -4024,8 +4031,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		TEXT("CommandCooldownBadge_1"));
 	UTextBlock* CardCooldownOriginal = Cast<UTextBlock>(
 		HUD->WidgetTree->FindWidget(TEXT("CommandCooldown_1")));
-	TestEqual(TEXT("플레이어 턴 시작에 큰 카드는 접혀 있다"), Card->GetVisibility(),
-		ESlateVisibility::Collapsed);
+	TestEqual(TEXT("플레이어 턴 시작에 큰 카드 자동 표시"), Card->GetVisibility(),
+		ESlateVisibility::SelfHitTestInvisible);
 	TestNull(TEXT("플레이 중에도 폐기 퀵바가 존재하지 않음"),
 		HUD->WidgetTree->FindWidget(TEXT("QuickSkillBar")));
 	TestEqual(TEXT("플레이어 턴 시작은 현재 용병 포커스를 요청한다"),
@@ -4034,8 +4041,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		Responder->mLastPayload, PlayerUnit.mUnitId);
 	TestEqual(TEXT("플레이어 턴 시작은 화면 앵커를 한 번만 보낸다"),
 		FocusAnchorCount, 1);
-	TestEqual(TEXT("플레이어 턴은 큰 카드 없이 화면 중앙에 포커스한다"),
-		LastFocusAnchor, FVector2D(.5f, .5f));
+	TestEqual(TEXT("플레이어 턴은 카드 고리 중심에 포커스한다"),
+		LastFocusAnchor, HUD->GetCommandRingAnchorForTest());
 
 	// 속박/기절 판정은 AP가 남아 있어도 이동을 막는다. Unit 도메인 갱신만
 	// 들어와도 카드 표식과 실제 클릭 차단이 함께 바뀌어야 한다.
@@ -4112,7 +4119,9 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("평상시 턴 종료 패널 복귀"), EndTurnPanel->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
 
-	// 큰 카드가 필요할 때만 스킬 단추로 열고 다시 접는다.
+	// 자동으로 열린 카드도 사용자가 접었다가 다시 열 수 있다.
+	SkillButton->OnClicked.Broadcast();
+	TestEqual(TEXT("자동으로 열린 카드 수동 접기"), Card->GetVisibility(), ESlateVisibility::Collapsed);
 	SkillButton->OnClicked.Broadcast();
 	TestEqual(TEXT("스킬 단추로 큰 카드를 편다"), Card->GetVisibility(),
 		ESlateVisibility::SelfHitTestInvisible);
@@ -4153,8 +4162,8 @@ bool FCombatHUDSkillLifecycleTest::RunTest(const FString& Parameters)
 		SkillPanel->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
-	TestEqual(TEXT("다음 플레이어 턴도 큰 카드를 자동으로 펴지 않는다"),
-		Card->GetVisibility(), ESlateVisibility::Collapsed);
+	TestEqual(TEXT("다음 플레이어 턴에도 큰 카드를 자동으로 연다"),
+		Card->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
 
 	Model->OnBeginAnyTurnAction.Broadcast(nullptr);
 	TestEqual(TEXT("행동 시작부터 카드를 감춘다"), Card->GetVisibility(),

@@ -1,4 +1,5 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatWorldWidgetPosition.h"
 #include "UI/Combat/CombatStatusPresentation.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
@@ -739,7 +740,10 @@ void UCombatLayoutHUDWidget::UpdateFloatingCombatLogs(float InDeltaTime)
 				: (Entry.mUsesDamageNumberSkin
 					? FloatingLogBaseOffsetY - Entry.mStackOffsetY + DamageNumberOffsetY
 					: FloatingLogBaseOffsetY - Entry.mStackOffsetY - FloatingLogRiseSpeed * Entry.mElapsed);
-			LogSlot->SetPosition(ScreenPosition
+			const FVector2D CanvasPosition = CombatWorldWidgetPosition::ViewportToCanvas(
+				ScreenPosition, UWidgetLayoutLibrary::GetViewportWidgetGeometry(this),
+				mRootCanvas->GetCachedGeometry());
+			LogSlot->SetPosition(CanvasPosition
 				+ FVector2D(DismissOffsetX + DamageNumberOffsetX, OffsetY));
 		}
 

@@ -2240,8 +2240,8 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		const FString Stem = FString::Printf(TEXT("%sScrollStatus"), *Prefix);
 		USizeBox* Row = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 			FName(*FString::Printf(TEXT("%sRow_%d"), *Stem, Index)));
-		Row->SetWidthOverride(56.f);
-		Row->SetHeightOverride(56.f);
+		Row->SetWidthOverride(88.f);
+		Row->SetHeightOverride(88.f);
 		Row->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		Row->SetVisibility(ESlateVisibility::Collapsed);
 
@@ -2265,7 +2265,11 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 
 		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
 			FName(*FString::Printf(TEXT("%sIcon_%d"), *Stem, Index)));
-		Icon->SetDesiredSizeOverride(FVector2D(42.f, 42.f));
+		// SetDesiredSizeOverride is ignored until the Slate image exists. Store the size
+		// in the brush so icons created before TakeWidget keep their intended size.
+		FSlateBrush IconBrush = Icon->GetBrush();
+		IconBrush.ImageSize = FVector2D(80.f, 80.f);
+		Icon->SetBrush(IconBrush);
 		Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Icon))
 		{
@@ -2277,8 +2281,8 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		FSlateFontInfo CountFont = (bAlly && mAllyName != nullptr)
 			? mAllyName->GetFont()
 			: (mEnemyName != nullptr ? mEnemyName->GetFont() : FSlateFontInfo());
-		CountFont.Size = 14;
-		CountFont.OutlineSettings.OutlineSize = 1;
+		CountFont.Size = 22;
+		CountFont.OutlineSettings.OutlineSize = 2;
 		CountFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 
 		UTextBlock* Count = WidgetTree->ConstructWidget<UTextBlock>(
@@ -2308,8 +2312,8 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		Button->Configure(bAlly, Index);
 		Button->OnStatusPressed.AddUniqueDynamic(
 			this, &UCombatLayoutHUDWidget::HandleScrollableStatusPressed);
-		Button->OnStatusReleased.AddUniqueDynamic(
-			this, &UCombatLayoutHUDWidget::HandleScrollableStatusReleased);
+		Button->OnStatusClicked.AddUniqueDynamic(
+			this, &UCombatLayoutHUDWidget::HandleScrollableStatusClicked);
 		Button->SetVisibility(ESlateVisibility::Collapsed);
 		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Button))
 		{
@@ -2357,7 +2361,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 	if (Scroll != nullptr)
 	{
 		const bool bHasStatus = ShownStatuses.IsEmpty() == false;
-		const bool bScrollable = ShownStatuses.Num() >= 4;
+		const bool bScrollable = ShownStatuses.Num() * 90.f > 190.f;
 		Scroll->SetVisibility(bHasStatus
 			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetScrollBarVisibility(bScrollable
@@ -2418,7 +2422,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 		if (Count != nullptr && Status.mStackCount > 1)
 		{
 			Count->SetText(FText::AsNumber(Status.mStackCount));
-			Count->SetColorAndOpacity(FSlateColor(Accent));
+			Count->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		}
 	}
 }
@@ -2758,7 +2762,7 @@ void UCombatLayoutHUDWidget::RefreshCommands()
 
 void UCombatLayoutHUDWidget::RefreshEnemy()
 {
-	// 눌러 둔 0.5초 사이에 대상/턴이 바뀌면 같은 슬롯 번호가 다른 상태를
+	// 누르는 동안 대상/턴이 바뀌면 같은 슬롯 번호가 다른 상태를
 	// 가리킬 수 있다. 스냅샷을 갈기 전에 그 누름부터 무른다.
 	CancelStatusPress();
 
@@ -3308,14 +3312,13 @@ void UCombatLayoutHUDWidget::CompleteTurnPresentationBegin()
 {
 	mIsTurnActive = true;
 
-	// 큰 카드 고리는 자동으로 열지 않는다. 좌하단 스킬 버튼을 누를 때만
-	// RefreshCommandVisibility가 큰 카드 고리를 연다.
+	// Turn announcements finish before opening the current mercenary's skills.
 	const bool bPlayerTurn = IsPlayerTurn();
-	SetCommandsShown(false);
+	SetCommandsShown(bPlayerTurn);
 	if (bPlayerTurn == true && mUIModel != nullptr)
 	{
 		const int32 TurnUnitId = mUIModel->GetTurnUI().mCurrentUnitId;
-		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/false);
+		RequestCameraFocus(TurnUnitId, /*bWithCommandRing=*/true);
 	}
 }
 
@@ -3327,8 +3330,7 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationEnd(
 	++mActionPresentationSerial;
 	mIsActionPlaying = false;
 	mIsTurnActive = false;
-	// 상태까지 접는다. 가리기만 하면 다음 턴이 열리는 순간 카드가 저절로
-	// 되살아난다 -- 카드는 스킬 단추로만 연다는 계약(0807)이 깨진다.
+	// Clear the previous unit's cards immediately; only the next turn may reopen them.
 	SetCommandsShown(false);
 }
 
@@ -4983,7 +4985,7 @@ void UCombatLayoutHUDWidget::ShowArtifactDetailOverlay(const int32 SlotIndex)
 }
 
 /**
- * @brief 상태이상 상세 -- 스킬 상세와 같은 판을 쓴다.
+ * @brief 상태이상 상세 -- WBP_SkillDetailContent에 상태 정보만 표시한다.
  *
  * @details 설명은 화면이 쥔 고정 표다. 게임플레이에 상태 설명 API 가 아직
  * 없어서다. 새 상태가 오면 이름만 뜨고 설명은 기본 문구로 빠진다.
@@ -4995,15 +4997,6 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		return;
 	}
-	ApplyReadableDetailTypography(false);
-	ApplyDetailColumnLayout(true);
-
-	SetTextIfPresent(mDetailTitleText, StatusDisplayName(StatusTag));
-	SetTextIfPresent(mDetailSubtitleText, StackCount > 1
-		? FText::Format(
-			LOCTEXT("StatusSubtitleStacked", "상태이상  ·  {0}중첩"), StackCount)
-		: LOCTEXT("StatusSubtitle", "상태이상"));
-
 	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
 	static const TMap<FString, FText> Descriptions = {
 		{ TEXT("Strength"),      LOCTEXT("StatusDescStrength", "공격 관련 능력이 강화된다.") },
@@ -5037,23 +5030,15 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 		: (Presentation.mIsRoundDuration
 			? LOCTEXT("StatusDurationRound", "라운드가 지나면 1중첩씩 사라진다.")
 			: LOCTEXT("StatusDurationOther", "효과 조건이 끝날 때까지 지속된다."));
-	SetTextIfPresent(mDetailBodyText, FText::Format(
+	const FText Body = FText::Format(
 		LOCTEXT("StatusDescBodyFmt", "{0}\n{1}"),
 		Description != nullptr
 			? *Description
 			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다."),
-		DurationText));
+		DurationText);
 
-	SetPortraitCropped(mDetailIconImage, StatusIconFor(StatusTag));
-
-	ClearDetailGrids();
-	ClearDetailChips();
-	SetShown(mDetailStatBlock, false);
+	mDetailPresenter->PresentStatus(StatusDisplayName(StatusTag), StatusIconFor(StatusTag), StackCount, Body);
 	SetDetailSkillRowShown(false);
-	SetTextIfPresent(mDetailExtraHeading, FText::GetEmpty());
-	SetTextIfPresent(mDetailExtraText, FText::GetEmpty());
-	ShowDetailRightBlock(nullptr);
-	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	RefreshWorldGestureInputBlock();
 }
 
@@ -5069,108 +5054,41 @@ void UCombatLayoutHUDWidget::HandleStatusClicked(const bool bAlly, const int32 S
 		Statuses[SlotIndex].mStackCount);
 }
 
-/** @brief 상태 소켓의 0.5초 긴 누름을 시작한다. */
+/** Track the pressed status so scrolling or a changed unit can cancel the tap. */
 void UCombatLayoutHUDWidget::BeginStatusPress(const bool bAlly, const int32 SlotIndex)
 {
-	// 둘째 손가락/마우스 합성 입력이 오면 먼저 잡은 상태를 발화시키지 않는다.
-	// 새로 실제 눌린 소켓 하나만 긴 누름 후보가 된다.
 	CancelStatusPress();
-
-	const TArray<FStatusEffectUI>& Statuses = bAlly
-		? mAllyShownStatuses : mEnemyShownStatuses;
-	if (Statuses.IsValidIndex(SlotIndex) == false)
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	if (World == nullptr)
-	{
-		return;
-	}
+	const TArray<FStatusEffectUI>& Statuses = bAlly ? mAllyShownStatuses : mEnemyShownStatuses;
+	if (!Statuses.IsValidIndex(SlotIndex)) return;
 	mStatusPressedAlly = bAlly;
 	mStatusPressedSlot = SlotIndex;
 	mStatusPressActive = true;
-	World->GetTimerManager().SetTimer(mStatusLongPressTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this, bAlly, SlotIndex]()
-		{
-			HandleStatusLongPress(bAlly, SlotIndex);
-		}), LongPressSeconds, false);
 }
 
-/** @brief 같은 소켓에서 손을 뗐을 때 아직 발화하지 않은 긴 누름만 취소한다. */
-void UCombatLayoutHUDWidget::EndStatusPress(const bool bAlly, const int32 SlotIndex)
-{
-	// 첫 손가락 뒤에 둘째 소켓을 눌렀다면 첫 손가락의 늦은 Release가 둘째
-	// 타이머를 취소하면 안 된다. 현재 후보와 정확히 같은 Release만 받는다.
-	if (mStatusPressActive == true && mStatusPressedAlly == bAlly
-		&& mStatusPressedSlot == SlotIndex)
-	{
-		CancelStatusPress();
-	}
-}
-
-/** @brief 누름이 같은 소켓에서 0.5초 유지됐을 때 상세를 한 번만 연다. */
-void UCombatLayoutHUDWidget::HandleStatusLongPress(
-	const bool bAlly, const int32 SlotIndex)
-{
-	if (mStatusPressActive == false || mStatusPressedAlly != bAlly
-		|| mStatusPressedSlot != SlotIndex)
-	{
-		return;
-	}
-
-	// 상세를 열기 전에 후보와 타이머를 소비한다. 테스트가 0.5초 전에 강제로
-	// 발화한 경우에도 예약된 콜백이 뒤늦게 한 번 더 남지 않는다.
-	CancelStatusPress();
-	HandleStatusClicked(bAlly, SlotIndex);
-}
-
-/** @brief 대상 교체/패널 종료/손 뗌에서 남은 상태 긴 누름을 전부 무른다. */
 void UCombatLayoutHUDWidget::CancelStatusPress()
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mStatusLongPressTimerHandle);
-	}
-	mStatusLongPressTimerHandle.Invalidate();
 	mStatusPressActive = false;
 	mStatusPressedSlot = INDEX_NONE;
 	mStatusPressedAlly = false;
 }
 
 #if WITH_DEV_AUTOMATION_TESTS
-void UCombatLayoutHUDWidget::TriggerStatusLongPressForTest(
-	const bool bAlly, const int32 SlotIndex)
+bool UCombatLayoutHUDWidget::IsStatusPressActiveForTest(const bool bAlly, const int32 SlotIndex) const
 {
-	HandleStatusLongPress(bAlly, SlotIndex);
-}
-
-bool UCombatLayoutHUDWidget::IsStatusLongPressPendingForTest() const
-{
-	const UWorld* World = GetWorld();
-	return mStatusPressActive == true && World != nullptr
-		&& World->GetTimerManager().IsTimerActive(mStatusLongPressTimerHandle);
-}
-
-bool UCombatLayoutHUDWidget::IsStatusPressActiveForTest(
-	const bool bAlly, const int32 SlotIndex) const
-{
-	return mStatusPressActive == true && mStatusPressedAlly == bAlly
-		&& mStatusPressedSlot == SlotIndex;
+	return mStatusPressActive && mStatusPressedAlly == bAlly && mStatusPressedSlot == SlotIndex;
 }
 #endif
 
-void UCombatLayoutHUDWidget::HandleScrollableStatusPressed(
-	const bool bAlly, const int32 SlotIndex)
+void UCombatLayoutHUDWidget::HandleScrollableStatusPressed(const bool bAlly, const int32 SlotIndex)
 {
 	BeginStatusPress(bAlly, SlotIndex);
 }
 
-void UCombatLayoutHUDWidget::HandleScrollableStatusReleased(
-	const bool bAlly, const int32 SlotIndex)
+void UCombatLayoutHUDWidget::HandleScrollableStatusClicked(const bool bAlly, const int32 SlotIndex)
 {
-	EndStatusPress(bAlly, SlotIndex);
+	if (!mStatusPressActive || mStatusPressedAlly != bAlly || mStatusPressedSlot != SlotIndex) return;
+	CancelStatusPress();
+	HandleStatusClicked(bAlly, SlotIndex);
 }
 
 void UCombatLayoutHUDWidget::HandleAllyStatusScrolled(const float CurrentOffset)

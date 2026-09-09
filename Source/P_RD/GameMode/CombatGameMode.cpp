@@ -1,4 +1,5 @@
 #include "GameMode/CombatGameMode.h"
+#include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "Tutorial/FirstBattleScenario.h"
@@ -35,6 +36,7 @@
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/ArtifactRewardPolicy.h"
+#include "UI/Reward/LevelUpSkillRewardFlow.h"
 
 #include "Actor/ActorView.h"
 
@@ -282,6 +284,7 @@ ACombatGameMode::ACombatGameMode()
 {
 	mCombatUIModel = CreateDefaultSubobject<UCombatUIModel>(TEXT("CombatUIModel"));
 	mRewardUIModel = CreateDefaultSubobject<URewardUIModel>(TEXT("RewardUIModel"));
+	mLevelUpSkillRewardFlow = CreateDefaultSubobject<ULevelUpSkillRewardFlow>(TEXT("LevelUpSkillRewardFlow"));
 }
 
 void ACombatGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -578,6 +581,8 @@ void ACombatGameMode::BeginCombatAfterEntrance()
 	}
 	UE_LOG(LogCombatGameMode, Display, TEXT("RD_BOSS_ENTRANCE combat begins after entrance=%d"), bHadEntrance);
 	if (auto* Combat = GetWorldSubsystemModel<USRPGCombatModel>(this)) Combat->BeginCombat();
+	// Pending reward choices belong to the completed-room checkpoint, not a new EXP grant.
+	mLevelUpSkillRewardFlow->Open(GetRunPersistData(), GetPartyModel(), GetWorld()->GetFirstPlayerController());
 }
 
 UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
@@ -836,6 +841,8 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 	if (ClaimCombatReward(ClaimKind, ChoiceIndex) && mRewardUIModel != nullptr)
 	{
 		mRewardUIModel->ConfirmRewardClaim(ClaimKind, ChoiceIndex);
+		if (ClaimKind == ERewardClaimKind::Exp)
+			mLevelUpSkillRewardFlow->Open(GetRunPersistData(), GetPartyModel(), GetWorld()->GetFirstPlayerController());
 	}
 }
 
@@ -964,6 +971,14 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 			if (AttributeSetComponentModel == nullptr)
 			{
 				continue;
+			}
+
+			// Queue each gained level before applying EXP; the same checkpoint stores both.
+			for (const FPlayerLevelUpData& Level : PlayerUnitModel->PredictLevelChange(CurrentRoom->mRewardExp))
+			{
+				FLevelUpSkillReward& SkillReward = RunPersistData->GetRoomTransactionsMutable().LevelUpSkills.AddDefaulted_GetRef();
+				SkillReward.UnitIndex = PlayerUnitModels.IndexOfByKey(PlayerUnitModel);
+				SkillReward.Level = Level.mCurLevel;
 			}
 
 			// Attribute 변경/레벨 변경 delegate는 동기 방송된다. 반환 시점에는
@@ -2880,7 +2895,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 	const FRoom& CurrentRoom = RunPersistData->GetCurrentRoom();
 	auto AddEquipmentReward = [&Choices](const FPrimaryAssetId& EquipmentId)
 		{
-			if (EquipmentId.IsValid() == false)
+			if (!GameplayAssetPolicy::IsPlayerFacing(EquipmentId))
 			{
 				return;
 			}
@@ -2978,6 +2993,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 
 void ACombatGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (mLevelUpSkillRewardFlow) mLevelUpSkillRewardFlow->Close();
  mCombatStartedAfterEntrance = true;
  if (mBossEntranceWidget) { mBossEntranceWidget->CancelCinematic(); mBossEntranceWidget = nullptr; }
  if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->CombatEnded(false);

@@ -18,6 +18,11 @@ UFadeInOutWidget::UFadeInOutWidget(const FObjectInitializer& ObjectInitializer)
 	mViewportZOrder = StaticCast<int32>(EViewportZOrderType::FadeInOut);
 }
 
+int32 UFadeInOutWidget::GetViewportZOrder() const
+{
+	return FMath::Max(Super::GetViewportZOrder(), RDViewportLayers::TransitionFade);
+}
+
 /**
  * 검은 덮개를 걷어 새 방 화면을 보여준다.
  *
