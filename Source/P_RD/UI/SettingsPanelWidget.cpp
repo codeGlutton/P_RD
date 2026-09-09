@@ -12,6 +12,8 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "P_RD.h"
+#include "Engine/GameInstance.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 /**
  * @brief 설정 패널을 팝업 레이어에 표시되도록 초기화한다.
@@ -45,6 +47,13 @@ USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectIniti
 void USettingsPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>())
+		{
+			Saver->OnSaveStatusChanged.RemoveAll(this);
+			Saver->OnSaveStatusChanged.AddUObject(this, &USettingsPanelWidget::RefreshSaveStatus);
+		}
+	RefreshSaveStatus();
 
 	ValidateDesignerBindings();
 
@@ -180,11 +189,11 @@ void USettingsPanelWidget::NativeConstruct()
 void USettingsPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	ApplyFoldScaleVariant(MyGeometry.GetLocalSize());
+	ApplyFoldScaleVariant(GetContentGeometry().GetLocalSize());
 	SyncSliderFillBars();
 
 	// [진단] 뷰포트가 바뀌면 8프레임 뒤(geometry 안정 후) 설정 레이아웃 전수 로그를 1회 남긴다.
-	const FVector2D MetricsViewport = MyGeometry.GetLocalSize();
+	const FVector2D MetricsViewport = GetContentGeometry().GetLocalSize();
 	if (MetricsViewport.X > 1.0f && MetricsViewport.Y > 1.0f
 		&& (FMath::Abs(MetricsViewport.X - mMetricsLastViewport.X) >= 1.0f
 			|| FMath::Abs(MetricsViewport.Y - mMetricsLastViewport.Y) >= 1.0f))
@@ -406,6 +415,8 @@ void USettingsPanelWidget::LogSettingsMetrics(const FVector2D& ViewportSize)
 
 void USettingsPanelWidget::NativeDestruct()
 {
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) Saver->OnSaveStatusChanged.RemoveAll(this);
 	/* NativeConstruct()에서 연결한 버튼 입력 Delegate를 해제한다. */
 
 	if (BackButton != nullptr)
@@ -517,4 +528,23 @@ void USettingsPanelWidget::HandleBackButtonClicked()
 	HideAbandonConfirm();
 	CloseUI();
 	OnBackRequested.Broadcast();
+}
+
+bool USettingsPanelWidget::HandleBackNavigation()
+{
+	if (mRunConfirmAction != ERunConfirmAction::None) HideAbandonConfirm();
+	else HandleBackButtonClicked();
+	return true;
+}
+
+void USettingsPanelWidget::ApplyOpenUI()
+{
+	Super::ApplyOpenUI();
+	RefreshSaveStatus();
+}
+
+void USettingsPanelWidget::RefreshSaveStatus()
+{
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) SetStatusText(Saver->GetSaveStatusText());
 }

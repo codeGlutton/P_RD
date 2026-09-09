@@ -495,6 +495,11 @@ void UAttributeSetComponentModel::OnTacticalEffectDurationChange(FActiveTactical
 int32 UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FActiveTacticalEffectHandle Handle) const
 {
     const FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
+    if (ActiveEffect == nullptr)
+    {
+        return 0;
+    }
+
     const int32 WorldTime = mActiveAttributeEffects.GetWorldTime(ActiveEffect->GetDurationUnit());
     return ActiveEffect->GetTimeRemaining(WorldTime);
 }

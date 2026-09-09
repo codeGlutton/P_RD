@@ -1,5 +1,6 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "UI/StageVictory/BossCollapseWidget.h"
 #include "Engine/GameInstance.h"
 
 #include "Actor/TileMap/TileLayer.h"
@@ -26,6 +27,7 @@
 #include "Components/ScrollBoxSlot.h"
 #include "Components/TextBlock.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Framework/Application/IInputProcessor.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
 #include "Engine/Font.h"
@@ -55,8 +57,34 @@
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "UI/CombatResultOverlayWidget.h"
+#include "UI/FrontendMapWidget.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 #define LOCTEXT_NAMESPACE "CombatLayoutHUD"
+
+// Observe contacts before a child button can consume them. A second finger on a
+// HUD button must cancel a board hold just like a second finger on the board.
+class FRDBoardPointerObserver final : public IInputProcessor
+{
+public:
+	explicit FRDBoardPointerObserver(UCombatLayoutHUDWidget* InOwner) : Owner(InOwner) {}
+	void Tick(float, FSlateApplication&, TSharedRef<ICursor>) override {}
+	bool HandleMouseButtonDownEvent(FSlateApplication&, const FPointerEvent& Event) override
+	{
+		if (Owner.IsValid() && Owner->IsVisible() && Event.IsTouchEvent()
+			&& Owner->GetCachedGeometry().IsUnderLocation(Event.GetScreenSpacePosition()))
+			Owner->ObserveBoardTouchDown(Event.GetPointerIndex());
+		return false;
+	}
+	bool HandleMouseButtonUpEvent(FSlateApplication&, const FPointerEvent& Event) override
+	{
+		if (Owner.IsValid() && Event.IsTouchEvent())
+			Owner->ObserveBoardTouchUp(Event.GetPointerIndex());
+		return false;
+	}
+private:
+	TWeakObjectPtr<UCombatLayoutHUDWidget> Owner;
+};
 
 /**
  * @brief 머리 위 HP 바가 쓰는 그림들을 미리 물어 둔다.
@@ -385,8 +413,20 @@ namespace
 void UCombatLayoutHUDWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if (!mBoardPointerObserver && FSlateApplication::IsInitialized())
+	{
+		mBoardPointerObserver = MakeShared<FRDBoardPointerObserver>(this);
+		FSlateApplication::Get().RegisterInputPreProcessor(mBoardPointerObserver);
+	}
 
 	CacheAuthoredWidgets();
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>())
+		{
+			Saver->OnSaveStatusChanged.RemoveAll(this);
+			Saver->OnSaveStatusChanged.AddUObject(this, &UCombatLayoutHUDWidget::RefreshSaveFailureNotice);
+		}
+	RefreshSaveFailureNotice();
 	ApplyActionLabelOpticalAlignment();
 	EnsureMercenarySkillButtons();
 	WireCommands();
@@ -404,6 +444,13 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 
 void UCombatLayoutHUDWidget::NativeDestruct()
 {
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) Saver->OnSaveStatusChanged.RemoveAll(this);
+	if (mBoardPointerObserver && FSlateApplication::IsInitialized())
+		FSlateApplication::Get().UnregisterInputPreProcessor(mBoardPointerObserver);
+	mBoardPointerObserver.Reset();
+	mBoardTouchSession.Reset();
+	CancelBoardPress();
 	// 화면이 바뀐 뒤 0.5초 타이머가 살아서 닫힌 HUD 위에 상세를 여는 일을 막는다.
 	CancelStatusPress();
 	CancelMonsterSkillPress();
@@ -3164,8 +3211,12 @@ void UCombatLayoutHUDWidget::HandleTurnPresentationBegin(
 
 bool UCombatLayoutHUDWidget::IsWorldInputModalShown() const
 {
+	if (const UWorld* World = GetWorld())
+		if (const auto* Widgets = World->GetSubsystem<UWorldWidgetSubsystem>())
+			if (const auto* Settings = Widgets->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings))
+				if (Settings->IsOpened()) return true;
 	return IsMercenaryPanelShown() || IsMonsterTabShown()
-		|| IsDetailOverlayShown();
+		|| IsDetailOverlayShown() || mCombatResultFlowActive || mCombatReviewWorldMapOpen;
 }
 
 void UCombatLayoutHUDWidget::RefreshWorldGestureInputBlock()
@@ -3455,6 +3506,12 @@ void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
 
 void UCombatLayoutHUDWidget::UnbindUIModel()
 {
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
+	if (mBossCollapseWidget)
+	{
+		mBossCollapseWidget->Cancel();
+		mBossCollapseWidget = nullptr;
+	}
 	HideDetailOverlay(/*bNotifyGameplay=*/false);
 	if (mUIModel != nullptr)
 	{
@@ -3544,6 +3601,7 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	RefreshWorldGestureInputBlock();
 	if(auto* GI=GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->UpdateGuidedHUD(this);
 	PollTurnBarMouseSwipe();
 	if (mSkillWorldPreviewActive)
@@ -3596,6 +3654,12 @@ FReply UCombatLayoutHUDWidget::NativeOnPreviewMouseButtonDown(
 FReply UCombatLayoutHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry,
 	const FPointerEvent& InMouseEvent)
 {
+	if (!InMouseEvent.IsTouchEvent() && mPressActive && !mBoardPressIsTouch
+		&& RDPointerGesture::HasMoved(mPressOrigin, InMouseEvent.GetScreenSpacePosition(), false))
+	{
+		mPressMoved = true;
+		if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+	}
 	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)
 		&& TryConsumeTurnSwipe(FVector2D(InMouseEvent.GetScreenSpacePosition())))
 	{
@@ -4083,7 +4147,7 @@ void UCombatLayoutHUDWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry,
 	const FPointerEvent& InMouseEvent)
 {
-	if (InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+	if (InMouseEvent.IsTouchEvent() || InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
@@ -4092,6 +4156,7 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 		return FReply::Handled();
 	}
 	mPressOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
+	mBoardPressIsTouch = false;
 	mPressMoved = false;
 	mPressActive = true;
 	if (UWorld* World = GetWorld())
@@ -4105,11 +4170,14 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	ObserveBoardTouchDown(InTouchEvent.GetPointerIndex());
+	if (!mBoardTouchSession.CanTap(InTouchEvent.GetPointerIndex())) return FReply::Handled();
 	if (IsWorldInputModalShown())
 	{
 		return FReply::Handled();
 	}
 	mPressOrigin = FVector2D(InTouchEvent.GetScreenSpacePosition());
+	mBoardPressIsTouch = true;
 	mPressMoved = false;
 	mPressActive = true;
 	if (UWorld* World = GetWorld())
@@ -4118,6 +4186,77 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 			&UCombatLayoutHUDWidget::HandleBoardLongPress, LongPressSeconds, false);
 	}
 	return FReply::Handled();
+}
+
+void UCombatLayoutHUDWidget::RefreshSaveFailureNotice()
+{
+	const auto* Instance = GetGameInstance();
+	const auto* Saver = Instance ? Instance->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (!mSaveFailureNotice && Saver && Saver->HasSaveFailure() && WidgetTree)
+		if (auto* Root = Cast<UCanvasPanel>(WidgetTree->RootWidget))
+		{
+			mSaveFailureNotice = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("SaveFailureNotice"));
+			mSaveFailureNotice->SetAutoWrapText(true);
+			mSaveFailureNotice->SetJustification(ETextJustify::Center);
+			mSaveFailureNotice->SetColorAndOpacity(FLinearColor(1.f, .78f, .25f));
+			if (mAllyName) mSaveFailureNotice->SetFont(mAllyName->GetFont());
+			if (auto* NoticeSlot = Root->AddChildToCanvas(mSaveFailureNotice))
+			{
+				NoticeSlot->SetAnchors(FAnchors(.5f, 0.f));
+				NoticeSlot->SetAlignment(FVector2D(.5f, 0.f));
+				NoticeSlot->SetPosition(FVector2D(0.f, 180.f));
+				NoticeSlot->SetSize(FVector2D(900.f, 90.f));
+				NoticeSlot->SetZOrder(9000);
+			}
+		}
+	if (mSaveFailureNotice)
+	{
+		mSaveFailureNotice->SetText(Saver ? Saver->GetSaveStatusText() : FText::GetEmpty());
+		mSaveFailureNotice->SetVisibility(Saver && Saver->HasSaveFailure() ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+	}
+}
+
+UUserWidget* UCombatLayoutHUDWidget::GetBackNavigationLayer() const
+{
+	if (mDetailOverlayWidget && mDetailOverlayWidget->IsInViewport() && mDetailOverlayWidget->IsVisible()) return mDetailOverlayWidget;
+	if (mMonsterTabWidget && mMonsterTabWidget->IsInViewport() && mMonsterTabWidget->IsVisible()) return mMonsterTabWidget;
+	return Super::GetBackNavigationLayer();
+}
+
+bool UCombatLayoutHUDWidget::HandleBackNavigation()
+{
+	if (IsDetailOverlayShown()) { HideDetailOverlay(true); return true; }
+	if (IsMonsterTabShown()) { SetMonsterTabShown(false); return true; }
+	if (IsMercenaryPanelShown())
+	{
+		if (mMercenaryCloseButton) mMercenaryCloseButton->OnClicked.Broadcast();
+		else SetMercenaryPanelShown(false);
+		return true;
+	}
+	if (mCombatReviewWorldMapOpen) { CloseWorldMapForCombatReview(); return true; }
+	if (mCombatResultFlowActive || mIsActionPlaying || mCombatAnnouncementKind != ECombatAnnouncementKind::None) return true;
+	if (IsAiming()) { HandleCancelClicked(); return true; }
+	if (mCommandsShown) { SetCommandsShown(false); return true; }
+	HandleSettingsMenuClicked();
+	return true;
+}
+
+void UCombatLayoutHUDWidget::CancelBoardPress()
+{
+	mPressActive = false;
+	mPressMoved = true;
+	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+}
+
+void UCombatLayoutHUDWidget::ObserveBoardTouchDown(uint32 Pointer)
+{
+	mBoardTouchSession.Begin(Pointer);
+	if (mBoardTouchSession.Consumed) CancelBoardPress();
+}
+
+void UCombatLayoutHUDWidget::ObserveBoardTouchUp(uint32 Pointer)
+{
+	mBoardTouchSession.End(Pointer);
 }
 
 /**
@@ -4178,6 +4317,12 @@ bool UCombatLayoutHUDWidget::IsOverChrome(const FVector2D& ScreenPosition) const
 FReply UCombatLayoutHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	ObserveBoardTouchUp(InTouchEvent.GetPointerIndex());
+	if (!mBoardTouchSession.CanTap(InTouchEvent.GetPointerIndex()))
+	{
+		CancelBoardPress();
+		return Super::NativeOnTouchEnded(InGeometry, InTouchEvent);
+	}
 	if (IsWorldInputModalShown())
 	{
 		mPressActive = false;
@@ -4191,13 +4336,14 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchEnded(const FGeometry& InGeometry,
 FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 	const FPointerEvent& InTouchEvent)
 {
+	if (!mBoardTouchSession.CanTap(InTouchEvent.GetPointerIndex())) return Super::NativeOnTouchMoved(InGeometry, InTouchEvent);
 	if (IsWorldInputModalShown())
 	{
 		mPressActive = false;
 		mPressMoved = false;
 		return FReply::Handled();
 	}
-	if (FVector2D(InTouchEvent.GetScreenSpacePosition()).Equals(mPressOrigin, BoardTapSlack) == false)
+	if (RDPointerGesture::HasMoved(mPressOrigin, InTouchEvent.GetScreenSpacePosition(), true))
 	{
 		const bool bDragJustStarted = mPressActive && mPressMoved == false;
 		mPressMoved = true;
@@ -4220,6 +4366,8 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 FReply UCombatLayoutHUDWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry,
 	const FPointerEvent& InMouseEvent)
 {
+	if (InMouseEvent.IsTouchEvent() || InMouseEvent.GetEffectingButton() != EKeys::LeftMouseButton)
+		return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 	if (IsWorldInputModalShown())
 	{
 		mPressActive = false;
@@ -4261,7 +4409,7 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 
 	const FVector2D DragDelta = ScreenPosition - mPressOrigin;
 	const bool bDragged = mPressMoved
-		|| ScreenPosition.Equals(mPressOrigin, BoardTapSlack) == false;
+		|| RDPointerGesture::HasMoved(mPressOrigin, ScreenPosition, mBoardPressIsTouch);
 	const bool bStartedOnTurnPanel = mTurnPanel != nullptr
 		&& mTurnPanel->GetVisibility() != ESlateVisibility::Collapsed
 		&& mTurnPanel->GetVisibility() != ESlateVisibility::Hidden
@@ -4649,6 +4797,8 @@ void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
 	Settings->SetStatusText(FText::GetEmpty());
 	CancelStatusPress();
 	Settings->OpenUI();
+	CancelBoardPress();
+	RefreshWorldGestureInputBlock();
 }
 
 /** @brief 설정 패널의 Back 요청을 받아 패널을 닫는다. */
@@ -4666,6 +4816,7 @@ void UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested()
 	{
 		Settings->CloseUI();
 	}
+	RefreshWorldGestureInputBlock();
 }
 
 /** @brief 런 액션을 잠그고 저장 후 종료 의도를 게임플레이에 전달한다. */

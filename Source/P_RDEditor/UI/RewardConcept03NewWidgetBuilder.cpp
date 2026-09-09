@@ -910,7 +910,8 @@ namespace RewardConcept03NewWidgetBuilder
 			OpenChestWithGold);
 		BackgroundChest->SetColorAndOpacity(
 			FLinearColor(1.f, .94f, .80f, .88f));
-		BackgroundChest->SetClipping(EWidgetClipping::ClipToBoundsAlways);
+		for (UWidget* Ancestor = BackgroundChest; Ancestor; Ancestor = Ancestor->GetParent())
+			Ancestor->SetClipping(EWidgetClipping::Inherit);
 
 		UBackgroundBlur* ChestBlur =
 			Blueprint->WidgetTree->ConstructWidget<UBackgroundBlur>(

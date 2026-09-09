@@ -515,12 +515,8 @@ bool FShopWBPContractTest::RunTest(const FString& Parameters)
 			{ TEXT("RestUnitIcon"), UImage::StaticClass() },
 			{ TEXT("RestUnitHPBeforeText"), UTextBlock::StaticClass() },
 			{ TEXT("RestUnitHPAfterText"), UTextBlock::StaticClass() },
-			{ TEXT("RestUnitAPBeforeText"), UTextBlock::StaticClass() },
-			{ TEXT("RestUnitAPAfterText"), UTextBlock::StaticClass() },
 			{ TEXT("RestUnitHPBeforeFill"), UImage::StaticClass() },
 			{ TEXT("RestUnitHPAfterFill"), UImage::StaticClass() },
-			{ TEXT("RestUnitAPBeforeFill"), UImage::StaticClass() },
-			{ TEXT("RestUnitAPAfterFill"), UImage::StaticClass() },
 		};
 		for (const FExpectedWidget& Expected : RestWidgets)
 		{
@@ -986,18 +982,12 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 		Tree->FindWidget(TEXT("RestUnitHPBeforeText_0")));
 	UTextBlock* RestHPAfter0 = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("RestUnitHPAfterText_0")));
-	UTextBlock* RestAPBefore0 = Cast<UTextBlock>(
-		Tree->FindWidget(TEXT("RestUnitAPBeforeText_0")));
-	UTextBlock* RestAPAfter0 = Cast<UTextBlock>(
-		Tree->FindWidget(TEXT("RestUnitAPAfterText_0")));
 	UImage* RestHPBeforeFill0 = Cast<UImage>(
 		Tree->FindWidget(TEXT("RestUnitHPBeforeFill_0")));
 	UTextBlock* RestButtonText = Cast<UTextBlock>(
 		Tree->FindWidget(TEXT("mRestButtonText")));
 	if (!TestNotNull(TEXT("휴식 첫 유닛 HP 현재값"), RestHPBefore0)
 		|| !TestNotNull(TEXT("휴식 첫 유닛 HP 회복값"), RestHPAfter0)
-		|| !TestNotNull(TEXT("휴식 첫 유닛 AP 현재값"), RestAPBefore0)
-		|| !TestNotNull(TEXT("휴식 첫 유닛 AP 회복값"), RestAPAfter0)
 		|| !TestNotNull(TEXT("휴식 첫 유닛 HP 현재 바"), RestHPBeforeFill0)
 		|| !TestNotNull(TEXT("휴식 버튼 라벨"), RestButtonText))
 	{
@@ -1007,12 +997,16 @@ bool FShopRenderedCaptureTest::RunTest(const FString& Parameters)
 		RestHPBefore0->GetText().ToString(), FString(TEXT("42/100")));
 	TestEqual(TEXT("휴식 첫 유닛 HP 회복값 반영"),
 		RestHPAfter0->GetText().ToString(), FString(TEXT("92/100")));
-	TestEqual(TEXT("휴식 첫 유닛 AP 현재값 반영"),
-		RestAPBefore0->GetText().ToString(), FString(TEXT("6/12")));
-	TestEqual(TEXT("휴식 첫 유닛 AP 회복값 반영"),
-		RestAPAfter0->GetText().ToString(), FString(TEXT("6/12")));
 	TestTrue(TEXT("휴식 첫 유닛 HP 현재 바 비율 반영"), FMath::IsNearlyEqual(
 		RestHPBeforeFill0->GetRenderTransform().Scale.X, 0.42f));
+	Tree->ForEachWidget([this](UWidget* Child)
+	{
+		if (Child->GetName().StartsWith(TEXT("RestUnitAP")))
+		{
+			TestEqual(*FString::Printf(TEXT("휴식 AP 표시 제거: %s"), *Child->GetName()),
+				Child->GetVisibility(), ESlateVisibility::Collapsed);
+		}
+	});
 	TestTrue(TEXT("휴식 요청 가능"), RestButton->GetIsEnabled());
 	const FString RestButtonLabel = RestButtonText->GetText().ToString();
 	TestTrue(TEXT("휴식 버튼 라벨"),

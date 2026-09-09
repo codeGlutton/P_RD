@@ -45,6 +45,9 @@ public:
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
 
+	// @brief 스킬 슬롯의 AI 선택 우선순위 (범위 밖이면 Normal)
+	ESkillPriority GetSkillPriority(int32 SkillSlot) const;
+
 private:
 	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "EquipmentCompModel"))
 	TObjectPtr<UEquipmentComponentModel> mEquipmentCompModel;
@@ -60,4 +63,8 @@ protected:
 	// @brief 이동 성향
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+
+	// @brief 스킬 슬롯별 AI 선택 우선순위 (인덱스 = 스킬 슬롯)
+	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillPriorities"))
+	TArray<ESkillPriority> mSkillPriorities;
 };

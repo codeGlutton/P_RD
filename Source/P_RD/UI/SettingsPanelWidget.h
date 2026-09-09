@@ -54,6 +54,10 @@ public:
 	 * @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	 */
 	USettingsPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
+	virtual void ApplyOpenUI() override;
+	void RefreshSaveStatus();
 
 	/** @brief 설정창도 프론트엔드 UI라 공용 버튼 클릭 사운드/누름 효과를 적용한다(타이틀/클래스선택과 동일). */
 	virtual bool ShouldApplyButtonFeedback() const override { return true; }
@@ -287,6 +291,7 @@ protected:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:
+	friend class FRDMobileBackNavigationTest;
 	/** @brief 폴드 모달 스케일 변형이 현재 적용 중인지. */
 	bool mFoldScaleActive = false;
 

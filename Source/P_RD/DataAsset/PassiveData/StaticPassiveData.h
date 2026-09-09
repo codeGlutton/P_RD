@@ -162,6 +162,18 @@ public:
 	TArray<FPassiveCaptureEntry> mCaptureOperands;
 
 	/**
+	* @brief 캡처한 타겟에게 발동
+	*
+	* @details
+	* 켜면 발동 시점의 대상을 캡처 시점에 있던 타겟들로 바꿔서 조건 판정과 효과 적용.
+	* 스킬 대상은 이펙트 적용 시점에만 들어오고 스킬 종료 시점엔 자기 자신뿐이라,
+	* "스킬 끝날 때 대상 상태로 판정"하는 패시브가 사용.
+	* 다단계 스킬은 페이즈마다 타겟이 누적되고, 발동하면 비움.
+	*/
+	UPROPERTY(Category = "Passive", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Activate On Captured Targets"))
+	bool mActivateOnCapturedTargets = false;
+
+	/**
 	* @brief 발동 조건 (AND)
 	*
 	* @details

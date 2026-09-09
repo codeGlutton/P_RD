@@ -21,6 +21,8 @@
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "UI/Combat/SkillTacticalDiagramWidget.h"
 #include "UI/SettingsPanelWidget.h"
+#include "UI/RDUIInputSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "UObject/ConstructorHelpers.h"
 
 #define LOCTEXT_NAMESPACE "RunOptionsRailWidget"
@@ -221,6 +223,29 @@ void URunOptionsRailWidget::NativeConstruct()
 	Super::NativeConstruct();
 	BindRailInputs();
 	SetMapContext(bMapContext);
+	RegisterBackNavigation();
+}
+
+void URunOptionsRailWidget::RegisterBackNavigation()
+{
+	if (auto* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>())
+		{
+			TWeakObjectPtr<URunOptionsRailWidget> WeakThis(this);
+			InputRouter->Register(this, [WeakThis]() -> UUserWidget*
+			{
+				if (!WeakThis.IsValid()) return nullptr;
+				if (WeakThis->DetailOverlayWidget && WeakThis->DetailOverlayWidget->IsVisible()) return WeakThis->DetailOverlayWidget;
+				return WeakThis->MercenaryPanelWidget;
+			}, [WeakThis]()
+			{
+				if (!WeakThis.IsValid()) return false;
+				if (WeakThis->DetailOverlayWidget && WeakThis->DetailOverlayWidget->IsVisible()) WeakThis->CloseDetailOverlay();
+				else if (WeakThis->bInventoryPageShown) WeakThis->SetInventoryPageShown(false);
+				else WeakThis->CloseMercenaryPanel();
+				return true;
+			});
+		}
 }
 
 void URunOptionsRailWidget::BindRailInputs()
@@ -468,6 +493,7 @@ void URunOptionsRailWidget::OpenMercenaryPanel()
 	SelectedPartyMember = 0;
 	bInventoryPageShown = false;
 	RefreshMercenaryPanel();
+	RegisterBackNavigation();
 }
 
 void URunOptionsRailWidget::CloseMercenaryPanel()
@@ -957,6 +983,8 @@ void URunOptionsRailWidget::HandleDetailCloseClicked()
 
 void URunOptionsRailWidget::NativeDestruct()
 {
+	if (auto* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>()) InputRouter->Unregister(this);
 	EndDetailPress();
 	if (OpenedMapWidget != nullptr)
 	{

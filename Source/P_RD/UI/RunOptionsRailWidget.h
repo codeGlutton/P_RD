@@ -100,6 +100,7 @@ protected:
 	virtual void NativeDestruct() override;
 
 private:
+	void RegisterBackNavigation();
 	void BuildRuntimeTree();
 	void BindRailInputs();
 	void OpenMercenaryPanel();

@@ -21,6 +21,7 @@
 #include "GamePlaySettings.generated.h"
 
 class UTexture2D;
+class UStaticObstacleSpawnData;
 
 /**
  * @brief  게임 플레이 연관 설정
@@ -72,6 +73,9 @@ public:
 
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
+
+    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EmptyObstacleData"))
+    TSoftObjectPtr<UStaticObstacleSpawnData> mEmptyObstacleData;
 
     /* 비디오 세팅 */
 public:

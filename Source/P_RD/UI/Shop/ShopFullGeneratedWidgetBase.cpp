@@ -23,7 +23,7 @@ void UShopFullGeneratedWidgetBase::NativeTick(
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
 
-	const FVector2D ViewportSize = MyGeometry.GetLocalSize();
+	const FVector2D ViewportSize = GetContentGeometry().GetLocalSize();
 	if (!ViewportSize.Equals(mLastResponsiveViewportSize, .5f))
 	{
 		UpdateResponsiveZoneLayout(ViewportSize);

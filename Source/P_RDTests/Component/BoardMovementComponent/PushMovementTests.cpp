@@ -383,3 +383,90 @@ bool FPushMovementCancelTests::RunTest(const FString& Parameters)
 
 	return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPushMovementBlockedTests,
+	"P_RD.SRPG.PushMovement.Blocked",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+/**
+ * @brief 경로 계산 뒤 다른 유닛이 먼저 칸을 차지한 경우 검증
+ *  1) 이동 도중 다음 칸이 막힘 -> 직전 칸에서 이동 완료, OnFinished 1회
+ *  2) 시작 전에 첫 칸이 막힘 -> 시작 거부, 제자리
+ */
+bool FPushMovementBlockedTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForPushTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	/* Case1: 이동 도중 다음 칸이 막힘 */
+	AddInfo(TEXT("=== Case1: 이동 중 다음 칸 점유 -> 직전 칸에서 완료 ==="));
+	{
+		// (5,2)에서 (3,2)까지 당겨지는 유닛
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+
+		// 다른 유닛: (4,2) 도착 통지 시점에 목적지 (3,2)를 먼저 차지 (동시에 당겨진 유닛이 먼저 도착한 상황)
+		UMockEnemyUnitModel* Blocker = NewObject<UMockEnemyUnitModel>(World);
+		Blocker->Initialize();
+		Blocker->BeginPlay();
+		FDelegateHandle BlockHandle = Fixture.Unit->OnEndMoveStep.AddLambda(
+			[&Fixture, Blocker](const FTileTransform& TileTransform, const FTransform&)
+			{
+				if (TileTransform.mIndex == FTileIndex(4, 2))
+				{
+					Fixture.TileMap->PlaceActor(FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward), Blocker);
+				}
+			});
+
+		int32 FinishCount = 0;
+		const bool Started = Fixture.Movement->PullAlongPath(
+			{ FTileIndex(5, 2), FTileIndex(4, 2), FTileIndex(3, 2) },
+			FOnBoardMoveFinished::CreateLambda([&FinishCount]()
+			{
+				++FinishCount;
+			}));
+
+		TestTrue(TEXT("[Case1] 시작 성공"), Started);
+		TestTrue(TEXT("[Case1] 막힌 칸 직전에서 정지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(4, 2));
+		TestTrue(TEXT("[Case1] 먼저 차지한 유닛은 그대로"), Blocker->GetTileTransform().mIndex == FTileIndex(3, 2));
+		TestEqual(TEXT("[Case1] OnFinished 1회"), FinishCount, 1);
+		TestFalse(TEXT("[Case1] 이동 종료 상태"), Fixture.Movement->IsMoving());
+
+		Fixture.Unit->OnEndMoveStep.Remove(BlockHandle);
+	}
+
+	/* Case2: 시작 전에 첫 칸이 막힘 */
+	AddInfo(TEXT("=== Case2: 첫 칸 점유 -> 시작 거부, 제자리 ==="));
+	{
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+
+		// 다른 유닛이 첫 이동 칸 (4,2)에 이미 서 있음
+		UMockEnemyUnitModel* Blocker = NewObject<UMockEnemyUnitModel>(World);
+		Blocker->Initialize();
+		Blocker->BeginPlay();
+		Fixture.TileMap->PlaceActor(FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward), Blocker);
+
+		int32 FinishCount = 0;
+		const bool Started = Fixture.Movement->PullAlongPath(
+			{ FTileIndex(5, 2), FTileIndex(4, 2), FTileIndex(3, 2) },
+			FOnBoardMoveFinished::CreateLambda([&FinishCount]()
+			{
+				++FinishCount;
+			}));
+
+		TestFalse(TEXT("[Case2] 시작 거부"), Started);
+		TestTrue(TEXT("[Case2] 제자리 유지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(5, 2));
+		TestEqual(TEXT("[Case2] 완료 통지 없음"), FinishCount, 0);
+		TestFalse(TEXT("[Case2] 이동 종료 상태"), Fixture.Movement->IsMoving());
+	}
+
+	return true;
+}

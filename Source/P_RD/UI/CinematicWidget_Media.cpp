@@ -12,7 +12,6 @@
 #include "FileMediaSource.h"
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
-#include "Misc/FileHelper.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/UITextureLoader.h"
 
@@ -133,49 +132,7 @@ bool UCinematicWidget::PlayCinematicVideo()
  */
 FVector2D UCinematicWidget::ReadCinematicVideoFileDimensions(const FString& VideoPath) const
 {
-	TArray<uint8> Bytes;
-	if (FFileHelper::LoadFileToArray(Bytes, *VideoPath) == false)
-	{
-		return FVector2D::ZeroVector; // 파일 로드 실패 → 해상도 미상(폴백 경로에서 처리)
-	}
-
-	const int32 NumBytes = Bytes.Num();
-	// MP4 박스 헤더의 길이/해상도 필드는 모두 빅엔디안 32비트라 4바이트를 묶어 uint32로 읽는 헬퍼.
-	auto ReadBigEndian32 = [&Bytes](int32 Offset) -> uint32
-	{
-		return (static_cast<uint32>(Bytes[Offset]) << 24)
-			| (static_cast<uint32>(Bytes[Offset + 1]) << 16)
-			| (static_cast<uint32>(Bytes[Offset + 2]) << 8)
-			| static_cast<uint32>(Bytes[Offset + 3]);
-	};
-
-	// 바이트 스트림 전체를 훑어 'tkhd' 4바이트 시그니처를 탐색(인덱스 4부터: 앞 4바이트는 박스 크기 자리).
-	for (int32 Index = 4; Index + 4 <= NumBytes; ++Index)
-	{
-		if (Bytes[Index] != 't' || Bytes[Index + 1] != 'k' || Bytes[Index + 2] != 'h' || Bytes[Index + 3] != 'd')
-		{
-			continue; // 'tkhd' 가 아니면 다음 바이트로
-		}
-
-		// 박스 크기(4바이트)는 타입('tkhd') 바로 앞에 온다. 박스 끝 = (타입앞) + 크기.
-		const int32 BoxStart = Index - 4;
-		const uint32 BoxSize = ReadBigEndian32(BoxStart);
-		const int64 BoxEnd = static_cast<int64>(BoxStart) + static_cast<int64>(BoxSize);
-		if (BoxSize < 32 || BoxEnd > NumBytes)
-		{
-			continue; // 박스 길이가 비정상이거나 버퍼를 넘어가면 잘못된 매치로 보고 스킵
-		}
-
-		// 표시 해상도는 박스 끝 직전 8바이트(width 4 + height 4)에 16.16 고정소수로 저장 → 65536으로 나눠 실수화.
-		const float Width = static_cast<float>(ReadBigEndian32(static_cast<int32>(BoxEnd) - 8)) / 65536.0f;
-		const float Height = static_cast<float>(ReadBigEndian32(static_cast<int32>(BoxEnd) - 4)) / 65536.0f;
-		if (Width > 0.0f && Height > 0.0f)
-		{
-			return FVector2D(Width, Height); // 첫 양수 해상도(=비디오 트랙) 발견 시 즉시 반환
-		}
-	}
-
-	return FVector2D::ZeroVector; // tkhd 미발견(또는 모두 0) → 해상도 미상
+	return RDUITexture::ReadMediaFileDimensions(VideoPath);
 }
 
 /**

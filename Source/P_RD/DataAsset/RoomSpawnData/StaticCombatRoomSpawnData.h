@@ -90,6 +90,10 @@ public:
 	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents", ExcludeBaseStruct))
 	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
+
+public:
+	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EmptyObstacleData", AssetBundles = "PAD"))
+	TSoftObjectPtr<UStaticObstacleSpawnData> mEmptyObstacleData;
 };
 
 UCLASS()

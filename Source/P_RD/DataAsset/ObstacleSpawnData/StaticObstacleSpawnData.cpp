@@ -63,6 +63,11 @@ EDataValidationResult UStaticObstacleSpawnData::IsDataValid(FDataValidationConte
 		Context.AddError(FText::FromString(TEXT("모델 클래스 or 액터 클래스 or 이름 미지정")));
 		ThisResult = EDataValidationResult::Invalid;
 	}
+	if (mRequiredEmptyTiles.Contains(FTileIndex(0, 0)) == true)
+	{
+		Context.AddError(FText::FromString(TEXT("추가 요구 타일에 0, 0 지정 불가")));
+		ThisResult = EDataValidationResult::Invalid;
+	}
 
 	return CombineDataValidationResults(SuperResult, ThisResult);
 }

@@ -25,6 +25,7 @@
 #include "UI/Combat/CombatUITypes.h"
 
 #include "Tutorial/GuidedTutorial.h"
+#include "Input/RDPointerGesturePolicy.h"
 #include "CombatLayoutHUDWidget.generated.h"
 
 struct FPresentationBarrier;
@@ -114,6 +115,9 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 
 public:
 	bool IsGuidedOverlayObscured() const;
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
+	virtual UUserWidget* GetBackNavigationLayer() const override;
 	bool IsGuidedBoardInputAt(const FVector2D& Position) const;
 	bool HasGuidedArtifact() const;
 	bool HasGuidedMonster() const;
@@ -470,7 +474,7 @@ private:
 	void FinishBoardPress(const FVector2D& ScreenPosition);
 
 	/** @brief 이만큼 안에서 움직였으면 톡 친 것으로 본다(px). */
-	static constexpr float BoardTapSlack = 24.f;
+	static constexpr float BoardTapSlack = RDPointerGesture::TouchPanSlop;
 	/** @brief 턴바를 이만큼 가로로 밀면 다음/이전 페이지로 넘긴다(px). */
 	static constexpr float TurnSwipeSlack = 48.f;
 
@@ -479,6 +483,17 @@ private:
 
 	/** @brief 누름이 아직 안 끝났나. 터치와 마우스가 겹쳐 와도 한 번만 처리한다. */
 	bool mPressActive = false;
+	bool mBoardPressIsTouch = false;
+	FRDBoardTouchSession mBoardTouchSession;
+	TSharedPtr<class IInputProcessor> mBoardPointerObserver;
+	friend class FRDBoardPointerObserver;
+	friend class FCombatBoardMultitouchTest;
+	friend class FCombatSettingsModalGateTest;
+	void ObserveBoardTouchDown(uint32 Pointer);
+	void ObserveBoardTouchUp(uint32 Pointer);
+	void CancelBoardPress();
+	void RefreshSaveFailureNotice();
+	UPROPERTY(Transient) TObjectPtr<UTextBlock> mSaveFailureNotice;
 
 	/** @brief 이 시간(초)을 넘게 누르고 있으면 긴 누름으로 본다. */
 	static constexpr float LongPressSeconds = 0.5f;
@@ -801,6 +816,7 @@ private:
 	void BeginCombatResultPresentation(TSharedPtr<FPresentationBarrier> Barrier, bool IsPlayerWin);
 	USoundBase* SelectCombatResultJingle(bool bPlayerWin) const;
 	void StartCombatResultCinematic();
+	void CompleteFinalRunAfterRewards();
 	void EnsureCombatResultWidgets();
 	void HandleCombatResultVideoFinished(class UCinematicWidget* CinematicWidget);
 	UFUNCTION() void HandleCombatResultOpenRequested();
@@ -1337,6 +1353,10 @@ private:
 	void HandleEndCombatUI(TSharedPtr<FPresentationBarrier> Barrier);
 
 	UPROPERTY(Transient) TObjectPtr<class UCinematicWidget> mCombatResultCinematicWidget;
+	UPROPERTY(Transient) TObjectPtr<class UBossCollapseWidget> mBossCollapseWidget;
+	bool mBossCollapsePlayed = false;
+	bool mResultRewardsOpened = false;
+	FTimerHandle mFinalRunCompletionTimerHandle;
 	UPROPERTY(Transient) TObjectPtr<class UCombatResultOverlayWidget> mCombatResultOverlayWidget;
 	TSharedPtr<FPresentationBarrier> mCombatResultBarrier;
 	FTimerHandle mCombatResultStartDelayTimerHandle;

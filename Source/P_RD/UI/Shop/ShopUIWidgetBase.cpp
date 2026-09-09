@@ -295,12 +295,8 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 	mRestUnitIcons.Reset();
 	mRestUnitHPBeforeTexts.Reset();
 	mRestUnitHPAfterTexts.Reset();
-	mRestUnitAPBeforeTexts.Reset();
-	mRestUnitAPAfterTexts.Reset();
 	mRestUnitHPBeforeFills.Reset();
 	mRestUnitHPAfterFills.Reset();
-	mRestUnitAPBeforeFills.Reset();
-	mRestUnitAPAfterFills.Reset();
 	mRailShopItemIndices.Init(INDEX_NONE, 5);
 
 	if (WidgetTree == nullptr)
@@ -360,18 +356,10 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 			FName(*FString::Printf(TEXT("RestUnitHPBeforeText_%d"), Index)))));
 		mRestUnitHPAfterTexts.Add(Cast<UTextBlock>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("RestUnitHPAfterText_%d"), Index)))));
-		mRestUnitAPBeforeTexts.Add(Cast<UTextBlock>(WidgetTree->FindWidget(
-			FName(*FString::Printf(TEXT("RestUnitAPBeforeText_%d"), Index)))));
-		mRestUnitAPAfterTexts.Add(Cast<UTextBlock>(WidgetTree->FindWidget(
-			FName(*FString::Printf(TEXT("RestUnitAPAfterText_%d"), Index)))));
 		mRestUnitHPBeforeFills.Add(Cast<UImage>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("RestUnitHPBeforeFill_%d"), Index)))));
 		mRestUnitHPAfterFills.Add(Cast<UImage>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("RestUnitHPAfterFill_%d"), Index)))));
-		mRestUnitAPBeforeFills.Add(Cast<UImage>(WidgetTree->FindWidget(
-			FName(*FString::Printf(TEXT("RestUnitAPBeforeFill_%d"), Index)))));
-		mRestUnitAPAfterFills.Add(Cast<UImage>(WidgetTree->FindWidget(
-			FName(*FString::Printf(TEXT("RestUnitAPAfterFill_%d"), Index)))));
 	}
 
 	for (int32 Index = 0; Index < 4; ++Index)
@@ -406,8 +394,6 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 	}
 	for (UTextBlock* Text : mRestUnitHPBeforeTexts) CenterText(Text);
 	for (UTextBlock* Text : mRestUnitHPAfterTexts) CenterText(Text);
-	for (UTextBlock* Text : mRestUnitAPBeforeTexts) CenterText(Text);
-	for (UTextBlock* Text : mRestUnitAPAfterTexts) CenterText(Text);
 }
 
 void UShopUIWidgetBase::BindFinalShopInputs()
@@ -1032,6 +1018,24 @@ void UShopUIWidgetBase::HandleCloseClicked()
 	CloseUI();
 }
 
+UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
+{
+	if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible())
+		if (auto* Layer = mMercenaryHireWidget->GetBackNavigationLayer())
+			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
+	return mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsInViewport() && mShopDetailOverlayWidget->IsVisible()
+		? mShopDetailOverlayWidget.Get() : Super::GetBackNavigationLayer();
+}
+
+bool UShopUIWidgetBase::HandleBackNavigation()
+{
+	if (mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsVisible()) HandleShopDetailCloseClicked();
+	else if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible()) mMercenaryHireWidget->HandleBackNavigation();
+	else if (mIsArtifactInventoryOpen) SetArtifactInventoryOpen(false);
+	else HandleCloseClicked();
+	return true;
+}
+
 /** @brief WBP의 슬롯 구매 입력을 UIModel의 구매 의도 이벤트로 전달한다. */
 void UShopUIWidgetBase::BuyItem(int32 SlotIndex)
 {
@@ -1641,9 +1645,29 @@ void UShopUIWidgetBase::RefreshSkillTargetView(const FShopUI& Shop)
 	}
 }
 
-/** @brief 휴식 탭의 3인 HP/AP 전·후 값과 바를 갱신한다. */
+/** @brief 휴식 탭의 3인 HP 전·후 값과 바를 갱신한다. */
 void UShopUIWidgetBase::RefreshRestView(const FShopUI& Shop)
 {
+	// Existing authored widgets still contain AP children. Hide the entire row,
+	// including static labels/tracks, without requiring an asset migration.
+	if (WidgetTree != nullptr)
+	{
+		const float HPRowOffset = WidgetTree->FindWidget(TEXT("RestUnitContent_0")) != nullptr
+			? 24.f : 12.f;
+		WidgetTree->ForEachWidget([HPRowOffset](UWidget* Widget)
+		{
+			if (Widget->GetName().StartsWith(TEXT("RestUnitAP")))
+			{
+				Widget->SetVisibility(ESlateVisibility::Collapsed);
+			}
+			else if (Widget->GetName().StartsWith(TEXT("RestUnitHP")))
+			{
+				// Absolute translation stays stable when the model refreshes repeatedly.
+				Widget->SetRenderTranslation(FVector2D(0.f, HPRowOffset));
+			}
+		});
+	}
+
 	const bool bRestMode = mActiveItemKind == EShopItemKind::Heal;
 	SetShopButtonShown(mRestButton, bRestMode);
 	SetShopWidgetShown(RestCostText, bRestMode);
@@ -1692,18 +1716,10 @@ void UShopUIWidgetBase::RefreshRestView(const FShopUI& Shop)
 			? mRestUnitHPBeforeTexts[UnitViewIndex].Get() : nullptr;
 		UTextBlock* HPAfterText = mRestUnitHPAfterTexts.IsValidIndex(UnitViewIndex)
 			? mRestUnitHPAfterTexts[UnitViewIndex].Get() : nullptr;
-		UTextBlock* APBeforeText = mRestUnitAPBeforeTexts.IsValidIndex(UnitViewIndex)
-			? mRestUnitAPBeforeTexts[UnitViewIndex].Get() : nullptr;
-		UTextBlock* APAfterText = mRestUnitAPAfterTexts.IsValidIndex(UnitViewIndex)
-			? mRestUnitAPAfterTexts[UnitViewIndex].Get() : nullptr;
 		UImage* HPBeforeFill = mRestUnitHPBeforeFills.IsValidIndex(UnitViewIndex)
 			? mRestUnitHPBeforeFills[UnitViewIndex].Get() : nullptr;
 		UImage* HPAfterFill = mRestUnitHPAfterFills.IsValidIndex(UnitViewIndex)
 			? mRestUnitHPAfterFills[UnitViewIndex].Get() : nullptr;
-		UImage* APBeforeFill = mRestUnitAPBeforeFills.IsValidIndex(UnitViewIndex)
-			? mRestUnitAPBeforeFills[UnitViewIndex].Get() : nullptr;
-		UImage* APAfterFill = mRestUnitAPAfterFills.IsValidIndex(UnitViewIndex)
-			? mRestUnitAPAfterFills[UnitViewIndex].Get() : nullptr;
 
 		SetShopWidgetShown(RowHolder, bHasUnit);
 		SetShopWidgetShown(Plate, bHasUnit);
@@ -1712,12 +1728,8 @@ void UShopUIWidgetBase::RefreshRestView(const FShopUI& Shop)
 			SetShopWidgetShown(Icon, false);
 			SetValueText(HPBeforeText, 0.f, 0.f, false);
 			SetValueText(HPAfterText, 0.f, 0.f, false);
-			SetValueText(APBeforeText, 0.f, 0.f, false);
-			SetValueText(APAfterText, 0.f, 0.f, false);
 			SetFillRatio(HPBeforeFill, 0.f, 0.f, false);
 			SetFillRatio(HPAfterFill, 0.f, 0.f, false);
-			SetFillRatio(APBeforeFill, 0.f, 0.f, false);
-			SetFillRatio(APAfterFill, 0.f, 0.f, false);
 			continue;
 		}
 
@@ -1729,12 +1741,8 @@ void UShopUIWidgetBase::RefreshRestView(const FShopUI& Shop)
 		SetShopImage(Icon, ResolveUnitIcon(Unit.mJobType));
 		SetValueText(HPBeforeText, Unit.mHP, Unit.mMaxHP, true);
 		SetValueText(HPAfterText, AfterHP, Unit.mMaxHP, true);
-		SetValueText(APBeforeText, Unit.mAP, Unit.mMaxAP, true);
-		SetValueText(APAfterText, Unit.mAP, Unit.mMaxAP, true);
 		SetFillRatio(HPBeforeFill, Unit.mHP, Unit.mMaxHP, true);
 		SetFillRatio(HPAfterFill, AfterHP, Unit.mMaxHP, true);
-		SetFillRatio(APBeforeFill, Unit.mAP, Unit.mMaxAP, true);
-		SetFillRatio(APAfterFill, Unit.mAP, Unit.mMaxAP, true);
 	}
 
 	if (mRestButton == nullptr || !bRestMode)

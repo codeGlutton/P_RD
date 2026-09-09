@@ -25,6 +25,7 @@ DECLARE_DELEGATE(FOnBoardMoveFinished);
  * 경로를 받아서 한 칸씩 모델을 이동하고, 매 칸마다 이동 델리게이트와 연출 베리어 실행
  * 턴과 상관없이 모두 이 모델을 사용해서 이동
  * 이동 계산은 이 모델에서 처리하고, 뷰 컴포넌트는 델리게이트를 받아 표시만 함
+ * 경로는 계산 시점의 점유 기준이므로 진행 중 다른 유닛이 먼저 점유한 칸에 막히면 직전 칸에서 이동 완료 처리
  */
 UCLASS()
 class P_RD_API UBoardMovementComponentModel : public UComponentModel
@@ -97,6 +98,8 @@ private:
 	bool StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished);
 	// @brief 전체 경로를 월드 좌표로 변환해서 뷰에 통지 (이동 시작/경로 교체 공용)
 	void BroadcastStartMovePath();
+	// @brief 칸에 진입 가능한지 판정 (경로 계산 후 당기기 등 스킬에 의해 다른 유닛이 먼저 점유했을 수 있으므로 진입 직전에 재확인)
+	bool CanEnterStep(int32 StepIndex) const;
 	// @brief StepIndex 칸으로 이동 시작 (모델 점유는 즉시, 도착 처리는 연출 후)
 	void StartStep(int32 StepIndex);
 	// @brief 현재 칸 도착 처리 (오버랩 통지)

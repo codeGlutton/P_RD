@@ -1,5 +1,7 @@
 ﻿#include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+#include "Engine/GameInstance.h"
 
 DEFINE_LOG_CATEGORY(LogGameProfile)
 
@@ -15,12 +17,13 @@ void UGameProfileSubsystem::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitId
 {
 	checkf(GetUserMutableData()->IsActive() == true, TEXT("유저 미존재 상태에서 새로운 런 생성 불가"));
 
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->ResetRunCheckpoint();
 	GetRunMutableData()->StartRun(PlayerUnitIds, Difficulty);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }
 
-void UGameProfileSubsystem::EndRun() const
+bool UGameProfileSubsystem::EndRun() const
 {
 	UUserPersistData* UserMutableData = GetUserMutableData();
 	URunPersistData* RunMutableData = GetRunMutableData();
@@ -28,10 +31,23 @@ void UGameProfileSubsystem::EndRun() const
 	checkf(UserMutableData->IsActive() == true, TEXT("유저 미존재 상태에서 런 종료 불가"));
 	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 런 종료 불가"));
 
-	UserMutableData->UpdateLog(RunMutableData->GetRunLog());
+	TArray<uint8> PreviousRun, PreviousUser;
+	if (!RDCheckpoint::Serialize(RunMutableData, PreviousRun)
+		|| !RDCheckpoint::Serialize(UserMutableData, PreviousUser)) return false;
+	const FRunLog CompletedLog = RunMutableData->GetRunLog();
 	RunMutableData->ClearRun();
+	RunMutableData->QueueCompletedRunLog(CompletedLog);
+	USaveGameSubsystem* Saver = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	if (!Saver->SaveEndedRun(PreviousRun))
+	{
+		RDCheckpoint::Deserialize(PreviousRun, RunMutableData);
+		RDCheckpoint::Deserialize(PreviousUser, UserMutableData);
+		return false;
+	}
+	Saver->CommitPendingRunLogs();
 
 	UE_LOG(LogGameProfile, Log, TEXT("런 데이터 기록 후 삭제"));
+	return true;
 }
 
 void UGameProfileSubsystem::SetRoomClearData(const FRoomClearData& ClearData) const

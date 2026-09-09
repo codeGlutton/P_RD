@@ -1,0 +1,62 @@
+name: Android verification
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-checks:
+    name: Android source checks
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check portability and mobile settings
+        run: python Tools/Android/check_sources.py
+      - name: Exercise release artifact rejection and signing preflight
+        run: python -m unittest discover -s Tools/Android/tests -v
+
+  arm64-compile:
+    name: Android arm64 Shipping compile
+    needs: source-checks
+    # Configure only an isolated UE/Android runner. Fork code does not execute on it.
+    if: >-
+      vars.ANDROID_CI_RUNNER != '' &&
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: [self-hosted, Windows, X64, '${{ vars.ANDROID_CI_RUNNER }}']
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile Android arm64 Shipping
+        shell: pwsh
+        run: ./Tools/Android/compile.ps1
+
+  native-gate:
+    name: Android native gate
+    needs: [source-checks, arm64-compile]
+    if: always()
+    runs-on: windows-latest
+    steps:
+      - name: Require actual Android compilation
+        shell: pwsh
+        env:
+          SOURCE_RESULT: ${{ needs.source-checks.result }}
+          COMPILE_RESULT: ${{ needs.arm64-compile.result }}
+        run: |
+          if ($env:SOURCE_RESULT -ne 'success' -or $env:COMPILE_RESULT -ne 'success') {
+            throw 'Android verification is incomplete. Configure an isolated UE 5.7 Windows runner with ANDROID_CI_RUNNER, then run the native compile. Source checks alone do not satisfy this gate.'
+          }

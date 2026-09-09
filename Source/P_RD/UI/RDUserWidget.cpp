@@ -1,4 +1,7 @@
 #include "UI/RDUserWidget.h"
+#include "UI/RDUIInputSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Widgets/Layout/SSafeZone.h"
 
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
@@ -7,6 +10,7 @@
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/ScaleBox.h"
+#include "Components/SafeZone.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
@@ -180,6 +184,7 @@ void URDUserWidget::ApplyOpenUI()
 	}
 
 	SetVisibility(ESlateVisibility::Visible);
+	RegisterBackNavigation();
 }
 
 /**
@@ -225,6 +230,7 @@ void URDUserWidget::NativeOnInitialized()
 void URDUserWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	RegisterBackNavigation();
 
 	// WBP에 구워진 버튼은 NativeOnInitialized에서 처리된다. 다만 파생 클래스는
 	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
@@ -242,6 +248,49 @@ void URDUserWidget::NativeConstruct()
 					SetupCommonButtonFeedback();
 				}));
 	}
+}
+
+TSharedRef<SWidget> URDUserWidget::RebuildWidget()
+{
+	TSharedRef<SWidget> Content = Super::RebuildWidget();
+	if (!ShouldWrapMobileSafeArea()) return Content;
+	// Wrap Slate content, leaving the asset's WidgetTree/root and bindings intact.
+	return SNew(SSafeZone).IsTitleSafe(true).Visibility(EVisibility::SelfHitTestInvisible)[Content];
+}
+
+bool URDUserWidget::ShouldWrapMobileSafeArea() const
+{
+	return UsesMobileSafeArea() && GetParent() == nullptr
+		&& !(WidgetTree && WidgetTree->RootWidget && WidgetTree->RootWidget->IsA<USafeZone>());
+}
+
+FGeometry URDUserWidget::GetContentGeometry() const
+{
+	return WidgetTree && WidgetTree->RootWidget ? WidgetTree->RootWidget->GetCachedGeometry() : GetCachedGeometry();
+}
+
+UUserWidget* URDUserWidget::GetBackNavigationLayer() const
+{
+	return const_cast<URDUserWidget*>(this);
+}
+
+void URDUserWidget::RegisterBackNavigation()
+{
+	if (UGameInstance* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>())
+		{
+			TWeakObjectPtr<URDUserWidget> WeakThis(this);
+			InputRouter->Register(this,
+				[WeakThis]() -> UUserWidget* { return WeakThis.IsValid() ? WeakThis->GetBackNavigationLayer() : nullptr; },
+				[WeakThis]() { return WeakThis.IsValid() && WeakThis->HandleBackNavigation(); });
+		}
+}
+
+void URDUserWidget::NativeDestruct()
+{
+	if (UGameInstance* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>()) InputRouter->Unregister(this);
+	Super::NativeDestruct();
 }
 
 void URDUserWidget::NormalizeCommonInputLayers()
