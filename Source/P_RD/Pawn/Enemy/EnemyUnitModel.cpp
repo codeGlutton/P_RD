@@ -33,6 +33,7 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
+	mSkillPriorities = EnemySpawn->mSkillPriorities;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
@@ -77,5 +78,10 @@ int32 UEnemyUnitModel::GetDifficulty() const
 EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 {
 	return mMoveTendency;
+}
+
+ESkillPriority UEnemyUnitModel::GetSkillPriority(int32 SkillSlot) const
+{
+	return mSkillPriorities.IsValidIndex(SkillSlot) ? mSkillPriorities[SkillSlot] : ESkillPriority::Normal;
 }
 
