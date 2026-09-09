@@ -486,6 +486,14 @@ public:
 	static bool IsPullAdjacent(const FTileIndex& Tile, const FTileIndex& Puller);
 
 	/**
+	 * 진입하려는 액터가 해당 타일에 막히는지 검사
+	 * @param TileIndex 검사할 타일 인덱스
+	 * @param Incoming 진입하려는 액터
+	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
+	 */
+	bool IsBlocked(const FTileIndex& TileIndex, const UBoardActorModel* Incoming) const;
+
+	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
 	 * @details 막히지 않았거나, 막혔어도 기존 액터를 교체할 수 있으면 배치 가능
 	 * @param TileIndex 검사할 타일 인덱스
@@ -618,14 +626,6 @@ private:
 	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
 	 */
 	TArray<FTileIndex> BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const;
-
-	/**
-	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
-	 * @param TileIndex 검사할 타일 인덱스
-	 * @param Incoming 진입하려는 액터
-	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
-	 */
-	bool IsBlocked(const FTileIndex& TileIndex, const UBoardActorModel* Incoming) const;
 
 	/**
 	 * 진입 액터가 덮어쓸(교체할) 기존 액터들을 반환하는 함수

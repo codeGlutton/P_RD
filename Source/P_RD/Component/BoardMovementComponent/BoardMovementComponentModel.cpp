@@ -71,6 +71,13 @@ bool UBoardMovementComponentModel::StartPathInternal(const TArray<FTileIndex>& P
 	mOnFinished = OnFinished;
 	mCancelRequested = false;
 
+	// 첫 칸이 이미 막혔으면 시작 안 함 (경로 계산 뒤 다른 유닛이 먼저 차지한 경우 등)
+	if (CanEnterStep(1) == false)
+	{
+		ResetMoveState();
+		return false;
+	}
+
 	// 외부 요청 시작 = 새 연쇄 시작 (연쇄 기록/보류 경로/깊이 초기화)
 	mChainedTrapTiles.Empty();
 	mPendingPushPath.Empty();
@@ -97,6 +104,14 @@ void UBoardMovementComponentModel::BroadcastStartMovePath()
 		PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
 	}
 	GetOwnerModel<UBoardActorModel>()->OnStartMovePath.Broadcast(PathWorldLocations, mMoveMode);
+}
+
+bool UBoardMovementComponentModel::CanEnterStep(int32 StepIndex) const
+{
+	checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+
+	// 다른 유닛이나 장애물이 그 칸을 막고 있지 않으면 진입 가능
+	return GetTileMap()->IsBlocked(mPathTileIndexes[StepIndex], GetOwnerModel<UBoardActorModel>()) == false;
 }
 
 bool UBoardMovementComponentModel::IsMoving() const
@@ -187,11 +202,11 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
 	Owner->OnEndMoveStep.Broadcast(Owner->GetTileTransform(), Owner->GetWorldTransform());
 
-	// 1) 보류 밀치기 경로가 있으면 남은 경로를 폐기하고 밀치기 경로로 교체
-	//    mOnFinished는 유지해서 연쇄 전체가 끝날 때 1회 호출
+	// 이 스텝 도중 함정이나 스킬에 밀쳐졌으면 남은 경로를 버리고 밀치기 경로로 갈아탐
+	// 완료 통지는 밀치기까지 다 끝난 뒤 한 번만 하므로 mOnFinished는 그대로 둠
 	if (mPendingPushPath.Num() > 0)
 	{
-		// 함정은 연쇄당 1회만 발동하므로 정상 연쇄가 이 상한을 넘을 수 없음. 넘으면 연쇄 기록 로직 버그
+		// 같은 함정은 한 번만 발동하므로 갈아탄 횟수가 상한을 넘으면 연쇄 기록 버그
 		++mAdoptedPushCount;
 		checkf(mAdoptedPushCount <= MaxPushChainDepth, TEXT("밀치기 연쇄 깊이 상한 초과"));
 
@@ -199,22 +214,26 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 		mPendingPushPath.Empty();
 		mMoveMode = EBoardMoveMode::Push;
 
-		// 교체된 경로를 뷰에 다시 통지 (일반 이동 폴리라인 폐기, 밀치기 연출 준비)
+		// 뷰에 새 경로 통지 (걷기 곡선은 버리고 밀치기 연출로 전환)
 		BroadcastStartMovePath();
-		StartStep(1);
+
+		// 바뀐 새 경로를 시작하도록 인덱스 초기화
+		mCurrentStepIndex = 0;
 	}
-	// 2) 마지막 타일이면 이동 완료. 상태를 먼저 비워서 완료 통지 안에서 새 이동을 시작할 수 있게 함
-	else if (mCurrentStepIndex >= mPathTileIndexes.Num() - 1)
+
+	// 다음 칸이 남아 있고 들어갈 수 있으면 계속 이동
+	const int32 NextStepIndex = mCurrentStepIndex + 1;
+	if (mPathTileIndexes.IsValidIndex(NextStepIndex) && CanEnterStep(NextStepIndex))
 	{
-		FOnBoardMoveFinished Finished = mOnFinished;
-		ResetMoveState();
-		Finished.ExecuteIfBound();
+		StartStep(NextStepIndex);
+		return;
 	}
-	// 3) 마지막 타일이 아니면 다음 타일로 이동
-	else
-	{
-		StartStep(mCurrentStepIndex + 1);
-	}
+
+	// 마지막 칸에 도착했거나 다음 칸이 막혔으면 여기서 이동 완료
+	// 통지를 받은 쪽이 바로 새 이동을 시작할 수 있으므로 상태를 먼저 비우고 호출 (비우면 mOnFinished도 지워지니 복사해 둠)
+	FOnBoardMoveFinished Finished = mOnFinished;
+	ResetMoveState();
+	Finished.ExecuteIfBound();
 }
 
 void UBoardMovementComponentModel::ResetMoveState()
