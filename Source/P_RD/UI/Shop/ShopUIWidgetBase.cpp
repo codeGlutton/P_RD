@@ -1018,6 +1018,24 @@ void UShopUIWidgetBase::HandleCloseClicked()
 	CloseUI();
 }
 
+UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
+{
+	if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible())
+		if (auto* Layer = mMercenaryHireWidget->GetBackNavigationLayer())
+			if (Layer->IsInViewport() && Layer->IsVisible()) return Layer;
+	return mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsInViewport() && mShopDetailOverlayWidget->IsVisible()
+		? mShopDetailOverlayWidget.Get() : Super::GetBackNavigationLayer();
+}
+
+bool UShopUIWidgetBase::HandleBackNavigation()
+{
+	if (mShopDetailOverlayWidget && mShopDetailOverlayWidget->IsVisible()) HandleShopDetailCloseClicked();
+	else if (mMercenaryHireWidget && mMercenaryHireWidget->IsVisible()) mMercenaryHireWidget->HandleBackNavigation();
+	else if (mIsArtifactInventoryOpen) SetArtifactInventoryOpen(false);
+	else HandleCloseClicked();
+	return true;
+}
+
 /** @brief WBP의 슬롯 구매 입력을 UIModel의 구매 의도 이벤트로 전달한다. */
 void UShopUIWidgetBase::BuyItem(int32 SlotIndex)
 {

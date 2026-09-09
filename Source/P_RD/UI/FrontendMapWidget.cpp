@@ -1163,6 +1163,13 @@ void UFrontendMapWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+bool UFrontendMapWidget::HandleBackNavigation()
+{
+	// A mandatory next-room selection has no Back button and must remain open.
+	if (CloseButton && CloseButton->IsVisible() && CloseButton->GetIsEnabled()) HandleCloseButtonClicked();
+	return true;
+}
+
 void UFrontendMapWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);

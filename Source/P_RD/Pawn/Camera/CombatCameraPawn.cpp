@@ -9,6 +9,7 @@
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
 #include "InputCoreTypes.h"
+#include "Input/RDPointerGesturePolicy.h"
 #include "EnhancedInputComponent.h"
 
 #if !UE_BUILD_SHIPPING
@@ -129,9 +130,13 @@ void ACombatCameraPawn::UpdatePointerGestures(const FTouchState& FirstTouch,
 	if (bUseMouse != mUsingMouseGesture)
 	{
 		for (FTouchState& State : mTouchStates) State = FTouchState();
+		mPinchActive = false;
+		mHadTwoTouches = false;
+		mPanActive = false;
 	}
 	mUsingMouseGesture = bUseMouse;
 	FTouchState Samples[2] = { FirstTouch, SecondTouch };
+	const bool HadTwoTouches = mTouchStates[0].bIsCurrentlyPressed && mTouchStates[1].bIsCurrentlyPressed;
 	if (bUseMouse)
 	{
 		Samples[0].bIsCurrentlyPressed = true;
@@ -147,11 +152,26 @@ void ACombatCameraPawn::UpdatePointerGestures(const FTouchState& FirstTouch,
 
 		if (bPreTickTouch == 0 && mTouchStates[i].bIsCurrentlyPressed)
 		{
+			if (i == 0) mPanActive = false;
 			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
 			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
 		}
 	}
 
+
+	const bool HasTwoTouches = mTouchStates[0].bIsCurrentlyPressed && mTouchStates[1].bIsCurrentlyPressed;
+	if (HasTwoTouches && !HadTwoTouches)
+	{
+		mPinchStartDistance = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
+		mPinchActive = false;
+		mHadTwoTouches = true;
+	}
+	if (!mTouchStates[0].bIsCurrentlyPressed && !mTouchStates[1].bIsCurrentlyPressed)
+	{
+		mPinchActive = false;
+		mHadTwoTouches = false;
+		mPanActive = false;
+	}
 
 	// Pinch 중
 	if (IsPinch())
@@ -205,6 +225,9 @@ void ACombatCameraPawn::SetTouchGestureInputEnabled(const bool bEnabled)
 		return;
 	}
 	mTouchGestureInputEnabled = bEnabled;
+	mPinchActive = false;
+	mHadTwoTouches = false;
+	mPanActive = false;
 	for (FTouchState& TouchState : mTouchStates)
 	{
 		TouchState = FTouchState();
@@ -213,9 +236,12 @@ void ACombatCameraPawn::SetTouchGestureInputEnabled(const bool bEnabled)
 
 bool ACombatCameraPawn::IsDrag()
 {
+	if (!mTouchStates[0].bIsCurrentlyPressed || mTouchStates[1].bIsCurrentlyPressed || mHadTwoTouches) return false;
+	mPanActive |= RDPointerGesture::HasMoved(mTouchStates[0].StartTouchPos, mTouchStates[0].CurTouchPos, !mUsingMouseGesture);
 	return mTouchStates[0].bIsCurrentlyPressed &&
 		!mTouchStates[1].bIsCurrentlyPressed &&
-		mImageStabilization < FVector2D::Distance(mTouchStates[0].StartTouchPos, mTouchStates[0].CurTouchPos) &&
+		!mHadTwoTouches &&
+		mPanActive &&
 		!mTouchStates[0].PreTouchPos.Equals(mTouchStates[0].CurTouchPos, 0.01f);
 }
 
@@ -224,9 +250,10 @@ bool ACombatCameraPawn::IsPinch()
 	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
-	return mTouchStates[0].bIsCurrentlyPressed &&
-		mTouchStates[1].bIsCurrentlyPressed &&
-		mImageStabilization < FMath::Abs(PrePinchDis - CurPinchDis);
+	if (!mTouchStates[0].bIsCurrentlyPressed || !mTouchStates[1].bIsCurrentlyPressed)
+		return false;
+	mPinchActive |= FMath::Abs(CurPinchDis - mPinchStartDistance) > RDPointerGesture::PinchSlop;
+	return mPinchActive && !FMath::IsNearlyEqual(PrePinchDis, CurPinchDis);
 }
 
 void ACombatCameraPawn::Dragging(const TArray<FTouchState>& Touch1State)
