@@ -190,6 +190,18 @@ public:
 	TArray<TObjectPtr<UCurveBase>> mEffectCurves;
 };
 
+/** One choice per gained level. Candidates and completion survive a reward-screen restart. */
+USTRUCT()
+struct FLevelUpSkillReward
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) int32 UnitIndex = INDEX_NONE;
+	UPROPERTY(SaveGame) int32 Level = 1;
+	UPROPERTY(SaveGame) bool Offered = false;
+	UPROPERTY(SaveGame) bool Completed = false;
+	UPROPERTY(SaveGame) TArray<FPrimaryAssetId> Candidates;
+};
+
 /** Claim and purchase state travels in the same payload as the granted items and money. */
 USTRUCT()
 struct FRoomTransactionState
@@ -202,6 +214,7 @@ struct FRoomTransactionState
 	UPROPERTY(SaveGame) FPrimaryAssetId SelectedArtifact;
 	UPROPERTY(SaveGame) TSet<int32> ClaimedChoices;
 	UPROPERTY(SaveGame) TSet<int32> SoldShopSlots;
+	UPROPERTY(SaveGame) TArray<FLevelUpSkillReward> LevelUpSkills;
 };
 
 USTRUCT()

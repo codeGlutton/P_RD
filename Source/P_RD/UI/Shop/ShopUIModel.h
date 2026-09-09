@@ -52,6 +52,10 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
 	FOnShopBuyRequested OnBuyRequested;
 
+	/** Level-up reward recipient portrait, identified by actual party slot. */
+	UPROPERTY(BlueprintAssignable, Category = "Shop|Input")
+	FOnShopBuyRequested OnRewardUnitRequested;
+
 	/**
 	 * @brief 위젯이 스킬 구매를 확정했음 (슬롯 index + 지급 대상 유닛 index)
 	 * @details 스킬은 유닛별 소유라 버리기와 마찬가지로 대상 유닛 지정이 필요

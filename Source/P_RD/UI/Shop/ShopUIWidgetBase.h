@@ -21,6 +21,7 @@ class URunOptionsRailWidget;
 class USkillDetailOverlayPresenter;
 class UMercenaryHireWidget;
 class UTexture2D;
+class USkillReplacementDialog;
 
 /** @brief 상점 화면 WBP 베이스. WBP(create_shop_wbp.py 생성) 위젯 이름은 아래 BindWidget 멤버명과 일치해야 한다. */
 // 이 베이스를 상속한 WBP는:
@@ -60,9 +61,12 @@ public:
 	{
 		return mShopDetailOverlayWidget;
 	}
+	USkillReplacementDialog* GetSkillReplacementDialogForTest() const { return mSkillReplacementDialog; }
 #endif
 
 protected:
+	virtual int32 GetViewportZOrder() const override;
+	void ApplyCloseUI() override;
 	/** @brief 상점값이 들어왔을 때 호출. WBP가 추가 연출을 하고 싶으면 여기서 한다(선택). */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Shop|UI")
 	void OnShopRefreshed();
@@ -101,6 +105,14 @@ private:
 	UFUNCTION() void HandlePreviousClicked();
 	UFUNCTION() void HandleNextClicked();
 	UFUNCTION() void HandleBuyClicked();
+	void ShowSkillReplacementConfirmation(const FShopItemUI& Item, const FShopOwnedUnitUI& Unit, int32 ModelSlot);
+	void ConfirmSkillReplacement();
+	void CancelSkillReplacement();
+	UPROPERTY() TObjectPtr<USkillReplacementDialog> mSkillReplacementDialog;
+	int32 mPendingReplacementItem = INDEX_NONE;
+	int32 mPendingReplacementUnit = INDEX_NONE;
+	int32 mPendingReplacementSlot = INDEX_NONE;
+	bool mWasEnabledBeforeReplacement = false;
 	UFUNCTION() void HandleRailClicked0();
 	UFUNCTION() void HandleRailClicked1();
 	UFUNCTION() void HandleRailClicked2();
@@ -143,6 +155,8 @@ private:
 
 	/** @brief 현재 모델의 골드/판매 슬롯을 BindWidget 위젯에 반영한다. */
 	void RefreshView();
+	void RefreshLevelUpRewardView(const FShopUI& Shop);
+	int32 mLastRewardOfferId = INDEX_NONE;
 
 	/** @brief 확정된 가로형 상점 WBP가 있는지 확인한다. */
 	bool HasFinalShopLayout() const;

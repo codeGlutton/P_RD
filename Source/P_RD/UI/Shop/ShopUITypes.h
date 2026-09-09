@@ -206,6 +206,11 @@ USTRUCT(BlueprintType)
 struct FShopUI
 {
 	GENERATED_BODY()
+	/** Reuse skill browsing/equipment for one free level-up choice. */
+	UPROPERTY(BlueprintReadOnly) bool mIsLevelUpReward = false;
+	UPROPERTY(BlueprintReadOnly) FText mRewardTitle;
+	UPROPERTY(BlueprintReadOnly) int32 mRewardOfferId = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) int32 mRewardUnitIndex = INDEX_NONE;
 
 	UPROPERTY(BlueprintReadOnly) int32 mGold = 0;
 	UPROPERTY(BlueprintReadOnly) TArray<FShopItemUI> mItems;

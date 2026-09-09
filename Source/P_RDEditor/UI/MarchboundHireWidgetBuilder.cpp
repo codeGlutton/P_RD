@@ -939,7 +939,7 @@ namespace MarchboundHireWidgetBuilder
 		}
 		ReplaceConfirmLayer->SetVisibility(ESlateVisibility::Collapsed);
 		UBorder* ReplaceDim = FindOrCreate<UBorder>(Blueprint, TEXT("HireReplaceConfirmDim"));
-		ReplaceDim->SetBrush(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, .68f)));
+		ReplaceDim->SetBrush(FSlateColorBrush(FLinearColor::Transparent));
 		PlaceCanvas(ReplaceConfirmLayer, ReplaceDim, FVector2D::ZeroVector, DesignSize, 0);
 		UCanvasPanel* ReplacePanel = FindOrCreate<UCanvasPanel>(
 			Blueprint, TEXT("HireReplaceConfirmPanel"));

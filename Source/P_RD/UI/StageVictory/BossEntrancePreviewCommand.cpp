@@ -9,7 +9,7 @@
 #include "UnrealClient.h"
 
 #if !UE_BUILD_SHIPPING
-namespace
+namespace BossEntrancePreview
 {
     TWeakObjectPtr<UBossEntranceWidget> Preview;
     void PlayPreview(UWorld* World, int32 Stage, bool All, bool Verify)
