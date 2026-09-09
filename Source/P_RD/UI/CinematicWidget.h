@@ -49,6 +49,8 @@ public:
 
 	/** @brief 기본 인트로 경로 대신 재생할 Content 상대/절대 mp4 경로를 지정한다. */
 	void SetCinematicVideoPath(const FString& InVideoPath);
+	void SetCinematicAudioEnabled(bool bEnabled) { mCinematicAudioEnabled = bEnabled; }
+	void CancelCinematic();
 
 	/** @brief 재생 종료 시 마지막 프레임을 유지할지 설정한다. */
 	void SetHoldLastFrameOnFinish(bool bInHoldLastFrameOnFinish);
@@ -258,6 +260,8 @@ private:
 	float mLoadingWaitLayerOpacity = 0.0f;
 
 	/** @brief 종료 처리가 이미 수행됐는지 여부. 종료 콜백 중복 발생을 막는다. */
+	UPROPERTY(Transient) TObjectPtr<class UMediaSoundComponent> mCinematicSound;
+	bool mCinematicAudioEnabled = false;
 	bool mCinematicFinished = false;
 
 	/** @brief 재생 완료 후 CloseUI 전까지 마지막 프레임을 유지한다. */

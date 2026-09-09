@@ -245,8 +245,19 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
  * @brief 위젯 소멸 시 타이머와 미디어 재생을 정리한다.
  * @details 기본 시네마틱 타이머와 페이드 타이머를 모두 해제하고 미디어를 정지해 누수를 방지한다.
  */
+void UCinematicWidget::CancelCinematic()
+{
+	OnEndCinematicAnimation.Unbind();
+	mCinematicFinished = true;
+	ClearDefaultCinematicTimer();
+	ClearCinematicFadeTimer();
+	StopCinematicMedia();
+	RemoveFromParent();
+}
+
 void UCinematicWidget::NativeDestruct()
 {
+	OnEndCinematicAnimation.Unbind();
 	ClearDefaultCinematicTimer();   // 영상 없을 때 쓰는 고정 길이 타이머 해제
 	ClearCinematicFadeTimer();      // 진행 중인 페이드 타이머 해제
 
@@ -294,8 +305,9 @@ void UCinematicWidget::FinishCinematic()
 
 	if (OnEndCinematicAnimation.IsBound())
 	{
-		OnEndCinematicAnimation.Execute(this);
-		OnEndCinematicAnimation.Unbind();   // 1회성 콜백이므로 실행 후 즉시 해제
+		FOnEndCinematicAnimation Callback = MoveTemp(OnEndCinematicAnimation);
+		OnEndCinematicAnimation.Unbind();
+		Callback.Execute(this);   // 1회성 콜백이므로 실행 후 즉시 해제
 	}
 }
 

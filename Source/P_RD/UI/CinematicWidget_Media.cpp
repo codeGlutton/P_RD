@@ -12,6 +12,7 @@
 #include "FileMediaSource.h"
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
+#include "MediaSoundComponent.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/UITextureLoader.h"
 
@@ -67,6 +68,15 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 		mCinematicMediaPlayer->OnEndReached.AddUniqueDynamic(this, &UCinematicWidget::HandleCinematicMediaEndReached);
 	}
 
+	if (mCinematicAudioEnabled && !mCinematicSound && GetWorld())
+	{
+		mCinematicSound = NewObject<UMediaSoundComponent>(this);
+		mCinematicSound->bIsUISound = true;
+		mCinematicSound->SetMediaPlayer(mCinematicMediaPlayer);
+		mCinematicSound->RegisterComponentWithWorld(GetWorld());
+		mCinematicSound->Start();
+	}
+
 	if (mCinematicMediaTexture == nullptr)
 	{
 		mCinematicMediaTexture = NewObject<UMediaTexture>(this, TEXT("IntroCinematicMediaTexture"));
@@ -120,6 +130,7 @@ bool UCinematicWidget::PlayCinematicVideo()
 	mCinematicMediaPlayer->Rewind();                    // 이전 재생 위치를 처음으로 되돌림
 	mCinematicMediaPlayer->Close();                     // 기존 열린 소스를 닫아 깨끗한 상태에서 다시 open
 	mCinematicMediaSource->SetFilePath(VideoPath);      // 열 대상 파일 경로 지정
+	StartDefaultCinematicTimer(mDefaultCinematicDuration + 10.f);
 	return mCinematicMediaPlayer->OpenSource(mCinematicMediaSource); // 비동기 open 시작(성공 발행 여부 반환)
 }
 
@@ -141,6 +152,13 @@ FVector2D UCinematicWidget::ReadCinematicVideoFileDimensions(const FString& Vide
  */
 void UCinematicWidget::StopCinematicMedia()
 {
+	if (mCinematicSound)
+	{
+		mCinematicSound->Stop();
+		mCinematicSound->SetMediaPlayer(nullptr);
+		mCinematicSound->DestroyComponent();
+		mCinematicSound = nullptr;
+	}
 	if (mCinematicMediaPlayer != nullptr)
 	{
 		// Close()가 유발할 수 있는 종료 콜백이 this로 재진입하지 않도록 먼저 모든 바인딩을 해제한다.
@@ -176,6 +194,10 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 {
 	if (mCinematicMediaPlayer != nullptr)
 	{
+		if (mCinematicAudioEnabled)
+			UE_LOG(LogRD, Display, TEXT("RD_BOSS_ENTRANCE media opened duration=%.2f audioTracks=%d audioOutput=%d"),
+				mCinematicMediaPlayer->GetDuration().GetTotalSeconds(),
+				mCinematicMediaPlayer->GetNumTracks(EMediaPlayerTrack::Audio), mCinematicSound && mCinematicSound->IsActive());
 		mCinematicMediaPlayer->Play(); // open 완료 시점에 비로소 재생 시작
 
 		// 영상 실제 해상도를 한 번 확보해 cover 비율 기준으로 쓴다.
