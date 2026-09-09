@@ -12,8 +12,13 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
@@ -25,15 +30,21 @@ TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(
 
     /* 기본 데미지를 Factor에 임시 추가 */
     {
+        const float StatusDamageUpRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength];
+        const float StatusDamageDownRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength];
+
         int32 StatusDamage = (
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength, 0) -
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength, 0)
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength, 0) * StatusDamageUpRatio -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength, 0) * StatusDamageDownRatio
             );
         int32 SkillDamage = SkillComponentModel->GetRandomDamage(mMinDamage, mMaxDamage);
 
+        const float StatusCriticalUpRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny];
+        const float StatusCriticalDownRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny];
+
         int32 StatusCriticalThreshold = (
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny, 0) -
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny, 0)
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny, 0) * StatusCriticalUpRatio -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny, 0) * StatusCriticalDownRatio
             );
         int32 AttributeCriticalThreshold = FMath::Floor<int32>(Snapshot->mAttributes[UCombatTargetAttributeSet::GetCriticalFactorAttribute()]);
 
