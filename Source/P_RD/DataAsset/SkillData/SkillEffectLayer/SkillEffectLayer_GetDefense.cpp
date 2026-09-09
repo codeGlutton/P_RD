@@ -9,8 +9,13 @@
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 
+#include "Setting/GameBalanceSettings.h"
+
 TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_GetDefense::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
+    const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+    checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
     UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
@@ -20,9 +25,12 @@ TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_GetDefense::ApplyFactorEff
 
     /* 포인트를 Factor에 임시 추가 */
     {
+        const float StatusDefenseUpRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Dexterity];
+        const float StatusDefenseDownRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity];
+
         int32 StatusDefense = (
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Dexterity, 0) -
-            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity, 0)
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Dexterity, 0) * StatusDefenseUpRatio -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity, 0) * StatusDefenseDownRatio
             );
 
         TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_DefenseFactor_AddBase::StaticClass(), EffectContext);
