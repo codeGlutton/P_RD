@@ -11,7 +11,7 @@
 #include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "DataAsset/PassiveData/StaticPassiveData.h"
 
-namespace
+namespace ImportArtifactDataPrivate
 {
 	// 노션 CSV 헤더 이름
 	// 괄호와 공백은 제거되며 문서에서 컬럼 이름을 바꾸면 여기도 수정 필요
@@ -48,6 +48,7 @@ UImportArtifactDataCommandlet::UImportArtifactDataCommandlet()
 
 int32 UImportArtifactDataCommandlet::Main(const FString& Params)
 {
+	using namespace ImportArtifactDataPrivate;
 	// -csv 는 필수, -ids 는 선택
 	FString CsvPath;
 	if (FParse::Value(*Params, TEXT("csv="), CsvPath) == false)
@@ -157,6 +158,7 @@ int32 UImportArtifactDataCommandlet::Main(const FString& Params)
 
 bool UImportArtifactDataCommandlet::FillArtifactData(const FImportCsvTable& Table, int32 RowIndex, UStaticArtifactData* Data) const
 {
+	using namespace ImportArtifactDataPrivate;
 	const FString Id = Table.Get(RowIndex, Column::Id).TrimStartAndEnd();
 	bool bOk = true;
 

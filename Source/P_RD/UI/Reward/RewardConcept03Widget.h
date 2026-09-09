@@ -38,6 +38,7 @@ class P_RD_API URewardConcept03Widget : public UUserWidget
 
 public:
 	URewardConcept03Widget(const FObjectInitializer& ObjectInitializer);
+	bool SetStageClearBackground(int32 Stage);
 	/** Connects the generated WBP to the real combat reward payload/claim flow. */
 	UFUNCTION(BlueprintCallable, Category = "Reward Concept 03")
 	void BindUIModel(URewardUIModel* InUIModel);
@@ -138,6 +139,9 @@ protected:
 	virtual bool UsesArtifactStep() const { return true; }
 
 private:
+	UPROPERTY(Transient) FSlateBrush DefaultRewardBackground;
+	bool bHasDefaultRewardBackground = false;
+	bool bStageClearBackground = false;
 	enum class EPresentationState : uint8
 	{
 		Idle,
