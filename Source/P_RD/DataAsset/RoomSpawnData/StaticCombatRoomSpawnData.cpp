@@ -15,6 +15,7 @@ void UStaticCombatRoomSpawnData::PostInitProperties()
 	if (HasAnyFlags(RF_ClassDefaultObject) == false)
 	{
 		mGameModeBase = GetDefault<UGamePlaySettings>()->mCombatGameMode;
+		mEmptyObstacleData = GetDefault<UGamePlaySettings>()->mEmptyObstacleData;
 	}
 }
 
@@ -23,12 +24,14 @@ void UStaticCombatRoomSpawnData::PostLoad()
 	Super::PostLoad();
 
 	const TSoftClassPtr<AGameModeBase> UpdatedGameMode = GetDefault<UGamePlaySettings>()->mCombatGameMode;
-	if (mGameModeBase != UpdatedGameMode)
+	const TSoftObjectPtr<UStaticObstacleSpawnData> UpdatedObstacleData = GetDefault<UGamePlaySettings>()->mEmptyObstacleData;
+	if (mGameModeBase != UpdatedGameMode || mEmptyObstacleData != UpdatedObstacleData)
 	{
 #if WITH_EDITOR
 		Modify();
 #endif
 		mGameModeBase = UpdatedGameMode;
+		mEmptyObstacleData = UpdatedObstacleData;
 #if WITH_EDITOR
 		MarkPackageDirty();
 #endif
