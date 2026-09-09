@@ -200,6 +200,7 @@ namespace AnimationTags
 #pragma region Stump
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Stump_Bodyslam);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Stump_Grow);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Stump_TreeOfLife);
 #pragma endregion
 
 #pragma region Spider
