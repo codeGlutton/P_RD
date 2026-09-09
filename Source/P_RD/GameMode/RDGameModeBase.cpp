@@ -22,6 +22,9 @@ ARDGameModeBase::ARDGameModeBase()
 void ARDGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+	// Apply saved audio after a world/audio device exists, including room changes.
+	GetOptionPersistData()->ApplyAudioOptions();
+	GetOptionPersistData()->SetVibrationEnabled(GetOptionPersistData()->IsVibrationEnabled());
 
 	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
 	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));

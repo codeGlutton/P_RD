@@ -62,6 +62,7 @@ void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
 			CurrentValueModel.mQualityLevel = RDSettingsPanel::FromOverallQuality(StaticCast<int32>(OptionData->GetOverallQuality()));
 			CurrentValueModel.mScreenShakeEnabled = OptionData->IsCameraShakeEnabled();
 			CurrentValueModel.mEffectsEnabled = OptionData->IsEffectVFXEnabled();
+			CurrentValueModel.mVibrationEnabled = OptionData->IsVibrationEnabled();
 		}
 	}
 	ApplyValueModel(CurrentValueModel);
@@ -254,6 +255,10 @@ void USettingsPanelWidget::HandleVibrationChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnVibrationChanged.Broadcast(mValueModel.mVibrationEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->GetOptionPersistData()->SetVibrationEnabled(mValueModel.mVibrationEnabled);
+		}
 	}
 }
 

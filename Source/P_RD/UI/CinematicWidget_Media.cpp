@@ -13,6 +13,7 @@
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
 #include "MediaSoundComponent.h"
+#include "Sound/SoundClass.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/UITextureLoader.h"
 
@@ -71,6 +72,8 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 	if (mCinematicAudioEnabled && !mCinematicSound && GetWorld())
 	{
 		mCinematicSound = NewObject<UMediaSoundComponent>(this);
+		mCinematicSound->SoundClass = GetDefault<UGamePlaySettings>()->mSoundClasses[
+			static_cast<int32>(EGameVolumeType::SFX)].LoadSynchronous();
 		mCinematicSound->bIsUISound = true;
 		mCinematicSound->SetMediaPlayer(mCinematicMediaPlayer);
 		mCinematicSound->RegisterComponentWithWorld(GetWorld());

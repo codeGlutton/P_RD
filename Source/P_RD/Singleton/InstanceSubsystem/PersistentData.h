@@ -372,6 +372,7 @@ class P_RD_API UOptionPersistData : public UObject
 
 public:
 	UOptionPersistData();
+	void BeginDestroy() override;
 
 public:
 	void MakeCaches();
@@ -389,6 +390,9 @@ public:
 	void SetEffectVFXEnabled(bool IsEnabled);
 
 	void ApplyCurrentOptions();
+	void ApplyAudioOptions();
+	void SetVibrationEnabled(bool IsEnabled);
+	bool IsVibrationEnabled() const { return mVibrationEnabled; }
 
 public:
 	float GetVolume(EGameVolumeType VolumeType) const;
@@ -428,9 +432,12 @@ protected:
 
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "EffectVFXEnabled"))
 	bool mEffectVFXEnabled = true;
+	UPROPERTY(SaveGame)
+	bool mVibrationEnabled = true;
 
 	/* 캐싱 */
 private:
 	UPROPERTY()
 	FOptionPersistDataCache mOptionPersistDataCache;
+	void RouteLoadedSound(UObject* Asset);
 };
