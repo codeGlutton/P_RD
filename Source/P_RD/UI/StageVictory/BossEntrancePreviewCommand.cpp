@@ -9,7 +9,9 @@
 #include "UnrealClient.h"
 
 #if !UE_BUILD_SHIPPING
-namespace
+// 익명 네임스페이스면 유니티 빌드에서 BossCollapsePreviewCommand.cpp와 같은 번역 단위로 묶여
+// 동명 심볼(Preview/PlayPreview/Command)이 충돌하므로 이름 부여
+namespace BossEntrancePreview
 {
     TWeakObjectPtr<UBossEntranceWidget> Preview;
     void PlayPreview(UWorld* World, int32 Stage, bool All, bool Verify)
