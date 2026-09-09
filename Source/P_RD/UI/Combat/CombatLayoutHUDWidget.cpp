@@ -2240,8 +2240,8 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		const FString Stem = FString::Printf(TEXT("%sScrollStatus"), *Prefix);
 		USizeBox* Row = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),
 			FName(*FString::Printf(TEXT("%sRow_%d"), *Stem, Index)));
-		Row->SetWidthOverride(56.f);
-		Row->SetHeightOverride(56.f);
+		Row->SetWidthOverride(88.f);
+		Row->SetHeightOverride(88.f);
 		Row->SetClipping(EWidgetClipping::ClipToBoundsAlways);
 		Row->SetVisibility(ESlateVisibility::Collapsed);
 
@@ -2265,7 +2265,11 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 
 		UImage* Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),
 			FName(*FString::Printf(TEXT("%sIcon_%d"), *Stem, Index)));
-		Icon->SetDesiredSizeOverride(FVector2D(42.f, 42.f));
+		// SetDesiredSizeOverride is ignored until the Slate image exists. Store the size
+		// in the brush so icons created before TakeWidget keep their intended size.
+		FSlateBrush IconBrush = Icon->GetBrush();
+		IconBrush.ImageSize = FVector2D(80.f, 80.f);
+		Icon->SetBrush(IconBrush);
 		Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 		if (UOverlaySlot* OverlaySlot = Layer->AddChildToOverlay(Icon))
 		{
@@ -2277,8 +2281,8 @@ void UCombatLayoutHUDWidget::EnsureSummaryStatusCapacity(
 		FSlateFontInfo CountFont = (bAlly && mAllyName != nullptr)
 			? mAllyName->GetFont()
 			: (mEnemyName != nullptr ? mEnemyName->GetFont() : FSlateFontInfo());
-		CountFont.Size = 14;
-		CountFont.OutlineSettings.OutlineSize = 1;
+		CountFont.Size = 22;
+		CountFont.OutlineSettings.OutlineSize = 2;
 		CountFont.OutlineSettings.OutlineColor = FLinearColor::Black;
 
 		UTextBlock* Count = WidgetTree->ConstructWidget<UTextBlock>(
@@ -2357,7 +2361,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 	if (Scroll != nullptr)
 	{
 		const bool bHasStatus = ShownStatuses.IsEmpty() == false;
-		const bool bScrollable = ShownStatuses.Num() >= 4;
+		const bool bScrollable = ShownStatuses.Num() * 90.f > 190.f;
 		Scroll->SetVisibility(bHasStatus
 			? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		Scroll->SetScrollBarVisibility(bScrollable
@@ -2418,7 +2422,7 @@ void UCombatLayoutHUDWidget::RefreshSummaryStatusList(const bool bAlly,
 		if (Count != nullptr && Status.mStackCount > 1)
 		{
 			Count->SetText(FText::AsNumber(Status.mStackCount));
-			Count->SetColorAndOpacity(FSlateColor(Accent));
+			Count->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		}
 	}
 }
