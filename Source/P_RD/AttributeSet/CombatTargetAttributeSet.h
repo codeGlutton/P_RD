@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   CombatTargetAttributeSet.h
  * @brief  CombatTarget에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -25,7 +25,9 @@ public:
 	/* UTacticalAttributeSet 상속 */
 public:
 	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
+	void PreAttributeBaseChange(const FTacticalAttribute& Attribute, float& NewValue) const override;
 	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
+	void PostAttributeBaseChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) const override;
 
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UCombatTargetAttributeSet, MaxHP)

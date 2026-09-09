@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   UnitAttributeSet.h
  * @brief  Unit에 대한 Attribute Set 정의 헤더
  * @author 모호재
@@ -22,7 +22,9 @@ class P_RD_API UUnitAttributeSet : public UCombatTargetAttributeSet
 	/* UTacticalAttributeSet 상속 */
 public:
 	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
+	void PreAttributeBaseChange(const FTacticalAttribute& Attribute, float& NewValue) const override;
 	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
+	void PostAttributeBaseChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) const override;
 
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UUnitAttributeSet, ActionPoint)
@@ -92,7 +94,9 @@ class P_RD_API UPlayerUnitAttributeSet : public UUnitAttributeSet
 	/* UTacticalAttributeSet 상속 */
 public:
 	void PreAttributeChange(const FTacticalAttribute& Attribute, float& NewValue) override;
+	void PreAttributeBaseChange(const FTacticalAttribute& Attribute, float& NewValue) const override;
 	void PostAttributeChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) override;
+	void PostAttributeBaseChange(const FTacticalAttribute& Attribute, float OldValue, float NewValue) const override;
 
 public:
 	TACTICAL_ATTRIBUTE_ACCESSORS_BASIC(UPlayerUnitAttributeSet, Exp)
