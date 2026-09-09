@@ -1,4 +1,7 @@
 #include "UI/Reward/LevelUpSkillRewardFlow.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "UI/Reward/RewardConcept03Widget.h"
+#include "UI/RunOptionsRailWidget.h"
 #include "Actor/Party/PartyModel.h"
 #include "AttributeSet/LevelAttributeSet.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
@@ -126,7 +129,27 @@ void ULevelUpSkillRewardFlow::Save()
 void ULevelUpSkillRewardFlow::Close()
 {
 	if (mWidget) mWidget->CloseUI();
+	for (const auto& Entry : mSuspendedRewardWidgets)
+		if (IsValid(Entry.Key) && Entry.Key->IsInViewport()) Entry.Key->SetVisibility(Entry.Value);
+	mSuspendedRewardWidgets.Reset();
 	mActiveReward = INDEX_NONE;
+}
+
+void ULevelUpSkillRewardFlow::SuspendRewardScreens()
+{
+	// The selection is transparent all the way to the battlefield. Keep the reward
+	// flow alive underneath so its current step can resume after choosing/skipping.
+	for (UClass* Class : { URewardConcept03Widget::StaticClass(), URunOptionsRailWidget::StaticClass() })
+	{
+		TArray<UUserWidget*> Widgets;
+		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(mController, Widgets, Class, true);
+		for (UUserWidget* Widget : Widgets)
+			if (Widget->IsVisible() && !mSuspendedRewardWidgets.Contains(Widget))
+			{
+				mSuspendedRewardWidgets.Add(Widget, Widget->GetVisibility());
+				Widget->SetVisibility(ESlateVisibility::Collapsed);
+			}
+	}
 }
 
 void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
@@ -205,6 +228,7 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 	}
 	if (!mWidget && mWidgetClass) mWidget = CreateWidget<UShopUIWidgetBase>(mController, mWidgetClass);
 	if (!mWidget) { UE_LOG(LogTemp, Error, TEXT("Level-up shop screen could not be created")); return; }
+	SuspendRewardScreens();
 	mUIModel->SetShop(View);
 	mWidget->BindUIModel(mUIModel);
 	mWidget->OpenUI();

@@ -2583,7 +2583,7 @@ int32 UShopUIWidgetBase::GetViewportZOrder() const
 void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)
 {
 	if (WidgetTree)
-		for (const TCHAR* Name : { TEXT("ShopBackgroundScale"), TEXT("ShopBackgroundArt") })
+		for (const TCHAR* Name : { TEXT("ShopLetterbox"), TEXT("ShopBackgroundScale"), TEXT("ShopBackgroundArt") })
 			if (UWidget* Background = WidgetTree->FindWidget(Name))
 				Background->SetVisibility(ESlateVisibility::Collapsed);
 	if (mTitleText) mTitleText->SetText(LOCTEXT("LevelUpTitle", "레벨업"));
