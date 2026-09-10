@@ -11,13 +11,15 @@ FSkillEffectCommitParams::FSkillEffectCommitParams(
 	TObjectPtr<UBoardCombatTargetSnapshotData> InstigatorSnapshot,
 	TArray<TScriptInterface<IBoardCombatTarget>>& Targets,
 	TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& TargetSnapshots,
-	TArray<FTileIndex>& FinalTileIndexes
+	TArray<FTileIndex>& FinalTileIndexes,
+	FTileIndex& AimedTileIndex
 ) :
 	mInstigator(Instigator),
 	mInstigatorSnapshot(InstigatorSnapshot),
 	mTargets(Targets),
 	mTargetSnapshots(TargetSnapshots),
-	mFinalTileIndexes(FinalTileIndexes)
+	mFinalTileIndexes(FinalTileIndexes),
+	mAimedTileIndex(AimedTileIndex)
 {
 
 }

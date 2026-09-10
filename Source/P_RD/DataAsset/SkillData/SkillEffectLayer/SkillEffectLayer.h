@@ -23,7 +23,8 @@ public:
 		TObjectPtr<UBoardCombatTargetSnapshotData> InstigatorSnapshot,
 		TArray<TScriptInterface<IBoardCombatTarget>>& Targets,
 		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& TargetSnapshots,
-		TArray<FTileIndex>& FinalTileIndexes
+		TArray<FTileIndex>& FinalTileIndexes,
+		FTileIndex& AimedTileIndex
 	);
 
 public:
@@ -35,6 +36,7 @@ public:
 
 public:
 	const TArray<FTileIndex>& mFinalTileIndexes;
+	FTileIndex mAimedTileIndex = FTileIndex::Invalid;
 };
 
 USTRUCT(BlueprintType)

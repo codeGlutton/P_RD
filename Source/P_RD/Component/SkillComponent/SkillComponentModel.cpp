@@ -1,4 +1,4 @@
-﻿#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
@@ -506,7 +506,8 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 			OwnerSnapshot, 
 			OtherCombatTargets, 
 			OtherSnapshots, 
-			mActiveSkillContext.mFinalTileIndexes
+			mActiveSkillContext.mFinalTileIndexes,
+			mActiveSkillContext.mAimedTileIndex
 		);
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
