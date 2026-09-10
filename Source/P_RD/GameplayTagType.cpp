@@ -220,6 +220,9 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Bat_Bodyslam,						"Animation.Montage.Skill.Enemy.Bat.Bodyslam");
 
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Rat_Shot,							"Animation.Montage.Skill.Enemy.Rat.Shot");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Rat_ExplosionShot,					"Animation.Montage.Skill.Enemy.Rat.ExplosionShot");
+
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mimic_Surprise,					"Animation.Montage.Skill.Enemy.Mimic.Surprise");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mimic_Bite,						"Animation.Montage.Skill.Enemy.Mimic.Bite");
 

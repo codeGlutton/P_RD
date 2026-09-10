@@ -278,6 +278,12 @@ namespace AnimationTags
 
 #pragma endregion
 
+#pragma region Rat
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Rat_Shot);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Rat_ExplosionShot);
+
+#pragma endregion
+
 #pragma region Mimic
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Mimic_Surprise);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Mimic_Bite);
