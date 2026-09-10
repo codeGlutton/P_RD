@@ -67,7 +67,7 @@ FText EnumToFullText(T Value)
 
 /* 모델 연관 */
 
-UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* Class);
+P_RD_API UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* Class);
 
 template<typename T>
 T* GetWorldSubsystemModel(const UObject* WorldContextObject)

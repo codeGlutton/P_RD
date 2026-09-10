@@ -95,13 +95,22 @@ bool UArtifactComponentModel::EquipInternal(UStaticArtifactData* Data, UPassiveC
 			UStaticPassiveData* PassiveData = PassivePtr.LoadSynchronous();
 			if (PassiveData == nullptr)
 			{
+				UE_LOG(LogPassive, Warning, TEXT("아티팩트 패시브 로드 실패: %s -> %s"), *Data->GetName(), *PassivePtr.ToString());
 				continue;
 			}
-			if (UTacticalPassive* Installed = PassiveComp->AddPassiveFromData(PassiveData))
+
+			UTacticalPassive* Installed = PassiveComp->AddPassiveFromData(PassiveData);
+			if (Installed == nullptr)
 			{
-				Entry.mInstalledPassives.Add(Installed);
+				UE_LOG(LogPassive, Warning, TEXT("아티팩트 패시브 설치 실패: %s -> %s"), *Data->GetName(), *PassiveData->GetName());
+				continue;
 			}
+			Entry.mInstalledPassives.Add(Installed);
 		}
+	}
+	else if (Data->mStaticPassiveData.Num() > 0)
+	{
+		UE_LOG(LogPassive, Warning, TEXT("패시브 컴포넌트 없음: %s 패시브 설치 생략"), *Data->GetName());
 	}
 
 	// 아티펙트 고유 스탯이 있으면 무한 이펙트로 자신에게 적용 (해제 시 핸들로 제거)
@@ -122,6 +131,9 @@ bool UArtifactComponentModel::EquipInternal(UStaticArtifactData* Data, UPassiveC
 	}
 
 	mArtifacts.Add(MoveTemp(Entry));
+
+	// 장착 확인용 로그 (소유 유닛, 아티팩트, 설치된 패시브 수)
+	UE_LOG(LogRD, Log, TEXT("아티팩트 장착: %s -> %s (패시브 %d개)"), *GetNameSafe(GetOwnerModel()), *Data->GetName(), mArtifacts.Last().mInstalledPassives.Num());
 	return true;
 }
 

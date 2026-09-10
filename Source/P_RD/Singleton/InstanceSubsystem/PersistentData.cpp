@@ -416,6 +416,17 @@ void UPartyPersistData::SyncPartyPersistData(UPartyModel* Party, TArray<TObjectP
 
 	// 아티팩트 동기화
 	PartyArtifactComponentModel->RestoreFrom(GetArtifactIds());
+
+	// 복원된 아티팩트를 구성원 전원에 장착
+	for (int32 PlayerIndex = 0; PlayerIndex < PlayerMaxNum; ++PlayerIndex)
+	{
+		if (Players[PlayerIndex] == nullptr)
+		{
+			continue;
+		}
+
+		PartyArtifactComponentModel->EquipArtifactsTo(Players[PlayerIndex]);
+	}
 }
 
 void UPartyPersistData::BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players)
