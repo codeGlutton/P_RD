@@ -7,5 +7,6 @@ class ULevelUpSkillTestPlayer : public UPlayerUnitModel
 {
 	GENERATED_BODY()
 public:
-	EUnitJobType GetUnitJobType() const override { return EUnitJobType::Knight; }
+	EUnitJobType Job = EUnitJobType::Knight;
+	EUnitJobType GetUnitJobType() const override { return Job; }
 };

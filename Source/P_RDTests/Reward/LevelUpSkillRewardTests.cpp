@@ -54,18 +54,25 @@ bool FLevelUpSkillEquipTest::RunTest(const FString& Parameters)
 	Manager.GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetActiveType(), Ids);
 	TArray<UStaticUnitSkillData*> Eligible;
 	UStaticUnitSkillData* OtherJob = nullptr;
+	UStaticUnitSkillData* CommonJob = nullptr;
 	for (const auto& Id : Ids)
 	{
 		auto* Skill = Cast<UStaticUnitSkillData>(Manager.GetPrimaryAssetPath(Id).TryLoad());
 		if (!Skill || Skill->mSkillPhaseLayers.IsEmpty()) continue;
-		if (Skills->IsAcquirableSkill(Skill)) Eligible.Add(Skill);
-		else OtherJob = Skill;
+		if (LevelUpSkillReward::IsEligibleForUnit(Unit.Get(), Skill)) Eligible.Add(Skill);
+		else if (Skill->mJobType == EUnitJobType::Common) CommonJob = Skill;
+		else if (!Skills->IsAcquirableSkill(Skill)) OtherJob = Skill;
 	}
 	if (!TestTrue(TEXT("Real knight skill pool available"), Eligible.Num() >= 3)
-		|| !TestNotNull(TEXT("Other-job skill available"), OtherJob)) return false;
+		|| !TestNotNull(TEXT("Other-job skill available"), OtherJob)
+		|| !TestNotNull(TEXT("Common-job skill available"), CommonJob)) return false;
 	Skills->SetSkill(0, Eligible[0]);
 	FLevelUpSkillReward Reward;
 	Reward.Offered = true;
+	Reward.Candidates = { CommonJob->GetPrimaryAssetId() };
+	TestTrue(TEXT("Common skills remain acquirable outside level-up rewards"), Skills->IsAcquirableSkill(CommonJob));
+	TestFalse(TEXT("Old common-job offer cannot be equipped"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 1));
+	TestFalse(TEXT("Rejected common skill does not consume reward"), Reward.Completed);
 	Reward.Candidates = { Eligible[1]->GetPrimaryAssetId(), Eligible[2]->GetPrimaryAssetId(), OtherJob->GetPrimaryAssetId() };
 	TestFalse(TEXT("Basic attack cannot be overwritten"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 0));
 	TestFalse(TEXT("Out-of-range slot rejected"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 6));
@@ -109,6 +116,76 @@ bool FLevelUpSkillSaveTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Next mercenary preserved"), State.LevelUpSkills[2].UnitIndex, 1);
 	TestFalse(TEXT("Next offer waits until earlier equipment is applied"), State.LevelUpSkills[2].Offered);
 	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpJobOnlyOfferTest,
+	"P_RD.Reward.LevelUp.JobOnlyOffers", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelUpJobOnlyOfferTest::RunTest(const FString& Parameters)
+{
+	TArray<FPrimaryAssetId> Ids;
+	UAssetManager& Manager = UAssetManager::Get();
+	Manager.GetPrimaryAssetIdList(SkillPrimaryAssetTypes::GetActiveType(), Ids);
+	TArray<UStaticUnitSkillData*> Pool;
+	UStaticUnitSkillData* CommonJob = nullptr;
+	for (const FPrimaryAssetId& Id : Ids)
+		if (auto* Skill = Cast<UStaticUnitSkillData>(Manager.GetPrimaryAssetPath(Id).TryLoad()))
+		{
+			Pool.Add(Skill);
+			if (Skill->mJobType == EUnitJobType::Common && !Skill->mSkillPhaseLayers.IsEmpty()) CommonJob = Skill;
+		}
+	if (!TestNotNull(TEXT("Common-job regression fixture exists"), CommonJob)) return false;
+	FRarityRate Rate;
+	for (float& Weight : Rate.mWeights) Weight = 1.f;
+	for (uint8 Job = 0; Job < static_cast<uint8>(EUnitJobType::PlayerJobCount); ++Job)
+	{
+		TStrongObjectPtr<ULevelUpSkillTestPlayer> Unit(NewObject<ULevelUpSkillTestPlayer>());
+		Unit->Job = static_cast<EUnitJobType>(Job);
+		USkillComponentModel* Skills = Unit->GetSkillComponentModel();
+		Skills->SetSkillFrom(TArray<FPrimaryAssetId>());
+		TArray<UStaticUnitSkillData*> Eligible;
+		for (UStaticUnitSkillData* Skill : Pool)
+			if (LevelUpSkillReward::IsEligibleForUnit(Unit.Get(), Skill)) Eligible.Add(Skill);
+		if (!TestTrue(FString::Printf(TEXT("Job %d has real skills"), Job), Eligible.Num() >= 4)) continue;
+		Skills->SetSkill(0, Eligible[0]);
+		FLevelUpSkillReward Reward;
+		FRandomStream Stream(137 + Job);
+		TestTrue(TEXT("Fresh offer is created"), LevelUpSkillReward::RefreshOffer(Reward, Unit.Get(), Pool, Rate, Stream));
+		TestEqual(TEXT("Three job-only choices"), Reward.Candidates.Num(), 3);
+		TestFalse(TEXT("Owned skill excluded"), Reward.Candidates.Contains(Eligible[0]->GetPrimaryAssetId()));
+		for (const FPrimaryAssetId& Id : Reward.Candidates)
+		{
+			auto* Skill = Cast<UStaticUnitSkillData>(Manager.GetPrimaryAssetPath(Id).TryLoad());
+			TestTrue(TEXT("Every candidate belongs to the recipient job"), Skill && Skill->mJobType == Unit->Job);
+		}
+		const auto First = Reward.Candidates;
+		const int32 Seed = Stream.GetCurrentSeed();
+		TestFalse(TEXT("Reopening a valid offer does not refresh it"), LevelUpSkillReward::RefreshOffer(Reward, Unit.Get(), Pool, Rate, Stream));
+		TestTrue(TEXT("Choices remain stable"), Reward.Candidates == First);
+		TestEqual(TEXT("Reopening does not advance random stream"), Stream.GetCurrentSeed(), Seed);
+
+		TStrongObjectPtr<URunPersistData> Run(NewObject<URunPersistData>());
+		Reward.Candidates = { First[0], CommonJob->GetPrimaryAssetId(), Eligible[0]->GetPrimaryAssetId() };
+		Run->GetRoomTransactionsMutable().LevelUpSkills.Add(Reward);
+		TArray<uint8> Bytes;
+		TStrongObjectPtr<URunPersistData> Restored(NewObject<URunPersistData>());
+		TestTrue(TEXT("Save legacy mixed-job offer"), RDCheckpoint::Serialize(Run.Get(), Bytes));
+		TestTrue(TEXT("Load legacy mixed-job offer"), RDCheckpoint::Deserialize(Bytes, Restored.Get()));
+		auto& Loaded = Restored->GetRoomTransactionsMutable().LevelUpSkills[0];
+		TestTrue(TEXT("Legacy offer is repaired"), LevelUpSkillReward::RefreshOffer(Loaded, Unit.Get(), Pool, Rate, Stream));
+		TestEqual(TEXT("Valid saved choice keeps its position"), Loaded.Candidates[0], First[0]);
+		TestEqual(TEXT("Invalid choices replaced when pool permits"), Loaded.Candidates.Num(), 3);
+		TestEqual(TEXT("Repaired choices do not duplicate"), TSet<FPrimaryAssetId>(Loaded.Candidates).Num(), 3);
+		for (const FPrimaryAssetId& Id : Loaded.Candidates)
+			TestTrue(TEXT("Repaired choice passes full eligibility"), LevelUpSkillReward::IsEligibleForUnit(Unit.Get(),
+				Cast<UStaticUnitSkillData>(Manager.GetPrimaryAssetPath(Id).TryLoad())));
+		TestFalse(TEXT("Repair happens only once"), LevelUpSkillReward::RefreshOffer(Loaded, Unit.Get(), Pool, Rate, Stream));
+		Loaded.Candidates = { CommonJob->GetPrimaryAssetId() };
+		TestTrue(TEXT("Exhausted legacy offer is cleaned"), LevelUpSkillReward::RefreshOffer(Loaded, Unit.Get(), {}, Rate, Stream));
+		TestTrue(TEXT("Exhausted pool never falls back to common-job skills"), Loaded.Candidates.IsEmpty());
+		TestTrue(TEXT("Empty offer can be skipped"), LevelUpSkillReward::Skip(Loaded));
+		TestFalse(TEXT("Completed reward stays completed"), LevelUpSkillReward::RefreshOffer(Loaded, Unit.Get(), Pool, Rate, Stream));
+	}
+	return !HasAnyErrors();
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpRewardRecipientTest,

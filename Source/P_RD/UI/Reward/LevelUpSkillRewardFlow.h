@@ -17,8 +17,12 @@ struct FRarityRate;
 
 namespace LevelUpSkillReward
 {
+	P_RD_API bool IsEligibleForUnit(UPlayerUnitModel* Unit, UStaticUnitSkillData* Skill);
+	// Preserve valid saved choices; replace only candidates that are no longer eligible.
+	P_RD_API bool RefreshOffer(FLevelUpSkillReward& Reward, UPlayerUnitModel* Unit,
+		const TArray<UStaticUnitSkillData*>& Pool, const FRarityRate& Rate, const FRandomStream& Stream);
 	P_RD_API TArray<FPrimaryAssetId> ChooseCandidates(const TArray<UStaticUnitSkillData*>& Pool,
-		const FRarityRate& Rate, const FRandomStream& Stream);
+		const FRarityRate& Rate, const FRandomStream& Stream, int32 MaxChoices = 3);
 	P_RD_API int32 FindPendingReward(const TArray<FLevelUpSkillReward>& Rewards, int32 UnitIndex = INDEX_NONE);
 	P_RD_API bool Skip(FLevelUpSkillReward& Reward);
 	P_RD_API bool TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel* Unit,
