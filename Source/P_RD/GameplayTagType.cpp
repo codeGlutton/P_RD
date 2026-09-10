@@ -207,6 +207,7 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Leshy_Attack,						"Animation.Montage.Skill.Enemy.Leshy.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Leshy_Curse,						"Animation.Montage.Skill.Enemy.Leshy.Curse");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Leshy_Vine_Whip,					"Animation.Montage.Skill.Enemy.Leshy.Vine.Whip");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Leshy_Vine_Pull,					"Animation.Montage.Skill.Enemy.Leshy.Vine.Pull");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Leshy_Vine_Roots,					"Animation.Montage.Skill.Enemy.Leshy.Vine.Roots");
 
