@@ -25,6 +25,9 @@ public:
         return FPrimaryAssetId(SkillPrimaryAssetTypes::GetActiveType(), GetFName());
     }
 
+public:
+    FText MakeDescription() const override;
+
 #if WITH_EDITOR
 public:
     EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
@@ -53,5 +56,10 @@ public:
     // @brief 필요 행동력
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredActionPoint"))
     int32 mRequiredActionPoint = 0;
+
+public:
+    // @brief 컨디션을 무시하고 순수 랜덤성 여부 (해당 스킬은 프리뷰를 제공하지 않음)
+    UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IgnoreCondition"))
+    bool mIgnoreCondition = false;
 };
 

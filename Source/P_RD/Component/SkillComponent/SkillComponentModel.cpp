@@ -594,6 +594,11 @@ void USkillComponentModel::DeactivateSkill()
 	mActiveSkillContext.Clear();
 }
 
+bool USkillComponentModel::CanPreview(int32 SkillIndex) const
+{
+	return true;
+}
+
 int32 USkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
 {
 	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
