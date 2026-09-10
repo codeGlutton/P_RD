@@ -103,8 +103,18 @@ int32 UUnitSkillComponentModel::GetRequiredActionPoint(int32 SkillIndex) const
 	return StaticCast<UStaticUnitSkillData*>(SkillEntry->mData)->mRequiredActionPoint;
 }
 
+bool UUnitSkillComponentModel::CanPreview(int32 SkillIndex) const
+{
+	return IsConditionIgnored(SkillIndex) == false;
+}
+
 int32 UUnitSkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
 {
+	if (IsConditionIgnored(mActiveSkillContext.mSkillIndex) == true)
+	{
+		return Super::GetRandomDamage(Min, Max);
+	}
+
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
@@ -122,9 +132,31 @@ int32 UUnitSkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
 
 bool UUnitSkillComponentModel::IsCritical(int32 Threshold) const
 {
+	if (IsConditionIgnored(mActiveSkillContext.mSkillIndex) == true)
+	{
+		return Super::IsCritical(Threshold);
+	}
+
 	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
 	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
 	return OwnerUnitModel->GetCombatCondition() == EUnitCombatCondition::Excellent;
+}
+
+bool UUnitSkillComponentModel::IsConditionIgnored(int32 SkillIndex) const
+{
+	bool IsIgnored = false;
+
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry != nullptr)
+	{
+		const UStaticUnitSkillData* UnitSkillData = Cast<UStaticUnitSkillData>(SkillEntry->mData);
+		if (UnitSkillData != nullptr)
+		{
+			IsIgnored = UnitSkillData->mIgnoreCondition;
+		}
+	}
+
+	return IsIgnored;
 }
 

@@ -4,6 +4,25 @@
 #include "Misc/DataValidation.h"
 #endif
 
+#define LOCTEXT_NAMESPACE "StaticSkillData"
+
+FText UStaticUnitSkillData::MakeDescription() const
+{
+	FText Description = Super::MakeDescription();
+	if (mIgnoreCondition == true)
+	{
+		FText PreviewHeader = LOCTEXT("PreviewHeaderFormat", "※ 컨디션 무관 랜덤 적용");
+		Description = FText::Format(
+			LOCTEXT("DescriptionFormat", "{0}\n{1}"),
+			PreviewHeader,
+			Description
+		);
+	}
+	return Description;
+}
+
+#undef LOCTEXT_NAMESPACE
+
 #if WITH_EDITOR
 
 EDataValidationResult UStaticUnitSkillData::IsDataValid(FDataValidationContext& Context) const
