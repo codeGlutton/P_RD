@@ -1129,10 +1129,19 @@ bool FLevelUpShopReuseTest::RunTest(const FString& Parameters)
 	{
 		TArray<FColor> Pixels;
 		FString Error;
-		if (!Capture(*Widget, Slate, TEXT("WBP_LevelUp_SkillChoice.png"), Pixels, Error)) AddError(Error);
+		const auto WithBattlefieldProbe = SNew(SOverlay)
+			+ SOverlay::Slot()[SNew(SColorBlock).Color(FLinearColor(0.f, 1.f, 0.f, 1.f))]
+			+ SOverlay::Slot()[Slate];
+		if (!Capture(*Widget, WithBattlefieldProbe, TEXT("WBP_LevelUp_SkillChoice.png"), Pixels, Error)) AddError(Error);
+		int32 VisibleBackgroundPixels = 0;
+		for (const FColor Pixel : Pixels)
+			if (Pixel.G > 240 && Pixel.R < 10 && Pixel.B < 10) ++VisibleBackgroundPixels;
+		TestTrue(TEXT("Battlefield layer is visible through empty selection space"), VisibleBackgroundPixels > Pixels.Num() / 10);
 	}
 	if (UWidget* Background = Widget->WidgetTree->FindWidget(TEXT("ShopBackgroundScale")))
 		TestEqual(TEXT("Level-up hides the shop background"), Background->GetVisibility(), ESlateVisibility::Collapsed);
+	if (UWidget* Letterbox = Widget->WidgetTree->FindWidget(TEXT("ShopLetterbox")))
+		TestEqual(TEXT("Level-up also removes the opaque black backing"), Letterbox->GetVisibility(), ESlateVisibility::Collapsed);
 	UButton* CandidateButton = Cast<UButton>(Widget->WidgetTree->FindWidget(TEXT("ShopRailButton_2")));
 	if (TestNotNull(TEXT("Candidate long-press button"), CandidateButton))
 	{

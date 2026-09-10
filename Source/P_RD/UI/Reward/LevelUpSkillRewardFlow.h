@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RDMinimal.h"
+#include "Components/SlateWrapperTypes.h"
 #include "LevelUpSkillRewardFlow.generated.h"
 
 class URunPersistData;
@@ -10,6 +11,7 @@ class UShopUIModel;
 class UShopUIWidgetBase;
 class APlayerController;
 class UStaticUnitSkillData;
+class UUserWidget;
 struct FLevelUpSkillReward;
 struct FRarityRate;
 
@@ -37,6 +39,7 @@ private:
 	void FinishActiveReward();
 	UFUNCTION() void SelectRewardUnit(int32 UnitIndex);
 	void Save();
+	void SuspendRewardScreens();
 	UFUNCTION() void Select(int32 Choice, int32 UnitIndex, int32 SkillSlot);
 	UFUNCTION() void ContinueWithoutCandidate();
 	UFUNCTION() void ShowDetail(int32 Choice);
@@ -47,5 +50,6 @@ private:
 	UPROPERTY() TObjectPtr<UShopUIModel> mUIModel;
 	UPROPERTY() TObjectPtr<UShopUIWidgetBase> mWidget;
 	UPROPERTY() TSubclassOf<UShopUIWidgetBase> mWidgetClass;
+	UPROPERTY() TMap<TObjectPtr<UUserWidget>, ESlateVisibility> mSuspendedRewardWidgets;
 	int32 mActiveReward = INDEX_NONE;
 };
