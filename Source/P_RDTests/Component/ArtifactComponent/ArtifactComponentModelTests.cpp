@@ -43,7 +43,7 @@ bool FArtifactComponentModelTests::RunTest(const FString& Parameters)
 	// 필요한 컴포넌트만 유닛 없이 생성
 	UArtifactComponentModel* ArtifactComp = NewObject<UArtifactComponentModel>();
 	UPassiveComponentModel* PassiveComp = NewObject<UPassiveComponentModel>();
-	if (!TestNotNull(TEXT("아티펙트 컴포넌트 생성"), ArtifactComp) || !TestNotNull(TEXT("패시브 컴포넌트 생성"), PassiveComp))
+	if (!TestNotNull(TEXT("아티팩트 컴포넌트 생성"), ArtifactComp) || !TestNotNull(TEXT("패시브 컴포넌트 생성"), PassiveComp))
 	{
 		return false;
 	}
