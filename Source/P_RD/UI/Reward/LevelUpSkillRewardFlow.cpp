@@ -34,8 +34,34 @@ namespace
 	}
 }
 
+bool LevelUpSkillReward::IsEligibleForUnit(UPlayerUnitModel* Unit, UStaticUnitSkillData* Skill)
+{
+	if (!Unit || !Skill || Skill->mJobType == EUnitJobType::Common || Skill->mJobType == EUnitJobType::None
+		|| Skill->mJobType != Unit->GetUnitJobType() || Skill->mSkillPhaseLayers.IsEmpty()
+		|| !GameplayAssetPolicy::IsPlayerFacing(Skill->GetPrimaryAssetId())) return false;
+	const USkillComponentModel* Skills = Unit->GetSkillComponentModel();
+	return Skills && Skills->IsAcquirableSkill(Skill) && !IsOwned(Skills, Skill->GetPrimaryAssetId());
+}
+
+bool LevelUpSkillReward::RefreshOffer(FLevelUpSkillReward& Reward, UPlayerUnitModel* Unit,
+	const TArray<UStaticUnitSkillData*>& Pool, const FRarityRate& Rate, const FRandomStream& Stream)
+{
+	if (Reward.Completed || !Unit || !Unit->GetSkillComponentModel()) return false;
+	const int32 Removed = Reward.Candidates.RemoveAll([Unit](const FPrimaryAssetId& Id)
+		{ return !IsEligibleForUnit(Unit, LoadSkill(Id)); });
+	if (Reward.Offered && Removed == 0) return false;
+	if (!Reward.Offered) Reward.Candidates.Reset();
+	TArray<UStaticUnitSkillData*> Eligible;
+	for (UStaticUnitSkillData* Skill : Pool)
+		if (IsEligibleForUnit(Unit, Skill) && !Reward.Candidates.Contains(Skill->GetPrimaryAssetId()))
+			Eligible.Add(Skill);
+	Reward.Candidates.Append(ChooseCandidates(Eligible, Rate, Stream, 3 - Reward.Candidates.Num()));
+	Reward.Offered = true;
+	return true;
+}
+
 TArray<FPrimaryAssetId> LevelUpSkillReward::ChooseCandidates(const TArray<UStaticUnitSkillData*>& Pool,
-	const FRarityRate& Rate, const FRandomStream& Stream)
+	const FRarityRate& Rate, const FRandomStream& Stream, int32 MaxChoices)
 {
 	TArray<UStaticUnitSkillData*> Remaining;
 	for (UStaticUnitSkillData* Skill : Pool)
@@ -43,7 +69,7 @@ TArray<FPrimaryAssetId> LevelUpSkillReward::ChooseCandidates(const TArray<UStati
 	Remaining.Sort([](const UStaticUnitSkillData& A, const UStaticUnitSkillData& B)
 		{ return A.GetPrimaryAssetId().ToString() < B.GetPrimaryAssetId().ToString(); });
 	TArray<FPrimaryAssetId> Result;
-	while (!Remaining.IsEmpty() && Result.Num() < 3)
+	while (!Remaining.IsEmpty() && Result.Num() < FMath::Clamp(MaxChoices, 0, 3))
 	{
 		TArray<ERarityType> Rarities;
 		for (const UStaticUnitSkillData* Skill : Remaining) Rarities.AddUnique(Skill->mRarityType);
@@ -90,7 +116,7 @@ bool LevelUpSkillReward::TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel*
 		|| !Unit || SkillSlot < 1 || SkillSlot > 4) return false;
 	USkillComponentModel* Skills = Unit->GetSkillComponentModel();
 	UStaticUnitSkillData* Skill = LoadSkill(SkillId);
-	if (!Skills || !Skill || !Skills->GetSkills().IsValidIndex(SkillSlot)
+	if (!Skills || !IsEligibleForUnit(Unit, Skill) || !Skills->GetSkills().IsValidIndex(SkillSlot)
 		|| IsOwned(Skills, SkillId) || !Skills->SetSkill(SkillSlot, Skill)) return false;
 	Reward.Completed = true;
 	return true;
@@ -163,7 +189,10 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 	UPlayerUnitModel* Unit = Units.IsValidIndex(Reward.UnitIndex) ? Units[Reward.UnitIndex].Get() : nullptr;
 	if (!Unit) { UE_LOG(LogTemp, Error, TEXT("Level-up reward target is missing")); return; }
 	USkillComponentModel* Skills = Unit->GetSkillComponentModel();
-	if (!Reward.Offered)
+	if (!Skills) return;
+	const bool NeedsOffer = !Reward.Offered || Reward.Candidates.ContainsByPredicate([Unit](const FPrimaryAssetId& Id)
+		{ return !LevelUpSkillReward::IsEligibleForUnit(Unit, LoadSkill(Id)); });
+	if (NeedsOffer)
 	{
 		UAssetManager* Manager = UAssetManager::GetIfInitialized();
 		if (!Manager || !Skills) return;
@@ -173,16 +202,11 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 		for (const FPrimaryAssetId& Id : Ids)
 		{
 			UStaticUnitSkillData* Skill = LoadSkill(Id);
-			if (Skill && !Skill->mSkillPhaseLayers.IsEmpty() && Skills->IsAcquirableSkill(Skill)
-				&& !IsOwned(Skills, Id)) Pool.Add(Skill);
+			if (Skill) Pool.Add(Skill);
 		}
-		Reward.Candidates = LevelUpSkillReward::ChooseCandidates(Pool,
-			ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream());
-		Reward.Offered = true;
-		Save();
+		if (LevelUpSkillReward::RefreshOffer(Reward, Unit, Pool,
+			ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream())) Save();
 	}
-	// Old checkpoint offers must follow the same production-only policy.
-	Reward.Candidates.RemoveAll([](const FPrimaryAssetId& Id) { return !GameplayAssetPolicy::IsPlayerFacing(Id); });
 
 	FShopUI View;
 	View.mIsLevelUpReward = true;
