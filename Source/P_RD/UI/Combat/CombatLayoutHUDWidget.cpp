@@ -74,12 +74,23 @@ public:
 		if (Owner.IsValid() && Owner->IsVisible() && Event.IsTouchEvent()
 			&& Owner->GetCachedGeometry().IsUnderLocation(Event.GetScreenSpacePosition()))
 			Owner->ObserveBoardTouchDown(Event.GetPointerIndex());
+		if (Owner.IsValid()) Owner->ObserveTurnPointerDown(Event);
 		return false;
 	}
 	bool HandleMouseButtonUpEvent(FSlateApplication&, const FPointerEvent& Event) override
 	{
 		if (Owner.IsValid() && Event.IsTouchEvent())
 			Owner->ObserveBoardTouchUp(Event.GetPointerIndex());
+		if (Owner.IsValid()) Owner->ObserveTurnPointerUp(Event);
+		return false;
+	}
+	bool HandleMouseButtonDoubleClickEvent(FSlateApplication& App, const FPointerEvent& Event) override
+	{
+		return HandleMouseButtonDownEvent(App, Event);
+	}
+	bool HandleMouseMoveEvent(FSlateApplication&, const FPointerEvent& Event) override
+	{
+		if (Owner.IsValid()) Owner->ObserveTurnPointerMove(Event);
 		return false;
 	}
 private:
@@ -450,6 +461,8 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 		FSlateApplication::Get().UnregisterInputPreProcessor(mBoardPointerObserver);
 	mBoardPointerObserver.Reset();
 	mBoardTouchSession.Reset();
+	mTurnSwipeTracking = false;
+	mTurnSwipeConsumed = false;
 	CancelBoardPress();
 	// 화면이 바뀐 뒤 0.5초 타이머가 살아서 닫힌 HUD 위에 상세를 여는 일을 막는다.
 	CancelStatusPress();
@@ -1306,6 +1319,8 @@ void UCombatLayoutHUDWidget::WireCommands()
 			{
 				Button->OnClicked.__Internal_AddUniqueDynamic(
 					this, TurnHandlers[Index], TurnHandlerNames[Index]);
+				Button->SetClickMethod(EButtonClickMethod::DownAndUp);
+				Button->SetTouchMethod(EButtonTouchMethod::DownAndUp);
 			}
 		}
 	}
@@ -1617,6 +1632,7 @@ void UCombatLayoutHUDWidget::FocusCameraOnTurnUnit()
 /** @brief 왼쪽 넘김칸을 눌러 직전 열 칸 페이지로 간다. */
 void UCombatLayoutHUDWidget::HandleTurnPageLeftClicked()
 {
+	if (mTurnSwipeConsumed) return;
 	// 모델이 풀린 뒤(전투 정리 중) 눌러도 안전해야 한다 -- 오른쪽과 짝.
 	const int32 SlotRoom = mTurnSlots.Num();
 	if (mUIModel == nullptr || SlotRoom <= 0)
@@ -1634,6 +1650,7 @@ void UCombatLayoutHUDWidget::HandleTurnPageLeftClicked()
 /** @brief 오른쪽 넘김칸을 눌러 다음 열 칸 페이지로 간다. */
 void UCombatLayoutHUDWidget::HandleTurnPageRightClicked()
 {
+	if (mTurnSwipeConsumed) return;
 	if (mUIModel == nullptr)
 	{
 		return;
@@ -3605,7 +3622,6 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	Super::NativeTick(MyGeometry, DeltaTime);
 	RefreshWorldGestureInputBlock();
 	if(auto* GI=GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->UpdateGuidedHUD(this);
-	PollTurnBarMouseSwipe();
 	if (mSkillWorldPreviewActive)
 	{
 		SyncSkillWorldPreviewCamera(false);
@@ -3635,22 +3651,53 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	}
 }
 
-FReply UCombatLayoutHUDWidget::NativeOnPreviewMouseButtonDown(
-	const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+void UCombatLayoutHUDWidget::ObserveTurnPointerDown(const FPointerEvent& Event)
 {
-	mTurnSwipeTracking = false;
-	mTurnSwipeConsumed = false;
-	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton
-		&& mTurnPanel != nullptr
-		&& mTurnPanel->GetVisibility() != ESlateVisibility::Collapsed
-		&& mTurnPanel->GetVisibility() != ESlateVisibility::Hidden)
+	if (!Event.IsTouchEvent() && Event.GetEffectingButton() != EKeys::LeftMouseButton) return;
+	// A second contact cancels the entire gesture, even if it lands outside the bar.
+	if (mTurnSwipeTracking && (mTurnPointerIsTouch != Event.IsTouchEvent()
+		|| mTurnPointerIndex != Event.GetPointerIndex() || mTurnPointerUser != Event.GetUserIndex()))
 	{
-		mTurnSwipeOrigin = FVector2D(InMouseEvent.GetScreenSpacePosition());
-		mTurnSwipeTracking = mTurnPanel->GetCachedGeometry().IsUnderLocation(
-			mTurnSwipeOrigin);
+		mTurnSwipeConsumed = true;
+		return;
 	}
-	// Do not steal a tap: turn-token buttons still open their normal detail action.
-	return Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
+	mTurnSwipeConsumed = false;
+	mTurnPointerMoved = false;
+	mTurnSwipeOrigin = Event.GetScreenSpacePosition();
+	mTurnPointerIndex = Event.GetPointerIndex();
+	mTurnPointerUser = Event.GetUserIndex();
+	mTurnPointerIsTouch = Event.IsTouchEvent();
+	mTurnSwipeTracking = IsVisible() && GetIsEnabled() && mTurnPanel && mTurnPanel->IsVisible()
+		&& !IsWorldInputModalShown()
+		&& mTurnPanel->GetCachedGeometry().IsUnderLocation(mTurnSwipeOrigin)
+		&& (!Event.IsTouchEvent() || mBoardTouchSession.CanTap(Event.GetPointerIndex()));
+}
+
+void UCombatLayoutHUDWidget::ObserveTurnPointerMove(const FPointerEvent& Event)
+{
+	if (!mTurnSwipeTracking || mTurnPointerIsTouch != Event.IsTouchEvent()
+		|| mTurnPointerIndex != Event.GetPointerIndex() || mTurnPointerUser != Event.GetUserIndex()) return;
+	if (!IsVisible() || !GetIsEnabled() || IsWorldInputModalShown()
+		|| (Event.IsTouchEvent() && !mBoardTouchSession.CanTap(Event.GetPointerIndex())))
+	{
+		mTurnSwipeConsumed = true;
+		return;
+	}
+	mTurnPointerMoved |= RDPointerGesture::HasMoved(mTurnSwipeOrigin,
+		Event.GetScreenSpacePosition(), Event.IsTouchEvent());
+	TryConsumeTurnSwipe(Event.GetScreenSpacePosition());
+}
+
+void UCombatLayoutHUDWidget::ObserveTurnPointerUp(const FPointerEvent& Event)
+{
+	if (!Event.IsTouchEvent() && Event.GetEffectingButton() != EKeys::LeftMouseButton) return;
+	if (!mTurnSwipeTracking || mTurnPointerIsTouch != Event.IsTouchEvent()
+		|| mTurnPointerIndex != Event.GetPointerIndex() || mTurnPointerUser != Event.GetUserIndex()) return;
+	// Include the final position: quick swipes need not have a separate move event.
+	ObserveTurnPointerMove(Event);
+	mTurnSwipeConsumed |= mTurnPointerMoved;
+	mTurnSwipeTracking = false;
+	// Keep suppression through the child's release; only the NEXT down clears it.
 }
 
 FReply UCombatLayoutHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry,
@@ -3662,11 +3709,6 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry,
 		mPressMoved = true;
 		if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
 	}
-	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton)
-		&& TryConsumeTurnSwipe(FVector2D(InMouseEvent.GetScreenSpacePosition())))
-	{
-		return FReply::Handled();
-	}
 	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }
 
@@ -3677,14 +3719,15 @@ bool UCombatLayoutHUDWidget::TryConsumeTurnSwipe(
 	{
 		return false;
 	}
-	const FVector2D Delta = ScreenPosition - mTurnSwipeOrigin;
+	// Use the bar's local coordinates so the same drag works at every UI scale.
+	const FGeometry& Geometry = mTurnPanel->GetCachedGeometry();
+	const FVector2D Delta = Geometry.AbsoluteToLocal(ScreenPosition)
+		- Geometry.AbsoluteToLocal(mTurnSwipeOrigin);
 	if (FMath::Abs(Delta.X) < TurnSwipeSlack
 		|| FMath::Abs(Delta.X) <= FMath::Abs(Delta.Y))
 	{
 		return false;
 	}
-	mTurnSwipeConsumed = true;
-	mTurnSwipeTracking = false;
 	if (Delta.X < 0.f)
 	{
 		HandleTurnPageRightClicked();
@@ -3693,27 +3736,8 @@ bool UCombatLayoutHUDWidget::TryConsumeTurnSwipe(
 	{
 		HandleTurnPageLeftClicked();
 	}
+	mTurnSwipeConsumed = true;
 	return true;
-}
-
-void UCombatLayoutHUDWidget::PollTurnBarMouseSwipe()
-{
-	if (!mTurnSwipeTracking || mTurnSwipeConsumed
-		|| !FSlateApplication::IsInitialized())
-	{
-		return;
-	}
-	const TSet<FKey>& PressedButtons =
-		FSlateApplication::Get().GetPressedMouseButtons();
-	if (!PressedButtons.Contains(EKeys::LeftMouseButton))
-	{
-		mTurnSwipeTracking = false;
-		return;
-	}
-	// PIE에서는 토큰 SButton이 마우스를 캡처해 부모 NativeOnMouseMove가 오지
-	// 않을 수 있다. Slate의 실제 커서 좌표를 Tick에서 같이 읽어 같은 판정을
-	// 수행하면 자식 캡처 여부와 무관하게 드래그가 동작한다.
-	TryConsumeTurnSwipe(FSlateApplication::Get().GetCursorPos());
 }
 
 void UCombatLayoutHUDWidget::RefreshScreenScale()
@@ -4409,33 +4433,11 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	}
 	mPressActive = false;
 
-	const FVector2D DragDelta = ScreenPosition - mPressOrigin;
 	const bool bDragged = mPressMoved
 		|| RDPointerGesture::HasMoved(mPressOrigin, ScreenPosition, mBoardPressIsTouch);
-	const bool bStartedOnTurnPanel = mTurnPanel != nullptr
-		&& mTurnPanel->GetVisibility() != ESlateVisibility::Collapsed
-		&& mTurnPanel->GetVisibility() != ESlateVisibility::Hidden
-		&& mTurnPanel->GetCachedGeometry().IsUnderLocation(mPressOrigin);
 	mPressMoved = false;
-	if (bDragged == true)
+	if (bDragged)
 	{
-		// 턴바 위의 가로 끌기는 전장을 미는 입력이 아니라 턴 예측 페이지
-		// 슬라이드다. 세로 끌기와 짧은 흔들림은 페이지를 바꾸지 않는다.
-		if (bStartedOnTurnPanel
-			&& FMath::Abs(DragDelta.X) >= TurnSwipeSlack
-			&& FMath::Abs(DragDelta.X) > FMath::Abs(DragDelta.Y))
-		{
-			if (DragDelta.X < 0.f)
-			{
-				HandleTurnPageRightClicked();
-			}
-			else
-			{
-				HandleTurnPageLeftClicked();
-			}
-			return;
-		}
-
 		// 0823 확정: 지도를 끄는 것도 판을 만진 것이다. 펴 둔 카드는 접는다.
 		// 조준 중(끌며 겨냥 확인)·연출 중·HUD 위에서 시작한 끌기는 건드리지
 		// 않는다 -- 탭의 예외 규칙과 같다.
@@ -5136,7 +5138,6 @@ void UCombatLayoutHUDWidget::HandleTurnTokenClicked(const int32 SlotIndex)
 	// 이동하지 않게 한다.
 	if (mTurnSwipeConsumed)
 	{
-		mTurnSwipeConsumed = false;
 		return;
 	}
 	if (mUIModel == nullptr || mTurnSlotUnitIds.IsValidIndex(SlotIndex) == false)

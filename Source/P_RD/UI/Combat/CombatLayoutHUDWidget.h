@@ -471,7 +471,7 @@ private:
 
 	/** @brief 이만큼 안에서 움직였으면 톡 친 것으로 본다(px). */
 	static constexpr float BoardTapSlack = RDPointerGesture::TouchPanSlop;
-	/** @brief 턴바를 이만큼 가로로 밀면 다음/이전 페이지로 넘긴다(px). */
+	/** @brief 턴바의 디자인 좌표에서 이만큼 밀면 다음/이전 페이지로 넘긴다. */
 	static constexpr float TurnSwipeSlack = 48.f;
 
 	FVector2D mPressOrigin = FVector2D::ZeroVector;
@@ -485,6 +485,7 @@ private:
 	friend class FRDBoardPointerObserver;
 	friend class FCombatBoardMultitouchTest;
 	friend class FCombatSettingsModalGateTest;
+	friend class FCombatTurnBarPointerTest;
 	void ObserveBoardTouchDown(uint32 Pointer);
 	void ObserveBoardTouchUp(uint32 Pointer);
 	void CancelBoardPress();
@@ -538,18 +539,23 @@ private:
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mChromeWidgets;
 
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
-	virtual FReply NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual FReply NativeOnTouchStarted(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnTouchMoved(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnTouchEnded(const FGeometry& InGeometry, const FPointerEvent& InTouchEvent) override;
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	bool TryConsumeTurnSwipe(const FVector2D& ScreenPosition);
-	void PollTurnBarMouseSwipe();
+	void ObserveTurnPointerDown(const FPointerEvent& Event);
+	void ObserveTurnPointerMove(const FPointerEvent& Event);
+	void ObserveTurnPointerUp(const FPointerEvent& Event);
 
-	/** Child turn-token buttons consume pointer down/up, so the parent tracks the swipe in preview. */
+	/** Observe the same pointer before child buttons consume either mouse or touch events. */
 	bool mTurnSwipeTracking = false;
 	bool mTurnSwipeConsumed = false;
+	bool mTurnPointerMoved = false;
+	bool mTurnPointerIsTouch = false;
+	uint32 mTurnPointerIndex = 0;
+	int32 mTurnPointerUser = 0;
 	FVector2D mTurnSwipeOrigin = FVector2D::ZeroVector;
 
 	UFUNCTION() void HandleCommandClicked_0();
