@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/SettingsPanelWidget.h"
+#include "UI/Combat/CombatUIModel.h"
 #include "MobileInputTestsHelper.generated.h"
 
 UCLASS()
@@ -12,6 +13,12 @@ public:
 	int32 Taps = 0;
 	int32 Holds = 0;
 	int32 Backs = 0;
+	int32 FocusRequests = 0;
+	int32 FocusUnit = INDEX_NONE;
+	UFUNCTION() void Command(ECombatInputType Type, int32 UnitId)
+	{
+		if (Type == ECombatInputType::FocusUnit) { ++FocusRequests; FocusUnit = UnitId; }
+	}
 	UFUNCTION() void WorldTouch(FVector2D Position, bool LongPress) { if (LongPress) ++Holds; else ++Taps; }
 	UFUNCTION() void Back() { ++Backs; }
 };
