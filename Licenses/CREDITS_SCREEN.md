@@ -21,9 +21,16 @@
 
 - 빌드: `P_RDEditor Win64 Development`
 - 자동화: `P_RD.UI.Credits` (실제 설정 버튼 진입/복귀, 두 설정 모드와 언어, 문서 로딩, 화면 캡처)
-- 회귀 확인: `P_RD.UI.Settings.BackLifecycle`, `P_RD.UI.Settings.Capture`
+- 회귀 확인: `P_RD.UI.Settings.BackLifecycle`, `P_RD.UI.Settings.Capture`, `P_RD.UI.Mobile.CenteredNotchLayout`, `P_RD.UI.Mobile.BackClosesInnermostConfirmation`
 - 화면 캡처: `Saved/UI/Credits/`, 가로 1672×941 및 폴드 2176×1812, 한국어/영어와 두 탭. 크레딧 및 설정 캡처는 실행별 시각·GUID 하위 폴더에 보존합니다.
 
-에디터 테스트 실행 시 `-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:-StartupScripts=SVNLinker.py`를 전달하여 해당 프로세스의 시작 스크립트 목록에서 SVNLinker를 제외합니다. 프로젝트 설정 파일은 변경하지 않습니다. Android AAB 설치 및 기기에서의 터치·하드웨어 Back 검증은 별도로 수행해야 합니다.
+에디터 테스트 실행 시 `-ini:Engine:[/Script/PythonScriptPlugin.PythonScriptPluginSettings]:-StartupScripts=SVNLinker.py`를 전달하여 해당 프로세스의 시작 스크립트 목록에서 SVNLinker를 제외합니다. Android cook에도 같은 옵션을 전달합니다. 프로젝트 설정 파일은 변경하지 않습니다.
 
-2026-09-12 검증 결과: 설정 회귀를 포함한 위 자동화 5개가 통과했고, 이미지·AI 제작 추가 후 `P_RD.UI.Credits` 3개를 다시 실행해 모두 통과했습니다(실패 0). 에디터 월드에서 뷰포트를 여는 테스트 경로의 World 경고가 있으며 실제 Android 기기 실행 결과는 아닙니다. 빌드 receipt에 AI 사용 고지의 한국어/영어 문서를 포함한 Legal 문서 14개가 UFS로 포함된 것을 확인했고, 폰트 약관 7개의 해시를 대조했습니다. AI 사용 고지 화면도 두 언어와 두 화면 비율로 캡처했습니다.
+2026-09-12 검증 기준은 develop `8db212eb` + 크레딧 구현 `7ae9f54c`, 깨끗한 SVN `r432`입니다.
+
+- Win64 에디터 빌드 및 위 자동화 7개 통과(실패 0). 에디터 월드에서 뷰포트를 여는 일부 테스트에는 World 경고가 있습니다. 화면 캡처는 한국어/영어와 두 화면 비율을 포함합니다.
+- `Tools/Android/check_sources.py` 통과, Android 배포 검증 도구 단위 테스트 13개 통과.
+- Android arm64 Shipping 컴파일, ASTC cook, APK 패키징 성공. APK 내부 OBB의 pak 해시가 검증한 staged pak과 일치하며, 해당 pak에 Legal 문서 14개가 포함됩니다. Git에 저장한 폰트 약관 7개의 해시는 배포 문서 manifest와 일치합니다.
+- Galaxy Z Fold5(SM-F946N, Android 16)에 기존 앱을 제거하지 않고 `adb install -r`로 업데이트했으며 첫 실행이 성공했습니다. 설치 전 접근 가능한 외부 SaveGames 3개를 백업했습니다. 기기의 터치·Android Back·언어 전환은 별도 확인 항목입니다.
+
+기기용 APK는 버전 `1 / 1.0`, min SDK 26, target SDK 36, Android debug 인증서로 서명한 비배포 빌드입니다. 네이티브 코드의 Shipping 구성과 별개로 Android manifest에는 debuggable이 설정되어 있으므로 Play 업로드용으로 사용하지 않습니다. 최종 배포 서명 AAB와 Play 경유 설치 검증은 남아 있습니다.
