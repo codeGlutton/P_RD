@@ -463,18 +463,19 @@ public:
 	TArray<FTileIndex> GetPushPath(const FTileIndex& Pushed, ETileActorDirection Direction, int32 MaxDistance) const;
 
 	/**
-	 * @brief 당기기 경로 계산 (대상을 시전자 쪽으로 붙을 때까지 끌어옴)
+	 * @brief 당기기 경로 계산 (대상을 시전자 쪽으로 최대 MaxDistance칸 끌어옴)
 	 * @details
 	 * - 경로는 밀치기와 같은 8방향 직선 (Pulled->Puller 방향을 가까운 직각/대각으로 양자화)
 	 * - Puller와 Pulled 사이에 장애물이 시야를 가리면 당기지 못함 (유닛은 관통)
-	 * - 정지 조건: 다음 칸이 막힘 / 현재 칸이 Puller와 붙음 / 다음 칸이 Puller를 지나침
+	 * - 정지 조건: MaxDistance 소진 / 다음 칸이 막힘 / 현재 칸이 Puller와 붙음 / 다음 칸이 Puller를 지나침
 	 *   (비스듬한 위치라 직선으로는 면에 못 붙는 경우 대각선 옆에서 멈춤)
 	 * - 붙음 판정은 IsPullAdjacent가 결정
 	 * @param[in] Puller 당기는 쪽 좌표 (방향 계산 및 정지 기준)
 	 * @param[in] Pulled 당겨지는 쪽 좌표 (전진 시작점)
+	 * @param[in] MaxDistance 최대 당기기 칸 수
 	 * @return TArray<FTileIndex> 당겨지는 위치부터 도착까지의 경로. 당겨지지 않으면 Pulled 위치 한 개
 	 */
-	TArray<FTileIndex> GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled) const;
+	TArray<FTileIndex> GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const;
 
 	/**
 	 * @brief 당기기 정지 판정 - 대상 칸이 당기는 쪽과 붙었는지

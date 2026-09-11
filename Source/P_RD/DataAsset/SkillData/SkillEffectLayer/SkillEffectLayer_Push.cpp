@@ -11,7 +11,7 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Push::GetTagEffectClass() const
 FText FSkillEffectLayer_Push::MakeDescription() const
 {
 	return FText::Format(
-		LOCTEXT("PushFormat", "시전자가 바라보는 방향으로 {0}칸 밀어냅니다."),
+		LOCTEXT("PushFormat", "대상을 {0}칸 밀어냅니다."),
 		FText::AsNumber(mTagGain)
 	);
 }
