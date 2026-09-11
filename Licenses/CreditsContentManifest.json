@@ -1,0 +1,51 @@
+[
+  {
+    "file": "Content/Legal/Licenses/GowunBatang.txt",
+    "audit_file": "GowunBatang_OFL.txt",
+    "source_sha256": "49a57cc769fa9affd6eefb9070a61e3d3f6b757c97cafb15848bc6d1c81acc78",
+    "source_encoding": "UTF-8",
+    "shipped_sha256": "49a57cc769fa9affd6eefb9070a61e3d3f6b757c97cafb15848bc6d1c81acc78"
+  },
+  {
+    "file": "Content/Legal/Licenses/LINESeedKR.txt",
+    "audit_file": "LINESeedKR_OFL.txt",
+    "source_sha256": "22ef2276e99e60aa4a9fc75d1433b95aff0350e570798442d6ae38f2f40dc6aa",
+    "source_encoding": "UTF-8",
+    "shipped_sha256": "22ef2276e99e60aa4a9fc75d1433b95aff0350e570798442d6ae38f2f40dc6aa"
+  },
+  {
+    "file": "Content/Legal/Licenses/Oswald.txt",
+    "audit_file": "Oswald_OFL.txt",
+    "source_sha256": "0fd731a904b729a4e02eaf5e8ebd06783edd9abe400e8882760160230675b652",
+    "source_encoding": "UTF-8",
+    "shipped_sha256": "0fd731a904b729a4e02eaf5e8ebd06783edd9abe400e8882760160230675b652"
+  },
+  {
+    "file": "Content/Legal/Licenses/Roboto.txt",
+    "audit_file": "ROBOTO_License.txt",
+    "source_sha256": "813aec82b71fe6fc927f1f9f5c08c5a098785b0a89e3a2e76697aa4662e5f666",
+    "source_encoding": "Windows-1252 (losslessly transcoded to UTF-8)",
+    "shipped_sha256": "af36c609b7e7af6df962e35f75aed3f00eccf67614bfb1a7fd6e235e9a279882"
+  },
+  {
+    "file": "Content/Legal/Licenses/Noto.txt",
+    "audit_file": "Noto_License.txt",
+    "source_sha256": "1beea52b7cf6b8f5fa3120f3b6fc4bd5828037bdbe513624ea55100876654c18",
+    "source_encoding": "UTF-8",
+    "shipped_sha256": "a4a561cafbaf80607ed089e2ec4dda9acb9e9061e8f4e1fe2b4280c3903fc74f"
+  },
+  {
+    "file": "Content/Legal/Licenses/DroidSans.txt",
+    "audit_file": "AndroidOpenSourceProject_License.txt",
+    "source_sha256": "5da12bfaffe32a5c3e1129bcccb606ee4d674ffe9a2c63d78e1c1f68153dcbb3",
+    "source_encoding": "UTF-8",
+    "shipped_sha256": "8200897200f79c4e1e3738974d46a7cd635134fcf4361cb46b5b8f852c91681f"
+  },
+  {
+    "file": "Content/Legal/Licenses/LastResort.txt",
+    "audit_file": "LastResortFont_License.txt",
+    "source_sha256": "9819d29fdbdfee3242b0c981f11aaf924b20ad69182a13952fac2896700bd1c7",
+    "source_encoding": "Windows-1252 (losslessly transcoded to UTF-8)",
+    "shipped_sha256": "0db72beacf799091fac6ddba19d618f3787187e917c5a95a8741fcffc9c0e6ee"
+  }
+]

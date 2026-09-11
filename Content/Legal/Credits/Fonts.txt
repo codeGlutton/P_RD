@@ -1,0 +1,24 @@
+LINE Seed Sans KR — © LY Corporation. SIL Open Font License 1.1.
+https://seed.line.me/index_kr.html
+
+Gowun Batang — Copyright 2021 The Gowun Batang Project Authors. SIL Open Font License 1.1.
+https://github.com/yangheeryu/Gowun-Batang
+
+Oswald — Copyright 2016 The Oswald Project Authors. SIL Open Font License 1.1.
+https://github.com/googlefonts/OswaldFont
+
+Roboto — Google
+Font data copyright Google 2011.
+See Licenses for the complete notices and terms.
+
+Droid Sans — Google
+Digitized data copyright Google Corporation © 2006.
+See Licenses for the complete notices and terms.
+
+Noto Arabic / Thai — Google
+Copyright 2013 / 2016 Google Inc. All Rights Reserved.
+See Licenses for the complete notices and terms.
+
+Last Resort — Apple Inc. / Unicode
+© 1998–2008 Apple Inc. Block additions by Michael Everson.
+See Licenses for the complete notices and terms.

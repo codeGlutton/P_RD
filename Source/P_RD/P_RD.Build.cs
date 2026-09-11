@@ -64,6 +64,18 @@ public class P_RD : ModuleRules
         StageContentMedia(Target, "mCombatVictoryVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
         StageContentMedia(Target, "mCombatDefeatVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
+        // The reader uses FileHelper (UFS), including on Android. Ship the actual
+        // notices with the product; external audit documents are not runtime data.
+        if (Target.ProjectFile != null)
+        {
+            string LegalRoot = Path.Combine(Target.ProjectFile.Directory.FullName, "Content", "Legal");
+            foreach (string LegalFile in Directory.GetFiles(LegalRoot, "*.txt", SearchOption.AllDirectories))
+            {
+                string RelativePath = Path.GetRelativePath(LegalRoot, LegalFile).Replace("\\", "/");
+                RuntimeDependencies.Add("$(ProjectDir)/Content/Legal/" + RelativePath, StagedFileType.UFS);
+            }
+        }
+
         if (Target.bBuildEditor == true)
         {
             PrivateDependencyModuleNames.AddRange(new string[]

@@ -135,6 +135,20 @@ void USettingsPanelWidget::SetStatusText(const FText& Text) const
  */
 void USettingsPanelWidget::SyncText() const
 {
+	if (mCreditsButton)
+	{
+		if (UTextBlock* Label = Cast<UTextBlock>(mCreditsButton->GetContent()))
+		{
+			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("크레딧") : TEXT("Credits")));
+		}
+	}
+	if (mLicensesButton)
+	{
+		if (UTextBlock* Label = Cast<UTextBlock>(mLicensesButton->GetContent()))
+		{
+			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("라이선스") : TEXT("Licenses")));
+		}
+	}
 	const TFunction<UTextBlock*(UWidget*)> FindFirstTextBlock = [&FindFirstTextBlock](UWidget* Root) -> UTextBlock*
 	{
 		if (Root == nullptr)
