@@ -16,8 +16,6 @@
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
-#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
-
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
 	return ISRPGCommandHandler::LOWEST_PRIORITY;
@@ -164,14 +162,6 @@ void USRPGTurnContext::BeginTurn()
 
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
-
-		// 시뮬레이션
-		{
-			FSimulationOption Option;
-			Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
-			Option.mSkipAIActions = true;
-			CombatModel->OnSimulateAllPlayerTurn.Broadcast(Option);
-		}
 
 		TArray<TInstancedStruct<FSRPGCommand>> TurnStartCommands;
 		if (mOwner->IsPlayerUnitModel() == false)
@@ -459,12 +449,7 @@ void USRPGTurnContext::ForcedClearActions()
 	}
 }
 
-void USRPGTurnContext::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand)
+void USRPGTurnContext::ForcedAdvanceUntilNextAction()
 {
 	mShouldTerminateAfterAction = true;
-
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
-
-	CommandRouterModel->SummitCommand(NextCommand);
 }

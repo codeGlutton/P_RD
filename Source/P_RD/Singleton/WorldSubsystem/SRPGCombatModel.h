@@ -132,6 +132,10 @@ protected:
 	void BeginRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
 	void EndRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
 
+protected:
+	void UpdatePlayerTurnCount(int32 PlayerId);
+	bool HaveAllPlayersEnoughTurns() const;
+
 	/* 이벤트 등록 함수 */
 public:
 	void AddRoundStartEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
@@ -218,10 +222,13 @@ public:
 
 	/* 시뮬 함수 */
 public:
-	void ForcedSkipAIActions();
-	void ForcedEndCurrentAction();
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
-	void ForcedAdvanceUntilAllPlayerTurn();
+	void RequestSkipAIActions();
+	void RequestAdvanceUntilNextAction();
+	void RequestAdvanceUntilAllPlayerTurn();
+
+	void ForcedClearActions();
+
+	void ForcedBeginTurn();
 
 	/* 외부 API 함수 */
 public:
@@ -396,9 +403,9 @@ protected:
 	FSRPGCombatRoundEventContainer mRoundEndEvents;
 
 protected:
-	// @brief 모든 플레이어가 한번 이상 턴 진입 시, 중단해야될 필요가 있는지
+	// @brief 모든 플레이어가 최소 2번 이상 턴 진입 시, 중단해야될 필요가 있는지
 	bool mShouldTerminateAfterAllPlayersTurnStarted = false;
-	TSet<int32> mHasPlayerStartedTurn;
+	TMap<int32, int32> mPlayerTurnStartCounts;
 
 	bool mShouldSkipAIActions = false;
 

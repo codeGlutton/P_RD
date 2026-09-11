@@ -107,7 +107,7 @@ protected:
 	void ForcedSkipPlayerTurn();
 	void ForcedSkipAIActions();
 	void ForcedClearActions();
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
+	void ForcedAdvanceUntilNextAction();
 
 public:
 	FOnBeginTurnUI OnBeginTurnUI;

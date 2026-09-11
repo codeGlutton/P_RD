@@ -1,5 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Simulation/RoomContext.h"
 #include "Simulation/RoomInstance.h"
@@ -59,19 +60,40 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
 	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	if (Option.mSkipAIActions == true)
+
+	/* 전처리 */
+
+	if (Option.mReservedCommand.IsValid() == true)
 	{
-		SRPGCombatModel->ForcedSkipAIActions();
+		SRPGCombatModel->ForcedClearActions();
 	}
 
-	SRPGCombatModel->ForcedEndCurrentAction();
+	/* 옵션 세팅 */
+
+	if (Option.mSkipAIActions == true)
+	{
+		SRPGCombatModel->RequestSkipAIActions();
+	}
 	if (Option.mDuration == ESimulationDurtaion::NextAction)
 	{
-		SRPGCombatModel->ForcedAdvanceUntilNextAction(MoveTemp(Option.mReservedCommand));
+		SRPGCombatModel->RequestAdvanceUntilNextAction();
 	}
 	else
 	{
-		SRPGCombatModel->ForcedAdvanceUntilAllPlayerTurn();
+		SRPGCombatModel->RequestAdvanceUntilAllPlayerTurn();
+	}
+
+	/* 시뮬 시작 */
+
+	if (Option.mReservedCommand.IsValid() == true)
+	{
+		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
+		CommandRouterModel->SummitCommand(Option.mReservedCommand);
+	}
+	else
+	{
+		SRPGCombatModel->ForcedBeginTurn();
 	}
 
 	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();

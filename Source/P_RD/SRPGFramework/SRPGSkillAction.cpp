@@ -12,6 +12,7 @@
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
 #include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
 
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
@@ -81,6 +82,7 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             FSimulationOption Option;
             Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
             Option.mSkipAIActions = true;
+            Option.mReservedCommand.InitializeAs<FSRPGTurnEndCommand>();
             GetCombatModel()->OnSimulateAllPlayerTurn.Broadcast(Option);
 
             MarkActionCompleted(ESRPGActionResult::Succeeded);
