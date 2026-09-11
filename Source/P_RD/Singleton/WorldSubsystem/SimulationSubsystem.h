@@ -41,7 +41,6 @@ public:
 	ESimulationDurtaion mDuration = ESimulationDurtaion::NextAction;
 	TInstancedStruct<FSRPGCommand> mReservedCommand;
 	bool mSkipAIActions = false;
-	bool mNeedEndCurrentAction = false;
 };
 
 /**

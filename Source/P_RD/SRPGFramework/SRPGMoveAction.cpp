@@ -2,6 +2,9 @@
 
 #include "Pawn/UnitModel.h"
 #include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 
 FSRPGMoveCommand::FSRPGMoveCommand()
 {
@@ -52,6 +55,11 @@ void USRPGMoveAction::OnBeginAction()
     const bool Started = MovementCompModel->MoveAlongPath(
         mPathTileIndexes,
         FOnBoardMoveFinished::CreateWeakLambda(this, [this]() {
+            FSimulationOption Option;
+            Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
+            Option.mSkipAIActions = true;
+            GetCombatModel()->OnSimulateAllPlayerTurn.Broadcast(Option);
+
             MarkActionCompleted(ESRPGActionResult::Succeeded);
             }));
     checkf(Started == true, TEXT("이동 시작 실패 (이미 이동 중이거나 경로 오류)"));
@@ -67,4 +75,14 @@ void USRPGMoveAction::OnEndAction()
     {
         MovementCompModel->CancelMove();
     }
+}
+
+USRPGCombatModel* USRPGMoveAction::GetCombatModel() const
+{
+    USRPGTurnContext* TurnContext = mParent.Get();
+    if (TurnContext != nullptr)
+    {
+        return TurnContext->GetParent();
+    }
+    return nullptr;
 }

@@ -16,6 +16,8 @@
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
 	return ISRPGCommandHandler::LOWEST_PRIORITY;
@@ -163,6 +165,14 @@ void USRPGTurnContext::BeginTurn()
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
 
+		// 시뮬레이션
+		{
+			FSimulationOption Option;
+			Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
+			Option.mSkipAIActions = true;
+			CombatModel->OnSimulateAllPlayerTurn.Broadcast(Option);
+		}
+
 		TArray<TInstancedStruct<FSRPGCommand>> TurnStartCommands;
 		if (mOwner->IsPlayerUnitModel() == false)
 		{
@@ -185,12 +195,15 @@ void USRPGTurnContext::BeginTurn()
 		// 턴 종료 여부 체크
 
 		const bool ShouldEndTurn = (
-			(mTurnPhase == ESRPGTurnPhase::TurnAbort) ||
 			(mOwner->IsPlayerUnitModel() == true && mShouldSkipPlayerTurn == true) ||
 			(mOwner->IsPlayerUnitModel() == false && mShouldSkipAIActions == true)
 			);
-
 		if (ShouldEndTurn == true)
+		{
+			mTurnPhase = ESRPGTurnPhase::TurnAbort;
+		}
+
+		if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
 		{
 			EndTurn();
 			return;
@@ -418,6 +431,12 @@ void USRPGTurnContext::ForcedSkipAIActions()
 
 void USRPGTurnContext::ForcedClearActions()
 {
+	USRPGCombatModel* CombatModel = mParent.Get();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	// 로그 작성
+	GetWorldEventLogger(this)->BeginTurnLog(CombatModel->GetRoundCount(), mOwner->GetModelId(), mOwner->GetClass());
+
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
 		const int32 NewHeadActionIndex = mHeadActionIndex + 1;
@@ -427,11 +446,6 @@ void USRPGTurnContext::ForcedClearActions()
 			mReservedActions.Pop();
 		}
 
-		USRPGCombatModel* CombatModel = mParent.Get();
-		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-
-		// 로그 작성
-		GetWorldEventLogger(this)->BeginTurnLog(CombatModel->GetRoundCount(), mOwner->GetModelId(), mOwner->GetClass());
 		GetWorldEventLogger(this)->BeginActionLog(mOwner->GetTileTransform().mIndex);
 
 		// 현재 액션 종료 요청

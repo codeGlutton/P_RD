@@ -58,7 +58,7 @@ ESRPGCommandResult USRPGSkillBuildAction::HandleCommand(const TInstancedStruct<F
 
         OnSelectSkill = SkillSelectCommand.OnSelectSkill;
         OnChangeSkillBuildPhase = SkillSelectCommand.OnChangeSkillBuildPhase;
-        OnPostSimulateSkillAction = SkillSelectCommand.OnPostSimulateSkillAction;
+        OnSimulateSkillAction = SkillSelectCommand.OnSimulateSkillAction;
         OnCancelSimulateSkillAction = SkillSelectCommand.OnCancelSimulateSkillAction;
         if (SkillSelectCommand.mSkillIndex != mSelectedSkillIndex)
         {
@@ -250,20 +250,15 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     mTargetTileIndexes = SkillCompModel->GetTargetTiles(TileMap, mSelectedSkillIndex, mSelectedTileIndex);
     mEffectTileIndexes = SkillCompModel->GetEffectTiles(TileMap, mSelectedSkillIndex, mTargetTileIndexes);
 
-    USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
-    checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 모델 nullptr"));
-
     FSimulationOption SimulationOption;
     SimulationOption.mDuration = ESimulationDurtaion::NextAction;
-    SimulationOption.mNeedEndCurrentAction = true;
     SimulationOption.mReservedCommand.InitializeAs<FSRPGSkillCastCommand>();
     SimulationOption.mReservedCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
     SimulationOption.mReservedCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mSelectedTileIndex;
 
     if (SkillCompModel->CanPreview(mSelectedSkillIndex) == true)
     {
-        TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(MoveTemp(SimulationOption));
-        OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
+        OnSimulateSkillAction.Broadcast(SimulationOption);
     }
 }
 

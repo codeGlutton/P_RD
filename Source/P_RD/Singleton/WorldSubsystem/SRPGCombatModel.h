@@ -34,6 +34,8 @@ class UStaticObstacleSpawnData;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
+struct FSimulationOption;
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterObstacleUI, UBoardActorModel* /*Actor*/)
@@ -50,6 +52,8 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresent
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSaveCombatPlay, const TArray<TObjectPtr<UUnitModel>>& /*PlayerModels*/, int32 /*RoundCount*/, int32 /*TurnCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE(FOnCombatProgressBlocked);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSimulateAllPlayerTurn, const FSimulationOption& /*Option*/);
 
 /**
  * @brief 턴 후보 데이터
@@ -284,6 +288,10 @@ public:
 	 */
 	FOnShowCombatResultUI OnShowCombatResultUI;
 	FOnCombatProgressBlocked OnCombatProgressBlocked;
+	/**
+	 * @brief 모든 플레이어 턴 시뮬 요청 대리자
+	 */
+	FOnSimulateAllPlayerTurn OnSimulateAllPlayerTurn;
 
 public:
 	/**

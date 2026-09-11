@@ -59,15 +59,12 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
 	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	if (Option.mNeedEndCurrentAction == true)
-	{
-		SRPGCombatModel->ForcedEndCurrentAction();
-	}
 	if (Option.mSkipAIActions == true)
 	{
 		SRPGCombatModel->ForcedSkipAIActions();
 	}
 
+	SRPGCombatModel->ForcedEndCurrentAction();
 	if (Option.mDuration == ESimulationDurtaion::NextAction)
 	{
 		SRPGCombatModel->ForcedAdvanceUntilNextAction(MoveTemp(Option.mReservedCommand));
