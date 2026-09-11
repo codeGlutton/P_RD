@@ -8,6 +8,9 @@
  * @date 2026-06-26
  */
 #include "UI/TitleMenuWidget.h"
+#include "Advertising/RDEntryAdsSubsystem.h"
+#include "Internationalization/Internationalization.h"
+#include "Internationalization/Culture.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "UI/TitleMenuWidgetPrivate.h"
@@ -296,6 +299,7 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 // AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
 void UTitleMenuWidget::NativeDestruct()
 {
+	CancelEntryAd();
 	if (auto* GI = GetGameInstance())
 		GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleClosed(this);
 	StopTitleBackgroundVideo();
@@ -315,6 +319,12 @@ void UTitleMenuWidget::NativeDestruct()
 // 텍스트 동기화를 한 함수로 모아두면 저장 슬롯/불러오기 버튼이 추가될 때 문구 갱신 지점이 분산되지 않는다.
 void UTitleMenuWidget::SyncMainText()
 {
+	if (URDEntryAdsSubsystem::IsEnabled())
+	{
+		const bool bKorean = FInternationalization::Get().GetCurrentCulture()->GetTwoLetterISOLanguageName() == TEXT("ko");
+		mNewStartButtonText = FText::FromString(bKorean ? TEXT("새로 시작 · 광고") : TEXT("NEW START · AD"));
+		mContinueButtonText = FText::FromString(bKorean ? TEXT("이어하기 · 광고") : TEXT("CONTINUE · AD"));
+	}
 	// 타이틀 문구는 생성자에서 NSLOCTEXT로 초기화되어 현재 컬처(en/ko)에 맞춰 자동 번역된다.
 	// 여기서는 그 문구를 실제 WBP TextBlock에 밀어넣기만 하며, 언어 판별/스위치는 로컬라이제이션 시스템이 담당한다.
 	if (TitleText != nullptr)
@@ -696,11 +706,14 @@ void UTitleMenuWidget::ValidateDesignerBindings() const
 
 void UTitleMenuWidget::OpenUI(FOnEndUIOpenAnimation Callback)
 {
+ CancelEntryAd();
  Super::OpenUI(MoveTemp(Callback));
+ if (auto* GI = GetGameInstance()) GI->GetSubsystem<URDEntryAdsSubsystem>()->Prepare();
  if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleOpened(this);
 }
 void UTitleMenuWidget::CloseUI(FOnEndUICloseAnimation Callback)
 {
+ CancelEntryAd();
  if (auto* GI = GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleClosed(this);
  Super::CloseUI(MoveTemp(Callback));
 }

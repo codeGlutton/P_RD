@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+    <init>
+        <setBoolFromProperty result="bRDBetaAds" ini="Engine" section="RD.BetaAds" property="bEnabled" default="false"/>
+    </init>
+    <buildGradleAdditions>
+        <if condition="bRDBetaAds"><true><insert>
+dependencies { implementation 'com.google.android.gms:play-services-ads:25.4.0' }
+        </insert></true></if>
+    </buildGradleAdditions>
+    <androidManifestUpdates>
+        <if condition="bRDBetaAds"><true>
+            <addPermission android:name="android.permission.INTERNET"/>
+            <addPermission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+            <addElements tag="application">
+                <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>
+                <meta-data android:name="com.aurelight.mgrk.BETA_TEST_ADS" android:value="true"/>
+            </addElements>
+        </true></if>
+    </androidManifestUpdates>
+    <gradleCopies>
+        <if condition="bRDBetaAds"><true>
+            <copyDir src="$S(PluginDir)/Java" dst="$S(BuildDir)/gradle/app/src/main/java"/>
+        </true></if>
+    </gradleCopies>
+    <gameActivityClassAdditions>
+        <insert>
+public native void nativeRDEntryAdFinished(int ticket);
+        </insert>
+        <if condition="bRDBetaAds"><true><insert><![CDATA[
+public void AndroidThunkJava_RDPrepareEntryAd() {
+    runOnUiThread(() -> com.aurelight.mgrk.BetaEntryAds.prepare(this));
+}
+public void AndroidThunkJava_RDShowEntryAd(int ticket) {
+    runOnUiThread(() -> com.aurelight.mgrk.BetaEntryAds.show(this, () -> nativeRDEntryAdFinished(ticket)));
+}
+        ]]></insert></true><false><insert><![CDATA[
+public void AndroidThunkJava_RDPrepareEntryAd() {}
+public void AndroidThunkJava_RDShowEntryAd(int ticket) { nativeRDEntryAdFinished(ticket); }
+        ]]></insert></false></if>
+    </gameActivityClassAdditions>
+    <proguardAdditions><insert>
+-keep class com.aurelight.mgrk.BetaEntryAds { *; }
+    </insert></proguardAdditions>
+</root>

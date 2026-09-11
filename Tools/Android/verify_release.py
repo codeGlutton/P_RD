@@ -171,7 +171,7 @@ def main() -> None:
     parser.add_argument("--java-home", type=Path, default=os.environ.get("JAVA_HOME"))
     parser.add_argument("--bundletool", type=Path)
     parser.add_argument("--expected-cert-sha256", default=os.environ.get("RD_ANDROID_UPLOAD_CERT_SHA256", ""))
-    parser.add_argument("--package", default="com.AssortRock.P_RD")
+    parser.add_argument("--package", default="com.aurelight.mercenaryguildoftheruinedkingdom")
     parser.add_argument("--min-target-sdk", type=int, default=36)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()

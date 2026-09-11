@@ -69,7 +69,10 @@ def run_logged(arguments: list[str], env: dict[str, str], signing: dict[str, str
             raise VerificationError("Android release step failed; see the redacted build.log")
     finally:
         if process.poll() is None:
-            process.terminate()
+            # UAT owns compiler/cooker children which keep DLLs and signing files open.
+            # Stop this build's process tree before the temporary copy is removed.
+            subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             process.wait()
 
 
@@ -99,7 +102,7 @@ bAllowExternalStartInShipping=False
     return copied_project
 
 
-def configure_release(project: Path, signing: dict[str, str], version: int) -> None:
+def configure_release(project: Path, signing: dict[str, str], version: int, beta_entry_ads: bool = False) -> None:
     # Keep the only copied key and plaintext settings inside the disposable build
     # directory; the directory is removed in finally on success and failure.
     keystore = project.parent / "Build" / "Android" / "upload.keystore"
@@ -110,12 +113,18 @@ bEnableBundle=True
 bEnableUniversalAPK=False
 bBuildForArm64=True
 bBuildForX8664=False
-bPackageDataInsideApk=True
+bPackageDataInsideApk=False
+bAllowPatchOBBFile=False
 StoreVersion={version}
 KeyStore=upload.keystore
 KeyAlias="{signing['RD_ANDROID_UPLOAD_ALIAS']}"
 KeyStorePassword="{signing['RD_ANDROID_UPLOAD_STORE_PASSWORD']}"
 KeyPassword="{signing['RD_ANDROID_UPLOAD_KEY_PASSWORD']}"
+[/Script/GooglePADEditor.GooglePADRuntimeSettings]
+bEnablePlugin=True
+bOnlyDistribution=True
+[RD.BetaAds]
+bEnabled={'True' if beta_entry_ads else 'False'}
 """)
     append_ini(project.parent / "Config" / "DefaultGame.ini", """[/Script/UnrealEd.ProjectPackagingSettings]
 BuildConfiguration=PPBC_Shipping
@@ -177,6 +186,7 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--preflight-only", action="store_true")
     parser.add_argument("--prepare-ui", action="store_true", help="Apply the two targeted NoMipmaps UI trials only in the isolated copy")
+    parser.add_argument("--beta-entry-ads", action="store_true", help="Google demo ads on title entry for beta testing only; not a monetized production placement")
     args = parser.parse_args()
     signing = signing_environment()  # Fail before build/cook if production credentials are unavailable.
     if os.name != "nt" or args.engine is None or args.sdk is None or args.java_home is None:
@@ -201,10 +211,11 @@ def main() -> None:
         isolated = Path(temp)
         print("Copying project inputs for an isolated Android release cook...")
         project = copy_build_inputs(args.project, isolated / "Project")
-        configure_release(project, signing, args.version_code)
+        configure_release(project, signing, args.version_code, args.beta_entry_ads)
         archive = isolated / "Archive"
         arguments = [str(args.engine / "Engine/Build/BatchFiles/RunUAT.bat"), "BuildCookRun",
                      f"-project={project}", "-noP4", "-platform=Android", "-cookflavor=ASTC",
+                     "-nocompileeditor",
                      "-UbtArgs=-DisableAdaptiveUnity",
                      "-clientconfig=Shipping", "-build", "-cook", "-stage", "-pak", "-iostore", "-compressed",
                      "-package", "-distribution", "-archive", f"-archivedirectory={archive}", "-utf8output", "-unattended"]
@@ -212,9 +223,9 @@ def main() -> None:
         env["ANDROID_HOME"] = str(args.sdk)
         env["JAVA_HOME"] = str(args.java_home)
         with (output / "build.log").open("w", encoding="utf-8") as log:
+            run_logged([str(args.engine / "Engine/Build/BatchFiles/Build.bat"), "P_RDEditor", "Win64", "Development",
+                        f"-Project={project}", "-WaitMutex", "-NoHotReload", "-DisableAdaptiveUnity"], env, signing, log)
             if args.prepare_ui:
-                run_logged([str(args.engine / "Engine/Build/BatchFiles/Build.bat"), "P_RDEditor", "Win64", "Development",
-                            f"-Project={project}", "-WaitMutex", "-NoHotReload", "-DisableAdaptiveUnity"], env, signing, log)
                 run_logged([str(args.engine / "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"), str(project),
                             "-run=pythonscript", f"-script={Path(__file__).resolve().parent / 'prepare_release_ui.py'}",
                             "-unattended", "-NullRHI", "-nosplash", "-stdout", "-FullStdOutLogOutput", "-UTF8Output"], env, signing, log)
@@ -228,7 +239,7 @@ def main() -> None:
             raise VerificationError("Release build must archive exactly one signed AAB")
         bundle = bundles[0]
         reports = [verify_artifact(bundle, args.sdk, args.java_home, args.bundletool,
-                                   signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.AssortRock.P_RD", 36)]
+                                   signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.aurelight.mercenaryguildoftheruinedkingdom", 36)]
         store_password = isolated / "store-password.txt"
         key_password = isolated / "key-password.txt"
         store_password.write_text(signing["RD_ANDROID_UPLOAD_STORE_PASSWORD"], encoding="utf-8")
@@ -242,7 +253,9 @@ def main() -> None:
         with zipfile.ZipFile(apks) as archive_file, archive_file.open("universal.apk") as source, apk.open("wb") as target:
             shutil.copyfileobj(source, target)
         reports.append(verify_artifact(apk, args.sdk, args.java_home, args.bundletool,
-                                       signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.AssortRock.P_RD", 36))
+                                       signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.aurelight.mercenaryguildoftheruinedkingdom", 36))
+        for report in reports:
+            report["beta_demo_entry_ads"] = args.beta_entry_ads
         # Only verified public artifacts and redacted output leave the private tree.
         shutil.copy2(bundle, output / bundle.name)
         shutil.copy2(apk, output / apk.name)
@@ -251,6 +264,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # UAT may emit replacement characters that the Windows cp949 console cannot encode.
+    # Keep streaming the build instead of killing UAT and leaving locked temporary files.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     try:
         main()
     except (VerificationError, ValueError, OSError, ET.ParseError, zipfile.BadZipFile) as error:

@@ -54,7 +54,7 @@ python Tools/Android/build_release.py --version-code 2 --output outputs/android-
 
 The sample version code is only an example. The tool cannot know which codes have already been used in your Play Console. Preflight fails before copying/cooking if any required signing input is missing or the certificate is wrong/debug-only.
 
-The script copies source/config/plugin/content inputs into a temporary project, disables the development SVN junction startup script in that copy, and builds Android ASTC Shipping with `ForDistribution=True`, AAB enabled and the supplied upload key. Credentials and generated Gradle files stay inside that temporary tree and are removed on normal completion or handled failure. Build console/log output is password-redacted. A forcibly killed process can leave a temporary directory; remove only its `P_RD-AndroidRelease-*` tree after confirming no build still uses it.
+The script copies source/config/plugin/content inputs into a temporary project, disables the development SVN junction startup script in that copy, and builds Android ASTC Shipping with `ForDistribution=True`, AAB enabled and the supplied upload key. The release copy enables GooglePAD and disables packaging data inside the base APK, so Unreal delivers the game's main OBB as the `obbassets` install-time asset pack. Ordinary development APK settings stay unchanged. Verify the final AAB contains `obbassets/assets/main.obb.png` and measure generated download sizes before upload; the game data should not inflate the base module beyond Play's limit. Credentials and generated Gradle files stay inside that temporary tree and are removed on normal completion or handled failure. Build console/log output is password-redacted. A forcibly killed process can leave a temporary directory; remove only its `P_RD-AndroidRelease-*` tree after confirming no build still uses it.
 
 Both native build invocations disable adaptive unity. The disposable copy has no Git metadata, so Unreal would otherwise treat every writable source file as locally changed and unnecessarily split all unity translation units. Normal unity compilation remains enabled, matching a clean Git checkout.
 
@@ -75,6 +75,20 @@ python Tools/Android/verify_release.py path/to/P_RD.apk
 ```
 
 These checks do not prove device execution, Play acceptance, asset completeness, performance, or account/policy compliance. Complete installation/update tests on a 16 KB device/emulator, launch-to-combat smoke tests, save/resume tests, and a Play internal-testing upload before public release. Test both cold and warm media caches. Capture the exact Git commit, SVN revision and verification report with the release.
+
+## Beta entry-ad test
+
+The Android package is `com.aurelight.mercenaryguildoftheruinedkingdom` for the first Play registration. Older local `com.AssortRock.P_RD` test installations are a different app and retain their own saves.
+
+```powershell
+python Tools/Android/build_release.py --version-code 3 --output outputs/android-beta-v3 --beta-entry-ads
+```
+
+This opt-in beta build uses Google Mobile Ads SDK 25.4.0 and Google's public demo app/interstitial IDs. Tapping New Start or Continue attempts one ready test ad per entry, then continues the original action after dismissal. No ad, load failure or display failure proceeds immediately; it never delays gameplay waiting for an ad or shows a late-loaded ad over gameplay. Repeated taps, duplicate Android callbacks and a closed title cannot trigger a second or stale entry. Returning to the title preloads the next entry's ad. Button captions disclose the ad in Korean and English.
+
+The integration intentionally has no live ad-unit setting. Google Play's [disruptive ads policy](https://support.google.com/googleplay/android-developer/answer/9857753?hl=en) identifies unexpected full-screen ads after a start action and before its content as a prohibited placement. This is a demo beta flow, not a production monetization approval. Production monetization requires an appropriate placement, the owner's AdMob app/ad units, required consent handling and corresponding Play declarations. Default release builds omit this demo SDK; `verification.json` records whether the beta demo flag was used.
+
+Validate `P_RD.Ads.EntryContinuation` and `P_RD.UI.Title.MenuRowsClickable`, then inspect a Google-labeled test ad and both entry paths on Android. Never click a live ad while testing. Native/SDK packaging and actual Play installation remain separate verification steps.
 
 ## Mobile memory and texture policy
 

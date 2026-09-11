@@ -1,5 +1,7 @@
 #include "UI/TitleMenuWidget.h"
 #include "UI/TitleMenuWidgetPrivate.h"
+#include "Advertising/RDEntryAdsSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
@@ -255,13 +257,7 @@ USettingsPanelWidget* UTitleMenuWidget::GetTitleSettingsPanel() const
 // GameMode가 준비되어 있으면 RequestCharacterSelectFromTitle()을 통해 독립 캐릭터 선택 월드 위젯을 연다.
 void UTitleMenuWidget::HandleStartButtonClicked()
 {
-	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
-	{
-		if (FrontendGameMode->RequestCharacterSelectFromTitle())
-		{
-			return;
-		}
-	}
+	BeginEntryAfterAd(false);
 }
 
 /** @brief CONTINUE 버튼 입력으로 현재 활성 Run의 방에 바로 들어간다. */
@@ -270,15 +266,52 @@ void UTitleMenuWidget::HandleStartButtonClicked()
 // 지도 조회/다음 방 선택은 방에 들어간 뒤 RoomGameMode가 준비한 WorldMap 위젯에서만 처리한다.
 void UTitleMenuWidget::HandleContinueButtonClicked()
 {
+	if (CanContinueRun()) BeginEntryAfterAd(true);
+}
+
+void UTitleMenuWidget::BeginEntryAfterAd(bool bContinueRun)
+{
+	if (mEntryAdPending) return;
+	mEntryAdPending = true;
+	SetIsEnabled(false);
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (URDEntryAdsSubsystem* Ads = GI->GetSubsystem<URDEntryAdsSubsystem>())
+		{
+			Ads->BeforeEntry(FSimpleDelegate::CreateWeakLambda(this, [this, bContinueRun]()
+			{
+				if (mEntryAdPending) CompleteEntryAfterAd(bContinueRun);
+			}));
+			return;
+		}
+	}
+	CompleteEntryAfterAd(bContinueRun);
+}
+
+void UTitleMenuWidget::CompleteEntryAfterAd(bool bContinueRun)
+{
+	mEntryAdPending = false;
+	SetIsEnabled(true);
 	if (AFrontendGameMode* FrontendGameMode = GetWorld() != nullptr ? GetWorld()->GetAuthGameMode<AFrontendGameMode>() : nullptr)
 	{
-		if (FrontendGameMode->ContinueRunFromTitle())
+		if (bContinueRun ? FrontendGameMode->ContinueRunFromTitle() : FrontendGameMode->RequestCharacterSelectFromTitle())
 		{
 			return;
 		}
 	}
 
 	SetStatusText(mMainOnlyStatusText);
+}
+
+void UTitleMenuWidget::CancelEntryAd()
+{
+	if (mEntryAdPending)
+	{
+		if (UGameInstance* GI = GetGameInstance())
+			if (URDEntryAdsSubsystem* Ads = GI->GetSubsystem<URDEntryAdsSubsystem>()) Ads->CancelEntry();
+	}
+	mEntryAdPending = false;
+	SetIsEnabled(true);
 }
 
 /** @brief SETTING 버튼 입력으로 공용 설정 패널을 연다. */
