@@ -260,8 +260,11 @@ void USRPGSkillBuildAction::SetTargetTile(const FTileIndex& TargetIndex)
     SimulationOption.mReservedCommand.GetMutable<FSRPGSkillCastCommand>().mSkillIndex = mSelectedSkillIndex;
     SimulationOption.mReservedCommand.GetMutable<FSRPGSkillCastCommand>().mTargetIndex = mSelectedTileIndex;
 
-    TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(MoveTemp(SimulationOption));
-    OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
+    if (SkillCompModel->CanPreview(mSelectedSkillIndex) == true)
+    {
+        TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(MoveTemp(SimulationOption));
+        OnPostSimulateSkillAction.Broadcast(TurnEventLogs);
+    }
 }
 
 void USRPGSkillBuildAction::BuildSkill()
