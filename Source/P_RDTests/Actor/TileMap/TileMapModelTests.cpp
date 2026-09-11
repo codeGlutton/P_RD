@@ -527,8 +527,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 )
 
 /**
- * @brief GetPullPath 검증 (시전자에 붙을 때까지 8방향 직선으로 끌어옴)
- *  일직선 면 접촉 / 비스듬 옆 스침 후 면 접촉 / 비스듬 대각선에서 정지 / 중간 점유 막힘 / 이미 붙음 / 같은 칸
+ * @brief GetPullPath 검증 (시전자에 붙거나 거리를 소진할 때까지 8방향 직선으로 끌어옴)
+ *  일직선 면 접촉 / 비스듬 옆 스침 후 면 접촉 / 비스듬 대각선에서 정지 / 중간 점유 막힘 / 이미 붙음 / 같은 칸 / 거리 제한
  */
 bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 {
@@ -553,7 +553,7 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	{
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 5)), Puller);
 
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1), 8);
 		TestTrue(TEXT("[Case1] {(2,1),(2,2),(2,3),(2,4)}"),
 			Path == (TArray<FTileIndex>{ FTileIndex(2, 1), FTileIndex(2, 2), FTileIndex(2, 3), FTileIndex(2, 4) }));
 
@@ -565,7 +565,7 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	{
 		TileMap->PlaceActor(FTileTransform(FTileIndex(3, 1)), Puller);
 
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(3, 1), FTileIndex(0, 0));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(3, 1), FTileIndex(0, 0), 8);
 		TestTrue(TEXT("[Case2] {(0,0),(1,0),(2,0),(3,0)}"),
 			Path == (TArray<FTileIndex>{ FTileIndex(0, 0), FTileIndex(1, 0), FTileIndex(2, 0), FTileIndex(3, 0) }));
 
@@ -577,7 +577,7 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	{
 		TileMap->PlaceActor(FTileTransform(FTileIndex(4, 2)), Puller);
 
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(4, 2), FTileIndex(0, 0));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(4, 2), FTileIndex(0, 0), 8);
 		TestTrue(TEXT("[Case3] {(0,0),(1,1),(2,2),(3,3)}"),
 			Path == (TArray<FTileIndex>{ FTileIndex(0, 0), FTileIndex(1, 1), FTileIndex(2, 2), FTileIndex(3, 3) }));
 
@@ -591,7 +591,7 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 3)), Blocker);
 
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1), 8);
 		TestTrue(TEXT("[Case4] {(2,1),(2,2)} 직전까지"),
 			Path == (TArray<FTileIndex>{ FTileIndex(2, 1), FTileIndex(2, 2) }));
 
@@ -604,11 +604,11 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	{
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Puller);
 
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 2), FTileIndex(2, 3));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 2), FTileIndex(2, 3), 8);
 		TestTrue(TEXT("[Case5] {(2,3)} 한 개"), Path == TArray<FTileIndex>{ FTileIndex(2, 3) });
 
 		// 대각선 옆은 붙은 게 아니지만 시전자 칸이 막혀 있어 역시 제자리
-		const TArray<FTileIndex> DiagonalPath = TileMap->GetPullPath(FTileIndex(2, 2), FTileIndex(3, 3));
+		const TArray<FTileIndex> DiagonalPath = TileMap->GetPullPath(FTileIndex(2, 2), FTileIndex(3, 3), 8);
 		TestTrue(TEXT("[Case5] 대각선 옆 {(3,3)} 한 개"), DiagonalPath == TArray<FTileIndex>{ FTileIndex(3, 3) });
 
 		TileMap->RemoveActor(Puller);
@@ -617,8 +617,23 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	/* Case6: 같은 칸 -> 방향 없음 */
 	AddInfo(TEXT("=== Case6: 같은 칸 -> 시작 타일 1개 ==="));
 	{
-		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(4, 4), FTileIndex(4, 4));
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(4, 4), FTileIndex(4, 4), 8);
 		TestTrue(TEXT("[Case6] {(4,4)} 한 개"), Path == TArray<FTileIndex>{ FTileIndex(4, 4) });
+	}
+
+	/* Case7: 거리 제한 -> 붙기 전에 멈춤 / 거리 0이면 제자리 */
+	AddInfo(TEXT("=== Case7: 일직선 (2,1)->(2,5) 시전자, 거리 1 -> (2,2)까지 ==="));
+	{
+		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 5)), Puller);
+
+		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1), 1);
+		TestTrue(TEXT("[Case7] {(2,1),(2,2)} 한 칸만"),
+			Path == (TArray<FTileIndex>{ FTileIndex(2, 1), FTileIndex(2, 2) }));
+
+		const TArray<FTileIndex> ZeroPath = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1), 0);
+		TestTrue(TEXT("[Case7] 거리 0 {(2,1)} 한 개"), ZeroPath == TArray<FTileIndex>{ FTileIndex(2, 1) });
+
+		TileMap->RemoveActor(Puller);
 	}
 
 	return true;

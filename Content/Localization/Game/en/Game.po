@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-10 10:15\n"
-"PO-Revision-Date: 2026-09-10 10:15\n"
+"POT-Creation-Date: 2026-09-11 03:41\n"
+"PO-Revision-Date: 2026-09-11 03:41\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -1266,17 +1266,17 @@ msgctxt ",954E1A224BF7CE80EAC99EB508E29E45"
 msgid "지진"
 msgstr "Earthquake"
 
-#. Key:	26C3C77C49C1D0EF4F42B8AB1EF45D4F
+#. Key:	83BECC2C4BA44FD0CDD92AA9292CFB47
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Stamp.DA_Goelm_Stamp.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Stamp.DA_Goelm_Stamp.mName
-msgctxt ",26C3C77C49C1D0EF4F42B8AB1EF45D4F"
+msgctxt ",83BECC2C4BA44FD0CDD92AA9292CFB47"
 msgid "부수기"
 msgstr "Smash"
 
-#. Key:	83BECC2C4BA44FD0CDD92AA9292CFB47
+#. Key:	26C3C77C49C1D0EF4F42B8AB1EF45D4F
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Swing.DA_Goelm_Swing.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Swing.DA_Goelm_Swing.mName
-msgctxt ",83BECC2C4BA44FD0CDD92AA9292CFB47"
+msgctxt ",26C3C77C49C1D0EF4F42B8AB1EF45D4F"
 msgid "휘두르기"
 msgstr "Swing"
 
@@ -1307,6 +1307,13 @@ msgstr "Snare Vine"
 msgctxt ",7D90B7F24EF6493FCECA858D44DD117D"
 msgid "덩쿨 늪"
 msgstr "Vine Swamp"
+
+#. Key:	D70F411F42E7AC5F73CB42838EAA61F8
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Leshy/DA_Leshy_VineWhip.DA_Leshy_VineWhip.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Leshy/DA_Leshy_VineWhip.DA_Leshy_VineWhip.mName
+msgctxt ",D70F411F42E7AC5F73CB42838EAA61F8"
+msgid "넝쿨 채찍"
+msgstr "Vine Whip"
 
 #. Key:	024EA2A34E9401316866348E3698DAEC
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Mushroom/DA_Mushroom_Bodyslam.DA_Mushroom_Bodyslam.mName
@@ -1547,8 +1554,8 @@ msgid "사격"
 msgstr "Shot"
 
 #. Key:	3F19865E4B068519D3AAB08555AE3A51
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Slime_Explosion/DA_Slime_Explosion_Attack_Explosion.DA_Slime_Explosion_Attack_Explosion.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Slime_Explosion/DA_Slime_Explosion_Attack_Explosion.DA_Slime_Explosion_Attack_Explosion.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Slime_Explosion/DA_Slime_Explosion.DA_Slime_Explosion.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Slime_Explosion/DA_Slime_Explosion.DA_Slime_Explosion.mName
 msgctxt ",3F19865E4B068519D3AAB08555AE3A51"
 msgid "슬라임 폭발"
 msgstr "Slime Explosion"
@@ -5726,18 +5733,18 @@ msgid "중독"
 msgstr "Poison"
 
 #. Key:	PullFormat
-#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(13)
-#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(13)
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(14)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(14)
 msgctxt "SkillEffectLayer_Pull,PullFormat"
-msgid "대상을 시전자 옆까지 끌어옵니다."
-msgstr "Pulls the target next to the caster."
+msgid "대상을 {0}칸 끌어당깁니다."
+msgstr "Pulls the target {0} tiles."
 
 #. Key:	PushFormat
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.cpp(14)
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.cpp(14)
 msgctxt "SkillEffectLayer_Push,PushFormat"
-msgid "시전자가 바라보는 방향으로 {0}칸 밀어냅니다."
-msgstr "Pushes the target {0} tiles in the caster's facing direction."
+msgid "대상을 {0}칸 밀어냅니다."
+msgstr "Pushes the target {0} tiles."
 
 #. Key:	RootName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Root.cpp(20)
