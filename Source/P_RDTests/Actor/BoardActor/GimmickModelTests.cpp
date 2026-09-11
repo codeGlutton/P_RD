@@ -440,16 +440,17 @@ bool FGimmickPullThroughTrapTests::RunTest(const FString& Parameters)
 	}
 
 	// @brief 시전자 유닛을 배치하고 대상에게 당기기 이펙트 적용
-	auto ApplyPull = [World](UTileMapModel* TileMap, const FTileIndex& CasterTile, UMockGimmickVictimUnitModel* Victim)
+	auto ApplyPull = [World](UTileMapModel* TileMap, const FTileIndex& CasterTile, UMockGimmickVictimUnitModel* Victim, int32 PullDistance)
 	{
 		UMockEnemyUnitModel* Caster = NewObject<UMockEnemyUnitModel>(World);
 		Caster->Initialize();
 		Caster->BeginPlay();
 		TileMap->PlaceActor(FTileTransform(CasterTile, ETileActorDirection::Forward), Caster);
 
+		// 당기기 거리는 스택 수로 전달됨 (수치 -> 스택 변환은 GetPull 이펙트가 담당)
 		UAttributeSetComponentModel* CasterAttr = Caster->GetAttributeComponentModel();
 		TSharedPtr<FTacticalEffectSpec> Spec = CasterAttr->MakeOutgoingSpec(UTacticalEffect_GetPull::StaticClass(), CasterAttr->MakeEffectContext());
-		Spec->mDynamicMagnitude = 1.f;
+		Spec->mDynamicMagnitude = static_cast<float>(PullDistance);
 		CasterAttr->ApplyTacticalEffectSpecToTarget(*Spec, Victim->GetAttributeComponentModel());
 	};
 
@@ -464,7 +465,7 @@ bool FGimmickPullThroughTrapTests::RunTest(const FString& Parameters)
 			MakePushSkillData(World, 2),
 			1);
 
-		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit);
+		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit, 3);
 
 		TestTrue(TEXT("[Case1] 시전자 앞 (2,4) 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(2, 4));
 		TestTrue(TEXT("[Case1] 당겨지는 동안 바라보는 방향 유지"), Fixture.Unit->GetTileTransform().mDirection == ETileActorDirection::Backward);
@@ -481,7 +482,7 @@ bool FGimmickPullThroughTrapTests::RunTest(const FString& Parameters)
 			MakePushSkillData(World, 2),
 			1);
 
-		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit);
+		ApplyPull(Fixture.TileMap, FTileIndex(2, 5), Fixture.Unit, 3);
 
 		TestTrue(TEXT("[Case2] 발판 방향으로 밀려난 위치 도착"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(2, 1));
 		TestEqual(TEXT("[Case2] 발판 수명 차감"), Fixture.Gimmick->GetRemainingTriggerCount(), 0);

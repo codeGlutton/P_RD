@@ -1113,14 +1113,14 @@ bool UTileMapModel::IsPullAdjacent(const FTileIndex& Tile, const FTileIndex& Pul
 	return FMath::Abs(Delta.mX) + FMath::Abs(Delta.mY) == 1;
 }
 
-TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled) const
+TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const
 {
 	// 경로는 최소한 당겨지는 칸 자신을 포함 (못 당기면 제자리 한 칸)
 	TArray<FTileIndex> Path;
 	Path.Add(Pulled);
 
-	// 당겨지는 칸이 맵 밖이면 그대로 둔다
-	if (!IsValidIndex(Pulled))
+	// 당겨지는 칸이 맵 밖이거나 당길 거리가 없으면 그대로 둔다
+	if (!IsValidIndex(Pulled) || MaxDistance <= 0)
 		return Path;
 
 	// 당기는 쪽과 당겨지는 쪽 사이에 장애물이 있으면 당길 수 없음 (유닛은 관통, 밀치기와 같은 규칙)
@@ -1134,9 +1134,9 @@ TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FT
 	if (Step == FTileIndex::Zero)
 		return Path;
 
-	// 붙을 때까지 한 칸씩 전진하며 지나가는 칸을 기록
+	// 거리가 남고 붙지 않은 동안 한 칸씩 전진하며 지나가는 칸을 기록
 	FTileIndex Current = Pulled;
-	while (IsPullAdjacent(Current, Puller) == false)
+	while (Path.Num() <= MaxDistance && IsPullAdjacent(Current, Puller) == false)
 	{
 		const FTileIndex Next = Current + Step;
 

@@ -36,8 +36,8 @@ void UTacticalEffectExecutionCalculation_Pull::Execute(const FTacticalEffectCust
 	UTileMapModel* TileMap = TargetMoveCompModel->GetTileMap();
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-	// 당겨지는 경로 계산 (시전자에 붙거나 중간이 막히면 그 앞까지로 짧아짐)
-	const TArray<FTileIndex> PullPath = TileMap->GetPullPath(SourceModel->GetTileTransform().mIndex, TargetModel->GetTileTransform().mIndex);
+	// 당겨지는 경로 계산 (거리 소진, 시전자에 붙음, 중간 막힘 중 먼저 오는 곳까지로 짧아짐)
+	const TArray<FTileIndex> PullPath = TileMap->GetPullPath(SourceModel->GetTileTransform().mIndex, TargetModel->GetTileTransform().mIndex, ExecutionParams.GetOwningSpec().GetStackCount());
 
 	// 한 칸도 당기지 못하거나 대상이 이동 중이면 아무것도 안 함 (이동 중 당기기는 지원하지 않음)
 	const int32 PathNum = PullPath.Num();
