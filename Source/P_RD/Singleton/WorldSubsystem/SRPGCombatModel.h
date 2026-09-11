@@ -214,8 +214,10 @@ public:
 
 	/* 시뮬 함수 */
 public:
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction);
-	void ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction);
+	void ForcedSkipAIActions();
+	void ForcedEndCurrentAction();
+	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
+	void ForcedAdvanceUntilAllPlayerTurn();
 
 	/* 외부 API 함수 */
 public:
@@ -386,8 +388,11 @@ protected:
 	FSRPGCombatRoundEventContainer mRoundEndEvents;
 
 protected:
-	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지
-	bool mShouldTerminateBeforePlayerTurnStart = false;
+	// @brief 모든 플레이어가 한번 이상 턴 진입 시, 중단해야될 필요가 있는지
+	bool mShouldTerminateAfterAllPlayersTurnStarted = false;
+	TSet<int32> mHasPlayerStartedTurn;
+
+	bool mShouldSkipAIActions = false;
 
 	/* 임시 객체 */
 protected:

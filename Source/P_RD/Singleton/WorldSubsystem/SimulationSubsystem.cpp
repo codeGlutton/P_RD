@@ -51,34 +51,33 @@ void USimulationSubsystem::PreDeinitialize()
 	Super::PreDeinitialize();
 }
 
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
+TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption Option)
 {
-	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewAction);
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSimulation);
+
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
 	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	if (Option.mNeedEndCurrentAction == true)
+	{
+		SRPGCombatModel->ForcedEndCurrentAction();
+	}
+	if (Option.mSkipAIActions == true)
+	{
+		SRPGCombatModel->ForcedSkipAIActions();
+	}
 
-	SRPGCombatModel->ForcedAdvanceUntilNextAction(NextCommand, NeedEndCurrentAction);
+	if (Option.mDuration == ESimulationDurtaion::NextAction)
+	{
+		SRPGCombatModel->ForcedAdvanceUntilNextAction(MoveTemp(Option.mReservedCommand));
+	}
+	else
+	{
+		SRPGCombatModel->ForcedAdvanceUntilAllPlayerTurn();
+	}
 
 	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
-
-	SetSimulationState(ESRPGSimulationState::RunningGame);
-	return MoveTemp(ResultLogs);
-}
-
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction)
-{
-	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewTurn);
-	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
-	SetSimulationState(ESRPGSimulationState::RunningSimulation);
-
-	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-
-	SRPGCombatModel->ForcedAdvanceUntilNextPlayerTurn(NeedEndCurrentAction);
-
-	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
-
 	SetSimulationState(ESRPGSimulationState::RunningGame);
 	return MoveTemp(ResultLogs);
 }

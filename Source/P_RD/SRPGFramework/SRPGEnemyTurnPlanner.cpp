@@ -22,6 +22,8 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TacticalTileTable.h"
 
+#include "Simulation/Logger/EventLogger.h"
+
 DEFINE_LOG_CATEGORY(LogSRPGEnemyPlanner);
 
 namespace
@@ -439,6 +441,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		CastRef.mSkillIndex = ChosenSkillSlot;
 		CastRef.mTargetIndex = bAimSelf ? Dest : TargetTiles[ChosenTarget];
 		AddAction(MoveTemp(Cast));
+
+		// 로그 작성
+
+		UEventLogger* Logger = GetWorldEventLogger(AttributeSetComp);
+		if (Logger != nullptr)
+		{
+			FSRPGAIPlanLog Log;
+			Log.mSkillIndex = ChosenSkillSlot;
+
+			Logger->LogAIPlan(Log);
+		}
 	}
 
 	return Commands;

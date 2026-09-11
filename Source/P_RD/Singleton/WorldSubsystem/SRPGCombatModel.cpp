@@ -166,7 +166,7 @@ void USRPGCombatModel::EndCombat()
 		Obstacle->OnEndRoom();
 	}
 
-	mShouldTerminateBeforePlayerTurnStart = false;
+	mShouldTerminateAfterAllPlayersTurnStarted = false;
 	if (mCombatResult == ESRPGCombatResult::PlayerWin)
 	{
 		ClearAllCombatTargetModels();
@@ -295,10 +295,25 @@ void USRPGCombatModel::AdvanceTurn()
 
 		if (mCombatPhase != ESRPGCombatRoomPhase::CombatPlay || !HasAnyTurnContext()) return;
 		const bool IsPlayerTurn = GetCurrentTurnContext()->GetOwner()->IsPlayerUnitModel() == true;
-		if (mShouldTerminateBeforePlayerTurnStart == true && IsPlayerTurn == true)
+		if (mShouldTerminateAfterAllPlayersTurnStarted == true && IsPlayerTurn == true)
 		{
-			mShouldTerminateBeforePlayerTurnStart = false;
-			return;
+			mHasPlayerStartedTurn.Add(GetCurrentTurnContext()->GetOwner()->GetModelId());
+
+			bool AllPlayerTurnStarted = true;
+			for (const TObjectPtr<UUnitModel>& PlayerUnitModel : mPlayerUnitModels)
+			{
+				if (mHasPlayerStartedTurn.Contains(PlayerUnitModel->GetModelId()) == false)
+				{
+					AllPlayerTurnStarted = false;
+					break;
+				}
+			}
+
+			if (AllPlayerTurnStarted == true)
+			{
+				mShouldTerminateAfterAllPlayersTurnStarted = false;
+				return;
+			}
 		}
 
 		/* 턴 준비 */
@@ -310,6 +325,14 @@ void USRPGCombatModel::AdvanceTurn()
 
 		/* 턴 시작 */
 
+		if (mShouldTerminateAfterAllPlayersTurnStarted == true)
+		{
+			GetCurrentTurnContext()->ForcedSkipPlayerTurn();
+		}
+		if (mShouldSkipAIActions == true)
+		{
+			GetCurrentTurnContext()->ForcedSkipAIActions();
+		}
 		GetCurrentTurnContext()->BeginTurn();
 		}));
 
@@ -1088,29 +1111,34 @@ bool USRPGCombatModel::PushAction(USRPGAction* Action)
 	return true;
 }
 
-void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
+void USRPGCombatModel::ForcedSkipAIActions()
 {
-	checkf(HasAnyTurnContext() == true, TEXT("현재 진행 중인 턴이 없음"));
-	USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
-
-	if (NeedEndCurrentAction == true)
-	{
-		CurTurnContext->ForcedClearActions();
-	}
-	CurTurnContext->ForcedAdvanceUntilNextAction(MoveTemp(NextCommand));
+	mShouldSkipAIActions = true;
 }
 
-void USRPGCombatModel::ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction)
+void USRPGCombatModel::ForcedEndCurrentAction()
 {
 	checkf(HasAnyTurnContext() == true, TEXT("현재 진행 중인 턴이 없음"));
 	USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
 
-	if (NeedEndCurrentAction == true)
-	{
-		CurTurnContext->ForcedClearActions();
-	}
+	CurTurnContext->ForcedClearActions();
+}
 
-	mShouldTerminateBeforePlayerTurnStart = true;
+void USRPGCombatModel::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand)
+{
+	checkf(HasAnyTurnContext() == true, TEXT("현재 진행 중인 턴이 없음"));
+	USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
+
+	if (NextCommand.IsValid() == true && NextCommand.Get().GetCommandType() != ESRPGCommandType::None)
+	{
+		CurTurnContext->ForcedAdvanceUntilNextAction(MoveTemp(NextCommand));
+	}
+}
+
+void USRPGCombatModel::ForcedAdvanceUntilAllPlayerTurn()
+{
+	mShouldTerminateAfterAllPlayersTurnStarted = true;
+	mHasPlayerStartedTurn.Empty();
 
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
