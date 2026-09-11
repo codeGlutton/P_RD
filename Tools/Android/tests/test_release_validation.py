@@ -56,6 +56,11 @@ class ReleaseValidationTests(unittest.TestCase):
         with self.assertRaises(VerificationError):
             verify_manifest(xml, 'other', 36)
 
+    def test_unused_billing_permission_blocks_ads_only_release(self):
+        xml = '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aurelight.mercenaryguildoftheruinedkingdom"><uses-sdk android:targetSdkVersion="36"/><uses-permission android:name="com.android.vending.BILLING"/><application/></manifest>'
+        with self.assertRaisesRegex(VerificationError, 'unused Play BILLING'):
+            verify_manifest(xml, 'com.aurelight.mercenaryguildoftheruinedkingdom', 36)
+
     def test_missing_signing_credentials_stop_before_build(self):
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(VerificationError, 'signing is unavailable'):
             signing_environment()
