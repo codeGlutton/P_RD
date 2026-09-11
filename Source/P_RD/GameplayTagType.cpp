@@ -239,7 +239,7 @@ namespace AnimationTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Swing,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Swing");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Kick");
-	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Stamp,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Stamp");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_SeismicToss,		"Animation.Montage.Skill.Enemy.Skeleton.Golem.SeismicToss");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl,				"Animation.Montage.Skill.Enemy.Skeleton.Golem.Howl");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Whirlwind,		"Animation.Montage.Skill.Enemy.Skeleton.Warrior.Whirlwind");

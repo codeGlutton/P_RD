@@ -310,7 +310,7 @@ namespace AnimationTags
 #pragma region Skeleton_Golem
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Swing);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Stamp);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_SeismicToss);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl);
 #pragma endregion
 
