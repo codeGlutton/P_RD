@@ -65,6 +65,7 @@ The release checks cover:
 - Pinned upload certificate and non-debug signer; valid AAB JAR/APK signatures.
 - Final package name, target SDK 36+, no debuggable/test-only application.
 - No unused Play `BILLING` permission: this game has no in-app purchase flow. Android config explicitly disables Unreal's inherited IAP default; Google rejects an unversioned billing permission as legacy AIDL billing.
+- No Google advertising manifest components or advertising ID/AdServices permissions. Android config explicitly disables Unreal's inherited AdMob registration, which otherwise adds `AdActivity` even without the SDK.
 - AAB requests 16 KB APK page alignment; every included native ELF has compatible LOAD segments and GNU_RELRO.
 - APK ZIP 16 KB alignment, including the universal APK produced from the actual AAB.
 
