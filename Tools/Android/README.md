@@ -64,7 +64,7 @@ The release checks cover:
 
 - Pinned upload certificate and non-debug signer; valid AAB JAR/APK signatures.
 - Final package name, target SDK 36+, no debuggable/test-only application.
-- No unused Play `BILLING` permission: this game uses ads and has no in-app purchase flow. Android config explicitly disables Unreal's inherited IAP default; Google rejects an unversioned billing permission as legacy AIDL billing.
+- No unused Play `BILLING` permission: this game has no in-app purchase flow. Android config explicitly disables Unreal's inherited IAP default; Google rejects an unversioned billing permission as legacy AIDL billing.
 - AAB requests 16 KB APK page alignment; every included native ELF has compatible LOAD segments and GNU_RELRO.
 - APK ZIP 16 KB alignment, including the universal APK produced from the actual AAB.
 
@@ -77,19 +77,19 @@ python Tools/Android/verify_release.py path/to/P_RD.apk
 
 These checks do not prove device execution, Play acceptance, asset completeness, performance, or account/policy compliance. Complete installation/update tests on a 16 KB device/emulator, launch-to-combat smoke tests, save/resume tests, and a Play internal-testing upload before public release. Test both cold and warm media caches. Capture the exact Git commit, SVN revision and verification report with the release.
 
-## Beta entry-ad test
+## Ad-free internal beta
 
 The Android package is `com.aurelight.mercenaryguildoftheruinedkingdom` for the first Play registration. Older local `com.AssortRock.P_RD` test installations are a different app and retain their own saves.
 
 ```powershell
-python Tools/Android/build_release.py --version-code 3 --output outputs/android-beta-v3 --beta-entry-ads
+python Tools/Android/build_release.py --version-code 5 --output outputs/android-beta-v5
 ```
 
-This opt-in beta build uses Google Mobile Ads SDK 25.4.0 and Google's public demo app/interstitial IDs. Tapping New Start or Continue attempts one ready test ad per entry, then continues the original action after dismissal. No ad, load failure or display failure proceeds immediately; it never delays gameplay waiting for an ad or shows a late-loaded ad over gameplay. Repeated taps, duplicate Android callbacks and a closed title cannot trigger a second or stale entry. Returning to the title preloads the next entry's ad. Button captions disclose the ad in Korean and English.
+The beta contains no Google Mobile Ads SDK, demo ad unit or entry-ad subsystem. New Start and Continue invoke their original game actions directly, and their localized captions have no advertising suffix. The former `--beta-entry-ads` option has been removed. `verification.json` records `advertising_enabled: false`.
 
-The integration intentionally has no live ad-unit setting. Google Play's [disruptive ads policy](https://support.google.com/googleplay/android-developer/answer/9857753?hl=en) identifies unexpected full-screen ads after a start action and before its content as a prohibited placement. This is a demo beta flow, not a production monetization approval. Production monetization requires an appropriate placement, the owner's AdMob app/ad units, required consent handling and corresponding Play declarations. Default release builds omit this demo SDK; `verification.json` records whether the beta demo flag was used.
+Before uploading a release, inspect the final AAB/APK manifests and DEX payloads for leftover advertising SDK components, advertising ID/AdServices permissions and the former demo bridge. Keep the existing package and upload certificate so Play can distribute an update over the installed beta.
 
-Validate `P_RD.Ads.EntryContinuation` and `P_RD.UI.Title.MenuRowsClickable`, then inspect a Google-labeled test ad and both entry paths on Android. Never click a live ad while testing. Native/SDK packaging and actual Play installation remain separate verification steps.
+Validate `P_RD.UI.Title.MenuRowsClickable` and both entry paths on Android. Native packaging, Play installation and actual device execution remain separate verification steps.
 
 ## Mobile memory and texture policy
 

@@ -193,11 +193,6 @@ private:
 	UFUNCTION()
 	void HandleContinueButtonClicked();
 
-	void BeginEntryAfterAd(bool bContinueRun);
-	void CompleteEntryAfterAd(bool bContinueRun);
-	void CancelEntryAd();
-	bool mEntryAdPending = false;
-
 	/** @brief SETTING 버튼 클릭을 공용 SettingsPanelWidget 표시로 연결한다. */
 	UFUNCTION()
 	void HandleSettingsButtonClicked();

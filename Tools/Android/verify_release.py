@@ -97,7 +97,7 @@ def verify_manifest(xml: str, package: str, min_target: int) -> dict:
     ns = "{http://schemas.android.com/apk/res/android}"
     if any(item.get(ns + "name") == "com.android.vending.BILLING"
            for item in root.findall("uses-permission")):
-        raise VerificationError("This ads-only release must not request the unused Play BILLING permission")
+        raise VerificationError("This release must not request the unused Play BILLING permission")
     if root.get("package") != package:
         raise VerificationError("Manifest package name does not match the release package")
     app = root.find("application")
@@ -120,7 +120,7 @@ def verify_artifact(artifact: Path, sdk: Path, java_home: Path, bundletool: Path
     if artifact.suffix.lower() == ".apk":
         badging = run_tool([android_tool(sdk, "aapt"), "dump", "badging", artifact])
         if "uses-permission: name='com.android.vending.BILLING'" in badging:
-            raise VerificationError("This ads-only release must not request the unused Play BILLING permission")
+            raise VerificationError("This release must not request the unused Play BILLING permission")
         if "application-debuggable" in badging or "application-testOnly" in badging:
             raise VerificationError("APK is debuggable or test-only")
         manifest_tree = run_tool([android_tool(sdk, "aapt"), "dump", "xmltree", artifact, "AndroidManifest.xml"])

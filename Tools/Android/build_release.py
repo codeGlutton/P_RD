@@ -102,7 +102,7 @@ bAllowExternalStartInShipping=False
     return copied_project
 
 
-def configure_release(project: Path, signing: dict[str, str], version: int, beta_entry_ads: bool = False) -> None:
+def configure_release(project: Path, signing: dict[str, str], version: int) -> None:
     # Keep the only copied key and plaintext settings inside the disposable build
     # directory; the directory is removed in finally on success and failure.
     keystore = project.parent / "Build" / "Android" / "upload.keystore"
@@ -123,8 +123,6 @@ KeyPassword="{signing['RD_ANDROID_UPLOAD_KEY_PASSWORD']}"
 [/Script/GooglePADEditor.GooglePADRuntimeSettings]
 bEnablePlugin=True
 bOnlyDistribution=True
-[RD.BetaAds]
-bEnabled={'True' if beta_entry_ads else 'False'}
 """)
     append_ini(project.parent / "Config" / "DefaultGame.ini", """[/Script/UnrealEd.ProjectPackagingSettings]
 BuildConfiguration=PPBC_Shipping
@@ -186,7 +184,6 @@ def main() -> None:
     parser.add_argument("--output", type=Path)
     parser.add_argument("--preflight-only", action="store_true")
     parser.add_argument("--prepare-ui", action="store_true", help="Apply the two targeted NoMipmaps UI trials only in the isolated copy")
-    parser.add_argument("--beta-entry-ads", action="store_true", help="Google demo ads on title entry for beta testing only; not a monetized production placement")
     args = parser.parse_args()
     signing = signing_environment()  # Fail before build/cook if production credentials are unavailable.
     if os.name != "nt" or args.engine is None or args.sdk is None or args.java_home is None:
@@ -211,7 +208,7 @@ def main() -> None:
         isolated = Path(temp)
         print("Copying project inputs for an isolated Android release cook...")
         project = copy_build_inputs(args.project, isolated / "Project")
-        configure_release(project, signing, args.version_code, args.beta_entry_ads)
+        configure_release(project, signing, args.version_code)
         archive = isolated / "Archive"
         arguments = [str(args.engine / "Engine/Build/BatchFiles/RunUAT.bat"), "BuildCookRun",
                      f"-project={project}", "-noP4", "-platform=Android", "-cookflavor=ASTC",
@@ -255,7 +252,7 @@ def main() -> None:
         reports.append(verify_artifact(apk, args.sdk, args.java_home, args.bundletool,
                                        signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.aurelight.mercenaryguildoftheruinedkingdom", 36))
         for report in reports:
-            report["beta_demo_entry_ads"] = args.beta_entry_ads
+            report["advertising_enabled"] = False
         # Only verified public artifacts and redacted output leave the private tree.
         shutil.copy2(bundle, output / bundle.name)
         shutil.copy2(apk, output / apk.name)
