@@ -38,10 +38,15 @@ void UTacticalEffectExecutionCalculation_Push::Execute(const FTacticalEffectCust
 
 
 	const FTileIndex SourceTileIndex = SourceModel->GetTileTransform().mIndex;
-	const ETileActorDirection PushDirection = SourceModel->GetTileTransform().mDirection;
+	const FTileIndex TargetTileIndex = TargetModel->GetTileTransform().mIndex;
+	const int32 PushDistance = ExecutionParams.GetOwningSpec().GetStackCount();
 
 	// 밀리는 경로 계산 (뒤가 막히면 막히기 직전까지로 짧아짐)
-	const TArray<FTileIndex> PushPath = TileMap->GetPushPath(TargetModel->GetTileTransform().mIndex, PushDirection, ExecutionParams.GetOwningSpec().GetStackCount());
+	// 시전자와 대상이 같은 타일이면 발판이므로 시전자→대상 방향을 구할 수 없어 발판의 고정 방향으로 밀고,
+	// 다르면 유닛 스킬이므로 시전자에서 멀어지는 방향으로 민다
+	const TArray<FTileIndex> PushPath = (SourceTileIndex == TargetTileIndex)
+		? TileMap->GetPushPath(TargetTileIndex, SourceModel->GetTileTransform().mDirection, PushDistance)
+		: TileMap->GetPushPath(SourceTileIndex, TargetTileIndex, PushDistance);
 
 	// 한 칸도 밀리지 못하면 아무것도 안 함
 	const int32 PathNum = PushPath.Num();
