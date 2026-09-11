@@ -264,13 +264,12 @@ namespace AnimationTags
 	// 스테이지 2
 #pragma region Skeleton_Melee
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Melee_Punch);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Melee_BoneStrike);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Melee_Clatter);
 #pragma endregion
 
 #pragma region Skeleton_Ranged
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranged_Shot);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranged_ClaimtheBone);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Ranged_Shove);
 #pragma endregion
 
 #pragma region Bat
@@ -287,6 +286,11 @@ namespace AnimationTags
 #pragma region Mimic
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Mimic_Surprise);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Mimic_Bite);
+#pragma endregion
+
+#pragma region SkeletonBird
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_SkeletonBird_Bodyslam);
+
 #pragma endregion
 
 #pragma region Pumpkin
@@ -306,7 +310,7 @@ namespace AnimationTags
 #pragma region Skeleton_Golem
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Swing);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Stamp);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_SeismicToss);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl);
 #pragma endregion
 
