@@ -59,8 +59,8 @@ bool FPartyArtifactComponentModelTests::RunTest(const FString& Parameters)
 	UStaticArtifactData* ArtifactB = NewObject<UStaticArtifactData>();
 
 	/* 획득: 파티 목록에 추가되고 구성원 전원에 장착돼야 함 */
-	TestTrue(TEXT("아티펙트 A 획득 성공"), PartyArtifactModel->AddArtifact(ArtifactA));
-	TestTrue(TEXT("아티펙트 B 획득 성공"), PartyArtifactModel->AddArtifact(ArtifactB));
+	TestTrue(TEXT("아티팩트 A 획득 성공"), PartyArtifactModel->AddArtifact(ArtifactA));
+	TestTrue(TEXT("아티팩트 B 획득 성공"), PartyArtifactModel->AddArtifact(ArtifactB));
 	TestEqual(TEXT("파티 목록 2개"), PartyArtifactModel->GetPartyArtifacts().Num(), 2);
 	TestEqual(TEXT("구성원 A 장착 2개"), MemberA->GetArtifactComponentModel()->GetArtifacts().Num(), 2);
 	TestEqual(TEXT("구성원 B 장착 2개"), MemberB->GetArtifactComponentModel()->GetArtifacts().Num(), 2);
@@ -73,7 +73,7 @@ bool FPartyArtifactComponentModelTests::RunTest(const FString& Parameters)
 	TestEqual(TEXT("획득 실패 시 이벤트 없음"), ChangeCount, 2);
 
 	/* 제거: 파티 목록에서 빠지고 구성원 전원에서 해제돼야 함 */
-	TestTrue(TEXT("아티펙트 A 제거 성공"), PartyArtifactModel->RemoveArtifact(ArtifactA));
+	TestTrue(TEXT("아티팩트 A 제거 성공"), PartyArtifactModel->RemoveArtifact(ArtifactA));
 	TestEqual(TEXT("파티 목록 1개"), PartyArtifactModel->GetPartyArtifacts().Num(), 1);
 	TestEqual(TEXT("구성원 A 장착 1개"), MemberA->GetArtifactComponentModel()->GetArtifacts().Num(), 1);
 	TestEqual(TEXT("구성원 B 장착 1개"), MemberB->GetArtifactComponentModel()->GetArtifacts().Num(), 1);

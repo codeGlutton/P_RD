@@ -1,4 +1,4 @@
-﻿#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
@@ -506,7 +506,8 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 			OwnerSnapshot, 
 			OtherCombatTargets, 
 			OtherSnapshots, 
-			mActiveSkillContext.mFinalTileIndexes
+			mActiveSkillContext.mFinalTileIndexes,
+			mActiveSkillContext.mAimedTileIndex
 		);
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
@@ -592,6 +593,11 @@ void USkillComponentModel::DeactivateSkill()
 	/* 활성화 스킬 데이터 비우기 */
 
 	mActiveSkillContext.Clear();
+}
+
+bool USkillComponentModel::CanPreview(int32 SkillIndex) const
+{
+	return true;
 }
 
 int32 USkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const

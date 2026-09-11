@@ -168,6 +168,7 @@ protected:
 
 	/* 랜덤 데미지 연관 */
 public:
+	virtual bool CanPreview(int32 SkillIndex) const;
 	/**
 	 * @brief 랜덤 확률을 데미지를 추출하는 함수
 	 * @param Min 최소 데미지

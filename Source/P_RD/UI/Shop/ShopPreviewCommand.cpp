@@ -181,7 +181,7 @@ namespace ShopPreview
 
 	FAutoConsoleCommandWithWorldAndArgs BuyCommand(
 		TEXT("RD.ShopBuy"),
-		TEXT("판매 슬롯을 산다(아티펙트). 사용법: RD.ShopBuy <슬롯번호>"),
+		TEXT("판매 슬롯을 산다(아티팩트). 사용법: RD.ShopBuy <슬롯번호>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&Buy));
 
 	/**
@@ -217,7 +217,7 @@ namespace ShopPreview
 		int32 ArtifactIndex = 0;
 		if (GetIntArg(Args, 0, ArtifactIndex) == false)
 		{
-			UE_LOG(LogRD, Warning, TEXT("사용법: RD.ShopDiscardArtifact <아티펙트번호>"));
+			UE_LOG(LogRD, Warning, TEXT("사용법: RD.ShopDiscardArtifact <아티팩트번호>"));
 			return;
 		}
 		if (UShopUIModel* Model = FindLiveModel(World))
@@ -228,7 +228,7 @@ namespace ShopPreview
 
 	FAutoConsoleCommandWithWorldAndArgs DiscardArtifactCommand(
 		TEXT("RD.ShopDiscardArtifact"),
-		TEXT("파티 소지 아티펙트를 버린다. 사용법: RD.ShopDiscardArtifact <아티펙트번호>"),
+		TEXT("파티 소지 아티팩트를 버린다. 사용법: RD.ShopDiscardArtifact <아티팩트번호>"),
 		FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(&DiscardArtifact));
 
 	/**
