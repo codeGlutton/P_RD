@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   CombatGameMode.h
  * @brief  전투 방에 대한 GameMode 정의 헤더
  * @author 모호재
@@ -163,6 +163,7 @@ protected:
 protected:
 	void PushCombatResultUIData(ESRPGCombatResult Result) const;
 	void PushTurnUIData(const TArray<FSRPGTurnEventLog>& Logs) const;
+	void PushEnemyNextSkillUIData(const TArray<FSRPGTurnEventLog>& Logs) const;
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
 	void PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;

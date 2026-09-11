@@ -1,4 +1,4 @@
-﻿#include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIModel.h"
 
 #include "UI/Combat/SimulationPreviewUIModel.h"
 
@@ -352,3 +352,23 @@ void UCombatUIModel::NotifyPrePlaySkillCutIn(
 	// HUD가 보관하지 않으면 이 함수 반환 시 배리어가 자연 해제되어 fail-open한다.
 	OnPrePlaySkillCutIn.Broadcast(Request, MoveTemp(Barrier));
 }
+
+void UCombatUIModel::SetEnemyNextSkillIndices(const TMap<int32, int32>& NextSkillIndices)
+{
+	mEnemyNextSkillIndices = NextSkillIndices;
+}
+
+int32 UCombatUIModel::GetEnemyNextSkillIndex(int32 UnitId) const
+{
+	if (const int32* FoundSkillIndex = mEnemyNextSkillIndices.Find(UnitId))
+	{
+		return *FoundSkillIndex;
+	}
+	return INDEX_NONE;
+}
+
+void UCombatUIModel::ClearEnemyNextSkillIndices()
+{
+	mEnemyNextSkillIndices.Reset();
+}
+

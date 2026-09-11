@@ -449,6 +449,7 @@ void ACombatGameMode::InitializeCombat()
 
 		const TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(Option);
 		PushTurnUIData(TurnEventLogs);
+		PushEnemyNextSkillUIData(TurnEventLogs);
 		});
 
 	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
@@ -1233,15 +1234,15 @@ void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTargetView* Target
 		return;
 	}
 
-	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
-	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
 	TArray<const UStaticUnitSkillData*> SkillDatas;
-	SkillDatas.Init(nullptr, Skills.Num());
-	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+
+	const int32 NextSkillIndex = mCombatUIModel->GetEnemyNextSkillIndex(UnitModel->GetModelId());
+	if (NextSkillIndex != INDEX_NONE)
 	{
-		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
+		const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(NextSkillIndex);
+		if (SkillEntry != nullptr)
 		{
-			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			SkillDatas.Add(StaticCast<const UStaticUnitSkillData*>(SkillEntry->mData));
 		}
 	}
 
@@ -1453,6 +1454,24 @@ void ACombatGameMode::PushTurnUIData(const TArray<FSRPGTurnEventLog>& Logs) cons
 		TurnUI.mNextRoundOffset = TurnUI.mPredictedRounds[0].mRoundOffset;
 	}
 	mCombatUIModel->SetTurnUI(TurnUI);
+}
+
+void ACombatGameMode::PushEnemyNextSkillUIData(const TArray<FSRPGTurnEventLog>& Logs) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	TMap<int32, int32> EnemyNextSkillIndices;
+	for (const FSRPGTurnEventLog& Log : Logs)
+	{
+		if (Log.mSourceUnitID != INDEX_NONE && Log.mAIPlanLog.mSkillIndex != INDEX_NONE)
+		{
+			if (EnemyNextSkillIndices.Contains(Log.mSourceUnitID) == false)
+			{
+				EnemyNextSkillIndices.Add(Log.mSourceUnitID, Log.mAIPlanLog.mSkillIndex);
+			}
+		}
+	}
+	mCombatUIModel->SetEnemyNextSkillIndices(EnemyNextSkillIndices);
 }
 
 void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const
