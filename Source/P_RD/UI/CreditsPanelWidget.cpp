@@ -41,6 +41,7 @@ namespace RDCredits
 		{ TEXT("게임 엔진"), TEXT("Game Engine"), TEXT("Credits/Engine.txt") }
 	};
 	const TArray<FPage> Licenses = {
+		{ TEXT("개인정보처리방침"), TEXT("Privacy Policy"), TEXT("Policies/Privacy.txt"), TEXT("Policies/Privacy_KO.txt") },
 		{ TEXT("고운바탕"), TEXT("Gowun Batang"), TEXT("Licenses/GowunBatang.txt") },
 		{ TEXT("LINE Seed Sans KR"), TEXT("LINE Seed Sans KR"), TEXT("Licenses/LINESeedKR.txt") },
 		{ TEXT("Oswald"), TEXT("Oswald"), TEXT("Licenses/Oswald.txt") },
@@ -155,8 +156,9 @@ public:
 	void SetPage(bool bShowLicenses)
 	{
 		bLicenses = bShowLicenses;
-		MainTitle->SetText(bLicenses ? Label(TEXT("라이선스"), TEXT("LICENSES")) : Label(TEXT("크레딧"), TEXT("CREDITS")));
-		ContentsCaption->SetText(bLicenses ? Label(TEXT("저작권 고지와 이용 약관"), TEXT("Copyright notices & terms")) : Label(TEXT("이 모험을 함께 만든 이들"), TEXT("The creators behind this adventure")));
+		MainTitle->SetText(bLicenses ? Label(TEXT("정책 · 라이선스"), TEXT("POLICIES & LICENSES")) : Label(TEXT("크레딧"), TEXT("CREDITS")));
+		MainTitle->SetFont(Font(bLicenses && !Owner->IsKorean() ? 32 : 48, true));
+		ContentsCaption->SetText(bLicenses ? Label(TEXT("개인정보 보호와 저작권 고지"), TEXT("Privacy & copyright notices")) : Label(TEXT("이 모험을 함께 만든 이들"), TEXT("The creators behind this adventure")));
 		CreditsTab->SetButtonStyle(bLicenses ? &TabStyle : &SelectedTabStyle);
 		LicensesTab->SetButtonStyle(bLicenses ? &SelectedTabStyle : &TabStyle);
 		Navigation->ClearChildren();
@@ -246,7 +248,9 @@ private:
 		}
 		const auto& Page = (bLicenses ? RDCredits::Licenses : RDCredits::Credits)[Index];
 		PageHeading->SetText(Label(Page.Korean, Page.English));
-		PageHint->SetText(bLicenses ? Label(TEXT("저작권 고지 · 라이선스 원문"), TEXT("Copyright notice · Original license")) : Label(TEXT("사용된 작품과 제작자"), TEXT("Featured works & creators")));
+		PageHint->SetText(bLicenses && Index == 0
+			? Label(TEXT("게임 데이터와 이용자 문의"), TEXT("Game data & support enquiries"))
+			: (bLicenses ? Label(TEXT("저작권 고지 · 라이선스 원문"), TEXT("Copyright notice · Original license")) : Label(TEXT("사용된 작품과 제작자"), TEXT("Featured works & creators"))));
 		FString Content;
 		const TCHAR* DocumentFile = Owner->IsKorean() && Page.KoreanFile ? Page.KoreanFile : Page.File;
 		const FString Path = FPaths::Combine(UCreditsPanelWidget::LegalDirectory(), DocumentFile);
