@@ -34,6 +34,8 @@ void UBoardMovementPresentationComponent::BindOwnerModel(UObjectModel* Model)
 	mBoardActorModel->OnStartMoveStep.AddUObject(this, &UBoardMovementPresentationComponent::OnStartMoveStep);
 	// 방향 전환 연출 요청 구독
 	mBoardActorModel->OnRotate.AddUObject(this, &UBoardMovementPresentationComponent::OnRotate);
+	// 이동 종료 통지 구독 (경로 중간 정지 시 걷기 마무리용)
+	mBoardActorModel->OnEndMovePath.AddUObject(this, &UBoardMovementPresentationComponent::OnEndMovePath);
 }
 
 void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
@@ -43,6 +45,7 @@ void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
 		mBoardActorModel->OnStartMovePath.RemoveAll(this);
 		mBoardActorModel->OnStartMoveStep.RemoveAll(this);
 		mBoardActorModel->OnRotate.RemoveAll(this);
+		mBoardActorModel->OnEndMovePath.RemoveAll(this);
 	}
 	mBoardActorModel.Reset();
 
@@ -140,6 +143,40 @@ void UBoardMovementPresentationComponent::OnRotate(const FRotator& TargetWorldRo
 	mRemainingPathDistance = 0.0f;
 
 	// 틱 시작
+	SetComponentTickEnabled(true);
+}
+
+void UBoardMovementPresentationComponent::OnEndMovePath(const FTileTransform& TileTransform, const FTransform& TileWorldTransform)
+{
+	AActor* Owner = GetOwner();
+	if (Owner == nullptr)
+	{
+		return;
+	}
+
+	// 코너 곡선 위에서 멈췄을 수 있으므로 폴리라인을 버리고 직선 이동으로 전환
+	ResetPolyLineState();
+
+	// 목표는 마지막 타일 중심. 바닥 기준 좌표라 바닥 오프셋을 더함
+	mMoveTargetTransform = TileWorldTransform;
+	FVector TargetLocation = mMoveTargetTransform.GetLocation();
+	TargetLocation.Z += mGroundZOffset;
+	mMoveTargetTransform.SetLocation(TargetLocation);
+	mRemainingPathDistance = 0.0f;
+
+	// 이미 중심에 서 있으면 바로 정지
+	if (Owner->GetActorLocation().Equals(TargetLocation) &&
+		Owner->GetActorRotation().Equals(mMoveTargetTransform.Rotator()))
+	{
+		mCurrentMoveSpeed = 0.0f;
+		mCurrentMoveVelocity = FVector::ZeroVector;
+		mMoveBarrier.Reset();
+		SetComponentTickEnabled(false);
+		return;
+	}
+
+	// 어긋나 있으면 걷던 속도 그대로 중심까지 마저 이동. 틱이 배리어를 요구하므로 빈 배리어 사용
+	mMoveBarrier = FPresentationBarrier::Make(FOnFinishPresentation());
 	SetComponentTickEnabled(true);
 }
 

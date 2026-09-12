@@ -63,10 +63,11 @@ public:
 	/**
 	 * @brief 이동 루프 안(도착 오버랩 통지 중)에서 함정이 보류 밀치기 경로를 등록
 	 * @details 직접 이동을 시작하는 재진입 대신 등록만 하고, 현재 스텝 마무리 지점에서 루프가 소비.
+	 *          밀 곳이 없는 제자리 1칸 경로도 등록 가능하며, 이 경우 잔여 걷기를 버리고 그 자리에서 이동 완료.
 	 *          정지 상태의 대상을 미는 경우는 이 함수가 아니라 PushAlongPath 사용
 	 * @param TrapTileIndex 발동한 함정의 타일 (연쇄 기록 키)
 	 * @param PushPathTileIndexes 밀치기 경로 (인덱스 0 = 피격자의 현재 타일)
-	 * @return 등록 성공 여부. 이동 중이 아니거나, 이번 연쇄에서 이미 발동한 함정이거나, 경로가 2칸 미만이면 false
+	 * @return 등록 성공 여부. 이동 중이 아니거나, 이번 연쇄에서 이미 발동한 함정이거나, 경로가 비어 있으면 false
 	 */
 	bool TryRegisterPendingPush(const FTileIndex& TrapTileIndex, const TArray<FTileIndex>& PushPathTileIndexes);
 
@@ -98,6 +99,8 @@ private:
 	bool StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished);
 	// @brief 전체 경로를 월드 좌표로 변환해서 뷰에 통지 (이동 시작/경로 교체 공용)
 	void BroadcastStartMovePath();
+	// @brief 이동 요청 전체 종료를 뷰에 통지 (완료/취소 공용, 경로 중간 정지 포함)
+	void BroadcastEndMovePath();
 	// @brief 칸에 진입 가능한지 판정 (경로 계산 후 당기기 등 스킬에 의해 다른 유닛이 먼저 점유했을 수 있으므로 진입 직전에 재확인)
 	bool CanEnterStep(int32 StepIndex) const;
 	// @brief StepIndex 칸으로 이동 시작 (모델 점유는 즉시, 도착 처리는 연출 후)
