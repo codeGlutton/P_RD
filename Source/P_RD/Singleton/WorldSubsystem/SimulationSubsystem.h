@@ -25,6 +25,24 @@ class UObjectModel;
 
 struct FSRPGCommand;
 
+UENUM()
+enum class ESimulationDurtaion
+{
+	NextAction,
+	AllPlayerTurnEnd,
+};
+
+USTRUCT()
+struct P_RD_API FSimulationOption
+{
+	GENERATED_BODY()
+
+public:
+	ESimulationDurtaion mDuration = ESimulationDurtaion::NextAction;
+	TInstancedStruct<FSRPGCommand> mReservedCommand;
+	bool mSkipAIActions = false;
+};
+
 /**
  * @brief  SRPG 시뮬레이션을 처리하는 서브시스템
  */
@@ -41,15 +59,11 @@ public:
 	/* 시뮬레이션 함수 */
 public:
 	/**
-	 * 다음 액션까지 결과를 시뮬레이션 돌리는 함수
+	 * 시뮬레이션 돌리는 함수
+	 * @param Option 시뮬레이션 옵션
 	 * @return 결과 로그
 	 */
-	TArray<FSRPGTurnEventLog> SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction = true);
-	/**
-	 * 다음 플레이어 턴까지 결과를 시뮬레이션 돌리는 함수
-	 * @return 결과 로그
-	 */
-	TArray<FSRPGTurnEventLog> SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction = true);
+	TArray<FSRPGTurnEventLog> PlaySimulation(FSimulationOption Option);
 
 protected:
 	void SetSimulationState(ESRPGSimulationState State);

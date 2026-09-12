@@ -34,6 +34,8 @@ class UStaticObstacleSpawnData;
 struct FEnemyUnitPlacementData;
 struct FObstaclePlacementData;
 
+struct FSimulationOption;
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnUnregisterUnitUI, UUnitModel* /*Unit*/)
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnRegisterObstacleUI, UBoardActorModel* /*Actor*/)
@@ -50,6 +52,8 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresent
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSaveCombatPlay, const TArray<TObjectPtr<UUnitModel>>& /*PlayerModels*/, int32 /*RoundCount*/, int32 /*TurnCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE(FOnCombatProgressBlocked);
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSimulateAllPlayerTurn, const FSimulationOption& /*Option*/);
 
 /**
  * @brief 턴 후보 데이터
@@ -127,6 +131,10 @@ protected:
 
 	void BeginRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
 	void EndRound(TSharedPtr<FPresentationBarrier> RoundPresentationBarrier);
+
+protected:
+	void UpdatePlayerTurnCount(int32 PlayerId);
+	bool HaveAllPlayersEnoughTurns() const;
 
 	/* 이벤트 등록 함수 */
 public:
@@ -214,8 +222,13 @@ public:
 
 	/* 시뮬 함수 */
 public:
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction);
-	void ForcedAdvanceUntilNextPlayerTurn(bool NeedEndCurrentAction);
+	void RequestSkipAIActions();
+	void RequestAdvanceUntilNextAction();
+	void RequestAdvanceUntilAllPlayerTurn();
+
+	void ForcedClearActions();
+
+	void ForcedBeginTurn();
 
 	/* 외부 API 함수 */
 public:
@@ -282,6 +295,10 @@ public:
 	 */
 	FOnShowCombatResultUI OnShowCombatResultUI;
 	FOnCombatProgressBlocked OnCombatProgressBlocked;
+	/**
+	 * @brief 모든 플레이어 턴 시뮬 요청 대리자
+	 */
+	FOnSimulateAllPlayerTurn OnSimulateAllPlayerTurn;
 
 public:
 	/**
@@ -386,8 +403,11 @@ protected:
 	FSRPGCombatRoundEventContainer mRoundEndEvents;
 
 protected:
-	// @brief 플레이어 턴 진입 시, 중단해야될 필요가 있는지
-	bool mShouldTerminateBeforePlayerTurnStart = false;
+	// @brief 모든 플레이어가 최소 2번 이상 턴 진입 시, 중단해야될 필요가 있는지
+	bool mShouldTerminateAfterAllPlayersTurnStarted = false;
+	TMap<int32, int32> mPlayerTurnStartCounts;
+
+	bool mShouldSkipAIActions = false;
 
 	/* 임시 객체 */
 protected:

@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 #include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
@@ -411,7 +411,6 @@ void ACombatGameMode::InitializeCombat()
 		// 차례가 왔으니 남의 카드를 접는다. 새 차례에 옛 유닛 카드가 떠 있으면
 		// 무엇을 조종하는 중인지 알 수 없다.
 		mInspectedUnitId = INDEX_NONE;
-		PushTurnUIData();
 		PushUnitUIData();
 		PushSkillUIData();
 		// 턴 시작 연출: 배리어를 HUD로 넘겨 턴 배너가 끝날 때까지 실제 턴 실행을 대기시킨다.
@@ -419,7 +418,6 @@ void ACombatGameMode::InitializeCombat()
 		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->TurnStarted(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel());
 		});
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
-		PushTurnUIData();
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
@@ -444,6 +442,14 @@ void ACombatGameMode::InitializeCombat()
 		mCombatUIModel->NotifyActionResolved();
 		mCombatUIModel->OnEndAnyTurnAction.Broadcast(Barrier);
 		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->ActionEnded(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel(), Action, Result == ESRPGActionResult::Succeeded);
+		});
+	CombatModel->OnSimulateAllPlayerTurn.AddWeakLambda(this, [this](const FSimulationOption& Option) {
+		USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
+		checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 모델 nullptr"));
+
+		const TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(Option);
+		PushTurnUIData(TurnEventLogs);
+		PushEnemyNextSkillUIData(TurnEventLogs);
 		});
 
 	/* 스킬 대리자 연결 -- 파티 **전부**에게 건다.
@@ -629,8 +635,12 @@ bool ACombatGameMode::SelectSkill(int32 SkillIndex)
 			? Action->GetSelectedTileIndex() : FTileIndex::Invalid;
 		PushSkillBuildUIData(Phase);
 		});
-	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnPostSimulateSkillAction.AddWeakLambda(this, [this](const TArray<FSRPGTurnEventLog>& EventLogs) {
-		PushSimulationPreviewUIData(EventLogs);
+	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnSimulateSkillAction.AddWeakLambda(this, [this](const FSimulationOption& Option) {
+		USimulationSubsystem* SimulationSubsystem = GetWorld()->GetSubsystem<USimulationSubsystem>();
+		checkf(SimulationSubsystem != nullptr, TEXT("시뮬레이션 서브시스템 모델 nullptr"));
+
+		const TArray<FSRPGTurnEventLog> TurnEventLogs = SimulationSubsystem->PlaySimulation(Option);
+		PushSimulationPreviewUIData(TurnEventLogs);
 		});
 	SkillSelectCommand.GetMutable<FSRPGSkillSelectCommand>().OnCancelSimulateSkillAction.AddWeakLambda(this, [this]() {
 		// 무름(취소)은 실전 표시를 건드리지 않는다 — 미리보기만 통째로 버린다.
@@ -1224,15 +1234,15 @@ void ACombatGameMode::ShowThreatRangeForTarget(IBoardSelectionTargetView* Target
 		return;
 	}
 
-	// 적 플래너와 같은 규약: 장착돼 있고 쿨다운이 아닌 슬롯만 데이터 채움
-	const TArray<FSkillEntry>& Skills = SkillComponentModel->GetSkills();
 	TArray<const UStaticUnitSkillData*> SkillDatas;
-	SkillDatas.Init(nullptr, Skills.Num());
-	for (int32 Index = 0; Index < Skills.Num(); ++Index)
+
+	const int32 NextSkillIndex = mCombatUIModel->GetEnemyNextSkillIndex(UnitModel->GetModelId());
+	if (NextSkillIndex != INDEX_NONE)
 	{
-		if (Skills[Index].IsValid() == true && SkillComponentModel->IsCooldown(Index) == false)
+		const FSkillEntry* SkillEntry = SkillComponentModel->GetSkill(NextSkillIndex);
+		if (SkillEntry != nullptr)
 		{
-			SkillDatas[Index] = StaticCast<const UStaticUnitSkillData*>(Skills[Index].mData);
+			SkillDatas.Add(StaticCast<const UStaticUnitSkillData*>(SkillEntry->mData));
 		}
 	}
 
@@ -1336,7 +1346,6 @@ void ACombatGameMode::OnRegisterUnit(UUnitModel* Unit)
 		mCombatUIModel->NotifyPrePlaySkillCutIn(Request, MoveTemp(SkillPlayBarrier));
 		});
 
-	PushTurnUIData();
 	PushUnitUIData();
 }
 
@@ -1364,7 +1373,6 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 		++mDefeatedMonsterCount;
 	}
 
-	PushTurnUIData();
 	PushUnitUIData();
 }
 
@@ -1386,20 +1394,14 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 	mCombatUIModel->SetCombatResultUI(CombatResultUIData);
 }
 
-void ACombatGameMode::PushTurnUIData() const
+void ACombatGameMode::PushTurnUIData(const TArray<FSRPGTurnEventLog>& Logs) const
 {
-	static constexpr uint32 TurnForecastRoundCount = 10;
-
 	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
 
 	const TArray<TObjectPtr<USRPGTurnContext>> TurnContexts = CombatModel->GetOrderedTurnContexts();
-	// 라운드 시작 UI는 새 턴 후보가 ApplyOrderedTurnCandidates 로 채워지기 전에
-	// 방송된다. 이 구간에서 바로 반환하면 TurnUI.mRound 만 이전 값으로 남아
-	// 실제 모델은 3라운드인데 배너/좌상단 표시는 ROUND 2를 그리게 된다.
-	// 턴이 비어 있어도 모델이 이미 올린 라운드 번호는 먼저 UI 스냅샷에 내린다.
 	if (TurnContexts.IsEmpty() == true)
 	{
 		FTurnUI RoundTransitionUI = mCombatUIModel->GetTurnUI();
@@ -1424,30 +1426,52 @@ void ACombatGameMode::PushTurnUIData() const
 		TurnUI.mTurnOrderUnitIds.Add(TurnContext->GetOwner()->GetModelId());
 	}
 
-	const TArray<FSRPGPredictedRound> PredictedRounds =
-		CombatModel->GetPredictedTurnRounds(TurnForecastRoundCount);
-	for (const FSRPGPredictedRound& PredictedRound : PredictedRounds)
+	int32 PreRoundOffset = 0;
+	for (const FSRPGTurnEventLog& Log : Logs)
 	{
-		FTurnRoundForecastUI& ForecastUI =
-			TurnUI.mPredictedRounds.AddDefaulted_GetRef();
-		ForecastUI.mRoundOffset = PredictedRound.mRoundOffset;
-		for (const FSRPGTurnCandidate& Candidate : PredictedRound.mCandidates)
+		const int32 CurRoundOffset = Log.mRoundIndex - CombatModel->GetRoundCount();
+		if (CurRoundOffset == 0)
 		{
-			if (Candidate.mOwner != nullptr)
-			{
-				ForecastUI.mTurnOrderUnitIds.Add(Candidate.mOwner->GetModelId());
-			}
+			continue;
 		}
+
+		if (PreRoundOffset < CurRoundOffset)
+		{
+			PreRoundOffset = CurRoundOffset;
+
+			FTurnRoundForecastUI& ForecastUI = TurnUI.mPredictedRounds.AddDefaulted_GetRef();
+			ForecastUI.mRoundOffset = CurRoundOffset;
+		}
+		
+		FTurnRoundForecastUI& ForecastUI = TurnUI.mPredictedRounds.Last();
+		ForecastUI.mTurnOrderUnitIds.Add(Log.mSourceUnitID);
 	}
 
 	// 구형 WBP/테스트도 첫 예측 라운드는 계속 읽을 수 있게 호환 필드를 채운다.
 	if (TurnUI.mPredictedRounds.IsEmpty() == false)
 	{
-		TurnUI.mNextRoundUnitIds =
-			TurnUI.mPredictedRounds[0].mTurnOrderUnitIds;
+		TurnUI.mNextRoundUnitIds = TurnUI.mPredictedRounds[0].mTurnOrderUnitIds;
 		TurnUI.mNextRoundOffset = TurnUI.mPredictedRounds[0].mRoundOffset;
 	}
 	mCombatUIModel->SetTurnUI(TurnUI);
+}
+
+void ACombatGameMode::PushEnemyNextSkillUIData(const TArray<FSRPGTurnEventLog>& Logs) const
+{
+	checkf(mCombatUIModel != nullptr, TEXT("전투 UI Model nullptr"));
+
+	TMap<int32, int32> EnemyNextSkillIndices;
+	for (const FSRPGTurnEventLog& Log : Logs)
+	{
+		if (Log.mSourceUnitID != INDEX_NONE && Log.mAIPlanLog.mSkillIndex != INDEX_NONE)
+		{
+			if (EnemyNextSkillIndices.Contains(Log.mSourceUnitID) == false)
+			{
+				EnemyNextSkillIndices.Add(Log.mSourceUnitID, Log.mAIPlanLog.mSkillIndex);
+			}
+		}
+	}
+	mCombatUIModel->SetEnemyNextSkillIndices(EnemyNextSkillIndices);
 }
 
 void ACombatGameMode::PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const

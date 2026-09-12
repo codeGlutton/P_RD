@@ -48,31 +48,28 @@ void UTacticalEffectExecutionCalculation_Push::Execute(const FTacticalEffectCust
 		? TileMap->GetPushPath(TargetTileIndex, SourceModel->GetTileTransform().mDirection, PushDistance)
 		: TileMap->GetPushPath(SourceTileIndex, TargetTileIndex, PushDistance);
 
-	// 한 칸도 밀리지 못하면 아무것도 안 함
 	const int32 PathNum = PushPath.Num();
-	if (PathNum >= 2)
+	if (TargetMoveCompModel->IsMoving() == true)
 	{
-		if (TargetMoveCompModel->IsMoving() == true)
+		// 이동 중인 대상: 등록만 하고, 이동 루프가 현재 스텝을 마무리하며 남은 경로를 밀치기 경로로 교체
+		// 한 칸도 밀리지 못해도 등록해서 잔여 걷기를 끊음 (밀치기 함정을 밟으면 밀린 거리와 무관하게 이동 종료)
+		TargetMoveCompModel->TryRegisterPendingPush(SourceTileIndex, PushPath);
+	}
+	else if (PathNum >= 2)
+	{
+		// 정지 상태 대상: 즉시 밀기 시작 (방 시작 시 발판 위 배치 발동 등). 한 칸도 밀리지 못하면 아무것도 안 함
+		TargetMoveCompModel->PushAlongPath(PushPath);
+
+		/* 로그 작성 */
+
+		for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
 		{
-			// 이동 중인 대상: 등록만 하고, 이동 루프가 현재 스텝을 마무리하며 남은 경로를 밀치기 경로로 교체
-			TargetMoveCompModel->TryRegisterPendingPush(SourceTileIndex, PushPath);
-		}
-		else
-		{
-			// 정지 상태 대상: 즉시 밀기 시작 (방 시작 시 발판 위 배치 발동 등)
-			TargetMoveCompModel->PushAlongPath(PushPath);
+			FSRPGTileEffectEventLog Log;
+			Log.mOccupancyState = ESRPGTileOccupancyState::Move;
+			Log.mPreTileIndex = PushPath[PathIndex - 1];
+			Log.mNextTileIndex = PushPath[PathIndex];
 
-			/* 로그 작성 */
-
-			for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
-			{
-				FSRPGTileEffectEventLog Log;
-				Log.mOccupancyState = ESRPGTileOccupancyState::Move;
-				Log.mPreTileIndex = PushPath[PathIndex - 1];
-				Log.mNextTileIndex = PushPath[PathIndex];
-
-				GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
-			}
+			GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
 		}
 	}
 

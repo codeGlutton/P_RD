@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /** @brief 전투 UI와 게임플레이를 잇는 단일 뷰모델 계약입니다. */
 // gameplay -> UI: 게임플레이/어댑터가 Set*()으로 표시값을 밀어넣고, 위젯은 Get*()으로 읽는다.
@@ -277,6 +277,11 @@ public:
 	/** @brief 상단 메타(Gold/Lv/Exp). [합의필요] 진짜소스=UUnitData/URunPersistData, 현재 placeholder. */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetPlayerMeta(const FPlayerMetaUI& Meta);
 
+	/** @brief 적 유닛별 다음 예정 스킬 인덱스 맵을 갱신한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetEnemyNextSkillIndices(const TMap<int32, int32>& NextSkillIndices);
+	/** @brief 적 유닛별 다음 예정 스킬 인덱스 맵을 초기화한다. */
+	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void ClearEnemyNextSkillIndices();
+
 	/** @brief 행동/예측 결과 큐를 통째로 설정(예측 표시용). */
 	UFUNCTION(BlueprintCallable, Category = "Combat|Push") void SetActionQueue(const TArray<FCombatQueueNode>& Queue);
 
@@ -330,6 +335,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FEquipmentDetailUI& GetEquipmentDetail() const { return mEquipmentDetail; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FPlayerMetaUI& GetPlayerMeta() const { return mPlayerMeta; }
 	UFUNCTION(BlueprintPure, Category = "Combat|Read") const FCombatEventBatchUI& GetCombatEventBatch() const { return mCombatEventBatch; }
+	/** @brief 특정 적 유닛의 다음 예정 스킬 인덱스를 반환한다. (없으면 INDEX_NONE) */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") int32 GetEnemyNextSkillIndex(int32 UnitId) const;
+	/** @brief 적 유닛별 다음 예정 스킬 인덱스 맵 전체를 반환한다. */
+	UFUNCTION(BlueprintPure, Category = "Combat|Read") const TMap<int32, int32>& GetEnemyNextSkillIndices() const { return mEnemyNextSkillIndices; }
 
 	/**
 	 * @brief 시뮬레이션 미리보기 전용 뷰모델. 실전 표시 상태와 저장 자리를 나눈다.
@@ -374,6 +383,8 @@ private:
 	UPROPERTY(Transient) FPlayerMetaUI mPlayerMeta;
 	/** @brief 가장 최근 예측/실전 전투 이벤트. Blueprint UI도 동일 모델에서 읽는다. */
 	UPROPERTY(Transient) FCombatEventBatchUI mCombatEventBatch;
+	/** @brief 적 유닛 ModelId -> 다음 예정 스킬 인덱스 매핑. */
+	UPROPERTY(Transient) TMap<int32, int32> mEnemyNextSkillIndices;
 	/** @brief 시뮬레이션 미리보기 뷰모델. Getter가 지연 생성한다(생성자 NewObject 금지). */
 	UPROPERTY(Transient) TObjectPtr<USimulationPreviewUIModel> mSimulationPreviewUIModel;
 };

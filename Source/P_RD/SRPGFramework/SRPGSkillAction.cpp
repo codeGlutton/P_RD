@@ -11,6 +11,9 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
+
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
     mCommandType = ESRPGCommandType::SkillCast;
@@ -76,6 +79,12 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
 
         FOnEndSkillUI Callback;
         Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* PreSkillData) {
+            FSimulationOption Option;
+            Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
+            Option.mSkipAIActions = true;
+            Option.mReservedCommand.InitializeAs<FSRPGTurnEndCommand>();
+            GetCombatModel()->OnSimulateAllPlayerTurn.Broadcast(Option);
+
             MarkActionCompleted(ESRPGActionResult::Succeeded);
             });
 
@@ -88,17 +97,23 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
     return ESRPGCommandResult::Ignored;
 }
 
-UTileMapModel* USRPGSkillAction::GetTileMap() const
+USRPGCombatModel* USRPGSkillAction::GetCombatModel() const
 {
     USRPGTurnContext* TurnContext = mParent.Get();
     if (TurnContext != nullptr)
     {
-        USRPGCombatModel* CombatModel = TurnContext->GetParent();
-        if (CombatModel != nullptr)
-        {
-            UTileMapModel* TileMap = CombatModel->GetTileMap();
-            return TileMap;
-        }
+        return TurnContext->GetParent();
+    }
+    return nullptr;
+}
+
+UTileMapModel* USRPGSkillAction::GetTileMap() const
+{
+    USRPGCombatModel* CombatModel = GetCombatModel();
+    if (CombatModel != nullptr)
+    {
+        UTileMapModel* TileMap = CombatModel->GetTileMap();
+        return TileMap;
     }
     return nullptr;
 }

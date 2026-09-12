@@ -223,6 +223,26 @@ public:
 };
 
 /**
+ * @brief 적 AI 동작 로그
+ */
+USTRUCT(BlueprintType)
+struct FSRPGAIPlanLog
+{
+	GENERATED_BODY()
+
+public:
+	bool IsValid() const
+	{
+		return true;
+	}
+
+public:
+	// @brief 사용할 스킬 인덱스 (INDEX_NONE일 경우 스킬 사용 불가)
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
+	int32													mSkillIndex = INDEX_NONE;
+};
+
+/**
  * @brief 하나의 턴 내에서 발생한 이벤트 로그
  */
 USTRUCT(BlueprintType)
@@ -237,6 +257,10 @@ public:
 	}
 
 public:
+	// @brief 라운드 인덱스
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundIndex"))
+	int32													mRoundIndex = INDEX_NONE;
+
 	// @brief 이벤트를 발생 시킨 소스 유닛 ID
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
 	int32													mSourceUnitID = INDEX_NONE;
@@ -244,6 +268,10 @@ public:
 	// @brief 이벤트를 발생 시킨 액터 모델 클래스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
 	TSubclassOf<UObject>									mUnitActorModelClass = nullptr;
+
+public:
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AIPlanLog"))
+	FSRPGAIPlanLog											mAIPlanLog;
 
 public:
 	// @brief 각 액션마다의 변화 로그

@@ -16,10 +16,11 @@
 class USRPGSkillBuildAction;
 class UStaticSkillData;
 class UTileMapModel;
+struct FSimulationOption;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSimulateSkillAction, const FSimulationOption& /*Option*/);
 DECLARE_MULTICAST_DELEGATE(FOnCancelSimulateSkillAction);
 
 USTRUCT(BlueprintType)
@@ -33,7 +34,7 @@ public:
 public:
 	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
-	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnSimulateSkillAction OnSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 public:
@@ -97,7 +98,7 @@ private:
 protected:
 	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
-	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnSimulateSkillAction OnSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 protected:

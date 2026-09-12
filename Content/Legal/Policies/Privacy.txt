@@ -1,0 +1,31 @@
+Privacy Policy
+Mercenary Guild of the Ruined Kingdom · aurelight
+Effective date: September 12, 2026
+
+1. Scope
+This policy explains how aurelight handles information for Mercenary Guild of the Ruined Kingdom (Korean title: 폐허왕국 용병단; package: com.aurelight.mercenaryguildoftheruinedkingdom). The current game has no registration, account login, advertising or in-app purchases.
+
+2. Game data stored on your device
+Game progress, earned rewards, options and language preferences are saved on your device. We do not upload these saves to our own server or link them to a cloud account. The game does not require your name, contacts, location, photos, microphone recordings or advertising identifier. It has no player chat or user-content upload feature.
+
+3. Google Play services
+Google Play and Play Asset Delivery handle installation, updates and delivery of game resources. Google processes device metadata and the app version to deliver appropriate resources and preserve them after updates. Google's documentation states that this data is encrypted in transit and deleted after a fixed retention period.
+Google Play and Android may process installation statistics, crash information and performance diagnostics under their own policies and your settings. We may use statistics and error reports made available through Play Console to improve game stability. Information handled by Google's own services is subject to Google's privacy policy, retention rules and account settings.
+Google Privacy Policy: https://policies.google.com/privacy
+Play Asset Delivery: https://developer.android.com/guide/playcore/asset-delivery
+
+4. Support enquiries
+If you email us, we process your sender email address, message and any attachments you choose to provide to answer your enquiry and resolve the issue. Do not send unnecessary sensitive information such as passwords, identity documents or payment details. We delete enquiry information without undue delay when its purpose is complete and it is no longer needed, except for information that applicable law requires us to retain for a specified period.
+
+5. Disclosure, protection and deletion
+We do not sell personal information or provide it for advertising. We do not disclose support information to third parties except through the email services needed to handle the enquiry or where required by law. Access to support materials is limited to the people who need it, with reasonable safeguards such as account access controls.
+You can delete local game data by clearing the app's storage in Android settings. This also deletes game progress. Device or Google backup and restore settings may restore data; manage backup copies in the relevant service's settings. The game has no account, so it has no separate game-account deletion process.
+To request access to, correction or deletion of information you provided in an enquiry, or restriction of its processing, contact us below. We will verify only the minimum information needed to handle the request and respond in accordance with applicable law.
+
+6. Audience and changes
+The game is intended for people aged 13 and older. We do not knowingly collect personal information from children under 13. If we learn that a child supplied personal information in a support enquiry, we will take appropriate action, including in response to a parent's request.
+If features such as advertising or online accounts change our information handling, we will update this policy and its effective date on this page and in the game.
+
+7. Contact
+Privacy and game support: aurelight
+Email: 2009ejsvk@gmail.com

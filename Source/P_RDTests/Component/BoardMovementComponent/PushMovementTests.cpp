@@ -170,6 +170,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  *  1) 걷기 중 등록 -> 남은 걷기 경로 폐기, 밀치기 경로 완주, OnFinished 1회
  *  2) 같은 함정은 한 연쇄에서 1회만 발동
  *  3) 새 외부 요청 시작 시 연쇄 기록 초기화
+ *  4) 밀 곳이 없는 제자리 1칸 경로 등록 -> 남은 걷기 경로 폐기, 함정 칸에서 완료, 모드는 Normal 유지
  */
 bool FPushMovementChainTests::RunTest(const FString& Parameters)
 {
@@ -254,6 +255,60 @@ bool FPushMovementChainTests::RunTest(const FString& Parameters)
 		Fixture.Unit->OnEndMoveStep.Remove(TrapHandle);
 	}
 
+	/* Case3: 밀 곳이 없는 함정 -> 잔여 걷기 폐기, 함정 칸에서 완료 */
+	AddInfo(TEXT("=== Case3: 제자리 1칸 경로 등록 -> 잔여 걷기 폐기, 함정 칸에서 완료 ==="));
+	{
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+
+		// (3,2)에 밀치기 함정이 있지만 밀릴 곳이 막힌 상황: 도착 통지에서 제자리 1칸 경로 등록
+		TArray<bool> RegisterResults;
+		int32 PathBroadcastCount = 0;
+		int32 EndPathCount = 0;
+		FDelegateHandle TrapHandle = Fixture.Unit->OnEndMoveStep.AddLambda(
+			[&RegisterResults, &Fixture](const FTileTransform& TileTransform, const FTransform&)
+			{
+				if (TileTransform.mIndex == FTileIndex(3, 2))
+				{
+					RegisterResults.Add(Fixture.Movement->TryRegisterPendingPush(
+						FTileIndex(3, 2), { FTileIndex(3, 2) }));
+				}
+			});
+		FDelegateHandle PathHandle = Fixture.Unit->OnStartMovePath.AddLambda(
+			[&PathBroadcastCount](const TArray<FVector>&, EBoardMoveMode)
+			{
+				++PathBroadcastCount;
+			});
+		// 경로 종료 통지는 함정 칸 트랜스폼으로 1회
+		FTileIndex EndPathTileIndex;
+		FDelegateHandle EndPathHandle = Fixture.Unit->OnEndMovePath.AddLambda(
+			[&EndPathCount, &EndPathTileIndex](const FTileTransform& TileTransform, const FTransform&)
+			{
+				++EndPathCount;
+				EndPathTileIndex = TileTransform.mIndex;
+			});
+
+		int32 FinishCount = 0;
+		Fixture.Movement->MoveAlongPath(
+			{ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2), FTileIndex(5, 2) },
+			FOnBoardMoveFinished::CreateLambda([&FinishCount]()
+			{
+				++FinishCount;
+			}));
+
+		TestTrue(TEXT("[Case3] 제자리 1칸 경로 등록 성공"), RegisterResults == TArray<bool>{ true });
+		TestTrue(TEXT("[Case3] 걷기 잔여 경로 폐기, 함정 칸에서 정지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
+		TestEqual(TEXT("[Case3] OnFinished 1회"), FinishCount, 1);
+		TestFalse(TEXT("[Case3] 이동 종료 상태"), Fixture.Movement->IsMoving());
+		TestTrue(TEXT("[Case3] 실제로 밀리지 않았으므로 모드는 Normal 유지"), Fixture.Movement->GetMoveMode() == EBoardMoveMode::Normal);
+		TestEqual(TEXT("[Case3] 경로 통지는 걷기 시작 1회뿐 (제자리 경로는 뷰에 미통지)"), PathBroadcastCount, 1);
+		TestEqual(TEXT("[Case3] 경로 종료 통지 1회"), EndPathCount, 1);
+		TestTrue(TEXT("[Case3] 경로 종료 통지는 함정 칸 기준"), EndPathTileIndex == FTileIndex(3, 2));
+
+		Fixture.Unit->OnEndMoveStep.Remove(TrapHandle);
+		Fixture.Unit->OnStartMovePath.Remove(PathHandle);
+		Fixture.Unit->OnEndMovePath.Remove(EndPathHandle);
+	}
+
 	return true;
 }
 
@@ -266,7 +321,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 /**
  * @brief 등록/시작 거부 가드 검증
  *  1) 정지 상태 TryRegisterPendingPush -> false
- *  2) 경로 2칸 미만: PushAlongPath/TryRegisterPendingPush 모두 거부
+ *  2) PushAlongPath는 경로 2칸 미만 거부, TryRegisterPendingPush는 빈 경로만 거부
  */
 bool FPushMovementGuardTests::RunTest(const FString& Parameters)
 {
@@ -290,25 +345,24 @@ bool FPushMovementGuardTests::RunTest(const FString& Parameters)
 		TestFalse(TEXT("[Case1] 정지 상태 등록 거부"), Registered);
 	}
 
-	/* Case2: 경로 2칸 미만 거부 */
-	AddInfo(TEXT("=== Case2: 경로 2칸 미만 -> false ==="));
+	/* Case2: 경로 길이 가드 */
+	AddInfo(TEXT("=== Case2: PushAlongPath 2칸 미만 거부, TryRegisterPendingPush 빈 경로 거부 ==="));
 	{
 		// 시작 API: 빈 경로/한 칸 경로 거부 (타일맵 접근 전 가드)
 		TestFalse(TEXT("[Case2] PushAlongPath 빈 경로 거부"), Fixture.Movement->PushAlongPath({}));
 		TestFalse(TEXT("[Case2] PushAlongPath 한 칸 경로 거부"), Fixture.Movement->PushAlongPath({ FTileIndex(2, 2) }));
 
-		// 등록 API: 이동 중이어야 경로 검사까지 도달하므로 걷기 도중에 한 칸 경로 등록 시도
+		// 등록 API: 이동 중이어야 경로 검사까지 도달하므로 걷기 도중에 빈 경로 등록 시도
 		TArray<bool> RegisterResults;
 		FDelegateHandle TrapHandle = Fixture.Unit->OnEndMoveStep.AddLambda(
 			[&RegisterResults, &Fixture](const FTileTransform& TileTransform, const FTransform&)
 			{
-				RegisterResults.Add(Fixture.Movement->TryRegisterPendingPush(
-					FTileIndex(3, 2), { TileTransform.mIndex }));
+				RegisterResults.Add(Fixture.Movement->TryRegisterPendingPush(FTileIndex(3, 2), {}));
 			});
 
 		Fixture.Movement->MoveAlongPath({ FTileIndex(2, 2), FTileIndex(3, 2) });
 
-		TestTrue(TEXT("[Case2] 이동 중이어도 한 칸 경로 등록 거부"), RegisterResults == TArray<bool>{ false });
+		TestTrue(TEXT("[Case2] 이동 중이어도 빈 경로 등록 거부"), RegisterResults == TArray<bool>{ false });
 		TestTrue(TEXT("[Case2] 등록 거부라서 걷기 경로 그대로 종료"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
 
 		Fixture.Unit->OnEndMoveStep.Remove(TrapHandle);
@@ -364,6 +418,14 @@ bool FPushMovementCancelTests::RunTest(const FString& Parameters)
 			}
 		});
 
+	// 취소여도 뷰의 걷기 마무리를 위해 경로 종료 통지는 나가야 함
+	int32 EndPathCount = 0;
+	FDelegateHandle EndPathHandle = Fixture.Unit->OnEndMovePath.AddLambda(
+		[&EndPathCount](const FTileTransform&, const FTransform&)
+		{
+			++EndPathCount;
+		});
+
 	int32 FinishCount = 0;
 	Fixture.Movement->MoveAlongPath(
 		{ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2) },
@@ -376,10 +438,12 @@ bool FPushMovementCancelTests::RunTest(const FString& Parameters)
 	TestTrue(TEXT("취소 스텝 타일에서 정지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
 	TestEqual(TEXT("함정 미발동 (도착 통지 없음)"), RegisterResults.Num(), 0);
 	TestEqual(TEXT("완료 통지 없음"), FinishCount, 0);
+	TestEqual(TEXT("경로 종료 통지 1회"), EndPathCount, 1);
 	TestFalse(TEXT("이동 종료 상태"), Fixture.Movement->IsMoving());
 
 	Fixture.Unit->OnStartMoveStep.Remove(CancelHandle);
 	Fixture.Unit->OnEndMoveStep.Remove(TrapHandle);
+	Fixture.Unit->OnEndMovePath.Remove(EndPathHandle);
 
 	return true;
 }

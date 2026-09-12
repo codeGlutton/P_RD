@@ -24,6 +24,7 @@ class UCheckBox;
 class USlider;
 class UTextBlock;
 class UWidget;
+class UCreditsPanelWidget;
 
 /**
  * @brief 공통 설정 UI의 표시 상태를 관리하고 버튼/슬라이더 입력을 이벤트로 전달한다.
@@ -82,6 +83,11 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "UI|Settings")
 	ESettingsPanelMode GetPanelMode() const;
+
+	/** Open the offline credits or license reader from either settings mode. */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ShowCreditsPage(bool bLicenses = false);
+	virtual void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
 
 	/**
 	 * @brief 런 상태에 따라 저장 후 종료/포기하기 버튼 활성 상태를 갱신한다.
@@ -292,6 +298,22 @@ protected:
 
 private:
 	friend class FRDMobileBackNavigationTest;
+	void EnsureCreditsButtons();
+	void CloseCreditsReader();
+	void HandleCreditsReaderClosed();
+	UFUNCTION()
+	void HandleCreditsClicked();
+	UFUNCTION()
+	void HandleLicensesClicked();
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mCreditsButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mLicensesButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UCreditsPanelWidget> mCreditsReader;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mCreditsReturnFocus;
+
 	/** @brief 폴드 모달 스케일 변형이 현재 적용 중인지. */
 	bool mFoldScaleActive = false;
 

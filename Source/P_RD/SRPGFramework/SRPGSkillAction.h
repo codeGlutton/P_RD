@@ -12,6 +12,7 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGSkillAction.generated.h"
 
+class USRPGCombatModel;
 class UTileMapModel;
 struct FSRPGSkillAction;
 
@@ -49,7 +50,7 @@ protected:
 
 	/* 헬퍼 */
 private:
-	// @brief 턴 컨텍스트 → 전투 모델 → 타일 맵 모델을 꺼내온다
+	USRPGCombatModel* GetCombatModel() const;
 	UTileMapModel* GetTileMap() const;
 };
 
