@@ -22,6 +22,8 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Actor/TileMap/TacticalTileTable.h"
 
+#include "Simulation/Logger/EventLogger.h"
+
 DEFINE_LOG_CATEGORY(LogSRPGEnemyPlanner);
 
 namespace
@@ -175,6 +177,18 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 행동없음 — 사용가능 스킬 없음(전부 쿨다운/행동력 부족 또는 미장착)"), *LogPrefix);
 		return Commands;
 	}
+
+	// 로그 작성
+
+	UEventLogger* Logger = GetWorldEventLogger(SkillComp);
+	if (Logger != nullptr)
+	{
+		FSRPGAIPlanLog Log;
+		Log.mSkillIndex = ChosenSkillSlot;
+
+		Logger->LogAIPlan(Log);
+	}
+
 	const UStaticUnitSkillData* ChosenSkill = StaticCast<const UStaticUnitSkillData*>(Skills[ChosenSkillSlot].mData);
 	const ESkillPriority ChosenPriority = Enemy->GetSkillPriority(ChosenSkillSlot);
 	UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 스킬확정: 스킬[%d]=%s 우선순위=%s"),

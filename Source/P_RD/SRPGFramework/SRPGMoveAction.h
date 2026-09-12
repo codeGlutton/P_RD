@@ -12,6 +12,8 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGMoveAction.generated.h"
 
+class USRPGCombatModel;
+
 // @brief 확정된 이동 경로를 실어 이동 액션 생성을 요청하는 명령
 USTRUCT()
 struct FSRPGMoveCommand : public FSRPGCommand
@@ -47,6 +49,10 @@ protected:
 
 protected:
 	ESRPGCommandResult HandleCommand(const TInstancedStruct<FSRPGCommand>& Command) override;
+
+	/* 헬퍼 */
+private:
+	USRPGCombatModel* GetCombatModel() const;
 
 protected:
 	// @brief 따라갈 경로 타일 목록 (인덱스 0은 시작 타일)

@@ -7,11 +7,15 @@ void UEventLogger::SetContext(FRoomContext& RoomContext)
 	mRoomContext = &RoomContext;
 }
 
-void UEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
+void UEventLogger::BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass)
 {
 }
 
 void UEventLogger::EndTurnLog()
+{
+}
+
+void UEventLogger::LogAIPlan(const FSRPGAIPlanLog& Log)
 {
 }
 
@@ -51,11 +55,12 @@ TArray<FSRPGTurnEventLog> UEventLogger::PopSRPGLogs()
 	return TArray<FSRPGTurnEventLog>();
 }
 
-void USimulationEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
+void USimulationEventLogger::BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass)
 {
-	Super::BeginTurnLog(SourceUnitID, UnitActorModelClass);
+	Super::BeginTurnLog(RoundIndex, SourceUnitID, UnitActorModelClass);
 
 	FSRPGTurnEventLog TurnLog;
+	TurnLog.mRoundIndex = RoundIndex;
 	TurnLog.mSourceUnitID = SourceUnitID;
 	TurnLog.mUnitActorModelClass = UnitActorModelClass;
 
@@ -75,6 +80,15 @@ void USimulationEventLogger::EndTurnLog()
 	mCurrentTurnEventLog = nullptr;
 
 	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
+}
+
+void USimulationEventLogger::LogAIPlan(const FSRPGAIPlanLog& Log)
+{
+	Super::LogAIPlan(Log);
+
+	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 AI 플랜 로그 시작 오류"));
+
+	mCurrentTurnEventLog->mAIPlanLog = Log;
 }
 
 void USimulationEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)

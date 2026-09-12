@@ -155,7 +155,7 @@ void USRPGTurnContext::BeginTurn()
 		}
 
 		// 로그 작성
-		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
+		GetWorldEventLogger(this)->BeginTurnLog(CombatModel->GetRoundCount(), mOwner->GetModelId(), mOwner->GetClass());
 
 		// 유닛 턴 시작 단계
 		mOwner->OnBeginTurn(CombatModel->GetTurnCount());
@@ -163,13 +163,7 @@ void USRPGTurnContext::BeginTurn()
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
 
-		// 턴 종료 여부 체크
-		if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
-		{
-			EndTurn();
-			return;
-		}
-
+		TArray<TInstancedStruct<FSRPGCommand>> TurnStartCommands;
 		if (mOwner->IsPlayerUnitModel() == false)
 		{
 			/* AI의 경우 움직임 판단 로직 시작 */
@@ -185,10 +179,31 @@ void USRPGTurnContext::BeginTurn()
 
 			// PlanTurn에서 Command 리스트를 리턴하면 순서대로 라우터에 전달
 			// @note 스킬 랜덤 선택은 시뮬/라이브 동일 결과를 위해 룸의 이벤트 스트림 사용
-			for (TInstancedStruct<FSRPGCommand>& Command : USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this), PlanLogTag))
-			{
-				CommandRouterModel->SummitCommand(Command);
-			}
+			TurnStartCommands = USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this), PlanLogTag);
+		}
+
+		// 턴 종료 여부 체크
+
+		const bool ShouldEndTurn = (
+			(mOwner->IsPlayerUnitModel() == true && mShouldSkipPlayerTurn == true) ||
+			(mOwner->IsPlayerUnitModel() == false && mShouldSkipAIActions == true)
+			);
+		if (ShouldEndTurn == true)
+		{
+			mTurnPhase = ESRPGTurnPhase::TurnAbort;
+		}
+
+		if (mTurnPhase == ESRPGTurnPhase::TurnAbort)
+		{
+			EndTurn();
+			return;
+		}
+
+		// 턴 시작
+
+		for (TInstancedStruct<FSRPGCommand>& Command : TurnStartCommands)
+		{
+			CommandRouterModel->SummitCommand(Command);
 		}
 		}));
 	OnBeginTurnUI.Broadcast(PresentationBarrier, this);
@@ -388,8 +403,30 @@ int32 USRPGTurnContext::GetTurnId() const
 	return mTurnId;
 }
 
+void USRPGTurnContext::ForcedSkipPlayerTurn()
+{
+	if (mTurnPhase == ESRPGTurnPhase::TurnInit)
+	{
+		mShouldSkipPlayerTurn = true;
+	}
+}
+
+void USRPGTurnContext::ForcedSkipAIActions()
+{
+	if (mTurnPhase == ESRPGTurnPhase::TurnInit)
+	{
+		mShouldSkipAIActions = true;
+	}
+}
+
 void USRPGTurnContext::ForcedClearActions()
 {
+	USRPGCombatModel* CombatModel = mParent.Get();
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	// 로그 작성
+	GetWorldEventLogger(this)->BeginTurnLog(CombatModel->GetRoundCount(), mOwner->GetModelId(), mOwner->GetClass());
+
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
 		const int32 NewHeadActionIndex = mHeadActionIndex + 1;
@@ -399,8 +436,6 @@ void USRPGTurnContext::ForcedClearActions()
 			mReservedActions.Pop();
 		}
 
-		// 로그 작성
-		GetWorldEventLogger(this)->BeginTurnLog(mOwner->GetModelId(), mOwner->GetClass());
 		GetWorldEventLogger(this)->BeginActionLog(mOwner->GetTileTransform().mIndex);
 
 		// 현재 액션 종료 요청
@@ -414,12 +449,7 @@ void USRPGTurnContext::ForcedClearActions()
 	}
 }
 
-void USRPGTurnContext::ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand)
+void USRPGTurnContext::ForcedAdvanceUntilNextAction()
 {
 	mShouldTerminateAfterAction = true;
-
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
-
-	CommandRouterModel->SummitCommand(NextCommand);
 }

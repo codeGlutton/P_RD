@@ -162,7 +162,8 @@ protected:
 
 protected:
 	void PushCombatResultUIData(ESRPGCombatResult Result) const;
-	void PushTurnUIData() const;
+	void PushTurnUIData(const TArray<FSRPGTurnEventLog>& Logs) const;
+	void PushEnemyNextSkillUIData(const TArray<FSRPGTurnEventLog>& Logs) const;
 	void PushSkillBuildUIData(ESRPGSkillBuildPhase Phase) const;
 	void PushMoveBuildUIData(const USRPGMoveBuildAction* Action, ESRPGMoveBuildPhase Phase) const;
 	void PushUnitUIData() const;

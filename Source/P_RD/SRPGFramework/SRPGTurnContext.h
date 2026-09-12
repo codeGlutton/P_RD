@@ -104,8 +104,10 @@ public:
 
 	/* 시뮬 함수 */
 protected:
+	void ForcedSkipPlayerTurn();
+	void ForcedSkipAIActions();
 	void ForcedClearActions();
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
+	void ForcedAdvanceUntilNextAction();
 
 public:
 	FOnBeginTurnUI OnBeginTurnUI;
@@ -146,4 +148,7 @@ protected:
 protected:
 	// @brief 액션 종료 시, 중단해야될 필요가 있는지
 	bool mShouldTerminateAfterAction = false;
+
+	bool mShouldSkipPlayerTurn = false;
+	bool mShouldSkipAIActions = false;
 };

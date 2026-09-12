@@ -1,5 +1,6 @@
 ﻿#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/SRPGCommandRouterModel.h"
 
 #include "Simulation/RoomContext.h"
 #include "Simulation/RoomInstance.h"
@@ -51,34 +52,51 @@ void USimulationSubsystem::PreDeinitialize()
 	Super::PreDeinitialize();
 }
 
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand, bool NeedEndCurrentAction)
+TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption Option)
 {
-	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewAction);
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSimulation);
+
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
 
 	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 
-	SRPGCombatModel->ForcedAdvanceUntilNextAction(NextCommand, NeedEndCurrentAction);
+	/* 전처리 */
+
+	if (Option.mReservedCommand.IsValid() == true)
+	{
+		SRPGCombatModel->ForcedClearActions();
+	}
+
+	/* 옵션 세팅 */
+
+	if (Option.mSkipAIActions == true)
+	{
+		SRPGCombatModel->RequestSkipAIActions();
+	}
+	if (Option.mDuration == ESimulationDurtaion::NextAction)
+	{
+		SRPGCombatModel->RequestAdvanceUntilNextAction();
+	}
+	else
+	{
+		SRPGCombatModel->RequestAdvanceUntilAllPlayerTurn();
+	}
+
+	/* 시뮬 시작 */
+
+	if (Option.mReservedCommand.IsValid() == true)
+	{
+		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 서브시스템 모델 nullptr"));
+		CommandRouterModel->SummitCommand(Option.mReservedCommand);
+	}
+	else
+	{
+		SRPGCombatModel->ForcedBeginTurn();
+	}
 
 	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
-
-	SetSimulationState(ESRPGSimulationState::RunningGame);
-	return MoveTemp(ResultLogs);
-}
-
-TArray<FSRPGTurnEventLog> USimulationSubsystem::SimulateUntilNextPlayerTurn(bool NeedEndCurrentAction)
-{
-	TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewTurn);
-	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
-	SetSimulationState(ESRPGSimulationState::RunningSimulation);
-
-	USRPGCombatModel* SRPGCombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-
-	SRPGCombatModel->ForcedAdvanceUntilNextPlayerTurn(NeedEndCurrentAction);
-
-	TArray<FSRPGTurnEventLog> ResultLogs = GetEventLogger().PopSRPGLogs();
-
 	SetSimulationState(ESRPGSimulationState::RunningGame);
 	return MoveTemp(ResultLogs);
 }

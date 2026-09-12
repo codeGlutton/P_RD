@@ -29,8 +29,10 @@ public:
 	void SetContext(FRoomContext& RoomContext);
 
 public:
-	virtual void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass);
+	virtual void BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass);
 	virtual void EndTurnLog();
+
+	virtual void LogAIPlan(const FSRPGAIPlanLog& Log);
 
 	virtual void BeginActionLog(const FTileIndex& SourceTileIndex);
 	virtual void EndActionLog();
@@ -72,8 +74,10 @@ class USimulationEventLogger : public UEventLogger
 	GENERATED_BODY()
 
 public:
-	void BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass) override;
+	void BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass) override;
 	void EndTurnLog() override;
+
+	void LogAIPlan(const FSRPGAIPlanLog& Log) override;
 
 	void BeginActionLog(const FTileIndex& SourceTileIndex) override;
 	void EndActionLog() override;
