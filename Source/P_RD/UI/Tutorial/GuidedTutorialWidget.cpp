@@ -221,7 +221,7 @@ void UGuidedTutorialWidget::NativeTick(const FGeometry& G, float Delta)
 	const double Width = FMath::Min(460., Size.X - 48.);
 	Card->SetWidthOverride(Width);
 	const double Height = FMath::Max(120., Card->GetDesiredSize().Y);
-	const double Pad = 24., Gap = 36.;
+	const double Pad = 24., Gap = 108.;
 	FVector2D Pos(Pad, FMath::Max(Pad, Size.Y - Height - 145.));
 	bFocus =
 	    !bBoard && TargetWidget.IsValid() && !TargetWidget->GetCachedGeometry().GetLocalSize().IsNearlyZero();
@@ -269,66 +269,112 @@ int32 UGuidedTutorialWidget::NativePaint(const FPaintArgs& Args, const FGeometry
                                          FSlateWindowElementList& Out, int32 Layer, const FWidgetStyle& Style,
                                          bool Enabled) const
 {
-	const int32 Top = Super::NativePaint(Args, G, Cull, Out, Layer, Style, Enabled);
-	if (!bFocus)
-		return Top;
-	int32 DrawLayer = Top;
-	auto Line = [&](const TArray<FVector2D>& P, float W, FLinearColor C) {
-		FSlateDrawElement::MakeLines(Out, ++DrawLayer, G.ToPaintGeometry(), P, ESlateDrawEffect::None, C,
-		                             true, W);
-	};
-	const FVector2D A = FocusA - FVector2D(5), B = FocusB + FVector2D(5), Center = (A + B) * .5;
-	const double L = FMath::Min(22., FMath::Min(B.X - A.X, B.Y - A.Y) * .25);
-	const float Pulse = .7f + .3f * FMath::Sin(GestureTime * 4);
-	if (WorldFocus.Num() == 4)
-	{
-		TArray<FVector2D> Diamond;
-		for (const auto& Point : WorldFocus) Diamond.Add(G.AbsoluteToLocal(Point));
-		// TArray::Add rejects references into itself, even if there is spare capacity.
-		const FVector2D FirstPoint = Diamond[0];
-		Diamond.Add(FirstPoint);
-		Line(Diamond, 12, Ink.CopyWithNewOpacity(.85f));
-		Line(Diamond, 6, Gold.CopyWithNewOpacity(Pulse));
-		Line(Diamond, 2, FLinearColor(1, 1, .8f));
-	}
-	if (!bBoard)
-	for (FVector2D Corner : {A, FVector2D(B.X, A.Y), B, FVector2D(A.X, B.Y)})
-	{
-		const double SX = Corner.X == A.X ? 1 : -1, SY = Corner.Y == A.Y ? 1 : -1;
-		TArray<FVector2D> P = {Corner + FVector2D(SX * L, 0), Corner, Corner + FVector2D(0, SY * L)};
-		Line(P, 6, Ink);
-		Line(P, 3, Gold.CopyWithNewOpacity(Pulse));
-	}
-	FVector2D Dir = Center - (BubblePosition + BubbleSize * .5);
-	Dir.Normalize();
-	const FVector2D Tip = Center - Dir * FMath::Min((B.X - A.X) * .5, (B.Y - A.Y) * .5);
-	const FVector2D Start = Tip - Dir * (26. + 4. * FMath::Sin(GestureTime * 4));
-	const FVector2D Side(-Dir.Y, Dir.X);
-	TArray<FVector2D> Arrow = {Start, Tip, Tip - Dir * 12. + Side * 9., Tip, Tip - Dir * 12. - Side * 9.};
-	Line(Arrow, 7, Ink);
-	Line(Arrow, 4, Gold);
+    if (!bFocus)
+        return Super::NativePaint(Args, G, Cull, Out, Layer, Style, Enabled);
+
+    const FVector2D ViewSize = G.GetLocalSize();
+    const FVector2D Center = (FocusA + FocusB) * .5;
+    // A small icon still needs a readable spotlight and a clear arrow landing point.
+    const FVector2D HalfSize(FMath::Max(30., (FocusB.X - FocusA.X) * .5 + 12.),
+                            FMath::Max(30., (FocusB.Y - FocusA.Y) * .5 + 12.));
+    const FVector2D A = Center - HalfSize, B = Center + HalfSize;
+    FVector2D HoleA = A - FVector2D(8), HoleB = B + FVector2D(8);
+    // Flying enemies extend above their tile. Keep their silhouette visible as well as the tile.
+    if (bBoard && CurrentStage == EGuidedStage::SkillTarget) HoleA.Y -= 110.;
+    HoleA.X = FMath::Clamp(HoleA.X, 0., ViewSize.X);
+    HoleA.Y = FMath::Clamp(HoleA.Y, 0., ViewSize.Y);
+    HoleB.X = FMath::Clamp(HoleB.X, HoleA.X, ViewSize.X);
+    HoleB.Y = FMath::Clamp(HoleB.Y, HoleA.Y, ViewSize.Y);
+
+    // NativePaint is called after Slate children. Cut out the callout as well as the target,
+    // otherwise the screen shade also darkens the instructions and acknowledgement button.
+    const auto& CardGeometry = Card->GetCachedGeometry();
+    const FVector2D CardA = G.AbsoluteToLocal(CardGeometry.LocalToAbsolute(FVector2D::ZeroVector));
+    const FVector2D CardB = G.AbsoluteToLocal(CardGeometry.LocalToAbsolute(CardGeometry.GetLocalSize()));
+    TArray<double> Xs = {0., ViewSize.X, HoleA.X, HoleB.X,
+        FMath::Clamp(CardA.X, 0., ViewSize.X), FMath::Clamp(CardB.X, 0., ViewSize.X)};
+    TArray<double> Ys = {0., ViewSize.Y, HoleA.Y, HoleB.Y,
+        FMath::Clamp(CardA.Y, 0., ViewSize.Y), FMath::Clamp(CardB.Y, 0., ViewSize.Y)};
+    Xs.Sort(); Ys.Sort();
+    auto Inside = [](FVector2D P, FVector2D Min, FVector2D Max)
+    { return P.X >= Min.X && P.X <= Max.X && P.Y >= Min.Y && P.Y <= Max.Y; };
+    static const FSlateColorBrush DimBrush(FLinearColor::White);
+    for (int32 X = 0; X + 1 < Xs.Num(); ++X)
+        for (int32 Y = 0; Y + 1 < Ys.Num(); ++Y)
+        {
+            const FVector2D Position(Xs[X], Ys[Y]), Size(Xs[X+1] - Xs[X], Ys[Y+1] - Ys[Y]);
+            const FVector2D Mid = Position + Size * .5;
+            if (Size.X <= 0 || Size.Y <= 0 || Inside(Mid, HoleA, HoleB) || Inside(Mid, CardA, CardB)) continue;
+            FSlateDrawElement::MakeBox(Out, Layer + 1,
+                G.ToPaintGeometry(FVector2f(Size), FSlateLayoutTransform(FVector2f(Position))),
+                &DimBrush, ESlateDrawEffect::None, FLinearColor(.015f, .02f, .025f, .68f));
+        }
+
+    int32 DrawLayer = Super::NativePaint(Args, G, Cull, Out, Layer + 2, Style, Enabled);
+    const FLinearColor Accent(1.f, .78f, .16f, 1.f), Ivory(1.f, .98f, .85f, 1.f);
+    const FLinearColor Edge(.015f, .012f, .009f, 1.f);
+    auto Line = [&](const TArray<FVector2D>& Points, float Width, FLinearColor Color)
+    {
+        FSlateDrawElement::MakeLines(Out, ++DrawLayer, G.ToPaintGeometry(), Points,
+            ESlateDrawEffect::None, Color, true, Width);
+    };
+    const float Pulse = .5f + .5f * FMath::Sin(GestureTime * 3.5f);
+    auto Outline = [&](const TArray<FVector2D>& Points)
+    {
+        Line(Points, 22.f + 5.f * Pulse, Accent.CopyWithNewOpacity(.18f + .10f * Pulse));
+        Line(Points, 14.f, Edge);
+        Line(Points, 8.f, Accent);
+        Line(Points, 2.f, Ivory);
+    };
+    if (WorldFocus.Num() == 4)
+    {
+        TArray<FVector2D> Diamond;
+        for (const auto& Point : WorldFocus) Diamond.Add(G.AbsoluteToLocal(Point));
+        const FVector2D FirstPoint = Diamond[0];
+        Diamond.Add(FirstPoint);
+        Outline(Diamond);
+    }
+    if (!bBoard)
+        Outline({A, {B.X, A.Y}, B, {A.X, B.Y}, A});
+
+    FVector2D Dir = Center - (BubblePosition + BubbleSize * .5);
+    if (!Dir.Normalize()) Dir = FVector2D(0, 1);
+    // Intersect the rectangle edge; using the smaller half-size lands inside wide controls.
+    const double EdgeDistance = FMath::Min(
+        FMath::Abs(Dir.X) > .001 ? HalfSize.X / FMath::Abs(Dir.X) : DBL_MAX,
+        FMath::Abs(Dir.Y) > .001 ? HalfSize.Y / FMath::Abs(Dir.Y) : DBL_MAX);
+    const FVector2D Tip = Center - Dir * (EdgeDistance + 17.);
+    const double Travel = 6. * (1. - Pulse);
+    const FVector2D ArrowTip = Tip - Dir * Travel;
+    const FVector2D Start = ArrowTip - Dir * 64.;
+    const FVector2D Side(-Dir.Y, Dir.X);
+    const TArray<FVector2D> Arrow = {Start, ArrowTip, ArrowTip - Dir * 25. + Side * 19.,
+                                   ArrowTip, ArrowTip - Dir * 25. - Side * 19.};
+    Line(Arrow, 17, Edge);
+    Line(Arrow, 11, Accent);
+    Line(Arrow, 3, Ivory);
 	if (Holding(CurrentStage))
 	{
 		const FVector2D C = Center + FVector2D(18, 18);
-		// A small outlined pointing hand; the ring demonstrates holding, not lesson completion.
+		// A larger outlined hand; the ring demonstrates holding, not lesson completion.
 		TArray<FVector2D> Hand = {{-7, 21},  {-14, 7}, {-14, 2}, {-10, 0}, {-5, 7},  {-5, -16},
 		                          {-3, -20}, {2, -20}, {5, -16}, {5, -2},  {10, -5}, {15, -1},
 		                          {20, -2},  {25, 3},  {27, 13}, {22, 27}, {-3, 27}, {-7, 21}};
 		for (auto& P : Hand)
-			P += C;
-		Line(Hand, 8, Ink);
-		Line(Hand, 4, FLinearColor(1.f, .95f, .8f));
+			P = P * 1.5 + C;
+		Line(Hand, 13, Edge);
+		Line(Hand, 7, Ivory);
 		const float Phase = FMath::Fmod(GestureTime, 1.7f) / 1.7f;
 		TArray<FVector2D> Arc;
 		for (int I = 0; I <= 32 * Phase; ++I)
 		{
 			const float Angle = I / 32.f * 2 * PI - PI * .5;
-			Arc.Add(C + FVector2D(0, -19) + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle)) * 29);
+			Arc.Add(C + FVector2D(0, -28) + FVector2D(FMath::Cos(Angle), FMath::Sin(Angle)) * 43);
 		}
 		if (Arc.Num() > 1)
 		{
-			Line(Arc, 7, Ink);
-			Line(Arc, 3, Gold);
+			Line(Arc, 12, Edge);
+			Line(Arc, 7, Accent);
 		}
 	}
 	return DrawLayer;
