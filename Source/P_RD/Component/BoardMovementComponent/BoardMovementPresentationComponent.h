@@ -69,6 +69,13 @@ public:
 		const FRotator& TargetWorldRotation,
 		TSharedPtr<FPresentationBarrier> Barrier);
 
+	/**
+	 * @brief 이동 요청 전체 종료를 수신해서 걷기 연출 마무리
+	 * @details 경로 중간에서 끝나면(함정 정지 등) 코너 곡선 위에 서 있을 수 있으므로,
+	 *          폴리라인을 버리고 마지막 타일 중심까지 직선 이동으로 마저 걸어가 멈춤
+	 */
+	virtual void OnEndMovePath(const FTileTransform& TileTransform, const FTransform& TileWorldTransform);
+
 	/* 접근자 */
 public:
 	// @brief 현재 이동 속도 벡터. 소유 액터의 GetVelocity()가 애니메이션용으로 사용

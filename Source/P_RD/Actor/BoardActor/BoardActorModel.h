@@ -27,6 +27,7 @@ DECLARE_MULTICAST_DELEGATE(FOnRemoveTileTransform);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */, EBoardMoveMode /* MoveMode */);
 DECLARE_MULTICAST_DELEGATE_FiveParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */, EBoardMoveMode /* MoveMode */);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMoveStep, const FTileTransform& /* TileTransform */, const FTransform& /* WorldTransform */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMovePath, const FTileTransform& /* TileTransform */, const FTransform& /* TileWorldTransform */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
@@ -184,6 +185,12 @@ public:
 	 * @details 도착한 타일과 월드 변환만 전달하며 AP 정산은 유닛 이동 컴포넌트 모델이 담당한다.
 	 */
 	FOnEndMoveStep OnEndMoveStep;
+	/**
+	 * @brief 이동 요청 전체(밀치기 연쇄 포함)가 끝났을 때의 알림 대리자
+	 * @details 경로 중간에서 끝나도(다음 칸 막힘, 함정 정지, 취소) 반드시 한 번 통지.
+	 *          뷰는 이걸 받아 걷기 연출을 멈추고 마지막 타일 중심으로 정렬
+	 */
+	FOnEndMovePath OnEndMovePath;
 
 	/**
 	 * @brief 방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자

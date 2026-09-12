@@ -42,8 +42,8 @@ bool UBoardMovementComponentModel::TryRegisterPendingPush(const FTileIndex& Trap
 		return false;
 	}
 
-	// 밀 곳이 없는 경로는 거부 (벽/장애물에 막히는 처리는 경로 생성 쪽 책임)
-	if (PushPathTileIndexes.Num() < 2)
+	// 빈 경로만 거부. 밀 곳이 없어 제자리 1칸인 경로도 등록해서 잔여 걷기를 끊음 (막힘 판정은 경로 생성 쪽 책임)
+	if (PushPathTileIndexes.IsEmpty() == true)
 	{
 		return false;
 	}
@@ -188,10 +188,11 @@ void UBoardMovementComponentModel::CompleteStep()
 
 void UBoardMovementComponentModel::OnStepPresentationFinished()
 {
-	// 취소 요청됐으면 완료 통지 없이 정지
+	// 취소 요청됐으면 완료 통지 없이 정지 (뷰가 걷기 연출을 멈추도록 경로 종료는 통지)
 	if (mCancelRequested == true)
 	{
 		ResetMoveState();
+		BroadcastEndMovePath();
 		return;
 	}
 
@@ -212,10 +213,14 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 
 		mPathTileIndexes = MoveTemp(mPendingPushPath);
 		mPendingPushPath.Empty();
-		mMoveMode = EBoardMoveMode::Push;
 
-		// 뷰에 새 경로 통지 (걷기 곡선은 버리고 밀치기 연출로 전환)
-		BroadcastStartMovePath();
+		// 실제로 밀리는 경우에만 밀치기 모드로 전환하고 뷰에 새 경로 통지 (걷기 곡선은 버리고 밀치기 연출로 전환)
+		// 밀 곳이 없는 제자리 1칸 경로는 연출 없이 아래에서 바로 완료
+		if (mPathTileIndexes.Num() >= 2)
+		{
+			mMoveMode = EBoardMoveMode::Push;
+			BroadcastStartMovePath();
+		}
 
 		// 바뀐 새 경로를 시작하도록 인덱스 초기화
 		mCurrentStepIndex = 0;
@@ -231,9 +236,19 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 
 	// 마지막 칸에 도착했거나 다음 칸이 막혔으면 여기서 이동 완료
 	// 통지를 받은 쪽이 바로 새 이동을 시작할 수 있으므로 상태를 먼저 비우고 호출 (비우면 mOnFinished도 지워지니 복사해 둠)
+	// 뷰의 경로 종료 정리가 완료 통지보다 먼저 끝나야 다음 이동 연출과 섞이지 않음
 	FOnBoardMoveFinished Finished = mOnFinished;
 	ResetMoveState();
+	BroadcastEndMovePath();
 	Finished.ExecuteIfBound();
+}
+
+void UBoardMovementComponentModel::BroadcastEndMovePath()
+{
+	// 뷰가 바닥 오프셋을 더하므로 타일 바닥 기준 좌표를 넘김
+	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
+	const FTileTransform& TileTransform = Owner->GetTileTransform();
+	Owner->OnEndMovePath.Broadcast(TileTransform, GetTileMap()->TileToWorldTransform(TileTransform));
 }
 
 void UBoardMovementComponentModel::ResetMoveState()
