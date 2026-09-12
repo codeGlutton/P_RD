@@ -181,16 +181,27 @@ TSharedRef<SWidget> UGuidedTutorialWidget::RebuildWidget()
 	ContinueStyle.SetNormalPadding(FMargin(24, 9));
 	ContinueStyle.SetPressedPadding(FMargin(24, 9));
 	ContinueButton->SetStyle(ContinueStyle);
-	auto* ContinueLabel = MakeText(22);
+	ContinueLabel = MakeText(22);
 	ContinueLabel->SetColorAndOpacity(FLinearColor(.98f, .91f, .73f));
 	ContinueLabel->SetText(NSLOCTEXT("FieldGuide", "Continue", "확인"));
 	ContinueButton->AddChild(ContinueLabel);
-	auto* ContinueSlot = VBox->AddChildToVerticalBox(ContinueButton);
+	auto* Footer = WidgetTree->ConstructWidget<UHorizontalBox>();
+	DismissButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("GuideDismissButton"));
+	DismissButton->SetStyle(ContinueStyle);
+	auto* DismissLabel = MakeText(22);
+	DismissLabel->SetColorAndOpacity(FLinearColor(.98f, .91f, .73f));
+	DismissLabel->SetText(NSLOCTEXT("FieldGuide", "CloseReading", "안내 닫기"));
+	DismissButton->AddChild(DismissLabel);
+	DismissButton->SetVisibility(ESlateVisibility::Collapsed);
+	Footer->AddChildToHorizontalBox(DismissButton)->SetPadding(FMargin(0, 0, 12, 0));
+	Footer->AddChildToHorizontalBox(ContinueButton);
+	auto* ContinueSlot = VBox->AddChildToVerticalBox(Footer);
 	ContinueSlot->SetHorizontalAlignment(HAlign_Right);
 	ContinueSlot->SetPadding(FMargin(0, 12, 0, 0));
 	auto* CS = Canvas->AddChildToCanvas(Card);
 	CS->SetAutoSize(true);
-	if (!EncounterTitle.IsEmpty()) PresentEncounter(EncounterTitle, EncounterDescription);
+	if (!ReadingTitle.IsEmpty()) PresentReading(ReadingTitle, ReadingDescription, TargetWidget.Get(), bLastReading);
+	else if (!EncounterTitle.IsEmpty()) PresentEncounter(EncounterTitle, EncounterDescription);
 	else Present(CurrentStage, TargetWidget.Get(), bBoard);
 	return Super::RebuildWidget();
 }
@@ -219,7 +230,18 @@ void UGuidedTutorialWidget::NativeTick(const FGeometry& G, float Delta)
 	const auto Size = G.GetLocalSize();
 	if (!Card || Size.X < 1)
 		return;
-	const double Width = FMath::Min(460., Size.X - 48.);
+	double PreferredWidth = 460.;
+	// A shop icon can sit in the middle of a short landscape screen. Fit the
+	// callout beside that icon instead of clamping a tall card over its spotlight.
+	if (!ReadingTitle.IsEmpty() && TargetWidget.IsValid())
+	{
+		const auto& TG = TargetWidget->GetCachedGeometry();
+		const auto TA = G.AbsoluteToLocal(TG.LocalToAbsolute(FVector2D::ZeroVector));
+		const auto TB = G.AbsoluteToLocal(TG.LocalToAbsolute(TG.GetLocalSize()));
+		const double SideSpace = FMath::Max(TA.X, Size.X - TB.X) - 108. - 28.;
+		PreferredWidth = FMath::Clamp(SideSpace, 280., 460.);
+	}
+	const double Width = FMath::Min(PreferredWidth, Size.X - 48.);
 	Card->SetWidthOverride(Width);
 	const double Height = FMath::Max(120., Card->GetDesiredSize().Y);
 	const double Pad = 24., Gap = 108.;
@@ -385,6 +407,9 @@ void UGuidedTutorialWidget::SetNotice(const FText& Text)
 	if (Label)
 		Label->SetText(Text);
 }
+#if WITH_DEV_AUTOMATION_TESTS
+const FGeometry& UGuidedTutorialWidget::GetCalloutGeometryForTest() const { return Card->GetCachedGeometry(); }
+#endif
 
 void UGuidedTutorialWidget::PresentEncounter(const FText& Title, const FText& Description)
 {
@@ -393,4 +418,17 @@ void UGuidedTutorialWidget::PresentEncounter(const FText& Title, const FText& De
     Present(EGuidedStage::ReadEnemy, nullptr, true);
     if (Counter) Counter->SetText(Title);
     SetNotice(Description);
+}
+
+void UGuidedTutorialWidget::PresentReading(const FText& Title, const FText& Description, UWidget* Target, bool Last)
+{
+    ReadingTitle = Title; ReadingDescription = Description; bLastReading = Last;
+    Present(EGuidedStage::ReadEnemy, Target);
+    if (!Counter) return;
+    Counter->SetText(Title);
+    SetNotice(Description);
+    Counter->SetAutoWrapText(true);
+    Label->SetFont(FSlateFontInfo(Font, 24));
+    DismissButton->SetVisibility(ESlateVisibility::Visible);
+    ContinueLabel->SetText(Last ? NSLOCTEXT("FieldGuide", "ReadingDone", "안내 마침") : NSLOCTEXT("FieldGuide", "ReadingNext", "다음"));
 }

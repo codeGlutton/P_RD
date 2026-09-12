@@ -16,6 +16,18 @@
 #include "Tutorial/StaticTutorialRoomSpawnData.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
+bool UFirstPlayTutorialSubsystem::NeedsShopGuide() const
+{
+	return !GetUserMutableData()->SeenShopWalkthrough;
+}
+
+void UFirstPlayTutorialSubsystem::AcknowledgeShopGuide()
+{
+	GetUserMutableData()->SeenShopWalkthrough = true;
+	Save();
+	UE_LOG(LogTemp, Display, TEXT("First shop guide acknowledged"));
+}
+
 void UFirstPlayTutorialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);

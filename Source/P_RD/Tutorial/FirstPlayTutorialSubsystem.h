@@ -18,6 +18,8 @@ class P_RD_API UFirstPlayTutorialSubsystem : public UGameInstanceSubsystem, publ
 	void Deinitialize() override;
 	bool IsInputRestricted() const;
 	bool IsEncounterHintVisible() const;
+	bool NeedsShopGuide() const;
+	void AcknowledgeShopGuide();
 	bool IsPointerAllowed(const FVector2D& Position) const;
 	class UStaticCombatRoomSpawnData* PrepareScenario(class UStaticCombatRoomSpawnData* Original,
 		const TArray<TObjectPtr<class UPlayerUnitModel>>& Party);

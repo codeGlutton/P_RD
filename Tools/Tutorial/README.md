@@ -64,3 +64,16 @@ Stage Builder는 정상 생성 후 시작 방의 ID만 교체한다. 이후 방�
 
 검증: `P_RD.Tutorial.Encounters.Save`, `P_RD.Tutorial.Encounters.RenderAndIdle`.
 수동 확인: 일반 전투의 함정 발견 → 확인 → 같은 종류 반복 없음 → 다른 종류의 첫 발견 안내 → 앱 재실행 후 확인 기록 유지.
+
+## 첫 상점 설명 안내
+
+실제 `AShopGameMode::BeginRoom`에서 상점 HUD를 연 뒤 `ShowFirstVisitGuide`를 호출한다. 같은 WBP를 재사용하는 레벨업 보상 화면과 상점 외 프리뷰에서는 실행하지 않는다.
+
+기존 `UGuidedTutorialWidget`의 화살표·테두리·주변 어둡게 표시를 재사용한다. 골드, 아티팩트 탭/상품/구매/인벤토리, 스킬 탭/용병/장착 칸, 휴식 탭/실행, 용병 고용 탭, 나가기를 실제 위젯에 하나씩 대응시킨다. 다음은 설명 대상에 맞는 탭만 전환한다. 구매·장착·휴식·고용 입력을 요구하거나 대신 실행하지 않는다. 안내 닫기와 Android 뒤로가기는 모든 단계에서 가능하다. 읽는 동안 배경 터치는 막아 실수로 거래하지 않게 한다.
+
+안내 닫기·뒤로가기·마지막 장 완료 시 프로필 `SeenShopWalkthrough`를 저장한다. 일반 새로하기/런 포기와 별개로 유지한다. 강제 종료나 화면 철수는 읽음으로 기록하지 않는다. 기본 전투 튜토리얼과 함정 안내 기록에는 영향을 주지 않는다.
+
+검증: `P_RD.Tutorial.Shop.Save`, `P_RD.Tutorial.Shop.ReadingAndRender` (12단계 실제 상점 위젯 대상, 두 화면 크기, 거래 없이 진행, 즉시 닫기, 뒤로가기). 공용 강조 위젯 변경 시 Guided/Encounters 테스트도 실행한다.
+개발 빌드에서 `Stage.FixedFirstRoomType Shop`으로 새 런을 만들면 실제 상점부터 시험할 수 있다. 검사 후 실행 인자를 제거하며 배포 설정이나 상점 DA는 바꾸지 않는다.
+
+2026-09-12 아이콘 복구: 아이콘 복구 커밋 `492cbcae`를 반영하고 SVN r434의 검토된 텍스처 60개를 manifest 기준으로 사본에 포함했다. `audit_ui_bindings.py` 및 `verify_ui_bindings.py`로 연결과 실제 로드를 확인한다. 원본 사본의 SVN 기준 r432에 복구 텍스처만 보충한 상태다.

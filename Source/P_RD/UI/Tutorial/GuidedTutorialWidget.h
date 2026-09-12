@@ -15,6 +15,8 @@ class P_RD_API UGuidedTutorialWidget : public UUserWidget
 		return ContinueButton;
 	}
 	void PresentEncounter(const FText& Title, const FText& Description);
+	void PresentReading(const FText& Title, const FText& Description, UWidget* Target, bool Last = false);
+	class UButton* GetDismissButton() const { return DismissButton; }
 	static FText Instruction(EGuidedStage Stage);
 	void SetNotice(const FText &Text);
 	void SetWorldFocus(const TArray<FVector2D> &Corners)
@@ -22,6 +24,7 @@ class P_RD_API UGuidedTutorialWidget : public UUserWidget
 		WorldFocus = Corners;
 	}
 #if WITH_DEV_AUTOMATION_TESTS
+	const FGeometry& GetCalloutGeometryForTest() const;
 	void UpdateLayoutForTest()
 	{
 		NativeTick(GetCachedGeometry(), .016f);
@@ -42,6 +45,10 @@ class P_RD_API UGuidedTutorialWidget : public UUserWidget
 	UPROPERTY() TObjectPtr<class UTextBlock> Label;
 	UPROPERTY() TObjectPtr<class UTextBlock> GestureText;
 	UPROPERTY() TObjectPtr<class UButton> ContinueButton;
+	UPROPERTY() TObjectPtr<class UButton> DismissButton;
+	UPROPERTY() TObjectPtr<class UTextBlock> ContinueLabel;
+	FText ReadingTitle, ReadingDescription;
+	bool bLastReading = false;
 	TWeakObjectPtr<UWidget> TargetWidget;
 	EGuidedStage CurrentStage = EGuidedStage::OpenSkills;
 	bool bBoard = false, bFocus = false;
