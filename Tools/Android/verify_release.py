@@ -19,6 +19,16 @@ class VerificationError(RuntimeError):
     pass
 
 
+def verify_no_advertising_manifest(manifest: str) -> None:
+    # UE enables AdMob manifest registration by default, independently of a
+    # project's custom SDK integration. Reject leftovers in AAB and APK output.
+    if any(marker in manifest for marker in (
+        "com.google.android.gms.ads.", "com.google.android.gms.permission.AD_ID",
+        "android.permission.ACCESS_ADSERVICES_",
+    )):
+        raise VerificationError("This ad-free release must not contain advertising manifest components or permissions")
+
+
 def run_tool(args: list[str | Path]) -> str:
     result = subprocess.run([str(arg) for arg in args], capture_output=True, text=True,
                             encoding="utf-8", errors="replace")
@@ -93,8 +103,12 @@ def verify_native_libraries(artifact: Path) -> list[dict]:
 
 
 def verify_manifest(xml: str, package: str, min_target: int) -> dict:
+    verify_no_advertising_manifest(xml)
     root = ET.fromstring(xml)
     ns = "{http://schemas.android.com/apk/res/android}"
+    if any(item.get(ns + "name") == "com.android.vending.BILLING"
+           for item in root.findall("uses-permission")):
+        raise VerificationError("This release must not request the unused Play BILLING permission")
     if root.get("package") != package:
         raise VerificationError("Manifest package name does not match the release package")
     app = root.find("application")
@@ -116,9 +130,12 @@ def verify_artifact(artifact: Path, sdk: Path, java_home: Path, bundletool: Path
         raise VerificationError("Release artifact does not exist")
     if artifact.suffix.lower() == ".apk":
         badging = run_tool([android_tool(sdk, "aapt"), "dump", "badging", artifact])
+        if "uses-permission: name='com.android.vending.BILLING'" in badging:
+            raise VerificationError("This release must not request the unused Play BILLING permission")
         if "application-debuggable" in badging or "application-testOnly" in badging:
             raise VerificationError("APK is debuggable or test-only")
         manifest_tree = run_tool([android_tool(sdk, "aapt"), "dump", "xmltree", artifact, "AndroidManifest.xml"])
+        verify_no_advertising_manifest(manifest_tree)
         if re.search(r"android:testOnly[^\n]*\(type 0x12\)0xffffffff", manifest_tree, re.I):
             raise VerificationError("APK is test-only")
         if not re.search(r"^package: name='" + re.escape(package) + "'", badging, re.M):
@@ -171,7 +188,7 @@ def main() -> None:
     parser.add_argument("--java-home", type=Path, default=os.environ.get("JAVA_HOME"))
     parser.add_argument("--bundletool", type=Path)
     parser.add_argument("--expected-cert-sha256", default=os.environ.get("RD_ANDROID_UPLOAD_CERT_SHA256", ""))
-    parser.add_argument("--package", default="com.AssortRock.P_RD")
+    parser.add_argument("--package", default="com.aurelight.mercenaryguildoftheruinedkingdom")
     parser.add_argument("--min-target-sdk", type=int, default=36)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()

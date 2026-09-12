@@ -60,7 +60,7 @@ bool FCreditsSettingsEntryTest::RunTest(const FString& Parameters)
 				UButton* Button = Cast<UButton>(Settings->GetWidgetFromName(bLicense ? TEXT("RuntimeLicensesButton") : TEXT("RuntimeCreditsButton")));
 				if (!TestNotNull(TEXT("Visible entry button"), Button)) { return false; }
 				TestTrue(TEXT("Entry is visible"), Button->IsVisible());
-				const FString Expected = bKorean ? (bLicense ? TEXT("라이선스") : TEXT("크레딧")) : (bLicense ? TEXT("Licenses") : TEXT("Credits"));
+				const FString Expected = bKorean ? (bLicense ? TEXT("개인정보 · 라이선스") : TEXT("크레딧")) : (bLicense ? TEXT("Privacy & Licenses") : TEXT("Credits"));
 				TestEqual(TEXT("Entry follows selected language"), CastChecked<UTextBlock>(Button->GetContent())->GetText().ToString(), Expected);
 				Button->OnClicked.Broadcast();
 				UCreditsPanelWidget* Reader = Cast<UCreditsPanelWidget>(ReaderProperty->GetObjectPropertyValue_InContainer(Settings));
@@ -90,7 +90,7 @@ bool FCreditsDocumentsTest::RunTest(const FString& Parameters)
 {
 	for (const TCHAR* Relative : { TEXT("Credits/Models.txt"), TEXT("Credits/AI.txt"), TEXT("Credits/AI_KO.txt"), TEXT("Credits/Audio.txt"), TEXT("Credits/VFX.txt"), TEXT("Credits/Fonts.txt"), TEXT("Credits/Engine.txt"),
 		TEXT("Licenses/GowunBatang.txt"), TEXT("Licenses/LINESeedKR.txt"), TEXT("Licenses/Oswald.txt"), TEXT("Licenses/Roboto.txt"),
-		TEXT("Licenses/Noto.txt"), TEXT("Licenses/DroidSans.txt"), TEXT("Licenses/LastResort.txt") })
+		TEXT("Licenses/Noto.txt"), TEXT("Licenses/DroidSans.txt"), TEXT("Licenses/LastResort.txt"), TEXT("Policies/Privacy.txt"), TEXT("Policies/Privacy_KO.txt") })
 	{
 		FString Text;
 		TestTrue(Relative, FFileHelper::LoadFileToString(Text, *(UCreditsPanelWidget::LegalDirectory() / Relative)));

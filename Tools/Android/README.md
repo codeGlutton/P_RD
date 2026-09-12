@@ -54,7 +54,7 @@ python Tools/Android/build_release.py --version-code 2 --output outputs/android-
 
 The sample version code is only an example. The tool cannot know which codes have already been used in your Play Console. Preflight fails before copying/cooking if any required signing input is missing or the certificate is wrong/debug-only.
 
-The script copies source/config/plugin/content inputs into a temporary project, disables the development SVN junction startup script in that copy, and builds Android ASTC Shipping with `ForDistribution=True`, AAB enabled and the supplied upload key. Credentials and generated Gradle files stay inside that temporary tree and are removed on normal completion or handled failure. Build console/log output is password-redacted. A forcibly killed process can leave a temporary directory; remove only its `P_RD-AndroidRelease-*` tree after confirming no build still uses it.
+The script copies source/config/plugin/content inputs into a temporary project, disables the development SVN junction startup script in that copy, and builds Android ASTC Shipping with `ForDistribution=True`, AAB enabled and the supplied upload key. The release copy enables GooglePAD and disables packaging data inside the base APK, so Unreal delivers the game's main OBB as the `obbassets` install-time asset pack. Ordinary development APK settings stay unchanged. Verify the final AAB contains `obbassets/assets/main.obb.png` and measure generated download sizes before upload; the game data should not inflate the base module beyond Play's limit. Credentials and generated Gradle files stay inside that temporary tree and are removed on normal completion or handled failure. Build console/log output is password-redacted. A forcibly killed process can leave a temporary directory; remove only its `P_RD-AndroidRelease-*` tree after confirming no build still uses it.
 
 Both native build invocations disable adaptive unity. The disposable copy has no Git metadata, so Unreal would otherwise treat every writable source file as locally changed and unnecessarily split all unity translation units. Normal unity compilation remains enabled, matching a clean Git checkout.
 
@@ -64,6 +64,8 @@ The release checks cover:
 
 - Pinned upload certificate and non-debug signer; valid AAB JAR/APK signatures.
 - Final package name, target SDK 36+, no debuggable/test-only application.
+- No unused Play `BILLING` permission: this game has no in-app purchase flow. Android config explicitly disables Unreal's inherited IAP default; Google rejects an unversioned billing permission as legacy AIDL billing.
+- No Google advertising manifest components or advertising ID/AdServices permissions. Android config explicitly disables Unreal's inherited AdMob registration, which otherwise adds `AdActivity` even without the SDK.
 - AAB requests 16 KB APK page alignment; every included native ELF has compatible LOAD segments and GNU_RELRO.
 - APK ZIP 16 KB alignment, including the universal APK produced from the actual AAB.
 
@@ -75,6 +77,20 @@ python Tools/Android/verify_release.py path/to/P_RD.apk
 ```
 
 These checks do not prove device execution, Play acceptance, asset completeness, performance, or account/policy compliance. Complete installation/update tests on a 16 KB device/emulator, launch-to-combat smoke tests, save/resume tests, and a Play internal-testing upload before public release. Test both cold and warm media caches. Capture the exact Git commit, SVN revision and verification report with the release.
+
+## Ad-free internal beta
+
+The Android package is `com.aurelight.mercenaryguildoftheruinedkingdom` for the first Play registration. Older local `com.AssortRock.P_RD` test installations are a different app and retain their own saves.
+
+```powershell
+python Tools/Android/build_release.py --version-code 5 --output outputs/android-beta-v5
+```
+
+The beta contains no Google Mobile Ads SDK, demo ad unit or entry-ad subsystem. New Start and Continue invoke their original game actions directly, and their localized captions have no advertising suffix. The former `--beta-entry-ads` option has been removed. `verification.json` records `advertising_enabled: false`.
+
+Before uploading a release, inspect the final AAB/APK manifests and DEX payloads for leftover advertising SDK components, advertising ID/AdServices permissions and the former demo bridge. Keep the existing package and upload certificate so Play can distribute an update over the installed beta.
+
+Validate `P_RD.UI.Title.MenuRowsClickable` and both entry paths on Android. Native packaging, Play installation and actual device execution remain separate verification steps.
 
 ## Mobile memory and texture policy
 

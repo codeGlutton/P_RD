@@ -31,8 +31,7 @@ UStaticCombatRoomSpawnData* UFirstPlayTutorialSubsystem::PrepareScenario(
 		UE_LOG(LogTemp, Error, TEXT("First battle scenario needs a basic attack in party slot 0."));
 		return Original;
 	}
-	auto* Base = LoadObject<UStaticCombatRoomSpawnData>(nullptr,
-		TEXT("/Game/BP/DataAsset/Room/Monster/DA_TestMonster_Stage1_0.DA_TestMonster_Stage1_0"));
+	auto* Base = FFirstBattleScenario::LoadTemplate();
 	if (!Base) return Original;
 	ScenarioRoom = DuplicateObject<UStaticCombatRoomSpawnData>(Base, this);
 	FFirstBattleScenario::ApplyLayout(*ScenarioRoom);

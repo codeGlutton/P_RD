@@ -10,6 +10,7 @@ enum class EGuidedStage : uint8;
 // Coordinates are board coordinates, independent of camera, viewport size and party shuffle.
 struct P_RD_API FFirstBattleScenario
 {
+	static UStaticCombatRoomSpawnData* LoadTemplate();
 	static FTileIndex Start() { return {4, 2}; }
 	static FTileIndex Move() { return {4, 3}; }
 	static FTileIndex Enemy() { return {4, 4}; }

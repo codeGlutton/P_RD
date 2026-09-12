@@ -74,8 +74,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFirstBattleScenarioTest, "P_RD.Tutorial.Guided
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FFirstBattleScenarioTest::RunTest(const FString&)
 {
-	auto* Source = LoadObject<UStaticCombatRoomSpawnData>(nullptr,
-		TEXT("/Game/BP/DataAsset/Room/Monster/DA_TestMonster_Stage1_0.DA_TestMonster_Stage1_0"));
+	auto* Source = FFirstBattleScenario::LoadTemplate();
 	if (!TestNotNull(TEXT("Authored first-room template exists"), Source)) return false;
 	const auto OriginalStart = Source->mPlayerTransforms[0];
 	auto* Room = DuplicateObject<UStaticCombatRoomSpawnData>(Source, GetTransientPackage());

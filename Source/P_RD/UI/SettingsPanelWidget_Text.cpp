@@ -146,7 +146,10 @@ void USettingsPanelWidget::SyncText() const
 	{
 		if (UTextBlock* Label = Cast<UTextBlock>(mLicensesButton->GetContent()))
 		{
-			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("라이선스") : TEXT("Licenses")));
+			FSlateFontInfo Font = Label->GetFont();
+			Font.Size = 19;
+			Label->SetFont(Font);
+			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("개인정보 · 라이선스") : TEXT("Privacy & Licenses")));
 		}
 	}
 	const TFunction<UTextBlock*(UWidget*)> FindFirstTextBlock = [&FindFirstTextBlock](UWidget* Root) -> UTextBlock*
