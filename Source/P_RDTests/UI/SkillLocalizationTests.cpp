@@ -37,7 +37,11 @@ bool FSkillLocalizationTest::RunTest(const FString&)
         Loc.WaitForAsyncTasks();
         Loc.UpdateFromLocalizationResource(FPaths::ProjectContentDir()/TEXT("Localization/Game")/Culture/TEXT("Game.locres"));
         for (const auto* Skill : Skills)
-            for (const FText* Text : { &Skill->mName, &Skill->mDescription })
+        {
+            // Some screens read the serialized description; others generate it
+            // from effect layers. Both must follow culture changes.
+            const FText GeneratedDescription = Skill->MakeDescription();
+            for (const FText* Text : { &Skill->mName, &Skill->mDescription, &GeneratedDescription })
             {
                 const FString* Source = FTextInspector::GetSourceString(*Text);
                 if (!Source || !HasKorean(*Source)) continue;
@@ -49,6 +53,7 @@ bool FSkillLocalizationTest::RunTest(const FString&)
                         *Culture,*Skill->GetName(),**Source,*Text->ToString(),Namespace.IsSet()?*Namespace.GetValue():TEXT("NONE"),Key.IsSet()?*Key.GetValue():TEXT("NONE"),Text->IsCultureInvariant()));
                 }
             }
+        }
         auto* Dialog = CreateWidget<USkillReplacementDialog>(GEditor->GetEditorWorldContext().World());
         Dialog->SetSkills(FText::FromString(TEXT("A")), FText::FromString(TEXT("B")), FSlateFontInfo());
         auto* Title = Cast<UTextBlock>(Dialog->GetWidgetFromName(TEXT("ReplaceTitle")));

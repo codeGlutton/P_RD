@@ -10,10 +10,7 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Pull::GetTagEffectClass() const
 
 FText FSkillEffectLayer_Pull::MakeDescription() const
 {
-	return FText::Format(
-		LOCTEXT("PullFormat", "대상을 {0}칸 끌어당깁니다."),
-		FText::AsNumber(mTagGain)
-	);
+	return LOCTEXT("PullFormat", "대상을 시전자 옆까지 끌어옵니다.");
 }
 
 #undef LOCTEXT_NAMESPACE

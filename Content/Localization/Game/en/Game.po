@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-11 03:41\n"
-"PO-Revision-Date: 2026-09-11 03:41\n"
+"POT-Creation-Date: 2026-09-12 07:45\n"
+"PO-Revision-Date: 2026-09-12 07:45\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -1260,22 +1260,22 @@ msgid "날개치기"
 msgstr "Wing Beat"
 
 #. Key:	954E1A224BF7CE80EAC99EB508E29E45
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_EarthQuake.DA_Goelm_EarthQuake.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_EarthQuake.DA_Goelm_EarthQuake.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_EarthQuake.DA_Golem_EarthQuake.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_EarthQuake.DA_Golem_EarthQuake.mName
 msgctxt ",954E1A224BF7CE80EAC99EB508E29E45"
 msgid "지진"
 msgstr "Earthquake"
 
 #. Key:	83BECC2C4BA44FD0CDD92AA9292CFB47
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Stamp.DA_Goelm_Stamp.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Stamp.DA_Goelm_Stamp.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_Stamp.DA_Golem_Stamp.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_Stamp.DA_Golem_Stamp.mName
 msgctxt ",83BECC2C4BA44FD0CDD92AA9292CFB47"
 msgid "부수기"
 msgstr "Smash"
 
 #. Key:	26C3C77C49C1D0EF4F42B8AB1EF45D4F
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Swing.DA_Goelm_Swing.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Goelm_Swing.DA_Goelm_Swing.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_Swing.DA_Golem_Swing.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage1/Golem/DA_Golem_Swing.DA_Golem_Swing.mName
 msgctxt ",26C3C77C49C1D0EF4F42B8AB1EF45D4F"
 msgid "휘두르기"
 msgstr "Swing"
@@ -1497,6 +1497,34 @@ msgctxt ",017916C44758A8ACE7AC6BA89D8F5A2D"
 msgid "나쁜 장난"
 msgstr "Nasty Trick"
 
+#. Key:	48B40C1C4E1FE046F3DB04A7FB93D03D
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Rat/DA_Rat_ExplosionShot.DA_Rat_ExplosionShot.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Rat/DA_Rat_ExplosionShot.DA_Rat_ExplosionShot.mName
+msgctxt ",48B40C1C4E1FE046F3DB04A7FB93D03D"
+msgid "지원 포격"
+msgstr "Support Bombardment"
+
+#. Key:	7F41A9554395B21E0B4B10956CC9FB9C
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Rat/DA_Rat_Shot.DA_Rat_Shot.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Rat/DA_Rat_Shot.DA_Rat_Shot.mName
+msgctxt ",7F41A9554395B21E0B4B10956CC9FB9C"
+msgid "사격"
+msgstr "Shot"
+
+#. Key:	DF50CAE54F71AD28307615B51E50DF4F
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Red_Spider/DA_Red_Spider_Attack_Web_Explosion.DA_Red_Spider_Attack_Web_Explosion.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Red_Spider/DA_Red_Spider_Attack_Web_Explosion.DA_Red_Spider_Attack_Web_Explosion.mName
+msgctxt ",DF50CAE54F71AD28307615B51E50DF4F"
+msgid "거미줄 폭파"
+msgstr "Web Detonation"
+
+#. Key:	7D6E111D45A3FAE194D68EB5F347C79E
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Red_Spider/DA_Red_Spider_Attack_Web_Roots.DA_Red_Spider_Attack_Web_Roots.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Red_Spider/DA_Red_Spider_Attack_Web_Roots.DA_Red_Spider_Attack_Web_Roots.mName
+msgctxt ",7D6E111D45A3FAE194D68EB5F347C79E"
+msgid "거미줄 폭파"
+msgstr "Web Detonation"
+
 #. Key:	B40FAB4B4B345D7656487E93BF60A75B
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Howl.DA_Skeleton_Golem_Howl.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Howl.DA_Skeleton_Golem_Howl.mName
@@ -1512,11 +1540,11 @@ msgid "발차기"
 msgstr "Kick"
 
 #. Key:	7AB7FBC147A1DB9254165FBDAAD5C63E
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Stamp.DA_Skeleton_Golem_Stamp.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Stamp.DA_Skeleton_Golem_Stamp.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_SeismicToss.DA_Skeleton_Golem_SeismicToss.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_SeismicToss.DA_Skeleton_Golem_SeismicToss.mName
 msgctxt ",7AB7FBC147A1DB9254165FBDAAD5C63E"
-msgid "부수기"
-msgstr "Smash"
+msgid "바위 던지기"
+msgstr "Boulder Toss"
 
 #. Key:	0D173D624F4251F5A78A70BB9DA0539A
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Swing.DA_Skeleton_Golem_Swing.mName
@@ -1539,19 +1567,33 @@ msgctxt ",E011CE394B61448AA8776B81B577966A"
 msgid "펀치"
 msgstr "Skeleton Punch"
 
-#. Key:	FC4B370040004F294517EABB8D7E6518
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Attack_Claimthebone.DA_Skeleton_Ranged_Attack_Claimthebone.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Attack_Claimthebone.DA_Skeleton_Ranged_Attack_Claimthebone.mName
-msgctxt ",FC4B370040004F294517EABB8D7E6518"
-msgid "명치 때리기"
-msgstr "Gut Punch"
+#. Key:	15D829CF469B38ECAB58A2BD9954A897
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Melee/DA_Skeleton_Melee_Clatter.DA_Skeleton_Melee_Clatter.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Melee/DA_Skeleton_Melee_Clatter.DA_Skeleton_Melee_Clatter.mName
+msgctxt ",15D829CF469B38ECAB58A2BD9954A897"
+msgid "달그락"
+msgstr "Clatter"
 
 #. Key:	5C3383984DD6A18784DA73BBA9C49E55
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Attack_Shot.DA_Skeleton_Ranged_Attack_Shot.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Attack_Shot.DA_Skeleton_Ranged_Attack_Shot.mName
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Shot.DA_Skeleton_Ranged_Shot.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Shot.DA_Skeleton_Ranged_Shot.mName
 msgctxt ",5C3383984DD6A18784DA73BBA9C49E55"
 msgid "사격"
 msgstr "Shot"
+
+#. Key:	FC4B370040004F294517EABB8D7E6518
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Shove.DA_Skeleton_Ranged_Shove.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Ranged/DA_Skeleton_Ranged_Shove.DA_Skeleton_Ranged_Shove.mName
+msgctxt ",FC4B370040004F294517EABB8D7E6518"
+msgid "밀치기"
+msgstr "Shove"
+
+#. Key:	40F86E594F4E5E4BA5EF23B738196A44
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/SkeletonBird/DA_SkeletonBird_Attack.DA_SkeletonBird_Attack.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/SkeletonBird/DA_SkeletonBird_Attack.DA_SkeletonBird_Attack.mName
+msgctxt ",40F86E594F4E5E4BA5EF23B738196A44"
+msgid "공격"
+msgstr "Attack"
 
 #. Key:	3F19865E4B068519D3AAB08555AE3A51
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Slime_Explosion/DA_Slime_Explosion.DA_Slime_Explosion.mName
@@ -1559,20 +1601,6 @@ msgstr "Shot"
 msgctxt ",3F19865E4B068519D3AAB08555AE3A51"
 msgid "슬라임 폭발"
 msgstr "Slime Explosion"
-
-#. Key:	DF50CAE54F71AD28307615B51E50DF4F
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Spider_Web/DA_Spider_Web_Attack_Web_Explosion.DA_Spider_Web_Attack_Web_Explosion.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Spider_Web/DA_Spider_Web_Attack_Web_Explosion.DA_Spider_Web_Attack_Web_Explosion.mName
-msgctxt ",DF50CAE54F71AD28307615B51E50DF4F"
-msgid "거미줄 폭파"
-msgstr "Web Detonation"
-
-#. Key:	7D6E111D45A3FAE194D68EB5F347C79E
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Spider_Web/DA_Spider_Web_Attack_Web_Roots.DA_Spider_Web_Attack_Web_Roots.mName
-#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Spider_Web/DA_Spider_Web_Attack_Web_Roots.DA_Spider_Web_Attack_Web_Roots.mName
-msgctxt ",7D6E111D45A3FAE194D68EB5F347C79E"
-msgid "거미줄 폭파"
-msgstr "Web Detonation"
 
 #. Key:	355E8C474B6FC5BE69C0F780E5EF9E92
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Demon/DA_Demon_Attack_Demonic_Bargain.DA_Demon_Attack_Demonic_Bargain.mName
@@ -2855,6 +2883,20 @@ msgctxt ",82DDA30F43F1C89A0F4492B9B58439CA"
 msgid "Rat"
 msgstr "Rat"
 
+#. Key:	DC8D7A1B49EAE84F47FC7A95B411EF0F
+#. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_Red_SpiderUnit.DA_Red_SpiderUnit.mDisplayName
+#: /Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_Red_SpiderUnit.DA_Red_SpiderUnit.mDisplayName
+msgctxt ",DC8D7A1B49EAE84F47FC7A95B411EF0F"
+msgid "Red_Spider"
+msgstr "Red Spider"
+
+#. Key:	2936593647B04239DFB6638C5D51B867
+#. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonBirdUnit.DA_SkeletonBirdUnit.mDisplayName
+#: /Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonBirdUnit.DA_SkeletonBirdUnit.mDisplayName
+msgctxt ",2936593647B04239DFB6638C5D51B867"
+msgid "해골 새"
+msgstr "Skeleton Bird"
+
 #. Key:	B1ABF5934F1874FE188BA8B2A813A546
 #. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonGolem.DA_SkeletonGolem.mDisplayName
 #: /Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonGolem.DA_SkeletonGolem.mDisplayName
@@ -2882,13 +2924,6 @@ msgstr "Skeleton Minion Ranged"
 msgctxt ",0F56AC4E4897DEB70BD5A795F5098A43"
 msgid "Slime_Explosion"
 msgstr "Slime_Explosion"
-
-#. Key:	DC8D7A1B49EAE84F47FC7A95B411EF0F
-#. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_Spider_WebUnit.DA_Spider_WebUnit.mDisplayName
-#: /Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_Spider_WebUnit.DA_Spider_WebUnit.mDisplayName
-msgctxt ",DC8D7A1B49EAE84F47FC7A95B411EF0F"
-msgid "Spider_Web"
-msgstr "Spider_Web"
 
 #. Key:	DD18DD9F487D85896B508CA873A0F023
 #. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_DemonUnit.DA_DemonUnit.mDisplayName
@@ -5649,8 +5684,8 @@ msgid "입장"
 msgstr "Enter"
 
 #. Key:	TagGainFormat
-#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(59)
-#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(59)
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(61)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(61)
 msgctxt "SkillEffectLayer_TagBase,TagGainFormat"
 msgid "{0} 태그를 {1} 중첩 부여합니다."
 msgstr "Applies {1} stacks of {0}."
@@ -5733,18 +5768,18 @@ msgid "중독"
 msgstr "Poison"
 
 #. Key:	PullFormat
-#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(14)
-#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(14)
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(13)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Pull.cpp(13)
 msgctxt "SkillEffectLayer_Pull,PullFormat"
-msgid "대상을 {0}칸 끌어당깁니다."
-msgstr "Pulls the target {0} tiles."
+msgid "대상을 시전자 옆까지 끌어옵니다."
+msgstr "Pulls the target next to the caster."
 
 #. Key:	PushFormat
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.cpp(14)
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Push.cpp(14)
 msgctxt "SkillEffectLayer_Push,PushFormat"
-msgid "대상을 {0}칸 밀어냅니다."
-msgstr "Pushes the target {0} tiles."
+msgid "시전자가 바라보는 방향으로 {0}칸 밀어냅니다."
+msgstr "Pushes the target {0} tiles in the direction the caster is facing."
 
 #. Key:	RootName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Root.cpp(20)
@@ -5781,6 +5816,13 @@ msgctxt "SkillEffectLayer_Stun,StunName"
 msgid "기절"
 msgstr "Stun"
 
+#. Key:	TeleportDesc
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Teleport.cpp(44)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Teleport.cpp(44)
+msgctxt "SkillEffectLayer_Teleport,TeleportDesc"
+msgid "지정한 위치로 순간이동합니다."
+msgstr "Teleports to the selected location."
+
 #. Key:	VigorName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Vigor.cpp(13)
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Vigor.cpp(13)
@@ -5816,9 +5858,23 @@ msgctxt "StaticSkillData,EffectLineFormat"
 msgid "- {0}"
 msgstr "- {0}"
 
+#. Key:	PreviewHeaderFormat
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/StaticUnitSkillData.cpp(14)
+#: Source/P_RD/DataAsset/SkillData/StaticUnitSkillData.cpp(14)
+msgctxt "StaticSkillData,PreviewHeaderFormat"
+msgid "※ 컨디션 무관 랜덤 적용"
+msgstr "※ Random result, regardless of condition"
+
+#. Key:	DescriptionFormat
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/StaticUnitSkillData.cpp(16)
+#: Source/P_RD/DataAsset/SkillData/StaticUnitSkillData.cpp(16)
+msgctxt "StaticSkillData,DescriptionFormat"
+msgid "{0}\n{1}"
+msgstr "{0}\n{1}"
+
 #. Key:	CurrentCombatArea
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1380)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(1380)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1388)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(1388)
 msgctxt "CombatGameMode,CurrentCombatArea"
 msgid "현재 전투 지역"
 msgstr "Current Combat Area"
@@ -5852,57 +5908,57 @@ msgid "EMPTY"
 msgstr "EMPTY"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2241)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2241)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2265)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2265)
 msgctxt "CombatGameMode,ArtifactFallbackName"
 msgid "Artifact {0}"
 msgstr "Artifact {0}"
 
 #. Key:	MovedTiles
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2480)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2480)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2504)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2504)
 msgctxt "CombatFloatingLog,MovedTiles"
 msgid "이동 {0}칸"
 msgstr "Move {0} tiles"
 
 #. Key:	EnteredBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2487)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2487)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2511)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2511)
 msgctxt "CombatFloatingLog,EnteredBoard"
 msgid "등장"
 msgstr "Entrance"
 
 #. Key:	ExitedBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2494)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2494)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2518)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2518)
 msgctxt "CombatFloatingLog,ExitedBoard"
 msgid "전투불능"
 msgstr "Defeated"
 
 #. Key:	VictoryRewardTitle
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2761)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2761)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2785)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2785)
 msgctxt "CombatGameMode,VictoryRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	UnknownRewardMercenary
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2804)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2804)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2828)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2828)
 msgctxt "CombatGameMode,UnknownRewardMercenary"
 msgid "Mercenary"
 msgstr "Mercenary"
 
 #. Key:	ArtifactStatBoost
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2940)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2940)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2964)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2964)
 msgctxt "CombatGameMode,ArtifactStatBoost"
 msgid "파티 전체 능력치를 강화합니다."
 msgstr "Boosts the stats of the entire party."
 
 #. Key:	ArtifactPartyWide
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2944)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2944)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2968)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2968)
 msgctxt "CombatGameMode,ArtifactPartyWide"
 msgid "파티 전체에 적용됩니다."
 msgstr "Applies to the entire party."
@@ -8372,260 +8428,260 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. Key:	SettingsLedger
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(180)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(180)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(197)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(197)
 msgctxt "SettingsPanelWidget_Text,SettingsLedger"
 msgid "SETTINGS LEDGER"
 msgstr "SETTINGS LEDGER"
 
 #. Key:	Back
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(181)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(181)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(198)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(198)
 msgctxt "SettingsPanelWidget_Text,Back"
 msgid "Back"
 msgstr "Back"
 
 #. Key:	SaveAndExit
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(182)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(182)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(199)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(199)
 msgctxt "SettingsPanelWidget_Text,SaveAndExit"
 msgid "Save and Exit"
 msgstr "Save and Exit"
 
 #. Key:	AbandonRun
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(183)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(183)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(200)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(200)
 msgctxt "SettingsPanelWidget_Text,AbandonRun"
 msgid "Abandon Run"
 msgstr "Abandon Run"
 
 #. Key:	Reset
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(184)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(184)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(201)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(201)
 msgctxt "SettingsPanelWidget_Text,Reset"
 msgid "Reset"
 msgstr "Reset"
 
 #. Key:	Graphics
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(190)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(190)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(207)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(207)
 msgctxt "SettingsPanelWidget_Text,Graphics"
 msgid "Graphics"
 msgstr "Graphics"
 
 #. Key:	Volume
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(192)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(192)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(209)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(209)
 msgctxt "SettingsPanelWidget_Text,Volume"
 msgid "Volume"
 msgstr "Volume"
 
 #. Key:	Gameplay
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(194)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(194)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(211)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(211)
 msgctxt "SettingsPanelWidget_Text,Gameplay"
 msgid "Gameplay"
 msgstr "Gameplay"
 
 #. Key:	FPS
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(195)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(195)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(212)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(212)
 msgctxt "SettingsPanelWidget_Text,FPS"
 msgid "FPS"
 msgstr "FPS"
 
 #. Key:	30
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(197)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(197)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(214)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(214)
 msgctxt "SettingsPanelWidget_Text,30"
 msgid "30"
 msgstr "30"
 
 #. Key:	60
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(198)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(198)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(215)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(215)
 msgctxt "SettingsPanelWidget_Text,60"
 msgid "60"
 msgstr "60"
 
 #. Key:	Quality
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(199)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(199)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(216)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(216)
 msgctxt "SettingsPanelWidget_Text,Quality"
 msgid "Quality"
 msgstr "Quality"
 
 #. Key:	Low
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(201)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(201)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(218)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(218)
 msgctxt "SettingsPanelWidget_Text,Low"
 msgid "LOW"
 msgstr "LOW"
 
 #. Key:	Mid
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(202)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(202)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(219)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(219)
 msgctxt "SettingsPanelWidget_Text,Mid"
 msgid "MID"
 msgstr "MID"
 
 #. Key:	High
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(203)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(203)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(220)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(220)
 msgctxt "SettingsPanelWidget_Text,High"
 msgid "HIGH"
 msgstr "HIGH"
 
 #. Key:	Screen Shake
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(213)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(213)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(230)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(230)
 msgctxt "SettingsPanelWidget_Text,Screen Shake"
 msgid "Screen Shake"
 msgstr "Screen Shake"
 
 #. Key:	Effects
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(215)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(215)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(232)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(232)
 msgctxt "SettingsPanelWidget_Text,Effects"
 msgid "Effects"
 msgstr "Effects"
 
 #. Key:	Language
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(218)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(218)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(235)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(235)
 msgctxt "SettingsPanelWidget_Text,Language"
 msgid "Language"
 msgstr "Language"
 
 #. Key:	Master
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(225)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(225)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(242)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(242)
 msgctxt "SettingsPanelWidget_Text,Master"
 msgid "Master"
 msgstr "Master"
 
 #. Key:	BGM
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(227)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(227)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(244)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(244)
 msgctxt "SettingsPanelWidget_Text,BGM"
 msgid "BGM"
 msgstr "BGM"
 
 #. Key:	SFX
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(229)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(229)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(246)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(246)
 msgctxt "SettingsPanelWidget_Text,SFX"
 msgid "SFX"
 msgstr "SFX"
 
 #. Key:	UI
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(231)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(231)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(248)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(248)
 msgctxt "SettingsPanelWidget_Text,UI"
 msgid "UI"
 msgstr "UI"
 
 #. Key:	Audio
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(257)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(257)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(274)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(274)
 msgctxt "SettingsPanelWidget_Text,Audio"
 msgid "Audio"
 msgstr "Audio"
 
 #. Key:	Display
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(277)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(277)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(294)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(294)
 msgctxt "SettingsPanelWidget_Text,Display"
 msgid "Display"
 msgstr "Display"
 
 #. Key:	Brightness
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(281)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(281)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(298)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(298)
 msgctxt "SettingsPanelWidget_Text,Brightness"
 msgid "Brightness"
 msgstr "Brightness"
 
 #. Key:	Vibration
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(289)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(289)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(306)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(306)
 msgctxt "SettingsPanelWidget_Text,Vibration"
 msgid "Vibration"
 msgstr "Vibration"
 
 #. Key:	Fast Mode
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(301)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(301)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(318)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(318)
 msgctxt "SettingsPanelWidget_Text,Fast Mode"
 msgid "Fast Mode"
 msgstr "Fast Mode"
 
 #. Key:	Skip Animation
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(305)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(305)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(322)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(322)
 msgctxt "SettingsPanelWidget_Text,Skip Animation"
 msgid "Skip Animation"
 msgstr "Skip Animation"
 
 #. Key:	Auto End Turn
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(309)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(309)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(326)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(326)
 msgctxt "SettingsPanelWidget_Text,Auto End Turn"
 msgid "Auto End Turn"
 msgstr "Auto End Turn"
 
 #. Key:	Info
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(313)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(313)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(330)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(330)
 msgctxt "SettingsPanelWidget_Text,Info"
 msgid "Info"
 msgstr "Info"
 
 #. Key:	Credits
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(317)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(317)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(334)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(334)
 msgctxt "SettingsPanelWidget_Text,Credits"
 msgid "Credits"
 msgstr "Credits"
 
 #. Key:	License
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(321)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(321)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(338)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(338)
 msgctxt "SettingsPanelWidget_Text,License"
 msgid "License"
 msgstr "License"
 
 #. Key:	Open
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(325)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(325)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(342)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(342)
 msgctxt "SettingsPanelWidget_Text,Open"
 msgid "Open"
 msgstr "Open"
 
 #. Key:	AbandonConfirmTitle
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(345)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(345)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(362)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(362)
 msgctxt "SettingsPanelWidget_Text,AbandonConfirmTitle"
 msgid "Abandon this run?"
 msgstr "Abandon this run?"
 
 #. Key:	AbandonConfirmBody
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(349)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(349)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(366)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(366)
 msgctxt "SettingsPanelWidget_Text,AbandonConfirmBody"
 msgid "Current progress will be deleted and you will return to the title."
 msgstr "Current progress will be deleted and you will return to the title."
 
 #. Key:	Abandon
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(353)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(353)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(370)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(370)
 msgctxt "SettingsPanelWidget_Text,Abandon"
 msgid "Abandon"
 msgstr "Abandon"
 
 #. Key:	Cancel
-#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(357)
-#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(357)
+#. SourceLocation:	Source/P_RD/UI/SettingsPanelWidget_Text.cpp(374)
+#: Source/P_RD/UI/SettingsPanelWidget_Text.cpp(374)
 msgctxt "SettingsPanelWidget_Text,Cancel"
 msgid "Cancel"
 msgstr "Cancel"
