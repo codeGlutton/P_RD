@@ -1,4 +1,4 @@
-﻿#include "PCGStage/StageBuilder.h"
+#include "PCGStage/StageBuilder.h"
 
 #include "PCGStage/Room.h"
 
@@ -53,6 +53,12 @@ FStageBuilder& FStageBuilder::SetParams(const FStageBuilderParams& Params)
 		LoadAllAssetIds();
 	}
 
+	return *this;
+}
+
+FStageBuilder& FStageBuilder::SetFirstRoomOverride(const FPrimaryAssetId& RoomId)
+{
+	mFirstRoomOverride = RoomId;
 	return *this;
 }
 
@@ -295,6 +301,14 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
 	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
 
+    if (mFirstRoomOverride.IsValid())
+    {
+        if (mFirstRoomOverride.PrimaryAssetType == RoomPrimaryAssetTypes::GetMonsterRoomType()
+            && UAssetManager::Get().GetPrimaryAssetPath(mFirstRoomOverride).IsValid())
+            StartRoom.mStaticRoomSpawnDataId = mFirstRoomOverride;
+        else
+            UE_LOG(LogStageBuilder, Error, TEXT("Invalid first-room override: %s"), *mFirstRoomOverride.ToString());
+    }
 	Stage.mCurRow = 0;
 	Stage.mCurColumn = StartColumn;
 }

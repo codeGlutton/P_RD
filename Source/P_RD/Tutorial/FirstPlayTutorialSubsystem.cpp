@@ -13,6 +13,7 @@
 #include "Layout/WidgetPath.h"
 #include "Widgets/SViewport.h"
 #include "Tutorial/FirstBattleScenario.h"
+#include "Tutorial/StaticTutorialRoomSpawnData.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 void UFirstPlayTutorialSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -111,7 +112,7 @@ void UFirstPlayTutorialSubsystem::TitleClosed(UUserWidget*)
 void UFirstPlayTutorialSubsystem::TurnStarted(bool PlayerTurn)
 {
 	auto* Data = GetUserMutableData();
-	if (!Data->GuidedTutorial.Enrolled)
+	if (!Data->GuidedTutorial.Enrolled || (Data->GuidedTutorial.NeedsFirstRoom(Data->TutorialProgress.Skipped) && !HasScenario()))
 	{
 		HideGuided();
 		return;
@@ -164,7 +165,7 @@ void UFirstPlayTutorialSubsystem::ActionEnded(bool PlayerAction, const USRPGActi
 	if (IsScenarioGuiding())
 	{
 		if (Action->GetInstigator() != ScenarioUnit.Get()) return;
-		if (Action->IsA<USRPGMoveAction>() && ScenarioUnit->GetTileTransform().mIndex != FFirstBattleScenario::Move()) return;
+		if (Action->IsA<USRPGMoveAction>() && ScenarioUnit->GetTileTransform().mIndex != GetScenarioMoveTile()) return;
 	}
 	bool Changed = false;
 	if (Action->IsA<USRPGMoveAction>())

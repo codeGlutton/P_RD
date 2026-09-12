@@ -1,4 +1,4 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
 #include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
@@ -788,8 +788,8 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 	if (Tutorial->IsScenarioGuiding())
 	{
 		if (bLongPress || !Tutorial->IsScenarioPointerAllowed(ScreenPosition)) return;
-		const FTileIndex Goal = Tutorial->IsScenarioTileAllowed(FFirstBattleScenario::Move())
-			? FFirstBattleScenario::Move() : FFirstBattleScenario::Enemy();
+		const FTileIndex Goal = Tutorial->IsScenarioTileAllowed(Tutorial->GetScenarioMoveTile())
+			? Tutorial->GetScenarioMoveTile() : Tutorial->GetScenarioEnemyTile();
 		ResolveWorldTouchEvent(ScreenPosition, Goal);
 		return;
 	}

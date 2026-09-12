@@ -4,6 +4,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Tutorial/FirstPlayProgress.h"
 #include "Tutorial/GuidedTutorial.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "FirstPlayTutorialSubsystem.generated.h"
 class UUserWidget;
 class USRPGAction;
@@ -19,6 +20,8 @@ class P_RD_API UFirstPlayTutorialSubsystem : public UGameInstanceSubsystem, publ
 	bool IsPointerAllowed(const FVector2D& Position) const;
 	class UStaticCombatRoomSpawnData* PrepareScenario(class UStaticCombatRoomSpawnData* Original,
 		const TArray<TObjectPtr<class UPlayerUnitModel>>& Party);
+	FTileIndex GetScenarioMoveTile() const;
+	FTileIndex GetScenarioEnemyTile() const;
 	bool HasScenario() const { return ScenarioRoom != nullptr; }
 	bool IsScenarioGuiding() const;
 	int32 GetScenarioSkillIndex() const { return ScenarioSkillIndex; }
@@ -42,7 +45,7 @@ class P_RD_API UFirstPlayTutorialSubsystem : public UGameInstanceSubsystem, publ
 
   private:
 	TSharedPtr<class FTutorialInputGate> InputGate;
-	UPROPERTY(Transient) TObjectPtr<class UStaticCombatRoomSpawnData> ScenarioRoom;
+	UPROPERTY(Transient) TObjectPtr<class UStaticTutorialRoomSpawnData> ScenarioRoom;
 	TWeakObjectPtr<class UPlayerUnitModel> ScenarioUnit;
 	int32 ScenarioSkillIndex = INDEX_NONE;
 	FText ScenarioSkillName;

@@ -1,5 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Tutorial/FirstBattleScenario.h"
+#include "Tutorial/StaticTutorialRoomSpawnData.h"
+#include "DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h"
 #include "Tutorial/GuidedTutorial.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
@@ -77,8 +79,10 @@ bool FFirstBattleScenarioTest::RunTest(const FString&)
 	auto* Source = FFirstBattleScenario::LoadTemplate();
 	if (!TestNotNull(TEXT("Authored first-room template exists"), Source)) return false;
 	const auto OriginalStart = Source->mPlayerTransforms[0];
-	auto* Room = DuplicateObject<UStaticCombatRoomSpawnData>(Source, GetTransientPackage());
-	FFirstBattleScenario::ApplyLayout(*Room);
+	auto* Room = DuplicateObject<UStaticTutorialRoomSpawnData>(Source, GetTransientPackage());
+	TArray<FText> LayoutErrors;
+	TestTrue(TEXT("Authored DA passes full occupancy validation"), Room->ValidateLayout(LayoutErrors));
+	for (const auto& Error : LayoutErrors) AddError(Error.ToString());
 	TestTrue(TEXT("Template asset was not changed"), Source->mPlayerTransforms[0] == OriginalStart);
 	TSet<FTileIndex> Occupied;
 	for (const auto& Player : Room->mPlayerTransforms)
@@ -94,18 +98,25 @@ bool FFirstBattleScenarioTest::RunTest(const FString&)
 	for (const auto& Obstacle : Room->mObstaclePlacementDatas)
 	{
 		TestFalse(TEXT("Authored combatants are not inside scenery"), Occupied.Contains(Obstacle.mTransform.mIndex));
-		Occupied.Add(Obstacle.mTransform.mIndex);
+        Occupied.Add(Obstacle.mTransform.mIndex);
+        if (const auto* Spawn = Obstacle.mSpawnData.LoadSynchronous())
+            for (const auto& Local : Spawn->mRequiredEmptyTiles)
+            {
+                const auto Tile = LocalToTileMapTransform(FTileTransform(Local), Obstacle.mTransform).mIndex;
+                TestFalse(TEXT("Full obstacle footprint cannot overlap combatants"), Occupied.Contains(Tile));
+                Occupied.Add(Tile);
+            }
 	}
-	TestFalse(TEXT("Required movement destination is empty"), Occupied.Contains(FFirstBattleScenario::Move()));
-	TestTrue(TEXT("First party slot has the authored start"), Room->mPlayerTransforms[0].mIndex == FFirstBattleScenario::Start());
-	TestTrue(TEXT("Attack target is an actual enemy placement"), Room->mEnemyUnitPlacementDatas[0].mTransform.mIndex == FFirstBattleScenario::Enemy());
+	TestFalse(TEXT("Required movement destination is empty"), Occupied.Contains(Room->MoveDestination));
+	TestTrue(TEXT("First party slot has the authored start"), Room->mPlayerTransforms[0].mIndex == Source->mPlayerTransforms[0].mIndex);
+	TestTrue(TEXT("Attack target is an actual enemy placement"), Room->mEnemyUnitPlacementDatas[0].mTransform.mIndex == Room->GetTargetTile());
 	TestEqual(TEXT("Second enemy prevents premature room completion"), Room->mEnemyUnitPlacementDatas.Num(), 2);
 	for (int32 X = 0; X < 10; ++X) for (int32 Y = 0; Y < 10; ++Y)
 	{
 		const FTileIndex Tile(X, Y);
-		TestEqual(TEXT("Only the authored move tile is accepted"), FFirstBattleScenario::AllowsTile(EGuidedStage::MoveTile, Tile), Tile == FFirstBattleScenario::Move());
-		TestEqual(TEXT("Only the authored enemy tile is accepted"), FFirstBattleScenario::AllowsTile(EGuidedStage::SkillTarget, Tile), Tile == FFirstBattleScenario::Enemy());
-		TestFalse(TEXT("Board cannot bypass reading the skill"), FFirstBattleScenario::AllowsTile(EGuidedStage::HoldSkill, Tile));
+		TestEqual(TEXT("Only the authored move tile is accepted"), FFirstBattleScenario::AllowsTile(*Room, EGuidedStage::MoveTile, Tile), Tile == Room->MoveDestination);
+		TestEqual(TEXT("Only the authored enemy tile is accepted"), FFirstBattleScenario::AllowsTile(*Room, EGuidedStage::SkillTarget, Tile), Tile == Room->GetTargetTile());
+		TestFalse(TEXT("Board cannot bypass reading the skill"), FFirstBattleScenario::AllowsTile(*Room, EGuidedStage::HoldSkill, Tile));
 	}
 	auto* Map = NewObject<UTileMapModel>();
 	Map->SetDimensions(10, 10);
@@ -124,7 +135,7 @@ bool FFirstBattleScenarioTest::RunTest(const FString&)
 		const auto* Selected = Skills.IsValidIndex(SelectedIndex) ? Skills[SelectedIndex] : nullptr;
 		if (!TestNotNull(*FString::Printf(TEXT("%s has a targeted scripted skill"), Job), Selected)) continue;
 		TestTrue(*FString::Printf(TEXT("%s can aim the fixed target after moving"), Job),
-			Map->CanAim(FFirstBattleScenario::Move(), FFirstBattleScenario::Enemy(), Selected->mAimRange,
+			Map->CanAim(Room->MoveDestination, Room->GetTargetTile(), Selected->mAimRange,
 				Selected->mAimPattern, Selected->mCanAimBoardActor, static_cast<ETileLayerFlag>(Selected->mAimBlockerMask)));
 		AddInfo(FString::Printf(TEXT("%s scripted skill: %s"), Job, *Selected->mName.ToString()));
 	}
