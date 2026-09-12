@@ -277,6 +277,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Reaper_BlackHole,					"Animation.Montage.Skill.Enemy.Reaper.BlackHole");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Attack,				"Animation.Montage.Skill.Enemy.Necromancer.Attack");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Summon,				"Animation.Montage.Skill.Enemy.Necromancer.Summon");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Curse,					"Animation.Montage.Skill.Enemy.Necromancer.Curse");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Nether,				"Animation.Montage.Skill.Enemy.Necromancer.Nether");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Necromancer_Absorption,			"Animation.Montage.Skill.Enemy.Necromancer.Absorption");
