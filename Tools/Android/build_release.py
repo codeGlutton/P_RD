@@ -69,7 +69,10 @@ def run_logged(arguments: list[str], env: dict[str, str], signing: dict[str, str
             raise VerificationError("Android release step failed; see the redacted build.log")
     finally:
         if process.poll() is None:
-            process.terminate()
+            # UAT owns compiler/cooker children which keep DLLs and signing files open.
+            # Stop this build's process tree before the temporary copy is removed.
+            subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             process.wait()
 
 
@@ -110,12 +113,16 @@ bEnableBundle=True
 bEnableUniversalAPK=False
 bBuildForArm64=True
 bBuildForX8664=False
-bPackageDataInsideApk=True
+bPackageDataInsideApk=False
+bAllowPatchOBBFile=False
 StoreVersion={version}
 KeyStore=upload.keystore
 KeyAlias="{signing['RD_ANDROID_UPLOAD_ALIAS']}"
 KeyStorePassword="{signing['RD_ANDROID_UPLOAD_STORE_PASSWORD']}"
 KeyPassword="{signing['RD_ANDROID_UPLOAD_KEY_PASSWORD']}"
+[/Script/GooglePADEditor.GooglePADRuntimeSettings]
+bEnablePlugin=True
+bOnlyDistribution=True
 """)
     append_ini(project.parent / "Config" / "DefaultGame.ini", """[/Script/UnrealEd.ProjectPackagingSettings]
 BuildConfiguration=PPBC_Shipping
@@ -205,6 +212,7 @@ def main() -> None:
         archive = isolated / "Archive"
         arguments = [str(args.engine / "Engine/Build/BatchFiles/RunUAT.bat"), "BuildCookRun",
                      f"-project={project}", "-noP4", "-platform=Android", "-cookflavor=ASTC",
+                     "-nocompileeditor",
                      "-UbtArgs=-DisableAdaptiveUnity",
                      "-clientconfig=Shipping", "-build", "-cook", "-stage", "-pak", "-iostore", "-compressed",
                      "-package", "-distribution", "-archive", f"-archivedirectory={archive}", "-utf8output", "-unattended"]
@@ -212,9 +220,9 @@ def main() -> None:
         env["ANDROID_HOME"] = str(args.sdk)
         env["JAVA_HOME"] = str(args.java_home)
         with (output / "build.log").open("w", encoding="utf-8") as log:
+            run_logged([str(args.engine / "Engine/Build/BatchFiles/Build.bat"), "P_RDEditor", "Win64", "Development",
+                        f"-Project={project}", "-WaitMutex", "-NoHotReload", "-DisableAdaptiveUnity"], env, signing, log)
             if args.prepare_ui:
-                run_logged([str(args.engine / "Engine/Build/BatchFiles/Build.bat"), "P_RDEditor", "Win64", "Development",
-                            f"-Project={project}", "-WaitMutex", "-NoHotReload", "-DisableAdaptiveUnity"], env, signing, log)
                 run_logged([str(args.engine / "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"), str(project),
                             "-run=pythonscript", f"-script={Path(__file__).resolve().parent / 'prepare_release_ui.py'}",
                             "-unattended", "-NullRHI", "-nosplash", "-stdout", "-FullStdOutLogOutput", "-UTF8Output"], env, signing, log)
@@ -228,7 +236,7 @@ def main() -> None:
             raise VerificationError("Release build must archive exactly one signed AAB")
         bundle = bundles[0]
         reports = [verify_artifact(bundle, args.sdk, args.java_home, args.bundletool,
-                                   signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.AssortRock.P_RD", 36)]
+                                   signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.aurelight.mercenaryguildoftheruinedkingdom", 36)]
         store_password = isolated / "store-password.txt"
         key_password = isolated / "key-password.txt"
         store_password.write_text(signing["RD_ANDROID_UPLOAD_STORE_PASSWORD"], encoding="utf-8")
@@ -242,7 +250,9 @@ def main() -> None:
         with zipfile.ZipFile(apks) as archive_file, archive_file.open("universal.apk") as source, apk.open("wb") as target:
             shutil.copyfileobj(source, target)
         reports.append(verify_artifact(apk, args.sdk, args.java_home, args.bundletool,
-                                       signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.AssortRock.P_RD", 36))
+                                       signing["RD_ANDROID_UPLOAD_CERT_SHA256"], "com.aurelight.mercenaryguildoftheruinedkingdom", 36))
+        for report in reports:
+            report["advertising_enabled"] = False
         # Only verified public artifacts and redacted output leave the private tree.
         shutil.copy2(bundle, output / bundle.name)
         shutil.copy2(apk, output / apk.name)
@@ -251,6 +261,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # UAT may emit replacement characters that the Windows cp949 console cannot encode.
+    # Keep streaming the build instead of killing UAT and leaving locked temporary files.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     try:
         main()
     except (VerificationError, ValueError, OSError, ET.ParseError, zipfile.BadZipFile) as error:

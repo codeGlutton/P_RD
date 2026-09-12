@@ -67,6 +67,9 @@ Build/*/**
 
 # Don't ignore icon files in Build
 !Build/**/*.ico
+!Build/Android/res/
+!Build/Android/res/drawable*/
+!Build/Android/res/drawable*/icon.png
 
 # Built data for maps
 *_BuiltData.uasset

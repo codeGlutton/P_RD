@@ -56,6 +56,23 @@ class ReleaseValidationTests(unittest.TestCase):
         with self.assertRaises(VerificationError):
             verify_manifest(xml, 'other', 36)
 
+    def test_unused_billing_permission_blocks_release(self):
+        xml = '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.aurelight.mercenaryguildoftheruinedkingdom"><uses-sdk android:targetSdkVersion="36"/><uses-permission android:name="com.android.vending.BILLING"/><application/></manifest>'
+        with self.assertRaisesRegex(VerificationError, 'unused Play BILLING'):
+            verify_manifest(xml, 'com.aurelight.mercenaryguildoftheruinedkingdom', 36)
+
+    def test_ad_free_release_rejects_engine_admob_default_and_sdk_permissions(self):
+        template = '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="game"><uses-sdk android:targetSdkVersion="36"/>%s<application>%s</application></manifest>'
+        cases = (
+            ('', '<activity android:name="com.google.android.gms.ads.AdActivity"/>'),
+            ('', '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="demo"/>'),
+            ('<uses-permission android:name="com.google.android.gms.permission.AD_ID"/>', ''),
+            ('<uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID"/>', ''),
+        )
+        for permission, component in cases:
+            with self.subTest(component=component, permission=permission), self.assertRaisesRegex(VerificationError, 'ad-free'):
+                verify_manifest(template % (permission, component), 'game', 36)
+
     def test_missing_signing_credentials_stop_before_build(self):
         with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(VerificationError, 'signing is unavailable'):
             signing_environment()

@@ -56,6 +56,7 @@ void USettingsPanelWidget::NativeConstruct()
 	RefreshSaveStatus();
 
 	ValidateDesignerBindings();
+	EnsureCreditsButtons();
 
 	/* Back은 자기 팝업을 닫은 뒤 복귀 이벤트를 알리고, 런 액션은 외부 요청으로 변환한다. */
 
@@ -417,6 +418,9 @@ void USettingsPanelWidget::NativeDestruct()
 {
 	if (auto* Instance = GetGameInstance())
 		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) Saver->OnSaveStatusChanged.RemoveAll(this);
+	CloseCreditsReader();
+	if (mCreditsButton) { mCreditsButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleCreditsClicked); }
+	if (mLicensesButton) { mLicensesButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleLicensesClicked); }
 	/* NativeConstruct()에서 연결한 버튼 입력 Delegate를 해제한다. */
 
 	if (BackButton != nullptr)

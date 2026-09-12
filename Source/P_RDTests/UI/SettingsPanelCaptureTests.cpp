@@ -44,7 +44,9 @@ namespace SettingsPanelCapture
 
 	FString OutputDirectory()
 	{
-		return FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UI"), TEXT("Settings"));
+		static const FString RunDirectory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UI"), TEXT("Settings"),
+			FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")) + TEXT("_") + FGuid::NewGuid().ToString(EGuidFormats::Short));
+		return RunDirectory;
 	}
 
 	/** @brief 위젯 트리의 모든 브러시 텍스처를 첫 오프스크린 draw 전에 준비한다. */
