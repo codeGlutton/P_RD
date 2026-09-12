@@ -3,6 +3,12 @@
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "Tutorial/GuidedTutorial.h"
 
+UStaticCombatRoomSpawnData* FFirstBattleScenario::LoadTemplate()
+{
+	return LoadObject<UStaticCombatRoomSpawnData>(nullptr,
+		TEXT("/Game/BP/DataAsset/Room/Monster/Stage1/DA_Monster_Stage1_00.DA_Monster_Stage1_00"));
+}
+
 int32 FFirstBattleScenario::SelectSkill(const TArray<const UStaticUnitSkillData*>& Skills)
 {
 	// Prefer an attack; Druid's starting attacks target itself, so teach its targeted control skill.
