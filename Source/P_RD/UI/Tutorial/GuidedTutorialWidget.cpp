@@ -190,7 +190,8 @@ TSharedRef<SWidget> UGuidedTutorialWidget::RebuildWidget()
 	ContinueSlot->SetPadding(FMargin(0, 12, 0, 0));
 	auto* CS = Canvas->AddChildToCanvas(Card);
 	CS->SetAutoSize(true);
-	Present(CurrentStage, TargetWidget.Get(), bBoard);
+	if (!EncounterTitle.IsEmpty()) PresentEncounter(EncounterTitle, EncounterDescription);
+	else Present(CurrentStage, TargetWidget.Get(), bBoard);
 	return Super::RebuildWidget();
 }
 void UGuidedTutorialWidget::Present(EGuidedStage S, UWidget* Target, bool BoardTarget, bool Retry)
@@ -383,4 +384,13 @@ void UGuidedTutorialWidget::SetNotice(const FText& Text)
 {
 	if (Label)
 		Label->SetText(Text);
+}
+
+void UGuidedTutorialWidget::PresentEncounter(const FText& Title, const FText& Description)
+{
+    EncounterTitle = Title;
+    EncounterDescription = Description;
+    Present(EGuidedStage::ReadEnemy, nullptr, true);
+    if (Counter) Counter->SetText(Title);
+    SetNotice(Description);
 }

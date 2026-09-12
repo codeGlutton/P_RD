@@ -17,6 +17,7 @@ class P_RD_API UFirstPlayTutorialSubsystem : public UGameInstanceSubsystem, publ
 	void Initialize(FSubsystemCollectionBase& Collection) override;
 	void Deinitialize() override;
 	bool IsInputRestricted() const;
+	bool IsEncounterHintVisible() const;
 	bool IsPointerAllowed(const FVector2D& Position) const;
 	class UStaticCombatRoomSpawnData* PrepareScenario(class UStaticCombatRoomSpawnData* Original,
 		const TArray<TObjectPtr<class UPlayerUnitModel>>& Party);
@@ -61,5 +62,11 @@ class P_RD_API UFirstPlayTutorialSubsystem : public UGameInstanceSubsystem, publ
 	TWeakObjectPtr<class UCombatLayoutHUDWidget> LastHUD;
 	EGuidedLesson LastLessonContext = EGuidedLesson::None;
 
+	UPROPERTY(Transient) TObjectPtr<class UGuidedTutorialWidget> EncounterWidget;
+	TWeakObjectPtr<class UGimmickModel> EncounterTarget;
+	double EncounterReadyAt = 0;
+	bool UpdateEncounterHint(class UCombatLayoutHUDWidget* HUD);
+	void HideEncounterHint();
+	UFUNCTION() void EncounterConfirmed();
 	void Save();
 };

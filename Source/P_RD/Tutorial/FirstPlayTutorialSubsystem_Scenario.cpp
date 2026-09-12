@@ -92,6 +92,7 @@ bool UFirstPlayTutorialSubsystem::IsScenarioPointerAllowed(const FVector2D& Posi
 
 bool UFirstPlayTutorialSubsystem::IsScenarioCommandAllowed(ECombatInputType Type, int32 Payload) const
 {
+	if (IsEncounterHintVisible()) return false;
 	if (!IsScenarioGuiding()) return true;
 	const auto Stage = GetUserMutableData()->GuidedTutorial.Stage;
 	switch (Type)

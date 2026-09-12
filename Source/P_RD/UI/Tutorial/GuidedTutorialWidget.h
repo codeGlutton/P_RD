@@ -14,6 +14,7 @@ class P_RD_API UGuidedTutorialWidget : public UUserWidget
 	{
 		return ContinueButton;
 	}
+	void PresentEncounter(const FText& Title, const FText& Description);
 	static FText Instruction(EGuidedStage Stage);
 	void SetNotice(const FText &Text);
 	void SetWorldFocus(const TArray<FVector2D> &Corners)
@@ -47,4 +48,5 @@ class P_RD_API UGuidedTutorialWidget : public UUserWidget
 	float GestureTime = 0;
 	FVector2D FocusA, FocusB, BubblePosition, BubbleSize;
 	TArray<FVector2D> WorldFocus;
+	FText EncounterTitle, EncounterDescription;
 };

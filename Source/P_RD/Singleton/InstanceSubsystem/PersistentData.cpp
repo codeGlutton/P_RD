@@ -745,6 +745,7 @@ void UUserPersistData::ClearUser()
 {
 	TutorialProgress = FFirstPlayProgress();
 	GuidedTutorial = FGuidedTutorialProgress();
+	SeenTrapHints.Reset();
 	mUserName = FText();
 	mUserLog.Clear();
 	mAppliedRunTransactions.Reset();

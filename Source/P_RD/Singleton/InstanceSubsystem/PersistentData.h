@@ -325,6 +325,8 @@ public:
 	UPROPERTY(SaveGame)
 	FFirstPlayProgress TutorialProgress;
 	UPROPERTY(SaveGame) FGuidedTutorialProgress GuidedTutorial;
+	// Acknowledged per authored trap type, independent of runs and basic tutorial enrollment.
+	UPROPERTY(SaveGame) TSet<FPrimaryAssetId> SeenTrapHints;
 
 	void MakeUser(const FText& Name);
 	void ClearUser();

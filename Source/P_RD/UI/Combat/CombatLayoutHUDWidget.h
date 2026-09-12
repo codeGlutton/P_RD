@@ -115,6 +115,7 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 
 public:
 	bool IsGuidedOverlayObscured() const;
+	bool CanShowEncounterHint() const;
 	virtual bool UsesMobileSafeArea() const override { return true; }
 	virtual bool HandleBackNavigation() override;
 	virtual UUserWidget* GetBackNavigationLayer() const override;

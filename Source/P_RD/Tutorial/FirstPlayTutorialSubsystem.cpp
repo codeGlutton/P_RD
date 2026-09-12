@@ -40,6 +40,7 @@ void UFirstPlayTutorialSubsystem::Initialize(FSubsystemCollectionBase& Collectio
 
 void UFirstPlayTutorialSubsystem::Deinitialize()
 {
+	HideEncounterHint();
 	if (InputGate && FSlateApplication::IsInitialized())
 		FSlateApplication::Get().UnregisterInputPreProcessor(InputGate);
 	InputGate.Reset();
@@ -49,6 +50,7 @@ void UFirstPlayTutorialSubsystem::Deinitialize()
 
 bool UFirstPlayTutorialSubsystem::IsInputRestricted() const
 {
+	if (IsEncounterHintVisible()) return true;
 	if (!bInCombat) return false;
 	const auto* Data = GetUserMutableData();
 	const auto& Flow = Data->GuidedTutorial;
@@ -61,6 +63,16 @@ bool UFirstPlayTutorialSubsystem::IsPointerAllowed(const FVector2D& Position) co
 	if (!IsInputRestricted()) return true;
 	auto* HUD = LastHUD.Get();
 	if (!bPlayerTurn || bExecutingAction || !HUD || HUD->IsGuidedOverlayObscured()) return false;
+	if (IsEncounterHintVisible())
+	{
+		const auto* Button = EncounterWidget->GetContinueButton();
+		if (!Button || !Button->GetCachedGeometry().IsUnderLocation(Position)) return false;
+		auto& Slate = FSlateApplication::Get();
+		const FWidgetPath Path = Slate.LocateWindowUnderMouse(Position, Slate.GetInteractiveTopLevelWindows());
+		for (int32 Index = 0; Index < Path.Widgets.Num(); ++Index)
+			if (Path.Widgets[Index].Widget == Button->GetCachedWidget()) return true;
+		return false;
+	}
 	const auto Stage = GetUserMutableData()->GuidedTutorial.Stage;
 	auto Next = Stage;
 	bool Board = false, Retry = false;
@@ -100,6 +112,7 @@ void UFirstPlayTutorialSubsystem::PrepareFirstProfile()
 }
 void UFirstPlayTutorialSubsystem::TitleOpened(UUserWidget*)
 {
+	HideEncounterHint();
 	HideGuided();
 	bInCombat = false;
 	LastHUD.Reset();
@@ -111,13 +124,18 @@ void UFirstPlayTutorialSubsystem::TitleClosed(UUserWidget*)
 }
 void UFirstPlayTutorialSubsystem::TurnStarted(bool PlayerTurn)
 {
+	const bool WasInCombat = bInCombat;
+	bInCombat = true;
+	bPlayerTurn = PlayerTurn;
+	bExecutingAction = false;
+	HideEncounterHint();
 	auto* Data = GetUserMutableData();
 	if (!Data->GuidedTutorial.Enrolled || (Data->GuidedTutorial.NeedsFirstRoom(Data->TutorialProgress.Skipped) && !HasScenario()))
 	{
 		HideGuided();
 		return;
 	}
-	if (!bInCombat)
+	if (!WasInCombat)
 	{
 		Data->GuidedTutorial.ResumeInNewBattle();
 		LastLessonContext = EGuidedLesson::None;
@@ -137,6 +155,7 @@ void UFirstPlayTutorialSubsystem::TurnStarted(bool PlayerTurn)
 }
 void UFirstPlayTutorialSubsystem::TurnEnded(bool PlayerTurn, bool Succeeded)
 {
+	HideEncounterHint();
 	if (bInCombat && PlayerTurn && Succeeded)
 	{
 		AdvanceGuided(EGuidedStage::EndTurn);
@@ -183,10 +202,12 @@ void UFirstPlayTutorialSubsystem::ActionStarted(const USRPGAction* Action)
 	// Selecting a path/target is an interactive build action, not a blocking animation.
 	if (!Action || Action->GetActionType() == ESRPGActionType::BuildAction) return;
 	bExecutingAction = true;
+	HideEncounterHint();
 	HideGuided();
 }
 void UFirstPlayTutorialSubsystem::CombatEnded(bool Finished)
 {
+	HideEncounterHint();
 	ScenarioRoom = nullptr;
 	ScenarioUnit.Reset();
 	if (Finished && bInCombat && GetUserMutableData()->GuidedTutorial.Enrolled)
@@ -229,6 +250,8 @@ void UFirstPlayTutorialSubsystem::GuidedClicked()
 }
 void UFirstPlayTutorialSubsystem::UpdateGuidedHUD(UCombatLayoutHUDWidget* HUD)
 {
+	LastHUD = HUD;
+	if (UpdateEncounterHint(HUD)) { HideGuided(); return; }
 	auto* Data = GetUserMutableData();
 	auto& Flow = Data->GuidedTutorial;
 	if (!Flow.Enrolled)

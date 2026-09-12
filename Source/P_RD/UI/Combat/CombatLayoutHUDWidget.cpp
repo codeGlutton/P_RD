@@ -6745,3 +6745,13 @@ bool UCombatLayoutHUDWidget::IsGuidedBoardInputAt(const FVector2D& Position) con
 {
 	return GetCachedGeometry().IsUnderLocation(Position) && !IsWorldInputModalShown() && !IsOverChrome(Position);
 }
+
+// Contextual hints wait until the player is free to choose an action.
+bool UCombatLayoutHUDWidget::CanShowEncounterHint() const
+{
+    return IsVisible() && GetIsEnabled() && mUIModel && !IsGuidedOverlayObscured() &&
+        !IsWorldInputModalShown() && !mIsActionPlaying &&
+        mUIModel->GetTurnUI().mPhase == ECombatBuildPhaseUI::None &&
+        mUIModel->GetPendingAction().mType == ECombatPendingActionType::None &&
+        mUIModel->GetActionQueue().IsEmpty();
+}

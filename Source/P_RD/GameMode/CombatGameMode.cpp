@@ -785,6 +785,7 @@ void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLon
 {
 	if (mSettingsRunActionPending || IsSaveAndExitPending()) return;
 	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
+	if (Tutorial->IsEncounterHintVisible()) return;
 	if (Tutorial->IsScenarioGuiding())
 	{
 		if (bLongPress || !Tutorial->IsScenarioPointerAllowed(ScreenPosition)) return;
