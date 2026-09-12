@@ -113,7 +113,16 @@ class P_RD_API UCombatLayoutHUDWidget : public UCombatUIWidgetBase
 {
 	GENERATED_BODY()
 
+private:
+	void EnsurePlaybackButton();
+	void RefreshPlaybackButton();
+	void PositionPlaybackButton();
+	UPROPERTY(Transient) TObjectPtr<class UCombatSpeedWidget> mPlaybackWidget;
 public:
+#if WITH_DEV_AUTOMATION_TESTS
+	class UCombatSpeedWidget* GetPlaybackWidgetForTest() const { return mPlaybackWidget; }
+	void PositionPlaybackButtonForTest() { PositionPlaybackButton(); }
+#endif
 	bool IsGuidedOverlayObscured() const;
 	bool CanShowEncounterHint() const;
 	virtual bool UsesMobileSafeArea() const override { return true; }

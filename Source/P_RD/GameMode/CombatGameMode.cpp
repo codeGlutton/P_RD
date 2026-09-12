@@ -1,4 +1,5 @@
 #include "GameMode/CombatGameMode.h"
+#include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
 #include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
@@ -282,6 +283,7 @@ namespace
 
 ACombatGameMode::ACombatGameMode()
 {
+	mPlaybackComponent = CreateDefaultSubobject<UCombatPlaybackComponent>(TEXT("CombatPlayback"));
 	mCombatUIModel = CreateDefaultSubobject<UCombatUIModel>(TEXT("CombatUIModel"));
 	mRewardUIModel = CreateDefaultSubobject<URewardUIModel>(TEXT("RewardUIModel"));
 	mLevelUpSkillRewardFlow = CreateDefaultSubobject<ULevelUpSkillRewardFlow>(TEXT("LevelUpSkillRewardFlow"));
@@ -574,6 +576,7 @@ void ACombatGameMode::BeginCombatAfterEntrance()
 {
 	if (mCombatStartedAfterEntrance || IsActorBeingDestroyed()) return;
 	mCombatStartedAfterEntrance = true;
+	mPlaybackComponent->StartPlayback(mCombatUIModel);
 	const bool bHadEntrance = mBossEntranceWidget != nullptr;
 	mBossEntranceWidget = nullptr;
 	if (bHadEntrance)
@@ -1379,6 +1382,7 @@ void ACombatGameMode::OnUnregisterUnit(UUnitModel* Unit)
 
 void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 {
+	mPlaybackComponent->StopPlayback();
 	const FStage& CurStage = GetRunPersistData()->GetStage();
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
 
@@ -3018,6 +3022,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 
 void ACombatGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	mPlaybackComponent->StopPlayback();
 	if (mLevelUpSkillRewardFlow) mLevelUpSkillRewardFlow->Close();
  mCombatStartedAfterEntrance = true;
  if (mBossEntranceWidget) { mBossEntranceWidget->CancelCinematic(); mBossEntranceWidget = nullptr; }

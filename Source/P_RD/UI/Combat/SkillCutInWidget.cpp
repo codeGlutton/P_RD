@@ -409,7 +409,7 @@ void USkillCutInWidget::NativeTick(
 	}
 	else
 	{
-		ElapsedSeconds += FMath::Max(0.0f, InDeltaTime);
+		ElapsedSeconds += FMath::Max(0.0f, InDeltaTime) * CombatPlaybackSpeed;
 	}
 	const double RealElapsedSeconds = FPlatformTime::Seconds() - StartedAtRealTimeSeconds;
 	const float NormalizedTime = FMath::Clamp(

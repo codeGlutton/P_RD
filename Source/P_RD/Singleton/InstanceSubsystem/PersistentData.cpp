@@ -881,6 +881,7 @@ void UOptionPersistData::ClearOption()
 	mCameraShakeEnabled = CDO->mCameraShakeEnabled;
 	mEffectVFXEnabled = CDO->mEffectVFXEnabled;
 	mVibrationEnabled = CDO->mVibrationEnabled;
+	mCombatPlaybackSpeed = CDO->mCombatPlaybackSpeed;
 
 	ApplyCurrentOptions();
 }

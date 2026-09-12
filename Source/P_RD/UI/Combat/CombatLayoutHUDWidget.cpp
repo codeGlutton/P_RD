@@ -1,4 +1,5 @@
 #include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatSpeedWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
 #include "Engine/GameInstance.h"
@@ -441,6 +442,7 @@ void UCombatLayoutHUDWidget::NativeConstruct()
 	ApplyActionLabelOpticalAlignment();
 	EnsureMercenarySkillButtons();
 	WireCommands();
+	EnsurePlaybackButton();
 	EnsureCombatAnnouncementWidgets();
 	StartPreviewIfUnbound();
 	// 실제 전투에서는 모델이 이미 채워진 뒤에 붙으므로, 붙자마자 한 번 그린다.
@@ -1683,6 +1685,7 @@ void UCombatLayoutHUDWidget::HandleAnyReleased()
 
 void UCombatLayoutHUDWidget::NativeOnUIRefreshed(const ECombatUIDomain Domain)
 {
+	RefreshPlaybackButton();
 	if (mUIModel == nullptr)
 	{
 		return;
@@ -3620,6 +3623,7 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	PositionPlaybackButton();
 	RefreshWorldGestureInputBlock();
 	if(auto* GI=GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->UpdateGuidedHUD(this);
 	if (mSkillWorldPreviewActive)
@@ -3635,8 +3639,9 @@ void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float Delta
 	UpdateUnitHpBars();
 	UpdateCommandRevealAnimation(DeltaTime);
 	RefreshPendingAPGlow(DeltaTime);
-	UpdateFloatingCombatLogQueue(DeltaTime);
-	UpdateFloatingCombatLogs(DeltaTime);
+	const float CombatDelta = DeltaTime * (mUIModel && mUIModel->IsPlaybackSpeedAvailable() ? mUIModel->GetPlaybackSpeed() : 1);
+	UpdateFloatingCombatLogQueue(CombatDelta);
+	UpdateFloatingCombatLogs(CombatDelta);
 	UpdateCombatAnnouncement(DeltaTime);
 	// 해상도/레터박스 변화 시 앵커 비율이 달라질 수 있어 다시 등록한다.
 	const FVector2D LocalSize = MyGeometry.GetLocalSize();

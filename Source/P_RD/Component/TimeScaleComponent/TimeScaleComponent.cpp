@@ -127,3 +127,25 @@ void UTimeScaleComponent::RemoveExpiredActivateRequests(const TArray<int32>& Key
 	}
 }
 
+
+void UTimeScaleComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    mActivateRequests.Empty();
+    if (GetWorld()) UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+    Super::EndPlay(EndPlayReason);
+}
+
+bool UTimeScaleComponent::SetTimeScaleImmediately(const FTimeScaleHandle& Handle, float Scale)
+{
+    auto* Request = mActivateRequests.Find(Handle.ID);
+    if (!Handle.IsValid() || !Request || !FMath::IsFinite(Scale) || Scale <= 0.f) return false;
+    Request->CurrentTimeScale = Request->TargetTimeScale = Scale;
+    Request->bReleasing = false;
+    UpdateTimeScale(0.f);
+    return true;
+}
+
+void UTimeScaleComponent::ReleaseTimeScaleImmediately(const FTimeScaleHandle& Handle)
+{
+    if (Handle.IsValid() && mActivateRequests.Remove(Handle.ID)) UpdateTimeScale(0.f);
+}
