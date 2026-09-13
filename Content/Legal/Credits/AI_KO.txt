@@ -1,5 +1,5 @@
 이미지 제작 — UI 그래픽과 아이콘은 생성형 AI를 사용해 제작했습니다.
 그 밖의 여러 이미지 제작에도 생성형 AI를 활용했습니다.
 
-Tencent Hunyuan 3D — 3D 에셋 제작
-Some 3D assets were created using Tencent Hunyuan 3D.
+3D 메시 제작 — 일부 3D 메시는 생성형 AI를 사용해 제작했습니다.
+함정 3D 메시는 Meshy의 CC BY 4.0 라이선스에 따라 제작되었습니다.

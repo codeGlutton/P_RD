@@ -34,7 +34,7 @@ namespace RDCredits
 	};
 	const TArray<FPage> Credits = {
 		{ TEXT("모델 · 애니메이션"), TEXT("Models & Animation"), TEXT("Credits/Models.txt") },
-		{ TEXT("이미지 · AI 제작"), TEXT("Images & AI"), TEXT("Credits/AI.txt"), TEXT("Credits/AI_KO.txt") },
+		{ TEXT("AI 제작"), TEXT("AI Generated"), TEXT("Credits/AI.txt"), TEXT("Credits/AI_KO.txt") },
 		{ TEXT("음악 · 효과음"), TEXT("Music & Sound"), TEXT("Credits/Audio.txt") },
 		{ TEXT("시각 효과"), TEXT("Visual Effects"), TEXT("Credits/VFX.txt") },
 		{ TEXT("글꼴"), TEXT("Fonts"), TEXT("Credits/Fonts.txt") },
