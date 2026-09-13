@@ -17,6 +17,10 @@
 #include "Setting/GameBalanceSettings.h"
 #include "Engine/AssetManager.h"
 #include "PCGStage/StageBuilder.h"
+#include "Engine/GameInstance.h"
+#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
+#include "Tutorial/FirstBattleScenario.h"
+#include "Tutorial/StaticTutorialRoomSpawnData.h"
 
 #include "DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
@@ -627,9 +631,15 @@ void URunPersistData::MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCrea
 		const FRandomStream& BuildStream = URandomStreamFunctionLibrary::GetStageBuildStream(this);
 		const FLevelAttributeCache LevelAttributeCache = ULevelAttributeSet::MakeCache(this);
 
-		mStage.InitializeAs<FStage>(
-			FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, LevelAttributeCache).SetParams(BuilderParams).Build()
-		);
+        auto Builder = FStageBuilder::Make(BuildStream, GameBalanceSetting->mGlobalStageBuildSetting, LevelAttributeCache);
+        Builder.SetParams(BuilderParams);
+        const auto* User = UGameplayStatics::GetGameInstance(this)->GetSubsystem<UPersistentDataSubsystem>()->GetUserPersistData();
+        if (Type == EStageLevelType::Stage1 && User->GuidedTutorial.NeedsFirstRoom(User->TutorialProgress.Skipped))
+        {
+            if (const auto* TutorialRoom = FFirstBattleScenario::LoadTemplate())
+                Builder.SetFirstRoomOverride(TutorialRoom->GetPrimaryAssetId());
+        }
+        mStage.InitializeAs<FStage>(Builder.Build());
 		mRoomTransactions = FRoomTransactionState();
 		OnCreateStage.ExecuteIfBound(mStage.Get());
 
@@ -735,6 +745,8 @@ void UUserPersistData::ClearUser()
 {
 	TutorialProgress = FFirstPlayProgress();
 	GuidedTutorial = FGuidedTutorialProgress();
+	SeenTrapHints.Reset();
+	SeenShopWalkthrough = false;
 	mUserName = FText();
 	mUserLog.Clear();
 	mAppliedRunTransactions.Reset();
@@ -869,6 +881,7 @@ void UOptionPersistData::ClearOption()
 	mCameraShakeEnabled = CDO->mCameraShakeEnabled;
 	mEffectVFXEnabled = CDO->mEffectVFXEnabled;
 	mVibrationEnabled = CDO->mVibrationEnabled;
+	mCombatPlaybackSpeed = CDO->mCombatPlaybackSpeed;
 
 	ApplyCurrentOptions();
 }

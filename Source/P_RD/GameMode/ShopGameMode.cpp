@@ -145,6 +145,7 @@ void AShopGameMode::BeginRoom()
 		{
 			ShopHUD->BindUIModel(mShopUIModel);
 			ShopHUD->OpenUI();
+			ShopHUD->ShowFirstVisitGuide();
 		}
 	}
 }

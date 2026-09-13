@@ -65,6 +65,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSaveAndExitRun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSaveAndExitCompleted, bool, bSuccess);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAbandonRunCompleted, bool, bSuccess);
 
+DECLARE_MULTICAST_DELEGATE(FOnCycleCombatPlaybackSpeed);
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeFocusScreenAnchor, const FVector2D& /*ScreenRatio*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnBeginCombatPresentation, TSharedPtr<FPresentationBarrier> /*Barrier*/)
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPrePlaySkillCutIn, const FCombatSkillCutInRequest& /*Request*/, TSharedPtr<FPresentationBarrier> /*Barrier*/)
@@ -74,6 +76,16 @@ UCLASS(BlueprintType)
 class P_RD_API UCombatUIModel : public UObject
 {
 	GENERATED_BODY()
+
+public:
+	FOnCycleCombatPlaybackSpeed OnCyclePlaybackSpeed;
+	void RequestCyclePlaybackSpeed() { OnCyclePlaybackSpeed.Broadcast(); }
+	void SetPlaybackSpeed(int32 Speed, bool Available);
+	int32 GetPlaybackSpeed() const { return mPlaybackSpeed; }
+	bool IsPlaybackSpeedAvailable() const { return mPlaybackSpeedAvailable; }
+private:
+	int32 mPlaybackSpeed = 1;
+	bool mPlaybackSpeedAvailable = false;
 
 	/* ───────── 위젯이 구독하는 알림 ───────── */
 public:

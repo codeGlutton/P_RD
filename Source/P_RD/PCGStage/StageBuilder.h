@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   StageBuilder.h
  * @brief  스테이지 내 방들을 생성해주는 빌더 객체 구현 헤더
  * @author 모호재
@@ -27,7 +27,7 @@ struct FRoomEdge
 /**
  * @brief  스테이지 내 방들을 생성해주는 빌더 객체
  */
-struct FStageBuilder
+struct P_RD_API FStageBuilder
 {
 private:
 	FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache);
@@ -36,6 +36,8 @@ public:
 	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache);
 	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache, const FStageBuilderParams& Params);
 	FStageBuilder& SetParams(const FStageBuilderParams& Params);
+	// Applied only to the start room after normal generation, preserving random stream consumption.
+	FStageBuilder& SetFirstRoomOverride(const FPrimaryAssetId& RoomId);
 	FStage Build() const;
 	void Build(OUT FStage& NewStage) const;
 
@@ -70,6 +72,7 @@ protected:
 	const FRandomStream& mBuildStream;
 	const FGlobalStageBuildSetting& mGlobalSetting;
 	FStageBuilderParams mParams;
+	FPrimaryAssetId mFirstRoomOverride;
 	FLevelAttributeCache mLevelCache;
 
 protected:

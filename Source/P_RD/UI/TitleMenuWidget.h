@@ -52,6 +52,10 @@ public:
 	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
 	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
 
+#if WITH_DEV_AUTOMATION_TESTS
+	void ApplyResponsiveLayoutForTest(const FVector2D& Size, bool bCanContinue);
+#endif
+
 protected:
 	/** @brief 타이틀 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
 	virtual bool ShouldApplyButtonFeedback() const override { return true; }
