@@ -112,9 +112,9 @@ protected:
 	/* Duration 데이터 */
 protected:
 	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "RoundCount"))
-	int32 mRoundCount;
+	int32 mRoundCount = 1;
 	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "TurnCount"))
-	int32 mTurnCount;
+	int32 mTurnCount = 1;
 
 	/* 임시 데이터 */
 protected:
