@@ -67,7 +67,7 @@ FText UGuidedTutorialWidget::Instruction(EGuidedStage S)
 	case EGuidedStage::ReadAP:
 		return NSLOCTEXT("FieldGuide", "ActionPoints", "AP는 행동에 쓰는 자원입니다.\n이동과 스킬에 필요한 AP를 확인하고 사용하세요.");
 	case EGuidedStage::ReadCondition:
-		return NSLOCTEXT("FieldGuide", "Condition", "표정은 컨디션입니다.\n나쁨·보통·좋음 순으로 피해가 높아지며, 최상은 치명타도 적용됩니다.");
+		return NSLOCTEXT("FieldGuide", "Condition", "표정은 컨디션입니다.\n나쁨, 보통, 좋음, 매우 좋음 순으로 피해량이 증가하며, 매우 좋음 상태에서는 치명타가 적용됩니다.");
 	case EGuidedStage::ReadStatus:
 		return NSLOCTEXT("FieldGuide", "StatusIcons", "상태이상이 생기면 요약판에 아이콘이 표시됩니다.\n아이콘을 누르면 효과를 확인할 수 있습니다.");
 	case EGuidedStage::ReadMercenaryStats:
