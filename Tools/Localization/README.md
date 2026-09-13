@@ -39,6 +39,10 @@ svnversion .\Content\SVN
 !StartupScripts=ClearArray
 ```
 
+## 저장된 당기기 설명 갱신
+
+당기기 효과의 설명이 거리 기반으로 바뀐 뒤에도 일부 스킬의 `mDescription`에는 기존 문구가 저장되어 있었습니다. 에디터를 빌드한 후 `-run=RefreshPullDescriptions`로 갱신 대상을 확인하고, `-Apply`를 추가하면 해당 스킬의 `MakeDescription()` 결과만 다시 저장합니다. 효과 수치와 스킬 구성은 변경하지 않습니다. 저장 후 위의 GatherText와 언어 전환 검사를 실행합니다.
+
 ## 에셋 이름 변경
 
 파일 탐색기에서 `.uasset` 이름만 바꾸지 말고 Unreal Editor의 이름 변경 기능을 사용합니다. 저장된 참조를 갱신하고 이전 redirector의 참조가 남지 않았는지 확인한 다음 번역을 재수집합니다.
