@@ -45,4 +45,8 @@ class P_RD_API UTacticalEffect_GetFrail : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetFrail();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

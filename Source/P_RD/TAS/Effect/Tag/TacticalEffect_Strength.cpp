@@ -28,7 +28,25 @@ UTacticalEffect_AddDebuff_Strength::UTacticalEffect_AddDebuff_Strength()
 	mStatusEffect = UTacticalEffect_Debuff_Strength::StaticClass();
 }
 
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
 UTacticalEffect_GetDebuff_Strength::UTacticalEffect_GetDebuff_Strength()
 {
 	mStatusEffect = UTacticalEffect_Debuff_Strength::StaticClass();
+}
+
+bool UTacticalEffect_GetDebuff_Strength::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity) == true)
+	{
+		return false;
+	}
+
+	return true;
 }

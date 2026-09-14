@@ -80,4 +80,8 @@ class P_RD_API UTacticalEffect_GetDebuff_Strength : public UTacticalEffect_GetSt
 
 public:
 	UTacticalEffect_GetDebuff_Strength();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

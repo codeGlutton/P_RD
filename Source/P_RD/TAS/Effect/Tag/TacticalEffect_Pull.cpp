@@ -1,4 +1,4 @@
-﻿#include "TAS/Effect/Tag/TacticalEffect_Pull.h"
+#include "TAS/Effect/Tag/TacticalEffect_Pull.h"
 #include "GameplayTagType.h"
 
 #include "Actor/TileMap/TileMapModel.h"
@@ -81,4 +81,20 @@ UTacticalEffect_AddPull::UTacticalEffect_AddPull()
 UTacticalEffect_GetPull::UTacticalEffect_GetPull()
 {
 	mStatusEffect = UTacticalEffect_Pull::StaticClass();
+}
+
+bool UTacticalEffect_GetPull::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity) == true)
+	{
+		return false;
+	}
+
+	return true;
 }

@@ -47,6 +47,10 @@ protected:
 	 */
 	void TryBeginAction();
 	/**
+	 * 액션 상태를 확인하여 조건적으로 틱을 실행하는 함수
+	 */
+	void TryTickAction(float DeltaTime);
+	/**
 	 * 액션 내부에서 종료됨을 알리는 함수
 	 * @param Result 결과
 	 */

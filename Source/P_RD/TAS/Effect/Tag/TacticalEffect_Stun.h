@@ -44,4 +44,8 @@ class P_RD_API UTacticalEffect_GetStun : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetStun();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

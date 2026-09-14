@@ -1,4 +1,4 @@
-﻿#include "TAS/Effect/Tag/TacticalEffect_Poison.h"
+#include "TAS/Effect/Tag/TacticalEffect_Poison.h"
 #include "GameplayTagType.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
