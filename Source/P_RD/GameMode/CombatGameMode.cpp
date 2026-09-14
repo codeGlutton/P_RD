@@ -50,6 +50,7 @@
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
 #include "Component/EquipmentComponent/EquipmentComponentModel.h"
+#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Component/PassiveComponent/PassiveComponentModel.h"
 #include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
 #include "Component/SkillComponent/UnitSkillComponentModel.h"
@@ -2115,6 +2116,21 @@ void ACombatGameMode::PushBoardActorDetailUIData(UBoardActorModel* BoardActorMod
 			}
 		}
 	}
+	if (const UEnemyUnitModel* Enemy = Cast<UEnemyUnitModel>(UnitModel))
+	{
+		if (const UEquipmentComponentModel* Equipment = Enemy->GetEquipmentComponentModel())
+		{
+			for (int32 Slot = 0; Slot < static_cast<int32>(EEquipmentType::Count); ++Slot)
+			{
+				const FEquippedEntry* Entry = Equipment->GetEquipped(static_cast<EEquipmentType>(Slot));
+				if (!Entry || !Entry->mData) continue;
+				auto& Item = UnitDetailUIData.mEquipment.AddDefaulted_GetRef();
+				Item.mName = Entry->mData->mName;
+				Item.mDescription = Entry->mData->mDescription;
+				Item.mIcon = Entry->mData->mIcon.LoadSynchronous();
+			}
+		}
+	}
 	mCombatUIModel->SetUnitDetail(UnitDetailUIData);
 }
 
@@ -2277,13 +2293,10 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 				: FText::GetEmpty();
 			ArtifactUI.mPrice = ArtifactData->mPrice;
 			ArtifactUI.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
-			// 설명은 붙은 패시브에서 모은다. 유닛 상세가 패시브를 모으는 것과 같다.
-			for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft : ArtifactData->mStaticPassiveData)
+			const FText Description = ArtifactData->GetDisplayDescription();
+			if (!Description.IsEmpty())
 			{
-				if (const UStaticPassiveData* Passive = PassiveSoft.LoadSynchronous())
-				{
-					ArtifactUI.mEffectDescriptions.Add(Passive->mDescription);
-				}
+				ArtifactUI.mEffectDescriptions.Add(Description);
 			}
 		}
 	}
@@ -2951,28 +2964,7 @@ void ACombatGameMode::PushCombatRewardChoicesUIData() const
 					: FText::GetEmpty();
 				Choice.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
 
-				TArray<FString> EffectLines;
-				for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
-					: ArtifactData->mStaticPassiveData)
-				{
-					if (const UStaticPassiveData* Passive =
-						PassiveSoft.LoadSynchronous())
-					{
-						if (!Passive->mDescription.IsEmpty())
-						{
-							EffectLines.Add(Passive->mDescription.ToString());
-						}
-					}
-				}
-				if (EffectLines.IsEmpty() && !ArtifactData->mStatModifiers.IsEmpty())
-				{
-					EffectLines.Add(NSLOCTEXT("CombatGameMode",
-						"ArtifactStatBoost", "파티 전체 능력치를 강화합니다.").ToString());
-				}
-				Choice.mDescription = EffectLines.IsEmpty()
-					? NSLOCTEXT("CombatGameMode",
-						"ArtifactPartyWide", "파티 전체에 적용됩니다.")
-					: FText::FromString(FString::Join(EffectLines, TEXT("\n")));
+				Choice.mDescription = ArtifactData->GetDisplayDescription();
 			}
 
 			Choices.Add(Choice);

@@ -40,6 +40,9 @@ public:
 	 */
 	static UStaticArtifactData* LoadByAssetId(const FPrimaryAssetId& ArtifactId);
 
+	/** Authored item description includes both passive and stat effects. */
+	FText GetDisplayDescription() const;
+
 public:
 	UPROPERTY(Category = "Default", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Name"))
 	FText mName;

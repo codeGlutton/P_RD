@@ -344,6 +344,8 @@ private:
 	/** Existing shared detail screen used by Combat HUD. */
 	UPROPERTY(Transient)
 	TObjectPtr<UUserWidget> ArtifactDetailOverlayWidget;
+	UPROPERTY(Transient)
+	TObjectPtr<class USkillDetailOverlayPresenter> ArtifactDetailPresenter;
 
 	/** Reward overlay에서도 전투/상점과 같은 지도·용병·설정 레일을 제공한다. */
 	UPROPERTY(Transient)

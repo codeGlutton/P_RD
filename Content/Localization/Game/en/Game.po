@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-13 23:08\n"
-"PO-Revision-Date: 2026-09-13 23:08\n"
+"POT-Creation-Date: 2026-09-14 16:51\n"
+"PO-Revision-Date: 2026-09-14 16:51\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -97,12 +97,12 @@ msgctxt ",E9B797F8433152CCFEA773B0492493E3"
 msgid "재생의 씨앗"
 msgstr "Seed of Renewal"
 
-#. Key:	8CF321E24947692F452BDA96CBC33078
+#. Key:	17FC111D42411B41329A21853560BD49
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A007_BerserkersMark.DA_Artifact_A007_BerserkersMark.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A007_BerserkersMark.DA_Artifact_A007_BerserkersMark.mDescription
-msgctxt ",8CF321E24947692F452BDA96CBC33078"
-msgid "스킬 사용 시, 3회 째 사용할 때마다 공격력이 50% 증가합니다."
-msgstr "Every 3rd skill use increases attack power by 50%."
+msgctxt ",17FC111D42411B41329A21853560BD49"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 공격력이 25% 증가합니다."
+msgstr "Every fifth skill use increases attack power by 25%."
 
 #. Key:	AB465500435D4F00310C34A87372DFB7
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A007_BerserkersMark.DA_Artifact_A007_BerserkersMark.mName
@@ -349,12 +349,12 @@ msgctxt ",91D70AED46FC5DE1F3BE1BB5703A2FB0"
 msgid "수호의 함성"
 msgstr "Defensive Shout"
 
-#. Key:	F37BA7D74F05C0D895AA83B20F72F478
+#. Key:	696AD2234FE1FA74C0BCFCA28EDB52BE
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A027_UnyieldingHeart.DA_Artifact_A027_UnyieldingHeart.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A027_UnyieldingHeart.DA_Artifact_A027_UnyieldingHeart.mDescription
-msgctxt ",F37BA7D74F05C0D895AA83B20F72F478"
-msgid "전투 종료 시, 체력이 50% 이하라면, 체력을 12 회복합니다."
-msgstr "At the end of combat, restore 12 HP if your HP is at or below 50%."
+msgctxt ",696AD2234FE1FA74C0BCFCA28EDB52BE"
+msgid "전투 종료 시, 체력이 50% 이하라면, 체력을 10 회복합니다."
+msgstr "At the end of combat, recover 10 HP if your HP is at or below 50%."
 
 #. Key:	536934AA4EA8CCE1EF9C50BA0F4B4DF9
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A027_UnyieldingHeart.DA_Artifact_A027_UnyieldingHeart.mName
@@ -573,83 +573,6 @@ msgctxt ",D8F78B9D43A862366DEC45BA3F12899F"
 msgid "작은 마법석"
 msgstr "Lesser Mana Stone"
 
-#. Key:	BF91343D421826811610368475476DD5
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Common_BrokenBow.DA_Artifact_Common_BrokenBow.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Common_BrokenBow.DA_Artifact_Common_BrokenBow.mName
-msgctxt ",BF91343D421826811610368475476DD5"
-msgid "망가진 활"
-msgstr "Broken Bow"
-
-#. Key:	3FA514114A04B82150CBDEBACA152228
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Common_Dagger.DA_Artifact_Common_Dagger.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Common_Dagger.DA_Artifact_Common_Dagger.mName
-msgctxt ",3FA514114A04B82150CBDEBACA152228"
-msgid "단검"
-msgstr "Dagger"
-
-#. Key:	0CAC364C4731CB48F10DFB9C6F2524AA
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Common_Shoes.DA_Artifact_Common_Shoes.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Common_Shoes.DA_Artifact_Common_Shoes.mName
-msgctxt ",0CAC364C4731CB48F10DFB9C6F2524AA"
-msgid "운동화"
-msgstr "Running Shoes"
-
-#. Key:	A761E045439A5884168B138C4117C172
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Common_Sword.DA_Artifact_Common_Sword.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Common_Sword.DA_Artifact_Common_Sword.mName
-msgctxt ",A761E045439A5884168B138C4117C172"
-msgid "검"
-msgstr "Sword"
-
-#. Key:	48BFFFBD4F95C146248DCD92EDCB3DE7
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Epic_LeftOver.DA_Artifact_Epic_LeftOver.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Epic_LeftOver.DA_Artifact_Epic_LeftOver.mName
-msgctxt ",48BFFFBD4F95C146248DCD92EDCB3DE7"
-msgid "잔반"
-msgstr "Leftovers"
-
-#. Key:	65FD911A4A6CAD9AE0F8DD9DB984BBC2
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Epic_ObsidianDagger.DA_Artifact_Epic_ObsidianDagger.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Epic_ObsidianDagger.DA_Artifact_Epic_ObsidianDagger.mName
-msgctxt ",65FD911A4A6CAD9AE0F8DD9DB984BBC2"
-msgid "흑요석 단검"
-msgstr "Obsidian Dagger"
-
-#. Key:	BF692FC445657D9CB1295388BEA6C9BB
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Epic_SpringShoes.DA_Artifact_Epic_SpringShoes.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Epic_SpringShoes.DA_Artifact_Epic_SpringShoes.mName
-msgctxt ",BF692FC445657D9CB1295388BEA6C9BB"
-msgid "용수철 신발"
-msgstr "Spring Shoes"
-
-#. Key:	C4B75C27484DC624855A32925EC9BA0E
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Byrnie.DA_Artifact_Rare_Byrnie.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Byrnie.DA_Artifact_Rare_Byrnie.mName
-msgctxt ",C4B75C27484DC624855A32925EC9BA0E"
-msgid "사슬갑옷"
-msgstr "Chainmail"
-
-#. Key:	3289408A4DD921C5264FD4A70C422785
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Oobleck.DA_Artifact_Rare_Oobleck.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Oobleck.DA_Artifact_Rare_Oobleck.mName
-msgctxt ",3289408A4DD921C5264FD4A70C422785"
-msgid "우블릭"
-msgstr "Ooblik"
-
-#. Key:	C16608EE4E9DE4135134D68836DC110C
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Seasoning.DA_Artifact_Rare_Seasoning.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Seasoning.DA_Artifact_Rare_Seasoning.mName
-msgctxt ",C16608EE4E9DE4135134D68836DC110C"
-msgid "조미료"
-msgstr "Seasoning"
-
-#. Key:	F0A463C246299CC820098A9F46AB5019
-#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Supplement.DA_Artifact_Rare_Supplement.mName
-#: /Game/BP/DataAsset/Artifact/DA_Artifact_Rare_Supplement.DA_Artifact_Rare_Supplement.mName
-msgctxt ",F0A463C246299CC820098A9F46AB5019"
-msgid "신발"
-msgstr "Shoes"
-
 #. Key:	79458D0F4B162D84BC01A59F3BA287F6
 #. SourceLocation:	/Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
 #: /Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
@@ -719,6 +642,62 @@ msgstr "At the start of combat, apply Stun for 2 rounds and grant 6 Strength."
 msgctxt ",841C5AA34A35405E2BE5389C1A630063"
 msgid "웨어울프의 심장"
 msgstr "Werewolf Heart"
+
+#. Key:	BB8E17A24B53DE59E2FA57B56747560E
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A001_FuryOfGhoul.DA_Equipment_A001_FuryOfGhoul.mDescription
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A001_FuryOfGhoul.DA_Equipment_A001_FuryOfGhoul.mDescription
+msgctxt ",BB8E17A24B53DE59E2FA57B56747560E"
+msgid "효과 피격 시,  자신에게 완력 1을 부여합니다"
+msgstr "When hit by an effect, gain 1 Strength."
+
+#. Key:	EB09EC354B586C5D30DB0EA02703D9F6
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A001_FuryOfGhoul.DA_Equipment_A001_FuryOfGhoul.mName
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A001_FuryOfGhoul.DA_Equipment_A001_FuryOfGhoul.mName
+msgctxt ",EB09EC354B586C5D30DB0EA02703D9F6"
+msgid "구울의 분노"
+msgstr "Ghoul's Fury"
+
+#. Key:	7F3E1DDD40324EABB4ED4FB8637EEC5D
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mDescription
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mDescription
+msgctxt ",7F3E1DDD40324EABB4ED4FB8637EEC5D"
+msgid "스킬 사용 시, 체력을 10 회복합니다."
+msgstr "When using a skill, recover 10 HP."
+
+#. Key:	7D8B51E24AF8D178D285F588B53429E1
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mName
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mName
+msgctxt ",7D8B51E24AF8D178D285F588B53429E1"
+msgid "부패한 재생"
+msgstr "Rotten Regeneration"
+
+#. Key:	7C8B0A394D28577815BE92887661DAC0
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A003_Harvest.DA_Equipment_A003_Harvest.mDescription
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A003_Harvest.DA_Equipment_A003_Harvest.mDescription
+msgctxt ",7C8B0A394D28577815BE92887661DAC0"
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 50 회복합니다."
+msgstr "After the effect resolves, recover 50 HP if the target has 0 HP or less."
+
+#. Key:	860CBAF74D4A6D3A5EE95A9511D029C0
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A003_Harvest.DA_Equipment_A003_Harvest.mName
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A003_Harvest.DA_Equipment_A003_Harvest.mName
+msgctxt ",860CBAF74D4A6D3A5EE95A9511D029C0"
+msgid "수확"
+msgstr "Harvest"
+
+#. Key:	4AAB680E4ADB6B78D5DAE39169E15BB4
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A004_BoneHardening.DA_Equipment_A004_BoneHardening.mDescription
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A004_BoneHardening.DA_Equipment_A004_BoneHardening.mDescription
+msgctxt ",4AAB680E4ADB6B78D5DAE39169E15BB4"
+msgid "피격 시, 자신에게 방어도 5을 부여합니다."
+msgstr "When hit, gain 5 Armor."
+
+#. Key:	C135318145B9183C89651FBEB918A5D4
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A004_BoneHardening.DA_Equipment_A004_BoneHardening.mName
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A004_BoneHardening.DA_Equipment_A004_BoneHardening.mName
+msgctxt ",C135318145B9183C89651FBEB918A5D4"
+msgid "단단한 뼈"
+msgstr "Bone Hardening"
 
 #. Key:	65D880F245C83280B41946BD97A388DF
 #. SourceLocation:	/Game/BP/DataAsset/Obstacle/Common/DA_EmptyObstacle.DA_EmptyObstacle.mDisplayName
@@ -797,6 +776,132 @@ msgctxt ",23A00DDB4FA80017E9135CA7EA31AE56"
 msgid "Stump"
 msgstr "Stump"
 
+#. Key:	5CD27BAC4125B4DFFC27D5A10CF377C5
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BarrelObstacle_01.DA_BarrelObstacle_01.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BarrelObstacle_01.DA_BarrelObstacle_01.mDisplayName
+msgctxt ",5CD27BAC4125B4DFFC27D5A10CF377C5"
+msgid "Barrel"
+msgstr "Barrel"
+
+#. Key:	D631E83C45E134234E89F8B369515A78
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BarrelObstacle_02.DA_BarrelObstacle_02.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BarrelObstacle_02.DA_BarrelObstacle_02.mDisplayName
+msgctxt ",D631E83C45E134234E89F8B369515A78"
+msgid "Barrel"
+msgstr "Barrel"
+
+#. Key:	9F04342742F7C2A96F66A2AEC04C3F26
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle.DA_BookcaseObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle.DA_BookcaseObstacle.mDisplayName
+msgctxt ",9F04342742F7C2A96F66A2AEC04C3F26"
+msgid "Bookcase"
+msgstr "Bookcase"
+
+#. Key:	697F4F494B7B1264A59BABB9DBBF0C7D
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BoxObstacle_02.DA_BoxObstacle_02.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BoxObstacle_02.DA_BoxObstacle_02.mDisplayName
+msgctxt ",697F4F494B7B1264A59BABB9DBBF0C7D"
+msgid "Box"
+msgstr "Box"
+
+#. Key:	F97A30ED4E438A121605B18C60A5506F
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_ChairObstacle.DA_ChairObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_ChairObstacle.DA_ChairObstacle.mDisplayName
+msgctxt ",F97A30ED4E438A121605B18C60A5506F"
+msgid "Chair"
+msgstr "Chair"
+
+#. Key:	1B49090E41C2798D0FE6E7A280BA6D48
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_EnvObstacle.DA_EnvObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_EnvObstacle.DA_EnvObstacle.mDisplayName
+msgctxt ",1B49090E41C2798D0FE6E7A280BA6D48"
+msgid "Environment"
+msgstr "Environment"
+
+#. Key:	80E4DF044695C7B11B1A4899878F04B4
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_PillarObstacle.DA_PillarObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_PillarObstacle.DA_PillarObstacle.mDisplayName
+msgctxt ",80E4DF044695C7B11B1A4899878F04B4"
+msgid "Pillar"
+msgstr "Pillar"
+
+#. Key:	590DF9D24112691314272C8EC98D8AC3
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_PotObstacle.DA_PotObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_PotObstacle.DA_PotObstacle.mDisplayName
+msgctxt ",590DF9D24112691314272C8EC98D8AC3"
+msgid "Pot"
+msgstr "Pot"
+
+#. Key:	EBFB4C6F4B289BEC552527A52CE171A0
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TableObstacle.DA_TableObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TableObstacle.DA_TableObstacle.mDisplayName
+msgctxt ",EBFB4C6F4B289BEC552527A52CE171A0"
+msgid "Table"
+msgstr "Table"
+
+#. Key:	04986E0841E05FCA5C89C0AAE490CEFC
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_00.DA_TreasureBoxObstacle_00.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_00.DA_TreasureBoxObstacle_00.mDisplayName
+msgctxt ",04986E0841E05FCA5C89C0AAE490CEFC"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	A2D2B89E492AA041D8C0EAA336D41D7E
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_01.DA_TreasureBoxObstacle_01.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_01.DA_TreasureBoxObstacle_01.mDisplayName
+msgctxt ",A2D2B89E492AA041D8C0EAA336D41D7E"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	6B7431FA42B357BC63E068ACE302DE6C
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_02.DA_TreasureBoxObstacle_02.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_02.DA_TreasureBoxObstacle_02.mDisplayName
+msgctxt ",6B7431FA42B357BC63E068ACE302DE6C"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	3C1802FC4662F6D815E622B91BA8E677
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_03.DA_TreasureBoxObstacle_03.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_03.DA_TreasureBoxObstacle_03.mDisplayName
+msgctxt ",3C1802FC4662F6D815E622B91BA8E677"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	B3BB6A5B4C6625E70C0996A310B52F9A
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_04.DA_TreasureBoxObstacle_04.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_04.DA_TreasureBoxObstacle_04.mDisplayName
+msgctxt ",B3BB6A5B4C6625E70C0996A310B52F9A"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	B3A2A8DB440D2677378EEE96ED3A32D1
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_05.DA_TreasureBoxObstacle_05.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_05.DA_TreasureBoxObstacle_05.mDisplayName
+msgctxt ",B3A2A8DB440D2677378EEE96ED3A32D1"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	AA4575B84BA443197E7208B4F2ACAD91
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_06.DA_TreasureBoxObstacle_06.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_06.DA_TreasureBoxObstacle_06.mDisplayName
+msgctxt ",AA4575B84BA443197E7208B4F2ACAD91"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	FB3D2CCD49518C020F403C96FF156825
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_07.DA_TreasureBoxObstacle_07.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_07.DA_TreasureBoxObstacle_07.mDisplayName
+msgctxt ",FB3D2CCD49518C020F403C96FF156825"
+msgid "Treasure"
+msgstr "Treasure"
+
+#. Key:	35832ED3418F3D831583C8B78DB29CF3
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_08.DA_TreasureBoxObstacle_08.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_TreasureBoxObstacle_08.DA_TreasureBoxObstacle_08.mDisplayName
+msgctxt ",35832ED3418F3D831583C8B78DB29CF3"
+msgid "Treasure"
+msgstr "Treasure"
+
 #. Key:	AFD09BB54E770A9D431D899E000ED00C
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_EndRoom_Heal_12.DA_Passive_EndRoom_Heal_12.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_EndRoom_Heal_12.DA_Passive_EndRoom_Heal_12.mDescription
@@ -853,12 +958,12 @@ msgctxt ",638EE6CA43AEDDF7B6E85CB571337F70"
 msgid "전투 종료 시, 체력을 5 회복합니다."
 msgstr "Restore 5 HP at the end of combat."
 
-#. Key:	CAAE21E74B6E69C4DF905194698AB6A5
+#. Key:	CB071F8149F1149DFE9E80BFC0B8F2D6
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P007.DA_Passive_P007.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P007.DA_Passive_P007.mDescription
-msgctxt ",CAAE21E74B6E69C4DF905194698AB6A5"
-msgid "스킬 사용 시, 3회 째 사용할 때마다 공격력이 50% 증가합니다."
-msgstr "Every 3rd skill use increases attack power by 50%."
+msgctxt ",CB071F8149F1149DFE9E80BFC0B8F2D6"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 공격력이 25% 증가합니다."
+msgstr "Every fifth skill use increases attack power by 25%."
 
 #. Key:	07CF45084D47C668C07A08B4EA55C2A1
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P008.DA_Passive_P008.mDescription
@@ -979,12 +1084,12 @@ msgctxt ",E3AD030649E4F653D951B383B9700F87"
 msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면,  자신에게 방어도 5를 부여합니다."
 msgstr "Gain 5 Defense after using 5 skills in a single turn."
 
-#. Key:	296E97894FFCC58ACFABA5BA00410020
+#. Key:	B3542A23465387CF79AB999E351E23CE
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P027.DA_Passive_P027.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P027.DA_Passive_P027.mDescription
-msgctxt ",296E97894FFCC58ACFABA5BA00410020"
-msgid "전투 종료 시, 체력이 50% 이하라면, 체력을 12 회복합니다."
-msgstr "At the end of combat, restore 12 HP if your HP is at or below 50%."
+msgctxt ",B3542A23465387CF79AB999E351E23CE"
+msgid "전투 종료 시, 체력이 50% 이하라면, 체력을 10 회복합니다."
+msgstr "At the end of combat, recover 10 HP if your HP is at or below 50%."
 
 #. Key:	530DA9E1480DC551ED1907B7412D08D1
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P028.DA_Passive_P028.mDescription
@@ -1139,6 +1244,34 @@ msgstr "Every 3rd Skill used increases Critical Chance by 5%"
 msgctxt ",D3F3C21248679665C774278BA071B5B9"
 msgid "전투 시작 시,  2라운드의 기절 상태이상과 완력 6을 부여합니다"
 msgstr "At the start of combat, apply Stun for 2 rounds and grant 6 Strength."
+
+#. Key:	FBE9575743865A911546428475920EAE
+#. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P001_FuryOfGhoul.DA_MonsterPassive_P001_FuryOfGhoul.mDescription
+#: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P001_FuryOfGhoul.DA_MonsterPassive_P001_FuryOfGhoul.mDescription
+msgctxt ",FBE9575743865A911546428475920EAE"
+msgid "효과 피격 시,  자신에게 완력 1을 부여합니다"
+msgstr "When hit by an effect, gain 1 Strength."
+
+#. Key:	2293EF534941E7ECD0ABACB98F4AA829
+#. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P002_RottenRegeneration.DA_MonsterPassive_P002_RottenRegeneration.mDescription
+#: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P002_RottenRegeneration.DA_MonsterPassive_P002_RottenRegeneration.mDescription
+msgctxt ",2293EF534941E7ECD0ABACB98F4AA829"
+msgid "스킬 사용 시, 체력을 10 회복합니다."
+msgstr "When using a skill, recover 10 HP."
+
+#. Key:	0E8EFF2E4ECD1205E5647382756ECC99
+#. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P003_Harvest.DA_MonsterPassive_P003_Harvest.mDescription
+#: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P003_Harvest.DA_MonsterPassive_P003_Harvest.mDescription
+msgctxt ",0E8EFF2E4ECD1205E5647382756ECC99"
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 50 회복합니다."
+msgstr "After the effect resolves, recover 50 HP if the target has 0 HP or less."
+
+#. Key:	79F9017F4B6D893D2B538A84721F3BF3
+#. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P004_BoneHardening.DA_MonsterPassive_P004_BoneHardening.mDescription
+#: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P004_BoneHardening.DA_MonsterPassive_P004_BoneHardening.mDescription
+msgctxt ",79F9017F4B6D893D2B538A84721F3BF3"
+msgid "피격 시, 자신에게 방어도 5을 부여합니다."
+msgstr "When hit, gain 5 Armor."
 
 #. Key:	DAF8C7E3429395E9A134439F0A52ADA9
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Attack_Common_CoveringFire.DA_Common_Attack_Common_CoveringFire.mName
@@ -1375,8 +1508,8 @@ msgstr "Melt: Armor"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Slime/DA_Slime_Dissolve_Weapon.DA_Slime_Dissolve_Weapon.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage1/Slime/DA_Slime_Dissolve_Weapon.DA_Slime_Dissolve_Weapon.mName
 msgctxt ",6919BCBA468B88D596AA6FB3E68888DA"
-msgid "녹이기 : 방어구"
-msgstr "Melt: Armor"
+msgid "녹이기 : 무기"
+msgstr "Melt: Weapon"
 
 #. Key:	1ACD5B834DBC1C2522D70584737599B3
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Spider/DA_Spider_Bite.DA_Spider_Bite.mName
@@ -1699,6 +1832,13 @@ msgstr "Nether"
 msgctxt ",D1640D9A4AF7C98588D845AEF06D9106"
 msgid "재구성"
 msgstr "Reconstitution"
+
+#. Key:	5B25637149DDDE9630D00EAB99C971B4
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Necromancer/DA_Necromancer_Spell_Summon.DA_Necromancer_Spell_Summon.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage3/Necromancer/DA_Necromancer_Spell_Summon.DA_Necromancer_Spell_Summon.mName
+msgctxt ",5B25637149DDDE9630D00EAB99C971B4"
+msgid "소환"
+msgstr "Summon"
 
 #. Key:	6C49CFD64D84187007C208AE881083B5
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Reaper/DA_Reaper_Attack_BlackHole.DA_Reaper_Attack_BlackHole.mName
@@ -2043,12 +2183,12 @@ msgctxt ",8A61B53C4BF547BE161DFBB79EAD37D1"
 msgid "부패"
 msgstr "Decay"
 
-#. Key:	60FF330A4607647B402CEFB623811A12
+#. Key:	4DBA135B40E69885E4E6C7BBF219B631
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Attack_Common_EssenceDrain.DA_Druid_Attack_Common_EssenceDrain.mDescription
 #: /Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Attack_Common_EssenceDrain.DA_Druid_Attack_Common_EssenceDrain.mDescription
-msgctxt ",60FF330A4607647B402CEFB623811A12"
+msgctxt ",4DBA135B40E69885E4E6C7BBF219B631"
 msgid "■ 1타 모션:\r\n- 대상에게 10~15의 데미지를 입힙니다.\r\n■ 2타 모션:\r\n- 자신의 체력을 15 회복시킵니다."
-msgstr "■ First hit:\r\n- Deals 10–15 damage to the target.\r\n■ Second hit:\r\n- Restores 15 HP to yourself."
+msgstr "■ Phase 1:\r\n- Deals 10~15 damage to the target.\r\n■ Phase 2:\r\n- Restores 15 HP to self."
 
 #. Key:	ED4E84664B2BFFDA6CBF77A9EA36CF45
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Attack_Common_EssenceDrain.DA_Druid_Attack_Common_EssenceDrain.mName
@@ -2484,12 +2624,12 @@ msgctxt ",E0761C174C426AEB20BD7488B0427A84"
 msgid "얼음 방패"
 msgstr "Ice Shield"
 
-#. Key:	954FB50E49E048328BE0A4A6C9B39649
+#. Key:	34F9D73A421EB901D7B89DA0F576C797
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Epic_Collapse.DA_Mage_Spell_Epic_Collapse.mDescription
 #: /Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Epic_Collapse.DA_Mage_Spell_Epic_Collapse.mDescription
-msgctxt ",954FB50E49E048328BE0A4A6C9B39649"
-msgid "■ 1타 모션:\r\n- 대상에게 25~50의 데미지를 입힙니다.\r\n■ 2타 모션:\r\n- 자신에게 탈진 태그를 3 중첩 부여합니다.\r\n- 자신에게 둔화 태그를 3 중첩 부여합니다."
-msgstr "■ 1st Hit:\r\n- Deals 25~50 damage to the target.\r\n■ 2nd Hit:\r\n- Applies 3 stacks of Exhaustion to the caster.\r\n- Applies 3 stacks of Slow to the caster."
+msgctxt ",34F9D73A421EB901D7B89DA0F576C797"
+msgid "■ 1타 모션:\r\n- 대상에게 33~66의 데미지를 입힙니다.\r\n■ 2타 모션:\r\n- 자신에게 탈진 태그를 2 중첩 부여합니다.\r\n- 자신에게 둔화 태그를 2 중첩 부여합니다."
+msgstr "■ Phase 1:\r\n- Deals 33~66 damage to the target.\r\n■ Phase 2:\r\n- Applies 2 stacks of Exhaustion to self.\r\n- Applies 2 stacks of Slow to self."
 
 #. Key:	15DCDC4640E77602560198968F32EC29
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Epic_Collapse.DA_Mage_Spell_Epic_Collapse.mName
@@ -2915,7 +3055,7 @@ msgstr "Red Spider"
 #. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonBirdUnit.DA_SkeletonBirdUnit.mDisplayName
 #: /Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_SkeletonBirdUnit.DA_SkeletonBirdUnit.mDisplayName
 msgctxt ",2936593647B04239DFB6638C5D51B867"
-msgid "해골 새"
+msgid "SkeletonBird"
 msgstr "Skeleton Bird"
 
 #. Key:	B1ABF5934F1874FE188BA8B2A813A546
@@ -5894,95 +6034,81 @@ msgid "{0}\n{1}"
 msgstr "{0}\n{1}"
 
 #. Key:	CurrentCombatArea
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1393)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(1393)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1394)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(1394)
 msgctxt "CombatGameMode,CurrentCombatArea"
 msgid "현재 전투 지역"
 msgstr "Current Combat Area"
 
 #. Key:	EquipmentSlotWeapon
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(202)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(202)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(203)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(203)
 msgctxt "CombatGameMode,EquipmentSlotWeapon"
 msgid "WEAPON"
 msgstr "WEAPON"
 
 #. Key:	EquipmentSlotGloves
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(204)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(204)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(205)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(205)
 msgctxt "CombatGameMode,EquipmentSlotGloves"
 msgid "GLOVES"
 msgstr "GLOVES"
 
 #. Key:	EquipmentSlotBoots
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(206)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(206)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(207)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(207)
 msgctxt "CombatGameMode,EquipmentSlotBoots"
 msgid "BOOTS"
 msgstr "BOOTS"
 
 #. Key:	EquipmentSlotEmpty
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(208)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(208)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(209)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(209)
 msgctxt "CombatGameMode,EquipmentSlotEmpty"
 msgid "EMPTY"
 msgstr "EMPTY"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2270)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2270)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2286)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2286)
 msgctxt "CombatGameMode,ArtifactFallbackName"
 msgid "Artifact {0}"
 msgstr "Artifact {0}"
 
 #. Key:	MovedTiles
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2509)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2509)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2522)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2522)
 msgctxt "CombatFloatingLog,MovedTiles"
 msgid "이동 {0}칸"
 msgstr "Move {0} tiles"
 
 #. Key:	EnteredBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2516)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2516)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2529)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2529)
 msgctxt "CombatFloatingLog,EnteredBoard"
 msgid "등장"
 msgstr "Entrance"
 
 #. Key:	ExitedBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2523)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2523)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2536)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2536)
 msgctxt "CombatFloatingLog,ExitedBoard"
 msgid "전투불능"
 msgstr "Defeated"
 
 #. Key:	VictoryRewardTitle
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2790)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2790)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2803)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2803)
 msgctxt "CombatGameMode,VictoryRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	UnknownRewardMercenary
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2833)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2833)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2846)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2846)
 msgctxt "CombatGameMode,UnknownRewardMercenary"
 msgid "Mercenary"
 msgstr "Mercenary"
-
-#. Key:	ArtifactStatBoost
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2969)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2969)
-msgctxt "CombatGameMode,ArtifactStatBoost"
-msgid "파티 전체 능력치를 강화합니다."
-msgstr "Boosts the stats of the entire party."
-
-#. Key:	ArtifactPartyWide
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2973)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2973)
-msgctxt "CombatGameMode,ArtifactPartyWide"
-msgid "파티 전체에 적용됩니다."
-msgstr "Applies to the entire party."
 
 #. Key:	MageDesc
 #. SourceLocation:	Source/P_RD/GameMode/FrontendGameMode.cpp(101)
@@ -6244,22 +6370,22 @@ msgid "Party-wide effect"
 msgstr "Party-wide effect"
 
 #. Key:	MercenaryLevel
-#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(338)
-#: Source/P_RD/GameMode/ShopGameMode.cpp(338)
+#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(326)
+#: Source/P_RD/GameMode/ShopGameMode.cpp(326)
 msgctxt "ShopGameMode,MercenaryLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	MercenarySummary
-#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(354)
-#: Source/P_RD/GameMode/ShopGameMode.cpp(354)
+#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(342)
+#: Source/P_RD/GameMode/ShopGameMode.cpp(342)
 msgctxt "ShopGameMode,MercenarySummary"
 msgid "Lv.{0} · HP {1}"
 msgstr "Lv.{0} · HP {1}"
 
 #. Key:	MercenarySold
-#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(401)
-#: Source/P_RD/GameMode/ShopGameMode.cpp(401)
+#. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(389)
+#: Source/P_RD/GameMode/ShopGameMode.cpp(389)
 msgctxt "ShopGameMode,MercenarySold"
 msgid "고용 완료"
 msgstr "Hired"
@@ -6832,120 +6958,134 @@ msgid "효과 설명이 아직 없다."
 msgstr "No effect description yet."
 
 #. Key:	MonsterTabSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5640)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5640)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
 msgctxt "CombatLayoutHUD,MonsterTabSkills"
 msgid "스킬"
 msgstr "Skills"
 
 #. Key:	MonsterTabNoSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5642)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5642)
 msgctxt "CombatLayoutHUD,MonsterTabNoSkills"
 msgid "스킬  ·  없음"
 msgstr "Skills  ·  None"
 
+#. Key:	MonsterEquipmentHeading
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5720)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5720)
+msgctxt "CombatLayoutHUD,MonsterEquipmentHeading"
+msgid "장비 · 눌러서 자세히"
+msgstr "Equipment · Tap for details"
+
+#. Key:	MonsterEquipmentEmpty
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5721)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5721)
+msgctxt "CombatLayoutHUD,MonsterEquipmentEmpty"
+msgid "장비 · 없음"
+msgstr "Equipment · None"
+
 #. Key:	UnitDetailLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6199)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6199)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6285)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6285)
 msgctxt "CombatLayoutHUD,UnitDetailLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	UnitDetailAlly
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6204)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6204)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
 msgctxt "CombatLayoutHUD,UnitDetailAlly"
 msgid "아군"
 msgstr "Ally"
 
 #. Key:	UnitDetailEnemy
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6205)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6205)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6291)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6291)
 msgctxt "CombatLayoutHUD,UnitDetailEnemy"
 msgid "적"
 msgstr "Enemy"
 
 #. Key:	UnitDetailIdentityAndHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6207)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6207)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6293)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6293)
 msgctxt "CombatLayoutHUD,UnitDetailIdentityAndHp"
 msgid "{0}  ·  {1}  ·  HP {2}/{3}"
 msgstr "{0}  ·  {1}  ·  HP {2}/{3}"
 
 #. Key:	UnitDetailWithDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6213)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6213)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6299)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6299)
 msgctxt "CombatLayoutHUD,UnitDetailWithDefense"
 msgid "{0}  ·  방어 {1}"
 msgstr "{0}  ·  Defense {1}"
 
 #. Key:	DetailChipLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6235)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6235)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6321)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6321)
 msgctxt "CombatLayoutHUD,DetailChipLevel"
 msgid "레벨"
 msgstr "Level"
 
 #. Key:	DetailChipHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6238)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6238)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6324)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6324)
 msgctxt "CombatLayoutHUD,DetailChipHp"
 msgid "HP"
 msgstr "HP"
 
 #. Key:	DetailChipDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6240)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6240)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
 msgctxt "CombatLayoutHUD,DetailChipDefense"
 msgid "방어"
 msgstr "Defense"
 
 #. Key:	DetailChipSpeed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6242)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6242)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6328)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6328)
 msgctxt "CombatLayoutHUD,DetailChipSpeed"
 msgid "속도"
 msgstr "Speed"
 
 #. Key:	DetailChipAp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6244)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6244)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6330)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6330)
 msgctxt "CombatLayoutHUD,DetailChipAp"
 msgid "AP"
 msgstr "AP"
 
 #. Key:	UnitDetailPassiveLine
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6251)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6251)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6337)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6337)
 msgctxt "CombatLayoutHUD,UnitDetailPassiveLine"
 msgid "· {0}"
 msgstr "· {0}"
 
 #. Key:	UnitDetailNoPassives
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6254)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6254)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6340)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6340)
 msgctxt "CombatLayoutHUD,UnitDetailNoPassives"
 msgid "패시브 없음"
 msgstr "No passives"
 
 #. Key:	UnitDetailEnemyThreatLegend
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6260)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6260)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6346)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6346)
 msgctxt "CombatLayoutHUD,UnitDetailEnemyThreatLegend"
 msgid "{0}\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위."
 msgstr "{0}\n\nThe board shows every tile this enemy can reach in one turn.\nBorder band = movement range, fill = attack range."
 
 #. Key:	MoveDetailTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6588)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6588)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6674)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6674)
 msgctxt "CombatLayoutHUD,MoveDetailTitle"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	MoveDetailDescription
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6589)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6589)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6675)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6675)
 msgctxt "CombatLayoutHUD,MoveDetailDescription"
 msgid "한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 {0}칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."
 msgstr "Moving one tile costs 1 AP. You can move up to {0} tiles with your remaining AP.\n\nTap the board to choose a destination, then tap the final tile again to confirm movement."
@@ -7363,6 +7503,13 @@ msgctxt "CombatLayoutHUD,ArtifactEffectHeader"
 msgid "효과"
 msgstr "Effects"
 
+#. Key:	EnemyEquipmentScope
+#. SourceLocation:	Source/P_RD/UI/Combat/SkillDetailOverlayPresenter.cpp(2204)
+#: Source/P_RD/UI/Combat/SkillDetailOverlayPresenter.cpp(2204)
+msgctxt "CombatLayoutHUD,EnemyEquipmentScope"
+msgid "장비 · 이 적에게 적용"
+msgstr "Equipment · Applies to this enemy"
+
 #. Key:	DetailStatHeading
 #. SourceLocation:	Source/P_RD/UI/Combat/SkillDetailOverlayPresenter.cpp(704)
 #: Source/P_RD/UI/Combat/SkillDetailOverlayPresenter.cpp(704)
@@ -7411,13 +7558,6 @@ msgstr "This skill is equipped by an owned mercenary."
 msgctxt "CombatLayoutHUD,SkillDetailFallbackDescription"
 msgid "현재 전투에서 사용할 수 있는 스킬입니다."
 msgstr "A skill available in the current battle."
-
-#. Key:	ArtifactStatOnlyEffect
-#. SourceLocation:	Source/P_RD/UI/Combat/SkillDetailUIBuilder.cpp(220)
-#: Source/P_RD/UI/Combat/SkillDetailUIBuilder.cpp(220)
-msgctxt "CombatLayoutHUD,ArtifactStatOnlyEffect"
-msgid "파티 전체 능력치를 강화합니다."
-msgstr "Boosts the stats of the entire party."
 
 #. Key:	SelectLegendSelf
 #. SourceLocation:	Source/P_RD/UI/Combat/SkillTacticalDiagramWidget.cpp(395)
@@ -7916,205 +8056,191 @@ msgctxt "MockRewardDriver,(mock reward)"
 msgid "(mock reward)"
 msgstr "(mock reward)"
 
-#. Key:	ArtifactFallbackEffect
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1763)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1763)
-msgctxt "RewardConcept03Widget,ArtifactFallbackEffect"
-msgid "파티 전체에 적용됩니다."
-msgstr "Applies to the entire party."
-
-#. Key:	EffectHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1766)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1766)
-msgctxt "RewardConcept03Widget,EffectHeading"
-msgid "효과"
-msgstr "Effect"
-
-#. Key:	TabExp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(194)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(194)
-msgctxt "RewardConcept03Widget,TabExp"
-msgid "경험치"
-msgstr "EXP"
-
-#. Key:	TabChest
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(195)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(195)
-msgctxt "RewardConcept03Widget,TabChest"
-msgid "상자"
-msgstr "Chest"
-
-#. Key:	TabGold
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(196)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(196)
-msgctxt "RewardConcept03Widget,TabGold"
-msgid "골드"
-msgstr "Gold"
-
-#. Key:	TabArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(197)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(197)
-msgctxt "RewardConcept03Widget,TabArtifact"
-msgid "아티팩트"
-msgstr "Artifact"
-
-#. Key:	NextButton
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(198)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(198)
-msgctxt "RewardConcept03Widget,NextButton"
-msgid "다음"
-msgstr "Next"
-
 #. Key:	ChestOpen
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1988)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1988)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1886)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1886)
 msgctxt "RewardConcept03Widget,ChestOpen"
 msgid "상자 열기"
 msgstr "Open Chest"
 
 #. Key:	ChestOpenHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1992)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1992)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1890)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1890)
 msgctxt "RewardConcept03Widget,ChestOpenHint"
 msgid "상자를 눌러 여세요"
 msgstr "Tap the chest to open it"
 
 #. Key:	ClaimSelectedOne
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1997)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1997)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1895)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1895)
 msgctxt "RewardConcept03Widget,ClaimSelectedOne"
 msgid "선택한 1개 받기"
 msgstr "Claim Selected Item"
 
 #. Key:	Confirm
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1997)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1997)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1895)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1895)
 msgctxt "RewardConcept03Widget,Confirm"
 msgid "확정"
 msgstr "Confirm"
 
-#. Key:	ConfirmButton
+#. Key:	SelectedArtifact
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1946)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1946)
+msgctxt "RewardConcept03Widget,SelectedArtifact"
+msgid "선택됨"
+msgstr "Selected"
+
+#. Key:	TabExp
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(197)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(197)
+msgctxt "RewardConcept03Widget,TabExp"
+msgid "경험치"
+msgstr "EXP"
+
+#. Key:	TabChest
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(198)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(198)
+msgctxt "RewardConcept03Widget,TabChest"
+msgid "상자"
+msgstr "Chest"
+
+#. Key:	TabGold
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(199)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(199)
+msgctxt "RewardConcept03Widget,TabGold"
+msgid "골드"
+msgstr "Gold"
+
+#. Key:	TabArtifact
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(200)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(200)
+msgctxt "RewardConcept03Widget,TabArtifact"
+msgid "아티팩트"
+msgstr "Artifact"
+
+#. Key:	NextButton
 #. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(201)
 #: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(201)
+msgctxt "RewardConcept03Widget,NextButton"
+msgid "다음"
+msgstr "Next"
+
+#. Key:	ConfirmButton
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
 msgctxt "RewardConcept03Widget,ConfirmButton"
 msgid "확정"
 msgstr "Confirm"
 
 #. Key:	ExpHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
 msgctxt "RewardConcept03Widget,ExpHeading"
 msgid "경험치 획득"
 msgstr "EXP Gained"
 
 #. Key:	ChestHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(207)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(207)
 msgctxt "RewardConcept03Widget,ChestHeading"
 msgid "보상 상자"
 msgstr "Reward Chest"
 
-#. Key:	SelectedArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(2048)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(2048)
-msgctxt "RewardConcept03Widget,SelectedArtifact"
-msgid "선택됨"
-msgstr "Selected"
-
 #. Key:	ChestOpenLabel
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
 msgctxt "RewardConcept03Widget,ChestOpenLabel"
 msgid "상자 열기"
 msgstr "Open the Chest"
 
 #. Key:	ChestHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(209)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(209)
 msgctxt "RewardConcept03Widget,ChestHint"
 msgid "상자를 눌러 여세요"
 msgstr "Tap the chest to open it"
 
 #. Key:	GoldHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(207)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(207)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(210)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(210)
 msgctxt "RewardConcept03Widget,GoldHeading"
 msgid "획득 골드"
 msgstr "Gold Gained"
 
 #. Key:	GoldGrantedHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
 msgctxt "RewardConcept03Widget,GoldGrantedHint"
 msgid "보상이 지급되었습니다"
 msgstr "Rewards have been granted"
 
 #. Key:	SelectionRetry
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(318)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(318)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(321)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(321)
 msgctxt "RewardConcept03Widget,SelectionRetry"
 msgid "지급 실패 · 다시 시도"
 msgstr "Reward Failed · Retry"
 
 #. Key:	DefaultRewardTitle
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(507)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(507)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(510)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(510)
 msgctxt "RewardConcept03Widget,DefaultRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	MercenaryFallbackName
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(554)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(554)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(557)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(557)
 msgctxt "RewardConcept03Widget,MercenaryFallbackName"
 msgid "용병 {0}"
 msgstr "Mercenary {0}"
 
 #. Key:	GoldBalanceHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(607)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(607)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(610)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(610)
 msgctxt "RewardConcept03Widget,GoldBalanceHint"
 msgid "총 보유 {0} G"
 msgstr "Total {0} G"
 
 #. Key:	ExperienceLevel
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(805)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(805)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(820)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(820)
 msgctxt "RewardConcept03Widget,ExperienceLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	MultipleLevelUp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(829)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(829)
 msgctxt "RewardConcept03Widget,MultipleLevelUp"
 msgid "레벨 업! ×{0}"
 msgstr "Level Up! ×{0}"
 
 #. Key:	LevelUp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(816)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(816)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(831)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(831)
 msgctxt "RewardConcept03Widget,LevelUp"
 msgid "레벨 업!"
 msgstr "Level Up!"
 
 #. Key:	ChoiceTypeArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(849)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(849)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(864)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(864)
 msgctxt "RewardConcept03Widget,ChoiceTypeArtifact"
 msgid "아티팩트"
 msgstr "Artifact"
 
 #. Key:	ChoiceTypeSkill
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(870)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(870)
 msgctxt "RewardConcept03Widget,ChoiceTypeSkill"
 msgid "스킬"
 msgstr "Skill"
 
 #. Key:	ChoiceTypeGold
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(857)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(857)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(872)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(872)
 msgctxt "RewardConcept03Widget,ChoiceTypeGold"
 msgid "골드"
 msgstr "Gold"
@@ -9184,50 +9310,50 @@ msgid "스킬을 교체하시겠습니까?"
 msgstr "Replace this skill?"
 
 #. Key:	TitleText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(249)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(249)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(257)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(257)
 msgctxt "TitleMenuWidget,TitleText"
 msgid "Rogue The Dice"
 msgstr "Rogue The Dice"
 
 #. Key:	StartText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(250)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(250)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(258)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(258)
 msgctxt "TitleMenuWidget,StartText"
 msgid "START"
 msgstr "START"
 
 #. Key:	NewStartText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(251)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(251)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(259)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(259)
 msgctxt "TitleMenuWidget,NewStartText"
 msgid "NEW START"
 msgstr "NEW START"
 
 #. Key:	ContinueText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(252)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(252)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(260)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(260)
 msgctxt "TitleMenuWidget,ContinueText"
 msgid "CONTINUE"
 msgstr "CONTINUE"
 
 #. Key:	SettingsText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(253)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(253)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(261)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(261)
 msgctxt "TitleMenuWidget,SettingsText"
 msgid "SETTINGS"
 msgstr "SETTINGS"
 
 #. Key:	MainOnlyStatusText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(254)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(254)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(262)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(262)
 msgctxt "TitleMenuWidget,MainOnlyStatusText"
 msgid "Title main screen only"
 msgstr "Title main screen only"
 
 #. Key:	ExitText
-#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(361)
-#: Source/P_RD/UI/TitleMenuWidget.cpp(361)
+#. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(377)
+#: Source/P_RD/UI/TitleMenuWidget.cpp(377)
 msgctxt "TitleMenuWidget,ExitText"
 msgid "EXIT"
 msgstr "EXIT"

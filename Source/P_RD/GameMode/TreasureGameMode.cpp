@@ -45,7 +45,7 @@ namespace
 
 	/**
 	 * @brief 아티팩트 효과 줄 조립. 중복 조립 대신 공용 조립기 결과를 이어 붙인다.
-	 * @details 패시브 설명 수집과 순수 스탯 폴백은 SkillDetailUIBuilder 가 담당한다.
+	 * @details 아티팩트 원문 설명은 SkillDetailUIBuilder가 공통 경로에서 가져온다.
 	 */
 	FText GetTreasureArtifactDescription(const UStaticArtifactData* Data)
 	{
