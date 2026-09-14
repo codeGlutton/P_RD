@@ -49,6 +49,7 @@ public:
 
 	/** @brief 화면에 올라오기 전 타이틀 배경 영상을 미리 열어 둔다. */
 	void PrimeTitleBackgroundVideo();
+	void RefreshLocalizedTitleLogo();
 	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
 	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
 

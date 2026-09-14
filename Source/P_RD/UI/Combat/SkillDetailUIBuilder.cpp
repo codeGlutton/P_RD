@@ -200,24 +200,10 @@ void SkillDetailUIBuilder::FillFromArtifactData(const UStaticArtifactData* Artif
 		: FText::GetEmpty();
 	OutDetail.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
 
-	// 아티팩트 자체에는 설명 필드가 없다. 붙은 패시브의 mDescription 을 모아
-	// 효과 줄로 쓴다 -- 전투 HUD/상점 상세 카드가 하던 조립과 같은 규칙.
 	OutDetail.mEffectDescriptions.Reset();
-	for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
-		: ArtifactData->mStaticPassiveData)
+	const FText Description = ArtifactData->GetDisplayDescription();
+	if (!Description.IsEmpty())
 	{
-		if (const UStaticPassiveData* Passive = PassiveSoft.LoadSynchronous();
-			Passive != nullptr && Passive->mDescription.IsEmpty() == false)
-		{
-			OutDetail.mEffectDescriptions.Add(Passive->mDescription);
-		}
-	}
-	// 설명 없는 순수 스탯 아티팩트는 기본 문구 한 줄 -- 보상 상세와 같은 폴백.
-	if (OutDetail.mEffectDescriptions.IsEmpty()
-		&& ArtifactData->mStatModifiers.IsEmpty() == false)
-	{
-		OutDetail.mEffectDescriptions.Add(
-			NSLOCTEXT("CombatLayoutHUD", "ArtifactStatOnlyEffect",
-				"파티 전체 능력치를 강화합니다."));
+		OutDetail.mEffectDescriptions.Add(Description);
 	}
 }

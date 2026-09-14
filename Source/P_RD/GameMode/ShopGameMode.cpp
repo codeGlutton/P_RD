@@ -1,4 +1,4 @@
-﻿#include "GameMode/ShopGameMode.h"
+#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -265,19 +265,7 @@ void AShopGameMode::PushShopUIData()
 						Item.mIcon = Data->mIcon.LoadSynchronous();
 						Item.mPrice = Data->mPrice;
 						Item.mRarityColor = GetShopRarityColor(Data->mRarityType);
-						// 아티팩트 자체에는 설명 필드가 없으므로 첫 패시브의 UI 설명을
-						// 상점 상세 카드에 사용한다. 설명 없는 순수 스탯 아티팩트는
-						// 위젯의 종류별 기본 문구로 폴백한다.
-						for (const TSoftObjectPtr<UStaticPassiveData>& PassiveSoft
-							: Data->mStaticPassiveData)
-						{
-							if (const UStaticPassiveData* Passive = PassiveSoft.LoadSynchronous();
-								Passive != nullptr && !Passive->mDescription.IsEmpty())
-							{
-								Item.mDescription = Passive->mDescription;
-								break;
-							}
-						}
+						Item.mDescription = Data->GetDisplayDescription();
 					}
 				}
 

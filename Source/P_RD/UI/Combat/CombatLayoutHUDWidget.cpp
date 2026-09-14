@@ -5629,6 +5629,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 	// 칸을 접어 둔다 -- 만든 그대로 두면 빈 이름과 흰 사각형이 그대로 남는다.
 	const bool bHasDetail = Detail.mUnitId != INDEX_NONE
 		&& Detail.mUnitId == mMonsterTabInspectedUnitId;
+	RefreshMonsterEquipment();
 	const int32 SkillCount = bHasDetail ? Detail.mSkills.Num() : 0;
 	mMonsterTabSkillIndices.Init(INDEX_NONE, 4);
 
@@ -5685,7 +5686,7 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 				? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 		}
 	}
-	if (Detail.mPortrait != nullptr)
+	if (bHasDetail && Detail.mPortrait != nullptr)
 	{
 		if (UImage* DetailPortrait = Cast<UImage>(
 			mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterDetailPortrait"))))
@@ -5694,6 +5695,91 @@ void UCombatLayoutHUDWidget::RefreshMonsterTabDetail()
 		}
 	}
 }
+void UCombatLayoutHUDWidget::RefreshMonsterEquipment()
+{
+	auto* Canvas = Cast<UCanvasPanel>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterTabCanvas")));
+	if (!Canvas || !mMonsterTabWidget->WidgetTree) return;
+	UWidgetTree* Tree = mMonsterTabWidget->WidgetTree;
+	const auto& Detail = mUIModel->GetUnitDetail();
+	const bool bCurrent = Detail.mUnitId != INDEX_NONE && Detail.mUnitId == mMonsterTabInspectedUnitId;
+	const int32 Count = bCurrent ? Detail.mEquipment.Num() : 0;
+	auto* Heading = Cast<UTextBlock>(Tree->FindWidget(TEXT("MonsterEquipmentHeading")));
+	if (!Heading)
+	{
+		Heading = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("MonsterEquipmentHeading"));
+		if (auto* Source = Cast<UTextBlock>(mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterSkillHeading"))))
+			Heading->SetFont(Source->GetFont());
+		Heading->SetColorAndOpacity(FSlateColor(FLinearColor(0.94f, 0.84f, 0.65f)));
+		Heading->SetJustification(ETextJustify::Center);
+		Heading->SetVisibility(ESlateVisibility::HitTestInvisible);
+		auto* CanvasSlot = Canvas->AddChildToCanvas(Heading);
+		CanvasSlot->SetPosition(FVector2D(265.f, 684.f));
+		CanvasSlot->SetSize(FVector2D(375.f, 40.f));
+		CanvasSlot->SetZOrder(20);
+	}
+	Heading->SetText(Count > 0 ? LOCTEXT("MonsterEquipmentHeading", "장비 · 눌러서 자세히")
+		: LOCTEXT("MonsterEquipmentEmpty", "장비 · 없음"));
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		const FName Name(*FString::Printf(TEXT("MonsterEquipmentButton_%d"), Index));
+		auto* Button = Cast<UButton>(Tree->FindWidget(Name));
+		if (!Button)
+		{
+			Button = Tree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+			FButtonStyle Style;
+			if (auto* Frame = Cast<UImage>(Tree->FindWidget(TEXT("MonsterSkillSlot_0"))))
+			{
+				Style.Normal = Frame->GetBrush();
+				Style.Hovered = Style.Normal;
+				Style.Pressed = Style.Normal;
+				Style.Pressed.TintColor = FSlateColor(FLinearColor(0.8f, 0.8f, 0.8f));
+				Button->SetStyle(Style);
+			}
+			Button->SetTouchMethod(EButtonTouchMethod::PreciseTap);
+			auto* Icon = Tree->ConstructWidget<UImage>(UImage::StaticClass(),
+				FName(*FString::Printf(TEXT("MonsterEquipmentIcon_%d"), Index)));
+			Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
+			auto* ContentSlot = Cast<UButtonSlot>(Button->AddChild(Icon));
+			ContentSlot->SetPadding(FMargin(16.f));
+			ContentSlot->SetHorizontalAlignment(HAlign_Fill);
+			ContentSlot->SetVerticalAlignment(VAlign_Fill);
+			auto* CanvasSlot = Canvas->AddChildToCanvas(Button);
+			CanvasSlot->SetPosition(FVector2D(287.f + Index * 108.f, 733.f));
+			CanvasSlot->SetSize(FVector2D(88.f, 88.f));
+			CanvasSlot->SetZOrder(20);
+			switch (Index)
+			{
+			case 0: Button->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_0); break;
+			case 1: Button->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_1); break;
+			case 2: Button->OnClicked.AddDynamic(this, &UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_2); break;
+			}
+		}
+		if (auto* EquipmentSlot = Cast<UCanvasPanelSlot>(Button->Slot))
+			EquipmentSlot->SetPosition(FVector2D(265.f + (375.f - Count * 108.f + 20.f) * 0.5f + Index * 108.f, 733.f));
+		Button->SetVisibility(Index < Count ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		if (Index < Count)
+		{
+			Button->SetToolTipText(Detail.mEquipment[Index].mName);
+			if (auto* Icon = Cast<UImage>(Button->GetChildAt(0)))
+				Icon->SetBrushFromTexture(Detail.mEquipment[Index].mIcon);
+		}
+	}
+}
+
+void UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked(int32 Index)
+{
+	if (!mUIModel || !mMonsterTabWidget || !mMonsterTabWidget->IsVisible()) return;
+	const auto& Detail = mUIModel->GetUnitDetail();
+	if (Detail.mUnitId != mMonsterTabInspectedUnitId || !Detail.mEquipment.IsValidIndex(Index)) return;
+	if (!EnsureDetailOverlayWidget()) return;
+	mDetailPresenter->PresentEquipment(Detail.mEquipment[Index]);
+	SetDetailSkillRowShown(false);
+	RefreshWorldGestureInputBlock();
+}
+void UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_0() { HandleMonsterEquipmentClicked(0); }
+void UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_1() { HandleMonsterEquipmentClicked(1); }
+void UCombatLayoutHUDWidget::HandleMonsterEquipmentClicked_2() { HandleMonsterEquipmentClicked(2); }
+
 void UCombatLayoutHUDWidget::HandleMercenaryCloseClicked()
 {
 	SetMercenaryPanelShown(false);

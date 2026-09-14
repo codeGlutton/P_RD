@@ -2194,6 +2194,20 @@ void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Deta
 	mDetailOverlayWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 }
 
+void USkillDetailOverlayPresenter::PresentEquipment(const FUnitDetailEquipmentUI& Detail)
+{
+	FCombatArtifactUI Item;
+	Item.mName = Detail.mName;
+	Item.mIcon = Detail.mIcon;
+	Item.mEffectDescriptions.Add(Detail.mDescription);
+	PresentArtifact(Item);
+	DetailSetTextIfPresent(mDetailSubtitleText, LOCTEXT("EnemyEquipmentScope", "장비 · 이 적에게 적용"));
+	if (mDetailOverlayWidget)
+		for (int32 Index = 0; Index < 5; ++Index)
+			DetailSetShown(mDetailOverlayWidget->GetWidgetFromName(
+				FName(*FString::Printf(TEXT("DetailRarityGem_%d"), Index))), false);
+}
+
 #undef LOCTEXT_NAMESPACE
 
 UWidget* USkillDetailOverlayPresenter::GetGuidedSystemTarget(EGuidedStage Stage) const
