@@ -325,6 +325,9 @@ public:
 	UPROPERTY(SaveGame)
 	FFirstPlayProgress TutorialProgress;
 	UPROPERTY(SaveGame) FGuidedTutorialProgress GuidedTutorial;
+	// Acknowledged per authored trap type, independent of runs and basic tutorial enrollment.
+	UPROPERTY(SaveGame) TSet<FPrimaryAssetId> SeenTrapHints;
+	UPROPERTY(SaveGame) bool SeenShopWalkthrough = false;
 
 	void MakeUser(const FText& Name);
 	void ClearUser();
@@ -382,6 +385,8 @@ public:
 	void ClearOption();
 
 public:
+	void SetCombatPlaybackSpeed(int32 Speed) { mCombatPlaybackSpeed = FMath::Clamp(Speed, 1, 3); }
+	int32 GetCombatPlaybackSpeed() const { return FMath::Clamp(mCombatPlaybackSpeed, 1, 3); }
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
 	void SetOverallQuality(EOverallQualityType QualityType);
@@ -434,6 +439,8 @@ protected:
 	bool mEffectVFXEnabled = true;
 	UPROPERTY(SaveGame)
 	bool mVibrationEnabled = true;
+	UPROPERTY(SaveGame)
+	int32 mCombatPlaybackSpeed = 1;
 
 	/* 캐싱 */
 private:

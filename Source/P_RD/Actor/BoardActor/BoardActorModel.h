@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   BoardActorModel.h
  * @brief  보드에 올라가는 액터 데이터 모델 클래스 정의 헤더
  * @author 이문환
@@ -57,6 +57,7 @@ public:
 
 public:
 	FPrimaryAssetId GetStaticSpawnDataId() const;
+	const UStaticObstacleSpawnData* GetStaticSpawnData() const { return mStaticSpawnData; }
 	FName GetBoardActorKeyName() const;
 	/**
 	 * @brief 이 액터가 어느 스폰 데이터에서 나왔는지.

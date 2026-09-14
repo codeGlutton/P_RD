@@ -98,6 +98,8 @@ protected:
 protected:
 	FSRPGTurnEventLog* mCurrentTurnEventLog = nullptr;
 	FSRPGActionEventLog* mCurrentActionEventLog = nullptr;
+
+	int32 mCurrentMotionEventCount = 0;
 	FSRPGMotionEventLog* mCurrentMotionEventLog = nullptr;
 };
 

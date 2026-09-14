@@ -90,7 +90,8 @@ namespace
 		const TCHAR* BaseName,
 		const FAnchors& Anchors,
 		const FVector2D& Alignment,
-		const FVector2D& Position)
+		const FVector2D& Position,
+		const float Scale = 1.0f)
 	{
 		if (Owner == nullptr)
 		{
@@ -105,6 +106,12 @@ namespace
 				CanvasSlot->SetAnchors(Anchors);
 				CanvasSlot->SetAlignment(Alignment);
 				CanvasSlot->SetPosition(Position);
+				// Scale the shared mount so the frame, label and hit target stay together.
+				if (UWidget* Mount = CanvasSlot->Content)
+				{
+					Mount->SetRenderTransformPivot(Alignment);
+					Mount->SetRenderScale(FVector2D(Scale));
+				}
 			}
 		}
 	}
@@ -117,8 +124,8 @@ namespace
 			return;
 		}
 
-		// ScaleToFit shrinks a 16:9 design by width on a 4:3 fold screen. ScaleToFitY
-		// deliberately keeps logo/button touch targets tied to the stable safe height.
+		// Keep the authored canvas height; compact UI independently on Fold inner displays.
+		// The background retains its own cover fit.
 		if (UScaleBox* LayoutScaleBox = Cast<UScaleBox>(
 			Owner->GetWidgetFromName(TEXT("TitleLayoutScaleBox_base_16_9"))))
 		{
@@ -129,12 +136,23 @@ namespace
 		constexpr float DesignWidth = 1920.0f;
 		constexpr float DesignHeight = 1080.0f;
 		constexpr float ButtonLeftMargin = 60.0f;
+		const bool bFoldLayout = ViewportSize.X / ViewportSize.Y < 1.6f;
+		const float ElementScale = bFoldLayout ? 0.78f : 1.0f;
+		const float EdgeMargin = bFoldLayout ? 44.0f : ButtonLeftMargin;
 		const float VisibleDesignWidth = DesignHeight * (ViewportSize.X / ViewportSize.Y);
 		const float CroppedDesignMargin = FMath::Max(0.0f, (DesignWidth - VisibleDesignWidth) * 0.5f);
-		const float ButtonX = CroppedDesignMargin + ButtonLeftMargin;
+		const float ButtonX = CroppedDesignMargin + EdgeMargin;
 
 		PositionProfileWidget(Owner, TEXT("TitleLogoImage"), FAnchors(0.5f, 0.0f),
-			FVector2D(0.5f, 0.0f), FVector2D(0.0f, 24.0f));
+			FVector2D(0.5f, 0.0f), FVector2D(0.0f, bFoldLayout ? 40.0f : 24.0f), ElementScale);
+
+		// Use the visible right edge, including the sides cropped by ScaleToFitY.
+		const float RightInset = (DesignWidth - VisibleDesignWidth) * 0.5f + EdgeMargin;
+		for (const TCHAR* Name : { TEXT("VersionPlateImage"), TEXT("VersionText") })
+		{
+			PositionProfileWidget(Owner, Name, FAnchors(1.0f, 1.0f), FVector2D(1.0f, 1.0f),
+				FVector2D(-RightInset, -48.0f), bFoldLayout ? 0.9f : 1.0f);
+		}
 
 		struct FButtonRow
 		{
@@ -155,10 +173,10 @@ namespace
 		};
 		for (const FButtonRow& Row : Rows)
 		{
-			const FVector2D Position(ButtonX, -Row.BottomOffset);
-			PositionProfileWidget(Owner, Row.Frame, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
-			PositionProfileWidget(Owner, Row.Button, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
-			PositionProfileWidget(Owner, Row.Text, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position);
+			const FVector2D Position(ButtonX, -(48.0f + (Row.BottomOffset - 48.0f) * ElementScale));
+			PositionProfileWidget(Owner, Row.Frame, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position, ElementScale);
+			PositionProfileWidget(Owner, Row.Button, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position, ElementScale);
+			PositionProfileWidget(Owner, Row.Text, FAnchors(0.0f, 1.0f), FVector2D(0.0f, 1.0f), Position, ElementScale);
 		}
 	}
 
@@ -207,6 +225,13 @@ namespace
 		}
 	}
 }
+
+#if WITH_DEV_AUTOMATION_TESTS
+void UTitleMenuWidget::ApplyResponsiveLayoutForTest(const FVector2D& Size, bool bCanContinue)
+{
+	ApplyResponsiveTitleLayout(this, Size, bCanContinue);
+}
+#endif
 
 /**
  * @brief 타이틀 메인 메뉴 UI 위젯.
@@ -282,11 +307,7 @@ void UTitleMenuWidget::NativeConstruct()
 void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	// 배경 영상만 화면비에 맞춘다.
-	//
-	// 레이아웃은 ScaleBox 가 알아서 줄인다. 전에는 여기서 매 틱 화면비를 재
-	// 다섯 벌 중 하나를 골랐는데, 재 보니 그 다섯이 서로 30~44px 밖에 안 달라
-	// 한 벌로 줄였다. 고를 것이 없으면 고르는 코드도 없어야 한다.
+	// Re-evaluate the compact layout when the window changes or the device folds.
 	ApplyResponsiveTitleLayout(this, MyGeometry.GetLocalSize(), CanContinueRun());
 	FitTitleBackgroundVideoToViewport();
 }

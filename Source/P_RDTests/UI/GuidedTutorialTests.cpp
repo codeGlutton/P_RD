@@ -49,6 +49,8 @@ bool FGuidedWorldFocusRenderTest::RunTest(const FString&)
 		for (int32 Y = 147; Y <= 153; ++Y) for (int32 X = 197; X <= 203; ++X)
 			HasOutline |= Pixels.IsValidIndex(Y * 800 + X) && Pixels[Y * 800 + X].A > 0;
 		TestTrue(TEXT("Projected movement/attack outline is actually painted"), HasOutline);
+        TestTrue(TEXT("Unrelated background is shaded"), Pixels[550 * 800 + 750].A > 120);
+        TestTrue(TEXT("Target center remains an unobscured cutout"), Pixels[200 * 800 + 200].A < 30);
 		Guide->SetWorldFocus({});
 		Guide->UpdateLayoutForTest();
 		Renderer.DrawWidget(Slate, FVector2D(800, 600));
@@ -197,6 +199,15 @@ bool FGuidedRenderTest::RunTest(const FString&)
 	                       EGuidedStage::OpenMercenary, EGuidedStage::SelectMercenary,
 	                       EGuidedStage::ReadMercenaryStats, EGuidedStage::ReadInventory})
 	{
+        if (S == EGuidedStage::OpenSkills)
+        {
+            // Real HUD now opens cards at turn start. Restore the closed-card fixture for this step.
+            bool ProbeBoard = false, ProbeRetry = false;
+            EGuidedStage ProbeNext = S;
+            HUD->ResolveGuidedTarget(S, ProbeNext, ProbeBoard, ProbeRetry);
+            if (ProbeNext != S)
+                CastChecked<UButton>(HUD->GetWidgetFromName(TEXT("SkillToggleButton")))->OnClicked.Broadcast();
+        }
 		if (S == EGuidedStage::HoldSkill)
 			CastChecked<UButton>(HUD->GetWidgetFromName(TEXT("SkillToggleButton")))->OnClicked.Broadcast();
 		if (S == EGuidedStage::SelectMercenary)
@@ -209,8 +220,8 @@ bool FGuidedRenderTest::RunTest(const FString&)
 		EGuidedStage Next = S;
 		UWidget* Target = HUD->ResolveGuidedTarget(S, Next, Board, Retry);
 		if (S != EGuidedStage::LessonMenu)
-			TestNotNull(TEXT("Actual step button exists"), Target);
-		TestEqual(TEXT("Opening target alone cannot advance"), Next, S);
+			TestNotNull(*FString::Printf(TEXT("Actual step %d button exists"), int32(S)), Target);
+		TestEqual(*FString::Printf(TEXT("Opening target for step %d alone cannot advance"), int32(S)), Next, S);
 		Guide->Present(S, Target, Board, Retry);
 		TestEqual(TEXT("Only explanations show the acknowledgement button"),
 		          Guide->GetContinueButton()->IsVisible(), FGuidedTutorialProgress::IsReadingStep(S));

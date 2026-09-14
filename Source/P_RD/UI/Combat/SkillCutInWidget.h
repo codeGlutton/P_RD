@@ -125,6 +125,10 @@ class P_RD_API USkillCutInWidget : public URDUserWidget
 
 public:
 	USkillCutInWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	void SetCombatPlaybackSpeed(float Speed) { CombatPlaybackSpeed = FMath::Clamp(Speed, 1.f, 3.f); }
+private:
+	float CombatPlaybackSpeed = 1.f;
+public:
 
 	/** Starts/restarts the cut-in and invokes OnFinished exactly once on natural/fail-safe completion. */
 	bool PlayCutIn(const FSkillCutInPresentationData& Presentation,

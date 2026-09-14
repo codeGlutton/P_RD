@@ -1,5 +1,9 @@
 ﻿#include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/DetailOverlayInputShield.h"
+#include "UI/Tutorial/ShopGuideWidget.h"
+#include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "GameMode/ShopGameMode.h"
+#include "Engine/GameInstance.h"
 #include "UI/Shop/SkillReplacementDialog.h"
 
 #include "Blueprint/WidgetTree.h"
@@ -1108,6 +1112,7 @@ void UShopUIWidgetBase::HandleCloseClicked()
 
 UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 {
+	if (mFirstVisitGuide && mFirstVisitGuide->IsVisible()) return mFirstVisitGuide;
 	if (mSkillReplacementDialog && mSkillReplacementDialog->IsVisible()) return mSkillReplacementDialog;
 	if (mShopSkillDetailPresenter)
 		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
@@ -1122,6 +1127,7 @@ UUserWidget* UShopUIWidgetBase::GetBackNavigationLayer() const
 
 bool UShopUIWidgetBase::HandleBackNavigation()
 {
+	if (mFirstVisitGuide && mFirstVisitGuide->IsVisible()) { mFirstVisitGuide->Dismiss(); return true; }
 	if (mPendingReplacementItem != INDEX_NONE) { CancelSkillReplacement(); return true; }
 	if (mShopSkillDetailPresenter)
 		if (UUserWidget* Layer = mShopSkillDetailPresenter->GetOverlayWidget())
@@ -2540,6 +2546,7 @@ void UShopUIWidgetBase::ShowShopDetail(const FText& Name,
 /** @brief 위젯 생명주기 종료 시 UIModel 델리게이트를 먼저 끊고 부모 정리를 따른다. */
 void UShopUIWidgetBase::NativeDestruct()
 {
+	RemoveFirstVisitGuide();
 	if (GetWorld() != nullptr)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(mSkillLongPressTimer);
@@ -2571,6 +2578,7 @@ void UShopUIWidgetBase::NativeDestruct()
 
 void UShopUIWidgetBase::ApplyCloseUI()
 {
+	RemoveFirstVisitGuide();
 	CancelSkillReplacement();
 	Super::ApplyCloseUI();
 }
@@ -2578,6 +2586,61 @@ void UShopUIWidgetBase::ApplyCloseUI()
 int32 UShopUIWidgetBase::GetViewportZOrder() const
 {
 	return mUIModel && mUIModel->GetShop().mIsLevelUpReward ? 10005 : Super::GetViewportZOrder();
+}
+
+void UShopUIWidgetBase::ShowFirstVisitGuide()
+{
+	// This WBP also hosts level-up rewards; binding a shop-shaped DTO is not a visit.
+	if (mFirstVisitGuide || !mUIModel || mUIModel->GetShop().mIsLevelUpReward ||
+		!IsOpened() || !GetWorld() || !GetWorld()->GetAuthGameMode<AShopGameMode>() || !GetGameInstance()) return;
+	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
+	if (!Tutorial || !Tutorial->NeedsShopGuide()) return;
+	mFirstVisitGuide = CreateWidget<UShopGuideWidget>(GetGameInstance());
+	if (!mFirstVisitGuide) return;
+	mFirstVisitGuide->OnDismissed.BindUObject(this, &UShopUIWidgetBase::DismissFirstVisitGuide);
+	mFirstVisitGuide->OnStepChanged.BindUObject(this, &UShopUIWidgetBase::ShowShopGuideStep);
+	mFirstVisitGuide->OpenUI();
+	UE_LOG(LogTemp, Display, TEXT("First shop guide shown"));
+}
+
+void UShopUIWidgetBase::DismissFirstVisitGuide()
+{
+	if (GetGameInstance())
+		if (auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>())
+			Tutorial->AcknowledgeShopGuide();
+	RemoveFirstVisitGuide();
+	SetActiveItemKind(EShopItemKind::Artifact);
+}
+
+UWidget* UShopUIWidgetBase::ShowShopGuideStep(int32 Step)
+{
+	// Only local presentation changes. Never call a RequestBuy/Rest/Hire/Leave intent.
+	SetActiveItemKind(Step >= 5 && Step <= 7 ? EShopItemKind::Skill :
+		Step >= 8 && Step <= 9 ? EShopItemKind::Heal : EShopItemKind::Artifact);
+	switch (Step)
+	{
+	case 0: return mGoldText;
+	case 1: return mArtifactTabButton;
+	case 2: if (mSelectedItemIcon && mSelectedItemIcon->IsVisible()) return mSelectedItemIcon; return mArtifactTabButton;
+	case 3: return mBuyButton;
+	case 4: return mRunOptionsRailWidget ? mRunOptionsRailWidget->GetWidgetFromName(TEXT("MenuButton_1")) : nullptr;
+	case 5: return mSkillTabButton;
+	case 6: return mUnitSelectButtons.IsValidIndex(0) ? mUnitSelectButtons[0].Get() : mSkillTabButton.Get();
+	case 7: return mSkillSlotButtons.IsValidIndex(0) ? mSkillSlotButtons[0].Get() : mSkillTabButton.Get();
+	case 8: return mRestTabButton;
+	case 9: return mRestButton;
+	case 10: return mMercenaryTabButton;
+	default: return mCloseButton;
+	}
+}
+
+void UShopUIWidgetBase::RemoveFirstVisitGuide()
+{
+	if (!mFirstVisitGuide) return;
+	mFirstVisitGuide->OnDismissed.Unbind();
+	mFirstVisitGuide->OnStepChanged.Unbind();
+	mFirstVisitGuide->CloseUI();
+	mFirstVisitGuide = nullptr;
 }
 
 void UShopUIWidgetBase::RefreshLevelUpRewardView(const FShopUI& Shop)

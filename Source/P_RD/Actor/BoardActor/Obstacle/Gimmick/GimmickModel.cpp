@@ -86,5 +86,10 @@ void UGimmickModel::OnGimmickSkillEnd(const FActiveSkillContext& Context, const 
 	if (mRemainingTriggerCount == 0)
 	{
 		GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+
+		USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+		CombatModel->EvaluateCombatStates();
 	}
 }

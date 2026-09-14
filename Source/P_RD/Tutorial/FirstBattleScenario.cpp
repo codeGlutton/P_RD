@@ -1,12 +1,12 @@
 #include "Tutorial/FirstBattleScenario.h"
-#include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
+#include "Tutorial/StaticTutorialRoomSpawnData.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "Tutorial/GuidedTutorial.h"
 
-UStaticCombatRoomSpawnData* FFirstBattleScenario::LoadTemplate()
+UStaticTutorialRoomSpawnData* FFirstBattleScenario::LoadTemplate()
 {
-	return LoadObject<UStaticCombatRoomSpawnData>(nullptr,
-		TEXT("/Game/BP/DataAsset/Room/Monster/Stage1/DA_Monster_Stage1_00.DA_Monster_Stage1_00"));
+	return LoadObject<UStaticTutorialRoomSpawnData>(nullptr,
+		TEXT("/Game/BP/DataAsset/Room/Turtorial/DA_Tutorial_FirstBattle.DA_Tutorial_FirstBattle"));
 }
 
 int32 FFirstBattleScenario::SelectSkill(const TArray<const UStaticUnitSkillData*>& Skills)
@@ -23,36 +23,9 @@ int32 FFirstBattleScenario::SelectSkill(const TArray<const UStaticUnitSkillData*
 	return INDEX_NONE;
 }
 
-bool FFirstBattleScenario::AllowsTile(EGuidedStage Stage, const FTileIndex& Tile)
+bool FFirstBattleScenario::AllowsTile(const UStaticTutorialRoomSpawnData& Room, EGuidedStage Stage, const FTileIndex& Tile)
 {
-	if (Stage == EGuidedStage::MoveTile || Stage == EGuidedStage::ConfirmMove) return Tile == Move();
-	if (Stage == EGuidedStage::SkillTarget || Stage == EGuidedStage::ConfirmSkill) return Tile == Enemy();
+	if (Stage == EGuidedStage::MoveTile || Stage == EGuidedStage::ConfirmMove) return Tile == Room.MoveDestination;
+	if (Stage == EGuidedStage::SkillTarget || Stage == EGuidedStage::ConfirmSkill) return Tile == Room.GetTargetTile();
 	return false;
-}
-
-void FFirstBattleScenario::ApplyLayout(UStaticCombatRoomSpawnData& Room)
-{
-	Room.mPlayerTransforms = {
-		FTileTransform(Start(), ETileActorDirection::Right),
-		FTileTransform({3, 2}, ETileActorDirection::Right),
-		FTileTransform({5, 2}, ETileActorDirection::Right)};
-	// Keep a second enemy so the first attack cannot bypass the end-turn instruction by winning.
-	Room.mEnemyUnitPlacementDatas.SetNum(2);
-	for (auto& Enemy : Room.mEnemyUnitPlacementDatas)
-	{
-		Enemy.mSpawnData = TSoftObjectPtr<UStaticEnemyUnitSpawnData>(FSoftObjectPath(
-			TEXT("/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_EagleUnit.DA_EagleUnit")));
-		Enemy.mDifficulty = 1;
-		Enemy.mDefaultSpeedPoint = 0;
-	}
-	Room.mEnemyUnitPlacementDatas[0].mTransform = FTileTransform(Enemy(), ETileActorDirection::Left);
-	Room.mEnemyUnitPlacementDatas[1].mTransform = FTileTransform({6, 6}, ETileActorDirection::Left);
-	Room.mObstaclePlacementDatas.RemoveAll([](const FObstaclePlacementData& Obstacle)
-	{
-		const auto Tile = Obstacle.mTransform.mIndex;
-		return Tile == Start() || Tile == Move() || Tile == Enemy() || Tile == FTileIndex(6, 6)
-			|| Tile == FTileIndex(3, 2) || Tile == FTileIndex(5, 2);
-	});
-	Room.mRoundStartEvents.Reset();
-	Room.mRoundEndEvents.Reset();
 }

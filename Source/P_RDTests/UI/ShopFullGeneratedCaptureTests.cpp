@@ -18,6 +18,7 @@
 #include "Components/TextBlock.h"
 #include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
 #include "TextureCompiler.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "HAL/FileManager.h"
@@ -954,6 +955,62 @@ bool FShopFullGeneratedRenderedCaptureTest::RunTest(const FString& Parameters)
 			IFileManager::Get().FileExists(*OutputPath));
 		TestTrue(*FString::Printf(TEXT("캡처 파일이 비어 있지 않음: %s"), FileName),
 			IFileManager::Get().FileSize(*OutputPath) > 1024);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FShopRestoredArtifactIconsTest,
+	"P_RD.UI.ShopFullGenerated.RestoredArtifactIcons",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FShopRestoredArtifactIconsTest::RunTest(const FString& Parameters)
+{
+	using namespace ShopFullGeneratedCaptureTests;
+	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	UClass* ShopClass = LoadClass<UShopUIWidgetBase>(nullptr, WidgetClassPath);
+	if (!TestNotNull(TEXT("Shop world"), World) || !TestNotNull(TEXT("Shop class"), ShopClass)) return false;
+	UShopUIWidgetBase* Widget = CreateWidget<UShopUIWidgetBase>(World, ShopClass);
+	if (!TestNotNull(TEXT("Shop widget"), Widget)) return false;
+	const TSharedRef<SWidget> Slate = Widget->TakeWidget();
+	FShopUI Shop;
+	Shop.mGold = 134;
+	const TCHAR* Paths[] = {
+		TEXT("/Game/BP/DataAsset/Artifact/DA_Artifact_A021_ArcaneCrystal"),
+		TEXT("/Game/BP/DataAsset/Artifact/DA_Artifact_A022_BladeSigil"),
+		TEXT("/Game/BP/DataAsset/Artifact/DA_Artifact_A023_HelmOfIntimidation")
+	};
+	for (const TCHAR* Path : Paths)
+	{
+		UStaticArtifactData* Data = LoadObject<UStaticArtifactData>(nullptr, Path);
+		if (!TestNotNull(Path, Data)) return false;
+		UTexture2D* Icon = Data->mIcon.LoadSynchronous();
+		if (!TestNotNull(TEXT("Production artifact icon loads"), Icon)) return false;
+		FShopItemUI& Item = Shop.mItems.AddDefaulted_GetRef();
+		Item.mSlotIndex = Shop.mItems.Num() - 1;
+		Item.mKind = EShopItemKind::Artifact;
+		Item.mName = Data->mName;
+		Item.mDescription = Data->mDescription;
+		Item.mIcon = Icon;
+		Item.mPrice = Data->mPrice;
+		Item.mIsAffordable = false;
+	}
+	UShopUIModel* Model = NewObject<UShopUIModel>(Widget);
+	Model->SetShop(Shop);
+	Widget->BindUIModel(Model);
+	UImage* MainIcon = Cast<UImage>(Widget->WidgetTree->FindWidget(TEXT("mSelectedItemIcon")));
+	if (!TestNotNull(TEXT("Selected icon widget"), MainIcon)) return false;
+	TestTrue(TEXT("Arcane Crystal reaches the real shop image brush"),
+		MainIcon->GetBrush().GetResourceObject() == Shop.mItems[0].mIcon.Get());
+	TestTrue(TEXT("Unaffordable item's icon remains visible"), MainIcon->GetVisibility() != ESlateVisibility::Collapsed);
+	if (!GUsingNullRHI)
+	{
+		TArray<FColor> Pixels;
+		FString Error;
+		if (!Capture(*Widget, Slate, TEXT("WBP_Shop_Restored_ArcaneCrystal.png"), Pixels, Error))
+		{
+			AddError(Error);
+			return false;
+		}
 	}
 	return true;
 }

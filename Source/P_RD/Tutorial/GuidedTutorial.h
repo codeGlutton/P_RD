@@ -106,6 +106,10 @@ struct P_RD_API FGuidedTutorialProgress
 		Enrolled = true;
 		return true;
 	}
+	bool NeedsFirstRoom(bool Skipped) const
+	{
+		return Enrolled && !Skipped && !CoreComplete && !FirstBattleFinished;
+	}
 	bool CanGuideCombat() const
 	{
 		return Enrolled && !FirstBattleFinished && !CoreComplete && !SystemsActive;

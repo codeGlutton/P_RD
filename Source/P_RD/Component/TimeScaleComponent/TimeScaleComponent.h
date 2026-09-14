@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TimeScaleComponent.h
  * @brief  시간 배율 컴포넌트
  * @author 김준형
@@ -72,6 +72,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
@@ -135,6 +136,10 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void ReleaseTimeScale(const FTimeScaleHandle& Handle);
+
+	// Persistent playback replaces its own multiplier without stacking new requests.
+	bool SetTimeScaleImmediately(const FTimeScaleHandle& Handle, float Scale);
+	void ReleaseTimeScaleImmediately(const FTimeScaleHandle& Handle);
 
 private:
 

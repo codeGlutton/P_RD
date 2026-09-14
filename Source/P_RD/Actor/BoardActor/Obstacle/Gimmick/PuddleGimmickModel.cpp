@@ -46,6 +46,11 @@ void UPuddleGimmickModel::OnReplaced(FTile* CurTile, UBoardActorModel* Other)
 
 	// 타일에서는 이미 빠진 상태. 사망 태그를 붙여 다음 정리 시점에 수거되게 함
 	GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	CombatModel->EvaluateCombatStates();
 }
 
 void UPuddleGimmickModel::TriggerRoundEnd(TSharedPtr<FPresentationBarrier> PresentationBarrier)
@@ -76,6 +81,11 @@ void UPuddleGimmickModel::TriggerRoundEnd(TSharedPtr<FPresentationBarrier> Prese
 	if (mRemainingRoundCount == 0)
 	{
 		GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
+
+		USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+		CombatModel->EvaluateCombatStates();
 	}
 }
 

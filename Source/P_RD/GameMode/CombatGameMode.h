@@ -57,6 +57,7 @@ protected:
 	void BeginRoom() override;
 
 private:
+	UPROPERTY() TObjectPtr<class UCombatPlaybackComponent> mPlaybackComponent;
 	void InitializeCombat();
 	void BeginCombatAfterEntrance();
 	UPROPERTY(Transient) TObjectPtr<class UBossEntranceWidget> mBossEntranceWidget;

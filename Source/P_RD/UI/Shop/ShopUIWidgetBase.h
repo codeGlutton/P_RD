@@ -56,7 +56,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Shop|UI")
 	void Leave();
 
+	/** Called only by the real shop room after its HUD is opened. */
+	void ShowFirstVisitGuide();
+
 #if WITH_DEV_AUTOMATION_TESTS
+	UWidget* ShowShopGuideStepForTest(int32 Step) { return ShowShopGuideStep(Step); }
 	UUserWidget* GetShopDetailOverlayForTest() const
 	{
 		return mShopDetailOverlayWidget;
@@ -89,6 +93,10 @@ protected:
 	virtual UTexture2D* ResolveOwnedArtifactPlate() const;
 	virtual UTexture2D* ResolveTabPlate(bool bSelected) const;
 private:
+	UPROPERTY(Transient) TObjectPtr<class UShopGuideWidget> mFirstVisitGuide;
+	void DismissFirstVisitGuide();
+	void RemoveFirstVisitGuide();
+	UWidget* ShowShopGuideStep(int32 Step);
 	/** @brief 나가기 버튼 클릭 → Leave 의도 전달 후 화면을 닫는다. */
 	UFUNCTION() void HandleCloseClicked();
 

@@ -94,6 +94,7 @@ bool UCombatLayoutHUDWidget::EnsureSkillCutInWidget()
 	{
 		return false;
 	}
+	mSkillCutInWidget->SetCombatPlaybackSpeed(mUIModel && mUIModel->IsPlaybackSpeedAvailable() ? mUIModel->GetPlaybackSpeed() : 1);
 
 	if (mSkillCutInWidget->IsInViewport() == false)
 	{

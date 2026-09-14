@@ -129,10 +129,14 @@ void USimulationEventLogger::BeginMotionLog()
 
 	checkf(MotionLog.IsValid() == true, TEXT("모션 로그 불량"));
 
-	mCurrentActionEventLog->mMotionEventLogs.Add(MoveTemp(MotionLog));
-	mCurrentMotionEventLog = &mCurrentActionEventLog->mMotionEventLogs.Last();
+	if (mCurrentMotionEventCount == 0)
+	{
+		mCurrentActionEventLog->mMotionEventLogs.Add(MoveTemp(MotionLog));
+		mCurrentMotionEventLog = &mCurrentActionEventLog->mMotionEventLogs.Last();
 
-	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
+		UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
+	}
+	++mCurrentMotionEventCount;
 }
 
 void USimulationEventLogger::EndMotionLog()
@@ -140,7 +144,12 @@ void USimulationEventLogger::EndMotionLog()
 	Super::EndMotionLog();
 
 	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 모션 로그 종료 오류"));
-	mCurrentMotionEventLog = nullptr;
+	
+	--mCurrentMotionEventCount;
+	if (mCurrentMotionEventCount == 0)
+	{
+		mCurrentMotionEventLog = nullptr;
+	}
 
 	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
 }

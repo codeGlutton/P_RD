@@ -1,5 +1,6 @@
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "Tutorial/FirstBattleScenario.h"
+#include "Tutorial/StaticTutorialRoomSpawnData.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 #include "DataAsset/RoomSpawnData/StaticCombatRoomSpawnData.h"
@@ -20,7 +21,15 @@ UStaticCombatRoomSpawnData* UFirstPlayTutorialSubsystem::PrepareScenario(
 	ScenarioUnit.Reset();
 	ScenarioSkillIndex = INDEX_NONE;
 	auto& Flow = GetUserMutableData()->GuidedTutorial;
-	if (!Flow.Enrolled || Flow.FirstBattleFinished || Party.IsEmpty() || !Party[0]) return Original;
+	// Stage Builder has already chosen the entire room, including its background and spawn setting.
+    auto* Authored = Cast<UStaticTutorialRoomSpawnData>(Original);
+    if (!Authored || !Flow.NeedsFirstRoom(GetUserMutableData()->TutorialProgress.Skipped) || Party.IsEmpty() || !Party[0]) return Original;
+    TArray<FText> Errors;
+    if (!Authored->ValidateLayout(Errors))
+    {
+        for (const auto& Error : Errors) UE_LOG(LogTemp, Error, TEXT("Tutorial DA: %s"), *Error.ToString());
+        return Original;
+    }
 	const auto& Skills = Party[0]->GetSkillComponentModel()->GetSkills();
 	TArray<const UStaticUnitSkillData*> SkillData;
 	for (const auto& Skill : Skills) SkillData.Add(Cast<UStaticUnitSkillData>(Skill.mData));
@@ -31,10 +40,7 @@ UStaticCombatRoomSpawnData* UFirstPlayTutorialSubsystem::PrepareScenario(
 		UE_LOG(LogTemp, Error, TEXT("First battle scenario needs a basic attack in party slot 0."));
 		return Original;
 	}
-	auto* Base = FFirstBattleScenario::LoadTemplate();
-	if (!Base) return Original;
-	ScenarioRoom = DuplicateObject<UStaticCombatRoomSpawnData>(Base, this);
-	FFirstBattleScenario::ApplyLayout(*ScenarioRoom);
+	ScenarioRoom = Authored;
 	ScenarioUnit = Party[0];
 	if (!Flow.CoreComplete)
 	{
@@ -42,9 +48,17 @@ UStaticCombatRoomSpawnData* UFirstPlayTutorialSubsystem::PrepareScenario(
 		Flow.Stage = EGuidedStage::OpenSkills;
 		Flow.Lesson = EGuidedLesson::None;
 	}
-	UE_LOG(LogTemp, Display, TEXT("Tutorial scenario: unit=%s move=(4,3) skill=%d target=(4,4)"),
-		*Party[0]->GetBoardActorDisplayName().ToString(), ScenarioSkillIndex);
+	UE_LOG(LogTemp, Display, TEXT("Tutorial authored room: %s skill=%d"), *Authored->GetPathName(), ScenarioSkillIndex);
 	return ScenarioRoom;
+}
+
+FTileIndex UFirstPlayTutorialSubsystem::GetScenarioMoveTile() const
+{
+    return ScenarioRoom ? ScenarioRoom->MoveDestination : FTileIndex::Invalid;
+}
+FTileIndex UFirstPlayTutorialSubsystem::GetScenarioEnemyTile() const
+{
+    return ScenarioRoom ? ScenarioRoom->GetTargetTile() : FTileIndex::Invalid;
 }
 
 bool UFirstPlayTutorialSubsystem::IsScenarioGuiding() const
@@ -55,7 +69,7 @@ bool UFirstPlayTutorialSubsystem::IsScenarioGuiding() const
 bool UFirstPlayTutorialSubsystem::IsScenarioTileAllowed(const FTileIndex& Tile) const
 {
 	if (!IsScenarioGuiding()) return true;
-	return FFirstBattleScenario::AllowsTile(GetUserMutableData()->GuidedTutorial.Stage, Tile);
+	return FFirstBattleScenario::AllowsTile(*ScenarioRoom, GetUserMutableData()->GuidedTutorial.Stage, Tile);
 }
 
 bool UFirstPlayTutorialSubsystem::IsScenarioPointerAllowed(const FVector2D& Position) const
@@ -78,6 +92,7 @@ bool UFirstPlayTutorialSubsystem::IsScenarioPointerAllowed(const FVector2D& Posi
 
 bool UFirstPlayTutorialSubsystem::IsScenarioCommandAllowed(ECombatInputType Type, int32 Payload) const
 {
+	if (IsEncounterHintVisible()) return false;
 	if (!IsScenarioGuiding()) return true;
 	const auto Stage = GetUserMutableData()->GuidedTutorial.Stage;
 	switch (Type)
@@ -99,8 +114,8 @@ bool UFirstPlayTutorialSubsystem::GetScenarioFocus(TArray<FVector2D>& Corners) c
 	if (!IsScenarioGuiding()) return false;
 	const auto Stage = GetUserMutableData()->GuidedTutorial.Stage;
 	FTileIndex Tile = FTileIndex::Invalid;
-	if (Stage == EGuidedStage::MoveTile || Stage == EGuidedStage::ConfirmMove) Tile = FFirstBattleScenario::Move();
-	if (Stage == EGuidedStage::SkillTarget || Stage == EGuidedStage::ConfirmSkill) Tile = FFirstBattleScenario::Enemy();
+	if (Stage == EGuidedStage::MoveTile || Stage == EGuidedStage::ConfirmMove) Tile = GetScenarioMoveTile();
+	if (Stage == EGuidedStage::SkillTarget || Stage == EGuidedStage::ConfirmSkill) Tile = GetScenarioEnemyTile();
 	if (Tile == FTileIndex::Invalid) return false;
 	const auto* Combat = GetWorldSubsystemModel<USRPGCombatModel>(GetWorld());
 	const auto* Map = Combat ? Combat->GetTileMap() : nullptr;

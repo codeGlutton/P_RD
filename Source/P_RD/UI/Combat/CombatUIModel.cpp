@@ -372,3 +372,12 @@ void UCombatUIModel::ClearEnemyNextSkillIndices()
 	mEnemyNextSkillIndices.Reset();
 }
 
+
+void UCombatUIModel::SetPlaybackSpeed(int32 Speed, bool Available)
+{
+    Speed = FMath::Clamp(Speed, 1, 3);
+    if (Speed == mPlaybackSpeed && Available == mPlaybackSpeedAvailable) return;
+    mPlaybackSpeed = Speed;
+    mPlaybackSpeedAvailable = Available;
+    OnUIChanged.Broadcast(ECombatUIDomain::Meta);
+}

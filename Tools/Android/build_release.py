@@ -222,6 +222,15 @@ def main() -> None:
         with (output / "build.log").open("w", encoding="utf-8") as log:
             run_logged([str(args.engine / "Engine/Build/BatchFiles/Build.bat"), "P_RDEditor", "Win64", "Development",
                         f"-Project={project}", "-WaitMutex", "-NoHotReload", "-DisableAdaptiveUnity"], env, signing, log)
+            icon_audit = output / "ui-bindings.json"
+            audit_env = env.copy()
+            audit_env["RD_UI_AUDIT_OUTPUT"] = str(icon_audit)
+            run_logged([str(args.engine / "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"), str(project),
+                        "-run=pythonscript", f"-script={Path(__file__).resolve().parent / 'audit_ui_bindings.py'}",
+                        "-unattended", "-NullRHI", "-nosplash", "-stdout", "-UTF8Output"], audit_env, signing, log)
+            run_logged([sys.executable, str(Path(__file__).resolve().parent / "verify_ui_bindings.py"),
+                        str(icon_audit), str(args.project.parent / "SourceArt/UI/BindingRepair_20260909/manifest.json")],
+                       env, signing, log)
             if args.prepare_ui:
                 run_logged([str(args.engine / "Engine/Binaries/Win64/UnrealEditor-Cmd.exe"), str(project),
                             "-run=pythonscript", f"-script={Path(__file__).resolve().parent / 'prepare_release_ui.py'}",
