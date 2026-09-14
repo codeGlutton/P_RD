@@ -211,10 +211,10 @@ void USRPGTurnContext::BeginTurn()
 
 void USRPGTurnContext::TickTurn(float DeltaTime)
 {
-	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
+	if (mReservedActions.Num() > mHeadActionIndex)
 	{
 		mReservedActions[mHeadActionIndex]->TryBeginAction();
-		mReservedActions[mHeadActionIndex]->TickAction(DeltaTime);
+		mReservedActions[mHeadActionIndex]->TryTickAction(DeltaTime);
 		mReservedActions[mHeadActionIndex]->TryEndAction();
 	}
 }
@@ -330,6 +330,11 @@ void USRPGTurnContext::EvaluateTurnEndState(bool ForceAbort)
 		mTurnPhase = ESRPGTurnPhase::TurnAbort;
 		return;
 	}
+}
+
+bool USRPGTurnContext::IsPlayingAction() const
+{
+	return mReservedActions.Num() > mHeadActionIndex && mReservedActions[mHeadActionIndex]->mActionPhase == ESRPGActionPhase::ActionPlay;
 }
 
 void USRPGTurnContext::EnqueueAction(USRPGAction* NewAction)

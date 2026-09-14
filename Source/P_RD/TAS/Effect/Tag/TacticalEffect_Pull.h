@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Pull.h
  * @brief  Pull(끌어오기) 이펙트 정의 헤더
  * @author 모호재
@@ -57,4 +57,8 @@ class P_RD_API UTacticalEffect_GetPull : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetPull();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

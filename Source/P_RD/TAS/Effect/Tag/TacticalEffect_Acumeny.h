@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Acumeny.h
  * @brief  예리함 버프/디버프 이펙트 정의 헤더
  * @author 모호재
@@ -80,4 +80,8 @@ class P_RD_API UTacticalEffect_GetDebuff_Acumeny : public UTacticalEffect_GetSta
 
 public:
 	UTacticalEffect_GetDebuff_Acumeny();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

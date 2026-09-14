@@ -1,4 +1,4 @@
-﻿#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
@@ -91,6 +91,63 @@ bool UTacticalEffect_GetStatus::CanApply(const FActiveTacticalEffectsContainer& 
 	if (AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Immunity) == true)
 	{
 		return false;
+	}
+
+	return true;
+}
+
+bool UTacticalEffect_AddUniqueStatus::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	if (mStatusEffect == nullptr)
+	{
+		return false;
+	}
+
+	const UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	if (AttributeSetCompModelInstance == nullptr)
+	{
+		return false;
+	}
+
+	const UTacticalEffect* StatusEffectCDO = GetDefault<UTacticalEffect>(mStatusEffect);
+	if (StatusEffectCDO != nullptr)
+	{
+		const FGameplayTagContainer& StatusTags = StatusEffectCDO->GetAssetTags();
+		if (AttributeSetCompModelInstance->HasAnyMatchingGameplayTags(StatusTags) == true)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UTacticalEffect_GetUniqueStatus::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
+	if (AttributeSetCompModelInstance == nullptr)
+	{
+		return false;
+	}
+
+	const UTacticalEffect* StatusEffectCDO = GetDefault<UTacticalEffect>(mStatusEffect);
+	if (StatusEffectCDO != nullptr)
+	{
+		const FGameplayTagContainer& StatusTags = StatusEffectCDO->GetAssetTags();
+		if (AttributeSetCompModelInstance->HasAnyMatchingGameplayTags(StatusTags) == true)
+		{
+			return false;
+		}
 	}
 
 	return true;

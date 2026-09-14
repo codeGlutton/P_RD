@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Slow.h
  * @brief  Slow 이펙트 정의 헤더
  * @details SP(스피드 포인트)을 더 적게 얻는 상태이상 이펙트
@@ -46,4 +46,8 @@ class P_RD_API UTacticalEffect_GetSlow : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetSlow();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

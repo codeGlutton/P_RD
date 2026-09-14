@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Push.h
  * @brief  Push(밀치기) 이펙트 정의 헤더
  * @author 모호재, 이문환
@@ -57,4 +57,8 @@ class P_RD_API UTacticalEffect_GetPush : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetPush();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

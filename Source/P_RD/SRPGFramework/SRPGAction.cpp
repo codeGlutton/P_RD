@@ -108,6 +108,14 @@ void USRPGAction::TryBeginAction()
 	}
 }
 
+void USRPGAction::TryTickAction(float DeltaTime)
+{
+	if (mActionPhase == ESRPGActionPhase::ActionPlay)
+	{
+		TickAction(DeltaTime);
+	}
+}
+
 void USRPGAction::MarkActionCompleted(ESRPGActionResult Result)
 {
 	if (mActionPhase == ESRPGActionPhase::ActionPlay)

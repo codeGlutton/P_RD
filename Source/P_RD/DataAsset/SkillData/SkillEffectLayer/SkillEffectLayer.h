@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SkillEffectLayer.h
  * @brief  하나의 스킬 모션 내에서 적용하는 단일 효과 단위 구현 헤더
  * @author 모호재
@@ -62,7 +62,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_TagBase : public FSkillEffectLayer
+struct P_RD_API FSkillEffectLayer_UniqueTagBase : public FSkillEffectLayer
 {
 	GENERATED_BODY()
 
@@ -72,6 +72,16 @@ public:
 
 public:
 	virtual FText GetTagDisplayName() const { return FText::GetEmpty(); }
+	FText MakeDescription() const override;
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_TagBase : public FSkillEffectLayer_UniqueTagBase
+{
+	GENERATED_BODY()
+
+public:
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 	FText MakeDescription() const override;
 
 public:
