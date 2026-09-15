@@ -2,7 +2,7 @@
  * @file   UnitMovementComponentModelTests.cpp
  * @brief  유닛 이동 컴포넌트 모델의 속박(이동불가) 판정 유닛테스트
  * @details
- * 속박 태그 스택 부여/제거에 따른 IsMoveable 상태 전이를 검증
+ * 속박 태그 스택 부여/제거에 따른 CanSelfMove 상태 전이를 검증
  * @author 이문환
  * @date   2026-08-10
  *********************************************************************/
@@ -74,19 +74,19 @@ bool FUnitRootTests::RunTest(const FString& Parameters)
 	}
 
 	/* [1] 기본 상태: 이동 가능 */
-	TestTrue(TEXT("기본: 이동 가능"), MovementCompModel->IsMoveable());
+	TestTrue(TEXT("기본: 이동 가능"), MovementCompModel->CanSelfMove());
 
 	/* [2] 속박 2스택 부여: 이동 불가 */
 	AttrComp->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root, 2);
-	TestFalse(TEXT("속박 2스택: 이동 불가"), MovementCompModel->IsMoveable());
+	TestFalse(TEXT("속박 2스택: 이동 불가"), MovementCompModel->CanSelfMove());
 
 	/* [3] 1스택 제거: 1스택 남아 여전히 이동 불가 (스택 감소 자체는 상태이상 수명 시스템이 담당) */
 	AttrComp->RemoveLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root, 1);
-	TestFalse(TEXT("1스택 제거(1스택): 이동 불가"), MovementCompModel->IsMoveable());
+	TestFalse(TEXT("1스택 제거(1스택): 이동 불가"), MovementCompModel->CanSelfMove());
 
 	/* [4] 남은 스택 제거: 스택 소진으로 이동 가능 */
 	AttrComp->RemoveLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root, 1);
-	TestTrue(TEXT("스택 소진(0스택): 이동 가능"), MovementCompModel->IsMoveable());
+	TestTrue(TEXT("스택 소진(0스택): 이동 가능"), MovementCompModel->CanSelfMove());
 
 	return true;
 }

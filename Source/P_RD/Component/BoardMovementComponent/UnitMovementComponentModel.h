@@ -23,8 +23,8 @@ class P_RD_API UUnitMovementComponentModel : public UBoardMovementComponentModel
 	GENERATED_BODY()
 
 public:
-	// @brief 이동 가능 여부 (저장값 없이 상태이상 태그에서 매번 계산)
-	bool IsMoveable() const;
+	// @brief 스스로 움직일 수 있는 상태인지 판정. 이동을 막는 상태이상 태그를 매번 확인
+	bool CanSelfMove() const override;
 
 protected:
 	// @brief 스텝 시작마다 AP 1 차감

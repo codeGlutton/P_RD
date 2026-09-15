@@ -12,9 +12,9 @@
 #include "AttributeSet/UnitAttributeSet.h"
 #include "GameplayTagType.h"
 
-bool UUnitMovementComponentModel::IsMoveable() const
+bool UUnitMovementComponentModel::CanSelfMove() const
 {
-	// 속박 태그 보유 중엔 이동 불가 (저장값 없이 매번 태그에서 계산)
+	// 이동을 막는 상태이상 태그가 있으면 이동 불가
 	UAttributeSetComponentModel* AttrComp = GetOwnerModel<UUnitModel>()->GetAttributeComponentModel();
 	if (AttrComp == nullptr)
 	{

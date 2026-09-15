@@ -226,15 +226,19 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 		mCurrentStepIndex = 0;
 	}
 
+	// 스스로 하는 이동 중 상태이상에 걸렸으면 남은 경로를 버리고 여기서 종료
+	// 강제 이동은 상태이상과 무관하게 끝까지 진행
+	const bool IsStoppedByStatus = IsSelfMove(mMoveMode) == true && CanSelfMove() == false;
+
 	// 다음 칸이 남아 있고 들어갈 수 있으면 계속 이동
 	const int32 NextStepIndex = mCurrentStepIndex + 1;
-	if (mPathTileIndexes.IsValidIndex(NextStepIndex) && CanEnterStep(NextStepIndex))
+	if (IsStoppedByStatus == false && mPathTileIndexes.IsValidIndex(NextStepIndex) && CanEnterStep(NextStepIndex))
 	{
 		StartStep(NextStepIndex);
 		return;
 	}
 
-	// 마지막 칸에 도착했거나 다음 칸이 막혔으면 여기서 이동 완료
+	// 마지막 칸 도착, 다음 칸 막힘, 상태이상 정지 중 하나면 여기서 이동 완료
 	// 통지를 받은 쪽이 바로 새 이동을 시작할 수 있으므로 상태를 먼저 비우고 호출 (비우면 mOnFinished도 지워지니 복사해 둠)
 	// 뷰의 경로 종료 정리가 완료 통지보다 먼저 끝나야 다음 이동 연출과 섞이지 않음
 	FOnBoardMoveFinished Finished = mOnFinished;

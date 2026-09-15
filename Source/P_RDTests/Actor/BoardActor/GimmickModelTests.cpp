@@ -217,7 +217,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 /**
  * @brief 진입 발동과 수명 검증
- *  1) 트랩 타일을 지나가면 발동 (효과 적용, 수명 차감, 이동은 계속)
+ *  1) 트랩 타일을 밟으면 발동, 기절로 그 칸에서 이동 종료
  *  2) 수명 소진 시 사망 태그, 이후 진입은 미발동
  */
 bool FGimmickTriggerTests::RunTest(const FString& Parameters)
@@ -232,10 +232,10 @@ bool FGimmickTriggerTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	/* Case1: 밟으면 발동, 이동은 계속 */
-	AddInfo(TEXT("=== Case1: 트랩 통과 -> 기절 부여, 수명 차감, 목적지 도착 ==="));
+	/* Case1: 밟으면 발동, 기절로 그 칸에서 정지 */
+	AddInfo(TEXT("=== Case1: 트랩 밟음 -> 기절 부여, 수명 차감, 트랩 칸에서 정지 ==="));
 
-	// (2,2)의 기절 트랩(수명 1) 위를 (1,2)->(3,2) 경로로 통과
+	// (2,2)의 기절 트랩(수명 1)을 (1,2)->(3,2) 경로 도중에 밟음
 	FGimmickFixture Fixture = MakeGimmickFixture(
 		World,
 		FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward),
@@ -247,11 +247,16 @@ bool FGimmickTriggerTests::RunTest(const FString& Parameters)
 
 	TestTrue(TEXT("[Case1] 밟은 유닛에 기절 태그 부여"), HasStunTag(Fixture.Unit));
 	TestEqual(TEXT("[Case1] 수명 1 -> 0"), Fixture.Gimmick->GetRemainingTriggerCount(), 0);
-	TestTrue(TEXT("[Case1] 트랩 발동에도 이동 계속 (목적지 도착)"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
+	TestTrue(TEXT("[Case1] 기절로 트랩 칸에서 정지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(2, 2));
+	TestFalse(TEXT("[Case1] 이동 종료 상태"), Fixture.Movement->IsMoving());
 	TestTrue(TEXT("[Case1] 수명 소진으로 사망 태그"), Fixture.Gimmick->IsDead());
 
 	/* Case2: 소진된 트랩은 미발동 */
 	AddInfo(TEXT("=== Case2: 소진 후 두 번째 유닛 통과 -> 미발동 ==="));
+
+	// 한 번 밟은 트랩이 발동하지 않는 걸 봐야하는데, 첫 유닛이 기절해서 자리를 차지하고 있으니까 치움
+	// 두 번째 유닛이 진입해도 죽은 트랩은 발동하지 않음
+	Fixture.TileMap->RemoveActor(Fixture.Unit);
 
 	UMockUnitMovementComponentModel* SecondMovement = nullptr;
 	UMockGimmickVictimUnitModel* SecondUnit = MakeVictimUnit(World, Fixture.TileMap, FTileTransform(FTileIndex(1, 2), ETileActorDirection::Forward), SecondMovement);
@@ -298,11 +303,14 @@ bool FGimmickLifetimeFilterTests::RunTest(const FString& Parameters)
 		MakeStunSkillData(World),
 		-1);
 
-	// 첫 번째 유닛 통과
+	// 첫 번째 유닛 진입
 	Fixture.Movement->MoveAlongPath({ FTileIndex(1, 2), FTileIndex(2, 2), FTileIndex(3, 2) });
 	TestTrue(TEXT("[Case1] 첫 유닛 기절"), HasStunTag(Fixture.Unit));
 
-	// 두 번째 유닛 통과
+	// 같은 트랩을 다시 밟아야 하는데, 첫 유닛이 기절해서 자리를 차지하고 있으니까 치움
+	Fixture.TileMap->RemoveActor(Fixture.Unit);
+
+	// 두 번째 유닛 진입
 	UMockUnitMovementComponentModel* SecondMovement = nullptr;
 	UMockGimmickVictimUnitModel* SecondUnit = MakeVictimUnit(World, Fixture.TileMap, FTileTransform(FTileIndex(1, 2), ETileActorDirection::Forward), SecondMovement);
 	SecondMovement->MoveAlongPath({ FTileIndex(1, 2), FTileIndex(2, 2) });
