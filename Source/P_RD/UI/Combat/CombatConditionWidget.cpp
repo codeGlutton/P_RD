@@ -19,9 +19,18 @@ public:
 		const FVector2D Origin = (Geometry.GetLocalSize()-FVector2D(Size))*.5f;
 		const FLinearColor Tint = Style.GetColorAndOpacityTint();
 		FLinearColor Color(.56f,.64f,.73f);
-		if (Value == EUnitCombatCondition::Bad) Color = FLinearColor(.88f,.32f,.21f);
-		if (Value == EUnitCombatCondition::Good) Color = FLinearColor(.22f,.79f,.51f);
-		if (Value == EUnitCombatCondition::Excellent) Color = FLinearColor(1.f,.73f,.19f);
+		if (Value == EUnitCombatCondition::Bad)
+		{
+			Color = FLinearColor(.88f, .32f, .21f);
+		}
+		if (Value == EUnitCombatCondition::Good)
+		{
+			Color = FLinearColor(.22f, .79f, .51f);
+		}
+		if (Value == EUnitCombatCondition::Excellent)
+		{
+			Color = FLinearColor(1.f, .41f, .71f);
+		}
 		const FLinearColor Ink(.035f,.045f,.055f);
 		auto Disc = [&](float Inset, FLinearColor C, int32 Z)
 		{
@@ -37,8 +46,13 @@ public:
 		for (float X : {.34f,.66f})
 		{
 			if (Value == EUnitCombatCondition::Excellent)
+			{
 				Line({{X-.075f,.43f},{X,.34f},{X+.075f,.43f}},.06f);
-			else Line({{X,.36f},{X,.47f}},.075f);
+			}
+			else
+			{
+				Line({{X,.36f},{X,.47f}},.075f);
+			}
 		}
 		TArray<FVector2D> Mouth;
 		for (int32 I=0;I<=16;++I)
@@ -48,6 +62,10 @@ public:
 			Mouth.Add(FVector2D(.29f+.42f*T,.66f+Bend*FMath::Sin(PI*T)));
 		}
 		Line(Mouth);
+		if (Value == EUnitCombatCondition::Excellent)
+		{
+			Line({{ .29f, .66f }, { .71f, .66f }});
+		}
 		return Layer+3;
 	}
 private:

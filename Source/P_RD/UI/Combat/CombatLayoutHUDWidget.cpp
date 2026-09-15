@@ -1,4 +1,4 @@
-#include "UI/Combat/CombatLayoutHUDWidget.h"
+﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatSpeedWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
@@ -650,7 +650,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mEnemyName = Find<UTextBlock>(WidgetTree, TEXT("EnemyName"));
 	mEnemyHPBar = Find<UProgressBar>(WidgetTree, TEXT("EnemyHPBar"));
 	mEnemyHPText = Find<UTextBlock>(WidgetTree, TEXT("EnemyHPText"));
-	mEnemyCritText = Find<UTextBlock>(WidgetTree, TEXT("EnemyCritText"));
+	mEnemyCriticalText = Find<UTextBlock>(WidgetTree, TEXT("EnemyCriticalText"));
 	mEnemySpeedText = Find<UTextBlock>(WidgetTree, TEXT("EnemySpeedText"));
 	mEnemyStatusText = Find<UTextBlock>(WidgetTree, TEXT("EnemyStatus"));
 	mEnemyForecastText = Find<UTextBlock>(WidgetTree, TEXT("EnemyForecast"));
@@ -793,6 +793,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mAllyHPText = Find<UTextBlock>(WidgetTree, TEXT("AllyHPText"));
 	mAllyAPText = Find<UTextBlock>(WidgetTree, TEXT("AllyAPText"));
 	mAllySpeedText = Find<UTextBlock>(WidgetTree, TEXT("AllySpeedText"));
+	mAllyCritText = Find<UTextBlock>(WidgetTree, TEXT("AllyCritText"));
 	mAllyStatusText = Find<UTextBlock>(WidgetTree, TEXT("AllyStatus"));
 	ConfigureCompactSummary(TEXT("Ally"));
 	// Keep the condition badge outside the portrait's clipping container.
@@ -839,6 +840,7 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mMercenaryDetailHP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailHP"));
 	mMercenaryDetailAP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailAP"));
 	mMercenaryDetailSpeed = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailSpeed"));
+	mMercenaryDetailCritical = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailCritical"));
 	mMercenaryDetailSection = Find<UWidget>(WidgetTree, TEXT("MercDetailSection"));
 	mMercenaryInventoryButton = Find<UButton>(
 		WidgetTree, TEXT("MercenaryInventoryButton"));
@@ -1959,6 +1961,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 	SetShown(mMercenaryDetailHP, bShowMercenaryDetail);
 	SetShown(mMercenaryDetailAP, bShowMercenaryDetail);
 	SetShown(mMercenaryDetailSpeed, bShowMercenaryDetail);
+	SetShown(mMercenaryDetailCritical, bShowMercenaryDetail);
 	if (bHasFocus)
 	{
 		// 확정 시안(0806): 큰 일러스트 대신 정사각 대갈치기를 건다.
@@ -1969,7 +1972,7 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			SetPortraitCropped(mMercenaryHeroPortrait, HeroFace);
 		}
 		SetTextIfPresent(mMercenaryDetailName, FocusUnit->mName);
-		// 라벨(HP/AP/속도)은 줄판 왼쪽에 따로 있으니 수치에는 값만 적는다.
+		// 라벨(HP/AP/속도/치명타)은 줄판 왼쪽에 따로 있으니 수치에는 값만 적는다.
 		SetTextIfPresent(mMercenaryDetailHP, FText::FromString(FString::Printf(
 			TEXT("%d/%d"), FMath::RoundToInt(FocusUnit->mHP),
 			FMath::RoundToInt(FocusUnit->mMaxHP))));
@@ -1978,6 +1981,8 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			FocusUnit->mMaxActionPoints)));
 		SetTextIfPresent(mMercenaryDetailSpeed, FText::AsNumber(
 			FMath::RoundToInt(FocusUnit->mSpeedPoint)));
+		SetTextIfPresent(mMercenaryDetailCritical, FText::AsNumber(
+			FMath::RoundToInt(FocusUnit->mCriticalPoint)));
 	}
 
 	// 우측 아래는 전투 중 현재 용병이 실제로 쓸 수 있는 여섯 커맨드의 요약이다.
@@ -2855,6 +2860,8 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 			: FString::Printf(TEXT("AP %d"), AllyShown->mActionPoints)));
 		SetTextIfPresent(mAllySpeedText, FText::AsNumber(
 			FMath::RoundToInt(AllyShown->mSpeedPoint)));
+		SetTextIfPresent(mAllyCritText, FText::AsNumber(
+			FMath::RoundToInt(AllyShown->mCriticalPoint)));
 
 		// 상태는 아이콘과 잔여 턴/중첩 숫자로만 보여 준다. 이름과 설명은
 		// 아이콘 롱프레스 상세에서 확인한다.
@@ -2898,9 +2905,8 @@ void UCombatLayoutHUDWidget::RefreshEnemy()
 		FString::Printf(TEXT("AP %d/%d"), EnemyAPLeft, EnemyAPTotal)));
 	SetTextIfPresent(mEnemySpeedText, FText::AsNumber(
 		FMath::RoundToInt(Shown->mSpeedPoint)));
-	// 치명 확률은 아직 FUnitUI 계약에 없으므로 값을 지어내지 않는다. 다만
-	// 용병 요약판과 짝인 프레임은 보이고 미지원 값은 명시적으로 '-'다.
-	SetTextIfPresent(mEnemyCritText, FText::FromString(TEXT("-")));
+	SetTextIfPresent(mEnemyCriticalText, FText::AsNumber(
+		FMath::RoundToInt(Shown->mCriticalPoint)));
 
 	// 상태는 아군 요약과 같은 스크롤 계약으로 그린다.
 	SetShown(mEnemyStatusText, false);
@@ -3024,7 +3030,7 @@ void UCombatLayoutHUDWidget::SetMercenaryInventoryShown(const bool bShown)
 		TEXT("MercenaryHeroPortrait"), TEXT("MercenaryPortraitFrame"),
 		TEXT("MercenaryNamePlate"), TEXT("MercenaryDetailName"),
 		TEXT("MercenaryDetailHP"), TEXT("MercenaryDetailAP"),
-		TEXT("MercenaryDetailSpeed"), TEXT("MercenaryCritPlate"),
+		TEXT("MercenaryDetailSpeed"), TEXT("MercenaryDetailCritical"),
 		TEXT("MercenaryCritIcon"),
 		TEXT("MercenaryCritLabel"), TEXT("MercenaryCritValue"),
 		TEXT("MercenarySkillHeading"), TEXT("MercenarySkillDivider") };
@@ -5569,13 +5575,14 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		HPBar->SetPercent(Monster.mMaxHP > 0.f ? Monster.mHP / Monster.mMaxHP : 0.f);
 	}
 	// 라벨(HP/AP/속도/치명타)은 줄판에 따로 있으니 값만 적는다.
-	// 치명타 확률은 아직 게임 데이터에 없어 판이 "-" 로 두고 있다(0806 합의).
 	SetTabText(TEXT("MonsterDetailHPText"), FText::FromString(FString::Printf(
 		TEXT("%d/%d"), FMath::RoundToInt(Monster.mHP), FMath::RoundToInt(Monster.mMaxHP))));
 	SetTabText(TEXT("MonsterDetailAPText"), FText::FromString(FString::Printf(
 		TEXT("%d/%d"), Monster.mActionPoints, Monster.mMaxActionPoints)));
 	SetTabText(TEXT("MonsterDetailSpeedText"), FText::AsNumber(
 		FMath::RoundToInt(Monster.mSpeedPoint)));
+	SetTabText(TEXT("MonsterDetailCriticalText"), FText::AsNumber(
+		FMath::RoundToInt(Monster.mCriticalPoint)));
 	// 몬스터 상세 WBP의 네 번째 스탯 아이콘은 구형 임시 브러시를 품고 있다.
 	// 용병 상세와 같은 치명타 전용 원화를 런타임의 단일 출처로 덮어써서,
 	// WBP가 다시 저장되더라도 두 상세 화면의 의미 표식이 갈라지지 않게 한다.
@@ -6333,6 +6340,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		SetDetailChip(3, LOCTEXT("DetailChipSpeed", "속도"),
 			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
 		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
+		SetDetailChip(5, LOCTEXT("DetailChipCritical", "치명타"), FText::AsNumber(FMath::RoundToInt(Unit->mCriticalPoint)));
 	}
 
 	TArray<FText> PassiveLines;

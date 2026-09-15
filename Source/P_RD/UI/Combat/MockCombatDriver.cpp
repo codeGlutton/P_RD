@@ -52,6 +52,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Ally.mHP = Allies[i].HP; Ally.mMaxHP = 100.f;
 			Ally.mActionPoints = Allies[i].AP; Ally.mMaxActionPoints = 4;
 			Ally.mSpeedPoint = Allies[i].Speed;
+			Ally.mCriticalPoint = 10.f;
 			Ally.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
 				Allies[i].TurnPortraitPath);
 			Ally.mPortrait = LoadObject<UTexture2D>(nullptr,
@@ -94,6 +95,7 @@ void UMockCombatDriver::Start(UCombatUIModel* UIModel)
 			Foe.mHP = Foes[i].HP; Foe.mMaxHP = Foes[i].MaxHP;
 			Foe.mActionPoints = 4; Foe.mMaxActionPoints = 4;
 			Foe.mSpeedPoint = 3.f + i;
+			Foe.mCriticalPoint = 5.f;
 			Foe.mLevel = 1;   // 몬스터 탭 목록의 Lv 배지 검수용
 			Foe.mTurnPortrait = LoadObject<UTexture2D>(nullptr,
 				Foes[i].TurnPortraitPath);
