@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 #include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
 #include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
@@ -421,6 +421,8 @@ void ACombatGameMode::InitializeCombat()
 		GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->TurnStarted(TurnContext && TurnContext->GetOwner() && TurnContext->GetOwner()->IsPlayerUnitModel());
 		});
 	CombatModel->OnBeginAnyRoundUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, int32 RoundCount) {
+		const TArray<FSRPGTurnEventLog> NoneTurnEventLogs;
+		PushTurnUIData(NoneTurnEventLogs);
 		mCombatUIModel->OnBeginAnyRound.Broadcast(Barrier);
 		});
 	CombatModel->OnEndAnyTurnUI.AddWeakLambda(this, [this](TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, ESRPGTurnResult Result) {
