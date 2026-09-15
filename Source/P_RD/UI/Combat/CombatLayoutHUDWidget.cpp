@@ -2,6 +2,7 @@
 #include "UI/Combat/CombatSpeedWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
+#include "UI/StageVictory/FinalRunVictoryWidget.h"
 #include "Engine/GameInstance.h"
 
 #include "Actor/TileMap/TileLayer.h"
@@ -1243,7 +1244,7 @@ void UCombatLayoutHUDWidget::WireCommands()
 			TEXT("HandleMercenaryInventoryArtifactClicked_9"),
 			TEXT("HandleMercenaryInventoryArtifactClicked_10") };
 		for (int32 Index = 0;
-			Index < FMath::Min(mMercenaryInventoryArtifactButtons.Num(), 11); ++Index)
+			mInventoryScroll == nullptr && Index < FMath::Min(mMercenaryInventoryArtifactButtons.Num(), 11); ++Index)
 		{
 			if (UButton* Button = mMercenaryInventoryArtifactButtons[Index])
 			{
@@ -2958,6 +2959,7 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 	}
 
 	const FPlayerMetaUI& Meta = mUIModel->GetPlayerMeta();
+	EnsureInventoryScroll(Meta.mArtifacts.Num());
 	SetTextIfPresent(mMercenaryInventoryGoldText, FText::AsNumber(Meta.mGold));
 	for (int32 Index = 0; Index < mMercenaryInventoryArtifactFrames.Num(); ++Index)
 	{
@@ -2965,7 +2967,7 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 			? &Meta.mArtifacts[Index] : nullptr;
 		const bool bHasArtifact = Artifact != nullptr;
 		const bool bHasIcon = bHasArtifact && Artifact->mIcon != nullptr;
-		SetShown(mMercenaryInventoryArtifactFrames[Index], true);
+		SetShown(mMercenaryInventoryArtifactFrames[Index], bHasArtifact);
 		if (mMercenaryInventoryArtifactIcons.IsValidIndex(Index))
 		{
 			UImage* Icon = mMercenaryInventoryArtifactIcons[Index];
@@ -3529,6 +3531,7 @@ void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
 void UCombatLayoutHUDWidget::UnbindUIModel()
 {
 	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
+	if (mFinalVictoryWidget) { mFinalVictoryWidget->RemoveFromParent(); mFinalVictoryWidget = nullptr; }
 	if (mBossCollapseWidget)
 	{
 		mBossCollapseWidget->Cancel();
@@ -5317,6 +5320,7 @@ void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked(const int32 RowIndex)
 	CancelMonsterSkillPress();
 	HideDetailOverlay(/*bNotifyGameplay=*/true);
 	mMonsterTabSelectedRow = RowIndex;
+	mMonsterTabInspectedUnitId = INDEX_NONE;
 	RefreshMonsterTab();
 }
 
@@ -5483,19 +5487,19 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		{
 			continue;
 		}
-		if (Monsters.Num() >= 3)
-		{
-			break;
-		}
 		Monsters.Add(&Unit);
 		mMonsterTabUnitIds.Add(Unit.mUnitId);
 	}
+	const int32 SelectedId = mMonsterTabInspectedUnitId;
+	const int32 SelectedIndex = mMonsterTabUnitIds.IndexOfByKey(SelectedId);
+	if (SelectedIndex != INDEX_NONE) mMonsterTabSelectedRow = SelectedIndex;
+	EnsureMonsterScroll(Monsters.Num());
 	if (mMonsterTabSelectedRow >= Monsters.Num())
 	{
 		mMonsterTabSelectedRow = FMath::Max(0, Monsters.Num() - 1);
 	}
 
-	for (int32 Index = 0; Index < 3; ++Index)
+	for (int32 Index = 0; Index < mMonsterRowCount; ++Index)
 	{
 		UWidget* Row = mMonsterTabWidget->GetWidgetFromName(
 			FName(*FString::Printf(TEXT("MonsterRow_%d"), Index)));
@@ -6230,7 +6234,7 @@ void UCombatLayoutHUDWidget::ShowUnitInspection()
 		if (Candidate.mUnitId == Detail.mUnitId)
 		{
 			Unit = &Candidate;
-			if (bAliveEnemy == true && AliveEnemyCount < 3)
+			if (bAliveEnemy == true)
 			{
 				EnemyRow = AliveEnemyCount;
 			}
@@ -6252,6 +6256,7 @@ void UCombatLayoutHUDWidget::ShowUnitInspection()
 	if (EnemyRow != INDEX_NONE)
 	{
 		mMonsterTabSelectedRow = EnemyRow;
+		mMonsterTabInspectedUnitId = Detail.mUnitId;
 	}
 	SetMonsterTabShown(true);
 }
