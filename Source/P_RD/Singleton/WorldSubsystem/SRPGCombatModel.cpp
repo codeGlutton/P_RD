@@ -516,6 +516,13 @@ void USRPGCombatModel::EvaluateCombatStates()
 
 void USRPGCombatModel::ClearDeadActorModels()
 {
+	UUnitModel* CurTurnOwner = nullptr;
+	const USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
+	if (CurTurnContext != nullptr && CurTurnContext->IsPlayingAction() == true)
+	{
+		CurTurnOwner = CurTurnContext->GetOwner();
+	}
+
 	TArray<TObjectPtr<UUnitModel>> DeadUnits;
 	TArray<TScriptInterface<IBoardCombatTarget>> DeadObstacles;
 
@@ -523,7 +530,7 @@ void USRPGCombatModel::ClearDeadActorModels()
 
 	for (const TObjectPtr<UUnitModel>& Unit : mUnitModels)
 	{
-		if (Unit->IsDead() == true)
+		if (Unit->IsDead() == true && Unit != CurTurnOwner)
 		{
 			DeadUnits.Add(Unit);
 		}

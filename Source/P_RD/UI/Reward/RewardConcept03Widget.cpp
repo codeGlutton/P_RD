@@ -1,6 +1,9 @@
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "Blueprint/WidgetTree.h"
 #include "UI/DetailOverlayInputShield.h"
+#include "UI/Combat/SkillDetailOverlayPresenter.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
 
 #include "Components/BackgroundBlur.h"
 #include "Components/Button.h"
@@ -644,33 +647,45 @@ void URewardConcept03Widget::RefreshRewardData()
 				Icon = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), IconName);
 				Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
 				UCanvasPanelSlot* ContentSlot = Content->AddChildToCanvas(Icon);
-				ContentSlot->SetPosition(FVector2D(66.f, 76.f));
-				ContentSlot->SetSize(FVector2D(100.f, 100.f));
+				ContentSlot->SetPosition(FVector2D(78.f, 72.f));
+				ContentSlot->SetSize(FVector2D(76.f, 76.f));
 			}
 			Icon->SetBrushFromTexture(Choices[Index].mIcon.Get());
 			Icon->SetVisibility(Choices[Index].mIcon ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-			const FName DescName(*FString::Printf(TEXT("NewChoiceDescription_%d"), Index));
-			UTextBlock* Desc = Cast<UTextBlock>(GetWidgetFromName(DescName));
-			if (!Desc)
-			{
-				Desc = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), DescName);
-				Desc->SetVisibility(ESlateVisibility::HitTestInvisible);
-				Desc->SetAutoWrapText(true);
-				Desc->SetJustification(ETextJustify::Center);
-				FSlateFontInfo Font = Desc->GetFont(); Font.Size = 12; Desc->SetFont(Font);
-				Desc->SetColorAndOpacity(FSlateColor(FLinearColor(.21f, .12f, .06f, 1.f)));
-				Desc->SetClipping(EWidgetClipping::ClipToBounds);
-				UCanvasPanelSlot* ContentSlot = Content->AddChildToCanvas(Desc);
-				ContentSlot->SetPosition(FVector2D(8.f, 179.f));
-				ContentSlot->SetSize(FVector2D(216.f, 46.f));
-			}
-			Desc->SetText(Choices[Index].mDescription);
-			if (UCanvasPanelSlot* DescriptionSlot = Cast<UCanvasPanelSlot>(Desc->Slot))
-			{
-				const bool bHasIcon = Choices[Index].mIcon != nullptr;
-				DescriptionSlot->SetPosition(FVector2D(8.f, bHasIcon ? 179.f : 88.f));
-				DescriptionSlot->SetSize(FVector2D(216.f, bHasIcon ? 46.f : 128.f));
-			}
+            const FName DescName(*FString::Printf(TEXT("NewChoiceDescription_%d"), Index));
+            const FName ScrollName(*FString::Printf(TEXT("NewChoiceDescriptionScroll_%d"), Index));
+            UTextBlock* Desc = Cast<UTextBlock>(GetWidgetFromName(DescName));
+            if (!Desc)
+            {
+                Desc = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), DescName);
+                Desc->SetVisibility(ESlateVisibility::HitTestInvisible);
+                Desc->SetAutoWrapText(true);
+                Desc->SetWrapTextAt(198.f);
+                Desc->SetJustification(ETextJustify::Left);
+                FSlateFontInfo Font = Desc->GetFont(); Font.Size = 14; Desc->SetFont(Font);
+                Desc->SetColorAndOpacity(FSlateColor(FLinearColor(.07f, .035f, .015f, 1.f)));
+            }
+            UScrollBox* Scroll = Cast<UScrollBox>(GetWidgetFromName(ScrollName));
+            if (!Scroll)
+            {
+                Scroll = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), ScrollName);
+                Scroll->SetVisibility(ESlateVisibility::Visible);
+                Scroll->SetScrollBarVisibility(ESlateVisibility::Visible);
+                Scroll->SetScrollbarThickness(FVector2D(4.f, 4.f));
+                Scroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+                Scroll->SetAllowOverscroll(false);
+                Desc->RemoveFromParent();
+                Scroll->AddChild(Desc);
+                Content->AddChildToCanvas(Scroll)->SetZOrder(100);
+            }
+            if (!Desc->GetText().EqualTo(Choices[Index].mDescription)) Scroll->ScrollToStart();
+            Desc->SetText(Choices[Index].mDescription);
+            if (UCanvasPanelSlot* DescriptionSlot = Cast<UCanvasPanelSlot>(Scroll->Slot))
+            {
+                const bool bHasIcon = Choices[Index].mIcon != nullptr;
+                DescriptionSlot->SetPosition(FVector2D(8.f, bHasIcon ? 151.f : 88.f));
+                DescriptionSlot->SetSize(FVector2D(216.f, bHasIcon ? 74.f : 128.f));
+            }
 		}
 
 		if (UTextBlock* Name = Cast<UTextBlock>(GetWidgetFromName(
@@ -1665,151 +1680,37 @@ void URewardConcept03Widget::CancelArtifactPress()
 
 bool URewardConcept03Widget::EnsureArtifactDetailOverlay()
 {
-	if (ArtifactDetailOverlayWidget != nullptr)
-	{
-		return true;
-	}
-	static const TCHAR* DetailClassPath =
-		TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay.WBP_CombatDetailOverlay_C");
-	UClass* DetailClass = LoadClass<UUserWidget>(nullptr, DetailClassPath);
-	if (DetailClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning,
-			TEXT("Reward artifact detail WBP unavailable: %s"), DetailClassPath);
-		return false;
-	}
-	if (APlayerController* OwningPlayer = GetOwningPlayer())
-	{
-		ArtifactDetailOverlayWidget =
-			CreateWidget<UUserWidget>(OwningPlayer, DetailClass);
-	}
-	else if (UWorld* World = GetWorld())
-	{
-		ArtifactDetailOverlayWidget = CreateWidget<UUserWidget>(World, DetailClass);
-	}
-	if (ArtifactDetailOverlayWidget == nullptr)
-	{
-		return false;
-	}
-
-	// Combat reward itself is placed at Z=10000, so the shared detail must sit
-	// above it. Treasure reward uses the same instance and therefore the same Z.
-	ArtifactDetailOverlayWidget->AddToViewport(10010);
-	ArtifactDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
-	RDDetailOverlay::EnsureModalInputShield(ArtifactDetailOverlayWidget);
-	if (UButton* CloseButton = Cast<UButton>(
-		ArtifactDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton"))))
-	{
-		CloseButton->OnClicked.AddUniqueDynamic(
-			this, &URewardConcept03Widget::HandleArtifactDetailCloseClicked);
-	}
-	return true;
+ if (!ArtifactDetailPresenter)
+ {
+  UClass* DetailClass = LoadClass<UUserWidget>(nullptr, TEXT("/Game/UI/CombatDetail/WBP_CombatDetailOverlay.WBP_CombatDetailOverlay_C"));
+  if (!DetailClass) return false;
+  ArtifactDetailPresenter = NewObject<USkillDetailOverlayPresenter>(this);
+  ArtifactDetailPresenter->Initialize(GetWorld(), DetailClass, nullptr, 10010);
+  ArtifactDetailPresenter->OnCloseClicked().AddUObject(this, &URewardConcept03Widget::HideArtifactDetails);
+ }
+ return true;
 }
 
 void URewardConcept03Widget::ReleaseArtifactDetailOverlay()
 {
-	if (ArtifactDetailOverlayWidget == nullptr)
-	{
-		return;
-	}
-	for (const TCHAR* ButtonName : { TEXT("DetailCloseCatch"),
-		TEXT("DetailCloseButton") })
-	{
-		if (UButton* Button = Cast<UButton>(
-			ArtifactDetailOverlayWidget->GetWidgetFromName(ButtonName)))
-		{
-			Button->OnClicked.RemoveDynamic(
-				this, &URewardConcept03Widget::HandleArtifactDetailCloseClicked);
-		}
-	}
-	ArtifactDetailOverlayWidget->RemoveFromParent();
-	ArtifactDetailOverlayWidget = nullptr;
+ if (ArtifactDetailPresenter) ArtifactDetailPresenter->Teardown();
+ ArtifactDetailOverlayWidget = nullptr;
+ ArtifactDetailPresenter = nullptr;
 }
 
 void URewardConcept03Widget::ShowArtifactDetails(const int32 ArtifactIndex)
 {
-	if (UIModel == nullptr
-		|| !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex)
-		|| EnsureArtifactDetailOverlay() == false)
-	{
-		return;
-	}
-	const FRewardChoiceUI& Choice = UIModel->GetRewardChoices()[ArtifactIndex];
-	auto Find = [this](const TCHAR* Name) -> UWidget*
-	{
-		return ArtifactDetailOverlayWidget->GetWidgetFromName(Name);
-	};
-	auto Show = [&Find](const TCHAR* Name, const bool bShown,
-		const ESlateVisibility ShownVisibility = ESlateVisibility::SelfHitTestInvisible)
-	{
-		if (UWidget* Widget = Find(Name))
-		{
-			Widget->SetVisibility(bShown ? ShownVisibility
-				: ESlateVisibility::Collapsed);
-		}
-	};
-	auto SetText = [&Find](const TCHAR* Name, const FText& Text)
-	{
-		if (UTextBlock* TextBlock = Cast<UTextBlock>(Find(Name)))
-		{
-			TextBlock->SetText(Text);
-		}
-	};
-
-	SetText(TEXT("DetailTitleText"), Choice.mName);
-	SetText(TEXT("DetailSubtitleText"), Choice.mRarityName.IsEmpty()
-		? GetRewardChoiceTypeText(ArtifactIndex) : Choice.mRarityName);
-	const FText EffectText = Choice.mDescription.IsEmpty()
-		? LOCTEXT("ArtifactFallbackEffect", "파티 전체에 적용됩니다.")
-		: Choice.mDescription;
-	SetText(TEXT("DetailBodyText"), EffectText);
-	SetText(TEXT("DetailExtraHeading"), LOCTEXT("EffectHeading", "효과"));
-	SetText(TEXT("DetailExtraText"), EffectText);
-
-	if (UImage* Icon = Cast<UImage>(Find(TEXT("DetailIconImage"))))
-	{
-		Icon->SetVisibility(Choice.mIcon != nullptr
-			? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		if (Choice.mIcon != nullptr)
-		{
-			RewardConcept03::SetPortraitCropped(Icon, Choice.mIcon.Get());
-		}
-	}
-
-	// Match Combat HUD's artifact presentation: identity + wide effect column,
-	// no stat/skill columns or free-form skill plate.
-	Show(TEXT("DetailIdentityColumn"), true);
-	Show(TEXT("DetailStatColumn"), false);
-	Show(TEXT("DetailRightColumn"), false);
-	Show(TEXT("DetailWideColumn"), true);
-	Show(TEXT("DetailStatBlock"), false);
-	Show(TEXT("DetailTargetBlock"), false);
-	Show(TEXT("DetailSkillBlock"), false);
-	Show(TEXT("DetailExtraBlock"), false);
-	Show(TEXT("DetailFreePlate"), false);
-	Show(TEXT("DetailBodyText"), true);
-	Show(TEXT("DetailSkillRowHost"), false);
-	// 아티팩트의 아이콘/등급/효과는 한 정보면으로 읽힌다. 공용 상세판의
-	// 가로 구분선이 내용을 위아래로 쪼개지 않도록 둘 다 접는다.
-	Show(TEXT("DetailDivider_0"), false);
-	Show(TEXT("DetailDivider_1"), false);
-
-	static const int32 LitByRarity[] = { 1, 3, 5 };
-	const int32 LitCount = LitByRarity[
-		FMath::Clamp(Choice.mRarityLevel, 0, 2)];
-	for (int32 Index = 0; Index < 5; ++Index)
-	{
-		if (UImage* Gem = Cast<UImage>(Find(
-			*FString::Printf(TEXT("DetailRarityGem_%d"), Index))))
-		{
-			Gem->SetVisibility(ESlateVisibility::HitTestInvisible);
-			Gem->SetColorAndOpacity(Index < LitCount
-				? FLinearColor::White
-				: FLinearColor(0.18f, 0.16f, 0.14f, 1.f));
-		}
-	}
-	ArtifactDetailOverlayWidget->SetVisibility(
-		ESlateVisibility::SelfHitTestInvisible);
+ if (!UIModel || !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex) || !EnsureArtifactDetailOverlay()) return;
+ const FRewardChoiceUI& Choice = UIModel->GetRewardChoices()[ArtifactIndex];
+ FCombatArtifactUI Detail;
+ Detail.mName = Choice.mName;
+ Detail.mIcon = Choice.mIcon;
+ Detail.mRarityName = Choice.mRarityName;
+ Detail.mRarityColor = Choice.mRarityColor;
+ Detail.mRarityLevel = Choice.mRarityLevel;
+ Detail.mEffectDescriptions.Add(Choice.mDescription);
+ ArtifactDetailPresenter->PresentArtifact(Detail);
+ ArtifactDetailOverlayWidget = ArtifactDetailPresenter->GetOverlayWidget();
 }
 
 void URewardConcept03Widget::HandleArtifact0Pressed() { BeginArtifactPress(0); }
@@ -1824,10 +1725,7 @@ void URewardConcept03Widget::HandleArtifactDetailCloseClicked()
 
 void URewardConcept03Widget::HideArtifactDetails()
 {
-	if (ArtifactDetailOverlayWidget != nullptr)
-	{
-		ArtifactDetailOverlayWidget->SetVisibility(ESlateVisibility::Collapsed);
-	}
+ if (ArtifactDetailPresenter) ArtifactDetailPresenter->Dismiss();
 }
 
 void URewardConcept03Widget::SetCurrentStep(const int32 StepIndex)

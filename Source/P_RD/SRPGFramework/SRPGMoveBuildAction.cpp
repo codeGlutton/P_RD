@@ -65,7 +65,7 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleCommand(const TInstancedStruct<FS
 
         // 속박 등으로 이동 불가면 빌드에 진입하지 않고 취소
         UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(PlayerUnitModel->GetBoardMovementComponentModel());
-        if (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
+        if (MovementCompModel != nullptr && MovementCompModel->CanSelfMove() == false)
         {
             MarkActionCompleted(ESRPGActionResult::Cancelled);
             SetBuildPhase(ESRPGMoveBuildPhase::None);

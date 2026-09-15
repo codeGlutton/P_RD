@@ -24,3 +24,14 @@ enum class EBoardMoveMode : uint8
 	// @brief 강제 끌려옴 (밀려남과 같은 규칙이지만 연출/기록할 때 구분하기 위해 따로 추가)
 	Pull,
 };
+
+/**
+ * @brief 스스로 하는 이동인지 판정
+ * @details 스스로 하는 이동은 상태이상(기절, 속박 등)으로 중단될 수 있음
+ *          강제 이동(밀치기, 당기기 등)은 상태이상으로 중단되지 않음
+ *          이동 모드가 추가되면 여기에 분류를 추가해야 됨
+ */
+inline bool IsSelfMove(EBoardMoveMode MoveMode)
+{
+	return MoveMode == EBoardMoveMode::Normal;
+}

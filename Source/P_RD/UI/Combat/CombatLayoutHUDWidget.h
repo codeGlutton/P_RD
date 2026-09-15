@@ -1174,6 +1174,11 @@ private:
 	bool EnsureMonsterTabWidget();
 	void RefreshMonsterTab();
 	void RefreshMonsterTabDetail();
+	void RefreshMonsterEquipment();
+	void HandleMonsterEquipmentClicked(int32 Index);
+	UFUNCTION() void HandleMonsterEquipmentClicked_0();
+	UFUNCTION() void HandleMonsterEquipmentClicked_1();
+	UFUNCTION() void HandleMonsterEquipmentClicked_2();
 	void BeginMonsterSkillPress(int32 SlotIndex);
 	void EndMonsterSkillPress(int32 SlotIndex);
 	void HandleMonsterSkillLongPress(int32 SlotIndex);

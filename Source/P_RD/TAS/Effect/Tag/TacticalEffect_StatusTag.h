@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_StatusTag.h
  * @brief  상태이상 GameplayTag 이펙트 부모 클래스 정의 헤더
  * @author 모호재
@@ -92,3 +92,30 @@ class P_RD_API UTacticalEffect_GetStatus : public UTacticalEffect_AddStatus
 public:
 	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };
+
+/**
+ * @brief 중복 적용되지 않는 상태이상 GameplayTag 변경 이펙트 부모 클래스 (이미 걸려있으면 적용 불가)
+ */
+UCLASS(Abstract)
+class P_RD_API UTacticalEffect_AddUniqueStatus : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
+	/* UTacticalEffect_AddStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
+};
+
+/**
+ * @brief 중복 적용되지 않는 상태이상 GameplayTag 부여 이펙트 부모 클래스 (이미 걸려있으면 적용 불가)
+ */
+UCLASS(Abstract)
+class P_RD_API UTacticalEffect_GetUniqueStatus : public UTacticalEffect_GetStatus
+{
+	GENERATED_BODY()
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
+};
+

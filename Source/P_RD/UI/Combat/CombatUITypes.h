@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 /** @brief 전투 UI와 게임플레이 사이에서 주고받는 표시용 뷰 데이터입니다. */
 // UI는 게임플레이 객체(UUnitData 등)를 직접 알지 않고 이 struct들만 읽는다.
@@ -365,6 +365,15 @@ struct FUnitDetailSkillUI
 // - mPassiveDescriptions: 적 패시브/특수 규칙을 텍스트 리스트로 표시.
 // [합의필요] 이름/초상화/패시브 최종 소스는 UUnitData 연결 필요.
 USTRUCT(BlueprintType)
+struct FUnitDetailEquipmentUI
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) FText mDescription;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+};
+
+USTRUCT(BlueprintType)
 struct FUnitDetailUI
 {
 	GENERATED_BODY()
@@ -376,6 +385,8 @@ struct FUnitDetailUI
 	UPROPERTY(BlueprintReadOnly) TArray<FText> mPassiveDescriptions;
 	/** @brief 이 유닛이 들고 있는 스킬 칸들. 탭하면 RequestInspectUnitSkill로 상세를 청한다. */
 	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailSkillUI> mSkills;
+	/** Actual equipped items of the inspected unit, not its spawn candidates. */
+	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailEquipmentUI> mEquipment;
 };
 
 /** @brief 스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울. */
@@ -615,13 +626,7 @@ struct FCombatArtifactUI
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 
-	/**
-	 * @brief 아티팩트를 꾹 눌렀을 때 보여 줄 값들.
-	 *
-	 * @details 이름과 그림만으로는 "이게 무슨 효과인지" 를 알 수 없어 아이콘을
-	 * 눌러도 볼 것이 없었다. 설명은 유닛 패시브와 같은 방식으로 붙인 패시브의
-	 * mDescription 을 모아 만든다 -- 아티팩트가 따로 설명 글을 갖지 않는다.
-	 */
+	/** Authored artifact description, including passive and stat effects. */
 	UPROPERTY(BlueprintReadOnly) TArray<FText> mEffectDescriptions;
 	UPROPERTY(BlueprintReadOnly) FText mRarityName;
 	UPROPERTY(BlueprintReadOnly) int32 mPrice = 0;

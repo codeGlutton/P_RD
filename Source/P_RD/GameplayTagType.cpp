@@ -1,4 +1,4 @@
-﻿#include "GameplayTagType.h"
+#include "GameplayTagType.h"
 
 namespace InputTags
 {
@@ -330,6 +330,9 @@ namespace EffectTags
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Strength,				"GameplayEffect.StatusEffect.Infinite.Buff.Strength");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Dexterity,				"GameplayEffect.StatusEffect.Infinite.Buff.Dexterity");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_Acumeny,				"GameplayEffect.StatusEffect.Infinite.Buff.Acumeny");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_ControlImmunity,		"GameplayEffect.StatusEffect.Infinite.Buff.ControlImmunity");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity,		"GameplayEffect.StatusEffect.Infinite.Buff.WeakeningImmunity");
+	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity,"GameplayEffect.StatusEffect.Infinite.Buff.ForcedMovementImmunity");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Strength,			"GameplayEffect.StatusEffect.Infinite.Debuff.Strength");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity,			"GameplayEffect.StatusEffect.Infinite.Debuff.Dexterity");
 	UE_DEFINE_GAMEPLAY_TAG(GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny,				"GameplayEffect.StatusEffect.Infinite.Debuff.Acumeny");

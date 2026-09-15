@@ -25,6 +25,9 @@
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
+#include "Materials/MaterialInterface.h"
+#include "Internationalization/Internationalization.h"
+#include "Internationalization/Culture.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/SettingsPanelWidget.h"
 #include "UI/TextOpticalAlignment.h"
@@ -188,9 +191,14 @@ namespace
 		}
 
 		const UGamePlaySettings* Settings = GetDefault<UGamePlaySettings>();
-		UTexture2D* LogoTexture = Settings != nullptr
-			? Settings->mTitleLogoTexture.LoadSynchronous()
-			: nullptr;
+		UObject* LogoTexture = nullptr;
+		if (Settings)
+		{
+			if (FInternationalization::Get().GetCurrentLanguage()->GetTwoLetterISOLanguageName() == TEXT("ko"))
+				LogoTexture = Settings->mTitleLogoTexture.LoadSynchronous();
+			else
+				LogoTexture = Settings->mTitleLogoEnglishMaterial.LoadSynchronous();
+		}
 		if (LogoTexture == nullptr)
 		{
 			UE_LOG(LogRD, Warning, TEXT("TitleMenuWidget: configured title logo texture could not be loaded"));
@@ -278,7 +286,9 @@ void UTitleMenuWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	ValidateDesignerBindings();
-	ApplyConfiguredTitleLogo(this);
+	RefreshLocalizedTitleLogo();
+	FInternationalization::Get().OnCultureChanged().RemoveAll(this);
+	FInternationalization::Get().OnCultureChanged().AddUObject(this, &UTitleMenuWidget::RefreshLocalizedTitleLogo);
 	ApplyResponsiveTitleLayout(this, GetCachedGeometry().GetLocalSize(), CanContinueRun());
 	StartTitleBackgroundVideo();
 
@@ -315,8 +325,14 @@ void UTitleMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime
 /** @brief Construct에서 붙인 이벤트를 제거해 재Construct 시 중복 호출을 막는다. */
 // UUserWidget은 OpenUI/CloseUI나 레벨 전환 과정에서 다시 Construct될 수 있다.
 // AddUniqueDynamic을 사용하더라도 명시적으로 해제해두면 WBP 교체/하위 위젯 재생성 시 이벤트 잔류를 피할 수 있다.
+void UTitleMenuWidget::RefreshLocalizedTitleLogo()
+{
+	ApplyConfiguredTitleLogo(this);
+}
+
 void UTitleMenuWidget::NativeDestruct()
 {
+	FInternationalization::Get().OnCultureChanged().RemoveAll(this);
 	if (auto* GI = GetGameInstance())
 		GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->TitleClosed(this);
 	StopTitleBackgroundVideo();

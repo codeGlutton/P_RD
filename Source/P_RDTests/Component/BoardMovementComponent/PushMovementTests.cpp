@@ -17,6 +17,7 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
+#include "GameplayTagType.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -530,6 +531,95 @@ bool FPushMovementBlockedTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("[Case2] 제자리 유지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(5, 2));
 		TestEqual(TEXT("[Case2] 완료 통지 없음"), FinishCount, 0);
 		TestFalse(TEXT("[Case2] 이동 종료 상태"), Fixture.Movement->IsMoving());
+	}
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPushMovementStatusEffectTests,
+	"P_RD.SRPG.PushMovement.StatusEffect",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+/**
+ * @brief 이동 중 상태이상 검증
+ *  1) 걷는 중 속박 -> 그 칸에서 정지, 남은 경로 폐기
+ *  2) 밀리는 중 기절 -> 끝까지 밀림
+ *  3) 밀리는 중 속박 -> 끝까지 밀림
+ */
+bool FPushMovementStatusEffectTests::RunTest(const FString& Parameters)
+{
+	UWorld* World = GetAnyGameWorldForPushTests();
+	if (World == nullptr)
+	{
+		World = GWorld;
+	}
+	if (TestNotNull(TEXT("유효한 UWorld"), World) == false)
+	{
+		return false;
+	}
+
+	// (3,2) 도착 통지에서 상태이상 태그를 붙이는 델리게이트 등록
+	auto AddStatusOnArrive = [](FPushMovementFixture& Fixture, const FGameplayTag& StatusTag)
+	{
+		return Fixture.Unit->OnEndMoveStep.AddLambda(
+			[&Fixture, StatusTag](const FTileTransform& TileTransform, const FTransform&)
+			{
+				if (TileTransform.mIndex == FTileIndex(3, 2))
+				{
+					Fixture.Unit->GetAttributeComponentModel()->AddLooseGameplayTag(StatusTag);
+				}
+			});
+	};
+
+	/* Case1: 걷는 중 속박 -> 정지 */
+	AddInfo(TEXT("=== Case1: 걷는 중 속박 -> 그 칸에서 정지, 남은 경로 폐기 ==="));
+	{
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
+
+		int32 FinishCount = 0;
+		Fixture.Movement->MoveAlongPath(
+			{ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2), FTileIndex(5, 2) },
+			FOnBoardMoveFinished::CreateLambda([&FinishCount]()
+			{
+				++FinishCount;
+			}));
+
+		TestTrue(TEXT("[Case1] 속박 걸린 칸에서 정지"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(3, 2));
+		TestEqual(TEXT("[Case1] OnFinished 1회"), FinishCount, 1);
+		TestFalse(TEXT("[Case1] 이동 종료 상태"), Fixture.Movement->IsMoving());
+
+		Fixture.Unit->OnEndMoveStep.Remove(StatusHandle);
+	}
+
+	/* Case2: 밀리는 중 기절 -> 끝까지 밀림 */
+	AddInfo(TEXT("=== Case2: 밀리는 중 기절 -> 끝까지 밀림 ==="));
+	{
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
+
+		Fixture.Movement->PushAlongPath({ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2) });
+
+		TestTrue(TEXT("[Case2] 기절 걸려도 끝까지 밀림"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(4, 2));
+		TestFalse(TEXT("[Case2] 이동 종료 상태"), Fixture.Movement->IsMoving());
+
+		Fixture.Unit->OnEndMoveStep.Remove(StatusHandle);
+	}
+
+	/* Case3: 밀리는 중 속박 -> 끝까지 밀림 */
+	AddInfo(TEXT("=== Case3: 밀리는 중 속박 -> 끝까지 밀림 ==="));
+	{
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
+
+		Fixture.Movement->PushAlongPath({ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2) });
+
+		TestTrue(TEXT("[Case3] 속박 걸려도 끝까지 밀림"), Fixture.Unit->GetTileTransform().mIndex == FTileIndex(4, 2));
+		TestFalse(TEXT("[Case3] 이동 종료 상태"), Fixture.Movement->IsMoving());
+
+		Fixture.Unit->OnEndMoveStep.Remove(StatusHandle);
 	}
 
 	return true;

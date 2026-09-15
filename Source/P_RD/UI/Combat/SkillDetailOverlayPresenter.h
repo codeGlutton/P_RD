@@ -143,6 +143,7 @@ public:
 	 * 서체도 같은 규칙(ApplyReadableDetailTypography)을 탄다.
 	 */
 	void PresentArtifact(const FCombatArtifactUI& Detail);
+	void PresentEquipment(const FUnitDetailEquipmentUI& Detail);
 
 	/** @brief 겹을 접는다. 호출자 쪽 정리(위협 범위 걷기 등)는 호출자가 한다. */
 	void Dismiss();
@@ -196,6 +197,7 @@ public:
 	UTextBlock* GetTitleText() const { return mDetailTitleText; }
 	UTextBlock* GetSubtitleText() const { return mDetailSubtitleText; }
 	UTextBlock* GetBodyText() const { return mDetailBodyText; }
+	UScrollBox* GetArtifactDescriptionScroll() const { return mArtifactDescriptionScrollBox; }
 	UWidget* GetStatBlock() const { return mDetailStatBlock; }
 	UWidget* GetTargetBlock() const { return mDetailTargetBlock; }
 	UWidget* GetSkillBlock() const { return mDetailSkillBlock; }

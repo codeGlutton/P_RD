@@ -87,6 +87,9 @@ protected:
 	void EvaluateTurnEndState(bool ForceAbort);
 
 	/* 액션 처리 함수 */
+public:
+	bool IsPlayingAction() const;
+
 protected:
 	void EnqueueAction(USRPGAction* NewAction);
 	void DequeueAction();

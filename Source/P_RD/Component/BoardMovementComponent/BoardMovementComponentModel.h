@@ -88,6 +88,9 @@ public:
 	// @brief 타일맵 획득 (테스트용 파생 컴포넌트가 오버라이드 할 수 있게 가상함수로 선언)
 	virtual UTileMapModel* GetTileMap() const;
 
+	// @brief 스스로 움직일 수 있는 상태인지 판정. 기본은 항상 참
+	virtual bool CanSelfMove() const { return true; }
+
 	/* 파생 훅 */
 protected:
 	// @brief 스텝 시작 직전 훅 (유닛 파생의 AP 차감 등). MoveMode로 일반이동/밀치기이동 구분

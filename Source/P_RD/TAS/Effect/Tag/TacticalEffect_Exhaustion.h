@@ -46,4 +46,8 @@ class P_RD_API UTacticalEffect_GetExhaustion : public UTacticalEffect_GetStatus
 
 public:
 	UTacticalEffect_GetExhaustion();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

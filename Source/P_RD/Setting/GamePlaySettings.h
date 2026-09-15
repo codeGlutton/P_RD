@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   GamePlaySettings.h
  * @brief  게임 플레이 연관 설정 객체 정의 헤더
  * @author 모호재
@@ -95,6 +95,9 @@ public:
     /** @brief 타이틀 WBP의 TitleLogoImage에 런타임으로 적용할 SVN 텍스처. */
     UPROPERTY(Config, Category = UI, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleLogoTexture"))
     TSoftObjectPtr<UTexture2D> mTitleLogoTexture;
+
+	UPROPERTY(Config, Category=UI, EditAnywhere, BlueprintReadOnly)
+	TSoftObjectPtr<class UMaterialInterface> mTitleLogoEnglishMaterial;
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatVictoryVideoPath"))
     FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
