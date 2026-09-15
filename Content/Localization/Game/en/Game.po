@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-14 16:51\n"
-"PO-Revision-Date: 2026-09-14 16:51\n"
+"POT-Creation-Date: 2026-09-15 12:09\n"
+"PO-Revision-Date: 2026-09-15 12:09\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -111,12 +111,12 @@ msgctxt ",AB465500435D4F00310C34A87372DFB7"
 msgid "광전사의 인장"
 msgstr "Berserker's Mark"
 
-#. Key:	B46EAA5E4F421D93F653E997D106B647
+#. Key:	B0D1FDBF49BC8EAB5BCD6C85648559E2
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A008_FangOfPrecision.DA_Artifact_A008_FangOfPrecision.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A008_FangOfPrecision.DA_Artifact_A008_FangOfPrecision.mDescription
-msgctxt ",B46EAA5E4F421D93F653E997D106B647"
-msgid "스킬 사용 시, 5회 째 사용할 때마다 자신에게 예리함 5을 부여합니다."
-msgstr "Gain 5 Acuity on every 5th skill use."
+msgctxt ",B0D1FDBF49BC8EAB5BCD6C85648559E2"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 자신에게 예리함 1을 부여합니다."
+msgstr "Every fifth skill use grants 1 Sharpness to self."
 
 #. Key:	7FA55CBC456023E91D1BC797A6DDEE01
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A008_FangOfPrecision.DA_Artifact_A008_FangOfPrecision.mName
@@ -153,12 +153,12 @@ msgctxt ",9AB630D3457EE600AC976581086C2695"
 msgid "선구자의 나침반"
 msgstr "Pathfinder's Compass"
 
-#. Key:	3B93F86F43D4BD04AC1540A36455C3E2
+#. Key:	BA26FCF14B76E04619F72E87016B5317
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A011_HuntersEye.DA_Artifact_A011_HuntersEye.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A011_HuntersEye.DA_Artifact_A011_HuntersEye.mDescription
-msgctxt ",3B93F86F43D4BD04AC1540A36455C3E2"
-msgid "턴 시작 시 체력이 50% 이상일 때, 자신에게 예리함 20을 부여합니다.(턴 종료 시 제거)"
-msgstr "If your HP is at or above 50% at the start of your turn, gain 20 Acuity. (Removed at the end of the turn.)"
+msgctxt ",BA26FCF14B76E04619F72E87016B5317"
+msgid "턴 시작 시 체력이 50% 이상일 때, 자신에게 예리함4을 부여합니다.(턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 4 Sharpness if your HP is at least 50%. (Removed at the end of the turn.)"
 
 #. Key:	6987A303424A208DC86585A97CA6C790
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A011_HuntersEye.DA_Artifact_A011_HuntersEye.mName
@@ -167,12 +167,12 @@ msgctxt ",6987A303424A208DC86585A97CA6C790"
 msgid "사냥꾼의 눈"
 msgstr "Hunter's Eye"
 
-#. Key:	A3E2129640BFF77D6F9DA287E8C97990
+#. Key:	9BE0B1DE4FE9F2A40169A199C4296C24
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A012_Bloodlust.DA_Artifact_A012_Bloodlust.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A012_Bloodlust.DA_Artifact_A012_Bloodlust.mDescription
-msgctxt ",A3E2129640BFF77D6F9DA287E8C97990"
-msgid "턴 시작 시 체력이 50% 이하일 때, 자신에게 근력 3를 부여합니다. (턴 종료 시 제거)"
-msgstr "If your HP is at or below 50% at the start of your turn, gain 3 Strength. (Removed at the end of the turn.)"
+msgctxt ",9BE0B1DE4FE9F2A40169A199C4296C24"
+msgid "턴 시작 시 체력이 50% 이하일 때, 자신에게 완력 3를 부여합니다. (턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 3 Strength if your HP is at or below 50%. (Removed at the end of the turn.)"
 
 #. Key:	031D480A4B19B2F3AA29E9B0906AE711
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A012_Bloodlust.DA_Artifact_A012_Bloodlust.mName
@@ -195,12 +195,12 @@ msgctxt ",0FE1528B45CC84EBE8AE36AB4A8CD2FE"
 msgid "생명의 씨앗"
 msgstr "Seed of Vitality"
 
-#. Key:	2938921F4880DE30524FFF962873B524
+#. Key:	A6D1234342DC73761058C484A2543B91
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A014_HammerOfPain.DA_Artifact_A014_HammerOfPain.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A014_HammerOfPain.DA_Artifact_A014_HammerOfPain.mDescription
-msgctxt ",2938921F4880DE30524FFF962873B524"
-msgid "스킬 사용 시, 체력을 잃으면, 자신에게 근력 1을 부여합니다."
-msgstr "If you lose HP while using a skill, gain 1 Strength."
+msgctxt ",A6D1234342DC73761058C484A2543B91"
+msgid "스킬 사용 시, 체력을 잃으면, 자신에게 완력 1을 부여합니다."
+msgstr "When using a skill, gain 1 Strength if you lose HP."
 
 #. Key:	A3A73EF243B1800D8BEE6FA0463821EF
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A014_HammerOfPain.DA_Artifact_A014_HammerOfPain.mName
@@ -251,12 +251,12 @@ msgctxt ",913C8B6B4A024AB131221281AA0E18F7"
 msgid "학살자의 심장"
 msgstr "Slayer's Heart"
 
-#. Key:	DA8601C54436B0E105800385F5227011
+#. Key:	DED67BCC44550F1FB831A3BA789E997F
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A020_WarriorsInsignia.DA_Artifact_A020_WarriorsInsignia.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A020_WarriorsInsignia.DA_Artifact_A020_WarriorsInsignia.mDescription
-msgctxt ",DA8601C54436B0E105800385F5227011"
-msgid "전투 시작 시, 자신에게 근력 2를 부여합니다."
-msgstr "Gain 2 Strength at the start of combat."
+msgctxt ",DED67BCC44550F1FB831A3BA789E997F"
+msgid "전투 시작 시, 자신에게 완력 1를 부여합니다."
+msgstr "At the start of combat, gain 1 Strength."
 
 #. Key:	3897D56E47E781F7F2ADE8A1141F5441
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A020_WarriorsInsignia.DA_Artifact_A020_WarriorsInsignia.mName
@@ -279,12 +279,12 @@ msgctxt ",789E68F148651531D5658494E602DB04"
 msgid "마력의 수정"
 msgstr "Arcane Crystal"
 
-#. Key:	7BD70A964CE120C66D2174AE7D9A2A2F
+#. Key:	59C959EA4F7377E5ED39C5BDC79BEA83
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A022_BladeSigil.DA_Artifact_A022_BladeSigil.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A022_BladeSigil.DA_Artifact_A022_BladeSigil.mDescription
-msgctxt ",7BD70A964CE120C66D2174AE7D9A2A2F"
-msgid "전투 시작 시, 자신에게 예리함 10을 부여합니다."
-msgstr "Gain 10 Acuity at the start of combat."
+msgctxt ",59C959EA4F7377E5ED39C5BDC79BEA83"
+msgid "전투 시작 시, 자신에게 예리함 2을 부여합니다."
+msgstr "At the start of combat, gain 2 Sharpness."
 
 #. Key:	18946BA54E468F15AC033C92A7503DA8
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A022_BladeSigil.DA_Artifact_A022_BladeSigil.mName
@@ -321,12 +321,12 @@ msgctxt ",CE1615B94FA5B91EF1488098661AA93C"
 msgid "철의 장갑"
 msgstr "Iron Gauntlet"
 
-#. Key:	B58184A9449481A8B111D4B22257C1C9
+#. Key:	0C9B8230433E8311DE2364BEE8317AEA
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A025_BattleCry.DA_Artifact_A025_BattleCry.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A025_BattleCry.DA_Artifact_A025_BattleCry.mDescription
-msgctxt ",B58184A9449481A8B111D4B22257C1C9"
-msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면, 자신에게 근력 1을 부여합니다."
-msgstr "Gain 1 Strength after using 5 skills in a single turn."
+msgctxt ",0C9B8230433E8311DE2364BEE8317AEA"
+msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면, 자신에게 완력 1을 부여합니다."
+msgstr "When using a skill, gain 1 Strength after using five skills in one turn."
 
 #. Key:	9F543F014F47828C679900AEF4F8E1C7
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A025_BattleCry.DA_Artifact_A025_BattleCry.mName
@@ -377,11 +377,11 @@ msgctxt ",2F0D58E2448ABBD21F3BCE860F3C5549"
 msgid "저격수의 렌즈"
 msgstr "Sniper's Lens"
 
-#. Key:	4D3268984B87884ABEA1F5A9C62A104A
+#. Key:	475F393B43007FC0A687C0A6ADE20F76
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A029_RootedTree.DA_Artifact_A029_RootedTree.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A029_RootedTree.DA_Artifact_A029_RootedTree.mDescription
-msgctxt ",4D3268984B87884ABEA1F5A9C62A104A"
-msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 근력 1을 부여합니다."
+msgctxt ",475F393B43007FC0A687C0A6ADE20F76"
+msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 완력 1을 부여합니다."
 msgstr "At the end of your turn, gain 1 Strength if you did not move during that turn."
 
 #. Key:	CEB9244B479421E8353C229151AFFF7D
@@ -391,12 +391,12 @@ msgctxt ",CEB9244B479421E8353C229151AFFF7D"
 msgid "뿌리내린 나무"
 msgstr "Rooted Tree"
 
-#. Key:	CA71395047FAFDDFD9297B91738F4314
+#. Key:	2BA5ACB9408E83E80164658B19DCC95E
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A030_BannerOfSlaughter.DA_Artifact_A030_BannerOfSlaughter.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A030_BannerOfSlaughter.DA_Artifact_A030_BannerOfSlaughter.mDescription
-msgctxt ",CA71395047FAFDDFD9297B91738F4314"
-msgid "한 번의 스킬로 3명 이상을 타겟으로 한다면, 자신에게 근력 1을 부여합니다."
-msgstr "If a single skill targets 3 or more units, gain 1 Strength."
+msgctxt ",2BA5ACB9408E83E80164658B19DCC95E"
+msgid "한 번의 스킬로 3명 이상을 타겟으로 한다면, 자신에게 완력 1을 부여합니다."
+msgstr "Gain 1 Strength when a single skill targets at least three units."
 
 #. Key:	02AC736346AC590A9BF5CF9530C70C32
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A030_BannerOfSlaughter.DA_Artifact_A030_BannerOfSlaughter.mName
@@ -405,12 +405,12 @@ msgctxt ",02AC736346AC590A9BF5CF9530C70C32"
 msgid "학살의 깃발"
 msgstr "Banner of Slaughter"
 
-#. Key:	ABEFB17C497128DC48EEEDAE5DABA8A4
+#. Key:	33EDDC6A4C82023D471FD9B236B2E4AB
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A031_MaskOfAgony.DA_Artifact_A031_MaskOfAgony.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A031_MaskOfAgony.DA_Artifact_A031_MaskOfAgony.mDescription
-msgctxt ",ABEFB17C497128DC48EEEDAE5DABA8A4"
-msgid "턴 시작 시 자신에게 디버프가 보유되어 있다면, 자신에게 근력 2를 부여합니다. (턴 종료 시 제거)"
-msgstr "If you have a debuff at the start of your turn, gain 2 Strength. (Removed at the end of the turn.)"
+msgctxt ",33EDDC6A4C82023D471FD9B236B2E4AB"
+msgid "턴 시작 시 자신에게 디버프가 보유되어 있다면, 자신에게 완력 2를 부여합니다. (턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 2 Strength if you have a debuff. (Removed at the end of the turn.)"
 
 #. Key:	C035B2AA4E8A9796EA959D9DE44993D1
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A031_MaskOfAgony.DA_Artifact_A031_MaskOfAgony.mName
@@ -791,9 +791,16 @@ msgid "Barrel"
 msgstr "Barrel"
 
 #. Key:	9F04342742F7C2A96F66A2AEC04C3F26
-#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle.DA_BookcaseObstacle.mDisplayName
-#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle.DA_BookcaseObstacle.mDisplayName
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle_00.DA_BookcaseObstacle_00.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle_00.DA_BookcaseObstacle_00.mDisplayName
 msgctxt ",9F04342742F7C2A96F66A2AEC04C3F26"
+msgid "Bookcase"
+msgstr "Bookcase"
+
+#. Key:	3D6AA3B04A25109E2BAC73A21C7A28E4
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle_01.DA_BookcaseObstacle_01.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_BookcaseObstacle_01.DA_BookcaseObstacle_01.mDisplayName
+msgctxt ",3D6AA3B04A25109E2BAC73A21C7A28E4"
 msgid "Bookcase"
 msgstr "Bookcase"
 
@@ -810,6 +817,13 @@ msgstr "Box"
 msgctxt ",F97A30ED4E438A121605B18C60A5506F"
 msgid "Chair"
 msgstr "Chair"
+
+#. Key:	44B4EE094BC54617E3DF48B4C861B3E5
+#. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_ColumnObstacle.DA_ColumnObstacle.mDisplayName
+#: /Game/BP/DataAsset/Obstacle/Stage2/DA_ColumnObstacle.DA_ColumnObstacle.mDisplayName
+msgctxt ",44B4EE094BC54617E3DF48B4C861B3E5"
+msgid "Column"
+msgstr "Column"
 
 #. Key:	1B49090E41C2798D0FE6E7A280BA6D48
 #. SourceLocation:	/Game/BP/DataAsset/Obstacle/Stage2/DA_EnvObstacle.DA_EnvObstacle.mDisplayName
@@ -965,12 +979,12 @@ msgctxt ",CB071F8149F1149DFE9E80BFC0B8F2D6"
 msgid "스킬 사용 시, 5회 째 사용할 때마다 공격력이 25% 증가합니다."
 msgstr "Every fifth skill use increases attack power by 25%."
 
-#. Key:	07CF45084D47C668C07A08B4EA55C2A1
+#. Key:	E1E7CC2444E0B650FEDAB784ECB19FCD
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P008.DA_Passive_P008.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P008.DA_Passive_P008.mDescription
-msgctxt ",07CF45084D47C668C07A08B4EA55C2A1"
-msgid "스킬 사용 시, 5회 째 사용할 때마다 자신에게 예리함 5을 부여합니다."
-msgstr "Gain 5 Acuity on every 5th skill use."
+msgctxt ",E1E7CC2444E0B650FEDAB784ECB19FCD"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 자신에게 예리함 1을 부여합니다."
+msgstr "Every fifth skill use grants 1 Sharpness to self."
 
 #. Key:	8647A6E14B779EB6686E688A61BB97DE
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P009.DA_Passive_P009.mDescription
@@ -986,19 +1000,19 @@ msgctxt ",4F022F5E4F645AC5921504AB2E7617DA"
 msgid "첫 턴 시작 시, AP 3을 획득합니다."
 msgstr "Gain 3 AP at the start of your first turn."
 
-#. Key:	D70222204EA2E1E29489368DAD5809F9
+#. Key:	AF9C294E41DAE9F3B059BD8F9ECB8019
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P011.DA_Passive_P011.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P011.DA_Passive_P011.mDescription
-msgctxt ",D70222204EA2E1E29489368DAD5809F9"
-msgid "턴 시작 시 체력이 50% 이상일 때, 자신에게 예리함 20을 부여합니다.(턴 종료 시 제거)"
-msgstr "If your HP is at or above 50% at the start of your turn, gain 20 Acuity. (Removed at the end of the turn.)"
+msgctxt ",AF9C294E41DAE9F3B059BD8F9ECB8019"
+msgid "턴 시작 시 체력이 50% 이상일 때, 자신에게 예리함 4을 부여합니다.(턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 4 Sharpness if your HP is at least 50%. (Removed at the end of the turn.)"
 
-#. Key:	353099954EB3F3406C80DEB536902521
+#. Key:	82BAEFC1487A9F796E6207B0F4E815DD
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P012.DA_Passive_P012.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P012.DA_Passive_P012.mDescription
-msgctxt ",353099954EB3F3406C80DEB536902521"
-msgid "턴 시작 시 체력이 50% 이하일 때, 자신에게 근력 3를 부여합니다. (턴 종료 시 제거)"
-msgstr "If your HP is at or below 50% at the start of your turn, gain 3 Strength. (Removed at the end of the turn.)"
+msgctxt ",82BAEFC1487A9F796E6207B0F4E815DD"
+msgid "턴 시작 시 체력이 50% 이하일 때, 자신에게 완력 3를 부여합니다. (턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 3 Strength if your HP is at or below 50%. (Removed at the end of the turn.)"
 
 #. Key:	A99041724CA6EB7D35BEDBB0C685F68D
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P013.DA_Passive_P013.mDescription
@@ -1007,12 +1021,12 @@ msgctxt ",A99041724CA6EB7D35BEDBB0C685F68D"
 msgid "전투 종료 시, 최대 체력이 1 증가합니다."
 msgstr "Increase maximum HP by 1 at the end of combat."
 
-#. Key:	F7F1384B4B6CEDC1DC5BA793C5B5CF87
+#. Key:	39EFDE144CC2DA953DCAC2B374305EC1
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P014.DA_Passive_P014.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P014.DA_Passive_P014.mDescription
-msgctxt ",F7F1384B4B6CEDC1DC5BA793C5B5CF87"
-msgid "스킬 사용 시, 체력을 잃으면, 자신에게 근력 1을 부여합니다."
-msgstr "If you lose HP while using a skill, gain 1 Strength."
+msgctxt ",39EFDE144CC2DA953DCAC2B374305EC1"
+msgid "스킬 사용 시, 체력을 잃으면, 자신에게 완력 1을 부여합니다."
+msgstr "When using a skill, gain 1 Strength if you lose HP."
 
 #. Key:	3C2A282A411BA5229D9816999982625A
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P015.DA_Passive_P015.mDescription
@@ -1035,12 +1049,12 @@ msgctxt ",F90CB4B94D0782E7398FD3878EE2A156"
 msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, AP 3과 SP 3을 획득합니다."
 msgstr "After applying an effect, gain 3 AP and 3 SP if the target's HP reaches 0 or below."
 
-#. Key:	9108D7C94A84A09BEC1C7CB9E5EAA3BA
+#. Key:	94A73FB441993440169E32913D13C29B
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P020.DA_Passive_P020.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P020.DA_Passive_P020.mDescription
-msgctxt ",9108D7C94A84A09BEC1C7CB9E5EAA3BA"
-msgid "전투 시작 시, 자신에게 근력 2를 부여합니다."
-msgstr "Gain 2 Strength at the start of combat."
+msgctxt ",94A73FB441993440169E32913D13C29B"
+msgid "전투 시작 시, 자신에게 완력 1를 부여합니다."
+msgstr "At the start of combat, gain 1 Strength."
 
 #. Key:	CFF0B2B04D042F5C7E23779B13162ADB
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P021.DA_Passive_P021.mDescription
@@ -1049,12 +1063,12 @@ msgctxt ",CFF0B2B04D042F5C7E23779B13162ADB"
 msgid "전투 시작 시, SP 3을 획득합니다."
 msgstr "Gain 3 SP at the start of combat."
 
-#. Key:	75ACFA2D4B76840CFD4792B6F69EA2BD
+#. Key:	7907BD2A4DD16E45F692939ABFC033B3
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P022.DA_Passive_P022.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P022.DA_Passive_P022.mDescription
-msgctxt ",75ACFA2D4B76840CFD4792B6F69EA2BD"
-msgid "전투 시작 시, 자신에게 예리함 10을 부여합니다."
-msgstr "Gain 10 Acuity at the start of combat."
+msgctxt ",7907BD2A4DD16E45F692939ABFC033B3"
+msgid "전투 시작 시, 자신에게 예리함 2을 부여합니다."
+msgstr "At the start of combat, gain 2 Sharpness."
 
 #. Key:	9E77F77644EA23F0F743228B002275AA
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P023.DA_Passive_P023.mDescription
@@ -1070,12 +1084,12 @@ msgctxt ",742BFF3A4134D49E0EDEEF8590217DA2"
 msgid "스킬 사용 시, 자신에게 방어도 1을 부여합니다."
 msgstr "Gain 1 Defense when you use a skill."
 
-#. Key:	908DA5564E07294F77DD73AC007EF1B4
+#. Key:	FB9E9FFB47E9433606C29EB5CC6BCD78
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P025.DA_Passive_P025.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P025.DA_Passive_P025.mDescription
-msgctxt ",908DA5564E07294F77DD73AC007EF1B4"
-msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면, 자신에게 근력 1을 부여합니다."
-msgstr "Gain 1 Strength after using 5 skills in a single turn."
+msgctxt ",FB9E9FFB47E9433606C29EB5CC6BCD78"
+msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면, 자신에게 완력 1을 부여합니다."
+msgstr "When using a skill, gain 1 Strength after using five skills in one turn."
 
 #. Key:	E3AD030649E4F653D951B383B9700F87
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P026.DA_Passive_P026.mDescription
@@ -1098,26 +1112,26 @@ msgctxt ",530DA9E1480DC551ED1907B7412D08D1"
 msgid "효과 적용 시, 대상 적군과의 거리가 3 이상이라면, 해당 효과의 피해량이 25% 증가합니다."
 msgstr "If the target enemy is at least 3 tiles away when an effect is applied, that effect deals 25% more damage."
 
-#. Key:	7FADE7F240FB21356678F8AC38159520
+#. Key:	710FC6FC49520D63CB5B4BA8C312EE07
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P029.DA_Passive_P029.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P029.DA_Passive_P029.mDescription
-msgctxt ",7FADE7F240FB21356678F8AC38159520"
-msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 근력 1을 부여합니다."
+msgctxt ",710FC6FC49520D63CB5B4BA8C312EE07"
+msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 완력 1을 부여합니다."
 msgstr "At the end of your turn, gain 1 Strength if you did not move during that turn."
 
-#. Key:	ADF45A1A4E046951C478049ACC6E278E
+#. Key:	B9C3401447AA313CD2EE0F92E613D13D
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P030.DA_Passive_P030.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P030.DA_Passive_P030.mDescription
-msgctxt ",ADF45A1A4E046951C478049ACC6E278E"
-msgid "한 번의 스킬로 3명 이상을 타겟으로 한다면, 자신에게 근력 1을 부여합니다."
-msgstr "If a single skill targets 3 or more units, gain 1 Strength."
+msgctxt ",B9C3401447AA313CD2EE0F92E613D13D"
+msgid "한 번의 스킬로 3명 이상을 타겟으로 한다면, 자신에게 완력 1을 부여합니다."
+msgstr "Gain 1 Strength when a single skill targets at least three units."
 
-#. Key:	3B7CB6FB4FB1C2DDD6E8718C5EC71299
+#. Key:	48ECBE3345D4CCF2904866A3907837DF
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P031.DA_Passive_P031.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P031.DA_Passive_P031.mDescription
-msgctxt ",3B7CB6FB4FB1C2DDD6E8718C5EC71299"
-msgid "턴 시작 시 자신에게 디버프가 보유되어 있다면, 자신에게 근력 2를 부여합니다. (턴 종료 시 제거)"
-msgstr "If you have a debuff at the start of your turn, gain 2 Strength. (Removed at the end of the turn.)"
+msgctxt ",48ECBE3345D4CCF2904866A3907837DF"
+msgid "턴 시작 시 자신에게 디버프가 보유되어 있다면, 자신에게 완력 2를 부여합니다. (턴 종료 시 제거)"
+msgstr "At the start of your turn, gain 2 Strength if you have a debuff. (Removed at the end of the turn.)"
 
 #. Key:	082AF84B4B30BA7B3FE70FAA9532DD68
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P032.DA_Passive_P032.mDescription
@@ -5844,9 +5858,16 @@ msgctxt ",9D9ADCF94494DD9108FE679BEA34A2CD"
 msgid "입장"
 msgstr "Enter"
 
+#. Key:	UniqueTagGainFormat
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(56)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(56)
+msgctxt "SkillEffectLayer_UniqueTagBase,UniqueTagGainFormat"
+msgid "{0} 태그를 부여합니다."
+msgstr "Applies the {0} tag."
+
 #. Key:	TagGainFormat
-#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(61)
-#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(61)
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(92)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer.cpp(92)
 msgctxt "SkillEffectLayer_TagBase,TagGainFormat"
 msgid "{0} 태그를 {1} 중첩 부여합니다."
 msgstr "Applies {1} stacks of {0}."
@@ -5865,6 +5886,13 @@ msgctxt "SkillEffectLayer_Attack,AttackDesc"
 msgid "대상에게 {0}~{1}의 데미지를 입힙니다."
 msgstr "Deals {0}~{1} damage to the target."
 
+#. Key:	ControlImmunityName
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ControlImmunity.cpp(13)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ControlImmunity.cpp(13)
+msgctxt "SkillEffectLayer_ControlImmunity,ControlImmunityName"
+msgid "억제 면역"
+msgstr "Control Immunity"
+
 #. Key:	DexterityName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Dexterity.cpp(18)
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Dexterity.cpp(18)
@@ -5878,6 +5906,13 @@ msgstr "Dexterity"
 msgctxt "SkillEffectLayer_Exhaustion,ExhaustionName"
 msgid "탈진"
 msgstr "Exhaustion"
+
+#. Key:	ForcedMovementImmunityName
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ForcedMovementImmunity.cpp(13)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ForcedMovementImmunity.cpp(13)
+msgctxt "SkillEffectLayer_ForcedMovementImmunity,ForcedMovementImmunityName"
+msgid "강제 이동 면역"
+msgstr "Forced Movement Immunity"
 
 #. Key:	FortificationName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Fortification.cpp(13)
@@ -5997,6 +6032,13 @@ msgstr "Vigor"
 msgctxt "SkillEffectLayer_Vulnerability,VulnerabilityName"
 msgid "취약"
 msgstr "Vulnerability"
+
+#. Key:	WeakeningImmunityName
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_WeakeningImmunity.cpp(13)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_WeakeningImmunity.cpp(13)
+msgctxt "SkillEffectLayer_WeakeningImmunity,WeakeningImmunityName"
+msgid "쇠약 면역"
+msgstr "Weakening Immunity"
 
 #. Key:	WeaknessName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Weakness.cpp(13)
@@ -6671,442 +6713,442 @@ msgid "잊힌 성채"
 msgstr "Forgotten Citadel"
 
 #. Key:	MercenaryMoveSummary
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2033)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2033)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2034)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2034)
 msgctxt "CombatLayoutHUD,MercenaryMoveSummary"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	PartySlotEmpty
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2102)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2102)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2103)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2103)
 msgctxt "CombatLayoutHUD,PartySlotEmpty"
 msgid "빈 자리"
 msgstr "Empty Slot"
 
 #. Key:	PreviousTurns
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2549)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2549)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2550)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2550)
 msgctxt "CombatLayoutHUD,PreviousTurns"
 msgid "이전 차례 보기"
 msgstr "View previous turns"
 
 #. Key:	NextTurns
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2551)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2551)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2552)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2552)
 msgctxt "CombatLayoutHUD,NextTurns"
 msgid "다음 차례 보기"
 msgstr "View upcoming turns"
 
 #. Key:	Move
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2664)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2664)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2665)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2665)
 msgctxt "CombatLayoutHUD,Move"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	MoveCostPerTileShort
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2665)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2665)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2666)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2666)
 msgctxt "CombatLayoutHUD,MoveCostPerTileShort"
 msgid "1/칸"
 msgstr "1/tile"
 
 #. Key:	MoveCost
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2666)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2666)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2667)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2667)
 msgctxt "CombatLayoutHUD,MoveCost"
 msgid "AP 1/칸"
 msgstr "AP 1/tile"
 
 #. Key:	SkillCost
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2710)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2710)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2711)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2711)
 msgctxt "CombatLayoutHUD,SkillCost"
 msgid "AP {0}"
 msgstr "AP {0}"
 
 #. Key:	SkillCardDamage
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2762)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2762)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2763)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2763)
 msgctxt "CombatLayoutHUD,SkillCardDamage"
 msgid "피해 {0}~{1}"
 msgstr "DMG {0}~{1}"
 
 #. Key:	CombatObjectiveRemaining
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2927)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2927)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2928)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2928)
 msgctxt "CombatLayoutHUD,CombatObjectiveRemaining"
 msgid "모든 적 처치 — 남은 적 {0}"
 msgstr "Defeat all enemies — {0} remaining"
 
 #. Key:	MercenaryInventoryPageTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2953)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2953)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2954)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2954)
 msgctxt "CombatHUD,MercenaryInventoryPageTitle"
 msgid "인벤토리"
 msgstr "Inventory"
 
 #. Key:	MercenaryPageTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2954)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2954)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2955)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2955)
 msgctxt "CombatHUD,MercenaryPageTitle"
 msgid "용병"
 msgstr "Mercenaries"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2984)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2984)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2986)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2986)
 msgctxt "CombatHUD,ArtifactFallbackName"
 msgid "Artifact"
 msgstr "Artifact"
 
 #. Key:	BattleStart
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3425)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3425)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3427)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3427)
 msgctxt "CombatAnnouncement,BattleStart"
 msgid "BATTLE START"
 msgstr "BATTLE START"
 
 #. Key:	Round
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3492)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3492)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3494)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3494)
 msgctxt "CombatAnnouncement,Round"
 msgid "ROUND {0}"
 msgstr "ROUND {0}"
 
 #. Key:	EndTurn
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3799)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3799)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3802)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3802)
 msgctxt "CombatLayoutHUD,EndTurn"
 msgid "턴 종료"
 msgstr "End Turn"
 
 #. Key:	CancelAim
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3802)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3802)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3805)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3805)
 msgctxt "CombatLayoutHUD,CancelAim"
 msgid "취소"
 msgstr "Cancel"
 
 #. Key:	SavingRun
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4844)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4844)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4847)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4847)
 msgctxt "CombatLayoutHUD,SavingRun"
 msgid "저장 중..."
 msgstr "Saving..."
 
 #. Key:	SaveAndExitFailed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4903)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4903)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4906)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4906)
 msgctxt "CombatLayoutHUD,SaveAndExitFailed"
 msgid "저장 후 종료에 실패했습니다."
 msgstr "Failed to save and exit."
 
 #. Key:	AbandonRunFailed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4927)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4927)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4930)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4930)
 msgctxt "CombatLayoutHUD,AbandonRunFailed"
 msgid "런 포기 요청에 실패했습니다."
 msgstr "Failed to abandon the run."
 
 #. Key:	StatusDescStrength
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5009)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5009)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5012)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5012)
 msgctxt "CombatLayoutHUD,StatusDescStrength"
 msgid "공격 관련 능력이 강화된다."
 msgstr "Enhances attack-related abilities."
 
 #. Key:	StatusDescDexterity
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5010)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5010)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5013)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5013)
 msgctxt "CombatLayoutHUD,StatusDescDexterity"
 msgid "기교 관련 능력이 강화된다."
 msgstr "Enhances dexterity-related abilities."
 
 #. Key:	StatusDescAcumeny
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5011)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5011)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5014)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5014)
 msgctxt "CombatLayoutHUD,StatusDescAcumeny"
 msgid "판단 관련 능력이 강화된다."
 msgstr "Enhances judgment-related abilities."
 
 #. Key:	StatusDescFortification
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5012)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5012)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5015)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5015)
 msgctxt "CombatLayoutHUD,StatusDescFortification"
 msgid "받는 피해가 줄어든다."
 msgstr "Reduces damage taken."
 
 #. Key:	StatusDescVulnerability
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5013)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5013)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5016)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5016)
 msgctxt "CombatLayoutHUD,StatusDescVulnerability"
 msgid "받는 피해가 늘어난다."
 msgstr "Increases damage taken."
 
 #. Key:	StatusDescWeakness
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5014)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5014)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5017)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5017)
 msgctxt "CombatLayoutHUD,StatusDescWeakness"
 msgid "주는 피해가 줄어든다."
 msgstr "Reduces damage dealt."
 
 #. Key:	StatusDescVigor
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5015)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5015)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5018)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5018)
 msgctxt "CombatLayoutHUD,StatusDescVigor"
 msgid "행동력 효율이 올라간다."
 msgstr "Improves AP efficiency."
 
 #. Key:	StatusDescHaste
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5016)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5016)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5019)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5019)
 msgctxt "CombatLayoutHUD,StatusDescHaste"
 msgid "속도가 올라간다."
 msgstr "Increases Speed."
 
 #. Key:	StatusDescExhaustion
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5017)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5017)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5020)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5020)
 msgctxt "CombatLayoutHUD,StatusDescExhaustion"
 msgid "행동력 효율이 내려간다."
 msgstr "Reduces AP efficiency."
 
 #. Key:	StatusDescSlow
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5018)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5018)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5021)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5021)
 msgctxt "CombatLayoutHUD,StatusDescSlow"
 msgid "속도가 내려간다."
 msgstr "Reduces Speed."
 
 #. Key:	StatusDescFrail
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5019)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5019)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5022)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5022)
 msgctxt "CombatLayoutHUD,StatusDescFrail"
 msgid "방어력이 내려간다."
 msgstr "Reduces Defense."
 
 #. Key:	StatusDescRoot
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5020)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5020)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5023)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5023)
 msgctxt "CombatLayoutHUD,StatusDescRoot"
 msgid "이동할 수 없다."
 msgstr "Cannot move."
 
 #. Key:	StatusDescPoison
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5021)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5021)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5024)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5024)
 msgctxt "CombatLayoutHUD,StatusDescPoison"
 msgid "턴마다 피해를 입는다."
 msgstr "Takes damage every turn."
 
 #. Key:	StatusDescBleed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5022)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5022)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5025)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5025)
 msgctxt "CombatLayoutHUD,StatusDescBleed"
 msgid "턴마다 피해를 입는다."
 msgstr "Takes damage every turn."
 
 #. Key:	StatusDescStun
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5023)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5023)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5026)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5026)
 msgctxt "CombatLayoutHUD,StatusDescStun"
 msgid "이동과 스킬을 사용할 수 없다."
 msgstr "Cannot move or use skills."
 
 #. Key:	StatusDescStealth
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5024)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5024)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5027)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5027)
 msgctxt "CombatLayoutHUD,StatusDescStealth"
 msgid "적의 대상이 되지 않는다."
 msgstr "Cannot be targeted by enemies."
 
 #. Key:	StatusDurationInfinite
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5036)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5036)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5039)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5039)
 msgctxt "CombatLayoutHUD,StatusDurationInfinite"
 msgid "전투가 끝날 때까지 지속된다."
 msgstr "Lasts until combat ends."
 
 #. Key:	StatusDurationRound
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5038)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5038)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5041)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5041)
 msgctxt "CombatLayoutHUD,StatusDurationRound"
 msgid "라운드가 지나면 1중첩씩 사라진다."
 msgstr "Loses 1 stack each round."
 
 #. Key:	StatusDurationOther
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5039)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5039)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5042)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5042)
 msgctxt "CombatLayoutHUD,StatusDurationOther"
 msgid "효과 조건이 끝날 때까지 지속된다."
 msgstr "Lasts until the effect's condition ends."
 
 #. Key:	StatusDescBodyFmt
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5041)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5041)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5044)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5044)
 msgctxt "CombatLayoutHUD,StatusDescBodyFmt"
 msgid "{0}\n{1}"
 msgstr "{0}\n{1}"
 
 #. Key:	StatusDescMissing
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5044)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5044)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5047)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5047)
 msgctxt "CombatLayoutHUD,StatusDescMissing"
 msgid "효과 설명이 아직 없다."
 msgstr "No effect description yet."
 
 #. Key:	MonsterTabSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5641)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5645)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5645)
 msgctxt "CombatLayoutHUD,MonsterTabSkills"
 msgid "스킬"
 msgstr "Skills"
 
 #. Key:	MonsterTabNoSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5642)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5642)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5646)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5646)
 msgctxt "CombatLayoutHUD,MonsterTabNoSkills"
 msgid "스킬  ·  없음"
 msgstr "Skills  ·  None"
 
 #. Key:	MonsterEquipmentHeading
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5720)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5720)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5724)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5724)
 msgctxt "CombatLayoutHUD,MonsterEquipmentHeading"
 msgid "장비 · 눌러서 자세히"
 msgstr "Equipment · Tap for details"
 
 #. Key:	MonsterEquipmentEmpty
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5721)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5721)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5725)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5725)
 msgctxt "CombatLayoutHUD,MonsterEquipmentEmpty"
 msgid "장비 · 없음"
 msgstr "Equipment · None"
 
 #. Key:	UnitDetailLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6285)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6285)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
 msgctxt "CombatLayoutHUD,UnitDetailLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	UnitDetailAlly
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6290)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6295)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6295)
 msgctxt "CombatLayoutHUD,UnitDetailAlly"
 msgid "아군"
 msgstr "Ally"
 
 #. Key:	UnitDetailEnemy
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6291)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6291)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6296)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6296)
 msgctxt "CombatLayoutHUD,UnitDetailEnemy"
 msgid "적"
 msgstr "Enemy"
 
 #. Key:	UnitDetailIdentityAndHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6293)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6293)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6298)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6298)
 msgctxt "CombatLayoutHUD,UnitDetailIdentityAndHp"
 msgid "{0}  ·  {1}  ·  HP {2}/{3}"
 msgstr "{0}  ·  {1}  ·  HP {2}/{3}"
 
 #. Key:	UnitDetailWithDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6299)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6299)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6304)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6304)
 msgctxt "CombatLayoutHUD,UnitDetailWithDefense"
 msgid "{0}  ·  방어 {1}"
 msgstr "{0}  ·  Defense {1}"
 
 #. Key:	DetailChipLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6321)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6321)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
 msgctxt "CombatLayoutHUD,DetailChipLevel"
 msgid "레벨"
 msgstr "Level"
 
 #. Key:	DetailChipHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6324)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6324)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6329)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6329)
 msgctxt "CombatLayoutHUD,DetailChipHp"
 msgid "HP"
 msgstr "HP"
 
 #. Key:	DetailChipDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6326)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6331)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6331)
 msgctxt "CombatLayoutHUD,DetailChipDefense"
 msgid "방어"
 msgstr "Defense"
 
 #. Key:	DetailChipSpeed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6328)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6328)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6333)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6333)
 msgctxt "CombatLayoutHUD,DetailChipSpeed"
 msgid "속도"
 msgstr "Speed"
 
 #. Key:	DetailChipAp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6330)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6330)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6335)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6335)
 msgctxt "CombatLayoutHUD,DetailChipAp"
 msgid "AP"
 msgstr "AP"
 
 #. Key:	UnitDetailPassiveLine
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6337)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6337)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6342)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6342)
 msgctxt "CombatLayoutHUD,UnitDetailPassiveLine"
 msgid "· {0}"
 msgstr "· {0}"
 
 #. Key:	UnitDetailNoPassives
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6340)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6340)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6345)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6345)
 msgctxt "CombatLayoutHUD,UnitDetailNoPassives"
 msgid "패시브 없음"
 msgstr "No passives"
 
 #. Key:	UnitDetailEnemyThreatLegend
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6346)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6346)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6351)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6351)
 msgctxt "CombatLayoutHUD,UnitDetailEnemyThreatLegend"
 msgid "{0}\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위."
 msgstr "{0}\n\nThe board shows every tile this enemy can reach in one turn.\nBorder band = movement range, fill = attack range."
 
 #. Key:	MoveDetailTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6674)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6674)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6679)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6679)
 msgctxt "CombatLayoutHUD,MoveDetailTitle"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	MoveDetailDescription
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6675)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6675)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6680)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6680)
 msgctxt "CombatLayoutHUD,MoveDetailDescription"
 msgid "한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 {0}칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."
 msgstr "Moving one tile costs 1 AP. You can move up to {0} tiles with your remaining AP.\n\nTap the board to choose a destination, then tap the final tile again to confirm movement."
 
 #. Key:	MercenaryCrit
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(766)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(766)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(767)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(767)
 msgctxt "CombatHUD,MercenaryCrit"
 msgid "치명타"
 msgstr "Critical"
 
 #. Key:	MercenaryBack
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(768)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(768)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(769)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(769)
 msgctxt "CombatHUD,MercenaryBack"
 msgid "닫기"
 msgstr "Close"
 
 #. Key:	ConfirmLabel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(770)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(770)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(771)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(771)
 msgctxt "CombatHUD,ConfirmLabel"
 msgid "확정"
 msgstr "Confirm"
@@ -7133,15 +7175,15 @@ msgid "전투 배속 {0}배 · 누르면 1 → 2 → 3배 전환"
 msgstr "Combat speed: {0}x · Tap to cycle 1 → 2 → 3x"
 
 #. Key:	StatusAdded
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(156)
-#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(156)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(159)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(159)
 msgctxt "CombatStatusUI,StatusAdded"
 msgid "{0} +{1}"
 msgstr "{0} +{1}"
 
 #. Key:	StatusRemoved
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(161)
-#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(161)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(164)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(164)
 msgctxt "CombatStatusUI,StatusRemoved"
 msgid "{0} -{1}"
 msgstr "{0} -{1}"
@@ -7272,16 +7314,37 @@ msgctxt "CombatStatusUI,Push"
 msgid "밀치기"
 msgstr "Push"
 
-#. Key:	Dead
+#. Key:	ControlImmunity
 #. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(83)
 #: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(83)
+msgctxt "CombatStatusUI,ControlImmunity"
+msgid "억제 면역"
+msgstr "Control Immunity"
+
+#. Key:	WeakeningImmunity
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(84)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(84)
+msgctxt "CombatStatusUI,WeakeningImmunity"
+msgid "쇠약 면역"
+msgstr "Weakening Immunity"
+
+#. Key:	ForcedMovementImmunity
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(85)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(85)
+msgctxt "CombatStatusUI,ForcedMovementImmunity"
+msgid "강제 이동 면역"
+msgstr "Forced Movement Immunity"
+
+#. Key:	Dead
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(86)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(86)
 msgctxt "CombatStatusUI,Dead"
 msgid "전투불능"
 msgstr "Defeated"
 
 #. Key:	Unknown
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(90)
-#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(90)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(93)
+#: Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(93)
 msgctxt "CombatStatusUI,Unknown"
 msgid "이상"
 msgstr "Status"
@@ -9309,6 +9372,27 @@ msgctxt "SkillReplacementDialog,Title"
 msgid "스킬을 교체하시겠습니까?"
 msgstr "Replace this skill?"
 
+#. Key:	Title
+#. SourceLocation:	Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(40)
+#: Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(40)
+msgctxt "FinalRunVictory,Title"
+msgid "왕국을 구했습니다"
+msgstr "The kingdom is saved"
+
+#. Key:	Message
+#. SourceLocation:	Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(41)
+#: Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(41)
+msgctxt "FinalRunVictory,Message"
+msgid "네크로맨서를 쓰러뜨리고 모든 스테이지를 클리어했습니다.\n용병단과 함께해 주셔서 감사합니다."
+msgstr "You defeated the Necromancer and cleared every stage.\nThank you for fighting alongside the guild."
+
+#. Key:	Continue
+#. SourceLocation:	Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(45)
+#: Source/P_RD/UI/StageVictory/FinalRunVictoryWidget.cpp(45)
+msgctxt "FinalRunVictory,Continue"
+msgid "타이틀로 돌아가기"
+msgstr "Return to title"
+
 #. Key:	TitleText
 #. SourceLocation:	Source/P_RD/UI/TitleMenuWidget.cpp(257)
 #: Source/P_RD/UI/TitleMenuWidget.cpp(257)
@@ -10308,7 +10392,7 @@ msgstr "+0"
 #: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(367)
 msgctxt "CombatDefeat,BackToTitle"
 msgid "타이틀로 돌아가기"
-msgstr "Return to Title"
+msgstr "Return to title"
 
 #. Key:	SkillToggleLabel
 #. SourceLocation:	Source/P_RDEditor/UI/CombatHUDWidgetBuilder.cpp(1518)

@@ -20,6 +20,7 @@
 #include "UI/Reward/RewardSettlementWidgetBase.h"
 #include "GameMode/RoomGameModeBase.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
+#include "UI/StageVictory/FinalRunVictoryWidget.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 
 namespace
@@ -232,9 +233,7 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 		{
 			if (ResultUI.mIsLastStage == true)
 			{
-				// The stage-three boss comic has already played before rewards.
-				// Settle the run without showing the obsolete mercenary ending again.
-				CompleteFinalRunAfterRewards();
+				ShowFinalRunVictory();
 			}
 			else
 			{
@@ -248,6 +247,22 @@ void UCombatLayoutHUDWidget::HandleCombatResultRewardConfirmed()
 			OpenWorldMapForNextRoom();
 		}
 	}));
+}
+
+void UCombatLayoutHUDWidget::ShowFinalRunVictory()
+{
+ if (mFinalVictoryWidget) return;
+ mFinalVictoryWidget=CreateWidget<UFinalRunVictoryWidget>(GetWorld());
+ if (!mFinalVictoryWidget) return;
+ mFinalVictoryWidget->SetOnContinue(FSimpleDelegate::CreateUObject(this,&UCombatLayoutHUDWidget::CompleteFinalRunAfterRewards));
+ mFinalVictoryWidget->SetIsFocusable(true);
+ mFinalVictoryWidget->AddToViewport(11000);
+ if (auto* Player=GetOwningPlayer())
+ {
+  FInputModeUIOnly Input;Input.SetWidgetToFocus(mFinalVictoryWidget->TakeWidget());
+  Input.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+  Player->SetInputMode(Input);Player->SetShowMouseCursor(true);
+ }
 }
 
 void UCombatLayoutHUDWidget::CompleteFinalRunAfterRewards()

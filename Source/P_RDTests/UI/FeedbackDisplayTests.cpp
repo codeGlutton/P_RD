@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Editor.h"
 #include "UI/TitleMenuWidget.h"
+#include "UI/StageVictory/FinalRunVictoryWidget.h"
 #include "Setting/GamePlaySettings.h"
 #include "Internationalization/Internationalization.h"
 #include "Internationalization/Culture.h"
@@ -53,7 +54,11 @@ void Capture(UUserWidget *Widget, const TCHAR *Name)
 	auto *Target = Renderer.DrawWidget(Slate, FVector2D(1920, 1080));
 	for (int32 Frame = 0; Frame < 3; ++Frame)
 		Renderer.DrawWidget(Target, Slate, FVector2D(1920, 1080), 0.016f);
-	FBufferArchive Bytes;
+	// Offscreen rendering paints widgets without the application's regular tick.
+ for(auto* Child:Children) if(auto* Scroll=Cast<UScrollBox>(Child))
+  if(auto SlateScroll=Scroll->GetCachedWidget()) SlateScroll->Tick(SlateScroll->GetPaintSpaceGeometry(),0,0.016f);
+ Renderer.DrawWidget(Target,Slate,FVector2D(1920,1080),0.016f);
+ FBufferArchive Bytes;
 	FImageUtils::ExportRenderTarget2DAsPNG(Target, Bytes);
 	const FString Dir = FPaths::ProjectSavedDir() / TEXT("UI/Feedback");
 	IFileManager::Get().MakeDirectory(*Dir, true);
@@ -336,5 +341,104 @@ bool FFeedbackAssetLocalizationTest::RunTest(const FString &)
 	FInternationalization::Get().SetCurrentCulture(Original);
 	FTextLocalizationManager::Get().WaitForAsyncTasks();
 	return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatExpandedListsTest, "P_RD.UI.Feedback.ExpandedLists",
+ EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCombatExpandedListsTest::RunTest(const FString&)
+{
+ auto* World=GEditor->GetEditorWorldContext().World();
+ auto* Class=LoadClass<UCombatLayoutHUDWidget>(nullptr,TEXT("/Game/UI/CombatLayouts/WBP_CombatHUD04.WBP_CombatHUD04_C"));
+ auto* HUD=CreateWidget<UCombatLayoutHUDWidget>(World,Class);const auto HUDSlate=HUD->TakeWidget();
+ auto* Model=NewObject<UCombatUIModel>(HUD);HUD->BindUIModel(Model);
+ TArray<FUnitUI> Units;
+ auto* Portrait=LoadObject<UTexture2D>(nullptr,TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Feedback_20260915/T_Rat_Head.T_Rat_Head"));
+ for(int32 I=0;I<12;++I)
+ {
+  FUnitUI U;U.mUnitId=100+I;U.mIsPlayer=false;U.mName=FText::FromString(FString::Printf(TEXT("Rat %02d"),I+1));
+  U.mHP=U.mMaxHP=50;U.mPortrait=U.mTurnPortrait=Portrait;Units.Add(U);
+ }
+ Model->SetUnitUIs(Units);
+ CastChecked<UButton>(HUD->GetWidgetFromName(TEXT("MenuButton_2")))->OnClicked.Broadcast();
+ auto* Tab=HUD->GetMonsterTabWidgetForTest();
+ if(!TestNotNull(TEXT("Enemy tab"),Tab)) return false;
+ const auto TabSlate=Tab->TakeWidget();
+ auto* Scroll=Cast<UScrollBox>(Tab->GetWidgetFromName(TEXT("MonsterListScroll")));
+ TestNotNull(TEXT("Enemy scroll created"),Scroll);
+ auto* Last=Cast<UButton>(Tab->GetWidgetFromName(TEXT("MonsterRowButton_11")));
+ if(TestNotNull(TEXT("Twelfth enemy button exists"),Last))
+ {
+  Last->OnClicked.Broadcast();
+  TestEqual(TEXT("Last enemy selection uses correct identity"),CastChecked<UTextBlock>(Tab->GetWidgetFromName(TEXT("MonsterDetailNameText")))->GetText().ToString(),FString(TEXT("Rat 12")));
+  Units.RemoveAt(0);Model->SetUnitUIs(Units);
+  TestEqual(TEXT("Selected identity survives preceding enemy death"),CastChecked<UTextBlock>(Tab->GetWidgetFromName(TEXT("MonsterDetailNameText")))->GetText().ToString(),FString(TEXT("Rat 12")));
+ }
+ FeedbackTests::Capture(Tab,TEXT("monster-list.png"));
+ if(Scroll && !GUsingNullRHI)
+ {
+  AddInfo(FString::Printf(TEXT("SCROLL monster content=%s view=%s paint=%s end=%f"),*Scroll->GetChildAt(0)->GetDesiredSize().ToString(),*Scroll->GetDesiredSize().ToString(),*Scroll->GetCachedWidget()->GetPaintSpaceGeometry().GetLocalSize().ToString(),Scroll->GetScrollOffsetOfEnd()));
+  TestTrue(TEXT("Enemy list exceeds viewport"),Scroll->GetScrollOffsetOfEnd()>0);
+  Scroll->ScrollToEnd();FeedbackTests::Capture(Tab,TEXT("monster-list-end.png"));
+  TestTrue(TEXT("Last enemy scroll reachable"),Scroll->GetScrollOffset()>0);
+ }
+ CastChecked<UButton>(Tab->GetWidgetFromName(TEXT("MonsterBackButton")))->OnClicked.Broadcast();
+ FPlayerMetaUI Meta;Meta.mGold=123;
+ for(int32 I=0;I<23;++I)
+ {
+  FCombatArtifactUI A;A.mName=FText::FromString(FString::Printf(TEXT("Artifact %02d"),I+1));A.mIcon=Portrait;
+  A.mEffectDescriptions={FText::FromString(TEXT("Unique item description"))};Meta.mArtifacts.Add(A);
+ }
+ Model->SetPlayerMeta(Meta);
+ CastChecked<UButton>(HUD->GetWidgetFromName(TEXT("MenuButton_1")))->OnClicked.Broadcast();
+ HUD->ShowMercenaryInventoryForTest();
+ auto* ArtifactScroll=Cast<UScrollBox>(HUD->GetWidgetFromName(TEXT("InventoryArtifactScroll")));
+ TestNotNull(TEXT("Artifact scroll created"),ArtifactScroll);
+ auto* LastArtifact=Cast<UButton>(HUD->GetWidgetFromName(TEXT("MercenaryInventoryArtifactButton_22")));
+ if(TestNotNull(TEXT("23rd artifact button exists"),LastArtifact))
+ {
+  LastArtifact->OnClicked.Broadcast();TestTrue(TEXT("Last artifact opens detail"),HUD->IsDetailOverlayShown());
+  auto* Detail=HUD->GetDetailOverlayWidgetForTest();bool Found=false;
+  if(Detail) Detail->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* T=Cast<UTextBlock>(W)) Found|=T->GetText().ToString()==TEXT("Artifact 23");});
+  TestTrue(TEXT("Detail belongs to selected last artifact"),Found);HUD->CloseDetailOverlayForTest();
+ }
+ HUD->OpenInventoryPanelForTest();
+ FeedbackTests::Capture(HUD,TEXT("inventory-list.png"));
+ if(ArtifactScroll && !GUsingNullRHI)
+ {
+  AddInfo(FString::Printf(TEXT("SCROLL artifact content=%s paint=%s"),*ArtifactScroll->GetChildAt(0)->GetDesiredSize().ToString(),*ArtifactScroll->GetCachedWidget()->GetPaintSpaceGeometry().GetLocalSize().ToString()));
+  TestTrue(TEXT("Artifact list exceeds viewport"),ArtifactScroll->GetScrollOffsetOfEnd()>0);
+  ArtifactScroll->ScrollToEnd();FeedbackTests::Capture(HUD,TEXT("inventory-list-end.png"));
+  TestTrue(TEXT("Last artifact scroll reachable"),ArtifactScroll->GetScrollOffset()>0);
+ }
+ Meta.mArtifacts.SetNum(1);Model->SetPlayerMeta(Meta);
+ if(LastArtifact) TestFalse(TEXT("Removed artifact cannot be clicked"),LastArtifact->IsVisible());
+ Meta.mArtifacts.Reset();Model->SetPlayerMeta(Meta);
+ auto* First=Cast<UButton>(HUD->GetWidgetFromName(TEXT("MercenaryInventoryArtifactButton_0")));
+ if(First) TestFalse(TEXT("Empty inventory has no stale clickable slot"),First->IsVisible());
+ HUD->RemoveFromParent();return !HasAnyErrors();
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFinalVictoryTest, "P_RD.UI.Feedback.FinalVictory",
+ EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFinalVictoryTest::RunTest(const FString&)
+{
+ auto* World=GEditor->GetEditorWorldContext().World();
+ auto* HUD=CreateWidget<UCombatLayoutHUDWidget>(World);HUD->TakeWidget();
+ auto* Model=NewObject<UCombatUIModel>(HUD);HUD->BindUIModel(Model);
+ FCombatResultUI Result;Result.mIsWin=true;Result.mIsClearStage=true;
+ Model->SetCombatResultUI(Result);HUD->FinishRewardsForTest();
+ TestNull(TEXT("Intermediate boss does not show final victory"),HUD->GetFinalVictoryForTest());
+ Result.mIsLastStage=true;Model->SetCombatResultUI(Result);HUD->FinishRewardsForTest();
+ auto* Victory=HUD->GetFinalVictoryForTest();
+ if(TestNotNull(TEXT("Last boss reward completion shows final victory"),Victory))
+ {
+  int32 Calls=0;Victory->SetOnContinue(FSimpleDelegate::CreateLambda([&Calls]{++Calls;}));
+  FeedbackTests::Capture(Victory,TEXT("final-victory.png"));
+  auto* Button=CastChecked<UButton>(Victory->GetWidgetFromName(TEXT("FinalVictoryContinue")));
+  Button->OnClicked.Broadcast();Button->OnClicked.Broadcast();
+  TestEqual(TEXT("Repeated confirmation settles run only once"),Calls,1);
+  Victory->RemoveFromParent();
+ }
+ HUD->RemoveFromParent();return !HasAnyErrors();
 }
 #endif
