@@ -27,7 +27,7 @@ bool UTacticalEffect_GetStun::CanApply(const FActiveTacticalEffectsContainer& Ac
 	}
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ControlImmunity) == true)
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ControlImmunity) == true)
 	{
 		return false;
 	}

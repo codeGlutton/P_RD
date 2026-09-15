@@ -27,7 +27,7 @@ bool UTacticalEffect_GetFrail::CanApply(const FActiveTacticalEffectsContainer& A
 	}
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity) == true)
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_WeakeningImmunity) == true)
 	{
 		return false;
 	}

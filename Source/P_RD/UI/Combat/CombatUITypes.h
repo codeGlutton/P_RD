@@ -99,7 +99,10 @@ enum class EFloatingLogIconType : uint8
 	Exhaustion,
 	Slow,
 	Frail,
-	Root
+	Root,
+	ControlImmunity,
+	WeakeningImmunity,
+	ForcedMovementImmunity
 };
 
 /**

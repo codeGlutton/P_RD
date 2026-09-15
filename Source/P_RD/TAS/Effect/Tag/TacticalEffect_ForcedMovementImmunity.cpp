@@ -3,8 +3,8 @@
 
 UTacticalEffect_ForcedMovementImmunity::UTacticalEffect_ForcedMovementImmunity()
 {
-	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity);
-	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity);
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ForcedMovementImmunity);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ForcedMovementImmunity);
 }
 
 UTacticalEffect_AddForcedMovementImmunity::UTacticalEffect_AddForcedMovementImmunity()

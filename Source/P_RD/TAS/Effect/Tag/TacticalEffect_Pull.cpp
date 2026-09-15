@@ -91,7 +91,7 @@ bool UTacticalEffect_GetPull::CanApply(const FActiveTacticalEffectsContainer& Ac
 	}
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity) == true)
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ForcedMovementImmunity) == true)
 	{
 		return false;
 	}

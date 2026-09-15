@@ -3,8 +3,8 @@
 
 UTacticalEffect_ControlImmunity::UTacticalEffect_ControlImmunity()
 {
-	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ControlImmunity);
-	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_ControlImmunity);
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ControlImmunity);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ControlImmunity);
 }
 
 UTacticalEffect_AddControlImmunity::UTacticalEffect_AddControlImmunity()

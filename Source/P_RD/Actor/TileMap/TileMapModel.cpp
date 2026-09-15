@@ -1060,8 +1060,15 @@ void UTileMapModel::GetThreatRanges(
 			if (MoveCost + Skill->mRequiredActionPoint > ActionPoint)
 				continue;
 
-			// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
-			AttackSet.Append(GetAimableTiles(Tile, Skill->mAimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), /*Incoming*/nullptr, /*IgnoreBlocker*/Self));
+			if (Skill->mAimPattern == EAimPattern::Single)
+			{
+				AttackSet.Append(GetEffectTiles(Tile, Skill->mEffectPattern, Skill->mEffectArea, static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), /*IgnoreBlocker*/Self));
+			}
+			else
+			{
+				// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
+				AttackSet.Append(GetAimableTiles(Tile, Skill->mAimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), /*Incoming*/nullptr, /*IgnoreBlocker*/Self));
+			}
 		}
 	}
 	AttackTiles = AttackSet.Array();
