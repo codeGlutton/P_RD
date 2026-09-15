@@ -1576,7 +1576,7 @@ void ACombatGameMode::PushUnitUIData() const
 		if (const UUnitMovementComponentModel* MovementComponent =
 			Cast<UUnitMovementComponentModel>(UnitModel->GetBoardMovementComponentModel()))
 		{
-			UnitUIData.mCanMove = MovementComponent->IsMoveable();
+			UnitUIData.mCanMove = MovementComponent->CanSelfMove();
 		}
 		// 용병 탭 상세의 "AP x / y" 표기용. Mock이 아닌 실전에서도 같은 자원을 보여 준다.
 		UnitUIData.mActionPoints = FMath::RoundToInt(UnitUIData.mMovementPoint);

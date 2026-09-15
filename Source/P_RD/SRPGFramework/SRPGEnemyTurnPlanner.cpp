@@ -253,7 +253,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	// 속박 등으로 이동 불가면 이동 예산을 0으로 -> 도달 범위가 제자리로 줄어 제자리 스킬만 계획
 	// (시전 예산은 ActionPoint를 따로 넘기므로 이동 불가여도 스킬 비용 판정에는 영향 없음)
 	const UUnitMovementComponentModel* MovementCompModel = Cast<UUnitMovementComponentModel>(Enemy->GetBoardMovementComponentModel());
-	const int32 MoveBudget = (MovementCompModel != nullptr && MovementCompModel->IsMoveable() == false)
+	const int32 MoveBudget = (MovementCompModel != nullptr && MovementCompModel->CanSelfMove() == false)
 		? 0
 		: ActionPoint;
 
