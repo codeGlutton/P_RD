@@ -14,7 +14,7 @@
  * @brief  ControlImmunity(억제 면역) 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_ControlImmunity : public UTacticalEffect_InfiniteStatus
+class P_RD_API UTacticalEffect_ControlImmunity : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -26,7 +26,7 @@ public:
  * @brief  ControlImmunity(억제 면역) 변화 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_AddControlImmunity : public UTacticalEffect_AddUniqueStatus
+class P_RD_API UTacticalEffect_AddControlImmunity : public UTacticalEffect_AddStatus
 {
 	GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
  * @brief  ControlImmunity(억제 면역) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetControlImmunity : public UTacticalEffect_GetUniqueStatus
+class P_RD_API UTacticalEffect_GetControlImmunity : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

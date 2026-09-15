@@ -14,7 +14,7 @@
  * @brief  WeakeningImmunity(쇠약 면역) 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_WeakeningImmunity : public UTacticalEffect_InfiniteStatus
+class P_RD_API UTacticalEffect_WeakeningImmunity : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
@@ -26,7 +26,7 @@ public:
  * @brief  WeakeningImmunity(쇠약 면역) 변화 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_AddWeakeningImmunity : public UTacticalEffect_AddUniqueStatus
+class P_RD_API UTacticalEffect_AddWeakeningImmunity : public UTacticalEffect_AddStatus
 {
 	GENERATED_BODY()
 
@@ -38,7 +38,7 @@ public:
  * @brief  WeakeningImmunity(쇠약 면역) 부여 이펙트
  */
 UCLASS()
-class P_RD_API UTacticalEffect_GetWeakeningImmunity : public UTacticalEffect_GetUniqueStatus
+class P_RD_API UTacticalEffect_GetWeakeningImmunity : public UTacticalEffect_GetStatus
 {
 	GENERATED_BODY()
 

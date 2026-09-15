@@ -3,8 +3,8 @@
 
 UTacticalEffect_WeakeningImmunity::UTacticalEffect_WeakeningImmunity()
 {
-	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity);
-	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity);
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_WeakeningImmunity);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_WeakeningImmunity);
 }
 
 UTacticalEffect_AddWeakeningImmunity::UTacticalEffect_AddWeakeningImmunity()

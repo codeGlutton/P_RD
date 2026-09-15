@@ -14,7 +14,7 @@
  * @brief  하나의 스킬 모션 내에서 적용하는 쇠약 면역 버프 효과 단위
  */
 USTRUCT(BlueprintType)
-struct P_RD_API FSkillEffectLayer_WeakeningImmunity : public FSkillEffectLayer_UniqueTagBase
+struct P_RD_API FSkillEffectLayer_WeakeningImmunity : public FSkillEffectLayer_TagBase
 {
 	GENERATED_BODY()
 

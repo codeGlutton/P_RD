@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   GameplayTagType.h
  * @brief  사용되는 태그 정의 매크로를 모아둔 파일
  * @details
@@ -452,10 +452,6 @@ namespace EffectTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Buff_Dexterity);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Buff_Acumeny);
 
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Buff_ControlImmunity);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Buff_WeakeningImmunity);
-	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Buff_ForcedMovementImmunity);
-
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Debuff_Strength);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Debuff_Dexterity);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny);
@@ -468,6 +464,9 @@ namespace EffectTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_Haste);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_ControlImmunity);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_WeakeningImmunity);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Buff_ForcedMovementImmunity);
 
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
@@ -482,9 +481,3 @@ namespace EffectTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(GameplayEffect_StatusEffect_RoundDuration_Debuff_Poison);
 }
 
-/**
- * @brief Cue를 실행하는 태그를 정의하는 namespace 영역
- */
-namespace CueTags
-{
-}

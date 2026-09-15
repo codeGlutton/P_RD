@@ -27,6 +27,9 @@ namespace
 		{TEXT("Slow"), EFloatingLogIconType::Slow, TEXT("Slow")},
 		{TEXT("Frail"), EFloatingLogIconType::Frail, TEXT("Frail")},
 		{TEXT("Root"), EFloatingLogIconType::Root, TEXT("Root")},
+		{TEXT("ControlImmunity"), EFloatingLogIconType::ControlImmunity, TEXT("ControlImmunity")},
+		{TEXT("WeakeningImmunity"), EFloatingLogIconType::WeakeningImmunity, TEXT("WeakeningImmunity")},
+		{TEXT("ForcedMovementImmunity"), EFloatingLogIconType::ForcedMovementImmunity, TEXT("ForcedMovementImmunity")},
 		{TEXT("Bleed"), EFloatingLogIconType::Status, TEXT("Bleed")},
 		{TEXT("Stealth"), EFloatingLogIconType::Status, TEXT("Stealth")},
 	};
