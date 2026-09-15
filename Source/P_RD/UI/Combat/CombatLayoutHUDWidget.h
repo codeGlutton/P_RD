@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 /**
  * @brief 배치안 평가용 전투 HUD.
@@ -764,6 +764,7 @@ private:
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailHP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailAP;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailSpeed;
+	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryDetailCritical;
 	UPROPERTY() TObjectPtr<UWidget> mMercenaryDetailSection;
 
 	/** @brief 네 번째 로스터 탭이 여는 용병 패널 내부 인벤토리 페이지. */
@@ -1538,7 +1539,7 @@ private:
 	TObjectPtr<UProgressBar> mEnemyHPBar;
 	TObjectPtr<UTextBlock> mEnemyHPText;
 	TObjectPtr<UTextBlock> mEnemyAPText;
-	TObjectPtr<UTextBlock> mEnemyCritText;
+	TObjectPtr<UTextBlock> mEnemyCriticalText;
 	TObjectPtr<UTextBlock> mEnemySpeedText;
 	TObjectPtr<UTextBlock> mEnemyStatusText;
 	TObjectPtr<UTextBlock> mEnemyForecastText;
@@ -1556,6 +1557,7 @@ private:
 	TObjectPtr<UProgressBar> mAllyHPBar;
 	TObjectPtr<UTextBlock> mAllyHPText;
 	TObjectPtr<UTextBlock> mAllyAPText;
+	TObjectPtr<UTextBlock> mAllyCritText;
 	TObjectPtr<UTextBlock> mAllySpeedText;
 	TObjectPtr<UTextBlock> mAllyStatusText;
 	TObjectPtr<UScrollBox> mAllyStatusScroll;

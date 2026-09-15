@@ -1,4 +1,5 @@
-﻿#include "GameMode/CombatGameMode.h"
+#include "GameMode/CombatGameMode.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
 #include "DataAsset/GameplayAssetPolicy.h"
 #include "UI/StageVictory/BossEntranceWidget.h"
@@ -1573,6 +1574,7 @@ void ACombatGameMode::PushUnitUIData() const
 		// 턴바 밑 "속도"는 라운드마다 충전되는 고유 속도(RechargeSpeedPoint)를 보여 준다.
 		// SpeedPoint는 라운드 진행 중 소비/누적되는 현재값이라 표시 기준으로 쓰지 않는다.
 		UnitUIData.mSpeedPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedSpeedPointAttribute());
+		UnitUIData.mCriticalPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetCriticalFactorAttribute());
 		UnitUIData.mDefensePoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute());
 		UnitUIData.mMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
 		UnitUIData.mMaxMovementPoint = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetLastRechargedActionPointAttribute());

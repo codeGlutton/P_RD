@@ -306,6 +306,7 @@ struct FUnitUI
 	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
 	/** @brief 턴 순서 칩 아래에 표시할 현재 속도. */
 	UPROPERTY(BlueprintReadOnly) float mSpeedPoint = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mCriticalPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
