@@ -1,4 +1,4 @@
-#include "Component/SkillComponent/SkillComponentModel.h"
+﻿#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 
@@ -102,8 +102,6 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
 	{
-		// Runtime room overrides can introduce skills outside the preloaded room bundle.
-		// Get() only resolves resident assets; load the soft reference before validating it.
 		UStaticSkillData* SkillData = Skill.LoadSynchronous();
 		const bool IsSettingSkill = SetSkill(NextSkillIndex++, SkillData);
 		checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당: %s (owner=%s, slot=%d, loaded=%s)"),
@@ -162,6 +160,20 @@ bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillDat
 
 	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
+	if (SkillData->mStartsOnCooldown == true)
+	{
+		/* 쿨다운 처리 */
+
+		IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+		checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+		UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+		checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+		UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(SkillData->mCooldownEffectClass.LoadSynchronous(), EffectContext);
+		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
+		mSkillEntries[SkillIndex].mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
 
 	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
 	return true;
@@ -234,11 +246,10 @@ void USkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
 	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
-
 	/* 쿨다운 처리 */
 
 	{
+		UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
 		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(SkillData->mCooldownEffectClass.LoadSynchronous(), EffectContext);
 		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
 		SkillEntry.mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);

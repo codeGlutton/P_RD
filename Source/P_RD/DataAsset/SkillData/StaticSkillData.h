@@ -116,7 +116,11 @@ public:
 
     // @brief 쿨다운까지 필요한 턴 수
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "CooldownDuration"))
-    int32 mCooldownDuration;
+    int32 mCooldownDuration = 0;
+
+    // @brief 전투 시작과 동시에 쿨다운이 요구되는 스킬 여부
+    UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StartsOnCooldown"))
+    bool mStartsOnCooldown = false;
 
     // @brief 하나의 스킬 내에서 적용하는 단일 처리 단위의 TArray 묶음 (1개 : 단타, N개 : 연타)
     UPROPERTY(Category = "BaseLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillPhaseLayers"))
@@ -125,11 +129,11 @@ public:
 public:
     // @brief 조준 범위 유형
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimPattern"))
-    EAimPattern mAimPattern;
+    EAimPattern mAimPattern = EAimPattern::Single;
 
     // @brief 조준 가능 거리 계산 시 사용되는 기본 값 (Single 패턴은 자기 칸 조준이라 사용하지 않음)
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AimRange", EditCondition = "mAimPattern != EAimPattern::Single", EditConditionHides))
-    int32 mAimRange;
+    int32 mAimRange = 0;
 
     // @brief 조준 시야를 막는 레이어 (비어 있으면 아무것도 조준을 막지 않음, Single 패턴은 사용하지 않음)
     UPROPERTY(Category = "AimLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "AimBlockerMask", EditCondition = "mAimPattern != EAimPattern::Single", EditConditionHides))
@@ -147,11 +151,11 @@ public:
 public:
     // @brief 영향 범위 유형
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectPattern"))
-    EEffectPattern mEffectPattern;
+    EEffectPattern mEffectPattern = EEffectPattern::Single;
     
     // @brief 영향 범위 계산 시 사용되는 기본 값
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectArea"))
-    int32 mEffectArea;
+    int32 mEffectArea = 0;
 
     // @brief 영향 확산을 막는 레이어 (비어 있으면 아무것도 확산을 막지 않음)
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "/Script/P_RD.ETileLayerFlag", DisplayName = "EffectBlockerMask"))
