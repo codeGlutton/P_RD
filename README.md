@@ -1,5 +1,8 @@
 # :computer: P_RD (폐허왕국 용병단)
 
+<img width="2880" height="1655" alt="image" src="https://github.com/user-attachments/assets/a4695c38-e0eb-472a-a2d4-5225adff5c43" />
+<img width="2880" height="1655" alt="image" src="https://github.com/user-attachments/assets/65faae1e-471f-44cc-b2ac-b0943608d066" />
+
 이 프로젝트는 언리얼 엔진 5.7(Unreal Engine 5.7)을 사용하여 개발한 로그라이트 SRPG 게임입니다.
 Slay the Spire를 모티브로 한 방 탐색 구조에 턴제 기반 SRPG 전투 시스템을 융합했습니다.
 
