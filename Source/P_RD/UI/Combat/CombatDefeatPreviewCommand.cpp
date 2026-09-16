@@ -5,7 +5,11 @@
 
 #include "RDMinimal.h"
 
-#include "Engine/Texture2D.h"
+#include "Containers/Ticker.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
+#include "TimerManager.h"
+#include "GameMode/FrontendGameMode.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/IConsoleManager.h"
@@ -61,15 +65,6 @@ namespace CombatDefeatPreview
 		Result.mDefeatedMonsterCount = 12;
 		Result.mGoldGained = 0;
 		Result.mExpGained = 0;
-		const TCHAR* PortraitPaths[] = {
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight.T_MB_HireIcon_Knight"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Rogue.T_MB_HireIcon_Rogue"),
-			TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Mage.T_MB_HireIcon_Mage"),
-		};
-		for (const TCHAR* PortraitPath : PortraitPaths)
-		{
-			Result.mPartyPortraits.Add(LoadObject<UTexture2D>(nullptr, PortraitPath));
-		}
 
 		Widget->ShowDefeatResult(Result,
 			FSimpleDelegate::CreateStatic(&CloseShownWidget));
@@ -77,6 +72,38 @@ namespace CombatDefeatPreview
 		ShownWidget = Widget;
 		UE_LOG(LogRD, Display, TEXT("RD.DefeatPreview: 패배 결과 WBP를 열었습니다."));
 	}
+
+	// The title level requires the intro's asynchronous asset preload. This command
+	// waits across that level transition instead of bypassing the normal boot path.
+	void ShowAfterStartup()
+	{
+		FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda(
+			[Started = FPlatformTime::Seconds()](float)
+			{
+				if (FPlatformTime::Seconds() - Started > 120.0) return false;
+				if (!GEngine) return true;
+				for (const FWorldContext& Context : GEngine->GetWorldContexts())
+				{
+					UWorld* World = Context.World();
+					if (!World || !World->IsGameWorld() || !Cast<AFrontendGameMode>(World->GetAuthGameMode())
+						|| World->GetTimeSeconds() < 3.f) continue;
+					Show(World);
+					FTimerHandle CaptureTimer;
+					World->GetTimerManager().SetTimer(CaptureTimer, FTimerDelegate::CreateLambda([]()
+					{
+						FScreenshotRequest::RequestScreenshot(FPaths::ProjectSavedDir() /
+							TEXT("UI/DefeatClassic/preview-viewport.png"), true, false);
+					}), 2.f, false);
+					return false;
+				}
+				return true;
+			}), .25f);
+	}
+
+	FAutoConsoleCommand StartupCommand(
+		TEXT("RD.DefeatPreview.AfterStartup"),
+		TEXT("Open the defeat preview after the normal intro and title preload."),
+		FConsoleCommandDelegate::CreateStatic(&ShowAfterStartup));
 
 	FAutoConsoleCommandWithWorld ShowCommand(
 		TEXT("RD.DefeatPreview"),
