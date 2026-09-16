@@ -6340,7 +6340,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		SetDetailChip(3, LOCTEXT("DetailChipSpeed", "속도"),
 			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
 		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
-		SetDetailChip(5, LOCTEXT("DetailChipCritical", "치명타"), FText::AsNumber(FMath::RoundToInt(Unit->mCriticalPoint)));
+		SetDetailChip(5, LOCTEXT("UnitDetailChipCritical", "치명타"), FText::AsNumber(FMath::RoundToInt(Unit->mCriticalPoint)));
 	}
 
 	TArray<FText> PassiveLines;
