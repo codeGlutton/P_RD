@@ -27,7 +27,8 @@ def verify(audit, manifest):
         if kind.endswith("UnitSpawnData"):
             assert row.get("mPortrait"), ("missing portrait", path)
         counts[kind] += 1
-    assert counts["StaticArtifactData"] >= 51, counts
+    # 87679c16 removed 11 legacy artifacts; the reviewed production catalog has 40.
+    assert counts["StaticArtifactData"] >= 40, counts
     assert counts["StaticEnemyUnitSpawnData"] >= 25, counts
     assert counts["StaticPlayerUnitSpawnData"] >= 6, counts
     assert counts["StaticUnitSkillData"] >= 216, counts
