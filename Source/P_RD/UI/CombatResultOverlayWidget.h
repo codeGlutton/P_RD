@@ -8,7 +8,6 @@
 #include "CombatResultOverlayWidget.generated.h"
 
 class UButton;
-class UImage;
 class UTextBlock;
 
 UENUM()
@@ -52,9 +51,4 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mLocationText;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mRoundText;
 	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mEnemyText;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mGoldText;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mExpText;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> mPartyPortrait0;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> mPartyPortrait1;
-	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UImage> mPartyPortrait2;
 };

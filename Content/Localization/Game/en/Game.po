@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-16 02:05\n"
-"PO-Revision-Date: 2026-09-16 02:05\n"
+"POT-Creation-Date: 2026-09-16 03:35\n"
+"PO-Revision-Date: 2026-09-16 03:35\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -7692,26 +7692,12 @@ msgctxt "SkillTacticalDiagram,EffectLegendRange"
 msgid "영향 범위  {0}칸"
 msgstr "Effect Area  {0} tiles"
 
-#. Key:	LocationFormat
-#. SourceLocation:	Source/P_RD/UI/CombatResultOverlayWidget.cpp(150)
-#: Source/P_RD/UI/CombatResultOverlayWidget.cpp(150)
-msgctxt "CombatResultOverlayWidget,LocationFormat"
-msgid "{0} · {1} 라운드"
-msgstr "{0} · Round {1}"
-
 #. Key:	UnknownLocation
-#. SourceLocation:	Source/P_RD/UI/CombatResultOverlayWidget.cpp(152)
-#: Source/P_RD/UI/CombatResultOverlayWidget.cpp(152)
+#. SourceLocation:	Source/P_RD/UI/CombatResultOverlayWidget.cpp(83)
+#: Source/P_RD/UI/CombatResultOverlayWidget.cpp(83)
 msgctxt "CombatResultOverlayWidget,UnknownLocation"
 msgid "현재 전투 지역"
 msgstr "Current Battle Area"
-
-#. Key:	SurvivorFormat
-#. SourceLocation:	Source/P_RD/UI/CombatResultOverlayWidget.cpp(176)
-#: Source/P_RD/UI/CombatResultOverlayWidget.cpp(176)
-msgctxt "CombatResultOverlayWidget,SurvivorFormat"
-msgid "0 / {0}"
-msgstr "0 / {0}"
 
 #. Key:	Monster
 #. SourceLocation:	Source/P_RD/UI/FrontendMapPreviewCommand.cpp(34)
@@ -8162,190 +8148,190 @@ msgid "(mock reward)"
 msgstr "(mock reward)"
 
 #. Key:	ChestOpen
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1854)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1854)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1860)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1860)
 msgctxt "RewardConcept03Widget,ChestOpen"
 msgid "상자 열기"
 msgstr "Open Chest"
 
 #. Key:	ChestOpenHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1858)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1858)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1864)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1864)
 msgctxt "RewardConcept03Widget,ChestOpenHint"
 msgid "상자를 눌러 여세요"
 msgstr "Tap the chest to open it"
 
 #. Key:	ClaimSelectedOne
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1863)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1863)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
 msgctxt "RewardConcept03Widget,ClaimSelectedOne"
 msgid "선택한 1개 받기"
 msgstr "Claim Selected Item"
 
 #. Key:	Confirm
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1863)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1863)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
 msgctxt "RewardConcept03Widget,Confirm"
 msgid "확정"
 msgstr "Confirm"
 
 #. Key:	SelectedArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1914)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1914)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1920)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1920)
 msgctxt "RewardConcept03Widget,SelectedArtifact"
 msgid "선택됨"
 msgstr "Selected"
 
 #. Key:	TabExp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(202)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(202)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(201)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(201)
 msgctxt "RewardConcept03Widget,TabExp"
 msgid "경험치"
 msgstr "EXP"
 
 #. Key:	TabChest
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(202)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(202)
 msgctxt "RewardConcept03Widget,TabChest"
 msgid "상자"
 msgstr "Chest"
 
 #. Key:	TabGold
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(203)
 msgctxt "RewardConcept03Widget,TabGold"
 msgid "골드"
 msgstr "Gold"
 
 #. Key:	TabArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(204)
 msgctxt "RewardConcept03Widget,TabArtifact"
 msgid "아티팩트"
 msgstr "Artifact"
 
 #. Key:	NextButton
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(206)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(205)
 msgctxt "RewardConcept03Widget,NextButton"
 msgid "다음"
 msgstr "Next"
 
 #. Key:	ConfirmButton
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(209)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(209)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(208)
 msgctxt "RewardConcept03Widget,ConfirmButton"
 msgid "확정"
 msgstr "Confirm"
 
 #. Key:	ExpHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(210)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(210)
 msgctxt "RewardConcept03Widget,ExpHeading"
 msgid "경험치 획득"
 msgstr "EXP Gained"
 
 #. Key:	ChestHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(212)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(212)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(211)
 msgctxt "RewardConcept03Widget,ChestHeading"
 msgid "보상 상자"
 msgstr "Reward Chest"
 
 #. Key:	ChestOpenLabel
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(213)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(213)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(212)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(212)
 msgctxt "RewardConcept03Widget,ChestOpenLabel"
 msgid "상자 열기"
 msgstr "Open the Chest"
 
 #. Key:	ChestHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(214)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(214)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(213)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(213)
 msgctxt "RewardConcept03Widget,ChestHint"
 msgid "상자를 눌러 여세요"
 msgstr "Tap the chest to open it"
 
 #. Key:	GoldHeading
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(215)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(215)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(214)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(214)
 msgctxt "RewardConcept03Widget,GoldHeading"
 msgid "획득 골드"
 msgstr "Gold Gained"
 
 #. Key:	GoldGrantedHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(216)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(216)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(215)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(215)
 msgctxt "RewardConcept03Widget,GoldGrantedHint"
 msgid "보상이 지급되었습니다"
 msgstr "Rewards have been granted"
 
 #. Key:	SelectionRetry
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(327)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(327)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(326)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(326)
 msgctxt "RewardConcept03Widget,SelectionRetry"
 msgid "지급 실패 · 다시 시도"
 msgstr "Reward Failed · Retry"
 
 #. Key:	DefaultRewardTitle
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(517)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(517)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(516)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(516)
 msgctxt "RewardConcept03Widget,DefaultRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	MercenaryFallbackName
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(564)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(564)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(563)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(563)
 msgctxt "RewardConcept03Widget,MercenaryFallbackName"
 msgid "용병 {0}"
 msgstr "Mercenary {0}"
 
 #. Key:	GoldBalanceHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(617)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(617)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(616)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(616)
 msgctxt "RewardConcept03Widget,GoldBalanceHint"
 msgid "총 보유 {0} G"
 msgstr "Total {0} G"
 
 #. Key:	ExperienceLevel
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(803)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(803)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(805)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(805)
 msgctxt "RewardConcept03Widget,ExperienceLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	MultipleLevelUp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(812)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(812)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
 msgctxt "RewardConcept03Widget,MultipleLevelUp"
 msgid "레벨 업! ×{0}"
 msgstr "Level Up! ×{0}"
 
 #. Key:	LevelUp
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(814)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(816)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(816)
 msgctxt "RewardConcept03Widget,LevelUp"
 msgid "레벨 업!"
 msgstr "Level Up!"
 
 #. Key:	ChoiceTypeArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(847)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(847)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(849)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(849)
 msgctxt "RewardConcept03Widget,ChoiceTypeArtifact"
 msgid "아티팩트"
 msgstr "Artifact"
 
 #. Key:	ChoiceTypeSkill
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(853)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(853)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
 msgctxt "RewardConcept03Widget,ChoiceTypeSkill"
 msgid "스킬"
 msgstr "Skill"
 
 #. Key:	ChoiceTypeGold
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(855)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(857)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(857)
 msgctxt "RewardConcept03Widget,ChoiceTypeGold"
 msgid "골드"
 msgstr "Gold"
@@ -10451,95 +10437,46 @@ msgid "스킬 설정값에 맞춰 Description 텍스트를 자동 생성합니�
 msgstr "Automatically generates the Description text based on the skill's settings."
 
 #. Key:	Title
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(266)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(266)
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(228)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(228)
 msgctxt "CombatDefeat,Title"
 msgid "패배"
-msgstr "Defeat"
+msgstr "DEFEAT"
 
-#. Key:	Subtitle
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(269)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(269)
-msgctxt "CombatDefeat,Subtitle"
-msgid "용병단이 전투에서 패배했습니다"
-msgstr "Your mercenary company was defeated in battle."
+#. Key:	ExpeditionEnded
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(231)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(231)
+msgctxt "CombatDefeat,ExpeditionEnded"
+msgid "이번 원정이 종료되었습니다"
+msgstr "This expedition has ended"
 
-#. Key:	Incapacitated
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(296)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(296)
-msgctxt "CombatDefeat,Incapacitated"
-msgid "전투 불능"
-msgstr "Incapacitated"
+#. Key:	Location
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(234)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(234)
+msgctxt "CombatDefeat,Location"
+msgid "현재 전투 지역"
+msgstr "Current battle area"
 
-#. Key:	LocationPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(315)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(315)
-msgctxt "CombatDefeat,LocationPreview"
-msgid "현재 전투 지역 · 2 라운드"
-msgstr "Current Battle Zone · Round 2"
+#. Key:	RoundLabel
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(237)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(237)
+msgctxt "CombatDefeat,RoundLabel"
+msgid "진행 라운드"
+msgstr "Round Reached"
 
-#. Key:	EnemyLabel
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(321)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(321)
-msgctxt "CombatDefeat,EnemyLabel"
-msgid "처치"
-msgstr "Kills"
-
-#. Key:	GoldLabel
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(324)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(324)
-msgctxt "CombatDefeat,GoldLabel"
-msgid "획득 골드"
-msgstr "Gold Earned"
-
-#. Key:	SurvivorLabel
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(327)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(327)
-msgctxt "CombatDefeat,SurvivorLabel"
-msgid "생존"
-msgstr "Survived"
-
-#. Key:	RoundPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(335)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(335)
-msgctxt "CombatDefeat,RoundPreview"
-msgid "2 라운드"
-msgstr "Round 2"
-
-#. Key:	EnemyPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(338)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(338)
-msgctxt "CombatDefeat,EnemyPreview"
-msgid "12"
-msgstr "12"
-
-#. Key:	GoldPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(341)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(341)
-msgctxt "CombatDefeat,GoldPreview"
-msgid "0"
-msgstr "0"
-
-#. Key:	SurvivorPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(344)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(344)
-msgctxt "CombatDefeat,SurvivorPreview"
-msgid "0 / 3"
-msgstr "0 / 3"
-
-#. Key:	ExpPreview
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(350)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(350)
-msgctxt "CombatDefeat,ExpPreview"
-msgid "+0"
-msgstr "+0"
+#. Key:	EnemiesDefeated
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(240)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(240)
+msgctxt "CombatDefeat,EnemiesDefeated"
+msgid "처치한 적"
+msgstr "Enemies Defeated"
 
 #. Key:	BackToTitle
-#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(367)
-#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(367)
+#. SourceLocation:	Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(252)
+#: Source/P_RDEditor/UI/CombatDefeatWidgetBuilder.cpp(252)
 msgctxt "CombatDefeat,BackToTitle"
 msgid "타이틀로 돌아가기"
-msgstr "Return to title"
+msgstr "Return to Title"
 
 #. Key:	SkillToggleLabel
 #. SourceLocation:	Source/P_RDEditor/UI/CombatHUDWidgetBuilder.cpp(1518)

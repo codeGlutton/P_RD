@@ -1395,6 +1395,14 @@ void ACombatGameMode::PushCombatResultUIData(ESRPGCombatResult Result) const
 	CombatResultUIData.mIsClearStage = CurRoom.mType == ERoomType::BossMonster;
 	CombatResultUIData.mIsWin = Result == ESRPGCombatResult::PlayerWin;
 	CombatResultUIData.mLocationName = NSLOCTEXT("CombatGameMode", "CurrentCombatArea", "현재 전투 지역");
+	if (const UStaticStageSpawnData* StageData =
+		LoadPrimaryAssetData<UStaticStageSpawnData>(CurStage.mStaticStageSpawnDataId))
+	{
+		if (!StageData->mStageName.IsEmpty())
+		{
+			CombatResultUIData.mLocationName = StageData->mStageName;
+		}
+	}
 	CombatResultUIData.mRound = mCombatUIModel != nullptr ? mCombatUIModel->GetTurnUI().mRound : 0;
 	CombatResultUIData.mDefeatedMonsterCount = mDefeatedMonsterCount;
 	CombatResultUIData.mGoldGained = 0;
