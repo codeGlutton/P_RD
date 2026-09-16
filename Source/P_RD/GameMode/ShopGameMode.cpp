@@ -1,4 +1,4 @@
-#include "GameMode/ShopGameMode.h"
+﻿#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -370,9 +370,14 @@ void AShopGameMode::PushShopUIData()
 				}
 			};
 
-			if (UnitData->mSkillDatas.Num() > 0)
+			const int32 DefaultSkillCount = FMath::Min(
+				USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
+				UnitData->mSkillDatas.Num()
+			);
+			for (int32 i = 0; i < DefaultSkillCount; i++)
 			{
-				AppendSkill(UnitData->mSkillDatas[0].LoadSynchronous());
+				const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[i];
+				AppendSkill(Skill.LoadSynchronous());
 			}
 			for (const FPrimaryAssetId& SkillId : Candidate.mOwingSkillIds)
 			{
@@ -825,10 +830,14 @@ void AShopGameMode::HandleHireMercenaryRequested(
 	// 채운다. 실패한 스킬 하나 때문에 이미 생성된 용병 전체를 무효화하지 않는다.
 	if (USkillComponentModel* SkillModel = NewUnit->GetSkillComponentModel())
 	{
-		int32 SlotIndex = 0;
-		if (UnitData->mSkillDatas.Num() > 0)
+		const int32 DefaultSkillCount = FMath::Min(
+			USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
+			UnitData->mSkillDatas.Num()
+		);
+		for (int32 Index = 0; Index < DefaultSkillCount; Index++)
 		{
-			SkillModel->SetSkill(SlotIndex++, UnitData->mSkillDatas[0].LoadSynchronous());
+			const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[Index];
+			SkillModel->SetSkill(Index, Skill.LoadSynchronous());
 		}
 		for (int32 Index = 0; Index < Candidate.mOwingSkillIds.Num(); ++Index)
 		{
@@ -836,7 +845,7 @@ void AShopGameMode::HandleHireMercenaryRequested(
 				AssetManager->GetPrimaryAssetObject<UStaticSkillData>(
 					Candidate.mOwingSkillIds[Index]))
 			{
-				SkillModel->SetSkill(SlotIndex++, Skill);
+				SkillModel->SetSkill(DefaultSkillCount + Index, Skill);
 			}
 		}
 	}
