@@ -41,6 +41,17 @@
 
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
+void UShopUITestListener::HandleItemDetailRequested(int32 SlotIndex)
+{
+	LastSlotIndex = SlotIndex;
+	if (DetailModel)
+	{
+		FCombatArtifactUI Detail;
+		Detail.mName = FText::FromString(FString::Printf(TEXT("Artifact %d"), SlotIndex));
+		DetailModel->SetArtifactDetail(Detail);
+	}
+}
+
 void UShopUITestListener::HandleBuySkillRequested(const int32 SlotIndex,
 	const int32 UnitIndex, const int32 SkillSlotIndex)
 {
