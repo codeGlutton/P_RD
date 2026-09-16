@@ -36,20 +36,15 @@ void UVFXTimelineComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		}
 	}
 
-	bool IsAnyTimelineActive = false;
 	for (FTimelineEntry& TimelineEntry: mTimelineEntries)
 	{
 		TimelineEntry.mTimeline.TickTimeline(DeltaTime);
-
-		if (TimelineEntry.mTimeline.IsPlaying() == true)
-		{
-			IsAnyTimelineActive = true;
-		}
 	}
 
 	if (IsNetSimulating() == false)
 	{
-		if (IsAnyTimelineActive == false)
+		// 새로 재생이 시작된 타임라인이 있는지는 루프가 끝난 다음에 확인
+		if (IsAnyPlaying() == false)
 		{
 			Deactivate();
 		}
@@ -508,30 +503,81 @@ void UCombatTargetVFXTimelineComponent::UnbindOwnerModel(UObjectModel* Model)
 
 void UCombatTargetVFXTimelineComponent::PlayRemoveVFX()
 {
-	IBoardCombatTargetView* BoardCombatTargetView = Cast<IBoardCombatTargetView>(GetOwner());
-	if (BoardCombatTargetView == nullptr)
-	{
-		return;
-	}
-	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-
 	/* 타겟 메시 채우기 */
 
 	FVFXTimelineEventTarget EventTarget;
+	UPrimitiveComponent* TargetMeshComp = nullptr;
+	if (MakeTargetMeshEventTarget(EventTarget, TargetMeshComp) == false)
+	{
+		return;
+	}
 
-	UPrimitiveComponent* TargetMeshComp = BoardCombatTargetView->GetTargetMeshComponent();
-	for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComp->GetAttachChildren())
+	/* 실행 */
+
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	UVFXFunctionLibrary::SpawnAndExecuteVFX(GamePlaySettings->mCombatTargetRemoveVFX, TargetMeshComp, this, EventTarget);
+}
+
+bool UCombatTargetVFXTimelineComponent::MakeTargetMeshEventTarget(FVFXTimelineEventTarget& OutEventTarget, UPrimitiveComponent*& OutTargetMeshComp) const
+{
+	IBoardCombatTargetView* BoardCombatTargetView = Cast<IBoardCombatTargetView>(GetOwner());
+	if (BoardCombatTargetView == nullptr)
+	{
+		return false;
+	}
+
+	// 본체 메시와 거기 붙어 있는 자식 메시(무기/장비 등)를 모두 담음
+	OutTargetMeshComp = BoardCombatTargetView->GetTargetMeshComponent();
+	for (const TObjectPtr<USceneComponent>& ChildComponent : OutTargetMeshComp->GetAttachChildren())
 	{
 		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
 		if (ChildMeshComp != nullptr)
 		{
-			EventTarget.mMeshComps.Add(ChildMeshComp);
+			OutEventTarget.mMeshComps.Add(ChildMeshComp);
 		}
 	}
-	EventTarget.mMeshComps.Add(TargetMeshComp);
+	OutEventTarget.mMeshComps.Add(OutTargetMeshComp);
+	return true;
+}
+
+void UCombatTargetVFXTimelineComponent::PlayTeleportOutVFX(FOnTimelineEventStatic OnFinished)
+{
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	PlayTeleportVFX(GamePlaySettings->mCombatTargetTeleportOutVFX, OnFinished);
+}
+
+void UCombatTargetVFXTimelineComponent::PlayTeleportInVFX(FOnTimelineEventStatic OnFinished)
+{
+	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+	PlayTeleportVFX(GamePlaySettings->mCombatTargetTeleportInVFX, OnFinished);
+}
+
+void UCombatTargetVFXTimelineComponent::PlayTeleportVFX(const FSoftVFXSpawnData& VFXSpawnData, FOnTimelineEventStatic OnFinished)
+{
+	/* 타겟 메시 채우기 */
+
+	FVFXTimelineEventTarget EventTarget;
+	UPrimitiveComponent* TargetMeshComp = nullptr;
+	if (MakeTargetMeshEventTarget(EventTarget, TargetMeshComp) == false || VFXSpawnData.mTimelineExecutionDatas.IsEmpty() == true)
+	{
+		// 연출을 틀 수 없으면 바로 완료 처리
+		OnFinished.ExecuteIfBound();
+		return;
+	}
+
+	/* 완료 콜백 등록 */
+
+	const FName& KeyName = VFXSpawnData.mTimelineExecutionDatas[0].mKeyName;
+	SetTimelineFinishedFunc(KeyName, OnFinished);
 
 	/* 실행 */
 
-	UVFXFunctionLibrary::SpawnAndExecuteVFX(GamePlaySettings->mCombatTargetRemoveVFX, TargetMeshComp, this, EventTarget);
+	UVFXFunctionLibrary::SpawnAndExecuteVFX(VFXSpawnData, TargetMeshComp, this, EventTarget);
+
+	// 타임라인이 돌지 않으면 완료 콜백도 오지 않을 것이므로 바로 완료 처리
+	if (IsPlaying(KeyName) == false)
+	{
+		OnFinished.ExecuteIfBound();
+	}
 }
 

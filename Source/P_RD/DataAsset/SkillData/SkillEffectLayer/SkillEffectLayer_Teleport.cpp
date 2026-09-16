@@ -3,8 +3,7 @@
 #include "Actor/ActorModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
-#include "Actor/TileMap/TileMapModel.h"
-#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 
 void FSkillEffectLayer_Teleport::CommitEffect(const FSkillEffectCommitParams& Params) const
 {
@@ -14,8 +13,6 @@ void FSkillEffectLayer_Teleport::CommitEffect(const FSkillEffectCommitParams& Pa
 	}
 
 	UBoardActorModel* InstigatorBoardActor = Cast<UBoardActorModel>(Params.mInstigator.GetObject());
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(InstigatorBoardActor);
-	UTileMapModel* TileMapModel = CombatModel->GetTileMap();
 
 	FTileIndex TargetTileIndex = Params.mAimedTileIndex;
 	if (TargetTileIndex == FTileIndex::Invalid && Params.mFinalTileIndexes.IsEmpty() == false)
@@ -28,12 +25,13 @@ void FSkillEffectLayer_Teleport::CommitEffect(const FSkillEffectCommitParams& Pa
 		return;
 	}
 
-	if (TileMapModel->CanPlace(TargetTileIndex, InstigatorBoardActor) == true)
+	// 이동 컴포넌트 모델로 텔레포트. 막힌 타일 검사는 TeleportTo가 처리
+	IBoardCombatTarget* CombatTarget = Cast<IBoardCombatTarget>(InstigatorBoardActor);
+	UBoardMovementComponentModel* MoveCompModel = (CombatTarget != nullptr) ? CombatTarget->GetBoardMovementComponentModel() : nullptr;
+	if (MoveCompModel != nullptr)
 	{
 		const FTileTransform NextTransform(TargetTileIndex, InstigatorBoardActor->GetTileTransform().mDirection);
-
-		TileMapModel->RemoveActor(InstigatorBoardActor);
-		TileMapModel->PlaceActor(NextTransform, InstigatorBoardActor);
+		MoveCompModel->TeleportTo(NextTransform);
 	}
 }
 

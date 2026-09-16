@@ -18,6 +18,7 @@ class UNiagaraComponent;
 
 class UBoardActorModel;
 class IBoardCombatTargetView;
+struct FSoftVFXSpawnData;
 
 USTRUCT(BlueprintType)
 struct FTimelineEntry
@@ -154,8 +155,20 @@ public:
 	void BindOwnerModel(UObjectModel* Model) override;
 	void UnbindOwnerModel(UObjectModel* Model) override;
 
+public:
+	// @brief 텔레포트 출발 연출(사라짐) 재생. 연출이 끝나면 OnFinished 호출, 재생할 수 없으면 즉시 호출
+	void PlayTeleportOutVFX(FOnTimelineEventStatic OnFinished);
+	// @brief 텔레포트 도착 연출(나타남) 재생. 연출이 끝나면 OnFinished 호출, 재생할 수 없으면 즉시 호출
+	void PlayTeleportInVFX(FOnTimelineEventStatic OnFinished);
+
 protected:
 	void PlayRemoveVFX();
+
+private:
+	// @brief 출발/도착 연출의 공통 재생 절차
+	void PlayTeleportVFX(const FSoftVFXSpawnData& VFXSpawnData, FOnTimelineEventStatic OnFinished);
+	// @brief 연출 대상 메시 목록 구성 (유닛 본체 메시 + 붙어 있는 무기/장비 메시)
+	bool MakeTargetMeshEventTarget(FVFXTimelineEventTarget& OutEventTarget, UPrimitiveComponent*& OutTargetMeshComp) const;
 
 protected:
 	// @brief 소유 모델 객체

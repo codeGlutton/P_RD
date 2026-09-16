@@ -118,6 +118,11 @@ bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp
 {
 	if (TimelineComp != nullptr && IsVFXPossible(TimelineComp) == true)
 	{
+		// 재생 속도는 한 번 설정하면 타임라인에 계속 남음
+		// 같은 키를 다른 배속으로 쓰는 연출이 있을 수 있으므로(예: 텔레포트 디졸브 3배속, 사망 디졸브 1배속)
+		// 재생할 때마다 이번 실행 데이터의 배속을 다시 지정
+		TimelineComp->SetPlayRate(TimelineExecutionData.mKeyName, TimelineExecutionData.mPlayRate);
+
 		if (TimelineExecutionData.mDirection == ETimelineDirection::Forward)
 		{
 			if (TimelineExecutionData.mIsPlayFromStart == true)

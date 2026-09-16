@@ -14,6 +14,7 @@
 
 #include "CoreMinimal.h"
 #include "Component/BoardMovementComponent/UnitMovementComponentModel.h"
+#include "Actor/BoardActor/BoardActorModel.h"
 #include "BoardMovementTestsHelper.generated.h"
 
 class UTileMapModel;
@@ -45,4 +46,40 @@ private:
 	// @brief 주입된 타일맵
 	UPROPERTY()
 	TObjectPtr<UTileMapModel> mTileMap;
+};
+
+/**
+ * @brief 타일 오버랩 관측 Mock
+ * @details Overlay 레이어, 블로킹 없음. 유닛과 같은 타일에 두고 진입/이탈 통지 횟수를 셈
+ *          진입 통지에서 실행할 델리게이트를 걸 수 있음 (함정 흉내)
+ */
+UCLASS()
+class UMockOverlapSensorModel : public UBoardActorModel
+{
+	GENERATED_BODY()
+
+public:
+	UMockOverlapSensorModel()
+	{
+		mTileLayerFlags = static_cast<int32>(ETileLayerFlag::Overlay);
+	}
+
+	void OnBeginTileOverlap(FTile* CurTile, UBoardActorModel* Other) override
+	{
+		++mBeginCount;
+		mOnBeginOverlap.ExecuteIfBound();
+	}
+
+	void OnEndTileOverlap(FTile* CurTile, UBoardActorModel* Other) override
+	{
+		++mEndCount;
+	}
+
+public:
+	// @brief 진입 통지 횟수
+	int32 mBeginCount = 0;
+	// @brief 이탈 통지 횟수
+	int32 mEndCount = 0;
+	// @brief 진입 통지에서 실행할 델리게이트
+	FSimpleDelegate mOnBeginOverlap;
 };

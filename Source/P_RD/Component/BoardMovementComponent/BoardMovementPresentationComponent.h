@@ -21,7 +21,7 @@ struct FPresentationBarrier;
  * @brief  보드 액터 이동 연출 컴포넌트
  *
  * @details
- * 이동 컴포넌트 모델이 발행하는 델리게이트(배치/경로/스텝/회전)를 받아 소유 액터를 움직임
+ * 이동 컴포넌트 모델이 발행하는 델리게이트(배치/경로/스텝/회전/텔레포트)를 받아 소유 액터를 움직임
  * 경로 추종(폴리라인 코너링), 가감속, 배리어 해제 등 화면 표현만 담당
  * 이동 판정은 모델이 이미 끝냈으므로 충돌 검사 없이 트랜스폼만 보간
  */
@@ -70,6 +70,16 @@ public:
 		TSharedPtr<FPresentationBarrier> Barrier);
 
 	/**
+	 * @brief 텔레포트 요청을 수신해서 사라짐 -> 위치 이동 -> 나타남 연출 시작
+	 * @details VFX 컴포넌트에 출발 연출을 요청하고, 끝나면 도착 위치로 옮긴 뒤 도착 연출 요청, 끝나면 배리어 해제
+	 *          VFX 컴포넌트가 없으면 연출 없이 바로 위치 이동 후 배리어 해제
+	 */
+	virtual void OnTeleport(
+		const FTileTransform& NextTileTransform,
+		const FTransform& TargetWorldTransform,
+		TSharedPtr<FPresentationBarrier> Barrier);
+
+	/**
 	 * @brief 이동 요청 전체 종료를 수신해서 걷기 연출 마무리
 	 * @details 경로 중간에서 끝나면(함정 정지 등) 코너 곡선 위에 서 있을 수 있으므로,
 	 *          폴리라인을 버리고 마지막 타일 중심까지 직선 이동으로 마저 걸어가 멈춤
@@ -115,6 +125,14 @@ private:
 	bool GetPolyLinePoint(float Distance, FVector& OutLocation, FVector& OutTangent) const;
 	// @brief 폴리라인 이동상태 초기화 (직선 이동모드로 전환)
 	void ResetPolyLineState();
+
+	/* 텔레포트 연출 */
+	// @brief 출발 연출 완료 콜백. 도착 위치에 놓고 도착 연출 요청
+	void OnTeleportOutFinished();
+	// @brief 도착 연출 완료 콜백. 배리어 해제
+	void OnTeleportInFinished();
+	// @brief 소유 액터를 텔레포트 도착 위치에 즉시 놓음
+	void PlaceAtTeleportTarget();
 
 protected:
 	// @brief 최대 이동 속도 (cm/초)
@@ -166,6 +184,10 @@ private:
 	FTransform mMoveTargetTransform = FTransform::Identity;
 	// @brief 진행 중인 이동스텝의 연출 배리어
 	TSharedPtr<FPresentationBarrier> mMoveBarrier;
+	// @brief 진행 중인 텔레포트의 연출 배리어
+	TSharedPtr<FPresentationBarrier> mTeleportBarrier;
+	// @brief 텔레포트 도착 위치의 월드트랜스폼
+	FTransform mTeleportTargetTransform = FTransform::Identity;
 	// @brief 현재 이동 속도 (cm/초).
 	// @details
 	// 가속/감속 계산에 쓰이는 스칼라 값.

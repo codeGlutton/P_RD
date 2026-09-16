@@ -31,6 +31,8 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMovePath, const FTileTransform& /* Ti
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnTeleport, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */);
+
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FBoardActorAnimationContext& /*Context*/);
 
 
@@ -199,6 +201,13 @@ public:
 	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
 	 */
 	FOnRotate OnRotate;
+
+	/**
+	 * @brief 텔레포트 시 뷰에게 사라짐 -> 위치 이동 -> 나타남 연출을 요청하는 대리자
+	 * @details 뷰는 배리어를 잡고 연출, 끝나면 배리어를 놓아 완료를 알림. 도착 타일 오버랩 통지는 그 뒤에 진행.
+	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
+	 */
+	FOnTeleport OnTeleport;
 
 	/**
 	 * @brief 애니메이션 실행 대리자

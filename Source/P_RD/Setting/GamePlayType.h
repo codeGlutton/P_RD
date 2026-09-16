@@ -77,6 +77,9 @@ public:
 	TEnumAsByte<ETimelineDirection::Type> mDirection = ETimelineDirection::Forward;
 	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IsPlayFromStart"))
 	bool mIsPlayFromStart = true;
+	// @brief 타임라인 재생 배속. 1.0이 커브 원래 속도, 클수록 빠름
+	UPROPERTY(Category = "Timeline", EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayRate", ClampMin = "0.01"))
+	float mPlayRate = 1.0f;
 };
 
 /**

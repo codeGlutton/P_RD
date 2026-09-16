@@ -134,7 +134,13 @@ public:
 public:
     UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetRemoveVFX", ToolTip = "전투 대상에서 타일 맵에서 제거될 때 호출되는 VFX 설정 값"))
     FSoftVFXSpawnData mCombatTargetRemoveVFX;
-    
+
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetTeleportOutVFX", ToolTip = "유닛이 텔레포트로 출발 타일에서 사라질 때 VFX 설정 값"))
+    FSoftVFXSpawnData mCombatTargetTeleportOutVFX;
+
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetTeleportInVFX", ToolTip = "유닛이 텔레포트로 도착 타일에 나타날 때 VFX 설정 값"))
+    FSoftVFXSpawnData mCombatTargetTeleportInVFX;
+
     UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineSettings", ToolTip = "전투 대상에서 활용되는 타임 라인 설정 값들"))
     TArray<FCombatTargetVFXTimelineSetting> mCombatTargetVFXTimelineSettings;
 };
