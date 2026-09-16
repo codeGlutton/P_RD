@@ -301,7 +301,17 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 {
 	const int32 ColumnCount = mParams.mColumnCount;
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
-	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
+
+	ERoomType StartRoomType = ERoomType::None;
+	if (Stage.mStageLevel == EStageLevelType::Stage1)
+	{
+		StartRoomType = ERoomType::Monster;
+	}
+	else
+	{
+		StartRoomType = ERoomType::Shop;
+	}
+	FRoom& StartRoom = CreateRoom(StartRoomType, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
 
     if (mFirstRoomOverride.IsValid())
     {
@@ -482,8 +492,8 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 				const FRarityRate RarityRate = mLevelCache.GetRarityRate(SkillLevel);
 				const uint8 RarityIndex = GetRandomRarityIndex(RarityRate);
 
-				const TArray<FPrimaryAssetId>& CommonSkillArray = mJobSkillAssetIds[FoundJobIndex][RarityIndex];
-				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, CommonSkillArray));
+				const TArray<FPrimaryAssetId>& JobSkillArray = mJobSkillAssetIds[FoundJobIndex][RarityIndex];
+				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, JobSkillArray));
 			}
 
 			NewRoom.mSaleMercenaryDataCandidates.mCandidates.Add(Candidate);

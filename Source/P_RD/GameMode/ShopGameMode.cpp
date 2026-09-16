@@ -1,4 +1,4 @@
-﻿#include "GameMode/ShopGameMode.h"
+#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -31,10 +31,9 @@
 namespace
 {
 	constexpr int32 ShopRestPrice = 100;
-	// 이동은 SkillModel 슬롯을 차지하지 않는다. 0번 기본 공격 뒤의 1..4가
-	// 상점에서 교체 가능한 네 스킬이다.
-	constexpr int32 ReplaceableSkillStartIndex = 1;
-	constexpr int32 ReplaceableSkillSlotCount = 4;
+	// 이동은 SkillModel 슬롯을 차지하지 않는다.
+	constexpr int32 ReplaceableSkillStartIndex = 0;
+	constexpr int32 ReplaceableSkillSlotCount = USkillComponentModel::DEFAULT_SKILL_POOL_SIZE;
 
 	FText ShopMercenaryName(const EUnitJobType JobType)
 	{
@@ -371,14 +370,9 @@ void AShopGameMode::PushShopUIData()
 				}
 			};
 
-			const int32 DefaultSkillCount = FMath::Min(
-				USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
-				UnitData->mSkillDatas.Num()
-			);
-			for (int32 i = 0; i < DefaultSkillCount; i++)
+			if (UnitData->mSkillDatas.Num() > 0)
 			{
-				const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[i];
-				AppendSkill(Skill.LoadSynchronous());
+				AppendSkill(UnitData->mSkillDatas[0].LoadSynchronous());
 			}
 			for (const FPrimaryAssetId& SkillId : Candidate.mOwingSkillIds)
 			{
@@ -831,14 +825,10 @@ void AShopGameMode::HandleHireMercenaryRequested(
 	// 채운다. 실패한 스킬 하나 때문에 이미 생성된 용병 전체를 무효화하지 않는다.
 	if (USkillComponentModel* SkillModel = NewUnit->GetSkillComponentModel())
 	{
-		const int32 DefaultSkillCount = FMath::Min(
-				USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
-				UnitData->mSkillDatas.Num()
-			);
-		for (int32 Index = 0; Index < DefaultSkillCount; Index++)
+		int32 SlotIndex = 0;
+		if (UnitData->mSkillDatas.Num() > 0)
 		{
-			const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[Index];
-			SkillModel->SetSkill(Index, Skill.LoadSynchronous());
+			SkillModel->SetSkill(SlotIndex++, UnitData->mSkillDatas[0].LoadSynchronous());
 		}
 		for (int32 Index = 0; Index < Candidate.mOwingSkillIds.Num(); ++Index)
 		{
@@ -846,7 +836,7 @@ void AShopGameMode::HandleHireMercenaryRequested(
 				AssetManager->GetPrimaryAssetObject<UStaticSkillData>(
 					Candidate.mOwingSkillIds[Index]))
 			{
-				SkillModel->SetSkill(DefaultSkillCount + Index, Skill);
+				SkillModel->SetSkill(SlotIndex++, Skill);
 			}
 		}
 	}
