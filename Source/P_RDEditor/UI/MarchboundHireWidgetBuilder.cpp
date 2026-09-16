@@ -741,8 +741,8 @@ namespace MarchboundHireWidgetBuilder
 		}
 
 		const TCHAR* DefaultSkillLabels[6] = {
-			TEXT("평타"), TEXT("이동"), TEXT("스킬 1"),
-			TEXT("스킬 2"), TEXT("스킬 3"), TEXT("스킬 4")
+			TEXT("이동"), TEXT("스킬 1"), TEXT("스킬 2"),
+			TEXT("스킬 3"), TEXT("스킬 4"), TEXT("스킬 5")
 		};
 		for (int32 Index = 0; Index < 6; ++Index)
 		{

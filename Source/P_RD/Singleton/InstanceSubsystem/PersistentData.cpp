@@ -1,4 +1,4 @@
-#include "Singleton/InstanceSubsystem/PersistentData.h"
+﻿#include "Singleton/InstanceSubsystem/PersistentData.h"
 
 #include "Containers/Ticker.h"
 #include "AttributeSet/PartyAttributeSet.h"
@@ -138,9 +138,9 @@ void UPlayerUnitPersistData::MakeUnit(UPlayerUnitModel* PlayerUnit)
 
 	// 플레이어 속성 세팅
 	{
-		mMaxHP = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetMaxHPAttribute());
-		mHP = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetHPAttribute());
-		mExp = AttributeSetComponentModel->GetAttributeCurrentValue(UPlayerUnitAttributeSet::GetExpAttribute());
+		mMaxHP = AttributeSetComponentModel->GetAttributeBaseValue(UPlayerUnitAttributeSet::GetMaxHPAttribute());
+		mHP = AttributeSetComponentModel->GetAttributeBaseValue(UPlayerUnitAttributeSet::GetHPAttribute());
+		mExp = AttributeSetComponentModel->GetAttributeBaseValue(UPlayerUnitAttributeSet::GetExpAttribute());
 	}
 
 	// 스킬 값 세팅

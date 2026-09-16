@@ -90,14 +90,9 @@ USkillComponentModel::USkillComponentModel()
 
 void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkillData>>& SkillList)
 {
-	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+	// 초기화 로직 (몬스터는 5개 이상의 스킬도 소유할 수 있음)
 
-	int32 SkillPoolSize = 4 /*추가 스킬*/ + 2 /*기본 스킬*/;
-	if (SkillList.Num() > SkillPoolSize)
-	{
-		SkillPoolSize = SkillList.Num();
-	}
-	mSkillEntries.Init(FSkillEntry(), SkillPoolSize);
+	mSkillEntries.Init(FSkillEntry(), FMath::Max(DEFAULT_SKILL_POOL_SIZE, SkillList.Num()));
 
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
@@ -112,14 +107,9 @@ void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkill
 
 void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList)
 {
-	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+	// 초기화 로직 (몬스터는 5개 이상의 스킬도 소유할 수 있음)
 
-	int32 SkillPoolSize = 4 /*추가 스킬*/ + 2 /*기본 스킬*/;
-	if (SkillList.Num() > SkillPoolSize)
-	{
-		SkillPoolSize = SkillList.Num();
-	}
-	mSkillEntries.Init(FSkillEntry(), SkillPoolSize);
+	mSkillEntries.Init(FSkillEntry(), FMath::Max(DEFAULT_SKILL_POOL_SIZE, SkillList.Num()));
 
 	int32 NextSkillIndex = 0;
 	for (const FPrimaryAssetId& AssetId : SkillList)

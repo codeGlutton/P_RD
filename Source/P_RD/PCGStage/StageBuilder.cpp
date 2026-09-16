@@ -1,4 +1,4 @@
-#include "PCGStage/StageBuilder.h"
+﻿#include "PCGStage/StageBuilder.h"
 
 #include "PCGStage/Room.h"
 
@@ -6,6 +6,8 @@
 #include "DataAsset/PrimaryAssetType.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
@@ -299,7 +301,17 @@ void FStageBuilder::CreateStartRoom(OUT FStage& Stage) const
 {
 	const int32 ColumnCount = mParams.mColumnCount;
 	const int32 StartColumn = Stage.mStartColumn = ColumnCount / 2;
-	FRoom& StartRoom = CreateRoom(ERoomType::Monster, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
+
+	ERoomType StartRoomType = ERoomType::None;
+	if (Stage.mStageLevel == EStageLevelType::Stage1)
+	{
+		StartRoomType = ERoomType::Monster;
+	}
+	else
+	{
+		StartRoomType = ERoomType::Shop;
+	}
+	FRoom& StartRoom = CreateRoom(StartRoomType, 0, StartColumn, Stage.mRoomRows[0].mRooms[StartColumn]);
 
     if (mFirstRoomOverride.IsValid())
     {
@@ -468,11 +480,11 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			const FString FoundJobStr = GetPropertyAssetData(Candidate.mSaleMercenaryId, TEXT("mJobType"));
 			const int64 FoundJobIndex = StaticJobEnum->GetValueByNameString(FoundJobStr);
 
-			/* 최대 레벨부터 내림차순으로 스킬 선택 (레벨 2 이상, 최대 4개) */
+			/* 최대 레벨부터 내림차순으로 스킬 선택 (레벨 2 이상, 최대 5개) */
 
 			for (int32 SkillLevel = Candidate.mLevel; SkillLevel >= 2; --SkillLevel)
 			{
-				if (Candidate.mOwingSkillIds.Num() >= 4)
+				if (Candidate.mOwingSkillIds.Num() >= USkillComponentModel::DEFAULT_SKILL_POOL_SIZE)
 				{
 					break;
 				}
@@ -480,8 +492,8 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 				const FRarityRate RarityRate = mLevelCache.GetRarityRate(SkillLevel);
 				const uint8 RarityIndex = GetRandomRarityIndex(RarityRate);
 
-				const TArray<FPrimaryAssetId>& CommonSkillArray = mJobSkillAssetIds[FoundJobIndex][RarityIndex];
-				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, CommonSkillArray));
+				const TArray<FPrimaryAssetId>& JobSkillArray = mJobSkillAssetIds[FoundJobIndex][RarityIndex];
+				Candidate.mOwingSkillIds.Push(URandomStreamFunctionLibrary::GetRandomItem(mBuildStream, JobSkillArray));
 			}
 
 			NewRoom.mSaleMercenaryDataCandidates.mCandidates.Add(Candidate);
