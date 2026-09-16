@@ -257,6 +257,7 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 	mWidget->BindUIModel(mUIModel);
 	mWidget->OpenUI();
 	mWidget->SetVisibility(ESlateVisibility::Visible);
+	mWidget->ShowFirstVisitGuide();
 }
 
 void ULevelUpSkillRewardFlow::Select(int32 Choice, int32 UnitIndex, int32 SkillSlot)

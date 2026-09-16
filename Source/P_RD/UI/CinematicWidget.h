@@ -14,6 +14,7 @@
 #include "RDMinimal.h"
 #include "Styling/SlateBrush.h"
 #include "TimerManager.h"
+#include "Containers/Ticker.h"
 #include "UI/RDUserWidget.h"
 
 #include "CinematicWidget.generated.h"
@@ -60,6 +61,7 @@ public:
 
 	/** @brief 현재/다음 시네마틱 재생 속도를 지정한다. 미디어 오픈 전 호출해도 오픈 직후 적용된다. */
 	bool SetCinematicPlaybackRate(float InPlaybackRate);
+	void SetIgnoreCombatPlayback(bool bIgnore) { mIgnoreCombatPlayback = bIgnore; }
 
 	/** @brief 시네마틱을 즉시 종료 처리하고 등록된 종료 콜백을 발생시킨다(중복 호출 방지됨). */
 	UFUNCTION(BlueprintCallable, Category = "UI|Cinematic")
@@ -234,6 +236,8 @@ private:
 
 	/** @brief 종료 이벤트 미수신 대비 폴백(기본 지속시간) 타이머 핸들. */
 	FTimerHandle mDefaultCinematicTimerHandle;
+	FTSTicker::FDelegateHandle mRealTimeCinematicTimer;
+	bool mIgnoreCombatPlayback = false;
 
 	/** @brief 검은 화면 페이드 진행 타이머 핸들. */
 	FTimerHandle mCinematicFadeTimerHandle;

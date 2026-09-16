@@ -2,6 +2,7 @@
 #include "UI/Combat/CombatSpeedWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
+#include "UI/StageVictory/FinalRunVictoryWidget.h"
 #include "Engine/GameInstance.h"
 
 #include "Actor/TileMap/TileLayer.h"
@@ -1245,7 +1246,7 @@ void UCombatLayoutHUDWidget::WireCommands()
 			TEXT("HandleMercenaryInventoryArtifactClicked_9"),
 			TEXT("HandleMercenaryInventoryArtifactClicked_10") };
 		for (int32 Index = 0;
-			Index < FMath::Min(mMercenaryInventoryArtifactButtons.Num(), 11); ++Index)
+			mInventoryScroll == nullptr && Index < FMath::Min(mMercenaryInventoryArtifactButtons.Num(), 11); ++Index)
 		{
 			if (UButton* Button = mMercenaryInventoryArtifactButtons[Index])
 			{
@@ -2964,6 +2965,7 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 	}
 
 	const FPlayerMetaUI& Meta = mUIModel->GetPlayerMeta();
+	EnsureInventoryScroll(Meta.mArtifacts.Num());
 	SetTextIfPresent(mMercenaryInventoryGoldText, FText::AsNumber(Meta.mGold));
 	for (int32 Index = 0; Index < mMercenaryInventoryArtifactFrames.Num(); ++Index)
 	{
@@ -2971,7 +2973,7 @@ void UCombatLayoutHUDWidget::RefreshMercenaryInventory()
 			? &Meta.mArtifacts[Index] : nullptr;
 		const bool bHasArtifact = Artifact != nullptr;
 		const bool bHasIcon = bHasArtifact && Artifact->mIcon != nullptr;
-		SetShown(mMercenaryInventoryArtifactFrames[Index], true);
+		SetShown(mMercenaryInventoryArtifactFrames[Index], bHasArtifact);
 		if (mMercenaryInventoryArtifactIcons.IsValidIndex(Index))
 		{
 			UImage* Icon = mMercenaryInventoryArtifactIcons[Index];
@@ -3535,6 +3537,7 @@ void UCombatLayoutHUDWidget::BindRewardUIModel(URewardUIModel* InUIModel)
 void UCombatLayoutHUDWidget::UnbindUIModel()
 {
 	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mFinalRunCompletionTimerHandle);
+	if (mFinalVictoryWidget) { mFinalVictoryWidget->RemoveFromParent(); mFinalVictoryWidget = nullptr; }
 	if (mBossCollapseWidget)
 	{
 		mBossCollapseWidget->Cancel();
@@ -4045,6 +4048,7 @@ void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 {
 	// 조건이 다 참이어야 보인다. 하나라도 아니면 접는다.
 	const bool bVisible = mCommandsShown == true
+		&& !mEncounterPresentationActive
 		&& IsAiming() == false
 		&& IsPlayerTurn() == true
 		&& mIsTurnActive == true
@@ -5010,45 +5014,7 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		return;
 	}
-	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
-	static const TMap<FString, FText> Descriptions = {
-		{ TEXT("Strength"),      LOCTEXT("StatusDescStrength", "공격 관련 능력이 강화된다.") },
-		{ TEXT("Dexterity"),     LOCTEXT("StatusDescDexterity", "기교 관련 능력이 강화된다.") },
-		{ TEXT("Acumeny"),       LOCTEXT("StatusDescAcumeny", "판단 관련 능력이 강화된다.") },
-		{ TEXT("Fortification"), LOCTEXT("StatusDescFortification", "받는 피해가 줄어든다.") },
-		{ TEXT("Vulnerability"), LOCTEXT("StatusDescVulnerability", "받는 피해가 늘어난다.") },
-		{ TEXT("Weakness"),      LOCTEXT("StatusDescWeakness", "주는 피해가 줄어든다.") },
-		{ TEXT("Vigor"),         LOCTEXT("StatusDescVigor", "행동력 효율이 올라간다.") },
-		{ TEXT("Haste"),         LOCTEXT("StatusDescHaste", "속도가 올라간다.") },
-		{ TEXT("Exhaustion"),    LOCTEXT("StatusDescExhaustion", "행동력 효율이 내려간다.") },
-		{ TEXT("Slow"),          LOCTEXT("StatusDescSlow", "속도가 내려간다.") },
-		{ TEXT("Frail"),         LOCTEXT("StatusDescFrail", "방어력이 내려간다.") },
-		{ TEXT("Root"),          LOCTEXT("StatusDescRoot", "이동할 수 없다.") },
-		{ TEXT("Poison"),        LOCTEXT("StatusDescPoison", "턴마다 피해를 입는다.") },
-		{ TEXT("Bleed"),         LOCTEXT("StatusDescBleed", "턴마다 피해를 입는다.") },
-		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
-		{ TEXT("Stealth"),       LOCTEXT("StatusDescStealth", "적의 대상이 되지 않는다.") },
-	};
-	FString Leaf = StatusTag.GetTagName().ToString();
-	int32 Dot = INDEX_NONE;
-	if (Leaf.FindLastChar(TEXT('.'), Dot))
-	{
-		Leaf = Leaf.Mid(Dot + 1);
-	}
-	const FText* Description = Descriptions.Find(Leaf);
-	const CombatStatusUI::FPresentation Presentation =
-		CombatStatusUI::Resolve(StatusTag);
-	const FText DurationText = Presentation.mIsInfinite
-		? LOCTEXT("StatusDurationInfinite", "전투가 끝날 때까지 지속된다.")
-		: (Presentation.mIsRoundDuration
-			? LOCTEXT("StatusDurationRound", "라운드가 지나면 1중첩씩 사라진다.")
-			: LOCTEXT("StatusDurationOther", "효과 조건이 끝날 때까지 지속된다."));
-	const FText Body = FText::Format(
-		LOCTEXT("StatusDescBodyFmt", "{0}\n{1}"),
-		Description != nullptr
-			? *Description
-			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다."),
-		DurationText);
+	const FText Body = CombatStatusUI::Describe(StatusTag);
 
 	mDetailPresenter->PresentStatus(StatusDisplayName(StatusTag), StatusIconFor(StatusTag), StackCount, Body);
 	SetDetailSkillRowShown(false);
@@ -5323,6 +5289,7 @@ void UCombatLayoutHUDWidget::HandleMonsterTabRowClicked(const int32 RowIndex)
 	CancelMonsterSkillPress();
 	HideDetailOverlay(/*bNotifyGameplay=*/true);
 	mMonsterTabSelectedRow = RowIndex;
+	mMonsterTabInspectedUnitId = INDEX_NONE;
 	RefreshMonsterTab();
 }
 
@@ -5489,19 +5456,19 @@ void UCombatLayoutHUDWidget::RefreshMonsterTab()
 		{
 			continue;
 		}
-		if (Monsters.Num() >= 3)
-		{
-			break;
-		}
 		Monsters.Add(&Unit);
 		mMonsterTabUnitIds.Add(Unit.mUnitId);
 	}
+	const int32 SelectedId = mMonsterTabInspectedUnitId;
+	const int32 SelectedIndex = mMonsterTabUnitIds.IndexOfByKey(SelectedId);
+	if (SelectedIndex != INDEX_NONE) mMonsterTabSelectedRow = SelectedIndex;
+	EnsureMonsterScroll(Monsters.Num());
 	if (mMonsterTabSelectedRow >= Monsters.Num())
 	{
 		mMonsterTabSelectedRow = FMath::Max(0, Monsters.Num() - 1);
 	}
 
-	for (int32 Index = 0; Index < 3; ++Index)
+	for (int32 Index = 0; Index < mMonsterRowCount; ++Index)
 	{
 		UWidget* Row = mMonsterTabWidget->GetWidgetFromName(
 			FName(*FString::Printf(TEXT("MonsterRow_%d"), Index)));
@@ -6237,7 +6204,7 @@ void UCombatLayoutHUDWidget::ShowUnitInspection()
 		if (Candidate.mUnitId == Detail.mUnitId)
 		{
 			Unit = &Candidate;
-			if (bAliveEnemy == true && AliveEnemyCount < 3)
+			if (bAliveEnemy == true)
 			{
 				EnemyRow = AliveEnemyCount;
 			}
@@ -6259,6 +6226,7 @@ void UCombatLayoutHUDWidget::ShowUnitInspection()
 	if (EnemyRow != INDEX_NONE)
 	{
 		mMonsterTabSelectedRow = EnemyRow;
+		mMonsterTabInspectedUnitId = Detail.mUnitId;
 	}
 	SetMonsterTabShown(true);
 }
@@ -6335,7 +6303,7 @@ void UCombatLayoutHUDWidget::ShowUnitDetailOverlay()
 		SetDetailChip(3, LOCTEXT("DetailChipSpeed", "속도"),
 			FText::AsNumber(FMath::RoundToInt(Unit->mSpeedPoint)));
 		SetDetailChip(4, LOCTEXT("DetailChipAp", "AP"), FText::AsNumber(Unit->mActionPoints));
-		SetDetailChip(5, LOCTEXT("DetailChipCritical", "치명타"), FText::AsNumber(FMath::RoundToInt(Unit->mCriticalPoint)));
+		SetDetailChip(5, LOCTEXT("UnitDetailChipCritical", "치명타"), FText::AsNumber(FMath::RoundToInt(Unit->mCriticalPoint)));
 	}
 
 	TArray<FText> PassiveLines;
@@ -6745,6 +6713,7 @@ UWidget* UCombatLayoutHUDWidget::ResolveGuidedTarget(EGuidedStage S, EGuidedStag
  }
  switch(S){
  case EGuidedStage::ReadTurnOrder:return Named(TEXT("TurnPanel"));
+ case EGuidedStage::ReadPlaybackSpeed:return mPlaybackWidget ? mPlaybackWidget->GetSpeedButton() : nullptr;
  case EGuidedStage::ReadAP:return mTurnAPRoot;
  case EGuidedStage::ReadStatus:return Named(TEXT("AllyPanel"));
  case EGuidedStage::ReadCondition:return Named(TEXT("AllyCondition"));

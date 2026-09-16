@@ -154,7 +154,7 @@ void UCinematicWidget::SetCinematicViewportZOrder(int32 InViewportZOrder)
 
 bool UCinematicWidget::SetCinematicPlaybackRate(float InPlaybackRate)
 {
-	if (InPlaybackRate <= 0.0f)
+	if (InPlaybackRate <= 0.0f || (mIgnoreCombatPlayback && !FMath::IsNearlyEqual(InPlaybackRate, 1.f)))
 	{
 		return false;
 	}

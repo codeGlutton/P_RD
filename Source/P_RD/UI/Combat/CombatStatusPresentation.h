@@ -27,6 +27,9 @@ namespace CombatStatusUI
 	/** @brief 상태 태그 하나의 이름/색/로그 아이콘/정렬 우선순위를 구한다. */
 	P_RD_API FPresentation Resolve(const FGameplayTag& StatusTag);
 
+	P_RD_API FText Describe(const FGameplayTag& Tag);
+	P_RD_API bool HasDescription(const FGameplayTag& Tag);
+
 	/** Shared texture lookup for status lists, detail panels and floating logs. */
 	P_RD_API UTexture2D* ResolveIcon(const FGameplayTag& StatusTag);
 	P_RD_API UTexture2D* ResolveIcon(EFloatingLogIconType IconType);

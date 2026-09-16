@@ -489,6 +489,7 @@ protected:
 	FText mPendingDetailDescription;
 	UPROPERTY(Transient) TObjectPtr<UTexture2D> mPendingDetailIcon;
 	bool mPendingDetailIsArtifact = false;
+	bool mDetailFromCandidate = false;
 	EUnitJobType mPendingDetailJob = EUnitJobType::None;
 
 	/** @brief 현재 바인딩된 상점 상태 소유자; 위젯은 이 객체를 소유하지 않고 구독만 한다. */

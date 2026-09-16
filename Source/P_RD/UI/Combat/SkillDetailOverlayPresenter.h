@@ -39,6 +39,7 @@ class UTextBlock;
 class UUserWidget;
 class UWidget;
 class UWidgetSwitcher;
+class UStatusDescriptionText;
 
 /**
  * @brief 통합 미리보기가 쓰는 그림 묶음.
@@ -131,6 +132,10 @@ public:
 
 	/** @brief 스킬 상세 DTO 하나로 풍부한 상세 화면 전체를 그린다. */
 	void Present(const FSkillDetailUI& Detail);
+	void SetNavigationEnabled(bool bEnabled);
+	FSimpleDelegate OnPreviousRequested;
+	FSimpleDelegate OnNextRequested;
+	void OpenStatusGlossary(FGameplayTag Tag);
 
 	/** Status details use the authored skill WBP, without skill costs or targeting controls. */
 	void PresentStatus(const FText& Name, UTexture2D* Icon, int32 StackCount, const FText& Description);
@@ -263,6 +268,18 @@ private:
 
 	/** @brief 확정 시안의 "닫기" 단추 처리. */
 	UFUNCTION() void HandleCloseClicked();
+	UFUNCTION() void HandlePreviousClicked();
+	UFUNCTION() void HandleNextClicked();
+	void BuildNavigationAndCloseLabel();
+	void RefreshStatusDescription(const FText& Text);
+	UPROPERTY(Transient) TObjectPtr<UButton> mPreviousDetailButton;
+	UPROPERTY(Transient) TObjectPtr<UButton> mNextDetailButton;
+	UPROPERTY(Transient) TObjectPtr<UStatusDescriptionText> mStatusDescription;
+	UPROPERTY(Transient) FSkillDetailUI mCurrentSkill;
+	UPROPERTY(Transient) FSkillDetailUI mGlossaryReturnSkill;
+	bool mShowingGlossary = false;
+	bool mNavigationEnabled = false;
+	bool mGlossaryReturnNavigation = false;
 	/** @brief 왼쪽 요약열의 사정 범위 버튼. 기존 전술 WBP의 토글 동작을 호출한다. */
 	UFUNCTION() void HandleSkillSelectRangeButtonClicked();
 	/** @brief 왼쪽 요약열의 영향 범위 버튼. 기존 전술 WBP의 토글 동작을 호출한다. */

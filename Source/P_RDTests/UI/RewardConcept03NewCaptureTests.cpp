@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   RewardConcept03NewCaptureTests.cpp
  * @brief  독립 신규 4단계 보상 WBP를 배경·아이콘 없이 렌더한다.
  * @date   2026-08-17
@@ -354,11 +354,8 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 	{
 		UTextBlock* Description = Cast<UTextBlock>(Widget->GetWidgetFromName(
 			*FString::Printf(TEXT("NewChoiceDescription_%d"), Index)));
-		if (TestNotNull(TEXT("각 카드 효과 설명 연결"), Description))
-		{
-			TestEqual(TEXT("카드 효과는 해당 후보 데이터 사용"),
-				Description->GetText().ToString(), TestChoices[Index].mDescription.ToString());
-		}
+        TestTrue(TEXT("카드는 아이콘과 이름만 표시하고 설명은 상세창에서 표시"),
+            !Description || Description->GetVisibility() == ESlateVisibility::Collapsed);
 	}
 	UTextBlock* LevelingLevel = Cast<UTextBlock>(
 		Widget->GetWidgetFromName(TEXT("NewLevel_0")));
@@ -474,7 +471,7 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 		Bundle.mItems.Add(TestChoices[0]);
 		GrantAllModel->SetGrantBundle(Bundle);
 		GrantAllWidget->BindUIModel(GrantAllModel);
-		GrantAllWidget->TakeWidget();
+		const TSharedRef<SWidget> GrantAllSlate = GrantAllWidget->TakeWidget();
 		GrantAllWidget->InitializeInteractionBindingsForTest();
 		GrantAllWidget->SetRewardPresentationManualTick(true);
 		UWidget* OnlyPanel = GrantAllWidget->GetWidgetFromName(
@@ -509,12 +506,17 @@ bool FRewardConcept03NewInteractionTest::RunTest(const FString& Parameters)
 			GrantAllModel->GetRewardChoices().Num(), 1);
 		UButton* GrantAllCard = Cast<UButton>(GrantAllWidget->GetWidgetFromName(
 			TEXT("NewArtifactChoiceButton_0")));
-		if (TestNotNull(TEXT("일괄 지급 카드 롱프레스 버튼"), GrantAllCard))
+		if (TestNotNull(TEXT("일괄 지급 카드 상세 버튼"), GrantAllCard))
 		{
-			TestTrue(TEXT("일괄 지급 카드 롱프레스 시작 바인딩"),
-				GrantAllCard->OnPressed.IsBound());
-			TestTrue(TEXT("일괄 지급 카드 롱프레스 종료 바인딩"),
-				GrantAllCard->OnReleased.IsBound());
+            GrantAllCard->OnClicked.Broadcast();
+            UUserWidget* Details = GrantAllWidget->GetArtifactDetailOverlayForTest();
+            if (TestNotNull(TEXT("일괄 지급 카드 상세 위젯"), Details))
+            {
+                TestEqual(TEXT("일괄 지급 카드도 한 번 터치하면 상세가 열린다"),
+                    Details->GetVisibility(), ESlateVisibility::SelfHitTestInvisible);
+            }
+            TestFalse(TEXT("상세를 보는 것만으로 지급하지 않는다"), GrantAllWidget->IsRewardFlowCompleted());
+            GrantAllWidget->HideArtifactDetails();
 		}
 	}
 	for (const TCHAR* ButtonName : {

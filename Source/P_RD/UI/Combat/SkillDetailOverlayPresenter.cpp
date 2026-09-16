@@ -1,5 +1,8 @@
 #include "UI/Combat/SkillDetailOverlayPresenter.h"
 #include "Tutorial/GuidedTutorial.h"
+#include "UI/Combat/StatusDescriptionText.h"
+#include "UI/Combat/CombatStatusPresentation.h"
+#include "Brushes/SlateColorBrush.h"
 
 #include "Actor/TileMap/TileLayer.h"
 
@@ -427,11 +430,14 @@ bool USkillDetailOverlayPresenter::EnsureOverlayWidget(
 			this, &USkillDetailOverlayPresenter::HandleCloseClicked);
 	}
 
+	BuildNavigationAndCloseLabel();
 	return true;
 }
 
 void USkillDetailOverlayPresenter::Teardown()
 {
+	mPreviousDetailButton = nullptr; mNextDetailButton = nullptr; mStatusDescription = nullptr;
+	mShowingGlossary = false; mNavigationEnabled = false;
 	if (mDetailOverlayWidget != nullptr)
 	{
 		mDetailOverlayWidget->RemoveFromParent();
@@ -459,6 +465,7 @@ void USkillDetailOverlayPresenter::Teardown()
 
 void USkillDetailOverlayPresenter::HandleCloseClicked()
 {
+	if (mShowingGlossary) { Dismiss(); return; }
 	// 전투 HUD 처럼 닫은 뒤 뒷정리(위협 범위 걷기)가 필요한 호출자는 여기에
 	// 바인딩해 스스로 닫는다. 아무도 안 들으면 프레젠터가 직접 접는다.
 	if (mOnCloseClicked.IsBound() == true)
@@ -471,6 +478,13 @@ void USkillDetailOverlayPresenter::HandleCloseClicked()
 
 void USkillDetailOverlayPresenter::Dismiss()
 {
+	if (mShowingGlossary)
+	{
+		mShowingGlossary = false;
+		Present(mGlossaryReturnSkill);
+		SetNavigationEnabled(mGlossaryReturnNavigation);
+		return;
+	}
 	if (IsShowing() == false)
 	{
 		return;
@@ -1837,6 +1851,8 @@ void USkillDetailOverlayPresenter::UpdateSkillVisualPreview(const FSkillDetailUI
 /** @brief 스킬 상세 DTO 하나로 패널 전체를 채워 띄운다. */
 void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 {
+	mCurrentSkill = Detail;
+	mShowingGlossary = false;
 	if (EnsureOverlayWidget() == false)
 	{
 		return;
@@ -1903,6 +1919,7 @@ void USkillDetailOverlayPresenter::Present(const FSkillDetailUI& Detail)
 	// 공용 본문은 다른 상세 종류와의 호환을 위해 데이터만 유지한다. 실제
 	// 스킬 화면은 오른쪽 ScrollBox를 사용해 긴 설명과 차단 규칙을 모두 담는다.
 	DetailSetTextIfPresent(mSkillDescriptionText, FText::FromString(Body));
+	RefreshStatusDescription(Detail.mDescription);
 	DetailSetShown(mDetailBodyText, false);
 	SetSkillVisualPreviewShown(true);
 	SetSkillControlsShown(true);
@@ -1946,7 +1963,8 @@ void USkillDetailOverlayPresenter::PresentStatus(const FText& Name, UTexture2D* 
 	if (mSkillTacticalDiagramWidget) mSkillTacticalDiagramWidget->SetVisibility(ESlateVisibility::Collapsed);
 	if (mSkillContentSwitcher) mSkillContentSwitcher->SetActiveWidgetIndex(0);
 	const FText Labels[] = { LOCTEXT("StatusType", "상태이상"),
-		FText::Format(LOCTEXT("StatusStackCount", "{0}중첩"), FMath::Max(StackCount, 1)) };
+		StackCount > 0 ? FText::Format(LOCTEXT("StatusStackCount", "{0}중첩"), StackCount)
+            : LOCTEXT("StatusGlossary", "효과 안내") };
 	for (int32 Index = 0; Index < 2 && mSkillVisualStatTexts.IsValidIndex(Index); ++Index)
 	{
 		DetailSetTextIfPresent(mSkillVisualStatTexts[Index], Labels[Index]);
@@ -2082,6 +2100,8 @@ void USkillDetailOverlayPresenter::BuildArtifactDescriptionScroll()
  */
 void USkillDetailOverlayPresenter::PresentArtifact(const FCombatArtifactUI& Detail)
 {
+	mShowingGlossary = false;
+	SetNavigationEnabled(false);
 	if (EnsureOverlayWidget() == false)
 	{
 		return;
@@ -2223,4 +2243,112 @@ UWidget* USkillDetailOverlayPresenter::GetGuidedSystemTarget(EGuidedStage Stage)
 	case EGuidedStage::ReadEnemySkill: return mSkillDescriptionScrollBox;
 	default: return nullptr;
 	}
+}
+
+void USkillDetailOverlayPresenter::BuildNavigationAndCloseLabel()
+{
+    auto* Close = Cast<UButton>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseButton")));
+    auto* Label = Cast<UTextBlock>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseText")));
+    if (!Close) return;
+    if (Label)
+    {
+        // The authored label used an independent canvas offset. Make it actual button content.
+        if (Close->GetContent() != Label)
+        {
+            Label->RemoveFromParent();
+            if (UWidget* Art = Close->GetContent())
+            {
+                Close->RemoveChild(Art);
+                auto* Stack = mDetailOverlayWidget->WidgetTree->ConstructWidget<UOverlay>();
+                Stack->AddChildToOverlay(Art);
+                auto* TextSlot = Stack->AddChildToOverlay(Label);
+                TextSlot->SetHorizontalAlignment(HAlign_Center);
+                TextSlot->SetVerticalAlignment(VAlign_Center);
+                Close->AddChild(Stack);
+            }
+            else Close->AddChild(Label);
+        }
+        Label->SetJustification(ETextJustify::Center);
+        Label->SetRenderTranslation(FVector2D::ZeroVector);
+        if (auto* ContentSlot = Cast<UButtonSlot>(Close->GetContent()->Slot))
+        {
+            ContentSlot->SetPadding(FMargin(0));
+            ContentSlot->SetHorizontalAlignment(HAlign_Center);
+            ContentSlot->SetVerticalAlignment(VAlign_Center);
+        }
+    }
+    auto* Parent = Cast<UCanvasPanel>(Close->GetParent());
+    auto* CloseSlot = Cast<UCanvasPanelSlot>(Close->Slot);
+    if (!Parent || !CloseSlot) return;
+    auto Make = [&](const TCHAR* Name, const TCHAR* Caption, bool bPrevious)
+    {
+        auto* Button = mDetailOverlayWidget->WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(Name));
+        FButtonStyle Style;
+        Style.SetNormal(FSlateColorBrush(FLinearColor(.10f, .065f, .035f)));
+        Style.SetHovered(FSlateColorBrush(FLinearColor(.30f, .18f, .07f)));
+        Style.SetPressed(FSlateColorBrush(FLinearColor(.42f, .25f, .08f)));
+        if (UTexture2D* Arrow = LoadObject<UTexture2D>(nullptr, bPrevious
+            ? TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Arrow_Left.T_ShopFG_Arrow_Left")
+            : TEXT("/Game/SVN/OutSideAsset/AICreation/UI/ShopFullGenerated/Controls/T_ShopFG_Arrow_Right.T_ShopFG_Arrow_Right")))
+        {
+            FSlateBrush Brush; Brush.SetResourceObject(Arrow); Brush.DrawAs = ESlateBrushDrawType::Image;
+            Style.SetNormal(Brush); Style.SetHovered(Brush); Style.SetPressed(Brush);
+            Caption = TEXT("");
+        }
+        Button->SetStyle(Style);
+        auto* Text = mDetailOverlayWidget->WidgetTree->ConstructWidget<UTextBlock>();
+        Text->SetText(FText::FromString(Caption));
+        if (Label) Text->SetFont(Label->GetFont());
+        Text->SetColorAndOpacity(FLinearColor(1.f, .85f, .5f));
+        auto* TextSlot = Cast<UButtonSlot>(Button->AddChild(Text));
+        TextSlot->SetHorizontalAlignment(HAlign_Center); TextSlot->SetVerticalAlignment(VAlign_Center);
+        auto* Slot = Parent->AddChildToCanvas(Button);
+        Slot->SetAnchors(CloseSlot->GetAnchors());
+        Slot->SetAlignment(FVector2D(0, CloseSlot->GetAlignment().Y));
+        const auto Size = CloseSlot->GetSize();
+        const float Left = CloseSlot->GetPosition().X - Size.X * CloseSlot->GetAlignment().X;
+        Slot->SetPosition(FVector2D(bPrevious ? Left - 84.f : Left + Size.X + 20.f, CloseSlot->GetPosition().Y));
+        Slot->SetSize(FVector2D(64.f, Size.Y));
+        Slot->SetZOrder(CloseSlot->GetZOrder() + 1);
+        return Button;
+    };
+    mPreviousDetailButton = Make(TEXT("DetailPreviousButton"), TEXT("◀"), true);
+    mNextDetailButton = Make(TEXT("DetailNextButton"), TEXT("▶"), false);
+    mPreviousDetailButton->OnClicked.AddUniqueDynamic(this, &USkillDetailOverlayPresenter::HandlePreviousClicked);
+    mNextDetailButton->OnClicked.AddUniqueDynamic(this, &USkillDetailOverlayPresenter::HandleNextClicked);
+    SetNavigationEnabled(mNavigationEnabled);
+}
+void USkillDetailOverlayPresenter::SetNavigationEnabled(bool bEnabled)
+{
+    mNavigationEnabled = bEnabled;
+    for (UButton* Button : {mPreviousDetailButton.Get(), mNextDetailButton.Get()})
+        if (Button) Button->SetVisibility(bEnabled ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+}
+void USkillDetailOverlayPresenter::HandlePreviousClicked() { if (mNavigationEnabled) OnPreviousRequested.ExecuteIfBound(); }
+void USkillDetailOverlayPresenter::HandleNextClicked() { if (mNavigationEnabled) OnNextRequested.ExecuteIfBound(); }
+void USkillDetailOverlayPresenter::RefreshStatusDescription(const FText& Text)
+{
+    if (!mSkillDescriptionScrollBox || !mSkillDescriptionText) return;
+    if (!mStatusDescription)
+    {
+        mStatusDescription = NewObject<UStatusDescriptionText>(mDetailOverlayWidget, TEXT("LinkedSkillDescription"));
+        mStatusDescription->OnStatusClicked.BindUObject(this, &USkillDetailOverlayPresenter::OpenStatusGlossary);
+        mSkillDescriptionScrollBox->AddChild(mStatusDescription);
+    }
+    mSkillDescriptionText->SetVisibility(ESlateVisibility::Collapsed);
+    mStatusDescription->SetDescription(Text, mSkillDescriptionText->GetFont(),
+        mSkillDescriptionText->GetColorAndOpacity(), mSkillDescriptionText->GetWrapTextAt());
+    mStatusDescription->SetVisibility(ESlateVisibility::Visible);
+}
+void USkillDetailOverlayPresenter::OpenStatusGlossary(FGameplayTag Tag)
+{
+    if (!Tag.IsValid() || !CombatStatusUI::HasDescription(Tag)) return;
+    if (!mShowingGlossary)
+    {
+        mGlossaryReturnSkill = mCurrentSkill;
+        mGlossaryReturnNavigation = mNavigationEnabled;
+    }
+    PresentStatus(CombatStatusUI::Resolve(Tag).mDisplayName, CombatStatusUI::ResolveIcon(Tag), 0, CombatStatusUI::Describe(Tag));
+    mShowingGlossary = true;
+    SetNavigationEnabled(false);
 }

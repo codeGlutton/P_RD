@@ -145,3 +145,6 @@ Config/UserEngine.ini
 # Project-owned reward mask; the original color atlas remains in SVN.
 !SourceArt/UI/RewardChest/chest_silhouette_v1.png
 !/Content/UI/Reward/Separated/T_RewardChestSilhouette.uasset
+
+# Reviewed monster portrait originals and prompts are stored in SVN SourceArt/UI.
+/SourceArt/UI/MonsterPortraits_20260916/

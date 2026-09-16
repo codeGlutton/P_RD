@@ -328,6 +328,7 @@ public:
 	// Acknowledged per authored trap type, independent of runs and basic tutorial enrollment.
 	UPROPERTY(SaveGame) TSet<FPrimaryAssetId> SeenTrapHints;
 	UPROPERTY(SaveGame) bool SeenShopWalkthrough = false;
+	UPROPERTY(SaveGame) bool SeenLevelUpWalkthrough = false;
 
 	void MakeUser(const FText& Name);
 	void ClearUser();

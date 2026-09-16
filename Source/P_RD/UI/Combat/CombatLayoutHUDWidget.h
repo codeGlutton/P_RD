@@ -125,6 +125,7 @@ public:
 #endif
 	bool IsGuidedOverlayObscured() const;
 	bool CanShowEncounterHint() const;
+	void SetEncounterPresentationActive(bool bActive);
 	virtual bool UsesMobileSafeArea() const override { return true; }
 	virtual bool HandleBackNavigation() override;
 	virtual UUserWidget* GetBackNavigationLayer() const override;
@@ -237,7 +238,10 @@ public:
 	{
 		ShowArtifactDetailOverlay(SlotIndex);
 	}
-	void ShowMercenaryInventoryForTest()
+	void OpenInventoryPanelForTest() { SetMercenaryPanelShown(true); HandleInventoryClicked(); }
+ void FinishRewardsForTest() { HandleCombatResultRewardConfirmed(); }
+ class UFinalRunVictoryWidget* GetFinalVictoryForTest() const { return mFinalVictoryWidget; }
+ void ShowMercenaryInventoryForTest()
 	{
 		HandleInventoryClicked();
 	}
@@ -629,6 +633,7 @@ private:
 	 * RefreshCommandVisibility() 를 보라.
 	 */
 	bool mCommandsShown = false;
+	bool mEncounterPresentationActive = false;
 
 	/** @brief 카드 등장 연출 경과(초). 음수면 아직 안 뜬 상태다. */
 	float mCommandRevealElapsed = -1.f;
@@ -769,6 +774,22 @@ private:
 
 	/** @brief 네 번째 로스터 탭이 여는 용병 패널 내부 인벤토리 페이지. */
 	UPROPERTY() TObjectPtr<UWidget> mMercenaryInventoryPage;
+ void EnsureInventoryScroll(int32 Count);
+ void EnsureMonsterScroll(int32 Count);
+ UPROPERTY(Transient) TObjectPtr<class UScrollBox> mInventoryScroll;
+ UPROPERTY(Transient) TObjectPtr<class UCanvasPanel> mInventoryScrollCanvas;
+ UPROPERTY(Transient) TObjectPtr<class USizeBox> mInventoryScrollSize;
+ UPROPERTY(Transient) TObjectPtr<class UScrollBox> mMonsterScroll;
+ UPROPERTY(Transient) TArray<TObjectPtr<class UCombatListEntryAction>> mListEntryActions;
+ FVector2D mInventoryGridOrigin;
+ FVector2D mInventoryCellPitch;
+ FVector2D mInventoryFrameSize;
+ FVector2D mInventoryViewportSize;
+ int32 mMonsterRowCount = 3;
+ int32 mMonsterBoundRowCount = 0;
+ UPROPERTY(Transient) TObjectPtr<class UFinalRunVictoryWidget> mFinalVictoryWidget;
+ void ShowFinalRunVictory();
+
 	UPROPERTY() TObjectPtr<UImage> mMercenaryInventoryPlate;
 	UPROPERTY() TObjectPtr<UTextBlock> mMercenaryInventoryGoldText;
 	UPROPERTY() TArray<TObjectPtr<UWidget>> mMercenaryInventoryArtifactFrames;
