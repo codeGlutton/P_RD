@@ -80,6 +80,12 @@ public:
 
 public:
 	/**
+	 * 죽음 훅 함수
+	 */
+	virtual void OnPostDead();
+
+public:
+	/**
 	 * 속성 컴포넌트를 반환하는 함수
 	 * @return 보유한 속성 컴포넌트
 	 */
