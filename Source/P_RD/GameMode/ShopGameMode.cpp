@@ -819,15 +819,13 @@ void AShopGameMode::HandleHireMercenaryRequested(
 		PreviousUnit->Destroy();
 	}
 
-	// #432 규칙(신규 합류 일괄 장착): 파티 공용 아티팩트를 새 용병에게도 장착한다.
-	// 빠뜨리면 상점 고용 용병만 아티팩트 효과 없이 전투에 들어간다.
+	// 파티 공용 아티팩트를 새 용병에게도 장착
 	if (UPartyArtifactComponentModel* PartyArtifacts = PartyModel->GetPartyArtifactComponentModel())
 	{
 		PartyArtifacts->EquipArtifactsTo(NewUnit);
 	}
 
-	// 후보에 붙은 추가 스킬은 플레이어 고정 스킬 뒤의 교체 가능 슬롯부터
-	// 채운다. 실패한 스킬 하나 때문에 이미 생성된 용병 전체를 무효화하지 않는다.
+	// 후보에 붙은 추가 스킬 우선해서 교체
 	if (USkillComponentModel* SkillModel = NewUnit->GetSkillComponentModel())
 	{
 		const int32 DefaultSkillCount = FMath::Min(
@@ -848,6 +846,13 @@ void AShopGameMode::HandleHireMercenaryRequested(
 				SkillModel->SetSkill(DefaultSkillCount + Index, Skill);
 			}
 		}
+	}
+
+	// 체력 회복
+	if (UAttributeSetComponentModel* Attributes = NewUnit->GetAttributeComponentModel())
+	{
+		float MaxHP = Attributes->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
+		Attributes->ApplyModToAttribute(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::Override, MaxHP);
 	}
 
 	SpendPartyGold(DisplayCandidate->mPrice);
