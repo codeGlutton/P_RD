@@ -15,6 +15,8 @@ public:
     FSimpleDelegate OnDismissed;
     FShopGuideTarget OnStepChanged;
     static constexpr int32 PageCount = 12;
+    void SetLevelUpMode(bool bEnabled) { bLevelUpMode = bEnabled; }
+    int32 GetPageCount() const { return bLevelUpMode ? 6 : PageCount; }
     int32 GetPage() const { return Page; }
     class UGuidedTutorialWidget* GetGuide() const { return Guide; }
     void BeginReading();
@@ -27,5 +29,6 @@ private:
     void RefreshPage();
     int32 Page = 0;
     bool bDismissed = false;
+    bool bLevelUpMode = false;
     UPROPERTY() TObjectPtr<class UGuidedTutorialWidget> Guide;
 };

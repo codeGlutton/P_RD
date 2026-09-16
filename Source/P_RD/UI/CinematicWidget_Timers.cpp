@@ -4,6 +4,20 @@
 
 void UCinematicWidget::StartDefaultCinematicTimer(float DurationSeconds)
 {
+    ClearDefaultCinematicTimer();
+    if (mIgnoreCombatPlayback && DurationSeconds > 0.f)
+    {
+        const double Deadline = FPlatformTime::Seconds() + DurationSeconds;
+        mRealTimeCinematicTimer = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateWeakLambda(this,
+            [this, Deadline](float)
+            {
+                if (FPlatformTime::Seconds() < Deadline) return true;
+                mRealTimeCinematicTimer.Reset();
+                FinishCinematicPlayback();
+                return false;
+            }));
+        return;
+    }
 	if (DurationSeconds <= 0.0f)
 	{
 		FinishCinematicPlayback();
@@ -30,6 +44,8 @@ void UCinematicWidget::StartDefaultCinematicTimer(float DurationSeconds)
 
 void UCinematicWidget::ClearDefaultCinematicTimer()
 {
+    FTSTicker::GetCoreTicker().RemoveTicker(mRealTimeCinematicTimer);
+    mRealTimeCinematicTimer.Reset();
 	UWorld* World = GetWorld();
 	if (World != nullptr)
 	{

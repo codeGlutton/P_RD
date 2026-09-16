@@ -34,6 +34,31 @@ bool UShopGuideWidget::Initialize()
 void UShopGuideWidget::RefreshPage()
 {
     FText Title, Body;
+    if (bLevelUpMode)
+    {
+        switch (Page)
+        {
+        case 0:
+            Title = LOCTEXT("LevelTarget", "레벨업한 용병");
+            Body = LOCTEXT("LevelTargetBody", "레벨업한 용병에게 새 스킬을 하나 줄 수 있어요. 골드는 들지 않습니다.\n여러 용병이 레벨업했다면 대상을 바꿔 각각 선택할 수 있어요."); break;
+        case 1:
+            Title = LOCTEXT("LevelCandidates", "새 스킬 후보");
+            Body = LOCTEXT("LevelCandidatesBody", "제시된 후보 중 하나를 고를 수 있어요. 카드를 눌러 선택하고 길게 눌러 자세히 살펴보세요.\n상세창의 좌우 버튼으로 후보를 비교할 수 있어요."); break;
+        case 2:
+            Title = LOCTEXT("LevelOwned", "지금 가진 스킬");
+            Body = LOCTEXT("LevelOwnedBody", "아래 칸에는 이 용병이 가진 스킬이 보여요. 길게 누르면 현재 스킬의 상세를 확인할 수 있어요.\n기본 공격은 바꿀 수 없습니다."); break;
+        case 3:
+            Title = LOCTEXT("LevelSlot", "장착할 자리");
+            Body = LOCTEXT("LevelSlotBody", "새 스킬을 넣을 칸을 선택하세요. 이미 스킬이 있는 칸은 기존 스킬과 교체됩니다.\n설명만 보고 있는 지금은 스킬이 바뀌지 않아요."); break;
+        case 4:
+            Title = LOCTEXT("LevelConfirm", "선택하여 장착");
+            Body = LOCTEXT("LevelConfirmBody", "후보와 장착 칸을 고른 뒤 이 버튼으로 확정해요. 기존 스킬을 교체할 때는 확인창이 한 번 더 나옵니다.\n지금은 선택을 강제하지 않으니 천천히 비교하세요."); break;
+        default:
+            Title = LOCTEXT("LevelSkip", "받지 않고 넘어가기");
+            Body = LOCTEXT("LevelSkipBody", "원하는 스킬이 없다면 이번 보상을 받지 않아도 돼요.\n다만 넘어간 보상은 다시 고를 수 없으니 확인 후 결정하세요."); break;
+        }
+    }
+    else
     switch (Page)
     {
     case 0:
@@ -74,9 +99,9 @@ void UShopGuideWidget::RefreshPage()
         Body = LOCTEXT("LeaveBody", "정비가 끝나면 이 버튼으로 다음 방을 고르면 돼요.\n구매나 휴식 없이, 골드를 아껴두고 바로 떠나도 괜찮아요!"); break;
     }
     UWidget* Target = OnStepChanged.IsBound() ? OnStepChanged.Execute(Page) : nullptr;
-    Guide->PresentReading(FText::Format(LOCTEXT("StepTitle", "상점 {0}/{1} · {2}"), Page + 1, PageCount, Title), Body, Target, Page == PageCount - 1);
+    Guide->PresentReading(FText::Format(bLevelUpMode ? LOCTEXT("LevelStepTitle", "레벨업 {0}/{1} · {2}") : LOCTEXT("StepTitle", "상점 {0}/{1} · {2}"), Page + 1, GetPageCount(), Title), Body, Target, Page == GetPageCount() - 1);
 }
-void UShopGuideWidget::Next() { if (bDismissed) return; if (Page == PageCount - 1) Dismiss(); else { ++Page; RefreshPage(); } }
+void UShopGuideWidget::Next() { if (bDismissed) return; if (Page == GetPageCount() - 1) Dismiss(); else { ++Page; RefreshPage(); } }
 void UShopGuideWidget::Previous() { if (!bDismissed && Page > 0) { --Page; RefreshPage(); } }
 void UShopGuideWidget::Dismiss()
 {

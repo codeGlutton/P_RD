@@ -35,6 +35,7 @@ UCLASS(BlueprintType, Blueprintable)
 class P_RD_API URewardConcept03Widget : public UUserWidget
 {
 	GENERATED_BODY()
+	UPROPERTY() TObjectPtr<class USoundBase> ArtifactAcquireSound;
 
 public:
 	URewardConcept03Widget(const FObjectInitializer& ObjectInitializer);

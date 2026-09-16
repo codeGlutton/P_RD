@@ -1,4 +1,4 @@
-﻿#include "UI/Shop/ShopUIWidgetBase.h"
+#include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/DetailOverlayInputShield.h"
 #include "UI/Tutorial/ShopGuideWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
@@ -812,6 +812,7 @@ void UShopUIWidgetBase::EndSkillSlotPress(const int32 SkillSlotIndex)
 
 void UShopUIWidgetBase::ShowHeldSkillDetails(const int32 SkillSlotIndex)
 {
+	mDetailFromCandidate = false;
 	if (mUIModel == nullptr)
 	{
 		return;
@@ -1211,6 +1212,7 @@ void UShopUIWidgetBase::PresentPushedDetail()
 		if (!Detail.mName.IsEmpty() && EnsureShopSkillDetailPresenter())
 		{
 			mShopSkillDetailPresenter->Present(Detail);
+			mShopSkillDetailPresenter->SetNavigationEnabled(mDetailFromCandidate && mFilteredShopItemIndices.Num() > 1);
 			return;
 		}
 	}
@@ -2365,6 +2367,16 @@ bool UShopUIWidgetBase::EnsureShopSkillDetailPresenter()
 	mShopSkillDetailPresenter = NewObject<USkillDetailOverlayPresenter>(this);
 	/* 플레인 상세 겹과 같은 층(10020)에 얹는다. */
 	mShopSkillDetailPresenter->Initialize(GetWorld(), OverlayClass, DiagramClass, 10020);
+    mShopSkillDetailPresenter->OnPreviousRequested.BindWeakLambda(this, [this]()
+    {
+        HandlePreviousClicked();
+        ShowSelectedItemDetails();
+    });
+    mShopSkillDetailPresenter->OnNextRequested.BindWeakLambda(this, [this]()
+    {
+        HandleNextClicked();
+        ShowSelectedItemDetails();
+    });
 	return mShopSkillDetailPresenter->EnsureOverlayWidget(GetOwningPlayer());
 }
 
@@ -2434,6 +2446,7 @@ void UShopUIWidgetBase::HandleShopDetailCloseClicked()
 
 void UShopUIWidgetBase::ShowSelectedItemDetails()
 {
+	mDetailFromCandidate = true;
 	if (mUIModel == nullptr)
 	{
 		return;
@@ -2590,30 +2603,49 @@ int32 UShopUIWidgetBase::GetViewportZOrder() const
 
 void UShopUIWidgetBase::ShowFirstVisitGuide()
 {
-	// This WBP also hosts level-up rewards; binding a shop-shaped DTO is not a visit.
-	if (mFirstVisitGuide || !mUIModel || mUIModel->GetShop().mIsLevelUpReward ||
-		!IsOpened() || !GetWorld() || !GetWorld()->GetAuthGameMode<AShopGameMode>() || !GetGameInstance()) return;
+	// Shop visits and level-up rewards keep independent one-time guide history.
+	if (mFirstVisitGuide || !mUIModel || !IsOpened() || !GetWorld() || !GetGameInstance()) return;
+	const bool bLevelUp = mUIModel->GetShop().mIsLevelUpReward;
+	if (!bLevelUp && !GetWorld()->GetAuthGameMode<AShopGameMode>()) return;
+	if (bLevelUp && mUIModel->GetShop().mItems.IsEmpty()) return;
 	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
-	if (!Tutorial || !Tutorial->NeedsShopGuide()) return;
+	if (!Tutorial || !(bLevelUp ? Tutorial->NeedsLevelUpGuide() : Tutorial->NeedsShopGuide())) return;
 	mFirstVisitGuide = CreateWidget<UShopGuideWidget>(GetGameInstance());
 	if (!mFirstVisitGuide) return;
+	mFirstVisitGuide->SetLevelUpMode(bLevelUp);
 	mFirstVisitGuide->OnDismissed.BindUObject(this, &UShopUIWidgetBase::DismissFirstVisitGuide);
 	mFirstVisitGuide->OnStepChanged.BindUObject(this, &UShopUIWidgetBase::ShowShopGuideStep);
 	mFirstVisitGuide->OpenUI();
-	UE_LOG(LogTemp, Display, TEXT("First shop guide shown"));
+	UE_LOG(LogTemp, Display, TEXT("First shop/level-up guide shown"));
 }
 
 void UShopUIWidgetBase::DismissFirstVisitGuide()
 {
 	if (GetGameInstance())
 		if (auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>())
-			Tutorial->AcknowledgeShopGuide();
+		{
+			if (mUIModel && mUIModel->GetShop().mIsLevelUpReward) Tutorial->AcknowledgeLevelUpGuide();
+			else Tutorial->AcknowledgeShopGuide();
+		}
 	RemoveFirstVisitGuide();
-	SetActiveItemKind(EShopItemKind::Artifact);
+	if (!mUIModel || !mUIModel->GetShop().mIsLevelUpReward) SetActiveItemKind(EShopItemKind::Artifact);
 }
 
 UWidget* UShopUIWidgetBase::ShowShopGuideStep(int32 Step)
 {
+	if (mUIModel && mUIModel->GetShop().mIsLevelUpReward)
+	{
+		switch (Step)
+		{
+		case 0: return mGoldText;
+		case 1: return mSelectedItemIcon && mSelectedItemIcon->IsVisible()
+            ? static_cast<UWidget*>(mSelectedItemIcon.Get()) : mSelectedItemNameText.Get();
+		case 2: return mSkillSlotButtons.IsValidIndex(0) ? mSkillSlotButtons[0].Get() : nullptr;
+		case 3: return mSkillSlotButtons.IsValidIndex(1) ? mSkillSlotButtons[1].Get() : nullptr;
+		case 4: return mBuyButton;
+		default: return mCloseButton;
+		}
+	}
 	// Only local presentation changes. Never call a RequestBuy/Rest/Hire/Leave intent.
 	SetActiveItemKind(Step >= 5 && Step <= 7 ? EShopItemKind::Skill :
 		Step >= 8 && Step <= 9 ? EShopItemKind::Heal : EShopItemKind::Artifact);

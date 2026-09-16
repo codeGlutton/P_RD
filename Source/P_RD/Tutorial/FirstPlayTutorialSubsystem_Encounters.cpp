@@ -1,4 +1,5 @@
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
+#include "ObjectView.h"
 #include "Actor/BoardActor/Obstacle/Gimmick/GimmickModel.h"
 #include "DataAsset/ObstacleSpawnData/StaticGimmickSpawnData.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -55,6 +56,7 @@ bool UFirstPlayTutorialSubsystem::IsEncounterHintVisible() const
 
 void UFirstPlayTutorialSubsystem::HideEncounterHint()
 {
+    if (LastHUD.IsValid()) LastHUD->SetEncounterPresentationActive(false);
     if (EncounterWidget) EncounterWidget->RemoveFromParent();
     EncounterWidget = nullptr;
     EncounterTarget.Reset();
@@ -111,6 +113,7 @@ bool UFirstPlayTutorialSubsystem::UpdateEncounterHint(UCombatLayoutHUDWidget* HU
         EncounterWidget = CreateWidget<UGuidedTutorialWidget>(GetGameInstance());
         if (!EncounterWidget) return false;
         EncounterTarget = Trap;
+        HUD->SetEncounterPresentationActive(true);
         EncounterWidget->PresentEncounter(Spawn->mDisplayName, Spawn->mDescription);
         EncounterWidget->SetWorldFocus(Corners);
         EncounterWidget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);

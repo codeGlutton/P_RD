@@ -26,6 +26,7 @@ UBossEntranceWidget* UBossEntranceWidget::Show(APlayerController* Player, int32 
     auto* Widget = CreateWidget<UBossEntranceWidget>(Player);
     if (!Widget) return nullptr;
     Widget->SetCinematicVideoPath(Path);
+    Widget->SetIgnoreCombatPlayback(true);
     Widget->SetCinematicAudioEnabled(true);
     Widget->SetCinematicViewportZOrder(12000);
     Widget->SetHoldLastFrameOnFinish(true);

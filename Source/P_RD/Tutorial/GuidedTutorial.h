@@ -41,7 +41,8 @@ enum class EGuidedStage : uint8
 	ReadInventory,
 	ReadEnemy,
 	ReadEnemySkill,
-	ReadStatus
+	ReadStatus,
+	ReadPlaybackSpeed
 };
 UENUM()
 enum class EGuidedLesson : uint8
@@ -68,6 +69,7 @@ struct P_RD_API FGuidedTutorialProgress
 		switch (S)
 		{
 		case EGuidedStage::ReadTurnOrder:
+		case EGuidedStage::ReadPlaybackSpeed:
 		case EGuidedStage::ReadAP:
 		case EGuidedStage::ReadCondition:
 		case EGuidedStage::ReadMercenaryStats:
@@ -163,6 +165,9 @@ struct P_RD_API FGuidedTutorialProgress
 			switch (Stage)
 			{
 			case EGuidedStage::ReadTurnOrder:
+				Stage = EGuidedStage::ReadPlaybackSpeed;
+				break;
+			case EGuidedStage::ReadPlaybackSpeed:
 				Stage = EGuidedStage::ReadAP;
 				break;
 			case EGuidedStage::ReadAP:

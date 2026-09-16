@@ -185,6 +185,15 @@ bool FGuidedRenderTest::RunTest(const FString&)
 	Turn.mTurnOrderUnitIds = {1};
 	Model->SetTurnUI(Turn);
 	Model->OnBeginAnyTurn.Broadcast(nullptr);
+    if (auto* Card = HUD->GetWidgetFromName(TEXT("CommandCard_0")))
+    {
+        TestTrue(TEXT("Player turn opens the skill rail"), Card->IsVisible());
+        HUD->SetEncounterPresentationActive(true);
+        TestFalse(TEXT("Trap explanation suppresses the auto-opened skill rail"), Card->IsVisible());
+        HUD->SetEncounterPresentationActive(false);
+        TestTrue(TEXT("Dismissing explanation restores the player's skill rail"), Card->IsVisible());
+    }
+
 	auto* Guide = CreateWidget<UGuidedTutorialWidget>(World);
 	Guide->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	auto Root = SNew(SOverlay) + SOverlay::Slot()[HUDSlate] + SOverlay::Slot()[Guide->TakeWidget()];
@@ -194,7 +203,7 @@ bool FGuidedRenderTest::RunTest(const FString&)
 	Renderer.SetIsPrepassNeeded(true);
 	const FString Folder = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("UI/FieldGuide"));
 	IFileManager::Get().MakeDirectory(*Folder, true);
-	for (EGuidedStage S : {EGuidedStage::ReadTurnOrder, EGuidedStage::ReadAP, EGuidedStage::ReadCondition,
+	for (EGuidedStage S : {EGuidedStage::ReadTurnOrder, EGuidedStage::ReadPlaybackSpeed, EGuidedStage::ReadAP, EGuidedStage::ReadCondition,
 	                       EGuidedStage::ReadStatus, EGuidedStage::OpenSkills, EGuidedStage::HoldSkill,
 	                       EGuidedStage::OpenMercenary, EGuidedStage::SelectMercenary,
 	                       EGuidedStage::ReadMercenaryStats, EGuidedStage::ReadInventory})
@@ -336,7 +345,7 @@ bool FGuidedSystemsFlowTest::RunTest(const FString&)
 	TestFalse(TEXT("Repeated turn event cannot restart active guidance"), P.BeginSystems());
 	TestFalse(TEXT("Opening a context cannot replace the fixed system sequence"), P.BeginLesson(EGuidedLesson::Monster, true));
 	TestFalse(TEXT("Unrelated action cannot skip a system explanation"), P.Advance(EGuidedStage::EndTurn));
-	const EGuidedStage Steps[] = {EGuidedStage::ReadTurnOrder, EGuidedStage::ReadAP,
+	const EGuidedStage Steps[] = {EGuidedStage::ReadTurnOrder, EGuidedStage::ReadPlaybackSpeed, EGuidedStage::ReadAP,
 	 EGuidedStage::ReadCondition, EGuidedStage::ReadStatus, EGuidedStage::OpenMercenary,
 	 EGuidedStage::SelectMercenary, EGuidedStage::ReadMercenaryStats, EGuidedStage::MercenarySkill,
 	 EGuidedStage::ReadSkillCost, EGuidedStage::ReadSkillCooldown, EGuidedStage::SelectRange,
