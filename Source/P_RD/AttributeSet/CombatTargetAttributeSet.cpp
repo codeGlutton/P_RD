@@ -1,7 +1,9 @@
-#include "AttributeSet/CombatTargetAttributeSet.h"
+﻿#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 #include "TAS/Effect/TacticalEffectContext.h"
 #include "TAS/Effect/Tag/TacticalEffect_Dead.h"
+
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 UCombatTargetAttributeSet::UCombatTargetAttributeSet() : MaxHP(FLT_MAX)
 {
@@ -49,13 +51,23 @@ void UCombatTargetAttributeSet::PostAttributeChange(const FTacticalAttribute& At
 	if (Attribute == GetHPAttribute() && OldValue > 0.f && NewValue <= 0.f)
 	{
 		UAttributeSetComponentModel* ASC = GetOwningAttributeSetComponentModel();
-		if (ASC != nullptr)
+		if (ASC == nullptr)
 		{
-			UTacticalEffectContext* EffectContext = ASC->MakeEffectContext();
-
-			TSharedPtr<FTacticalEffectSpec> InfiniteEffect = ASC->MakeOutgoingSpec(UTacticalEffect_GetDead::StaticClass(), EffectContext);
-			FActiveTacticalEffectHandle ActiveHandle = ASC->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
+			return;
 		}
+
+		IBoardCombatTarget* CombatTarget = ASC->GetOwnerModel<IBoardCombatTarget>();
+		if (CombatTarget == nullptr)
+		{
+			return;
+		}
+
+		UTacticalEffectContext* EffectContext = ASC->MakeEffectContext();
+
+		TSharedPtr<FTacticalEffectSpec> InfiniteEffect = ASC->MakeOutgoingSpec(UTacticalEffect_GetDead::StaticClass(), EffectContext);
+		FActiveTacticalEffectHandle ActiveHandle = ASC->ApplyTacticalEffectSpecToSelf(*InfiniteEffect);
+
+		CombatTarget->OnPostDead();
 	}
 }
 
