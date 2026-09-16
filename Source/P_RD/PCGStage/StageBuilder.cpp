@@ -1,4 +1,4 @@
-#include "PCGStage/StageBuilder.h"
+﻿#include "PCGStage/StageBuilder.h"
 
 #include "PCGStage/Room.h"
 
@@ -6,6 +6,8 @@
 #include "DataAsset/PrimaryAssetType.h"
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
+
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 DEFINE_LOG_CATEGORY(LogStageBuilder)
 
@@ -468,11 +470,11 @@ FRoom& FStageBuilder::CreateRoom(ERoomType Type, int32 Row, int32 Column, TInsta
 			const FString FoundJobStr = GetPropertyAssetData(Candidate.mSaleMercenaryId, TEXT("mJobType"));
 			const int64 FoundJobIndex = StaticJobEnum->GetValueByNameString(FoundJobStr);
 
-			/* 최대 레벨부터 내림차순으로 스킬 선택 (레벨 2 이상, 최대 4개) */
+			/* 최대 레벨부터 내림차순으로 스킬 선택 (레벨 2 이상, 최대 5개) */
 
 			for (int32 SkillLevel = Candidate.mLevel; SkillLevel >= 2; --SkillLevel)
 			{
-				if (Candidate.mOwingSkillIds.Num() >= 4)
+				if (Candidate.mOwingSkillIds.Num() >= USkillComponentModel::DEFAULT_SKILL_POOL_SIZE)
 				{
 					break;
 				}

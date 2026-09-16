@@ -1,4 +1,4 @@
-#include "GameMode/ShopGameMode.h"
+﻿#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -370,8 +370,14 @@ void AShopGameMode::PushShopUIData()
 						FMath::Max(0, UnitSkill->mRequiredActionPoint);
 				}
 			};
-			for (const TSoftObjectPtr<UStaticSkillData>& Skill : UnitData->mSkillDatas)
+
+			const int32 DefaultSkillCount = FMath::Min(
+				USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
+				UnitData->mSkillDatas.Num()
+			);
+			for (int32 i = 0; i < DefaultSkillCount; i++)
 			{
+				const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[i];
 				AppendSkill(Skill.LoadSynchronous());
 			}
 			for (const FPrimaryAssetId& SkillId : Candidate.mOwingSkillIds)
@@ -806,37 +812,43 @@ void AShopGameMode::HandleHireMercenaryRequested(
 	NewUnit->SetStaticSpawnData(UnitData);
 	NewUnit->SetPlayerLevel(FMath::Max(1, Candidate.mLevel));
 	NewUnit->FinishCreating();
+
+	UPlayerUnitModel* PreviousUnit = PartyModel->GetPlayerUnitModels()[PartySlotIndex].Get();
+	PartyModel->SetPlayerUnitModel(PartySlotIndex, NewUnit);
+	if (PreviousUnit != nullptr)
+	{
+		PreviousUnit->Destroy();
+	}
+
 	// #432 규칙(신규 합류 일괄 장착): 파티 공용 아티팩트를 새 용병에게도 장착한다.
 	// 빠뜨리면 상점 고용 용병만 아티팩트 효과 없이 전투에 들어간다.
-	if (UPartyArtifactComponentModel* PartyArtifacts =
-		PartyModel->GetPartyArtifactComponentModel())
+	if (UPartyArtifactComponentModel* PartyArtifacts = PartyModel->GetPartyArtifactComponentModel())
 	{
 		PartyArtifacts->EquipArtifactsTo(NewUnit);
 	}
-
-	UPlayerUnitModel* PreviousUnit =
-		PartyModel->GetPlayerUnitModels()[PartySlotIndex].Get();
-	PartyModel->SetPlayerUnitModel(PartySlotIndex, NewUnit);
 
 	// 후보에 붙은 추가 스킬은 플레이어 고정 스킬 뒤의 교체 가능 슬롯부터
 	// 채운다. 실패한 스킬 하나 때문에 이미 생성된 용병 전체를 무효화하지 않는다.
 	if (USkillComponentModel* SkillModel = NewUnit->GetSkillComponentModel())
 	{
-		for (int32 Index = 0;
-			Index < Candidate.mOwingSkillIds.Num()
-				&& Index < ReplaceableSkillSlotCount; ++Index)
+		const int32 DefaultSkillCount = FMath::Min(
+				USkillComponentModel::DEFAULT_SKILL_POOL_SIZE - Candidate.mOwingSkillIds.Num(),
+				UnitData->mSkillDatas.Num()
+			);
+		for (int32 Index = 0; Index < DefaultSkillCount; Index++)
+		{
+			const TSoftObjectPtr<UStaticSkillData>& Skill = UnitData->mSkillDatas[Index];
+			SkillModel->SetSkill(Index, Skill.LoadSynchronous());
+		}
+		for (int32 Index = 0; Index < Candidate.mOwingSkillIds.Num(); ++Index)
 		{
 			if (UStaticSkillData* Skill =
 				AssetManager->GetPrimaryAssetObject<UStaticSkillData>(
 					Candidate.mOwingSkillIds[Index]))
 			{
-				SkillModel->SetSkill(ReplaceableSkillStartIndex + Index, Skill);
+				SkillModel->SetSkill(DefaultSkillCount + Index, Skill);
 			}
 		}
-	}
-	if (PreviousUnit != nullptr)
-	{
-		GetWorldModelFactory(this)->DestroyModel(PreviousUnit);
 	}
 
 	SpendPartyGold(DisplayCandidate->mPrice);

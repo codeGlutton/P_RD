@@ -1081,37 +1081,19 @@ void UMercenaryHireWidget::RefreshDetail()
 	MercenaryHireDetail::SetTextIfPresent(mDetailSpeed, FText::FromString(
 		FString::Printf(TEXT("SPEED %d"), Option.mSpeed)));
 
-	static const FText CoreActions[2] = {
-		LOCTEXT("BasicAttack", "평타"),
-		LOCTEXT("Move", "이동")
-	};
-	// 실제 플레이어 유닛 DA에는 평타를 포함한 스킬 다섯 개만 있고 이동은
-	// 별도 커맨드다. 전투 HUD와 똑같이 0번 이동 + 1~5번 DA 스킬로 놓는다.
-	// 구형/검수 데이터의 두 고정 칸 규칙은 작은 목록에만 그대로 남긴다.
-	const bool bRealKit = Option.mSkillNames.Num() >= 5;
+	static const FText MoveAction = LOCTEXT("Move", "이동");
+	// 0번 칸은 이동 커맨드이고, 1~5번 칸은 DA 스킬 목록(0~4번)에 대응한다.
 	for (int32 Index = 0; Index < mDetailSkills.Num(); ++Index)
 	{
 		// 그림이 있으면 그림으로, 없으면 이름 글자로 -- 전투 요약 칸과 같은 규칙.
 		UTexture2D* IconTexture = nullptr;
-		if (bRealKit)
+		if (Index == 0)
 		{
-			const int32 SkillIndex = Index - 1;
-			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index], Index == 0
-				? CoreActions[1]
-				: (Option.mSkillNames.IsValidIndex(SkillIndex)
-					? Option.mSkillNames[SkillIndex] : FText::GetEmpty()));
-			if (Index > 0 && Option.mSkillIcons.IsValidIndex(SkillIndex))
-			{
-				IconTexture = Option.mSkillIcons[SkillIndex].LoadSynchronous();
-			}
-		}
-		else if (Index < 2)
-		{
-			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index], CoreActions[Index]);
+			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index], MoveAction);
 		}
 		else
 		{
-			const int32 SkillIndex = Index - 2;
+			const int32 SkillIndex = Index - 1;
 			MercenaryHireDetail::SetTextIfPresent(mDetailSkills[Index],
 				Option.mSkillNames.IsValidIndex(SkillIndex)
 					? Option.mSkillNames[SkillIndex]
@@ -1146,11 +1128,8 @@ int32 UMercenaryHireWidget::GetSkillDataIndexForSlot(
 	{
 		return INDEX_NONE;
 	}
-	// 실제 전투 kit는 0번 이동 + DA 스킬 다섯 개다. 이동에는 대응하는
-	// FFrontendSkillOption이 없고, 1~5번만 0~4번 상세에 정확히 대응한다.
-	// 구형/검수 데이터는 앞의 평타·이동 두 칸을 가상으로 유지한다.
-	const bool bRealKit = Option.mSkillNames.Num() >= 5;
-	const int32 DataIndex = bRealKit ? SlotIndex - 1 : SlotIndex - 2;
+	// 0번은 이동 커맨드이며, 1~5번 칸이 0~4번 상세 스킬 데이터에 대응한다.
+	const int32 DataIndex = SlotIndex - 1;
 	return Option.mSkillDetails.IsValidIndex(DataIndex) ? DataIndex : INDEX_NONE;
 }
 

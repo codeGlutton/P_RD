@@ -202,6 +202,9 @@ public:
 	int32 GetRemainingCooldownTime(int32 SkillIndex) const;
 
 public:
+	static constexpr int32 DEFAULT_SKILL_POOL_SIZE = 5;
+
+public:
 	/**
 	 * @brief 스킬 변경 시 호출되는 대리자
 	 */
