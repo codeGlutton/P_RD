@@ -1214,6 +1214,7 @@ namespace CombatHUDWidgetBuilder
 		{
 			PlaceCanvas(DetailSection, Value, RowPosition + FVector2D(205.f, 4.f),
 				FVector2D(360.f, 58.f), 9);
+			Value->SetJustification(ETextJustify::Center);
 		}
 	}
 
@@ -3625,6 +3626,7 @@ namespace CombatHUDWidgetBuilder
 			FVector2D(360.f, 58.f), 9);
 		CritValue->SetText(FText::FromString(TEXT("-")));
 		SetReadableFont(CritValue, BaseFont, 30);
+		CritValue->SetJustification(ETextJustify::Center);
 
 		UTextBlock* SkillHeading = FindOrCreate<UTextBlock>(Blueprint,
 			TEXT("MercenarySkillHeading"));

@@ -1222,6 +1222,7 @@ void UShopUIWidgetBase::PresentPushedDetail()
 		if (!Detail.mName.IsEmpty() && EnsureShopSkillDetailPresenter())
 		{
 			mShopSkillDetailPresenter->PresentArtifact(Detail);
+			mShopSkillDetailPresenter->SetNavigationEnabled(mDetailFromCandidate && mFilteredShopItemIndices.Num() > 1);
 			return;
 		}
 	}
