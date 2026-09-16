@@ -23,6 +23,14 @@ void UCombatLayoutHUDWidget::RefreshPlaybackButton()
         mPlaybackWidget->Configure(mUIModel);
 }
 
+void UCombatLayoutHUDWidget::SetEncounterPresentationActive(bool bActive)
+{
+    if (mEncounterPresentationActive == bActive) return;
+    mEncounterPresentationActive = bActive;
+    RefreshCommandVisibility();
+    RefreshActionButtons();
+}
+
 void UCombatLayoutHUDWidget::PositionPlaybackButton()
 {
     if (!mPlaybackWidget || !mRootCanvas || !mMenuButtons.IsValidIndex(0)) return;

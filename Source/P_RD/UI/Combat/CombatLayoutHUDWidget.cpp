@@ -4048,6 +4048,7 @@ void UCombatLayoutHUDWidget::RefreshCommandVisibility()
 {
 	// 조건이 다 참이어야 보인다. 하나라도 아니면 접는다.
 	const bool bVisible = mCommandsShown == true
+		&& !mEncounterPresentationActive
 		&& IsAiming() == false
 		&& IsPlayerTurn() == true
 		&& mIsTurnActive == true
@@ -5013,45 +5014,7 @@ void UCombatLayoutHUDWidget::ShowStatusDetailOverlay(
 	{
 		return;
 	}
-	// 잎 이름 -> 효과 설명. 기획 수치가 붙으면 게임플레이 쪽 표로 옮긴다.
-	static const TMap<FString, FText> Descriptions = {
-		{ TEXT("Strength"),      LOCTEXT("StatusDescStrength", "공격 관련 능력이 강화된다.") },
-		{ TEXT("Dexterity"),     LOCTEXT("StatusDescDexterity", "기교 관련 능력이 강화된다.") },
-		{ TEXT("Acumeny"),       LOCTEXT("StatusDescAcumeny", "판단 관련 능력이 강화된다.") },
-		{ TEXT("Fortification"), LOCTEXT("StatusDescFortification", "받는 피해가 줄어든다.") },
-		{ TEXT("Vulnerability"), LOCTEXT("StatusDescVulnerability", "받는 피해가 늘어난다.") },
-		{ TEXT("Weakness"),      LOCTEXT("StatusDescWeakness", "주는 피해가 줄어든다.") },
-		{ TEXT("Vigor"),         LOCTEXT("StatusDescVigor", "행동력 효율이 올라간다.") },
-		{ TEXT("Haste"),         LOCTEXT("StatusDescHaste", "속도가 올라간다.") },
-		{ TEXT("Exhaustion"),    LOCTEXT("StatusDescExhaustion", "행동력 효율이 내려간다.") },
-		{ TEXT("Slow"),          LOCTEXT("StatusDescSlow", "속도가 내려간다.") },
-		{ TEXT("Frail"),         LOCTEXT("StatusDescFrail", "방어력이 내려간다.") },
-		{ TEXT("Root"),          LOCTEXT("StatusDescRoot", "이동할 수 없다.") },
-		{ TEXT("Poison"),        LOCTEXT("StatusDescPoison", "턴마다 피해를 입는다.") },
-		{ TEXT("Bleed"),         LOCTEXT("StatusDescBleed", "턴마다 피해를 입는다.") },
-		{ TEXT("Stun"),          LOCTEXT("StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
-		{ TEXT("Stealth"),       LOCTEXT("StatusDescStealth", "적의 대상이 되지 않는다.") },
-	};
-	FString Leaf = StatusTag.GetTagName().ToString();
-	int32 Dot = INDEX_NONE;
-	if (Leaf.FindLastChar(TEXT('.'), Dot))
-	{
-		Leaf = Leaf.Mid(Dot + 1);
-	}
-	const FText* Description = Descriptions.Find(Leaf);
-	const CombatStatusUI::FPresentation Presentation =
-		CombatStatusUI::Resolve(StatusTag);
-	const FText DurationText = Presentation.mIsInfinite
-		? LOCTEXT("StatusDurationInfinite", "전투가 끝날 때까지 지속된다.")
-		: (Presentation.mIsRoundDuration
-			? LOCTEXT("StatusDurationRound", "라운드가 지나면 1중첩씩 사라진다.")
-			: LOCTEXT("StatusDurationOther", "효과 조건이 끝날 때까지 지속된다."));
-	const FText Body = FText::Format(
-		LOCTEXT("StatusDescBodyFmt", "{0}\n{1}"),
-		Description != nullptr
-			? *Description
-			: LOCTEXT("StatusDescMissing", "효과 설명이 아직 없다."),
-		DurationText);
+	const FText Body = CombatStatusUI::Describe(StatusTag);
 
 	mDetailPresenter->PresentStatus(StatusDisplayName(StatusTag), StatusIconFor(StatusTag), StackCount, Body);
 	SetDetailSkillRowShown(false);
@@ -6750,6 +6713,7 @@ UWidget* UCombatLayoutHUDWidget::ResolveGuidedTarget(EGuidedStage S, EGuidedStag
  }
  switch(S){
  case EGuidedStage::ReadTurnOrder:return Named(TEXT("TurnPanel"));
+ case EGuidedStage::ReadPlaybackSpeed:return mPlaybackWidget ? mPlaybackWidget->GetSpeedButton() : nullptr;
  case EGuidedStage::ReadAP:return mTurnAPRoot;
  case EGuidedStage::ReadStatus:return Named(TEXT("AllyPanel"));
  case EGuidedStage::ReadCondition:return Named(TEXT("AllyCondition"));

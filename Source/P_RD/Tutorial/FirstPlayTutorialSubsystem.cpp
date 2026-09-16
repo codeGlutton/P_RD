@@ -21,6 +21,17 @@ bool UFirstPlayTutorialSubsystem::NeedsShopGuide() const
 	return !GetUserMutableData()->SeenShopWalkthrough;
 }
 
+bool UFirstPlayTutorialSubsystem::NeedsLevelUpGuide() const
+{
+	return !GetUserMutableData()->SeenLevelUpWalkthrough;
+}
+
+void UFirstPlayTutorialSubsystem::AcknowledgeLevelUpGuide()
+{
+	GetUserMutableData()->SeenLevelUpWalkthrough = true;
+	Save();
+}
+
 void UFirstPlayTutorialSubsystem::AcknowledgeShopGuide()
 {
 	GetUserMutableData()->SeenShopWalkthrough = true;
@@ -262,6 +273,7 @@ void UFirstPlayTutorialSubsystem::GuidedClicked()
 }
 void UFirstPlayTutorialSubsystem::UpdateGuidedHUD(UCombatLayoutHUDWidget* HUD)
 {
+	if (LastHUD.Get() != HUD) HideEncounterHint();
 	LastHUD = HUD;
 	if (UpdateEncounterHint(HUD)) { HideGuided(); return; }
 	auto* Data = GetUserMutableData();

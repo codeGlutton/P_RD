@@ -151,14 +151,9 @@ bool FFeedbackDisplayTest::RunTest(const FString &)
 	Reward->SkipRewardPresentation();
 	FeedbackTests::Capture(Reward, TEXT("reward-long.png"));
 	auto *CardScroll = Cast<UScrollBox>(Reward->GetWidgetFromName(TEXT("NewChoiceDescriptionScroll_0")));
-	if (TestNotNull(TEXT("Reward card scroll"), CardScroll) && !GUsingNullRHI)
-	{
-		TestTrue(TEXT("Reward card has scrollable overflow"), CardScroll->GetScrollOffsetOfEnd() > 0);
-		CardScroll->ScrollToEnd();
-		FeedbackTests::Capture(Reward, TEXT("reward-long-end.png"));
-		TestTrue(TEXT("Reward card reaches final text"), CardScroll->GetScrollOffset() > 0);
-	}
-	Reward->ShowArtifactDetails(0);
+    TestTrue(TEXT("Reward cards defer full description to detail"), !CardScroll || !CardScroll->IsVisible());
+    Reward->SelectArtifact(0);
+
 	auto *RewardOverlay = Reward->GetArtifactDetailOverlayForTest();
 	if (TestNotNull(TEXT("Reward opens common detail overlay"), RewardOverlay))
 		TestTrue(TEXT("Reward detail preserves full text"),

@@ -14,6 +14,8 @@
 #include "Components/WidgetSwitcher.h"
 #include "Engine/Texture2D.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UI/Reward/RewardUITypes.h"
 #include "UI/RunOptionsRailWidget.h"
@@ -39,7 +41,6 @@ namespace RewardConcept03
 	constexpr int32 TripleBurstFrameCount = 33;
 	constexpr int32 TripleBurstAtlasColumns = 6;
 	constexpr int32 TripleBurstAtlasRows = 6;
-	constexpr float ArtifactLongPressSeconds = .5f;
 	constexpr float DefaultChestRevealDuration = 1.15f;
 	// 33장을 약 24fps로 한 번만 보여 준다. 기존 4.06초는 보상 흐름을
 	// 지나치게 늦추고 밝은 프레임의 중첩을 더 눈에 띄게 했다.
@@ -149,6 +150,9 @@ namespace RewardConcept03
 URewardConcept03Widget::URewardConcept03Widget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+    static ConstructorHelpers::FObjectFinder<USoundBase> AcquireSound(TEXT("/Game/SVN/OutSideAsset/SFX/OpenGameArt_CC0/UI/SFX_XPGain_OGA_CC0_Rise03.SFX_XPGain_OGA_CC0_Rise03"));
+    ArtifactAcquireSound = AcquireSound.Object;
+
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Game/UI/Reward/Separated/M_RewardChestCutout"));
 	mChestAtlasMaterial = Material.Object;
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Light(TEXT("/Game/UI/Reward/Separated/M_RewardChestLight"));
@@ -309,6 +313,7 @@ void URewardConcept03Widget::HandleRewardSelectionConfirmed(
 	}
 
 	bRewardRequestPending = false;
+	if (ArtifactAcquireSound) UGameplayStatics::PlaySound2D(this, ArtifactAcquireSound);
 	FinishRewardFlowAfterConfirmation();
 }
 
@@ -334,6 +339,7 @@ void URewardConcept03Widget::HandleRewardGrantBundleConfirmed(
 	// 부분 실패도 정책상 bundle 처리는 끝난 것이다. 실제 결과는
 	// 게임플레이가 보관하고 UI는 완료 confirmation 이후에만 닫는다.
 	bRewardRequestPending = false;
+	if (!Result.mGrantedItemIds.IsEmpty() && ArtifactAcquireSound) UGameplayStatics::PlaySound2D(this, ArtifactAcquireSound);
 	FinishRewardFlowAfterConfirmation();
 }
 
@@ -652,51 +658,30 @@ void URewardConcept03Widget::RefreshRewardData()
 			}
 			Icon->SetBrushFromTexture(Choices[Index].mIcon.Get());
 			Icon->SetVisibility(Choices[Index].mIcon ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-            const FName DescName(*FString::Printf(TEXT("NewChoiceDescription_%d"), Index));
-            const FName ScrollName(*FString::Printf(TEXT("NewChoiceDescriptionScroll_%d"), Index));
-            UTextBlock* Desc = Cast<UTextBlock>(GetWidgetFromName(DescName));
-            if (!Desc)
+            // Match skill candidates: portrait and name on the card; effects live in the detail panel.
+            if (auto* IconSlot = Cast<UCanvasPanelSlot>(Icon->Slot))
             {
-                Desc = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), DescName);
-                Desc->SetVisibility(ESlateVisibility::HitTestInvisible);
-                Desc->SetAutoWrapText(true);
-                Desc->SetWrapTextAt(198.f);
-                Desc->SetJustification(ETextJustify::Left);
-                FSlateFontInfo Font = Desc->GetFont(); Font.Size = 14; Desc->SetFont(Font);
-                Desc->SetColorAndOpacity(FSlateColor(FLinearColor(.07f, .035f, .015f, 1.f)));
+                IconSlot->SetPosition(FVector2D(52.f, 80.f));
+                IconSlot->SetSize(FVector2D(128.f, 128.f));
             }
-            UScrollBox* Scroll = Cast<UScrollBox>(GetWidgetFromName(ScrollName));
-            if (!Scroll)
-            {
-                Scroll = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), ScrollName);
-                Scroll->SetVisibility(ESlateVisibility::Visible);
-                Scroll->SetScrollBarVisibility(ESlateVisibility::Visible);
-                Scroll->SetScrollbarThickness(FVector2D(4.f, 4.f));
-                Scroll->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
-                Scroll->SetAllowOverscroll(false);
-                Desc->RemoveFromParent();
-                Scroll->AddChild(Desc);
-                Content->AddChildToCanvas(Scroll)->SetZOrder(100);
-            }
-            if (!Desc->GetText().EqualTo(Choices[Index].mDescription)) Scroll->ScrollToStart();
-            Desc->SetText(Choices[Index].mDescription);
-            if (UCanvasPanelSlot* DescriptionSlot = Cast<UCanvasPanelSlot>(Scroll->Slot))
-            {
-                const bool bHasIcon = Choices[Index].mIcon != nullptr;
-                DescriptionSlot->SetPosition(FVector2D(8.f, bHasIcon ? 151.f : 88.f));
-                DescriptionSlot->SetSize(FVector2D(216.f, bHasIcon ? 74.f : 128.f));
-            }
+            for (const TCHAR* Prefix : {TEXT("NewChoiceDescription_"), TEXT("NewChoiceDescriptionScroll_")})
+                if (auto* Inline = GetWidgetFromName(*FString::Printf(TEXT("%s%d"), Prefix, Index)))
+                    Inline->SetVisibility(ESlateVisibility::Collapsed);
+
 		}
 
 		if (UTextBlock* Name = Cast<UTextBlock>(GetWidgetFromName(
 			*FString::Printf(TEXT("NewChoiceName_%d"), Index))))
 		{
 			Name->SetText(Choices[Index].mName);
+            Name->SetColorAndOpacity(FLinearColor(.10f, .05f, .02f));
+            Name->SetShadowColorAndOpacity(FLinearColor::Transparent);
 		}
 		if (UTextBlock* Type = Cast<UTextBlock>(GetWidgetFromName(
 			*FString::Printf(TEXT("NewChoiceType_%d"), Index))))
 		{
 			Type->SetText(GetRewardChoiceTypeText(Index));
+            Type->SetColorAndOpacity(FLinearColor(.16f, .08f, .03f));
 		}
 	}
 
@@ -1613,12 +1598,16 @@ void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 		|| CurrentStepIndex != RewardConcept03::ArtifactStep
 		|| PresentationState != EPresentationState::AwaitArtifactChoice
 		|| UIModel == nullptr
-		|| UIModel->GetAcquisitionPolicy() != ERewardAcquisitionPolicy::SelectOne
 		|| ArtifactIndex < 0 || ArtifactIndex >= UE_ARRAY_COUNT(ArtifactButtons)
 		|| !UIModel->GetRewardChoices().IsValidIndex(ArtifactIndex))
 	{
 		return;
 	}
+    if (UIModel->GetAcquisitionPolicy() == ERewardAcquisitionPolicy::GrantAll)
+    {
+        ShowArtifactDetails(ArtifactIndex);
+        return;
+    }
 	const TArray<FRewardChoiceUI>& Choices = UIModel->GetRewardChoices();
 	if (Choices.Num() == 1)
 	{
@@ -1630,6 +1619,7 @@ void URewardConcept03Widget::SelectArtifact(const int32 ArtifactIndex)
 	SelectedArtifactIndex = ArtifactIndex;
 	ApplyArtifactSelection();
 	OnArtifactSelected.Broadcast(SelectedArtifactIndex);
+	ShowArtifactDetails(ArtifactIndex);
 }
 
 void URewardConcept03Widget::BeginArtifactPress(const int32 ArtifactIndex)
@@ -1644,24 +1634,8 @@ void URewardConcept03Widget::BeginArtifactPress(const int32 ArtifactIndex)
 		return;
 	}
 	PressedArtifactIndex = ArtifactIndex;
-	// With one artifact a normal tap opens details. Long press remains the
-	// inspection gesture only when a tap is needed to choose among several cards.
-	if (UIModel->GetRewardChoices().Num() <= 1)
-	{
-		return;
-	}
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(ArtifactLongPressTimer,
-			FTimerDelegate::CreateWeakLambda(this, [this, ArtifactIndex]()
-			{
-				if (PressedArtifactIndex == ArtifactIndex)
-				{
-					bSuppressNextArtifactClick = true;
-					ShowArtifactDetails(ArtifactIndex);
-				}
-			}), RewardConcept03::ArtifactLongPressSeconds, false);
-	}
+	// Every card opens its detail on tap; holding does not perform a separate selection.
+
 }
 
 void URewardConcept03Widget::EndArtifactPress()
@@ -1923,7 +1897,7 @@ void URewardConcept03Widget::ApplyVisualState()
 		{
 			// Choice cards live only on the artifact switcher page. Keep an
 			// available card enabled throughout that page's lifecycle so GrantAll
-			// cards can receive the same long-press detail input as SelectOne cards;
+			// cards open the same detail panel on tap as SelectOne cards;
 			// the handlers still guard the exact interaction state.
 			ArtifactButton->SetIsEnabled(UIModel != nullptr
 				&& UIModel->GetRewardChoices().IsValidIndex(Index)

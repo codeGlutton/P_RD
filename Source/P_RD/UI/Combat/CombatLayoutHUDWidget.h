@@ -125,6 +125,7 @@ public:
 #endif
 	bool IsGuidedOverlayObscured() const;
 	bool CanShowEncounterHint() const;
+	void SetEncounterPresentationActive(bool bActive);
 	virtual bool UsesMobileSafeArea() const override { return true; }
 	virtual bool HandleBackNavigation() override;
 	virtual UUserWidget* GetBackNavigationLayer() const override;
@@ -632,6 +633,7 @@ private:
 	 * RefreshCommandVisibility() 를 보라.
 	 */
 	bool mCommandsShown = false;
+	bool mEncounterPresentationActive = false;
 
 	/** @brief 카드 등장 연출 경과(초). 음수면 아직 안 뜬 상태다. */
 	float mCommandRevealElapsed = -1.f;

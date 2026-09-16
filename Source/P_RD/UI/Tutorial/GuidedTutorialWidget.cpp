@@ -28,6 +28,7 @@ FText Topic(EGuidedStage S)
 	switch (S)
 	{
 	case EGuidedStage::ReadTurnOrder: return NSLOCTEXT("FieldGuideTopic", "Order", "턴과 라운드");
+	case EGuidedStage::ReadPlaybackSpeed: return NSLOCTEXT("FieldGuideTopic", "Playback", "전투 배속");
 	case EGuidedStage::ReadAP: return NSLOCTEXT("FieldGuideTopic", "AP", "행동력 · AP");
 	case EGuidedStage::ReadCondition: return NSLOCTEXT("FieldGuideTopic", "Condition", "컨디션");
 	case EGuidedStage::ReadStatus: return NSLOCTEXT("FieldGuideTopic", "Status", "상태이상");
@@ -64,6 +65,8 @@ FText UGuidedTutorialWidget::Instruction(EGuidedStage S)
 	{
 	case EGuidedStage::ReadTurnOrder:
 		return NSLOCTEXT("FieldGuide", "TurnOrder", "왼쪽부터 행동할 차례입니다.\nR은 라운드 번호이며, 화살표로 이후 순서를 볼 수 있습니다.");
+	case EGuidedStage::ReadPlaybackSpeed:
+		return NSLOCTEXT("FieldGuide", "Playback", "이 버튼을 누르면 전투 연출이 1 → 2 → 3배속으로 바뀝니다.\n행동 비용이나 효과는 같아요. 천천히 보고 싶으면 다시 1배속으로 돌리세요.");
 	case EGuidedStage::ReadAP:
 		return NSLOCTEXT("FieldGuide", "ActionPoints", "AP는 행동에 쓰는 자원입니다.\n이동과 스킬에 필요한 AP를 확인하고 사용하세요.");
 	case EGuidedStage::ReadCondition:

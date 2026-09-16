@@ -77,7 +77,10 @@ namespace
 			{ TEXT("Poison"),        			NSLOCTEXT("CombatStatusUI", "Poison", "중독") },
 			{ TEXT("Bleed"),         			NSLOCTEXT("CombatStatusUI", "Bleed", "출혈") },
 			{ TEXT("Stun"),          			NSLOCTEXT("CombatStatusUI", "Stun", "기절") },
-			{ TEXT("Stealth"),       			NSLOCTEXT("CombatStatusUI", "Stealth", "은신") },
+	        { TEXT("ControlImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescControlImmunity", "기절과 속박에 걸리는 것을 막아줍니다.") },
+        { TEXT("WeakeningImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescWeakeningImmunity", "탈진, 둔화, 약화 같은 능력 저하 효과에 걸리는 것을 막아줍니다.") },
+        { TEXT("ForcedMovementImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescForcedMovementImmunity", "밀치기나 끌어당기기로 위치가 바뀌는 것을 막아줍니다.") },
+		{ TEXT("Stealth"),       			NSLOCTEXT("CombatStatusUI", "Stealth", "은신") },
 			{ TEXT("Strength"),      			NSLOCTEXT("CombatStatusUI", "Strength", "완력") },
 			{ TEXT("Dexterity"),     			NSLOCTEXT("CombatStatusUI", "Dexterity", "재치") },
 			{ TEXT("Acumeny"),       			NSLOCTEXT("CombatStatusUI", "Acumeny", "예리함") },
@@ -218,4 +221,46 @@ UTexture2D* CombatStatusUI::ResolveIcon(const EFloatingLogIconType IconType)
 		}
 	}
 	return nullptr;
+}
+
+namespace
+{
+const TMap<FString, FText>& StatusDescriptions()
+{
+    static const TMap<FString, FText> Descriptions = {
+		{ TEXT("Strength"),      NSLOCTEXT("CombatLayoutHUD", "StatusDescStrength", "공격 관련 능력이 강화된다.") },
+		{ TEXT("Dexterity"),     NSLOCTEXT("CombatLayoutHUD", "StatusDescDexterity", "기교 관련 능력이 강화된다.") },
+		{ TEXT("Acumeny"),       NSLOCTEXT("CombatLayoutHUD", "StatusDescAcumeny", "판단 관련 능력이 강화된다.") },
+		{ TEXT("Fortification"), NSLOCTEXT("CombatLayoutHUD", "StatusDescFortification", "방어도를 얻을 때 받는 양이 늘어납니다.") },
+		{ TEXT("Vulnerability"), NSLOCTEXT("CombatLayoutHUD", "StatusDescVulnerability", "받는 피해가 늘어난다.") },
+		{ TEXT("Weakness"),      NSLOCTEXT("CombatLayoutHUD", "StatusDescWeakness", "주는 피해가 줄어든다.") },
+		{ TEXT("Vigor"),         NSLOCTEXT("CombatLayoutHUD", "StatusDescVigor", "행동력(AP)을 회복하거나 얻을 때 받는 양이 늘어납니다.") },
+		{ TEXT("Haste"),         NSLOCTEXT("CombatLayoutHUD", "StatusDescHaste", "속도가 올라간다.") },
+		{ TEXT("Exhaustion"),    NSLOCTEXT("CombatLayoutHUD", "StatusDescExhaustion", "행동력(AP)을 회복하거나 얻을 때 받는 양이 줄어듭니다. 한 턴에 이동하거나 스킬을 사용할 여유가 줄어들어요.") },
+		{ TEXT("Slow"),          NSLOCTEXT("CombatLayoutHUD", "StatusDescSlow", "속도가 내려간다.") },
+		{ TEXT("Frail"),         NSLOCTEXT("CombatLayoutHUD", "StatusDescFrail", "방어도를 얻을 때 받는 양이 줄어듭니다.") },
+		{ TEXT("Root"),          NSLOCTEXT("CombatLayoutHUD", "StatusDescRoot", "이동할 수 없다.") },
+		{ TEXT("Poison"),        NSLOCTEXT("CombatLayoutHUD", "StatusDescPoison", "라운드가 지날 때 피해를 입습니다.") },
+		{ TEXT("Bleed"),         NSLOCTEXT("CombatLayoutHUD", "StatusDescBleed", "라운드가 지날 때 피해를 입습니다.") },
+		{ TEXT("Stun"),          NSLOCTEXT("CombatLayoutHUD", "StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
+		{ TEXT("Stealth"),       NSLOCTEXT("CombatLayoutHUD", "StatusDescStealth", "적의 대상이 되지 않는다.") },
+	};
+    return Descriptions;
+}
+}
+bool CombatStatusUI::HasDescription(const FGameplayTag& Tag)
+{
+    return StatusDescriptions().Contains(StatusLeafName(Tag));
+}
+FText CombatStatusUI::Describe(const FGameplayTag& Tag)
+{
+    const FText* Description = StatusDescriptions().Find(StatusLeafName(Tag));
+    const auto Info = Resolve(Tag);
+    const FText Duration = Info.mIsInfinite
+        ? NSLOCTEXT("CombatLayoutHUD", "StatusDurationInfinite", "전투가 끝날 때까지 지속된다.")
+        : Info.mIsRoundDuration
+            ? NSLOCTEXT("CombatLayoutHUD", "StatusDurationRound", "라운드가 지나면 1중첩씩 사라진다.")
+            : NSLOCTEXT("CombatLayoutHUD", "StatusDurationOther", "효과 조건이 끝날 때까지 지속된다.");
+    return FText::Format(NSLOCTEXT("CombatLayoutHUD", "StatusDescBodyFmt", "{0}\n{1}"),
+        Description ? *Description : NSLOCTEXT("CombatLayoutHUD", "StatusDescMissing", "효과 설명이 아직 없다."), Duration);
 }

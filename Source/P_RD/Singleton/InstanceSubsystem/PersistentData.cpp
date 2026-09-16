@@ -747,6 +747,7 @@ void UUserPersistData::ClearUser()
 	GuidedTutorial = FGuidedTutorialProgress();
 	SeenTrapHints.Reset();
 	SeenShopWalkthrough = false;
+	SeenLevelUpWalkthrough = false;
 	mUserName = FText();
 	mUserLog.Clear();
 	mAppliedRunTransactions.Reset();

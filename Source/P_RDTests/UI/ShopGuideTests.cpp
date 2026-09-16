@@ -19,14 +19,17 @@ bool FShopGuideSaveTest::RunTest(const FString&)
     auto* Profile = NewObject<UUserPersistData>();
     TestFalse(TEXT("Existing and new profiles can see their first shop guide"), Profile->SeenShopWalkthrough);
     Profile->SeenShopWalkthrough = true;
+    Profile->SeenLevelUpWalkthrough = true;
     TArray<uint8> Bytes;
     { FMemoryWriter W(Bytes); FObjectAndNameAsStringProxyArchive A(W, false); A.ArIsSaveGame = true; A.ArNoDelta = true; Profile->Serialize(A); }
     auto* Reloaded = NewObject<UUserPersistData>();
     { FMemoryReader R(Bytes); FObjectAndNameAsStringProxyArchive A(R, false); A.ArIsSaveGame = true; A.ArNoDelta = true; Reloaded->Serialize(A); }
+    TestTrue(TEXT("Level-up guide survives save/load independently"), Reloaded->SeenLevelUpWalkthrough);
     TestTrue(TEXT("Dismissal survives a profile save/load"), Reloaded->SeenShopWalkthrough);
     TestFalse(TEXT("Shop history does not start the combat tutorial"), Reloaded->GuidedTutorial.Enrolled);
     TestTrue(TEXT("Shop history does not acknowledge traps"), Reloaded->SeenTrapHints.IsEmpty());
     Reloaded->ClearUser();
+    TestFalse(TEXT("Profile reset restores level-up guidance"), Reloaded->SeenLevelUpWalkthrough);
     TestFalse(TEXT("Only a profile reset clears the shop history"), Reloaded->SeenShopWalkthrough);
     return !HasAnyErrors();
 }
