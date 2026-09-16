@@ -2312,40 +2312,6 @@ void ACombatGameMode::PushPlayerMetaUIData() const
 			}
 		}
 	}
-
-#if WITH_EDITOR
-	// UI 검수용 에디터 실행에서는 빈 파티도 아티팩트 줄을 확인할 수 있게 한다.
-	// 실제 보유물이 하나라도 있으면 이 fixture는 전혀 개입하지 않는다.
-	if (PlayerMetaUIData.mArtifacts.IsEmpty())
-	{
-		struct FPreviewArtifact
-		{
-			const TCHAR* Name;
-			const TCHAR* IconPath;
-			FLinearColor RarityColor;
-		};
-		static const FPreviewArtifact PreviewArtifacts[] = {
-			{ TEXT("정찰의 나침반"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_Treasure.T_MapNode_Treasure"),
-				FLinearColor(0.86f, 0.98f, 0.94f, 1.f) },
-			{ TEXT("푸른 깃털"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_RareTreasure.T_MapNode_RareTreasure"),
-				FLinearColor(0.55f, 0.72f, 1.f, 1.f) },
-			{ TEXT("왕의 부적"),
-				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/MapNode/T_MapNode_EpicTreasure.T_MapNode_EpicTreasure"),
-				FLinearColor(0.82f, 0.58f, 1.f, 1.f) },
-		};
-		for (const FPreviewArtifact& Preview : PreviewArtifacts)
-		{
-			FCombatArtifactUI& Artifact =
-				PlayerMetaUIData.mArtifacts.AddDefaulted_GetRef();
-			Artifact.mName = FText::FromString(Preview.Name);
-			Artifact.mIcon = LoadObject<UTexture2D>(nullptr, Preview.IconPath);
-			Artifact.mRarityColor = Preview.RarityColor;
-		}
-	}
-#endif
-
 	mCombatUIModel->SetPlayerMeta(PlayerMetaUIData);
 }
 

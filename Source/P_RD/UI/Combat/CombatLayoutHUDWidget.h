@@ -835,6 +835,7 @@ private:
 
 	/** @brief 전역 DPI 외 별도 카드/파티 배율이 남지 않게 정리한다. */
 	void RefreshScreenScale();
+	void AlignMercenaryCriticalValue();
 
 	virtual void NativeTick(const FGeometry& MyGeometry, float DeltaTime) override;
 

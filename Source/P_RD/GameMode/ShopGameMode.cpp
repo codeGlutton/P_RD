@@ -1,4 +1,4 @@
-﻿#include "GameMode/ShopGameMode.h"
+#include "GameMode/ShopGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -1002,6 +1002,7 @@ void AShopGameMode::HandleLeaveRequested()
 		return;
 	}
 
+	MapWidget->OnCloseRequested.AddUniqueDynamic(this, &AShopGameMode::HandleWorldMapCloseRequested);
 	MapWidget->SetRoomSelectionEnabled(true);
 	MapWidget->ClearMapStatusOverride();
 	MapWidget->OpenUI(FOnEndUIOpenAnimation::CreateWeakLambda(
@@ -1014,6 +1015,18 @@ void AShopGameMode::HandleLeaveRequested()
 			}
 		}));
 	MapWidget->RefreshMap();
+}
+
+void AShopGameMode::HandleWorldMapCloseRequested()
+{
+    auto* Widgets = GetWorld() ? GetWorld()->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+    if (!Widgets) return;
+    if (auto* Map = Widgets->GetWorldWidget<UFrontendMapWidget>(EWorldWidgetType::WorldMap))
+    {
+        Map->OnCloseRequested.RemoveDynamic(this, &AShopGameMode::HandleWorldMapCloseRequested);
+        Map->CloseUI();
+    }
+    if (auto* Shop = Widgets->GetHUD<UShopUIWidgetBase>()) Shop->OpenUI();
 }
 
 /** @brief 파티 골드 소비. 0 이하 가격은 무시한다. */

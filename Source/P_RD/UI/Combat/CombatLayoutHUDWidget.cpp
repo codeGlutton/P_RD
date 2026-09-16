@@ -1,4 +1,4 @@
-﻿#include "UI/Combat/CombatLayoutHUDWidget.h"
+#include "UI/Combat/CombatLayoutHUDWidget.h"
 #include "UI/Combat/CombatSpeedWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
 #include "UI/StageVictory/BossCollapseWidget.h"
@@ -841,6 +841,15 @@ void UCombatLayoutHUDWidget::CacheAuthoredWidgets()
 	mMercenaryDetailAP = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailAP"));
 	mMercenaryDetailSpeed = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailSpeed"));
 	mMercenaryDetailCritical = Find<UTextBlock>(WidgetTree, TEXT("MercenaryDetailCritical"));
+	if (mMercenaryDetailCritical == nullptr)
+	{
+		mMercenaryDetailCritical = Find<UTextBlock>(WidgetTree, TEXT("MercenaryCritValue"));
+	}
+	if (auto* CriticalValue = Find<UTextBlock>(WidgetTree, TEXT("MercenaryCritValue")))
+	{
+		CriticalValue->SetJustification(ETextJustify::Center);
+		if (mMercenaryDetailSpeed) CriticalValue->SetFont(mMercenaryDetailSpeed->GetFont());
+	}
 	mMercenaryDetailSection = Find<UWidget>(WidgetTree, TEXT("MercDetailSection"));
 	mMercenaryInventoryButton = Find<UButton>(
 		WidgetTree, TEXT("MercenaryInventoryButton"));
@@ -1981,8 +1990,11 @@ void UCombatLayoutHUDWidget::RefreshParty()
 			FocusUnit->mMaxActionPoints)));
 		SetTextIfPresent(mMercenaryDetailSpeed, FText::AsNumber(
 			FMath::RoundToInt(FocusUnit->mSpeedPoint)));
-		SetTextIfPresent(mMercenaryDetailCritical, FText::AsNumber(
-			FMath::RoundToInt(FocusUnit->mCriticalPoint)));
+		const FText CriticalValue = FText::AsNumber(FMath::RoundToInt(FocusUnit->mCriticalPoint));
+		SetTextIfPresent(mMercenaryDetailCritical, CriticalValue);
+		// The current HUD adds this chip beside the legacy nested detail widget.
+		// Both can exist, so finding the legacy field alone leaves the visible chip blank.
+		SetTextIfPresent(Find<UTextBlock>(WidgetTree, TEXT("MercenaryCritValue")), CriticalValue);
 	}
 
 	// 우측 아래는 전투 중 현재 용병이 실제로 쓸 수 있는 여섯 커맨드의 요약이다.
@@ -3632,6 +3644,7 @@ bool UCombatLayoutHUDWidget::IsAiming() const
 void UCombatLayoutHUDWidget::NativeTick(const FGeometry& MyGeometry, float DeltaTime)
 {
 	Super::NativeTick(MyGeometry, DeltaTime);
+	AlignMercenaryCriticalValue();
 	PositionPlaybackButton();
 	RefreshWorldGestureInputBlock();
 	if(auto* GI=GetGameInstance()) GI->GetSubsystem<UFirstPlayTutorialSubsystem>()->UpdateGuidedHUD(this);
@@ -3752,6 +3765,29 @@ bool UCombatLayoutHUDWidget::TryConsumeTurnSwipe(
 	}
 	mTurnSwipeConsumed = true;
 	return true;
+}
+
+void UCombatLayoutHUDWidget::AlignMercenaryCriticalValue()
+{
+	if (!IsMercenaryPanelShown() || mMercenaryInventoryShown) return;
+	auto* Critical = Find<UTextBlock>(WidgetTree, TEXT("MercenaryCritValue"));
+	if (!Critical || !mMercenaryDetailSpeed || !Critical->GetParent()) return;
+	auto* CriticalSlot = Cast<UCanvasPanelSlot>(Critical->Slot);
+	if (!CriticalSlot) return;
+	const auto& Reference = mMercenaryDetailSpeed->GetCachedGeometry();
+	const auto& Current = Critical->GetCachedGeometry();
+	if (Reference.GetLocalSize().X <= 0.f || Current.GetLocalSize().X <= 0.f) return;
+	const auto& Parent = Critical->GetParent()->GetCachedGeometry();
+	// Speed is nested in authored centering/scaling widgets. Compare the arranged
+	// centers in the critical row's parent space instead of guessing a canvas X.
+	const float ReferenceX = Parent.AbsoluteToLocal(Reference.LocalToAbsolute(Reference.GetLocalSize() * .5f)).X;
+	const float TargetX = ReferenceX
+		- Parent.GetLocalSize().X * CriticalSlot->GetAnchors().Minimum.X
+		- CriticalSlot->GetSize().X * (.5f - CriticalSlot->GetAlignment().X);
+	if (FMath::Abs(TargetX - CriticalSlot->GetPosition().X) > .1f)
+	{
+		CriticalSlot->SetPosition(FVector2D(TargetX, CriticalSlot->GetPosition().Y));
+	}
 }
 
 void UCombatLayoutHUDWidget::RefreshScreenScale()
@@ -5319,7 +5355,7 @@ void UCombatLayoutHUDWidget::SetMonsterTabShown(const bool bShown)
 	}
 
 	mMonsterTabWidget->SetVisibility(
-		bShown ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		bShown ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 	// 용병 패널과 같은 모달 계약: 탭이 떠 있는 동안 턴 묶음은 접는다.
 	SetShown(Find<UWidget>(WidgetTree, TEXT("TurnPanel")),
 		bShown == false && IsMercenaryPanelShown() == false);
@@ -5381,6 +5417,12 @@ bool UCombatLayoutHUDWidget::EnsureMonsterTabWidget()
 	{
 		return false;
 	}
+    // Full-viewport chrome must not intercept the HUD's visible menu buttons.
+    // Combat input remains blocked by IsWorldInputModalShown while this tab is open.
+    if (auto* Root = mMonsterTabWidget->WidgetTree->RootWidget.Get())
+        Root->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+    if (auto* Dimmer = mMonsterTabWidget->GetWidgetFromName(TEXT("MonsterTabWorldDimmer")))
+        Dimmer->SetVisibility(ESlateVisibility::HitTestInvisible);
 	// 평상시에는 HUD보다 위. 몬스터 스킬 상세(70)는 이 탭보다 위에 놓인다.
 	mMonsterTabWidget->AddToViewport(MonsterTabViewportZOrder);
 	mMonsterTabWidget->SetVisibility(ESlateVisibility::Collapsed);

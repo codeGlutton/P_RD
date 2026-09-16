@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   ShopGameMode.h
  * @brief  상점 방에 대한 GameMode 정의 헤더
  * @author 모호재
@@ -97,6 +97,9 @@ private:
 
 	/** @brief 나간다. 지도를 열어 다음 방을 고르게 한다. */
 	UFUNCTION() void HandleLeaveRequested();
+
+	/** Return from route selection without resetting purchases or party data. */
+	UFUNCTION() void HandleWorldMapCloseRequested();
 
 	/**
 	 * @brief 판매 슬롯 상세 요청. 종류(mSlotSources)에 맞는 상세 DTO를 조립해 밀어준다.

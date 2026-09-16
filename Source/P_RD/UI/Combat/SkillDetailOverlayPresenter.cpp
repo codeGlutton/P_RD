@@ -2252,29 +2252,34 @@ void USkillDetailOverlayPresenter::BuildNavigationAndCloseLabel()
     if (!Close) return;
     if (Label)
     {
-        // The authored label used an independent canvas offset. Make it actual button content.
-        if (Close->GetContent() != Label)
+        auto* Stack = Cast<UOverlay>(mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseVisualStack")));
+        if (!Stack)
         {
+            auto* Art = mDetailOverlayWidget->GetWidgetFromName(TEXT("DetailCloseArt"));
             Label->RemoveFromParent();
-            if (UWidget* Art = Close->GetContent())
+            if (Art) Art->RemoveFromParent();
+            Close->ClearChildren();
+            Stack = mDetailOverlayWidget->WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(),TEXT("DetailCloseVisualStack"));
+            if (Art)
             {
-                Close->RemoveChild(Art);
-                auto* Stack = mDetailOverlayWidget->WidgetTree->ConstructWidget<UOverlay>();
-                Stack->AddChildToOverlay(Art);
-                auto* TextSlot = Stack->AddChildToOverlay(Label);
-                TextSlot->SetHorizontalAlignment(HAlign_Center);
-                TextSlot->SetVerticalAlignment(VAlign_Center);
-                Close->AddChild(Stack);
+                Art->SetRenderTranslation(FVector2D::ZeroVector);
+                Art->SetVisibility(ESlateVisibility::HitTestInvisible);
+                auto* ArtSlot = Stack->AddChildToOverlay(Art);
+                ArtSlot->SetHorizontalAlignment(HAlign_Fill);
+                ArtSlot->SetVerticalAlignment(VAlign_Fill);
             }
-            else Close->AddChild(Label);
+            auto* TextSlot = Stack->AddChildToOverlay(Label);
+            TextSlot->SetHorizontalAlignment(HAlign_Center);
+            TextSlot->SetVerticalAlignment(VAlign_Center);
+            Close->AddChild(Stack);
         }
         Label->SetJustification(ETextJustify::Center);
         Label->SetRenderTranslation(FVector2D::ZeroVector);
-        if (auto* ContentSlot = Cast<UButtonSlot>(Close->GetContent()->Slot))
+        if (auto* ContentSlot = Cast<UButtonSlot>(Stack->Slot))
         {
             ContentSlot->SetPadding(FMargin(0));
-            ContentSlot->SetHorizontalAlignment(HAlign_Center);
-            ContentSlot->SetVerticalAlignment(VAlign_Center);
+            ContentSlot->SetHorizontalAlignment(HAlign_Fill);
+            ContentSlot->SetVerticalAlignment(VAlign_Fill);
         }
     }
     auto* Parent = Cast<UCanvasPanel>(Close->GetParent());
