@@ -52,17 +52,8 @@ void UTacticalFrameworkSubsystem::ApplyGlobalVFXEffect(const FTacticalEffectSpec
 		const IBoardCombatTargetView* CombatTargetView = Instigator->GetView<IBoardCombatTargetView>();
 		if (CombatTargetView != nullptr)
 		{
-			FVFXTimelineEventTarget EventTarget;
 			UPrimitiveComponent* TargetMeshComp = CombatTargetView->GetTargetMeshComponent();
-			for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComp->GetAttachChildren())
-			{
-				UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
-				if (ChildMeshComp != nullptr)
-				{
-					EventTarget.mMeshComps.Add(ChildMeshComp);
-				}
-			}
-			EventTarget.mMeshComps.Add(TargetMeshComp);
+			const FVFXTimelineEventTarget EventTarget = UVFXFunctionLibrary::MakeTimelineEventTarget(TargetMeshComp);
 
 			UVFXFunctionLibrary::SpawnAndExecuteVFX(*VFXSpawnData, TargetMeshComp, CombatTargetView->GetCombatTargetVFXTimelineComponent(), EventTarget);
 		}

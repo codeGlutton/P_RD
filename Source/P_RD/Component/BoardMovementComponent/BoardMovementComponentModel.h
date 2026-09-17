@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   BoardMovementComponentModel.h
  * @brief  보드 액터 공용 이동 컴포넌트 모델 정의 헤더
  * @author 이문환
@@ -122,8 +122,6 @@ private:
 	void CompleteStep();
 	// @brief 이동 연출 배리어가 완료됐을 때 호출될 콜백 (다음 타일 진행/종료 판단)
 	void OnStepPresentationFinished();
-	// @brief 텔레포트 연출 배리어가 완료됐을 때 호출될 콜백 (도착 오버랩 통지/완료 알림)
-	void OnTeleportPresentationFinished();
 
 	/* 헬퍼 */
 	// @brief 이동 상태 초기화 (완료/취소 공통 정리)
@@ -155,9 +153,6 @@ private:
 
 	// @brief 취소 요청 여부 (현재 스텝 연출 종료 시점에 반영)
 	bool mCancelRequested = false;
-
-	// @brief 텔레포트 연출 진행 중 여부 (경로 이동과 별개 상태)
-	bool mIsTeleporting = false;
 
 	// @brief 이번 이동의 완료 통지 대리자
 	FOnBoardMoveFinished mOnFinished;

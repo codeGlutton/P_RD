@@ -9,7 +9,6 @@
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
 #include "Actor/BoardActor/BoardActorModel.h"
-#include "Component/VFXTimelineComponent/VFXTimelineComponent.h"
 
 #include "Algo/BinarySearch.h"
 
@@ -53,9 +52,8 @@ void UBoardMovementPresentationComponent::UnbindOwnerModel(UObjectModel* Model)
 	}
 	mBoardActorModel.Reset();
 
-	// 진행 중이던 이동스텝/텔레포트 연출이 있으면 배리어를 놓아서 완료로 처리
+	// 진행 중이던 이동스텝 연출이 있으면 배리어를 놓아서 완료로 처리
 	mMoveBarrier.Reset();
-	mTeleportBarrier.Reset();
 	// 이동이 멈추면 틱도 비활성화
 	SetComponentTickEnabled(false);
 	// 이동 중 해제될 수 있으므로 속도 상태도 초기화
@@ -151,7 +149,7 @@ void UBoardMovementPresentationComponent::OnRotate(const FRotator& TargetWorldRo
 	SetComponentTickEnabled(true);
 }
 
-void UBoardMovementPresentationComponent::OnTeleport(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform, TSharedPtr<FPresentationBarrier> Barrier)
+void UBoardMovementPresentationComponent::OnTeleport(const FTileTransform& NextTileTransform, const FTransform& TargetWorldTransform)
 {
 	AActor* Owner = GetOwner();
 	if (Owner == nullptr)
@@ -166,71 +164,22 @@ void UBoardMovementPresentationComponent::OnTeleport(const FTileTransform& NextT
 	mCurrentMoveVelocity = FVector::ZeroVector;
 	SetComponentTickEnabled(false);
 
-	// 배리어와 도착 위치 보관
-	mTeleportBarrier = Barrier;
-	mTeleportTargetTransform = TargetWorldTransform;
+	FTransform TeleportTargetActorTransform = TargetWorldTransform;
 
 	// 도착 위치는 타일 바닥 좌표라 액터를 그대로 놓으면 캡슐 절반이 파묻힘
 	// 캡슐 반높이(mGroundZOffset)만큼 올려서 발이 바닥을 딛게 함
-	FVector TargetLocation = mTeleportTargetTransform.GetLocation();
+	FVector TargetLocation = TeleportTargetActorTransform.GetLocation();
 	TargetLocation.Z += mGroundZOffset;
-	mTeleportTargetTransform.SetLocation(TargetLocation);
+	TeleportTargetActorTransform.SetLocation(TargetLocation);
 
 	// 루트 컴포넌트가 Static이면 SetActorLocation이 무시되므로 Movable로 강제
-	if (Owner->GetRootComponent() != nullptr
-		&& Owner->GetRootComponent()->Mobility != EComponentMobility::Movable)
+	if (Owner->GetRootComponent() != nullptr && Owner->GetRootComponent()->Mobility != EComponentMobility::Movable)
 	{
 		Owner->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 	}
 
-	// VFX 컴포넌트가 없으면 연출 없이 바로 도착 위치에 놓고 완료
-	UCombatTargetVFXTimelineComponent* VFXComp = Owner->FindComponentByClass<UCombatTargetVFXTimelineComponent>();
-	if (VFXComp == nullptr)
-	{
-		PlaceAtTeleportTarget();
-		mTeleportBarrier.Reset();
-		return;
-	}
-
-	// 출발 연출 시작. 끝나면 OnTeleportOutFinished 콜백 호출
-	VFXComp->PlayTeleportOutVFX(FOnTimelineEventStatic::CreateUObject(this, &UBoardMovementPresentationComponent::OnTeleportOutFinished));
-}
-
-void UBoardMovementPresentationComponent::OnTeleportOutFinished()
-{
-	AActor* Owner = GetOwner();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-
-	// 출발 연출이 끝났으므로 도착 위치에 놓음
-	PlaceAtTeleportTarget();
-
-	// 도착 연출 시작. 끝나면 OnTeleportInFinished 콜백 호출
-	UCombatTargetVFXTimelineComponent* VFXComp = Owner->FindComponentByClass<UCombatTargetVFXTimelineComponent>();
-	if (VFXComp == nullptr)
-	{
-		mTeleportBarrier.Reset();
-		return;
-	}
-	VFXComp->PlayTeleportInVFX(FOnTimelineEventStatic::CreateUObject(this, &UBoardMovementPresentationComponent::OnTeleportInFinished));
-}
-
-void UBoardMovementPresentationComponent::OnTeleportInFinished()
-{
-	// 배리어 해제 -> 이동 컴포넌트 모델의 OnTeleportPresentationFinished() 호출
-	mTeleportBarrier.Reset();
-}
-
-void UBoardMovementPresentationComponent::PlaceAtTeleportTarget()
-{
-	AActor* Owner = GetOwner();
-	if (Owner == nullptr)
-	{
-		return;
-	}
-	Owner->SetActorLocationAndRotation(mTeleportTargetTransform.GetLocation(), mTeleportTargetTransform.Rotator());
+	// 도착 위치에 놓고 완료
+	Owner->SetActorLocationAndRotation(TeleportTargetActorTransform.GetLocation(), TeleportTargetActorTransform.Rotator());
 }
 
 void UBoardMovementPresentationComponent::OnEndMovePath(const FTileTransform& TileTransform, const FTransform& TileWorldTransform)

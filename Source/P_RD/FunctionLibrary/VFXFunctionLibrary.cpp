@@ -1,4 +1,4 @@
-#include "FunctionLibrary/VFXFunctionLibrary.h"
+﻿#include "FunctionLibrary/VFXFunctionLibrary.h"
 #include "Components/PrimitiveComponent.h"
 
 #include "NiagaraFunctionLibrary.h"
@@ -114,12 +114,31 @@ UNiagaraComponent* UVFXFunctionLibrary::SpawnNiagaraEffectWithDirection(const FN
 	return SpawnNiagaraEffectWithDirection_Internal(NiagaraSpawnData.mNiagaraSystem, TargetComponent->GetOwner(), TargetComponent, NiagaraSpawnData.mSocketName, NiagaraSpawnData.mRelativeTransform, NiagaraSpawnData.mAttached, Direction);
 }
 
+FVFXTimelineEventTarget UVFXFunctionLibrary::MakeTimelineEventTarget(UPrimitiveComponent* RootTargetComp)
+{
+	FVFXTimelineEventTarget EventTarget;
+	if (RootTargetComp == nullptr)
+	{
+		return EventTarget;
+	}
+
+	for (const TObjectPtr<USceneComponent>& ChildComponent : RootTargetComp->GetAttachChildren())
+	{
+		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
+		if (ChildMeshComp != nullptr)
+		{
+			EventTarget.mMeshComps.Add(ChildMeshComp);
+		}
+	}
+	EventTarget.mMeshComps.Add(RootTargetComp);
+
+	return EventTarget;
+}
+
 bool UVFXFunctionLibrary::ExecuteVFXTimeline(UVFXTimelineComponent* TimelineComp, const FVFXTimelineExecutionData& TimelineExecutionData, FVFXTimelineEventTarget EventTarget)
 {
 	if (TimelineComp != nullptr && IsVFXPossible(TimelineComp) == true)
 	{
-		// 재생 속도는 한 번 설정하면 타임라인에 계속 남음
-		// 같은 키를 다른 배속으로 쓰는 연출이 있을 수 있으므로(예: 텔레포트 디졸브 3배속, 사망 디졸브 1배속)
 		// 재생할 때마다 이번 실행 데이터의 배속을 다시 지정
 		TimelineComp->SetPlayRate(TimelineExecutionData.mKeyName, TimelineExecutionData.mPlayRate);
 

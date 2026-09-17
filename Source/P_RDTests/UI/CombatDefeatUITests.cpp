@@ -1,4 +1,4 @@
-#include "Misc/AutomationTest.h"
+﻿#include "Misc/AutomationTest.h"
 #include "Editor.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
@@ -98,8 +98,8 @@ bool FCombatDefeatClassicTest::RunTest(const FString&)
                 FReadSurfaceDataFlags Flags(RCM_UNorm);
                 Flags.SetLinearToGamma(false);
                 Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels, Flags);
-                TArray<uint8> Bytes;
-                FImageUtils::CompressImageArray(Size.X, Size.Y, Pixels, Bytes);
+                TArray64<uint8> Bytes;
+                FImageUtils::PNGCompressImageArray(Size.X, Size.Y, Pixels, Bytes);
                 const FString Dir = FPaths::ProjectSavedDir() / TEXT("UI/DefeatClassic");
                 IFileManager::Get().MakeDirectory(*Dir, true);
                 FFileHelper::SaveArrayToFile(Bytes, *(Dir / FString::Printf(TEXT("defeat-%s-%dx%d.png"), Culture, Size.X, Size.Y)));

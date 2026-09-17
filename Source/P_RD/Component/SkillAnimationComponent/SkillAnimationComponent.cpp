@@ -134,7 +134,7 @@ void USkillAnimationComponent::OnHandleHitAnimationEvent(const FBoardActorAnimat
 			continue;
 		}
 
-		const ETileActorDirection OtherAnimationDir = ConvertOtherLocalTileMapDirection(
+		const ETileActorDirection OtherAnimationDir = LocalToOtherLocalDirection(
 			Context.mMontageDir, 
 			OwnerActorModel->GetTileTransform().mDirection, 
 			OtherActorModel->GetTileTransform().mDirection
@@ -175,7 +175,7 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 				continue;
 			}
 
-			const ETileActorDirection OtherVFXDir = ConvertOtherLocalTileMapDirection(
+			const ETileActorDirection OtherVFXDir = LocalToOtherLocalDirection(
 				Context.mMontageDir,
 				OwnerActorModel->GetTileTransform().mDirection,
 				OtherActorModel->GetTileTransform().mDirection
@@ -203,6 +203,11 @@ void USkillAnimationComponent::OnHandleHitVFXEvent(const FBoardActorAnimationCon
 			const FTransform TargetTransform = ActiveSkillContext.mMapModel->TileToWorldTransform(TargetTileTransform);
 			SpawnHitVFXOnTile(ActiveSkillContext.mSkillEndBarrier, VFXPayload->mVFXSpawnData, TargetTransform);
 		}
+		break;
+	}
+	case EApplyNiagaraTargetType::Self:
+	{
+		SpawnHitVFXOnSelf(ActiveSkillContext.mSkillEndBarrier, VFXPayload->mVFXSpawnData, Context.mMontageDir);
 		break;
 	}
 	}
@@ -327,17 +332,7 @@ void USkillAnimationComponent::SpawnHitVFXOnSelf(TSharedPtr<FPresentationBarrier
 		return;
 	}
 
-	FVFXTimelineEventTarget EventTarget;
-	for (const TObjectPtr<USceneComponent>& ChildComponent : TargetMeshComponent->GetAttachChildren())
-	{
-		UPrimitiveComponent* ChildMeshComp = Cast<UPrimitiveComponent>(ChildComponent);
-		if (ChildMeshComp != nullptr)
-		{
-			EventTarget.mMeshComps.Add(ChildMeshComp);
-		}
-	}
-	EventTarget.mMeshComps.Add(TargetMeshComponent);
-
+	const FVFXTimelineEventTarget EventTarget = UVFXFunctionLibrary::MakeTimelineEventTarget(TargetMeshComponent);
 	UVFXFunctionLibrary::SpawnAndExecuteVFX(VFXSpawnData, TargetMeshComponent, TimelineComponent, EventTarget, LocalDirection);
 }
 
