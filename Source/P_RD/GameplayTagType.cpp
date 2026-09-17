@@ -199,6 +199,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_Attack,								"Animation.Montage.Skill.Enemy.Eagle.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_BlindnessAttack,						"Animation.Montage.Skill.Enemy.Eagle.BlindnessAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_WindyWing,							"Animation.Montage.Skill.Enemy.Eagle.WindyWing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_Fly,									"Animation.Montage.Skill.Enemy.Eagle.Fly");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Golem_Swing,								"Animation.Montage.Skill.Enemy.Golem.Swing");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Golem_EarthQuake, 							"Animation.Montage.Skill.Enemy.Golem.EarthQuake");
@@ -239,6 +240,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_BladeWind,						"Animation.Montage.Skill.Enemy.HatchetBird.BladeWind");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_BladeStorm,					"Animation.Montage.Skill.Enemy.HatchetBird.BladeStorm");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_Haste,							"Animation.Montage.Skill.Enemy.HatchetBird.Haste");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_Fly,							"Animation.Montage.Skill.Enemy.HatchetBird.Fly");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Swing,						"Animation.Montage.Skill.Enemy.Skeleton.Golem.Swing");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick,						"Animation.Montage.Skill.Enemy.Skeleton.Golem.Kick");

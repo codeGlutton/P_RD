@@ -242,6 +242,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Eagle_Attack);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Eagle_BlindnessAttack);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Eagle_WindyWing);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Eagle_Fly);
 #pragma endregion
 
 #pragma region Golem
@@ -308,6 +309,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_HatchetBird_BladeWind);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_HatchetBird_BladeStorm);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_HatchetBird_Haste);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_HatchetBird_Fly);
 #pragma endregion
 
 #pragma region Skeleton_Golem
