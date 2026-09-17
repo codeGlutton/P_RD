@@ -468,7 +468,9 @@ void UCombatTargetVFXTimelineComponent::BindOwnerModel(UObjectModel* Model)
 	/* 연출 커브 추가 */
 
 	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	for (const FCombatTargetVFXTimelineSetting& CombatTargetVFXTimelineSetting : GamePlaySettings->mCombatTargetVFXTimelineSettings)
+
+	mTimelineSetttings.Append(GamePlaySettings->mCombatTargetVFXTimelineSettings);
+	for (const FCombatTargetVFXTimelineSetting& CombatTargetVFXTimelineSetting : mTimelineSetttings)
 	{
 		UCurveBase* Curve = CombatTargetVFXTimelineSetting.mTimelineCurve.LoadSynchronous();
 		if (UCurveFloat* FloatCurve = Cast<UCurveFloat>(Curve))

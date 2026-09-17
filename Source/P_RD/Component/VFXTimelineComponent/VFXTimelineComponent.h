@@ -11,6 +11,7 @@
 #include "Component/ComponentView.h"
 #include "Components/TimelineComponent.h"
 #include "Component/VFXTimelineComponent/VFXTimelineTrackEvent.h"
+#include "Setting/GamePlayType.h"
 #include "VFXTimelineComponent.generated.h"
 
 class UPrimitiveComponent;
@@ -160,6 +161,10 @@ protected:
 private:
 	// @brief 연출 대상 메시 목록 구성 (유닛 본체 메시 + 붙어 있는 무기/장비 메시)
 	bool MakeTargetMeshEventTarget(OUT FVFXTimelineEventTarget& OutEventTarget, OUT UPrimitiveComponent*& OutTargetMeshComp) const;
+
+protected:
+	UPROPERTY(Category = "Timeline", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "TimelineSetttings"))
+	TArray<FCombatTargetVFXTimelineSetting> mTimelineSetttings;
 
 protected:
 	// @brief 소유 모델 객체
