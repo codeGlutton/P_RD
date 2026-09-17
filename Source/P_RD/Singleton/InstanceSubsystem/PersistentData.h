@@ -6,6 +6,7 @@
  *********************************************************************/
 
 #pragma once
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
 
 #include "RDMinimal.h"
 
@@ -386,8 +387,8 @@ public:
 	void ClearOption();
 
 public:
-	void SetCombatPlaybackSpeed(int32 Speed) { mCombatPlaybackSpeed = FMath::Clamp(Speed, 1, 3); }
-	int32 GetCombatPlaybackSpeed() const { return FMath::Clamp(mCombatPlaybackSpeed, 1, 3); }
+	void SetCombatPlaybackSpeed(int32 Speed) { mCombatPlaybackSpeed = CombatPlaybackSpeed::Clamp(Speed); }
+	int32 GetCombatPlaybackSpeed() const { return CombatPlaybackSpeed::Clamp(mCombatPlaybackSpeed); }
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
 	void SetOverallQuality(EOverallQualityType QualityType);

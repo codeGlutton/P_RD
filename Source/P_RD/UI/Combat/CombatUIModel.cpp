@@ -1,4 +1,5 @@
 #include "UI/Combat/CombatUIModel.h"
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
 
 #include "UI/Combat/SimulationPreviewUIModel.h"
 
@@ -375,7 +376,7 @@ void UCombatUIModel::ClearEnemyNextSkillIndices()
 
 void UCombatUIModel::SetPlaybackSpeed(int32 Speed, bool Available)
 {
-    Speed = FMath::Clamp(Speed, 1, 3);
+    Speed = CombatPlaybackSpeed::Clamp(Speed);
     if (Speed == mPlaybackSpeed && Available == mPlaybackSpeedAvailable) return;
     mPlaybackSpeed = Speed;
     mPlaybackSpeedAvailable = Available;

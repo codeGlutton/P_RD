@@ -7038,8 +7038,8 @@ msgstr "{0}'S TURN"
 #. SourceLocation:	Source/P_RD/UI/Combat/CombatSpeedWidget.cpp(57)
 #: Source/P_RD/UI/Combat/CombatSpeedWidget.cpp(57)
 msgctxt "CombatHUD,PlaybackSpeed"
-msgid "전투 배속 {0}배 · 누르면 1 → 2 → 3배 전환"
-msgstr "Combat speed: {0}x · Tap to cycle 1 → 2 → 3x"
+msgid "전투 배속 {0}배 · 누르면 1~8배 순환"
+msgstr "Combat speed: {0}x · Tap to cycle from 1x to 8x"
 
 #. Key:	StatusAdded
 #. SourceLocation:	Source/P_RD/UI/Combat/CombatStatusPresentation.cpp(165)
@@ -9964,8 +9964,8 @@ msgstr "Units act in order from the left.\nR is the round number. Use the arrows
 #. SourceLocation:	Source/P_RD/UI/Tutorial/GuidedTutorialWidget.cpp(69)
 #: Source/P_RD/UI/Tutorial/GuidedTutorialWidget.cpp(69)
 msgctxt "FieldGuide,Playback"
-msgid "이 버튼을 누르면 전투 연출이 1 → 2 → 3배속으로 바뀝니다.\n행동 비용이나 효과는 같아요. 천천히 보고 싶으면 다시 1배속으로 돌리세요."
-msgstr "Tap this button to cycle combat animations through 1x, 2x, and 3x speed.\nAction costs and effects stay the same. Switch back to 1x whenever you want a closer look."
+msgid "이 버튼을 누르면 전투 연출이 1배부터 8배까지 차례로 바뀝니다.\n행동 비용이나 효과는 같아요. 천천히 보고 싶으면 다시 1배속으로 돌리세요."
+msgstr "Tap this button to cycle combat animations from 1x up to 8x speed.\nAction costs and effects stay the same. Switch back to 1x whenever you want a closer look."
 
 #. Key:	ActionPoints
 #. SourceLocation:	Source/P_RD/UI/Tutorial/GuidedTutorialWidget.cpp(71)
