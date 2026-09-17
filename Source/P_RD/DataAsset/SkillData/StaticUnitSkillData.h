@@ -9,7 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
-#include "DataAsset/UnitSpawnData/EnemyTargetPolicy.h"
+#include "DataAsset/SkillData/EnemyTargetPolicy.h"
 #include "StaticUnitSkillData.generated.h"
 /**
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset
@@ -52,13 +52,6 @@ public:
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
     int32 mPrice = 0;
 
-    // AI-only override; does not change player targeting or skill selection priority.
-    UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Override Enemy Target Policy", EditCondition = "mSkillType == ESkillType::Attack", EditConditionHides))
-    bool mOverrideEnemyTargetPolicy = false;
-
-    UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Enemy Target Policy", EditCondition = "mOverrideEnemyTargetPolicy && mSkillType == ESkillType::Attack", EditConditionHides))
-    FEnemyTargetPolicy mEnemyTargetPolicy;
-
     /* 논리적 설정값들 */
 public:
     // @brief 필요 행동력
@@ -69,5 +62,10 @@ public:
     // @brief 컨디션을 무시하고 순수 랜덤성 여부 (해당 스킬은 프리뷰를 제공하지 않음)
     UPROPERTY(Category = "EffectLogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IgnoreCondition"))
     bool mIgnoreCondition = false;
+
+public:
+    // @brief 타겟 선정 기준
+    UPROPERTY(Category = "AILogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetPolicy", EditCondition = "mSkillType == ESkillType::Attack", EditConditionHides))
+    FEnemyTargetPolicy mTargetPolicy;
 };
 

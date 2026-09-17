@@ -1,7 +1,4 @@
-#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
-#if WITH_EDITOR
-#include "Misc/DataValidation.h"
-#endif
+﻿#include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
 
 namespace
 {
@@ -20,6 +17,22 @@ namespace
 			Priorities[Index] = ESkillPriority::Normal;
 		}
 	}
+
+	// @brief 타겟 선정 기준 오버라이드 배열을 스킬 수에 맞춤 (새로 늘어난 항목은 비워두기)
+	void SyncTargetPolicyOverrideCount(TArray<FEnemyTargetPolicyOverride>& Overrides, int32 SkillCount)
+	{
+		const int32 OldCount = Overrides.Num();
+		if (OldCount == SkillCount)
+		{
+			return;
+		}
+
+		Overrides.SetNum(SkillCount);
+		for (int32 Index = OldCount; Index < SkillCount; ++Index)
+		{
+			Overrides[Index] = FEnemyTargetPolicyOverride();
+		}
+	}
 }
 
 void UStaticEnemyUnitSpawnData::PostLoad()
@@ -27,25 +40,16 @@ void UStaticEnemyUnitSpawnData::PostLoad()
 	Super::PostLoad();
 
 	SyncSkillPriorityCount(mSkillPriorities, mSkillDatas.Num());
+	SyncTargetPolicyOverrideCount(mTargetPolicyOverrides, mSkillDatas.Num());
 }
 
 #if WITH_EDITOR
-EDataValidationResult UStaticEnemyUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
-{
-	const EDataValidationResult Result = Super::IsDataValid(Context);
-	if (mTargetPolicy.IsStatusPolicy() && !mTargetPolicy.mStatusTag.IsValid())
-	{
-		Context.AddError(FText::FromString(TEXT("AI 상태이상 대상 우선순위에 Status Tag를 지정하세요.")));
-		return EDataValidationResult::Invalid;
-	}
-	return Result;
-}
-
 void UStaticEnemyUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 
 	SyncSkillPriorityCount(mSkillPriorities, mSkillDatas.Num());
+	SyncTargetPolicyOverrideCount(mTargetPolicyOverrides, mSkillDatas.Num());
 }
 #endif
 

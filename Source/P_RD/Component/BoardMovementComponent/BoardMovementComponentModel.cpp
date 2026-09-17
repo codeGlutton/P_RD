@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   BoardMovementComponentModel.cpp
  * @brief  보드 액터 공용 이동 컴포넌트 모델 구현 파일
  * @author 이문환
@@ -45,23 +45,16 @@ bool UBoardMovementComponentModel::TeleportTo(const FTileTransform& NextTransfor
 		return false;
 	}
 
-	mIsTeleporting = true;
-	mOnFinished = OnFinished;
-
 	// 논리 좌표 변경 -> 출발 타일의 이탈 오버랩 통지
-	// 도착 타일의 진입 오버랩 통지는, 연출이 끝난 다음에 발생
 	TileMap->StartActorMovement(NextTransform, Owner);
+	// 도착 타일 진입 오버랩 통지
+	TileMap->CompleteActorMovement(GetOwnerModel<UBoardActorModel>());
 
-	// 연출 완료 후 받을 배리어 생성
-	// 컴포넌트 모델이 먼저 파괴될 수 있으므로 WeakLambda로 보호
-	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
-		FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-			OnTeleportPresentationFinished();
-			}));
+	// 완료 통지
+	OnFinished.ExecuteIfBound();
 
-	// OnTeleport를 구독하고 있던 뷰가 사라짐/나타남 연출 시작
-	// 구독자가 없으면(시뮬레이션 모드) 함수 종료 시 배리어가 바로 소멸해서 즉시 완료 처리
-	Owner->OnTeleport.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier);
+	// OnTeleport를 구독하고 있던 뷰가 사라짐/나타남 동기 연출 시작
+	Owner->OnTeleport.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform));
 	return true;
 }
 
@@ -153,8 +146,8 @@ bool UBoardMovementComponentModel::CanEnterStep(int32 StepIndex) const
 
 bool UBoardMovementComponentModel::IsMoving() const
 {
-	// 경로 이동 중이거나 텔레포트 연출 중이면 '이동' 중이라고 판단
-	return mCurrentStepIndex != INDEX_NONE || mIsTeleporting == true;
+	// 경로 이동 연출 중이면 '이동' 중이라고 판단
+	return mCurrentStepIndex != INDEX_NONE;
 }
 
 EBoardMoveMode UBoardMovementComponentModel::GetMoveMode() const
@@ -164,8 +157,7 @@ EBoardMoveMode UBoardMovementComponentModel::GetMoveMode() const
 
 void UBoardMovementComponentModel::CancelMove()
 {
-	// 지금 이동하고 있는 칸의 연출이 끝나면 다음 칸으로 넘어가지 않도록 플래그 설정
-	// 텔레포트는 한 번에 이동하니까 '다음 칸'이 없어서 상관 없음
+	// 이동 중일 때만 의미 있음 - 실제 정지는 진행 중인 스텝의 연출 종료 시점
 	if (IsMoving() == true)
 	{
 		mCancelRequested = true;
@@ -283,23 +275,6 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 	FOnBoardMoveFinished Finished = mOnFinished;
 	ResetMoveState();
 	BroadcastEndMovePath();
-	Finished.ExecuteIfBound();
-}
-
-void UBoardMovementComponentModel::OnTeleportPresentationFinished()
-{
-	// 통지 받은 쪽에서 바로 새 이동을 시작하면 현재 실행중인 델리깃을 덮어쓸 수 있음
-	// 덮어쓰기를 방지하기 위해 변수로 이동시켜두고 통지
-	FOnBoardMoveFinished Finished = MoveTemp(mOnFinished);
-
-	// 텔레포트 상태 해제. 도착 오버랩 통지보다 먼저 해야 함
-	// (도착 타일의 밀치기 함정이 IsMoving()==true 를 보면 밀지 않고 넘어감)
-	mIsTeleporting = false;
-
-	// 도착 타일 진입 오버랩 통지
-	GetTileMap()->CompleteActorMovement(GetOwnerModel<UBoardActorModel>());
-
-	// 완료 통지
 	Finished.ExecuteIfBound();
 }
 

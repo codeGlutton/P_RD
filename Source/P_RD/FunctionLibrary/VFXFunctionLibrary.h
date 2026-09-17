@@ -51,6 +51,9 @@ public:
 	static UNiagaraComponent* SpawnNiagaraEffectWithDirection(const FNiagaraSpawnData& NiagaraSpawnData, UPrimitiveComponent* TargetComponent, ETileActorDirection Direction);
 
 public:
+	static FVFXTimelineEventTarget MakeTimelineEventTarget(UPrimitiveComponent* RootTargetComp);
+
+public:
 	/**
 	 * @brief FVFXTimelineExecutionData 기반으로 타임라인을 실행합니다.
 	 */

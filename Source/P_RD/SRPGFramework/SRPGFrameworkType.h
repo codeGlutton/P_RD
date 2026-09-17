@@ -50,9 +50,16 @@ inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDire
     return StaticCast<ETileActorDirection>(TileMapDir);
 }
 
-inline ETileActorDirection ConvertOtherLocalTileMapDirection(ETileActorDirection SourceLocalDirection, ETileActorDirection SourceForward, ETileActorDirection DestForward)
+/**
+ * @brief 로컬 맵 좌표계에서 다른 로컬 맵 좌표계로 방향 전환
+ * @param SourceLocalDirection 소스 로컬 좌표계에서의 방향
+ * @param SourceTileMapForward 소스의 타일 맵 좌표계 기준 방향
+ * @param DestTileMapForward 목표의 타일 맵 좌표계 기준 방향
+ * @return 목표 로컬 좌표계에서의 방향
+ */
+inline ETileActorDirection LocalToOtherLocalDirection(ETileActorDirection SourceLocalDirection, ETileActorDirection SourceTileMapForward, ETileActorDirection DestTileMapForward)
 {
-    const int32 Delta = StaticCast<int32>(DestForward) - StaticCast<int32>(SourceForward);
+    const int32 Delta = StaticCast<int32>(DestTileMapForward) - StaticCast<int32>(SourceTileMapForward);
 
     return StaticCast<ETileActorDirection>((StaticCast<int32>(SourceLocalDirection) + Delta + 4) % 4);
 }

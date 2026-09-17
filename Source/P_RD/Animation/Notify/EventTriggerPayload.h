@@ -156,6 +156,7 @@ enum class EApplyNiagaraTargetType : uint8
     Actor,
     EffectTile,
     TargetTile,
+    Self,
 };
 
 /**
