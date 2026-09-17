@@ -191,7 +191,7 @@ protected:
 	 * @details
 	 * mTargets를 순회하며 IsTargetQualified로 자격 타겟 수를 센 뒤,
 	 * 수량 조건(Any/All)으로 발동 여부를 결정.
-	 * 타겟이 비어 있으면 판정 대상이 없으므로 통과.
+	 * 타겟이 비어 있으면 대상 인덱스 없이 조건을 한 번 평가 (대상 참조 조건은 탈락).
 	 *
 	 * @param Ctx   소유자/대상 및 스냅샷
 	 * @param State 패시브 내부 상태 (자격 판정에 전달)

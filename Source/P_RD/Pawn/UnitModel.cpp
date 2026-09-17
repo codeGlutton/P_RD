@@ -199,12 +199,9 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 
 void UUnitModel::OnEndTurn(int32 TurnCount)
 {
-	/* 행동력 제거 */
-
-	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
-
 	/* 턴 종료 패시브 처리 */
 
+	// 남은 AP를 참조하는 패시브가 있으므로 행동력 제거보다 먼저 처리
 	TArray<UTacticalPassive*> Passives = mPassiveCompModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndTurn);
 
 	UBoardCombatTargetSnapshotData* OwnerSnapshot = MakeSnapshotData();
@@ -221,6 +218,10 @@ void UUnitModel::OnEndTurn(int32 TurnCount)
 		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndTurn, PassiveContext, OUT DynamicPassiveData);
 		Passive->CommitPassive(DynamicPassiveData);
 	}
+
+	/* 행동력 제거 */
+
+	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, 0.f);
 }
 
 UAttributeSetComponentModel* UUnitModel::GetAttributeComponentModel() const
