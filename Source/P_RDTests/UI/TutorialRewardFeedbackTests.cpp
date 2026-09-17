@@ -147,6 +147,7 @@ bool FLevelRewardGuideTest::RunTest(const FString&)
     auto* Boss = CreateWidget<UBossEntranceWidget>(World);
     Boss->SetIgnoreCombatPlayback(true);
     TestFalse(TEXT("Boss cinema refuses combat acceleration"), Boss->SetCinematicPlaybackRate(3.f));
+    TestFalse(TEXT("Boss cinema also refuses maximum combat speed"), Boss->SetCinematicPlaybackRate(8.f));
     return !HasAnyErrors();
 }
 #endif

@@ -1,4 +1,5 @@
 #include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "FunctionLibrary/CameraFunctionLibrary.h"
 #include "Pawn/Camera/CombatCameraPawn.h"
@@ -47,7 +48,7 @@ void UCombatPlaybackComponent::ApplySpeed()
 void UCombatPlaybackComponent::CycleSpeed()
 {
     if (!Active || !Mixer.IsValid()) return;
-    Speed = Speed % 3 + 1;
+    Speed = CombatPlaybackSpeed::Next(Speed);
     ApplySpeed();
     if (auto* GI = GetWorld()->GetGameInstance())
     {

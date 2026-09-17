@@ -54,7 +54,7 @@ void UCombatSpeedWidget::Configure(UCombatUIModel* Model)
     Label->SetText(FText::FromString(FString::Printf(TEXT("%dx"), Speed)));
     Button->SetIsEnabled(Model && Model->IsPlaybackSpeedAvailable());
     Button->SetBackgroundColor(Speed == 1 ? FLinearColor(.22f,.18f,.12f) : FLinearColor(.4f,.3f,.14f));
-    SetToolTipText(FText::Format(NSLOCTEXT("CombatHUD", "PlaybackSpeed", "전투 배속 {0}배 · 누르면 1 → 2 → 3배 전환"), Speed));
+    SetToolTipText(FText::Format(NSLOCTEXT("CombatHUD", "PlaybackSpeed", "전투 배속 {0}배 · 누르면 1~8배 순환"), Speed));
 }
 
 void UCombatSpeedWidget::Clicked()
