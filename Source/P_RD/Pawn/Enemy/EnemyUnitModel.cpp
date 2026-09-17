@@ -33,6 +33,7 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
+	mTargetPolicy = EnemySpawn->mTargetPolicy;
 	mSkillPriorities = EnemySpawn->mSkillPriorities;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())

@@ -28,6 +28,62 @@ DEFINE_LOG_CATEGORY(LogSRPGEnemyPlanner);
 
 namespace
 {
+	// Evaluate actual effect footprints, including empty aimed tiles and each phase's team filter.
+	// This is geometric coverage, not damage simulation; it consumes no gameplay randomness.
+	int32 CountCoveredTargets(const UTileMapModel* Map, const UEnemyUnitModel* Enemy,
+		const UStaticUnitSkillData* Skill, const FTileIndex& From, const FTileIndex& Aim,
+		const TArray<const UUnitModel*>& Targets)
+	{
+		TArray<FTileIndex> EffectTiles;
+		for (const FTileIndex& Center : Map->GetTargetTiles(From, Aim, Skill->mTargetPattern))
+		{
+			for (const FTileIndex& Tile : Map->GetEffectTiles(Center, Skill->mEffectPattern,
+				Skill->mEffectArea, static_cast<ETileLayerFlag>(Skill->mEffectBlockerMask), Enemy))
+			{
+				EffectTiles.AddUnique(Tile);
+			}
+		}
+		TSet<const UUnitModel*> Covered;
+		for (const FSkillPhaseLayer& Phase : Skill->mSkillPhaseLayers)
+		{
+			const auto Tiles = Phase.FilterTileIndexes(From, EffectTiles);
+			const auto CombatTargets = Phase.FilterCombatTargets(Map, Enemy, Tiles);
+			for (const UUnitModel* Target : Targets)
+			{
+				if (CombatTargets.Contains(const_cast<UUnitModel*>(Target))) Covered.Add(Target);
+			}
+		}
+		return Covered.Num();
+	}
+
+	bool ChooseMostTargets(const FTacticalTileTable& Table, const UTileMapModel* Map,
+		const UEnemyUnitModel* Enemy, const UStaticUnitSkillData* Skill,
+		const TArray<const UUnitModel*>& Targets, int32 ActionPoint,
+		TMap<FTileIndex, FTileIndex>& BestAims)
+	{
+		int32 BestCount = 0;
+		for (const FTacticalTileInfo& Tile : Table.GetTacticalTiles())
+		{
+			if (Tile.mMoveCost + Skill->mRequiredActionPoint > ActionPoint) continue;
+			const auto AimTiles = Map->GetAimableTiles(Tile.mIndex, Skill->mAimRange,
+				Skill->mAimPattern, Skill->mCanAimBoardActor,
+				static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), nullptr, Enemy);
+			for (const FTileIndex& Aim : AimTiles)
+			{
+				const int32 Count = CountCoveredTargets(Map, Enemy, Skill, Tile.mIndex, Aim, Targets);
+				if (Count == 0 || Count < BestCount) continue;
+				if (Count > BestCount)
+				{
+					BestCount = Count;
+					BestAims.Reset();
+				}
+				// Stable first aim per destination; movement tendency breaks destination ties.
+				if (!BestAims.Contains(Tile.mIndex)) BestAims.Add(Tile.mIndex, Aim);
+			}
+		}
+		return BestCount > 0;
+	}
+
 	// @brief 유닛 로그 라벨 (키이름#모델ID)
 	FString MakeUnitLabel(const UBoardActorModel* Model)
 	{
@@ -96,6 +152,11 @@ namespace
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s@(%d,%d) 경로거리=%s → 시전불가: 조준가능타일 없음(사거리/시야 밖)"),
 					*LogPrefix, TargetIndex, *TargetLabel, TargetTiles[TargetIndex].mX, TargetTiles[TargetIndex].mY, *DistanceText);
 			}
+			else if (MinNeed <= ActionPoint)
+			{
+				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 타겟[%d]=%s → 조준/AP 가능하지만 대상 정책 또는 효과 범위 조건으로 시전하지 않음"),
+					*LogPrefix, TargetIndex, *TargetLabel);
+			}
 			else
 			{
 				// 조준가능하지만 행동력 부족
@@ -146,7 +207,9 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	TArray<const UUnitModel*> TargetModels;
 	for (const UUnitModel* Player : Players)
 	{
-		if (Player != nullptr)
+		if (Player != nullptr &&
+			(!Player->GetAttributeComponentModel() || !Player->GetAttributeComponentModel()->HasMatchingGameplayTag(
+				EffectTags::GameplayEffect_ActorState_Dead)))
 		{
 			TargetTiles.Add(Player->GetTileTransform().mIndex);
 			TargetModels.Add(Player);
@@ -289,14 +352,21 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	bool CanCast = false;
 	int32 ChosenTarget = INDEX_NONE;
 	FTileIndex Dest = EnemyTile;
+	FTileIndex AreaAim = FTileIndex::Invalid;
+	const FEnemyTargetPolicy& Policy = ChosenSkill->mOverrideEnemyTargetPolicy
+		? ChosenSkill->mEnemyTargetPolicy : Enemy->GetTargetPolicy();
+	const bool bChasePreferred = !bSpell && Policy.mPriority != EEnemyTargetPriority::MostTargets &&
+		Policy.mUnreachableBehavior == EEnemyUnreachableTargetBehavior::ChasePreferred;
 
-	// 이동 판단의 기준 타겟: 전체 타겟 중 최근접
+	// 이동 판단의 기준 타겟도 DA 우선순위를 사용한다. 자기 버프는 기존 거리 기준 유지.
 	TArray<int32> AllTargets;
 	for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
 	{
 		AllTargets.Add(TargetIndex);
 	}
-	const int32 NearestTarget = ChooseNearestTarget(Table, AllTargets, EventStream);
+	const int32 ReferenceTarget = ChooseTargetByPriority(
+		bSpell ? FEnemyTargetPolicy() : Policy,
+		Table, TargetModels, AllTargets, EventStream);
 
 	// 확정 스킬로 시전 가능한 타겟 후보 수집 (버프는 테이블에 스킬이 없으므로 항상 비어 있음)
 	TArray<int32> CastableTargets;
@@ -308,12 +378,21 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		}
 	}
 
+	TMap<FTileIndex, FTileIndex> BestAreaAims;
+	const bool bAreaCast = !bSpell && Policy.mPriority == EEnemyTargetPriority::MostTargets &&
+		ChooseMostTargets(Table, TileMap, Enemy, ChosenSkill, TargetModels, ActionPoint, BestAreaAims);
+	if (bChasePreferred)
+	{
+		// Rank all living targets first, then only permit a cast at that target.
+		CastableTargets.RemoveAll([ReferenceTarget](int32 Index) { return Index != ReferenceTarget; });
+	}
+
 	if (bSpell == true)
 	{
 		//
 		// 자기 버프: 남는 예산으로 이동 성향대로 자리를 잡고 거기서 시전 (도달 가능한 모든 타일이 후보)
 		//
-		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), NearestTarget, EnemyTile,
+		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ReferenceTarget, EnemyTile,
 			[](const FTacticalTileInfo&)
 			{
 				return true;
@@ -333,13 +412,26 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 				*LogPrefix, ChosenSkillSlot, *ChosenSkill->GetName(), ChosenSkill->mRequiredActionPoint, TableMoveBudget);
 		}
 	}
-	else if (CastableTargets.IsEmpty() == false)
+	else if (bAreaCast)
+	{
+		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ReferenceTarget, EnemyTile,
+			[&BestAreaAims](const FTacticalTileInfo& Tile) { return BestAreaAims.Contains(Tile.mIndex); });
+		AreaAim = BestAreaAims.FindChecked(Dest);
+		CanCast = true;
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 밀집공격: 이동(%d,%d) 조준(%d,%d)"),
+			*LogPrefix, Dest.mX, Dest.mY, AreaAim.mX, AreaAim.mY);
+	}
+	else if (CastableTargets.IsEmpty() == false && Policy.mPriority != EEnemyTargetPriority::MostTargets)
 	{
 		//
 		// 공격 시전: 시전 가능한 타겟이 있으면 [타겟 -> 목적지] 순서로 확정 (스킬은 이미 확정)
 		//
-		// 타겟: 시전 가능한 타겟 중 최근접
-		ChosenTarget = ChooseNearestTarget(Table, CastableTargets, EventStream);
+		// 높은 우선순위 대상이 사거리/AP 조건 밖이어도 공격 가능한 다른 대상에게 시전한다.
+		ChosenTarget = bChasePreferred ? ReferenceTarget :
+			ChooseTargetByPriority(Policy, Table, TargetModels, CastableTargets, EventStream);
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 대상우선순위=%s 선택=%s"), *LogPrefix,
+			*StaticEnum<EEnemyTargetPriority>()->GetNameStringByValue(static_cast<int64>(Policy.mPriority)),
+			*MakeUnitLabel(TargetModels[ChosenTarget]));
 		// 목적지: 확정 스킬로 그 타겟에게 시전 가능한 타일 중 이동성향대로
 		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ChosenTarget, EnemyTile,
 			[&Table, ChosenSkillSlot, ChosenTarget](const FTacticalTileInfo& Tile)
@@ -377,14 +469,18 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 판단근거 로그: 시전하지 못한 턴은 근거를 상세히 남김
 		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), ChosenSkillSlot, ChosenSkill, TargetModels, TargetTiles, Table);
 
-		if (Table.HasAnyAimable())
+		// Keep legacy Nearest/AttackAvailable movement and RNG behaviour exactly intact.
+		const bool bLegacyMovement = Policy.mPriority == EEnemyTargetPriority::Nearest && !bChasePreferred;
+		const auto CanPrepareCast = [&Table, ChosenSkillSlot, ReferenceTarget, bLegacyMovement](const FTacticalTileInfo& Tile)
+		{
+			return bLegacyMovement ? Tile.mAimableFlags.Contains(true) :
+				Table.IsAimable(Tile, ChosenSkillSlot, ReferenceTarget);
+		};
+		if (Table.GetTacticalTiles().ContainsByPredicate(CanPrepareCast))
 		{
 			// 이번 턴에는 못 때리므로, 다음 턴 시전을 노리고 조준 가능한 타일로 이동
-			Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), NearestTarget, EnemyTile,
-				[](const FTacticalTileInfo& Tile)
-				{
-					return Tile.mAimableFlags.Contains(true);
-				});
+			Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ReferenceTarget, EnemyTile,
+				CanPrepareCast);
 
 			// 판단근거 로그: 선점이동 결정
 			if (Dest != EnemyTile)
@@ -399,14 +495,14 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		}
 		else
 		{
-			// 어디로 가든 조준이 안 되면, 최근접 타겟에게 최대한 접근
-			Dest = ChooseApproachDestination(Table, NearestTarget, EnemyTile);
+			// 어디로 가든 조준이 안 되면, DA로 선택한 타겟에게 최대한 접근
+			Dest = ChooseApproachDestination(Table, ReferenceTarget, EnemyTile);
 
 			// 판단근거 로그: 접근이동 결정
 			if (Dest != EnemyTile)
 			{
 				UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 결정: 접근이동 → 타겟[%d]=%s 방향 (%d,%d) 이동%d/AP%d"),
-					*LogPrefix, NearestTarget, *MakeUnitLabel(TargetModels[NearestTarget]), Dest.mX, Dest.mY, GetTableMoveCost(Dest), ActionPoint);
+					*LogPrefix, ReferenceTarget, *MakeUnitLabel(TargetModels[ReferenceTarget]), Dest.mX, Dest.mY, GetTableMoveCost(Dest), ActionPoint);
 			}
 			else
 			{
@@ -451,7 +547,8 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		Cast.InitializeAs<FSRPGSkillCastCommand>();
 		FSRPGSkillCastCommand& CastRef = Cast.GetMutable<FSRPGSkillCastCommand>();
 		CastRef.mSkillIndex = ChosenSkillSlot;
-		CastRef.mTargetIndex = bAimSelf ? Dest : TargetTiles[ChosenTarget];
+		CastRef.mTargetIndex = AreaAim != FTileIndex::Invalid ? AreaAim :
+			(bAimSelf ? Dest : TargetTiles[ChosenTarget]);
 		AddAction(MoveTemp(Cast));
 	}
 
@@ -496,6 +593,80 @@ int32 USRPGEnemyTurnPlanner::ChooseSkillByPriority(
 	return (Candidates.Num() == 1)
 		? Candidates[0]
 		: Candidates[EventStream.RandRange(0, Candidates.Num() - 1)];
+}
+
+int32 USRPGEnemyTurnPlanner::ChooseTargetByPriority(
+	const FEnemyTargetPolicy& Policy,
+	const FTacticalTileTable& Table,
+	const TArray<const UUnitModel*>& Targets,
+	const TArray<int32>& Candidates,
+	const FRandomStream& EventStream)
+{
+	const EEnemyTargetPriority Priority = Policy.mPriority;
+	if (Candidates.IsEmpty()) return INDEX_NONE;
+	if (Priority == EEnemyTargetPriority::Random)
+		return Candidates.Num() == 1 ? Candidates[0] : Candidates[EventStream.RandRange(0, Candidates.Num() - 1)];
+	if (Priority == EEnemyTargetPriority::Nearest || Priority == EEnemyTargetPriority::MostTargets ||
+		(Policy.IsStatusPolicy() && !Policy.mStatusTag.IsValid()))
+		return ChooseNearestTarget(Table, Candidates, EventStream);
+
+	double BestScore = TNumericLimits<double>::Max();
+	TArray<int32> BestTargets;
+	for (int32 Index : Candidates)
+	{
+		const auto* Attributes = Targets[Index]->GetAttributeComponentModel();
+		if (!Attributes && Priority != EEnemyTargetPriority::Farthest) continue;
+		bool HasValues = true;
+		const auto Read = [Attributes, &HasValues](const FTacticalAttribute& Attribute)
+		{
+			bool Found = false;
+			const float Value = Attributes->GetAttributeCurrentValue(Attribute, Found);
+			HasValues &= Found;
+			return Value;
+		};
+		double Score = 0.;
+		switch (Priority)
+		{
+		case EEnemyTargetPriority::LowestHP:
+			Score = Read(UCombatTargetAttributeSet::GetHPAttribute());
+			break;
+		case EEnemyTargetPriority::LowestHPPercent:
+		{
+			const double MaxHP = Read(UCombatTargetAttributeSet::GetMaxHPAttribute());
+			if (MaxHP <= 0.) continue;
+			Score = Read(UCombatTargetAttributeSet::GetHPAttribute()) / MaxHP;
+			break;
+		}
+		case EEnemyTargetPriority::HighestMaxHP:
+			Score = -Read(UCombatTargetAttributeSet::GetMaxHPAttribute());
+			break;
+		case EEnemyTargetPriority::Farthest:
+			if (Table.GetDistanceToTarget(Index) == MAX_int32) continue;
+			Score = -static_cast<double>(Table.GetDistanceToTarget(Index));
+			break;
+		case EEnemyTargetPriority::WithStatus:
+			Score = Attributes->HasMatchingGameplayTag(Policy.mStatusTag) ? 0. : 1.;
+			break;
+		case EEnemyTargetPriority::WithoutStatus:
+			Score = Attributes->HasMatchingGameplayTag(Policy.mStatusTag) ? 1. : 0.;
+			break;
+		default:
+			return ChooseNearestTarget(Table, Candidates, EventStream);
+		}
+		if (!HasValues || !FMath::IsFinite(Score)) continue;
+		if (Score < BestScore)
+		{
+			BestScore = Score;
+			BestTargets.Reset();
+			BestTargets.Add(Index);
+		}
+		else if (Score == BestScore)
+		{
+			BestTargets.Add(Index);
+		}
+	}
+	// Missing attributes must not stop the turn. Preserve the established seeded distance tie-break.
+	return ChooseNearestTarget(Table, BestTargets.IsEmpty() ? Candidates : BestTargets, EventStream);
 }
 
 int32 USRPGEnemyTurnPlanner::ChooseNearestTarget(
