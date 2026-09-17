@@ -12,12 +12,18 @@
 #include "Components/OverlaySlot.h"
 #include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
+#include "HAL/IConsoleManager.h"
 #include "UI/Combat/CombatUIModel.h"
 #include "GameplayTagType.h"   // EffectTags::GameplayEffect_StatusEffect_* (상태이상 태그→아이콘 매핑)
 #include "P_RD.h"   // LogRD ([RDBOT] 자동 플레이/QA 텔레메트리)
 
 namespace
 {
+	int32 GRDBotTelemetry = 0;
+	FAutoConsoleVariableRef CRDBotTelemetry(
+		TEXT("rd.Debug.BotTelemetry"), GRDBotTelemetry,
+		TEXT("Emit combat unit coordinates for automation when set to 1. Disabled by default."));
+
 	// (WBP 클래스/채움 텍스처는 UCombatLayoutHUDWidget 생성자에서 ConstructorHelpers로 하드 레퍼런스한다 — #300 컨벤션.)
 
 	// HP바는 기존 크기를 유지한다. 상태이상만 아래의 독립 레이아웃 값으로 키운다.
@@ -461,8 +467,13 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 	 * 자동 플레이/QA 드라이버가 화면 픽셀을 추정하지 않도록, 이미 여기서 구하는
 	 * 유닛의 투영 좌표를 그대로 로그로 흘린다. HP바 배치에 쓰는 값과 같은 값이라
 	 * 별도 투영 경로를 두지 않는다(어긋날 여지를 없앤다).
-	 * 매 틱 찍으면 logcat이 넘치므로 내용이 바뀔 때만 한 줄 낸다.
+	 * QA에서 명시적으로 켰을 때만 수집한다. 이동 중에는 좌표가 매 틱 바뀐다.
 	 */
+	const bool bBotTelemetryEnabled = GRDBotTelemetry != 0;
+	if (bBotTelemetryEnabled == false)
+	{
+		mLastBotTelemetry.Reset();
+	}
 	FString BotLine;
 
 	const TArray<FUnitUI>& Units = mUIModel->GetUnitUIs();
@@ -553,16 +564,19 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 			RootSlot->SetPosition(CanvasPosition + FVector2D(0.0f, UnitHpBarHeadOffsetY));
 		}
 
-		// [RDBOT] 유닛 한 칸. sx/sy 는 유닛 발밑(=탭해야 하는 타일) 기준 위젯 좌표.
-		BotLine += FString::Printf(
-			TEXT("|u=%d,%s,%s,%d/%d,ap=%d/%d,tile=%d:%d,sx=%.0f,sy=%.0f"),
-			Unit.mUnitId,
-			*Unit.mName.ToString(),
-			Unit.mIsPlayer ? TEXT("ally") : TEXT("foe"),
-			FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP),
-			Unit.mActionPoints, Unit.mMaxActionPoints,
-			Unit.mTile.mX, Unit.mTile.mY,
-			ScreenPosition.X, ScreenPosition.Y);
+		if (bBotTelemetryEnabled)
+		{
+			// [RDBOT] sx/sy 는 유닛 발밑(=탭해야 하는 타일) 기준 위젯 좌표.
+			BotLine += FString::Printf(
+				TEXT("|u=%d,%s,%s,%d/%d,ap=%d/%d,tile=%d:%d,sx=%.0f,sy=%.0f"),
+				Unit.mUnitId,
+				*Unit.mName.ToString(),
+				Unit.mIsPlayer ? TEXT("ally") : TEXT("foe"),
+				FMath::RoundToInt(Unit.mHP), FMath::RoundToInt(Unit.mMaxHP),
+				Unit.mActionPoints, Unit.mMaxActionPoints,
+				Unit.mTile.mX, Unit.mTile.mY,
+				ScreenPosition.X, ScreenPosition.Y);
+		}
 
 		// 줌 배율 반영(하단 중앙 피벗이라 커져도 밑변이 머리 위 투영점에 고정).
 		Bar.mRoot->SetRenderScale(BarRenderScale);
@@ -575,7 +589,7 @@ void UCombatLayoutHUDWidget::UpdateUnitHpBars()
 
 	// [RDBOT] 내용이 바뀐 틱에만 한 줄. 드라이버는 vps(뷰포트 스케일)로
 	// 위젯 좌표를 기기 픽셀로 환산해 그대로 탭한다.
-	if (BotLine != mLastBotTelemetry)
+	if (bBotTelemetryEnabled && BotLine != mLastBotTelemetry)
 	{
 		mLastBotTelemetry = BotLine;
 		const FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(this);
