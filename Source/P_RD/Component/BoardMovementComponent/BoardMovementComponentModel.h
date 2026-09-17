@@ -61,6 +61,16 @@ public:
 	bool PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
 
 	/**
+	 * @brief 목표 타일로 즉시 이동(텔레포트) 시작
+	 * @details 경로 없이 논리 좌표를 바로 옮기고, 뷰에는 사라짐/나타남 연출을 요청. 도착 오버랩 통지는 연출 완료 후.
+	 *          바라보는 방향 유지, 이동 AP 미차감(비용은 스킬 쪽에서 처리). 막힌 타일이면 교체 대상 밀어내기 없이 실패
+	 * @param NextTransform 도착 타일 트랜스폼
+	 * @param OnFinished 완료 통지
+	 * @return 시작 성공 여부 (이동/텔레포트 중 재호출이거나 도착 타일이 막혀 있으면 false)
+	 */
+	bool TeleportTo(const FTileTransform& NextTransform, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
+
+	/**
 	 * @brief 이동 루프 안(도착 오버랩 통지 중)에서 함정이 보류 밀치기 경로를 등록
 	 * @details 직접 이동을 시작하는 재진입 대신 등록만 하고, 현재 스텝 마무리 지점에서 루프가 소비.
 	 *          밀 곳이 없는 제자리 1칸 경로도 등록 가능하며, 이 경우 잔여 걷기를 버리고 그 자리에서 이동 완료.
@@ -110,8 +120,10 @@ private:
 	void StartStep(int32 StepIndex);
 	// @brief 현재 칸 도착 처리 (오버랩 통지)
 	void CompleteStep();
-	// @brief 이동연출베리어가 완료됐을 때 호출될 콜백 (다음 타일 진행/종료 판단)
+	// @brief 이동 연출 배리어가 완료됐을 때 호출될 콜백 (다음 타일 진행/종료 판단)
 	void OnStepPresentationFinished();
+	// @brief 텔레포트 연출 배리어가 완료됐을 때 호출될 콜백 (도착 오버랩 통지/완료 알림)
+	void OnTeleportPresentationFinished();
 
 	/* 헬퍼 */
 	// @brief 이동 상태 초기화 (완료/취소 공통 정리)
@@ -143,6 +155,9 @@ private:
 
 	// @brief 취소 요청 여부 (현재 스텝 연출 종료 시점에 반영)
 	bool mCancelRequested = false;
+
+	// @brief 텔레포트 연출 진행 중 여부 (경로 이동과 별개 상태)
+	bool mIsTeleporting = false;
 
 	// @brief 이번 이동의 완료 통지 대리자
 	FOnBoardMoveFinished mOnFinished;
