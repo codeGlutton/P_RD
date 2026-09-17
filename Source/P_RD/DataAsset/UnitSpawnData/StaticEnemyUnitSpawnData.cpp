@@ -1,4 +1,7 @@
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
+#if WITH_EDITOR
+#include "Misc/DataValidation.h"
+#endif
 
 namespace
 {
@@ -27,6 +30,17 @@ void UStaticEnemyUnitSpawnData::PostLoad()
 }
 
 #if WITH_EDITOR
+EDataValidationResult UStaticEnemyUnitSpawnData::IsDataValid(FDataValidationContext& Context) const
+{
+	const EDataValidationResult Result = Super::IsDataValid(Context);
+	if (mTargetPolicy.IsStatusPolicy() && !mTargetPolicy.mStatusTag.IsValid())
+	{
+		Context.AddError(FText::FromString(TEXT("AI 상태이상 대상 우선순위에 Status Tag를 지정하세요.")));
+		return EDataValidationResult::Invalid;
+	}
+	return Result;
+}
+
 void UStaticEnemyUnitSpawnData::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);

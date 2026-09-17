@@ -36,6 +36,13 @@ EDataValidationResult UStaticUnitSkillData::IsDataValid(FDataValidationContext& 
 		ThisResult = EDataValidationResult::Invalid;
 	}
 
+	if (mSkillType == ESkillType::Attack && mOverrideEnemyTargetPolicy &&
+		mEnemyTargetPolicy.IsStatusPolicy() && !mEnemyTargetPolicy.mStatusTag.IsValid())
+	{
+		Context.AddError(FText::FromString(TEXT("AI 상태이상 대상 우선순위에 Status Tag를 지정하세요.")));
+		ThisResult = EDataValidationResult::Invalid;
+	}
+
 	return CombineDataValidationResults(SuperResult, ThisResult);
 }
 

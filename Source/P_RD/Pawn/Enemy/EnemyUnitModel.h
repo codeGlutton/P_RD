@@ -45,6 +45,8 @@ public:
 	// @brief 이동 성향
 	EMoveTendency GetMoveTendency() const;
 
+	const FEnemyTargetPolicy& GetTargetPolicy() const { return mTargetPolicy; }
+
 	// @brief 스킬 슬롯의 AI 선택 우선순위 (범위 밖이면 Normal)
 	ESkillPriority GetSkillPriority(int32 SkillSlot) const;
 
@@ -63,6 +65,9 @@ protected:
 	// @brief 이동 성향
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+
+	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Target Policy"))
+	FEnemyTargetPolicy mTargetPolicy;
 
 	// @brief 스킬 슬롯별 AI 선택 우선순위 (인덱스 = 스킬 슬롯)
 	UPROPERTY(Category = AI, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillPriorities"))
