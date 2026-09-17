@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
 #include "Editor.h"
 #include "Component/TimeScaleComponent/TimeScaleComponent.h"
 #include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
@@ -20,6 +21,30 @@
 #include "TextureCompiler.h"
 #include "ImageUtils.h"
 #include "Misc/FileHelper.h"
+#include "Internationalization/Internationalization.h"
+#include "Internationalization/Culture.h"
+#include "Misc/ScopeExit.h"
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatPlaybackLocalizationTest, "P_RD.Combat.Playback.Localization", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCombatPlaybackLocalizationTest::RunTest(const FString&)
+{
+    auto& I18N = FInternationalization::Get();
+    const FString Previous = I18N.GetCurrentLanguage()->GetName();
+    ON_SCOPE_EXIT { I18N.SetCurrentLanguage(Previous); };
+    auto* World = GEditor->GetEditorWorldContext().World();
+    auto* Widget = CreateWidget<UCombatSpeedWidget>(World);
+    auto* Model = NewObject<UCombatUIModel>(Widget);
+    Model->SetPlaybackSpeed(8, true);
+    for (const TCHAR* Language : {TEXT("en"), TEXT("ko")})
+    {
+        I18N.SetCurrentLanguage(Language);
+        Widget->Configure(Model);
+        const FString Tip = Widget->GetToolTipText().ToString();
+        TestTrue(TEXT("Localized tooltip shows the full range"), Tip.Contains(
+            FCString::Strcmp(Language, TEXT("en")) == 0 ? TEXT("1x to 8x") : TEXT("1~8배")));
+    }
+    return !HasAnyErrors();
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCombatPlaybackMixerTest, "P_RD.Combat.Playback.MixingAndLifecycle", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 bool FCombatPlaybackMixerTest::RunTest(const FString&)
@@ -29,12 +54,12 @@ bool FCombatPlaybackMixerTest::RunTest(const FString&)
     auto* Mixer = NewObject<UTimeScaleComponent>(Actor);
     Mixer->RegisterComponent();
     const float Original = World->GetWorldSettings()->TimeDilation;
-    auto Playback = Mixer->RequestTimeScale(Actor, 3.f);
-    Mixer->SetTimeScaleImmediately(Playback, 3.f);
-    TestEqual(TEXT("3x playback"), World->GetWorldSettings()->TimeDilation, 3.f);
+    auto Playback = Mixer->RequestTimeScale(Actor, 8.f);
+    Mixer->SetTimeScaleImmediately(Playback, 8.f);
+    TestEqual(TEXT("8x playback"), World->GetWorldSettings()->TimeDilation, 8.f);
     auto Slow = Mixer->RequestTimeScale(Actor, .2f);
     Mixer->TickComponent(.01f, LEVELTICK_All, nullptr);
-    TestTrue(TEXT("Cinematic and playback multiply"), FMath::IsNearlyEqual(World->GetWorldSettings()->TimeDilation, .6f, 0.0001f));
+    TestTrue(TEXT("Cinematic and playback multiply"), FMath::IsNearlyEqual(World->GetWorldSettings()->TimeDilation, 1.6f, 0.0001f));
     Mixer->SetTimeScaleImmediately(Playback, 2.f);
     TestTrue(TEXT("Changing playback preserves cinematic"), FMath::IsNearlyEqual(World->GetWorldSettings()->TimeDilation, .4f, 0.0001f));
     Mixer->ReleaseTimeScale(Slow); Mixer->TickComponent(.01f, LEVELTICK_All, nullptr);
@@ -55,13 +80,13 @@ bool FCombatPlaybackSaveTest::RunTest(const FString&)
 {
     auto* Data = NewObject<UOptionPersistData>();
     TestEqual(TEXT("Old saves default to 1x"), Data->GetCombatPlaybackSpeed(), 1);
-    Data->SetCombatPlaybackSpeed(3);
+    Data->SetCombatPlaybackSpeed(8);
     TArray<uint8> Bytes;
     { FMemoryWriter W(Bytes); FObjectAndNameAsStringProxyArchive A(W,false); A.ArIsSaveGame=true; A.ArNoDelta=true; Data->Serialize(A); }
     auto* Loaded = NewObject<UOptionPersistData>();
     { FMemoryReader R(Bytes); FObjectAndNameAsStringProxyArchive A(R,false); A.ArIsSaveGame=true; Loaded->Serialize(A); }
-    TestEqual(TEXT("3x survives option serialization"), Loaded->GetCombatPlaybackSpeed(), 3);
-    Loaded->SetCombatPlaybackSpeed(99); TestEqual(TEXT("At most 3x"), Loaded->GetCombatPlaybackSpeed(), 3);
+    TestEqual(TEXT("8x survives option serialization"), Loaded->GetCombatPlaybackSpeed(), 8);
+    Loaded->SetCombatPlaybackSpeed(99); TestEqual(TEXT("At most 8x"), Loaded->GetCombatPlaybackSpeed(), 8);
     Loaded->SetCombatPlaybackSpeed(0); TestEqual(TEXT("At least 1x"), Loaded->GetCombatPlaybackSpeed(), 1);
     return !HasAnyErrors();
 }
@@ -79,21 +104,21 @@ bool FCombatPlaybackHUDTest::RunTest(const FString&)
     auto* SpeedWidget = HUD->GetPlaybackWidgetForTest();
     if (!TestNotNull(TEXT("Speed control exists in actual combat HUD"), SpeedWidget)) return false;
     int32 Clicks = 0;
-    Model->OnCyclePlaybackSpeed.AddLambda([&] { ++Clicks; Model->SetPlaybackSpeed(Model->GetPlaybackSpeed()%3+1,true); });
+    Model->OnCyclePlaybackSpeed.AddLambda([&] { ++Clicks; Model->SetPlaybackSpeed(CombatPlaybackSpeed::Next(Model->GetPlaybackSpeed()),true); });
     Model->SetPlaybackSpeed(1,true);
     auto* Button = SpeedWidget->GetSpeedButton();
     if (!TestNotNull(TEXT("Speed button initialized without player context"), Button)) return false;
-    for (int32 Expected : {2,3,1})
+    for (int32 Expected : {2,3,4,5,6,7,8,1})
     {
         Button->OnClicked.Broadcast();
-        TestEqual(TEXT("Button sends cycle intent 1-2-3-1"), Model->GetPlaybackSpeed(), Expected);
+        TestEqual(TEXT("Button sends cycle intent 1 through 8 then 1"), Model->GetPlaybackSpeed(), Expected);
     }
-    TestEqual(TEXT("One intent per click"), Clicks, 3);
+    TestEqual(TEXT("One intent per click"), Clicks, 8);
     const FString Dir = FPaths::ProjectSavedDir()/TEXT("UI/CombatPlayback");
     IFileManager::Get().MakeDirectory(*Dir,true);
     for (FVector2D Size : {FVector2D(1400,1165), FVector2D(1920,1080)})
     {
-        Model->SetPlaybackSpeed(3,true);
+        Model->SetPlaybackSpeed(8,true);
         FTextureCompilingManager::Get().FinishAllCompilation();
         FWidgetRenderer Renderer(true,true); Renderer.SetIsPrepassNeeded(true);
         for(int I=0; I<4; ++I) { Renderer.DrawWidget(Slate,Size); HUD->PositionPlaybackButtonForTest(); }
@@ -104,9 +129,9 @@ bool FCombatPlaybackHUDTest::RunTest(const FString&)
         TestTrue(TEXT("Speed control has a visible touch target"), S.X>=100 && S.Y>=56);
         TestTrue(TEXT("Speed button cannot tap the board underneath"), !HUD->IsGuidedBoardInputAt(G.LocalToAbsolute(S*.5f)));
         FBufferArchive Png; FImageUtils::ExportRenderTarget2DAsPNG(Target,Png);
-        FFileHelper::SaveArrayToFile(Png,*(Dir/FString::Printf(TEXT("speed3-%.0fx%.0f.png"),Size.X,Size.Y)));
+        FFileHelper::SaveArrayToFile(Png,*(Dir/FString::Printf(TEXT("speed8-%.0fx%.0f.png"),Size.X,Size.Y)));
     }
-    Model->SetPlaybackSpeed(3,false);
+    Model->SetPlaybackSpeed(8,false);
     TestFalse(TEXT("Unavailable outside active combat"), Button->GetIsEnabled());
     Model->OnCyclePlaybackSpeed.Clear(); HUD->RemoveFromParent();
     return !HasAnyErrors();
@@ -127,7 +152,7 @@ bool FCombatPlaybackLifecycleTest::RunTest(const FString&)
     auto* Model = NewObject<UCombatUIModel>(Owner);
     Playback->StartPlayback(Model);
     TestTrue(TEXT("Playback connects to current camera"), Model->IsPlaybackSpeedAvailable());
-    for (int32 Expected : {2,3,1,2})
+    for (int32 Expected : {2,3,4,5,6,7,8,1,2})
     {
         Model->RequestCyclePlaybackSpeed();
         TestEqual(TEXT("Controller applies speed"), World->GetWorldSettings()->TimeDilation, float(Expected));

@@ -23,6 +23,7 @@ class USkillComponentModel;
 class FTacticalTileTable;
 struct FTacticalTileInfo;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
+struct FEnemyTargetPolicy;
 
 /**
  * @brief 적 한 턴의 행동을 계산하는 플래너
@@ -63,6 +64,14 @@ public:
 		const FString& LogTag = FString());
 
 private:
+	// Rank only the supplied legal candidates; equal stats fall back to path distance.
+	static int32 ChooseTargetByPriority(
+		const FEnemyTargetPolicy& Policy,
+		const FTacticalTileTable& Table,
+		const TArray<const UUnitModel*>& Targets,
+		const TArray<int32>& Candidates,
+		const FRandomStream& EventStream);
+
 	/**
 	 * @brief 이번 턴에 시전할 스킬 슬롯 확정
 	 * @details

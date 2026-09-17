@@ -9,6 +9,7 @@
 
 #include "RDMinimal.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/UnitSpawnData/EnemyTargetPolicy.h"
 #include "StaticUnitSkillData.generated.h"
 /**
  * @brief  스킬 생성 시 사용되는 정적 Primary Data Asset
@@ -50,6 +51,13 @@ public:
     // @brief 구매 시 가격
     UPROPERTY(Category = "Skill", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Price"))
     int32 mPrice = 0;
+
+    // AI-only override; does not change player targeting or skill selection priority.
+    UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Override Enemy Target Policy", EditCondition = "mSkillType == ESkillType::Attack", EditConditionHides))
+    bool mOverrideEnemyTargetPolicy = false;
+
+    UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Enemy Target Policy", EditCondition = "mOverrideEnemyTargetPolicy && mSkillType == ESkillType::Attack", EditConditionHides))
+    FEnemyTargetPolicy mEnemyTargetPolicy;
 
     /* 논리적 설정값들 */
 public:

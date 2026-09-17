@@ -8,6 +8,7 @@
 #pragma once
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+#include "DataAsset/UnitSpawnData/EnemyTargetPolicy.h"
 #include "StaticEnemyUnitSpawnData.generated.h"
 
 class UStaticEquipmentData;
@@ -57,6 +58,7 @@ public:
 
 #if WITH_EDITOR
 	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+	EDataValidationResult IsDataValid(class FDataValidationContext& Context) const override;
 #endif
 
 public:
@@ -69,6 +71,10 @@ public:
 	// @brief 기본 이동 성향: 멀어짐 / 사거리 유지(정지) / 붙음 중 택1
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
+
+	// @brief 대상 우선순위. 능력치 동률은 가까운 대상, 거리도 같으면 시드 기반 추첨.
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Target Policy"))
+	FEnemyTargetPolicy mTargetPolicy;
 
 	// @brief mSkillDatas 항목별 AI 선택 우선순위 (인덱스 = 스킬 슬롯)
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, EditFixedSize, meta = (DisplayName = "SkillPriorities"))
