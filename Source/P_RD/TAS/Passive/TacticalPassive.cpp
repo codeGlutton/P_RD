@@ -216,11 +216,12 @@ bool UTacticalPassive::PassesTargetQuantifier(
 	const FPassiveActivateContext& Ctx,
 	const TInstancedStruct<FDynamicPassiveData>& State) const
 {
-	// 판정 대상이 없으면(자기 대상 등) 게이트 통과
+	// 판정 대상이 없으면(빈 타일 공격 등) 대상 인덱스 없이 조건을 한 번 평가.
+	// 대상을 참조하는 조건은 정보가 없어 탈락하고, 대상을 안 보는 조건은 그대로 판정됨
 	const int32 TargetNum = Ctx.mTargets.Num();
 	if (TargetNum == 0)
 	{
-		return true;
+		return IsTargetQualified(Ctx, INDEX_NONE, State);
 	}
 
 	// 타겟별 자격 조건(predicate)으로 자격 타겟 수 집계
