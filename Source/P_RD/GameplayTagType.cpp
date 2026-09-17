@@ -33,6 +33,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_CoveringFire,					"Animation.Montage.Skill.Mercenary.Common.CoveringFire");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_SupportBlast,					"Animation.Montage.Skill.Mercenary.Common.SupportBlast");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_PyrrhicStrike,					"Animation.Montage.Skill.Mercenary.Common.PyrrhicStrike");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Common_Passion,						"Animation.Montage.Skill.Mercenary.Common.Passion");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_NormalSlash,					"Animation.Montage.Skill.Mercenary.Knight.NormalSlash")
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Knight_HeavyStrike,					"Animation.Montage.Skill.Mercenary.Knight.HeavyStrike")	
@@ -127,6 +128,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_AxeThrow,					"Animation.Montage.Skill.Mercenary.Barbarian.AxeThrow");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Cleave,						"Animation.Montage.Skill.Mercenary.Barbarian.Cleave");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_BloodRush,					"Animation.Montage.Skill.Mercenary.Barbarian.BloodRush");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_Unstoppable,					"Animation.Montage.Skill.Mercenary.Barbarian.Unstoppable");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Rogue_NormalDoubleSlash,				"Animation.Montage.Skill.Mercenary.Rogue.NormalDoubleSlash");
@@ -172,6 +174,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_EssenceDrain,					"Animation.Montage.Skill.Mercenary.Druid.EssenceDrain");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_AcidRain,						"Animation.Montage.Skill.Mercenary.Druid.AcidRain");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_Invincibility,					"Animation.Montage.Skill.Mercenary.Druid.Invincibility");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Druid_ImmunityBoost,					"Animation.Montage.Skill.Mercenary.Druid.ImmunityBoost");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mushroom_Bodyslam,							"Animation.Montage.Skill.Enemy.Mushroom.Bodyslam");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Mushroom_Spore_Exhaustion,					"Animation.Montage.Skill.Enemy.Mushroom.Spore.Exhaustion");
@@ -196,6 +199,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_Attack,								"Animation.Montage.Skill.Enemy.Eagle.Attack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_BlindnessAttack,						"Animation.Montage.Skill.Enemy.Eagle.BlindnessAttack");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_WindyWing,							"Animation.Montage.Skill.Enemy.Eagle.WindyWing");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Eagle_Fly,									"Animation.Montage.Skill.Enemy.Eagle.Fly");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Golem_Swing,								"Animation.Montage.Skill.Enemy.Golem.Swing");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Golem_EarthQuake, 							"Animation.Montage.Skill.Enemy.Golem.EarthQuake");
@@ -236,6 +240,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_BladeWind,						"Animation.Montage.Skill.Enemy.HatchetBird.BladeWind");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_BladeStorm,					"Animation.Montage.Skill.Enemy.HatchetBird.BladeStorm");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_Haste,							"Animation.Montage.Skill.Enemy.HatchetBird.Haste");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_HatchetBird_Fly,							"Animation.Montage.Skill.Enemy.HatchetBird.Fly");
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Swing,						"Animation.Montage.Skill.Enemy.Skeleton.Golem.Swing");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick,						"Animation.Montage.Skill.Enemy.Skeleton.Golem.Kick");
