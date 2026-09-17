@@ -33,8 +33,8 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
-	mTargetPolicy = EnemySpawn->mTargetPolicy;
 	mSkillPriorities = EnemySpawn->mSkillPriorities;
+	mTargetPolicyOverrides = EnemySpawn->mTargetPolicyOverrides;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
@@ -84,5 +84,10 @@ EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 ESkillPriority UEnemyUnitModel::GetSkillPriority(int32 SkillSlot) const
 {
 	return mSkillPriorities.IsValidIndex(SkillSlot) ? mSkillPriorities[SkillSlot] : ESkillPriority::Normal;
+}
+
+const FEnemyTargetPolicyOverride& UEnemyUnitModel::GetTargetPolicyOverride(int32 SkillSlot) const
+{
+	return mTargetPolicyOverrides[SkillSlot];
 }
 

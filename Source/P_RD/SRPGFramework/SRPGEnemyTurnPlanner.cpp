@@ -353,10 +353,15 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	int32 ChosenTarget = INDEX_NONE;
 	FTileIndex Dest = EnemyTile;
 	FTileIndex AreaAim = FTileIndex::Invalid;
-	const FEnemyTargetPolicy& Policy = ChosenSkill->mOverrideEnemyTargetPolicy
-		? ChosenSkill->mEnemyTargetPolicy : Enemy->GetTargetPolicy();
-	const bool bChasePreferred = !bSpell && Policy.mPriority != EEnemyTargetPriority::MostTargets &&
-		Policy.mUnreachableBehavior == EEnemyUnreachableTargetBehavior::ChasePreferred;
+
+	const bool bTargetPolicyOverrided = Enemy->GetTargetPolicyOverride(ChosenSkillSlot).mIsOverrided;
+	const FEnemyTargetPolicy& ChosenTargetPolicy =
+		bSpell == true ?
+		FEnemyTargetPolicy::Default :
+		(bTargetPolicyOverrided == true ? Enemy->GetTargetPolicyOverride(ChosenSkillSlot).mTargetPolicy : ChosenSkill->mTargetPolicy);
+
+	const bool bChasePreferred = !bSpell && ChosenTargetPolicy.mPriority != EEnemyTargetPriority::MostTargets &&
+		ChosenTargetPolicy.mUnreachableBehavior == EEnemyUnreachableTargetBehavior::ChasePreferred;
 
 	// 이동 판단의 기준 타겟도 DA 우선순위를 사용한다. 자기 버프는 기존 거리 기준 유지.
 	TArray<int32> AllTargets;
@@ -365,7 +370,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		AllTargets.Add(TargetIndex);
 	}
 	const int32 ReferenceTarget = ChooseTargetByPriority(
-		bSpell ? FEnemyTargetPolicy() : Policy,
+		bSpell ? FEnemyTargetPolicy() : ChosenTargetPolicy,
 		Table, TargetModels, AllTargets, EventStream);
 
 	// 확정 스킬로 시전 가능한 타겟 후보 수집 (버프는 테이블에 스킬이 없으므로 항상 비어 있음)
@@ -379,7 +384,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	}
 
 	TMap<FTileIndex, FTileIndex> BestAreaAims;
-	const bool bAreaCast = !bSpell && Policy.mPriority == EEnemyTargetPriority::MostTargets &&
+	const bool bAreaCast = !bSpell && ChosenTargetPolicy.mPriority == EEnemyTargetPriority::MostTargets &&
 		ChooseMostTargets(Table, TileMap, Enemy, ChosenSkill, TargetModels, ActionPoint, BestAreaAims);
 	if (bChasePreferred)
 	{
@@ -421,16 +426,16 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 밀집공격: 이동(%d,%d) 조준(%d,%d)"),
 			*LogPrefix, Dest.mX, Dest.mY, AreaAim.mX, AreaAim.mY);
 	}
-	else if (CastableTargets.IsEmpty() == false && Policy.mPriority != EEnemyTargetPriority::MostTargets)
+	else if (CastableTargets.IsEmpty() == false && ChosenTargetPolicy.mPriority != EEnemyTargetPriority::MostTargets)
 	{
 		//
 		// 공격 시전: 시전 가능한 타겟이 있으면 [타겟 -> 목적지] 순서로 확정 (스킬은 이미 확정)
 		//
 		// 높은 우선순위 대상이 사거리/AP 조건 밖이어도 공격 가능한 다른 대상에게 시전한다.
 		ChosenTarget = bChasePreferred ? ReferenceTarget :
-			ChooseTargetByPriority(Policy, Table, TargetModels, CastableTargets, EventStream);
+			ChooseTargetByPriority(ChosenTargetPolicy, Table, TargetModels, CastableTargets, EventStream);
 		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 대상우선순위=%s 선택=%s"), *LogPrefix,
-			*StaticEnum<EEnemyTargetPriority>()->GetNameStringByValue(static_cast<int64>(Policy.mPriority)),
+			*StaticEnum<EEnemyTargetPriority>()->GetNameStringByValue(static_cast<int64>(ChosenTargetPolicy.mPriority)),
 			*MakeUnitLabel(TargetModels[ChosenTarget]));
 		// 목적지: 확정 스킬로 그 타겟에게 시전 가능한 타일 중 이동성향대로
 		Dest = ChooseDestinationByTendency(Table, Enemy->GetMoveTendency(), ChosenTarget, EnemyTile,
@@ -470,7 +475,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), ChosenSkillSlot, ChosenSkill, TargetModels, TargetTiles, Table);
 
 		// Keep legacy Nearest/AttackAvailable movement and RNG behaviour exactly intact.
-		const bool bLegacyMovement = Policy.mPriority == EEnemyTargetPriority::Nearest && !bChasePreferred;
+		const bool bLegacyMovement = ChosenTargetPolicy.mPriority == EEnemyTargetPriority::Nearest && !bChasePreferred;
 		const auto CanPrepareCast = [&Table, ChosenSkillSlot, ReferenceTarget, bLegacyMovement](const FTacticalTileInfo& Tile)
 		{
 			return bLegacyMovement ? Tile.mAimableFlags.Contains(true) :
