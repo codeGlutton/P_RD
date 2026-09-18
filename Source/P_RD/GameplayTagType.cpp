@@ -270,6 +270,10 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghoul_Bite,								"Animation.Montage.Skill.Enemy.Ghoul.Bite");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghoul_FlurryofClaws,						"Animation.Montage.Skill.Enemy.Ghoul.FlurryofClaws");
 
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghost_Teleport,							"Animation.Montage.Skill.Enemy.Ghost.Teleport");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghost_Boo,									"Animation.Montage.Skill.Enemy.Ghost.Boo");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Ghost_Sob,									"Animation.Montage.Skill.Enemy.Ghost.Sob");
+	
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_DemonicBargain,						"Animation.Montage.Skill.Enemy.Demon.DemonicBargain");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Slash,								"Animation.Montage.Skill.Enemy.Demon.Slash");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Enemy_Demon_Offering,							"Animation.Montage.Skill.Enemy.Demon.Offering");

@@ -690,6 +690,74 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 }
 
 /**
+ * @brief 빈 타겟 테스트
+ * 빈 타일 공격처럼 판정 대상이 없을 때, 대상 참조 조건은 탈락하고
+ * 소유자 참조 조건과 무조건형은 그대로 판정되는지 검증
+ */
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FPassiveGenericNoTargetTest,
+	"P_RD.TAS.Passive.Generic.NoTarget",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter
+)
+
+bool FPassiveGenericNoTargetTest::RunTest(const FString& Parameters)
+{
+	const FGameplayTag OnEndApplyingEffect = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndApplyingEffect"));
+
+	// 소유자 AttackFactor 10, HP 30으로 두고 빈 타겟 컨텍스트로 발동. 반환값은 발동 후 소유자 AttackFactor
+	auto RunCase = [&](const TArray<FPassiveCondition>& Conditions) -> float
+	{
+		UMockBoardActorModel* Player = MakeMockActor(*this);
+		if (Player == nullptr)
+		{
+			return -1.f;
+		}
+		UAttributeSetComponentModel* PlayerComp = Player->GetAttributeComponentModel();
+		PlayerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
+		PlayerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 30.f);
+
+		UStaticPassiveData* Data = MakeGenericData(OnEndApplyingEffect, FGameplayTag(), UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+		Data->mConditions = Conditions;
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+
+		// 타겟과 타겟 스냅샷을 비워둔 컨텍스트
+		FPassiveActivateContext Ctx;
+		Ctx.mOwner = Player;
+		Ctx.mOwnerSnapshot = Player->MakeSnapshotData();
+
+		DriveTiming(Passive, OnEndApplyingEffect, Ctx);
+		return PlayerComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute());
+	};
+
+	// 대상 HP < 50 조건 (A018/A019형): 대상이 없으면 탈락
+	{
+		TArray<FPassiveCondition> Conditions;
+		Conditions.Add(MakeCondition(
+			MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Target),
+			EPassiveCompareOp::Less,
+			MakeConstOperand(50.f)));
+		TestEqual(TEXT("대상 참조 조건/빈 타겟 → 미발동"), RunCase(Conditions), 10.f);
+	}
+
+	// 소유자 HP < 50 조건: 대상이 없어도 소유자 스냅샷으로 판정
+	{
+		TArray<FPassiveCondition> Conditions;
+		Conditions.Add(MakeCondition(
+			MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Self),
+			EPassiveCompareOp::Less,
+			MakeConstOperand(50.f)));
+		TestEqual(TEXT("소유자 참조 조건/빈 타겟 → 발동"), RunCase(Conditions), 15.f);
+	}
+
+	// 조건 없음: 기존처럼 발동
+	{
+		TestEqual(TEXT("조건 없음/빈 타겟 → 발동"), RunCase({}), 15.f);
+	}
+
+	return true;
+}
+
+/**
  * @brief 태그형 이펙트 테스트
  * 상태이상 스택 부여와 Infinite 태그의 부여/회수가 제네릭 경로로 동작하는지 검증
  */

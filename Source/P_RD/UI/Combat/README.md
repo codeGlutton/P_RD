@@ -23,6 +23,8 @@
 | `CombatUIWidgetBase.h/.cpp` | 위젯 베이스. `BindUIModel()` 후 `OnUIRefreshed`/`OnQueueNodePlayed`만 구현 |
 | `MockCombatDriver.h/.cpp` | 게임플레이 없이 가짜 데이터로 UI를 먼저 만들고 테스트하는 개발용 |
 
+전투 유닛의 화면 좌표를 출력하는 `[RDBOT]` 로그는 기본적으로 꺼져 있다. 자동 플레이/QA에서 필요할 때만 콘솔에서 `rd.Debug.BotTelemetry 1`로 켜고, 끝나면 `rd.Debug.BotTelemetry 0`으로 끈다. 이동 중에는 좌표가 매 프레임 달라져 로그가 많이 출력될 수 있다.
+
 ### 다루는 도메인 (`ECombatUIDomain`)
 | 도메인 | struct | push | read |
 |--------|--------|------|------|
