@@ -57,7 +57,7 @@ namespace
 
 		if (IsIncludeSelf == true && IsIncludeTarget == true)
 		{
-			return LOCTEXT("TargetIndexFilter_SelfAndTarget", "시전자/타겟 타일들");
+			return LOCTEXT("TargetIndexFilter_SelfAndTarget", "시전자 및 타겟 타일들");
 		}
 		if (IsIncludeSelf == true)
 		{
