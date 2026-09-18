@@ -72,16 +72,13 @@ void ISRPGCommandHandler::GetTileActorUnderCursor(UWorld* World, ECollisionChann
 	GetTileActorUnderCursor(World, Channel, FVector2D(-1.0, -1.0), OUT Actor, OUT TileIndex);
 }
 
-void ISRPGCommandHandler::GetTileActorForCommand(UWorld* World,
-	ECollisionChannel Channel, const FSRPGWorldTraceCommand& Command,
-	OUT AActor*& Actor, OUT FTileIndex& TileIndex)
+void ISRPGCommandHandler::GetTileActorForCommand(UWorld* World, ECollisionChannel Channel, const FSRPGWorldTraceCommand& Command, OUT AActor*& Actor, OUT FTileIndex& TileIndex)
 {
 	check(World != nullptr);
 
 	if (Command.mResolvedTileIndex == FTileIndex::Invalid)
 	{
-		GetTileActorUnderCursor(World, Channel, Command.mScreenPosition,
-			OUT Actor, OUT TileIndex);
+		GetTileActorUnderCursor(World, Channel, Command.mScreenPosition, OUT Actor, OUT TileIndex);
 		return;
 	}
 
@@ -96,8 +93,7 @@ void ISRPGCommandHandler::GetTileActorForCommand(UWorld* World,
 
 	TileIndex = Command.mResolvedTileIndex;
 	Actor = TileMap->GetView<AActor>();
-	if (UBoardActorModel* Occupant =
-		TileMap->GetActorOnTile<UBoardActorModel>(TileIndex))
+	if (UBoardActorModel* Occupant = TileMap->GetActorOnTile<UBoardActorModel>(TileIndex))
 	{
 		Actor = Occupant->GetView<AActor>();
 	}

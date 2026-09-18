@@ -76,8 +76,7 @@ public:
 	 *          뒤의 엉뚱한 월드를 집을 수 있다. 그런 경우 선택 단계에서 보관한
 	 *          타일을 직접 전달해 동일한 WorldTrace 규칙만 재사용한다.
 	 */
-	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite,
-		meta = (DisplayName = "ResolvedTileIndex"))
+	UPROPERTY(Category = Input, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ResolvedTileIndex"))
 	FTileIndex mResolvedTileIndex = FTileIndex::Invalid;
 
 public:

@@ -1,4 +1,4 @@
-#include "GameMode/CombatGameMode.h"
+﻿#include "GameMode/CombatGameMode.h"
 #include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Component/TimeScaleComponent/CombatPlaybackComponent.h"
 #include "DataAsset/GameplayAssetPolicy.h"
@@ -1176,8 +1176,7 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition)
 	return ResolveWorldTouchEvent(ScreenPosition, FTileIndex::Invalid);
 }
 
-bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition,
-	const FTileIndex& ResolvedTileIndex)
+bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition, const FTileIndex& ResolvedTileIndex)
 {
 	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
 	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
@@ -1187,8 +1186,7 @@ bool ACombatGameMode::ResolveWorldTouchEvent(FVector2D ScreenPosition,
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mIsLongPress = false;
 	// 모바일 터치는 커서가 없으므로, 탭 화면 좌표를 커맨드에 실어 월드 트레이스에 사용한다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mScreenPosition = ScreenPosition;
-	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mResolvedTileIndex =
-		ResolvedTileIndex;
+	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().mResolvedTileIndex = ResolvedTileIndex;
 	// 톡 친 칸을 UI 에 알린다. 어느 타일인지는 트레이스한 쪽만 안다.
 	WorldTraceActionCommand.GetMutable<FSRPGWorldTraceCommand>().OnSelectTargetTile.AddWeakLambda(this,
 		[this](const FTileIndex& Tile, AActor* HitActor) {
