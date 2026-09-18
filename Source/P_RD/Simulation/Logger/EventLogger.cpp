@@ -122,6 +122,12 @@ void USimulationEventLogger::BeginMotionLog()
 {
 	Super::BeginMotionLog();
 
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("턴 외의 모션 시작"));
+		return;
+	}
+
 	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 모션 로그 시작 오류"));
 	checkf(mCurrentActionEventLog != nullptr, TEXT("액션 로그 시작 없이 모션 로그 시작 오류"));
 
@@ -142,6 +148,12 @@ void USimulationEventLogger::BeginMotionLog()
 void USimulationEventLogger::EndMotionLog()
 {
 	Super::EndMotionLog();
+
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("턴 외의 모션 종료"));
+		return;
+	}
 
 	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 모션 로그 종료 오류"));
 	
