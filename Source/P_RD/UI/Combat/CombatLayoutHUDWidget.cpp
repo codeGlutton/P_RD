@@ -6691,7 +6691,7 @@ void UCombatLayoutHUDWidget::ShowMoveDetailOverlay()
 	MoveDetail.mSkillIndex = -2; // INDEX_NONE과 구분되는 UI 전용 이동 식별자.
 	MoveDetail.mName = LOCTEXT("MoveDetailTitle", "이동");
 	MoveDetail.mDescription = FText::Format(LOCTEXT("MoveDetailDescription",
-		"한 칸 옮길 때마다 행동력을 1 쓴다. 지금 남은 행동력으로 최대 {0}칸 갈 수 있다.\n\n판을 톡 쳐서 갈 곳을 고르고, 마지막 칸을 다시 누르면 이동을 확정한다."),
+		"한 칸 옮길 때마다 행동력을 1 씁니다. (최대 {0}칸 이동 가능)\n\n이동할 칸을 터치하여 고른 후, 마지막 칸을 다시 터치하여 이동을 확정합니다."),
 		Left);
 	MoveDetail.mIcon = MoveIcon;
 	MoveDetail.mActionPointCost = 1;
