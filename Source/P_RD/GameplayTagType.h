@@ -355,6 +355,12 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghoul_FlurryofClaws);
 #pragma endregion
 
+#pragma region Ghost
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghost_Teleport);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghost_Boo);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Ghost_Sob);
+#pragma endregion
+
 #pragma region Demon
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_DemonicBargain);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Demon_Slash);
