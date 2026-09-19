@@ -970,7 +970,7 @@ void USRPGCombatModel::RegisterEnemyUnitModel(const FEnemyUnitPlacementData& Ene
 
 	EnemyUnitModel->SetDifficulty(EnemyPlacementData.mDifficulty);
 
-	if (EnemyPlacementData.mDefaultSpeedPoint > 0)
+	if (EnemyPlacementData.mDefaultSpeedPoint != 0)
 	{
 		UTacticalEffectContext* Context = EnemyUnitModel->GetAttributeComponentModel()->MakeEffectContext();
 		TSharedPtr<FTacticalEffectSpec> Spec = EnemyUnitModel->GetAttributeComponentModel()->MakeOutgoingSpec(UTacticalEffect_SpeedPoint::StaticClass(), Context);
