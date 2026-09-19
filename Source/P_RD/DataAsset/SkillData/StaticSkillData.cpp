@@ -47,6 +47,56 @@ TArray<IBoardCombatTarget*> FSkillPhaseLayer::FilterCombatTargets(const UTileMap
 
 #define LOCTEXT_NAMESPACE "StaticSkillData"
 
+namespace
+{
+	FText GetTargetIndexFilterText(int32 TargetIndexFilter)
+	{
+		const ETargetIndexFilter Filter = StaticCast<ETargetIndexFilter>(TargetIndexFilter);
+		const bool IsIncludeSelf = EnumHasAllFlags(Filter, ETargetIndexFilter::IncludeSelfIndex);
+		const bool IsIncludeTarget = EnumHasAllFlags(Filter, ETargetIndexFilter::IncludeTargetIndexes);
+
+		if (IsIncludeSelf == true && IsIncludeTarget == true)
+		{
+			return LOCTEXT("TargetIndexFilter_SelfAndTarget", "시전자 및 타겟 타일들");
+		}
+		if (IsIncludeSelf == true)
+		{
+			return LOCTEXT("TargetIndexFilter_Self", "시전자 타일");
+		}
+		if (IsIncludeTarget == true)
+		{
+			return LOCTEXT("TargetIndexFilter_Target", "타겟 타일들");
+		}
+		return LOCTEXT("TargetIndexFilter_None", "없음");
+	}
+
+	FText GetTeamAttitudeFilterText(int32 TeamAttitudeFilter)
+	{
+		const ETeamAttitudeFilter Filter = StaticCast<ETeamAttitudeFilter>(TeamAttitudeFilter);
+		TArray<FText> TeamTexts;
+
+		if (EnumHasAllFlags(Filter, ETeamAttitudeFilter::Hostile) == true)
+		{
+			TeamTexts.Add(LOCTEXT("Team_Hostile", "적"));
+		}
+		if (EnumHasAllFlags(Filter, ETeamAttitudeFilter::Friendly) == true)
+		{
+			TeamTexts.Add(LOCTEXT("Team_Friendly", "아군"));
+		}
+		if (EnumHasAllFlags(Filter, ETeamAttitudeFilter::Neutral) == true)
+		{
+			TeamTexts.Add(LOCTEXT("Team_Neutral", "중립"));
+		}
+
+		if (TeamTexts.IsEmpty() == true)
+		{
+			return LOCTEXT("Team_None", "없음");
+		}
+
+		return FText::Join(FText::FromString(TEXT("/")), TeamTexts);
+	}
+}
+
 FText UStaticSkillData::MakeDescription() const
 {
 	TArray<FText> DescriptionLines;
@@ -57,14 +107,16 @@ FText UStaticSkillData::MakeDescription() const
 	{
 		const FSkillPhaseLayer& MotionLayer = mSkillPhaseLayers[PhaseIndex];
 
-        if (PhaseCount > 1)
-        {
-            FText MotionHeader = FText::Format(
-                LOCTEXT("MotionHeaderFormat", "■ {0}타 모션:"),
-                FText::AsNumber(PhaseIndex + 1)
-            );
-            DescriptionLines.Add(MotionHeader);
-        }
+		const FText TargetFilterText = GetTargetIndexFilterText(MotionLayer.mTargetIndexFilter);
+		const FText TeamFilterText = GetTeamAttitudeFilterText(MotionLayer.mTeamAttitudeFilter);
+
+		FText MotionHeader = FText::Format(
+			LOCTEXT("MotionHeaderFormat", "■ {0}타 모션 ({1}, {2}):"),
+			FText::AsNumber(PhaseIndex + 1),
+			TargetFilterText,
+			TeamFilterText
+		);
+		DescriptionLines.Add(MotionHeader);
 
 		for (const TInstancedStruct<FSkillEffectLayer>& InstancedEffect : MotionLayer.mSkillEffectLayers)
 		{

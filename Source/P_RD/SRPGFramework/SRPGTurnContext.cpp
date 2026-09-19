@@ -73,8 +73,13 @@ ESRPGCommandResult USRPGDetailInfoPopupCommandHandler::HandleCommand(const TInst
 		const FSRPGWorldTraceCommand& WorldTraceCommand = Command.Get<FSRPGWorldTraceCommand>();
 		AActor* HitActor = nullptr;
 		FTileIndex TileIndex = FTileIndex::Invalid;
-		GetTileActorForCommand(GetWorld(), RDTraceChannels::TileAnyTrace,
-			WorldTraceCommand, OUT HitActor, OUT TileIndex);
+		GetTileActorForCommand(
+			GetWorld(), 
+			RDTraceChannels::TileAnyTrace,
+			WorldTraceCommand, 
+			OUT HitActor, 
+			OUT TileIndex
+		);
 
 		if (WorldTraceCommand.mIsLongPress == true)
 		{

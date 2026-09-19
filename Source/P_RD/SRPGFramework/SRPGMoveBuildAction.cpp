@@ -1,4 +1,4 @@
-#include "SRPGFramework/SRPGMoveBuildAction.h"
+﻿#include "SRPGFramework/SRPGMoveBuildAction.h"
 
 #include "Actor/ActorView.h"
 #include "RDCollision.h"
@@ -126,8 +126,13 @@ ESRPGCommandResult USRPGMoveBuildAction::HandleWorldTraceCommand(const TInstance
 
     AActor* TargetActor = nullptr;
     FTileIndex TargetTileIndex = FTileIndex::Invalid;
-    GetTileActorForCommand(GetWorld(), RDTraceChannels::TileOnlyTrace,
-        WorldTraceCommand, OUT TargetActor, OUT TargetTileIndex);
+    GetTileActorForCommand(
+        GetWorld(), 
+        RDTraceChannels::TileOnlyTrace,
+        WorldTraceCommand, 
+        OUT TargetActor,
+        OUT TargetTileIndex
+    );
 
     IActorView* ActorView = Cast<IActorView>(TargetActor);
     const bool IsContactedTileMap = ActorView != nullptr && ActorView->GetModel() == TileMap;
