@@ -15,17 +15,17 @@
 
 bool UBoardMovementComponentModel::MoveAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
 {
-	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Normal, OnFinished);
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Normal, OnFinished, nullptr);
 }
 
-bool UBoardMovementComponentModel::PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+bool UBoardMovementComponentModel::PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished, TSharedPtr<FPresentationBarrier> MoveEndBarrier)
 {
-	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Push, OnFinished);
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Push, OnFinished, MoveEndBarrier);
 }
 
-bool UBoardMovementComponentModel::PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+bool UBoardMovementComponentModel::PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished, TSharedPtr<FPresentationBarrier> MoveEndBarrier)
 {
-	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Pull, OnFinished);
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Pull, OnFinished, MoveEndBarrier);
 }
 
 bool UBoardMovementComponentModel::TeleportTo(const FTileTransform& NextTransform, FOnBoardMoveFinished OnFinished)
@@ -88,7 +88,7 @@ bool UBoardMovementComponentModel::TryRegisterPendingPush(const FTileIndex& Trap
 	return true;
 }
 
-bool UBoardMovementComponentModel::StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished)
+bool UBoardMovementComponentModel::StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished, TSharedPtr<FPresentationBarrier> MoveEndBarrier)
 {
 	// 이동 중 재호출이거나 경로가 2칸 미만이면 시작 거부
 	if (IsMoving() == true || PathTileIndexes.Num() < 2)
@@ -99,6 +99,7 @@ bool UBoardMovementComponentModel::StartPathInternal(const TArray<FTileIndex>& P
 	mPathTileIndexes = PathTileIndexes;
 	mMoveMode = MoveMode;
 	mOnFinished = OnFinished;
+	mMoveEndBarrier = MoveEndBarrier;
 	mCancelRequested = false;
 
 	// 첫 칸이 이미 막혔으면 시작 안 함 (경로 계산 뒤 다른 유닛이 먼저 차지한 경우 등)
@@ -222,6 +223,8 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 	// 취소 요청됐으면 완료 통지 없이 정지 (뷰가 걷기 연출을 멈추도록 경로 종료는 통지)
 	if (mCancelRequested == true)
 	{
+		// 이동 종료 배리어가 ResetMoveState 실행에도 살아남도록 로컬 변수에 저장
+		TSharedPtr<FPresentationBarrier> MoveEndBarrier = MoveTemp(mMoveEndBarrier);
 		ResetMoveState();
 		BroadcastEndMovePath();
 		return;
@@ -273,6 +276,8 @@ void UBoardMovementComponentModel::OnStepPresentationFinished()
 	// 통지를 받은 쪽이 바로 새 이동을 시작할 수 있으므로 상태를 먼저 비우고 호출 (비우면 mOnFinished도 지워지니 복사해 둠)
 	// 뷰의 경로 종료 정리가 완료 통지보다 먼저 끝나야 다음 이동 연출과 섞이지 않음
 	FOnBoardMoveFinished Finished = mOnFinished;
+	// 이동 종료 배리어가 ResetMoveState 실행에도 살아남도록 로컬 변수에 저장
+	TSharedPtr<FPresentationBarrier> MoveEndBarrier = MoveTemp(mMoveEndBarrier);
 	ResetMoveState();
 	BroadcastEndMovePath();
 	Finished.ExecuteIfBound();
@@ -292,6 +297,7 @@ void UBoardMovementComponentModel::ResetMoveState()
 	mCurrentStepIndex = INDEX_NONE;
 	mCancelRequested = false;
 	mOnFinished.Unbind();
+	mMoveEndBarrier.Reset();
 
 	// 연쇄 상태 정리 (mMoveMode는 유지해서 GetMoveMode()가 마지막 모드 반환)
 	mChainedTrapTiles.Empty();

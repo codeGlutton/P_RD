@@ -162,6 +162,39 @@ EDataValidationResult UStaticSkillData::IsDataValid(FDataValidationContext& Cont
         ThisResult = EDataValidationResult::Invalid;
     }
 
+    // 밀치기/당기기 배치 순서 검증
+    // 밀당이 중간에 끼면 시전자와 피격자의 모션이 어긋나서 어색할 수 있으므로 의도가 맞는 지 한 번 더 확인해보라는 의미에서 경고
+    const int32 LastPhaseIndex = mSkillPhaseLayers.Num() - 1;
+    for (int32 PhaseIndex = 0; PhaseIndex <= LastPhaseIndex; ++PhaseIndex)
+    {
+        const TArray<TInstancedStruct<FSkillEffectLayer>>& Layers = mSkillPhaseLayers[PhaseIndex].mSkillEffectLayers;
+        bool HasPassedForcedMovement = false;
+        for (int32 LayerIndex = 0; LayerIndex < Layers.Num(); ++LayerIndex)
+        {
+            if (Layers[LayerIndex].IsValid() == false)
+            {
+                continue;
+            }
+
+            // 마지막 페이즈가 아닌 곳의 밀당
+            const bool HasForced = Layers[LayerIndex].Get().HasForcedMovement();
+            if (HasForced == true && PhaseIndex != LastPhaseIndex)
+            {
+                Context.AddWarning(FText::FromString(FString::Printf(TEXT("밀치기/당기기를 마지막 페이즈 아닌 곳에 배치 (%d타)"), PhaseIndex + 1)));
+            }
+
+            // 같은 페이즈에서 밀당 뒤에 오는 다른 이펙트
+            if (HasForced == true)
+            {
+                HasPassedForcedMovement = true;
+            }
+            else if (HasPassedForcedMovement == true)
+            {
+                Context.AddWarning(FText::FromString(FString::Printf(TEXT("밀치기/당기기 뒤에 다른 이펙트 배치 (%d타 %d번째)"), PhaseIndex + 1, LayerIndex + 1)));
+            }
+        }
+    }
+
     return CombineDataValidationResults(SuperResult, ThisResult);
 }
 #endif
