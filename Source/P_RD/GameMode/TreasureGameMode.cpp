@@ -356,6 +356,7 @@ bool ATreasureGameMode::GrantTreasureGold()
 		RunPersistData->GetCurrentRoom());
 	GivePartyGold(TreasureRoom.mRewardMoney);
 	mGoldRewardGranted = true;
+	GetRunPersistData()->GetRoomTransactionsMutable().GoldClaimed = true;
 	return true;
 }
 
@@ -402,6 +403,9 @@ void ATreasureGameMode::HandleRewardSelectionRequested(FPrimaryAssetId RewardId)
 	}
 	mGrantedArtifactIds = Result.mGrantedItemIds;
 	mFailedArtifactIds.Reset();
+	FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactionsMutable();
+	Transactions.TreasureOpened = true;
+	Transactions.SelectedArtifact = SelectedId;
 	PushTreasureUIData();
 	if (mRewardUIModel) mRewardUIModel->ConfirmSelectedReward(SelectedId);
 }
@@ -475,6 +479,7 @@ void ATreasureGameMode::HandleRewardPresentationCompleted(int32 ArtifactIndex)
 			|| !static_cast<const FTreasureRoom&>(Run->GetCurrentRoom()).mRewardArtifactDataIds.IsEmpty()
 			|| !GrantTreasureGold()) return;
 		mOpened = true;
+		GetRunPersistData()->GetRoomTransactionsMutable().TreasureOpened = true;
 		PushTreasureUIData();
 	}
 	if (mRewardWidget != nullptr)
