@@ -1048,7 +1048,6 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 	if (bClaimed)
 	{
 		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
-		RunPersistData->GetRoomTransactionsMutable().ClaimedChoices.Add(ChoiceIndex);
 	}
 	return bClaimed;
 }

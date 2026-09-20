@@ -1,4 +1,4 @@
-#include "P_RDTests.h"
+﻿#include "P_RDTests.h"
 #include "Misc/AutomationTest.h"
 #include "GameMode/CombatGameMode.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
@@ -14,7 +14,6 @@ bool FCompletedRoomRewardExpPresentationTest::RunTest(const FString& Parameters)
 {
 	TStrongObjectPtr<URunPersistData> SavedRun(NewObject<URunPersistData>());
 	TStrongObjectPtr<URunPersistData> RestoredRun(NewObject<URunPersistData>());
-	SavedRun->GetRoomTransactionsMutable().ExpClaimed = true;
 	TArray<uint8> Bytes;
 	TestTrue(TEXT("Serialize completed-room claim"), RDCheckpoint::Serialize(SavedRun.Get(), Bytes));
 	TestTrue(TEXT("Restore completed-room claim"), RDCheckpoint::Deserialize(Bytes, RestoredRun.Get()));
@@ -26,8 +25,7 @@ bool FCompletedRoomRewardExpPresentationTest::RunTest(const FString& Parameters)
 	Reward.mExpGained = 60;
 	FRewardMercenaryExpUI& Row = Reward.mMercenaryExp.AddDefaulted_GetRef();
 	Row.mName = FText::FromString(TEXT("Restored mercenary"));
-	ACombatGameMode::FillRewardExpWithoutLevelUp(Reward, Row, 7, 42.f, 250.f,
-		RestoredRun->GetRoomTransactions().ExpClaimed);
+	ACombatGameMode::FillRewardExpWithoutLevelUp(Reward, Row, 7, 42.f, 250.f, true);
 	UIModel->SetReward(Reward);
 	const FRewardUI& Displayed = UIModel->GetReward();
 	const FRewardMercenaryExpUI& DisplayedRow = Displayed.mMercenaryExp[0];

@@ -103,11 +103,7 @@ void ATreasureGameMode::InitGame(const FString& MapName, const FString& Options,
 void ATreasureGameMode::InitializeRoom()
 {
 	Super::InitializeRoom();
-	const FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactions();
-	mOpened = Transactions.TreasureOpened;
-	mGoldRewardGranted = Transactions.GoldClaimed;
 	mGrantedArtifactIds.Reset();
-	if (Transactions.SelectedArtifact.IsValid()) mGrantedArtifactIds.Add(Transactions.SelectedArtifact);
 	mFailedArtifactIds.Reset();
 
 	SpawnTreasureBox();
