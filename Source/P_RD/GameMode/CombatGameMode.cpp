@@ -1052,32 +1052,11 @@ void ACombatGameMode::HandleAbandonRun()
 		return;
 	}
 
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
-		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
-	if (SaveGameSubsystem == nullptr)
+	const bool bAbandonRun = AbandonRunFromRoom();
+	if (mCombatUIModel != nullptr)
 	{
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->NotifyAbandonRunCompleted(false);
-		}
-		return;
+		mCombatUIModel->NotifyAbandonRunCompleted(bAbandonRun);
 	}
-
-	mSettingsRunActionPending = true;
-	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
-		this,
-		[this](const FString& SlotName, const int32 UserIndex, const bool bSaveSucceeded)
-		{
-			const bool bAbandonStarted = bSaveSucceeded && AbandonRunFromRoom();
-			if (!bAbandonStarted)
-			{
-				mSettingsRunActionPending = false;
-			}
-			if (mCombatUIModel != nullptr)
-			{
-				mCombatUIModel->NotifyAbandonRunCompleted(bAbandonStarted);
-			}
-		}));
 }
 
 void ACombatGameMode::HandleSaveAndExitRun()
@@ -1087,17 +1066,7 @@ void ACombatGameMode::HandleSaveAndExitRun()
 		return;
 	}
 
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr ? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
-	if (SaveGameSubsystem == nullptr)
-	{
-		if (mCombatUIModel != nullptr)
-		{
-			mCombatUIModel->NotifyAbandonRunCompleted(false);
-		}
-		return;
-	}
-
-	const bool bSaveAndExitRun = PreloadAndTransitionFrontendRoomAsync();
+	const bool bSaveAndExitRun = SaveAndExitRunFromRoomAsync();
 	if (mCombatUIModel != nullptr)
 	{
 		mCombatUIModel->NotifySaveAndExitCompleted(bSaveAndExitRun);

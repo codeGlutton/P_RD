@@ -81,10 +81,10 @@ TStatId USRPGCombatModel::GetStatId() const
 
 void USRPGCombatModel::InitCombat(UStaticCombatRoomSpawnData* RoomSpawnData, const TArray<TObjectPtr<UPlayerUnitModel>>& PlayerUnits, const FTransform& RoomStartTransform, const FRoomClearData& ClearData, bool FixedPlayerOpening)
 {
-	mFixedPlayerOpening = FixedPlayerOpening;
 	checkf(RoomSpawnData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
 	checkf(mCombatPhase == ESRPGCombatRoomPhase::None, TEXT("중복 초기화"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatInit;
+	mFixedPlayerOpening = FixedPlayerOpening;
 
 	/* 모델들 등록 */
 
@@ -200,8 +200,10 @@ void USRPGCombatModel::InitBoardActorModels(UStaticCombatRoomSpawnData* RoomSpaw
 		TransformIndexes.Add(PlayerIndex);
 	}
 	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
-	if (!mFixedPlayerOpening)
+	if (mFixedPlayerOpening == false)
+	{
 		URandomStreamFunctionLibrary::ShuffleArray(RandomStream, TransformIndexes);
+	}
 
 	/* 플레이어 유닛 스폰 */
 
@@ -712,9 +714,8 @@ bool USRPGCombatModel::UnregisterTurn(UUnitModel* Owner, bool IgnoreCurTurn)
 
 bool USRPGCombatModel::EvaluateRound()
 {
-	// A corrupted or stalled speed configuration must not block the game thread in Shipping.
-	constexpr int32 MaxRechargePasses = 1024;
-	for (int32 RechargePass = 0; RechargePass < MaxRechargePasses; ++RechargePass)
+	constexpr int32 RoundPassThreshold = 1024;
+	for (int32 RechargePass = 0; RechargePass < RoundPassThreshold; ++RechargePass)
 	{
 		/* 스피드 포인트 충전 */
 
@@ -728,9 +729,8 @@ bool USRPGCombatModel::EvaluateRound()
 		}
 
 		/* 현 상태 평가 */
-		if (mFixedPlayerOpening && mRoundCount == 0 && !mPlayerUnitModels.IsEmpty())
+		if (mFixedPlayerOpening && mRoundCount == 0 && mPlayerUnitModels.IsEmpty() == false)
 		{
-			// The scripted opening always belongs to party slot 0, regardless of speed rolls.
 			auto* Attributes = mPlayerUnitModels[0]->GetAttributeComponentModel();
 			const float Required = GetDefault<UGameBalanceSettings>()->mRequiredSpeedPointForTurn;
 			const float Missing = Required - Attributes->GetAttributeCurrentValue(UUnitAttributeSet::GetSpeedPointAttribute());
@@ -746,7 +746,10 @@ bool USRPGCombatModel::EvaluateRound()
 		int32 NextRoundRandomSeed = INDEX_NONE;
 
 		const bool IsValid = CheckOrderedTurnCandidates(OUT Candidates, OUT NextRoundRandomSeed);
-		if (!IsValid) break;
+		if (IsValid == false)
+		{
+			break;
+		}
 
 		/* 유효 라운드 발견 */
 
@@ -756,9 +759,9 @@ bool USRPGCombatModel::EvaluateRound()
 			return true;
 		}
 	}
-	UE_LOG(LogSRPGCombat, Warning, TEXT("Combat speed cannot produce a turn; retaining room entry checkpoint."));
+
+	UE_LOG(LogSRPGCombat, Error, TEXT("유효한 라운드가 발견되지 않음"));
 	mCombatPhase = ESRPGCombatRoomPhase::CombatEnd;
-	OnCombatProgressBlocked.Broadcast();
 	return false;
 }
 
@@ -830,8 +833,7 @@ bool USRPGCombatModel::CheckOrderedTurnCandidates(OUT TArray<FSRPGTurnCandidate>
 
 bool USRPGCombatModel::CanAccumulateTurn(float Remaining, float Recharge, float Required)
 {
-	return FMath::IsFinite(Remaining) && FMath::IsFinite(Recharge) && FMath::IsFinite(Required)
-		&& Required > 0.f && (Recharge > 0.f || Remaining >= Required);
+	return FMath::IsFinite(Remaining) && FMath::IsFinite(Recharge) && FMath::IsFinite(Required) && Required > 0.f && (Recharge > 0.f || Remaining >= Required);
 }
 
 TArray<FSRPGPredictedRound> USRPGCombatModel::PredictTurnRounds(

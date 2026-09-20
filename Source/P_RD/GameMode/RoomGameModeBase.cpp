@@ -1,4 +1,4 @@
-#include "GameMode/RoomGameModeBase.h"
+﻿#include "GameMode/RoomGameModeBase.h"
 #include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -432,7 +432,7 @@ bool ARoomGameModeBase::EnterNextStage()
 
 bool ARoomGameModeBase::AbandonRunFromRoom()
 {
-	if (mSaveAndExitPending || mWasNextRoomPreloadRequested == true)
+	if (mWasNextRoomPreloadRequested == true)
 	{
 		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
 		return false;
@@ -447,7 +447,7 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 
 bool ARoomGameModeBase::CompleteRunFromRoom()
 {
-	if (mSaveAndExitPending || mWasNextRoomPreloadRequested) return false;
+	if (mWasNextRoomPreloadRequested) return false;
 	if (!mFinalRunClosed)
 	{
 		if (!HasActiveRun()) return false;
@@ -472,39 +472,20 @@ bool ARoomGameModeBase::CompleteRunFromRoom()
 	return PreloadAndTransitionFrontendRoomAsync();
 }
 
-void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(
-	FOnRoomSaveAndExitComplete Completion)
+bool ARoomGameModeBase::SaveAndExitRunFromRoomAsync()
 {
-	if (mSaveAndExitPending || mWasNextRoomPreloadRequested || !HasActiveRun())
+	if (mWasNextRoomPreloadRequested || !HasActiveRun())
 	{
-		Completion.ExecuteIfBound(false);
-		return;
+		return false;
 	}
 
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
-		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
 	if (SaveGameSubsystem == nullptr)
 	{
-		Completion.ExecuteIfBound(false);
-		return;
+		return false;
 	}
 
-	mSaveAndExitPending = true;
-	SaveGameSubsystem->RestoreCheckpointOnNextFrontend();
-	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
-		this,
-		[this, MovedCompletion = MoveTemp(Completion)](
-			const FString& SlotName, int32 UserIndex, bool bSaveSucceeded) mutable
-		{
-			const bool bTransitionStarted = bSaveSucceeded
-				&& PreloadAndTransitionFrontendRoomAsync();
-			if (!bTransitionStarted)
-			{
-				mSaveAndExitPending = false;
-				GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->CancelCheckpointFrontendRestore();
-			}
-			MovedCompletion.ExecuteIfBound(bTransitionStarted);
-		}));
+	return PreloadAndTransitionFrontendRoomAsync();
 }
 
 bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
