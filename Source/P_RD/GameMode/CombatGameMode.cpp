@@ -920,6 +920,7 @@ bool ACombatGameMode::ClaimCombatSelectedArtifact(
 	mRewardSelectionClaimed = true;
 	mSelectedRewardArtifactId = SelectedId;
 	RunPersistData->GetRoomTransactionsMutable().SelectedArtifact = SelectedId;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	return true;
 }
 
@@ -962,6 +963,7 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
 		mGoldRewardClaimed = true;
 		RunPersistData->GetRoomTransactionsMutable().GoldClaimed = true;
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		PushPlayerMetaUIData();
 		return true;
 	}
@@ -1014,6 +1016,7 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 
 		mExpRewardClaimed = true;
 		RunPersistData->GetRoomTransactionsMutable().ExpClaimed = true;
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		PushCombatRewardUIData();
 		PushPlayerMetaUIData();
 		return true;
@@ -1058,6 +1061,7 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 	{
 		mClaimedRewardChoiceIndices.Add(ChoiceIndex);
 		RunPersistData->GetRoomTransactionsMutable().ClaimedChoices.Add(ChoiceIndex);
+		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	}
 	return bClaimed;
 }

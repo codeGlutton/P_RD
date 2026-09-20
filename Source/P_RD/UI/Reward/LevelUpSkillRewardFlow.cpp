@@ -1,4 +1,4 @@
-#include "UI/Reward/LevelUpSkillRewardFlow.h"
+﻿#include "UI/Reward/LevelUpSkillRewardFlow.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/RunOptionsRailWidget.h"
@@ -13,6 +13,7 @@
 #include "TimerManager.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Shop/ShopUIWidgetBase.h"
@@ -145,6 +146,12 @@ void ULevelUpSkillRewardFlow::Open(URunPersistData* Run, UPartyModel* Party, APl
 	ShowNext();
 }
 
+void ULevelUpSkillRewardFlow::Save()
+{
+	if (mController && mController->GetGameInstance())
+		mController->GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
+}
+
 void ULevelUpSkillRewardFlow::Close()
 {
 	if (mWidget) mWidget->CloseUI();
@@ -197,7 +204,8 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 			UStaticUnitSkillData* Skill = LoadSkill(Id);
 			if (Skill) Pool.Add(Skill);
 		}
-		LevelUpSkillReward::RefreshOffer(Reward, Unit, Pool, ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream());
+		if (LevelUpSkillReward::RefreshOffer(Reward, Unit, Pool,
+			ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream())) Save();
 	}
 
 	FShopUI View;
@@ -268,6 +276,7 @@ void ULevelUpSkillRewardFlow::Select(int32 Choice, int32 UnitIndex, int32 SkillS
 void ULevelUpSkillRewardFlow::FinishActiveReward()
 {
 	const int32 UnitIndex = mRun->GetRoomTransactions().LevelUpSkills[mActiveReward].UnitIndex;
+	Save();
 	// Retire this offer immediately, including skip, before accepting another tap.
 	mActiveReward = INDEX_NONE;
 	mWidget->SetIsEnabled(false);
