@@ -189,10 +189,10 @@ public:
 	const FActiveSkillContext& GetActiveSkillContext() const;
 
 public:
-	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const;
-	TArray<FTileIndex> GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
-	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
-	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetAimableTiles(const UTileMapModel* MapModel, int32 SkillIndex) const;
+	TArray<FTileIndex> GetTargetTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
+	TArray<FTileIndex> GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
 
 public:
 	bool IsCooldown(int32 SkillIndex) const;

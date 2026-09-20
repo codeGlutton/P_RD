@@ -624,7 +624,7 @@ const FActiveSkillContext& USkillComponentModel::GetActiveSkillContext() const
 	return mActiveSkillContext;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const
+TArray<FTileIndex> USkillComponentModel::GetAimableTiles(const UTileMapModel* MapModel, int32 SkillIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	
@@ -639,7 +639,7 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, BlockerLayers);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+TArray<FTileIndex> USkillComponentModel::GetTargetTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
@@ -648,7 +648,7 @@ TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel,
 	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
@@ -671,7 +671,7 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	return AllEffectTiles;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
 	const TArray<FTileIndex> TargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
