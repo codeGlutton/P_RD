@@ -317,11 +317,6 @@ void ACombatGameMode::InitializeRoom()
 void ACombatGameMode::InitializeCombat()
 {
 	const FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactions();
-	mGoldRewardClaimed = Transactions.GoldClaimed;
-	mExpRewardClaimed = Transactions.ExpClaimed;
-	mClaimedRewardChoiceIndices = Transactions.ClaimedChoices;
-	mRewardSelectionClaimed = Transactions.SelectedArtifact.IsValid();
-	mSelectedRewardArtifactId = Transactions.SelectedArtifact;
 
 	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
 	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
@@ -919,7 +914,6 @@ bool ACombatGameMode::ClaimCombatSelectedArtifact(
 
 	mRewardSelectionClaimed = true;
 	mSelectedRewardArtifactId = SelectedId;
-	RunPersistData->GetRoomTransactionsMutable().SelectedArtifact = SelectedId;
 	return true;
 }
 
@@ -961,7 +955,6 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 
 		AttributeSetComponentModel->ApplyModToAttribute(UPartyAttributeSet::GetMoneyAttribute(), ETacticalModOp::AddBase, StaticCast<float>(CurrentRoom->mRewardMoney));
 		mGoldRewardClaimed = true;
-		RunPersistData->GetRoomTransactionsMutable().GoldClaimed = true;
 		PushPlayerMetaUIData();
 		return true;
 	}
@@ -989,7 +982,6 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 				continue;
 			}
 
-			// Queue each gained level before applying EXP; the same checkpoint stores both.
 			for (const FPlayerLevelUpData& Level : PlayerUnitModel->PredictLevelChange(CurrentRoom->mRewardExp))
 			{
 				FLevelUpSkillReward& SkillReward = RunPersistData->GetRoomTransactionsMutable().LevelUpSkills.AddDefaulted_GetRef();
@@ -1013,7 +1005,6 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		}
 
 		mExpRewardClaimed = true;
-		RunPersistData->GetRoomTransactionsMutable().ExpClaimed = true;
 		PushCombatRewardUIData();
 		PushPlayerMetaUIData();
 		return true;

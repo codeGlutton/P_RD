@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   PersistentData.h
  * @brief  영구적 플레이 데이터 구현 헤더
  * @author 모호재
@@ -208,20 +208,17 @@ USTRUCT()
 struct FRoomTransactionState
 {
 	GENERATED_BODY()
-	UPROPERTY(SaveGame) bool GoldClaimed = false;
-	UPROPERTY(SaveGame) bool ExpClaimed = false;
-	UPROPERTY(SaveGame) bool TreasureOpened = false;
+
 	UPROPERTY(SaveGame) bool RestUsed = false;
-	UPROPERTY(SaveGame) FPrimaryAssetId SelectedArtifact;
-	UPROPERTY(SaveGame) TSet<int32> ClaimedChoices;
 	UPROPERTY(SaveGame) TSet<int32> SoldShopSlots;
-	UPROPERTY(SaveGame) TArray<FLevelUpSkillReward> LevelUpSkills;
+	UPROPERTY() TArray<FLevelUpSkillReward> LevelUpSkills;
 };
 
 USTRUCT()
 struct FPendingCompletedRun
 {
 	GENERATED_BODY()
+
 	UPROPERTY(SaveGame) FGuid TransactionId;
 	UPROPERTY(SaveGame) FRunLog Log;
 };
