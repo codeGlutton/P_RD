@@ -1,14 +1,20 @@
 var classUTacticalFrameworkModel =
 [
     [ "AddAggregatorDirty", "classUTacticalFrameworkModel.html#af3b3c077e6740f04bd407ae06f9ca95b", null ],
+    [ "AdvanceRoundDuration", "classUTacticalFrameworkModel.html#a1f4f80339cf96936de1217229d615621", null ],
+    [ "AdvanceTurnDuration", "classUTacticalFrameworkModel.html#a15214d426e485a81b5e6769c17c0a874", null ],
     [ "AllocAttributeSetInitter", "classUTacticalFrameworkModel.html#a5ae8f0b9d75b6e7f4e20afc5ce66ec6a", null ],
     [ "AllocTacticalEffectContext", "classUTacticalFrameworkModel.html#aaa7bf3fa0c870975ce05f1861a34784f", null ],
     [ "BeginAggregatorDirtyBatch", "classUTacticalFrameworkModel.html#ad38791a11095dafde6ace0ac25fd397c", null ],
+    [ "CheckEffectDurations", "classUTacticalFrameworkModel.html#a483c88721671590d1b76ac1aa18c7d56", null ],
     [ "EndAggregatorDirtyBatch", "classUTacticalFrameworkModel.html#ac7d85ee81a18796173f5d419651c62aa", null ],
     [ "GetAttributeSetInitter", "classUTacticalFrameworkModel.html#a12e78ebd1d44b446a8623e60511bc16a", null ],
     [ "GetGlobalBatchCount", "classUTacticalFrameworkModel.html#af20b3f892132e1f71f28206932556c4f", null ],
     [ "GetGlobalInitCurveTable", "classUTacticalFrameworkModel.html#a9ece3f75fd4e6b3eb9eb7e0cf61d8914", null ],
-    [ "GlobalPreTacticalEffectSpecApply", "classUTacticalFrameworkModel.html#a468f63a159cb9c89f219ab1aea78e6f2", null ],
+    [ "GetWorldTime", "classUTacticalFrameworkModel.html#acfc54854ef6ec651350cdcb7622dee8a", null ],
+    [ "GlobalPostTacticalEffectSpecAdded", "classUTacticalFrameworkModel.html#ab5137586d630e1945a588729e22db083", null ],
+    [ "GlobalPreTacticalEffectSpecApply", "classUTacticalFrameworkModel.html#a5c094393d9ba31841d04ae6ff634d7b8", null ],
+    [ "GlobalPreTacticalEffectSpecRemoved", "classUTacticalFrameworkModel.html#a53eb85ed4b93c7c933a3857605519a8e", null ],
     [ "Initialize", "classUTacticalFrameworkModel.html#aeeda0b2acc41849d2272db3268cc5238", null ],
     [ "PopCurrentAppliedTE", "classUTacticalFrameworkModel.html#a8960d1385f8b5b604c0a19d4c6e16a2f", null ],
     [ "PushCurrentAppliedTE", "classUTacticalFrameworkModel.html#abbd9b87cf80592da8a3b61f40de93552", null ],
@@ -19,7 +25,11 @@ var classUTacticalFrameworkModel =
     [ "FActiveTacticalEffectHandle", "classUTacticalFrameworkModel.html#a9d628bba5d4165886ea1867e8a020142", null ],
     [ "mDirtyAggregators", "classUTacticalFrameworkModel.html#a31f3af322e4b62cc020b28f30749650a", null ],
     [ "mEffectOwningModelMap", "classUTacticalFrameworkModel.html#ad9b18c3b9ac4f68c483885b5133fe76d", null ],
-    [ "mGlobalAttributeSetInitter", "classUTacticalFrameworkModel.html#a652006033b52ab5378104354ea747a3e", null ],
     [ "mGlobalBatchCount", "classUTacticalFrameworkModel.html#a7a7f0205bdd17933a5a03e8a090d23ce", null ],
-    [ "mGlobalInitCurveTable", "classUTacticalFrameworkModel.html#a10e1de9b425d0c002c311cbb46140c5f", null ]
+    [ "mGlobalInitCurveTable", "classUTacticalFrameworkModel.html#a10e1de9b425d0c002c311cbb46140c5f", null ],
+    [ "mRoundCount", "classUTacticalFrameworkModel.html#ae7bf2758fbffe887a64d8d55b3c78882", null ],
+    [ "mTurnCount", "classUTacticalFrameworkModel.html#ab21e522b6d85aa0b9472a35687f806c3", null ],
+    [ "OnPostTacticalEffectSpecAddedUI", "classUTacticalFrameworkModel.html#a430a041311cd7d80d338c5d5174efcab", null ],
+    [ "OnPreTacticalEffectSpecApplyUI", "classUTacticalFrameworkModel.html#a7f0781b3eeb49d26375e32098c424a6b", null ],
+    [ "OnPreTacticalEffectSpecRemovedUI", "classUTacticalFrameworkModel.html#a477b091135a413f4d509a55178b498ed", null ]
 ];

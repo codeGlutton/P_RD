@@ -108,17 +108,23 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 정적 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:aa5088ee19e557877b0dc006e0f71442e" id="r_aa5088ee19e557877b0dc006e0f71442e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFSRPGCommand.html">FSRPGCommand</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGEnemyTurnPlanner.html#aa5088ee19e557877b0dc006e0f71442e">PlanTurn</a> (<a class="el" href="classUEnemyUnitModel.html">UEnemyUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>, <a class="el" href="classUUnitModel.html">UUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUTileMapModel.html">UTileMapModel</a> *TileMap, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventStream</a>)</td></tr>
-<tr class="memdesc:aa5088ee19e557877b0dc006e0f71442e"><td class="mdescLeft">&#160;</td><td class="mdescRight">적 한 턴의 행동 커맨드 목록을 계산  <br /></td></tr>
-<tr class="separator:aa5088ee19e557877b0dc006e0f71442e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6912db8d5e7d7ec87860c34ebfe4631" id="r_af6912db8d5e7d7ec87860c34ebfe4631"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFSRPGCommand.html">FSRPGCommand</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGEnemyTurnPlanner.html#af6912db8d5e7d7ec87860c34ebfe4631">PlanTurn</a> (<a class="el" href="classUEnemyUnitModel.html">UEnemyUnitModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> * &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Players</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUTileMapModel.html">UTileMapModel</a> *TileMap, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventStream</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogTag</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>())</td></tr>
+<tr class="memdesc:af6912db8d5e7d7ec87860c34ebfe4631"><td class="mdescLeft">&#160;</td><td class="mdescRight">적 한 턴의 행동 커맨드 목록을 계산  <br /></td></tr>
+<tr class="separator:af6912db8d5e7d7ec87860c34ebfe4631"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>플레이어가 쓰는 것과 동일한 최종 커맨드(이동/스킬시전/턴종료)를 순서대로 만들어 반환 </p>
+<div class="textblock"><p>플레이어가 쓰는 것과 동일한 최종 커맨드(이동/스킬시전/턴종료)를 순서대로 만들어 반환</p>
+<p>전제: 턴당 스킬 시전은 1회</p><ul>
+<li>스킬은 배치와 무관하게 우선순위와 사용 가능 여부(쿨다운/행동력)만으로 먼저 확정 (동순위는 랜덤) -&gt; 플레이어 턴에 보여주는 예상 스킬과 실제 시전 스킬이 항상 일치</li>
+<li>Attack: 확정 스킬로 시전 가능한 타겟이 있으면 시전, 없으면 다른 스킬로 바꾸지 않고 이동만</li>
+<li>Spell: 시전 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡은 뒤 시전 <dl class="section note"><dt>주의</dt><dd>턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함 </dd></dl>
+</li>
+</ul>
 
-<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8h_source.html">SRPGEnemyTurnPlanner.h</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8h_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8h_source.html">SRPGEnemyTurnPlanner.h</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
-<a id="aa5088ee19e557877b0dc006e0f71442e" name="aa5088ee19e557877b0dc006e0f71442e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa5088ee19e557877b0dc006e0f71442e">&#9670;&#160;</a></span>PlanTurn()</h2>
+<a id="af6912db8d5e7d7ec87860c34ebfe4631" name="af6912db8d5e7d7ec87860c34ebfe4631"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af6912db8d5e7d7ec87860c34ebfe4631">&#9670;&#160;</a></span>PlanTurn()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -135,8 +141,8 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td>
-          <td class="paramname"><em>Player</em>, </td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> * &gt; &amp;&#160;</td>
+          <td class="paramname"><em>Players</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -148,7 +154,13 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FRandomStream</a> &amp;&#160;</td>
-          <td class="paramname"><em>EventStream</em>&#160;</td>
+          <td class="paramname"><em>EventStream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;&#160;</td>
+          <td class="paramname"><em>LogTag</em> = <code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>()</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -165,9 +177,10 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
 <p>반환 목록은 FSRPGTurnEndCommand로 끝나서 턴이 끝나도록 보장 </p><dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">Enemy</td><td>행동할 적 유닛 </td></tr>
-    <tr><td class="paramname">Player</td><td>표적이 될 플레이어 유닛 </td></tr>
+    <tr><td class="paramname">Players</td><td>표적 후보가 될 플레이어 유닛들 (배열 순서가 곧 타겟 인덱스, null 원소는 제외됨) </td></tr>
     <tr><td class="paramname">TileMap</td><td>타일맵 모델 (도달/조준/효과 범위 계산) </td></tr>
-    <tr><td class="paramname">EventStream</td><td>스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용) </td></tr>
+    <tr><td class="paramname">EventStream</td><td>타겟 동률/스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용) </td></tr>
+    <tr><td class="paramname">LogTag</td><td>판단근거 로그의 줄마다 붙는 식별 태그 (예: "R3/T12", 비어있으면 생략) </td></tr>
   </table>
   </dd>
 </dl>
@@ -177,7 +190,7 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
 <p>스킬커맨드 생성 여부 판단 및 생성</p>
 <p>스킬 사용이 가능할 경우에만 생성 목적지 타일에 도착해서 시전한다고 가정</p>
 
-<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html">SRPGEnemyTurnPlanner.cpp</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html#l00019">19</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html">SRPGEnemyTurnPlanner.cpp</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html#l00171">171</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

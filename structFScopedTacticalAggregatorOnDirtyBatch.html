@@ -104,10 +104,8 @@ $(document).ready(function(){initNavTree('structFScopedTacticalAggregatorOnDirty
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:ab00c5ad23469b208889a25fb40ed69bf" id="r_ab00c5ad23469b208889a25fb40ed69bf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFScopedTacticalAggregatorOnDirtyBatch.html#ab00c5ad23469b208889a25fb40ed69bf">FScopedTacticalAggregatorOnDirtyBatch</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>)</td></tr>
-<tr class="memdesc:ab00c5ad23469b208889a25fb40ed69bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">배치 스코프 진입. 대상 World의 Dirty 누적을 시작한다.  <br /></td></tr>
 <tr class="separator:ab00c5ad23469b208889a25fb40ed69bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7d62b5377c99d7791f44841124219cdc" id="r_a7d62b5377c99d7791f44841124219cdc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFScopedTacticalAggregatorOnDirtyBatch.html#a7d62b5377c99d7791f44841124219cdc">~FScopedTacticalAggregatorOnDirtyBatch</a> ()</td></tr>
-<tr class="memdesc:a7d62b5377c99d7791f44841124219cdc"><td class="mdescLeft">&#160;</td><td class="mdescRight">배치 스코프 종료. 누적된 Dirty를 일괄 발화한다.  <br /></td></tr>
 <tr class="separator:a7d62b5377c99d7791f44841124219cdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
@@ -118,7 +116,7 @@ Protected 속성</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><p>생성 시점에 World 단위로 "Dirty 누적 모드"를 켜고, 소멸 시점에 한꺼번에 OnDirty를 발화시켜 다중 모디파이어 변경 중 중복 재계산/재귀 호출을 줄인다. </p>
 
-<p class="definition"><a class="el" href="TacticalAggregator_8h_source.html">TacticalAggregator.h</a> 파일의 <a class="el" href="TacticalAggregator_8h_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalAggregator_8h_source.html">TacticalAggregator.h</a> 파일의 <a class="el" href="TacticalAggregator_8h_source.html#l00022">22</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="ab00c5ad23469b208889a25fb40ed69bf" name="ab00c5ad23469b208889a25fb40ed69bf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab00c5ad23469b208889a25fb40ed69bf">&#9670;&#160;</a></span>FScopedTacticalAggregatorOnDirtyBatch()</h2>
@@ -135,17 +133,8 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>RAII 스코프 가드: 생성~소멸 구간 동안 Aggregator의 Dirty 전파를 배치(batch)로 묶는다.</p>
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">World</td><td>배치를 적용할 월드</td></tr>
-    <tr><td class="paramname">World</td><td>배치 카운터를 보유한 TacticalFrameworkModel을 찾을 월드.</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>생성 시 BeginAggregatorDirtyBatch()로 전역 배치 카운트를 올린다. 배치가 열려 있는 동안 BroadcastOnDirty()는 즉시 재계산하지 않고 Dirty 목록에만 등록되어, 다수의 모디파이어를 한꺼번에 변경할 때 중복 재계산을 방지한다. </p>
 
-<p class="definition"><a class="el" href="TacticalAggregator_8cpp_source.html">TacticalAggregator.cpp</a> 파일의 <a class="el" href="TacticalAggregator_8cpp_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalAggregator_8cpp_source.html">TacticalAggregator.cpp</a> 파일의 <a class="el" href="TacticalAggregator_8cpp_source.html#l00006">6</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -163,9 +152,8 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>스코프 종료 시 배치를 닫는다. 배치가 0으로 떨어지면 누적된 Dirty들을 한 번에 처리한다. </p>
 
-<p class="definition"><a class="el" href="TacticalAggregator_8cpp_source.html">TacticalAggregator.cpp</a> 파일의 <a class="el" href="TacticalAggregator_8cpp_source.html#l00059">59</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalAggregator_8cpp_source.html">TacticalAggregator.cpp</a> 파일의 <a class="el" href="TacticalAggregator_8cpp_source.html#l00017">17</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -190,7 +178,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TacticalAggregator_8h_source.html">TacticalAggregator.h</a> 파일의 <a class="el" href="TacticalAggregator_8h_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalAggregator_8h_source.html">TacticalAggregator.h</a> 파일의 <a class="el" href="TacticalAggregator_8h_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

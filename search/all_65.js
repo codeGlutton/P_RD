@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['처리하는가_0',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]]
+  ['위젯_20이름_20정정_20에디터_20작업_20코드_20무변경_0',['4. WBP_CombatHUD04 위젯 이름 정정 (에디터 작업, 코드 무변경)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html#autotoc_md26',1,'']]]
 ];

@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: 타격 피드백 구현 계획</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">타격 피드백 구현 계획</div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><p><a class="anchor" id="autotoc_md21"></a> </p><blockquote class="doxtable">
+<p>&zwj;2026-07-30 작성. "맞는 순간이 화면에 안 남는다"를 고치기 위한 구체 스펙. 원칙: <b>신규 제작 최소화</b> — 이미 프로젝트에 있는 위젯·아이콘·폰트·사운드를 배선하고, 새로 만드는 에셋은 카메라 셰이크 BP 2개뿐이다. </p>
+</blockquote>
+<h1><a class="anchor" id="autotoc_md22"></a>
+&lt;/blockquote&gt;</h1>
+<h1><a class="anchor" id="autotoc_md23"></a>
+1. 실행 데미지 숫자 (최우선 — 코드 배선만으로 해결)</h1>
+<p><b>현황</b>: 플로팅 로그 위젯·순차 재생 큐·아이콘 변환까지 전부 완성돼 있다 (<code><a class="el" href="CombatLayoutHUDWidget__CombatLog_8cpp.html" title="전투 플로팅 로그(대상 머리 위 텍스트) + 턴 라운드 배너의 표시 구현.">CombatLayoutHUDWidget_CombatLog.cpp</a></code>). 그런데 발행이 **미리보기 경로뿐**이다:</p>
+<ul>
+<li>미리보기(조준 시): <code>OnPostSimulateSkillAction</code> → <code>PushSimulationFloatingLogs(Logs)</code> — <code><a class="el" href="CombatGameMode_8cpp.html">CombatGameMode.cpp</a>:457-458</code> ✅</li>
+<li>실행(실제 타격): <code>PushSimulationFloatingLogs(Logs, /*IsPreview=*/false)</code> — <b>호출부 없음</b> ❌</li>
+</ul>
+<p><b>배선 지점 (권장)</b>: 라이브 커밋 지점인 <code>USkillComponentModel::TriggerMotionLayer</code> (AnimNotify_EventTrigger가 모션마다 트리거)에서 모션 단위 이벤트 로그를 델리게이트로 올린다. 미리보기의 <code>OnPostSimulateSkillAction</code>과 대칭인 <code>OnPostCommitMotion(EventLogs)</code> 델리게이트를 스킬 컴포넌트에 추가하고, <code><a class="el" href="classACombatGameMode.html" title="전투 방에 대한 GameMode">ACombatGameMode</a></code>가 파티/적 전 유닛에 구독(기존 스킬 델리게이트 연결부 <code><a class="el" href="CombatGameMode_8cpp.html">CombatGameMode.cpp</a>:331-</code> 근처)해 <code>PushSimulationFloatingLogs(Logs, false)</code>를 호출.</p>
+<ul>
+<li>차선책: <code>OnEndAnyTurnActionUI</code>(<code><a class="el" href="CombatGameMode_8cpp.html">CombatGameMode.cpp</a>:319</code>)에서 액션 로그를 일괄 발행. 구현은 더 쉽지만 다단 모션 스킬에서 숫자가 "액션 끝난 뒤 몰아서" 뜬다. 모션 단위가 정답.</li>
+<li>실행 로그 큐의 간격·상승·페이드 연출은 이미 구현돼 있으므로 파라미터 튜닝만.</li>
+</ul>
+<p><b>표기 스타일</b> (전부 기존 에셋):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">항목   </th><th class="markdownTableHeadNone">값    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">숫자 폰트   </td><td class="markdownTableBodyNone"><code>F_HUD_Oswald</code> (<code>SVN/OutSideAsset/Fonts/F_HUD_Oswald.uasset</code>) — 숫자 전용, HUD 폰트 패밀리로 이미 준비됨    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">텍스트 라벨(상태이상 등)   </td><td class="markdownTableBodyNone"><code>F_HUD_LINESeedKR</code> (LINESeedKR-Bold)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">아이콘   </td><td class="markdownTableBodyNone"><code>T_Status_*</code> 8종 — 이미 HUD 생성자에서 로드 중 (<code><a class="el" href="CombatLayoutHUDWidget_8cpp.html">CombatLayoutHUDWidget.cpp</a>:41-48</code>), 신규 불필요    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">색   </td><td class="markdownTableBodyNone">피해 빨강 / 회복 초록 / 방어 파랑 / 이동력 노랑 / 태그(버프·디버프) 보라 — <code>EFloatingLogColorType</code> 변환부에 이미 있음    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">크리티컬   </td><td class="markdownTableBodyNone">폰트 크기 1.3배 + 스케일 펀치(0.1s). 크리 판정 플래그가 로그에 실리기 전까지는 보류   </td></tr>
+</table>
+<h1><a class="anchor" id="autotoc_md24"></a>
+2. 카메라 셰이크 (신규 에셋 = BP 2개)</h1>
+<p><b>현황</b>: 직교 전용 셰이크 패턴 <code><a class="el" href="classUOrthographicCameraShakePattern.html">UOrthographicCameraShakePattern</a></code>(OrthoWidth까지 흔듦)과 <code><a class="el" href="classUCameraMovementComponent.html#abd7c3f75a97a9a62d07b77cd17eaa39a">UCameraMovementComponent::StartCameraShake</a>(TSubclassOf&lt;UCameraShakeBase&gt;)</code> (<code><a class="el" href="CameraMovementComponent_8cpp.html">CameraMovementComponent.cpp</a>:643</code>) 완성. 설정 온오프 토글도 이미 있음(<code><a class="el" href="RDGameModeBase_8cpp.html">RDGameModeBase.cpp</a>:169-173</code>). <b>호출부만 없다.</b></p>
+<p><b>만들 에셋</b> (<code>Content/BP/Camera/</code> 에 BP_CombatCamera 옆):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">에셋   </th><th class="markdownTableHeadNone">용도   </th><th class="markdownTableHeadNone">파라미터 제안    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>CS_HitLight</code>   </td><td class="markdownTableBodyNone">일반 타격 (HP 감소 발생 시)   </td><td class="markdownTableBodyNone">진폭 소, 지속 0.15s, OrthoWidth 진폭 ~20    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>CS_HitHeavy</code>   </td><td class="markdownTableBodyNone">큰 타격(피해 ≥ 대상 MaxHP 30%) / 처치   </td><td class="markdownTableBodyNone">진폭 대, 지속 0.25s, OrthoWidth 진폭 ~50   </td></tr>
+</table>
+<p><b>배선 지점</b>: 1번과 같은 커밋 지점. HP 감소 로그(<code><a class="el" href="structFSRPGAttributeEffectEventLog.html" title="속성값을 변경시키는 이펙트 이벤트 로그">FSRPGAttributeEffectEventLog</a></code>)를 감지하면 <code>CombatCameraPawn</code>의 <code><a class="el" href="classUCameraMovementComponent.html">UCameraMovementComponent</a></code>에 <code>StartCameraShake(CS_HitLight/Heavy)</code>. 힐·버프·이동에는 걸지 않는다(Attack 이펙트 한정). 시뮬레이션(미리보기) 경로에서는 호출 금지.</p>
+<h1><a class="anchor" id="autotoc_md25"></a>
+3. 히트 VFX / SFX (에셋 이미 있음 — 애님 배치 확인)</h1>
+<p>자체 제작분이 이미 있다 (<code>Content/SVN/InSideAsset/</code>):</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">종류   </th><th class="markdownTableHeadNone">에셋   </th><th class="markdownTableHeadNone">매핑    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">VFX   </td><td class="markdownTableBodyNone"><code>VFX/Hit/FXS_Hit_Attack</code>, <code>FXS_Hit_Spell</code>   </td><td class="markdownTableBodyNone"><code>ESkillType</code> Attack / Spell    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">SFX   </td><td class="markdownTableBodyNone"><code>SFX/Hit/SFX_Hit_Attack</code>, <code>SFX_Hit_Spell</code>   </td><td class="markdownTableBodyNone">동일    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">스킬 SFX   </td><td class="markdownTableBodyNone"><code>SFX/Skill/SFX_Skill_{Buff,DeBuff,Defense,Heal,Movement,Sword_01,Sword_02}</code>   </td><td class="markdownTableBodyNone">스킬 이펙트 레이어별   </td></tr>
+</table>
+<p><code>AnimNotify_ConditionalPlayNiagaraEffect</code> / <code>AnimNotify_EventTrigger</code>가 이미 있으므로 **스킬 애님 24종(직업 5 × 스킬 + 몬스터)에 히트 노티파이가 실제로 박혀 있는지 에디터에서 전수 확인**이 작업의 본체다. 빠진 애님에 노티파이 배치(에디터 작업, 코드 무변경).</p>
+<h1><a class="anchor" id="autotoc_md26"></a>
+4. WBP_CombatHUD04 위젯 이름 정정 (에디터 작업, 코드 무변경)</h1>
+<p>C++는 이름으로 찾고 없으면 조용히 건너뛴다. 아래는 <b>코드는 완성인데 WBP에 이름이 없거나 달라서 화면에 안 나오는</b> 기능들. UMG 에디터에서 이름만 맞추면 켜진다.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">코드가 찾는 이름   </th><th class="markdownTableHeadNone">WBP04 현재   </th><th class="markdownTableHeadNone">조치   </th><th class="markdownTableHeadNone">우선순위    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>CommandCooldownIcon_0..5</code>   </td><td class="markdownTableBodyNone"><code>CommandCooldownBadge_0..5</code>   </td><td class="markdownTableBodyNone"><b>이름 변경</b> (이동 카드에 모래시계 잔존 버그 해결)   </td><td class="markdownTableBodyNone">★★★    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>EnemyStatus</code>   </td><td class="markdownTableBodyNone">없음   </td><td class="markdownTableBodyNone">적 안내판에 TextBlock 추가 (적 상태이상 텍스트)   </td><td class="markdownTableBodyNone">★★★    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>ObjectiveText</code>   </td><td class="markdownTableBodyNone">없음 (<code>ObjectivePanel</code>만 존재)   </td><td class="markdownTableBodyNone">패널 안에 TextBlock 추가 ("남은 적 N" 표시)   </td><td class="markdownTableBodyNone">★★    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>PartyStatus_0..2</code>   </td><td class="markdownTableBodyNone">없음   </td><td class="markdownTableBodyNone">파티 칸에 상태이상 텍스트 추가 ("약화 2턴")   </td><td class="markdownTableBodyNone">★★    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>PartyAPPip_{slot}_{n}</code>   </td><td class="markdownTableBodyNone">없음 (숫자판만)   </td><td class="markdownTableBodyNone">낱개 AP pip — 숫자로 충분하면 생략 가능   </td><td class="markdownTableBodyNone">★    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>TurnName_0..5</code>   </td><td class="markdownTableBodyNone">없음   </td><td class="markdownTableBodyNone">턴 토큰 이름 — 초상화로 충분하면 생략 가능   </td><td class="markdownTableBodyNone">★    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>CommandCostLine_0..5</code>   </td><td class="markdownTableBodyNone">없음   </td><td class="markdownTableBodyNone">카드 비용 문장 — 숫자로 충분하면 생략 가능   </td><td class="markdownTableBodyNone">★   </td></tr>
+</table>
+<p>폰트는 기존 HUD와 동일하게 <code>F_HUD_LINESeedKR</code>(한글) / <code>F_HUD_Oswald</code>(숫자).</p>
+<h1><a class="anchor" id="autotoc_md27"></a>
+5. 후순위 (이번 범위 밖, 기록만)</h1>
+<ul>
+<li><b>사망 연출</b>: 사망 시 머리 위 HP바 페이드아웃 + <code>CS_HitHeavy</code> + 처치 SFX. 애님 레이어의 <code>mDefaultDeathAnim</code>은 이미 재생되므로 UI/카메라 쪽만.</li>
+<li><b>크리티컬 연출</b>: 피해 계산에 크리 분기가 생긴 뒤 (현재 UI가 ×1.5를 임시 곱셈 중 — <code><a class="el" href="CombatGameMode_8cpp.html">CombatGameMode.cpp</a></code> 주석 참고).</li>
+</ul>
+<h1><a class="anchor" id="autotoc_md28"></a>
+진행 순서 제안</h1>
+<ol type="1">
+<li>§4 이름 정정 2건(★★★) — 10분짜리 에디터 작업, 즉효</li>
+<li>§1 실행 로그 발행 배선 — 코드 1~2시간, 타격감 절반이 여기서 나옴</li>
+<li>§2 셰이크 BP 2개 제작 + 같은 지점 배선</li>
+<li>§3 애님 노티파이 전수 확인 </li>
+</ol>
+</div></div><!-- contents -->
+</div><!-- PageDoc -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

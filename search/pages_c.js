@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['매크로_0',['매크로',['../gas_tag_page.html',1,'Gameplay 태그 매크로'],['../priamry_asset_type_page.html',1,'Primary Asset Type 매크로']]]
+  ['구현_20계획_0',['타격 피드백 구현 계획',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html',1,'']]]
 ];

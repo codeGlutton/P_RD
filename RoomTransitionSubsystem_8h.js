@@ -17,5 +17,5 @@ var RoomTransitionSubsystem_8h =
     ] ],
     [ "DECLARE_DELEGATE_TwoParams", "RoomTransitionSubsystem_8h.html#a09431212979406f04cd9f6294e27b199", null ],
     [ "ENUM_CLASS_FLAGS", "RoomTransitionSubsystem_8h.html#a726f48ae7dee87533f00f5e6b49c6ca7", null ],
-    [ "int32", "RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b", null ]
+    [ "int32", "RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b", null ]
 ];

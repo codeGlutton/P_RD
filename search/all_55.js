@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['알림_20strong_20게임플레이가_20발신_20→_20ui가_20다시_20그림_0',['C. UI가 &lt;strong&gt;구독하는 알림&lt;/strong&gt; (게임플레이가 발신 → UI가 다시 그림)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md32',1,'']]]
+  ['숫자_20최우선_20—_20코드_20배선만으로_20해결_0',['1. 실행 데미지 숫자 (최우선 — 코드 배선만으로 해결)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html#autotoc_md23',1,'']]]
 ];

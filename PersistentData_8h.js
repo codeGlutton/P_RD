@@ -2,6 +2,11 @@ var PersistentData_8h =
 [
     [ "FUserLog", "structFUserLog.html", "structFUserLog" ],
     [ "UPlayerUnitPersistData", "classUPlayerUnitPersistData.html", "classUPlayerUnitPersistData" ],
+    [ "UPartyPersistData", "classUPartyPersistData.html", "classUPartyPersistData" ],
+    [ "FRunPersistDataCache", "structFRunPersistDataCache.html", "structFRunPersistDataCache" ],
+    [ "FLevelUpSkillReward", "structFLevelUpSkillReward.html", "structFLevelUpSkillReward" ],
+    [ "FRoomTransactionState", "structFRoomTransactionState.html", "structFRoomTransactionState" ],
+    [ "FPendingCompletedRun", "structFPendingCompletedRun.html", "structFPendingCompletedRun" ],
     [ "URunPersistData", "classURunPersistData.html", "classURunPersistData" ],
     [ "UUserPersistData", "classUUserPersistData.html", "classUUserPersistData" ],
     [ "FOptionPersistDataCache", "structFOptionPersistDataCache.html", "structFOptionPersistDataCache" ],

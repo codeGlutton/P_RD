@@ -1,6 +1,5 @@
 var classUPersistentDataSubsystem =
 [
-    [ "DoStageBuildTest", "classUPersistentDataSubsystem.html#aa22521a4956b96eb772e76bf8ddecd0a", null ],
     [ "GetOptionPersistData", "classUPersistentDataSubsystem.html#a96ba0de9cf12d17ac69c4d0c3517579b", null ],
     [ "GetOptionPersistData", "classUPersistentDataSubsystem.html#aca4ca5516faedc930eead62d7c47d56d", null ],
     [ "GetRunPersistData", "classUPersistentDataSubsystem.html#a0529400710b312dc92d1d72bc42d2dbc", null ],

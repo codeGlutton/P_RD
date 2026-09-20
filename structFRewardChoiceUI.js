@@ -6,5 +6,7 @@ var structFRewardChoiceUI =
     [ "mKind", "structFRewardChoiceUI.html#af8a69402c3de7ed24947c80f3b3b393b", null ],
     [ "mName", "structFRewardChoiceUI.html#a866f02e745eef2560f1dbc40c0df163d", null ],
     [ "mRarityColor", "structFRewardChoiceUI.html#a2b22ba5f2cf12c7e86711dd887bc5bdd", null ],
+    [ "mRarityLevel", "structFRewardChoiceUI.html#a0623334c8bac582b7fe9ca9ced6b827d", null ],
+    [ "mRarityName", "structFRewardChoiceUI.html#a93caed31a233eb35a54e37eaeb8ed39a", null ],
     [ "mSourceAssetId", "structFRewardChoiceUI.html#a772316f78ab7fb98762f238e70da5999", null ]
 ];

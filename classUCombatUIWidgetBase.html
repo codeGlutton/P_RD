@@ -104,15 +104,19 @@ UCombatUIWidgetBase에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classUCombatUIWidgetBase.png" usemap="#UCombatUIWidgetBase_map" alt=""/>
   <map id="UCombatUIWidgetBase_map" name="UCombatUIWidgetBase_map">
-<area href="classURDUserWidget.html" title="RD 프로젝트 UMG 위젯의 공통 베이스 클래스" alt="URDUserWidget" shape="rect" coords="0,56,139,80"/>
+<area href="classURDUserWidget.html" title="RD 프로젝트 UMG 위젯의 공통 베이스 클래스" alt="URDUserWidget" shape="rect" coords="0,56,164,80"/>
+<area href="classUCombatLayoutHUDWidget.html" alt="UCombatLayoutHUDWidget" shape="rect" coords="0,168,164,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:aa80f5dea0bc640e07e80156685b3531b" id="r_aa80f5dea0bc640e07e80156685b3531b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#aa80f5dea0bc640e07e80156685b3531b">BindUIModel</a> (<a class="el" href="classUCombatUIModel.html">UCombatUIModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InUIModel</a>)</td></tr>
+<tr class="memitem:aa80f5dea0bc640e07e80156685b3531b" id="r_aa80f5dea0bc640e07e80156685b3531b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#aa80f5dea0bc640e07e80156685b3531b">BindUIModel</a> (<a class="el" href="classUCombatUIModel.html">UCombatUIModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InUIModel</a>)</td></tr>
 <tr class="memdesc:aa80f5dea0bc640e07e80156685b3531b"><td class="mdescLeft">&#160;</td><td class="mdescRight">공용 뷰모델에 연결하고 갱신/큐 알림을 구독한다.  <br /></td></tr>
 <tr class="separator:aa80f5dea0bc640e07e80156685b3531b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7dd6d226c381610018cf945537166733" id="r_a7dd6d226c381610018cf945537166733"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#a7dd6d226c381610018cf945537166733">UnbindUIModel</a> ()</td></tr>
+<tr class="memdesc:a7dd6d226c381610018cf945537166733"><td class="mdescLeft">&#160;</td><td class="mdescRight">구독을 끊는다.  <br /></td></tr>
+<tr class="separator:a7dd6d226c381610018cf945537166733"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4973b5227c7181722e77c232f77f43de" id="r_a4973b5227c7181722e77c232f77f43de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUCombatUIModel.html">UCombatUIModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#a4973b5227c7181722e77c232f77f43de">GetUIModel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:a4973b5227c7181722e77c232f77f43de"><td class="mdescLeft">&#160;</td><td class="mdescRight">WBP가 자기 도메인 데이터를 읽을 때 사용하는 UIModel 접근자.  <br /></td></tr>
 <tr class="separator:a4973b5227c7181722e77c232f77f43de"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,6 +133,14 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget" id="r_a8a0ecabf313dbba6fa3a495d73f8dbad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a8a0ecabf313dbba6fa3a495d73f8dbad">IsOpened</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯이 열렸거나 열리는 중이며 실제 화면에 보이는지 확인한다.  <br /></td></tr>
 <tr class="separator:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab1c5965ca8609aa949cc0049efb5a38a inherit pub_methods_classURDUserWidget" id="r_ab1c5965ca8609aa949cc0049efb5a38a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ab1c5965ca8609aa949cc0049efb5a38a">HandleBackNavigation</a> ()</td></tr>
+<tr class="separator:ab1c5965ca8609aa949cc0049efb5a38a inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12adf4820f3e74fa2f2d967d264fc6ad inherit pub_methods_classURDUserWidget" id="r_a12adf4820f3e74fa2f2d967d264fc6ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> UUserWidget *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a12adf4820f3e74fa2f2d967d264fc6ad">GetBackNavigationLayer</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a12adf4820f3e74fa2f2d967d264fc6ad inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12fb3f84d3ad2c6c2c26dc5a5c7235d9 inherit pub_methods_classURDUserWidget" id="r_a12fb3f84d3ad2c6c2c26dc5a5c7235d9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a12fb3f84d3ad2c6c2c26dc5a5c7235d9">UsesMobileSafeArea</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a12fb3f84d3ad2c6c2c26dc5a5c7235d9 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afddbb56b2bc0875de4321450e45fa598 inherit pub_methods_classURDUserWidget" id="r_afddbb56b2bc0875de4321450e45fa598"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#afddbb56b2bc0875de4321450e45fa598">ShouldWrapMobileSafeArea</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:afddbb56b2bc0875de4321450e45fa598 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget" id="r_a027636eb3c9a5f583d2da72e1f08bdff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a027636eb3c9a5f583d2da72e1f08bdff">FinishOpenUI</a> ()</td></tr>
 <tr class="memdesc:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션 완료를 C++ 생명주기에 알린다.  <br /></td></tr>
 <tr class="separator:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,10 +156,19 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:aec7e3913aa2ab065e7f357dd57f82ffa" id="r_aec7e3913aa2ab065e7f357dd57f82ffa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#aec7e3913aa2ab065e7f357dd57f82ffa">OnQueueNodePlayed</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFCombatQueueNode.html">FCombatQueueNode</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Node</a>)</td></tr>
 <tr class="memdesc:aec7e3913aa2ab065e7f357dd57f82ffa"><td class="mdescLeft">&#160;</td><td class="mdescRight">행동 큐 노드 하나가 재생됐을 때 호출. WBP가 머리 위 숫자/효과를 띄운다.  <br /></td></tr>
 <tr class="separator:aec7e3913aa2ab065e7f357dd57f82ffa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65e3505145acadf1edb5c595dd130fce" id="r_a65e3505145acadf1edb5c595dd130fce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#a65e3505145acadf1edb5c595dd130fce">NativeOnUIRefreshed</a> (<a class="el" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81">ECombatUIDomain</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Domain</a>)</td></tr>
+<tr class="memdesc:a65e3505145acadf1edb5c595dd130fce"><td class="mdescLeft">&#160;</td><td class="mdescRight">위 두 이벤트의 C++ 판.  <br /></td></tr>
+<tr class="separator:a65e3505145acadf1edb5c595dd130fce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab61ccce6671dd2e628e03b4f276d1a38" id="r_ab61ccce6671dd2e628e03b4f276d1a38"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#ab61ccce6671dd2e628e03b4f276d1a38">NativeOnQueueNodePlayed</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFCombatQueueNode.html">FCombatQueueNode</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Node</a>)</td></tr>
+<tr class="separator:ab61ccce6671dd2e628e03b4f276d1a38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01ec397a7c4e0edad532e1a691357e59" id="r_a01ec397a7c4e0edad532e1a691357e59"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#a01ec397a7c4e0edad532e1a691357e59">NativeDestruct</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="memdesc:a01ec397a7c4e0edad532e1a691357e59"><td class="mdescLeft">&#160;</td><td class="mdescRight">화면 이탈 시 UIModel 델리게이트 구독을 해제한다.  <br /></td></tr>
 <tr class="separator:a01ec397a7c4e0edad532e1a691357e59"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
+<tr class="memitem:af40aa88b3e0040caef6d6be8eca407c9 inherit pro_methods_classURDUserWidget" id="r_af40aa88b3e0040caef6d6be8eca407c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedRef</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SWidget</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#af40aa88b3e0040caef6d6be8eca407c9">RebuildWidget</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:af40aa88b3e0040caef6d6be8eca407c9 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a649e8962201fa83e78888340eaf3a680 inherit pro_methods_classURDUserWidget" id="r_a649e8962201fa83e78888340eaf3a680"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a649e8962201fa83e78888340eaf3a680">GetContentGeometry</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a649e8962201fa83e78888340eaf3a680 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget" id="r_a84d00481ec98f6d9469a5d722d2191de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a84d00481ec98f6d9469a5d722d2191de">PlayOpenUIAnimation</a> ()</td></tr>
 <tr class="memdesc:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션을 재생한다.  <br /></td></tr>
 <tr class="separator:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,7 +187,7 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget" id="r_ac694c35e0fa59dfad7c8e11faff0c67b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ac694c35e0fa59dfad7c8e11faff0c67b">ApplyCloseUI</a> ()</td></tr>
 <tr class="memdesc:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ab47bc7509e2d94ec4567748b85e8eaf7" title="닫기 애니메이션 완료를 C++ 생명주기에 알린다.">FinishCloseUI()</a> 이후 닫힘 정책을 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
 <tr class="separator:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget" id="r_a131ce144666f32f53d2f32e7dc8d2f75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a131ce144666f32f53d2f32e7dc8d2f75">GetViewportZOrder</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget" id="r_a131ce144666f32f53d2f32e7dc8d2f75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a131ce144666f32f53d2f32e7dc8d2f75">GetViewportZOrder</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddToViewport()</a>에 사용할 ZOrder를 반환한다.  <br /></td></tr>
 <tr class="separator:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ea7bb344a4def56b4c81e1365c341ca inherit pro_methods_classURDUserWidget" id="r_a3ea7bb344a4def56b4c81e1365c341ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a3ea7bb344a4def56b4c81e1365c341ca">ShouldRemoveFromParentOnClose</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
@@ -178,14 +199,20 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget" id="r_ab601b5cb3eabe3b566a1f6c204926a40"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ab601b5cb3eabe3b566a1f6c204926a40">NativeOnInitialized</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="memdesc:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯 초기화 시(피드백을 켠 화면에 한해) 트리 안의 버튼에 공용 누름 효과를 1회 배선한다.  <br /></td></tr>
 <tr class="separator:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea7fc843a9c40f9e694fda3c810935ab inherit pro_methods_classURDUserWidget" id="r_aea7fc843a9c40f9e694fda3c810935ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#aea7fc843a9c40f9e694fda3c810935ab">NativeConstruct</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="memdesc:aea7fc843a9c40f9e694fda3c810935ab inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">파생 위젯이 NativeConstruct에서 런타임 버튼을 만든 뒤 공용 사운드를 다시 배선한다.  <br /></td></tr>
+<tr class="separator:aea7fc843a9c40f9e694fda3c810935ab inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget" id="r_ae52edb48cd9915d6917c93915116340f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae52edb48cd9915d6917c93915116340f">ApplyCommonButtonPressSound</a> (UButton *Button) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">런타임에 늦게 생성된 버튼 하나에 공용 클릭 사운드를 즉시 적용한다.  <br /></td></tr>
+<tr class="separator:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
 <tr class="memitem:aa6f77c23912de9c60da66b0403978f35" id="r_aa6f77c23912de9c60da66b0403978f35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUCombatUIModel.html">UCombatUIModel</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIWidgetBase.html#aa6f77c23912de9c60da66b0403978f35">mUIModel</a></td></tr>
-<tr class="memdesc:aa6f77c23912de9c60da66b0403978f35"><td class="mdescLeft">&#160;</td><td class="mdescRight">연결된 공용 전투 UIModel; 위젯은 소유하지 않고 구독/읽기만 한다.  <br /></td></tr>
+<tr class="memdesc:aa6f77c23912de9c60da66b0403978f35"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 UIModel 구독을 끊고 참조를 비운다.  <br /></td></tr>
 <tr class="separator:aa6f77c23912de9c60da66b0403978f35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 속성</td></tr>
-<tr class="memitem:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget" id="r_ae62d782bb431f6a764b2aae9a0e3d3f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">mViewportZOrder</a> = 0</td></tr>
+<tr class="memitem:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget" id="r_ae62d782bb431f6a764b2aae9a0e3d3f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">mViewportZOrder</a> = 0</td></tr>
 <tr class="memdesc:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">뷰포트에 올라갈 때 사용할 표시 순서  <br /></td></tr>
 <tr class="separator:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab4c4ee1e763fa6b1807a6febfad8050 inherit pro_attribs_classURDUserWidget" id="r_aab4c4ee1e763fa6b1807a6febfad8050"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#aab4c4ee1e763fa6b1807a6febfad8050">mRemoveFromParentOnClose</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td></tr>
@@ -201,6 +228,9 @@ Protected 속성</h2></td></tr>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UCombatUIWidgetBase::BindUIModel </td>
@@ -210,8 +240,15 @@ Protected 속성</h2></td></tr>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 <p>새 UIModel을 구독하고 이미 들어온 스냅샷을 전체 갱신으로 한 번 그린다. </p>
+
+<p><a class="el" href="classUCombatLayoutHUDWidget.html#a3f3ee0a7f0249abb6559b86cc76e5670">UCombatLayoutHUDWidget</a>에서 재구현되었습니다.</p>
 
 <p class="definition"><a class="el" href="CombatUIWidgetBase_8cpp_source.html">CombatUIWidgetBase.cpp</a> 파일의 <a class="el" href="CombatUIWidgetBase_8cpp_source.html#l00006">6</a> 번째 라인에서 정의되었습니다.</p>
 
@@ -240,7 +277,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00036">36</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -268,7 +305,70 @@ Protected 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>위젯 파괴 전에 UIModel 구독을 끊어 dangling delegate 호출을 막는다. </p>
 
-<p class="definition"><a class="el" href="CombatUIWidgetBase_8cpp_source.html">CombatUIWidgetBase.cpp</a> 파일의 <a class="el" href="CombatUIWidgetBase_8cpp_source.html#l00050">50</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classURDUserWidget.html#ad16af9444bb2820b46e6c5eb0cdea774">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p><a class="el" href="classUCombatLayoutHUDWidget.html#aa059114617897444e7c98aa17764dbb8">UCombatLayoutHUDWidget</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8cpp_source.html">CombatUIWidgetBase.cpp</a> 파일의 <a class="el" href="CombatUIWidgetBase_8cpp_source.html#l00053">53</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab61ccce6671dd2e628e03b4f276d1a38" name="ab61ccce6671dd2e628e03b4f276d1a38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab61ccce6671dd2e628e03b4f276d1a38">&#9670;&#160;</a></span>NativeOnQueueNodePlayed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UCombatUIWidgetBase::NativeOnQueueNodePlayed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFCombatQueueNode.html">FCombatQueueNode</a> &amp;&#160;</td>
+          <td class="paramname"><em>Node</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00057">57</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a65e3505145acadf1edb5c595dd130fce" name="a65e3505145acadf1edb5c595dd130fce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65e3505145acadf1edb5c595dd130fce">&#9670;&#160;</a></span>NativeOnUIRefreshed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UCombatUIWidgetBase::NativeOnUIRefreshed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="CombatUITypes_8h.html#a561fae8bc960f9ccf6d920135ecfaa81">ECombatUIDomain</a>&#160;</td>
+          <td class="paramname"><em>Domain</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>OnUIRefreshed/OnQueueNodePlayed는 BlueprintImplementableEvent라 C++ 파생 클래스가 재정의할 수 없다. 배치를 코드로 조립하는 HUD는 블루프린트 그래프 없이 갱신을 받아야 해서, 같은 시점에 불리는 네이티브 훅을 함께 둔다. 블루프린트로 만드는 위젯은 이 둘을 몰라도 된다. </p>
+
+<p><a class="el" href="classUCombatLayoutHUDWidget.html#aa52c261d73fa12eb29db874ae4094748">UCombatLayoutHUDWidget</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00056">56</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -324,6 +424,37 @@ Protected 속성</h2></td></tr>
 
 </div>
 </div>
+<a id="a7dd6d226c381610018cf945537166733" name="a7dd6d226c381610018cf945537166733"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7dd6d226c381610018cf945537166733">&#9670;&#160;</a></span>UnbindUIModel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UCombatUIWidgetBase::UnbindUIModel </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>현재 UIModel의 도메인/큐 델리게이트 구독을 해제한다.</p>
+<p>파생 위젯이 자기 몫의 구독을 더 붙일 수 있으므로 protected 다. 붙인 쪽이 떼야 하는데 private 이면 뗄 자리가 없다. </p>
+
+<p><a class="el" href="classUCombatLayoutHUDWidget.html#aee17f7b73ecd58b918d4b065d9bbcd62">UCombatLayoutHUDWidget</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8cpp_source.html">CombatUIWidgetBase.cpp</a> 파일의 <a class="el" href="CombatUIWidgetBase_8cpp_source.html#l00028">28</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
 <a id="aa6f77c23912de9c60da66b0403978f35" name="aa6f77c23912de9c60da66b0403978f35"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa6f77c23912de9c60da66b0403978f35">&#9670;&#160;</a></span>mUIModel</h2>
@@ -344,8 +475,9 @@ Protected 속성</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>연결된 공용 전투 UIModel; 위젯은 소유하지 않고 구독/읽기만 한다. </p>
 
-<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00055">55</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatUIWidgetBase_8h_source.html">CombatUIWidgetBase.h</a> 파일의 <a class="el" href="CombatUIWidgetBase_8h_source.html#l00075">75</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

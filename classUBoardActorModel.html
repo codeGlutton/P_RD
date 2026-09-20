@@ -108,14 +108,27 @@ UBoardActorModel에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classUBoardActorModel.png" usemap="#UBoardActorModel_map" alt=""/>
   <map id="UBoardActorModel_map" name="UBoardActorModel_map">
-<area href="classUActorModel.html" title="액터 데이터 모델 클래스" alt="UActorModel" shape="rect" coords="80,112,231,136"/>
-<area href="classUObjectModel.html" title="시뮬레이션 데이터 모델의 최상위 인터페이스" alt="UObjectModel" shape="rect" coords="80,56,231,80"/>
-<area href="classUMockBoardActorModel.html" title="패시브 테스트용 UBoardActorModel 목 (IBoardCombatTarget 구현 + 실제 속성 컴포넌트 보유)" alt="UMockBoardActorModel" shape="rect" coords="0,224,151,248"/>
-<area href="classUUnitModel.html" title="턴을 소유할 수 있는 베이스 폰 클래스 모델" alt="UUnitModel" shape="rect" coords="161,224,312,248"/>
-<area href="classUEnemyUnitModel.html" title="적 베이스 유닛 모델" alt="UEnemyUnitModel" shape="rect" coords="0,280,151,304"/>
-<area href="classUMockPlayerUnitModel.html" title="플레이어유닛 Mock" alt="UMockPlayerUnitModel" shape="rect" coords="161,280,312,304"/>
-<area href="classUPlayerUnitModel.html" title="플레이어 베이스 유닛 모델 입니다." alt="UPlayerUnitModel" shape="rect" coords="322,280,473,304"/>
-<area href="classUMockEnemyUnitModel.html" title="적유닛 Mock" alt="UMockEnemyUnitModel" shape="rect" coords="0,336,151,360"/>
+<area href="classUActorModel.html" title="액터 데이터 모델 클래스" alt="UActorModel" shape="rect" coords="337,112,552,136"/>
+<area href="classUObjectModel.html" title="시뮬레이션 데이터 모델의 최상위 인터페이스" alt="UObjectModel" shape="rect" coords="337,56,552,80"/>
+<area href="classUMockBoardActorModel.html" title="패시브 테스트용 UBoardActorModel 목 (IBoardCombatTarget 구현 + 실제 속성 컴포넌트 보유)" alt="UMockBoardActorModel" shape="rect" coords="0,224,215,248"/>
+<area href="classUMockOverlapSensorModel.html" title="타일 오버랩 관측 Mock" alt="UMockOverlapSensorModel" shape="rect" coords="225,224,440,248"/>
+<area href="classUObstacleModel.html" title="장애물 모델" alt="UObstacleModel" shape="rect" coords="450,224,665,248"/>
+<area href="classUUnitModel.html" title="턴을 소유할 수 있는 베이스 폰 클래스 모델" alt="UUnitModel" shape="rect" coords="900,224,1115,248"/>
+<area href="classUCombatTargetObstacleModel.html" title="전투 가능한 장애물 모델" alt="UCombatTargetObstacleModel" shape="rect" coords="450,280,665,304"/>
+<area href="classUEnemyUnitModel.html" title="적 베이스 유닛 모델" alt="UEnemyUnitModel" shape="rect" coords="675,280,890,304"/>
+<area href="classUMockPlayerUnitModel.html" title="플레이어유닛 Mock" alt="UMockPlayerUnitModel" shape="rect" coords="900,280,1115,304"/>
+<area href="classUPlayerUnitModel.html" title="플레이어 베이스 유닛 모델 입니다." alt="UPlayerUnitModel" shape="rect" coords="1350,280,1565,304"/>
+<area href="classUGimmickModel.html" title="기믹 공통 모델" alt="UGimmickModel" shape="rect" coords="450,336,665,360"/>
+<area href="classUMockEnemyUnitModel.html" title="적유닛 Mock" alt="UMockEnemyUnitModel" shape="rect" coords="675,336,890,360"/>
+<area href="classUMockTargetPolicyPlayerUnitModel.html" alt="UMockTargetPolicyPlayerUnitModel" shape="rect" coords="900,336,1115,360"/>
+<area href="classULevelUpSkillTestPlayer.html" alt="ULevelUpSkillTestPlayer" shape="rect" coords="1125,336,1340,360"/>
+<area href="classUMockPartyMemberModel.html" title="파티 구성원 Mock" alt="UMockPartyMemberModel" shape="rect" coords="1350,336,1565,360"/>
+<area href="classUPlayerLevelProgressionTestModel.html" title="레벨/경험치 영속 추적 테스트용 구체 플레이어 모델." alt="UPlayerLevelProgressionTestModel" shape="rect" coords="1575,336,1790,360"/>
+<area href="classUOverlapGimmickModel.html" title="진입 트리거 기믹 모델 (부비트랩, 기절트랩, 밀치기발판 등)" alt="UOverlapGimmickModel" shape="rect" coords="450,392,665,416"/>
+<area href="classUMockGimmickVictimUnitModel.html" title="트랩을 밟는 피해자 유닛 Mock" alt="UMockGimmickVictimUnitModel" shape="rect" coords="675,392,890,416"/>
+<area href="classUMockOverlapGimmickModel.html" title="진입 트리거 기믹 Mock" alt="UMockOverlapGimmickModel" shape="rect" coords="337,448,552,472"/>
+<area href="classUPuddleGimmickModel.html" title="장판 기믹 모델 (불장판, 독장판 등)" alt="UPuddleGimmickModel" shape="rect" coords="562,448,777,472"/>
+<area href="classUMockPuddleGimmickModel.html" title="장판 기믹 Mock" alt="UMockPuddleGimmickModel" shape="rect" coords="562,504,777,528"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -124,11 +137,18 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a7cdf1be3df2836bbd8587a9a969326cd" id="r_a7cdf1be3df2836bbd8587a9a969326cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a7cdf1be3df2836bbd8587a9a969326cd">SetStaticSpawnData</a> (<a class="el" href="classUStaticObstacleSpawnData.html">UStaticObstacleSpawnData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticSpawnData</a>)</td></tr>
 <tr class="memdesc:a7cdf1be3df2836bbd8587a9a969326cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">스폰 데이터 대입 함수  <br /></td></tr>
 <tr class="separator:a7cdf1be3df2836bbd8587a9a969326cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10dd413366d2e47d76f4bbb87127c577" id="r_a10dd413366d2e47d76f4bbb87127c577"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a10dd413366d2e47d76f4bbb87127c577">GetStaticSpawnDataId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a10dd413366d2e47d76f4bbb87127c577"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5412131057b948129bb169e01c6b154e" id="r_a5412131057b948129bb169e01c6b154e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUStaticObstacleSpawnData.html">UStaticObstacleSpawnData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a5412131057b948129bb169e01c6b154e">GetStaticSpawnData</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a5412131057b948129bb169e01c6b154e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca12b6f98071be2d37285ca2261e533b" id="r_aca12b6f98071be2d37285ca2261e533b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FName</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#aca12b6f98071be2d37285ca2261e533b">GetBoardActorKeyName</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:aca12b6f98071be2d37285ca2261e533b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bacd031d20ec245973fe3067424fb96" id="r_a0bacd031d20ec245973fe3067424fb96"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a0bacd031d20ec245973fe3067424fb96">GetBoardActorAssetId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a0bacd031d20ec245973fe3067424fb96"><td class="mdescLeft">&#160;</td><td class="mdescRight">이 액터가 어느 스폰 데이터에서 나왔는지.  <br /></td></tr>
+<tr class="separator:a0bacd031d20ec245973fe3067424fb96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16cc71f96f478ec113db80c2e55cda7b" id="r_a16cc71f96f478ec113db80c2e55cda7b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a16cc71f96f478ec113db80c2e55cda7b">GetBoardActorDisplayName</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a16cc71f96f478ec113db80c2e55cda7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2550675d87ee2a780137c0ecbdea18a3" id="r_a2550675d87ee2a780137c0ecbdea18a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a2550675d87ee2a780137c0ecbdea18a3">GetBoardActorLevel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:a2550675d87ee2a780137c0ecbdea18a3" id="r_a2550675d87ee2a780137c0ecbdea18a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a2550675d87ee2a780137c0ecbdea18a3">GetBoardActorLevel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a2550675d87ee2a780137c0ecbdea18a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2a83d17985728309565ea7ebc531eea" id="r_aa2a83d17985728309565ea7ebc531eea"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UTexture2D</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#aa2a83d17985728309565ea7ebc531eea">GetBoardActorIcon</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:aa2a83d17985728309565ea7ebc531eea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,7 +169,7 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:adf4274635385494450cf6d6e4ff300bd" id="r_adf4274635385494450cf6d6e4ff300bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3">ETileLayerFlag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#adf4274635385494450cf6d6e4ff300bd">GetReplaceLayerFlags</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:adf4274635385494450cf6d6e4ff300bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 배치 시에 교체할 타입들 반환  <br /></td></tr>
 <tr class="separator:adf4274635385494450cf6d6e4ff300bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac77f420a7b127190177818b2519ee292" id="r_ac77f420a7b127190177818b2519ee292"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#ac77f420a7b127190177818b2519ee292">GetOverlayLayerPriority</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:ac77f420a7b127190177818b2519ee292" id="r_ac77f420a7b127190177818b2519ee292"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#ac77f420a7b127190177818b2519ee292">GetOverlayLayerPriority</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:ac77f420a7b127190177818b2519ee292"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overlay 레이어 내 교체 우선순위 반환  <br /></td></tr>
 <tr class="separator:ac77f420a7b127190177818b2519ee292"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1548171ab336785e6ffb8625966ea205" id="r_a1548171ab336785e6ffb8625966ea205"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a1548171ab336785e6ffb8625966ea205">OnBeginTileOverlap</a> (<a class="el" href="structFTile.html">FTile</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurTile</a>, <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Other</a>)</td></tr>
@@ -166,11 +186,14 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:ab996d6883358f776d93b0d11f376c439"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a47fd1b68e2eb9460b8f6aadc07dff6ce" id="r_a47fd1b68e2eb9460b8f6aadc07dff6ce"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a47fd1b68e2eb9460b8f6aadc07dff6ce">OnEndRoom</a> ()</td></tr>
 <tr class="separator:a47fd1b68e2eb9460b8f6aadc07dff6ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab95e4b375665b23a2e8b2a6d267bf3b0" id="r_ab95e4b375665b23a2e8b2a6d267bf3b0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#ab95e4b375665b23a2e8b2a6d267bf3b0">OnBeginRound</a> ()</td></tr>
-<tr class="memdesc:ab95e4b375665b23a2e8b2a6d267bf3b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)  <br /></td></tr>
-<tr class="separator:ab95e4b375665b23a2e8b2a6d267bf3b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4437cda06c8ec5937748ee65349ba359" id="r_a4437cda06c8ec5937748ee65349ba359"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a4437cda06c8ec5937748ee65349ba359">OnEndRound</a> ()</td></tr>
-<tr class="separator:a4437cda06c8ec5937748ee65349ba359"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2275a8a9e79bdf538f9d5933f192aeb6" id="r_a2275a8a9e79bdf538f9d5933f192aeb6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a2275a8a9e79bdf538f9d5933f192aeb6">OnPreEvaluateRound</a> ()</td></tr>
+<tr class="memdesc:a2275a8a9e79bdf538f9d5933f192aeb6"><td class="mdescLeft">&#160;</td><td class="mdescRight">새로운 라운드 평가마다 실행될 함수  <br /></td></tr>
+<tr class="separator:a2275a8a9e79bdf538f9d5933f192aeb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6237acc311f9a2d8053c3d0be77db238" id="r_a6237acc311f9a2d8053c3d0be77db238"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a6237acc311f9a2d8053c3d0be77db238">OnBeginRound</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoundCount</a>)</td></tr>
+<tr class="memdesc:a6237acc311f9a2d8053c3d0be77db238"><td class="mdescLeft">&#160;</td><td class="mdescRight">라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)  <br /></td></tr>
+<tr class="separator:a6237acc311f9a2d8053c3d0be77db238"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc1db60748ffd2f87fb122f13bc2d440" id="r_afc1db60748ffd2f87fb122f13bc2d440"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#afc1db60748ffd2f87fb122f13bc2d440">OnEndRound</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RoundCount</a>)</td></tr>
+<tr class="separator:afc1db60748ffd2f87fb122f13bc2d440"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classUActorModel"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classUActorModel')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUActorModel.html">UActorModel</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
 <tr class="memitem:a49be997e6435fbe1182f8fe06f8c5914 inherit pub_methods_classUActorModel" id="r_a49be997e6435fbe1182f8fe06f8c5914"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUActorModel.html#a49be997e6435fbe1182f8fe06f8c5914">PostInitProperties</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="separator:a49be997e6435fbe1182f8fe06f8c5914 inherit pub_methods_classUActorModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -231,7 +254,7 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:aa1d4d4a3ea66fd0fd7f4344ae28e328d inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a85fdd82fe3ecb556f19338b9ecb2abd8 inherit pub_methods_classUObjectModel" id="r_a85fdd82fe3ecb556f19338b9ecb2abd8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classIObjectView.html">IObjectView</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a85fdd82fe3ecb556f19338b9ecb2abd8">GetView</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a85fdd82fe3ecb556f19338b9ecb2abd8 inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e50e7079ee175afb26af92641d179cc inherit pub_methods_classUObjectModel" id="r_a2e50e7079ee175afb26af92641d179cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a2e50e7079ee175afb26af92641d179cc">GetModelId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:a2e50e7079ee175afb26af92641d179cc inherit pub_methods_classUObjectModel" id="r_a2e50e7079ee175afb26af92641d179cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a2e50e7079ee175afb26af92641d179cc">GetModelId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a2e50e7079ee175afb26af92641d179cc inherit pub_methods_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -240,30 +263,42 @@ Public 속성</h2></td></tr>
 <tr class="memdesc:af9e192515779eb2eea44257911752bc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">뷰 좌표 질의 델리깃  <br /></td></tr>
 <tr class="separator:af9e192515779eb2eea44257911752bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1425c861f38c95fed8e4c1da3ee1b779" id="r_a1425c861f38c95fed8e4c1da3ee1b779"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlaceTileTransform</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a1425c861f38c95fed8e4c1da3ee1b779">OnPlaceTileTransform</a></td></tr>
-<tr class="memdesc:a1425c861f38c95fed8e4c1da3ee1b779"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자  <br /></td></tr>
+<tr class="memdesc:a1425c861f38c95fed8e4c1da3ee1b779"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일에 배치되었을 때, 뷰에게 전달하는 대리자  <br /></td></tr>
 <tr class="separator:a1425c861f38c95fed8e4c1da3ee1b779"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6cdbe891b3082f5c22900c470752170" id="r_ab6cdbe891b3082f5c22900c470752170"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRemoveTileTransform</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#ab6cdbe891b3082f5c22900c470752170">OnRemoveTileTransform</a></td></tr>
+<tr class="memdesc:ab6cdbe891b3082f5c22900c470752170"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일에서 떨어졌을 때, 뷰에게 전달하는 대리자  <br /></td></tr>
+<tr class="separator:ab6cdbe891b3082f5c22900c470752170"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81b3d9c656b5ad46d7a8d45ce2d0e021" id="r_a81b3d9c656b5ad46d7a8d45ce2d0e021"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnStartMovePath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a81b3d9c656b5ad46d7a8d45ce2d0e021">OnStartMovePath</a></td></tr>
+<tr class="memdesc:a81b3d9c656b5ad46d7a8d45ce2d0e021"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동 시작 시 전체 경로 전달  <br /></td></tr>
+<tr class="separator:a81b3d9c656b5ad46d7a8d45ce2d0e021"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad601f99d2a9a319a26d06abab5aad6eb" id="r_ad601f99d2a9a319a26d06abab5aad6eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnStartMoveStep</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#ad601f99d2a9a319a26d06abab5aad6eb">OnStartMoveStep</a></td></tr>
 <tr class="memdesc:ad601f99d2a9a319a26d06abab5aad6eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자  <br /></td></tr>
 <tr class="separator:ad601f99d2a9a319a26d06abab5aad6eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af59b4b3240fb56b0c70c498557da069e" id="r_af59b4b3240fb56b0c70c498557da069e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndMoveStep</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#af59b4b3240fb56b0c70c498557da069e">OnEndMoveStep</a></td></tr>
+<tr class="memdesc:af59b4b3240fb56b0c70c498557da069e"><td class="mdescLeft">&#160;</td><td class="mdescRight">물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림 대리자  <br /></td></tr>
+<tr class="separator:af59b4b3240fb56b0c70c498557da069e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c03f64d5e0fa0f45020fc0d34458908" id="r_a9c03f64d5e0fa0f45020fc0d34458908"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndMovePath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a9c03f64d5e0fa0f45020fc0d34458908">OnEndMovePath</a></td></tr>
+<tr class="memdesc:a9c03f64d5e0fa0f45020fc0d34458908"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동 요청 전체(밀치기 연쇄 포함)가 끝났을 때의 알림 대리자  <br /></td></tr>
+<tr class="separator:a9c03f64d5e0fa0f45020fc0d34458908"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f9bef2a093dc9759370c4bca48d8ba2" id="r_a6f9bef2a093dc9759370c4bca48d8ba2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRotate</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a6f9bef2a093dc9759370c4bca48d8ba2">OnRotate</a></td></tr>
 <tr class="memdesc:a6f9bef2a093dc9759370c4bca48d8ba2"><td class="mdescLeft">&#160;</td><td class="mdescRight">방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자  <br /></td></tr>
 <tr class="separator:a6f9bef2a093dc9759370c4bca48d8ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a336b3131523ec0e311b6dfd1b7154eb5" id="r_a336b3131523ec0e311b6dfd1b7154eb5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayApplyAnimationUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a336b3131523ec0e311b6dfd1b7154eb5">OnPlayApplyAnimationUI</a></td></tr>
-<tr class="memdesc:a336b3131523ec0e311b6dfd1b7154eb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">능동적 행동을 전달하는 대리자  <br /></td></tr>
-<tr class="separator:a336b3131523ec0e311b6dfd1b7154eb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93bfe4faf8cb9340a86a32c3f3213a55" id="r_a93bfe4faf8cb9340a86a32c3f3213a55"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayReceiveAnimationUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a93bfe4faf8cb9340a86a32c3f3213a55">OnPlayReceiveAnimationUI</a></td></tr>
-<tr class="memdesc:a93bfe4faf8cb9340a86a32c3f3213a55"><td class="mdescLeft">&#160;</td><td class="mdescRight">피동적 행동을 전달하는 대리자  <br /></td></tr>
-<tr class="separator:a93bfe4faf8cb9340a86a32c3f3213a55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afba01aea00c74b0f212516d5cd107db0" id="r_afba01aea00c74b0f212516d5cd107db0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnTeleport</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#afba01aea00c74b0f212516d5cd107db0">OnTeleport</a></td></tr>
+<tr class="memdesc:afba01aea00c74b0f212516d5cd107db0"><td class="mdescLeft">&#160;</td><td class="mdescRight">텔레포트 시 위치 변경 연출을 요청하는 대리자  <br /></td></tr>
+<tr class="separator:afba01aea00c74b0f212516d5cd107db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a348a21a31236efcbb126547cd560fed7" id="r_a348a21a31236efcbb126547cd560fed7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayAnimationUI</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a348a21a31236efcbb126547cd560fed7">OnPlayAnimationUI</a></td></tr>
+<tr class="memdesc:a348a21a31236efcbb126547cd560fed7"><td class="mdescLeft">&#160;</td><td class="mdescRight">애니메이션 실행 대리자  <br /></td></tr>
+<tr class="separator:a348a21a31236efcbb126547cd560fed7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a0c77c192549f8933d4a14e2ed8069369" id="r_a0c77c192549f8933d4a14e2ed8069369"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a0c77c192549f8933d4a14e2ed8069369">mTileLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
+<tr class="memitem:a0c77c192549f8933d4a14e2ed8069369" id="r_a0c77c192549f8933d4a14e2ed8069369"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a0c77c192549f8933d4a14e2ed8069369">mTileLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
 <tr class="separator:a0c77c192549f8933d4a14e2ed8069369"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aade86e3f8465a0968ad2496b3084ae2f" id="r_aade86e3f8465a0968ad2496b3084ae2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#aade86e3f8465a0968ad2496b3084ae2f">mBlockLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
+<tr class="memitem:aade86e3f8465a0968ad2496b3084ae2f" id="r_aade86e3f8465a0968ad2496b3084ae2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#aade86e3f8465a0968ad2496b3084ae2f">mBlockLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
 <tr class="separator:aade86e3f8465a0968ad2496b3084ae2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04f16dd10b3c5e6ba3afa8d068eddd8f" id="r_a04f16dd10b3c5e6ba3afa8d068eddd8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a04f16dd10b3c5e6ba3afa8d068eddd8f">mReplaceLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
+<tr class="memitem:a04f16dd10b3c5e6ba3afa8d068eddd8f" id="r_a04f16dd10b3c5e6ba3afa8d068eddd8f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a04f16dd10b3c5e6ba3afa8d068eddd8f">mReplaceLayerFlags</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td></tr>
 <tr class="separator:a04f16dd10b3c5e6ba3afa8d068eddd8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e208a1b865c4bfd5f6a9ae498ae03a1" id="r_a3e208a1b865c4bfd5f6a9ae498ae03a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a3e208a1b865c4bfd5f6a9ae498ae03a1">mOverlayLayerPriority</a> = 0</td></tr>
+<tr class="memitem:a3e208a1b865c4bfd5f6a9ae498ae03a1" id="r_a3e208a1b865c4bfd5f6a9ae498ae03a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a3e208a1b865c4bfd5f6a9ae498ae03a1">mOverlayLayerPriority</a> = 0</td></tr>
 <tr class="separator:a3e208a1b865c4bfd5f6a9ae498ae03a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a59ffe9a5ed8b6dcc7f5b77b20189a147" id="r_a59ffe9a5ed8b6dcc7f5b77b20189a147"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUStaticObstacleSpawnData.html">UStaticObstacleSpawnData</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUBoardActorModel.html#a59ffe9a5ed8b6dcc7f5b77b20189a147">mStaticSpawnData</a></td></tr>
 <tr class="separator:a59ffe9a5ed8b6dcc7f5b77b20189a147"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -273,7 +308,7 @@ Protected 속성</h2></td></tr>
 <tr class="inherit_header pro_attribs_classUObjectModel"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classUObjectModel')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUObjectModel.html">UObjectModel</a>(으)로부터 상속된 Protected 속성</td></tr>
 <tr class="memitem:adceab5f34e04d308936e5cf147032f85 inherit pro_attribs_classUObjectModel" id="r_adceab5f34e04d308936e5cf147032f85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TWeakObjectPtr</a>&lt; UObject &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#adceab5f34e04d308936e5cf147032f85">mView</a></td></tr>
 <tr class="separator:adceab5f34e04d308936e5cf147032f85 inherit pro_attribs_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75d4cd2e58251b4d2def69ced0f439e2 inherit pro_attribs_classUObjectModel" id="r_a75d4cd2e58251b4d2def69ced0f439e2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a75d4cd2e58251b4d2def69ced0f439e2">mModelId</a></td></tr>
+<tr class="memitem:a75d4cd2e58251b4d2def69ced0f439e2 inherit pro_attribs_classUObjectModel" id="r_a75d4cd2e58251b4d2def69ced0f439e2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUObjectModel.html#a75d4cd2e58251b4d2def69ced0f439e2">mModelId</a></td></tr>
 <tr class="separator:a75d4cd2e58251b4d2def69ced0f439e2 inherit pro_attribs_classUObjectModel"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
@@ -286,7 +321,7 @@ Friends</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><p>보드 위에 올라가는 액터(플레이어, 몬스터 등)의 데이터 모델 베이스 클래스다. </p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00039">39</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="a184da4e11baf2a06d6ced1aff0636fd7" name="a184da4e11baf2a06d6ced1aff0636fd7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a184da4e11baf2a06d6ced1aff0636fd7">&#9670;&#160;</a></span>GetBlockLayerFlags()</h2>
@@ -304,7 +339,30 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>블로킹할 레이어 타입들 </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00081">81</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00098">98</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0bacd031d20ec245973fe3067424fb96" name="a0bacd031d20ec245973fe3067424fb96"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bacd031d20ec245973fe3067424fb96">&#9670;&#160;</a></span>GetBoardActorAssetId()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> UBoardActorModel::GetBoardActorAssetId </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>이 액터가 나온 스폰 데이터의 식별자.</p>
+<p>저장본이 파티 칸을 이 값으로 찾는다. 표시 이름은 사람이 읽는 것이라 바뀔 수 있어 짝을 맞추는 열쇠로 쓰기에 위태롭다. </p><dl class="section return"><dt>반환값</dt><dd>스폰 데이터의 PrimaryAssetId. 데이터가 없으면 빈 값</dd>
+<dd>
+PrimaryAssetId, 데이터가 없으면 빈 값 </dd></dl>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00026">26</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -323,7 +381,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00019">19</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00036">36</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -342,7 +400,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00034">34</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -361,7 +419,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00009">9</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00015">15</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -375,7 +433,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::GetBoardActorLevel </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::GetBoardActorLevel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -390,7 +448,7 @@ Friends</h2></td></tr>
 
 <p><a class="el" href="classUEnemyUnitModel.html#a74aca76d696d278c318c5d9928ce6848">UEnemyUnitModel</a>, <a class="el" href="classUPlayerUnitModel.html#a94121de727c728480667b3657bbac6af">UPlayerUnitModel</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -409,7 +467,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00061">61</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -420,7 +478,7 @@ Friends</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::GetOverlayLayerPriority </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::GetOverlayLayerPriority </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -429,7 +487,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>같은 교체 대상끼리 우열을 가린다. 진입자 우선순위가 같거나 더 높을 때만 기존 액터를 덮어쓴다. </p><dl class="section return"><dt>반환값</dt><dd>우선순위 (높을수록 우선) </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00093">93</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00110">110</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -449,7 +507,53 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>교체할 레이어 타입들 </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00087">87</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00104">104</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5412131057b948129bb169e01c6b154e" name="a5412131057b948129bb169e01c6b154e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5412131057b948129bb169e01c6b154e">&#9670;&#160;</a></span>GetStaticSpawnData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUStaticObstacleSpawnData.html">UStaticObstacleSpawnData</a> * UBoardActorModel::GetStaticSpawnData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00062">62</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a10dd413366d2e47d76f4bbb87127c577" name="a10dd413366d2e47d76f4bbb87127c577"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10dd413366d2e47d76f4bbb87127c577">&#9670;&#160;</a></span>GetStaticSpawnDataId()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> UBoardActorModel::GetStaticSpawnDataId </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00010">10</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -469,7 +573,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>레이어 타입 </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00075">75</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00092">92</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -489,7 +593,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>타일 트랜스폼 </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00063">63</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00080">80</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -509,7 +613,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>타일 트랜스폼 </dd></dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00054">54</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -536,14 +640,14 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classUUnitModel.html#a3c76def84440d38f72f9d4abd1218406">UUnitModel</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetObstacleModel.html#aeb9114b568c294f409892832cec07890">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a3c76def84440d38f72f9d4abd1218406">UUnitModel</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00111">111</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00128">128</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="ab95e4b375665b23a2e8b2a6d267bf3b0" name="ab95e4b375665b23a2e8b2a6d267bf3b0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab95e4b375665b23a2e8b2a6d267bf3b0">&#9670;&#160;</a></span>OnBeginRound()</h2>
+<a id="a6237acc311f9a2d8053c3d0be77db238" name="a6237acc311f9a2d8053c3d0be77db238"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6237acc311f9a2d8053c3d0be77db238">&#9670;&#160;</a></span>OnBeginRound()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -554,7 +658,8 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UBoardActorModel::OnBeginRound </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoundCount</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -565,7 +670,9 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUUnitModel.html#a825899c491bb794f63a931e5c0662c39">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00140">140</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -610,7 +717,9 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00099">99</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUOverlapGimmickModel.html#aadf31b10d0c6ed29ae9f4a49cba2a35b">UOverlapGimmickModel</a>, <a class="el" href="classUMockOverlapSensorModel.html#a61ac7b0f09538c1142bbcf776df43dd5">UMockOverlapSensorModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00116">116</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -637,14 +746,14 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classUUnitModel.html#a06fb9b21d866122e7a3712e472e85963">UUnitModel</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a03cea0dc6fd7152e969dfbac225e203c">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a06fb9b21d866122e7a3712e472e85963">UUnitModel</a>에서 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00115">115</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00132">132</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a4437cda06c8ec5937748ee65349ba359" name="a4437cda06c8ec5937748ee65349ba359"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4437cda06c8ec5937748ee65349ba359">&#9670;&#160;</a></span>OnEndRound()</h2>
+<a id="afc1db60748ffd2f87fb122f13bc2d440" name="afc1db60748ffd2f87fb122f13bc2d440"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc1db60748ffd2f87fb122f13bc2d440">&#9670;&#160;</a></span>OnEndRound()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -655,7 +764,8 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UBoardActorModel::OnEndRound </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>RoundCount</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -666,7 +776,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00123">123</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00144">144</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -711,7 +821,38 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00103">103</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUMockOverlapSensorModel.html#a3c0f81e3a34ddf25b97ac26967380f73">UMockOverlapSensorModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00120">120</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a2275a8a9e79bdf538f9d5933f192aeb6" name="a2275a8a9e79bdf538f9d5933f192aeb6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2275a8a9e79bdf538f9d5933f192aeb6">&#9670;&#160;</a></span>OnPreEvaluateRound()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UBoardActorModel::OnPreEvaluateRound </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#a8e2ae1e17ff92107875a64c2ea2e615f">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00136">136</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -756,7 +897,9 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00107">107</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUPuddleGimmickModel.html#a3438b6d3021ad4e92a0ae13da200147a">UPuddleGimmickModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00124">124</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -782,7 +925,7 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00004">4</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8cpp_source.html">BoardActorModel.cpp</a> 파일의 <a class="el" href="BoardActorModel_8cpp_source.html#l00005">5</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -807,7 +950,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -831,7 +974,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -846,7 +989,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::mBlockLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::mBlockLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
         </tr>
       </table>
   </td>
@@ -856,7 +999,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00180">180</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00224">224</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -870,7 +1013,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::mOverlayLayerPriority = 0</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::mOverlayLayerPriority = 0</td>
         </tr>
       </table>
   </td>
@@ -880,7 +1023,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00188">188</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00232">232</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -894,7 +1037,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::mReplaceLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::mReplaceLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
         </tr>
       </table>
   </td>
@@ -904,7 +1047,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00184">184</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -928,7 +1071,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00198">198</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00242">242</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -942,7 +1085,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UBoardActorModel::mTileLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UBoardActorModel::mTileLayerFlags = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">static_cast</a>&lt;<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&gt;(<a class="el" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3a6adf97f83acf6453d4a6a4b1070f3754">ETileLayerFlag::None</a>)</td>
         </tr>
       </table>
   </td>
@@ -952,7 +1095,41 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00176">176</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00220">220</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9c03f64d5e0fa0f45020fc0d34458908" name="a9c03f64d5e0fa0f45020fc0d34458908"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c03f64d5e0fa0f45020fc0d34458908">&#9670;&#160;</a></span>OnEndMovePath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndMovePath</a> UBoardActorModel::OnEndMovePath</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>경로 중간에서 끝나도(다음 칸 막힘, 함정 정지, 취소) 반드시 한 번 통지. 뷰는 이걸 받아 걷기 연출을 멈추고 마지막 타일 중심으로 정렬 </p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00196">196</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="af59b4b3240fb56b0c70c498557da069e" name="af59b4b3240fb56b0c70c498557da069e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af59b4b3240fb56b0c70c498557da069e">&#9670;&#160;</a></span>OnEndMoveStep</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndMoveStep</a> UBoardActorModel::OnEndMoveStep</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>도착한 타일과 월드 변환만 전달하며 AP 정산은 유닛 이동 컴포넌트 모델이 담당한다. </p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00190">190</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -968,7 +1145,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00143">143</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00164">164</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -984,39 +1161,39 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00148">148</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00169">169</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a336b3131523ec0e311b6dfd1b7154eb5" name="a336b3131523ec0e311b6dfd1b7154eb5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a336b3131523ec0e311b6dfd1b7154eb5">&#9670;&#160;</a></span>OnPlayApplyAnimationUI</h2>
+<a id="a348a21a31236efcbb126547cd560fed7" name="a348a21a31236efcbb126547cd560fed7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a348a21a31236efcbb126547cd560fed7">&#9670;&#160;</a></span>OnPlayAnimationUI</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayApplyAnimationUI</a> UBoardActorModel::OnPlayApplyAnimationUI</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayAnimationUI</a> UBoardActorModel::OnPlayAnimationUI</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00167">167</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00215">215</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a93bfe4faf8cb9340a86a32c3f3213a55" name="a93bfe4faf8cb9340a86a32c3f3213a55"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93bfe4faf8cb9340a86a32c3f3213a55">&#9670;&#160;</a></span>OnPlayReceiveAnimationUI</h2>
+<a id="ab6cdbe891b3082f5c22900c470752170" name="ab6cdbe891b3082f5c22900c470752170"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6cdbe891b3082f5c22900c470752170">&#9670;&#160;</a></span>OnRemoveTileTransform</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPlayReceiveAnimationUI</a> UBoardActorModel::OnPlayReceiveAnimationUI</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRemoveTileTransform</a> UBoardActorModel::OnRemoveTileTransform</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00171">171</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00173">173</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1033,7 +1210,24 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>뷰는 배리어를 잡고 회전 보간, 끝나면 배리어를 놓아 완료를 알림. 시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작. </p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00162">162</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00203">203</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a81b3d9c656b5ad46d7a8d45ce2d0e021" name="a81b3d9c656b5ad46d7a8d45ce2d0e021"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81b3d9c656b5ad46d7a8d45ce2d0e021">&#9670;&#160;</a></span>OnStartMovePath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnStartMovePath</a> UBoardActorModel::OnStartMovePath</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>코너링에 베지어곡선을 사용하려면 진입/진출 타일의 정보가 필요하므로 미리 전체 경로 정보 전달 </p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00179">179</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1050,7 +1244,24 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>뷰는 배리어를 잡고 애니메이션 연출, 끝나면 다음 스텝 진행을 알림. 시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작. </p>
 
-<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00155">155</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00185">185</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afba01aea00c74b0f212516d5cd107db0" name="afba01aea00c74b0f212516d5cd107db0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afba01aea00c74b0f212516d5cd107db0">&#9670;&#160;</a></span>OnTeleport</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnTeleport</a> UBoardActorModel::OnTeleport</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>텔레포트는 스킬 연출과 동시에 진행되기 때문에 로직이 연출을 기다리면 안됨. 따라서 배리어는 전달하지 않음 </p>
+
+<p class="definition"><a class="el" href="BoardActorModel_8h_source.html">BoardActorModel.h</a> 파일의 <a class="el" href="BoardActorModel_8h_source.html#l00210">210</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

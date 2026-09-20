@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/Combat/SkillDetailUIBuilder.h 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SkillDetailUIBuilder_8h_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SkillDetailUIBuilder.h</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SkillDetailUIBuilder_8h.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// @file SkillDetailUIBuilder.h</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#pragma once</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;CoreMinimal.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="SRPGFrameworkType_8h.html">SRPGFramework/SRPGFrameworkType.h</a>&quot;</span>   <span class="comment">// EAimPattern/EEffectPattern</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="CombatUITypes_8h.html">UI/Combat/CombatUITypes.h</a>&quot;</span>           <span class="comment">// ECombatSkill*ShapeUI</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="keyword">class </span><a class="code hl_class" href="classUStaticArtifactData.html">UStaticArtifactData</a>;</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="keyword">class </span><a class="code hl_class" href="classUStaticSkillData.html">UStaticSkillData</a>;</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">struct </span><a class="code hl_struct" href="structFCombatArtifactUI.html">FCombatArtifactUI</a>;</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">struct </span><a class="code hl_struct" href="structFPartyRosterSkillView.html">FPartyRosterSkillView</a>;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><span class="keyword">struct </span><a class="code hl_struct" href="structFSkillUI.html">FSkillUI</a>;</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">struct </span><a class="code hl_struct" href="structFSkillDetailUI.html">FSkillDetailUI</a>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="keyword">struct </span><a class="code hl_struct" href="structFFrontendSkillOption.html">FFrontendSkillOption</a>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="foldopen" id="foldopen00028" data-start="{" data-end="}">
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno"><a class="line" href="namespaceSkillDetailUIBuilder.html">   28</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceSkillDetailUIBuilder.html">SkillDetailUIBuilder</a></div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>{</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_enumeration" href="CombatUITypes_8h.html#a7b6e5e715845eb8f7d587e413aa923ff">ECombatSkillSelectShapeUI</a> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#a66c32993b56a5f001304b1d738ae7de1">ToSelectShape</a>(<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Pattern</a>);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span> </div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="code hl_enumeration" href="CombatUITypes_8h.html#ace53b5cd3671dc25bcb5075ae0317767">ECombatSkillHitShapeUI</a> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#a47d1a87e35a6004694d749dc07747b10">ToHitShape</a>(<a class="code hl_enumeration" href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Pattern</a>);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <span class="keywordtype">void</span> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#a72e2d25a3029da4217381e0b96d5e00c">FillFromSkillData</a>(<span class="keyword">const</span> <a class="code hl_class" href="classUStaticSkillData.html">UStaticSkillData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SkillData</a>,</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        <a class="code hl_struct" href="structFSkillDetailUI.html">FSkillDetailUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDetail</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <span class="keywordtype">void</span> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#afa0d3f6ccd1adad085623439c9269048">FillFromFrontendOption</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFFrontendSkillOption.html">FFrontendSkillOption</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Option</a>,</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <a class="code hl_struct" href="structFSkillDetailUI.html">FSkillDetailUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDetail</a>);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <span class="keywordtype">bool</span> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#aa8d537cfe009fc9b192adb9ee9008973">FillFallbackFromPartyRosterSkillView</a>(</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        <span class="keyword">const</span> <a class="code hl_struct" href="structFPartyRosterSkillView.html">FPartyRosterSkillView</a>&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>, <a class="code hl_struct" href="structFSkillDetailUI.html">FSkillDetailUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDetail</a>);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <span class="keywordtype">bool</span> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#a8b39323a9703e8d25b5f55bbbfe5ddb9">FillFallbackFromCombatSkillView</a>(<span class="keyword">const</span> <a class="code hl_struct" href="structFSkillUI.html">FSkillUI</a>&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>,</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <a class="code hl_struct" href="structFSkillDetailUI.html">FSkillDetailUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDetail</a>);</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <span class="keywordtype">void</span> <a class="code hl_function" href="namespaceSkillDetailUIBuilder.html#aff9b96e0a6390837482abc69675e0147">FillFromArtifactData</a>(<span class="keyword">const</span> <a class="code hl_class" href="classUStaticArtifactData.html">UStaticArtifactData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ArtifactData</a>,</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        <a class="code hl_struct" href="structFCombatArtifactUI.html">FCombatArtifactUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutDetail</a>);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>}</div>
+</div>
+<div class="ttc" id="aCombatUITypes_8h_html"><div class="ttname"><a href="CombatUITypes_8h.html">CombatUITypes.h</a></div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a7b6e5e715845eb8f7d587e413aa923ff"><div class="ttname"><a href="CombatUITypes_8h.html#a7b6e5e715845eb8f7d587e413aa923ff">ECombatSkillSelectShapeUI</a></div><div class="ttdeci">ECombatSkillSelectShapeUI</div><div class="ttdoc">스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00399">CombatUITypes.h:400</a></div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_ace53b5cd3671dc25bcb5075ae0317767"><div class="ttname"><a href="CombatUITypes_8h.html#ace53b5cd3671dc25bcb5075ae0317767">ECombatSkillHitShapeUI</a></div><div class="ttdeci">ECombatSkillHitShapeUI</div><div class="ttdoc">스킬 타격 범위 형태. UI 피격 가이드용. 스킬데이터 HitType의 UI 거울.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00412">CombatUITypes.h:413</a></div></div>
+<div class="ttc" id="aFirstPlayProgress_8h_html_ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d"><div class="ttname"><a href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">EFirstPlayStep::Skill</a></div><div class="ttdeci">@ Skill</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html"><div class="ttname"><a href="SRPGFrameworkType_8h.html">SRPGFrameworkType.h</a></div><div class="ttdoc">SRPG 프레임워크에서 사용되는 타입 정의 헤더</div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_a5649b259c42cfc63c1190663e66cce26"><div class="ttname"><a href="SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26">EEffectPattern</a></div><div class="ttdeci">EEffectPattern</div><div class="ttdoc">영향 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00279">SRPGFrameworkType.h:280</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ae26b1418bce20a6ba6577d4671b7d706"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706">EAimPattern</a></div><div class="ttdeci">EAimPattern</div><div class="ttdoc">조준 범위 패턴</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00267">SRPGFrameworkType.h:268</a></div></div>
+<div class="ttc" id="aclassUStaticArtifactData_html"><div class="ttname"><a href="classUStaticArtifactData.html">UStaticArtifactData</a></div><div class="ttdoc">아티펙트 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticArtifactData_8h_source.html#l00024">StaticArtifactData.h:25</a></div></div>
+<div class="ttc" id="aclassUStaticSkillData_html"><div class="ttname"><a href="classUStaticSkillData.html">UStaticSkillData</a></div><div class="ttdoc">스킬 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticSkillData_8h_source.html#l00080">StaticSkillData.h:81</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html">SkillDetailUIBuilder</a></div><div class="ttdoc">스킬 상세 DTO(FSkillDetailUI) 공용 조립기.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8h_source.html#l00028">SkillDetailUIBuilder.h:29</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_a47d1a87e35a6004694d749dc07747b10"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#a47d1a87e35a6004694d749dc07747b10">SkillDetailUIBuilder::ToHitShape</a></div><div class="ttdeci">P_RD_API ECombatSkillHitShapeUI ToHitShape(EEffectPattern Pattern)</div><div class="ttdoc">영향 패턴 → UI 타격 형태. Star는 8방향(Star)으로 그대로 보존한다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00031">SkillDetailUIBuilder.cpp:31</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_a66c32993b56a5f001304b1d738ae7de1"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#a66c32993b56a5f001304b1d738ae7de1">SkillDetailUIBuilder::ToSelectShape</a></div><div class="ttdeci">P_RD_API ECombatSkillSelectShapeUI ToSelectShape(EAimPattern Pattern)</div><div class="ttdoc">조준 패턴 → UI 시전 형태. 화면 공용 단일 변환표.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00014">SkillDetailUIBuilder.cpp:14</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_a72e2d25a3029da4217381e0b96d5e00c"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#a72e2d25a3029da4217381e0b96d5e00c">SkillDetailUIBuilder::FillFromSkillData</a></div><div class="ttdeci">P_RD_API void FillFromSkillData(const UStaticSkillData *SkillData, FSkillDetailUI &amp;OutDetail)</div><div class="ttdoc">정적 스킬 데이터에서 표시 수치와 타게팅을 채운다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00076">SkillDetailUIBuilder.cpp:76</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_a8b39323a9703e8d25b5f55bbbfe5ddb9"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#a8b39323a9703e8d25b5f55bbbfe5ddb9">SkillDetailUIBuilder::FillFallbackFromCombatSkillView</a></div><div class="ttdeci">P_RD_API bool FillFallbackFromCombatSkillView(const FSkillUI &amp;Skill, FSkillDetailUI &amp;OutDetail)</div><div class="ttdoc">전투 상세 생산자가 식별 정보를 비운 경우 같은 슬롯의 전투 카드 View로 보완한다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00165">SkillDetailUIBuilder.cpp:165</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_aa8d537cfe009fc9b192adb9ee9008973"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#aa8d537cfe009fc9b192adb9ee9008973">SkillDetailUIBuilder::FillFallbackFromPartyRosterSkillView</a></div><div class="ttdeci">P_RD_API bool FillFallbackFromPartyRosterSkillView(const FPartyRosterSkillView &amp;Skill, FSkillDetailUI &amp;OutDetail)</div><div class="ttdoc">방 전환 중 상세 생산자가 준비되지 않았을 때 파티 명단 View로 최소 상세 DTO를 보완한다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00148">SkillDetailUIBuilder.cpp:148</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_afa0d3f6ccd1adad085623439c9269048"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#afa0d3f6ccd1adad085623439c9269048">SkillDetailUIBuilder::FillFromFrontendOption</a></div><div class="ttdeci">P_RD_API void FillFromFrontendOption(const FFrontendSkillOption &amp;Option, FSkillDetailUI &amp;OutDetail)</div><div class="ttdoc">캐릭터 선택/고용 옵션 값에서 채운다. 변환 규칙은 FillFromSkillData와 같다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00127">SkillDetailUIBuilder.cpp:127</a></div></div>
+<div class="ttc" id="anamespaceSkillDetailUIBuilder_html_aff9b96e0a6390837482abc69675e0147"><div class="ttname"><a href="namespaceSkillDetailUIBuilder.html#aff9b96e0a6390837482abc69675e0147">SkillDetailUIBuilder::FillFromArtifactData</a></div><div class="ttdeci">P_RD_API void FillFromArtifactData(const UStaticArtifactData *ArtifactData, FCombatArtifactUI &amp;OutDetail)</div><div class="ttdoc">정적 아티팩트 데이터에서 상세 DTO(FCombatArtifactUI)를 채운다.</div><div class="ttdef"><b>Definition</b> <a href="SkillDetailUIBuilder_8cpp_source.html#l00183">SkillDetailUIBuilder.cpp:183</a></div></div>
+<div class="ttc" id="astructFCombatArtifactUI_html"><div class="ttname"><a href="structFCombatArtifactUI.html">FCombatArtifactUI</a></div><div class="ttdoc">전투 HUD에 늘 꺼내 놓는 파티 공용 아티팩트 한 칸.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00625">CombatUITypes.h:626</a></div></div>
+<div class="ttc" id="astructFFrontendSkillOption_html"><div class="ttname"><a href="structFFrontendSkillOption.html">FFrontendSkillOption</a></div><div class="ttdoc">캐릭터 선택 화면에서 한 스킬의 상세를 그릴 정적 표시 데이터.</div><div class="ttdef"><b>Definition</b> <a href="CharacterSelectTypes_8h_source.html#l00023">CharacterSelectTypes.h:24</a></div></div>
+<div class="ttc" id="astructFPartyRosterSkillView_html"><div class="ttname"><a href="structFPartyRosterSkillView.html">FPartyRosterSkillView</a></div><div class="ttdoc">용병 패널에 늘어놓는 장착 스킬 한 칸.</div><div class="ttdef"><b>Definition</b> <a href="RoomViewTypes_8h_source.html#l00179">RoomViewTypes.h:180</a></div></div>
+<div class="ttc" id="astructFSkillDetailUI_html"><div class="ttname"><a href="structFSkillDetailUI.html">FSkillDetailUI</a></div><div class="ttdoc">스킬을 길게 눌렀을 때의 상세창 내용.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00538">CombatUITypes.h:539</a></div></div>
+<div class="ttc" id="astructFSkillUI_html"><div class="ttname"><a href="structFSkillUI.html">FSkillUI</a></div><div class="ttdoc">스킬 레일에 그릴 스킬 한 칸.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00509">CombatUITypes.h:510</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="dir_c03fad49ae08ebf88456b3b7860f433d.html">Combat</a></li><li class="navelem"><a class="el" href="SkillDetailUIBuilder_8h.html">SkillDetailUIBuilder.h</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

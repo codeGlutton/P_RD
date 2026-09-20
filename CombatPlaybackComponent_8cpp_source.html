@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Component/TimeScaleComponent/CombatPlaybackComponent.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CombatPlaybackComponent_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CombatPlaybackComponent.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CombatPlaybackComponent_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="CombatPlaybackComponent_8h.html">Component/TimeScaleComponent/CombatPlaybackComponent.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="CombatPlaybackSpeed_8h.html">Component/TimeScaleComponent/CombatPlaybackSpeed.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="CombatUIModel_8h.html">UI/Combat/CombatUIModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="CameraFunctionLibrary_8h.html">FunctionLibrary/CameraFunctionLibrary.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="CombatCameraPawn_8h.html">Pawn/Camera/CombatCameraPawn.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentDataSubsystem_8h.html">Singleton/InstanceSubsystem/PersistentDataSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="SaveGameSubsystem_8h.html">Singleton/InstanceSubsystem/SaveGameSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &quot;Engine/GameInstance.h&quot;</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#a86dbbdfae68a7400dee60d3d0fd088d5">   11</a></span><a class="code hl_function" href="classUCombatPlaybackComponent.html#a86dbbdfae68a7400dee60d3d0fd088d5">UCombatPlaybackComponent::UCombatPlaybackComponent</a>()</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PrimaryComponentTick</a>.bCanEverTick = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PrimaryComponentTick</a>.bStartWithTickEnabled = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>}</div>
+</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#a2154a67557c8a3f6b86f030c5c83a24c">   17</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUCombatPlaybackComponent.html#a2154a67557c8a3f6b86f030c5c83a24c">UCombatPlaybackComponent::StartPlayback</a>(<a class="code hl_class" href="classUCombatUIModel.html">UCombatUIModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>)</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>{</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_function" href="classUCombatPlaybackComponent.html#a4a7df378e3693d66f6b9b38b1fe36058">StopPlayback</a>();</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    ViewModel = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>;</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="keywordflow">if</span> (<span class="keyword">auto</span>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GI</a> = GetWorld()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetGameInstance</a>())</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordflow">if</span> (<span class="keyword">auto</span>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Data</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GI</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a>&gt;())</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>            Speed = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Data</a>-&gt;GetOptionPersistData()-&gt;GetCombatPlaybackSpeed();</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    Active = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Model</a>-&gt;OnCyclePlaybackSpeed.AddUObject(<span class="keyword">this</span>, &amp;<a class="code hl_function" href="classUCombatPlaybackComponent.html#ae2580d7836d54e0867ce9e09a9b0e0cc">UCombatPlaybackComponent::CycleSpeed</a>);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SetComponentTickEnabled</a>(<span class="keyword">true</span>);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    ApplySpeed();</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>}</div>
+</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><span class="keywordtype">void</span> UCombatPlaybackComponent::ApplySpeed()</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>{</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keyword">auto</span>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Camera</a> = <a class="code hl_function" href="classUCameraFunctionLibrary.html#a6565819234fe45a1562d722608e4ef5d">UCameraFunctionLibrary::GetMainCameraPawn</a>(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keyword">auto</span>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentMixer</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Camera</a> ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Camera</a>-&gt;GetTimeScaleComponent() : <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">if</span> (Mixer.Get() != <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentMixer</a>)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <span class="keywordflow">if</span> (Mixer.IsValid()) Mixer-&gt;ReleaseTimeScaleImmediately(Handle);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        Mixer = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CurrentMixer</a>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        Handle.<a class="code hl_function" href="structFTimeScaleHandle.html#a6f803fe62a5a0a3484e4d76133be7799">Invalidate</a>();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    }</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <span class="keywordflow">if</span> (Mixer.IsValid())</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    {</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        <span class="keywordflow">if</span> (!Handle.<a class="code hl_function" href="structFTimeScaleHandle.html#a9fe63af8e1b553b88cef2db0ee3e7475">IsValid</a>()) Handle = Mixer-&gt;RequestTimeScale(<span class="keyword">this</span>, Speed);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        Mixer-&gt;SetTimeScaleImmediately(Handle, Speed);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    }</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <span class="keywordflow">if</span> (ViewModel.IsValid()) ViewModel-&gt;SetPlaybackSpeed(Speed, Active &amp;&amp; Mixer.IsValid());</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>}</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="foldopen" id="foldopen00048" data-start="{" data-end="}">
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#ae2580d7836d54e0867ce9e09a9b0e0cc">   48</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUCombatPlaybackComponent.html#ae2580d7836d54e0867ce9e09a9b0e0cc">UCombatPlaybackComponent::CycleSpeed</a>()</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>{</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <span class="keywordflow">if</span> (!Active || !Mixer.IsValid()) <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    Speed = <a class="code hl_function" href="namespaceCombatPlaybackSpeed.html#a4010be44babd01c2532ea6931f2ac9b5">CombatPlaybackSpeed::Next</a>(Speed);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    ApplySpeed();</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordflow">if</span> (<span class="keyword">auto</span>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GI</a> = GetWorld()-&gt;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetGameInstance</a>())</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    {</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GI</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a>&gt;()-&gt;GetOptionPersistData()-&gt;SetCombatPlaybackSpeed(Speed);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <span class="comment">// Tiny options save is synchronous: rapid taps cannot race older async writes.</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        <span class="keyword">const</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Saved</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GI</a>-&gt;GetSubsystem&lt;<a class="code hl_class" href="classUSaveGameSubsystem.html">USaveGameSubsystem</a>&gt;()-&gt;SaveOption();</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogTemp</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Display</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;RD_PLAYBACK speed=%d saved=%d&quot;</span>), Speed, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Saved</a>);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    }</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>}</div>
+</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="foldopen" id="foldopen00062" data-start="{" data-end="}">
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#a2858fc9110ada2aef222a072e841b2fa">   62</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUCombatPlaybackComponent.html#a2858fc9110ada2aef222a072e841b2fa">UCombatPlaybackComponent::TickComponent</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ELevelTick</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TickType</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FActorComponentTickFunction</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TickFunction</a>)</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>{</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>    Super::TickComponent(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TickType</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TickFunction</a>);</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keywordflow">if</span> (Active) ApplySpeed(); <span class="comment">// Reattach after a camera replacement; never accumulate requests.</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>}</div>
+</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span> </div>
+<div class="foldopen" id="foldopen00068" data-start="{" data-end="}">
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#a4a7df378e3693d66f6b9b38b1fe36058">   68</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUCombatPlaybackComponent.html#a4a7df378e3693d66f6b9b38b1fe36058">UCombatPlaybackComponent::StopPlayback</a>()</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>{</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    Active = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SetComponentTickEnabled</a>(<span class="keyword">false</span>);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    <span class="keywordflow">if</span> (Mixer.IsValid()) Mixer-&gt;ReleaseTimeScaleImmediately(Handle);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    Mixer.Reset(); Handle.<a class="code hl_function" href="structFTimeScaleHandle.html#a6f803fe62a5a0a3484e4d76133be7799">Invalidate</a>();</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>    <span class="keywordflow">if</span> (ViewModel.IsValid())</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>    {</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        ViewModel-&gt;OnCyclePlaybackSpeed.RemoveAll(<span class="keyword">this</span>);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        ViewModel-&gt;SetPlaybackSpeed(Speed, <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    }</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    ViewModel.Reset();</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>}</div>
+</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span> </div>
+<div class="foldopen" id="foldopen00082" data-start="{" data-end="}">
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno"><a class="line" href="classUCombatPlaybackComponent.html#af934fb94dbd6beee3e6a278c9ba46752">   82</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUCombatPlaybackComponent.html#af934fb94dbd6beee3e6a278c9ba46752">UCombatPlaybackComponent::EndPlay</a>(<span class="keyword">const</span> EEndPlayReason::Type <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reason</a>)</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>{</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    <a class="code hl_function" href="classUCombatPlaybackComponent.html#a4a7df378e3693d66f6b9b38b1fe36058">StopPlayback</a>();</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    Super::EndPlay(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Reason</a>);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>}</div>
+</div>
+<div class="ttc" id="aCameraFunctionLibrary_8h_html"><div class="ttname"><a href="CameraFunctionLibrary_8h.html">CameraFunctionLibrary.h</a></div><div class="ttdoc">카메라 관련 정적 헬퍼 함수 라이브러리 헤더</div></div>
+<div class="ttc" id="aCombatCameraPawn_8h_html"><div class="ttname"><a href="CombatCameraPawn_8h.html">CombatCameraPawn.h</a></div></div>
+<div class="ttc" id="aCombatPlaybackComponent_8h_html"><div class="ttname"><a href="CombatPlaybackComponent_8h.html">CombatPlaybackComponent.h</a></div></div>
+<div class="ttc" id="aCombatPlaybackSpeed_8h_html"><div class="ttname"><a href="CombatPlaybackSpeed_8h.html">CombatPlaybackSpeed.h</a></div></div>
+<div class="ttc" id="aCombatUIModel_8h_html"><div class="ttname"><a href="CombatUIModel_8h.html">CombatUIModel.h</a></div></div>
+<div class="ttc" id="aPersistentDataSubsystem_8h_html"><div class="ttname"><a href="PersistentDataSubsystem_8h.html">PersistentDataSubsystem.h</a></div><div class="ttdoc">영구적 플레이 데이터 Subsystem 구현 헤더</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aSaveGameSubsystem_8h_html"><div class="ttname"><a href="SaveGameSubsystem_8h.html">SaveGameSubsystem.h</a></div></div>
+<div class="ttc" id="aclassUCameraFunctionLibrary_html_a6565819234fe45a1562d722608e4ef5d"><div class="ttname"><a href="classUCameraFunctionLibrary.html#a6565819234fe45a1562d722608e4ef5d">UCameraFunctionLibrary::GetMainCameraPawn</a></div><div class="ttdeci">static ACombatCameraPawn * GetMainCameraPawn(const UObject *WorldContextObject)</div><div class="ttdef"><b>Definition</b> <a href="CameraFunctionLibrary_8cpp_source.html#l00061">CameraFunctionLibrary.cpp:61</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_a2154a67557c8a3f6b86f030c5c83a24c"><div class="ttname"><a href="classUCombatPlaybackComponent.html#a2154a67557c8a3f6b86f030c5c83a24c">UCombatPlaybackComponent::StartPlayback</a></div><div class="ttdeci">void StartPlayback(UCombatUIModel *Model)</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00017">CombatPlaybackComponent.cpp:17</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_a2858fc9110ada2aef222a072e841b2fa"><div class="ttname"><a href="classUCombatPlaybackComponent.html#a2858fc9110ada2aef222a072e841b2fa">UCombatPlaybackComponent::TickComponent</a></div><div class="ttdeci">virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction *TickFunction) override</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00062">CombatPlaybackComponent.cpp:62</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_a4a7df378e3693d66f6b9b38b1fe36058"><div class="ttname"><a href="classUCombatPlaybackComponent.html#a4a7df378e3693d66f6b9b38b1fe36058">UCombatPlaybackComponent::StopPlayback</a></div><div class="ttdeci">void StopPlayback()</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00068">CombatPlaybackComponent.cpp:68</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_a86dbbdfae68a7400dee60d3d0fd088d5"><div class="ttname"><a href="classUCombatPlaybackComponent.html#a86dbbdfae68a7400dee60d3d0fd088d5">UCombatPlaybackComponent::UCombatPlaybackComponent</a></div><div class="ttdeci">UCombatPlaybackComponent()</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00011">CombatPlaybackComponent.cpp:11</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_ae2580d7836d54e0867ce9e09a9b0e0cc"><div class="ttname"><a href="classUCombatPlaybackComponent.html#ae2580d7836d54e0867ce9e09a9b0e0cc">UCombatPlaybackComponent::CycleSpeed</a></div><div class="ttdeci">void CycleSpeed()</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00048">CombatPlaybackComponent.cpp:48</a></div></div>
+<div class="ttc" id="aclassUCombatPlaybackComponent_html_af934fb94dbd6beee3e6a278c9ba46752"><div class="ttname"><a href="classUCombatPlaybackComponent.html#af934fb94dbd6beee3e6a278c9ba46752">UCombatPlaybackComponent::EndPlay</a></div><div class="ttdeci">virtual void EndPlay(const EEndPlayReason::Type Reason) override</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackComponent_8cpp_source.html#l00082">CombatPlaybackComponent.cpp:82</a></div></div>
+<div class="ttc" id="aclassUCombatUIModel_html"><div class="ttname"><a href="classUCombatUIModel.html">UCombatUIModel</a></div><div class="ttdoc">전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.</div><div class="ttdef"><b>Definition</b> <a href="CombatUIModel_8h_source.html#l00076">CombatUIModel.h:77</a></div></div>
+<div class="ttc" id="aclassUPersistentDataSubsystem_html"><div class="ttname"><a href="classUPersistentDataSubsystem.html">UPersistentDataSubsystem</a></div><div class="ttdoc">영구적 플레이 데이터 Subsystem</div><div class="ttdef"><b>Definition</b> <a href="PersistentDataSubsystem_8h_source.html#l00023">PersistentDataSubsystem.h:24</a></div></div>
+<div class="ttc" id="aclassUSaveGameSubsystem_html"><div class="ttname"><a href="classUSaveGameSubsystem.html">USaveGameSubsystem</a></div><div class="ttdef"><b>Definition</b> <a href="SaveGameSubsystem_8h_source.html#l00013">SaveGameSubsystem.h:14</a></div></div>
+<div class="ttc" id="anamespaceCombatPlaybackSpeed_html_a4010be44babd01c2532ea6931f2ac9b5"><div class="ttname"><a href="namespaceCombatPlaybackSpeed.html#a4010be44babd01c2532ea6931f2ac9b5">CombatPlaybackSpeed::Next</a></div><div class="ttdeci">int32 Next(int32 Speed)</div><div class="ttdef"><b>Definition</b> <a href="CombatPlaybackSpeed_8h_source.html#l00009">CombatPlaybackSpeed.h:9</a></div></div>
+<div class="ttc" id="astructFTimeScaleHandle_html_a6f803fe62a5a0a3484e4d76133be7799"><div class="ttname"><a href="structFTimeScaleHandle.html#a6f803fe62a5a0a3484e4d76133be7799">FTimeScaleHandle::Invalidate</a></div><div class="ttdeci">void Invalidate()</div><div class="ttdef"><b>Definition</b> <a href="TimeScaleComponent_8h_source.html#l00048">TimeScaleComponent.h:48</a></div></div>
+<div class="ttc" id="astructFTimeScaleHandle_html_a9fe63af8e1b553b88cef2db0ee3e7475"><div class="ttname"><a href="structFTimeScaleHandle.html#a9fe63af8e1b553b88cef2db0ee3e7475">FTimeScaleHandle::IsValid</a></div><div class="ttdeci">bool IsValid() const</div><div class="ttdef"><b>Definition</b> <a href="TimeScaleComponent_8h_source.html#l00047">TimeScaleComponent.h:47</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_6cd1626ba92a5a6057b71e6a2a6ef174.html">Component</a></li><li class="navelem"><a class="el" href="dir_56c61c908cda82da9c74db36b2cf0ae9.html">TimeScaleComponent</a></li><li class="navelem"><a class="el" href="CombatPlaybackComponent_8cpp.html">CombatPlaybackComponent.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

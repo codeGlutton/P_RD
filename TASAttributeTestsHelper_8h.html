@@ -118,12 +118,18 @@ $(document).ready(function(){initNavTree('TASAttributeTestsHelper_8h.html',''); 
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTestInfiniteTagEffect.html">UTestInfiniteTagEffect</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">무한 지속 + 태그 부여 이펙트 테스트용 Mock  <a href="classUTestInfiniteTagEffect.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTestTurnDurationTacticalEffect.html">UTestTurnDurationTacticalEffect</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">턴 기반 Duration 이펙트 Mock (2턴 지속)  <a href="classUTestTurnDurationTacticalEffect.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTestStackRemoveSingleDurationTacticalEffect.html">UTestStackRemoveSingleDurationTacticalEffect</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">스택 단일 제거 및 Duration 재시작 이펙트 Mock (2턴 지속, 스택형)  <a href="classUTestStackRemoveSingleDurationTacticalEffect.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
 <dl class="section date"><dt>날짜</dt><dd>2026-06-26</dd></dl>
-<p>[PR #191 맥락 - GAS 폐기/연산 enum 치환] 이 헤더는 TAS(Tactical Attribute System) 테스트용 Mock 객체를 정의한다. 본 PR은 이펙트 모디파이어의 "연산 종류"를 표현하던 GAS의 EGameplayModOp를 자체 enum인 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 전면 치환하는 작업의 일부다.</p><ul>
-<li>따라서 아래 Mock 이펙트들의 mModifierOp 필드 타입/값도 EGameplayModOp가 아닌 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4dada51b427eda00cb729fa322f001f0732">ETacticalModOp::Additive</a> 등)을 사용하도록 바뀌었다.</li>
+<p>[PR #191 맥락 - GAS 폐기/연산 enum 치환] 이 헤더는 TAS(Tactical Attribute System) 테스트용 Mock 객체를 정의한다. 본 PR은 이펙트 모디파이어의 "연산 종류"를 표현하던 GAS의 EGameplayModOp를 자체 enum인 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 전면 치환하는 작업의 일부다.</p><ul>
+<li>따라서 아래 Mock 이펙트들의 mModifierOp 필드 타입/값도 EGameplayModOp가 아닌 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류">ETacticalModOp</a>(ETacticalModOp::Additive 등)을 사용하도록 바뀌었다.</li>
 <li>ETacticalModOp의 정수값은 구 EGameplayModOp와 동일하게 유지된다: (1) 직렬화 호환 - 기존 에셋/세이브에 박힌 정수값을 그대로 보존, (2) Aggregator가 mMods[ETacticalModOp::Max]처럼 op 값으로 배열을 인덱싱, (3) DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum으로 매핑.</li>
 <li>연산 의미: AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수. 하위호환 별칭(구 GAS 이름): Additive=0 / Multiplicitive=1 / Division=2 / Override=3. </li>
 </ul>

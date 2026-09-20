@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['tacticaleffectutilities_0',['TacticalEffectUtilities',['../namespaceTacticalEffectUtilities.html',1,'']]]
+  ['levelupskillreward_0',['LevelUpSkillReward',['../namespaceLevelUpSkillReward.html',1,'']]]
 ];

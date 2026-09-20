@@ -1,7 +1,7 @@
 var classARDWorldSettings =
 [
-    [ "GetMainCameraPoint", "classARDWorldSettings.html#a87d120bf3eac69c6c28580c5b3a35835", null ],
-    [ "GetRoomStartPoint", "classARDWorldSettings.html#a5bd6d9606ac1f34bbda72966a23ec304", null ],
-    [ "mMainCameraPoint", "classARDWorldSettings.html#a7f5f68d324e9a43251a572670616f024", null ],
-    [ "mRoomStartPoint", "classARDWorldSettings.html#a2601409023450f47bd077a2d283db730", null ]
+    [ "GetMainCameraPoint", "classARDWorldSettings.html#a406887afa9642f6fd84905722e1e0b07", null ],
+    [ "GetRandomRoomSpawnSettingName", "classARDWorldSettings.html#ac35a1f0602d44a4d91b629bac86a138a", null ],
+    [ "GetRoomStartPoint", "classARDWorldSettings.html#ab764857e3290433c7548c865e2b380c0", null ],
+    [ "mSpawnSettings", "classARDWorldSettings.html#a1451e1a7f62758b7e2df831c558aedee", null ]
 ];

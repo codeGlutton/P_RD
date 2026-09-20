@@ -94,15 +94,8 @@ $(document).ready(function(){initNavTree('TacticalEffect_8cpp.html',''); initRes
 </div><!--header-->
 <div class="contents">
 
-<p>전술 전투(TAS) 이펙트 시스템의 런타임 구현. 이펙트 스펙(FTacticalEffectSpec)의 모디파이어 크기 계산과 이펙트 정의(UTacticalEffect)의 적용 콜백을 담당한다.  
-<a href="#details">더 자세히 ...</a></p>
-
 <p><a href="TacticalEffect_8cpp_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
-<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>[PR #191 마이그레이션 맥락] 본 시스템은 GAS(GameplayAbilitySystem) 폐기 작업의 일부로, 모디파이어 "연산 종류"를 구 EGameplayModOp 에서 자체 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 치환한 결과물이다. <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a> 의 정수값은 의도적으로 구 EGameplayModOp 와 동일하게 유지된다. 그 이유는 다음 3가지이며, 이 파일의 연산 인덱싱/직렬화 가정도 모두 이 전제에 기댄다: (1) 직렬화 호환 - 기존 에셋/세이브 파일에 박힌 정수값을 그대로 보존하기 위함. (2) 배열 인덱싱 - Aggregator 가 mMods[ETacticalModOp::Max] 처럼 op 값을 배열 인덱스로 사용. (3) CoreRedirect - DefaultEngine.ini 가 구 enum 이름을 새 enum 이름으로 매핑. 연산 종류: AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산, Max(6)=무효/개수. 구 GAS 이름(Additive/Multiplicitive/Division/Override)은 동일 정수값의 하위호환 별칭으로 남아 있다. </p>
-
-<p class="definition"><a class="el" href="TacticalEffect_8cpp_source.html">TacticalEffect.cpp</a> 파일에서 정의되었습니다.</p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

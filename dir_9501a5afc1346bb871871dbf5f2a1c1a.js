@@ -12,6 +12,6 @@ var dir_9501a5afc1346bb871871dbf5f2a1c1a =
     [ "RoomGameModeBase.h", "RoomGameModeBase_8h.html", "RoomGameModeBase_8h" ],
     [ "ShopGameMode.cpp", "ShopGameMode_8cpp.html", null ],
     [ "ShopGameMode.h", "ShopGameMode_8h.html", "ShopGameMode_8h" ],
-    [ "TreasureGameMode.cpp", "TreasureGameMode_8cpp.html", null ],
+    [ "TreasureGameMode.cpp", "TreasureGameMode_8cpp.html", "TreasureGameMode_8cpp" ],
     [ "TreasureGameMode.h", "TreasureGameMode_8h.html", "TreasureGameMode_8h" ]
 ];

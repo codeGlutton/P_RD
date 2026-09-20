@@ -1,6 +1,6 @@
 var dir_1f8f559340f3ccded65c91e626aea339 =
 [
-    [ "DiceData", "dir_e0c9700f67b9fea85bd2bade749b5263.html", "dir_e0c9700f67b9fea85bd2bade749b5263" ],
+    [ "ArtifactData", "dir_271916c7a18fb8d28e655099e6f0e284.html", "dir_271916c7a18fb8d28e655099e6f0e284" ],
     [ "EquipmentData", "dir_39a4ac66148fa493f92d9fffa141ebd2.html", "dir_39a4ac66148fa493f92d9fffa141ebd2" ],
     [ "ObstacleSpawnData", "dir_4b0b13ef5b557668f245c06cc953b814.html", "dir_4b0b13ef5b557668f245c06cc953b814" ],
     [ "PassiveData", "dir_47f81409d819d5be75050e6281a3bca9.html", "dir_47f81409d819d5be75050e6281a3bca9" ],
@@ -10,6 +10,7 @@ var dir_1f8f559340f3ccded65c91e626aea339 =
     [ "UnitSpawnData", "dir_fc45415503833c4d9dc4a74af923a9c6.html", "dir_fc45415503833c4d9dc4a74af923a9c6" ],
     [ "BundleType.cpp", "BundleType_8cpp.html", null ],
     [ "BundleType.h", "BundleType_8h.html", "BundleType_8h" ],
+    [ "GameplayAssetPolicy.h", "GameplayAssetPolicy_8h.html", "GameplayAssetPolicy_8h" ],
     [ "PrimaryAssetType.cpp", "PrimaryAssetType_8cpp.html", null ],
     [ "PrimaryAssetType.h", "PrimaryAssetType_8h.html", "PrimaryAssetType_8h" ],
     [ "RarityRate.cpp", "RarityRate_8cpp.html", null ],

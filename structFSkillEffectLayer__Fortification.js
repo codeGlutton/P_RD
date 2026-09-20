@@ -1,6 +1,5 @@
 var structFSkillEffectLayer__Fortification =
 [
-    [ "CommitEffect", "structFSkillEffectLayer__Fortification.html#a9c3ce01f13b0bcb8d568129d94cebee4", null ],
-    [ "mDefaultTagGain", "structFSkillEffectLayer__Fortification.html#a13620f649dd4272c10ddad5d4f538097", null ],
-    [ "mDiceRatio", "structFSkillEffectLayer__Fortification.html#a3f9a0427301966c80cb797ebc4da186b", null ]
+    [ "GetTagDisplayName", "structFSkillEffectLayer__Fortification.html#a15f2bc3a9c5ebd4e823938e489a457ba", null ],
+    [ "GetTagEffectClass", "structFSkillEffectLayer__Fortification.html#afa2aeef793c75e1a9153b18f1a0973df", null ]
 ];

@@ -14,6 +14,7 @@ var SettingsPanelTypes_8h =
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam", "SettingsPanelTypes_8h.html#af262665c1c8ddd7d80d6ccaf05648350", null ],
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam", "SettingsPanelTypes_8h.html#a1658ac393c7d02ffa772c9976a29f2c6", null ],
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam", "SettingsPanelTypes_8h.html#a0d4b077e4d31cf92ac95ce2ec43c6fd0", null ],
+    [ "FromOverallQuality", "SettingsPanelTypes_8h.html#a836b8e1dbb1dac60e5822c14c98ab8f9", null ],
     [ "NormalizeVolumeValue", "SettingsPanelTypes_8h.html#a6fbe1c6b8d1217dbc172567d3b6199dc", null ],
     [ "SanitizeValueModel", "SettingsPanelTypes_8h.html#adb205610f5dbdb791d4f2b0c751c61e9", null ],
     [ "ToQualityRequestValue", "SettingsPanelTypes_8h.html#a5c670eaf8d5fe401caf92d9142a811d8", null ]

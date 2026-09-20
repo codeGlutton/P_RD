@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/UI/Combat/SimulationPreviewUIModel.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('SimulationPreviewUIModel_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">SimulationPreviewUIModel.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="SimulationPreviewUIModel_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="SimulationPreviewUIModel_8h.html">UI/Combat/SimulationPreviewUIModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="foldopen" id="foldopen00004" data-start="{" data-end="}">
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno"><a class="line" href="classUSimulationPreviewUIModel.html#ab18669fa7622f00b53bc88bbdf865990">    4</a></span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="code hl_function" href="classUSimulationPreviewUIModel.html#ab18669fa7622f00b53bc88bbdf865990">USimulationPreviewUIModel::BeginPreview</a>()</div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span>{</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    ++mGeneration;</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>    mIsActive = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    ResetPreviewPayloads();</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <span class="keywordflow">return</span> mGeneration;</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>}</div>
+</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="foldopen" id="foldopen00013" data-start="{" data-end="}">
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno"><a class="line" href="classUSimulationPreviewUIModel.html#addcf35a36ad32bd9e09061eed09b6690">   13</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSimulationPreviewUIModel.html#addcf35a36ad32bd9e09061eed09b6690">USimulationPreviewUIModel::SetPreviewEventBatch</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FCombatFloatingLogRequest&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Requests</a>)</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="comment">// 낡은 세대의 결과다 — 이미 다른 미리보기가 열렸거나 통째로 버려졌으니 무시한다.</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordflow">if</span> (mIsActive == <span class="keyword">false</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a> != mGeneration)</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    {</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    }</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    mPreviewEventBatch.<a class="code hl_variable" href="structFCombatEventBatchUI.html#a6c1f9670649619b3594175ddff32e3fb">mSource</a> = <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a6f1796bd0d605fc8075af8ab92766610aee3931bcc0c831cf9f043bdb9ebbf55e">ECombatEventDataSourceUI::SimulationPreview</a>;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    ++mPreviewEventBatch.<a class="code hl_variable" href="structFCombatEventBatchUI.html#aed2a15d950db118d3643ab5569e54513">mRevision</a>;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    mPreviewEventBatch.<a class="code hl_variable" href="structFCombatEventBatchUI.html#a86cce8f73f54cbb48ea17880d09a28f5">mFloatingLogs</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Requests</a>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#ac407be3ff7be1e0f4be5dea4f649b05e">OnPreviewEventBatch</a>.Broadcast(mPreviewEventBatch);</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#a3a99c0c5b49495caf515d653c2e1b45c">OnPreviewChanged</a>.Broadcast(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a87f9f735a1d36793ceaecd4e47124b63">ESimulationPreviewDomainUI::Events</a>);</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>}</div>
+</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="foldopen" id="foldopen00030" data-start="{" data-end="}">
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno"><a class="line" href="classUSimulationPreviewUIModel.html#a3696ba75e31915225de51a6cffd7712c">   30</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSimulationPreviewUIModel.html#a3696ba75e31915225de51a6cffd7712c">USimulationPreviewUIModel::SetPredictedUnits</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FUnitPredictionUI&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Predictions</a>)</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>{</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keywordflow">if</span> (mIsActive == <span class="keyword">false</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a> != mGeneration)</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    {</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    }</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span> </div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    mPredictedUnits = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Predictions</a>;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#a3a99c0c5b49495caf515d653c2e1b45c">OnPreviewChanged</a>.Broadcast(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5ae5771a362d88a71a657bfcd21ca54b3f">ESimulationPreviewDomainUI::Units</a>);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>}</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00042" data-start="{" data-end="}">
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno"><a class="line" href="classUSimulationPreviewUIModel.html#ad2ffd7eb80f82610c289c2a4d9731bef">   42</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSimulationPreviewUIModel.html#ad2ffd7eb80f82610c289c2a4d9731bef">USimulationPreviewUIModel::SetPreviewPendingAction</a>(<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a>, <span class="keyword">const</span> <a class="code hl_struct" href="structFCombatPendingActionUI.html">FCombatPendingActionUI</a>&amp; <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a6663dbfdd9e5bec1732431275e2e9482">PendingAction</a>)</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>{</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordflow">if</span> (mIsActive == <span class="keyword">false</span> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Generation</a> != mGeneration)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    {</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>    }</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span> </div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    mPreviewPendingAction = <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a6663dbfdd9e5bec1732431275e2e9482">PendingAction</a>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#a3a99c0c5b49495caf515d653c2e1b45c">OnPreviewChanged</a>.Broadcast(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a6663dbfdd9e5bec1732431275e2e9482">ESimulationPreviewDomainUI::PendingAction</a>);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>}</div>
+</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="foldopen" id="foldopen00057" data-start="{" data-end="}">
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno"><a class="line" href="classUSimulationPreviewUIModel.html#a5c34e3a5d4f2b21f58b37f0df7948f84">   57</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUSimulationPreviewUIModel.html#a5c34e3a5d4f2b21f58b37f0df7948f84">USimulationPreviewUIModel::ClearPreview</a>()</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>{</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    <span class="comment">// 열려 있지 않으면 알림도 내지 않는다 — 취소 경로가 겹쳐도 Cleared는 한 번만 나간다.</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>    <span class="keywordflow">if</span> (mIsActive == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    {</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    }</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    mIsActive = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>    ++mGeneration;   <span class="comment">// 비행 중인 낡은 Set*() 결과가 빈 자리를 다시 채우지 못하게 한다.</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    ResetPreviewPayloads();</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#abf300fe05cb5d947194f63c41c50142c">OnPreviewCleared</a>.Broadcast();</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <a class="code hl_variable" href="classUSimulationPreviewUIModel.html#a3a99c0c5b49495caf515d653c2e1b45c">OnPreviewChanged</a>.Broadcast(<a class="code hl_enumvalue" href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5ab1c94ca2fbc3e78fc30069c8d0f01680">ESimulationPreviewDomainUI::All</a>);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>}</div>
+</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="keywordtype">void</span> USimulationPreviewUIModel::ResetPreviewPayloads()</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>{</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    mPreviewEventBatch.<a class="code hl_variable" href="structFCombatEventBatchUI.html#a6c1f9670649619b3594175ddff32e3fb">mSource</a> = <a class="code hl_enumvalue" href="CombatUITypes_8h.html#a6f1796bd0d605fc8075af8ab92766610a6adf97f83acf6453d4a6a4b1070f3754">ECombatEventDataSourceUI::None</a>;</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    mPreviewEventBatch.<a class="code hl_variable" href="structFCombatEventBatchUI.html#a86cce8f73f54cbb48ea17880d09a28f5">mFloatingLogs</a>.Reset();</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    mPredictedUnits.Reset();</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    mPreviewPendingAction = <a class="code hl_struct" href="structFCombatPendingActionUI.html">FCombatPendingActionUI</a>();</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>}</div>
+<div class="ttc" id="aCombatUITypes_8h_html_a60af73d824b69b35cc1a3bfd4a30f2a5a6663dbfdd9e5bec1732431275e2e9482"><div class="ttname"><a href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a6663dbfdd9e5bec1732431275e2e9482">ESimulationPreviewDomainUI::PendingAction</a></div><div class="ttdeci">@ PendingAction</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a60af73d824b69b35cc1a3bfd4a30f2a5a87f9f735a1d36793ceaecd4e47124b63"><div class="ttname"><a href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5a87f9f735a1d36793ceaecd4e47124b63">ESimulationPreviewDomainUI::Events</a></div><div class="ttdeci">@ Events</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a60af73d824b69b35cc1a3bfd4a30f2a5ab1c94ca2fbc3e78fc30069c8d0f01680"><div class="ttname"><a href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5ab1c94ca2fbc3e78fc30069c8d0f01680">ESimulationPreviewDomainUI::All</a></div><div class="ttdeci">@ All</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a60af73d824b69b35cc1a3bfd4a30f2a5ae5771a362d88a71a657bfcd21ca54b3f"><div class="ttname"><a href="CombatUITypes_8h.html#a60af73d824b69b35cc1a3bfd4a30f2a5ae5771a362d88a71a657bfcd21ca54b3f">ESimulationPreviewDomainUI::Units</a></div><div class="ttdeci">@ Units</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a6f1796bd0d605fc8075af8ab92766610a6adf97f83acf6453d4a6a4b1070f3754"><div class="ttname"><a href="CombatUITypes_8h.html#a6f1796bd0d605fc8075af8ab92766610a6adf97f83acf6453d4a6a4b1070f3754">ECombatEventDataSourceUI::None</a></div><div class="ttdeci">@ None</div></div>
+<div class="ttc" id="aCombatUITypes_8h_html_a6f1796bd0d605fc8075af8ab92766610aee3931bcc0c831cf9f043bdb9ebbf55e"><div class="ttname"><a href="CombatUITypes_8h.html#a6f1796bd0d605fc8075af8ab92766610aee3931bcc0c831cf9f043bdb9ebbf55e">ECombatEventDataSourceUI::SimulationPreview</a></div><div class="ttdeci">@ SimulationPreview</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a3aff982d98ac1c2362247321cc2cde0b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aSimulationPreviewUIModel_8h_html"><div class="ttname"><a href="SimulationPreviewUIModel_8h.html">SimulationPreviewUIModel.h</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_a3696ba75e31915225de51a6cffd7712c"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#a3696ba75e31915225de51a6cffd7712c">USimulationPreviewUIModel::SetPredictedUnits</a></div><div class="ttdeci">void SetPredictedUnits(int32 Generation, const TArray&lt; FUnitPredictionUI &gt; &amp;Predictions)</div><div class="ttdoc">유닛별 예측 요약(HP 증감·사망·도착 타일)을 교체한다. Generation이 낡았으면 버린다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8cpp_source.html#l00030">SimulationPreviewUIModel.cpp:30</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_a3a99c0c5b49495caf515d653c2e1b45c"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#a3a99c0c5b49495caf515d653c2e1b45c">USimulationPreviewUIModel::OnPreviewChanged</a></div><div class="ttdeci">FOnSimulationPreviewChanged OnPreviewChanged</div><div class="ttdoc">미리보기 도메인 하나가 갱신됐음을 알림. 위젯은 자기 도메인만 다시 그린다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8h_source.html#l00036">SimulationPreviewUIModel.h:36</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_a5c34e3a5d4f2b21f58b37f0df7948f84"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#a5c34e3a5d4f2b21f58b37f0df7948f84">USimulationPreviewUIModel::ClearPreview</a></div><div class="ttdeci">void ClearPreview()</div><div class="ttdoc">미리보기를 통째로 버린다. 실전 모델은 어떤 것도 건드리지 않는다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8cpp_source.html#l00057">SimulationPreviewUIModel.cpp:57</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_ab18669fa7622f00b53bc88bbdf865990"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#ab18669fa7622f00b53bc88bbdf865990">USimulationPreviewUIModel::BeginPreview</a></div><div class="ttdeci">int32 BeginPreview()</div><div class="ttdoc">새 미리보기를 연다. 세대를 올리고 이전 payload를 비운다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8cpp_source.html#l00004">SimulationPreviewUIModel.cpp:4</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_abf300fe05cb5d947194f63c41c50142c"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#abf300fe05cb5d947194f63c41c50142c">USimulationPreviewUIModel::OnPreviewCleared</a></div><div class="ttdeci">FOnSimulationPreviewCleared OnPreviewCleared</div><div class="ttdoc">미리보기가 통째로 버려졌음을 알림. HUD는 미리보기 표시만 걷는다(실전은 그대로).</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8h_source.html#l00044">SimulationPreviewUIModel.h:44</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_ac407be3ff7be1e0f4be5dea4f649b05e"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#ac407be3ff7be1e0f4be5dea4f649b05e">USimulationPreviewUIModel::OnPreviewEventBatch</a></div><div class="ttdeci">FOnSimulationPreviewEventBatch OnPreviewEventBatch</div><div class="ttdoc">미리보기 플로팅 로그 배치가 교체됐음을 알림. HUD가 미리보기 로그를 갈아 끼운다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8h_source.html#l00040">SimulationPreviewUIModel.h:40</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_ad2ffd7eb80f82610c289c2a4d9731bef"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#ad2ffd7eb80f82610c289c2a4d9731bef">USimulationPreviewUIModel::SetPreviewPendingAction</a></div><div class="ttdeci">void SetPreviewPendingAction(int32 Generation, const FCombatPendingActionUI &amp;PendingAction)</div><div class="ttdoc">미리보기 중인 행동의 AP 예정 소모를 교체한다. Generation이 낡았으면 버린다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8cpp_source.html#l00042">SimulationPreviewUIModel.cpp:42</a></div></div>
+<div class="ttc" id="aclassUSimulationPreviewUIModel_html_addcf35a36ad32bd9e09061eed09b6690"><div class="ttname"><a href="classUSimulationPreviewUIModel.html#addcf35a36ad32bd9e09061eed09b6690">USimulationPreviewUIModel::SetPreviewEventBatch</a></div><div class="ttdeci">void SetPreviewEventBatch(int32 Generation, const TArray&lt; FCombatFloatingLogRequest &gt; &amp;Requests)</div><div class="ttdoc">미리보기 플로팅 로그 배치를 교체한다. Generation이 낡았으면 버린다.</div><div class="ttdef"><b>Definition</b> <a href="SimulationPreviewUIModel_8cpp_source.html#l00013">SimulationPreviewUIModel.cpp:13</a></div></div>
+<div class="ttc" id="astructFCombatEventBatchUI_html_a6c1f9670649619b3594175ddff32e3fb"><div class="ttname"><a href="structFCombatEventBatchUI.html#a6c1f9670649619b3594175ddff32e3fb">FCombatEventBatchUI::mSource</a></div><div class="ttdeci">ECombatEventDataSourceUI mSource</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00215">CombatUITypes.h:215</a></div></div>
+<div class="ttc" id="astructFCombatEventBatchUI_html_a86cce8f73f54cbb48ea17880d09a28f5"><div class="ttname"><a href="structFCombatEventBatchUI.html#a86cce8f73f54cbb48ea17880d09a28f5">FCombatEventBatchUI::mFloatingLogs</a></div><div class="ttdeci">TArray&lt; FCombatFloatingLogRequest &gt; mFloatingLogs</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00217">CombatUITypes.h:217</a></div></div>
+<div class="ttc" id="astructFCombatEventBatchUI_html_aed2a15d950db118d3643ab5569e54513"><div class="ttname"><a href="structFCombatEventBatchUI.html#aed2a15d950db118d3643ab5569e54513">FCombatEventBatchUI::mRevision</a></div><div class="ttdeci">int32 mRevision</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00216">CombatUITypes.h:216</a></div></div>
+<div class="ttc" id="astructFCombatPendingActionUI_html"><div class="ttname"><a href="structFCombatPendingActionUI.html">FCombatPendingActionUI</a></div><div class="ttdoc">현재 프리뷰 중인 행동의 AP 예정 소모 데이터.</div><div class="ttdef"><b>Definition</b> <a href="CombatUITypes_8h_source.html#l00062">CombatUITypes.h:63</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_18e329638b0f3372047d81882ea0cdaf.html">UI</a></li><li class="navelem"><a class="el" href="dir_c03fad49ae08ebf88456b3b7860f433d.html">Combat</a></li><li class="navelem"><a class="el" href="SimulationPreviewUIModel_8cpp.html">SimulationPreviewUIModel.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

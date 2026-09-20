@@ -8,6 +8,8 @@ var structFStage =
     [ "GetStartRoom", "structFStage.html#a323f09e2cd32b78eb7592a29eabebcee", null ],
     [ "HasRoom", "structFStage.html#a0784a8dbe71105a97788990766f49d44", null ],
     [ "SetCurrentRoom", "structFStage.html#a84fa3f7e68927f4d43a180d56e203d96", null ],
+    [ "SetRoomClearData", "structFStage.html#a21dd2d8c7a05d006db8ae535eb4d88cf", null ],
+    [ "mClearData", "structFStage.html#a89ca9b4d9d0fc4b61d9a1fa9e08551cc", null ],
     [ "mCurColumn", "structFStage.html#af1507e43f23bcaa36f93382999fddfb6", null ],
     [ "mCurRow", "structFStage.html#ab83fe223734e7ac4b0bbd464215dce65", null ],
     [ "mRoomRows", "structFStage.html#ac2736b2368baaed56af8634422b70d7f", null ],

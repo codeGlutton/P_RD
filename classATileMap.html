@@ -94,6 +94,7 @@ $(document).ready(function(){initNavTree('classATileMap.html',''); initResizable
 <a href="#pub-methods">Public 멤버 함수</a> &#124;
 <a href="#pro-methods">Protected 멤버 함수</a> &#124;
 <a href="#pro-attribs">Protected 속성</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classATileMap-members.html">모든 멤버 목록</a>  </div>
   <div class="headertitle"><div class="title">ATileMap 클래스 참조</div></div>
 </div><!--header-->
@@ -142,12 +143,24 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:aa9631e87b31c75cb8b55e63c9133a045" id="r_aa9631e87b31c75cb8b55e63c9133a045"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aa9631e87b31c75cb8b55e63c9133a045">ClearTileHighlight</a> (<a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Flag</a>)</td></tr>
 <tr class="memdesc:aa9631e87b31c75cb8b55e63c9133a045"><td class="mdescLeft">&#160;</td><td class="mdescRight">지정한 강조 상태를 모든 타일에서 해제  <br /></td></tr>
 <tr class="separator:aa9631e87b31c75cb8b55e63c9133a045"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d186cf6558ac34231222dedacb727a9" id="r_a9d186cf6558ac34231222dedacb727a9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a9d186cf6558ac34231222dedacb727a9">SetMovePath</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PathTiles</a>)</td></tr>
-<tr class="memdesc:a9d186cf6558ac34231222dedacb727a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동경로를 화살표로 표시 (경로 타일 배열을 방향 화살표 + 도착 마커로 시각화)  <br /></td></tr>
-<tr class="separator:a9d186cf6558ac34231222dedacb727a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8ee4e85f2130a39ba1fefe6a50ab324" id="r_ae8ee4e85f2130a39ba1fefe6a50ab324"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ae8ee4e85f2130a39ba1fefe6a50ab324">SetThreatRange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MoveTiles</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttackTiles</a>)</td></tr>
+<tr class="memdesc:ae8ee4e85f2130a39ba1fefe6a50ab324"><td class="mdescLeft">&#160;</td><td class="mdescRight">적 위협 범위 표시  <br /></td></tr>
+<tr class="separator:ae8ee4e85f2130a39ba1fefe6a50ab324"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57b8390c096d9e27e0486665a9bde46b" id="r_a57b8390c096d9e27e0486665a9bde46b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a57b8390c096d9e27e0486665a9bde46b">ClearThreatRange</a> ()</td></tr>
+<tr class="memdesc:a57b8390c096d9e27e0486665a9bde46b"><td class="mdescLeft">&#160;</td><td class="mdescRight">적 위협 범위 표시 해제 (최대이동범위, 최대공격범위 모두 제거)  <br /></td></tr>
+<tr class="separator:a57b8390c096d9e27e0486665a9bde46b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17a794f500ad1a62c4fe36370ac50942" id="r_a17a794f500ad1a62c4fe36370ac50942"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a17a794f500ad1a62c4fe36370ac50942">SetMovePath</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFMovePathTile.html">FMovePathTile</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PathTiles</a>)</td></tr>
+<tr class="memdesc:a17a794f500ad1a62c4fe36370ac50942"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동경로를 화살표와 경유지마커로 표시  <br /></td></tr>
+<tr class="separator:a17a794f500ad1a62c4fe36370ac50942"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a256e26c2713caa200a9def6c12bee289" id="r_a256e26c2713caa200a9def6c12bee289"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a256e26c2713caa200a9def6c12bee289">ClearMovePath</a> ()</td></tr>
-<tr class="memdesc:a256e26c2713caa200a9def6c12bee289"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)  <br /></td></tr>
+<tr class="memdesc:a256e26c2713caa200a9def6c12bee289"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동경로 표시 해제 (화살표, 마커, 원뿔 모두 제거)  <br /></td></tr>
 <tr class="separator:a256e26c2713caa200a9def6c12bee289"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3bb727260d25433dbda301e10b9480c5" id="r_a3bb727260d25433dbda301e10b9480c5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a3bb727260d25433dbda301e10b9480c5">AddPushPath</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PathTiles</a>)</td></tr>
+<tr class="memdesc:a3bb727260d25433dbda301e10b9480c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">밀치기 경로를 기존 표시에 추가  <br /></td></tr>
+<tr class="separator:a3bb727260d25433dbda301e10b9480c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3a0def57bb4cf1636049d8746621b05" id="r_ae3a0def57bb4cf1636049d8746621b05"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ae3a0def57bb4cf1636049d8746621b05">ClearPushPath</a> ()</td></tr>
+<tr class="memdesc:ae3a0def57bb4cf1636049d8746621b05"><td class="mdescLeft">&#160;</td><td class="mdescRight">밀치기 경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)  <br /></td></tr>
+<tr class="separator:ae3a0def57bb4cf1636049d8746621b05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf121def7b1e09110c3d5ec75723ee1c" id="r_abf121def7b1e09110c3d5ec75723ee1c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#abf121def7b1e09110c3d5ec75723ee1c">GetTileSize</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:abf121def7b1e09110c3d5ec75723ee1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 한 칸의 월드 크기 (cm): 기본값은 100cm  <br /></td></tr>
 <tr class="separator:abf121def7b1e09110c3d5ec75723ee1c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,6 +179,8 @@ Public 멤버 함수</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
+<tr class="memitem:a702bb2f1a2126522415edd45d53c949d" id="r_a702bb2f1a2126522415edd45d53c949d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a702bb2f1a2126522415edd45d53c949d">PostInitializeComponents</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a702bb2f1a2126522415edd45d53c949d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a561188518a1bce50158d76de65d6c096" id="r_a561188518a1bce50158d76de65d6c096"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a561188518a1bce50158d76de65d6c096">BeginPlay</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="separator:a561188518a1bce50158d76de65d6c096"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a120c3330103bc9869292debee8a767" id="r_a0a120c3330103bc9869292debee8a767"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUObjectModel.html">UObjectModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a0a120c3330103bc9869292debee8a767">GetModel_Internal</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
@@ -182,6 +197,9 @@ Protected 속성</h2></td></tr>
 <tr class="memitem:acb40f4e6eae1d8e41d101fb79204b913" id="r_acb40f4e6eae1d8e41d101fb79204b913"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#acb40f4e6eae1d8e41d101fb79204b913">mTileMeshComponent</a></td></tr>
 <tr class="memdesc:acb40f4e6eae1d8e41d101fb79204b913"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 그리드를 그리는 인스턴스드 메시 컴포넌트  <br /></td></tr>
 <tr class="separator:acb40f4e6eae1d8e41d101fb79204b913"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a98cd9a0c927c295aecf64e6bfc19cd" id="r_a6a98cd9a0c927c295aecf64e6bfc19cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UBoxComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a6a98cd9a0c927c295aecf64e6bfc19cd">mPickingBoxComponent</a></td></tr>
+<tr class="memdesc:a6a98cd9a0c927c295aecf64e6bfc19cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 사이 틈 터치를 받기 위한 콜리전 전용 박스 (렌더링 없음, 타일맵 전체 크기)  <br /></td></tr>
+<tr class="separator:a6a98cd9a0c927c295aecf64e6bfc19cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ce380ac5a2fce334555e09b7ca7753e" id="r_a3ce380ac5a2fce334555e09b7ca7753e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a3ce380ac5a2fce334555e09b7ca7753e">mTileMesh</a></td></tr>
 <tr class="memdesc:a3ce380ac5a2fce334555e09b7ca7753e"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 한 칸에 사용할 메시 (기본: 엔진 Plane)  <br /></td></tr>
 <tr class="separator:a3ce380ac5a2fce334555e09b7ca7753e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -200,12 +218,12 @@ Protected 속성</h2></td></tr>
 <tr class="memitem:a13956b09afc195f93de9fef8d88f779d" id="r_a13956b09afc195f93de9fef8d88f779d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a13956b09afc195f93de9fef8d88f779d">mTileBorderWidth</a> = 3.0f</td></tr>
 <tr class="memdesc:a13956b09afc195f93de9fef8d88f779d"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일 테두리 굵기 (cm 단위)  <br /></td></tr>
 <tr class="separator:a13956b09afc195f93de9fef8d88f779d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae338a9cb88bc3a37652bd3bfe2aa79ef" id="r_ae338a9cb88bc3a37652bd3bfe2aa79ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ae338a9cb88bc3a37652bd3bfe2aa79ef">mPathArrowComponent</a></td></tr>
-<tr class="memdesc:ae338a9cb88bc3a37652bd3bfe2aa79ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">경로 중간 화살표를 그리는 인스턴스드 메시 컴포넌트  <br /></td></tr>
-<tr class="separator:ae338a9cb88bc3a37652bd3bfe2aa79ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee6e25dc15cf80a560675f7b38795471" id="r_aee6e25dc15cf80a560675f7b38795471"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aee6e25dc15cf80a560675f7b38795471">mPathEndComponent</a></td></tr>
-<tr class="memdesc:aee6e25dc15cf80a560675f7b38795471"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착(끝) 타일 마커를 그리는 인스턴스드 메시 컴포넌트  <br /></td></tr>
-<tr class="separator:aee6e25dc15cf80a560675f7b38795471"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c7d02e6583d5c5f1ffee89e79daf2e9" id="r_a1c7d02e6583d5c5f1ffee89e79daf2e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a1c7d02e6583d5c5f1ffee89e79daf2e9">mWaypointComponent</a></td></tr>
+<tr class="memdesc:a1c7d02e6583d5c5f1ffee89e79daf2e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">경유지 마커 메시 컴포넌트  <br /></td></tr>
+<tr class="separator:a1c7d02e6583d5c5f1ffee89e79daf2e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa16e61d70b3addbcb510f645fe5b59e7" id="r_aa16e61d70b3addbcb510f645fe5b59e7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aa16e61d70b3addbcb510f645fe5b59e7">mDestConeComponent</a></td></tr>
+<tr class="memdesc:aa16e61d70b3addbcb510f645fe5b59e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착지 원뿔 메시 컴포넌트 (기존 바닥 메시와 별개로 머리 위에서 위아래로 진동)  <br /></td></tr>
+<tr class="separator:aa16e61d70b3addbcb510f645fe5b59e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b93f5833d356a010e45c8768fbd744f" id="r_a3b93f5833d356a010e45c8768fbd744f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a3b93f5833d356a010e45c8768fbd744f">mAimStyle</a></td></tr>
 <tr class="memdesc:a3b93f5833d356a010e45c8768fbd744f"><td class="mdescLeft">&#160;</td><td class="mdescRight">조준 범위 스타일 (타일 위에 자기 알파로 Mix)  <br /></td></tr>
 <tr class="separator:a3b93f5833d356a010e45c8768fbd744f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -218,46 +236,87 @@ Protected 속성</h2></td></tr>
 <tr class="memitem:ac8010d54070e164f44a9a8a44784674c" id="r_ac8010d54070e164f44a9a8a44784674c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ac8010d54070e164f44a9a8a44784674c">mPulsePeriod</a> = 1.0f</td></tr>
 <tr class="memdesc:ac8010d54070e164f44a9a8a44784674c"><td class="mdescLeft">&#160;</td><td class="mdescRight">펄스 주기 (초)  <br /></td></tr>
 <tr class="separator:ac8010d54070e164f44a9a8a44784674c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfa89354578c007d8b3128d96becc9a6" id="r_acfa89354578c007d8b3128d96becc9a6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#acfa89354578c007d8b3128d96becc9a6">mPathArrowMesh</a></td></tr>
-<tr class="memdesc:acfa89354578c007d8b3128d96becc9a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">경로 중간 화살표 메시 (기본: Kenney SM_Kenney_FactoryKit_Arrow, +X를 가리키는 형상이어야 방향이 맞음)  <br /></td></tr>
-<tr class="separator:acfa89354578c007d8b3128d96becc9a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45f1e66fb79e3ab4f579ffbd77911905" id="r_a45f1e66fb79e3ab4f579ffbd77911905"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a45f1e66fb79e3ab4f579ffbd77911905">mPathArrowMaterial</a></td></tr>
-<tr class="memdesc:a45f1e66fb79e3ab4f579ffbd77911905"><td class="mdescLeft">&#160;</td><td class="mdescRight">화살표에 덮어쓸 머티리얼 (custom data RGBA 색을 읽는 하이라이트 머티리얼 권장, null이면 메시 기본)  <br /></td></tr>
-<tr class="separator:a45f1e66fb79e3ab4f579ffbd77911905"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d1bba9afcec62ff4692abd97aad9273" id="r_a0d1bba9afcec62ff4692abd97aad9273"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a0d1bba9afcec62ff4692abd97aad9273">mPathEndMesh</a></td></tr>
-<tr class="memdesc:a0d1bba9afcec62ff4692abd97aad9273"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착(끝) 타일 마커 메시 (기본: Kenney SM_Kenney_FactoryKit_IndicatorSpecialArrow)  <br /></td></tr>
-<tr class="separator:a0d1bba9afcec62ff4692abd97aad9273"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add5d830e588e9fc3a12adba8e761ae0f" id="r_add5d830e588e9fc3a12adba8e761ae0f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#add5d830e588e9fc3a12adba8e761ae0f">mPathEndMaterial</a></td></tr>
-<tr class="memdesc:add5d830e588e9fc3a12adba8e761ae0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착 마커에 덮어쓸 머티리얼 (null이면 메시 기본)  <br /></td></tr>
-<tr class="separator:add5d830e588e9fc3a12adba8e761ae0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a42a6892622f42af9111155740c97df2d" id="r_a42a6892622f42af9111155740c97df2d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a42a6892622f42af9111155740c97df2d">mPathArrowStyle</a></td></tr>
-<tr class="memdesc:a42a6892622f42af9111155740c97df2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">경로 화살표 색 (불투명이라 알파값은 사용하지 않음)  <br /></td></tr>
-<tr class="separator:a42a6892622f42af9111155740c97df2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbb886d518b2364fb99c53e1e195bafd" id="r_acbb886d518b2364fb99c53e1e195bafd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#acbb886d518b2364fb99c53e1e195bafd">mPathEndStyle</a></td></tr>
-<tr class="memdesc:acbb886d518b2364fb99c53e1e195bafd"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착지 마커 색 (불투명이라 알파값은 사용하지 않음)  <br /></td></tr>
-<tr class="separator:acbb886d518b2364fb99c53e1e195bafd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad83c1342b203fedb42a225b7c22826b7" id="r_ad83c1342b203fedb42a225b7c22826b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ad83c1342b203fedb42a225b7c22826b7">mPathPulsePeriod</a> = 1.0f</td></tr>
-<tr class="memdesc:ad83c1342b203fedb42a225b7c22826b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">경로 펄스 주기 (초)  <br /></td></tr>
-<tr class="separator:ad83c1342b203fedb42a225b7c22826b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a288834df1a7aee66391d55707b3e8dbd" id="r_a288834df1a7aee66391d55707b3e8dbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a288834df1a7aee66391d55707b3e8dbd">mPathFlowCycles</a> = 1.0f</td></tr>
-<tr class="memdesc:a288834df1a7aee66391d55707b3e8dbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">경로 전체에 동시에 흐르는 펄스 고점 개수 (1=한 줄기, 경로 길이에 무관하게 일정한 흐름. 0=전체 동시 펄스)  <br /></td></tr>
-<tr class="separator:a288834df1a7aee66391d55707b3e8dbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f51a7bbe3f0a7c881e1d72690f44aed" id="r_a4f51a7bbe3f0a7c881e1d72690f44aed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a4f51a7bbe3f0a7c881e1d72690f44aed">mPathPulseMinBrightness</a> = 0.1<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
-<tr class="memdesc:a4f51a7bbe3f0a7c881e1d72690f44aed"><td class="mdescLeft">&#160;</td><td class="mdescRight">펄스 밝기 하한  <br /></td></tr>
-<tr class="separator:a4f51a7bbe3f0a7c881e1d72690f44aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6821e3fa6dc9addc9cac785ad3aff638" id="r_a6821e3fa6dc9addc9cac785ad3aff638"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a6821e3fa6dc9addc9cac785ad3aff638">mPathPulseMaxBrightness</a> = 1.0f</td></tr>
-<tr class="memdesc:a6821e3fa6dc9addc9cac785ad3aff638"><td class="mdescLeft">&#160;</td><td class="mdescRight">펄스 밝기 상한  <br /></td></tr>
-<tr class="separator:a6821e3fa6dc9addc9cac785ad3aff638"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe9bca3489f1ed0b3470d0d72c1890ac" id="r_afe9bca3489f1ed0b3470d0d72c1890ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#afe9bca3489f1ed0b3470d0d72c1890ac">mThreatMoveComponent</a></td></tr>
+<tr class="memdesc:afe9bca3489f1ed0b3470d0d72c1890ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">최대이동범위 메시 컴포넌트  <br /></td></tr>
+<tr class="separator:afe9bca3489f1ed0b3470d0d72c1890ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d7a57c1f1e52042269444b5047ad610" id="r_a7d7a57c1f1e52042269444b5047ad610"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a7d7a57c1f1e52042269444b5047ad610">mThreatAttackComponent</a></td></tr>
+<tr class="memdesc:a7d7a57c1f1e52042269444b5047ad610"><td class="mdescLeft">&#160;</td><td class="mdescRight">최대공격범위 메시 컴포넌트  <br /></td></tr>
+<tr class="separator:a7d7a57c1f1e52042269444b5047ad610"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c185fe3658f961dfe75a9ffd47b8fb9" id="r_a8c185fe3658f961dfe75a9ffd47b8fb9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a8c185fe3658f961dfe75a9ffd47b8fb9">mThreatMoveStyle</a></td></tr>
+<tr class="memdesc:a8c185fe3658f961dfe75a9ffd47b8fb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">최대이동범위 색  <br /></td></tr>
+<tr class="separator:a8c185fe3658f961dfe75a9ffd47b8fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecc889333f3fd2957e5deff8e698aa8e" id="r_aecc889333f3fd2957e5deff8e698aa8e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aecc889333f3fd2957e5deff8e698aa8e">mThreatAttackStyle</a></td></tr>
+<tr class="memdesc:aecc889333f3fd2957e5deff8e698aa8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">최대공격범위 색  <br /></td></tr>
+<tr class="separator:aecc889333f3fd2957e5deff8e698aa8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52247e5b16ae8033a6eab6148ccc85d8" id="r_a52247e5b16ae8033a6eab6148ccc85d8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a52247e5b16ae8033a6eab6148ccc85d8">mThreatBandWidthRatio</a> = 0.12<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
+<tr class="memdesc:a52247e5b16ae8033a6eab6148ccc85d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">밴드 폭 비율 (타일 시각 크기 기준)  <br /></td></tr>
+<tr class="separator:a52247e5b16ae8033a6eab6148ccc85d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad53136a138aa8bba2f843cf268f4eb45" id="r_ad53136a138aa8bba2f843cf268f4eb45"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ad53136a138aa8bba2f843cf268f4eb45">mThreatHeightOffset</a> = 0.5<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
+<tr class="memdesc:ad53136a138aa8bba2f843cf268f4eb45"><td class="mdescLeft">&#160;</td><td class="mdescRight">표시 높이 오프셋 (cm, 타일 면과의 z-파이팅 방지)  <br /></td></tr>
+<tr class="separator:ad53136a138aa8bba2f843cf268f4eb45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5537a96481d7959fe1fc44b50231b2ab" id="r_a5537a96481d7959fe1fc44b50231b2ab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a5537a96481d7959fe1fc44b50231b2ab">mThreatMaterial</a></td></tr>
+<tr class="memdesc:a5537a96481d7959fe1fc44b50231b2ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">위협 표시 전용 머티리얼 (없으면 타일 머티리얼 재사용)  <br /></td></tr>
+<tr class="separator:a5537a96481d7959fe1fc44b50231b2ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bd1e7dc1d3a00370e308a6ff5e9bf7f" id="r_a5bd1e7dc1d3a00370e308a6ff5e9bf7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFPathArrowSet.html">FPathArrowSet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a5bd1e7dc1d3a00370e308a6ff5e9bf7f">mMovePathSet</a></td></tr>
+<tr class="memdesc:a5bd1e7dc1d3a00370e308a6ff5e9bf7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동 경로 표시 세트  <br /></td></tr>
+<tr class="separator:a5bd1e7dc1d3a00370e308a6ff5e9bf7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a8a0faa4b23f7d0b85abed8891a16ac" id="r_a9a8a0faa4b23f7d0b85abed8891a16ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFPathArrowSet.html">FPathArrowSet</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a9a8a0faa4b23f7d0b85abed8891a16ac">mPushPathSet</a></td></tr>
+<tr class="memdesc:a9a8a0faa4b23f7d0b85abed8891a16ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">밀치기 경로 표시 세트  <br /></td></tr>
+<tr class="separator:a9a8a0faa4b23f7d0b85abed8891a16ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e366cc71744faf08760cbc9a939ac96" id="r_a6e366cc71744faf08760cbc9a939ac96"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a6e366cc71744faf08760cbc9a939ac96">mPathArrowScale</a> = 0.5<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
 <tr class="memdesc:a6e366cc71744faf08760cbc9a939ac96"><td class="mdescLeft">&#160;</td><td class="mdescRight">화살표/마커 시각 크기 비율 (타일 크기 기준)  <br /></td></tr>
 <tr class="separator:a6e366cc71744faf08760cbc9a939ac96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86b87fe4deefea708d113ed3ce27b16a" id="r_a86b87fe4deefea708d113ed3ce27b16a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a86b87fe4deefea708d113ed3ce27b16a">mPathArrowZScale</a> = 0.5<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
+<tr class="memdesc:a86b87fe4deefea708d113ed3ce27b16a"><td class="mdescLeft">&#160;</td><td class="mdescRight">화살표 Z축(두께) 스케일 비율 (1이면 원본 두께, 도착 마커에는 적용 안 함)  <br /></td></tr>
+<tr class="separator:a86b87fe4deefea708d113ed3ce27b16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e7b5bb9126154d08ca82f70c7ee529f" id="r_a1e7b5bb9126154d08ca82f70c7ee529f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a1e7b5bb9126154d08ca82f70c7ee529f">mPathHeightOffset</a> = 1.0f</td></tr>
 <tr class="memdesc:a1e7b5bb9126154d08ca82f70c7ee529f"><td class="mdescLeft">&#160;</td><td class="mdescRight">화살표/마커를 타일 위로 띄우는 Z 오프셋 (cm, z-fighting 방지)  <br /></td></tr>
 <tr class="separator:a1e7b5bb9126154d08ca82f70c7ee529f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e9452901a6e138a63cf076cbd12b945" id="r_a5e9452901a6e138a63cf076cbd12b945"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a5e9452901a6e138a63cf076cbd12b945">mWaypointBarMesh</a></td></tr>
+<tr class="memdesc:a5e9452901a6e138a63cf076cbd12b945"><td class="mdescLeft">&#160;</td><td class="mdescRight">경유지 마커 막대 메시 (기본: 엔진 Cube)  <br /></td></tr>
+<tr class="separator:a5e9452901a6e138a63cf076cbd12b945"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a835061fea4869b9e82c362ee06c17258" id="r_a835061fea4869b9e82c362ee06c17258"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a835061fea4869b9e82c362ee06c17258">mWaypointStyle</a></td></tr>
+<tr class="memdesc:a835061fea4869b9e82c362ee06c17258"><td class="mdescLeft">&#160;</td><td class="mdescRight">경유지 마커 색  <br /></td></tr>
+<tr class="separator:a835061fea4869b9e82c362ee06c17258"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ff2220c0e1ca043968812e8d74167b7" id="r_a0ff2220c0e1ca043968812e8d74167b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a0ff2220c0e1ca043968812e8d74167b7">mWaypointFrameScale</a> = 0.6<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
+<tr class="memdesc:a0ff2220c0e1ca043968812e8d74167b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">경유지 테두리 크기 비율 (타일 크기 기준)  <br /></td></tr>
+<tr class="separator:a0ff2220c0e1ca043968812e8d74167b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae473d28af4b2dbbeab24fbacd776ef7e" id="r_ae473d28af4b2dbbeab24fbacd776ef7e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ae473d28af4b2dbbeab24fbacd776ef7e">mWaypointBarThickness</a> = 8.0f</td></tr>
+<tr class="memdesc:ae473d28af4b2dbbeab24fbacd776ef7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">마커 막대 굵기 (cm)  <br /></td></tr>
+<tr class="separator:ae473d28af4b2dbbeab24fbacd776ef7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00e678e117ac62bf856db8ec91d15566" id="r_a00e678e117ac62bf856db8ec91d15566"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a00e678e117ac62bf856db8ec91d15566">mWaypointBarHeight</a> = 8.0f</td></tr>
+<tr class="memdesc:a00e678e117ac62bf856db8ec91d15566"><td class="mdescLeft">&#160;</td><td class="mdescRight">마커 막대 높이 (cm)  <br /></td></tr>
+<tr class="separator:a00e678e117ac62bf856db8ec91d15566"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f4af36ad86ba32c9009717f7fd9689f" id="r_a0f4af36ad86ba32c9009717f7fd9689f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a0f4af36ad86ba32c9009717f7fd9689f">mWaypointYaw</a> = 0.0f</td></tr>
+<tr class="memdesc:a0f4af36ad86ba32c9009717f7fd9689f"><td class="mdescLeft">&#160;</td><td class="mdescRight">숫자 방향 (도, 0이면 숫자 위쪽이 +X — 카메라에 맞춰 조정)  <br /></td></tr>
+<tr class="separator:a0f4af36ad86ba32c9009717f7fd9689f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0c1d67fec3ed7699f5d7b80f8d56d5d" id="r_ae0c1d67fec3ed7699f5d7b80f8d56d5d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ae0c1d67fec3ed7699f5d7b80f8d56d5d">mDestConeMesh</a></td></tr>
+<tr class="memdesc:ae0c1d67fec3ed7699f5d7b80f8d56d5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착지 원뿔 메시 (기본: 엔진 Cone, 뒤집어서 배치)  <br /></td></tr>
+<tr class="separator:ae0c1d67fec3ed7699f5d7b80f8d56d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ad7411223ae0337a43899786b5b4575" id="r_a6ad7411223ae0337a43899786b5b4575"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a6ad7411223ae0337a43899786b5b4575">mDestConeStyle</a></td></tr>
+<tr class="memdesc:a6ad7411223ae0337a43899786b5b4575"><td class="mdescLeft">&#160;</td><td class="mdescRight">도착지 원뿔 색  <br /></td></tr>
+<tr class="separator:a6ad7411223ae0337a43899786b5b4575"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3ed68dd85dd924d4d870aad75f61e98" id="r_aa3ed68dd85dd924d4d870aad75f61e98"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#aa3ed68dd85dd924d4d870aad75f61e98">mDestConeScale</a> = 0.25<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
+<tr class="memdesc:aa3ed68dd85dd924d4d870aad75f61e98"><td class="mdescLeft">&#160;</td><td class="mdescRight">원뿔 크기 비율 (타일 크기 기준)  <br /></td></tr>
+<tr class="separator:aa3ed68dd85dd924d4d870aad75f61e98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07dd6486dd2b56d25f8bead55cb59609" id="r_a07dd6486dd2b56d25f8bead55cb59609"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a07dd6486dd2b56d25f8bead55cb59609">mDestConeBaseHeight</a> = 80.0f</td></tr>
+<tr class="memdesc:a07dd6486dd2b56d25f8bead55cb59609"><td class="mdescLeft">&#160;</td><td class="mdescRight">원뿔 기준 높이 (cm, 타일 바닥에서 원뿔 꼭짓점까지)  <br /></td></tr>
+<tr class="separator:a07dd6486dd2b56d25f8bead55cb59609"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac464857295eeed6b6aa2e86ef2a4b224" id="r_ac464857295eeed6b6aa2e86ef2a4b224"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#ac464857295eeed6b6aa2e86ef2a4b224">mDestConeBobAmplitude</a> = 30.0f</td></tr>
+<tr class="memdesc:ac464857295eeed6b6aa2e86ef2a4b224"><td class="mdescLeft">&#160;</td><td class="mdescRight">원뿔 진동 폭 (cm)  <br /></td></tr>
+<tr class="separator:ac464857295eeed6b6aa2e86ef2a4b224"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf20950f60126139fb98dd262966205c" id="r_abf20950f60126139fb98dd262966205c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#abf20950f60126139fb98dd262966205c">mDestConeBobPeriod</a> = 1.0f</td></tr>
+<tr class="memdesc:abf20950f60126139fb98dd262966205c"><td class="mdescLeft">&#160;</td><td class="mdescRight">원뿔 진동 주기 (초)  <br /></td></tr>
+<tr class="separator:abf20950f60126139fb98dd262966205c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a62db66cd16c747cf2f3fd33d4c70e3d2" id="r_a62db66cd16c747cf2f3fd33d4c70e3d2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classATileMap.html#a62db66cd16c747cf2f3fd33d4c70e3d2">FTileHighlightPulseMembershipTest</a></td></tr>
+<tr class="separator:a62db66cd16c747cf2f3fd33d4c70e3d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00184">184</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="a24f9b89617bc9616633c976e8a9f6925" name="a24f9b89617bc9616633c976e8a9f6925"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a24f9b89617bc9616633c976e8a9f6925">&#9670;&#160;</a></span>ATileMap()</h2>
@@ -274,11 +333,37 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00031">31</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a3bb727260d25433dbda301e10b9480c5" name="a3bb727260d25433dbda301e10b9480c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3bb727260d25433dbda301e10b9480c5">&#9670;&#160;</a></span>AddPushPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::AddPushPath </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>PathTiles</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>광역 밀치기처럼 여러 몹이 밀릴 때 몹마다 GetPushPath 결과를 쌓는 용도. 밀리지 못하는 경로(타일 1개 이하)는 무시 같은 타일에 여러 표시가 중복되면 나중 표시가 덮어씀 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">PathTiles</td><td>경로 타일 목록 (밀리는 몹의 타일부터 도착까지) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00879">879</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a561188518a1bce50158d76de65d6c096" name="a561188518a1bce50158d76de65d6c096"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a561188518a1bce50158d76de65d6c096">&#9670;&#160;</a></span>BeginPlay()</h2>
 
@@ -302,7 +387,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00209">209</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00337">337</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -338,7 +423,7 @@ Protected 속성</h2></td></tr>
 
 <p><a class="el" href="classIObjectView.html#a1aa5c7950b5df0ce179e766d70d90ee9">IObjectView</a>를 구현.</p>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00143">143</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00213">213</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -357,7 +442,45 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00644">644</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00868">868</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae3a0def57bb4cf1636049d8746621b05" name="ae3a0def57bb4cf1636049d8746621b05"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae3a0def57bb4cf1636049d8746621b05">&#9670;&#160;</a></span>ClearPushPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::ClearPushPath </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00895">895</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a57b8390c096d9e27e0486665a9bde46b" name="a57b8390c096d9e27e0486665a9bde46b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57b8390c096d9e27e0486665a9bde46b">&#9670;&#160;</a></span>ClearThreatRange()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::ClearThreatRange </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00800">800</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -383,7 +506,7 @@ Protected 속성</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00537">537</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00703">703</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -413,7 +536,7 @@ Protected 속성</h2></td></tr>
 
 <p><a class="el" href="classIObjectView.html#a143e614e5fe249857240d441e44f5b0f">IObjectView</a>를 구현.</p>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00175">175</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00247">247</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -432,7 +555,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00376">376</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00537">537</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -452,7 +575,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00559">559</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00811">811</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -480,12 +603,39 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00181">181</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00253">253</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a9d186cf6558ac34231222dedacb727a9" name="a9d186cf6558ac34231222dedacb727a9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d186cf6558ac34231222dedacb727a9">&#9670;&#160;</a></span>SetMovePath()</h2>
+<a id="a702bb2f1a2126522415edd45d53c949d" name="a702bb2f1a2126522415edd45d53c949d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a702bb2f1a2126522415edd45d53c949d">&#9670;&#160;</a></span>PostInitializeComponents()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::PostInitializeComponents </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00281">281</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a17a794f500ad1a62c4fe36370ac50942" name="a17a794f500ad1a62c4fe36370ac50942"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17a794f500ad1a62c4fe36370ac50942">&#9670;&#160;</a></span>SetMovePath()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -493,20 +643,57 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::SetMovePath </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFMovePathTile.html">FMovePathTile</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>PathTiles</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>UTileMapModel::FindPath가 돌려준 타일 배열(시작→목표 순서)을 받는다. 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표를, 마지막 타일엔 도착 마커를 배치한다. 기존 경로 표시는 먼저 지운다. 빈 배열이면 표시를 모두 해제하는 것과 같다. </p><dl class="params"><dt>매개변수</dt><dd>
+<p>경로를 구성하는 타일배열을 받아 각 타일에 '다음 타일로 향하는' 화살표 배치 경유지 타일에는 화살표 대신 경유지 표시(사각형 테두리 안에 경유지 순번), 도착지에는 도착지 마커와 원역뿔을 배치 같은 타일이 여러 번 경유지면 마지막 순번 마커만 남고(덮어쓰기), 도착 타일과 겹친 경유지 마커는 생략 기존 경로 표시는 먼저 지운다. 빈 배열이면 표시를 모두 해제하는 것과 같다. </p><dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">PathTiles</td><td>: 경로 타일 목록 (FindPath 결과, 양 끝 포함) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">PathTiles</td><td>: 경로 타일 목록 (양 끝 포함) </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00571">571</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00823">823</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae8ee4e85f2130a39ba1fefe6a50ab324" name="ae8ee4e85f2130a39ba1fefe6a50ab324"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae8ee4e85f2130a39ba1fefe6a50ab324">&#9670;&#160;</a></span>SetThreatRange()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ATileMap::SetThreatRange </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>MoveTiles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>AttackTiles</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>최대이동범위는 타일 테두리 안쪽 밴드 영역, 최대공격범위는 밴드를 제외한 내부 전체 기존 위협범위는 삭제되며 빈 배열일 경우 그리지 않음 </p><dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">MoveTiles</td><td>: 최대 이동 범위 타일 목록 (맵 밖 좌표는 무시) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">AttackTiles</td><td>: 최대 공격 범위 타일 목록 (맵 밖 좌표는 무시) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00723">723</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -549,7 +736,7 @@ Protected 속성</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00491">491</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00657">657</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -577,7 +764,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00276">276</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00404">404</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -604,7 +791,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>FVector : 해당 타일 중심의 월드 위치 </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00391">391</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00552">552</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -631,7 +818,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>FVector : 해당 타일 중심의 월드 회전 </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00401">401</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00562">562</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -658,7 +845,7 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>FTransform : 해당 타일 중심의 월드 트랜스폼 (위치+회전+스케일) </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00381">381</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00542">542</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -688,7 +875,7 @@ Protected 속성</h2></td></tr>
 
 <p><a class="el" href="classIObjectView.html#aa9c0042bc08819f0c53fc26a4ef214b6">IObjectView</a>를 구현.</p>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00158">158</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -715,7 +902,32 @@ Protected 속성</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd><a class="el" href="structFTileIndex.html" title="타일 맵 상 인덱스 좌표">FTileIndex</a> : 가장 가까운 타일 인덱스 (범위 밖 처리 정책은 구현 시 결정) </dd></dl>
 
-<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00408">408</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8cpp_source.html">TileMap.cpp</a> 파일의 <a class="el" href="TileMap_8cpp_source.html#l00569">569</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Friend, 그리고 관련된 함수 문서화</h2>
+<a id="a62db66cd16c747cf2f3fd33d4c70e3d2" name="a62db66cd16c747cf2f3fd33d4c70e3d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a62db66cd16c747cf2f3fd33d4c70e3d2">&#9670;&#160;</a></span>FTileHighlightPulseMembershipTest</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTileHighlightPulseMembershipTest</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00672">672</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -740,7 +952,175 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00261">261</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00459">459</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a07dd6486dd2b56d25f8bead55cb59609" name="a07dd6486dd2b56d25f8bead55cb59609"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07dd6486dd2b56d25f8bead55cb59609">&#9670;&#160;</a></span>mDestConeBaseHeight</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mDestConeBaseHeight = 80.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00615">615</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac464857295eeed6b6aa2e86ef2a4b224" name="ac464857295eeed6b6aa2e86ef2a4b224"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac464857295eeed6b6aa2e86ef2a4b224">&#9670;&#160;</a></span>mDestConeBobAmplitude</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mDestConeBobAmplitude = 30.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00621">621</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abf20950f60126139fb98dd262966205c" name="abf20950f60126139fb98dd262966205c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abf20950f60126139fb98dd262966205c">&#9670;&#160;</a></span>mDestConeBobPeriod</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mDestConeBobPeriod = 1.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00627">627</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa16e61d70b3addbcb510f645fe5b59e7" name="aa16e61d70b3addbcb510f645fe5b59e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa16e61d70b3addbcb510f645fe5b59e7">&#9670;&#160;</a></span>mDestConeComponent</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mDestConeComponent</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00451">451</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae0c1d67fec3ed7699f5d7b80f8d56d5d" name="ae0c1d67fec3ed7699f5d7b80f8d56d5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0c1d67fec3ed7699f5d7b80f8d56d5d">&#9670;&#160;</a></span>mDestConeMesh</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a>&gt; ATileMap::mDestConeMesh</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00597">597</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa3ed68dd85dd924d4d870aad75f61e98" name="aa3ed68dd85dd924d4d870aad75f61e98"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3ed68dd85dd924d4d870aad75f61e98">&#9670;&#160;</a></span>mDestConeScale</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mDestConeScale = 0.25<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00609">609</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6ad7411223ae0337a43899786b5b4575" name="a6ad7411223ae0337a43899786b5b4575"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ad7411223ae0337a43899786b5b4575">&#9670;&#160;</a></span>mDestConeStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mDestConeStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00603">603</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -764,7 +1144,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00273">273</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00471">471</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -789,12 +1169,12 @@ Protected 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>Instanced로 액터가 소유·직렬화하며, ShowOnlyInnerProperties로 내부 프로퍼티를 디테일 패널 최상위에 펼쳐 노출 </p>
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00191">191</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00383">383</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="ae338a9cb88bc3a37652bd3bfe2aa79ef" name="ae338a9cb88bc3a37652bd3bfe2aa79ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae338a9cb88bc3a37652bd3bfe2aa79ef">&#9670;&#160;</a></span>mPathArrowComponent</h2>
+<a id="a5bd1e7dc1d3a00370e308a6ff5e9bf7f" name="a5bd1e7dc1d3a00370e308a6ff5e9bf7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bd1e7dc1d3a00370e308a6ff5e9bf7f">&#9670;&#160;</a></span>mMovePathSet</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -803,7 +1183,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mPathArrowComponent</td>
+          <td class="memname"><a class="el" href="structFPathArrowSet.html">FPathArrowSet</a> ATileMap::mMovePathSet</td>
         </tr>
       </table>
   </td>
@@ -813,55 +1193,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00247">247</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a45f1e66fb79e3ab4f579ffbd77911905" name="a45f1e66fb79e3ab4f579ffbd77911905"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a45f1e66fb79e3ab4f579ffbd77911905">&#9670;&#160;</a></span>mPathArrowMaterial</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a>&gt; ATileMap::mPathArrowMaterial</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00293">293</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="acfa89354578c007d8b3128d96becc9a6" name="acfa89354578c007d8b3128d96becc9a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acfa89354578c007d8b3128d96becc9a6">&#9670;&#160;</a></span>mPathArrowMesh</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a>&gt; ATileMap::mPathArrowMesh</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00287">287</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00529">529</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -885,12 +1217,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00347">347</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00541">541</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a42a6892622f42af9111155740c97df2d" name="a42a6892622f42af9111155740c97df2d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a42a6892622f42af9111155740c97df2d">&#9670;&#160;</a></span>mPathArrowStyle</h2>
+<a id="a86b87fe4deefea708d113ed3ce27b16a" name="a86b87fe4deefea708d113ed3ce27b16a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86b87fe4deefea708d113ed3ce27b16a">&#9670;&#160;</a></span>mPathArrowZScale</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -899,7 +1231,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mPathArrowStyle</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mPathArrowZScale = 0.5<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
         </tr>
       </table>
   </td>
@@ -909,127 +1241,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00311">311</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="aee6e25dc15cf80a560675f7b38795471" name="aee6e25dc15cf80a560675f7b38795471"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aee6e25dc15cf80a560675f7b38795471">&#9670;&#160;</a></span>mPathEndComponent</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mPathEndComponent</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00253">253</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="add5d830e588e9fc3a12adba8e761ae0f" name="add5d830e588e9fc3a12adba8e761ae0f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add5d830e588e9fc3a12adba8e761ae0f">&#9670;&#160;</a></span>mPathEndMaterial</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a>&gt; ATileMap::mPathEndMaterial</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00305">305</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a0d1bba9afcec62ff4692abd97aad9273" name="a0d1bba9afcec62ff4692abd97aad9273"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d1bba9afcec62ff4692abd97aad9273">&#9670;&#160;</a></span>mPathEndMesh</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a>&gt; ATileMap::mPathEndMesh</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00299">299</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="acbb886d518b2364fb99c53e1e195bafd" name="acbb886d518b2364fb99c53e1e195bafd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbb886d518b2364fb99c53e1e195bafd">&#9670;&#160;</a></span>mPathEndStyle</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mPathEndStyle</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00317">317</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a288834df1a7aee66391d55707b3e8dbd" name="a288834df1a7aee66391d55707b3e8dbd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a288834df1a7aee66391d55707b3e8dbd">&#9670;&#160;</a></span>mPathFlowCycles</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mPathFlowCycles = 1.0f</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00329">329</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00547">547</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1053,12 +1265,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00353">353</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00553">553</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a6821e3fa6dc9addc9cac785ad3aff638" name="a6821e3fa6dc9addc9cac785ad3aff638"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6821e3fa6dc9addc9cac785ad3aff638">&#9670;&#160;</a></span>mPathPulseMaxBrightness</h2>
+<a id="a6a98cd9a0c927c295aecf64e6bfc19cd" name="a6a98cd9a0c927c295aecf64e6bfc19cd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a98cd9a0c927c295aecf64e6bfc19cd">&#9670;&#160;</a></span>mPickingBoxComponent</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1067,7 +1279,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mPathPulseMaxBrightness = 1.0f</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UBoxComponent</a>&gt; ATileMap::mPickingBoxComponent</td>
         </tr>
       </table>
   </td>
@@ -1077,55 +1289,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00341">341</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a4f51a7bbe3f0a7c881e1d72690f44aed" name="a4f51a7bbe3f0a7c881e1d72690f44aed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4f51a7bbe3f0a7c881e1d72690f44aed">&#9670;&#160;</a></span>mPathPulseMinBrightness</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mPathPulseMinBrightness = 0.1<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00335">335</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ad83c1342b203fedb42a225b7c22826b7" name="ad83c1342b203fedb42a225b7c22826b7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad83c1342b203fedb42a225b7c22826b7">&#9670;&#160;</a></span>mPathPulsePeriod</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mPathPulsePeriod = 1.0f</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00323">323</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00403">403</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1149,7 +1313,31 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00279">279</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00477">477</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9a8a0faa4b23f7d0b85abed8891a16ac" name="a9a8a0faa4b23f7d0b85abed8891a16ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a8a0faa4b23f7d0b85abed8891a16ac">&#9670;&#160;</a></span>mPushPathSet</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFPathArrowSet.html">FPathArrowSet</a> ATileMap::mPushPathSet</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00535">535</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1173,7 +1361,175 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00267">267</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00465">465</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a7d7a57c1f1e52042269444b5047ad610" name="a7d7a57c1f1e52042269444b5047ad610"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d7a57c1f1e52042269444b5047ad610">&#9670;&#160;</a></span>mThreatAttackComponent</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mThreatAttackComponent</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00491">491</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aecc889333f3fd2957e5deff8e698aa8e" name="aecc889333f3fd2957e5deff8e698aa8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecc889333f3fd2957e5deff8e698aa8e">&#9670;&#160;</a></span>mThreatAttackStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mThreatAttackStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00503">503</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a52247e5b16ae8033a6eab6148ccc85d8" name="a52247e5b16ae8033a6eab6148ccc85d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52247e5b16ae8033a6eab6148ccc85d8">&#9670;&#160;</a></span>mThreatBandWidthRatio</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mThreatBandWidthRatio = 0.12<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00509">509</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad53136a138aa8bba2f843cf268f4eb45" name="ad53136a138aa8bba2f843cf268f4eb45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad53136a138aa8bba2f843cf268f4eb45">&#9670;&#160;</a></span>mThreatHeightOffset</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mThreatHeightOffset = 0.5<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00515">515</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5537a96481d7959fe1fc44b50231b2ab" name="a5537a96481d7959fe1fc44b50231b2ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5537a96481d7959fe1fc44b50231b2ab">&#9670;&#160;</a></span>mThreatMaterial</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UMaterialInterface</a>&gt; ATileMap::mThreatMaterial</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00521">521</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="afe9bca3489f1ed0b3470d0d72c1890ac" name="afe9bca3489f1ed0b3470d0d72c1890ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afe9bca3489f1ed0b3470d0d72c1890ac">&#9670;&#160;</a></span>mThreatMoveComponent</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mThreatMoveComponent</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00485">485</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8c185fe3658f961dfe75a9ffd47b8fb9" name="a8c185fe3658f961dfe75a9ffd47b8fb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8c185fe3658f961dfe75a9ffd47b8fb9">&#9670;&#160;</a></span>mThreatMoveStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mThreatMoveStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00497">497</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1197,7 +1553,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00229">229</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00427">427</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1221,7 +1577,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00235">235</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00433">433</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1245,7 +1601,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00241">241</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00439">439</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1269,7 +1625,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00217">217</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00415">415</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1293,7 +1649,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00211">211</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00409">409</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1317,7 +1673,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00205">205</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00397">397</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1341,7 +1697,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00197">197</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00389">389</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1365,7 +1721,175 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00421">421</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a00e678e117ac62bf856db8ec91d15566" name="a00e678e117ac62bf856db8ec91d15566"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a00e678e117ac62bf856db8ec91d15566">&#9670;&#160;</a></span>mWaypointBarHeight</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mWaypointBarHeight = 8.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00585">585</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5e9452901a6e138a63cf076cbd12b945" name="a5e9452901a6e138a63cf076cbd12b945"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e9452901a6e138a63cf076cbd12b945">&#9670;&#160;</a></span>mWaypointBarMesh</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UStaticMesh</a>&gt; ATileMap::mWaypointBarMesh</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00561">561</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae473d28af4b2dbbeab24fbacd776ef7e" name="ae473d28af4b2dbbeab24fbacd776ef7e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae473d28af4b2dbbeab24fbacd776ef7e">&#9670;&#160;</a></span>mWaypointBarThickness</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mWaypointBarThickness = 8.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00579">579</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a1c7d02e6583d5c5f1ffee89e79daf2e9" name="a1c7d02e6583d5c5f1ffee89e79daf2e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c7d02e6583d5c5f1ffee89e79daf2e9">&#9670;&#160;</a></span>mWaypointComponent</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UInstancedStaticMeshComponent</a>&gt; ATileMap::mWaypointComponent</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00445">445</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0ff2220c0e1ca043968812e8d74167b7" name="a0ff2220c0e1ca043968812e8d74167b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ff2220c0e1ca043968812e8d74167b7">&#9670;&#160;</a></span>mWaypointFrameScale</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mWaypointFrameScale = 0.6<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00573">573</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a835061fea4869b9e82c362ee06c17258" name="a835061fea4869b9e82c362ee06c17258"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a835061fea4869b9e82c362ee06c17258">&#9670;&#160;</a></span>mWaypointStyle</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structFTileHighlightStyle.html">FTileHighlightStyle</a> ATileMap::mWaypointStyle</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00567">567</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0f4af36ad86ba32c9009717f7fd9689f" name="a0f4af36ad86ba32c9009717f7fd9689f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f4af36ad86ba32c9009717f7fd9689f">&#9670;&#160;</a></span>mWaypointYaw</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ATileMap::mWaypointYaw = 0.0f</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="TileMap_8h_source.html">TileMap.h</a> 파일의 <a class="el" href="TileMap_8h_source.html#l00591">591</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

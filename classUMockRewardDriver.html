@@ -105,14 +105,60 @@ UMockRewardDriver에 대한 상속 다이어그램 : </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:aaf1a6db55f1e37278651f23b48f52f39" id="r_aaf1a6db55f1e37278651f23b48f52f39"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUMockRewardDriver.html#aaf1a6db55f1e37278651f23b48f52f39">Start</a> (<a class="el" href="classURewardUIModel.html">URewardUIModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UIModel</a>)</td></tr>
+<tr class="memitem:ae4965b4c96e601bdfa3a52818a9b23d0" id="r_ae4965b4c96e601bdfa3a52818a9b23d0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUMockRewardDriver.html#ae4965b4c96e601bdfa3a52818a9b23d0">BindAutoConfirm</a> (<a class="el" href="classURewardUIModel.html">URewardUIModel</a> *UIModel)</td></tr>
+<tr class="memdesc:ae4965b4c96e601bdfa3a52818a9b23d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">기존 스냅샷은 유지하고 보상 행 요청만 즉시 성공 처리하는 프리뷰 응답기를 연결한다.  <br /></td></tr>
+<tr class="separator:ae4965b4c96e601bdfa3a52818a9b23d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7aa105ba8d2a32bef35644ba0bdf9e93" id="r_a7aa105ba8d2a32bef35644ba0bdf9e93"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUMockRewardDriver.html#a7aa105ba8d2a32bef35644ba0bdf9e93">SetOnPreviewClosed</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSimpleDelegate</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InCallback</a>)</td></tr>
+<tr class="memdesc:a7aa105ba8d2a32bef35644ba0bdf9e93"><td class="mdescLeft">&#160;</td><td class="mdescRight">프리뷰가 정상 닫힐 때 외부의 임시 strong 참조를 해제할 콜백을 지정한다.  <br /></td></tr>
+<tr class="separator:a7aa105ba8d2a32bef35644ba0bdf9e93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaf1a6db55f1e37278651f23b48f52f39" id="r_aaf1a6db55f1e37278651f23b48f52f39"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUMockRewardDriver.html#aaf1a6db55f1e37278651f23b48f52f39">Start</a> (<a class="el" href="classURewardUIModel.html">URewardUIModel</a> *UIModel)</td></tr>
 <tr class="memdesc:aaf1a6db55f1e37278651f23b48f52f39"><td class="mdescLeft">&#160;</td><td class="mdescRight">뷰모델에 가짜 보상을 밀어넣고 '받기' 입력을 구독한다.  <br /></td></tr>
 <tr class="separator:aaf1a6db55f1e37278651f23b48f52f39"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="MockRewardDriver_8h_source.html">MockRewardDriver.h</a> 파일의 <a class="el" href="MockRewardDriver_8h_source.html#l00015">15</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="MockRewardDriver_8h_source.html">MockRewardDriver.h</a> 파일의 <a class="el" href="MockRewardDriver_8h_source.html#l00016">16</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="ae4965b4c96e601bdfa3a52818a9b23d0" name="ae4965b4c96e601bdfa3a52818a9b23d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae4965b4c96e601bdfa3a52818a9b23d0">&#9670;&#160;</a></span>BindAutoConfirm()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UMockRewardDriver::BindAutoConfirm </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classURewardUIModel.html">URewardUIModel</a> *&#160;</td>
+          <td class="paramname"><em>UIModel</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="MockRewardDriver_8cpp_source.html">MockRewardDriver.cpp</a> 파일의 <a class="el" href="MockRewardDriver_8cpp_source.html#l00007">7</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a7aa105ba8d2a32bef35644ba0bdf9e93" name="a7aa105ba8d2a32bef35644ba0bdf9e93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7aa105ba8d2a32bef35644ba0bdf9e93">&#9670;&#160;</a></span>SetOnPreviewClosed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UMockRewardDriver::SetOnPreviewClosed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSimpleDelegate</a>&#160;</td>
+          <td class="paramname"><em>InCallback</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="MockRewardDriver_8cpp_source.html">MockRewardDriver.cpp</a> 파일의 <a class="el" href="MockRewardDriver_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="aaf1a6db55f1e37278651f23b48f52f39" name="aaf1a6db55f1e37278651f23b48f52f39"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aaf1a6db55f1e37278651f23b48f52f39">&#9670;&#160;</a></span>Start()</h2>
 
@@ -130,7 +176,7 @@ Public 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>개발용 고정 보상 스냅샷을 UIModel에 주입해 WBP 연동만 검증한다. </p>
 
-<p class="definition"><a class="el" href="MockRewardDriver_8cpp_source.html">MockRewardDriver.cpp</a> 파일의 <a class="el" href="MockRewardDriver_8cpp_source.html#l00008">8</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="MockRewardDriver_8cpp_source.html">MockRewardDriver.cpp</a> 파일의 <a class="el" href="MockRewardDriver_8cpp_source.html#l00035">35</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

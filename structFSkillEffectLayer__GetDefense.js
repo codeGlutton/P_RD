@@ -1,8 +1,8 @@
 var structFSkillEffectLayer__GetDefense =
 [
-    [ "ApplyPointEffect", "structFSkillEffectLayer__GetDefense.html#aadb22a95be21e1829a7365196ba7bc12", null ],
-    [ "ClearPointEffect", "structFSkillEffectLayer__GetDefense.html#a7099b247532551bb880adf8a971583c2", null ],
-    [ "CommitEffect", "structFSkillEffectLayer__GetDefense.html#a67d6434ca3be4e664e694780f23fd192", null ],
-    [ "mDefaultDefenseGain", "structFSkillEffectLayer__GetDefense.html#a2e9c788df9e3e13bd46f5fd3287615cb", null ],
-    [ "mDiceRatio", "structFSkillEffectLayer__GetDefense.html#a88db2bd9b3032e9f4236c7b0d71578b5", null ]
+    [ "ApplyFactorEffect", "structFSkillEffectLayer__GetDefense.html#acdf796ba4bee103eda4f7fa8b8531131", null ],
+    [ "ClearFactorEffect", "structFSkillEffectLayer__GetDefense.html#ae8ec3bffc1e344deb1b6c1fc1c379727", null ],
+    [ "CommitEffect", "structFSkillEffectLayer__GetDefense.html#a5f49ac07c2e8c2b53ac9a475937e642b", null ],
+    [ "MakeDescription", "structFSkillEffectLayer__GetDefense.html#a49a50580b74d0309a6a38cd14e184f44", null ],
+    [ "mDefenseGain", "structFSkillEffectLayer__GetDefense.html#a5a73da5587ba6fc3b012a2241e079999", null ]
 ];

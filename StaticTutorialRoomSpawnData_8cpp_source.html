@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Tutorial/StaticTutorialRoomSpawnData.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('StaticTutorialRoomSpawnData_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">StaticTutorialRoomSpawnData.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="StaticTutorialRoomSpawnData_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="StaticTutorialRoomSpawnData_8h.html">Tutorial/StaticTutorialRoomSpawnData.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="StaticObstacleSpawnData_8h.html">DataAsset/ObstacleSpawnData/StaticObstacleSpawnData.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;Misc/DataValidation.h&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="foldopen" id="foldopen00007" data-start="{" data-end="}">
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno"><a class="line" href="classUStaticTutorialRoomSpawnData.html#aad0acc14b134b4aed422eee869d55444">    7</a></span><a class="code hl_function" href="classUStaticTutorialRoomSpawnData.html#aad0acc14b134b4aed422eee869d55444">UStaticTutorialRoomSpawnData::UStaticTutorialRoomSpawnData</a>()</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>{</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ae37da6bce1e7a88f44ac939ed6872256">mStageLevel</a> = <a class="code hl_enumvalue" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95a6adf97f83acf6453d4a6a4b1070f3754">EStageLevelType::None</a>;</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <a class="code hl_variable" href="classUStaticRoomSpawnData.html#a0194c4e73ddad065c6819dd42cf27a37">mUseRandomSpawnSetting</a> = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <a class="code hl_variable" href="classUStaticTutorialRoomSpawnData.html#ac5b476aff41ac64ee6d127a9740c452f">MoveDestination</a> = <a class="code hl_variable" href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a>;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>}</div>
+</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00014" data-start="{" data-end="}">
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classUStaticTutorialRoomSpawnData.html#a63e606562811b7d31db565cb9abeaafd">   14</a></span><a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a> <a class="code hl_function" href="classUStaticTutorialRoomSpawnData.html#a63e606562811b7d31db565cb9abeaafd">UStaticTutorialRoomSpawnData::GetTargetTile</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="keywordflow">return</span> <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">mEnemyUnitPlacementDatas</a>.IsValidIndex(<a class="code hl_variable" href="classUStaticTutorialRoomSpawnData.html#adb528875a5f35bae2a6776fd0de8bf98">TargetEnemyIndex</a>)</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        ? <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">mEnemyUnitPlacementDatas</a>[<a class="code hl_variable" href="classUStaticTutorialRoomSpawnData.html#adb528875a5f35bae2a6776fd0de8bf98">TargetEnemyIndex</a>].mTransform.mIndex : <a class="code hl_variable" href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>}</div>
+</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
+<div class="foldopen" id="foldopen00020" data-start="{" data-end="}">
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno"><a class="line" href="classUStaticTutorialRoomSpawnData.html#ab0832976294f51ce706b6f36a8fa9799">   20</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="classUStaticTutorialRoomSpawnData.html#ab0832976294f51ce706b6f36a8fa9799">UStaticTutorialRoomSpawnData::ValidateLayout</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FText&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="keyword">auto</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a> = [&amp;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>](<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; Text) { <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>.Add(FText::FromString(Text)); };</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ae37da6bce1e7a88f44ac939ed6872256">mStageLevel</a> != <a class="code hl_enumvalue" href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95a6adf97f83acf6453d4a6a4b1070f3754">EStageLevelType::None</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial StageLevel must be None; otherwise it enters normal random rooms.&quot;</span>));</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticRoomSpawnData.html#a0194c4e73ddad065c6819dd42cf27a37">mUseRandomSpawnSetting</a> || <a class="code hl_variable" href="classUStaticRoomSpawnData.html#a6fccce999d9a9481edb626f1077c8b7c">mDefaultSpawnSettingName</a>.IsNone()) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial requires a named, fixed background spawn setting.&quot;</span>));</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#a2544341badd9207c2a4796e064fbed5e">mPlayerTransforms</a>.Num() != 3) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial needs three party placements.&quot;</span>));</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">mEnemyUnitPlacementDatas</a>.Num() &lt; 2) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial needs at least two enemies so one attack cannot skip End Turn.&quot;</span>));</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="classUStaticTutorialRoomSpawnData.html#a63e606562811b7d31db565cb9abeaafd">GetTargetTile</a>() == <a class="code hl_variable" href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial TargetEnemyIndex must select an authored enemy.&quot;</span>));</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSet&lt;FTileIndex&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Occupied</a>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keyword">auto</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Claim</a> = [&amp;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Occupied</a>, &amp;<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>](<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>)</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    {</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Occupied</a>.Contains(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>)) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(FString::Printf(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial overlapping occupancy at (%d,%d).&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>.mX, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>.mY));</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Occupied</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>);</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    };</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a> : <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#a2544341badd9207c2a4796e064fbed5e">mPlayerTransforms</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Claim</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Player</a>.mIndex);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a> : <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">mEnemyUnitPlacementDatas</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Claim</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Enemy</a>.mTransform.mIndex);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Placement</a> : <a class="code hl_variable" href="classUStaticCombatRoomSpawnData.html#a6526a060e0ba758164930a3d85aa9ea3">mObstaclePlacementDatas</a>)</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    {</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Claim</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Placement</a>.mTransform.mIndex);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <span class="keyword">const</span> <span class="keyword">auto</span>* <a class="code hl_enumvalue" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3afe29c1262b319e6d200d32384ae636c7">Obstacle</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Placement</a>.mSpawnData.LoadSynchronous();</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keywordflow">if</span> (!<a class="code hl_enumvalue" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3afe29c1262b319e6d200d32384ae636c7">Obstacle</a>) { <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial obstacle asset cannot be loaded.&quot;</span>)); <span class="keywordflow">continue</span>; }</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Relative</a> : <a class="code hl_enumvalue" href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3afe29c1262b319e6d200d32384ae636c7">Obstacle</a>-&gt;mRequiredEmptyTiles)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Claim</a>(<a class="code hl_function" href="SRPGFrameworkType_8h.html#ae62a85228db4c93d0c70cab6851ace41">LocalToTileMapTransform</a>(<a class="code hl_struct" href="structFTileTransform.html">FTileTransform</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Relative</a>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Placement</a>.mTransform).<a class="code hl_variable" href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">mIndex</a>);</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    }</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUStaticTutorialRoomSpawnData.html#ac5b476aff41ac64ee6d127a9740c452f">MoveDestination</a> == <a class="code hl_variable" href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a> || <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Occupied</a>.Contains(<a class="code hl_variable" href="classUStaticTutorialRoomSpawnData.html#ac5b476aff41ac64ee6d127a9740c452f">MoveDestination</a>)) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Tutorial move destination must be an empty tile.&quot;</span>));</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>.IsEmpty();</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>}</div>
+</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EDataValidationResult</a> UStaticTutorialRoomSpawnData::IsDataValid(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FDataValidationContext</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="keyword">const</span> <span class="keyword">auto</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Parent</a> = Super::IsDataValid(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>);</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FText&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>;</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <a class="code hl_function" href="classUStaticTutorialRoomSpawnData.html#ab0832976294f51ce706b6f36a8fa9799">ValidateLayout</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>) <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>.<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddError</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Error</a>);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Errors</a>.IsEmpty() ? <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Parent</a> : EDataValidationResult::Invalid;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>}</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="preprocessor">#endif</span></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aSRPGFrameworkType_8h_html_ae62a85228db4c93d0c70cab6851ace41"><div class="ttname"><a href="SRPGFrameworkType_8h.html#ae62a85228db4c93d0c70cab6851ace41">LocalToTileMapTransform</a></div><div class="ttdeci">FTileTransform LocalToTileMapTransform(const FTileTransform &amp;LocalTransform, const FTileTransform &amp;FacingTileMapTransfrom)</div><div class="ttdoc">타일 맵 좌표계 TileTransform을 바탕으로 로컬 좌표계 TileTransform을 타일 맵 좌표계 TileTransform으로 변환</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00216">SRPGFrameworkType.h:216</a></div></div>
+<div class="ttc" id="aStageLevelType_8h_html_ae0b1317897a714ca0969cdc80dfd5d95a6adf97f83acf6453d4a6a4b1070f3754"><div class="ttname"><a href="StageLevelType_8h.html#ae0b1317897a714ca0969cdc80dfd5d95a6adf97f83acf6453d4a6a4b1070f3754">EStageLevelType::None</a></div><div class="ttdeci">@ None</div></div>
+<div class="ttc" id="aStaticObstacleSpawnData_8h_html"><div class="ttname"><a href="StaticObstacleSpawnData_8h.html">StaticObstacleSpawnData.h</a></div><div class="ttdoc">장애물 생성 시 사용되는 정적 Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aStaticTutorialRoomSpawnData_8h_html"><div class="ttname"><a href="StaticTutorialRoomSpawnData_8h.html">StaticTutorialRoomSpawnData.h</a></div></div>
+<div class="ttc" id="aTileLayer_8h_html_a61ff5e934720f6e71d4d011bf7d5e6c3afe29c1262b319e6d200d32384ae636c7"><div class="ttname"><a href="TileLayer_8h.html#a61ff5e934720f6e71d4d011bf7d5e6c3afe29c1262b319e6d200d32384ae636c7">ETileLayerFlag::Obstacle</a></div><div class="ttdeci">@ Obstacle</div></div>
+<div class="ttc" id="aclassUStaticCombatRoomSpawnData_html_a2544341badd9207c2a4796e064fbed5e"><div class="ttname"><a href="classUStaticCombatRoomSpawnData.html#a2544341badd9207c2a4796e064fbed5e">UStaticCombatRoomSpawnData::mPlayerTransforms</a></div><div class="ttdeci">TArray&lt; FTileTransform &gt; mPlayerTransforms</div><div class="ttdef"><b>Definition</b> <a href="StaticCombatRoomSpawnData_8h_source.html#l00079">StaticCombatRoomSpawnData.h:79</a></div></div>
+<div class="ttc" id="aclassUStaticCombatRoomSpawnData_html_a6526a060e0ba758164930a3d85aa9ea3"><div class="ttname"><a href="classUStaticCombatRoomSpawnData.html#a6526a060e0ba758164930a3d85aa9ea3">UStaticCombatRoomSpawnData::mObstaclePlacementDatas</a></div><div class="ttdeci">TArray&lt; FObstaclePlacementData &gt; mObstaclePlacementDatas</div><div class="ttdef"><b>Definition</b> <a href="StaticCombatRoomSpawnData_8h_source.html#l00086">StaticCombatRoomSpawnData.h:86</a></div></div>
+<div class="ttc" id="aclassUStaticCombatRoomSpawnData_html_ab08b5617c48119e5ddbf690f042f0072"><div class="ttname"><a href="classUStaticCombatRoomSpawnData.html#ab08b5617c48119e5ddbf690f042f0072">UStaticCombatRoomSpawnData::mEnemyUnitPlacementDatas</a></div><div class="ttdeci">TArray&lt; FEnemyUnitPlacementData &gt; mEnemyUnitPlacementDatas</div><div class="ttdef"><b>Definition</b> <a href="StaticCombatRoomSpawnData_8h_source.html#l00083">StaticCombatRoomSpawnData.h:83</a></div></div>
+<div class="ttc" id="aclassUStaticCombatRoomSpawnData_html_ae37da6bce1e7a88f44ac939ed6872256"><div class="ttname"><a href="classUStaticCombatRoomSpawnData.html#ae37da6bce1e7a88f44ac939ed6872256">UStaticCombatRoomSpawnData::mStageLevel</a></div><div class="ttdeci">EStageLevelType mStageLevel</div><div class="ttdoc">현재 방이 등장할 수 있는 스테이지 레벨</div><div class="ttdef"><b>Definition</b> <a href="StaticCombatRoomSpawnData_8h_source.html#l00075">StaticCombatRoomSpawnData.h:75</a></div></div>
+<div class="ttc" id="aclassUStaticRoomSpawnData_html_a0194c4e73ddad065c6819dd42cf27a37"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a0194c4e73ddad065c6819dd42cf27a37">UStaticRoomSpawnData::mUseRandomSpawnSetting</a></div><div class="ttdeci">bool mUseRandomSpawnSetting</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00048">StaticRoomSpawnData.h:48</a></div></div>
+<div class="ttc" id="aclassUStaticRoomSpawnData_html_a6fccce999d9a9481edb626f1077c8b7c"><div class="ttname"><a href="classUStaticRoomSpawnData.html#a6fccce999d9a9481edb626f1077c8b7c">UStaticRoomSpawnData::mDefaultSpawnSettingName</a></div><div class="ttdeci">FName mDefaultSpawnSettingName</div><div class="ttdef"><b>Definition</b> <a href="StaticRoomSpawnData_8h_source.html#l00050">StaticRoomSpawnData.h:50</a></div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html_a63e606562811b7d31db565cb9abeaafd"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html#a63e606562811b7d31db565cb9abeaafd">UStaticTutorialRoomSpawnData::GetTargetTile</a></div><div class="ttdeci">FTileIndex GetTargetTile() const</div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8cpp_source.html#l00014">StaticTutorialRoomSpawnData.cpp:14</a></div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html_aad0acc14b134b4aed422eee869d55444"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html#aad0acc14b134b4aed422eee869d55444">UStaticTutorialRoomSpawnData::UStaticTutorialRoomSpawnData</a></div><div class="ttdeci">UStaticTutorialRoomSpawnData()</div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8cpp_source.html#l00007">StaticTutorialRoomSpawnData.cpp:7</a></div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html_ab0832976294f51ce706b6f36a8fa9799"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html#ab0832976294f51ce706b6f36a8fa9799">UStaticTutorialRoomSpawnData::ValidateLayout</a></div><div class="ttdeci">bool ValidateLayout(TArray&lt; FText &gt; &amp;Errors) const</div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8cpp_source.html#l00020">StaticTutorialRoomSpawnData.cpp:20</a></div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html_ac5b476aff41ac64ee6d127a9740c452f"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html#ac5b476aff41ac64ee6d127a9740c452f">UStaticTutorialRoomSpawnData::MoveDestination</a></div><div class="ttdeci">FTileIndex MoveDestination</div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8h_source.html#l00013">StaticTutorialRoomSpawnData.h:13</a></div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html_adb528875a5f35bae2a6776fd0de8bf98"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html#adb528875a5f35bae2a6776fd0de8bf98">UStaticTutorialRoomSpawnData::TargetEnemyIndex</a></div><div class="ttdeci">int32 TargetEnemyIndex</div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8h_source.html#l00015">StaticTutorialRoomSpawnData.h:15</a></div></div>
+<div class="ttc" id="astructFTileIndex_html"><div class="ttname"><a href="structFTileIndex.html">FTileIndex</a></div><div class="ttdoc">타일 맵 상 인덱스 좌표</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00071">SRPGFrameworkType.h:72</a></div></div>
+<div class="ttc" id="astructFTileIndex_html_a34e1e14cbc47d78d2c5a867e7e19b0e4"><div class="ttname"><a href="structFTileIndex.html#a34e1e14cbc47d78d2c5a867e7e19b0e4">FTileIndex::Invalid</a></div><div class="ttdeci">static const FTileIndex Invalid</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00113">SRPGFrameworkType.h:113</a></div></div>
+<div class="ttc" id="astructFTileTransform_html"><div class="ttname"><a href="structFTileTransform.html">FTileTransform</a></div><div class="ttdoc">타일 맵 상 위치</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00175">SRPGFrameworkType.h:176</a></div></div>
+<div class="ttc" id="astructFTileTransform_html_a03d9bfdf9a62b9f63cf92abcb390b850"><div class="ttname"><a href="structFTileTransform.html#a03d9bfdf9a62b9f63cf92abcb390b850">FTileTransform::mIndex</a></div><div class="ttdeci">FTileIndex mIndex</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00198">SRPGFrameworkType.h:198</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_0048a1d9d575850c48113b8d906ddc7e.html">Tutorial</a></li><li class="navelem"><a class="el" href="StaticTutorialRoomSpawnData_8cpp.html">StaticTutorialRoomSpawnData.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

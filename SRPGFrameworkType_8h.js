@@ -2,6 +2,10 @@ var SRPGFrameworkType_8h =
 [
     [ "FTileIndex", "structFTileIndex.html", "structFTileIndex" ],
     [ "FTileTransform", "structFTileTransform.html", "structFTileTransform" ],
+    [ "FRoomClearData", "structFRoomClearData.html", "structFRoomClearData" ],
+    [ "FSRPGCombatRoundEvent", "structFSRPGCombatRoundEvent.html", "structFSRPGCombatRoundEvent" ],
+    [ "FSRPGCombatRoundEventContainer", "structFSRPGCombatRoundEventContainer.html", "structFSRPGCombatRoundEventContainer" ],
+    [ "FSRPGCombatRoundEventContainer::FScopedLock", "structFSRPGCombatRoundEventContainer_1_1FScopedLock.html", "structFSRPGCombatRoundEventContainer_1_1FScopedLock" ],
     [ "EAimPattern", "SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706", [
       [ "UMETA", "SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
@@ -9,7 +13,6 @@ var SRPGFrameworkType_8h =
       [ "UMETA", "SRPGFrameworkType_8h.html#ae26b1418bce20a6ba6577d4671b7d706aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ]
     ] ],
     [ "EEffectPattern", "SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26", [
-      [ "UMETA", "SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a5649b259c42cfc63c1190663e66cce26aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
@@ -43,15 +46,16 @@ var SRPGFrameworkType_8h =
       [ "UMETA", "SRPGFrameworkType_8h.html#a3beb135022a1ac44d4eb6e24b409b844aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a3beb135022a1ac44d4eb6e24b409b844aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ]
     ] ],
+    [ "ESRPGCombatRoundEventResult", "SRPGFrameworkType_8h.html#aee9e3d6479ce823217529558f97e16f0", [
+      [ "Ongoing", "SRPGFrameworkType_8h.html#aee9e3d6479ce823217529558f97e16f0a7ee7defde6dc3a1d4a4a891b3894e790", null ],
+      [ "End", "SRPGFrameworkType_8h.html#aee9e3d6479ce823217529558f97e16f0a87557f11575c0ad78e4e28abedc13b6e", null ]
+    ] ],
     [ "ESRPGCommandResult", "SRPGFrameworkType_8h.html#a8bb9769f20896b4ac6c361ea24012870", [
       [ "UMETA", "SRPGFrameworkType_8h.html#a8bb9769f20896b4ac6c361ea24012870aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a8bb9769f20896b4ac6c361ea24012870aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a8bb9769f20896b4ac6c361ea24012870aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ]
     ] ],
     [ "ESRPGCommandType", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115", [
-      [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
-      [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
-      [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
       [ "UMETA", "SRPGFrameworkType_8h.html#a408e3ba214c94fe0363fda4011671115aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
@@ -90,6 +94,10 @@ var SRPGFrameworkType_8h =
       [ "IncludeTargetIndexes", "SRPGFrameworkType_8h.html#a195ae7ca13e41675f083766e82f89c32a20ef7a24a25741baa896679b879d8735", null ],
       [ "All", "SRPGFrameworkType_8h.html#a195ae7ca13e41675f083766e82f89c32ab1c94ca2fbc3e78fc30069c8d0f01680", null ]
     ] ],
+    [ "ETargetPattern", "SRPGFrameworkType_8h.html#ac866f55045f7fecd8d70ffdf4a4cc229", [
+      [ "UMETA", "SRPGFrameworkType_8h.html#ac866f55045f7fecd8d70ffdf4a4cc229aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ],
+      [ "UMETA", "SRPGFrameworkType_8h.html#ac866f55045f7fecd8d70ffdf4a4cc229aa3f80d8f0f1b4ffa8c475f5d60ea5635", null ]
+    ] ],
     [ "ETeamAttitudeFilter", "SRPGFrameworkType_8h.html#ac7ee9c35d6624c09a77b8af8de434db4", [
       [ "None", "SRPGFrameworkType_8h.html#ac7ee9c35d6624c09a77b8af8de434db4a6adf97f83acf6453d4a6a4b1070f3754", null ],
       [ "Friendly", "SRPGFrameworkType_8h.html#ac7ee9c35d6624c09a77b8af8de434db4a03fdbf12e03a4cd1409b84abe2b631df", null ],
@@ -106,6 +114,11 @@ var SRPGFrameworkType_8h =
     ] ],
     [ "CombineSRPGCommandResult", "SRPGFrameworkType_8h.html#a8c05ce482a0431502d6c29da3a7c5fe2", null ],
     [ "ENUM_CLASS_FLAGS", "SRPGFrameworkType_8h.html#a965f9b64c6c3cd21a3b861e379d759d6", null ],
+    [ "LocalToOtherLocalDirection", "SRPGFrameworkType_8h.html#a2b978838c78db3ddb1d242dabb905ba1", null ],
     [ "LocalToTileMapDirection", "SRPGFrameworkType_8h.html#a6a0c732e8ea916a15e89daf72e7a37ad", null ],
-    [ "TileMapToLocalDirection", "SRPGFrameworkType_8h.html#ad97ffdfe7bbc608ab97858f2ecc5d8e5", null ]
+    [ "LocalToTileMapIndexOffset", "SRPGFrameworkType_8h.html#afeb609e26e68162e30eb1115bbc4d6ce", null ],
+    [ "LocalToTileMapTransform", "SRPGFrameworkType_8h.html#ae62a85228db4c93d0c70cab6851ace41", null ],
+    [ "TileMapToLocalDirection", "SRPGFrameworkType_8h.html#ad97ffdfe7bbc608ab97858f2ecc5d8e5", null ],
+    [ "TileMapToLocalIndexOffset", "SRPGFrameworkType_8h.html#a55dc59088a2b3ee84af3b5bf352e5afd", null ],
+    [ "TileMapToLocalTransform", "SRPGFrameworkType_8h.html#a8f57d46eba62c98aa1b7c85237e83e70", null ]
 ];

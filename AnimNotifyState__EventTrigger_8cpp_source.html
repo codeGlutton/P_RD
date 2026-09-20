@@ -1,0 +1,231 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Animation/Notify/AnimNotifyState_EventTrigger.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('AnimNotifyState__EventTrigger_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">AnimNotifyState_EventTrigger.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="AnimNotifyState__EventTrigger_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="AnimNotifyState__EventTrigger_8h.html">Animation/Notify/AnimNotifyState_EventTrigger.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="BoardActorAnimInstance_8h.html">Animation/BoardActorAnimInstance.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;Logging/MessageLog.h&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;Misc/UObjectToken.h&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include UE_INLINE_GENERATED_CPP_BY_NAME(AnimNotifyState_EventTrigger)</span></div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
+<div class="foldopen" id="foldopen00011" data-start="{" data-end="}">
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a07235eb22ca5e113b9461231a2a27987">   11</a></span><a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a07235eb22ca5e113b9461231a2a27987">UAnimNotifyState_EventTrigger::UAnimNotifyState_EventTrigger</a>()</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>{</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="preprocessor">#if WITH_EDITORONLY_DATA</span></div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NotifyColor</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FColor</a>(200, 200, 200, 255);</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="preprocessor">#endif </span><span class="comment">// WITH_EDITORONLY_DATA</span></div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>}</div>
+</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="foldopen" id="foldopen00018" data-start="{" data-end="}">
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a2430ab828b118d3725ebd12326a0f667">   18</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a2430ab828b118d3725ebd12326a0f667">UAnimNotifyState_EventTrigger::GetNotifyName_Implementation</a>()<span class="keyword"> const</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.IsValid() == <span class="keyword">false</span>)</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    {</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        <span class="keywordflow">return</span> Super::GetNotifyName_Implementation();</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    }</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <span class="keywordflow">else</span></div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    {</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NotifyName</a> = <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.GetScriptStruct()-&gt;GetName();</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NotifyName</a>.ReplaceInline(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;TriggerPayload&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;&quot;</span>), ESearchCase::CaseSensitive);</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NotifyName</a>;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    }</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>}</div>
+</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span> </div>
+<div class="foldopen" id="foldopen00032" data-start="{" data-end="}">
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a642f3f4e51385b97ab28230ce876b391">   32</a></span><a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FLinearColor</a> <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a642f3f4e51385b97ab28230ce876b391">UAnimNotifyState_EventTrigger::GetEditorColor</a>()</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>{</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.IsValid() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.Get().GetEditorColor();</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    }</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <span class="keywordflow">return</span> Super::GetEditorColor();</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>}</div>
+</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00041" data-start="{" data-end="}">
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a574c02e438832f6e69e53065a22f3587">   41</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a574c02e438832f6e69e53065a22f3587">UAnimNotifyState_EventTrigger::NotifyBegin</a>(<span class="keyword">class</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USkeletalMeshComponent</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <span class="keyword">class</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UAnimSequenceBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalDuration</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnimNotifyEventReference</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventReference</a>)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>{</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>    Super::NotifyBegin(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalDuration</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventReference</a>);</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.IsValid() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    {</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>        <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.GetMutable().OnEndDurationEventTrigger.Unbind();</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a6fea1b7da1695dd7e78529a2c2d8bd21">TriggerEvent</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.GetMutable().OnEndDurationEventTrigger);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>}</div>
+</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="foldopen" id="foldopen00052" data-start="{" data-end="}">
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a369121a03441127763b85e362b9eaa31">   52</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a369121a03441127763b85e362b9eaa31">UAnimNotifyState_EventTrigger::NotifyEnd</a>(<span class="keyword">class</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USkeletalMeshComponent</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <span class="keyword">class</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UAnimSequenceBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FAnimNotifyEventReference</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventReference</a>)</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.IsValid() == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    {</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.GetMutable().OnEndDurationEventTrigger.ExecuteIfBound();</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    }</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    Super::NotifyEnd(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EventReference</a>);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>}</div>
+</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="preprocessor">#if WITH_EDITOR</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="keywordtype">void</span> UAnimNotifyState_EventTrigger::ValidateAssociatedAssets()</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>{</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keyword">static</span> <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FName</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NAME_AssetCheck</a>(<span class="stringliteral">&quot;AssetCheck&quot;</span>);</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span> </div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <span class="keywordflow">if</span> (<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#aba4fa7f60ee2dd44378727ff5ba0acd3">mTargetEventTag</a> == FGameplayTag::EmptyTag)</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    {</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FMessageLog</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetCheckLog</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NAME_AssetCheck</a>);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span> </div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FText</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MessageLooping</a> = FText::Format(</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NSLOCTEXT</a>(<span class="stringliteral">&quot;AnimNotify&quot;</span>, <span class="stringliteral">&quot;EventTrigger&quot;</span>, <span class="stringliteral">&quot;호출할 이벤트 태그 {1}가 유효하지 않음.&quot;</span>),</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            FText::AsCultureInvariant(<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#aba4fa7f60ee2dd44378727ff5ba0acd3">mTargetEventTag</a>.ToString())</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        );</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetCheckLog</a>.Warning()-&gt;AddToken(FTextToken::Create(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MessageLooping</a>));</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span> </div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GIsEditor</a> == <span class="keyword">true</span>)</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetCheckLog</a>.Notify(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MessageLooping</a>, EMessageSeverity::Warning, <span class="keyword">true</span>);</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        }</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    }</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>}</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span> </div>
+<div class="foldopen" id="foldopen00085" data-start="{" data-end="}">
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno"><a class="line" href="classUAnimNotifyState__EventTrigger.html#a6fea1b7da1695dd7e78529a2c2d8bd21">   85</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="classUAnimNotifyState__EventTrigger.html#a6fea1b7da1695dd7e78529a2c2d8bd21">UAnimNotifyState_EventTrigger::TriggerEvent</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">USkeletalMeshComponent</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UAnimSequenceBase</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Animation</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndDurationEventTrigger</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">EndDurationEvent</a>)</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>{</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>    {</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>        <a class="code hl_class" href="classUBoardActorAnimInstance.html">UBoardActorAnimInstance</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoardActorAnimInst</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Cast&lt;UBoardActorAnimInstance&gt;</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MeshComp</a>-&gt;GetAnimInstance());</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoardActorAnimInst</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        {</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BoardActorAnimInst</a>-&gt;TriggerMontageTagEvent(<a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#aba4fa7f60ee2dd44378727ff5ba0acd3">mTargetEventTag</a>, <a class="code hl_variable" href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">mEventPayload</a>.GetPtr());</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        }</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>    }</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>}</div>
+</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span> </div>
+<div class="ttc" id="aAnimNotifyState__EventTrigger_8h_html"><div class="ttname"><a href="AnimNotifyState__EventTrigger_8h.html">AnimNotifyState_EventTrigger.h</a></div><div class="ttdoc">시간이 있는 이벤트 호출 애님 노티파이 스테이트 정의 헤더</div></div>
+<div class="ttc" id="aBoardActorAnimInstance_8h_html"><div class="ttname"><a href="BoardActorAnimInstance_8h.html">BoardActorAnimInstance.h</a></div><div class="ttdoc">보드 액터의 애님 인스턴스 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a07235eb22ca5e113b9461231a2a27987"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a07235eb22ca5e113b9461231a2a27987">UAnimNotifyState_EventTrigger::UAnimNotifyState_EventTrigger</a></div><div class="ttdeci">UAnimNotifyState_EventTrigger()</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00011">AnimNotifyState_EventTrigger.cpp:11</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a2430ab828b118d3725ebd12326a0f667"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a2430ab828b118d3725ebd12326a0f667">UAnimNotifyState_EventTrigger::GetNotifyName_Implementation</a></div><div class="ttdeci">FString GetNotifyName_Implementation() const override</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00018">AnimNotifyState_EventTrigger.cpp:18</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a354ebd19839be1769ed156eb2887c58d"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a354ebd19839be1769ed156eb2887c58d">UAnimNotifyState_EventTrigger::mEventPayload</a></div><div class="ttdeci">TInstancedStruct&lt; FDurationEventTriggerPayload &gt; mEventPayload</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8h_source.html#l00046">AnimNotifyState_EventTrigger.h:46</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a369121a03441127763b85e362b9eaa31"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a369121a03441127763b85e362b9eaa31">UAnimNotifyState_EventTrigger::NotifyEnd</a></div><div class="ttdeci">void NotifyEnd(class USkeletalMeshComponent *MeshComp, class UAnimSequenceBase *Animation, const FAnimNotifyEventReference &amp;EventReference) override</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00052">AnimNotifyState_EventTrigger.cpp:52</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a574c02e438832f6e69e53065a22f3587"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a574c02e438832f6e69e53065a22f3587">UAnimNotifyState_EventTrigger::NotifyBegin</a></div><div class="ttdeci">void NotifyBegin(class USkeletalMeshComponent *MeshComp, class UAnimSequenceBase *Animation, float TotalDuration, const FAnimNotifyEventReference &amp;EventReference) override</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00041">AnimNotifyState_EventTrigger.cpp:41</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a642f3f4e51385b97ab28230ce876b391"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a642f3f4e51385b97ab28230ce876b391">UAnimNotifyState_EventTrigger::GetEditorColor</a></div><div class="ttdeci">FLinearColor GetEditorColor() override</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00032">AnimNotifyState_EventTrigger.cpp:32</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_a6fea1b7da1695dd7e78529a2c2d8bd21"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#a6fea1b7da1695dd7e78529a2c2d8bd21">UAnimNotifyState_EventTrigger::TriggerEvent</a></div><div class="ttdeci">virtual void TriggerEvent(USkeletalMeshComponent *MeshComp, UAnimSequenceBase *Animation, FOnEndDurationEventTrigger &amp;EndDurationEvent)</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8cpp_source.html#l00085">AnimNotifyState_EventTrigger.cpp:85</a></div></div>
+<div class="ttc" id="aclassUAnimNotifyState__EventTrigger_html_aba4fa7f60ee2dd44378727ff5ba0acd3"><div class="ttname"><a href="classUAnimNotifyState__EventTrigger.html#aba4fa7f60ee2dd44378727ff5ba0acd3">UAnimNotifyState_EventTrigger::mTargetEventTag</a></div><div class="ttdeci">FGameplayTag mTargetEventTag</div><div class="ttdef"><b>Definition</b> <a href="AnimNotifyState__EventTrigger_8h_source.html#l00043">AnimNotifyState_EventTrigger.h:43</a></div></div>
+<div class="ttc" id="aclassUBoardActorAnimInstance_html"><div class="ttname"><a href="classUBoardActorAnimInstance.html">UBoardActorAnimInstance</a></div><div class="ttdoc">보드 액터의 애님 인스턴스</div><div class="ttdef"><b>Definition</b> <a href="BoardActorAnimInstance_8h_source.html#l00026">BoardActorAnimInstance.h:27</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_13a36591b040254d49e2cb4a137103c6.html">Animation</a></li><li class="navelem"><a class="el" href="dir_fdd40b09988cf7ec3a5c88dc30a7db36.html">Notify</a></li><li class="navelem"><a class="el" href="AnimNotifyState__EventTrigger_8cpp.html">AnimNotifyState_EventTrigger.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

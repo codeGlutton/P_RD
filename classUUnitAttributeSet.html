@@ -98,7 +98,7 @@ $(document).ready(function(){initNavTree('classUUnitAttributeSet.html',''); init
 </div><!--header-->
 <div class="contents">
 
-<p>SRPG Unit에 대한 Attribute Set 정의  
+<p>Unit에 대한 Attribute Set 정의  
  <a href="classUUnitAttributeSet.html#details">더 자세히 ...</a></p>
 <div class="dynheader">
 UUnitAttributeSet에 대한 상속 다이어그램 : </div>
@@ -106,22 +106,26 @@ UUnitAttributeSet에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classUUnitAttributeSet.png" usemap="#UUnitAttributeSet_map" alt=""/>
   <map id="UUnitAttributeSet_map" name="UUnitAttributeSet_map">
-<area href="classUTacticalAttributeSet.html" alt="UTacticalAttributeSet" shape="rect" coords="0,56,143,80"/>
-<area href="classUPlayerUnitAttributeSet.html" title="Player가 조작하는 SRPG Unit에 대한 Attribute Set 정의" alt="UPlayerUnitAttributeSet" shape="rect" coords="0,168,143,192"/>
+<area href="classUCombatTargetAttributeSet.html" title="SRPG Unit에 대한 Attribute Set 정의" alt="UCombatTargetAttributeSet" shape="rect" coords="86,112,249,136"/>
+<area href="classUTacticalAttributeSet.html" title="속성들의 묶음" alt="UTacticalAttributeSet" shape="rect" coords="86,56,249,80"/>
+<area href="classUEnemyUnitAttributeSet.html" title="Enemy Unit에 대한 Attribute Set 정의" alt="UEnemyUnitAttributeSet" shape="rect" coords="0,224,163,248"/>
+<area href="classUPlayerUnitAttributeSet.html" title="Player가 조작하는 Unit에 대한 Attribute Set 정의" alt="UPlayerUnitAttributeSet" shape="rect" coords="173,224,336,248"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:ab3b9b2078f700168a3f31941a242bcce" id="r_ab3b9b2078f700168a3f31941a242bcce"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce">UUnitAttributeSet</a> ()</td></tr>
-<tr class="memdesc:ab3b9b2078f700168a3f31941a242bcce"><td class="mdescLeft">&#160;</td><td class="mdescRight">기본 생성자. MaxHP를 FLT_MAX로 초기화하여, 별도 데이터로 덮어쓰기 전까지는 PreAttributeChange의 HP 클램프 상한이 사실상 무제한이 되도록 한다.  <br /></td></tr>
-<tr class="separator:ab3b9b2078f700168a3f31941a242bcce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07da152dd0c562b39e5469233a8fd917" id="r_a07da152dd0c562b39e5469233a8fd917"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917">PreAttributeChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
-<tr class="memdesc:a07da152dd0c562b39e5469233a8fd917"><td class="mdescLeft">&#160;</td><td class="mdescRight">어트리뷰트 값이 실제로 반영되기 "직전"에 호출되어 NewValue를 보정한다.  <br /></td></tr>
+<tr class="memitem:a07da152dd0c562b39e5469233a8fd917" id="r_a07da152dd0c562b39e5469233a8fd917"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917">PreAttributeChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="separator:a07da152dd0c562b39e5469233a8fd917"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ebaa30e444bb23212b627ea486586a8" id="r_a0ebaa30e444bb23212b627ea486586a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8">PostAttributeChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OldValue</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
-<tr class="memdesc:a0ebaa30e444bb23212b627ea486586a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">어트리뷰트 값이 반영된 "직후"에 호출되어 파생 효과를 처리한다.  <br /></td></tr>
+<tr class="memitem:a14ef9b036a52dfa2120becf97e94753c" id="r_a14ef9b036a52dfa2120becf97e94753c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a14ef9b036a52dfa2120becf97e94753c">PreAttributeBaseChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a14ef9b036a52dfa2120becf97e94753c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ebaa30e444bb23212b627ea486586a8" id="r_a0ebaa30e444bb23212b627ea486586a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8">PostAttributeChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OldValue</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="separator:a0ebaa30e444bb23212b627ea486586a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7e8de22917a21262c5a2d27f99b7d18" id="r_aa7e8de22917a21262c5a2d27f99b7d18"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#aa7e8de22917a21262c5a2d27f99b7d18">PostAttributeBaseChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OldValue</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:aa7e8de22917a21262c5a2d27f99b7d18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classUCombatTargetAttributeSet"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classUCombatTargetAttributeSet')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUCombatTargetAttributeSet.html">UCombatTargetAttributeSet</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
+<tr class="memitem:aa58d4a9706b45bbeb5058df8e10785c1 inherit pub_methods_classUCombatTargetAttributeSet" id="r_aa58d4a9706b45bbeb5058df8e10785c1"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#aa58d4a9706b45bbeb5058df8e10785c1">UCombatTargetAttributeSet</a> ()</td></tr>
+<tr class="separator:aa58d4a9706b45bbeb5058df8e10785c1 inherit pub_methods_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classUTacticalAttributeSet"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classUTacticalAttributeSet')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUTacticalAttributeSet.html">UTacticalAttributeSet</a>(으)로부터 상속된 Public 멤버 함수</td></tr>
 <tr class="memitem:adcb8b60be95ad1782c2dad3f6b4798d2 inherit pub_methods_classUTacticalAttributeSet" id="r_adcb8b60be95ad1782c2dad3f6b4798d2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#adcb8b60be95ad1782c2dad3f6b4798d2">ShouldInitProperty</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FirstInit</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FProperty</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PropertyToInit</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:adcb8b60be95ad1782c2dad3f6b4798d2 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,11 +133,7 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:af4b34f74c0e5301c20bc4befb3fa4a4e inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97dd0be285d9cd9097e94cccbdad9e94 inherit pub_methods_classUTacticalAttributeSet" id="r_a97dd0be285d9cd9097e94cccbdad9e94"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#a97dd0be285d9cd9097e94cccbdad9e94">PostTacticalEffectExecute</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectModCallbackData.html">FTacticalEffectModCallbackData</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Data</a>)</td></tr>
 <tr class="separator:a97dd0be285d9cd9097e94cccbdad9e94 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d7111a0969e55f3995802812031b0d5 inherit pub_methods_classUTacticalAttributeSet" id="r_a9d7111a0969e55f3995802812031b0d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#a9d7111a0969e55f3995802812031b0d5">PreAttributeBaseChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="separator:a9d7111a0969e55f3995802812031b0d5 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abecf56756b780eb5caac1bd6c7f114b5 inherit pub_methods_classUTacticalAttributeSet" id="r_abecf56756b780eb5caac1bd6c7f114b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#abecf56756b780eb5caac1bd6c7f114b5">PostAttributeBaseChange</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OldValue</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewValue</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="separator:abecf56756b780eb5caac1bd6c7f114b5 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c2a4e26fd87424b2d4b4e7f732d9896 inherit pub_methods_classUTacticalAttributeSet" id="r_a7c2a4e26fd87424b2d4b4e7f732d9896"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#a7c2a4e26fd87424b2d4b4e7f732d9896">OnAttributeAggregatorCreated</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="structFTacticalAggregator.html">FTacticalAggregator</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewAggregator</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:a7c2a4e26fd87424b2d4b4e7f732d9896 inherit pub_methods_classUTacticalAttributeSet" id="r_a7c2a4e26fd87424b2d4b4e7f732d9896"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#a7c2a4e26fd87424b2d4b4e7f732d9896">OnAttributeAggregatorCreated</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="structFTacticalAggregator.html">FTacticalAggregator</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewAggregator</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a7c2a4e26fd87424b2d4b4e7f732d9896 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae68671647e269305ed4e5d92f620f541 inherit pub_methods_classUTacticalAttributeSet" id="r_ae68671647e269305ed4e5d92f620f541"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#ae68671647e269305ed4e5d92f620f541">SetNetAddressable</a> ()</td></tr>
 <tr class="separator:ae68671647e269305ed4e5d92f620f541 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,35 +145,42 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:a235227a727b29bad6a4d4574733b63bd inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2543bbac81e2c1a09620e9f2a9e24c74 inherit pub_methods_classUTacticalAttributeSet" id="r_a2543bbac81e2c1a09620e9f2a9e24c74"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#a2543bbac81e2c1a09620e9f2a9e24c74">GetOwningAttributeSetComponentModelChecked</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a2543bbac81e2c1a09620e9f2a9e24c74 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad128d8aa06c7949e0cb15aba49463797 inherit pub_methods_classUTacticalAttributeSet" id="r_ad128d8aa06c7949e0cb15aba49463797"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#ad128d8aa06c7949e0cb15aba49463797">CaptureAllAttributes</a> (<a class="el" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Snapshot</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="separator:ad128d8aa06c7949e0cb15aba49463797 inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac20eef0fab690642f00355146064c92b inherit pub_methods_classUTacticalAttributeSet" id="r_ac20eef0fab690642f00355146064c92b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalAttributeSet.html#ac20eef0fab690642f00355146064c92b">CaptureAllAttributes</a> (<a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Snapshot</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:ac20eef0fab690642f00355146064c92b inherit pub_methods_classUTacticalAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a95dad8f6955c9b9fc677cfe0ef203cae" id="r_a95dad8f6955c9b9fc677cfe0ef203cae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a95dad8f6955c9b9fc677cfe0ef203cae">MaxHP</a></td></tr>
-<tr class="separator:a95dad8f6955c9b9fc677cfe0ef203cae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e76be2875daee23581bdd03012d0976" id="r_a0e76be2875daee23581bdd03012d0976"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a0e76be2875daee23581bdd03012d0976">HP</a></td></tr>
-<tr class="separator:a0e76be2875daee23581bdd03012d0976"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf44c856cd52e53ae52732223de14cc0" id="r_abf44c856cd52e53ae52732223de14cc0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#abf44c856cd52e53ae52732223de14cc0">Defense</a></td></tr>
-<tr class="separator:abf44c856cd52e53ae52732223de14cc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac581dad6175cc82a12f22d0c81bac44f" id="r_ac581dad6175cc82a12f22d0c81bac44f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#ac581dad6175cc82a12f22d0c81bac44f">Movement</a></td></tr>
-<tr class="separator:ac581dad6175cc82a12f22d0c81bac44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55cc29dd975a5b1699a9f1579d03537b" id="r_a55cc29dd975a5b1699a9f1579d03537b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a55cc29dd975a5b1699a9f1579d03537b">AttackPoint</a></td></tr>
-<tr class="separator:a55cc29dd975a5b1699a9f1579d03537b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add3cac52f3ac3e4b84a8d5d644eac25f" id="r_add3cac52f3ac3e4b84a8d5d644eac25f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#add3cac52f3ac3e4b84a8d5d644eac25f">HealPoint</a></td></tr>
-<tr class="separator:add3cac52f3ac3e4b84a8d5d644eac25f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a653a531bb92015b81e5995a80650a8a8" id="r_a653a531bb92015b81e5995a80650a8a8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a653a531bb92015b81e5995a80650a8a8">DefensePoint</a></td></tr>
-<tr class="separator:a653a531bb92015b81e5995a80650a8a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab598e8dcebe1e4e642f8f30029f42730" id="r_ab598e8dcebe1e4e642f8f30029f42730"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#ab598e8dcebe1e4e642f8f30029f42730">MovementPoint</a></td></tr>
-<tr class="separator:ab598e8dcebe1e4e642f8f30029f42730"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50494f545249e7d4b2ecd6a2bb11cb03" id="r_a50494f545249e7d4b2ecd6a2bb11cb03"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a50494f545249e7d4b2ecd6a2bb11cb03">AttackFactor</a></td></tr>
-<tr class="separator:a50494f545249e7d4b2ecd6a2bb11cb03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a07d0478f2f38bed2f982a94f3879f772" id="r_a07d0478f2f38bed2f982a94f3879f772"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a07d0478f2f38bed2f982a94f3879f772">HealFactor</a></td></tr>
-<tr class="separator:a07d0478f2f38bed2f982a94f3879f772"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9526b59923efcc3a8d01363222bc1500" id="r_a9526b59923efcc3a8d01363222bc1500"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a9526b59923efcc3a8d01363222bc1500">DefenseFactor</a></td></tr>
-<tr class="separator:a9526b59923efcc3a8d01363222bc1500"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae8d11dcb6604ea0ef3f01b7437ba8dab" id="r_ae8d11dcb6604ea0ef3f01b7437ba8dab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#ae8d11dcb6604ea0ef3f01b7437ba8dab">MovementFactor</a></td></tr>
-<tr class="separator:ae8d11dcb6604ea0ef3f01b7437ba8dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33104a2abf10f6b05e0156cfdda96092" id="r_a33104a2abf10f6b05e0156cfdda96092"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a33104a2abf10f6b05e0156cfdda96092">ActionPoint</a></td></tr>
+<tr class="separator:a33104a2abf10f6b05e0156cfdda96092"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a4157184b9d16900b0f2fe62e4f4adf" id="r_a3a4157184b9d16900b0f2fe62e4f4adf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a3a4157184b9d16900b0f2fe62e4f4adf">SpeedPoint</a></td></tr>
+<tr class="separator:a3a4157184b9d16900b0f2fe62e4f4adf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7db32234f64bf703fa087f6e0f81913" id="r_aa7db32234f64bf703fa087f6e0f81913"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#aa7db32234f64bf703fa087f6e0f81913">ActionPointFactor</a></td></tr>
+<tr class="separator:aa7db32234f64bf703fa087f6e0f81913"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64f53914233a89a4c22fa48a58002a95" id="r_a64f53914233a89a4c22fa48a58002a95"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a64f53914233a89a4c22fa48a58002a95">SpeedPointFactor</a></td></tr>
+<tr class="separator:a64f53914233a89a4c22fa48a58002a95"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af96b9580a27378e67856a5b07b396b77" id="r_af96b9580a27378e67856a5b07b396b77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#af96b9580a27378e67856a5b07b396b77">RechargeActionPoint</a></td></tr>
+<tr class="separator:af96b9580a27378e67856a5b07b396b77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8eebe8d70610c351ec207782085514f" id="r_ab8eebe8d70610c351ec207782085514f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#ab8eebe8d70610c351ec207782085514f">RechargeSpeedPoint</a></td></tr>
+<tr class="separator:ab8eebe8d70610c351ec207782085514f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a37c2a7a76f67c1f0dedc0ab1dd4119aa" id="r_a37c2a7a76f67c1f0dedc0ab1dd4119aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#a37c2a7a76f67c1f0dedc0ab1dd4119aa">LastRechargedActionPoint</a></td></tr>
+<tr class="separator:a37c2a7a76f67c1f0dedc0ab1dd4119aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcfc7059ca3f01624d1daa23ac449554" id="r_adcfc7059ca3f01624d1daa23ac449554"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUUnitAttributeSet.html#adcfc7059ca3f01624d1daa23ac449554">LastRechargedSpeedPoint</a></td></tr>
+<tr class="separator:adcfc7059ca3f01624d1daa23ac449554"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classUCombatTargetAttributeSet"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classUCombatTargetAttributeSet')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classUCombatTargetAttributeSet.html">UCombatTargetAttributeSet</a>(으)로부터 상속된 Protected 속성</td></tr>
+<tr class="memitem:a8c43f176550957939cb87ddb5ab05074 inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a8c43f176550957939cb87ddb5ab05074"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a8c43f176550957939cb87ddb5ab05074">MaxHP</a></td></tr>
+<tr class="separator:a8c43f176550957939cb87ddb5ab05074 inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9501f33a4ab1716378219ef6f0bfdf4a inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a9501f33a4ab1716378219ef6f0bfdf4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a9501f33a4ab1716378219ef6f0bfdf4a">HP</a></td></tr>
+<tr class="separator:a9501f33a4ab1716378219ef6f0bfdf4a inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12b175c9ee6396134933c2a866812443 inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a12b175c9ee6396134933c2a866812443"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a12b175c9ee6396134933c2a866812443">Defense</a></td></tr>
+<tr class="separator:a12b175c9ee6396134933c2a866812443 inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d509049a7bb8396f6e808148e60683e inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a7d509049a7bb8396f6e808148e60683e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a7d509049a7bb8396f6e808148e60683e">AttackFactor</a></td></tr>
+<tr class="separator:a7d509049a7bb8396f6e808148e60683e inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1120a3ab8046896785239de4a25c1ecf inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a1120a3ab8046896785239de4a25c1ecf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a1120a3ab8046896785239de4a25c1ecf">HealFactor</a></td></tr>
+<tr class="separator:a1120a3ab8046896785239de4a25c1ecf inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8996760bde0e52f25cca1783b1995921 inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a8996760bde0e52f25cca1783b1995921"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a8996760bde0e52f25cca1783b1995921">DefenseFactor</a></td></tr>
+<tr class="separator:a8996760bde0e52f25cca1783b1995921 inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a489e03ae9351bb551d37507b0247e1df inherit pro_attribs_classUCombatTargetAttributeSet" id="r_a489e03ae9351bb551d37507b0247e1df"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatTargetAttributeSet.html#a489e03ae9351bb551d37507b0247e1df">CriticalFactor</a></td></tr>
+<tr class="separator:a489e03ae9351bb551d37507b0247e1df inherit pro_attribs_classUCombatTargetAttributeSet"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 추가로 상속된 멤버들</h2></td></tr>
@@ -184,27 +191,53 @@ Protected 속성</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
 <p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
-</div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
-<a id="ab3b9b2078f700168a3f31941a242bcce" name="ab3b9b2078f700168a3f31941a242bcce"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3b9b2078f700168a3f31941a242bcce">&#9670;&#160;</a></span>UUnitAttributeSet()</h2>
+</div><h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="aa7e8de22917a21262c5a2d27f99b7d18" name="aa7e8de22917a21262c5a2d27f99b7d18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7e8de22917a21262c5a2d27f99b7d18">&#9670;&#160;</a></span>PostAttributeBaseChange()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">UUnitAttributeSet::UUnitAttributeSet </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UUnitAttributeSet::PostAttributeBaseChange </td>
           <td>(</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;&#160;</td>
+          <td class="paramname"><em>Attribute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td>
+          <td class="paramname"><em>OldValue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td>
+          <td class="paramname"><em>NewValue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00035">35</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUCombatTargetAttributeSet.html#aaa0ff77e983d947f3fa5a59feb2d65f3">UCombatTargetAttributeSet</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00034">34</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="a0ebaa30e444bb23212b627ea486586a8" name="a0ebaa30e444bb23212b627ea486586a8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0ebaa30e444bb23212b627ea486586a8">&#9670;&#160;</a></span>PostAttributeChange()</h2>
 
@@ -244,18 +277,50 @@ Protected 속성</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>변경된 어트리뷰트. </td></tr>
-    <tr><td class="paramname">OldValue</td><td>변경 전 값. </td></tr>
-    <tr><td class="paramname">NewValue</td><td>변경 후 값(이미 반영됨). </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p><a class="el" href="classUTacticalAttributeSet.html#a004f8f074ddf882e7fdcb02ff61b34b3">UTacticalAttributeSet</a>(으)로부터 재구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetAttributeSet.html#a6cad656b1aa07e76f6f2b3c9a41cca40">UCombatTargetAttributeSet</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00062">62</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00029">29</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a14ef9b036a52dfa2120becf97e94753c" name="a14ef9b036a52dfa2120becf97e94753c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a14ef9b036a52dfa2120becf97e94753c">&#9670;&#160;</a></span>PreAttributeBaseChange()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UUnitAttributeSet::PreAttributeBaseChange </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;&#160;</td>
+          <td class="paramname"><em>Attribute</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;&#160;</td>
+          <td class="paramname"><em>NewValue</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUCombatTargetAttributeSet.html#a7542e8799be4849c1da5899ee0fefb95">UCombatTargetAttributeSet</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -292,23 +357,16 @@ Protected 속성</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>변경 대상 어트리뷰트. </td></tr>
-    <tr><td class="paramname">NewValue</td><td>반영 예정 값(참조). 여기서 클램프하면 그 값이 최종 반영된다. </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p><a class="el" href="classUTacticalAttributeSet.html#acdf2d91df7dc179aceec45dd410baf2f">UTacticalAttributeSet</a>(으)로부터 재구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetAttributeSet.html#a4cba59ab53e4cd80aaa550e63ff15d28">UCombatTargetAttributeSet</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8cpp_source.html">UnitAttributeSet.cpp</a> 파일의 <a class="el" href="UnitAttributeSet_8cpp_source.html#l00007">7</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="a50494f545249e7d4b2ecd6a2bb11cb03" name="a50494f545249e7d4b2ecd6a2bb11cb03"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a50494f545249e7d4b2ecd6a2bb11cb03">&#9670;&#160;</a></span>AttackFactor</h2>
+<a id="a33104a2abf10f6b05e0156cfdda96092" name="a33104a2abf10f6b05e0156cfdda96092"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33104a2abf10f6b05e0156cfdda96092">&#9670;&#160;</a></span>ActionPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -317,7 +375,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::AttackFactor</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::ActionPoint</td>
         </tr>
       </table>
   </td>
@@ -327,12 +385,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00081">81</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a55cc29dd975a5b1699a9f1579d03537b" name="a55cc29dd975a5b1699a9f1579d03537b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a55cc29dd975a5b1699a9f1579d03537b">&#9670;&#160;</a></span>AttackPoint</h2>
+<a id="aa7db32234f64bf703fa087f6e0f81913" name="aa7db32234f64bf703fa087f6e0f81913"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7db32234f64bf703fa087f6e0f81913">&#9670;&#160;</a></span>ActionPointFactor</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -341,7 +399,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::AttackPoint</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::ActionPointFactor</td>
         </tr>
       </table>
   </td>
@@ -351,12 +409,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00066">66</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00055">55</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="abf44c856cd52e53ae52732223de14cc0" name="abf44c856cd52e53ae52732223de14cc0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf44c856cd52e53ae52732223de14cc0">&#9670;&#160;</a></span>Defense</h2>
+<a id="a37c2a7a76f67c1f0dedc0ab1dd4119aa" name="a37c2a7a76f67c1f0dedc0ab1dd4119aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a37c2a7a76f67c1f0dedc0ab1dd4119aa">&#9670;&#160;</a></span>LastRechargedActionPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -365,55 +423,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::Defense</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00057">57</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a9526b59923efcc3a8d01363222bc1500" name="a9526b59923efcc3a8d01363222bc1500"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9526b59923efcc3a8d01363222bc1500">&#9670;&#160;</a></span>DefenseFactor</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::DefenseFactor</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00087">87</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a653a531bb92015b81e5995a80650a8a8" name="a653a531bb92015b81e5995a80650a8a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a653a531bb92015b81e5995a80650a8a8">&#9670;&#160;</a></span>DefensePoint</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::DefensePoint</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::LastRechargedActionPoint</td>
         </tr>
       </table>
   </td>
@@ -427,8 +437,8 @@ Protected 속성</h2></td></tr>
 
 </div>
 </div>
-<a id="a07d0478f2f38bed2f982a94f3879f772" name="a07d0478f2f38bed2f982a94f3879f772"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a07d0478f2f38bed2f982a94f3879f772">&#9670;&#160;</a></span>HealFactor</h2>
+<a id="adcfc7059ca3f01624d1daa23ac449554" name="adcfc7059ca3f01624d1daa23ac449554"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcfc7059ca3f01624d1daa23ac449554">&#9670;&#160;</a></span>LastRechargedSpeedPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -437,7 +447,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::HealFactor</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::LastRechargedSpeedPoint</td>
         </tr>
       </table>
   </td>
@@ -447,12 +457,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00084">84</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00074">74</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="add3cac52f3ac3e4b84a8d5d644eac25f" name="add3cac52f3ac3e4b84a8d5d644eac25f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add3cac52f3ac3e4b84a8d5d644eac25f">&#9670;&#160;</a></span>HealPoint</h2>
+<a id="af96b9580a27378e67856a5b07b396b77" name="af96b9580a27378e67856a5b07b396b77"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af96b9580a27378e67856a5b07b396b77">&#9670;&#160;</a></span>RechargeActionPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -461,7 +471,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::HealPoint</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::RechargeActionPoint</td>
         </tr>
       </table>
   </td>
@@ -471,12 +481,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00069">69</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00064">64</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a0e76be2875daee23581bdd03012d0976" name="a0e76be2875daee23581bdd03012d0976"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e76be2875daee23581bdd03012d0976">&#9670;&#160;</a></span>HP</h2>
+<a id="ab8eebe8d70610c351ec207782085514f" name="ab8eebe8d70610c351ec207782085514f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8eebe8d70610c351ec207782085514f">&#9670;&#160;</a></span>RechargeSpeedPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -485,7 +495,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::HP</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::RechargeSpeedPoint</td>
         </tr>
       </table>
   </td>
@@ -495,12 +505,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00053">53</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00067">67</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a95dad8f6955c9b9fc677cfe0ef203cae" name="a95dad8f6955c9b9fc677cfe0ef203cae"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95dad8f6955c9b9fc677cfe0ef203cae">&#9670;&#160;</a></span>MaxHP</h2>
+<a id="a3a4157184b9d16900b0f2fe62e4f4adf" name="a3a4157184b9d16900b0f2fe62e4f4adf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a4157184b9d16900b0f2fe62e4f4adf">&#9670;&#160;</a></span>SpeedPoint</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -509,7 +519,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::MaxHP</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::SpeedPoint</td>
         </tr>
       </table>
   </td>
@@ -519,12 +529,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00050">50</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="ac581dad6175cc82a12f22d0c81bac44f" name="ac581dad6175cc82a12f22d0c81bac44f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac581dad6175cc82a12f22d0c81bac44f">&#9670;&#160;</a></span>Movement</h2>
+<a id="a64f53914233a89a4c22fa48a58002a95" name="a64f53914233a89a4c22fa48a58002a95"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64f53914233a89a4c22fa48a58002a95">&#9670;&#160;</a></span>SpeedPointFactor</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -533,7 +543,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::Movement</td>
+          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::SpeedPointFactor</td>
         </tr>
       </table>
   </td>
@@ -543,55 +553,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ae8d11dcb6604ea0ef3f01b7437ba8dab" name="ae8d11dcb6604ea0ef3f01b7437ba8dab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8d11dcb6604ea0ef3f01b7437ba8dab">&#9670;&#160;</a></span>MovementFactor</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::MovementFactor</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00090">90</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ab598e8dcebe1e4e642f8f30029f42730" name="ab598e8dcebe1e4e642f8f30029f42730"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab598e8dcebe1e4e642f8f30029f42730">&#9670;&#160;</a></span>MovementPoint</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> UUnitAttributeSet::MovementPoint</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00075">75</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UnitAttributeSet_8h_source.html">UnitAttributeSet.h</a> 파일의 <a class="el" href="UnitAttributeSet_8h_source.html#l00058">58</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

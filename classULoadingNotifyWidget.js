@@ -1,7 +1,9 @@
 var classULoadingNotifyWidget =
 [
     [ "ULoadingNotifyWidget", "classULoadingNotifyWidget.html#ae3b855dc189e5aabc1b2ae57a8e11e28", null ],
+    [ "GetViewportZOrder", "classULoadingNotifyWidget.html#ae8f06762de420156119a43b18e6c5a77", null ],
     [ "Initialize", "classULoadingNotifyWidget.html#a7e02350fbacc5a2c8594677647e1c4ef", null ],
+    [ "NativeDestruct", "classULoadingNotifyWidget.html#ad7f66622f931a240185ed09348f75cc3", null ],
     [ "NativePreConstruct", "classULoadingNotifyWidget.html#a89599575b61b4806573330507f56a108", null ],
     [ "NativeTick", "classULoadingNotifyWidget.html#adfc5b79c4b12f32a4dcab2054a1fb647", null ],
     [ "PlayCloseUIAnimation_Implementation", "classULoadingNotifyWidget.html#a0548ae427821cecb799765887c3057d7", null ],

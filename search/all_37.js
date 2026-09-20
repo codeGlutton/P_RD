@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['로그_20두_20종류_20mispreview로_20갈림_0',['로그 두 종류 (mIsPreview로 갈림)',['../CombatTileMapHUDWidget__CombatLog_8cpp.html#autotoc_md38',1,'']]],
-  ['로그_20한_20건의_20일생_1',['로그 한 건의 일생',['../CombatTileMapHUDWidget__CombatLog_8cpp.html#autotoc_md39',1,'']]]
+  ['도메인_20tt_20ecombatuidomain_20tt_0',['다루는 도메인 (&lt;tt&gt;ECombatUIDomain&lt;/tt&gt;)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html#autotoc_md31',1,'']]]
 ];

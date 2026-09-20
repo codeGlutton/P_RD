@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['전투_20보상_20화면_20ui_20↔_20게임플레이_20경계_20view_20model_20계약_0',['전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'']]],
-  ['전투_20뷰모델_1',['범위 — 이건 &apos;전투&apos; 뷰모델',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html#autotoc_md22',1,'']]],
-  ['전투_20ui_20↔_20게임플레이_20경계_20view_20model_20계약_2',['전투 UI ↔ 게임플레이 경계 (View-Model 계약)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html',1,'']]],
-  ['전투_20ui_20↔_20게임플레이_20api_20계약_3',['전투 UI ↔ 게임플레이 API 계약',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html',1,'']]]
+  ['어디서_20검사하는가_0',['Q 턴 종료는 어디서 검사하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step4',1,'']]],
+  ['어떻게_20처리하는가_1',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]]
 ];

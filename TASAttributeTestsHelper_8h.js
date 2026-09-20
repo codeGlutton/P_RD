@@ -4,5 +4,7 @@ var TASAttributeTestsHelper_8h =
     [ "UTASActorModelMock", "classUTASActorModelMock.html", "classUTASActorModelMock" ],
     [ "UTestInstantTacticalEffect", "classUTestInstantTacticalEffect.html", "classUTestInstantTacticalEffect" ],
     [ "UTestInfiniteTacticalEffect", "classUTestInfiniteTacticalEffect.html", "classUTestInfiniteTacticalEffect" ],
-    [ "UTestInfiniteTagEffect", "classUTestInfiniteTagEffect.html", "classUTestInfiniteTagEffect" ]
+    [ "UTestInfiniteTagEffect", "classUTestInfiniteTagEffect.html", "classUTestInfiniteTagEffect" ],
+    [ "UTestTurnDurationTacticalEffect", "classUTestTurnDurationTacticalEffect.html", "classUTestTurnDurationTacticalEffect" ],
+    [ "UTestStackRemoveSingleDurationTacticalEffect", "classUTestStackRemoveSingleDurationTacticalEffect.html", "classUTestStackRemoveSingleDurationTacticalEffect" ]
 ];

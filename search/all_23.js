@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['검사하는가_0',['Q 턴 종료는 어디서 검사하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step4',1,'']]]
+  ['갈림_0',['로그 두 종류 (mIsPreview로 갈림)',['../CombatLayoutHUDWidget__CombatLog_8cpp.html#autotoc_md18',1,'']]]
 ];

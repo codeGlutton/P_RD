@@ -103,7 +103,7 @@ $(document).ready(function(){initNavTree('classFActiveTacticalEffectIterator.htm
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
-<tr class="memitem:ab0e0fdf303cc42c0df51ca69ba6ed7dc" id="r_ab0e0fdf303cc42c0df51ca69ba6ed7dc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFActiveTacticalEffectIterator.html#ab0e0fdf303cc42c0df51ca69ba6ed7dc">FActiveTacticalEffectIterator</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ContainerType</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Container</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StartIdx</a>=0)</td></tr>
+<tr class="memitem:ab0e0fdf303cc42c0df51ca69ba6ed7dc" id="r_ab0e0fdf303cc42c0df51ca69ba6ed7dc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFActiveTacticalEffectIterator.html#ab0e0fdf303cc42c0df51ca69ba6ed7dc">FActiveTacticalEffectIterator</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ContainerType</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Container</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StartIdx</a>=0)</td></tr>
 <tr class="memdesc:ab0e0fdf303cc42c0df51ca69ba6ed7dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">반복자 생성. 락을 잡고 시작 위치를 가리키도록 초기화한다.  <br /></td></tr>
 <tr class="separator:ab0e0fdf303cc42c0df51ca69ba6ed7dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e45ddd4c4d49907db3ac62c5082f35e" id="r_a7e45ddd4c4d49907db3ac62c5082f35e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFActiveTacticalEffectIterator.html#a7e45ddd4c4d49907db3ac62c5082f35e">~FActiveTacticalEffectIterator</a> ()</td></tr>
@@ -126,15 +126,16 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">typename</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ElementType</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">typename</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ContainerType</a>&gt;<br />
-class FActiveTacticalEffectIterator&lt; ElementType, ContainerType &gt;</div><p>두 자료구조를 하나의 순회로 이어 붙인다. (1) mTacticalEffects 배열(이미 활성화된 이펙트), 그리고 (2) 락에 의해 보류된 mPending* Linked-List(추가 예약 이펙트). 반복자가 살아 있는 동안 컨테이너의 락 카운트를 유지하여 순회 중 배열 변형을 막는다. </p><dl class="tparams"><dt>템플릿 파라메터</dt><dd>
+class FActiveTacticalEffectIterator&lt; ElementType, ContainerType &gt;</div><dl class="tparams"><dt>템플릿 파라메터</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">ElementType</td><td>순회 요소 타입(const/비const <a class="el" href="structFActiveTacticalEffect.html" title="현재 활성화 이펙트(런타임에 어떤 대상에 부착되어 동작 중인 이펙트 1건).">FActiveTacticalEffect</a>) </td></tr>
-    <tr><td class="paramname">ContainerType</td><td>대상 컨테이너 타입 </td></tr>
+    <tr><td class="paramname">ElementType</td><td>순회 요소 타입 </td></tr>
+    <tr><td class="paramname">ContainerType</td><td>대상 컨테이너 타입</td></tr>
   </table>
   </dd>
 </dl>
+<p>두 자료구조를 하나의 순회로 이어 붙인다. (1) mTacticalEffects 배열(이미 활성화된 이펙트) (2) 락에 의해 보류된 mPending* Linked-List(추가 예약 이펙트) </p>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00070">70</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00076">76</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="ab0e0fdf303cc42c0df51ca69ba6ed7dc" name="ab0e0fdf303cc42c0df51ca69ba6ed7dc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab0e0fdf303cc42c0df51ca69ba6ed7dc">&#9670;&#160;</a></span>FActiveTacticalEffectIterator()</h2>
@@ -156,7 +157,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname"><em>StartIdx</em> = <code>0</code>&#160;</td>
         </tr>
         <tr>
@@ -179,7 +180,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00078">78</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00084">84</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -208,7 +209,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00093">93</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00098">98</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -238,7 +239,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00121">121</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -267,7 +268,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00106">106</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00110">110</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -296,7 +297,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00100">100</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00105">105</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -325,7 +326,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00112">112</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00115">115</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -366,7 +367,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00129">129</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00130">130</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -406,7 +407,7 @@ template&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413a
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00125">125</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00126">126</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

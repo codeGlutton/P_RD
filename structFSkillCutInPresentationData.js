@@ -1,0 +1,27 @@
+var structFSkillCutInPresentationData =
+[
+    [ "AccentColor", "structFSkillCutInPresentationData.html#af5b6a8125eeca5e7f62a27347267653d", null ],
+    [ "BackgroundTexture", "structFSkillCutInPresentationData.html#adadc8477134863475ae3dbcbff0063fa", null ],
+    [ "bMirror", "structFSkillCutInPresentationData.html#a106aa82eebfcbbffbdc88fef87cfac9d", null ],
+    [ "BodyTexture", "structFSkillCutInPresentationData.html#a19f96cb142413076172c7696548d7131", null ],
+    [ "DurationSeconds", "structFSkillCutInPresentationData.html#ae57fef09d674ec6f65ae875fd007f772", null ],
+    [ "EyeSocketTexture", "structFSkillCutInPresentationData.html#a59b9967c567efe17c0012b336a38ec32", null ],
+    [ "EyeWhiteTexture", "structFSkillCutInPresentationData.html#ab60887bf14f64595533e5848e886a214", null ],
+    [ "FailSafeSeconds", "structFSkillCutInPresentationData.html#a4a9e51fed72f0a94105ee1cd269eedcd", null ],
+    [ "FlashTexture", "structFSkillCutInPresentationData.html#aa7ff2e7dcc119146931cc7010032c217", null ],
+    [ "ForegroundTexture", "structFSkillCutInPresentationData.html#a5d279e3f3eaa815de98f14ddab2e7a2d", null ],
+    [ "FrameTexture", "structFSkillCutInPresentationData.html#a3b2d24d9a6a1d5ca80c6e4c13a9b6d62", null ],
+    [ "IrisTexture", "structFSkillCutInPresentationData.html#a114a42579ed44e9a088c619729bda26e", null ],
+    [ "LayerRig", "structFSkillCutInPresentationData.html#aef4649e322edfa2f858c10736ef2fe38", null ],
+    [ "MercenaryCapeTexture", "structFSkillCutInPresentationData.html#a99bd7a5ef295a7468b83c864859489f6", null ],
+    [ "MercenaryHeadTexture", "structFSkillCutInPresentationData.html#a4a040727cae5ff4569e1b6e2df2807fb", null ],
+    [ "MercenaryImpactTexture", "structFSkillCutInPresentationData.html#a43f4c4b704d42b7270d4414fd8d686b3", null ],
+    [ "MercenaryShieldArmTexture", "structFSkillCutInPresentationData.html#a15f51c83a7cd7493a9325dbf91c34e69", null ],
+    [ "MercenaryShieldTexture", "structFSkillCutInPresentationData.html#ad8d9743d006953da98bf607641782569", null ],
+    [ "MercenarySwordArcTexture", "structFSkillCutInPresentationData.html#a5e43cb76b0882dee2fdef656558a23f6", null ],
+    [ "MercenarySwordArmTexture", "structFSkillCutInPresentationData.html#a143fba04dc5ea20c7e77e4f1bd14f204", null ],
+    [ "PupilAim", "structFSkillCutInPresentationData.html#a3b0141037d7463a4fb2065a177539f3b", null ],
+    [ "PupilTexture", "structFSkillCutInPresentationData.html#a64a65d9fe01f293efdd3d906bab61b23", null ],
+    [ "RimTexture", "structFSkillCutInPresentationData.html#ae8e51be96f8cfcfb6223a9e6ab63485c", null ],
+    [ "SpeedLinesTexture", "structFSkillCutInPresentationData.html#aeecf616d72e4d2fa0ceb42fe15085a0f", null ]
+];

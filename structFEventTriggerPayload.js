@@ -1,5 +1,4 @@
 var structFEventTriggerPayload =
 [
-    [ "~FEventTriggerPayload", "structFEventTriggerPayload.html#a25291b96ab29f398e5dbc3d38241c3c5", null ],
-    [ "GetScriptStruct", "structFEventTriggerPayload.html#abd55407cfb8b806f4527b7c04f0f2088", null ]
+    [ "GetScriptStruct", "structFEventTriggerPayload.html#abc17c848a54f3758d1c571429955abff", null ]
 ];

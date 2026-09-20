@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['턴에_20대한_20순서도_0',['단일 턴에 대한 순서도',['../srpg_framework_page.html#srpg_framework_turn_image_section',1,'']]],
-  ['턴_20순서_20배치는_20어떻게_20처리하는가_1',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]],
-  ['턴_20종료는_20어디서_20검사하는가_2',['Q 턴 종료는 어디서 검사하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step4',1,'']]],
-  ['턴_20추가_20및_20삭제_20확장성이_20있는가_3',['Q 턴 추가 및 삭제 확장성이 있는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step2',1,'']]]
+  ['정정_20에디터_20작업_20코드_20무변경_0',['4. WBP_CombatHUD04 위젯 이름 정정 (에디터 작업, 코드 무변경)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html#autotoc_md26',1,'']]],
+  ['정하나_1',['데이터 경계 (누가 뭘 정하나)',['../CombatLayoutHUDWidget__CombatLog_8cpp.html#autotoc_md20',1,'']]],
+  ['정해진_20것_20게임플레이와_20합의_20필요_2',['E. 아직 안 정해진 것 (게임플레이와 합의 필요)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md48',1,'']]]
 ];

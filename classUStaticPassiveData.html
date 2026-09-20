@@ -106,6 +106,8 @@ UStaticPassiveData에 대한 상속 다이어그램 : </div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
+<tr class="memitem:a275b214253c0891cb30da76f5e23049b" id="r_a275b214253c0891cb30da76f5e23049b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a275b214253c0891cb30da76f5e23049b">UStaticPassiveData</a> ()</td></tr>
+<tr class="separator:a275b214253c0891cb30da76f5e23049b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade273bb44c198876caa34b916c6c6934" id="r_ade273bb44c198876caa34b916c6c6934"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#ade273bb44c198876caa34b916c6c6934">GetPrimaryAssetId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="separator:ade273bb44c198876caa34b916c6c6934"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -121,29 +123,58 @@ Public 속성</h2></td></tr>
 <tr class="memitem:aebeafb910e3e03d5fb060d6a6724fa1f" id="r_aebeafb910e3e03d5fb060d6a6724fa1f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#aebeafb910e3e03d5fb060d6a6724fa1f">mDeactivateTimingTag</a></td></tr>
 <tr class="memdesc:aebeafb910e3e03d5fb060d6a6724fa1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">패시브 해제 시점 (단일)  <br /></td></tr>
 <tr class="separator:aebeafb910e3e03d5fb060d6a6724fa1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbe24c3e07c8e1a9f590c8b9d0e370c2" id="r_acbe24c3e07c8e1a9f590c8b9d0e370c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFPassiveCondition.html">FPassiveCondition</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#acbe24c3e07c8e1a9f590c8b9d0e370c2">mPassiveTriggerCondition</a></td></tr>
-<tr class="memdesc:acbe24c3e07c8e1a9f590c8b9d0e370c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">패시브 발동 조건  <br /></td></tr>
-<tr class="separator:acbe24c3e07c8e1a9f590c8b9d0e370c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a0ae7341d518e51efb35e1a8e03ee85" id="r_a3a0ae7341d518e51efb35e1a8e03ee85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a3a0ae7341d518e51efb35e1a8e03ee85">mCounterResetTimingTag</a></td></tr>
+<tr class="memdesc:a3a0ae7341d518e51efb35e1a8e03ee85"><td class="mdescLeft">&#160;</td><td class="mdescRight">카운터 리셋 시점 (단일)  <br /></td></tr>
+<tr class="separator:a3a0ae7341d518e51efb35e1a8e03ee85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17b1dae87baecaf09ad456a9cf7296e8" id="r_a17b1dae87baecaf09ad456a9cf7296e8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a17b1dae87baecaf09ad456a9cf7296e8">mCaptureTimingTag</a></td></tr>
+<tr class="memdesc:a17b1dae87baecaf09ad456a9cf7296e8"><td class="mdescLeft">&#160;</td><td class="mdescRight">캡처 시점 (단일)  <br /></td></tr>
+<tr class="separator:a17b1dae87baecaf09ad456a9cf7296e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e8e1154e8ce3bb52a14c87a2b78ef36" id="r_a6e8e1154e8ce3bb52a14c87a2b78ef36"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFPassiveCaptureEntry.html">FPassiveCaptureEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a6e8e1154e8ce3bb52a14c87a2b78ef36">mCaptureOperands</a></td></tr>
+<tr class="memdesc:a6e8e1154e8ce3bb52a14c87a2b78ef36"><td class="mdescLeft">&#160;</td><td class="mdescRight">캡처 목록  <br /></td></tr>
+<tr class="separator:a6e8e1154e8ce3bb52a14c87a2b78ef36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79909a8eb04191661b063358209caebc" id="r_a79909a8eb04191661b063358209caebc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a79909a8eb04191661b063358209caebc">mActivateOnCapturedTargets</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td></tr>
+<tr class="memdesc:a79909a8eb04191661b063358209caebc"><td class="mdescLeft">&#160;</td><td class="mdescRight">캡처한 타겟에게 발동  <br /></td></tr>
+<tr class="separator:a79909a8eb04191661b063358209caebc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc451f88316ecd5b04727e2e7ee2b4a4" id="r_abc451f88316ecd5b04727e2e7ee2b4a4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFPassiveCondition.html">FPassiveCondition</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#abc451f88316ecd5b04727e2e7ee2b4a4">mConditions</a></td></tr>
+<tr class="memdesc:abc451f88316ecd5b04727e2e7ee2b4a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">발동 조건 (AND)  <br /></td></tr>
+<tr class="separator:abc451f88316ecd5b04727e2e7ee2b4a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0e3313c3fb41b3c9d3bf995cfe0bc7d" id="r_ad0e3313c3fb41b3c9d3bf995cfe0bc7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="StaticPassiveData_8h.html#ab07c52cfd782464ac899c3fd4d98b952">EPassiveTargetQuantifier</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#ad0e3313c3fb41b3c9d3bf995cfe0bc7d">mTargetQuantifier</a> = EPassiveTargetQuantifier::Any</td></tr>
 <tr class="memdesc:ad0e3313c3fb41b3c9d3bf995cfe0bc7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">수량 조건  <br /></td></tr>
 <tr class="separator:ad0e3313c3fb41b3c9d3bf995cfe0bc7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42deccf9b4ca32a3a536d97e86b48b92" id="r_a42deccf9b4ca32a3a536d97e86b48b92"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFPassiveEffectEntry.html">FPassiveEffectEntry</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a42deccf9b4ca32a3a536d97e86b48b92">mEffects</a></td></tr>
+<tr class="memdesc:a42deccf9b4ca32a3a536d97e86b48b92"><td class="mdescLeft">&#160;</td><td class="mdescRight">효과 목록  <br /></td></tr>
+<tr class="separator:a42deccf9b4ca32a3a536d97e86b48b92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a996ba2abb58d348fe87cd91bdeef97" id="r_a8a996ba2abb58d348fe87cd91bdeef97"><td class="memItemLeft" align="right" valign="top"><a class="el" href="StaticPassiveData_8h.html#a9ea5ca4cdd49fc162ecbec8e3c2be359">EPassiveEffectTarget</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a8a996ba2abb58d348fe87cd91bdeef97">mEffectTarget</a> = EPassiveEffectTarget::Self</td></tr>
+<tr class="memdesc:a8a996ba2abb58d348fe87cd91bdeef97"><td class="mdescLeft">&#160;</td><td class="mdescRight">효과 적용 대상  <br /></td></tr>
+<tr class="separator:a8a996ba2abb58d348fe87cd91bdeef97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3f7c11e1570ebc58e2129384a742bda" id="r_af3f7c11e1570ebc58e2129384a742bda"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSoftClassPtr</a>&lt; <a class="el" href="classUTacticalPassive.html">UTacticalPassive</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#af3f7c11e1570ebc58e2129384a742bda">mPassiveClass</a></td></tr>
 <tr class="memdesc:af3f7c11e1570ebc58e2129384a742bda"><td class="mdescLeft">&#160;</td><td class="mdescRight">패시브 클래스  <br /></td></tr>
 <tr class="separator:af3f7c11e1570ebc58e2129384a742bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb56815f198be77f43a785d9d79cd4c1" id="r_afb56815f198be77f43a785d9d79cd4c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSoftClassPtr</a>&lt; <a class="el" href="classUTacticalEffect.html">UTacticalEffect</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#afb56815f198be77f43a785d9d79cd4c1">mEffectClass</a></td></tr>
-<tr class="memdesc:afb56815f198be77f43a785d9d79cd4c1"><td class="mdescLeft">&#160;</td><td class="mdescRight">적용할 이펙트 "종류" 클래스  <br /></td></tr>
-<tr class="separator:afb56815f198be77f43a785d9d79cd4c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24ce7d9eb98224ac2c2e88f7bfec6b47" id="r_a24ce7d9eb98224ac2c2e88f7bfec6b47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#a24ce7d9eb98224ac2c2e88f7bfec6b47">mMagnitude</a> = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td></tr>
-<tr class="memdesc:a24ce7d9eb98224ac2c2e88f7bfec6b47"><td class="mdescLeft">&#160;</td><td class="mdescRight">적용 수치(양)  <br /></td></tr>
-<tr class="separator:a24ce7d9eb98224ac2c2e88f7bfec6b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af69273cd04337ed80f0fd16677b8dcd7" id="r_af69273cd04337ed80f0fd16677b8dcd7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUStaticPassiveData.html#af69273cd04337ed80f0fd16677b8dcd7">mThreshold</a> = 0</td></tr>
-<tr class="memdesc:af69273cd04337ed80f0fd16677b8dcd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">계산형 패시브의 파라미터(예: 매 N회 발동). 고정형은 미사용.  <br /></td></tr>
-<tr class="separator:af69273cd04337ed80f0fd16677b8dcd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
-</div><h2 class="groupheader">멤버 함수 문서화</h2>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00082">82</a> 번째 라인에서 정의되었습니다.</p>
+</div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
+<a id="a275b214253c0891cb30da76f5e23049b" name="a275b214253c0891cb30da76f5e23049b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a275b214253c0891cb30da76f5e23049b">&#9670;&#160;</a></span>UStaticPassiveData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">UStaticPassiveData::UStaticPassiveData </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="StaticPassiveData_8cpp_source.html">StaticPassiveData.cpp</a> 파일의 <a class="el" href="StaticPassiveData_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="ade273bb44c198876caa34b916c6c6934" name="ade273bb44c198876caa34b916c6c6934"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ade273bb44c198876caa34b916c6c6934">&#9670;&#160;</a></span>GetPrimaryAssetId()</h2>
 
@@ -167,11 +198,28 @@ Public 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00050">50</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00089">89</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a79909a8eb04191661b063358209caebc" name="a79909a8eb04191661b063358209caebc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79909a8eb04191661b063358209caebc">&#9670;&#160;</a></span>mActivateOnCapturedTargets</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UStaticPassiveData::mActivateOnCapturedTargets = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>켜면 발동 시점의 대상을 캡처 시점에 있던 타겟들로 바꿔서 조건 판정과 효과 적용. 스킬 대상은 이펙트 적용 시점에만 들어오고 스킬 종료 시점엔 자기 자신뿐이라, "스킬 끝날 때 대상 상태로 판정"하는 패시브가 사용. 다단계 스킬은 페이즈마다 타겟이 누적되고, 발동하면 비움. </p>
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00174">174</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="ab9193c444c8a79ae3fca8e3455adaf80" name="ab9193c444c8a79ae3fca8e3455adaf80"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab9193c444c8a79ae3fca8e3455adaf80">&#9670;&#160;</a></span>mActivateTimingTag</h2>
 
@@ -183,9 +231,81 @@ Public 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등). 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다. </p>
+<p>이펙트를 적용(발동)할 시점(예: 공격 시작, 타격 전 등). 주기형 버프는 여기에 시작 시점을, mDeactivateTimingTag에 끝 시점을 둔다. 시점에 따라 조건/효과의 "대상"이 달라짐:</p><ul>
+<li>Room/Turn/UsingSkill: 자기 자신</li>
+<li>ApplyingEffect: 스킬 최종 타겟들</li>
+<li>ReceivingEffect: 시전자 </li>
+</ul>
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00125">125</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6e8e1154e8ce3bb52a14c87a2b78ef36" name="a6e8e1154e8ce3bb52a14c87a2b78ef36"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e8e1154e8ce3bb52a14c87a2b78ef36">&#9670;&#160;</a></span>mCaptureOperands</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFPassiveCaptureEntry.html">FPassiveCaptureEntry</a>&gt; UStaticPassiveData::mCaptureOperands</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>캡처 시점에 저장할 값 정의. 발동 조건의 Captured 피연산자가 키로 읽음. </p>
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00162">162</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a17b1dae87baecaf09ad456a9cf7296e8" name="a17b1dae87baecaf09ad456a9cf7296e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17b1dae87baecaf09ad456a9cf7296e8">&#9670;&#160;</a></span>mCaptureTimingTag</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> UStaticPassiveData::mCaptureTimingTag</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>도달 시 mCaptureOperands를 평가해 값을 저장. 비우면 캡처 없음. </p>
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00153">153</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="abc451f88316ecd5b04727e2e7ee2b4a4" name="abc451f88316ecd5b04727e2e7ee2b4a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abc451f88316ecd5b04727e2e7ee2b4a4">&#9670;&#160;</a></span>mConditions</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFPassiveCondition.html">FPassiveCondition</a>&gt; UStaticPassiveData::mConditions</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>전부 통과해야 발동. 빈 배열 = 무조건 발동. </p>
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00183">183</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3a0ae7341d518e51efb35e1a8e03ee85" name="a3a0ae7341d518e51efb35e1a8e03ee85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a0ae7341d518e51efb35e1a8e03ee85">&#9670;&#160;</a></span>mCounterResetTimingTag</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> UStaticPassiveData::mCounterResetTimingTag</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>도달 시 내부 카운터를 0으로 초기화. 비우면 리셋 없음. </p>
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00144">144</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -200,9 +320,9 @@ Public 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝). </p>
+<p>적용 중인 이펙트를 제거(해제)할 시점(예: 공격 끝). Instant 이펙트는 적용 순간 끝나므로 해제 대상이 아님. 이때는 비워 둠. </p>
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00080">80</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00135">135</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -218,24 +338,40 @@ Public 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00057">57</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00107">107</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="afb56815f198be77f43a785d9d79cd4c1" name="afb56815f198be77f43a785d9d79cd4c1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb56815f198be77f43a785d9d79cd4c1">&#9670;&#160;</a></span>mEffectClass</h2>
+<a id="a42deccf9b4ca32a3a536d97e86b48b92" name="a42deccf9b4ca32a3a536d97e86b48b92"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42deccf9b4ca32a3a536d97e86b48b92">&#9670;&#160;</a></span>mEffects</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSoftClassPtr</a>&lt;<a class="el" href="classUTacticalEffect.html">UTacticalEffect</a>&gt; UStaticPassiveData::mEffectClass</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFPassiveEffectEntry.html">FPassiveEffectEntry</a>&gt; UStaticPassiveData::mEffects</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>속성·연산(op)·지속정책은 이 이펙트 클래스가 정의. 양(magnitude)은 mMagnitude로 공급. </p>
+<p>발동 시 순서대로 전부 적용. 수치는 피연산자로 계산. Instant 이펙트는 발동할 때마다 온전히 적용됨. Infinite 이펙트는 재발동 시 이전 적용을 지우고 새로 적용. 수치가 쌓이지 않음. </p>
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00204">204</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a8a996ba2abb58d348fe87cd91bdeef97" name="a8a996ba2abb58d348fe87cd91bdeef97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a996ba2abb58d348fe87cd91bdeef97">&#9670;&#160;</a></span>mEffectTarget</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="StaticPassiveData_8h.html#a9ea5ca4cdd49fc162ecbec8e3c2be359">EPassiveEffectTarget</a> UStaticPassiveData::mEffectTarget = EPassiveEffectTarget::Self</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00210">210</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -251,24 +387,7 @@ Public 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00060">60</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a24ce7d9eb98224ac2c2e88f7bfec6b47" name="a24ce7d9eb98224ac2c2e88f7bfec6b47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24ce7d9eb98224ac2c2e88f7bfec6b47">&#9670;&#160;</a></span>mMagnitude</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> UStaticPassiveData::mMagnitude = 0.<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">f</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>'+5' vs '+10'은 서로 다른 DA. 등급/레벨 스케일이 필요해지면 커브로 확장. </p>
-
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00128">128</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00110">110</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -283,26 +402,9 @@ Public 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>고정형은 제네릭(UTacticalPassive_AddStat), 계산형은 Nth 등. 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다. </p>
+<p>기본은 제네릭(UTacticalPassive_Generic). 컴포넌트가 이 클래스로 런타임 패시브를 생성하고 본 데이터를 주입한다. </p>
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00110">110</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="acbe24c3e07c8e1a9f590c8b9d0e370c2" name="acbe24c3e07c8e1a9f590c8b9d0e370c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbe24c3e07c8e1a9f590c8b9d0e370c2">&#9670;&#160;</a></span>mPassiveTriggerCondition</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFPassiveCondition.html">FPassiveCondition</a>&gt; UStaticPassiveData::mPassiveTriggerCondition</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>패시브의 발동 조건(mConditionTag), 패시브의 발동 조건 수치(mThresholdValue) </p>
-
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00090">90</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00220">220</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -319,28 +421,13 @@ Public 속성</h2></td></tr>
 </div><div class="memdoc">
 <p>발동 조건을 통과한 타겟이 얼마나 있어야 발동하는지 여부. Any=하나라도, All=전부. </p>
 
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00100">100</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00193">193</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="af69273cd04337ed80f0fd16677b8dcd7" name="af69273cd04337ed80f0fd16677b8dcd7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af69273cd04337ed80f0fd16677b8dcd7">&#9670;&#160;</a></span>mThreshold</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UStaticPassiveData::mThreshold = 0</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a> 파일의 <a class="el" href="StaticPassiveData_8h_source.html#l00134">134</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<hr/>이 클래스에 대한 문서화 페이지는 다음의 파일로부터 생성되었습니다.:<ul>
+<hr/>이 클래스에 대한 문서화 페이지는 다음의 파일들로부터 생성되었습니다.:<ul>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/DataAsset/PassiveData/<a class="el" href="StaticPassiveData_8h_source.html">StaticPassiveData.h</a></li>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/DataAsset/PassiveData/<a class="el" href="StaticPassiveData_8cpp_source.html">StaticPassiveData.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

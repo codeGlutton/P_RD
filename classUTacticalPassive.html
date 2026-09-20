@@ -91,6 +91,7 @@ $(document).ready(function(){initNavTree('classUTacticalPassive.html',''); initR
 
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">클래스</a> &#124;
 <a href="#pub-methods">Public 멤버 함수</a> &#124;
 <a href="#pro-methods">Protected 멤버 함수</a> &#124;
 <a href="#pro-attribs">Protected 속성</a> &#124;
@@ -108,16 +109,20 @@ UTacticalPassive에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classUTacticalPassive.png" usemap="#UTacticalPassive_map" alt=""/>
   <map id="UTacticalPassive_map" name="UTacticalPassive_map">
-<area href="classUTacticalPassive__AddStat.html" title="스탯 가산하는 패시브 (내부 상태 없음)" alt="UTacticalPassive_AddStat" shape="rect" coords="0,112,192,136"/>
-<area href="classUTacticalPassive__NthAddStat.html" title="N번째 발동마다 스탯 가산하는 계산형 패시브" alt="UTacticalPassive_NthAddStat" shape="rect" coords="202,112,394,136"/>
-<area href="classUMockConditionAddStatPassive.html" title="수량 조건 테스트용 목 패시브 (AddStat + HP 자격 조건)" alt="UMockConditionAddStatPassive" shape="rect" coords="0,168,192,192"/>
+<area href="classUTacticalPassive__Generic.html" title="데이터 기반 제네릭 패시브" alt="UTacticalPassive_Generic" shape="rect" coords="0,112,160,136"/>
   </map>
 </div></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+클래스</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structUTacticalPassive_1_1FPassiveAppliedEffect.html">FPassiveAppliedEffect</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">적용해서 받은 핸들 하나 (핸들 + 해제할 스택 수)  <a href="structUTacticalPassive_1_1FPassiveAppliedEffect.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:ab03a255c478cb03e8fe30994de005f71" id="r_ab03a255c478cb03e8fe30994de005f71"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ab03a255c478cb03e8fe30994de005f71">ActivatePassive</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TimingTag</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>)</td></tr>
-<tr class="memdesc:ab03a255c478cb03e8fe30994de005f71"><td class="mdescLeft">&#160;</td><td class="mdescRight">패시브 발동/해제/무시 요청  <br /></td></tr>
+<tr class="memdesc:ab03a255c478cb03e8fe30994de005f71"><td class="mdescLeft">&#160;</td><td class="mdescRight">패시브 타이밍 라우팅 (리셋/캡처/발동/해제)  <br /></td></tr>
 <tr class="separator:ab03a255c478cb03e8fe30994de005f71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7da968e1006e2642bd232ea320a51f32" id="r_a7da968e1006e2642bd232ea320a51f32"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a7da968e1006e2642bd232ea320a51f32">CommitPassive</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>)</td></tr>
 <tr class="memdesc:a7da968e1006e2642bd232ea320a51f32"><td class="mdescLeft">&#160;</td><td class="mdescRight">계산된 패시브 내부 상태를 커밋  <br /></td></tr>
@@ -137,35 +142,47 @@ Public 멤버 함수</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:a38bf66d373c453045ebd33ae3c16a44f" id="r_a38bf66d373c453045ebd33ae3c16a44f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a38bf66d373c453045ebd33ae3c16a44f">InitializeFromData</a> ()</td></tr>
-<tr class="memdesc:a38bf66d373c453045ebd33ae3c16a44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">정적 데이터로 공통 필드(이펙트 클래스/타이밍 태그) 초기화  <br /></td></tr>
+<tr class="memdesc:a38bf66d373c453045ebd33ae3c16a44f"><td class="mdescLeft">&#160;</td><td class="mdescRight">정적 데이터로 공통 필드(타이밍 태그) 초기화  <br /></td></tr>
 <tr class="separator:a38bf66d373c453045ebd33ae3c16a44f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a334fbccbbe83a6cace13209c1a54e938" id="r_a334fbccbbe83a6cace13209c1a54e938"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a334fbccbbe83a6cace13209c1a54e938">NotifyPassive</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Magnitude</a>)</td></tr>
-<tr class="memdesc:a334fbccbbe83a6cace13209c1a54e938"><td class="mdescLeft">&#160;</td><td class="mdescRight">계산된 기여값을 드라이버가 원하는 형태로 출력  <br /></td></tr>
-<tr class="separator:a334fbccbbe83a6cace13209c1a54e938"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb6587bde15cbb6bd6636eed28df38c0" id="r_aeb6587bde15cbb6bd6636eed28df38c0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#aeb6587bde15cbb6bd6636eed28df38c0">PassesTargetQuantifier</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:aeb6587bde15cbb6bd6636eed28df38c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">수량 조건 판정  <br /></td></tr>
-<tr class="separator:aeb6587bde15cbb6bd6636eed28df38c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af483707f95aa64940cfc731b3e5b1888" id="r_af483707f95aa64940cfc731b3e5b1888"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#af483707f95aa64940cfc731b3e5b1888">IsTargetQualified</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Snapshot</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:af483707f95aa64940cfc731b3e5b1888"><td class="mdescLeft">&#160;</td><td class="mdescRight">자격 조건 판정  <br /></td></tr>
-<tr class="separator:af483707f95aa64940cfc731b3e5b1888"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81993b28b6d76ba24dc170031a336c19" id="r_a81993b28b6d76ba24dc170031a336c19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a81993b28b6d76ba24dc170031a336c19">OnCounterReset</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>)</td></tr>
+<tr class="memdesc:a81993b28b6d76ba24dc170031a336c19"><td class="mdescLeft">&#160;</td><td class="mdescRight">카운터 리셋 시점 처리  <br /></td></tr>
+<tr class="separator:a81993b28b6d76ba24dc170031a336c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f104249dc2be8209af9151fa58c84bf" id="r_a4f104249dc2be8209af9151fa58c84bf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a4f104249dc2be8209af9151fa58c84bf">OnCapture</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>)</td></tr>
+<tr class="memdesc:a4f104249dc2be8209af9151fa58c84bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">캡처 시점 처리 (비교용 값 저장)  <br /></td></tr>
+<tr class="separator:a4f104249dc2be8209af9151fa58c84bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebc94a0581766beecf9ffb20f0c5d3e5" id="r_aebc94a0581766beecf9ffb20f0c5d3e5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#aebc94a0581766beecf9ffb20f0c5d3e5">OnActivate</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>)</td></tr>
+<tr class="memdesc:aebc94a0581766beecf9ffb20f0c5d3e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">발동 시점 처리 (게이트 → 계산 → 적용)  <br /></td></tr>
+<tr class="separator:aebc94a0581766beecf9ffb20f0c5d3e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9639e527bcea8c403551297e0c91621" id="r_af9639e527bcea8c403551297e0c91621"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#af9639e527bcea8c403551297e0c91621">InitializeState</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:af9639e527bcea8c403551297e0c91621"><td class="mdescLeft">&#160;</td><td class="mdescRight">내부 상태 최초 생성  <br /></td></tr>
+<tr class="separator:af9639e527bcea8c403551297e0c91621"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10efc110b9b1d01924c3151039368438" id="r_a10efc110b9b1d01924c3151039368438"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a10efc110b9b1d01924c3151039368438">NotifyPassive</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt; <a class="el" href="classUTacticalEffect.html">UTacticalEffect</a> &gt; EffectClass, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Magnitude</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="StaticPassiveData_8h.html#a9ea5ca4cdd49fc162ecbec8e3c2be359">EPassiveEffectTarget</a> EffectTarget, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bRefreshPrevious</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a>)</td></tr>
+<tr class="memdesc:a10efc110b9b1d01924c3151039368438"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 적용 (이펙트 클래스/대상 지정)  <br /></td></tr>
+<tr class="separator:a10efc110b9b1d01924c3151039368438"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea3c01f8b08317c5a26b7cc1b8bea6ae" id="r_aea3c01f8b08317c5a26b7cc1b8bea6ae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#aea3c01f8b08317c5a26b7cc1b8bea6ae">PassesTargetQuantifier</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">State</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:aea3c01f8b08317c5a26b7cc1b8bea6ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">수량 조건 판정  <br /></td></tr>
+<tr class="separator:aea3c01f8b08317c5a26b7cc1b8bea6ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a480c7c5e4d2851914a93467b77df8b13" id="r_a480c7c5e4d2851914a93467b77df8b13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a480c7c5e4d2851914a93467b77df8b13">IsTargetQualified</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TargetIndex</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">State</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a480c7c5e4d2851914a93467b77df8b13"><td class="mdescLeft">&#160;</td><td class="mdescRight">자격 조건 판정  <br /></td></tr>
+<tr class="separator:a480c7c5e4d2851914a93467b77df8b13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected 속성</h2></td></tr>
-<tr class="memitem:a9d2e223c13db554cb052008abefa4b0b" id="r_a9d2e223c13db554cb052008abefa4b0b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a9d2e223c13db554cb052008abefa4b0b">EvaluateActivate</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutMagnitude</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PURE_VIRTUAL</a>(<a class="el" href="classUTacticalPassive.html">UTacticalPassive</a></td></tr>
-<tr class="memdesc:a9d2e223c13db554cb052008abefa4b0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">발동 시점에서 적용 여부 결정 + 다음 상태 계산 + 기여값 산출  <br /></td></tr>
-<tr class="separator:a9d2e223c13db554cb052008abefa4b0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53bdb9fad72ad4b8eae028c3563f401c" id="r_a53bdb9fad72ad4b8eae028c3563f401c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt; <a class="el" href="classUTacticalEffect.html">UTacticalEffect</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a53bdb9fad72ad4b8eae028c3563f401c">mEffectClass</a></td></tr>
-<tr class="memdesc:a53bdb9fad72ad4b8eae028c3563f401c"><td class="mdescLeft">&#160;</td><td class="mdescRight">이 패시브가 적용할 이펙트  <br /></td></tr>
-<tr class="separator:a53bdb9fad72ad4b8eae028c3563f401c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aace8dbb065db3fd78cc6a6f822a93f1e" id="r_aace8dbb065db3fd78cc6a6f822a93f1e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#aace8dbb065db3fd78cc6a6f822a93f1e">mActiveHandles</a></td></tr>
-<tr class="memdesc:aace8dbb065db3fd78cc6a6f822a93f1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">적용 중인 이펙트 핸들들 (대상별)  <br /></td></tr>
-<tr class="separator:aace8dbb065db3fd78cc6a6f822a93f1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7b28f3aa34cdf046626b84335b927c2" id="r_ac7b28f3aa34cdf046626b84335b927c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structUTacticalPassive_1_1FPassiveAppliedEffect.html">FPassiveAppliedEffect</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ac7b28f3aa34cdf046626b84335b927c2">mAppliedEffects</a></td></tr>
+<tr class="memdesc:ac7b28f3aa34cdf046626b84335b927c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">적용해서 받은 핸들 목록 (해제용)  <br /></td></tr>
+<tr class="separator:ac7b28f3aa34cdf046626b84335b927c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a280c92d317c10e37f9fced76c62f0d92" id="r_a280c92d317c10e37f9fced76c62f0d92"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a280c92d317c10e37f9fced76c62f0d92">mActivateTimingTag</a></td></tr>
 <tr class="memdesc:a280c92d317c10e37f9fced76c62f0d92"><td class="mdescLeft">&#160;</td><td class="mdescRight">발동 시점 태그 (단일)  <br /></td></tr>
 <tr class="separator:a280c92d317c10e37f9fced76c62f0d92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c3bfd1d0ae3c06922fe8dbfe632f929" id="r_a7c3bfd1d0ae3c06922fe8dbfe632f929"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a7c3bfd1d0ae3c06922fe8dbfe632f929">mDeactivateTimingTag</a></td></tr>
 <tr class="memdesc:a7c3bfd1d0ae3c06922fe8dbfe632f929"><td class="mdescLeft">&#160;</td><td class="mdescRight">해제 시점 태그 (단일)  <br /></td></tr>
 <tr class="separator:a7c3bfd1d0ae3c06922fe8dbfe632f929"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addc5e175b5201e49b11b1d9f97209adc" id="r_addc5e175b5201e49b11b1d9f97209adc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#addc5e175b5201e49b11b1d9f97209adc">mCounterResetTimingTag</a></td></tr>
+<tr class="memdesc:addc5e175b5201e49b11b1d9f97209adc"><td class="mdescLeft">&#160;</td><td class="mdescRight">카운터 리셋 시점 태그 (단일)  <br /></td></tr>
+<tr class="separator:addc5e175b5201e49b11b1d9f97209adc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae09797cfae6b425d30db418d34bab524" id="r_ae09797cfae6b425d30db418d34bab524"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ae09797cfae6b425d30db418d34bab524">mCaptureTimingTag</a></td></tr>
+<tr class="memdesc:ae09797cfae6b425d30db418d34bab524"><td class="mdescLeft">&#160;</td><td class="mdescRight">캡처 시점 태그 (단일)  <br /></td></tr>
+<tr class="separator:ae09797cfae6b425d30db418d34bab524"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab57b0b1fcf1131a722bf0219e7fcd4c5" id="r_ab57b0b1fcf1131a722bf0219e7fcd4c5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ab57b0b1fcf1131a722bf0219e7fcd4c5">mState</a></td></tr>
 <tr class="memdesc:ab57b0b1fcf1131a722bf0219e7fcd4c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">커밋된 패시브 내부 상태  <br /></td></tr>
 <tr class="separator:ab57b0b1fcf1131a722bf0219e7fcd4c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,19 +195,13 @@ Friends</h2></td></tr>
 <tr class="memitem:a44a4e21651393b6c7658c441a0440055" id="r_a44a4e21651393b6c7658c441a0440055"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a44a4e21651393b6c7658c441a0440055">FPassiveComponentModelTests</a></td></tr>
 <tr class="memdesc:a44a4e21651393b6c7658c441a0440055"><td class="mdescLeft">&#160;</td><td class="mdescRight">유닛테스트 모듈이 패시브 객체에 접근하기 위해 friend 선언  <br /></td></tr>
 <tr class="separator:a44a4e21651393b6c7658c441a0440055"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad19df3b8d089bff1db92aadbb80be612" id="r_ad19df3b8d089bff1db92aadbb80be612"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ad19df3b8d089bff1db92aadbb80be612">FTacticalPassiveAddStatTests</a></td></tr>
-<tr class="separator:ad19df3b8d089bff1db92aadbb80be612"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12ce59a04b6825657aed057a0a018e9d" id="r_a12ce59a04b6825657aed057a0a018e9d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#a12ce59a04b6825657aed057a0a018e9d">FTacticalPassiveNthAddStatCalcTests</a></td></tr>
-<tr class="separator:a12ce59a04b6825657aed057a0a018e9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2fe1150e112cb8f6663c80ea78e67e9" id="r_ad2fe1150e112cb8f6663c80ea78e67e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTacticalPassive.html#ad2fe1150e112cb8f6663c80ea78e67e9">FTacticalPassiveNthAddStatCommitTests</a></td></tr>
-<tr class="separator:ad2fe1150e112cb8f6663c80ea78e67e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><p>전투 중 특정 시점(타격 전/후, 피격 전/후 등)에 발동하는 패시브의 베이스. 액티브 스킬과 달리 플레이어가 직접 발동하지 않고, 타이밍 태그에 맞춰서 호출됨.</p>
 <p>계산할 때는 내부 상태를 바꾸지 않으며 적용 함수가 호출될 때만 내부 상태를 변경.</p>
 <dl class="section user"><dt>상태 보유 여부</dt><dd>스택 카운터 같은 내부 상태가 필요한 패시브만 mState를 사용함. 상태가 없는 패시브는 mState를 비워두고 PassiveState를 무시하면 됨. </dd></dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00034">34</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00037">37</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="ab03a255c478cb03e8fe30994de005f71" name="ab03a255c478cb03e8fe30994de005f71"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab03a255c478cb03e8fe30994de005f71">&#9670;&#160;</a></span>ActivatePassive()</h2>
@@ -223,13 +234,14 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>드라이버는 타이밍태그마다 패시브의 발동/해제 여부를 모른 채 이 함수를 호출.</p>
-<p>들어온 타이밍이</p><ul>
-<li>발동 시점(mActivateTimingTag)이면 EvaluateActivate로 적용 여부를 묻고, 참이면 NotifyPassive(발동=적용).</li>
-<li>해제 시점(mDeactivateTimingTag)이면 DeactivatePassive(해제=제거).</li>
-<li>둘 다 아니면 무시.</li>
+<p>드라이버는 타이밍태그마다 패시브의 처리 내용을 모른 채 이 함수를 호출.</p>
+<p>진입 시 상태 작업본을 준비(커밋본 복사 또는 InitializeState)한 뒤, 들어온 타이밍이</p><ul>
+<li>카운터 리셋 시점(mCounterResetTimingTag)이면 OnCounterReset.</li>
+<li>캡처 시점(mCaptureTimingTag)이면 OnCapture.</li>
+<li>발동 시점(mActivateTimingTag)이면 OnActivate.</li>
+<li>해제 시점(mDeactivateTimingTag)이면 DeactivatePassive(해제=제거). 같은 태그가 여러 시점에 걸릴 수 있으므로 위 순서대로 전부 처리.</li>
 </ul>
-<p>라우팅이 고정돼 있으므로 일반함수로 두고, 파생클래스에서는 EvaluateActivate를 구현.</p>
+<p>라우팅이 고정돼 있으므로 일반함수로 두고, 파생클래스에서는 시점별 가상 함수를 구현.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">TimingTag</td><td>타이밍 태그 (발동/해제 시점 분기에 사용) </td></tr>
@@ -239,7 +251,7 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00021">21</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -274,7 +286,7 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p><a class="el" href="classUTacticalPassive__NthAddStat.html#a26e17ef4d37e4182aae830cd2eae6cda">UTacticalPassive_NthAddStat</a>에서 재구현되었습니다.</p>
+<p><a class="el" href="classUTacticalPassive__Generic.html#a8b0dd8f275e77e2e29c80f5b12c7d7b6">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
 
 <p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00080">80</a> 번째 라인에서 정의되었습니다.</p>
 
@@ -294,9 +306,9 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>NotifyPassive에서 저장해 둔 핸들로 이펙트를 활성 집합에서 제거한다. 되돌리는 수치 계산은 없으며, 제거 후 TAS가 base에서 재계산해 기여가 빠진 값이 된다. 조건을 따지지 않고 즉시 내린다(예: 장비 장착 해제). </p>
+<p>NotifyPassive에서 저장해 둔 핸들로 이펙트를 활성 집합에서 제거한다. 상태이상은 이 패시브가 넣은 스택 수만 제거해 다른 출처의 스택은 남김. 되돌리는 수치 계산은 없으며, 제거 후 TAS가 base에서 재계산해 기여가 빠진 값이 된다. 조건을 따지지 않고 즉시 내린다(예: 장비 장착 해제). </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00142">142</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00187">187</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -323,7 +335,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00107">107</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00112">112</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -351,7 +363,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00095">95</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00096">96</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -377,14 +389,51 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>기본은 mStaticData를 베이스 멤버로 복사. 패시브별 추가 파라미터(임계 등)는 각자 EvaluateActivate에서 mStaticData를 직접 읽음. </p>
+<p>기본은 mStaticData의 시점 태그를 베이스 멤버로 복사. 조건/효과 등 나머지는 각자 mStaticData를 직접 읽음. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00058">58</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00073">73</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="af483707f95aa64940cfc731b3e5b1888" name="af483707f95aa64940cfc731b3e5b1888"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af483707f95aa64940cfc731b3e5b1888">&#9670;&#160;</a></span>IsTargetQualified()</h2>
+<a id="af9639e527bcea8c403551297e0c91621" name="af9639e527bcea8c403551297e0c91621"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9639e527bcea8c403551297e0c91621">&#9670;&#160;</a></span>InitializeState()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UTacticalPassive::InitializeState </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>PassiveState</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>상태 보유 패시브가 자기 상태 타입으로 초기화. 기본은 no-op(무상태). ActivatePassive 진입 시 작업본이 비어 있고 mState도 없을 때 호출됨.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">PassiveState</td><td>[out] 초기화할 내부 상태 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><a class="el" href="classUTacticalPassive__Generic.html#a78566c6706d3dfabc0f8696fd2c59c75">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a480c7c5e4d2851914a93467b77df8b13" name="a480c7c5e4d2851914a93467b77df8b13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a480c7c5e4d2851914a93467b77df8b13">&#9670;&#160;</a></span>IsTargetQualified()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -395,9 +444,25 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UTacticalPassive::IsTargetQualified </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> *&#160;</td>
-          <td class="paramname"><em>Snapshot</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>TargetIndex</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>State</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -406,21 +471,25 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>기본은 무조건 통과(true). '체력 50% 이하' 같은 자격 조건이 있는 패시브가 override해서 스냅샷 수치로 판정. (TODO: 지금 보니 자격 조건을 데이터로 지정하고 판정하는 로직이 없음. 이거 구현은 나중에 ^^)</p>
+<p>기본은 무조건 통과(true). '체력 50% 이하' 같은 자격 조건이 있는 패시브가 override해서 스냅샷/상태로 판정.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Snapshot</td><td>대상 스냅샷 (없으면 nullptr) </td></tr>
+    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
+    <tr><td class="paramname">TargetIndex</td><td>Ctx.mTargets 인덱스 </td></tr>
+    <tr><td class="paramname">State</td><td>패시브 내부 상태 </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>자격을 갖췄으면 true </dd></dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00175">175</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classUTacticalPassive__Generic.html#a0fd8e1fc674ecf13117eb5b1af14d840">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00214">214</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a334fbccbbe83a6cace13209c1a54e938" name="a334fbccbbe83a6cace13209c1a54e938"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a334fbccbbe83a6cace13209c1a54e938">&#9670;&#160;</a></span>NotifyPassive()</h2>
+<a id="a10efc110b9b1d01924c3151039368438" name="a10efc110b9b1d01924c3151039368438"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10efc110b9b1d01924c3151039368438">&#9670;&#160;</a></span>NotifyPassive()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -437,8 +506,26 @@ Friends</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt; <a class="el" href="classUTacticalEffect.html">UTacticalEffect</a> &gt;&#160;</td>
+          <td class="paramname"><em>EffectClass</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td>
-          <td class="paramname"><em>Magnitude</em>&#160;</td>
+          <td class="paramname"><em>Magnitude</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="StaticPassiveData_8h.html#a9ea5ca4cdd49fc162ecbec8e3c2be359">EPassiveEffectTarget</a>&#160;</td>
+          <td class="paramname"><em>EffectTarget</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>bRefreshPrevious</em> = <code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -448,25 +535,161 @@ Friends</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>기본은 OUT 모드(TargetDelta를 그대로 둠). 이펙트 발사 등 출력 방식이 달라지면 베이스에서 이 함수만 교체하면 되고, 서브클래스는 영향 없음.</p>
+<p>EffectTarget이 Self면 소유자에게만, Targets면 Ctx.mTargets 전부에 적용. 적용한 핸들은 mAppliedEffects에 저장. 상태이상 클래스(UTacticalEffect_Status)는 수치를 스택 수로 넣고 면역 검사를 직접 함.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 현재 스냅샷 </td></tr>
-    <tr><td class="paramname">Magnitude</td><td>[in,out] 계산된 수치 변화 </td></tr>
+    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
+    <tr><td class="paramname">EffectClass</td><td>적용할 이펙트 클래스 </td></tr>
+    <tr><td class="paramname">Magnitude</td><td>적용 수치 </td></tr>
+    <tr><td class="paramname">EffectTarget</td><td>적용 대상 (Self / Targets) </td></tr>
+    <tr><td class="paramname">bRefreshPrevious</td><td>적용 전에 이전 핸들 배치를 제거할지 (효과 배열은 첫 적용 전 1회만 제거해야 하므로 false로 호출) </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00072">72</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00088">88</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="aeb6587bde15cbb6bd6636eed28df38c0" name="aeb6587bde15cbb6bd6636eed28df38c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeb6587bde15cbb6bd6636eed28df38c0">&#9670;&#160;</a></span>PassesTargetQuantifier()</h2>
+<a id="aebc94a0581766beecf9ffb20f0c5d3e5" name="aebc94a0581766beecf9ffb20f0c5d3e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aebc94a0581766beecf9ffb20f0c5d3e5">&#9670;&#160;</a></span>OnActivate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UTacticalPassive::OnActivate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>PassiveState</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>발동 경로 전체를 파생 클래스(Generic)가 구현. 기본은 아무것도 안 함.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
+    <tr><td class="paramname">PassiveState</td><td>[in,out] 패시브 내부 상태 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><a class="el" href="classUTacticalPassive__Generic.html#a9f05bcca02992dc5ac1af78e12f0ff48">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00154">154</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4f104249dc2be8209af9151fa58c84bf" name="a4f104249dc2be8209af9151fa58c84bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f104249dc2be8209af9151fa58c84bf">&#9670;&#160;</a></span>OnCapture()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UTacticalPassive::OnCapture </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>PassiveState</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>캡처를 쓰는 패시브가 override. 기본은 no-op.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
+    <tr><td class="paramname">PassiveState</td><td>[in,out] 패시브 내부 상태 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><a class="el" href="classUTacticalPassive__Generic.html#a67e51a45d77da5501ff034f1d6b012a9">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00143">143</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a81993b28b6d76ba24dc170031a336c19" name="a81993b28b6d76ba24dc170031a336c19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81993b28b6d76ba24dc170031a336c19">&#9670;&#160;</a></span>OnCounterReset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UTacticalPassive::OnCounterReset </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>PassiveState</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>상태에 카운터를 가진 패시브가 override. 기본은 no-op.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">PassiveState</td><td>[in,out] 패시브 내부 상태 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p><a class="el" href="classUTacticalPassive__Generic.html#a532ca4deea75acece9215d7fe4ad4015">UTacticalPassive_Generic</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00132">132</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aea3c01f8b08317c5a26b7cc1b8bea6ae" name="aea3c01f8b08317c5a26b7cc1b8bea6ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aea3c01f8b08317c5a26b7cc1b8bea6ae">&#9670;&#160;</a></span>PassesTargetQuantifier()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -478,8 +701,18 @@ Friends</h2></td></tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UTacticalPassive::PassesTargetQuantifier </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;&#160;</td>
-          <td class="paramname"><em>Ctx</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramname"><em>Ctx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>State</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -488,16 +721,17 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>mTargets를 순회하며 IsTargetQualified로 자격 타겟 수를 센 뒤, 수량 조건(Any/All)으로 발동 여부를 결정. 타겟이 비어 있으면 판정 대상이 없으므로 통과.</p>
+<p>mTargets를 순회하며 IsTargetQualified로 자격 타겟 수를 센 뒤, 수량 조건(Any/All)으로 발동 여부를 결정. 타겟이 비어 있으면 대상 인덱스 없이 조건을 한 번 평가 (대상 참조 조건은 탈락).</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
+    <tr><td class="paramname">State</td><td>패시브 내부 상태 (자격 판정에 전달) </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>발동 허용이면 true </dd></dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00167">167</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00215">215</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -518,7 +752,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>데이터 구동 패시브는 이펙트/시점/수치를 클래스가 아니라 mStaticData에서 읽는다. 컴포넌트가 패시브 생성 직후 호출. 내부적으로 InitializeFromData로 공통 필드를 채움. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00051">51</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8cpp_source.html">TacticalPassive.cpp</a> 파일의 <a class="el" href="TacticalPassive_8cpp_source.html#l00066">66</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -544,117 +778,11 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section note"><dt>주의</dt><dd>릴리즈 빌드에서는 테스트 모듈이 빠져도 전방선언만 했기 때문에 영향 없음 </dd></dl>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00042">42</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="ad19df3b8d089bff1db92aadbb80be612" name="ad19df3b8d089bff1db92aadbb80be612"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad19df3b8d089bff1db92aadbb80be612">&#9670;&#160;</a></span>FTacticalPassiveAddStatTests</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveAddStatTests</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a12ce59a04b6825657aed057a0a018e9d" name="a12ce59a04b6825657aed057a0a018e9d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a12ce59a04b6825657aed057a0a018e9d">&#9670;&#160;</a></span>FTacticalPassiveNthAddStatCalcTests</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveNthAddStatCalcTests</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
 <p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="ad2fe1150e112cb8f6663c80ea78e67e9" name="ad2fe1150e112cb8f6663c80ea78e67e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad2fe1150e112cb8f6663c80ea78e67e9">&#9670;&#160;</a></span>FTacticalPassiveNthAddStatCommitTests</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FTacticalPassiveNthAddStatCommitTests</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
-<a id="a9d2e223c13db554cb052008abefa4b0b" name="a9d2e223c13db554cb052008abefa4b0b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d2e223c13db554cb052008abefa4b0b">&#9670;&#160;</a></span>EvaluateActivate</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UTacticalPassive::EvaluateActivate(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFPassiveActivateContext.html">FPassiveActivateContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Ctx</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IN</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TInstancedStruct</a>&lt; <a class="el" href="structFDynamicPassiveData.html">FDynamicPassiveData</a> &gt; &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PassiveState</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutMagnitude</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PURE_VIRTUAL</a>(<a class="el" href="classUTacticalPassive.html">UTacticalPassive</a></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>발동 시점(mActivateTimingTag)에 베이스가 호출. 해제는 베이스가 라우팅하므로 여기선 발동만 판단. 내부상태는 인자로 받은 PassiveState를 사용하고 다음 내부상태도 여기에 써서 돌려줌.</p>
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Ctx</td><td>소유자/대상 및 스냅샷 </td></tr>
-    <tr><td class="paramname">PassiveState</td><td>[in,out] 패시브 내부 상태 </td></tr>
-    <tr><td class="paramname">OutMagnitude</td><td>[out] 적용 시 대상에게 가할 수치 변화 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>이펙트를 적용하면 true, 스킵이면 false </dd></dl>
-
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00131">131</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
 <a id="a280c92d317c10e37f9fced76c62f0d92" name="a280c92d317c10e37f9fced76c62f0d92"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a280c92d317c10e37f9fced76c62f0d92">&#9670;&#160;</a></span>mActivateTimingTag</h2>
 
@@ -674,14 +802,14 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>이 패시브가 발동(이펙트 적용)할 시점(예: OnStartAttacking). 드라이버가 HasTimingTag로 모아서 ActivatePassive 호출 시, 이 태그와 일치하면 EvaluateActivate로 분기. </p>
+<p>이 패시브가 발동(이펙트 적용)할 시점(예: OnStartAttacking). 드라이버가 HasTimingTag로 모아서 ActivatePassive 호출 시, 이 태그와 일치하면 OnActivate로 분기. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00206">206</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00248">248</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="aace8dbb065db3fd78cc6a6f822a93f1e" name="aace8dbb065db3fd78cc6a6f822a93f1e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aace8dbb065db3fd78cc6a6f822a93f1e">&#9670;&#160;</a></span>mActiveHandles</h2>
+<a id="ac7b28f3aa34cdf046626b84335b927c2" name="ac7b28f3aa34cdf046626b84335b927c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac7b28f3aa34cdf046626b84335b927c2">&#9670;&#160;</a></span>mAppliedEffects</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -690,7 +818,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>&gt; UTacticalPassive::mActiveHandles</td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="structUTacticalPassive_1_1FPassiveAppliedEffect.html">FPassiveAppliedEffect</a>&gt; UTacticalPassive::mAppliedEffects</td>
         </tr>
       </table>
   </td>
@@ -699,9 +827,59 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>NotifyPassive 적용 시 대상마다 하나씩 저장하고 DeactivatePassive 제거 시 전부 비움. 한 배치는 통째로 적용/해제된다는 전제(직렬 apply/deactivate). </p>
+<p>발동 시 정의(mStaticData-&gt;mEffects)를 대상에게 적용할 때마다 핸들 하나씩 저장. 다음 발동이나 해제 시점에 전부 제거하고 비움. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00195">195</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00237">237</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae09797cfae6b425d30db418d34bab524" name="ae09797cfae6b425d30db418d34bab524"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae09797cfae6b425d30db418d34bab524">&#9670;&#160;</a></span>mCaptureTimingTag</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> UTacticalPassive::mCaptureTimingTag</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>이 태그와 일치하면 OnCapture로 분기. 비어 있으면 캡처 없음. </p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00276">276</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="addc5e175b5201e49b11b1d9f97209adc" name="addc5e175b5201e49b11b1d9f97209adc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addc5e175b5201e49b11b1d9f97209adc">&#9670;&#160;</a></span>mCounterResetTimingTag</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGameplayTag</a> UTacticalPassive::mCounterResetTimingTag</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>이 태그와 일치하면 OnCounterReset으로 분기. 비어 있으면 리셋 없음. </p>
+
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00267">267</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -726,35 +904,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>이 패시브가 해제(이펙트 제거)할 시점(예: OnEndAttacking) 이 태그와 일치하면 DeactivatePassive로 분기. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00216">216</a> 번째 라인에서 정의되었습니다.</p>
-
-</div>
-</div>
-<a id="a53bdb9fad72ad4b8eae028c3563f401c" name="a53bdb9fad72ad4b8eae028c3563f401c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a53bdb9fad72ad4b8eae028c3563f401c">&#9670;&#160;</a></span>mEffectClass</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSubclassOf</a>&lt;<a class="el" href="classUTacticalEffect.html">UTacticalEffect</a>&gt; UTacticalPassive::mEffectClass</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<ul>
-<li>대상 속성, 연산(op), 지속정책(Infinite/Instant)은 이 이펙트가 정의하고, 패시브 계산은 크기(magnitude)만 공급한다.</li>
-<li>모디파이어가 없는 태그형 이펙트는 태그의 값을 크기로 사용 </li>
-</ul>
-
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00186">186</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00258">258</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -779,7 +929,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>스택 카운터 등 패시브마다 다른 내부 상태를 <a class="el" href="structFDynamicPassiveData.html" title="패시브 런타임 상태 베이스">FDynamicPassiveData</a> 파생형으로 저장. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00225">225</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00285">285</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -804,7 +954,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>클래스 구동(생성자에서 직접 세팅) 패시브는 null. 데이터 구동 아키타입은 여기서 수치를 읽음. </p>
 
-<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00234">234</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalPassive_8h_source.html">TacticalPassive.h</a> 파일의 <a class="el" href="TacticalPassive_8h_source.html#l00294">294</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

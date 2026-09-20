@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['계약_0',['계약',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)'],['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html',1,'전투 UI ↔ 게임플레이 경계 (View-Model 계약)'],['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html',1,'전투 UI ↔ 게임플레이 API 계약']]]
+  ['계약_0',['계약',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)'],['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2README.html',1,'전투 UI ↔ 게임플레이 경계 (View-Model 계약)'],['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html',1,'전투 UI ↔ 게임플레이 API 계약']]],
+  ['계획_1',['타격 피드백 구현 계획',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2HIT__FEEDBACK__PLAN.html',1,'']]]
 ];

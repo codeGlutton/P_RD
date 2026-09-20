@@ -100,7 +100,7 @@ $(document).ready(function(){initNavTree('structFActiveTacticalEffectsContainer.
 </div><!--header-->
 <div class="contents">
 
-<p>현재 활성화 이펙트들과 그에 따른 결과를 보유한 객체  
+<p>현재 활성화 이펙트 컨테이너  
  <a href="structFActiveTacticalEffectsContainer.html#details">더 자세히 ...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
@@ -113,53 +113,74 @@ Public 타입</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a3781efc1723ceb89e168a1db719b318e" id="r_a3781efc1723ceb89e168a1db719b318e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a3781efc1723ceb89e168a1db719b318e">FActiveTacticalEffectsContainer</a> ()</td></tr>
-<tr class="memdesc:a3781efc1723ceb89e168a1db719b318e"><td class="mdescLeft">&#160;</td><td class="mdescRight">컨테이너 기본 생성자. 지연 이펙트 연결 리스트의 tail 포인터를 head를 가리키도록 초기화한다(빈 리스트 상태).  <br /></td></tr>
 <tr class="separator:a3781efc1723ceb89e168a1db719b318e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8b9c18f376e62b8f5ff340fc7ede1875" id="r_a8b9c18f376e62b8f5ff340fc7ede1875"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a8b9c18f376e62b8f5ff340fc7ede1875">~FActiveTacticalEffectsContainer</a> ()</td></tr>
-<tr class="memdesc:a8b9c18f376e62b8f5ff340fc7ede1875"><td class="mdescLeft">&#160;</td><td class="mdescRight">소멸자. 아직 본 배열로 합쳐지지 못한 지연(pending) 이펙트 노드들을 직접 delete로 정리한다. (지연 노드는 new로 동적 할당되므로 별도 해제가 필요하다.)  <br /></td></tr>
 <tr class="separator:a8b9c18f376e62b8f5ff340fc7ede1875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad52159876c483c5fea69465ef74aa333" id="r_ad52159876c483c5fea69465ef74aa333"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ad52159876c483c5fea69465ef74aa333">RegisterWithOwnerModel</a> (<a class="el" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Owner</a>)</td></tr>
+<tr class="memitem:ad52159876c483c5fea69465ef74aa333" id="r_ad52159876c483c5fea69465ef74aa333"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ad52159876c483c5fea69465ef74aa333">RegisterWithOwnerModel</a> (<a class="el" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a> *Owner)</td></tr>
 <tr class="memdesc:ad52159876c483c5fea69465ef74aa333"><td class="mdescLeft">&#160;</td><td class="mdescRight">이 컨테이너를 소유하는 컴포넌트 모델을 등록한다.  <br /></td></tr>
 <tr class="separator:ad52159876c483c5fea69465ef74aa333"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b84acfb96a2dbc02ebb0a74ad0e3dd2" id="r_a3b84acfb96a2dbc02ebb0a74ad0e3dd2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a3b84acfb96a2dbc02ebb0a74ad0e3dd2">PostDuplicate</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DuplicateForPIE</a>)</td></tr>
-<tr class="memdesc:a3b84acfb96a2dbc02ebb0a74ad0e3dd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">객체 복제(PostDuplicate) 후 내부 포인터/콜백 재배선을 수행한다.  <br /></td></tr>
+<tr class="memdesc:a3b84acfb96a2dbc02ebb0a74ad0e3dd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">객체 복제(PostDuplicate) 후 활성 이펙트를 가지고 Aggregator들을 복구한다.  <br /></td></tr>
 <tr class="separator:a3b84acfb96a2dbc02ebb0a74ad0e3dd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89c30c6c71ab1c9c605d95a8cef33ec2" id="r_a89c30c6c71ab1c9c605d95a8cef33ec2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a89c30c6c71ab1c9c605d95a8cef33ec2">SetAttributeBaseValue</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseValue</a>)</td></tr>
-<tr class="memdesc:a89c30c6c71ab1c9c605d95a8cef33ec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">속성의 base 값을 설정하고, 그에 따른 current 값을 다시 계산한다. FTacticalAttributeData에 base를 직접 쓰고, 해당 속성의 Aggregator가 있으면 base를 갱신해 모든 모디파이어가 반영된 current를 산출한다. Aggregator가 없으면 base == current로 본다. 변경 전후로 PreAttributeBaseChange / PostAttributeBaseChange 훅을 호출한다.  <br /></td></tr>
+<tr class="memitem:a89c30c6c71ab1c9c605d95a8cef33ec2" id="r_a89c30c6c71ab1c9c605d95a8cef33ec2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a89c30c6c71ab1c9c605d95a8cef33ec2">SetAttributeBaseValue</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseValue</a>)</td></tr>
 <tr class="separator:a89c30c6c71ab1c9c605d95a8cef33ec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ede76e476a8af044ee0510483cd791b" id="r_a5ede76e476a8af044ee0510483cd791b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a5ede76e476a8af044ee0510483cd791b">GetAttributeBaseValue</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:a5ede76e476a8af044ee0510483cd791b"><td class="mdescLeft">&#160;</td><td class="mdescRight">속성의 base 값을 조회한다. <a class="el" href="structFTacticalAttributeData.html">FTacticalAttributeData</a> 기반 속성이면 데이터에서 직접 읽고, 아니면 Aggregator의 base 값을 사용한다.  <br /></td></tr>
+<tr class="memitem:a5ede76e476a8af044ee0510483cd791b" id="r_a5ede76e476a8af044ee0510483cd791b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a5ede76e476a8af044ee0510483cd791b">GetAttributeBaseValue</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> Attribute) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a5ede76e476a8af044ee0510483cd791b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45bd932c135d373cc01f01ec292bbe2a" id="r_a45bd932c135d373cc01f01ec292bbe2a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a45bd932c135d373cc01f01ec292bbe2a">ApplyModToAttribute</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEnumAsByte</a>&lt; <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> &gt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModifierOp</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModifierMagnitude</a>)</td></tr>
+<tr class="memitem:a45bd932c135d373cc01f01ec292bbe2a" id="r_a45bd932c135d373cc01f01ec292bbe2a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a45bd932c135d373cc01f01ec292bbe2a">ApplyModToAttribute</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEnumAsByte</a>&lt; <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> &gt; ModifierOp, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> ModifierMagnitude)</td></tr>
 <tr class="memdesc:a45bd932c135d373cc01f01ec292bbe2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">속성에 단일 모디파이어를 즉시 적용한다.  <br /></td></tr>
 <tr class="separator:a45bd932c135d373cc01f01ec292bbe2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf50e71ad7f607399d367d03ce98a9ec" id="r_aaf50e71ad7f607399d367d03ce98a9ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#aaf50e71ad7f607399d367d03ce98a9ec">ApplyTacticalEffectSpec</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Spec</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FoundExistingStackableGE</a>)</td></tr>
-<tr class="memdesc:aaf50e71ad7f607399d367d03ce98a9ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 스펙을 컨테이너에 적용(스택 가능 시 기존 이펙트 갱신).  <br /></td></tr>
-<tr class="separator:aaf50e71ad7f607399d367d03ce98a9ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a28c4d6e1ee706651ad185f551b1a4144" id="r_a28c4d6e1ee706651ad185f551b1a4144"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a28c4d6e1ee706651ad185f551b1a4144">ApplyTacticalEffectSpec</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Spec</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FoundExistingStackableGE</a>)</td></tr>
+<tr class="memdesc:a28c4d6e1ee706651ad185f551b1a4144"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 스펙을 컨테이너에 적용  <br /></td></tr>
+<tr class="separator:a28c4d6e1ee706651ad185f551b1a4144"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0d6ed091b6f0bd4621ccb7af1ece29f" id="r_ae0d6ed091b6f0bd4621ccb7af1ece29f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ae0d6ed091b6f0bd4621ccb7af1ece29f">ExecuteActiveEffectsFrom</a> (<a class="el" href="structFTacticalEffectSpec.html">FTacticalEffectSpec</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Spec</a>)</td></tr>
-<tr class="memdesc:ae0d6ed091b6f0bd4621ccb7af1ece29f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Instant(즉발) 이펙트처럼 base 값에 즉시 반영해야 하는 모디파이어들을 실행한다. Spec의 모든 모디파이어를 평가해 InternalExecuteMod로 하나씩 base 값에 적용한 뒤, 이펙트 클래스의 OnExecuted 훅을 호출한다.  <br /></td></tr>
+<tr class="memdesc:ae0d6ed091b6f0bd4621ccb7af1ece29f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Instant Effect와 같이 즉발 변화를 처리하는 함수  <br /></td></tr>
 <tr class="separator:ae0d6ed091b6f0bd4621ccb7af1ece29f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d240d79ea3fdfc934396bee2d5fbdb8" id="r_a9d240d79ea3fdfc934396bee2d5fbdb8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a9d240d79ea3fdfc934396bee2d5fbdb8">RemoveActiveTacticalEffect</a> (<a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Handle</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StacksToRemove</a>)</td></tr>
+<tr class="memitem:a9d240d79ea3fdfc934396bee2d5fbdb8" id="r_a9d240d79ea3fdfc934396bee2d5fbdb8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a9d240d79ea3fdfc934396bee2d5fbdb8">RemoveActiveTacticalEffect</a> (<a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StacksToRemove</a>)</td></tr>
 <tr class="memdesc:a9d240d79ea3fdfc934396bee2d5fbdb8"><td class="mdescLeft">&#160;</td><td class="mdescRight">핸들로 지정한 활성 이펙트의 스택을 제거(0이 되면 이펙트 자체 제거).  <br /></td></tr>
 <tr class="separator:a9d240d79ea3fdfc934396bee2d5fbdb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa222f43d7e8e84dc38ce099e364d3093" id="r_aa222f43d7e8e84dc38ce099e364d3093"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeAttributeValue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#aa222f43d7e8e84dc38ce099e364d3093">GetTacticalAttributeValueChangeDelegate</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Attribute</a>)</td></tr>
+<tr class="memitem:a6a6496cae809172a2e5a8fe9ac8a40ef" id="r_a6a6496cae809172a2e5a8fe9ac8a40ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a6a6496cae809172a2e5a8fe9ac8a40ef">RemoveActiveEffects</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StacksToRemove</a>)</td></tr>
+<tr class="separator:a6a6496cae809172a2e5a8fe9ac8a40ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa222f43d7e8e84dc38ce099e364d3093" id="r_aa222f43d7e8e84dc38ce099e364d3093"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeAttributeValue</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#aa222f43d7e8e84dc38ce099e364d3093">GetTacticalAttributeValueChangeDelegate</a> (<a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> Attribute)</td></tr>
 <tr class="memdesc:aa222f43d7e8e84dc38ce099e364d3093"><td class="mdescLeft">&#160;</td><td class="mdescRight">특정 속성의 값 변경 대리자를 반환한다(없으면 생성).  <br /></td></tr>
 <tr class="separator:aa222f43d7e8e84dc38ce099e364d3093"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad85d812f826b59e41f1af75215840d27" id="r_ad85d812f826b59e41f1af75215840d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ad85d812f826b59e41f1af75215840d27">GetActiveTacticalEffect</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Handle</a>)</td></tr>
-<tr class="memdesc:ad85d812f826b59e41f1af75215840d27"><td class="mdescLeft">&#160;</td><td class="mdescRight">핸들로 활성 이펙트를 찾는다(본 배열 + 지연 리스트를 함께 순회하는 반복자 사용).  <br /></td></tr>
+<tr class="memitem:a079e686387fa96797d30644640cbe570" id="r_a079e686387fa96797d30644640cbe570"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a079e686387fa96797d30644640cbe570">AdvanceEffectDurations</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Time</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitType</a>)</td></tr>
+<tr class="memdesc:a079e686387fa96797d30644640cbe570"><td class="mdescLeft">&#160;</td><td class="mdescRight">Effect 시간 진행  <br /></td></tr>
+<tr class="separator:a079e686387fa96797d30644640cbe570"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3562aa0ea8e48f9a1a2ab637cf9c9c37" id="r_a3562aa0ea8e48f9a1a2ab637cf9c9c37"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a3562aa0ea8e48f9a1a2ab637cf9c9c37">CheckDurationExpired</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Time</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitType</a>)</td></tr>
+<tr class="memdesc:a3562aa0ea8e48f9a1a2ab637cf9c9c37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Effect 만기 체크  <br /></td></tr>
+<tr class="separator:a3562aa0ea8e48f9a1a2ab637cf9c9c37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:affc81343a456d6f70c3a56f0dab399bb" id="r_affc81343a456d6f70c3a56f0dab399bb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#affc81343a456d6f70c3a56f0dab399bb">CaptureAllEffectStacks</a> (<a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Snapshot</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:affc81343a456d6f70c3a56f0dab399bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad85d812f826b59e41f1af75215840d27" id="r_ad85d812f826b59e41f1af75215840d27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ad85d812f826b59e41f1af75215840d27">GetActiveTacticalEffect</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle)</td></tr>
+<tr class="memdesc:ad85d812f826b59e41f1af75215840d27"><td class="mdescLeft">&#160;</td><td class="mdescRight">핸들로 활성 이펙트를 조회(없으면 nullptr)  <br /></td></tr>
 <tr class="separator:ad85d812f826b59e41f1af75215840d27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7311eb0c131487c0220c368c810ef27" id="r_ae7311eb0c131487c0220c368c810ef27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ae7311eb0c131487c0220c368c810ef27">GetActiveTacticalEffect</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Handle</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:ae7311eb0c131487c0220c368c810ef27"><td class="mdescLeft">&#160;</td><td class="mdescRight">핸들로 활성 이펙트를 찾는다(const 버전).  <br /></td></tr>
+<tr class="memitem:ae7311eb0c131487c0220c368c810ef27" id="r_ae7311eb0c131487c0220c368c810ef27"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ae7311eb0c131487c0220c368c810ef27">GetActiveTacticalEffect</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:ae7311eb0c131487c0220c368c810ef27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a779c1f5864a5fbe8e898f5c51ab617de" id="r_a779c1f5864a5fbe8e898f5c51ab617de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a779c1f5864a5fbe8e898f5c51ab617de">GetActiveTacticalEffect</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>)</td></tr>
-<tr class="memdesc:a779c1f5864a5fbe8e898f5c51ab617de"><td class="mdescLeft">&#160;</td><td class="mdescRight">인덱스로 활성 이펙트를 얻는다. 본 배열 범위를 넘는 인덱스는 지연 리스트로 이어 접근한다. 즉 논리 인덱스 공간은 [본 배열 0..N-1] 다음에 [지연 리스트]가 이어진 형태다.  <br /></td></tr>
+<tr class="memitem:a779c1f5864a5fbe8e898f5c51ab617de" id="r_a779c1f5864a5fbe8e898f5c51ab617de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a779c1f5864a5fbe8e898f5c51ab617de">GetActiveTacticalEffect</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> Index)</td></tr>
+<tr class="memdesc:a779c1f5864a5fbe8e898f5c51ab617de"><td class="mdescLeft">&#160;</td><td class="mdescRight">배열 인덱스로 활성 이펙트를 조회  <br /></td></tr>
 <tr class="separator:a779c1f5864a5fbe8e898f5c51ab617de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5da2802f15c18d8991f4c62c554a4319" id="r_a5da2802f15c18d8991f4c62c554a4319"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a5da2802f15c18d8991f4c62c554a4319">GetActiveTacticalEffect</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Index</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:a5da2802f15c18d8991f4c62c554a4319"><td class="mdescLeft">&#160;</td><td class="mdescRight">인덱스로 활성 이펙트를 얻는다(const 버전). 비-const 구현으로 위임한다.  <br /></td></tr>
+<tr class="memitem:a5da2802f15c18d8991f4c62c554a4319" id="r_a5da2802f15c18d8991f4c62c554a4319"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a5da2802f15c18d8991f4c62c554a4319">GetActiveTacticalEffect</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> Index) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a5da2802f15c18d8991f4c62c554a4319"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67c93f6a18556482fccb956003c476ac" id="r_a67c93f6a18556482fccb956003c476ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a67c93f6a18556482fccb956003c476ac">GetNumTacticalEffects</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:a67c93f6a18556482fccb956003c476ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">본 배열과 지연 추가 리스트를 합친 전체 활성 이펙트 개수를 반환한다.  <br /></td></tr>
+<tr class="memitem:a09e8bb4e207e948b2f4eef748db2e666" id="r_a09e8bb4e207e948b2f4eef748db2e666"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a09e8bb4e207e948b2f4eef748db2e666">GetActiveEffects</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a09e8bb4e207e948b2f4eef748db2e666"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9cfa6fc6a81c7ee450d9388bdb4850a" id="r_ab9cfa6fc6a81c7ee450d9388bdb4850a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ab9cfa6fc6a81c7ee450d9388bdb4850a">SetActiveEffectTimeRemaining</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewTime</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle)</td></tr>
+<tr class="separator:ab9cfa6fc6a81c7ee450d9388bdb4850a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c55cb52c4ea217943dcc2c0f32b0b49" id="r_a9c55cb52c4ea217943dcc2c0f32b0b49"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a9c55cb52c4ea217943dcc2c0f32b0b49">GetActiveEffectTimeRemaining</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a9c55cb52c4ea217943dcc2c0f32b0b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa65747472ab6ce68f463faaf62cf94b4" id="r_aa65747472ab6ce68f463faaf62cf94b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#aa65747472ab6ce68f463faaf62cf94b4">GetActiveEffectsTimeRemaining</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>, <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitType</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:aa65747472ab6ce68f463faaf62cf94b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18daaeab6e850c471b94e5ba142f9792" id="r_a18daaeab6e850c471b94e5ba142f9792"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a18daaeab6e850c471b94e5ba142f9792">GetActiveEffectsDuration</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a18daaeab6e850c471b94e5ba142f9792"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ec6833d3a296964cd33ac51c786d535" id="r_a0ec6833d3a296964cd33ac51c786d535"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TPair</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a0ec6833d3a296964cd33ac51c786d535">GetActiveEffectsTimeRemainingAndDuration</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>, <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitType</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a0ec6833d3a296964cd33ac51c786d535"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99e933e4b6b0e27a4eb35a2f9ea66502" id="r_a99e933e4b6b0e27a4eb35a2f9ea66502"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a99e933e4b6b0e27a4eb35a2f9ea66502">GetTacticalEffectMagnitude</a> (<a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> Handle, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;Attribute) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a99e933e4b6b0e27a4eb35a2f9ea66502"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3239ef9619c2b8b44968a2e7324ab130" id="r_a3239ef9619c2b8b44968a2e7324ab130"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a3239ef9619c2b8b44968a2e7324ab130">GetActiveEffectCount</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Query</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a3239ef9619c2b8b44968a2e7324ab130"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67c93f6a18556482fccb956003c476ac" id="r_a67c93f6a18556482fccb956003c476ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a67c93f6a18556482fccb956003c476ac">GetNumTacticalEffects</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a67c93f6a18556482fccb956003c476ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af905670d679cbd7cfbc77c72438abc35" id="r_af905670d679cbd7cfbc77c72438abc35"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#af905670d679cbd7cfbc77c72438abc35">GetWorldTime</a> (<a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnitType</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:af905670d679cbd7cfbc77c72438abc35"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac03f4bbeb60c07a1190cb5ff80a3b7f5" id="r_ac03f4bbeb60c07a1190cb5ff80a3b7f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffectsContainer.html#aa9cb5d5932d0f4923dd8d9064452b784">ConstIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#ac03f4bbeb60c07a1190cb5ff80a3b7f5">CreateConstIterator</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:ac03f4bbeb60c07a1190cb5ff80a3b7f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04a8f5022a5ae4310c404711a054d8bd" id="r_a04a8f5022a5ae4310c404711a054d8bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFActiveTacticalEffectsContainer.html#a214bb29cc7ec2c4a2f2dbe85815e6249">Iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFActiveTacticalEffectsContainer.html#a04a8f5022a5ae4310c404711a054d8bd">CreateIterator</a> ()</td></tr>
@@ -192,7 +213,7 @@ Friends</h2></td></tr>
 <tr class="separator:af0bdc5c98b0c1d9b1586346b3b849d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>GAS의 FActiveGameplayEffectsContainer를 대체하는 자체 구현으로, 활성 이펙트 배열을 보관하고 속성별 Aggregator를 통해 최종 수치를 산출한다. 이 PR(#191)에서 GAS의 EGameplayModOp가 자체 ETacticalModOp로 치환되면서, 모디파이어 연산 종류를 받는 진입점(ApplyModToAttribute 등)도 함께 바뀌었다. </p>
+<div class="textblock"><p>활성 이펙트 배열을 보관하고 속성별 Aggregator를 통해 최종 수치를 산출한다. </p>
 
 <p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00217">217</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 타입정의 문서화</h2>
@@ -208,7 +229,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00227">227</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -224,7 +245,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00229">229</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -244,7 +265,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00023">23</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -263,11 +284,48 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00061">61</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00033">33</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a079e686387fa96797d30644640cbe570" name="a079e686387fa96797d30644640cbe570"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a079e686387fa96797d30644640cbe570">&#9670;&#160;</a></span>AdvanceEffectDurations()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> FActiveTacticalEffectsContainer::AdvanceEffectDurations </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>Time</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a>&#160;</td>
+          <td class="paramname"><em>UnitType</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Time</td><td>현재 단위 시간 </td></tr>
+    <tr><td class="paramname">UnitType</td><td>시간 단위 </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00471">471</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a45bd932c135d373cc01f01ec292bbe2a" name="a45bd932c135d373cc01f01ec292bbe2a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a45bd932c135d373cc01f01ec292bbe2a">&#9670;&#160;</a></span>ApplyModToAttribute()</h2>
 
@@ -299,31 +357,21 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>모디파이어를 속성의 base 값에 직접 실행(Instant/Execute 계열)한다. 현재 base 값에 연산 종류(ModifierOp)와 크기(ModifierMagnitude)를 적용해 새 base를 구하고 반영한다.</p>
-<p>[PR #191 핵심 치환] 연산 종류 인자가 GAS의 EGameplayModOp → 자체 ETacticalModOp로 바뀐 진입점. ETacticalModOp의 정수값은 구 EGameplayModOp와 동일하게 유지되므로(직렬화 호환 + Aggregator의 mMods[ETacticalModOp::Max] 배열 인덱싱 + DefaultEngine.ini CoreRedirect), 기존 에셋/세이브에 박힌 op 정수값을 그대로 해석할 수 있다. 연산 의미: AddBase(0)=Base 합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산. </p><dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>적용 대상 속성 </td></tr>
-    <tr><td class="paramname">ModifierOp</td><td>모디파이어 연산 종류(<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>, 구 EGameplayModOp 대체) </td></tr>
-    <tr><td class="paramname">ModifierMagnitude</td><td>적용할 크기 값</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section note"><dt>주의</dt><dd>[PR #191 enum 치환] ModifierOp 타입이 GAS의 EGameplayModOp -&gt; 자체 ETacticalModOp로 바뀐 지점이다. ETacticalModOp의 정수값은 구 EGameplayModOp와 동일하게 유지된다(직렬화 호환 / Aggregator의 op-인덱싱 / DefaultEngine.ini CoreRedirect 매핑을 위해). 실제 연산식은 StaticExecModOnBaseValue가 op에 따라 분기한다: AddBase(0)=합산, MultiplyAdditive(1)=배율 가산, DivideAdditive(2)=나눗셈 가산, Override(3)=덮어쓰기, MultiplyCompound(4)=거듭제곱 곱, AddFinal(5)=최종 합산. </dd></dl>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Attribute</td><td>대상 속성. </td></tr>
-    <tr><td class="paramname">ModifierOp</td><td>연산 종류(ETacticalModOp). </td></tr>
-    <tr><td class="paramname">ModifierMagnitude</td><td>적용할 모디파이어 크기. </td></tr>
+    <tr><td class="paramname">Attribute</td><td>적용 대상 속성 </td></tr>
+    <tr><td class="paramname">ModifierOp</td><td>모디파이어 연산 종류 </td></tr>
+    <tr><td class="paramname">ModifierMagnitude</td><td>적용할 크기 값 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00298">298</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00200">200</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="aaf50e71ad7f607399d367d03ce98a9ec" name="aaf50e71ad7f607399d367d03ce98a9ec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf50e71ad7f607399d367d03ce98a9ec">&#9670;&#160;</a></span>ApplyTacticalEffectSpec()</h2>
+<a id="a28c4d6e1ee706651ad185f551b1a4144" name="a28c4d6e1ee706651ad185f551b1a4144"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28c4d6e1ee706651ad185f551b1a4144">&#9670;&#160;</a></span>ApplyTacticalEffectSpec()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -337,7 +385,7 @@ Friends</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OUT</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> &amp;&#160;</td>
           <td class="paramname"><em>FoundExistingStackableGE</em>&#160;</td>
         </tr>
         <tr>
@@ -347,25 +395,73 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>지속(Duration/Infinite) 이펙트 Spec을 컨테이너에 적용한다. 스태킹 가능한 동일 이펙트가 이미 있으면 스택 수를 합치고, 없으면 새 활성 이펙트를 만든다. 새 이펙트 생성 시, 본 배열에 여유 슬랙이 없으면(재할당 필요) Scope Lock 중 안전을 위해 지연(pending) 연결 리스트에 넣어 Lock 해제 시점에 합쳐지도록 한다.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">Spec</td><td>적용할 이펙트 스펙 </td></tr>
-    <tr><td class="paramname">FoundExistingStackableGE</td><td>[out] 스택 가능한 기존 이펙트를 찾아 합쳤는지 여부 </td></tr>
+    <tr><td class="paramname">FoundExistingStackableGE</td><td>스택 가능한 기존 이펙트인지 여부 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>생성/갱신된 활성 이펙트 포인터</dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>생성/갱신된 활성 이펙트 포인터 </dd></dl>
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00208">208</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="affc81343a456d6f70c3a56f0dab399bb" name="affc81343a456d6f70c3a56f0dab399bb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#affc81343a456d6f70c3a56f0dab399bb">&#9670;&#160;</a></span>CaptureAllEffectStacks()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> FActiveTacticalEffectsContainer::CaptureAllEffectStacks </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *&#160;</td>
+          <td class="paramname"><em>Snapshot</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00850">850</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3562aa0ea8e48f9a1a2ab637cf9c9c37" name="a3562aa0ea8e48f9a1a2ab637cf9c9c37"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3562aa0ea8e48f9a1a2ab637cf9c9c37">&#9670;&#160;</a></span>CheckDurationExpired()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> FActiveTacticalEffectsContainer::CheckDurationExpired </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>Time</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a>&#160;</td>
+          <td class="paramname"><em>UnitType</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramdir"></td><td class="paramname">Spec</td><td>적용할 이펙트 명세. </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">FoundExistingStackableGE</td><td>기존 스태킹 대상에 합쳐졌으면 true. </td></tr>
+    <tr><td class="paramname">Time</td><td>현재 단위 시간 </td></tr>
+    <tr><td class="paramname">UnitType</td><td>시간 단위 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>적용 결과로 활성화된(또는 갱신된) 이펙트 포인터. </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00316">316</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00497">497</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -392,7 +488,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00383">383</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00399">399</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -419,7 +515,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00388">388</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00403">403</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -440,12 +536,152 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Spec</td><td>실행할 이펙트 명세(모디파이어 크기는 내부에서 재계산됨). </td></tr>
+    <tr><td class="paramname">Spec</td><td>적용할 이펙트 스펙 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00406">406</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00371">371</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a3239ef9619c2b8b44968a2e7324ab130" name="a3239ef9619c2b8b44968a2e7324ab130"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3239ef9619c2b8b44968a2e7324ab130">&#9670;&#160;</a></span>GetActiveEffectCount()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> FActiveTacticalEffectsContainer::GetActiveEffectCount </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l01037">1037</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a09e8bb4e207e948b2f4eef748db2e666" name="a09e8bb4e207e948b2f4eef748db2e666"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09e8bb4e207e948b2f4eef748db2e666">&#9670;&#160;</a></span>GetActiveEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a> &gt; FActiveTacticalEffectsContainer::GetActiveEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00910">910</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a18daaeab6e850c471b94e5ba142f9792" name="a18daaeab6e850c471b94e5ba142f9792"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18daaeab6e850c471b94e5ba142f9792">&#9670;&#160;</a></span>GetActiveEffectsDuration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt; FActiveTacticalEffectsContainer::GetActiveEffectsDuration </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00978">978</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa65747472ab6ce68f463faaf62cf94b4" name="aa65747472ab6ce68f463faaf62cf94b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa65747472ab6ce68f463faaf62cf94b4">&#9670;&#160;</a></span>GetActiveEffectsTimeRemaining()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt; FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a>&#160;</td>
+          <td class="paramname"><em>UnitType</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00957">957</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0ec6833d3a296964cd33ac51c786d535" name="a0ec6833d3a296964cd33ac51c786d535"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ec6833d3a296964cd33ac51c786d535">&#9670;&#160;</a></span>GetActiveEffectsTimeRemainingAndDuration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TPair</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> &gt; &gt; FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemainingAndDuration </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a>&#160;</td>
+          <td class="paramname"><em>UnitType</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00994">994</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a9c55cb52c4ea217943dcc2c0f32b0b49" name="a9c55cb52c4ea217943dcc2c0f32b0b49"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c55cb52c4ea217943dcc2c0f32b0b49">&#9670;&#160;</a></span>GetActiveEffectTimeRemaining()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> FActiveTacticalEffectsContainer::GetActiveEffectTimeRemaining </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>&#160;</td>
+          <td class="paramname"><em>Handle</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00945">945</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -466,13 +702,13 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Handle</td><td>찾을 이펙트 핸들. </td></tr>
+    <tr><td class="paramname">Handle</td><td>탐색 핸들 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>일치하는 이펙트 포인터(없으면 nullptr). </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>발견된 활성 Effect 객체 </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00825">825</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00861">861</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -491,15 +727,8 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Handle</td><td>찾을 이펙트 핸들. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>일치하는 이펙트의 const 포인터(없으면 nullptr). </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00842">842</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00873">873</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -512,7 +741,7 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> * FActiveTacticalEffectsContainer::GetActiveTacticalEffect </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname"><em>Index</em></td><td>)</td>
           <td></td>
         </tr>
@@ -520,13 +749,13 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Index</td><td>0-기반 논리 인덱스. </td></tr>
+    <tr><td class="paramname">Index</td><td>활성 Effect 인덱스 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>해당 위치의 이펙트 포인터(범위를 벗어나면 nullptr). </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>발견된 활성 Effect 객체 </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00860">860</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00885">885</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -539,21 +768,14 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffect.html">FActiveTacticalEffect</a> * FActiveTacticalEffectsContainer::GetActiveTacticalEffect </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname"><em>Index</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Index</td><td>0-기반 논리 인덱스. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>해당 위치의 이펙트 const 포인터(범위를 벗어나면 nullptr). </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00885">885</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00905">905</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -572,15 +794,8 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>조회할 속성. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>base 값(소유자/데이터가 없으면 0). </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00721">721</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00762">762</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -591,16 +806,15 @@ Friends</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> FActiveTacticalEffectsContainer::GetNumTacticalEffects </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> FActiveTacticalEffectsContainer::GetNumTacticalEffects </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>반환값</dt><dd>활성 이펙트 총 개수(본 배열 + pending). </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00894">894</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l01050">1050</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -619,23 +833,65 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>특정 속성의 값 변경 알림 델리게이트를 반환한다(없으면 생성).</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">Attribute</td><td>대상 속성 </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>해당 속성에 바인딩할 수 있는 값 변경 대리자 참조</dd></dl>
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>대상 속성. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>해당 속성의 값 변경 델리게이트 참조. </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>해당 속성에 바인딩할 수 있는 값 변경 대리자 참조 </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00461">461</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00466">466</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a99e933e4b6b0e27a4eb35a2f9ea66502" name="a99e933e4b6b0e27a4eb35a2f9ea66502"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99e933e4b6b0e27a4eb35a2f9ea66502">&#9670;&#160;</a></span>GetTacticalEffectMagnitude()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> FActiveTacticalEffectsContainer::GetTacticalEffectMagnitude </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>&#160;</td>
+          <td class="paramname"><em>Handle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalAttribute.html">FTacticalAttribute</a> &amp;&#160;</td>
+          <td class="paramname"><em>Attribute</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l01015">1015</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="af905670d679cbd7cfbc77c72438abc35" name="af905670d679cbd7cfbc77c72438abc35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af905670d679cbd7cfbc77c72438abc35">&#9670;&#160;</a></span>GetWorldTime()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> FActiveTacticalEffectsContainer::GetWorldTime </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a>&#160;</td>
+          <td class="paramname"><em>UnitType</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l01064">1064</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -654,16 +910,14 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>복제(예: PIE 복제) 직후 호출. 런타임 전용 상태를 초기화하고 Aggregator를 재구축한다. Lock/지연 리스트/Aggregator 맵/델리게이트/스태킹 맵 등 비직렬화 상태를 깨끗이 비운 뒤, 살아있는 각 이펙트에 대해 Aggregator 모디파이어 크기를 다시 계산해 채워 넣는다.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">DuplicateForPIE</td><td>PIE용 복제 여부</td></tr>
-    <tr><td class="paramname">DuplicateForPIE</td><td>PIE 복제 여부(현재 분기에는 사용하지 않음). </td></tr>
+    <tr><td class="paramname">DuplicateForPIE</td><td>PIE용 복제 여부 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00090">90</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -682,16 +936,44 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>이 컨테이너의 소유자(Attribute를 보유한 컴포넌트 모델)를 등록한다.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
-    <tr><td class="paramname">Owner</td><td>소유 컴포넌트 모델</td></tr>
-    <tr><td class="paramname">Owner</td><td>소유 컴포넌트 모델. nullptr이거나 이미 동일하면 무시한다. </td></tr>
+    <tr><td class="paramname">Owner</td><td>소유 컴포넌트 모델 </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00075">75</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00043">43</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6a6496cae809172a2e5a8fe9ac8a40ef" name="a6a6496cae809172a2e5a8fe9ac8a40ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a6496cae809172a2e5a8fe9ac8a40ef">&#9670;&#160;</a></span>RemoveActiveEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> FActiveTacticalEffectsContainer::RemoveActiveEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFTacticalEffectQuery.html">FTacticalEffectQuery</a> &amp;&#160;</td>
+          <td class="paramname"><em>Query</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>StacksToRemove</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00449">449</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -710,7 +992,7 @@ Friends</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname"><em>StacksToRemove</em>&#160;</td>
         </tr>
         <tr>
@@ -720,7 +1002,6 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>핸들로 활성 이펙트를 찾아 제거(또는 일부 스택 제거)한다.</p>
 <dl class="params"><dt>매개변수</dt><dd>
   <table class="params">
     <tr><td class="paramname">Handle</td><td>대상 이펙트 핸들 </td></tr>
@@ -728,17 +1009,39 @@ Friends</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>반환값</dt><dd>제거가 수행되었으면 true</dd></dl>
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Handle</td><td>제거 대상 이펙트 핸들. </td></tr>
-    <tr><td class="paramname">StacksToRemove</td><td>제거할 스택 수(0 이하 또는 보유 스택 이상이면 이펙트 전체 제거). </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>일치하는 이펙트를 찾아 제거 처리했으면 true, 못 찾으면 false. </dd></dl>
+<dl class="section return"><dt>반환값</dt><dd>제거가 수행되었으면 true </dd></dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00440">440</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00433">433</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab9cfa6fc6a81c7ee450d9388bdb4850a" name="ab9cfa6fc6a81c7ee450d9388bdb4850a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9cfa6fc6a81c7ee450d9388bdb4850a">&#9670;&#160;</a></span>SetActiveEffectTimeRemaining()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> FActiveTacticalEffectsContainer::SetActiveEffectTimeRemaining </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>NewTime</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveTacticalEffectHandle.html">FActiveTacticalEffectHandle</a>&#160;</td>
+          <td class="paramname"><em>Handle</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00926">926</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -767,15 +1070,8 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Attribute</td><td>대상 속성. </td></tr>
-    <tr><td class="paramname">BaseValue</td><td>설정할 새 base 값. </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00675">675</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html">ActiveTacticalEffectsContainer.cpp</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8cpp_source.html#l00724">724</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -804,7 +1100,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00406">406</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00419">419</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -832,7 +1128,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00395">395</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00409">409</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -860,7 +1156,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00410">410</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00423">423</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -888,7 +1184,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00399">399</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00413">413</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -912,7 +1208,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00222">222</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -936,7 +1232,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00222">222</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -960,7 +1256,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00222">222</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -984,7 +1280,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00222">222</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00221">221</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1001,7 +1297,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00422">422</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00435">435</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1017,7 +1313,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00417">417</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="ActiveTacticalEffectsContainer_8h_source.html">ActiveTacticalEffectsContainer.h</a> 파일의 <a class="el" href="ActiveTacticalEffectsContainer_8h_source.html#l00430">430</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

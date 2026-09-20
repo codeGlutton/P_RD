@@ -5,5 +5,6 @@ var structFSRPGAttributeEffectEventLog =
     [ "operator==", "structFSRPGAttributeEffectEventLog.html#adfc3576b3d4b6f6105ee94e59a746e8a", null ],
     [ "GetTypeHash", "structFSRPGAttributeEffectEventLog.html#ab3dcd4cc800a87aa7763ee78df378d90", null ],
     [ "mEffectAttribute", "structFSRPGAttributeEffectEventLog.html#af5231749f7aaf76e268d9d4dc86879fb", null ],
+    [ "mIsCritical", "structFSRPGAttributeEffectEventLog.html#aca3b3a147749f6096533fd3f7e49b5e8", null ],
     [ "mMagnitude", "structFSRPGAttributeEffectEventLog.html#a5f5fe65c234d21489c51fb838a3850e4", null ]
 ];

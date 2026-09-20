@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Singleton/InstanceSubsystem/PartyRestorationSubsystem.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('PartyRestorationSubsystem_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">PartyRestorationSubsystem.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="PartyRestorationSubsystem_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="PartyRestorationSubsystem_8h.html">Singleton/InstanceSubsystem/PartyRestorationSubsystem.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="PartyModel_8h.html">Actor/Party/PartyModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="PlayerUnitModel_8h.html">Pawn/Player/PlayerUnitModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span> </div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;Engine/AssetManager.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &quot;<a class="code" href="StaticPlayerUnitSpawnData_8h.html">DataAsset/UnitSpawnData/StaticPlayerUnitSpawnData.h</a>&quot;</span></div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="preprocessor">#include &quot;<a class="code" href="ObjectModelFactory_8h.html">Simulation/Factory/ObjectModelFactory.h</a>&quot;</span></div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span><a class="code hl_function" href="CombatGameMode_8cpp.html#a94d60604635d3b762922c188374cb4c4">DEFINE_LOG_CATEGORY</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogPartyRestoration</a>)</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span> </div>
+<div class="foldopen" id="foldopen00014" data-start="{" data-end="}">
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classUPartyRestorationSubsystem.html#a49a110c40d36157dfae21ccee7a21ab0">   14</a></span><a class="code hl_class" href="classUPartyModel.html">UPartyModel</a>* <a class="code hl_class" href="classUPartyRestorationSubsystem.html">UPartyRestorationSubsystem</a>::RestorePartyFromPersistData(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UWorld</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">World</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;월드 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span> </div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UAssetManager</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetManager</a> = UAssetManager::GetIfInitialized();</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetManager</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;에셋 매니저 nullptr&quot;</span>));</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <span class="comment">/* 파티 스폰 */</span></div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    </div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_class" href="classUPartyModel.html">UPartyModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PartyModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#a11a61dbffd578717c7fcb1bfc6d6259a">GetWorldModelFactory</a>(<span class="keyword">this</span>)-&gt;<a class="code hl_function" href="classUObjectModelFactory.html#ad7838ea8ff3feb1b0ca4043b18aa4744">NewModel</a>&lt;<a class="code hl_class" href="classUPartyModel.html">UPartyModel</a>&gt;();</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <span class="comment">/* 멤버 스폰 */</span></div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;TObjectPtr&lt;UPlayerUnitModel&gt;</a>&gt; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModels</a>;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;FPrimaryAssetId&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitIds</a> = GetRunMutableData()-&gt;GetPlayerUnitIds();</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModels</a>.Reserve(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitIds</a>.Num());</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitId</a> : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitIds</a>)</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    {</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <a class="code hl_class" href="classUPlayerUnitModel.html">UPlayerUnitModel</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModel</a> = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        <a class="code hl_class" href="classUStaticPlayerUnitSpawnData.html">UStaticPlayerUnitSpawnData</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticPlayerUnitSpawnData</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AssetManager</a>-&gt;GetPrimaryAssetObject&lt;<a class="code hl_class" href="classUStaticPlayerUnitSpawnData.html">UStaticPlayerUnitSpawnData</a>&gt;(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitId</a>);</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticPlayerUnitSpawnData</a> != <span class="keyword">nullptr</span>)</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        {</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UClass</a>* <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModelClass</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticPlayerUnitSpawnData</a>-&gt;mModelClass.LoadSynchronous();</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">checkf</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModelClass</a> != <span class="keyword">nullptr</span>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;플레이어 유닛 ModelClass 로드 실패&quot;</span>));</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModel</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#a11a61dbffd578717c7fcb1bfc6d6259a">GetWorldModelFactory</a>(<span class="keyword">this</span>)-&gt;<a class="code hl_function" href="classUObjectModelFactory.html#ab59174cb3a7fdc4a4d55ca067cdc8778">NewModelDeferred</a>&lt;<a class="code hl_class" href="classUPlayerUnitModel.html">UPlayerUnitModel</a>&gt;(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModelClass</a>);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModel</a>-&gt;SetStaticSpawnData(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StaticPlayerUnitSpawnData</a>);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModel</a>-&gt;<a class="code hl_function" href="classUObjectModel.html#a3bd7cf1ad5ad3142935bbd5408620e76">FinishCreating</a>();</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span> </div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>            <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogPartyRestoration</a>, Log, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;플레이어 유닛 스폰&quot;</span>));</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        }</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModels</a>.Add(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModel</a>);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    }</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="comment">/* 복원 */</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span> </div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    GetRunMutableData()-&gt;RegisterParty(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PartyModel</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PlayerUnitModels</a>);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UE_LOG</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LogPartyRestoration</a>, Log, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;파티 복원&quot;</span>));</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span> </div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PartyModel</a>;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>}</div>
+</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
+<div class="ttc" id="aCombatGameMode_8cpp_html_a94d60604635d3b762922c188374cb4c4"><div class="ttname"><a href="CombatGameMode_8cpp.html#a94d60604635d3b762922c188374cb4c4">DEFINE_LOG_CATEGORY</a></div><div class="ttdeci">DEFINE_LOG_CATEGORY(LogCombatGameMode)</div></div>
+<div class="ttc" id="aObjectModelFactory_8h_html"><div class="ttname"><a href="ObjectModelFactory_8h.html">ObjectModelFactory.h</a></div><div class="ttdoc">모델 생성 용 팩토리 헤더</div></div>
+<div class="ttc" id="aPartyModel_8h_html"><div class="ttname"><a href="PartyModel_8h.html">PartyModel.h</a></div><div class="ttdoc">파티 모델 클래스 정의 헤더</div></div>
+<div class="ttc" id="aPartyRestorationSubsystem_8h_html"><div class="ttname"><a href="PartyRestorationSubsystem_8h.html">PartyRestorationSubsystem.h</a></div><div class="ttdoc">파티 복구 Subsystem 구현 헤더</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aPlayerUnitModel_8h_html"><div class="ttname"><a href="PlayerUnitModel_8h.html">PlayerUnitModel.h</a></div><div class="ttdoc">플레이어 베이스 유닛 정의 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_a11a61dbffd578717c7fcb1bfc6d6259a"><div class="ttname"><a href="RDMinimal_8cpp.html#a11a61dbffd578717c7fcb1bfc6d6259a">GetWorldModelFactory</a></div><div class="ttdeci">UObjectModelFactory * GetWorldModelFactory(const UObject *WorldContextObject)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00026">RDMinimal.cpp:26</a></div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aStaticPlayerUnitSpawnData_8h_html"><div class="ttname"><a href="StaticPlayerUnitSpawnData_8h.html">StaticPlayerUnitSpawnData.h</a></div><div class="ttdoc">플레이어 유닛 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aclassUObjectModelFactory_html_ab59174cb3a7fdc4a4d55ca067cdc8778"><div class="ttname"><a href="classUObjectModelFactory.html#ab59174cb3a7fdc4a4d55ca067cdc8778">UObjectModelFactory::NewModelDeferred</a></div><div class="ttdeci">T * NewModelDeferred(const UClass *Class, FName Name=NAME_None, EObjectFlags Flags=RF_NoFlags, UObject *Template=nullptr, bool CopyTransientsFromClassDefaults=false, FObjectInstancingGraph *InInstanceGraph=nullptr, UPackage *InExternalPackage=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="ObjectModelFactory_8h_source.html#l00061">ObjectModelFactory.h:61</a></div></div>
+<div class="ttc" id="aclassUObjectModelFactory_html_ad7838ea8ff3feb1b0ca4043b18aa4744"><div class="ttname"><a href="classUObjectModelFactory.html#ad7838ea8ff3feb1b0ca4043b18aa4744">UObjectModelFactory::NewModel</a></div><div class="ttdeci">T * NewModel(const UClass *Class, const FTransform &amp;ViewTransform=FTransform::Identity, FName Name=NAME_None, EObjectFlags Flags=RF_NoFlags, UObject *Template=nullptr, bool CopyTransientsFromClassDefaults=false, FObjectInstancingGraph *InInstanceGraph=nullptr, UPackage *InExternalPackage=nullptr)</div><div class="ttdef"><b>Definition</b> <a href="ObjectModelFactory_8h_source.html#l00038">ObjectModelFactory.h:38</a></div></div>
+<div class="ttc" id="aclassUObjectModel_html_a3bd7cf1ad5ad3142935bbd5408620e76"><div class="ttname"><a href="classUObjectModel.html#a3bd7cf1ad5ad3142935bbd5408620e76">UObjectModel::FinishCreating</a></div><div class="ttdeci">void FinishCreating(const FTransform &amp;ViewTransform=FTransform::Identity)</div><div class="ttdef"><b>Definition</b> <a href="ObjectModel_8cpp_source.html#l00023">ObjectModel.cpp:23</a></div></div>
+<div class="ttc" id="aclassUPartyModel_html"><div class="ttname"><a href="classUPartyModel.html">UPartyModel</a></div><div class="ttdoc">플레이어 모델을 관리하는 파티 모델 클래스</div><div class="ttdef"><b>Definition</b> <a href="PartyModel_8h_source.html#l00025">PartyModel.h:26</a></div></div>
+<div class="ttc" id="aclassUPartyRestorationSubsystem_html"><div class="ttname"><a href="classUPartyRestorationSubsystem.html">UPartyRestorationSubsystem</a></div><div class="ttdoc">파티 유닛 복구 Subsystem</div><div class="ttdef"><b>Definition</b> <a href="PartyRestorationSubsystem_8h_source.html#l00025">PartyRestorationSubsystem.h:26</a></div></div>
+<div class="ttc" id="aclassUPlayerUnitModel_html"><div class="ttname"><a href="classUPlayerUnitModel.html">UPlayerUnitModel</a></div><div class="ttdoc">플레이어 베이스 유닛 모델 입니다.</div><div class="ttdef"><b>Definition</b> <a href="PlayerUnitModel_8h_source.html#l00068">PlayerUnitModel.h:69</a></div></div>
+<div class="ttc" id="aclassUStaticPlayerUnitSpawnData_html"><div class="ttname"><a href="classUStaticPlayerUnitSpawnData.html">UStaticPlayerUnitSpawnData</a></div><div class="ttdoc">플레이어 유닛 생성 시 사용되는 정적 Primary Data Asset</div><div class="ttdef"><b>Definition</b> <a href="StaticPlayerUnitSpawnData_8h_source.html#l00018">StaticPlayerUnitSpawnData.h:19</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_36741995dc55b5b43265b1773ea4ad65.html">Singleton</a></li><li class="navelem"><a class="el" href="dir_b1781bf60d5273ee279ba5c41ae38a22.html">InstanceSubsystem</a></li><li class="navelem"><a class="el" href="PartyRestorationSubsystem_8cpp.html">PartyRestorationSubsystem.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

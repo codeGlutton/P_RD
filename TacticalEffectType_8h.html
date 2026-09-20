@@ -109,42 +109,66 @@ $(document).ready(function(){initNavTree('TacticalEffectType_8h.html',''); initR
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTacticalEffectRemovalInfo.html">FTacticalEffectRemovalInfo</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 제거 시 콜백/통지에 전달되는 제거 정보 묶음.  <a href="structFTacticalEffectRemovalInfo.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTacticalEventData.html">FTacticalEventData</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">이벤트 호출 시 참조용 정보  <a href="structFTacticalEventData.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
 네임스페이스</h2></td></tr>
+<tr class="memitem:namespaceETacticalTagEventType" id="r_namespaceETacticalTagEventType"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceETacticalTagEventType.html">ETacticalTagEventType</a></td></tr>
+<tr class="memdesc:namespaceETacticalTagEventType"><td class="mdescLeft">&#160;</td><td class="mdescRight">태그 이벤트 호출 타입 <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespaceETacticalModOp" id="r_namespaceETacticalModOp"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceETacticalModOp.html">ETacticalModOp</a></td></tr>
-<tr class="memdesc:namespaceETacticalModOp"><td class="mdescLeft">&#160;</td><td class="mdescRight">속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum. <br /></td></tr>
+<tr class="memdesc:namespaceETacticalModOp"><td class="mdescLeft">&#160;</td><td class="mdescRight">속성 수정자(Modifier) 연산 종류 <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespaceTacticalEffectUtilities" id="r_namespaceTacticalEffectUtilities"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html">TacticalEffectUtilities</a></td></tr>
-<tr class="memdesc:namespaceTacticalEffectUtilities"><td class="mdescLeft">&#160;</td><td class="mdescRight">구 GAS의 GameplayEffectUtilities를 대체하는 모디파이어 연산 보조 함수 모음. <br /></td></tr>
+<tr class="memdesc:namespaceTacticalEffectUtilities"><td class="mdescLeft">&#160;</td><td class="mdescRight">Effect 연관 헬퍼 함수를 묶는 namespace <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
 열거형 타입</h2></td></tr>
-<tr class="memitem:ae4e87585bef75d91a0f8b49edd2acd7a" id="r_ae4e87585bef75d91a0f8b49edd2acd7a"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7a">ETacticalEffectStackingType</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "No Stacking")
-, <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "Stack Per Source")
-, <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "Stack Per Target")
+<tr class="memitem:acdb187fc7443a05b2f6c4db32cdea7c2" id="r_acdb187fc7443a05b2f6c4db32cdea7c2"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceETacticalTagEventType.html#acdb187fc7443a05b2f6c4db32cdea7c2">ETacticalTagEventType::Type</a> : int { <a class="el" href="namespaceETacticalTagEventType.html#acdb187fc7443a05b2f6c4db32cdea7c2a2f99617e9491bc432ffdd23906d18042">ETacticalTagEventType::NewOrRemoved</a>
+, <a class="el" href="namespaceETacticalTagEventType.html#acdb187fc7443a05b2f6c4db32cdea7c2a9d891f39c4c488b44a4fcef80b6bcec6">ETacticalTagEventType::AnyCountChange</a>
+ }</td></tr>
+<tr class="separator:acdb187fc7443a05b2f6c4db32cdea7c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4e87585bef75d91a0f8b49edd2acd7a" id="r_ae4e87585bef75d91a0f8b49edd2acd7a"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7a">ETacticalEffectStackingType</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "No Stacking", ToolTip = "스택이 누적되지 않음")
+, <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "Stack Per Source", ToolTip = "소스 ASC마다 스택 누적")
+, <a class="el" href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(DisplayName = "Stack Per Target", ToolTip = "타겟 ASC마다 스택 누적")
  }</td></tr>
 <tr class="memdesc:ae4e87585bef75d91a0f8b49edd2acd7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 스택(중첩) 집계 방식.  <a href="TacticalEffectType_8h.html#ae4e87585bef75d91a0f8b49edd2acd7a">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:ae4e87585bef75d91a0f8b49edd2acd7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a0e4bd42177847be28fb73cdc48c72b" id="r_a9a0e4bd42177847be28fb73cdc48c72b"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72b">ETacticalEffectDurationType</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d">Instant</a>
-, <a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72bab10e24496ff8fec66189548a92a67045">Infinite</a>
+<tr class="memitem:a9a0e4bd42177847be28fb73cdc48c72b" id="r_a9a0e4bd42177847be28fb73cdc48c72b"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72b">ETacticalEffectDurationType</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "즉발이후 소멸")
+, <a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "일단 단위 기간 지속 후 소멸")
+, <a class="el" href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "인위적으로 해제 명령 전까지 무한 지속")
  }</td></tr>
-<tr class="memdesc:a9a0e4bd42177847be28fb73cdc48c72b"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 지속 종류.  <a href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72b">더 자세히 ...</a><br /></td></tr>
+<tr class="memdesc:a9a0e4bd42177847be28fb73cdc48c72b"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 지속 종류  <a href="TacticalEffectType_8h.html#a9a0e4bd42177847be28fb73cdc48c72b">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:a9a0e4bd42177847be28fb73cdc48c72b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a604cc9df3fb970b91959520736850831" id="r_a604cc9df3fb970b91959520736850831"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "매 턴 단위")
+, <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "매 라운드 단위")
+ }</td></tr>
+<tr class="memdesc:a604cc9df3fb970b91959520736850831"><td class="mdescLeft">&#160;</td><td class="mdescRight">이펙트 지속이 Duration으로 설정될 경우, 기간 단위  <a href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:a604cc9df3fb970b91959520736850831"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adaade050cdc75ff4d117532c6a6f3093" id="r_adaade050cdc75ff4d117532c6a6f3093"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093">ETacticalEffectStackingDurationPolicy</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "새로운 Duration으로 덮어쓰기")
+, <a class="el" href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "초기 Duration으로만 작동하고, 변화없음")
+, <a class="el" href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "누적될때마다 Duration 더하기")
+ }</td></tr>
+<tr class="memdesc:adaade050cdc75ff4d117532c6a6f3093"><td class="mdescLeft">&#160;</td><td class="mdescRight">스택킹될 경우, Effect의 Duration 변화 정책  <a href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:adaade050cdc75ff4d117532c6a6f3093"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a10ea7efba3589207fa69c1a6dbdcaa80" id="r_a10ea7efba3589207fa69c1a6dbdcaa80"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80">ETacticalEffectStackingExpirationPolicy</a> : uint8 { <a class="el" href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "모든 스택 지우기")
+, <a class="el" href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "단일 스택 지우고 Duration 초기화")
+, <a class="el" href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635">UMETA</a> =(ToolTip = "스택 변경 없이 Duration만 초기화")
+ }</td></tr>
+<tr class="memdesc:a10ea7efba3589207fa69c1a6dbdcaa80"><td class="mdescLeft">&#160;</td><td class="mdescRight">스택킹될 경우, Effect의 Duration 만기 정책  <a href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:a10ea7efba3589207fa69c1a6dbdcaa80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab00d942643ba92aefd4d59fa25e5cd4d" id="r_ab00d942643ba92aefd4d59fa25e5cd4d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> : int { <br />
 &#160;&#160;<a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
 , <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
 , <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
-, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da40ce19382f233a3532ff9c2ecca022a8">ETacticalModOp::MultiplyCompound</a> = 4 UMETA(DisplayName = "Multiply (Compound)")
+, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
 , <br />
 &#160;&#160;<a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
 , <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
-, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4dada51b427eda00cb729fa322f001f0732">ETacticalModOp::Additive</a> = 0 UMETA(Hidden)
-, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da0791ed13b802fad5d3339432d4425b51">ETacticalModOp::Multiplicitive</a> = 1 UMETA(Hidden)
-, <br />
-&#160;&#160;<a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da5d8b02d946c547824d90f332a25940c4">ETacticalModOp::Division</a> = 2 UMETA(Hidden)
-, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4daa60c6b7cabf4e650f3959412d9636aa6">ETacticalModOp::Override</a> = 3 UMETA(DisplayName = "Override")
+, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4da8f1ea71b0451b63b77703fd23cd95ccd">ETacticalModOp::UMETA</a> =(DisplayName = "Add (Base)")
 <br />
  }</td></tr>
 <tr class="separator:ab00d942643ba92aefd4d59fa25e5cd4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -152,12 +176,12 @@ $(document).ready(function(){initNavTree('TacticalEffectType_8h.html',''); initR
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 함수</h2></td></tr>
 <tr class="memitem:a3f238d9a09bb1f78ba0507833dd133b9" id="r_a3f238d9a09bb1f78ba0507833dd133b9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html#a3f238d9a09bb1f78ba0507833dd133b9">TacticalEffectUtilities::GetModifierBiasByModifierOp</a> (<a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModOp</a>)</td></tr>
-<tr class="memdesc:a3f238d9a09bb1f78ba0507833dd133b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">주어진 연산의 항등값(identity/bias)을 반환한다.  <br /></td></tr>
+<tr class="memdesc:a3f238d9a09bb1f78ba0507833dd133b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">각 연산자에 대한 초기 누적 값을 반환한다.  <br /></td></tr>
 <tr class="separator:a3f238d9a09bb1f78ba0507833dd133b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1af45e8b6a03bca3fdd025c814d5a144" id="r_a1af45e8b6a03bca3fdd025c814d5a144"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html#a1af45e8b6a03bca3fdd025c814d5a144">TacticalEffectUtilities::ComputeStackedModifierMagnitude</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseComputedMagnitude</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">StackCount</a>, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModOp</a>)</td></tr>
-<tr class="memdesc:a1af45e8b6a03bca3fdd025c814d5a144"><td class="mdescLeft">&#160;</td><td class="mdescRight">스택(중첩) 수를 반영한 모디파이어 최종 크기를 계산한다.  <br /></td></tr>
+<tr class="memitem:a1af45e8b6a03bca3fdd025c814d5a144" id="r_a1af45e8b6a03bca3fdd025c814d5a144"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html#a1af45e8b6a03bca3fdd025c814d5a144">TacticalEffectUtilities::ComputeStackedModifierMagnitude</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BaseComputedMagnitude</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> StackCount, <a class="el" href="namespaceETacticalModOp.html#ab00d942643ba92aefd4d59fa25e5cd4d">ETacticalModOp::Type</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ModOp</a>)</td></tr>
+<tr class="memdesc:a1af45e8b6a03bca3fdd025c814d5a144"><td class="mdescLeft">&#160;</td><td class="mdescRight">스택(중첩) 수를 반영한 연산자에 대한 Effect 최종 크기를 계산한다.  <br /></td></tr>
 <tr class="separator:a1af45e8b6a03bca3fdd025c814d5a144"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4949974cc574568e1c378b143d533829" id="r_a4949974cc574568e1c378b143d533829"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html#a4949974cc574568e1c378b143d533829">TacticalEffectUtilities::TacticalModOpToString</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> Type)</td></tr>
+<tr class="memitem:a4949974cc574568e1c378b143d533829" id="r_a4949974cc574568e1c378b143d533829"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceTacticalEffectUtilities.html#a4949974cc574568e1c378b143d533829">TacticalEffectUtilities::TacticalModOpToString</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> Type)</td></tr>
 <tr class="memdesc:a4949974cc574568e1c378b143d533829"><td class="mdescLeft">&#160;</td><td class="mdescRight">연산 종류를 디버그용 사람이 읽는 문자열로 변환한다.  <br /></td></tr>
 <tr class="separator:a4949974cc574568e1c378b143d533829"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -186,18 +210,99 @@ $(document).ready(function(){initNavTree('TacticalEffectType_8h.html',''); initR
   </tr>
 </table>
 </div><div class="memdoc">
-<ul>
-<li>Instant: 즉발(BaseValue를 즉시 영구 변경, 적용 후 사라짐).<ul>
-<li>Infinite: 무한 지속(명시적으로 제거되기 전까지 모디파이어로 유지). </li>
-</ul>
-</li>
-</ul>
 <table class="fieldtable">
-<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d" name="a9a0e4bd42177847be28fb73cdc48c72ba54828f327f31abd59f2f459c0247756d"></a>Instant&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a9a0e4bd42177847be28fb73cdc48c72bab10e24496ff8fec66189548a92a67045" name="a9a0e4bd42177847be28fb73cdc48c72bab10e24496ff8fec66189548a92a67045"></a>Infinite&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a9a0e4bd42177847be28fb73cdc48c72baa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00038">38</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a604cc9df3fb970b91959520736850831" name="a604cc9df3fb970b91959520736850831"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a604cc9df3fb970b91959520736850831">&#9670;&#160;</a></span>ETacticalEffectDurationUnitType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">enum</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="TacticalEffectType_8h.html#a604cc9df3fb970b91959520736850831">ETacticalEffectDurationUnitType</a> : <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a604cc9df3fb970b91959520736850831aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00056">56</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="adaade050cdc75ff4d117532c6a6f3093" name="adaade050cdc75ff4d117532c6a6f3093"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adaade050cdc75ff4d117532c6a6f3093">&#9670;&#160;</a></span>ETacticalEffectStackingDurationPolicy</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">enum</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="TacticalEffectType_8h.html#adaade050cdc75ff4d117532c6a6f3093">ETacticalEffectStackingDurationPolicy</a> : <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="adaade050cdc75ff4d117532c6a6f3093aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00066">66</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a10ea7efba3589207fa69c1a6dbdcaa80" name="a10ea7efba3589207fa69c1a6dbdcaa80"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a10ea7efba3589207fa69c1a6dbdcaa80">&#9670;&#160;</a></span>ETacticalEffectStackingExpirationPolicy</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">enum</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> <a class="el" href="TacticalEffectType_8h.html#a10ea7efba3589207fa69c1a6dbdcaa80">ETacticalEffectStackingExpirationPolicy</a> : <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">uint8</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635" name="a10ea7efba3589207fa69c1a6dbdcaa80aa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00077">77</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -220,18 +325,13 @@ $(document).ready(function(){initNavTree('TacticalEffectType_8h.html',''); initR
   </tr>
 </table>
 </div><div class="memdoc">
-<p>동일 이펙트가 여러 번 적용될 때 무엇을 키로 삼아 스택을 합칠지 결정한다.</p><ul>
-<li>None: 스택하지 않음(매번 독립 인스턴스).</li>
-<li>AggregateBySource: 가해자(Source)별로 스택을 합산.</li>
-<li>AggregateByTarget: 대상(Target)별로 스택을 합산. </li>
-</ul>
 <table class="fieldtable">
 <tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635" name="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635" name="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635" name="ae4e87585bef75d91a0f8b49edd2acd7aaa3f80d8f0f1b4ffa8c475f5d60ea5635"></a>UMETA&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="TacticalEffectType_8h_source.html">TacticalEffectType.h</a> 파일의 <a class="el" href="TacticalEffectType_8h_source.html#l00033">33</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

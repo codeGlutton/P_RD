@@ -93,7 +93,7 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_
   <div class="headertitle"><div class="title">전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md41"></a> 전투 뷰모델(<code>UI/Combat</code>)과 같은 패턴. 보상 화면은 **<code><a class="el" href="classURewardUIModel.html" title="보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.">URewardUIModel</a></code> 하나**로만 게임플레이와 만난다. <b>현재 범위: 돈(골드) · 경험치만.</b> 아이템/주사위 보상은 이후 같은 패턴으로 도메인 추가.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md51"></a> 전투 뷰모델(<code>UI/Combat</code>)과 같은 패턴. 보상 화면은 **<code><a class="el" href="classURewardUIModel.html" title="보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.">URewardUIModel</a></code> 하나**로만 게임플레이와 만난다. <b>현재 범위: 돈(골드) · 경험치만.</b> 아이템 보상은 이후 같은 패턴으로 도메인 추가.</p>
 <div class="fragment"><div class="line">[게임플레이] 전투 종료 → 보상 계산</div>
 <div class="line">      │ SetReward(FRewardUI)              ▲ OnRewardClaimed (받기 의도)</div>
 <div class="line">      ▼                                       │</div>
@@ -101,38 +101,41 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_
 <div class="line">            └─────────────────────────────────────┘</div>
 <div class="line">      │ GetReward() / OnUIChanged</div>
 <div class="line">      ▼</div>
-<div class="line">[UI] URewardUIWidgetBase 상속 WBP — 돈/경험치 카운트업·막대 연출 + 받기 버튼</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md42"></a>
+<div class="line">[UI] URewardSettlementWidgetBase 상속 WBP — 돈/경험치 카운트업·막대 연출 + 받기 버튼</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md52"></a>
 구성</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">파일   </th><th class="markdownTableHeadNone">역할    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code><a class="el" href="RewardUITypes_8h.html">RewardUITypes.h</a></code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code> — 돈(번 양·잔액) + 경험치(번 양·레벨 전/후·막대 전/후·최대)    </td></tr>
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardUITypes_8h.html">RewardUITypes.h</a></code>   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code> — 돈(번 양·잔액) + 용병별 경험치 전/후와 레벨 구간 배열    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code><a class="el" href="RewardUIModel_8h.html">RewardUIModel.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">경계. <code>SetReward</code>/<code>GetReward</code>+<code>OnUIChanged</code>(읽기) · <code>RequestClaim</code>→<code>OnRewardClaimed</code>(주기)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code><a class="el" href="RewardUIWidgetBase_8h.html">RewardUIWidgetBase.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">WBP 베이스. <code>BindUIModel</code> 후 <code>OnRewardRefreshed</code>만 구현, 버튼은 <code>Claim()</code>    </td></tr>
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardSettlementWidgetBase_8h.html">RewardSettlementWidgetBase.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">WBP 베이스(<code>WBP_RewardSettlement_Runtime</code>). <code>BindUIModel</code> 후 Model 데이터로 정산 화면을 그린다    </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code><a class="el" href="RewardPreviewCommand_8cpp.html" title="저장 데이터에 손대지 않고 현재 보상 화면을 띄우는 개발용 명령.">RewardPreviewCommand.cpp</a></code>   </td><td class="markdownTableBodyNone">에디터에서 정산 화면 프리뷰 콘솔 명령    </td></tr>
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code><a class="el" href="MockRewardDriver_8h.html">MockRewardDriver.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">게임플레이 없이 가짜 보상 push + 받기 로그 — UI 선개발/테스트   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md43"></a>
+<p>구형 <code>RewardUIWidgetBase</code>/<code>RewardRowWidgetBase</code>(WBP_Reward/WBP_RewardRow 기반)는 <code>RewardSettlementWidgetBase</code>로 대체되어 삭제했다.</p>
+<h1><a class="anchor" id="autotoc_md53"></a>
 박용수(UI) 사용법</h1>
 <ol type="1">
-<li>WBP를 <code><a class="el" href="classURewardUIWidgetBase.html">URewardUIWidgetBase</a></code> 상속으로 만든다.</li>
+<li>WBP를 <code><a class="el" href="classURewardSettlementWidgetBase.html" title="신규 전투 보상 정산 WBP 전용 런타임 클래스.">URewardSettlementWidgetBase</a></code> 상속으로 만든다.</li>
 <li><code>BindUIModel(VM)</code> 호출.</li>
-<li><code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OnRewardRefreshed()</a></code>에서 <code>VM-&gt;GetReward()</code>를 읽어 돈/경험치 카운트업·막대 채움(전→후) 연출.</li>
-<li>'받기' 버튼 → <code>Claim()</code>.</li>
+<li>Model의 <code>GetReward()</code>를 읽어 돈/경험치 카운트업·막대 채움(전→후) 연출.</li>
+<li>'받기' 버튼 → <code>RequestClaim()</code>.</li>
 <li>게임플레이 전이라도 <code>UMockRewardDriver::Start(VM)</code>로 표시·연출·받기 테스트.</li>
 </ol>
-<h1><a class="anchor" id="autotoc_md44"></a>
+<h1><a class="anchor" id="autotoc_md54"></a>
 모호재(게임플레이) 사용법</h1>
 <p>Mock 자리에 어댑터만(위젯 무수정): 전투 종료 시 보상 계산 → <code>VM-&gt;SetReward(...)</code>(<code>PersistentData</code>의 골드/경험치 전/후), <code>VM-&gt;OnRewardClaimed</code> 구독해 다음 화면(맵)으로 전환.</p>
-<h1><a class="anchor" id="autotoc_md45"></a>
+<h1><a class="anchor" id="autotoc_md55"></a>
 확장 메모</h1>
 <ul>
-<li>아이템/주사위 보상: <code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code>에 배열 도메인 추가 + 선택 의도(<code>RequestPick(index)</code>)만 늘리면 됨(지금은 미구현).</li>
-<li>레벨업 다단계: 현재 <code>mLevelBefore/After</code> + 한 막대(<code>mExpBefore→After</code>/<code>mMaxExp</code>). 다중 레벨업 연출이 필요하면 단계 배열로 확장. </li>
+<li>아이템 보상: <code><a class="el" href="structFRewardUI.html" title="전투 결과 보상 한 건의 표시값(돈·경험치).">FRewardUI</a></code>에 배열 도메인 추가 + 선택 의도(<code>RequestPick(index)</code>)만 늘리면 됨(지금은 미구현).</li>
+<li>레벨업 다단계: <code><a class="el" href="structFRewardMercenaryExpUI.html#a579d700a7e4149ff9ea97070cb78f003">FRewardMercenaryExpUI::mProgressSteps</a></code>를 순서대로 재생한다. 각 구간은 해당 레벨의 시작/끝 EXP와 임계치, 전/후 레벨을 보관하며 배열이 비어 있으면 구형 단일 막대 필드로 표시한다. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

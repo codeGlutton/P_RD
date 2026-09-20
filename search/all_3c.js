@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['무엇을_20어디에_20물릴지_0',['D. 게임플레이(모호재/김준형) 측 연결 지점 — 무엇을 어디에 물릴지',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md34',1,'']]]
+  ['매크로란_0',['매크로란',['../gas_tag_page.html#tag_macro_section',1,'태그 매크로란?'],['../priamry_asset_type_page.html#primary_asset_type_macro_section',1,'Primary Asset Type 매크로란?']]],
+  ['매크로_1',['매크로',['../gas_tag_page.html',1,'Gameplay 태그 매크로'],['../priamry_asset_type_page.html',1,'Primary Asset Type 매크로']]]
 ];

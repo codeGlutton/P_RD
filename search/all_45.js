@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['보상_20화면_20ui_20↔_20게임플레이_20경계_20view_20model_20계약_0',['전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'']]]
+  ['발신_20→_20ui가_20다시_20그림_0',['C. UI가 &lt;strong&gt;구독하는 알림&lt;/strong&gt; (게임플레이가 발신 → UI가 다시 그림)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md44',1,'']]]
 ];

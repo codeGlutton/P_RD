@@ -93,8 +93,8 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_
   <div class="headertitle"><div class="title">전투 UI ↔ 게임플레이 경계 (View-Model 계약)</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md17"></a> 데이터/비주얼 분리 구조에 맞춰, 전투 UI와 게임플레이는 **<code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> 하나**로만 만난다. 게임플레이가 리팩토링돼도 이 계약만 지키면 위젯은 안 바뀐다.</p>
-<div class="fragment"><div class="line">[게임플레이] UnitData/DiceData/SkillBuildAction …</div>
+<div class="textblock"><p><a class="anchor" id="autotoc_md29"></a> 데이터/비주얼 분리 구조에 맞춰, 전투 UI와 게임플레이는 **<code><a class="el" href="classUCombatUIModel.html" title="전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.">UCombatUIModel</a></code> 하나**로만 만난다. 게임플레이가 리팩토링돼도 이 계약만 지키면 위젯은 안 바뀐다.</p>
+<div class="fragment"><div class="line">[게임플레이] UnitData/SkillBuildAction …</div>
 <div class="line">      │ Set*()  (읽기 데이터 push)        ▲ OnCombatCommand/WorldTouch  (의도 구독)</div>
 <div class="line">      ▼                                    │</div>
 <div class="line">            ┌──────────  UCombatUIModel  ──────────┐</div>
@@ -102,8 +102,8 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_
 <div class="line">            └────────────────────────────────────────┘</div>
 <div class="line">      │ Get*() / OnUIChanged / OnQueueNodeResolved</div>
 <div class="line">      ▼</div>
-<div class="line">[UI] UCombatUIWidgetBase 상속 WBP들 (HUD / DicePanel / SkillPanel) — 표시·입력만</div>
-</div><!-- fragment --><h1><a class="anchor" id="autotoc_md18"></a>
+<div class="line">[UI] UCombatUIWidgetBase 상속 WBP들 (HUD / SkillPanel) — 표시·입력만</div>
+</div><!-- fragment --><h1><a class="anchor" id="autotoc_md30"></a>
 구성</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -117,54 +117,50 @@ $(document).ready(function(){initNavTree('md__2home_2runner_2work_2P__RD_2P__RD_
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code><a class="el" href="MockCombatDriver_8h.html">MockCombatDriver.h</a>/.cpp</code>   </td><td class="markdownTableBodyNone">게임플레이 없이 가짜 데이터로 UI를 먼저 만들고 테스트하는 개발용   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md19"></a>
+<p>전투 유닛의 화면 좌표를 출력하는 <code>[RDBOT]</code> 로그는 기본적으로 꺼져 있다. 자동 플레이/QA에서 필요할 때만 콘솔에서 <code>rd.Debug.BotTelemetry 1</code>로 켜고, 끝나면 <code>rd.Debug.BotTelemetry 0</code>으로 끈다. 이동 중에는 좌표가 매 프레임 달라져 로그가 많이 출력될 수 있다.</p>
+<h2><a class="anchor" id="autotoc_md31"></a>
 다루는 도메인 (&lt;tt&gt;ECombatUIDomain&lt;/tt&gt;)</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">도메인   </th><th class="markdownTableHeadNone">struct   </th><th class="markdownTableHeadNone">push   </th><th class="markdownTableHeadNone">read    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Unit   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFUnitUI.html" title="유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).">FUnitUI</a></code>(HP·스탯·위치·<code>mStatusTags</code>) / <code><a class="el" href="structFUnitDetailUI.html" title="적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등).">FUnitDetailUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetUnitUIs</code>/<code>SetUnitDetail</code>   </td><td class="markdownTableBodyNone"><code>GetUnitUIs</code>/<code>GetUnitDetail</code>    </td></tr>
+<td class="markdownTableBodyNone">Unit   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFUnitUI.html" title="유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치).">FUnitUI</a></code>(HP·스탯·위치·<code>mStatusTags</code>) / <code><a class="el" href="structFUnitDetailUI.html">FUnitDetailUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetUnitUIs</code>/<code>SetUnitDetail</code>   </td><td class="markdownTableBodyNone"><code>GetUnitUIs</code>/<code>GetUnitDetail</code>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Dice   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFDiceSlotUI.html" title="주사위 한 칸을 그릴 때 필요한 표시값입니다.">FDiceSlotUI</a></code>(값·희귀도·선택·**<code>mPreviewTexture</code> 3D 프리뷰 슬롯**)   </td><td class="markdownTableBodyNone"><code>SetDiceUIs</code>/<code>SetSelectedDice</code>   </td><td class="markdownTableBodyNone"><code>GetDiceUIs</code>/<code>GetSelectedDice*</code>    </td></tr>
-<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Skill   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFSkillUI.html" title="스킬 레일에 그릴 스킬 한 칸.">FSkillUI</a></code> / <code><a class="el" href="structFSkillDetailUI.html" title="스킬을 길게 눌렀을 때의 상세창 내용.">FSkillDetailUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetSkillUIs</code>/<code>SetSkillDetail</code>   </td><td class="markdownTableBodyNone"><code>GetSkillUIs</code>/<code>GetSkillDetail</code>    </td></tr>
-<tr class="markdownTableRowEven">
+<tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Turn   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFTurnUI.html" title="현재 턴/라운드/페이즈 상태.">FTurnUI</a></code>(라운드·페이즈·순서)   </td><td class="markdownTableBodyNone"><code>SetTurnUI</code>   </td><td class="markdownTableBodyNone"><code>GetTurnUI</code>    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Equipment   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFEquipmentUI.html" title="장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.">FEquipmentUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetEquipmentUIs</code>   </td><td class="markdownTableBodyNone"><code>GetEquipmentUIs</code>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Meta   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFPlayerMetaUI.html" title="플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨).">FPlayerMetaUI</a></code>(돈·경험치·레벨)   </td><td class="markdownTableBodyNone"><code>SetPlayerMeta</code>   </td><td class="markdownTableBodyNone"><code>GetPlayerMeta</code>    </td></tr>
+<td class="markdownTableBodyNone">Equipment   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFEquipmentUI.html" title="장비 슬롯 하나(전투 중 표시·상세). 인벤토리/장착 변경은 의도(Request)로만 보낸다.">FEquipmentUI</a></code>   </td><td class="markdownTableBodyNone"><code>SetEquipmentUIs</code>   </td><td class="markdownTableBodyNone"><code>GetEquipmentUIs</code>    </td></tr>
 <tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Meta   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFPlayerMetaUI.html" title="플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨).">FPlayerMetaUI</a></code>(돈·경험치·레벨)   </td><td class="markdownTableBodyNone"><code>SetPlayerMeta</code>   </td><td class="markdownTableBodyNone"><code>GetPlayerMeta</code>    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">Queue   </td><td class="markdownTableBodyNone"><code><a class="el" href="structFCombatQueueNode.html" title="행동/시뮬레이션 결과 큐의 한 노드이며 애니메이션 한 단위에 해당합니다.">FCombatQueueNode</a></code>   </td><td class="markdownTableBodyNone"><code>SetActionQueue</code>/<code>ResolveFrontQueueNode</code>   </td><td class="markdownTableBodyNone"><code>GetActionQueue</code>   </td></tr>
 </table>
-<blockquote class="doxtable">
-<p>&zwj;다이스의 3D 굴림 프리뷰는 아직 캡처 계층이 붙지 않았다. 이후 비주얼 캡처가 렌더타깃을 만들면, 어댑터가 그 텍스처를 <code><a class="el" href="structFDiceSlotUI.html#af319efb2e5655b5c5cf6a2607805e358">FDiceSlotUI.mPreviewTexture</a></code>로 넣고 UI는 표시만 한다. </p>
-</blockquote>
-<h1><a class="anchor" id="autotoc_md20"></a>
+<h1><a class="anchor" id="autotoc_md32"></a>
 박용수(UI) 사용법</h1>
 <ol type="1">
 <li>WBP를 <code><a class="el" href="classUCombatUIWidgetBase.html">UCombatUIWidgetBase</a></code> 상속으로 만든다.</li>
 <li><code>BindUIModel(VM)</code> 호출.</li>
-<li><code>OnUIRefreshed(Domain)</code>에서 <code>VM-&gt;GetDiceUIs()</code> 등을 읽어 자기 화면을 그린다.</li>
-<li>탭/터치 → <code>VM-&gt;RequestSelectSkill(i)</code> / <code>RequestToggleDice(i)</code> / <code>RequestRollDice()</code> / <code>RequestWorldTouch(pos,long)</code> …</li>
+<li><code>OnUIRefreshed(Domain)</code>에서 필요한 표시값을 읽어 자기 화면을 그린다.</li>
+<li>탭/터치 → <code>VM-&gt;RequestSelectSkill(i)</code> / <code>RequestWorldTouch(pos,long)</code> …</li>
 <li><code>OnQueueNodePlayed(Node)</code>에서 머리 위 숫자·효과를 띄운다.</li>
-<li>게임플레이 전이라도 <code>UMockCombatDriver::Start(VM)</code>로 굴림·선택·예측 큐 재생까지 테스트.</li>
+<li>게임플레이 전이라도 <code>UMockCombatDriver::Start(VM)</code>로 선택·예측 큐 재생까지 테스트.</li>
 </ol>
-<h1><a class="anchor" id="autotoc_md21"></a>
+<h1><a class="anchor" id="autotoc_md33"></a>
 모호재(게임플레이) 사용법</h1>
 <p>Mock 자리에 **어댑터**만 구현(위젯 무수정):</p><ul>
-<li>상태가 바뀌면 <code>VM-&gt;SetUnitUIs/SetDiceUIs/SetSkillUIs/SetTurnUI()</code>.</li>
+<li>상태가 바뀌면 <code>VM-&gt;SetUnitUIs/SetSkillUIs/SetTurnUI()</code>.</li>
 <li>행동/예측 결과를 <code>VM-&gt;SetActionQueue(Queue)</code>로 주고, 애니 한 단위 끝날 때마다 <code>VM-&gt;ResolveFrontQueueNode()</code>.</li>
 <li><code>VM-&gt;OnCombatCommand</code>/<code>OnCombatWorldTouch</code>를 구독해 입력(의도)을 처리.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md22"></a>
+<h1><a class="anchor" id="autotoc_md34"></a>
 범위 — 이건 '전투' 뷰모델</h1>
-<p>전투 화면(HUD/Dice/Skill/Tile/Equip)만 담당. 아래는 **전투 밖 UI**라 별도 뷰모델로 같은 패턴 반복: 타이틀·캐릭터선택·프론트엔드맵(방 이동)·설정·**전투 보상/획득**·인벤토리. (이미 대부분 WBP로 존재 → 필요할 때 뷰모델로 감싸면 됨.)</p>
-<h1><a class="anchor" id="autotoc_md23"></a>
+<p>전투 화면(HUD/Skill/Tile/Equip)만 담당. 전투 밖 UI는 별도 뷰모델이 같은 패턴을 반복하며, 이미 존재한다: <code><a class="el" href="classURewardUIModel.html" title="보상 화면 뷰모델. 전투 종료 시 게임플레이가 하나 만들어 보상 위젯에 물린다.">URewardUIModel</a></code>(전투 보상/획득)·<code><a class="el" href="classUShopUIModel.html" title="상점 화면 뷰모델. 상점방 진입 시 게임플레이가 하나 만들어 위젯에 물린다.">UShopUIModel</a></code>(상점)·<code><a class="el" href="classUTreasureUIModel.html" title="보물방 화면 뷰모델. 보물방 진입 시 게임플레이가 하나 만들어 위젯에 바인딩">UTreasureUIModel</a></code>(보물방). 타이틀·캐릭터선택·프론트엔드맵(방 이동)·설정·인벤토리는 뷰모델 없이 GameMode pull API(<code>Get*View</code>)로 그린다 — 필요해지면 같은 패턴으로 감싼다.</p>
+<h1><a class="anchor" id="autotoc_md35"></a>
 미합의/맞출 것</h1>
 <ul>
 <li><b>큐 노드 묶음 방식</b>: 한 행동의 효과(데미지·상태이상·힐)를 "한 노드+태그(`mTags`)"로 묶음(현재) vs 분리 — 회의 미확정.</li>
-<li>게임플레이 타입(<code>FSRPGSkillBuildPhase</code>,<code>UDiceData</code>,장비/메타 소스 <code>PersistentData</code>)과의 실제 매핑은 어댑터에서. </li>
+<li>게임플레이 타입(<code>FSRPGSkillBuildPhase</code>, 장비/메타 소스 <code>PersistentData</code>)과의 실제 매핑은 어댑터에서. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

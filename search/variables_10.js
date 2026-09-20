@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['user_5fslot_5fname_0',['USER_SLOT_NAME',['../classUSaveGameSubsystem.html#ae890e9fd03036517943666066af66303',1,'USaveGameSubsystem']]]
+  ['quantifier_0',['Quantifier',['../namespaceImportPassiveDataPrivate_1_1Column.html#acca73690dd4dc5376bd65914555e080c',1,'ImportPassiveDataPrivate::Column']]]
 ];

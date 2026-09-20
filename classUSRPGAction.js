@@ -18,6 +18,7 @@ var classUSRPGAction =
     [ "TickAction", "classUSRPGAction.html#a1f3bc7a9c17cf3e68c5ece715e5eb1c5", null ],
     [ "TryBeginAction", "classUSRPGAction.html#a1cfffe46d6290f58d11dee2357503b7f", null ],
     [ "TryEndAction", "classUSRPGAction.html#a2887356b7b591bbdafd9ccff75487c5c", null ],
+    [ "TryTickAction", "classUSRPGAction.html#a6207741f53779a488a75191b3954b448", null ],
     [ "USRPGActionCreationCommandHandler", "classUSRPGAction.html#a3c62ef85bf7ecd13649d476384b4ad0b", null ],
     [ "USRPGTurnContext", "classUSRPGAction.html#a3800dc016888aa645c0f3f9d7d457361", null ],
     [ "mActionPhase", "classUSRPGAction.html#a1e99a99fd7c74e6931553fac56c0a450", null ],

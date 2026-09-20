@@ -8,5 +8,6 @@ var structFRewardUI =
     [ "mLevelAfter", "structFRewardUI.html#acdd8845d7144c20449c49530b36681d2", null ],
     [ "mLevelBefore", "structFRewardUI.html#a763dff156d265377e834549fe0fe9868", null ],
     [ "mMaxExp", "structFRewardUI.html#a6cb277eddfcfc7c945b647740afa082e", null ],
+    [ "mMercenaryExp", "structFRewardUI.html#a857e25bd09d36bca45c1b76cc339c9d0", null ],
     [ "mTitle", "structFRewardUI.html#a6700527b998e5129555b7550114c5b6e", null ]
 ];

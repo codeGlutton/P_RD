@@ -105,7 +105,11 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 클래스</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGTurnUnregisterRequest.html">FSRPGTurnUnregisterRequest</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGTurnCandidate.html">FSRPGTurnCandidate</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">턴 후보 데이터  <a href="structFSRPGTurnCandidate.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFSRPGPredictedRound.html">FSRPGPredictedRound</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 전투 상태를 변경하지 않고 계산한 한 개 미래 라운드의 턴 순서.  <a href="structFSRPGPredictedRound.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSRPGCombatModel.html">USRPGCombatModel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">SRPG 턴제 전투를 제어하기 위한 서브 시스템 모델  <a href="classUSRPGCombatModel.html#details">더 자세히 ...</a><br /></td></tr>
@@ -117,23 +121,27 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 <tr class="separator:aabb7d9e058dd0c5c186f2b3941f297bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af019a4372b08cad2536758b54a3169fd" id="r_af019a4372b08cad2536758b54a3169fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#af019a4372b08cad2536758b54a3169fd">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnRegisterObstacleUI</a>, <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *) DECLARE_MULTICAST_DELEGATE_OneParam(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnUnregisterObstacleUI</a></td></tr>
 <tr class="separator:af019a4372b08cad2536758b54a3169fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a357266a5e086894d474af461d3f3e99d" id="r_a357266a5e086894d474af461d3f3e99d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a357266a5e086894d474af461d3f3e99d">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowDicePanelAnyTurnUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *)</td></tr>
-<tr class="separator:a357266a5e086894d474af461d3f3e99d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1905b32e8c5a5e72b4db581665ed87b" id="r_ac1905b32e8c5a5e72b4db581665ed87b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#ac1905b32e8c5a5e72b4db581665ed87b">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;) <a class="el" href="BoardActorModel_8h.html#ab66c1e1c9374b0f0c85d6a26d1673951">DECLARE_MULTICAST_DELEGATE_TwoParams</a>(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndCombatUI</a></td></tr>
-<tr class="separator:ac1905b32e8c5a5e72b4db581665ed87b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0e213978dce773239694cbd7b4161a77" id="r_a0e213978dce773239694cbd7b4161a77"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a0e213978dce773239694cbd7b4161a77">DECLARE_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *) DECLARE_MULTICAST_DELEGATE_TwoParams(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyRoundUI</a></td></tr>
-<tr class="separator:a0e213978dce773239694cbd7b4161a77"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a088ed0d3301028df05fb07d900612260" id="r_a088ed0d3301028df05fb07d900612260"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a088ed0d3301028df05fb07d900612260">DECLARE_MULTICAST_DELEGATE_ThreeParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *, <a class="el" href="SRPGFrameworkType_8h.html#abccb523bb2e60227f32f65436247eb08">ESRPGTurnResult</a>) DECLARE_MULTICAST_DELEGATE_ThreeParams(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnActionUI</a></td></tr>
-<tr class="separator:a088ed0d3301028df05fb07d900612260"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5450ad24ac1048c7a122760758e4a351" id="r_a5450ad24ac1048c7a122760758e4a351"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a5450ad24ac1048c7a122760758e4a351">DECLARE_MULTICAST_DELEGATE_FourParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnActionUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> *, <a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a>) <a class="el" href="BoardCombatTarget_8h.html#a36c15ab5d6202231073ddda4e9b8312f">DECLARE_MULTICAST_DELEGATE_OneParam</a>(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomInToActorsUI</a></td></tr>
-<tr class="separator:a5450ad24ac1048c7a122760758e4a351"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a461953f75a5da19674edeb1fc2337eb5" id="r_a461953f75a5da19674edeb1fc2337eb5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a461953f75a5da19674edeb1fc2337eb5">DECLARE_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomOutFromActorsUI</a>)</td></tr>
-<tr class="separator:a461953f75a5da19674edeb1fc2337eb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91dca94ea2fb307b3a225c5aaf051869" id="r_a91dca94ea2fb307b3a225c5aaf051869"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a91dca94ea2fb307b3a225c5aaf051869">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;) <a class="el" href="BoardActorModel_8h.html#ab66c1e1c9374b0f0c85d6a26d1673951">DECLARE_MULTICAST_DELEGATE_TwoParams</a>(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndCombatUI</a></td></tr>
+<tr class="separator:a91dca94ea2fb307b3a225c5aaf051869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab41ca044705ef8d95b83a2e513218992" id="r_ab41ca044705ef8d95b83a2e513218992"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#ab41ca044705ef8d95b83a2e513218992">DECLARE_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *) DECLARE_MULTICAST_DELEGATE_TwoParams(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyRoundUI</a></td></tr>
+<tr class="separator:ab41ca044705ef8d95b83a2e513218992"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd2c0de5e3782cc9f14b4cef7ff4d430" id="r_acd2c0de5e3782cc9f14b4cef7ff4d430"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#acd2c0de5e3782cc9f14b4cef7ff4d430">DECLARE_MULTICAST_DELEGATE_ThreeParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *, <a class="el" href="SRPGFrameworkType_8h.html#abccb523bb2e60227f32f65436247eb08">ESRPGTurnResult</a>) DECLARE_MULTICAST_DELEGATE_ThreeParams(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnActionUI</a></td></tr>
+<tr class="separator:acd2c0de5e3782cc9f14b4cef7ff4d430"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab484ec2d81c424162de3f4808f5695d4" id="r_ab484ec2d81c424162de3f4808f5695d4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#ab484ec2d81c424162de3f4808f5695d4">DECLARE_MULTICAST_DELEGATE_FourParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnActionUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> *, <a class="el" href="SRPGFrameworkType_8h.html#a3893ef0b7368d435ebbf5aa7d97073e7">ESRPGActionResult</a>) <a class="el" href="PartyModel_8h.html#abbe562b5f123414afda142ac6aedd476">DECLARE_MULTICAST_DELEGATE_ThreeParams</a>(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSaveCombatPlay</a></td></tr>
+<tr class="separator:ab484ec2d81c424162de3f4808f5695d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd8bd5805bf05f133148e0af0123fe48" id="r_abd8bd5805bf05f133148e0af0123fe48"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#abd8bd5805bf05f133148e0af0123fe48">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowCombatResultUI</a>, <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a>)</td></tr>
+<tr class="separator:abd8bd5805bf05f133148e0af0123fe48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2aba7f19c0397586e364bb53494fbb55" id="r_a2aba7f19c0397586e364bb53494fbb55"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a2aba7f19c0397586e364bb53494fbb55">DECLARE_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatProgressBlocked</a>)</td></tr>
+<tr class="separator:a2aba7f19c0397586e364bb53494fbb55"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b69ae719018abe685560bf9943b5c32" id="r_a7b69ae719018abe685560bf9943b5c32"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a7b69ae719018abe685560bf9943b5c32">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSimulateAllPlayerTurn</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFSimulationOption.html">FSimulationOption</a> &amp;)</td></tr>
+<tr class="separator:a7b69ae719018abe685560bf9943b5c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 변수</h2></td></tr>
-<tr class="memitem:a989ac07b6b9603d8bf4ec5d89ef5e2e9" id="r_a989ac07b6b9603d8bf4ec5d89ef5e2e9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a989ac07b6b9603d8bf4ec5d89ef5e2e9">TSharedPtr&lt; FPresentationBarrier &gt;</a></td></tr>
-<tr class="separator:a989ac07b6b9603d8bf4ec5d89ef5e2e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bfe84ea5ebad6fe068e50ac597c5e47" id="r_a5bfe84ea5ebad6fe068e50ac597c5e47"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a5bfe84ea5ebad6fe068e50ac597c5e47">TSharedPtr&lt; FPresentationBarrier &gt;</a></td></tr>
+<tr class="separator:a5bfe84ea5ebad6fe068e50ac597c5e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a379e78310283f46336d4ec9227dc6d" id="r_a5a379e78310283f46336d4ec9227dc6d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> int32 <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classUUnitModel.html">UUnitModel</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="SRPGCombatModel_8h.html#a5a379e78310283f46336d4ec9227dc6d">int32</a></td></tr>
+<tr class="separator:a5a379e78310283f46336d4ec9227dc6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><dl class="section author"><dt>작성자</dt><dd>모호재 </dd></dl>
@@ -141,16 +149,16 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 <p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일에서 정의되었습니다.</p>
 </div><h2 class="groupheader">함수 문서화</h2>
-<a id="a461953f75a5da19674edeb1fc2337eb5" name="a461953f75a5da19674edeb1fc2337eb5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a461953f75a5da19674edeb1fc2337eb5">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE()</h2>
+<a id="a2aba7f19c0397586e364bb53494fbb55" name="a2aba7f19c0397586e364bb53494fbb55"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2aba7f19c0397586e364bb53494fbb55">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp; DECLARE_MULTICAST_DELEGATE </td>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnZoomOutFromActorsUI</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatProgressBlocked</a>&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
@@ -159,14 +167,14 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 </div>
 </div>
-<a id="a5450ad24ac1048c7a122760758e4a351" name="a5450ad24ac1048c7a122760758e4a351"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5450ad24ac1048c7a122760758e4a351">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_FourParams()</h2>
+<a id="ab484ec2d81c424162de3f4808f5695d4" name="ab484ec2d81c424162de3f4808f5695d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab484ec2d81c424162de3f4808f5695d4">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_FourParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> * DECLARE_MULTICAST_DELEGATE_FourParams </td>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> * DECLARE_MULTICAST_DELEGATE_FourParams </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnActionUI</a>&#160;</td>
           <td class="paramname">, </td>
@@ -205,14 +213,14 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 </div>
 </div>
-<a id="ac1905b32e8c5a5e72b4db581665ed87b" name="ac1905b32e8c5a5e72b4db581665ed87b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1905b32e8c5a5e72b4db581665ed87b">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/4]</span></h2>
+<a id="a91dca94ea2fb307b3a225c5aaf051869" name="a91dca94ea2fb307b3a225c5aaf051869"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91dca94ea2fb307b3a225c5aaf051869">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> * DECLARE_MULTICAST_DELEGATE_OneParam </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatUI</a>&#160;</td>
           <td class="paramname">, </td>
@@ -234,7 +242,7 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 </div>
 </div>
 <a id="af019a4372b08cad2536758b54a3169fd" name="af019a4372b08cad2536758b54a3169fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af019a4372b08cad2536758b54a3169fd">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#af019a4372b08cad2536758b54a3169fd">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -262,7 +270,7 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 </div>
 </div>
 <a id="aabb7d9e058dd0c5c186f2b3941f297bb" name="aabb7d9e058dd0c5c186f2b3941f297bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aabb7d9e058dd0c5c186f2b3941f297bb">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[3/4]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aabb7d9e058dd0c5c186f2b3941f297bb">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -289,22 +297,22 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 </div>
 </div>
-<a id="a357266a5e086894d474af461d3f3e99d" name="a357266a5e086894d474af461d3f3e99d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a357266a5e086894d474af461d3f3e99d">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[4/4]</span></h2>
+<a id="abd8bd5805bf05f133148e0af0123fe48" name="abd8bd5805bf05f133148e0af0123fe48"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd8bd5805bf05f133148e0af0123fe48">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[4/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> * DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowDicePanelAnyTurnUI</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnShowCombatResultUI</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a>&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -317,14 +325,42 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 </div>
 </div>
-<a id="a088ed0d3301028df05fb07d900612260" name="a088ed0d3301028df05fb07d900612260"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a088ed0d3301028df05fb07d900612260">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_ThreeParams()</h2>
+<a id="a7b69ae719018abe685560bf9943b5c32" name="a7b69ae719018abe685560bf9943b5c32"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7b69ae719018abe685560bf9943b5c32">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[5/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> DECLARE_MULTICAST_DELEGATE_ThreeParams </td>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSimulateAllPlayerTurn</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFSimulationOption.html">FSimulationOption</a> &amp;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acd2c0de5e3782cc9f14b4cef7ff4d430" name="acd2c0de5e3782cc9f14b4cef7ff4d430"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd2c0de5e3782cc9f14b4cef7ff4d430">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_ThreeParams()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> DECLARE_MULTICAST_DELEGATE_ThreeParams </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndAnyTurnUI</a>&#160;</td>
           <td class="paramname">, </td>
@@ -357,14 +393,14 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 
 </div>
 </div>
-<a id="a0e213978dce773239694cbd7b4161a77" name="a0e213978dce773239694cbd7b4161a77"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0e213978dce773239694cbd7b4161a77">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_TwoParams()</h2>
+<a id="ab41ca044705ef8d95b83a2e513218992" name="ab41ca044705ef8d95b83a2e513218992"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab41ca044705ef8d95b83a2e513218992">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_TwoParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> DECLARE_MULTICAST_DELEGATE_TwoParams </td>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> DECLARE_MULTICAST_DELEGATE_TwoParams </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginAnyTurnUI</a>&#160;</td>
           <td class="paramname">, </td>
@@ -392,19 +428,35 @@ $(document).ready(function(){initNavTree('SRPGCombatModel_8h.html',''); initResi
 </div>
 </div>
 <h2 class="groupheader">변수 문서화</h2>
-<a id="a989ac07b6b9603d8bf4ec5d89ef5e2e9" name="a989ac07b6b9603d8bf4ec5d89ef5e2e9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a989ac07b6b9603d8bf4ec5d89ef5e2e9">&#9670;&#160;</a></span>TSharedPtr&lt; FPresentationBarrier &gt;</h2>
+<a id="a5a379e78310283f46336d4ec9227dc6d" name="a5a379e78310283f46336d4ec9227dc6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a379e78310283f46336d4ec9227dc6d">&#9670;&#160;</a></span>int32</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;</td>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> int32 <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGTurnContext.html">USRPGTurnContext</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="classUSRPGAction.html">USRPGAction</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt;<a class="el" href="classUUnitModel.html">UUnitModel</a>&gt; &gt; int32</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00043">43</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5bfe84ea5ebad6fe068e50ac597c5e47" name="a5bfe84ea5ebad6fe068e50ac597c5e47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bfe84ea5ebad6fe068e50ac597c5e47">&#9670;&#160;</a></span>TSharedPtr&lt; FPresentationBarrier &gt;</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classUUnitModel.html">UUnitModel</a> <a class="el" href="classUBoardActorModel.html">UBoardActorModel</a> <a class="el" href="SRPGFrameworkType_8h.html#a87b752dc898e3139c35ae662b79156ae">ESRPGCombatResult</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SRPGCombatModel_8h_source.html">SRPGCombatModel.h</a> 파일의 <a class="el" href="SRPGCombatModel_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

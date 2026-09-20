@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Pawn/Camera/OrthographicCameraShakePattern.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('OrthographicCameraShakePattern_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">OrthographicCameraShakePattern.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="OrthographicCameraShakePattern_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="comment">// Fill out your copyright notice in the Description page of Project Settings.</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="OrthographicCameraShakePattern_8h.html">Pawn/Camera/OrthographicCameraShakePattern.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="foldopen" id="foldopen00006" data-start="{" data-end="}">
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">    6</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">FOrthographicNoiseShaker::Update</a>(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AmplitudeMultiplier</a>, <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrequencyMultiplier</a>, <span class="keywordtype">float</span>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InOutCurrentOffset</a>)<span class="keyword"> const</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="keyword"></span>{</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalAmplitude</a> = <a class="code hl_variable" href="structFOrthographicNoiseShaker.html#a3c2380a5f9ba616a7ec65898d20c5091">Amplitude</a> * <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AmplitudeMultiplier</a>;</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalAmplitude</a> != 0.f)</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    {</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InOutCurrentOffset</a> += <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a> * <a class="code hl_variable" href="structFOrthographicNoiseShaker.html#a108f018bbc3d9e698bc9132de23f42ed">Frequency</a> * <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FrequencyMultiplier</a>;</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TotalAmplitude</a> * FMath::PerlinNoise1D(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InOutCurrentOffset</a>);</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    }</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="keywordflow">return</span> 0.f;</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>}</div>
+</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
+<div class="foldopen" id="foldopen00017" data-start="{" data-end="}">
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classUOrthographicCameraShakePattern.html#a0765dbc3314886e22a6ab89b7e502004">   17</a></span><a class="code hl_function" href="classUOrthographicCameraShakePattern.html#a0765dbc3314886e22a6ab89b7e502004">UOrthographicCameraShakePattern::UOrthographicCameraShakePattern</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FObjectInitializer</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjInit</a>)</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    : <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Super</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjInit</a>)</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>{</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <span class="comment">// Default to only location shaking.</span></div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a3223980f21ad4ac616a73edcb33e4870">RotationAmplitudeMultiplier</a> = 0.f;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#aaa98dfdf5b76defd747820e3d8b052fc">OrthoWidth</a>.<a class="code hl_variable" href="structFOrthographicNoiseShaker.html#a3c2380a5f9ba616a7ec65898d20c5091">Amplitude</a> = 0.f;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>}</div>
+</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="keywordtype">void</span> UOrthographicCameraShakePattern::StartShakePatternImpl(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternStartParams</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>)</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>{</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    Super::StartShakePatternImpl(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>);</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keywordflow">if</span> (!<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>.bIsRestarting)</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    {</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="comment">// All offsets are random. This is because the core perlin noise implementation</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="comment">// uses permutation tables, so if two shakers have the same initial offset and the same</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>        <span class="comment">// frequency, they will have the same exact values.</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        InitialLocationOffset = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector3f</a>((<span class="keywordtype">float</span>)FMath::RandHelper(255), (<span class="keywordtype">float</span>)FMath::RandHelper(255), (<span class="keywordtype">float</span>)FMath::RandHelper(255));</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        InitialRotationOffset = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector3f</a>((<span class="keywordtype">float</span>)FMath::RandHelper(255), (<span class="keywordtype">float</span>)FMath::RandHelper(255), (<span class="keywordtype">float</span>)FMath::RandHelper(255));</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        InitialOrthoWidthOffset = (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>)FMath::RandHelper(255);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        CurrentLocationOffset = InitialLocationOffset;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        CurrentRotationOffset = InitialRotationOffset;</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        CurrentOrthoWidthOffset = InitialOrthoWidthOffset;</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    }</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>}</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span> </div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="keywordtype">void</span> UOrthographicCameraShakePattern::UpdateShakePatternImpl(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternUpdateParams</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternUpdateResult</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>)</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>{</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    UpdateOrthographicNoise(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>.DeltaTime, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>);</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlendWeight</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">State</a>.Update(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>.DeltaTime);</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>.ApplyScale(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlendWeight</a>);</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>}</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="keywordtype">void</span> UOrthographicCameraShakePattern::ScrubShakePatternImpl(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternScrubParams</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternUpdateResult</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>)</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>{</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <span class="comment">// Scrubbing is like going back to our initial state and updating directly to the scrub time.</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    CurrentLocationOffset = InitialLocationOffset;</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    CurrentRotationOffset = InitialRotationOffset;</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    CurrentOrthoWidthOffset = InitialOrthoWidthOffset;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>    UpdateOrthographicNoise(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>.AbsoluteTime, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>);</div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span> </div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>    <span class="keyword">const</span> <span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlendWeight</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">State</a>.Scrub(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Params</a>.AbsoluteTime);</div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>.ApplyScale(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">BlendWeight</a>);</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>}</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="keywordtype">void</span> UOrthographicCameraShakePattern::UpdateOrthographicNoise(<span class="keywordtype">float</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FCameraShakePatternUpdateResult</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>)</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>{</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>.Location.Y = <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a1a8ab7aa9b957f11021a8568dbc4c4b0">Y</a>.<a class="code hl_function" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">Update</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a75986278962b3d4c39bfff09ea546209">LocationAmplitudeMultiplier</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a78387f52c8979abc6cff9df5d00a7ccc">LocationFrequencyMultiplier</a>, CurrentLocationOffset.Y);</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>.Location.Z = <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#ac758b6f9f095a17cee87d570becee397">Z</a>.<a class="code hl_function" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">Update</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a75986278962b3d4c39bfff09ea546209">LocationAmplitudeMultiplier</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a78387f52c8979abc6cff9df5d00a7ccc">LocationFrequencyMultiplier</a>, CurrentLocationOffset.Z);</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span> </div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">OutResult</a>.Rotation.Roll = <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#aca1d4117999e84267f0d260246131f58">Roll</a>.<a class="code hl_function" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">Update</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a3223980f21ad4ac616a73edcb33e4870">RotationAmplitudeMultiplier</a>, <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#a394b6720376095b2bcd685ac49039803">RotationFrequencyMultiplier</a>, CurrentRotationOffset.Z);</div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span> </div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>    CurrentOrhoWidthValue = <a class="code hl_variable" href="classUOrthographicCameraShakePattern.html#aaa98dfdf5b76defd747820e3d8b052fc">OrthoWidth</a>.<a class="code hl_function" href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">Update</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DeltaTime</a>, 1.f, 1.f, CurrentOrthoWidthOffset);</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>}</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span> </div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
+<div class="ttc" id="aOrthographicCameraShakePattern_8h_html"><div class="ttname"><a href="OrthographicCameraShakePattern_8h.html">OrthographicCameraShakePattern.h</a></div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a0765dbc3314886e22a6ab89b7e502004"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a0765dbc3314886e22a6ab89b7e502004">UOrthographicCameraShakePattern::UOrthographicCameraShakePattern</a></div><div class="ttdeci">UOrthographicCameraShakePattern(const FObjectInitializer &amp;ObjInit)</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8cpp_source.html#l00017">OrthographicCameraShakePattern.cpp:17</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a1a8ab7aa9b957f11021a8568dbc4c4b0"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a1a8ab7aa9b957f11021a8568dbc4c4b0">UOrthographicCameraShakePattern::Y</a></div><div class="ttdeci">FOrthographicNoiseShaker Y</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00062">OrthographicCameraShakePattern.h:62</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a3223980f21ad4ac616a73edcb33e4870"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a3223980f21ad4ac616a73edcb33e4870">UOrthographicCameraShakePattern::RotationAmplitudeMultiplier</a></div><div class="ttdeci">float RotationAmplitudeMultiplier</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00073">OrthographicCameraShakePattern.h:73</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a394b6720376095b2bcd685ac49039803"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a394b6720376095b2bcd685ac49039803">UOrthographicCameraShakePattern::RotationFrequencyMultiplier</a></div><div class="ttdeci">float RotationFrequencyMultiplier</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00077">OrthographicCameraShakePattern.h:77</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a75986278962b3d4c39bfff09ea546209"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a75986278962b3d4c39bfff09ea546209">UOrthographicCameraShakePattern::LocationAmplitudeMultiplier</a></div><div class="ttdeci">float LocationAmplitudeMultiplier</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00051">OrthographicCameraShakePattern.h:51</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_a78387f52c8979abc6cff9df5d00a7ccc"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#a78387f52c8979abc6cff9df5d00a7ccc">UOrthographicCameraShakePattern::LocationFrequencyMultiplier</a></div><div class="ttdeci">float LocationFrequencyMultiplier</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00055">OrthographicCameraShakePattern.h:55</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_aaa98dfdf5b76defd747820e3d8b052fc"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#aaa98dfdf5b76defd747820e3d8b052fc">UOrthographicCameraShakePattern::OrthoWidth</a></div><div class="ttdeci">FOrthographicNoiseShaker OrthoWidth</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00093">OrthographicCameraShakePattern.h:93</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_ac758b6f9f095a17cee87d570becee397"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#ac758b6f9f095a17cee87d570becee397">UOrthographicCameraShakePattern::Z</a></div><div class="ttdeci">FOrthographicNoiseShaker Z</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00069">OrthographicCameraShakePattern.h:69</a></div></div>
+<div class="ttc" id="aclassUOrthographicCameraShakePattern_html_aca1d4117999e84267f0d260246131f58"><div class="ttname"><a href="classUOrthographicCameraShakePattern.html#aca1d4117999e84267f0d260246131f58">UOrthographicCameraShakePattern::Roll</a></div><div class="ttdeci">FOrthographicNoiseShaker Roll</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00084">OrthographicCameraShakePattern.h:84</a></div></div>
+<div class="ttc" id="astructFOrthographicNoiseShaker_html_a0ace9d42891adfa7886d29bd2039fe7f"><div class="ttname"><a href="structFOrthographicNoiseShaker.html#a0ace9d42891adfa7886d29bd2039fe7f">FOrthographicNoiseShaker::Update</a></div><div class="ttdeci">float Update(float DeltaTime, float AmplitudeMultiplier, float FrequencyMultiplier, float &amp;InOutCurrentOffset) const</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8cpp_source.html#l00006">OrthographicCameraShakePattern.cpp:6</a></div></div>
+<div class="ttc" id="astructFOrthographicNoiseShaker_html_a108f018bbc3d9e698bc9132de23f42ed"><div class="ttname"><a href="structFOrthographicNoiseShaker.html#a108f018bbc3d9e698bc9132de23f42ed">FOrthographicNoiseShaker::Frequency</a></div><div class="ttdeci">float Frequency</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00022">OrthographicCameraShakePattern.h:22</a></div></div>
+<div class="ttc" id="astructFOrthographicNoiseShaker_html_a3c2380a5f9ba616a7ec65898d20c5091"><div class="ttname"><a href="structFOrthographicNoiseShaker.html#a3c2380a5f9ba616a7ec65898d20c5091">FOrthographicNoiseShaker::Amplitude</a></div><div class="ttdeci">float Amplitude</div><div class="ttdef"><b>Definition</b> <a href="OrthographicCameraShakePattern_8h_source.html#l00018">OrthographicCameraShakePattern.h:18</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_e9535491f66388144d99fb6379099d27.html">Pawn</a></li><li class="navelem"><a class="el" href="dir_a787794e235ba414f7b4031af1b80d27.html">Camera</a></li><li class="navelem"><a class="el" href="OrthographicCameraShakePattern_8cpp.html">OrthographicCameraShakePattern.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

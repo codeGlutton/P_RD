@@ -1,7 +1,7 @@
 var structFTacticalTagCountContainer =
 [
     [ "FTacticalTagCountContainer", "structFTacticalTagCountContainer.html#a910f1d83e9f1eabe44ab1566558d8697", null ],
-    [ "CaptureAllTags", "structFTacticalTagCountContainer.html#afd544243b5cd949621be29824f269a5d", null ],
+    [ "CaptureAllTags", "structFTacticalTagCountContainer.html#a01b4fc5daca31484e628a7d3d5b9c896", null ],
     [ "FillParentTags", "structFTacticalTagCountContainer.html#ac903c24eb514bc0751d121312121a532", null ],
     [ "GetExplicitGameplayTags", "structFTacticalTagCountContainer.html#ae4da393dc3b9c83896c24961f89cb683", null ],
     [ "GetExplicitTagCount", "structFTacticalTagCountContainer.html#a47249140b0888885dd11c84931df0e7e", null ],
@@ -11,7 +11,7 @@ var structFTacticalTagCountContainer =
     [ "HasMatchingGameplayTag", "structFTacticalTagCountContainer.html#a462ad7317c877e36b486c42eb5e9ef77", null ],
     [ "Notify_StackCountChange", "structFTacticalTagCountContainer.html#a12393a85d54628fe4139f04d758e93fa", null ],
     [ "operator==", "structFTacticalTagCountContainer.html#a08481c212b7a377d1d01e824a08ff78b", null ],
-    [ "RegisterGameplayTagEvent", "structFTacticalTagCountContainer.html#a32b9e9c67e0c36be323b0bb6e475deaf", null ],
+    [ "RegisterGameplayTagEvent", "structFTacticalTagCountContainer.html#af1b1bacf10d0e190226549ebef502dec", null ],
     [ "RegisterGenericGameplayEvent", "structFTacticalTagCountContainer.html#a0ecc5ef1c6e55adc5500e6127dcd9b49", null ],
     [ "Reset", "structFTacticalTagCountContainer.html#ad5cb0b95b5ee2892e911d9a502d7e18e", null ],
     [ "SetOwner", "structFTacticalTagCountContainer.html#a3cefe8bf7061d429af5749ac9a56c659", null ],

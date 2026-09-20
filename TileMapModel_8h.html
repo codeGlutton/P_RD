@@ -107,6 +107,9 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFTile.html">FTile</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">SRPG의 타일  <a href="structFTile.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFMovePathTile.html">FMovePathTile</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">이동경로 표시용 타일정보  <a href="structFMovePathTile.html#details">더 자세히 ...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUTileMapModel.html">UTileMapModel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">타일맵 데이터 모델 클래스  <a href="classUTileMapModel.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,14 +123,19 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
 <tr class="separator:a07053e3fb5a9b01d066aa450756c5e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a505de2781a38416348a0d0b977ede27a" id="r_a505de2781a38416348a0d0b977ede27a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a505de2781a38416348a0d0b977ede27a">DECLARE_DELEGATE_RetVal_OneParam</a> (<a class="el" href="structFTileIndex.html">FTileIndex</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FWorldToTileIndexDelegate</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector</a> &amp;)</td></tr>
 <tr class="separator:a505de2781a38416348a0d0b977ede27a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1c46f121425c1ce2889de78181b6d4b2" id="r_a1c46f121425c1ce2889de78181b6d4b2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a1c46f121425c1ce2889de78181b6d4b2">DECLARE_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSetMovePathDelegate</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;)</td></tr>
-<tr class="memdesc:a1c46f121425c1ce2889de78181b6d4b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">모델이 뷰(ATileMap)에 이동경로 표시를 요청하는 델리깃  <br /></td></tr>
-<tr class="separator:a1c46f121425c1ce2889de78181b6d4b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a048cafa5a8efe7c837e3ed6cfecfebac" id="r_a048cafa5a8efe7c837e3ed6cfecfebac"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a048cafa5a8efe7c837e3ed6cfecfebac">DECLARE_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSetMovePathDelegate</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFMovePathTile.html">FMovePathTile</a> &gt; &amp;)</td></tr>
+<tr class="memdesc:a048cafa5a8efe7c837e3ed6cfecfebac"><td class="mdescLeft">&#160;</td><td class="mdescRight">모델이 뷰(ATileMap)에 이동경로 표시를 요청하는 델리깃  <br /></td></tr>
+<tr class="separator:a048cafa5a8efe7c837e3ed6cfecfebac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acbc604ace1344638e79bc597e5c1d06a" id="r_acbc604ace1344638e79bc597e5c1d06a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#acbc604ace1344638e79bc597e5c1d06a">DECLARE_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSetTileHighlightDelegate</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;, <a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a>)</td></tr>
 <tr class="memdesc:acbc604ace1344638e79bc597e5c1d06a"><td class="mdescLeft">&#160;</td><td class="mdescRight">모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃  <br /></td></tr>
 <tr class="separator:acbc604ace1344638e79bc597e5c1d06a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7db697f8262e3f391bbf9603e8ca9a2b" id="r_a7db697f8262e3f391bbf9603e8ca9a2b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a7db697f8262e3f391bbf9603e8ca9a2b">DECLARE_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FClearTileHighlightDelegate</a>, <a class="el" href="TileHighlight_8h.html#afa8f0977bfa9d4ffd2ae4ccbfedf2410">ETileHighlightFlag</a>)</td></tr>
 <tr class="separator:a7db697f8262e3f391bbf9603e8ca9a2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a223755e550eb7e3148060869d10a516f" id="r_a223755e550eb7e3148060869d10a516f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a223755e550eb7e3148060869d10a516f">DECLARE_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSetThreatRangeDelegate</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;)</td></tr>
+<tr class="memdesc:a223755e550eb7e3148060869d10a516f"><td class="mdescLeft">&#160;</td><td class="mdescRight">모델이 뷰(ATileMap)에 위협 범위 표시/해제를 요청하는 델리깃  <br /></td></tr>
+<tr class="separator:a223755e550eb7e3148060869d10a516f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d3f5747f11a4ec76545f707669e41c7" id="r_a3d3f5747f11a4ec76545f707669e41c7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="TileMapModel_8h.html#a3d3f5747f11a4ec76545f707669e41c7">DECLARE_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FClearThreatRangeDelegate</a>)</td></tr>
+<tr class="separator:a3d3f5747f11a4ec76545f707669e41c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock"><dl class="section author"><dt>작성자</dt><dd>이문환 </dd></dl>
@@ -135,6 +143,24 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
 
 <p class="definition"><a class="el" href="TileMapModel_8h_source.html">TileMapModel.h</a> 파일에서 정의되었습니다.</p>
 </div><h2 class="groupheader">함수 문서화</h2>
+<a id="a3d3f5747f11a4ec76545f707669e41c7" name="a3d3f5747f11a4ec76545f707669e41c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d3f5747f11a4ec76545f707669e41c7">&#9670;&#160;</a></span>DECLARE_DELEGATE()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FClearThreatRangeDelegate</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a7db697f8262e3f391bbf9603e8ca9a2b" name="a7db697f8262e3f391bbf9603e8ca9a2b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7db697f8262e3f391bbf9603e8ca9a2b">&#9670;&#160;</a></span>DECLARE_DELEGATE_OneParam() <span class="overload">[1/2]</span></h2>
 
@@ -163,8 +189,8 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
 
 </div>
 </div>
-<a id="a1c46f121425c1ce2889de78181b6d4b2" name="a1c46f121425c1ce2889de78181b6d4b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1c46f121425c1ce2889de78181b6d4b2">&#9670;&#160;</a></span>DECLARE_DELEGATE_OneParam() <span class="overload">[2/2]</span></h2>
+<a id="a048cafa5a8efe7c837e3ed6cfecfebac" name="a048cafa5a8efe7c837e3ed6cfecfebac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a048cafa5a8efe7c837e3ed6cfecfebac">&#9670;&#160;</a></span>DECLARE_DELEGATE_OneParam() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -178,7 +204,7 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFMovePathTile.html">FMovePathTile</a> &gt; &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -295,8 +321,43 @@ $(document).ready(function(){initNavTree('TileMapModel_8h.html',''); initResizab
 
 </div>
 </div>
+<a id="a223755e550eb7e3148060869d10a516f" name="a223755e550eb7e3148060869d10a516f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a223755e550eb7e3148060869d10a516f">&#9670;&#160;</a></span>DECLARE_DELEGATE_TwoParams() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DELEGATE_TwoParams </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FSetThreatRangeDelegate</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="structFTileIndex.html">FTileIndex</a> &gt; &amp;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>강조 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetThreatRange/ClearThreatRange로 바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다. </p>
+
+</div>
+</div>
 <a id="acbc604ace1344638e79bc597e5c1d06a" name="acbc604ace1344638e79bc597e5c1d06a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbc604ace1344638e79bc597e5c1d06a">&#9670;&#160;</a></span>DECLARE_DELEGATE_TwoParams()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#acbc604ace1344638e79bc597e5c1d06a">&#9670;&#160;</a></span>DECLARE_DELEGATE_TwoParams() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">

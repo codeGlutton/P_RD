@@ -94,6 +94,7 @@ $(document).ready(function(){initNavTree('classUSettingsPanelWidget.html',''); i
 <a href="#pub-methods">Public 멤버 함수</a> &#124;
 <a href="#pub-attribs">Public 속성</a> &#124;
 <a href="#pro-methods">Protected 멤버 함수</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classUSettingsPanelWidget-members.html">모든 멤버 목록</a>  </div>
   <div class="headertitle"><div class="title">USettingsPanelWidget 클래스 참조</div></div>
 </div><!--header-->
@@ -107,7 +108,8 @@ USettingsPanelWidget에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classUSettingsPanelWidget.png" usemap="#USettingsPanelWidget_map" alt=""/>
   <map id="USettingsPanelWidget_map" name="USettingsPanelWidget_map">
-<area href="classURDUserWidget.html" title="RD 프로젝트 UMG 위젯의 공통 베이스 클래스" alt="URDUserWidget" shape="rect" coords="0,56,134,80"/>
+<area href="classURDUserWidget.html" title="RD 프로젝트 UMG 위젯의 공통 베이스 클래스" alt="URDUserWidget" shape="rect" coords="0,56,180,80"/>
+<area href="classURDMobileSettingsTestWidget.html" alt="URDMobileSettingsTestWidget" shape="rect" coords="0,168,180,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -116,6 +118,15 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:a74918643a60eee2de3830fc46d51dbf4" id="r_a74918643a60eee2de3830fc46d51dbf4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a74918643a60eee2de3830fc46d51dbf4">USettingsPanelWidget</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FObjectInitializer</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ObjectInitializer</a>=FObjectInitializer::Get())</td></tr>
 <tr class="memdesc:a74918643a60eee2de3830fc46d51dbf4"><td class="mdescLeft">&#160;</td><td class="mdescRight">설정 패널의 기본 ZOrder와 모드를 초기화한다.  <br /></td></tr>
 <tr class="separator:a74918643a60eee2de3830fc46d51dbf4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a009e412b32f520e5d18004a4d1eaccff" id="r_a009e412b32f520e5d18004a4d1eaccff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a009e412b32f520e5d18004a4d1eaccff">UsesMobileSafeArea</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:a009e412b32f520e5d18004a4d1eaccff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa447ffda81ca3e198b7ab89713e76220" id="r_aa447ffda81ca3e198b7ab89713e76220"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#aa447ffda81ca3e198b7ab89713e76220">HandleBackNavigation</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:aa447ffda81ca3e198b7ab89713e76220"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a41abf472d01f36a83941b1a65c2c4016" id="r_a41abf472d01f36a83941b1a65c2c4016"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a41abf472d01f36a83941b1a65c2c4016">ApplyOpenUI</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="memdesc:a41abf472d01f36a83941b1a65c2c4016"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee" title="위젯을 여는 단일 진입점">OpenUI()</a>가 확정한 열기 상태를 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
+<tr class="separator:a41abf472d01f36a83941b1a65c2c4016"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25583cd6eb1464cc5d486f43a46daae2" id="r_a25583cd6eb1464cc5d486f43a46daae2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a25583cd6eb1464cc5d486f43a46daae2">RefreshSaveStatus</a> ()</td></tr>
+<tr class="separator:a25583cd6eb1464cc5d486f43a46daae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a925c07c88a9ac8bc0612bf3bc5dd8897" id="r_a925c07c88a9ac8bc0612bf3bc5dd8897"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a925c07c88a9ac8bc0612bf3bc5dd8897">ShouldApplyButtonFeedback</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="memdesc:a925c07c88a9ac8bc0612bf3bc5dd8897"><td class="mdescLeft">&#160;</td><td class="mdescRight">설정창도 프론트엔드 UI라 공용 버튼 클릭 사운드/누름 효과를 적용한다(타이틀/클래스선택과 동일).  <br /></td></tr>
 <tr class="separator:a925c07c88a9ac8bc0612bf3bc5dd8897"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,6 +136,11 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:aae669b13cac85ffcf6581516ba0323c6" id="r_aae669b13cac85ffcf6581516ba0323c6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="SettingsPanelTypes_8h.html#a99bb6f9d5202f3ead69228ec6af80ab4">ESettingsPanelMode</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#aae669b13cac85ffcf6581516ba0323c6">GetPanelMode</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:aae669b13cac85ffcf6581516ba0323c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 설정 패널 모드를 반환한다.  <br /></td></tr>
 <tr class="separator:aae669b13cac85ffcf6581516ba0323c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac46d0f5ba97e9da44ac927793fb599be" id="r_ac46d0f5ba97e9da44ac927793fb599be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#ac46d0f5ba97e9da44ac927793fb599be">ShowCreditsPage</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> bLicenses=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a>)</td></tr>
+<tr class="separator:ac46d0f5ba97e9da44ac927793fb599be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa68dc9cac9dc77c0dc44ae889b8a7901" id="r_aa68dc9cac9dc77c0dc44ae889b8a7901"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#aa68dc9cac9dc77c0dc44ae889b8a7901">CloseUI</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Callback</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a>()) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="memdesc:aa68dc9cac9dc77c0dc44ae889b8a7901"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯을 닫는 단일 진입점  <br /></td></tr>
+<tr class="separator:aa68dc9cac9dc77c0dc44ae889b8a7901"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e1ba206fb51dabe26306ad3eafd4ae9" id="r_a5e1ba206fb51dabe26306ad3eafd4ae9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a5e1ba206fb51dabe26306ad3eafd4ae9">RefreshPanelState</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bCanSaveRun</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bCanAbandonRun</a>)</td></tr>
 <tr class="memdesc:a5e1ba206fb51dabe26306ad3eafd4ae9"><td class="mdescLeft">&#160;</td><td class="mdescRight">런 상태에 따라 저장 후 종료/포기하기 버튼 활성 상태를 갱신한다.  <br /></td></tr>
 <tr class="separator:a5e1ba206fb51dabe26306ad3eafd4ae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -146,6 +162,9 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:aca471e1845a5246dcc214b6ddeae7117" id="r_aca471e1845a5246dcc214b6ddeae7117"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#aca471e1845a5246dcc214b6ddeae7117">ShowAbandonConfirm</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:aca471e1845a5246dcc214b6ddeae7117"><td class="mdescLeft">&#160;</td><td class="mdescRight">런 포기 확인 패널을 보여준다.  <br /></td></tr>
 <tr class="separator:aca471e1845a5246dcc214b6ddeae7117"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a3b1da4059997c6e50f064e0058af86" id="r_a5a3b1da4059997c6e50f064e0058af86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a5a3b1da4059997c6e50f064e0058af86">ShowSaveAndExitConfirm</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:a5a3b1da4059997c6e50f064e0058af86"><td class="mdescLeft">&#160;</td><td class="mdescRight">저장 후 종료 전에 같은 확인 패널을 저장 안내 문구로 연다.  <br /></td></tr>
+<tr class="separator:a5a3b1da4059997c6e50f064e0058af86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add23220d556066ff3096a6e95cf86c98" id="r_add23220d556066ff3096a6e95cf86c98"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#add23220d556066ff3096a6e95cf86c98">HideAbandonConfirm</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:add23220d556066ff3096a6e95cf86c98"><td class="mdescLeft">&#160;</td><td class="mdescRight">런 포기 확인 패널을 숨긴다.  <br /></td></tr>
 <tr class="separator:add23220d556066ff3096a6e95cf86c98"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,12 +175,13 @@ Public 멤버 함수</h2></td></tr>
 <tr class="memitem:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget" id="r_ae32f620cc43ff20e3c329019df0de3ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee">OpenUI</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUIOpenAnimation</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Callback</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUIOpenAnimation</a>())</td></tr>
 <tr class="memdesc:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯을 여는 단일 진입점  <br /></td></tr>
 <tr class="separator:ae32f620cc43ff20e3c329019df0de3ee inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget" id="r_a53b2cba03bfba50c140ab7fef60872d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a53b2cba03bfba50c140ab7fef60872d1">CloseUI</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Callback</a>=<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a>())</td></tr>
-<tr class="memdesc:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯을 닫는 단일 진입점  <br /></td></tr>
-<tr class="separator:a53b2cba03bfba50c140ab7fef60872d1 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget" id="r_a8a0ecabf313dbba6fa3a495d73f8dbad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a8a0ecabf313dbba6fa3a495d73f8dbad">IsOpened</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯이 열렸거나 열리는 중이며 실제 화면에 보이는지 확인한다.  <br /></td></tr>
 <tr class="separator:a8a0ecabf313dbba6fa3a495d73f8dbad inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12adf4820f3e74fa2f2d967d264fc6ad inherit pub_methods_classURDUserWidget" id="r_a12adf4820f3e74fa2f2d967d264fc6ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> UUserWidget *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a12adf4820f3e74fa2f2d967d264fc6ad">GetBackNavigationLayer</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a12adf4820f3e74fa2f2d967d264fc6ad inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afddbb56b2bc0875de4321450e45fa598 inherit pub_methods_classURDUserWidget" id="r_afddbb56b2bc0875de4321450e45fa598"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#afddbb56b2bc0875de4321450e45fa598">ShouldWrapMobileSafeArea</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:afddbb56b2bc0875de4321450e45fa598 inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget" id="r_a027636eb3c9a5f583d2da72e1f08bdff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a027636eb3c9a5f583d2da72e1f08bdff">FinishOpenUI</a> ()</td></tr>
 <tr class="memdesc:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션 완료를 C++ 생명주기에 알린다.  <br /></td></tr>
 <tr class="separator:a027636eb3c9a5f583d2da72e1f08bdff inherit pub_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -226,6 +246,10 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memdesc:a8fc106208750d86dfddf2b4282203a00"><td class="mdescLeft">&#160;</td><td class="mdescRight">매 틱 뷰포트 화면비를 보고 폴드(&lt;1.68) 모달 스케일 변형을 전환한다.  <br /></td></tr>
 <tr class="separator:a8fc106208750d86dfddf2b4282203a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 멤버 함수</td></tr>
+<tr class="memitem:af40aa88b3e0040caef6d6be8eca407c9 inherit pro_methods_classURDUserWidget" id="r_af40aa88b3e0040caef6d6be8eca407c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedRef</a>&lt; <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SWidget</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#af40aa88b3e0040caef6d6be8eca407c9">RebuildWidget</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:af40aa88b3e0040caef6d6be8eca407c9 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a649e8962201fa83e78888340eaf3a680 inherit pro_methods_classURDUserWidget" id="r_a649e8962201fa83e78888340eaf3a680"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGeometry</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a649e8962201fa83e78888340eaf3a680">GetContentGeometry</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a649e8962201fa83e78888340eaf3a680 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget" id="r_a84d00481ec98f6d9469a5d722d2191de"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a84d00481ec98f6d9469a5d722d2191de">PlayOpenUIAnimation</a> ()</td></tr>
 <tr class="memdesc:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">열기 애니메이션을 재생한다.  <br /></td></tr>
 <tr class="separator:a84d00481ec98f6d9469a5d722d2191de inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -238,13 +262,10 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget" id="r_a8ace2bc7dcd42b5316045f7dfba38604"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a8ace2bc7dcd42b5316045f7dfba38604">PlayCloseUIAnimation_Implementation</a> ()</td></tr>
 <tr class="memdesc:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">별도 Blueprint 연출이 없으면 즉시 닫힌 상태로 완료한다.  <br /></td></tr>
 <tr class="separator:a8ace2bc7dcd42b5316045f7dfba38604 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget" id="r_a08c6778b31048ca7c2bb2dc8ce3d0c55"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a08c6778b31048ca7c2bb2dc8ce3d0c55">ApplyOpenUI</a> ()</td></tr>
-<tr class="memdesc:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee" title="위젯을 여는 단일 진입점">OpenUI()</a>가 확정한 열기 상태를 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
-<tr class="separator:a08c6778b31048ca7c2bb2dc8ce3d0c55 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget" id="r_ac694c35e0fa59dfad7c8e11faff0c67b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ac694c35e0fa59dfad7c8e11faff0c67b">ApplyCloseUI</a> ()</td></tr>
 <tr class="memdesc:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classURDUserWidget.html#ab47bc7509e2d94ec4567748b85e8eaf7" title="닫기 애니메이션 완료를 C++ 생명주기에 알린다.">FinishCloseUI()</a> 이후 닫힘 정책을 실제 UMG 표시 상태에 반영한다.  <br /></td></tr>
 <tr class="separator:ac694c35e0fa59dfad7c8e11faff0c67b inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget" id="r_a131ce144666f32f53d2f32e7dc8d2f75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a131ce144666f32f53d2f32e7dc8d2f75">GetViewportZOrder</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memitem:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget" id="r_a131ce144666f32f53d2f32e7dc8d2f75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a131ce144666f32f53d2f32e7dc8d2f75">GetViewportZOrder</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="memdesc:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AddToViewport()</a>에 사용할 ZOrder를 반환한다.  <br /></td></tr>
 <tr class="separator:a131ce144666f32f53d2f32e7dc8d2f75 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ea7bb344a4def56b4c81e1365c341ca inherit pro_methods_classURDUserWidget" id="r_a3ea7bb344a4def56b4c81e1365c341ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#a3ea7bb344a4def56b4c81e1365c341ca">ShouldRemoveFromParentOnClose</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
@@ -253,11 +274,19 @@ Protected 멤버 함수</h2></td></tr>
 <tr class="memitem:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget" id="r_ab601b5cb3eabe3b566a1f6c204926a40"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ab601b5cb3eabe3b566a1f6c204926a40">NativeOnInitialized</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
 <tr class="memdesc:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">위젯 초기화 시(피드백을 켠 화면에 한해) 트리 안의 버튼에 공용 누름 효과를 1회 배선한다.  <br /></td></tr>
 <tr class="separator:ab601b5cb3eabe3b566a1f6c204926a40 inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget" id="r_ae52edb48cd9915d6917c93915116340f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae52edb48cd9915d6917c93915116340f">ApplyCommonButtonPressSound</a> (UButton *Button) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="memdesc:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">런타임에 늦게 생성된 버튼 하나에 공용 클릭 사운드를 즉시 적용한다.  <br /></td></tr>
+<tr class="separator:ae52edb48cd9915d6917c93915116340f inherit pro_methods_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a5df8ce18af32694431bdddce3cc9aec4" id="r_a5df8ce18af32694431bdddce3cc9aec4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUSettingsPanelWidget.html#a5df8ce18af32694431bdddce3cc9aec4">FRDMobileBackNavigationTest</a></td></tr>
+<tr class="separator:a5df8ce18af32694431bdddce3cc9aec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="inherited" name="inherited"></a>
 추가로 상속된 멤버들</h2></td></tr>
 <tr class="inherit_header pro_attribs_classURDUserWidget"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classURDUserWidget')"><img src="closed.png" alt="-"/>&#160;<a class="el" href="classURDUserWidget.html">URDUserWidget</a>(으)로부터 상속된 Protected 속성</td></tr>
-<tr class="memitem:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget" id="r_ae62d782bb431f6a764b2aae9a0e3d3f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">mViewportZOrder</a> = 0</td></tr>
+<tr class="memitem:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget" id="r_ae62d782bb431f6a764b2aae9a0e3d3f8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#ae62d782bb431f6a764b2aae9a0e3d3f8">mViewportZOrder</a> = 0</td></tr>
 <tr class="memdesc:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="mdescLeft">&#160;</td><td class="mdescRight">뷰포트에 올라갈 때 사용할 표시 순서  <br /></td></tr>
 <tr class="separator:ae62d782bb431f6a764b2aae9a0e3d3f8 inherit pro_attribs_classURDUserWidget"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab4c4ee1e763fa6b1807a6febfad8050 inherit pro_attribs_classURDUserWidget" id="r_aab4c4ee1e763fa6b1807a6febfad8050"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classURDUserWidget.html#aab4c4ee1e763fa6b1807a6febfad8050">mRemoveFromParentOnClose</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td></tr>
@@ -270,7 +299,7 @@ Protected 멤버 함수</h2></td></tr>
 <p>왜 이벤트만 내보내는가: 설정 패널 안에 저장/전환 로직을 넣으면 타이틀에서 열린 패널도 인게임 런 상태를 알아야 한다. 반대로 입력만 이벤트로 올리면 같은 WBP를 두 화면에서 공유하면서도, 실제 처리는 각 화면의 책임으로 남길 수 있다.</p>
 <p>기능 범위: 이 클래스는 WBP 바인딩, 입력 이벤트 변환, 모드별 영역 표시, 확인 패널 표시만 맡는다. 설정 값 적용, 세이브 파일 작성, 현재 런 폐기, 타이틀 이동은 이 위젯의 책임이 아니다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="a74918643a60eee2de3830fc46d51dbf4" name="a74918643a60eee2de3830fc46d51dbf4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a74918643a60eee2de3830fc46d51dbf4">&#9670;&#160;</a></span>USettingsPanelWidget()</h2>
@@ -296,11 +325,41 @@ Protected 멤버 함수</h2></td></tr>
 </dl>
 <p>설정 패널은 타이틀 메뉴 위나 인게임 상단 메뉴 위에 뜨는 보조 화면이다. 기본 ZOrder를 PopUp으로 두면 <a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee" title="위젯을 여는 단일 진입점">OpenUI()</a>로 열릴 때 HUD/월드 위젯보다 앞에 배치되어 입력 우선순위가 자연스럽다. 팝업 계층에 올라와야 Back/Save/Abandon 같은 버튼 입력이 뒤쪽 메뉴나 HUD에 섞이지 않는다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00024">24</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00026">26</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="a41abf472d01f36a83941b1a65c2c4016" name="a41abf472d01f36a83941b1a65c2c4016"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41abf472d01f36a83941b1a65c2c4016">&#9670;&#160;</a></span>ApplyOpenUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USettingsPanelWidget::ApplyOpenUI </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>공통 <a class="el" href="classURDUserWidget.html#ae32f620cc43ff20e3c329019df0de3ee" title="위젯을 여는 단일 진입점">OpenUI()</a>가 선택한 ZOrder로 뷰포트에 올리고 Visible 상태를 보장한다. </p>
+
+<p><a class="el" href="classURDUserWidget.html#a08c6778b31048ca7c2bb2dc8ce3d0c55">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00544">544</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="acbfa081c9e9fd76643139dcda95f4ff2" name="acbfa081c9e9fd76643139dcda95f4ff2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acbfa081c9e9fd76643139dcda95f4ff2">&#9670;&#160;</a></span>ApplyValueModel()</h2>
 
@@ -325,6 +384,45 @@ Protected 멤버 함수</h2></td></tr>
 </dl>
 
 <p class="definition"><a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Values_8cpp_source.html#l00011">11</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa68dc9cac9dc77c0dc44ae889b8a7901" name="aa68dc9cac9dc77c0dc44ae889b8a7901"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa68dc9cac9dc77c0dc44ae889b8a7901">&#9670;&#160;</a></span>CloseUI()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USettingsPanelWidget::CloseUI </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a>&#160;</td>
+          <td class="paramname"><em>Callback</em> = <code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnEndUICloseAnimation</a>()</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>닫기 연출과 실제 닫힘 처리를 한 경로로 묶는다.</p>
+<p>닫기 애니메이션을 시작하고, 완료 시 <a class="el" href="classURDUserWidget.html#ac694c35e0fa59dfad7c8e11faff0c67b" title="FinishCloseUI() 이후 닫힘 정책을 실제 UMG 표시 상태에 반영한다.">ApplyCloseUI()</a>를 통해 Collapsed 처리 또는 부모 제거를 수행한다. 이미 닫힌 위젯은 콜백을 즉시 실행하고, 닫히는 중인 위젯은 중복 닫기 요청을 무시한다. 닫기 연출과 후속 로직이 여러 번 실행되는 것을 막기 위한 생명주기 방어다.</p>
+<dl class="params"><dt>매개변수</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">Callback</td><td>닫기 애니메이션 완료 후 실행할 선택 콜백</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>닫힌 위젯을 닫는 요청은 성공한 닫힘으로 취급해 콜백을 실행한다. 반대로 닫히는 중인 위젯에 대한 중복 요청은 같은 애니메이션과 콜백이 다시 쌓이지 않도록 무시한다. </p>
+
+<p><a class="el" href="classURDUserWidget.html#a53b2cba03bfba50c140ab7fef60872d1">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget__Credits_8cpp_source.html">SettingsPanelWidget_Credits.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Credits_8cpp_source.html#l00097">97</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -365,7 +463,37 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Values_8cpp_source.html#l00069">69</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Values_8cpp_source.html#l00071">71</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aa447ffda81ca3e198b7ab89713e76220" name="aa447ffda81ca3e198b7ab89713e76220"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa447ffda81ca3e198b7ab89713e76220">&#9670;&#160;</a></span>HandleBackNavigation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USettingsPanelWidget::HandleBackNavigation </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Handle one navigation step. Modal owners close their innermost layer first. </p>
+
+<p><a class="el" href="classURDUserWidget.html#ab1c5965ca8609aa949cc0049efb5a38a">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00537">537</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -387,7 +515,7 @@ Protected 멤버 함수</h2></td></tr>
 <p>취소 버튼, 패널 재초기화, 다른 화면으로 돌아가는 흐름에서 확인 UI만 닫을 때 사용한다. 확인 패널을 닫아도 런 상태나 설정 값은 변경하지 않는다.</p>
 <p>취소하거나 패널을 초기 상태로 되돌릴 때 확인 UI만 접는다. 이 함수는 확인 패널의 가시성만 바꾸며, 런 데이터나 저장 상태에는 손대지 않는다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html#l00027">27</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html#l00091">91</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -409,7 +537,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -420,7 +548,9 @@ Protected 멤버 함수</h2></td></tr>
 <p>왜 이렇게 나누는가: 같은 설정 패널을 타이틀과 인게임에서 함께 쓰기 때문이다. 패널 안에 GameMode/저장/전환 로직을 넣으면 타이틀용 설정과 인게임용 설정이 서로의 흐름을 알아야 하므로 재사용하기 어렵다.</p>
 <p>구성 순서: 먼저 WBP 바인딩 누락을 로그로 확인하고, 버튼/슬라이더/체크박스 입력을 C++ 핸들러에 연결한다. 그 뒤 기본 문구, 모드별 표시 상태, 런 포기 확인 패널의 초기 상태를 맞춘다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00045">45</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classURDUserWidget.html#aea7fc843a9c40f9e694fda3c810935ab">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00047">47</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -442,13 +572,15 @@ Protected 멤버 함수</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span></span>  </td>
+<span class="mlabels"><span class="mlabel">override</span><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 <p>UUserWidget은 화면에서 제거됐다가 다시 생성되거나, 같은 인스턴스가 생명주기상 Destruct를 거칠 수 있다. 이때 버튼/슬라이더 Delegate 연결을 정리해 두면 다음 Construct에서 입력이 중복 호출되는 상황을 피할 수 있다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00387">387</a> 번째 라인에서 정의되었습니다.</p>
+<p><a class="el" href="classURDUserWidget.html#ad16af9444bb2820b46e6c5eb0cdea774">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00417">417</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -490,7 +622,7 @@ Protected 멤버 함수</h2></td></tr>
 <p>UMG 위젯은 화면에서 빠졌다가 다시 붙거나, 에디터에서 재생을 반복하면서 Construct/Destruct를 여러 번 거칠 수 있다. Construct에서 AddUniqueDynamic을 사용해 중복 연결을 줄이고, Destruct에서 RemoveDynamic으로 정리해 생명주기 끝에 입력 연결이 남지 않게 한다.</p>
 <p>왜 모든 입력을 다시 풀어주는가: 설정 패널은 OpenUI/CloseUI 흐름으로 여러 번 열릴 수 있다. 이전 인스턴스의 Delegate가 남아 있으면 버튼 한 번에 같은 요청이 여러 번 Broadcast될 수 있으므로, Construct에서 연결한 항목은 Destruct에서 같은 목록으로 해제한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00165">165</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00190">190</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -536,6 +668,25 @@ Protected 멤버 함수</h2></td></tr>
 
 </div>
 </div>
+<a id="a25583cd6eb1464cc5d486f43a46daae2" name="a25583cd6eb1464cc5d486f43a46daae2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25583cd6eb1464cc5d486f43a46daae2">&#9670;&#160;</a></span>RefreshSaveStatus()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USettingsPanelWidget::RefreshSaveStatus </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget_8cpp_source.html#l00550">550</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a2da9647e0b6ea014f87314482bb81082" name="a2da9647e0b6ea014f87314482bb81082"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2da9647e0b6ea014f87314482bb81082">&#9670;&#160;</a></span>RefreshValueModelFromCurrentOptions()</h2>
 
@@ -552,7 +703,7 @@ Protected 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>설정창이 열릴 때 저장된 볼륨, 언어, FPS 제한을 화면에 맞추는 진입점이다. 값 적용 중 발생하는 슬라이더/체크박스 콜백은 외부 이벤트로 다시 나가지 않는다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Values_8cpp_source.html#l00048">48</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Values_8cpp_source.html#l00049">49</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -639,7 +790,7 @@ Protected 멤버 함수</h2></td></tr>
 </dl>
 <p>저장 중, 저장 완료, 저장 실패처럼 실제 결과를 아는 쪽은 설정 패널이 아니라 이벤트 수신자다. 따라서 이 함수는 들어온 문구를 그대로 보여주는 표시 함수이며, 빈 문구는 상태 영역을 접어 평상시 레이아웃을 깔끔하게 유지한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget__Text_8cpp_source.html">SettingsPanelWidget_Text.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Text_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget__Text_8cpp_source.html">SettingsPanelWidget_Text.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Text_8cpp_source.html#l00119">119</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -668,7 +819,7 @@ Protected 멤버 함수</h2></td></tr>
 
 <p><a class="el" href="classURDUserWidget.html#aac8b2976845b8349979a2e75590afddf">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00059">59</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00064">64</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -690,7 +841,101 @@ Protected 멤버 함수</h2></td></tr>
 <p>런 포기는 되돌리기 어려운 액션이므로 첫 버튼 클릭에서는 바로 실행하지 않고 확인 패널만 연다. 실제 런 종료는 Confirm 버튼이 눌린 뒤 OnAbandonRunConfirmed를 받은 외부 흐름이 수행한다.</p>
 <p>"런 포기" 버튼은 위험한 액션의 1차 진입점이므로 이 함수에서는 확인 UI만 연다. 실제 포기 실행은 Confirm 버튼을 눌러 OnAbandonRunConfirmed가 Broadcast된 뒤 외부 흐름에서 처리한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html#l00012">12</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html#l00056">56</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ac46d0f5ba97e9da44ac927793fb599be" name="ac46d0f5ba97e9da44ac927793fb599be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac46d0f5ba97e9da44ac927793fb599be">&#9670;&#160;</a></span>ShowCreditsPage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USettingsPanelWidget::ShowCreditsPage </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>bLicenses</em> = <code><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Open the offline credits or license reader from either settings mode. </p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget__Credits_8cpp_source.html">SettingsPanelWidget_Credits.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Credits_8cpp_source.html#l00065">65</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a5a3b1da4059997c6e50f064e0058af86" name="a5a3b1da4059997c6e50f064e0058af86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a3b1da4059997c6e50f064e0058af86">&#9670;&#160;</a></span>ShowSaveAndExitConfirm()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> USettingsPanelWidget::ShowSaveAndExitConfirm </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a> 파일의 <a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html#l00070">70</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a009e412b32f520e5d18004a4d1eaccff" name="a009e412b32f520e5d18004a4d1eaccff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a009e412b32f520e5d18004a4d1eaccff">&#9670;&#160;</a></span>UsesMobileSafeArea()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> USettingsPanelWidget::UsesMobileSafeArea </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classURDUserWidget.html#a12fb3f84d3ad2c6c2c26dc5a5c7235d9">URDUserWidget</a>(으)로부터 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00058">58</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Friend, 그리고 관련된 함수 문서화</h2>
+<a id="a5df8ce18af32694431bdddce3cc9aec4" name="a5df8ce18af32694431bdddce3cc9aec4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5df8ce18af32694431bdddce3cc9aec4">&#9670;&#160;</a></span>FRDMobileBackNavigationTest</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">friend</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">class</a> FRDMobileBackNavigationTest</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00300">300</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -708,7 +953,7 @@ Protected 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>확인 패널에서 최종 승인까지 끝난 뒤에만 발생한다. 현재 런 정리, 저장 데이터 폐기, 타이틀 이동은 이벤트를 받은 인게임 흐름이 처리한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00198">198</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00213">213</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -723,9 +968,9 @@ Protected 멤버 함수</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>타이틀에서는 타이틀 메뉴로, 인게임에서는 상단 메뉴나 이전 팝업 상태로 돌아갈 수 있다. 이 위젯은 자신이 어느 화면 스택에 올라와 있는지 모르므로 복귀 처리를 직접 하지 않는다. </p>
+<p>타이틀에서는 타이틀 메뉴로, 인게임에서는 상단 메뉴나 이전 팝업 상태로 돌아갈 수 있다. 이 위젯은 자신의 팝업만 닫고, 어느 상위 화면으로 복귀할지는 외부 수신자에게 맡긴다. 수신자가 없는 RD.SettingsPreview에서도 팝업은 정상적으로 닫힌다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00179">179</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00194">194</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -741,7 +986,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00212">212</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00227">227</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -757,7 +1002,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00244">244</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00259">259</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -773,7 +1018,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00240">240</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00255">255</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -789,7 +1034,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00248">248</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00263">263</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -805,7 +1050,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00236">236</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00251">251</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -821,7 +1066,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00232">232</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00247">247</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -838,7 +1083,7 @@ Protected 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>어떤 설정을 기본값으로 되돌릴지, 되돌린 값을 즉시 저장할지는 설정 시스템의 정책이다. 패널은 Reset 버튼 입력을 한 번의 요청으로 전달한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00208">208</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00223">223</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -855,7 +1100,7 @@ Protected 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>패널은 저장/전환을 직접 실행하지 않는다. 인게임 탑바나 GameMode가 이 이벤트를 받아 권한 있는 흐름에서 처리한다. </p>
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00188">188</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00203">203</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -871,7 +1116,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00224">224</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00239">239</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -887,7 +1132,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00216">216</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00231">231</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -903,7 +1148,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00220">220</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00235">235</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -919,7 +1164,7 @@ Protected 멤버 함수</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a> 파일의 <a class="el" href="SettingsPanelWidget_8h_source.html#l00243">243</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -927,6 +1172,7 @@ Protected 멤버 함수</h2></td></tr>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget_8h_source.html">SettingsPanelWidget.h</a></li>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget_8cpp_source.html">SettingsPanelWidget.cpp</a></li>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget__Confirm_8cpp_source.html">SettingsPanelWidget_Confirm.cpp</a></li>
+<li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget__Credits_8cpp_source.html">SettingsPanelWidget_Credits.cpp</a></li>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget__RunActions_8cpp_source.html">SettingsPanelWidget_RunActions.cpp</a></li>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget__Text_8cpp_source.html">SettingsPanelWidget_Text.cpp</a></li>
 <li>/home/runner/work/P_RD/P_RD/Source/P_RD/UI/<a class="el" href="SettingsPanelWidget__Values_8cpp_source.html">SettingsPanelWidget_Values.cpp</a></li>

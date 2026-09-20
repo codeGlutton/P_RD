@@ -1,6 +1,5 @@
 var structFSkillEffectLayer__Weakness =
 [
-    [ "CommitEffect", "structFSkillEffectLayer__Weakness.html#aac1efa98f02b31d6a13e06b36314cf01", null ],
-    [ "mDefaultTagGain", "structFSkillEffectLayer__Weakness.html#a29f2b2ff93325da4e42c6b8b89e34f74", null ],
-    [ "mDiceRatio", "structFSkillEffectLayer__Weakness.html#aa69757b6ec1f5882f8913629e80f0bc0", null ]
+    [ "GetTagDisplayName", "structFSkillEffectLayer__Weakness.html#a782402c448a9165eb6df6f484c3e4518", null ],
+    [ "GetTagEffectClass", "structFSkillEffectLayer__Weakness.html#aaca804e01945fe6a6c3a3411e4caf4a0", null ]
 ];

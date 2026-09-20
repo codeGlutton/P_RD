@@ -101,8 +101,64 @@ $(document).ready(function(){initNavTree('namespaceRDUITexture.html',''); initRe
 <tr class="memitem:ac4be609d363c2ec733ffb63ad260c15f" id="r_ac4be609d363c2ec733ffb63ad260c15f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceRDUITexture.html#ac4be609d363c2ec733ffb63ad260c15f">ResolveContentFilePath</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RelativeContentPath</a>)</td></tr>
 <tr class="memdesc:ac4be609d363c2ec733ffb63ad260c15f"><td class="mdescLeft">&#160;</td><td class="mdescRight">mp4 등 raw 미디어의 Content 상대경로를 MediaPlayer가 열 수 있는 디스크 절대경로로 변환한다.  <br /></td></tr>
 <tr class="separator:ac4be609d363c2ec733ffb63ad260c15f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a5880ff850f0f33731ef296a7d5d4ef" id="r_a6a5880ff850f0f33731ef296a7d5d4ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceRDUITexture.html#a6a5880ff850f0f33731ef296a7d5d4ef">EnsureCachedMediaFile</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SourcePath</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">CachePath</a>)</td></tr>
+<tr class="separator:a6a5880ff850f0f33731ef296a7d5d4ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc181430d2173296340a943000e3720d" id="r_acc181430d2173296340a943000e3720d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">P_RD_API</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceRDUITexture.html#acc181430d2173296340a943000e3720d">ReadMediaFileDimensions</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FilePath</a>)</td></tr>
+<tr class="separator:acc181430d2173296340a943000e3720d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">함수 문서화</h2>
+<a id="a6a5880ff850f0f33731ef296a7d5d4ef" name="a6a5880ff850f0f33731ef296a7d5d4ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a5880ff850f0f33731ef296a7d5d4ef">&#9670;&#160;</a></span>EnsureCachedMediaFile()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> RDUITexture::EnsureCachedMediaFile </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;&#160;</td>
+          <td class="paramname"><em>SourcePath</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;&#160;</td>
+          <td class="paramname"><em>CachePath</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Validates content bytes, including equal-length updates, before reusing a media cache. </p>
+
+<p class="definition"><a class="el" href="UITextureLoader_8cpp_source.html">UITextureLoader.cpp</a> 파일의 <a class="el" href="UITextureLoader_8cpp_source.html#l00078">78</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="acc181430d2173296340a943000e3720d" name="acc181430d2173296340a943000e3720d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc181430d2173296340a943000e3720d">&#9670;&#160;</a></span>ReadMediaFileDimensions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> RDUITexture::ReadMediaFileDimensions </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a> &amp;&#160;</td>
+          <td class="paramname"><em>FilePath</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Reads MP4 track dimensions by seeking over media payloads instead of loading the entire movie. </p>
+
+<p class="definition"><a class="el" href="UITextureLoader_8cpp_source.html">UITextureLoader.cpp</a> 파일의 <a class="el" href="UITextureLoader_8cpp_source.html#l00097">97</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="ac4be609d363c2ec733ffb63ad260c15f" name="ac4be609d363c2ec733ffb63ad260c15f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac4be609d363c2ec733ffb63ad260c15f">&#9670;&#160;</a></span>ResolveContentFilePath()</h2>
 
@@ -119,7 +175,7 @@ $(document).ready(function(){initNavTree('namespaceRDUITexture.html',''); initRe
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="UITextureLoader_8cpp_source.html">UITextureLoader.cpp</a> 파일의 <a class="el" href="UITextureLoader_8cpp_source.html#l00006">6</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="UITextureLoader_8cpp_source.html">UITextureLoader.cpp</a> 파일의 <a class="el" href="UITextureLoader_8cpp_source.html#l00106">106</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

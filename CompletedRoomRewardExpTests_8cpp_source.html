@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RDTests/Reward/CompletedRoomRewardExpTests.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('CompletedRoomRewardExpTests_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">CompletedRoomRewardExpTests.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="CompletedRoomRewardExpTests_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="P__RDTests_8h.html">P_RDTests.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;Misc/AutomationTest.h&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="CombatGameMode_8h.html">GameMode/CombatGameMode.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="PersistentData_8h.html">Singleton/InstanceSubsystem/PersistentData.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &quot;<a class="code" href="SaveCheckpoint_8h.html">SaveGame/SaveCheckpoint.h</a>&quot;</span></div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="preprocessor">#include &quot;<a class="code" href="RewardUIModel_8h.html">UI/Reward/RewardUIModel.h</a>&quot;</span></div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span><span class="preprocessor">#include &quot;UObject/StrongObjectPtr.h&quot;</span></div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
+<div class="foldopen" id="foldopen00009" data-start="{" data-end="}">
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno"><a class="line" href="CompletedRoomRewardExpTests_8cpp.html#a34c25429f28c31becf67dee64b2b42d5">    9</a></span><a class="code hl_function" href="CompletedRoomRewardExpTests_8cpp.html#a34c25429f28c31becf67dee64b2b42d5">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a>(FCompletedRoomRewardExpPresentationTest,</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>    <span class="stringliteral">&quot;P_RD.UI.Reward.CompletedRoomExpPresentation&quot;</span>,</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keywordtype">bool</span> FCompletedRoomRewardExpPresentationTest::RunTest(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FString</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Parameters</a>)</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>{</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TStrongObjectPtr&lt;URunPersistData&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SavedRun</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;URunPersistData&gt;</a>());</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TStrongObjectPtr&lt;URunPersistData&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RestoredRun</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;URunPersistData&gt;</a>());</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SavedRun</a>-&gt;GetRoomTransactionsMutable().ExpClaimed = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;uint8&gt;</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>;</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Serialize completed-room claim&quot;</span>), <a class="code hl_function" href="namespaceRDCheckpoint.html#aec1cdfb30efe58d14779d75eb7a2f0b7">RDCheckpoint::Serialize</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">SavedRun</a>.Get(), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>));</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Restore completed-room claim&quot;</span>), <a class="code hl_function" href="namespaceRDCheckpoint.html#a61e79d67b63a164af1c934d0a32e471e">RDCheckpoint::Deserialize</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Bytes</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RestoredRun</a>.Get()));</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="comment">// A newly created reward UI has no pre-claim animation data after a process restart.</span></div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TStrongObjectPtr&lt;URewardUIModel&gt;</a> UIModel(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">NewObject&lt;URewardUIModel&gt;</a>());</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestTrue</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Recreated reward UI has no previous rows&quot;</span>), UIModel-&gt;GetReward().mMercenaryExp.IsEmpty());</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    <a class="code hl_struct" href="structFRewardUI.html">FRewardUI</a> <a class="code hl_enumvalue" href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">Reward</a>;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    <a class="code hl_enumvalue" href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">Reward</a>.<a class="code hl_variable" href="structFRewardUI.html#a3307d92b58eabe28621f2f17fd82b13e">mExpGained</a> = 60;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    <a class="code hl_struct" href="structFRewardMercenaryExpUI.html">FRewardMercenaryExpUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Row</a> = <a class="code hl_enumvalue" href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">Reward</a>.mMercenaryExp.AddDefaulted_GetRef();</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Row</a>.mName = FText::FromString(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Restored mercenary&quot;</span>));</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    ACombatGameMode::FillRewardExpWithoutLevelUp(<a class="code hl_enumvalue" href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">Reward</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Row</a>, 7, 42.f, 250.f,</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RestoredRun</a>-&gt;GetRoomTransactions().ExpClaimed);</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    UIModel-&gt;SetReward(<a class="code hl_enumvalue" href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">Reward</a>);</div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keyword">const</span> <a class="code hl_struct" href="structFRewardUI.html">FRewardUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Displayed</a> = UIModel-&gt;GetReward();</div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span>    <span class="keyword">const</span> <a class="code hl_struct" href="structFRewardMercenaryExpUI.html">FRewardMercenaryExpUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Displayed</a>.mMercenaryExp[0];</div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Already granted EXP is not shown as a new gain&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Displayed</a>.mExpGained, 0);</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Current level retained&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mLevel, 7);</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;No repeated level-up marker&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.GetLevelUpCount(), 0);</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Current EXP before retained&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mExpBefore, 42.f);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Current EXP after retained&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mExpAfter, 42.f);</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Current level maximum retained&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mMaxExp, 250.f);</div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Single stable animation segment&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mProgressSteps.Num(), 1);</div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>    <span class="keywordflow">if</span> (<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mProgressSteps.Num() == 1)</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>    {</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        <span class="keyword">const</span> <a class="code hl_struct" href="structFRewardExpProgressStepUI.html">FRewardExpProgressStepUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Step</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">DisplayedRow</a>.mProgressSteps[0];</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Animation has no duplicated EXP increase&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Step</a>.mExpAfter, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Step</a>.mExpBefore);</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Animation has no duplicated level increase&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Step</a>.mLevelAfter, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Step</a>.mLevelBefore);</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>    }</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>    <span class="comment">// The same no-level-up branch must still preview unclaimed EXP correctly.</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    <a class="code hl_struct" href="structFRewardUI.html">FRewardUI</a> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Unclaimed</a>;</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Unclaimed</a>.mExpGained = 60;</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <a class="code hl_struct" href="structFRewardMercenaryExpUI.html">FRewardMercenaryExpUI</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnclaimedRow</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Unclaimed</a>.mMercenaryExp.AddDefaulted_GetRef();</div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    ACombatGameMode::FillRewardExpWithoutLevelUp(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Unclaimed</a>, <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnclaimedRow</a>, 7, 42.f, 250.f, <span class="keyword">false</span>);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Unclaimed reward remains visible&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Unclaimed</a>.mExpGained, 60);</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Unclaimed preview retains level&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnclaimedRow</a>.mLevelAfter, 7);</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Unclaimed preview adds EXP once&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnclaimedRow</a>.mExpAfter, 102.f);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>    <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TestEqual</a>(<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;Unclaimed animation adds EXP once&quot;</span>), <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">UnclaimedRow</a>.mProgressSteps[0].mExpAfter, 102.f);</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>}</div>
+</div>
+<div class="ttc" id="aCombatGameMode_8h_html"><div class="ttname"><a href="CombatGameMode_8h.html">CombatGameMode.h</a></div><div class="ttdoc">전투 방에 대한 GameMode 정의 헤더</div></div>
+<div class="ttc" id="aCompletedRoomRewardExpTests_8cpp_html_a34c25429f28c31becf67dee64b2b42d5"><div class="ttname"><a href="CompletedRoomRewardExpTests_8cpp.html#a34c25429f28c31becf67dee64b2b42d5">IMPLEMENT_SIMPLE_AUTOMATION_TEST</a></div><div class="ttdeci">IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCompletedRoomRewardExpPresentationTest, &quot;P_RD.UI.Reward.CompletedRoomExpPresentation&quot;, EAutomationTestFlags::EditorContext|EAutomationTestFlags::ProductFilter) bool FCompletedRoomRewardExpPresentationTest</div><div class="ttdef"><b>Definition</b> <a href="CompletedRoomRewardExpTests_8cpp_source.html#l00009">CompletedRoomRewardExpTests.cpp:9</a></div></div>
+<div class="ttc" id="aP__RDTests_8h_html"><div class="ttname"><a href="P__RDTests_8h.html">P_RDTests.h</a></div><div class="ttdoc">P_RD 자동화 테스트 모듈 헤더</div></div>
+<div class="ttc" id="aPersistentData_8h_html"><div class="ttname"><a href="PersistentData_8h.html">PersistentData.h</a></div><div class="ttdoc">영구적 플레이 데이터 구현 헤더</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRewardUIModel_8h_html"><div class="ttname"><a href="RewardUIModel_8h.html">RewardUIModel.h</a></div></div>
+<div class="ttc" id="aSaveCheckpoint_8h_html"><div class="ttname"><a href="SaveCheckpoint_8h.html">SaveCheckpoint.h</a></div></div>
+<div class="ttc" id="aTreasureUITypes_8h_html_a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd"><div class="ttname"><a href="TreasureUITypes_8h.html#a39f6f4a6048fba7cbdafafba4c000c6ea35281ac0e8d77e142fdcd41c07ce47dd">ETreasureUIDomain::Reward</a></div><div class="ttdeci">@ Reward</div></div>
+<div class="ttc" id="anamespaceRDCheckpoint_html_a61e79d67b63a164af1c934d0a32e471e"><div class="ttname"><a href="namespaceRDCheckpoint.html#a61e79d67b63a164af1c934d0a32e471e">RDCheckpoint::Deserialize</a></div><div class="ttdeci">P_RD_API bool Deserialize(const TArray&lt; uint8 &gt; &amp;Data, UObject *Object)</div><div class="ttdef"><b>Definition</b> <a href="SaveCheckpoint_8cpp_source.html#l00085">SaveCheckpoint.cpp:85</a></div></div>
+<div class="ttc" id="anamespaceRDCheckpoint_html_aec1cdfb30efe58d14779d75eb7a2f0b7"><div class="ttname"><a href="namespaceRDCheckpoint.html#aec1cdfb30efe58d14779d75eb7a2f0b7">RDCheckpoint::Serialize</a></div><div class="ttdeci">P_RD_API bool Serialize(UObject *Object, TArray&lt; uint8 &gt; &amp;OutData)</div><div class="ttdef"><b>Definition</b> <a href="SaveCheckpoint_8cpp_source.html#l00075">SaveCheckpoint.cpp:75</a></div></div>
+<div class="ttc" id="astructFRewardExpProgressStepUI_html"><div class="ttname"><a href="structFRewardExpProgressStepUI.html">FRewardExpProgressStepUI</a></div><div class="ttdoc">경험치 보상 한 번이 한 레벨 구간에서 이동하는 진행도.</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00018">RewardUITypes.h:19</a></div></div>
+<div class="ttc" id="astructFRewardMercenaryExpUI_html"><div class="ttname"><a href="structFRewardMercenaryExpUI.html">FRewardMercenaryExpUI</a></div><div class="ttdoc">경험치 보상을 받는 용병 한 명의 지급 전/후 표시값.</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00036">RewardUITypes.h:37</a></div></div>
+<div class="ttc" id="astructFRewardUI_html"><div class="ttname"><a href="structFRewardUI.html">FRewardUI</a></div><div class="ttdoc">전투 결과 보상 한 건의 표시값(돈·경험치).</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00069">RewardUITypes.h:70</a></div></div>
+<div class="ttc" id="astructFRewardUI_html_a3307d92b58eabe28621f2f17fd82b13e"><div class="ttname"><a href="structFRewardUI.html#a3307d92b58eabe28621f2f17fd82b13e">FRewardUI::mExpGained</a></div><div class="ttdeci">int32 mExpGained</div><div class="ttdef"><b>Definition</b> <a href="RewardUITypes_8h_source.html#l00083">RewardUITypes.h:83</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_b774e7ec51d4a1271b160947af725bd0.html">P_RDTests</a></li><li class="navelem"><a class="el" href="dir_2680e1d967a56b027ab8176420d41434.html">Reward</a></li><li class="navelem"><a class="el" href="CompletedRoomRewardExpTests_8cpp.html">CompletedRoomRewardExpTests.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

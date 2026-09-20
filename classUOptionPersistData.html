@@ -110,46 +110,52 @@ UOptionPersistData에 대한 상속 다이어그램 : </div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public 멤버 함수</h2></td></tr>
 <tr class="memitem:afe6be51868a68f160b3e1a1b8ccaecc3" id="r_afe6be51868a68f160b3e1a1b8ccaecc3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#afe6be51868a68f160b3e1a1b8ccaecc3">UOptionPersistData</a> ()</td></tr>
-<tr class="memdesc:afe6be51868a68f160b3e1a1b8ccaecc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">옵션 영속 데이터 기본 생성자. 볼륨 배열을 볼륨 타입 개수만큼 1.0(최대)으로, 사운드 클래스 캐시 배열을 같은 길이만큼 nullptr 로 초기화한다.  <br /></td></tr>
 <tr class="separator:afe6be51868a68f160b3e1a1b8ccaecc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1317bfdb42bc58efafb4b00ccdd3ee8" id="r_ad1317bfdb42bc58efafb4b00ccdd3ee8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ad1317bfdb42bc58efafb4b00ccdd3ee8">BeginDestroy</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">override</a></td></tr>
+<tr class="separator:ad1317bfdb42bc58efafb4b00ccdd3ee8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d8123d50a0cde171266a7a4e0c4c488" id="r_a3d8123d50a0cde171266a7a4e0c4c488"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a3d8123d50a0cde171266a7a4e0c4c488">MakeCaches</a> ()</td></tr>
-<tr class="memdesc:a3d8123d50a0cde171266a7a4e0c4c488"><td class="mdescLeft">&#160;</td><td class="mdescRight">사운드 믹스/클래스 객체 캐시를 구성한다. 설정에 지정된 SoundMix 와 볼륨 타입별 SoundClass 를 동기 로드해 캐시 배열에 채운다.  <br /></td></tr>
 <tr class="separator:a3d8123d50a0cde171266a7a4e0c4c488"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8c5bf9ba09da4c9bdb5181a6b3d2e695" id="r_a8c5bf9ba09da4c9bdb5181a6b3d2e695"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a8c5bf9ba09da4c9bdb5181a6b3d2e695">MakeOption</a> ()</td></tr>
-<tr class="memdesc:a8c5bf9ba09da4c9bdb5181a6b3d2e695"><td class="mdescLeft">&#160;</td><td class="mdescRight">옵션 데이터 초기 생성 훅(현재 별도 동작 없음, 향후 확장용).  <br /></td></tr>
 <tr class="separator:a8c5bf9ba09da4c9bdb5181a6b3d2e695"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55627ff4f8800e69d9ebd1cc0c57c77e" id="r_a55627ff4f8800e69d9ebd1cc0c57c77e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a55627ff4f8800e69d9ebd1cc0c57c77e">ClearOption</a> ()</td></tr>
-<tr class="memdesc:a55627ff4f8800e69d9ebd1cc0c57c77e"><td class="mdescLeft">&#160;</td><td class="mdescRight">옵션을 기본값(CDO)으로 되돌리고 즉시 적용한다. 볼륨/언어/해상도를 CDO 값으로 복사한 뒤 ApplyCurrentOptions 로 실제 시스템에 반영한다.  <br /></td></tr>
 <tr class="separator:a55627ff4f8800e69d9ebd1cc0c57c77e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dfd9db452b8ca6c4ec73fda7c82e316" id="r_a6dfd9db452b8ca6c4ec73fda7c82e316"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a6dfd9db452b8ca6c4ec73fda7c82e316">SetCombatPlaybackSpeed</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> Speed)</td></tr>
+<tr class="separator:a6dfd9db452b8ca6c4ec73fda7c82e316"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43e23039fa20e5d37861978450bd391c" id="r_a43e23039fa20e5d37861978450bd391c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a43e23039fa20e5d37861978450bd391c">GetCombatPlaybackSpeed</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a43e23039fa20e5d37861978450bd391c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad242f5ed8bdf61037e1b885f7337d4ca" id="r_ad242f5ed8bdf61037e1b885f7337d4ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ad242f5ed8bdf61037e1b885f7337d4ca">SetVolume</a> (<a class="el" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273">EGameVolumeType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VolumeType</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Volume</a>)</td></tr>
-<tr class="memdesc:ad242f5ed8bdf61037e1b885f7337d4ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">특정 볼륨 타입의 볼륨을 설정하고 SoundMix 오버라이드로 즉시 반영한다.  <br /></td></tr>
 <tr class="separator:ad242f5ed8bdf61037e1b885f7337d4ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8bfaf7dda46c61b9b2c984557bc53b5" id="r_ae8bfaf7dda46c61b9b2c984557bc53b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ae8bfaf7dda46c61b9b2c984557bc53b5">SetLanguage</a> (<a class="el" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468">ELanguageType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LanguageType</a>)</td></tr>
-<tr class="memdesc:ae8bfaf7dda46c61b9b2c984557bc53b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">게임 언어(컬처)를 설정한다. 지원 언어를 컬처 코드로 매핑해 국제화 시스템에 적용한다. 매핑되지 않은(빈 문자열) 언어 타입이면 아무 변경 없이 반환한다.  <br /></td></tr>
 <tr class="separator:ae8bfaf7dda46c61b9b2c984557bc53b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7402d91bc0866a59f092694f822b097" id="r_aa7402d91bc0866a59f092694f822b097"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#aa7402d91bc0866a59f092694f822b097">SetResolution</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Resolution</a>)</td></tr>
-<tr class="memdesc:aa7402d91bc0866a59f092694f822b097"><td class="mdescLeft">&#160;</td><td class="mdescRight">화면 해상도를 설정한다.  <br /></td></tr>
-<tr class="separator:aa7402d91bc0866a59f092694f822b097"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a351dfe23005d22fec555f85446522b56" id="r_a351dfe23005d22fec555f85446522b56"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a351dfe23005d22fec555f85446522b56">SetFpsLimit</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FpsLimit</a>)</td></tr>
-<tr class="memdesc:a351dfe23005d22fec555f85446522b56"><td class="mdescLeft">&#160;</td><td class="mdescRight">FPS 제한을 지원 값(30/60)으로 보정하고 런타임 최대 FPS에 즉시 반영한다.  <br /></td></tr>
+<tr class="memitem:a960c3f3c4651b00070d71aaf0a266816" id="r_a960c3f3c4651b00070d71aaf0a266816"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a960c3f3c4651b00070d71aaf0a266816">SetOverallQuality</a> (<a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">QualityType</a>)</td></tr>
+<tr class="separator:a960c3f3c4651b00070d71aaf0a266816"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a351dfe23005d22fec555f85446522b56" id="r_a351dfe23005d22fec555f85446522b56"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a351dfe23005d22fec555f85446522b56">SetFpsLimit</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FpsLimit</a>)</td></tr>
 <tr class="separator:a351dfe23005d22fec555f85446522b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae294fb838f638777168a09aad488a9e0" id="r_ae294fb838f638777168a09aad488a9e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ae294fb838f638777168a09aad488a9e0">SetCameraShakeEnabled</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsEnabled</a>)</td></tr>
+<tr class="separator:ae294fb838f638777168a09aad488a9e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4dc99374567467e73b7450e9f4b7f5c" id="r_ad4dc99374567467e73b7450e9f4b7f5c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ad4dc99374567467e73b7450e9f4b7f5c">SetEffectVFXEnabled</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsEnabled</a>)</td></tr>
+<tr class="separator:ad4dc99374567467e73b7450e9f4b7f5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a395750d70f6dafb493c5b81b43a71def" id="r_a395750d70f6dafb493c5b81b43a71def"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a395750d70f6dafb493c5b81b43a71def">ApplyCurrentOptions</a> ()</td></tr>
-<tr class="memdesc:a395750d70f6dafb493c5b81b43a71def"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 보관 중인 모든 옵션(볼륨 전 타입 + 언어 + 해상도)을 실제 시스템에 일괄 적용한다. 옵션 로드/초기화 직후 상태를 런타임에 동기화하는 진입점.  <br /></td></tr>
 <tr class="separator:a395750d70f6dafb493c5b81b43a71def"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff36fbae890e61d696e23367fd2ee513" id="r_aff36fbae890e61d696e23367fd2ee513"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#aff36fbae890e61d696e23367fd2ee513">ApplyAudioOptions</a> ()</td></tr>
+<tr class="separator:aff36fbae890e61d696e23367fd2ee513"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39d94ac97859c00221fa35ac9dba671e" id="r_a39d94ac97859c00221fa35ac9dba671e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a39d94ac97859c00221fa35ac9dba671e">SetVibrationEnabled</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IsEnabled</a>)</td></tr>
+<tr class="separator:a39d94ac97859c00221fa35ac9dba671e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a176ef102f62d68dc172dfa2f92928899" id="r_a176ef102f62d68dc172dfa2f92928899"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a176ef102f62d68dc172dfa2f92928899">IsVibrationEnabled</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a176ef102f62d68dc172dfa2f92928899"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8924e403b52110e721c2404b9a7e64d" id="r_ac8924e403b52110e721c2404b9a7e64d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">float</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ac8924e403b52110e721c2404b9a7e64d">GetVolume</a> (<a class="el" href="PersistentDataType_8h.html#a537f7a730a17b9fdf67192d2aba02273">EGameVolumeType</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">VolumeType</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:ac8924e403b52110e721c2404b9a7e64d"><td class="mdescLeft">&#160;</td><td class="mdescRight">특정 볼륨 타입의 현재 볼륨을 반환한다.  <br /></td></tr>
 <tr class="separator:ac8924e403b52110e721c2404b9a7e64d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0911ff000fd3a65be474826175989f0" id="r_aa0911ff000fd3a65be474826175989f0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468">ELanguageType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#aa0911ff000fd3a65be474826175989f0">GetLanguage</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:aa0911ff000fd3a65be474826175989f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 설정된 언어 타입을 반환한다.  <br /></td></tr>
 <tr class="separator:aa0911ff000fd3a65be474826175989f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32aaa5417b01bb143a44043b3c454f7d" id="r_a32aaa5417b01bb143a44043b3c454f7d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a32aaa5417b01bb143a44043b3c454f7d">GetResolution</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:a32aaa5417b01bb143a44043b3c454f7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 설정된 해상도를 반환한다.  <br /></td></tr>
-<tr class="separator:a32aaa5417b01bb143a44043b3c454f7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2406a32b8c61f9751f93fde27a2d831e" id="r_a2406a32b8c61f9751f93fde27a2d831e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a2406a32b8c61f9751f93fde27a2d831e">GetFpsLimit</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:a2406a32b8c61f9751f93fde27a2d831e"><td class="mdescLeft">&#160;</td><td class="mdescRight">현재 FPS 제한 값을 반환한다.  <br /></td></tr>
+<tr class="memitem:a5418638f33eedcbcc39bc1f33d964b28" id="r_a5418638f33eedcbcc39bc1f33d964b28"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a5418638f33eedcbcc39bc1f33d964b28">GetOverallQuality</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a5418638f33eedcbcc39bc1f33d964b28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2406a32b8c61f9751f93fde27a2d831e" id="r_a2406a32b8c61f9751f93fde27a2d831e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a2406a32b8c61f9751f93fde27a2d831e">GetFpsLimit</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a2406a32b8c61f9751f93fde27a2d831e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06f3fae1e3cb65214a7eb6093d747a06" id="r_a06f3fae1e3cb65214a7eb6093d747a06"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a06f3fae1e3cb65214a7eb6093d747a06">IsCameraShakeEnabled</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a06f3fae1e3cb65214a7eb6093d747a06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a2a943883f3fe01e76f654232214e84" id="r_a0a2a943883f3fe01e76f654232214e84"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a0a2a943883f3fe01e76f654232214e84">IsEffectVFXEnabled</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:a0a2a943883f3fe01e76f654232214e84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac94836dfbc97669124b064f4627f58ac" id="r_ac94836dfbc97669124b064f4627f58ac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ac94836dfbc97669124b064f4627f58ac">IsActive</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="memdesc:ac94836dfbc97669124b064f4627f58ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">옵션 데이터 활성 여부. 옵션은 항상 유효하므로 언제나 true.  <br /></td></tr>
 <tr class="separator:ac94836dfbc97669124b064f4627f58ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
@@ -158,14 +164,22 @@ Protected 속성</h2></td></tr>
 <tr class="separator:a3d47945018c230dfe9f216eed76dd294"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acaf6e792e231a6b590248760efede7e9" id="r_acaf6e792e231a6b590248760efede7e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468">ELanguageType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#acaf6e792e231a6b590248760efede7e9">mLanguageType</a> = <a class="el" href="PersistentDataType_8h.html#aa4937652ff7daea43d51193d6c47b468a11040bd29db4ec9964af9fd3f9a24f17">ELanguageType::ENGLISH</a></td></tr>
 <tr class="separator:acaf6e792e231a6b590248760efede7e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adabc8ad9c58c58eddcc757a115d17777" id="r_adabc8ad9c58c58eddcc757a115d17777"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#adabc8ad9c58c58eddcc757a115d17777">mResolution</a> = FIntPoint::ZeroValue</td></tr>
-<tr class="separator:adabc8ad9c58c58eddcc757a115d17777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac97b4ccacc7420344c363ddbbb14332a" id="r_ac97b4ccacc7420344c363ddbbb14332a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ac97b4ccacc7420344c363ddbbb14332a">mFpsLimit</a> = 60</td></tr>
+<tr class="memitem:ae02918bb6f2b5f78d53141bdffcdc40d" id="r_ae02918bb6f2b5f78d53141bdffcdc40d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ae02918bb6f2b5f78d53141bdffcdc40d">mOverallQuality</a> = <a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bfa87f8a6ab85c9ced3702b4ea641ad4bb5">EOverallQualityType::Medium</a></td></tr>
+<tr class="separator:ae02918bb6f2b5f78d53141bdffcdc40d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac97b4ccacc7420344c363ddbbb14332a" id="r_ac97b4ccacc7420344c363ddbbb14332a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#ac97b4ccacc7420344c363ddbbb14332a">mFpsLimit</a> = 60</td></tr>
 <tr class="separator:ac97b4ccacc7420344c363ddbbb14332a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30aeca0b0c6081162a2ef51621d0fb61" id="r_a30aeca0b0c6081162a2ef51621d0fb61"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a30aeca0b0c6081162a2ef51621d0fb61">mCameraShakeEnabled</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td></tr>
+<tr class="separator:a30aeca0b0c6081162a2ef51621d0fb61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08ba313800780913ea488d4addbc1f85" id="r_a08ba313800780913ea488d4addbc1f85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a08ba313800780913ea488d4addbc1f85">mEffectVFXEnabled</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td></tr>
+<tr class="separator:a08ba313800780913ea488d4addbc1f85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18f864df9de3beb1976ffc6ffa34956b" id="r_a18f864df9de3beb1976ffc6ffa34956b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a18f864df9de3beb1976ffc6ffa34956b">mVibrationEnabled</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td></tr>
+<tr class="separator:a18f864df9de3beb1976ffc6ffa34956b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96b72a040fe840db969c91df24805275" id="r_a96b72a040fe840db969c91df24805275"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUOptionPersistData.html#a96b72a040fe840db969c91df24805275">mCombatPlaybackSpeed</a> = 1</td></tr>
+<tr class="separator:a96b72a040fe840db969c91df24805275"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00239">239</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00374">374</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">생성자 &amp; 소멸자 문서화</h2>
 <a id="afe6be51868a68f160b3e1a1b8ccaecc3" name="afe6be51868a68f160b3e1a1b8ccaecc3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afe6be51868a68f160b3e1a1b8ccaecc3">&#9670;&#160;</a></span>UOptionPersistData()</h2>
@@ -182,11 +196,30 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00574">574</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00813">813</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 함수 문서화</h2>
+<a id="aff36fbae890e61d696e23367fd2ee513" name="aff36fbae890e61d696e23367fd2ee513"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff36fbae890e61d696e23367fd2ee513">&#9670;&#160;</a></span>ApplyAudioOptions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::ApplyAudioOptions </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00853">853</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="a395750d70f6dafb493c5b81b43a71def" name="a395750d70f6dafb493c5b81b43a71def"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a395750d70f6dafb493c5b81b43a71def">&#9670;&#160;</a></span>ApplyCurrentOptions()</h2>
 
@@ -202,7 +235,34 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00709">709</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00983">983</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad1317bfdb42bc58efafb4b00ccdd3ee8" name="ad1317bfdb42bc58efafb4b00ccdd3ee8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad1317bfdb42bc58efafb4b00ccdd3ee8">&#9670;&#160;</a></span>BeginDestroy()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::BeginDestroy </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">override</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00847">847</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -221,7 +281,34 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00607">607</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00875">875</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a43e23039fa20e5d37861978450bd391c" name="a43e23039fa20e5d37861978450bd391c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a43e23039fa20e5d37861978450bd391c">&#9670;&#160;</a></span>GetCombatPlaybackSpeed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UOptionPersistData::GetCombatPlaybackSpeed </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00391">391</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -232,16 +319,15 @@ Protected 속성</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UOptionPersistData::GetFpsLimit </td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UOptionPersistData::GetFpsLimit </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>반환값</dt><dd>30 또는 60 </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00744">744</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01010">1010</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -259,29 +345,27 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>반환값</dt><dd>언어 타입 </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00732">732</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01000">1000</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a32aaa5417b01bb143a44043b3c454f7d" name="a32aaa5417b01bb143a44043b3c454f7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a32aaa5417b01bb143a44043b3c454f7d">&#9670;&#160;</a></span>GetResolution()</h2>
+<a id="a5418638f33eedcbcc39bc1f33d964b28" name="a5418638f33eedcbcc39bc1f33d964b28"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5418638f33eedcbcc39bc1f33d964b28">&#9670;&#160;</a></span>GetOverallQuality()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> &amp; UOptionPersistData::GetResolution </td>
+          <td class="memname"><a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a> UOptionPersistData::GetOverallQuality </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>반환값</dt><dd>해상도(가로x세로) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00738">738</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01005">1005</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -300,15 +384,8 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">VolumeType</td><td>조회할 볼륨 타입 </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>반환값</dt><dd>해당 타입의 볼륨(0.0~1.0) </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00726">726</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00994">994</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -326,9 +403,73 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>반환값</dt><dd>항상 true </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00750">750</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01025">1025</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a06f3fae1e3cb65214a7eb6093d747a06" name="a06f3fae1e3cb65214a7eb6093d747a06"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06f3fae1e3cb65214a7eb6093d747a06">&#9670;&#160;</a></span>IsCameraShakeEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::IsCameraShakeEnabled </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01015">1015</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a0a2a943883f3fe01e76f654232214e84" name="a0a2a943883f3fe01e76f654232214e84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a2a943883f3fe01e76f654232214e84">&#9670;&#160;</a></span>IsEffectVFXEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::IsEffectVFXEnabled </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l01020">1020</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a176ef102f62d68dc172dfa2f92928899" name="a176ef102f62d68dc172dfa2f92928899"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a176ef102f62d68dc172dfa2f92928899">&#9670;&#160;</a></span>IsVibrationEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::IsVibrationEnabled </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00402">402</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -347,7 +488,7 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00584">584</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00819">819</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -366,7 +507,75 @@ Protected 속성</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00599">599</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00870">870</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ae294fb838f638777168a09aad488a9e0" name="ae294fb838f638777168a09aad488a9e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae294fb838f638777168a09aad488a9e0">&#9670;&#160;</a></span>SetCameraShakeEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetCameraShakeEnabled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>IsEnabled</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00973">973</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a6dfd9db452b8ca6c4ec73fda7c82e316" name="a6dfd9db452b8ca6c4ec73fda7c82e316"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6dfd9db452b8ca6c4ec73fda7c82e316">&#9670;&#160;</a></span>SetCombatPlaybackSpeed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetCombatPlaybackSpeed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>Speed</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00390">390</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad4dc99374567467e73b7450e9f4b7f5c" name="ad4dc99374567467e73b7450e9f4b7f5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4dc99374567467e73b7450e9f4b7f5c">&#9670;&#160;</a></span>SetEffectVFXEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetEffectVFXEnabled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>IsEnabled</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00978">978</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -379,14 +588,14 @@ Protected 속성</h2></td></tr>
         <tr>
           <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetFpsLimit </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname"><em>FpsLimit</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00696">696</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00962">962</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -405,41 +614,48 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">LanguageType</td><td>적용할 언어 타입(한국어/영어) </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00650">650</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00915">915</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="aa7402d91bc0866a59f092694f822b097" name="aa7402d91bc0866a59f092694f822b097"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7402d91bc0866a59f092694f822b097">&#9670;&#160;</a></span>SetResolution()</h2>
+<a id="a960c3f3c4651b00070d71aaf0a266816" name="a960c3f3c4651b00070d71aaf0a266816"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a960c3f3c4651b00070d71aaf0a266816">&#9670;&#160;</a></span>SetOverallQuality()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetResolution </td>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetOverallQuality </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> &amp;&#160;</td>
-          <td class="paramname"><em>Resolution</em></td><td>)</td>
+          <td class="paramtype"><a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a>&#160;</td>
+          <td class="paramname"><em>QualityType</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">Resolution</td><td>적용할 해상도(가로x세로) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section note"><dt>주의</dt><dd>미구현(TODO). </dd></dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00690">690</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00950">950</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a39d94ac97859c00221fa35ac9dba671e" name="a39d94ac97859c00221fa35ac9dba671e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39d94ac97859c00221fa35ac9dba671e">&#9670;&#160;</a></span>SetVibrationEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> UOptionPersistData::SetVibrationEnabled </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname"><em>IsEnabled</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00862">862</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -468,19 +684,84 @@ Protected 속성</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="params"><dt>매개변수</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">VolumeType</td><td>설정할 볼륨 타입(마스터/BGM/SFX 등) </td></tr>
-    <tr><td class="paramname">Volume</td><td>적용할 볼륨(0.0~1.0 범위로 클램프됨) </td></tr>
-  </table>
-  </dd>
-</dl>
 
-<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00623">623</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8cpp_source.html">PersistentData.cpp</a> 파일의 <a class="el" href="PersistentData_8cpp_source.html#l00890">890</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">멤버 데이터 문서화</h2>
+<a id="a30aeca0b0c6081162a2ef51621d0fb61" name="a30aeca0b0c6081162a2ef51621d0fb61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30aeca0b0c6081162a2ef51621d0fb61">&#9670;&#160;</a></span>mCameraShakeEnabled</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::mCameraShakeEnabled = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00438">438</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a96b72a040fe840db969c91df24805275" name="a96b72a040fe840db969c91df24805275"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96b72a040fe840db969c91df24805275">&#9670;&#160;</a></span>mCombatPlaybackSpeed</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UOptionPersistData::mCombatPlaybackSpeed = 1</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00445">445</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a08ba313800780913ea488d4addbc1f85" name="a08ba313800780913ea488d4addbc1f85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08ba313800780913ea488d4addbc1f85">&#9670;&#160;</a></span>mEffectVFXEnabled</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::mEffectVFXEnabled = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00441">441</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
 <a id="ac97b4ccacc7420344c363ddbbb14332a" name="ac97b4ccacc7420344c363ddbbb14332a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac97b4ccacc7420344c363ddbbb14332a">&#9670;&#160;</a></span>mFpsLimit</h2>
 
@@ -491,7 +772,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> UOptionPersistData::mFpsLimit = 60</td>
+          <td class="memname"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> UOptionPersistData::mFpsLimit = 60</td>
         </tr>
       </table>
   </td>
@@ -501,7 +782,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00284">284</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00435">435</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -525,12 +806,12 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00276">276</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00427">427</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="adabc8ad9c58c58eddcc757a115d17777" name="adabc8ad9c58c58eddcc757a115d17777"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adabc8ad9c58c58eddcc757a115d17777">&#9670;&#160;</a></span>mResolution</h2>
+<a id="ae02918bb6f2b5f78d53141bdffcdc40d" name="ae02918bb6f2b5f78d53141bdffcdc40d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae02918bb6f2b5f78d53141bdffcdc40d">&#9670;&#160;</a></span>mOverallQuality</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -539,7 +820,7 @@ Protected 속성</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FIntPoint</a> UOptionPersistData::mResolution = FIntPoint::ZeroValue</td>
+          <td class="memname"><a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bf">EOverallQualityType</a> UOptionPersistData::mOverallQuality = <a class="el" href="PersistentDataType_8h.html#a3e7a36172f1882271f2e2560b3a384bfa87f8a6ab85c9ced3702b4ea641ad4bb5">EOverallQualityType::Medium</a></td>
         </tr>
       </table>
   </td>
@@ -549,7 +830,31 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00280">280</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00432">432</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a18f864df9de3beb1976ffc6ffa34956b" name="a18f864df9de3beb1976ffc6ffa34956b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18f864df9de3beb1976ffc6ffa34956b">&#9670;&#160;</a></span>mVibrationEnabled</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> UOptionPersistData::mVibrationEnabled = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">true</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00443">443</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -573,7 +878,7 @@ Protected 속성</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00272">272</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="PersistentData_8h_source.html">PersistentData.h</a> 파일의 <a class="el" href="PersistentData_8h_source.html#l00422">422</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

@@ -94,25 +94,8 @@ $(document).ready(function(){initNavTree('AttributeSetComponentModel_8cpp.html',
 </div><!--header-->
 <div class="contents">
 
-<p>유닛(ActorModel)에 부착되어 속성(Attribute)과 전술 이펙트(TacticalEffect)를 총괄하는 컴포넌트 모델 구현부. GAS의 UAbilitySystemComponent에 대응하는 자체 구현이다.  
-<a href="#details">더 자세히 ...</a></p>
-
 <p><a href="AttributeSetComponentModel_8cpp_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
-<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>[PR #191 마이그레이션 맥락] 본 PR은 효과 모디파이어의 "연산 종류" enum을 GAS의 EGameplayModOp에서 자체 enum인 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 치환한다(GAS 폐기 작업의 일부). 본 파일에서 직접 영향을 받는 지점은 ApplyModToAttribute()의 시그니처로, 매개변수 타입이 TEnumAsByte&lt;EGameplayModOp::Type&gt; → TEnumAsByte&lt;ETacticalModOp::Type&gt;로 교체되었다.</p>
-<p>[<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a> 정수값을 구 EGameplayModOp와 동일하게 유지하는 이유 3가지] (1) 직렬화 호환: 기존 에셋/세이브에 정수로 박힌 op 값을 그대로 보존한다. (2) 배열 인덱싱 호환: Aggregator가 mMods[ETacticalModOp::Max]처럼 op 정수값으로 모디파이어 배열을 인덱싱하므로 값이 바뀌면 인덱스가 깨진다. (3) CoreRedirect 호환: DefaultEngine.ini의 CoreRedirect가 구 enum 이름을 새 enum 이름으로 매핑하므로, 값까지 같아야 무손실 치환이 된다.</p>
-<p>[<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a> 연산 종류와 수식]</p><ul>
-<li>AddBase(0) : 합산. 기본값에 더한다. (별칭 Additive=0)</li>
-<li>MultiplyAdditive(1) : 배율 가산. 곱셈 계수를 누적 합산한다. (별칭 Multiplicitive=1)</li>
-<li>DivideAdditive(2) : 나눗셈 가산. 나눗셈 계수를 누적 합산한다. (별칭 Division=2)</li>
-<li>Override(3) : 덮어쓰기. 이전 값을 무시하고 교체한다. (별칭 Override=3)</li>
-<li>MultiplyCompound(4) : 거듭제곱 곱. 스택 수만큼 거듭제곱으로 곱한다.</li>
-<li>AddFinal(5) : 최종 합산. 모든 계산 후 마지막에 더한다.</li>
-<li>Max(6) : 무효/연산 개수(배열 크기 인덱스로 사용). ※ 항등값/스택 누적 수식은 <a class="el" href="namespaceTacticalEffectUtilities.html" title="구 GAS의 GameplayEffectUtilities를 대체하는 모디파이어 연산 보조 함수 모음.">TacticalEffectUtilities</a>(<a class="el" href="TacticalEffectType_8cpp.html" title="전술 이펙트 모디파이어 &quot;연산 종류&quot;(ETacticalModOp) 유틸리티 구현.">TacticalEffectType.cpp</a>)의 GetModifierBiasByModifierOp(곱셈계열=1, 합산계열=0)와 ComputeStackedModifierMagnitude(MultiplyCompound는 거듭제곱)에서 처리한다. </li>
-</ul>
-
-<p class="definition"><a class="el" href="AttributeSetComponentModel_8cpp_source.html">AttributeSetComponentModel.cpp</a> 파일에서 정의되었습니다.</p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

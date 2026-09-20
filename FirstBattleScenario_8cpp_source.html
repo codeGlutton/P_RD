@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/Tutorial/FirstBattleScenario.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('FirstBattleScenario_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">FirstBattleScenario.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="FirstBattleScenario_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="FirstBattleScenario_8h.html">Tutorial/FirstBattleScenario.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#include &quot;<a class="code" href="StaticTutorialRoomSpawnData_8h.html">Tutorial/StaticTutorialRoomSpawnData.h</a>&quot;</span></div>
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span><span class="preprocessor">#include &quot;<a class="code" href="StaticUnitSkillData_8h.html">DataAsset/SkillData/StaticUnitSkillData.h</a>&quot;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &quot;<a class="code" href="GuidedTutorial_8h.html">Tutorial/GuidedTutorial.h</a>&quot;</span></div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
+<div class="foldopen" id="foldopen00006" data-start="{" data-end="}">
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno"><a class="line" href="structFFirstBattleScenario.html#a66bec53da1f1d0828130aae22ab52bd3">    6</a></span><a class="code hl_class" href="classUStaticTutorialRoomSpawnData.html">UStaticTutorialRoomSpawnData</a>* <a class="code hl_function" href="structFFirstBattleScenario.html#a66bec53da1f1d0828130aae22ab52bd3">FFirstBattleScenario::LoadTemplate</a>()</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>{</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">LoadObject&lt;UStaticTutorialRoomSpawnData&gt;</a>(<span class="keyword">nullptr</span>,</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span>        <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TEXT</a>(<span class="stringliteral">&quot;/Game/BP/DataAsset/Room/Turtorial/DA_Tutorial_FirstBattle.DA_Tutorial_FirstBattle&quot;</span>));</div>
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span>}</div>
+</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
+<div class="foldopen" id="foldopen00012" data-start="{" data-end="}">
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno"><a class="line" href="structFFirstBattleScenario.html#a4acf861d204ed72489d72f48d7fba655">   12</a></span><a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="code hl_function" href="structFFirstBattleScenario.html#a4acf861d204ed72489d72f48d7fba655">FFirstBattleScenario::SelectSkill</a>(<span class="keyword">const</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray&lt;const UStaticUnitSkillData*&gt;</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>)</div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>{</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="comment">// Prefer an attack; Druid&#39;s starting attacks target itself, so teach its targeted control skill.</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttackOnly</a> : {<span class="keyword">true</span>, <span class="keyword">false</span>})</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        <span class="keywordflow">for</span> (<a class="code hl_variable" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> Index = 0; Index &lt; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>.Num(); ++Index)</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        {</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>            <span class="keyword">const</span> <span class="keyword">auto</span>* <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a> = <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Skills</a>[Index];</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>            <span class="keywordflow">if</span> (<a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a> &amp;&amp; (!<a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">AttackOnly</a> || <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>-&gt;mSkillType == <a class="code hl_enumvalue" href="SkillType_8h.html#a16a964ae795aa7244a7e59a33d3489a6adcfafcb4323b102c7e204555d313ba0a">ESkillType::Attack</a>)</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>                &amp;&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>-&gt;mAimPattern != EAimPattern::Single &amp;&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>-&gt;mCanAimBoardActor</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>                &amp;&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>-&gt;mAimRange &gt;= 1 &amp;&amp; <a class="code hl_enumvalue" href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">Skill</a>-&gt;mRequiredActionPoint &lt;= 10) <span class="keywordflow">return</span> Index;</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        }</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">INDEX_NONE</a>;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>}</div>
+</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span> </div>
+<div class="foldopen" id="foldopen00026" data-start="{" data-end="}">
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="structFFirstBattleScenario.html#ac545bc6158aa5ea5abd55d6b940b71ad">   26</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="structFFirstBattleScenario.html#ac545bc6158aa5ea5abd55d6b940b71ad">FFirstBattleScenario::AllowsTile</a>(<span class="keyword">const</span> <a class="code hl_class" href="classUStaticTutorialRoomSpawnData.html">UStaticTutorialRoomSpawnData</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Room</a>, <a class="code hl_enumeration" href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509">EGuidedStage</a> Stage, <span class="keyword">const</span> <a class="code hl_struct" href="structFTileIndex.html">FTileIndex</a>&amp; <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a>)</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>{</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keywordflow">if</span> (Stage == <a class="code hl_enumvalue" href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a572ddac7d2af32f48fcb8938d4ad00a0">EGuidedStage::MoveTile</a> || Stage == <a class="code hl_enumvalue" href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a5ba71c8422947290371b806b04db59d2">EGuidedStage::ConfirmMove</a>) <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a> == <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Room</a>.MoveDestination;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="keywordflow">if</span> (Stage == <a class="code hl_enumvalue" href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a5f58b1550215ef1520cc2f95e8f491b3">EGuidedStage::SkillTarget</a> || Stage == <a class="code hl_enumvalue" href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a9278f192ff67f20b96e8923fbbba7119">EGuidedStage::ConfirmSkill</a>) <span class="keywordflow">return</span> <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Tile</a> == <a class="code hl_function" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Room</a>.GetTargetTile();</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>}</div>
+</div>
+<div class="ttc" id="aFirstBattleScenario_8h_html"><div class="ttname"><a href="FirstBattleScenario_8h.html">FirstBattleScenario.h</a></div></div>
+<div class="ttc" id="aFirstPlayProgress_8h_html_ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d"><div class="ttname"><a href="FirstPlayProgress_8h.html#ae8fad49141bbbf65251c00c267476bbca88bb766f0cc321759ed2eeb0bc06be5d">EFirstPlayStep::Skill</a></div><div class="ttdeci">@ Skill</div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html"><div class="ttname"><a href="GuidedTutorial_8h.html">GuidedTutorial.h</a></div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html_aba0ed9e67705533b4b9a6731486c6509"><div class="ttname"><a href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509">EGuidedStage</a></div><div class="ttdeci">EGuidedStage</div><div class="ttdef"><b>Definition</b> <a href="GuidedTutorial_8h_source.html#l00006">GuidedTutorial.h:7</a></div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html_aba0ed9e67705533b4b9a6731486c6509a572ddac7d2af32f48fcb8938d4ad00a0"><div class="ttname"><a href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a572ddac7d2af32f48fcb8938d4ad00a0">EGuidedStage::MoveTile</a></div><div class="ttdeci">@ MoveTile</div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html_aba0ed9e67705533b4b9a6731486c6509a5ba71c8422947290371b806b04db59d2"><div class="ttname"><a href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a5ba71c8422947290371b806b04db59d2">EGuidedStage::ConfirmMove</a></div><div class="ttdeci">@ ConfirmMove</div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html_aba0ed9e67705533b4b9a6731486c6509a5f58b1550215ef1520cc2f95e8f491b3"><div class="ttname"><a href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a5f58b1550215ef1520cc2f95e8f491b3">EGuidedStage::SkillTarget</a></div><div class="ttdeci">@ SkillTarget</div></div>
+<div class="ttc" id="aGuidedTutorial_8h_html_aba0ed9e67705533b4b9a6731486c6509a9278f192ff67f20b96e8923fbbba7119"><div class="ttname"><a href="GuidedTutorial_8h.html#aba0ed9e67705533b4b9a6731486c6509a9278f192ff67f20b96e8923fbbba7119">EGuidedStage::ConfirmSkill</a></div><div class="ttdeci">@ ConfirmSkill</div></div>
+<div class="ttc" id="aRDMinimal_8cpp_html_aa776b55d46c939d166cc1e3413afc625"><div class="ttname"><a href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">GetWorldSubsystemModel</a></div><div class="ttdeci">UObjectModel * GetWorldSubsystemModel(const UObject *WorldContextObject, UClass *Class)</div><div class="ttdef"><b>Definition</b> <a href="RDMinimal_8cpp_source.html#l00004">RDMinimal.cpp:4</a></div></div>
+<div class="ttc" id="aRoomTransitionSubsystem_8h_html_a3aff982d98ac1c2362247321cc2cde0b"><div class="ttname"><a href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a></div><div class="ttdeci">int32</div><div class="ttdef"><b>Definition</b> <a href="RoomTransitionSubsystem_8h_source.html#l00021">RoomTransitionSubsystem.h:21</a></div></div>
+<div class="ttc" id="aSkillType_8h_html_a16a964ae795aa7244a7e59a33d3489a6adcfafcb4323b102c7e204555d313ba0a"><div class="ttname"><a href="SkillType_8h.html#a16a964ae795aa7244a7e59a33d3489a6adcfafcb4323b102c7e204555d313ba0a">ESkillType::Attack</a></div><div class="ttdeci">@ Attack</div></div>
+<div class="ttc" id="aStaticTutorialRoomSpawnData_8h_html"><div class="ttname"><a href="StaticTutorialRoomSpawnData_8h.html">StaticTutorialRoomSpawnData.h</a></div></div>
+<div class="ttc" id="aStaticUnitSkillData_8h_html"><div class="ttname"><a href="StaticUnitSkillData_8h.html">StaticUnitSkillData.h</a></div><div class="ttdoc">유닛 스킬 생성 시 사용되는 정적 Primary Data Asset 구현 헤더</div></div>
+<div class="ttc" id="aclassUStaticTutorialRoomSpawnData_html"><div class="ttname"><a href="classUStaticTutorialRoomSpawnData.html">UStaticTutorialRoomSpawnData</a></div><div class="ttdef"><b>Definition</b> <a href="StaticTutorialRoomSpawnData_8h_source.html#l00007">StaticTutorialRoomSpawnData.h:8</a></div></div>
+<div class="ttc" id="astructFFirstBattleScenario_html_a4acf861d204ed72489d72f48d7fba655"><div class="ttname"><a href="structFFirstBattleScenario.html#a4acf861d204ed72489d72f48d7fba655">FFirstBattleScenario::SelectSkill</a></div><div class="ttdeci">static int32 SelectSkill(const TArray&lt; const UStaticUnitSkillData * &gt; &amp;Skills)</div><div class="ttdef"><b>Definition</b> <a href="FirstBattleScenario_8cpp_source.html#l00012">FirstBattleScenario.cpp:12</a></div></div>
+<div class="ttc" id="astructFFirstBattleScenario_html_a66bec53da1f1d0828130aae22ab52bd3"><div class="ttname"><a href="structFFirstBattleScenario.html#a66bec53da1f1d0828130aae22ab52bd3">FFirstBattleScenario::LoadTemplate</a></div><div class="ttdeci">static UStaticTutorialRoomSpawnData * LoadTemplate()</div><div class="ttdef"><b>Definition</b> <a href="FirstBattleScenario_8cpp_source.html#l00006">FirstBattleScenario.cpp:6</a></div></div>
+<div class="ttc" id="astructFFirstBattleScenario_html_ac545bc6158aa5ea5abd55d6b940b71ad"><div class="ttname"><a href="structFFirstBattleScenario.html#ac545bc6158aa5ea5abd55d6b940b71ad">FFirstBattleScenario::AllowsTile</a></div><div class="ttdeci">static bool AllowsTile(const UStaticTutorialRoomSpawnData &amp;Room, EGuidedStage Stage, const FTileIndex &amp;Tile)</div><div class="ttdef"><b>Definition</b> <a href="FirstBattleScenario_8cpp_source.html#l00026">FirstBattleScenario.cpp:26</a></div></div>
+<div class="ttc" id="astructFTileIndex_html"><div class="ttname"><a href="structFTileIndex.html">FTileIndex</a></div><div class="ttdoc">타일 맵 상 인덱스 좌표</div><div class="ttdef"><b>Definition</b> <a href="SRPGFrameworkType_8h_source.html#l00071">SRPGFrameworkType.h:72</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_0048a1d9d575850c48113b8d906ddc7e.html">Tutorial</a></li><li class="navelem"><a class="el" href="FirstBattleScenario_8cpp.html">FirstBattleScenario.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

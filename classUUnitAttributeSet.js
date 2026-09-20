@@ -1,18 +1,15 @@
 var classUUnitAttributeSet =
 [
-    [ "UUnitAttributeSet", "classUUnitAttributeSet.html#ab3b9b2078f700168a3f31941a242bcce", null ],
+    [ "PostAttributeBaseChange", "classUUnitAttributeSet.html#aa7e8de22917a21262c5a2d27f99b7d18", null ],
     [ "PostAttributeChange", "classUUnitAttributeSet.html#a0ebaa30e444bb23212b627ea486586a8", null ],
+    [ "PreAttributeBaseChange", "classUUnitAttributeSet.html#a14ef9b036a52dfa2120becf97e94753c", null ],
     [ "PreAttributeChange", "classUUnitAttributeSet.html#a07da152dd0c562b39e5469233a8fd917", null ],
-    [ "AttackFactor", "classUUnitAttributeSet.html#a50494f545249e7d4b2ecd6a2bb11cb03", null ],
-    [ "AttackPoint", "classUUnitAttributeSet.html#a55cc29dd975a5b1699a9f1579d03537b", null ],
-    [ "Defense", "classUUnitAttributeSet.html#abf44c856cd52e53ae52732223de14cc0", null ],
-    [ "DefenseFactor", "classUUnitAttributeSet.html#a9526b59923efcc3a8d01363222bc1500", null ],
-    [ "DefensePoint", "classUUnitAttributeSet.html#a653a531bb92015b81e5995a80650a8a8", null ],
-    [ "HealFactor", "classUUnitAttributeSet.html#a07d0478f2f38bed2f982a94f3879f772", null ],
-    [ "HealPoint", "classUUnitAttributeSet.html#add3cac52f3ac3e4b84a8d5d644eac25f", null ],
-    [ "HP", "classUUnitAttributeSet.html#a0e76be2875daee23581bdd03012d0976", null ],
-    [ "MaxHP", "classUUnitAttributeSet.html#a95dad8f6955c9b9fc677cfe0ef203cae", null ],
-    [ "Movement", "classUUnitAttributeSet.html#ac581dad6175cc82a12f22d0c81bac44f", null ],
-    [ "MovementFactor", "classUUnitAttributeSet.html#ae8d11dcb6604ea0ef3f01b7437ba8dab", null ],
-    [ "MovementPoint", "classUUnitAttributeSet.html#ab598e8dcebe1e4e642f8f30029f42730", null ]
+    [ "ActionPoint", "classUUnitAttributeSet.html#a33104a2abf10f6b05e0156cfdda96092", null ],
+    [ "ActionPointFactor", "classUUnitAttributeSet.html#aa7db32234f64bf703fa087f6e0f81913", null ],
+    [ "LastRechargedActionPoint", "classUUnitAttributeSet.html#a37c2a7a76f67c1f0dedc0ab1dd4119aa", null ],
+    [ "LastRechargedSpeedPoint", "classUUnitAttributeSet.html#adcfc7059ca3f01624d1daa23ac449554", null ],
+    [ "RechargeActionPoint", "classUUnitAttributeSet.html#af96b9580a27378e67856a5b07b396b77", null ],
+    [ "RechargeSpeedPoint", "classUUnitAttributeSet.html#ab8eebe8d70610c351ec207782085514f", null ],
+    [ "SpeedPoint", "classUUnitAttributeSet.html#a3a4157184b9d16900b0f2fe62e4f4adf", null ],
+    [ "SpeedPointFactor", "classUUnitAttributeSet.html#a64f53914233a89a4c22fa48a58002a95", null ]
 ];

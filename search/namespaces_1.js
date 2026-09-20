@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['cuetags_0',['CueTags',['../namespaceCueTags.html',1,'']]]
+  ['bossentrancepreview_0',['BossEntrancePreview',['../namespaceBossEntrancePreview.html',1,'']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['보상_20화면_20ui_20↔_20게임플레이_20경계_20view_20model_20계약_0',['전투 보상 화면 UI ↔ 게임플레이 경계 (View-Model 계약)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Reward_2README.html',1,'']]]
+  ['매크로_0',['매크로',['../gas_tag_page.html',1,'Gameplay 태그 매크로'],['../priamry_asset_type_page.html',1,'Primary Asset Type 매크로']]]
 ];

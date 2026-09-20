@@ -6,7 +6,9 @@ var structFShopItemUI =
     [ "mIsSoldOut", "structFShopItemUI.html#a597bfe5c1ff9d1267054951fc8ec1eef", null ],
     [ "mKind", "structFShopItemUI.html#a309df59624e6a0e5734c87a02247b264", null ],
     [ "mName", "structFShopItemUI.html#a42a201f033c0aced67c314c17c7c1b5f", null ],
+    [ "mOwnedByUnitIndices", "structFShopItemUI.html#aee26f2e04380f48811eeac6484882db9", null ],
     [ "mPrice", "structFShopItemUI.html#ae54da07c7893b41f1c866b490f9b7ce5", null ],
     [ "mRarityColor", "structFShopItemUI.html#aeb24f9c5efee5d0c695a28553c6e20fc", null ],
+    [ "mRequiredJobType", "structFShopItemUI.html#ae5bbe06c1b72195fb770d7ccfb6f966c", null ],
     [ "mSlotIndex", "structFShopItemUI.html#a9e519204a7836e9e9b12ac1eeddae58c", null ]
 ];

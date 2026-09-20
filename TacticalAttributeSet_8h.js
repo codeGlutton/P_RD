@@ -4,6 +4,7 @@ var TacticalAttributeSet_8h =
     [ "FTacticalAttributeData", "structFTacticalAttributeData.html", "structFTacticalAttributeData" ],
     [ "FTacticalAttribute", "structFTacticalAttribute.html", "structFTacticalAttribute" ],
     [ "UTacticalAttributeSet", "classUTacticalAttributeSet.html", "classUTacticalAttributeSet" ],
+    [ "FTacticalAttributeMetaData", "structFTacticalAttributeMetaData.html", "structFTacticalAttributeMetaData" ],
     [ "FTacticalAttributeSetInitter", "structFTacticalAttributeSetInitter.html", "structFTacticalAttributeSetInitter" ],
     [ "FTacticalAttributeSetInitterDiscreteLevels", "structFTacticalAttributeSetInitterDiscreteLevels.html", "structFTacticalAttributeSetInitterDiscreteLevels" ],
     [ "FTacticalAttributeSetInitterDiscreteLevels::FAttributeDefaultValueList::FOffsetValuePair", "structFTacticalAttributeSetInitterDiscreteLevels_1_1FAttributeDefaultValueList_1_1FOffsetValuePair.html", "structFTacticalAttributeSetInitterDiscreteLevels_1_1FAttributeDefaultValueList_1_1FOffsetValuePair" ],

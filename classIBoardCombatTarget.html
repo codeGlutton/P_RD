@@ -105,12 +105,23 @@ IBoardCombatTarget에 대한 상속 다이어그램 : </div>
  <div class="center">
   <img src="classIBoardCombatTarget.png" usemap="#IBoardCombatTarget_map" alt=""/>
   <map id="IBoardCombatTarget_map" name="IBoardCombatTarget_map">
-<area href="classUMockBoardActorModel.html" title="패시브 테스트용 UBoardActorModel 목 (IBoardCombatTarget 구현 + 실제 속성 컴포넌트 보유)" alt="UMockBoardActorModel" shape="rect" coords="0,56,151,80"/>
-<area href="classUUnitModel.html" title="턴을 소유할 수 있는 베이스 폰 클래스 모델" alt="UUnitModel" shape="rect" coords="161,56,312,80"/>
-<area href="classUEnemyUnitModel.html" title="적 베이스 유닛 모델" alt="UEnemyUnitModel" shape="rect" coords="0,112,151,136"/>
-<area href="classUMockPlayerUnitModel.html" title="플레이어유닛 Mock" alt="UMockPlayerUnitModel" shape="rect" coords="161,112,312,136"/>
-<area href="classUPlayerUnitModel.html" title="플레이어 베이스 유닛 모델 입니다." alt="UPlayerUnitModel" shape="rect" coords="322,112,473,136"/>
-<area href="classUMockEnemyUnitModel.html" title="적유닛 Mock" alt="UMockEnemyUnitModel" shape="rect" coords="0,168,151,192"/>
+<area href="classUCombatTargetObstacleModel.html" title="전투 가능한 장애물 모델" alt="UCombatTargetObstacleModel" shape="rect" coords="112,56,327,80"/>
+<area href="classUMockBoardActorModel.html" title="패시브 테스트용 UBoardActorModel 목 (IBoardCombatTarget 구현 + 실제 속성 컴포넌트 보유)" alt="UMockBoardActorModel" shape="rect" coords="337,56,552,80"/>
+<area href="classUUnitModel.html" title="턴을 소유할 수 있는 베이스 폰 클래스 모델" alt="UUnitModel" shape="rect" coords="675,56,890,80"/>
+<area href="classUGimmickModel.html" title="기믹 공통 모델" alt="UGimmickModel" shape="rect" coords="112,112,327,136"/>
+<area href="classUEnemyUnitModel.html" title="적 베이스 유닛 모델" alt="UEnemyUnitModel" shape="rect" coords="450,112,665,136"/>
+<area href="classUMockPlayerUnitModel.html" title="플레이어유닛 Mock" alt="UMockPlayerUnitModel" shape="rect" coords="675,112,890,136"/>
+<area href="classUPlayerUnitModel.html" title="플레이어 베이스 유닛 모델 입니다." alt="UPlayerUnitModel" shape="rect" coords="1125,112,1340,136"/>
+<area href="classUOverlapGimmickModel.html" title="진입 트리거 기믹 모델 (부비트랩, 기절트랩, 밀치기발판 등)" alt="UOverlapGimmickModel" shape="rect" coords="112,168,327,192"/>
+<area href="classUMockEnemyUnitModel.html" title="적유닛 Mock" alt="UMockEnemyUnitModel" shape="rect" coords="450,168,665,192"/>
+<area href="classUMockTargetPolicyPlayerUnitModel.html" alt="UMockTargetPolicyPlayerUnitModel" shape="rect" coords="675,168,890,192"/>
+<area href="classULevelUpSkillTestPlayer.html" alt="ULevelUpSkillTestPlayer" shape="rect" coords="900,168,1115,192"/>
+<area href="classUMockPartyMemberModel.html" title="파티 구성원 Mock" alt="UMockPartyMemberModel" shape="rect" coords="1125,168,1340,192"/>
+<area href="classUPlayerLevelProgressionTestModel.html" title="레벨/경험치 영속 추적 테스트용 구체 플레이어 모델." alt="UPlayerLevelProgressionTestModel" shape="rect" coords="1350,168,1565,192"/>
+<area href="classUMockOverlapGimmickModel.html" title="진입 트리거 기믹 Mock" alt="UMockOverlapGimmickModel" shape="rect" coords="0,224,215,248"/>
+<area href="classUPuddleGimmickModel.html" title="장판 기믹 모델 (불장판, 독장판 등)" alt="UPuddleGimmickModel" shape="rect" coords="225,224,440,248"/>
+<area href="classUMockGimmickVictimUnitModel.html" title="트랩을 밟는 피해자 유닛 Mock" alt="UMockGimmickVictimUnitModel" shape="rect" coords="450,224,665,248"/>
+<area href="classUMockPuddleGimmickModel.html" title="장판 기믹 Mock" alt="UMockPuddleGimmickModel" shape="rect" coords="225,280,440,304"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -120,20 +131,38 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:a30bed0cd8d6956a89e43e51adbff31e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a81c8adea3dc71117998a06aeadaa57" id="r_a0a81c8adea3dc71117998a06aeadaa57"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a0a81c8adea3dc71117998a06aeadaa57">IsDead</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a0a81c8adea3dc71117998a06aeadaa57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad184cb5d3ce225e1b2003a26f30b1690" id="r_ad184cb5d3ce225e1b2003a26f30b1690"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#ad184cb5d3ce225e1b2003a26f30b1690">OnPostDead</a> ()</td></tr>
+<tr class="separator:ad184cb5d3ce225e1b2003a26f30b1690"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae3dcc568440a10025f0f34aaf1a1e5bb" id="r_ae3dcc568440a10025f0f34aaf1a1e5bb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUAttributeSetComponentModel.html">UAttributeSetComponentModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#ae3dcc568440a10025f0f34aaf1a1e5bb">GetAttributeComponentModel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> =0</td></tr>
 <tr class="separator:ae3dcc568440a10025f0f34aaf1a1e5bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ecc98a31b27bc6afc16f98e0b06f396" id="r_a4ecc98a31b27bc6afc16f98e0b06f396"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a4ecc98a31b27bc6afc16f98e0b06f396">MakeSnapshotData</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
-<tr class="separator:a4ecc98a31b27bc6afc16f98e0b06f396"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0e262963da799869564e1b926bf7636" id="r_aa0e262963da799869564e1b926bf7636"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUSkillComponentModel.html">USkillComponentModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#aa0e262963da799869564e1b926bf7636">GetSkillComponentModel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> =0</td></tr>
+<tr class="separator:aa0e262963da799869564e1b926bf7636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac608fe9ca85a44739108108d4ea6d159" id="r_ac608fe9ca85a44739108108d4ea6d159"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUBoardMovementComponentModel.html">UBoardMovementComponentModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#ac608fe9ca85a44739108108d4ea6d159">GetBoardMovementComponentModel</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> =0</td></tr>
+<tr class="separator:ac608fe9ca85a44739108108d4ea6d159"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac37172a0b453f4c517136904926972e9" id="r_ac37172a0b453f4c517136904926972e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#ac37172a0b453f4c517136904926972e9">MakeSnapshotData</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
+<tr class="separator:ac37172a0b453f4c517136904926972e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4d658063be48bb7df46833f58cf60719" id="r_a4d658063be48bb7df46833f58cf60719"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a4d658063be48bb7df46833f58cf60719">SetGenericTeamId</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGenericTeamId</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TeamID</a>)=0</td></tr>
 <tr class="separator:a4d658063be48bb7df46833f58cf60719"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba6a6d5f31be0ec175ff0c7007236f29" id="r_aba6a6d5f31be0ec175ff0c7007236f29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FGenericTeamId</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#aba6a6d5f31be0ec175ff0c7007236f29">GetGenericTeamId</a> () <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> =0</td></tr>
 <tr class="separator:aba6a6d5f31be0ec175ff0c7007236f29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a37f2df32b66d63fe9cd3609943684c97" id="r_a37f2df32b66d63fe9cd3609943684c97"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> ETeamAttitude::Type&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a37f2df32b66d63fe9cd3609943684c97">GetTeamAttitudeTowards</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> UObject &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Other</a>) <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a></td></tr>
 <tr class="separator:a37f2df32b66d63fe9cd3609943684c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a554cbfc1d3a3641922122e5509ebc38f" id="r_a554cbfc1d3a3641922122e5509ebc38f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a554cbfc1d3a3641922122e5509ebc38f">OnStartUsingSkill</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> SkillIndex)</td></tr>
+<tr class="separator:a554cbfc1d3a3641922122e5509ebc38f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab26cb569987672167ce30398c7059e3f" id="r_ab26cb569987672167ce30398c7059e3f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#ab26cb569987672167ce30398c7059e3f">OnEndUsingSkill</a> (<a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> SkillIndex)</td></tr>
+<tr class="separator:ab26cb569987672167ce30398c7059e3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09351f4583ddd4909cc9f60155aa0f91" id="r_a09351f4583ddd4909cc9f60155aa0f91"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a09351f4583ddd4909cc9f60155aa0f91">OnStartApplyingEffects</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PhaseIndex</a>)</td></tr>
+<tr class="separator:a09351f4583ddd4909cc9f60155aa0f91"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92e782291749b0414d0b6842daab736f" id="r_a92e782291749b0414d0b6842daab736f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a92e782291749b0414d0b6842daab736f">OnEndApplyingEffects</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PhaseIndex</a>)</td></tr>
+<tr class="separator:a92e782291749b0414d0b6842daab736f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c666484aad9e1fcd21999c5f6b89452" id="r_a4c666484aad9e1fcd21999c5f6b89452"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a4c666484aad9e1fcd21999c5f6b89452">OnStartReceivingEffects</a> (<a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InstigatorSnapshot</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PhaseIndex</a>)</td></tr>
+<tr class="separator:a4c666484aad9e1fcd21999c5f6b89452"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a144e2680f2115023f8767d17aaa990b8" id="r_a144e2680f2115023f8767d17aaa990b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classIBoardCombatTarget.html#a144e2680f2115023f8767d17aaa990b8">OnEndReceivingEffects</a> (<a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">InstigatorSnapshot</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Context</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">PhaseIndex</a>)</td></tr>
+<tr class="separator:a144e2680f2115023f8767d17aaa990b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
 <div class="textblock">
-<p class="definition"><a class="el" href="BoardCombatTarget_8h_source.html">BoardCombatTarget.h</a> 파일의 <a class="el" href="BoardCombatTarget_8h_source.html#l00083">83</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardCombatTarget_8h_source.html">BoardCombatTarget.h</a> 파일의 <a class="el" href="BoardCombatTarget_8h_source.html#l00064">64</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="ae3dcc568440a10025f0f34aaf1a1e5bb" name="ae3dcc568440a10025f0f34aaf1a1e5bb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae3dcc568440a10025f0f34aaf1a1e5bb">&#9670;&#160;</a></span>GetAttributeComponentModel()</h2>
@@ -159,7 +188,35 @@ Public 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>속성 컴포넌트를 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>보유한 속성 컴포넌트 </dd></dl>
 
-<p><a class="el" href="classUUnitModel.html#a0ac717272ea0d96891bbdfbe4d52f44f">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#a0737b416ac94e9441123d33dcc0e982b">UMockBoardActorModel</a>에서 구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a9deb791a018ecbb198163f296b2b2719">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a0ac717272ea0d96891bbdfbe4d52f44f">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#a0737b416ac94e9441123d33dcc0e982b">UMockBoardActorModel</a>에서 구현되었습니다.</p>
+
+</div>
+</div>
+<a id="ac608fe9ca85a44739108108d4ea6d159" name="ac608fe9ca85a44739108108d4ea6d159"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac608fe9ca85a44739108108d4ea6d159">&#9670;&#160;</a></span>GetBoardMovementComponentModel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUBoardMovementComponentModel.html">UBoardMovementComponentModel</a> * IBoardCombatTarget::GetBoardMovementComponentModel </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>움직임 컴포넌트를 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>보유한 움직임 컴포넌트 </dd></dl>
+
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a5ceeeb188cb025c4e162b7ad29155880">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a5a66b13f7dac88d8e12edd0139b93221">UUnitModel</a>, <a class="el" href="classUMockGimmickVictimUnitModel.html#ab8961f09ef99954dc718593620e2c81c">UMockGimmickVictimUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#a935732419355ddf8c43d6e43f44567a0">UMockBoardActorModel</a>에서 구현되었습니다.</p>
 
 </div>
 </div>
@@ -186,7 +243,35 @@ Public 멤버 함수</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classUUnitModel.html#a54092000038a84d8d8d5f19c3b2d0c8f">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#aa8ccd0af26fc26a4f3161a241c9f8f6d">UMockBoardActorModel</a>에서 구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a4b6e175c8006e389f7cc51f37db9d7d3">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a54092000038a84d8d8d5f19c3b2d0c8f">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#aa8ccd0af26fc26a4f3161a241c9f8f6d">UMockBoardActorModel</a>에서 구현되었습니다.</p>
+
+</div>
+</div>
+<a id="aa0e262963da799869564e1b926bf7636" name="aa0e262963da799869564e1b926bf7636"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0e262963da799869564e1b926bf7636">&#9670;&#160;</a></span>GetSkillComponentModel()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">virtual</a> <a class="el" href="classUSkillComponentModel.html">USkillComponentModel</a> * IBoardCombatTarget::GetSkillComponentModel </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>스킬 컴포넌트를 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>보유한 스킬 컴포넌트 </dd></dl>
+
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a069c699c1997fb56fbe65356e053766b">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a60ed53f81310cbc11c8e9abb833a4f76">UUnitModel</a>, <a class="el" href="classUMockEnemyUnitModel.html#a075d8b3574dbbd486efaf41a7fbd372f">UMockEnemyUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#a7a99680b4f5adeea8447e9e7695c49a0">UMockBoardActorModel</a>에서 구현되었습니다.</p>
 
 </div>
 </div>
@@ -214,7 +299,7 @@ Public 멤버 함수</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00022">22</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00026">26</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -270,18 +355,20 @@ Public 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>현재 타격 가능한 여부를 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>타격 가능 여부 </dd></dl>
 
+<p><a class="el" href="classUOverlapGimmickModel.html#ae2f880a79d2d5f8eed318bb66e1061a8">UOverlapGimmickModel</a>에서 재구현되었습니다.</p>
+
 <p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00004">4</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
-<a id="a4ecc98a31b27bc6afc16f98e0b06f396" name="a4ecc98a31b27bc6afc16f98e0b06f396"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4ecc98a31b27bc6afc16f98e0b06f396">&#9670;&#160;</a></span>MakeSnapshotData()</h2>
+<a id="ac37172a0b453f4c517136904926972e9" name="ac37172a0b453f4c517136904926972e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac37172a0b453f4c517136904926972e9">&#9670;&#160;</a></span>MakeSnapshotData()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structFBoardCombatTargetSnapshotData.html">FBoardCombatTargetSnapshotData</a> IBoardCombatTarget::MakeSnapshotData </td>
+          <td class="memname"><a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> * IBoardCombatTarget::MakeSnapshotData </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -290,7 +377,277 @@ Public 멤버 함수</h2></td></tr>
 </div><div class="memdoc">
 <p>현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수 </p><dl class="section return"><dt>반환값</dt><dd>스냅샷 데이터 </dd></dl>
 
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00018">18</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a92e782291749b0414d0b6842daab736f" name="a92e782291749b0414d0b6842daab736f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a92e782291749b0414d0b6842daab736f">&#9670;&#160;</a></span>OnEndApplyingEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnEndApplyingEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>PhaseIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#a2416c4dac120b111f10c29e11561b86c">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00048">48</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a144e2680f2115023f8767d17aaa990b8" name="a144e2680f2115023f8767d17aaa990b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a144e2680f2115023f8767d17aaa990b8">&#9670;&#160;</a></span>OnEndReceivingEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnEndReceivingEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *&#160;</td>
+          <td class="paramname"><em>InstigatorSnapshot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>PhaseIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#af51095c6d751ce2e75e2211b775216c6">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00056">56</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ab26cb569987672167ce30398c7059e3f" name="ab26cb569987672167ce30398c7059e3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab26cb569987672167ce30398c7059e3f">&#9670;&#160;</a></span>OnEndUsingSkill()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnEndUsingSkill </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>SkillIndex</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#a4c07d71fd7623eea86e537542e779242">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00040">40</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad184cb5d3ce225e1b2003a26f30b1690" name="ad184cb5d3ce225e1b2003a26f30b1690"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad184cb5d3ce225e1b2003a26f30b1690">&#9670;&#160;</a></span>OnPostDead()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnPostDead </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>죽음 훅 함수 </p>
+
 <p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00014">14</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a09351f4583ddd4909cc9f60155aa0f91" name="a09351f4583ddd4909cc9f60155aa0f91"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09351f4583ddd4909cc9f60155aa0f91">&#9670;&#160;</a></span>OnStartApplyingEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnStartApplyingEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>PhaseIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#ada2fd97cddc16147c7260b4201b3cf5f">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a4c666484aad9e1fcd21999c5f6b89452" name="a4c666484aad9e1fcd21999c5f6b89452"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c666484aad9e1fcd21999c5f6b89452">&#9670;&#160;</a></span>OnStartReceivingEffects()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnStartReceivingEffects </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classUBoardCombatTargetSnapshotData.html">UBoardCombatTargetSnapshotData</a> *&#160;</td>
+          <td class="paramname"><em>InstigatorSnapshot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>PhaseIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#ade68bc99d2f88c6029227195377799b3">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00052">52</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="a554cbfc1d3a3641922122e5509ebc38f" name="a554cbfc1d3a3641922122e5509ebc38f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a554cbfc1d3a3641922122e5509ebc38f">&#9670;&#160;</a></span>OnStartUsingSkill()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> IBoardCombatTarget::OnStartUsingSkill </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="structFActiveSkillContext.html">FActiveSkillContext</a> &amp;&#160;</td>
+          <td class="paramname"><em>Context</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
+          <td class="paramname"><em>SkillIndex</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p><a class="el" href="classUUnitModel.html#af409e47d1811af28ced5ebfc49b2eaa7">UUnitModel</a>에서 재구현되었습니다.</p>
+
+<p class="definition"><a class="el" href="BoardCombatTarget_8cpp_source.html">BoardCombatTarget.cpp</a> 파일의 <a class="el" href="BoardCombatTarget_8cpp_source.html#l00036">36</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -318,7 +675,7 @@ Public 멤버 함수</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p><a class="el" href="classUUnitModel.html#a9b73cef8a72cb73f80a62bab0fb351f5">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#ad15e7396d08697e2054aea07aa58686e">UMockBoardActorModel</a>에서 구현되었습니다.</p>
+<p><a class="el" href="classUCombatTargetObstacleModel.html#a2533145141a8ad782604c5f5c5a5425e">UCombatTargetObstacleModel</a>, <a class="el" href="classUUnitModel.html#a9b73cef8a72cb73f80a62bab0fb351f5">UUnitModel</a>, <a class="el" href="classUMockBoardActorModel.html#ad15e7396d08697e2054aea07aa58686e">UMockBoardActorModel</a>에서 구현되었습니다.</p>
 
 </div>
 </div>

@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=11"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>P_RD: /home/runner/work/P_RD/P_RD/Source/P_RD/TAS/Effect/Cooldown/TacticalEffect_Cooldown.cpp 소스 파일</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr id="projectrow">
+  <td id="projectalign">
+   <div id="projectname">P_RD<span id="projectnumber">&#160;1.0</span>
+   </div>
+   <div id="projectbrief">Rogue the dice Docs</div>
+  </td>
+ </tr>
+ </tbody>
+</table>
+</div>
+<!-- end header part -->
+<!-- 다음에 의해 생성됨 :  Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','검색');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function() { init_codefold(0); });
+/* @license-end */
+</script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('TacticalEffect__Cooldown_8cpp_source.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">로딩중...</div>
+<div class="SRStatus" id="Searching">검색중...</div>
+<div class="SRStatus" id="NoMatches">일치하는것 없음</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="header">
+  <div class="headertitle"><div class="title">TacticalEffect_Cooldown.cpp</div></div>
+</div><!--header-->
+<div class="contents">
+<a href="TacticalEffect__Cooldown_8cpp.html">이 파일의 문서화 페이지로 가기</a><div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#include &quot;<a class="code" href="TacticalEffect__Cooldown_8h.html">TAS/Effect/Cooldown/TacticalEffect_Cooldown.h</a>&quot;</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span> </div>
+<div class="foldopen" id="foldopen00003" data-start="{" data-end="}">
+<div class="line"><a id="l00003" name="l00003"></a><span class="lineno"><a class="line" href="classUTacticalEffect__Cooldown.html#a45231449ec6b53e12b3034dc53ccf2d0">    3</a></span><a class="code hl_function" href="classUTacticalEffect__Cooldown.html#a45231449ec6b53e12b3034dc53ccf2d0">UTacticalEffect_Cooldown::UTacticalEffect_Cooldown</a>()</div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span>{</div>
+<div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span>    <a class="code hl_variable" href="classUTacticalEffect.html#afd0b3c03544e82acb3aa9413929353f9">mDurationPolicy</a> = ETacticalEffectDurationType::Duration;</div>
+<div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span>    <a class="code hl_variable" href="classUTacticalEffect.html#a433a0f90e1fd45083813d68683d75c8d">mStackingType</a> = ETacticalEffectStackingType::None;</div>
+<div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span>    <a class="code hl_variable" href="classUTacticalEffect.html#a993b61cca071abc795b0262c234fb868">mDurationMagnitude</a> = 1;</div>
+<div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span>}</div>
+</div>
+<div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span> </div>
+<div class="foldopen" id="foldopen00010" data-start="{" data-end="}">
+<div class="line"><a id="l00010" name="l00010"></a><span class="lineno"><a class="line" href="classUTacticalEffect__RoundCooldown.html#a038f9cf6b3a2176db9bf38b4ecceed7f">   10</a></span><a class="code hl_function" href="classUTacticalEffect__RoundCooldown.html#a038f9cf6b3a2176db9bf38b4ecceed7f">UTacticalEffect_RoundCooldown::UTacticalEffect_RoundCooldown</a>()</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>{</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="comment">// 기간 설정</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <a class="code hl_variable" href="classUTacticalEffect.html#ab4f9be0115d72e0a8937e09c1667de28">mDurationUnitPolicy</a> = ETacticalEffectDurationUnitType::EveryRound;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>}</div>
+</div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
+<div class="foldopen" id="foldopen00016" data-start="{" data-end="}">
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno"><a class="line" href="classUTacticalEffect__TurnCooldown.html#a45c978c5b24b2ee78b1cfa5ea4d39716">   16</a></span><a class="code hl_function" href="classUTacticalEffect__TurnCooldown.html#a45c978c5b24b2ee78b1cfa5ea4d39716">UTacticalEffect_TurnCooldown::UTacticalEffect_TurnCooldown</a>()</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>{</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>    <span class="comment">// 기간 설정</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <a class="code hl_variable" href="classUTacticalEffect.html#ab4f9be0115d72e0a8937e09c1667de28">mDurationUnitPolicy</a> = ETacticalEffectDurationUnitType::EveryTurn;</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>}</div>
+</div>
+<div class="ttc" id="aTacticalEffect__Cooldown_8h_html"><div class="ttname"><a href="TacticalEffect__Cooldown_8h.html">TacticalEffect_Cooldown.h</a></div><div class="ttdoc">Cooldown 이펙트 정의 헤더</div></div>
+<div class="ttc" id="aclassUTacticalEffect__Cooldown_html_a45231449ec6b53e12b3034dc53ccf2d0"><div class="ttname"><a href="classUTacticalEffect__Cooldown.html#a45231449ec6b53e12b3034dc53ccf2d0">UTacticalEffect_Cooldown::UTacticalEffect_Cooldown</a></div><div class="ttdeci">UTacticalEffect_Cooldown()</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect__Cooldown_8cpp_source.html#l00003">TacticalEffect_Cooldown.cpp:3</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect__RoundCooldown_html_a038f9cf6b3a2176db9bf38b4ecceed7f"><div class="ttname"><a href="classUTacticalEffect__RoundCooldown.html#a038f9cf6b3a2176db9bf38b4ecceed7f">UTacticalEffect_RoundCooldown::UTacticalEffect_RoundCooldown</a></div><div class="ttdeci">UTacticalEffect_RoundCooldown()</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect__Cooldown_8cpp_source.html#l00010">TacticalEffect_Cooldown.cpp:10</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect__TurnCooldown_html_a45c978c5b24b2ee78b1cfa5ea4d39716"><div class="ttname"><a href="classUTacticalEffect__TurnCooldown.html#a45c978c5b24b2ee78b1cfa5ea4d39716">UTacticalEffect_TurnCooldown::UTacticalEffect_TurnCooldown</a></div><div class="ttdeci">UTacticalEffect_TurnCooldown()</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect__Cooldown_8cpp_source.html#l00016">TacticalEffect_Cooldown.cpp:16</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_a433a0f90e1fd45083813d68683d75c8d"><div class="ttname"><a href="classUTacticalEffect.html#a433a0f90e1fd45083813d68683d75c8d">UTacticalEffect::mStackingType</a></div><div class="ttdeci">ETacticalEffectStackingType mStackingType</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00354">TacticalEffect.h:354</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_a993b61cca071abc795b0262c234fb868"><div class="ttname"><a href="classUTacticalEffect.html#a993b61cca071abc795b0262c234fb868">UTacticalEffect::mDurationMagnitude</a></div><div class="ttdeci">int32 mDurationMagnitude</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00349">TacticalEffect.h:349</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_ab4f9be0115d72e0a8937e09c1667de28"><div class="ttname"><a href="classUTacticalEffect.html#ab4f9be0115d72e0a8937e09c1667de28">UTacticalEffect::mDurationUnitPolicy</a></div><div class="ttdeci">ETacticalEffectDurationUnitType mDurationUnitPolicy</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00345">TacticalEffect.h:345</a></div></div>
+<div class="ttc" id="aclassUTacticalEffect_html_afd0b3c03544e82acb3aa9413929353f9"><div class="ttname"><a href="classUTacticalEffect.html#afd0b3c03544e82acb3aa9413929353f9">UTacticalEffect::mDurationPolicy</a></div><div class="ttdeci">ETacticalEffectDurationType mDurationPolicy</div><div class="ttdef"><b>Definition</b> <a href="TacticalEffect_8h_source.html#l00341">TacticalEffect.h:341</a></div></div>
+</div><!-- fragment --></div><!-- contents -->
+</div><!-- doc-content -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="navelem"><a class="el" href="dir_74389ed8173ad57b461b9d623a1f3867.html">Source</a></li><li class="navelem"><a class="el" href="dir_1f24ef3104f458df00ee6841ed699ce4.html">P_RD</a></li><li class="navelem"><a class="el" href="dir_2931332fe30aa418bc02be414a0905e5.html">TAS</a></li><li class="navelem"><a class="el" href="dir_80b541583085c98647deca5095addce4.html">Effect</a></li><li class="navelem"><a class="el" href="dir_1fa97fccb16fc2134fd95b8c6cf7dc85.html">Cooldown</a></li><li class="navelem"><a class="el" href="TacticalEffect__Cooldown_8cpp.html">TacticalEffect_Cooldown.cpp</a></li>
+    <li class="footer">다음에 의해 생성됨 :  <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.8 </li>
+  </ul>
+</div>
+</body>
+</html>

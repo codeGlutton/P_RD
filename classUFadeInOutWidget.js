@@ -1,6 +1,7 @@
 var classUFadeInOutWidget =
 [
     [ "UFadeInOutWidget", "classUFadeInOutWidget.html#a3e730344ec7688a84b12c566cdd6d709", null ],
+    [ "GetViewportZOrder", "classUFadeInOutWidget.html#a77ec1bf870a86118697e7dfff8ab3c2b", null ],
     [ "Initialize", "classUFadeInOutWidget.html#aae242e7cde2dc4c7889e8b3049c95b83", null ],
     [ "NativePreConstruct", "classUFadeInOutWidget.html#a110cbce08e49c7d6dd3897410f35cabb", null ],
     [ "NativeTick", "classUFadeInOutWidget.html#a5b7568d68f7da49be4f0c73af16386ea", null ],

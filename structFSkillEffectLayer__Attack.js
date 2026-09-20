@@ -1,8 +1,9 @@
 var structFSkillEffectLayer__Attack =
 [
-    [ "ApplyPointEffect", "structFSkillEffectLayer__Attack.html#aa7b921d173113073f1de6d267bea2f58", null ],
-    [ "ClearPointEffect", "structFSkillEffectLayer__Attack.html#ae2c72c9d64e7817f4e443cdcba5c880b", null ],
-    [ "CommitEffect", "structFSkillEffectLayer__Attack.html#a4867bdd86fb67c6e755b53722dbcbaf5", null ],
-    [ "mDefaultDamage", "structFSkillEffectLayer__Attack.html#a4853114fe276c69e17923cc9b084e1c7", null ],
-    [ "mDiceRatio", "structFSkillEffectLayer__Attack.html#a0e42836c72076c8701cd83fb17c0d2bf", null ]
+    [ "ApplyFactorEffect", "structFSkillEffectLayer__Attack.html#a028fdc22bb396f89199e931748df083f", null ],
+    [ "ClearFactorEffect", "structFSkillEffectLayer__Attack.html#a6ba406e6229c022cf72189f8d5f5f82d", null ],
+    [ "CommitEffect", "structFSkillEffectLayer__Attack.html#a7b9f39ab8aa9cc029fc5463ec454b4b3", null ],
+    [ "MakeDescription", "structFSkillEffectLayer__Attack.html#af6df248de049ab7e388ea105ee6861cf", null ],
+    [ "mMaxDamage", "structFSkillEffectLayer__Attack.html#ac98d9309cff92365b6ea1c14a5159237", null ],
+    [ "mMinDamage", "structFSkillEffectLayer__Attack.html#a90d9186b9430a93dd51c0e6222876ee0", null ]
 ];

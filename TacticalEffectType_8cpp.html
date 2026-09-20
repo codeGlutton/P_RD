@@ -94,17 +94,8 @@ $(document).ready(function(){initNavTree('TacticalEffectType_8cpp.html',''); ini
 </div><!--header-->
 <div class="contents">
 
-<p>전술 이펙트 모디파이어 "연산 종류"(<a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>) 유틸리티 구현.  
-<a href="#details">더 자세히 ...</a></p>
-
 <p><a href="TacticalEffectType_8cpp_source.html">이 파일의 소스 코드 페이지로 가기</a></p>
-<a name="details" id="details"></a><h2 class="groupheader">상세한 설명</h2>
-<div class="textblock"><p>[마이그레이션 배경 / GAS 폐기] 본 PR(#191)은 효과 모디파이어의 연산 종류 enum을 GAS의 EGameplayModOp에서 자체 <a class="el" href="namespaceETacticalModOp.html" title="속성 수정자(Modifier) 연산 종류 — 구 GAS의 EGameplayModOp를 대체하는 자체 enum.">ETacticalModOp</a>(<a class="el" href="TacticalEffectType_8h.html" title="Effect 연관 타입들 정의 헤더">TacticalEffectType.h</a>)로 치환한 결과물이다. 즉 이 파일의 TacticalEffectUtilities는 구 엔진 헬퍼 FGameplayEffectUtilities를 대체한다.</p>
-<p>★중요: ETacticalModOp의 "정수값"은 구 EGameplayModOp와 동일하게 유지된다. 이름만 바뀌고 숫자는 그대로다. 그 이유는 다음 3가지다. (1) 직렬화 호환: 기존 .uasset/세이브에는 enum이 "정수"로 박혀 있다. 값을 바꾸면 구 데이터가 엉뚱한 연산으로 해석되므로 정수값을 보존해야 한다. (2) 배열 인덱싱: Aggregator는 mMods[ETacticalModOp::Max]처럼 op 값 자체를 배열 인덱스로 쓴다(본 파일의 ModifierOpBiases[] 도 동일). 값이 곧 슬롯 번호이므로 연속·고정이어야 한다. (3) CoreRedirect: DefaultEngine.ini가 구 enum '이름'을 새 enum 이름으로 매핑한다. 값이 같아야 리다이렉트 후에도 의미가 보존된다.</p>
-<p>[연산 종류와 정수값 — 구 EGameplayModOp 대응] AddBase(0) : 합산. 구 Additive 와 동일 슬롯/값. MultiplyAdditive(1) : 배율 가산. 구 Multiplicitive 와 동일 슬롯/값. DivideAdditive(2) : 나눗셈 가산. 구 Division 와 동일 슬롯/값. Override(3) : 덮어쓰기. 구 Override 와 동일 슬롯/값. MultiplyCompound(4) : 거듭제곱 곱(복리식 곱셈). 신규 의미 슬롯. AddFinal(5) : 최종 합산(다른 연산 적용 후 마지막에 더함). 신규 슬롯. Max(6) : 무효/개수(enum 끝 표식, 배열 크기 = op 개수). ※ 헤더에는 구 GAS 이름(Additive/Multiplicitive/Division/Override) 별칭이 같은 정수값으로 남아 하위호환을 보장한다. </p>
-
-<p class="definition"><a class="el" href="TacticalEffectType_8cpp_source.html">TacticalEffectType.cpp</a> 파일에서 정의되었습니다.</p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

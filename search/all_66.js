@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['초기_20턴_20순서_20배치는_20어떻게_20처리하는가_0',['Q 초기 턴 순서 배치는 어떻게 처리하는가?',['../srpg_framework_page.html#srpg_framework_subsystem_step1',1,'']]]
+  ['의도만_0',['B. UI가 게임플레이에 &lt;strong&gt;요구하는 것&lt;/strong&gt; (UI → gameplay, &lt;tt&gt;Request*&lt;/tt&gt; = 의도만)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md42',1,'']]]
 ];

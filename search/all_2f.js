@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['누가_20뭘_20정하나_0',['데이터 경계 (누가 뭘 정하나)',['../CombatTileMapHUDWidget__CombatLog_8cpp.html#autotoc_md40',1,'']]]
+  ['그림_0',['C. UI가 &lt;strong&gt;구독하는 알림&lt;/strong&gt; (게임플레이가 발신 → UI가 다시 그림)',['../md__2home_2runner_2work_2P__RD_2P__RD_2Source_2P__RD_2UI_2Combat_2UI__API__CONTRACT.html#autotoc_md44',1,'']]]
 ];

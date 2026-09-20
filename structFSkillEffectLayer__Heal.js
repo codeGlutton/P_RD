@@ -1,8 +1,8 @@
 var structFSkillEffectLayer__Heal =
 [
-    [ "ApplyPointEffect", "structFSkillEffectLayer__Heal.html#aefbae5cb8a7f6e651edc26540b2f28da", null ],
-    [ "ClearPointEffect", "structFSkillEffectLayer__Heal.html#ada371dfbc6837e7b49694d6d40b4307d", null ],
-    [ "CommitEffect", "structFSkillEffectLayer__Heal.html#a4d45d0e849a3baf2cdb281f4b9d98e92", null ],
-    [ "mDefaultHealGain", "structFSkillEffectLayer__Heal.html#a3ca3fd5b87eaa7bf97942848f1c8d29e", null ],
-    [ "mDiceRatio", "structFSkillEffectLayer__Heal.html#af4fd76330b8e52405d1b4c49dbfb32b1", null ]
+    [ "ApplyFactorEffect", "structFSkillEffectLayer__Heal.html#ade51149f6ce9376712d9ef9810bcc964", null ],
+    [ "ClearFactorEffect", "structFSkillEffectLayer__Heal.html#ad4d780e54f70658739ec4b937a5d15b8", null ],
+    [ "CommitEffect", "structFSkillEffectLayer__Heal.html#a75f340d7b5ea9869f2e916a812220db6", null ],
+    [ "MakeDescription", "structFSkillEffectLayer__Heal.html#ade6666dc85410d2bc5e54c2c84d2f069", null ],
+    [ "mHealGain", "structFSkillEffectLayer__Heal.html#a97c6bbb9fc93bdd8445a58bb513c2b9e", null ]
 ];

@@ -6,6 +6,8 @@ var dir_f6ad2a272e5af527f6870f24a0ebb404 =
     [ "GameBalanceType.h", "GameBalanceType_8h.html", "GameBalanceType_8h" ],
     [ "GamePlaySettings.cpp", "GamePlaySettings_8cpp.html", null ],
     [ "GamePlaySettings.h", "GamePlaySettings_8h.html", "GamePlaySettings_8h" ],
+    [ "GamePlayType.cpp", "GamePlayType_8cpp.html", null ],
+    [ "GamePlayType.h", "GamePlayType_8h.html", "GamePlayType_8h" ],
     [ "GameTeamType.cpp", "GameTeamType_8cpp.html", null ],
     [ "GameTeamType.h", "GameTeamType_8h.html", "GameTeamType_8h" ],
     [ "ModelViewMapping.cpp", "ModelViewMapping_8cpp.html", null ],

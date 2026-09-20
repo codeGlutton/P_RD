@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['대한_20순서도_0',['단일 턴에 대한 순서도',['../srpg_framework_page.html#srpg_framework_turn_image_section',1,'']]]
+  ['누가_20뭘_20정하나_0',['데이터 경계 (누가 뭘 정하나)',['../CombatLayoutHUDWidget__CombatLog_8cpp.html#autotoc_md20',1,'']]]
 ];

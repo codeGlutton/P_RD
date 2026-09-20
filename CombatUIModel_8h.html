@@ -102,6 +102,8 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 클래스</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structFCombatSkillCutInRequest.html">FCombatSkillCutInRequest</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classUCombatUIModel.html">UCombatUIModel</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">전투 조작 UI의 뷰모델. PlayerController나 전투 HUD가 하나 소유해 위젯들이 공유한다.  <a href="classUCombatUIModel.html#details">더 자세히 ...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -110,16 +112,18 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 열거형 타입</h2></td></tr>
 <tr class="memitem:ae94ae9ff6ce2880635df7bcd3bb54d94" id="r_ae94ae9ff6ce2880635df7bcd3bb54d94"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">ECombatInputType</a> : uint8 { <br />
 &#160;&#160;<a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aef9b2706f5e52bd1f47a5481c0be0219">SelectSkill</a>
-, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32">ToggleDice</a>
-, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1">RollDice</a>
 , <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a1331c815dfe7a16c929f6e2a72dd9a42">LongPressSkill</a>
-, <br />
-&#160;&#160;<a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985">LongPressUnit</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985">LongPressUnit</a>
 , <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a6bc362dbf494c61ea117fe3c71ca48a5">Move</a>
-, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a0f5830c168fdb5396f4c2eff1fc48aeb">EndTurn</a>
-, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19">Cancel</a>
 , <br />
-&#160;&#160;<a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a6989de5a95c03fa033f496575974f17d">LongPressEquip</a>
+&#160;&#160;<a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a0f5830c168fdb5396f4c2eff1fc48aeb">EndTurn</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19">Cancel</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a6989de5a95c03fa033f496575974f17d">LongPressEquip</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aed46bc9956f4d70736bce3fd5a3de6f7">InspectUnit</a>
+, <br />
+&#160;&#160;<a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a70d9be9b139893aa6c69b5e77e614311">Confirm</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94a1bcea6551898a6482920a686f73c91fb">InspectUnitSkill</a>
+, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94aede09ef10a92707a00cad904b7dec404">FocusUnit</a>
 <br />
  }</td></tr>
 <tr class="memdesc:ae94ae9ff6ce2880635df7bcd3bb54d94"><td class="mdescLeft">&#160;</td><td class="mdescRight">전투 UI와 게임플레이를 잇는 단일 뷰모델 계약입니다.  <a href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">더 자세히 ...</a><br /></td></tr>
@@ -133,20 +137,34 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 <tr class="separator:a2177dd802c94d24af24309dff31419c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10da77616d36467aa244c84081aa481b" id="r_a10da77616d36467aa244c84081aa481b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a10da77616d36467aa244c84081aa481b">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatActionResolved</a>)</td></tr>
 <tr class="separator:a10da77616d36467aa244c84081aa481b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7a53949e0da4c08353a323d80f7447d" id="r_ab7a53949e0da4c08353a323d80f7447d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#ab7a53949e0da4c08353a323d80f7447d">DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatCommand</a>, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">ECombatInputType</a>, Type, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>)</td></tr>
+<tr class="memitem:ab7a53949e0da4c08353a323d80f7447d" id="r_ab7a53949e0da4c08353a323d80f7447d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#ab7a53949e0da4c08353a323d80f7447d">DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatCommand</a>, <a class="el" href="CombatUIModel_8h.html#ae94ae9ff6ce2880635df7bcd3bb54d94">ECombatInputType</a>, Type, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">IntPayload</a>)</td></tr>
 <tr class="separator:ab7a53949e0da4c08353a323d80f7447d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4db7a99615e74b356f7f91f157a9eaf8" id="r_a4db7a99615e74b356f7f91f157a9eaf8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a4db7a99615e74b356f7f91f157a9eaf8">DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatWorldTouch</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ScreenPosition</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bLongPress</a>)</td></tr>
 <tr class="separator:a4db7a99615e74b356f7f91f157a9eaf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12d015a90cbff3cf0b01e589e1dbaa8b" id="r_a12d015a90cbff3cf0b01e589e1dbaa8b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a12d015a90cbff3cf0b01e589e1dbaa8b">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnApplyDiceResults</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt; &amp;, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RolledFaceIndices</a>)</td></tr>
-<tr class="separator:a12d015a90cbff3cf0b01e589e1dbaa8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf340aa56aa4b51e8a7fb7a1fff744b8" id="r_abf340aa56aa4b51e8a7fb7a1fff744b8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#abf340aa56aa4b51e8a7fb7a1fff744b8">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatFloatingLog</a>, <a class="el" href="structFCombatFloatingLogRequest.html">FCombatFloatingLogRequest</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Request</a>)</td></tr>
 <tr class="separator:abf340aa56aa4b51e8a7fb7a1fff744b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a61ab3ad18868a7ee7124c02daa7d1f12" id="r_a61ab3ad18868a7ee7124c02daa7d1f12"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a61ab3ad18868a7ee7124c02daa7d1f12">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatFloatingLogMotionFinished</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MotionIndex</a>)</td></tr>
+<tr class="memitem:a6e2314a61a330d9538f1f49c6365613c" id="r_a6e2314a61a330d9538f1f49c6365613c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a6e2314a61a330d9538f1f49c6365613c">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatEventBatchChanged</a>, <a class="el" href="structFCombatEventBatchUI.html">FCombatEventBatchUI</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Batch</a>)</td></tr>
+<tr class="separator:a6e2314a61a330d9538f1f49c6365613c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61ab3ad18868a7ee7124c02daa7d1f12" id="r_a61ab3ad18868a7ee7124c02daa7d1f12"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a61ab3ad18868a7ee7124c02daa7d1f12">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatFloatingLogMotionFinished</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">MotionIndex</a>)</td></tr>
 <tr class="separator:a61ab3ad18868a7ee7124c02daa7d1f12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ed36fb2b932a3b109c31fb06696d960" id="r_a6ed36fb2b932a3b109c31fb06696d960"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a6ed36fb2b932a3b109c31fb06696d960">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatFloatingLogsCleared</a>)</td></tr>
 <tr class="separator:a6ed36fb2b932a3b109c31fb06696d960"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a006816e1a0c99f2cc718c588f372e12c" id="r_a006816e1a0c99f2cc718c588f372e12c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a006816e1a0c99f2cc718c588f372e12c">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatDiceRollRequested</a>)</td></tr>
-<tr class="separator:a006816e1a0c99f2cc718c588f372e12c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a154ada11f14eee9b0045244149eeff45" id="r_a154ada11f14eee9b0045244149eeff45"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a154ada11f14eee9b0045244149eeff45">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatResultOpenRequested</a>)</td></tr>
+<tr class="separator:a154ada11f14eee9b0045244149eeff45"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a962e0adfcac91b94168507a045db9b81" id="r_a962e0adfcac91b94168507a045db9b81"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a962e0adfcac91b94168507a045db9b81">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAbandonRun</a>)</td></tr>
+<tr class="separator:a962e0adfcac91b94168507a045db9b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad083689a04102c6003ecdf19bc18fbc8" id="r_ad083689a04102c6003ecdf19bc18fbc8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#ad083689a04102c6003ecdf19bc18fbc8">DECLARE_DYNAMIC_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSaveAndExitRun</a>)</td></tr>
+<tr class="separator:ad083689a04102c6003ecdf19bc18fbc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1475b5fe775b6bc43f6ad7e6d4afaeeb" id="r_a1475b5fe775b6bc43f6ad7e6d4afaeeb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a1475b5fe775b6bc43f6ad7e6d4afaeeb">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSaveAndExitCompleted</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bSuccess</a>)</td></tr>
+<tr class="separator:a1475b5fe775b6bc43f6ad7e6d4afaeeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3c667cc672fcf5112c953d6edd03bf38" id="r_a3c667cc672fcf5112c953d6edd03bf38"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a3c667cc672fcf5112c953d6edd03bf38">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAbandonRunCompleted</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bSuccess</a>)</td></tr>
+<tr class="separator:a3c667cc672fcf5112c953d6edd03bf38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a80d6ade7e1250b661c4593232835718c" id="r_a80d6ade7e1250b661c4593232835718c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a80d6ade7e1250b661c4593232835718c">DECLARE_MULTICAST_DELEGATE</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCycleCombatPlaybackSpeed</a>)</td></tr>
+<tr class="separator:a80d6ade7e1250b661c4593232835718c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a624c14827ed6e9a35e1d14a85ab16cb7" id="r_a624c14827ed6e9a35e1d14a85ab16cb7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#a624c14827ed6e9a35e1d14a85ab16cb7">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeFocusScreenAnchor</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> &amp;)</td></tr>
+<tr class="separator:a624c14827ed6e9a35e1d14a85ab16cb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf9f9b2e3fbc069c1511a928b862378f" id="r_acf9f9b2e3fbc069c1511a928b862378f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="CombatUIModel_8h.html#acf9f9b2e3fbc069c1511a928b862378f">DECLARE_MULTICAST_DELEGATE_OneParam</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatPresentation</a>, <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;) <a class="el" href="BoardActorModel_8h.html#ab66c1e1c9374b0f0c85d6a26d1673951">DECLARE_MULTICAST_DELEGATE_TwoParams</a>(<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnPrePlaySkillCutIn</a></td></tr>
+<tr class="separator:acf9f9b2e3fbc069c1511a928b862378f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">열거형 타입 문서화</h2>
 <a id="ae94ae9ff6ce2880635df7bcd3bb54d94" name="ae94ae9ff6ce2880635df7bcd3bb54d94"></a>
@@ -171,23 +189,43 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 <p>UI가 게임플레이에 보내는 의도 종류(index 기반 명령). 타일/월드 터치는 별도 델리게이트로 보낸다. </p>
 <table class="fieldtable">
 <tr><th colspan="2">열거형 멤버</th></tr><tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94aef9b2706f5e52bd1f47a5481c0be0219" name="ae94ae9ff6ce2880635df7bcd3bb54d94aef9b2706f5e52bd1f47a5481c0be0219"></a>SelectSkill&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32" name="ae94ae9ff6ce2880635df7bcd3bb54d94abf14eb2e740ad6081a6a60b9cb293a32"></a>ToggleDice&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1" name="ae94ae9ff6ce2880635df7bcd3bb54d94a7ea8a47351af9f9bb1f93c79c59604a1"></a>RollDice&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a1331c815dfe7a16c929f6e2a72dd9a42" name="ae94ae9ff6ce2880635df7bcd3bb54d94a1331c815dfe7a16c929f6e2a72dd9a42"></a>LongPressSkill&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985" name="ae94ae9ff6ce2880635df7bcd3bb54d94a97d0350ecb921334df4360586239b985"></a>LongPressUnit&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a6bc362dbf494c61ea117fe3c71ca48a5" name="ae94ae9ff6ce2880635df7bcd3bb54d94a6bc362dbf494c61ea117fe3c71ca48a5"></a>Move&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a0f5830c168fdb5396f4c2eff1fc48aeb" name="ae94ae9ff6ce2880635df7bcd3bb54d94a0f5830c168fdb5396f4c2eff1fc48aeb"></a>EndTurn&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19" name="ae94ae9ff6ce2880635df7bcd3bb54d94aea4788705e6873b424c65e91c2846b19"></a>Cancel&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a6989de5a95c03fa033f496575974f17d" name="ae94ae9ff6ce2880635df7bcd3bb54d94a6989de5a95c03fa033f496575974f17d"></a>LongPressEquip&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94aed46bc9956f4d70736bce3fd5a3de6f7" name="ae94ae9ff6ce2880635df7bcd3bb54d94aed46bc9956f4d70736bce3fd5a3de6f7"></a>InspectUnit&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a70d9be9b139893aa6c69b5e77e614311" name="ae94ae9ff6ce2880635df7bcd3bb54d94a70d9be9b139893aa6c69b5e77e614311"></a>Confirm&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94a1bcea6551898a6482920a686f73c91fb" name="ae94ae9ff6ce2880635df7bcd3bb54d94a1bcea6551898a6482920a686f73c91fb"></a>InspectUnitSkill&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae94ae9ff6ce2880635df7bcd3bb54d94aede09ef10a92707a00cad904b7dec404" name="ae94ae9ff6ce2880635df7bcd3bb54d94aede09ef10a92707a00cad904b7dec404"></a>FocusUnit&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition"><a class="el" href="CombatUIModel_8h_source.html">CombatUIModel.h</a> 파일의 <a class="el" href="CombatUIModel_8h_source.html#l00016">16</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatUIModel_8h_source.html">CombatUIModel.h</a> 파일의 <a class="el" href="CombatUIModel_8h_source.html#l00017">17</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
 <h2 class="groupheader">함수 문서화</h2>
+<a id="a962e0adfcac91b94168507a045db9b81" name="a962e0adfcac91b94168507a045db9b81"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a962e0adfcac91b94168507a045db9b81">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[1/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAbandonRun</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a10da77616d36467aa244c84081aa481b" name="a10da77616d36467aa244c84081aa481b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a10da77616d36467aa244c84081aa481b">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[1/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a10da77616d36467aa244c84081aa481b">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[2/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -204,26 +242,8 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 
 </div>
 </div>
-<a id="a006816e1a0c99f2cc718c588f372e12c" name="a006816e1a0c99f2cc718c588f372e12c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a006816e1a0c99f2cc718c588f372e12c">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[2/3]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatDiceRollRequested</a>&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="a6ed36fb2b932a3b109c31fb06696d960" name="a6ed36fb2b932a3b109c31fb06696d960"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ed36fb2b932a3b109c31fb06696d960">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[3/3]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ed36fb2b932a3b109c31fb06696d960">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[3/5]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -240,8 +260,44 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 
 </div>
 </div>
-<a id="a12d015a90cbff3cf0b01e589e1dbaa8b" name="a12d015a90cbff3cf0b01e589e1dbaa8b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a12d015a90cbff3cf0b01e589e1dbaa8b">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/5]</span></h2>
+<a id="a154ada11f14eee9b0045244149eeff45" name="a154ada11f14eee9b0045244149eeff45"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a154ada11f14eee9b0045244149eeff45">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[4/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatResultOpenRequested</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad083689a04102c6003ecdf19bc18fbc8" name="ad083689a04102c6003ecdf19bc18fbc8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad083689a04102c6003ecdf19bc18fbc8">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE() <span class="overload">[5/5]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSaveAndExitRun</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3c667cc672fcf5112c953d6edd03bf38" name="a3c667cc672fcf5112c953d6edd03bf38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3c667cc672fcf5112c953d6edd03bf38">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -249,19 +305,53 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
         <tr>
           <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnApplyDiceResults</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnAbandonRunCompleted</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TArray</a>&lt; <a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a> &gt; &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RolledFaceIndices</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bSuccess</a>&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6e2314a61a330d9538f1f49c6365613c" name="a6e2314a61a330d9538f1f49c6365613c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e2314a61a330d9538f1f49c6365613c">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/7]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCombatEventBatchChanged</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structFCombatEventBatchUI.html">FCombatEventBatchUI</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Batch</a>&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -275,7 +365,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 </div>
 </div>
 <a id="abf340aa56aa4b51e8a7fb7a1fff744b8" name="abf340aa56aa4b51e8a7fb7a1fff744b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abf340aa56aa4b51e8a7fb7a1fff744b8">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#abf340aa56aa4b51e8a7fb7a1fff744b8">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[3/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -309,7 +399,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 </div>
 </div>
 <a id="a61ab3ad18868a7ee7124c02daa7d1f12" name="a61ab3ad18868a7ee7124c02daa7d1f12"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a61ab3ad18868a7ee7124c02daa7d1f12">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[3/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a61ab3ad18868a7ee7124c02daa7d1f12">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[4/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -323,7 +413,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -343,7 +433,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 </div>
 </div>
 <a id="a2177dd802c94d24af24309dff31419c7" name="a2177dd802c94d24af24309dff31419c7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2177dd802c94d24af24309dff31419c7">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[4/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a2177dd802c94d24af24309dff31419c7">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[5/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -377,7 +467,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
 </div>
 </div>
 <a id="ae7a2bcd4f4069d4adf48f68d4e428cfa" name="ae7a2bcd4f4069d4adf48f68d4e428cfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae7a2bcd4f4069d4adf48f68d4e428cfa">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[5/5]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7a2bcd4f4069d4adf48f68d4e428cfa">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[6/7]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -398,6 +488,40 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">Domain</a>&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1475b5fe775b6bc43f6ad7e6d4afaeeb" name="a1475b5fe775b6bc43f6ad7e6d4afaeeb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1475b5fe775b6bc43f6ad7e6d4afaeeb">&#9670;&#160;</a></span>DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam() <span class="overload">[7/7]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnSaveAndExitCompleted</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bSuccess</a>&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>
@@ -437,7 +561,7 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#ada104807b93ac7cd59dac80d98ba857b">int32</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a>&#160;</td>
           <td class="paramname">, </td>
         </tr>
         <tr>
@@ -490,6 +614,80 @@ $(document).ready(function(){initNavTree('CombatUIModel_8h.html',''); initResiza
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bLongPress</a>&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a80d6ade7e1250b661c4593232835718c" name="a80d6ade7e1250b661c4593232835718c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a80d6ade7e1250b661c4593232835718c">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnCycleCombatPlaybackSpeed</a>&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acf9f9b2e3fbc069c1511a928b862378f" name="acf9f9b2e3fbc069c1511a928b862378f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf9f9b2e3fbc069c1511a928b862378f">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnBeginCombatPresentation</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TSharedPtr</a>&lt; <a class="el" href="structFPresentationBarrier.html">FPresentationBarrier</a> &gt;&#160;</td>
+          <td class="paramname">&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a624c14827ed6e9a35e1d14a85ab16cb7" name="a624c14827ed6e9a35e1d14a85ab16cb7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a624c14827ed6e9a35e1d14a85ab16cb7">&#9670;&#160;</a></span>DECLARE_MULTICAST_DELEGATE_OneParam() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">DECLARE_MULTICAST_DELEGATE_OneParam </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FOnChangeFocusScreenAnchor</a>&#160;</td>
+          <td class="paramname">, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">const</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FVector2D</a> &amp;&#160;</td>
           <td class="paramname">&#160;</td>
         </tr>
         <tr>

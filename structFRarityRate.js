@@ -6,5 +6,6 @@ var structFRarityRate =
     [ "GetTotalWeight", "structFRarityRate.html#a9cebe5d7bafaed778412ce9c24227aa0", null ],
     [ "GetType", "structFRarityRate.html#af986222f77eda12222c725137c4051d9", null ],
     [ "GetType", "structFRarityRate.html#ab9ea832d7da25063b8c2e774e2576780", null ],
+    [ "IsValid", "structFRarityRate.html#a98460eb1f15f7fa791a16a1f53dee251", null ],
     [ "mWeights", "structFRarityRate.html#a1d5ac1d3e105a7fdbe1d695fd46bb580", null ]
 ];

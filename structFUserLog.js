@@ -6,5 +6,5 @@ var structFUserLog =
     [ "mKnownEquipmentIds", "structFUserLog.html#ad202dedeb7059d77dc4462c75c99f3b0", null ],
     [ "mKnownSkillIds", "structFUserLog.html#a8c0305d682a8679451511f3023e9f3e2", null ],
     [ "mRunCount", "structFUserLog.html#a9b3fe4ec11cf4a95f3dbcfb9b97b38e0", null ],
-    [ "mRunCountPerUnit", "structFUserLog.html#a7a376f62bcd9bf972f4e27db663ddbd6", null ]
+    [ "mUseCountPerUnit", "structFUserLog.html#a4c9dc9f2e33613ef822dcce98277ff11", null ]
 ];
