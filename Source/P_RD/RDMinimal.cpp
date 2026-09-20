@@ -8,7 +8,13 @@ UObjectModel* GetWorldSubsystemModel(const UObject* WorldContextObject, UClass* 
         return nullptr;
     }
 
-    USimulationSubsystem* SimulationSubsystem =  WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+    UWorld* World = WorldContextObject->GetWorld();
+    if (World == nullptr)
+    {
+        return nullptr;
+    }
+
+    USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;
@@ -24,7 +30,13 @@ UObjectModelFactory* GetWorldModelFactory(const UObject* WorldContextObject)
         return nullptr;
     }
 
-    USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+    UWorld* World = WorldContextObject->GetWorld();
+    if (World == nullptr)
+    {
+        return nullptr;
+    }
+
+    USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;
@@ -40,7 +52,13 @@ UEventLogger* GetWorldEventLogger(const UObject* WorldContextObject)
         return nullptr;
     }
 
-    USimulationSubsystem* SimulationSubsystem = WorldContextObject->GetWorld()->GetSubsystem<USimulationSubsystem>();
+    UWorld* World = WorldContextObject->GetWorld();
+    if (World == nullptr)
+    {
+        return nullptr;
+    }
+
+    USimulationSubsystem* SimulationSubsystem = World->GetSubsystem<USimulationSubsystem>();
     if (SimulationSubsystem == nullptr)
     {
         return nullptr;

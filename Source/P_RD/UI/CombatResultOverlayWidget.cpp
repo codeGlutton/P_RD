@@ -1,20 +1,14 @@
 #include "UI/CombatResultOverlayWidget.h"
 
-#include "Styling/CoreStyle.h"
-#include "Widgets/Input/SButton.h"
-#include "Widgets/Layout/SBorder.h"
-#include "Widgets/Layout/SBox.h"
-#include "Widgets/SBoxPanel.h"
-#include "Widgets/SOverlay.h"
-#include "Widgets/SNullWidget.h"
-#include "Widgets/Text/STextBlock.h"
+#include "Components/Button.h"
+#include "Components/TextBlock.h"
 
 #define LOCTEXT_NAMESPACE "CombatResultOverlayWidget"
 
 UCombatResultOverlayWidget::UCombatResultOverlayWidget(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	mViewportZOrder = -15;
+	mViewportZOrder = 60;
 	mRemoveFromParentOnClose = true;
 }
 
@@ -22,151 +16,79 @@ void UCombatResultOverlayWidget::ShowVictoryReward(const FRewardUI& Reward, FSim
 {
 	mMode = ECombatResultOverlayMode::VictoryReward;
 	mReward = Reward;
-	mConfirmCallback = MoveTemp(ConfirmCallback);
-	RefreshSlate();
+	mTitleCallback = MoveTemp(ConfirmCallback);
+	RefreshWidget();
 }
 
-void UCombatResultOverlayWidget::ShowDefeatContinue(FSimpleDelegate ContinueCallback)
+void UCombatResultOverlayWidget::ShowDefeatResult(
+	const FCombatResultUI& Result,
+	FSimpleDelegate TitleCallback)
 {
 	mMode = ECombatResultOverlayMode::DefeatContinue;
 	mReward = FRewardUI();
-	mConfirmCallback = MoveTemp(ContinueCallback);
-	RefreshSlate();
+	mCombatResult = Result;
+	mTitleCallback = MoveTemp(TitleCallback);
+	BindButtons();
+	RefreshWidget();
 }
 
-TSharedRef<SWidget> UCombatResultOverlayWidget::RebuildWidget()
+void UCombatResultOverlayWidget::NativeConstruct()
 {
-	const FLinearColor PanelColor(0.018f, 0.022f, 0.028f, 0.88f);
-	const FLinearColor ButtonColor(0.65f, 0.49f, 0.21f, 0.96f);
-	const FLinearColor TextColor(0.96f, 0.94f, 0.84f, 1.0f);
-	const FLinearColor MutedTextColor(0.78f, 0.82f, 0.80f, 1.0f);
+	Super::NativeConstruct();
+	UE_LOG(LogRD, Display, TEXT("Combat defeat WBP construct: title=%s"),
+		mTitleButton != nullptr ? TEXT("bound") : TEXT("missing"));
 
-	TSharedRef<SWidget> Root =
-		SNew(SOverlay)
-		+ SOverlay::Slot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		[
-			SAssignNew(mRewardPanel, SBorder)
-			.Padding(FMargin(36.0f, 28.0f))
-			.BorderImage(FCoreStyle::Get().GetBrush(TEXT("WhiteBrush")))
-			.BorderBackgroundColor(PanelColor)
-			[
-				SNew(SBox)
-				.WidthOverride(520.0f)
-				[
-					SNew(SVerticalBox)
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					.Padding(FMargin(0.0f, 0.0f, 0.0f, 18.0f))
-					[
-						SAssignNew(mTitleText, STextBlock)
-						.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 34))
-						.ColorAndOpacity(TextColor)
-						.Justification(ETextJustify::Center)
-					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					.Padding(FMargin(0.0f, 0.0f, 0.0f, 10.0f))
-					[
-						SAssignNew(mGoldText, STextBlock)
-						.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 25))
-						.ColorAndOpacity(MutedTextColor)
-						.Justification(ETextJustify::Center)
-					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					.Padding(FMargin(0.0f, 0.0f, 0.0f, 24.0f))
-					[
-						SAssignNew(mExpText, STextBlock)
-						.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 25))
-						.ColorAndOpacity(MutedTextColor)
-						.Justification(ETextJustify::Center)
-					]
-					+ SVerticalBox::Slot()
-					.AutoHeight()
-					.HAlign(HAlign_Center)
-					[
-						SNew(SButton)
-						.ContentPadding(FMargin(34.0f, 12.0f))
-						.ButtonColorAndOpacity(ButtonColor)
-						.OnClicked_UObject(this, &UCombatResultOverlayWidget::HandleConfirmClicked)
-						[
-							SNew(STextBlock)
-							.Text(LOCTEXT("Claim", "CLAIM"))
-							.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 24))
-							.ColorAndOpacity(TextColor)
-							.Justification(ETextJustify::Center)
-						]
-					]
-				]
-			]
-		]
-		+ SOverlay::Slot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Bottom)
-		.Padding(FMargin(0.0f, 0.0f, 0.0f, 84.0f))
-		[
-			SAssignNew(mContinuePanel, SBorder)
-			.BorderImage(FCoreStyle::Get().GetBrush(TEXT("WhiteBrush")))
-			.BorderBackgroundColor(FLinearColor::Transparent)
-			[
-				SNew(SButton)
-				.ContentPadding(FMargin(42.0f, 14.0f))
-				.ButtonColorAndOpacity(ButtonColor)
-				.OnClicked_UObject(this, &UCombatResultOverlayWidget::HandleConfirmClicked)
-				[
-					SNew(STextBlock)
-					.Text(LOCTEXT("DefeatReturn", "돌아가기"))
-					.Font(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 26))
-					.ColorAndOpacity(TextColor)
-					.Justification(ETextJustify::Center)
-				]
-			]
-		];
+	BindButtons();
 
-	RefreshSlate();
-	return Root;
+	RefreshWidget();
 }
 
-FReply UCombatResultOverlayWidget::HandleConfirmClicked()
+void UCombatResultOverlayWidget::NativeDestruct()
 {
-	FSimpleDelegate Callback = MoveTemp(mConfirmCallback);
-	mConfirmCallback.Unbind();
+	if (mTitleButton != nullptr)
+	{
+		mTitleButton->OnClicked.RemoveDynamic(this, &UCombatResultOverlayWidget::HandleTitleClicked);
+	}
+	Super::NativeDestruct();
+}
+
+void UCombatResultOverlayWidget::BindButtons()
+{
+	if (mTitleButton != nullptr)
+	{
+		mTitleButton->OnClicked.RemoveDynamic(this, &UCombatResultOverlayWidget::HandleTitleClicked);
+		mTitleButton->OnClicked.AddUniqueDynamic(this, &UCombatResultOverlayWidget::HandleTitleClicked);
+	}
+}
+
+void UCombatResultOverlayWidget::HandleTitleClicked()
+{
+	UE_LOG(LogRD, Display, TEXT("Combat defeat title button clicked."));
+	FSimpleDelegate Callback = MoveTemp(mTitleCallback);
+	mTitleCallback.Unbind();
 	Callback.ExecuteIfBound();
-	return FReply::Handled();
 }
 
-void UCombatResultOverlayWidget::RefreshSlate()
+void UCombatResultOverlayWidget::RefreshWidget()
 {
-	if (mRewardPanel.IsValid())
+	if (mMode != ECombatResultOverlayMode::DefeatContinue)
 	{
-		mRewardPanel->SetVisibility(mMode == ECombatResultOverlayMode::VictoryReward ? EVisibility::Visible : EVisibility::Collapsed);
+		return;
 	}
-	if (mContinuePanel.IsValid())
+
+	// The board supplies the artwork; native text keeps live values and localization.
+	if (mLocationText != nullptr)
 	{
-		mContinuePanel->SetVisibility(mMode == ECombatResultOverlayMode::DefeatContinue ? EVisibility::Visible : EVisibility::Collapsed);
+		mLocationText->SetText(mCombatResult.mLocationName.IsEmpty()
+			? LOCTEXT("UnknownLocation", "현재 전투 지역") : mCombatResult.mLocationName);
 	}
-	if (mTitleText.IsValid())
+	if (mRoundText != nullptr)
 	{
-		mTitleText->SetText(mReward.mTitle.IsEmpty() ? LOCTEXT("VictoryReward", "VICTORY REWARD") : mReward.mTitle);
+		mRoundText->SetText(FText::AsNumber(FMath::Max(1, mCombatResult.mRound)));
 	}
-	if (mGoldText.IsValid())
+	if (mEnemyText != nullptr)
 	{
-		mGoldText->SetText(FText::Format(
-			LOCTEXT("GoldRewardFormat", "Gold +{0}  /  {1}"),
-			FText::AsNumber(mReward.mGoldGained),
-			FText::AsNumber(mReward.mGoldBalance)));
-	}
-	if (mExpText.IsValid())
-	{
-		mExpText->SetText(FText::Format(
-			LOCTEXT("ExpRewardFormat", "EXP +{0}  /  Lv {1}"),
-			FText::AsNumber(mReward.mExpGained),
-			FText::AsNumber(mReward.mLevelAfter)));
+		mEnemyText->SetText(FText::AsNumber(FMath::Max(0, mCombatResult.mDefeatedMonsterCount)));
 	}
 }
 

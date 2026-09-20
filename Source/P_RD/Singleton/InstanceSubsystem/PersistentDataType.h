@@ -35,3 +35,30 @@ enum class ELanguageType : uint8
 	Count,
 };
 
+/**
+ * 퀄리티 종류 열거형
+ */
+UENUM(BlueprintType)
+enum class EOverallQualityType : uint8
+{
+	Low = 0,
+	Medium,
+	High,
+	Epic,
+	Cinematic,
+	Count,
+};
+
+inline float ToRenderResolutionHeight(EOverallQualityType QualityType)
+{
+	switch (QualityType)
+	{
+	case EOverallQualityType::Low:
+		return 360.f;
+	case EOverallQualityType::High:
+		return 1080.f;
+	case EOverallQualityType::Medium:
+	default:
+		return 720.f;
+	}
+}

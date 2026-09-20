@@ -12,6 +12,8 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "P_RD.h"
+#include "Engine/GameInstance.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 
 /**
  * @brief 설정 패널을 팝업 레이어에 표시되도록 초기화한다.
@@ -45,10 +47,18 @@ USettingsPanelWidget::USettingsPanelWidget(const FObjectInitializer& ObjectIniti
 void USettingsPanelWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>())
+		{
+			Saver->OnSaveStatusChanged.RemoveAll(this);
+			Saver->OnSaveStatusChanged.AddUObject(this, &USettingsPanelWidget::RefreshSaveStatus);
+		}
+	RefreshSaveStatus();
 
 	ValidateDesignerBindings();
+	EnsureCreditsButtons();
 
-	/* 화면 복귀와 런 액션 버튼은 클릭을 외부 요청 이벤트로만 변환한다. */
+	/* Back은 자기 팝업을 닫은 뒤 복귀 이벤트를 알리고, 런 액션은 외부 요청으로 변환한다. */
 
 	if (BackButton != nullptr)
 	{
@@ -76,6 +86,21 @@ void USettingsPanelWidget::NativeConstruct()
 	}
 
 	/* 품질 버튼은 현재 패널의 임시 품질 번호를 외부 설정 정책으로 전달한다. */
+	/* 현재 WBP의 실제 버튼 이름은 Quality{Low/Mid/High}Button이라 BindWidgetOptional 멤버명({Low/Medium/High}QualityButton)에
+	   잡히지 않는다. WBP 리네임 없이 클릭이 연결되도록 대체 이름으로 한 번 더 찾는다(SyncText의 라벨 처리와 같은 이유). */
+
+	if (LowQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		LowQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityLowButton")));
+	}
+	if (MediumQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		MediumQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityMidButton")));
+	}
+	if (HighQualityButton == nullptr && WidgetTree != nullptr)
+	{
+		HighQualityButton = Cast<UButton>(WidgetTree->FindWidget(TEXT("QualityHighButton")));
+	}
 
 	if (LowQualityButton != nullptr)
 	{
@@ -165,11 +190,11 @@ void USettingsPanelWidget::NativeConstruct()
 void USettingsPanelWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-	ApplyFoldScaleVariant(MyGeometry.GetLocalSize());
+	ApplyFoldScaleVariant(GetContentGeometry().GetLocalSize());
 	SyncSliderFillBars();
 
 	// [진단] 뷰포트가 바뀌면 8프레임 뒤(geometry 안정 후) 설정 레이아웃 전수 로그를 1회 남긴다.
-	const FVector2D MetricsViewport = MyGeometry.GetLocalSize();
+	const FVector2D MetricsViewport = GetContentGeometry().GetLocalSize();
 	if (MetricsViewport.X > 1.0f && MetricsViewport.Y > 1.0f
 		&& (FMath::Abs(MetricsViewport.X - mMetricsLastViewport.X) >= 1.0f
 			|| FMath::Abs(MetricsViewport.Y - mMetricsLastViewport.Y) >= 1.0f))
@@ -257,6 +282,7 @@ void USettingsPanelWidget::SyncSliderFillBars()
 		mMasterFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_master")));
 		mBgmFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_bgm")));
 		mSfxFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_sfx")));
+		mUiFillBar = Cast<UProgressBar>(WidgetTree->FindWidget(TEXT("Set_slider_fill_ui")));
 		mFillBarsResolved = true;
 	}
 	// 시안 채움 텍스처(ProgressBar)를 슬라이더 현재 값에 맞춘다 — UMG Slider 스타일엔 채움 슬롯이 없어 오버레이로 구현.
@@ -271,6 +297,10 @@ void USettingsPanelWidget::SyncSliderFillBars()
 	if (mSfxFillBar.IsValid() && SfxVolumeSlider != nullptr)
 	{
 		mSfxFillBar->SetPercent(SfxVolumeSlider->GetValue());
+	}
+	if (mUiFillBar.IsValid() && UiVolumeSlider != nullptr)
+	{
+		mUiFillBar->SetPercent(UiVolumeSlider->GetValue());
 	}
 }
 
@@ -386,6 +416,11 @@ void USettingsPanelWidget::LogSettingsMetrics(const FVector2D& ViewportSize)
 
 void USettingsPanelWidget::NativeDestruct()
 {
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) Saver->OnSaveStatusChanged.RemoveAll(this);
+	CloseCreditsReader();
+	if (mCreditsButton) { mCreditsButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleCreditsClicked); }
+	if (mLicensesButton) { mLicensesButton->OnClicked.RemoveDynamic(this, &USettingsPanelWidget::HandleLicensesClicked); }
 	/* NativeConstruct()에서 연결한 버튼 입력 Delegate를 해제한다. */
 
 	if (BackButton != nullptr)
@@ -479,16 +514,41 @@ void USettingsPanelWidget::NativeDestruct()
  * @brief Back 버튼 입력을 외부 복귀 요청 이벤트로 전달한다.
  *
  * @details
- * 이 함수는 화면을 닫지 않고 OnBackRequested만 Broadcast한다.
- * 타이틀에서는 타이틀 메뉴로 돌아가고, 인게임에서는 상단 메뉴 흐름으로 돌아가는 식으로 수신자마다 복귀 방식이 다르기 때문이다.
+ * 패널 자체는 먼저 닫고 OnBackRequested를 Broadcast한다. 외부 수신자는 타이틀
+ * 메뉴나 전투 HUD 같은 상위 흐름만 복원한다. 이렇게 해야 개발 프리뷰처럼
+ * 외부 수신자가 없는 진입점에서도 Back이 사용자를 열린 설정창에 가두지 않는다.
  */
 void USettingsPanelWidget::HandleBackButtonClicked()
 {
 	// 패널이 닫히는 시점이 옵션 커밋 지점이다. SaveOptionAsync는 존재했지만 호출처가 없어
 	// 옵션(볼륨/언어)이 세션 안에서만 유지되던 문제를 보완한다. 구독자가 패널을 닫기 전에 저장을 건다.
-	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+	UWorld* World = GetWorld();
+	if (ARDGameModeBase* GameModeBase = World != nullptr
+		? World->GetAuthGameMode<ARDGameModeBase>()
+		: nullptr)
 	{
 		GameModeBase->BackFromOptionPanel();
 	}
+	HideAbandonConfirm();
+	CloseUI();
 	OnBackRequested.Broadcast();
+}
+
+bool USettingsPanelWidget::HandleBackNavigation()
+{
+	if (mRunConfirmAction != ERunConfirmAction::None) HideAbandonConfirm();
+	else HandleBackButtonClicked();
+	return true;
+}
+
+void USettingsPanelWidget::ApplyOpenUI()
+{
+	Super::ApplyOpenUI();
+	RefreshSaveStatus();
+}
+
+void USettingsPanelWidget::RefreshSaveStatus()
+{
+	if (auto* Instance = GetGameInstance())
+		if (auto* Saver = Instance->GetSubsystem<USaveGameSubsystem>()) SetStatusText(Saver->GetSaveStatusText());
 }

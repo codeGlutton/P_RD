@@ -20,6 +20,9 @@ struct FRarityRate
 	GENERATED_BODY()
 
 public:
+	bool IsValid() const;
+
+public:
 	float GetRate(ERarityType Type) const;
 	float GetRate(ERarityType Type, const TArray<ERarityType>& IncludedTypes) const;
 	ERarityType GetType(float Rate) const;

@@ -12,6 +12,7 @@
 
 class UStaticObstacleSpawnData;
 class UStaticEnemyUnitSpawnData;
+struct FSRPGCombatRoundEvent;
 
 /**
  * @brief 타일 맵 상에 장애물의 배치 정보 구조체
@@ -45,8 +46,8 @@ public:
 	FTileTransform mTransform;
 
 public:
-	UPROPERTY(Category = "Turn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TurnPriority", ToolTip = "턴 초기 배치 우선 순위"))
-	int32 mTurnPriority = 0;
+	UPROPERTY(Category = "Speed", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultSpeedPoint", ToolTip = "스피트 포인트 기본 오프셋 "))
+	int32 mDefaultSpeedPoint = 0;
 };
 
 /**
@@ -58,6 +59,9 @@ class P_RD_API UStaticCombatRoomSpawnData : public UStaticRoomSpawnData
 	GENERATED_BODY()
 
 public:
+	UStaticCombatRoomSpawnData();
+
+public:
 	void PostInitProperties() override;
 	void PostLoad() override;
 
@@ -67,12 +71,12 @@ public:
 	 * @details
 	 * Primary Asset을 방 타입과 레벨 별로 분류해두었기 때문에, 해당 값은 Primary Asset Type에 영향을 줌
 	 */
-	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "StageLevel"))
+	UPROPERTY(Category = "Stage", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "StageLevel"))
 	EStageLevelType mStageLevel;
 
 public:
-	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform"))
-	FTileTransform mPlayerTransform;
+	UPROPERTY(Category = "Transform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "PlayerTransform", EditFixedSize))
+	TArray<FTileTransform> mPlayerTransforms;
 	
 public:
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EnemyUnitPlacementDatas"))
@@ -80,6 +84,16 @@ public:
 
 	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ObstaclePlacementDatas"))
 	TArray<FObstaclePlacementData> mObstaclePlacementDatas;
+
+public:
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundStartEvents", ExcludeBaseStruct))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundStartEvents;
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundEndEvents", ExcludeBaseStruct))
+	TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mRoundEndEvents;
+
+public:
+	UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "EmptyObstacleData", AssetBundles = "PAD"))
+	TSoftObjectPtr<UStaticObstacleSpawnData> mEmptyObstacleData;
 };
 
 UCLASS()
@@ -90,7 +104,7 @@ class P_RD_API UStaticMonsterRoomSpawnData : public UStaticCombatRoomSpawnData
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetMonsterRoomType(), GetFName());
 	}
 };
 
@@ -102,7 +116,7 @@ class P_RD_API UStaticEliteMonsterRoomSpawnData : public UStaticCombatRoomSpawnD
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetEliteMonsterRoomType(), GetFName());
 	}
 };
 
@@ -114,7 +128,7 @@ class P_RD_API UStaticBossMonsterRoomSpawnData : public UStaticCombatRoomSpawnDa
 public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
-		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetBossMonsterRoomType(mStageLevel), GetFName());
+		return FPrimaryAssetId(RoomPrimaryAssetTypes::GetBossMonsterRoomType(), GetFName());
 	}
 };
 

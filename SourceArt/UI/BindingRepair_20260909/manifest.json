@@ -1,0 +1,718 @@
+{
+  "schema": 1,
+  "svn_base_revision": 433,
+  "images": [
+    {
+      "source": "Artifact_A001_ChaliceOfLife.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A001_ChaliceOfLife",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A002_FeatherOfGale.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A002_FeatherOfGale",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A003_GuardiansShield.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A003_GuardiansShield",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A004_HourglassOfTime.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A004_HourglassOfTime",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A005_SigilOfChain.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A005_SigilOfChain",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A006_SeedOfRenewal.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A006_SeedOfRenewal",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A007_BerserkersMark.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A007_BerserkersMark",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A008_FangOfPrecision.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A008_FangOfPrecision",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A009_ArmorOfIron.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A009_ArmorOfIron",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A010_PathfindersCompass.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A010_PathfindersCompass",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A011_HuntersEye.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A011_HuntersEye",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A012_Bloodlust.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A012_Bloodlust",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A013_SeedOfVitality.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A013_SeedOfVitality",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A014_HammerOfPain.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A014_HammerOfPain",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A015_ThornOfPlague.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A015_ThornOfPlague",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A018_PredatorsHeart.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A018_PredatorsHeart",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A019_SlayersHeart.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A019_SlayersHeart",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A020_WarriorsInsignia.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A020_WarriorsInsignia",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A021_ArcaneCrystal.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A021_ArcaneCrystal",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A022_BladeSigil.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A022_BladeSigil",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A023_HelmOfIntimidation.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A023_HelmOfIntimidation",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A024_IronGauntlet.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A024_IronGauntlet",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A025_BattleCry.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A025_BattleCry",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A026_WarCry.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A026_WarCry",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A027_UnyieldingHeart.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A027_UnyieldingHeart",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A028_SnipersLens.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A028_SnipersLens",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A029_RootedTree.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A029_RootedTree",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A030_BannerOfSlaughter.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A030_BannerOfSlaughter",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A031_MaskOfAgony.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A031_MaskOfAgony",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A032_PlagueBlade.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A032_PlagueBlade",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A033_TalismanOfFellowship.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A033_TalismanOfFellowship",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A034_TabletOfCurse.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A034_TabletOfCurse",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A035_ChainsOfBinding.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A035_ChainsOfBinding",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A036_FortressCore.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A036_FortressCore",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A037_FrozenHeart.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A037_FrozenHeart",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A038_WearyGiant.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A038_WearyGiant",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A039_GiantsHeart.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A039_GiantsHeart",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A040_StoneOfLife.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A040_StoneOfLife",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A041_SmallHourglass.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A041_SmallHourglass",
+      "max_size": 512
+    },
+    {
+      "source": "Artifact_A042_LesserManaStone.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A042_LesserManaStone",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Stump.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Stump",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Bat.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Bat",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_HatchetBird_alpha_v2.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_HatchetBird",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Mimic.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Mimic",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Pumpkin.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Pumpkin",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Demon.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Demon",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Ghoul_v3.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Ghoul",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Reaper.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Reaper",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Skeleton_Mage.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Mage",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Skeleton_Rogue_v3.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Rogue",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Skeleton_Warrior.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Warrior",
+      "max_size": 512
+    },
+    {
+      "source": "Portrait_Zombie.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Zombie",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_Barrel_Explosion.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_Barrel_Explosion",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_BlackHoleTotem.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_BlackHoleTotem",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_BoobyTrap.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_BoobyTrap",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_FirePuddle.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_FirePuddle",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_HealTotem.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_HealTotem",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_PoisonPuddle.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_PoisonPuddle",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_PushPlate.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_PushPlate",
+      "max_size": 512
+    },
+    {
+      "source": "Gimmick_StunTrap.png",
+      "texture": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_StunTrap",
+      "max_size": 512
+    }
+  ],
+  "bindings": [
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A001_ChaliceOfLife",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A001_ChaliceOfLife"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A002_FeatherOfGale",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A002_FeatherOfGale"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A003_GuardiansShield"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A004_HourglassOfTime",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A004_HourglassOfTime"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A005_SigilOfChain",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A005_SigilOfChain"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A006_SeedOfRenewal"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A007_BerserkersMark",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A007_BerserkersMark"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A008_FangOfPrecision",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A008_FangOfPrecision"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A009_ArmorOfIron",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A009_ArmorOfIron"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A010_PathfindersCompass",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A010_PathfindersCompass"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A011_HuntersEye",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A011_HuntersEye"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A012_Bloodlust",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A012_Bloodlust"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A013_SeedOfVitality",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A013_SeedOfVitality"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A014_HammerOfPain",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A014_HammerOfPain"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A015_ThornOfPlague",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A015_ThornOfPlague"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A018_PredatorsHeart"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A019_SlayersHeart",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A019_SlayersHeart"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A020_WarriorsInsignia",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A020_WarriorsInsignia"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A021_ArcaneCrystal",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A021_ArcaneCrystal"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A022_BladeSigil",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A022_BladeSigil"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A023_HelmOfIntimidation",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A023_HelmOfIntimidation"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A024_IronGauntlet",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A024_IronGauntlet"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A025_BattleCry",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A025_BattleCry"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A026_WarCry"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A027_UnyieldingHeart",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A027_UnyieldingHeart"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A028_SnipersLens",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A028_SnipersLens"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A029_RootedTree",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A029_RootedTree"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A030_BannerOfSlaughter",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A030_BannerOfSlaughter"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A031_MaskOfAgony",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A031_MaskOfAgony"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A032_PlagueBlade",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A032_PlagueBlade"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A033_TalismanOfFellowship",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A033_TalismanOfFellowship"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A034_TabletOfCurse",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A034_TabletOfCurse"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A035_ChainsOfBinding",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A035_ChainsOfBinding"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A036_FortressCore",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A036_FortressCore"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A037_FrozenHeart",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A037_FrozenHeart"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A038_WearyGiant",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A038_WearyGiant"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A039_GiantsHeart",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A039_GiantsHeart"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A040_StoneOfLife",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A040_StoneOfLife"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A041_SmallHourglass",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A041_SmallHourglass"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Artifact/DA_Artifact_A042_LesserManaStone",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Artifact_A042_LesserManaStone"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_StumpUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Stump",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Stump"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_BatUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Bat",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Bat"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_HatchetBirdUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_HatchetBird",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_HatchetBird"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_MimicUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Mimic",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Mimic"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_PumpkinUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Pumpkin",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Pumpkin"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_DemonUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Demon",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Demon"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_GhoulUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Ghoul",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Ghoul"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_ReaperUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Reaper",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Reaper"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_Skeleton_MageUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Mage",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Mage"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_Skeleton_RogueUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Rogue",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Rogue"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_Skeleton_WarriorUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Warrior",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Skeleton_Warrior"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_ZombieUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Zombie",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Portrait_Zombie"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage3/DA_NecromancerUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Necromancer_HeadV2",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Necromancer_ActionV3"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/EnemyUnit/Stage2/DA_Slime_ExplosionUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Slime_HeadV2",
+        "mPortrait": "/Game/SVN/OutSideAsset/AICreation/UI/Portraits/KK_Face_Enemy_Slime_HeadV2"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Unit/PlayerUnit/DA_TestKnightPlayerUnit",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/T_MB_HireIcon_Knight"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_Barrel_Explosion",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_Barrel_Explosion"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_BlackHoleTotem",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_BlackHoleTotem"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_BoobyTrap",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_BoobyTrap"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_FirePuddle",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_FirePuddle"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_HealTotem",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_HealTotem"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_PoisonPuddle",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_PoisonPuddle"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_PushPlate",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_PushPlate"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Gimmick/DA_Gimmick_StunTrap",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/BindingRepair_20260909/T_Gimmick_StunTrap"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Attack_Common_NormalSlash",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/Skill_Icon/T_Skill_Icon_Barbarian_Slash"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Spell_Common_Willpower",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/Skill_Icon/T_Skill_Icon_Barbarian_Meditation"
+      }
+    },
+    {
+      "asset": "/Game/BP/DataAsset/Skill/Enemy/Stage3/Zombie/DA_Zombie_Attack_Claw",
+      "textures": {
+        "mIcon": "/Game/SVN/OutSideAsset/AICreation/UI/MonsterSkillIcons/T_MonsterSkill_Claw"
+      }
+    }
+  ]
+}

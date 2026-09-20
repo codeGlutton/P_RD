@@ -1,5 +1,11 @@
 ﻿#include "DataAsset/RarityRate.h"
 
+bool FRarityRate::IsValid() const
+{
+	const float TotalWeight = GetTotalWeight();
+	return TotalWeight > 0.f;
+}
+
 float FRarityRate::GetRate(ERarityType Type) const
 {
 	const float TotalWeight = GetTotalWeight();

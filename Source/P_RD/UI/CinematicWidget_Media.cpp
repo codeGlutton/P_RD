@@ -12,13 +12,15 @@
 #include "FileMediaSource.h"
 #include "MediaPlayer.h"
 #include "MediaTexture.h"
-#include "Misc/FileHelper.h"
+#include "MediaSoundComponent.h"
+#include "Sound/SoundClass.h"
 #include "Setting/GamePlaySettings.h"
 #include "UI/UITextureLoader.h"
 
 namespace
 {
-	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+	const TCHAR* const FallbackIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s.mp4");
+	const TCHAR* const FallbackAcceleratedIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s_3x.mp4");
 
 	FString GetIntroCinematicVideoPath()
 	{
@@ -29,6 +31,17 @@ namespace
 		}
 
 		return FString(FallbackIntroCinematicVideoPath);
+	}
+
+	FString GetAcceleratedIntroCinematicVideoPath()
+	{
+		const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
+		if (GamePlaySettings != nullptr && GamePlaySettings->mIntroCinematicAcceleratedVideoPath.IsEmpty() == false)
+		{
+			return GamePlaySettings->mIntroCinematicAcceleratedVideoPath;
+		}
+
+		return FString(FallbackAcceleratedIntroCinematicVideoPath);
 	}
 }
 
@@ -54,6 +67,17 @@ void UCinematicWidget::EnsureCinematicMediaObjects()
 		mCinematicMediaPlayer->OnMediaOpened.AddUniqueDynamic(this, &UCinematicWidget::HandleCinematicMediaOpened);
 		mCinematicMediaPlayer->OnMediaOpenFailed.AddUniqueDynamic(this, &UCinematicWidget::HandleCinematicMediaOpenFailed);
 		mCinematicMediaPlayer->OnEndReached.AddUniqueDynamic(this, &UCinematicWidget::HandleCinematicMediaEndReached);
+	}
+
+	if (mCinematicAudioEnabled && !mCinematicSound && GetWorld())
+	{
+		mCinematicSound = NewObject<UMediaSoundComponent>(this);
+		mCinematicSound->SoundClass = GetDefault<UGamePlaySettings>()->mSoundClasses[
+			static_cast<int32>(EGameVolumeType::SFX)].LoadSynchronous();
+		mCinematicSound->bIsUISound = true;
+		mCinematicSound->SetMediaPlayer(mCinematicMediaPlayer);
+		mCinematicSound->RegisterComponentWithWorld(GetWorld());
+		mCinematicSound->Start();
 	}
 
 	if (mCinematicMediaTexture == nullptr)
@@ -109,6 +133,7 @@ bool UCinematicWidget::PlayCinematicVideo()
 	mCinematicMediaPlayer->Rewind();                    // 이전 재생 위치를 처음으로 되돌림
 	mCinematicMediaPlayer->Close();                     // 기존 열린 소스를 닫아 깨끗한 상태에서 다시 open
 	mCinematicMediaSource->SetFilePath(VideoPath);      // 열 대상 파일 경로 지정
+	StartDefaultCinematicTimer(mDefaultCinematicDuration + 10.f);
 	return mCinematicMediaPlayer->OpenSource(mCinematicMediaSource); // 비동기 open 시작(성공 발행 여부 반환)
 }
 
@@ -121,49 +146,7 @@ bool UCinematicWidget::PlayCinematicVideo()
  */
 FVector2D UCinematicWidget::ReadCinematicVideoFileDimensions(const FString& VideoPath) const
 {
-	TArray<uint8> Bytes;
-	if (FFileHelper::LoadFileToArray(Bytes, *VideoPath) == false)
-	{
-		return FVector2D::ZeroVector; // 파일 로드 실패 → 해상도 미상(폴백 경로에서 처리)
-	}
-
-	const int32 NumBytes = Bytes.Num();
-	// MP4 박스 헤더의 길이/해상도 필드는 모두 빅엔디안 32비트라 4바이트를 묶어 uint32로 읽는 헬퍼.
-	auto ReadBigEndian32 = [&Bytes](int32 Offset) -> uint32
-	{
-		return (static_cast<uint32>(Bytes[Offset]) << 24)
-			| (static_cast<uint32>(Bytes[Offset + 1]) << 16)
-			| (static_cast<uint32>(Bytes[Offset + 2]) << 8)
-			| static_cast<uint32>(Bytes[Offset + 3]);
-	};
-
-	// 바이트 스트림 전체를 훑어 'tkhd' 4바이트 시그니처를 탐색(인덱스 4부터: 앞 4바이트는 박스 크기 자리).
-	for (int32 Index = 4; Index + 4 <= NumBytes; ++Index)
-	{
-		if (Bytes[Index] != 't' || Bytes[Index + 1] != 'k' || Bytes[Index + 2] != 'h' || Bytes[Index + 3] != 'd')
-		{
-			continue; // 'tkhd' 가 아니면 다음 바이트로
-		}
-
-		// 박스 크기(4바이트)는 타입('tkhd') 바로 앞에 온다. 박스 끝 = (타입앞) + 크기.
-		const int32 BoxStart = Index - 4;
-		const uint32 BoxSize = ReadBigEndian32(BoxStart);
-		const int64 BoxEnd = static_cast<int64>(BoxStart) + static_cast<int64>(BoxSize);
-		if (BoxSize < 32 || BoxEnd > NumBytes)
-		{
-			continue; // 박스 길이가 비정상이거나 버퍼를 넘어가면 잘못된 매치로 보고 스킵
-		}
-
-		// 표시 해상도는 박스 끝 직전 8바이트(width 4 + height 4)에 16.16 고정소수로 저장 → 65536으로 나눠 실수화.
-		const float Width = static_cast<float>(ReadBigEndian32(static_cast<int32>(BoxEnd) - 8)) / 65536.0f;
-		const float Height = static_cast<float>(ReadBigEndian32(static_cast<int32>(BoxEnd) - 4)) / 65536.0f;
-		if (Width > 0.0f && Height > 0.0f)
-		{
-			return FVector2D(Width, Height); // 첫 양수 해상도(=비디오 트랙) 발견 시 즉시 반환
-		}
-	}
-
-	return FVector2D::ZeroVector; // tkhd 미발견(또는 모두 0) → 해상도 미상
+	return RDUITexture::ReadMediaFileDimensions(VideoPath);
 }
 
 /**
@@ -172,6 +155,13 @@ FVector2D UCinematicWidget::ReadCinematicVideoFileDimensions(const FString& Vide
  */
 void UCinematicWidget::StopCinematicMedia()
 {
+	if (mCinematicSound)
+	{
+		mCinematicSound->Stop();
+		mCinematicSound->SetMediaPlayer(nullptr);
+		mCinematicSound->DestroyComponent();
+		mCinematicSound = nullptr;
+	}
 	if (mCinematicMediaPlayer != nullptr)
 	{
 		// Close()가 유발할 수 있는 종료 콜백이 this로 재진입하지 않도록 먼저 모든 바인딩을 해제한다.
@@ -192,6 +182,11 @@ FString UCinematicWidget::ResolveCinematicVideoPath() const
 	return RDUITexture::ResolveContentFilePath(CinematicVideoPath);
 }
 
+FString UCinematicWidget::ResolveAcceleratedCinematicVideoPath() const
+{
+	return RDUITexture::ResolveContentFilePath(GetAcceleratedIntroCinematicVideoPath());
+}
+
 /**
  * @brief 미디어 소스 open 성공 콜백. 실제 재생을 시작하고 종료 폴백 타이머를 건다.
  * @param OpenedUrl 열린 미디어의 URL(엔진 델리게이트 시그니처상 전달되나 본 핸들러에서는 사용하지 않음)
@@ -202,6 +197,10 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 {
 	if (mCinematicMediaPlayer != nullptr)
 	{
+		if (mCinematicAudioEnabled)
+			UE_LOG(LogRD, Display, TEXT("RD_BOSS_ENTRANCE media opened duration=%.2f audioTracks=%d audioOutput=%d"),
+				mCinematicMediaPlayer->GetDuration().GetTotalSeconds(),
+				mCinematicMediaPlayer->GetNumTracks(EMediaPlayerTrack::Audio), mCinematicSound && mCinematicSound->IsActive());
 		mCinematicMediaPlayer->Play(); // open 완료 시점에 비로소 재생 시작
 
 		// 영상 실제 해상도를 한 번 확보해 cover 비율 기준으로 쓴다.
@@ -215,6 +214,25 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 			mCinematicVideoBrush.ImageSize = mCinematicVideoNativeSize;                  // 브러시 이미지 크기를 실해상도에 맞춰 비율 보존
 		}
 
+		if (mUsingAcceleratedCinematicSource)
+		{
+			if (mAcceleratedCinematicStartTime > FTimespan::Zero() && mCinematicMediaPlayer->SupportsSeeking())
+			{
+				mCinematicMediaPlayer->Seek(mAcceleratedCinematicStartTime);
+			}
+			const float RemainingSeconds = StaticCast<float>(FMath::Max(
+				0.0,
+				(mCinematicMediaPlayer->GetDuration() - mAcceleratedCinematicStartTime).GetTotalSeconds()));
+			StartDefaultCinematicTimer(RemainingSeconds + 1.0f);
+			UE_LOG(LogRD, Display, TEXT("Intro cinematic switched to pre-encoded 3.00x source at %.2fs"), mAcceleratedCinematicStartTime.GetTotalSeconds());
+			return;
+		}
+
+		if (mRequestedPlaybackRate > 1.0f && ApplyRequestedCinematicPlaybackRate())
+		{
+			return;
+		}
+
 		const float MediaDurationSeconds = StaticCast<float>(mCinematicMediaPlayer->GetDuration().GetTotalSeconds());
 		if (MediaDurationSeconds > 0.0f)
 		{
@@ -225,6 +243,54 @@ void UCinematicWidget::HandleCinematicMediaOpened(FString OpenedUrl)
 			StartDefaultCinematicTimer(mDefaultCinematicDuration); // 길이 미상이면 기본 재생 시간으로 폴백 타이머 설정
 		}
 	}
+}
+
+bool UCinematicWidget::ApplyRequestedCinematicPlaybackRate()
+{
+	if (mCinematicMediaPlayer == nullptr || mCinematicMediaPlayer->IsReady() == false)
+	{
+		return false;
+	}
+
+	const float PlaybackRate = FMath::Max(mRequestedPlaybackRate, KINDA_SMALL_NUMBER);
+	if (mCinematicMediaPlayer->SetRate(PlaybackRate) == false)
+	{
+		const FString AcceleratedVideoPath = ResolveAcceleratedCinematicVideoPath();
+		if (FMath::IsNearlyEqual(PlaybackRate, 3.0f) == false
+			|| FPaths::FileExists(AcceleratedVideoPath) == false
+			|| mCinematicMediaSource == nullptr)
+		{
+			UE_LOG(LogRD, Warning, TEXT("Intro cinematic playback rate %.2fx is not supported by the active media player"), PlaybackRate);
+			return false;
+		}
+
+		mAcceleratedCinematicStartTime = FTimespan::FromSeconds(mCinematicMediaPlayer->GetTime().GetTotalSeconds() / 3.0);
+		mUsingAcceleratedCinematicSource = true;
+		if (mCinematicMediaTexture != nullptr)
+		{
+			mCinematicMediaTexture->AutoClear = false;
+		}
+		mCinematicMediaPlayer->Close();
+		mCinematicMediaSource->SetFilePath(AcceleratedVideoPath);
+		if (mCinematicMediaPlayer->OpenSource(mCinematicMediaSource) == false)
+		{
+			mUsingAcceleratedCinematicSource = false;
+			UE_LOG(LogRD, Warning, TEXT("Intro cinematic failed to open pre-encoded 3.00x source: %s"), *AcceleratedVideoPath);
+			return false;
+		}
+		UE_LOG(LogRD, Display, TEXT("Intro cinematic opening pre-encoded 3.00x source: %s"), *AcceleratedVideoPath);
+		return true;
+	}
+
+	const double RemainingSeconds = FMath::Max(
+		0.0,
+		(mCinematicMediaPlayer->GetDuration() - mCinematicMediaPlayer->GetTime()).GetTotalSeconds());
+	if (RemainingSeconds > 0.0)
+	{
+		StartDefaultCinematicTimer(StaticCast<float>(RemainingSeconds / PlaybackRate) + 1.0f);
+	}
+	UE_LOG(LogRD, Display, TEXT("Intro cinematic playback accelerated to %.2fx; remaining media time %.2fs"), PlaybackRate, RemainingSeconds);
+	return true;
 }
 
 /**

@@ -1,0 +1,209 @@
+#include "UI/Combat/SkillDetailUIBuilder.h"
+
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/RoomViewTypes.h"
+#include "Frontend/CharacterSelectTypes.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
+#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_GetActionPoint.h"
+
+/* CombatGameMode가 쓰던 변환과 같은 표. 여기가 유일한 기준이다. */
+
+ECombatSkillSelectShapeUI SkillDetailUIBuilder::ToSelectShape(const EAimPattern Pattern)
+{
+	switch (Pattern)
+	{
+	case EAimPattern::Single:
+		return ECombatSkillSelectShapeUI::Single;
+	case EAimPattern::Cross:
+		return ECombatSkillSelectShapeUI::Cross;
+	case EAimPattern::Star:
+		return ECombatSkillSelectShapeUI::Diagonal;
+	case EAimPattern::Square:
+		return ECombatSkillSelectShapeUI::Square;
+	default:
+		return ECombatSkillSelectShapeUI::None;
+	}
+}
+
+ECombatSkillHitShapeUI SkillDetailUIBuilder::ToHitShape(const EEffectPattern Pattern)
+{
+	switch (Pattern)
+	{
+	case EEffectPattern::Single:
+		return ECombatSkillHitShapeUI::Single;
+	case EEffectPattern::Cross:
+		return ECombatSkillHitShapeUI::Cross;
+	// 게임플레이(TileMapModel::GetEffectTiles)는 Star를 직교+대각 8방향으로
+	// 계산한다. Cross로 뭉개면 상세판이 대각 줄을 숨겨 실제와 어긋난다.
+	case EEffectPattern::Star:
+		return ECombatSkillHitShapeUI::Star;
+	case EEffectPattern::Square:
+		return ECombatSkillHitShapeUI::Circle;
+	default:
+		return ECombatSkillHitShapeUI::None;
+	}
+}
+
+namespace
+{
+	/** @brief ETargetPattern → UI 타겟 패턴. LineToTarget만 구분하면 된다. */
+	ECombatSkillTargetPatternUI ToTargetPattern(const ETargetPattern Pattern)
+	{
+		return Pattern == ETargetPattern::LineToTarget
+			? ECombatSkillTargetPatternUI::LineToTarget
+			: ECombatSkillTargetPatternUI::Default;
+	}
+
+	/* CombatGameMode 의 GetRarityColor 와 같은 표. 아티팩트 상세도 같은 색을 쓴다. */
+	FLinearColor ToRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.55f, 0.72f, 1.0f, 1.0f);
+		case ERarityType::Epic:
+			return FLinearColor(0.82f, 0.58f, 1.0f, 1.0f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.86f, 0.98f, 0.94f, 1.0f);
+		}
+	}
+}
+
+void SkillDetailUIBuilder::FillFromSkillData(const UStaticSkillData* SkillData,
+	FSkillDetailUI& OutDetail)
+{
+	if (SkillData == nullptr)
+	{
+		return;
+	}
+
+	OutDetail.mName = SkillData->mName;
+	// 0823 확정: 구워 둔 설명은 번역 키가 없어(생성 스냅샷) 언어를 안 탄다.
+	// 같은 내용을 런타임에 다시 생성해 현재 언어의 LOCTEXT 로 조립한다.
+	// 레이어가 없어 생성이 비면 구워 둔 설명(수기 작성분)을 그대로 쓴다.
+	{
+		const FText Generated = SkillData->MakeDescription();
+		OutDetail.mDescription = Generated.IsEmpty()
+			? SkillData->mDescription : Generated;
+	}
+	OutDetail.mIcon = SkillData->mIcon.LoadSynchronous();
+	if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(SkillData))
+	{
+		OutDetail.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);
+	}
+	OutDetail.mCooldownTurns = FMath::Max(SkillData->mCooldownDuration, 0);
+	for (const FSkillPhaseLayer& MotionLayer : SkillData->mSkillPhaseLayers)
+	{
+		for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer :
+			MotionLayer.mSkillEffectLayers)
+		{
+			if (const FSkillEffectLayer_Attack* Attack =
+				EffectLayer.GetPtr<FSkillEffectLayer_Attack>())
+			{
+				OutDetail.mDamageMin += Attack->mMinDamage;
+				OutDetail.mDamageMax += Attack->mMaxDamage;
+			}
+			if (const FSkillEffectLayer_GetActionPoint* Gain =
+				EffectLayer.GetPtr<FSkillEffectLayer_GetActionPoint>())
+			{
+				OutDetail.mActionPointGain += Gain->mActionPointGain;
+			}
+		}
+	}
+	OutDetail.mCriticalDamage = FMath::RoundToInt(OutDetail.mDamageMax * 1.5f);
+	OutDetail.mTargeting.mSelectShape = ToSelectShape(SkillData->mAimPattern);
+	OutDetail.mTargeting.mSelectRange = StaticCast<float>(SkillData->mAimRange);
+	OutDetail.mTargeting.mHitShape = ToHitShape(SkillData->mEffectPattern);
+	OutDetail.mTargeting.mHitRange = StaticCast<float>(SkillData->mEffectArea);
+	OutDetail.mTargeting.mAimBlockerMask = SkillData->mAimBlockerMask;
+	OutDetail.mTargeting.mEffectBlockerMask = SkillData->mEffectBlockerMask;
+	OutDetail.mTargeting.mTargetPattern = ToTargetPattern(SkillData->mTargetPattern);
+}
+
+void SkillDetailUIBuilder::FillFromFrontendOption(const FFrontendSkillOption& Option,
+	FSkillDetailUI& OutDetail)
+{
+	OutDetail.mName = Option.mName;
+	OutDetail.mDescription = Option.mDescription;
+	OutDetail.mIcon = Option.mIcon.LoadSynchronous();
+	OutDetail.mActionPointCost = Option.mActionPointCost;
+	OutDetail.mActionPointGain = Option.mActionPointGain;
+	OutDetail.mCooldownTurns = Option.mCooldownTurns;
+	OutDetail.mDamageMin = Option.mDamageMin;
+	OutDetail.mDamageMax = Option.mDamageMax;
+	OutDetail.mCriticalDamage = Option.mCriticalDamage;
+	OutDetail.mTargeting.mSelectShape = ToSelectShape(Option.mAimPattern);
+	OutDetail.mTargeting.mSelectRange = StaticCast<float>(Option.mAimRange);
+	OutDetail.mTargeting.mHitShape = ToHitShape(Option.mEffectPattern);
+	OutDetail.mTargeting.mHitRange = StaticCast<float>(Option.mEffectArea);
+	OutDetail.mTargeting.mAimBlockerMask = Option.mAimBlockerMask;
+	OutDetail.mTargeting.mEffectBlockerMask = Option.mEffectBlockerMask;
+	OutDetail.mTargeting.mTargetPattern = ToTargetPattern(Option.mTargetPattern);
+}
+
+bool SkillDetailUIBuilder::FillFallbackFromPartyRosterSkillView(
+	const FPartyRosterSkillView& Skill, FSkillDetailUI& OutDetail)
+{
+	if (Skill.mSlotIndex == INDEX_NONE)
+	{
+		return false;
+	}
+
+	OutDetail.mSkillIndex = Skill.mSlotIndex;
+	OutDetail.mName = Skill.mName;
+	OutDetail.mIcon = Skill.mIcon;
+	OutDetail.mActionPointCost = FMath::Max(Skill.mActionPointCost, 0);
+	OutDetail.mDescription = NSLOCTEXT("RunOptionsRailWidget", "SkillDetailFallback",
+		"보유 용병이 장착한 스킬입니다.");
+	return true;
+}
+
+bool SkillDetailUIBuilder::FillFallbackFromCombatSkillView(
+	const FSkillUI& Skill, FSkillDetailUI& OutDetail)
+{
+	if (OutDetail.mSkillIndex == INDEX_NONE
+		|| Skill.mSkillIndex != OutDetail.mSkillIndex)
+	{
+		return false;
+	}
+
+	OutDetail.mName = Skill.mName;
+	OutDetail.mIcon = Skill.mIcon;
+	OutDetail.mActionPointCost = Skill.mActionPointCost;
+	OutDetail.mDescription = NSLOCTEXT("CombatLayoutHUD",
+		"SkillDetailFallbackDescription",
+		"현재 전투에서 사용할 수 있는 스킬입니다.");
+	return true;
+}
+
+void SkillDetailUIBuilder::FillFromArtifactData(const UStaticArtifactData* ArtifactData,
+	FCombatArtifactUI& OutDetail)
+{
+	if (ArtifactData == nullptr)
+	{
+		return;
+	}
+
+	// 이름 미설정 DA(placeholder)는 에셋 이름으로 폴백한다 -- 상점 목록과 같은 규칙.
+	OutDetail.mName = ArtifactData->mName.IsEmpty()
+		? FText::FromName(ArtifactData->GetFName()) : ArtifactData->mName;
+	OutDetail.mIcon = ArtifactData->mIcon.LoadSynchronous();
+	OutDetail.mPrice = ArtifactData->mPrice;
+	OutDetail.mRarityColor = ToRarityColor(ArtifactData->mRarityType);
+	OutDetail.mRarityName = StaticEnum<ERarityType>() != nullptr
+		? StaticEnum<ERarityType>()->GetDisplayNameTextByValue(
+			StaticCast<int64>(ArtifactData->mRarityType))
+		: FText::GetEmpty();
+	OutDetail.mRarityLevel = StaticCast<int32>(ArtifactData->mRarityType);
+
+	OutDetail.mEffectDescriptions.Reset();
+	const FText Description = ArtifactData->GetDisplayDescription();
+	if (!Description.IsEmpty())
+	{
+		OutDetail.mEffectDescriptions.Add(Description);
+	}
+}

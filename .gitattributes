@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Preserve redistributed license bytes, including the original line endings and spaces.
+Content/Legal/Licenses/*.txt -text whitespace=-blank-at-eol

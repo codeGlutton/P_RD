@@ -10,6 +10,9 @@
 #include "RDMinimal.h"
 #include "SRPGFrameworkType.generated.h"
 
+class USRPGCombatModel;
+struct FPresentationBarrier;
+
 /**
  * @brief 타일 내에서 바라보는 방향
  */
@@ -23,16 +26,42 @@ enum class ETileActorDirection : uint8
     Count UMETA(Hidden)
 };
 
+/**
+ * @brief 타일 맵 기준 좌표계에서 로컬 맵 좌표계로 방향 전환
+ * @param TileMapDirection 변환하고자 하는 타일 맵 기준 좌표계 방향
+ * @param FacingTileMapDirection 로컬 좌표계의 타일 맵 기준 좌표계 방향
+ * @return 변환된 로컬 좌표계 기준 방향
+ */
 inline ETileActorDirection TileMapToLocalDirection(ETileActorDirection TileMapDirection, ETileActorDirection FacingTileMapDirection)
 {
-    const int32 LocalDir = (static_cast<int32>(TileMapDirection) - static_cast<int32>(FacingTileMapDirection) + 4) % 4;
-    return static_cast<ETileActorDirection>(LocalDir);
+    const int32 LocalDir = (StaticCast<int32>(TileMapDirection) - StaticCast<int32>(FacingTileMapDirection) + 4) % 4;
+    return StaticCast<ETileActorDirection>(LocalDir);
 }
 
+/**
+ * @brief 로컬 맵 좌표계에서 타일 맵 기준 좌표계로 방향 전환
+ * @param LocalDirection 변환하고자 하는 로컬 좌표계 기준 방향
+ * @param FacingTileMapDirection 로컬 좌표계의 타일 맵 기준 좌표계 방향
+ * @return 변환된 타일 맵 좌표계 기준 방향
+ */
 inline ETileActorDirection LocalToTileMapDirection(ETileActorDirection LocalDirection, ETileActorDirection FacingTileMapDirection)
 {
-    const int32 TileMapDir = (static_cast<int32>(LocalDirection) + static_cast<int32>(FacingTileMapDirection)) % 4;
-    return static_cast<ETileActorDirection>(TileMapDir);
+    const int32 TileMapDir = (StaticCast<int32>(LocalDirection) + StaticCast<int32>(FacingTileMapDirection)) % 4;
+    return StaticCast<ETileActorDirection>(TileMapDir);
+}
+
+/**
+ * @brief 로컬 맵 좌표계에서 다른 로컬 맵 좌표계로 방향 전환
+ * @param SourceLocalDirection 소스 로컬 좌표계에서의 방향
+ * @param SourceTileMapForward 소스의 타일 맵 좌표계 기준 방향
+ * @param DestTileMapForward 목표의 타일 맵 좌표계 기준 방향
+ * @return 목표 로컬 좌표계에서의 방향
+ */
+inline ETileActorDirection LocalToOtherLocalDirection(ETileActorDirection SourceLocalDirection, ETileActorDirection SourceTileMapForward, ETileActorDirection DestTileMapForward)
+{
+    const int32 Delta = StaticCast<int32>(DestTileMapForward) - StaticCast<int32>(SourceTileMapForward);
+
+    return StaticCast<ETileActorDirection>((StaticCast<int32>(SourceLocalDirection) + Delta + 4) % 4);
 }
 
 /**
@@ -58,24 +87,86 @@ public:
         return (*this == Other) == false;
     }
 
+    FTileIndex operator+(const FTileIndex& Other) const
+    {
+        return FTileIndex(mX + Other.mX, mY + Other.mY);
+    }
+
+    FTileIndex operator-(const FTileIndex& Other) const
+    {
+        return FTileIndex(mX - Other.mX, mY - Other.mY);
+    }
+
     friend uint32 GetTypeHash(const FTileIndex& Tile)
     {
         return HashCombine(GetTypeHash(Tile.mX), GetTypeHash(Tile.mY));
     }
 
     // @brief 가로(X) 방향 인덱스
-    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
+    UPROPERTY(Category = "TileIndex", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;
     // @brief 세로(Y) 방향 인덱스
-    UPROPERTY(Category = "TileIndex", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
+    UPROPERTY(Category = "TileIndex", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Y"))
     int32 mY = 0;
 
     // @brief 유효하지 않은(미배치) 타일을 나타내는 초기/해제값
     static const FTileIndex Invalid;
+
+    // @brief 영벡터 (방향 없음)
+    static const FTileIndex Zero;
 };
 
 // @brief 무효 좌표 정의: (-1, -1)
 inline const FTileIndex FTileIndex::Invalid = FTileIndex(-1, -1);
+
+// @brief 영벡터 정의: (0, 0)
+inline const FTileIndex FTileIndex::Zero = FTileIndex(0, 0);
+
+/**
+ * @brief 타일 맵 좌표계 방향을 고려하여 로컬 좌표계 타일 오프셋을 타일 맵 좌표계 타일 오프셋으로 변환
+ * @param LocalIndex 로컬 좌표계의 상대 타일 인덱스 (X: 전방, Y: 우측)
+ * @param FacingTileMapDirection 기준이 되는 타일 맵 좌표계 방향
+ * @return 타일 맵 좌표계 타일 인덱스 Offset
+ */
+inline FTileIndex LocalToTileMapIndexOffset(const FTileIndex& LocalIndex, ETileActorDirection FacingTileMapDirection)
+{
+    switch (FacingTileMapDirection)
+    {
+    case ETileActorDirection::Forward:
+        return FTileIndex(LocalIndex.mX, LocalIndex.mY);
+    case ETileActorDirection::Right:
+        return FTileIndex(-LocalIndex.mY, LocalIndex.mX);
+    case ETileActorDirection::Backward:
+        return FTileIndex(-LocalIndex.mX, -LocalIndex.mY);
+    case ETileActorDirection::Left:
+        return FTileIndex(LocalIndex.mY, -LocalIndex.mX);
+    default:
+        return LocalIndex;
+    }
+}
+
+/**
+ * @brief 타일 맵 좌표계 방향을 고려하여 타일 맵 좌표계 타일 오프셋을 로컬 좌표계 타일 오프셋으로 변환
+ * @param TileMapIndex 타일 맵 좌표계의 상대 타일 인덱스 (X: 전방, Y: 우측)
+ * @param FacingTileMapDirection 기준이 되는 타일 맵 좌표계 방향
+ * @return 로컬 좌표계 타일 인덱스 Offset
+ */
+inline FTileIndex TileMapToLocalIndexOffset(const FTileIndex& TileMapIndex, ETileActorDirection FacingTileMapDirection)
+{
+    switch (FacingTileMapDirection)
+    {
+    case ETileActorDirection::Forward:
+        return FTileIndex(TileMapIndex.mX, TileMapIndex.mY);
+    case ETileActorDirection::Right:
+        return FTileIndex(TileMapIndex.mY, -TileMapIndex.mX);
+    case ETileActorDirection::Backward:
+        return FTileIndex(-TileMapIndex.mX, -TileMapIndex.mY);
+    case ETileActorDirection::Left:
+        return FTileIndex(-TileMapIndex.mY, TileMapIndex.mX);
+    default:
+        return TileMapIndex;
+    }
+}
 
 /**
  * @brief 타일 맵 상 위치
@@ -90,11 +181,23 @@ public:
     FTileTransform(const FTileIndex& InIndex, ETileActorDirection InDirection = ETileActorDirection::Forward)
         : mIndex(InIndex), mDirection(InDirection) {}
 
+public:
+    bool operator==(const FTileTransform& Other) const
+    {
+        return mDirection == Other.mDirection && mIndex == Other.mIndex;
+    }
+
+    bool operator!=(const FTileIndex& Other) const
+    {
+        return (*this == Other) == false;
+    }
+
+public:
     // @brief 타일 인덱스 좌표
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
+    UPROPERTY(Category = "TileTransform", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
     FTileIndex mIndex;
     // @brief 액터가 바라보는 방향
-    UPROPERTY(Category = "TileTransform", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
+    UPROPERTY(Category = "TileTransform", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Direction"))
     ETileActorDirection mDirection = ETileActorDirection::Forward;
 
     // @brief 유효하지 않은(미배치) 트랜스폼을 나타내는 초기/해제값
@@ -103,6 +206,59 @@ public:
 
 // @brief 무효 트랜스폼 정의: 인덱스가 무효
 inline const FTileTransform FTileTransform::Invalid = FTileTransform(FTileIndex::Invalid);
+
+/**
+ * @brief 타일 맵 좌표계 TileTransform을 바탕으로 로컬 좌표계 TileTransform을 타일 맵 좌표계 TileTransform으로 변환
+ * @param LocalTransform 로컬 좌표계 TileTransform
+ * @param FacingTileMapTransfrom 기준이 되는 타일 맵 좌표계 TileTransform
+ * @return 타일 맵 좌표계 TileTransform
+ */
+inline FTileTransform LocalToTileMapTransform(const FTileTransform& LocalTransform, const FTileTransform& FacingTileMapTransfrom)
+{
+    const FTileIndex WorldOffset = LocalToTileMapIndexOffset(LocalTransform.mIndex, FacingTileMapTransfrom.mDirection);
+    const FTileIndex WorldIndex = FacingTileMapTransfrom.mIndex + WorldOffset;
+    const ETileActorDirection WorldDirection = LocalToTileMapDirection(LocalTransform.mDirection, FacingTileMapTransfrom.mDirection);
+
+    return FTileTransform(WorldIndex, WorldDirection);
+}
+
+/**
+ * @brief 타일 맵 좌표계 TileTransform을 바탕으로 타일 맵 좌표계 TileTransform을 로컬 좌표계 TileTransform으로 변환
+ * @param WorldTransform 타일 맵 좌표계 TileTransform
+ * @param FacingTileMapTransfrom 기준이 되는 타일 맵 좌표계 TileTransform
+ * @return 로컬 좌표계 TileTransform
+ */
+inline FTileTransform TileMapToLocalTransform(const FTileTransform& WorldTransform, const FTileTransform& FacingTileMapTransfrom)
+{
+    const FTileIndex WorldOffset = WorldTransform.mIndex - FacingTileMapTransfrom.mIndex;
+    const FTileIndex LocalIndex = TileMapToLocalIndexOffset(WorldOffset, FacingTileMapTransfrom.mDirection);
+    const ETileActorDirection LocalDirection = TileMapToLocalDirection(WorldTransform.mDirection, FacingTileMapTransfrom.mDirection);
+
+    return FTileTransform(LocalIndex, LocalDirection);
+}
+
+/**
+ * @brief 방 클리어 데이터
+ */
+USTRUCT(BlueprintType)
+struct FRoomClearData
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "IsCleared"))
+    bool mIsCleared = false;
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerTileTransforms"))
+    TArray<FTileTransform> mPlayerTileTransforms;
+
+public:
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "RoundCount"))
+    int32 mRoundCount = 0;
+    UPROPERTY(Category = Play, SaveGame, VisibleAnywhere, meta = (DisplayName = "TurnCount"))
+    int32 mTurnCount = 0;
+};
 
 /**
  * @brief 조준 범위 패턴
@@ -126,7 +282,18 @@ enum class EEffectPattern : uint8
     Cross       UMETA(ToolTip = "타겟에서 4방향 직선"),
     Star        UMETA(ToolTip = "타겟에서 8방향 직선"),
     Square      UMETA(ToolTip = "타겟 중심 사각형 범위 전체"),
-    Beam        UMETA(ToolTip = "시전자에서 타겟 방향으로 뻗는 직선"),
+};
+
+/**
+ * @brief 타겟 범위 패턴
+ * @details
+ * 시전자와 조준 타일을 입력으로 영향 범위의 시점 타일 목록을 결정
+ */
+UENUM(BlueprintType)
+enum class ETargetPattern : uint8
+{
+    TargetOnly      UMETA(ToolTip = "조준 타일 한 칸"),
+    LineToTarget    UMETA(ToolTip = "시전자에서 조준 타일까지의 경로 전체, 시전자 타일 제외"),
 };
 
 /**
@@ -275,11 +442,7 @@ enum class ESRPGCommandType : uint8
 
     WorldTrace          UMETA(ToolTip = "월드 공간 선택"),
 
-    DicePrepare         UMETA(ToolTip = "굴릴 주사위 준비"),
-    DiceRoll            UMETA(ToolTip = "주사위 굴리기"),
-
     SkillSelect         UMETA(ToolTip = "사용 스킬 결정"),
-    DiceSelect          UMETA(ToolTip = "사용 주사위 결정"),
     SkillCast           UMETA(ToolTip = "스킬 사용"),
 
     MoveSelect          UMETA(ToolTip = "이동 시작"),
@@ -314,4 +477,194 @@ inline ESRPGCommandResult CombineSRPGCommandResult(ESRPGCommandResult Lhs, ESRPG
     }
     return Rhs;
 }
+
+UENUM(BlueprintType)
+enum class ESRPGCombatRoundEventResult : uint8
+{
+    Ongoing,
+    End
+};
+
+/**
+ * @brief 특정 라운드 호출 이벤트
+ */
+USTRUCT(BlueprintType)
+struct FSRPGCombatRoundEvent
+{
+    GENERATED_BODY()
+
+    friend struct FSRPGCompositeCombatRoundEvent;
+
+public:
+    virtual ~FSRPGCombatRoundEvent() = default;
+
+public:
+    void SetEventName(const FName& NewName);
+    FName GetEventName() const;
+    int32 GetLayerIndex() const;
+
+public:
+    bool IsTriggered() const;
+    bool IsActivated() const;
+    void TryToTrigger(TSharedRef<FPresentationBarrier> RoundBarrier, USRPGCombatModel* Model);
+
+private:
+    /**
+     * @brief 트리거 시기를 결정하는 함수
+     * @param Model 전투 모델 객체
+     * @return 트리거 여부
+     */
+    virtual bool CanTrigger_Internal(USRPGCombatModel* Model) const
+    {
+        return true;
+    }
+
+    /**
+     * @brief 트리거 이전에 계속해서 라운드마다 호출되는 함수로, 원하는 타이밍에 경고 표기 가능
+     * @param Model 전투 모델 객체
+     */
+    virtual void Warning_Internal(USRPGCombatModel* Model) const 
+    {
+    }
+
+    /**
+     * @brief 초기 트리거 실행 전에 실행되는 함수
+     * @param Model 전투 모델 객체 
+     */
+    virtual void PreTrigger_Internal(USRPGCombatModel* Model)
+    {
+    }
+
+    /**
+     * @brief 트리거 라운드에 도달 이후부터, 호출되는 함수
+     * @param Model 전투 모델 객체
+     * @return 종료 여부
+     */
+    virtual ESRPGCombatRoundEventResult Trigger_Internal(TSharedPtr<FPresentationBarrier> RoundBarrier, USRPGCombatModel* Model)
+    { 
+        return ESRPGCombatRoundEventResult::End; 
+    }
+
+    /**
+    * @brief 트리거 종료 후 루프되는 이벤트에서 호출되는 함수
+    * @param Model 전투 모델 객체
+    */
+    virtual void Reset_Internal(USRPGCombatModel* Model)
+    {
+    }
+
+protected:
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EventName"))
+    FName mEventName;
+
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "LayerIndex"))
+    int32 mLayerIndex = 0;
+
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsLoop"))
+    bool mIsLoop = false;
+
+private:
+    UPROPERTY()
+    bool mIsTriggered = false;
+    UPROPERTY()
+    bool mIsActivated = true;
+};
+
+/**
+ * @brief 라운드 이벤트를 LayerIndex 순서로 관리하며, Lock/Unlock 기반 지연 추가/삭제를 지원하는 컨테이너
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FSRPGCombatRoundEventContainer
+{
+    GENERATED_BODY()
+
+    /* RAII ScopedLock */
+public:
+    struct FScopedLock
+    {
+    public:
+        explicit FScopedLock(FSRPGCombatRoundEventContainer& InContainer) : mContainer(InContainer)
+        {
+            mContainer.Lock();
+        }
+
+        ~FScopedLock()
+        {
+            mContainer.Unlock();
+        }
+
+        FScopedLock(const FScopedLock&) = delete;
+        FScopedLock& operator=(const FScopedLock&) = delete;
+
+    private:
+        FSRPGCombatRoundEventContainer& mContainer;
+    };
+
+public:
+    FSRPGCombatRoundEventContainer() = default;
+
+public:
+    TInstancedStruct<FSRPGCombatRoundEvent>& operator[](int32 Index);
+    const TInstancedStruct<FSRPGCombatRoundEvent>& operator[](int32 Index) const;
+
+public:
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& GetEvents();
+    const TArray<TInstancedStruct<FSRPGCombatRoundEvent>>& GetEvents() const;
+
+    /* 기본 TArray 문법 */
+public:
+    int32 Num() const;
+    bool IsEmpty() const;
+    bool IsValidIndex(int32 Index) const;
+    bool RemoveAt(int32 Index);
+    void Empty();
+
+    /* range-based for loop (for-each) 지원 */
+public:
+    auto begin()
+    { 
+        return mEvents.begin(); 
+    }
+    auto end() 
+    { 
+        return mEvents.end(); 
+    }
+    auto begin() const 
+    { 
+        return mEvents.begin(); 
+    }
+    auto end() const 
+    { 
+        return mEvents.end();
+    }
+
+    /* 이벤트 제어 (추가/검색/삭제) */
+public:
+    void AddEvent(TInstancedStruct<FSRPGCombatRoundEvent> Event);
+
+    FSRPGCombatRoundEvent* FindEvent(const FName& EventName);
+    const FSRPGCombatRoundEvent* FindEvent(const FName& EventName) const;
+
+    bool RemoveEvent(const FName& EventName);
+
+public:
+    /* Lock / Unlock 메커니즘 */
+    void Lock();
+    void Unlock();
+    bool IsLocked() const;
+    int32 GetLockCount() const;
+
+private:
+    void FlushPendingOperations();
+
+protected:
+    UPROPERTY(Category = "Event", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Events"))
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mEvents;
+
+private:
+    int32 mLockCount = 0;
+    TArray<TInstancedStruct<FSRPGCombatRoundEvent>> mReservedAdds;
+    TArray<int32> mReservedRemoveIndices;
+};
+
 

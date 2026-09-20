@@ -1,5 +1,7 @@
 ﻿#include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+#include "Engine/GameInstance.h"
 
 DEFINE_LOG_CATEGORY(LogGameProfile)
 
@@ -11,16 +13,17 @@ void UGameProfileSubsystem::MakeUser(const FText& Name) const
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 유저 데이터 생성"));
 }
 
-void UGameProfileSubsystem::StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const
+void UGameProfileSubsystem::StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty) const
 {
 	checkf(GetUserMutableData()->IsActive() == true, TEXT("유저 미존재 상태에서 새로운 런 생성 불가"));
 
-	GetRunMutableData()->StartRun(PlayerUnitId, Difficulty);
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->ResetRunCheckpoint();
+	GetRunMutableData()->StartRun(PlayerUnitIds, Difficulty);
 
 	UE_LOG(LogGameProfile, Log, TEXT("새로운 런 데이터 생성"));
 }
 
-void UGameProfileSubsystem::EndRun() const
+bool UGameProfileSubsystem::EndRun() const
 {
 	UUserPersistData* UserMutableData = GetUserMutableData();
 	URunPersistData* RunMutableData = GetRunMutableData();
@@ -28,10 +31,31 @@ void UGameProfileSubsystem::EndRun() const
 	checkf(UserMutableData->IsActive() == true, TEXT("유저 미존재 상태에서 런 종료 불가"));
 	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 런 종료 불가"));
 
-	UserMutableData->UpdateLog(RunMutableData->GetPlayerUnitId(), RunMutableData->GetRunLog());
+	TArray<uint8> PreviousRun, PreviousUser;
+	if (!RDCheckpoint::Serialize(RunMutableData, PreviousRun)
+		|| !RDCheckpoint::Serialize(UserMutableData, PreviousUser)) return false;
+	const FRunLog CompletedLog = RunMutableData->GetRunLog();
 	RunMutableData->ClearRun();
+	RunMutableData->QueueCompletedRunLog(CompletedLog);
+	USaveGameSubsystem* Saver = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	if (!Saver->SaveEndedRun(PreviousRun))
+	{
+		RDCheckpoint::Deserialize(PreviousRun, RunMutableData);
+		RDCheckpoint::Deserialize(PreviousUser, UserMutableData);
+		return false;
+	}
+	Saver->CommitPendingRunLogs();
 
 	UE_LOG(LogGameProfile, Log, TEXT("런 데이터 기록 후 삭제"));
+	return true;
+}
+
+void UGameProfileSubsystem::SetRoomClearData(const FRoomClearData& ClearData) const
+{
+	URunPersistData* RunMutableData = GetRunMutableData();
+	checkf(RunMutableData->IsActive() == true, TEXT("런 미존재 상태에서 전투 방 클리어 저장 불가"));
+
+	RunMutableData->SetRoomClearData(ClearData);
 }
 
 void UGameProfileSubsystem::SetVolume(EGameVolumeType VolumeType, float Volume) const
@@ -48,11 +72,11 @@ void UGameProfileSubsystem::SetLanguage(ELanguageType LanguageType) const
 	UE_LOG(LogGameProfile, Log, TEXT("[%s] 언어 변경"), *EnumToString(LanguageType));
 }
 
-void UGameProfileSubsystem::SetResolution(const FIntPoint& Resolution) const
+void UGameProfileSubsystem::SetOverallQuality(EOverallQualityType QualityType) const
 {
-	GetOptionMutableData()->SetResolution(Resolution);
+	GetOptionMutableData()->SetOverallQuality(QualityType);
 
-	UE_LOG(LogGameProfile, Log, TEXT("[%d x %d] 해상도 변경"), Resolution.X, Resolution.Y);
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 퀄리티 변경"), *EnumToString(QualityType));
 }
 
 void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
@@ -60,6 +84,20 @@ void UGameProfileSubsystem::SetFpsLimit(int32 FpsLimit) const
 	GetOptionMutableData()->SetFpsLimit(FpsLimit);
 
 	UE_LOG(LogGameProfile, Log, TEXT("[%d] FPS 제한 변경"), FpsLimit);
+}
+
+void UGameProfileSubsystem::SetCameraShakeEnabled(bool IsEnabled) const
+{
+	GetOptionMutableData()->SetCameraShakeEnabled(IsEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 카메라 흔들림 설정 변경"), (IsEnabled ? TEXT("True") : TEXT("False")));
+}
+
+void UGameProfileSubsystem::SetEffectVFXEnabled(bool IsEnabled) const
+{
+	GetOptionMutableData()->SetEffectVFXEnabled(IsEnabled);
+
+	UE_LOG(LogGameProfile, Log, TEXT("[%s] 이펙트 VFX 설정 변경"), (IsEnabled ? TEXT("True") : TEXT("False")));
 }
 
 void UGameProfileSubsystem::ResetOptions() const

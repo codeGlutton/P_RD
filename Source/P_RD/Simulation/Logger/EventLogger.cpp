@@ -7,210 +7,60 @@ void UEventLogger::SetContext(FRoomContext& RoomContext)
 	mRoomContext = &RoomContext;
 }
 
-void UGameEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
+void UEventLogger::BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass)
 {
-	mActiveTurnSourceUnitID = SourceUnitID;
-	mActiveTurnActorModelClass = UnitActorModelClass;
-
-	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 시작"));
 }
 
-void UGameEventLogger::EndTurnLog()
+void UEventLogger::EndTurnLog()
 {
-	mCurrentMotionEventLog = nullptr;
-	mCurrentActionEventLog = nullptr;
-	mCurrentTurnEventLog = nullptr;
-	mActiveTurnSourceUnitID = INDEX_NONE;
-	mActiveTurnActorModelClass = nullptr;
-
-	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
 }
 
-void UGameEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
+void UEventLogger::LogAIPlan(const FSRPGAIPlanLog& Log)
 {
-	if (mActiveTurnSourceUnitID == INDEX_NONE || mActiveTurnActorModelClass == nullptr)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("턴 로그 시작 없이 액션 로그 시작 요청으로 실제 전투 로그를 무시"));
-		return;
-	}
+}
+
+void UEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
+{
+}
+
+void UEventLogger::EndActionLog()
+{
+}
+
+void UEventLogger::BeginMotionLog()
+{
+}
+
+void UEventLogger::EndMotionLog()
+{
+}
+
+void UEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log)
+{
+	OnLogTagEffect.Broadcast(TargetActorID, BoardActorModelClass, Log);
+}
+
+void UEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
+{
+	OnLogAttributeEffect.Broadcast(TargetActorID, BoardActorModelClass, Log);
+}
+
+void UEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
+{
+	OnLogTileEffect.Broadcast(TargetActorID, BoardActorModelClass, Log);
+}
+
+TArray<FSRPGTurnEventLog> UEventLogger::PopSRPGLogs()
+{
+	return TArray<FSRPGTurnEventLog>();
+}
+
+void USimulationEventLogger::BeginTurnLog(int32 RoundIndex, int32 SourceUnitID, UClass* UnitActorModelClass)
+{
+	Super::BeginTurnLog(RoundIndex, SourceUnitID, UnitActorModelClass);
 
 	FSRPGTurnEventLog TurnLog;
-	TurnLog.mSourceUnitID = mActiveTurnSourceUnitID;
-	TurnLog.mUnitActorModelClass = mActiveTurnActorModelClass;
-
-	FSRPGActionEventLog ActionLog;
-	ActionLog.mSourceTileIndex = SourceTileIndex;
-
-	if (TurnLog.IsValid() == false || ActionLog.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 액션 로그 불량으로 무시"));
-		return;
-	}
-
-	TurnLog.mActionEventLogs.Add(MoveTemp(ActionLog));
-	mTurnEventLogs.Add(MoveTemp(TurnLog));
-	mCurrentTurnEventLog = &mTurnEventLogs.Last();
-	mCurrentActionEventLog = &mCurrentTurnEventLog->mActionEventLogs.Last();
-	mCurrentMotionEventLog = nullptr;
-
-	UE_LOG(LogEventLogger, Log, TEXT("액션 이벤트 로그 시작"));
-}
-
-void UGameEventLogger::EndActionLog()
-{
-	mCurrentMotionEventLog = nullptr;
-	mCurrentActionEventLog = nullptr;
-	mCurrentTurnEventLog = nullptr;
-
-	UE_LOG(LogEventLogger, Log, TEXT("액션 이벤트 로그 종료"));
-}
-
-void UGameEventLogger::BeginMotionLog()
-{
-	if (mCurrentActionEventLog == nullptr)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("액션 로그 시작 없이 모션 로그 시작 요청으로 실제 전투 로그를 무시"));
-		return;
-	}
-
-	FSRPGMotionEventLog MotionLog;
-	if (MotionLog.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 모션 로그 불량으로 무시"));
-		return;
-	}
-
-	mCurrentActionEventLog->mMotionEventLogs.Add(MoveTemp(MotionLog));
-	mCurrentMotionEventLog = &mCurrentActionEventLog->mMotionEventLogs.Last();
-
-	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
-}
-
-void UGameEventLogger::EndMotionLog()
-{
-	mCurrentMotionEventLog = nullptr;
-
-	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
-}
-
-void UGameEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTagEffectEventLog& Log)
-{
-	if (mCurrentMotionEventLog == nullptr)
-	{
-		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 실제 전투 태그 로그 요청으로 화면 로그만 무시"));
-		UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %d] 태그 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mCount);
-		return;
-	}
-	if (Log.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 태그 변경 로그 불량으로 무시"));
-		return;
-	}
-
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
-	BoardActorLog.mTargetActorID = TargetActorID;
-	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
-
-	if (BoardActorLog.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 보드 액터 태그 로그 불량으로 무시"));
-		mCurrentMotionEventLog->mBoardActorEventLogs.Remove(TargetActorID);
-		return;
-	}
-
-	bool IsAlreadyExisted = false;
-	FSRPGTagEffectEventLog& TagEffectEventLog = BoardActorLog.mTagEffectEventLogs.FindOrAdd(Log, &IsAlreadyExisted);
-	if (IsAlreadyExisted == true)
-	{
-		TagEffectEventLog.mEffectTag = Log.mEffectTag;
-		TagEffectEventLog.mCount += Log.mCount;
-	}
-
-	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %d] 태그 변경"), TargetActorID, *Log.mEffectTag.ToString(), Log.mCount);
-}
-
-void UGameEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGAttributeEffectEventLog& Log)
-{
-	if (mCurrentMotionEventLog == nullptr)
-	{
-		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 실제 전투 속성 로그 요청으로 화면 로그만 무시"));
-		UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectAttribute.GetName(), Log.mMagnitude);
-		return;
-	}
-	if (Log.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 속성 변경 로그 불량으로 무시"));
-		return;
-	}
-
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
-	BoardActorLog.mTargetActorID = TargetActorID;
-	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
-
-	if (BoardActorLog.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 보드 액터 속성 로그 불량으로 무시"));
-		mCurrentMotionEventLog->mBoardActorEventLogs.Remove(TargetActorID);
-		return;
-	}
-
-	bool IsAlreadyExisted = false;
-	FSRPGAttributeEffectEventLog& AttributeEffectLog = BoardActorLog.mAttributeEffectEventLogs.FindOrAdd(Log, &IsAlreadyExisted);
-	if (IsAlreadyExisted == true)
-	{
-		AttributeEffectLog.mEffectAttribute = Log.mEffectAttribute;
-		AttributeEffectLog.mMagnitude += Log.mMagnitude;
-	}
-
-	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s : %f] 속성 변경"), TargetActorID, *Log.mEffectAttribute.GetName(), Log.mMagnitude);
-}
-
-void UGameEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardActorModelClass, const FSRPGTileEffectEventLog& Log)
-{
-	if (mCurrentMotionEventLog == nullptr)
-	{
-		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 실제 전투 타일 로그 요청으로 화면 로그만 무시"));
-		UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
-		return;
-	}
-	if (Log.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 타일 위치 변경 로그 불량으로 무시"));
-		return;
-	}
-
-	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
-	BoardActorLog.mTargetActorID = TargetActorID;
-	BoardActorLog.mBoardActorModelClass = BoardActorModelClass;
-
-	if (BoardActorLog.IsValid() == false)
-	{
-		UE_LOG(LogEventLogger, Warning, TEXT("실제 전투 보드 액터 타일 로그 불량으로 무시"));
-		mCurrentMotionEventLog->mBoardActorEventLogs.Remove(TargetActorID);
-		return;
-	}
-
-	BoardActorLog.mTileEffectEventLogs.Add(Log);
-	if (Log.mOccupancyState == ESRPGTileOccupancyState::Enter)
-	{
-		mCurrentMotionEventLog->mSpawnedBoardActorPositions.Add(TargetActorID, Log.mNextTileIndex);
-	}
-
-	UE_LOG(LogEventLogger, Log, TEXT("[%d][%s][(%d, %d) -> (%d, %d)] 타일 위치 이동"), TargetActorID, *EnumToString(Log.mOccupancyState), Log.mPreTileIndex.mX, Log.mPreTileIndex.mY, Log.mNextTileIndex.mX, Log.mNextTileIndex.mY);
-}
-
-TArray<FSRPGTurnEventLog> UGameEventLogger::PopSRPGLogs()
-{
-	mCurrentMotionEventLog = nullptr;
-	mCurrentActionEventLog = nullptr;
-	mCurrentTurnEventLog = nullptr;
-
-	return MoveTemp(mTurnEventLogs);
-}
-
-void USimulationEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorModelClass)
-{
-	FSRPGTurnEventLog TurnLog;
+	TurnLog.mRoundIndex = RoundIndex;
 	TurnLog.mSourceUnitID = SourceUnitID;
 	TurnLog.mUnitActorModelClass = UnitActorModelClass;
 
@@ -224,14 +74,27 @@ void USimulationEventLogger::BeginTurnLog(int32 SourceUnitID, UClass* UnitActorM
 
 void USimulationEventLogger::EndTurnLog()
 {
+	Super::EndTurnLog();
+
 	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 턴 로그 종료 오류"));
 	mCurrentTurnEventLog = nullptr;
 
 	UE_LOG(LogEventLogger, Log, TEXT("턴 이벤트 로그 종료"));
 }
 
+void USimulationEventLogger::LogAIPlan(const FSRPGAIPlanLog& Log)
+{
+	Super::LogAIPlan(Log);
+
+	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 AI 플랜 로그 시작 오류"));
+
+	mCurrentTurnEventLog->mAIPlanLog = Log;
+}
+
 void USimulationEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
 {
+	Super::BeginActionLog(SourceTileIndex);
+
 	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 액션 로그 시작 오류"));
 
 	FSRPGActionEventLog ActionLog;
@@ -247,6 +110,8 @@ void USimulationEventLogger::BeginActionLog(const FTileIndex& SourceTileIndex)
 
 void USimulationEventLogger::EndActionLog()
 {
+	Super::EndActionLog();
+
 	checkf(mCurrentActionEventLog != nullptr, TEXT("액션 로그 시작 없이 액션 로그 종료 오류"));
 	mCurrentActionEventLog = nullptr;
 
@@ -255,6 +120,14 @@ void USimulationEventLogger::EndActionLog()
 
 void USimulationEventLogger::BeginMotionLog()
 {
+	Super::BeginMotionLog();
+
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("턴 외의 모션 시작"));
+		return;
+	}
+
 	checkf(mCurrentTurnEventLog != nullptr, TEXT("턴 로그 시작 없이 모션 로그 시작 오류"));
 	checkf(mCurrentActionEventLog != nullptr, TEXT("액션 로그 시작 없이 모션 로그 시작 오류"));
 
@@ -262,16 +135,33 @@ void USimulationEventLogger::BeginMotionLog()
 
 	checkf(MotionLog.IsValid() == true, TEXT("모션 로그 불량"));
 
-	mCurrentActionEventLog->mMotionEventLogs.Add(MoveTemp(MotionLog));
-	mCurrentMotionEventLog = &mCurrentActionEventLog->mMotionEventLogs.Last();
+	if (mCurrentMotionEventCount == 0)
+	{
+		mCurrentActionEventLog->mMotionEventLogs.Add(MoveTemp(MotionLog));
+		mCurrentMotionEventLog = &mCurrentActionEventLog->mMotionEventLogs.Last();
 
-	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
+		UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 시작"));
+	}
+	++mCurrentMotionEventCount;
 }
 
 void USimulationEventLogger::EndMotionLog()
 {
+	Super::EndMotionLog();
+
+	if (mCurrentTurnEventLog == nullptr || mCurrentActionEventLog == nullptr)
+	{
+		UE_LOG(LogEventLogger, Log, TEXT("턴 외의 모션 종료"));
+		return;
+	}
+
 	checkf(mCurrentMotionEventLog != nullptr, TEXT("모션 로그 시작 없이 모션 로그 종료 오류"));
-	mCurrentMotionEventLog = nullptr;
+	
+	--mCurrentMotionEventCount;
+	if (mCurrentMotionEventCount == 0)
+	{
+		mCurrentMotionEventLog = nullptr;
+	}
 
 	UE_LOG(LogEventLogger, Log, TEXT("모션 이벤트 로그 종료"));
 }
@@ -283,8 +173,9 @@ void USimulationEventLogger::LogTagEffect(int32 TargetActorID, UClass* BoardActo
 		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
 		return;
 	}
-
 	checkf(Log.IsValid() == true, TEXT("태그 변경 로그 불량"));
+
+	Super::LogTagEffect(TargetActorID, BoardActorModelClass, Log);
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
@@ -310,8 +201,9 @@ void USimulationEventLogger::LogAttributeEffect(int32 TargetActorID, UClass* Boa
 		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
 		return;
 	}
-
 	checkf(Log.IsValid() == true, TEXT("속성 변경 로그 불량"));
+
+	Super::LogAttributeEffect(TargetActorID, BoardActorModelClass, Log);
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
@@ -337,8 +229,9 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 		UE_LOG(LogEventLogger, Log, TEXT("모션 외 범위에서의 잘못된 로그 요청으로 무시"));
 		return;
 	}
-
 	checkf(Log.IsValid() == true, TEXT("타일 위치 변경 로그 불량"));
+
+	Super::LogTileEffect(TargetActorID, BoardActorModelClass, Log);
 
 	FSRPGBoardActorEventLog& BoardActorLog = mCurrentMotionEventLog->mBoardActorEventLogs.FindOrAdd(TargetActorID);
 	BoardActorLog.mTargetActorID = TargetActorID;
@@ -357,5 +250,8 @@ void USimulationEventLogger::LogTileEffect(int32 TargetActorID, UClass* BoardAct
 
 TArray<FSRPGTurnEventLog> USimulationEventLogger::PopSRPGLogs()
 {
-	return MoveTemp(mTurnEventLogs);
+	TArray<FSRPGTurnEventLog> Logs = MoveTemp(mTurnEventLogs);
+	mTurnEventLogs.Empty();
+
+	return Logs;
 }

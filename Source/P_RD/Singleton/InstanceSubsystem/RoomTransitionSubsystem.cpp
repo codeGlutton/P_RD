@@ -6,8 +6,76 @@
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
 
 #include "Setting/GamePlaySettings.h"
+#include "HAL/IConsoleManager.h"
 
 DEFINE_LOG_CATEGORY(LogTransition)
+
+#if !UE_BUILD_SHIPPING
+
+namespace
+{
+    // @brief 디버깅용: 새 스테이지의 첫 진입 방을 대체할 방 타입 이름 (None 또는 빈 값이면 미사용)
+    FString GFixedFirstRoomTypeNameForDebugging;
+
+    FAutoConsoleVariableRef CFixedFirstRoomTypeNameForDebugging(
+        TEXT("Stage.FixedFirstRoomType"),
+        GFixedFirstRoomTypeNameForDebugging,
+        TEXT("디버깅을 위해서 새 스테이지의 첫 진입 방을 지정 타입의 방으로 고정 (예: Shop). None 또는 빈 값이면 미사용"),
+        ECVF_Default
+    );
+
+    /**
+     * @brief 첫 방 고정이 켜져 있으면 스테이지에서 해당 타입의 방을 찾는다.
+     *
+     * @details
+     * 상점방처럼 스테이지 후반에 배치되는 방을 빠르게 테스트하기 위한 디버깅 전용 기능이다.
+     * 런 생성/스테이지 생성 흐름은 그대로 두고, 생성된 스테이지에서 첫 진입 방 좌표만 바꾼다.
+     * 아래 행(0행)부터 훑어 가장 먼저 나오는 방의 좌표를 돌려준다.
+     *
+     * @param Stage       탐색할 스테이지
+     * @param RowIndex    [out] 찾은 방의 행 index
+     * @param ColumnIndex [out] 찾은 방의 열 index
+     * @return 첫 방 고정이 켜져 있고 해당 타입의 방을 찾았으면 true
+     */
+    bool TryGetFixedFirstRoomForDebugging(const FStage& Stage, OUT int32& RowIndex, OUT int32& ColumnIndex)
+    {
+        if (GFixedFirstRoomTypeNameForDebugging.IsEmpty() == true)
+        {
+            return false;
+        }
+
+        // 콘솔 변수 문자열을 방 타입으로 해석 (예: "Shop"). 잘못된 이름이나 None/Count는 미사용으로 처리
+        const UEnum* RoomTypeEnum = StaticEnum<ERoomType>();
+        const int64 RoomTypeValue = RoomTypeEnum != nullptr ? RoomTypeEnum->GetValueByNameString(GFixedFirstRoomTypeNameForDebugging) : INDEX_NONE;
+        if (RoomTypeValue == INDEX_NONE ||
+            StaticCast<ERoomType>(RoomTypeValue) == ERoomType::None ||
+            StaticCast<ERoomType>(RoomTypeValue) == ERoomType::Count)
+        {
+            return false;
+        }
+        const ERoomType TargetRoomType = StaticCast<ERoomType>(RoomTypeValue);
+
+        // 스테이지 전체에서 해당 타입의 첫 방 탐색
+        for (const FRoomRow& RoomRow : Stage.mRoomRows)
+        {
+            for (const TInstancedStruct<FRoom>& RoomInstance : RoomRow.mRooms)
+            {
+                const FRoom* Room = RoomInstance.GetPtr<FRoom>();
+                if (Room != nullptr && Room->mType == TargetRoomType)
+                {
+                    RowIndex = Room->mRow;
+                    ColumnIndex = Room->mColumn;
+                    return true;
+                }
+            }
+        }
+
+        UE_LOG(LogTransition, Warning, TEXT("첫 방 고정 미적용. 스테이지에 %s 타입 방 없음"), *GFixedFirstRoomTypeNameForDebugging);
+        return false;
+    }
+}
+
+#endif
 
 void URoomTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -63,22 +131,6 @@ bool URoomTransitionSubsystem::PreloadFrontendRoomAsync(FOnReadyToTransition Rea
     return true;
 }
 
-/**
- * @brief 방 좌표를 받아 방 전환 준비를 시작한다.
- *
- * @details
- * 이 함수는 방 좌표로 FRoomTransitionRequest를 만든 뒤 실제 처리 함수로 넘깁니다.
- * 여기서 중요한 점은 RequireExternalReady와 IsAutoTransition을 둘 다 그대로 넘기는 것입니다.
- * 하나가 빠지면 "외부 준비를 기다릴지"와 "자동으로 이동할지"가 서로 잘못 해석될 수 있습니다.
- *
- * @param RoomRowIndex 전환할 방의 행 index.
- * @param RoomColumnIndex 전환할 방의 열 index.
- * @param ReadyToTransitionCallback 전환 준비 완료 시 호출할 콜백.
- * @param PreTransitionCallback 실제 전환 직전 호출할 콜백.
- * @param RequireExternalReady 에셋 로드 후 외부 준비 신호까지 기다릴지 여부.
- * @param IsAutoTransition 준비 완료 후 자동으로 전환을 시작할지 여부.
- * @return 전환 준비 요청을 받았으면 true, 이미 다른 전환 중이면 false.
- */
 bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomColumnIndex, FOnReadyToTransition ReadyToTransitionCallback, FOnPreTransitNextRoom PreTransitionCallback, bool RequireExternalReady, bool IsAutoTransition)
 {
     FRoomTransitionRequest Request;
@@ -88,7 +140,6 @@ bool URoomTransitionSubsystem::PreloadRoomAsync(int32 RoomRowIndex, int32 RoomCo
     Request.OnReadyToTransition = ReadyToTransitionCallback;
     Request.OnPreTransitNextRoom = PreTransitionCallback;
 
-    // 두 옵션을 모두 넘겨야 "기다릴지/자동 이동할지"가 바뀌지 않는다.
     return PreloadRoomAsync(MoveTemp(Request), RequireExternalReady, IsAutoTransition);
 }
 
@@ -167,7 +218,19 @@ bool URoomTransitionSubsystem::MakeStageAndPreloadRoomAsync(EStageLevelType Stag
 
         // 이후 스테이지의 배정된 첫 방으로 Preload 시작
         const FRoom& StartRoom = NewStage.GetStartRoom();
-        checkf(PreloadRoomAsync(StartRoom.mRow, StartRoom.mColumn, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition), TEXT("만들어진 Stage로 Preload 시도 실패"));
+        int32 FirstRoomRowIndex = StartRoom.mRow;
+        int32 FirstRoomColumnIndex = StartRoom.mColumn;
+
+#if !UE_BUILD_SHIPPING
+        // 디버깅용 첫 방 고정이 켜져 있으면 해당 타입 방의 좌표로 대체 (꺼져 있으면 기존 흐름 그대로)
+        if (TryGetFixedFirstRoomForDebugging(NewStage, OUT FirstRoomRowIndex, OUT FirstRoomColumnIndex) == true)
+        {
+            UE_LOG(LogTransition, Warning, TEXT("첫 진입 방을 (%d, %d)로 고정 (Stage.FixedFirstRoomType=%s)"), FirstRoomRowIndex, FirstRoomColumnIndex, *GFixedFirstRoomTypeNameForDebugging);
+        }
+#endif
+
+        const bool IsPreloadStarted = PreloadRoomAsync(FirstRoomRowIndex, FirstRoomColumnIndex, ReadyToTransitionCallback, PreTransitionCallback, RequireExternalReady, IsAutoTransition);
+        checkf(IsPreloadStarted == true, TEXT("만들어진 Stage로 Preload 시도 실패"));
         }));
 
     return true;
@@ -199,17 +262,6 @@ bool URoomTransitionSubsystem::MarkExternalReady()
     return true;
 }
 
-/**
- * @brief 준비만 끝난 방 전환을 실제로 시작한다.
- *
- * @details
- * AutoTransition=false로 준비한 방은 에셋 로드가 끝나도 바로 이동하지 않습니다.
- * GameMode가 로딩 UI나 닫힘 애니메이션을 끝낸 뒤 이 함수를 호출해 실제 이동을 시작합니다.
- *
- * ReadyToTransition이 없으면 아직 이동할 방 정보가 완성되지 않은 상태라서 이동하지 않습니다.
- *
- * @return 실제 이동을 시작했으면 true, 아직 준비 전이거나 이미 이동 중이면 false.
- */
 bool URoomTransitionSubsystem::TransitLoadedRoom()
 {
     // 아직 준비가 끝나지 않았으면 OpenLevel을 시작하면 안 된다.

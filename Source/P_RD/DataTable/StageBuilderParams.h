@@ -81,10 +81,11 @@ public:
 	UPROPERTY(Category = "Rate", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillRarityRate"))
 	FRarityRate mSkillRarityRate = { 10.f, 5.f, 1.f };
 
-	UPROPERTY(Category = "Rate", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentRarityRate"))
-	FRarityRate mEquipmentRarityRate = { 10.f, 5.f, 1.f };
+	UPROPERTY(Category = "Rate", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ArtifactRarityRate"))
+	FRarityRate mArtifactRarityRate = { 10.f, 5.f, 1.f };
 
-	UPROPERTY(Category = "Rate", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRarityRate"))
-	FRarityRate mDiceRarityRate = { 10.f, 5.f, 1.f };
+public:
+	UPROPERTY(Category = "Mercenary", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MercenaryLevelRange"))
+	FInt32Interval mMercenaryLevelRange = { 1, 5 };
 };
 

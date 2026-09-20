@@ -11,6 +11,9 @@
 #include "Actor/TileMap/TileMapModel.h"
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
 
+#include "Singleton/WorldSubsystem/SimulationSubsystem.h"
+#include "SRPGFramework/SRPGTurnEndAction.h"
+
 FSRPGSkillCastCommand::FSRPGSkillCastCommand()
 {
     mCommandType = ESRPGCommandType::SkillCast;
@@ -66,12 +69,34 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
             return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
         }
 
+        // 이동 중 방해받아 계획한 위치에 도달하지 못할 수도 있으므로,
+        // 스킬 사용이 가능한지 한 번 더 확인
+        if (SkillCompModel->CanActiveSkill(SkillCastCommand.mSkillIndex) == false)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+        }
+
+        // 밀치기 등으로 인해 명령을 만든 시점과 현재 시점의 위치가 다를 수 있음
+        // 현재 위치에서 조준할 수 없는 타일인 지 한 번 더 확인하고, 조준 불가능하면 액션 취소
+        if (SkillCompModel->GetAimableTiles(TileMap, SkillCastCommand.mSkillIndex).Contains(SkillCastCommand.mTargetIndex) == false)
+        {
+            MarkActionCompleted(ESRPGActionResult::Cancelled);
+            return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
+        }
+
         FOnEndSkillUI Callback;
         Callback.AddWeakLambda(this, [this](const FActiveSkillContext& Context, const UStaticSkillData* PreSkillData) {
+            FSimulationOption Option;
+            Option.mDuration = ESimulationDurtaion::AllPlayerTurnEnd;
+            Option.mSkipAIActions = true;
+            Option.mReservedCommand.InitializeAs<FSRPGTurnEndCommand>();
+            GetCombatModel()->OnSimulateAllPlayerTurn.Broadcast(Option);
+
             MarkActionCompleted(ESRPGActionResult::Succeeded);
             });
 
-        SkillCompModel->ActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, SkillCastCommand.mDiceSum, MoveTemp(Callback));
+        SkillCompModel->ForcedActivateSkill(TileMap, SkillCastCommand.mSkillIndex, SkillCastCommand.mTargetIndex, MoveTemp(Callback));
 
         return CombineSRPGCommandResult(ESRPGCommandResult::Handled, Result);
     }
@@ -80,17 +105,23 @@ ESRPGCommandResult USRPGSkillAction::HandleCommand(const TInstancedStruct<FSRPGC
     return ESRPGCommandResult::Ignored;
 }
 
-UTileMapModel* USRPGSkillAction::GetTileMap() const
+USRPGCombatModel* USRPGSkillAction::GetCombatModel() const
 {
     USRPGTurnContext* TurnContext = mParent.Get();
     if (TurnContext != nullptr)
     {
-        USRPGCombatModel* CombatModel = TurnContext->GetParent();
-        if (CombatModel != nullptr)
-        {
-            UTileMapModel* TileMap = CombatModel->GetTileMap();
-            return TileMap;
-        }
+        return TurnContext->GetParent();
+    }
+    return nullptr;
+}
+
+UTileMapModel* USRPGSkillAction::GetTileMap() const
+{
+    USRPGCombatModel* CombatModel = GetCombatModel();
+    if (CombatModel != nullptr)
+    {
+        UTileMapModel* TileMap = CombatModel->GetTileMap();
+        return TileMap;
     }
     return nullptr;
 }

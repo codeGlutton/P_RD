@@ -10,7 +10,8 @@
 #include "CoreMinimal.h"
 
 class UBoardActorModel;
-struct FBoardCombatTargetSnapshotData;
+class UBoardCombatTargetSnapshotData;
+class UStaticSkillData;
 
 /**
  * @brief 패시브 계산 입력 컨텍스트
@@ -31,8 +32,11 @@ struct FPassiveActivateContext
 	TArray<TWeakObjectPtr<UBoardActorModel>> mTargets;
 
 	// 소유자 스냅샷 (base + 누적, 읽기 전용)
-	const FBoardCombatTargetSnapshotData* mOwnerSnapshot = nullptr;
+	const UBoardCombatTargetSnapshotData* mOwnerSnapshot = nullptr;
 
 	// 타겟들 스탭샷 (mTargets와 짝이 맞아야 됨)
-	TArray<const FBoardCombatTargetSnapshotData*> mTargetSnapshots;
+	TArray<const UBoardCombatTargetSnapshotData*> mTargetSnapshots;
+
+	// 사용 스킬 정보 (연관없는 패시브에서는 nullptr)
+	const UStaticSkillData* mSkillData;
 };

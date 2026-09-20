@@ -10,65 +10,46 @@
 #include "AttributeSet/AttributeSetMinimal.h"
 #include "UObject/Interface.h"
 #include "GenericTeamAgentInterface.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "BoardCombatTarget.generated.h"
 
 class UAttributeSetComponentModel;
+class USkillComponentModel;
+class UBoardMovementComponentModel;
+
+struct FActiveSkillContext;
+class UBoardCombatTargetSnapshotData;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnChangeCombatTargetAliveState, bool /*IsAlive*/);
 
 /**
  * @brief 타격 가능 보드 액터들에 대한 스냅샷
  */
-USTRUCT(Blueprintable)
-struct FBoardCombatTargetSnapshotData
+UCLASS(BlueprintType)
+class UBoardCombatTargetSnapshotData : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	FBoardCombatTargetSnapshotData operator+(const FBoardCombatTargetSnapshotData& Other) const
-	{
-		FBoardCombatTargetSnapshotData Result = *this;
-
-		// Attributes 값 합산
-		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
-		{
-			Result.mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		// Tags 값 합산
-		for (const TPair<FGameplayTag, int32>& Pair : Other.mTags)
-		{
-			Result.mTags.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		return Result;
-	}
-
-	FBoardCombatTargetSnapshotData& operator+=(const FBoardCombatTargetSnapshotData& Other)
-	{
-		// Attributes 값 합산
-		for (const TPair<FTacticalAttribute, float>& Pair : Other.mAttributes)
-		{
-			mAttributes.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		// Tags 값 합산
-		for (const TPair<FGameplayTag, int32>& Pair : Other.mTags)
-		{
-			mTags.FindOrAdd(Pair.Key) += Pair.Value;
-		}
-
-		return *this;
-	}
-
-public:
-	// @brief HP, Money, power 등의 "수치"가 중요한 변화
+	// @brief HP, Money, power 등의 "수치"
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
 	TMap<FTacticalAttribute, float> mAttributes;
 
-	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "발동 여부"가 중요한 변화
+	// @brief 밀치기, 약화(타격 피해량 25퍼 감소), 취약(피격 피해량 50퍼 증가) 등의 "상태이상 Effect 스택 수"
 	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
-	TMap<FGameplayTag, int32> mTags;
+	TMap<FGameplayTag, int32> mEffectCounts;
+
+	// @brief 죽음, 버프, 디버프의 모든 "태그 부여 요인 수"
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	TMap<FGameplayTag, int32> mGrantedTags;
+
+	// @brief 타일 위치
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	FTileTransform mTileTransform;
+
+	/** @brief 이번 공격 계수 계산에서 치명타 배율이 적용됐는지 여부. */
+	UPROPERTY(Category = Targeting, EditAnywhere, BlueprintReadWrite)
+	bool mIsCriticalAttack = false;
 };
 
 UINTERFACE(MinimalAPI)
@@ -84,6 +65,7 @@ class P_RD_API IBoardCombatTarget
 {
 	GENERATED_BODY()
 
+	/* 전투 로직 */
 public:
 	/**
 	 * 현재 타격 가능한 여부를 반환하는 함수
@@ -98,19 +80,47 @@ public:
 
 public:
 	/**
+	 * 죽음 훅 함수
+	 */
+	virtual void OnPostDead();
+
+public:
+	/**
 	 * 속성 컴포넌트를 반환하는 함수
 	 * @return 보유한 속성 컴포넌트
 	 */
 	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const = 0;
 	/**
+	 * 스킬 컴포넌트를 반환하는 함수
+	 * @return 보유한 스킬 컴포넌트
+	 */
+	virtual USkillComponentModel* GetSkillComponentModel() const = 0;
+	/**
+	 * 움직임 컴포넌트를 반환하는 함수
+	 * @return 보유한 움직임 컴포넌트
+	 */
+	virtual UBoardMovementComponentModel* GetBoardMovementComponentModel() const = 0;
+	/**
 	 * 현재 스탯 스냅샷을 찍어 타겟 정보로 반환하는 함수
 	 * @return 스냅샷 데이터
 	 */
-	FBoardCombatTargetSnapshotData MakeSnapshotData() const;
+	UBoardCombatTargetSnapshotData* MakeSnapshotData() const;
 
+	/* 팀 로직 */
 public:
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) = 0;
 	virtual FGenericTeamId GetGenericTeamId() const = 0;
 
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const UObject& Other) const;
+
+	/* 추가적인 훅들 */
+public:
+	virtual void OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex);
+	virtual void OnEndUsingSkill(int32 SkillIndex);
+
+public:
+	virtual void OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex);
+	virtual void OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex);
 };

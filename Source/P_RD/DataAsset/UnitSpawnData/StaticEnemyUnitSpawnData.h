@@ -8,7 +8,10 @@
 #pragma once
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
+#include "DataAsset/SkillData/EnemyTargetPolicy.h"
 #include "StaticEnemyUnitSpawnData.generated.h"
+
+class UStaticEquipmentData;
 
 /**
  * @brief  적의 이동 성향 (이동 여부와 목적지를 정하는 기준)
@@ -26,6 +29,23 @@ enum class EMoveTendency : uint8
 };
 
 /**
+ * @brief  적 스킬 선택 우선순위
+ *
+ * @details
+ * 플래너가 배치와 무관하게 높은 순으로 사용 가능한 스킬을 고름 (동순위는 랜덤).
+ * 열거값이 작을수록 높은 우선순위.
+ */
+UENUM(BlueprintType)
+enum class ESkillPriority : uint8
+{
+	Highest         UMETA(DisplayName = "Highest", ToolTip = "사용 가능하면 가장 먼저 선택"),
+	High            UMETA(DisplayName = "High"),
+	Normal          UMETA(DisplayName = "Normal",  ToolTip = "기본"),
+	Low             UMETA(DisplayName = "Low"),
+	Lowest          UMETA(DisplayName = "Lowest",  ToolTip = "상위 스킬이 전부 사용 불가일 때만 선택"),
+};
+
+/**
  * @brief  적 유닛 생성 시 사용되는 정적 Primary Data Asset
  */
 UCLASS()
@@ -34,17 +54,32 @@ class P_RD_API UStaticEnemyUnitSpawnData : public UStaticUnitSpawnData
 	GENERATED_BODY()
 
 public:
+	void PostLoad() override;
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+
+public:
 	FPrimaryAssetId GetPrimaryAssetId() const override
 	{
 		return FPrimaryAssetId(UnitPrimaryAssetTypes::GetEnemyUnitType(), GetFName());
 	}
 
+public:
 	// @brief 기본 이동 성향: 멀어짐 / 사거리 유지(정지) / 붙음 중 택1
-	// @note 사거리는 스킬(추후 스킬+장비+패시브)에서 나오므로 여기엔 눈금값을 두지 않는다.
 	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MoveTendency"))
 	EMoveTendency mMoveTendency = EMoveTendency::HoldRange;
-	
-	// @brief 이동포인트
-	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MovePoint"))
-	int32 mMovePoint{ 5 };
+
+	// @brief mSkillDatas 항목별 AI 선택 우선순위 (인덱스 = 스킬 슬롯)
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, EditFixedSize, meta = (DisplayName = "SkillPriorities"))
+	TArray<ESkillPriority> mSkillPriorities;
+
+	// @brief mSkillDatas 항목별 AI 타겟 선정 기준 오버라이드 (인덱스 = 스킬 슬롯)
+	UPROPERTY(Category = "AI", EditAnywhere, BlueprintReadWrite, EditFixedSize, meta = (DisplayName = "TargetPolicyOverrides"))
+	TArray<FEnemyTargetPolicyOverride> mTargetPolicyOverrides;
+
+public:
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EquipmentDatas", AssetBundles = "PAD"))
+	TArray<TSoftObjectPtr<UStaticEquipmentData>> mEquipmentDatas;
 };

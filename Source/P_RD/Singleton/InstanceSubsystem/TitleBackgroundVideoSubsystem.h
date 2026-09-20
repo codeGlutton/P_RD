@@ -65,6 +65,12 @@ private:
 	/** @brief MediaPlayer/MediaTexture/MediaSource 3종을 1회 생성·연결한다(콜백/루프 설정 포함, 중복 호출 안전). */
 	void EnsureMediaObjects();
 
+	/** @brief 현재 셔플 백에서 다음 영상을 골라 비동기 open한다. 모든 후보를 한 번씩 재생한 뒤 다시 섞는다. */
+	void OpenNextTitleBackgroundVideo();
+
+	/** @brief 후보 인덱스를 셔플한다. 새 백의 첫 영상이 직전 영상과 같지 않도록 보정한다. */
+	void RebuildShuffleBag();
+
 	/** @brief 미디어 열기 성공 콜백(비동기). 루프 재생 시작 + 비디오 트랙에서 원본 해상도를 읽어 mVideoNativeSize 갱신. */
 	UFUNCTION()
 	void HandleMediaOpened(FString OpenedUrl);
@@ -72,6 +78,10 @@ private:
 	/** @brief 미디어 열기 실패 콜백(비동기). 요청 플래그 초기화 + 경고 로그. */
 	UFUNCTION()
 	void HandleMediaOpenFailed(FString FailedUrl);
+
+	/** @brief 현재 5초 영상이 끝나면 같은 정지 프레임을 유지한 채 다음 셔플 영상을 연다. */
+	UFUNCTION()
+	void HandleMediaEndReached();
 
 private:
 	/** @brief 영상 디코딩/재생 엔진. */
@@ -88,6 +98,18 @@ private:
 
 	/** @brief 현재 열려 있는(또는 요청한) 영상의 Content 상대 경로. 같은 경로 재요청 시 중복 열기 방지용. */
 	FString mCurrentRelativePath;
+
+	/** @brief 설정에서 읽은 30개 전체 화면 영상 후보. 명시 경로 호출 시에는 한 개만 들어간다. */
+	TArray<FString> mCandidateRelativePaths;
+
+	/** @brief 중복 없이 모든 후보를 한 번씩 재생하기 위한 무작위 인덱스 백. */
+	TArray<int32> mShuffleBag;
+
+	/** @brief 셔플 백에서 다음에 꺼낼 위치. */
+	int32 mShuffleCursor = 0;
+
+	/** @brief 직전 재생 후보 인덱스. 셔플 재구성 시 연속 중복을 막는다. */
+	int32 mCurrentCandidateIndex = INDEX_NONE;
 
 	/** @brief 열린 영상 원본 크기. 열기 전 기본값 1280x1280, 콜백에서 실제 값으로 갱신. */
 	FVector2D mVideoNativeSize = FVector2D(1280.0f, 1280.0f);

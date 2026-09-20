@@ -8,10 +8,8 @@
 #pragma once
 
 #include "DataAsset/UnitSpawnData/StaticUnitSpawnData.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "StaticPlayerUnitSpawnData.generated.h"
-
-class UStaticDiceData;
 
 /**
  * @brief  플레이어 유닛 생성 시 사용되는 정적 Primary Data Asset
@@ -33,10 +31,6 @@ public:
 #endif
 
 public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "JobType"))
-	EPlayerJobType mJobType = EPlayerJobType::None;
-
-public:
-	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceDatas", AssetBundles = "PAD"))
-	TArray<TSoftObjectPtr<UStaticDiceData>> mDiceDatas;
+	UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, AssetRegistrySearchable, meta = (DisplayName = "JobType"))
+	EUnitJobType mJobType = EUnitJobType::None;
 };

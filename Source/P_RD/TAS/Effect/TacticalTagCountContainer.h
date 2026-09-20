@@ -8,15 +8,21 @@
 #pragma once
 
 #include "AttributeSet/AttributeSetMinimal.h"
+#include "TAS/Effect/TacticalEffectType.h"
 #include "GameplayTagContainer.h"
 #include "TacticalTagCountContainer.generated.h"
 
 class UAttributeSetComponentModel;
-struct FBoardCombatTargetSnapshotData;
+class UBoardCombatTargetSnapshotData;
 
+// Tag 갯수가 변경되었을 때 호출되는 대리자
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTacticalEffectTagCountChanged, const FGameplayTag /*Tag*/, int32 /*Count*/);
+// Tag 변경 시에 후속 처리를 위한 내부 연산용 콜백 모음
 DECLARE_DELEGATE(FDeferredTagChangeDelegate);
 
+/**
+ * @brief 각 소유 태그의 갯수를 기록하기 위한 구조체
+ */
 USTRUCT()
 struct FTacticalTagCountItem
 {
@@ -52,8 +58,11 @@ public:
 	int32 mCount;
 };
 
+/**
+ * @brief 명시적 누적 태그와 Effect 태그 등의 모든 태그를 관리하는 컨테이너
+ */
 USTRUCT(BlueprintType)
-struct FTacticalTagCountContainer
+struct P_RD_API FTacticalTagCountContainer
 {
 	GENERATED_BODY()
 
@@ -93,7 +102,7 @@ public:
 	bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const;
 
 public:
-	void CaptureAllTags(FBoardCombatTargetSnapshotData& Snapshot) const;
+	void CaptureAllTags(UBoardCombatTargetSnapshotData* Snapshot) const;
 
 public:
 	void UpdateTagCount(const FGameplayTagContainer& Container, int32 CountDelta);
@@ -113,7 +122,7 @@ public:
 	void Notify_StackCountChange(const FGameplayTag& Tag);
 
 public:
-	FOnTacticalEffectTagCountChanged& RegisterGameplayTagEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType = EGameplayTagEventType::NewOrRemoved);
+	FOnTacticalEffectTagCountChanged& RegisterGameplayTagEvent(const FGameplayTag& Tag, ETacticalTagEventType::Type EventType = ETacticalTagEventType::NewOrRemoved);
 	FOnTacticalEffectTagCountChanged& RegisterGenericGameplayEvent();
 
 private:

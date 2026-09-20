@@ -19,15 +19,19 @@ struct P_RD_API FSkillEffectLayer_Attack : public FSkillEffectLayer
 	GENERATED_BODY()
 
 public:
-	void ClearPointEffect(IBoardCombatTarget* ActorModel) const override;
+	TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const override;
+	void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const override;
 
 public:
-	void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const override;
-	void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const override;
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 
 public:
-	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DefaultDamage"))
-	float mDefaultDamage = 0.f;
-	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceRatio"))
-	float mDiceRatio = 0.f;
+	FText MakeDescription() const override;
+
+public:
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MaxDamage"))
+	int32 mMaxDamage = 0;
+
+	UPROPERTY(Category = "Attack", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "MinDamage"))
+	int32 mMinDamage = 0;
 };

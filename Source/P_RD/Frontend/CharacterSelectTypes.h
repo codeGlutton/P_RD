@@ -1,15 +1,47 @@
-// @file CharacterSelectTypes.h
+﻿// @file CharacterSelectTypes.h
 // @brief 캐릭터 선택 화면에서 쓰는 View 타입 정의
 // @date 2026-06-04
 
 #pragma once
 
 #include "RDMinimal.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 
 #include "CharacterSelectTypes.generated.h"
 
 class UTexture2D;
+
+/**
+ * @brief 캐릭터 선택 화면에서 한 스킬의 상세를 그릴 정적 표시 데이터.
+ *
+ * @details 선택 화면은 아직 전투 인스턴스가 없으므로 남은 쿨타임/사용 가능
+ * 여부가 아니라 DataAsset의 원래 스펙만 보여 준다. Widget이 DataAsset 구조를
+ * 직접 알지 않도록 FrontendGameMode가 이 값으로 변환해 내려준다.
+ */
+USTRUCT(BlueprintType)
+struct P_RD_API FFrontendSkillOption
+{
+	GENERATED_BODY()
+
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) FText mName;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) FText mDescription;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) TSoftObjectPtr<UTexture2D> mIcon;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mCriticalDamage = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) EAimPattern mAimPattern = EAimPattern::Single;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mAimRange = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) EEffectPattern mEffectPattern = EEffectPattern::Single;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectArea = 0;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
+	/** @brief 영향 시점 패턴(PR #466 LineToTarget). 상세 모식도의 경로 표시에 쓴다. */
+	UPROPERTY(Category = Frontend, BlueprintReadOnly) ETargetPattern mTargetPattern = ETargetPattern::TargetOnly;
+};
 
 /** @brief 캐릭터 선택 UI가 표시할 플레이어 유닛 카드 데이터 */
 // 이 타입은 캐릭터 선택 화면에 필요한 표시 데이터를 한 곳에 모은다.
@@ -40,9 +72,14 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mRoleText;
 
+	// 역할 한 낱말. 용병 선택 화면의 역할 알약처럼 좁은 자리에 건다.
+	// mRoleText 를 줄여 쓰면 화면마다 다르게 줄여서 결국 다 달라진다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	FText mRoleShort;
+
 	// 화면 아트 선택용 직업 키. 게임 로직 enum 이름과 표시 이름이 달라도 UI는 이 값으로 이미지를 고른다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	EPlayerJobType mJobType = EPlayerJobType::None;
+	EUnitJobType mJobType = EUnitJobType::None;
 
 	// 카드/상세 패널용 설명 문구.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
@@ -52,13 +89,31 @@ struct P_RD_API FFrontendCharacterOption
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	FText mStatSummary;
 
+	// 이 캐릭터가 들고 시작하는 스킬 이름. 용병 선택 화면이 카드에 두 줄로 건다.
+	// 이름만 있으면 되고 쿨타임/피해 같은 수치는 UI가 판단하지 않는다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<FText> mSkillNames;
+
+	// 스킬 아이콘(mSkillNames와 같은 순서). 상세의 스킬 칸이 그림으로 걸고,
+	// 비어 있는 칸은 이름 글자로 대신 보여준다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<TSoftObjectPtr<UTexture2D>> mSkillIcons;
+
+	// 스킬 상세 겹용 정적 스펙(mSkillNames/mSkillIcons와 같은 순서).
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	TArray<FFrontendSkillOption> mSkillDetails;
+
 	// 시작 최대 체력. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
 	int32 mMaxHP = 0;
 
-	// 시작 주사위 수. UI는 표시만 하고 계산하지 않는다.
+	// 한 턴에 충전되는 기본 AP. 선택 상세의 AP 표시에 사용한다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)
-	int32 mDice = 0;
+	int32 mMaxAP = 0;
+
+	// 턴 순서 계산에 쓰는 기본 속도 포인트. 선택 상세의 속도 표시에 사용한다.
+	UPROPERTY(Category = Frontend, BlueprintReadOnly)
+	int32 mSpeed = 0;
 
 	// 시작 골드. UI는 표시만 하고 계산하지 않는다.
 	UPROPERTY(Category = Frontend, BlueprintReadOnly)

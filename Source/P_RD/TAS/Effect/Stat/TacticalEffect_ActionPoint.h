@@ -1,0 +1,85 @@
+﻿/*****************************************************************//**
+ * @file   TacticalEffect_ActionPoint.h
+ * @brief  ActionPoint 이펙트 정의 헤더
+ * @author 이문환, 모호재
+ * @date   2026-08-01
+ *********************************************************************/
+
+#pragma once
+
+#include "TAS/Effect/Stat/TacticalEffect_Unit.h"
+#include "TAS/Calculation/TacticalEffectExecutionCalculation.h"
+#include "TacticalEffect_ActionPoint.generated.h"
+
+/**
+ * @brief ActionPoint 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_ActionPoint : public UTacticalEffect_Unit
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_ActionPoint();
+
+	/* UTacticalEffect_Unit 상속 */
+public:
+	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
+};
+
+/**
+ * @brief ActionPoint 습득 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_GetActionPoint : public UTacticalEffectExecutionCalculation
+{
+	GENERATED_BODY()
+
+public:
+	void Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const override;
+
+protected:
+	virtual void OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const;
+	virtual void OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const;
+};
+
+/**
+ * @brief ActionPoint 습득 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_GetActionPoint : public UTacticalEffect_Unit
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_GetActionPoint();
+
+	/* UTacticalEffect_Unit 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
+};
+
+/**
+ * @brief ActionPoint 충전 계산기
+ */
+UCLASS()
+class UTacticalEffectExecutionCalculation_RechargeActionPoint : public UTacticalEffectExecutionCalculation_GetActionPoint
+{
+	GENERATED_BODY()
+
+protected:
+	void OnPreGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, OUT float& ActionPoint) const override;
+	void OnPostGetActionPoint(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput, float ActionPoint) const override;
+};
+
+/**
+ * @brief ActionPoint 충전 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_RechargeActionPoint : public UTacticalEffect_Unit
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_RechargeActionPoint();
+};

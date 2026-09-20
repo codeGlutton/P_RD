@@ -2,13 +2,13 @@
 
 #include "RDMinimal.h"
 #include "UI/RDUserWidget.h"
+#include "UI/Combat/CombatUITypes.h"
 #include "UI/Reward/RewardUITypes.h"
 
 #include "CombatResultOverlayWidget.generated.h"
 
-class SBorder;
-class STextBlock;
-class SWidget;
+class UButton;
+class UTextBlock;
 
 UENUM()
 enum class ECombatResultOverlayMode : uint8
@@ -28,23 +28,27 @@ public:
 	UCombatResultOverlayWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	void ShowVictoryReward(const FRewardUI& Reward, FSimpleDelegate ConfirmCallback);
-	void ShowDefeatContinue(FSimpleDelegate ContinueCallback);
+	void ShowDefeatResult(
+		const FCombatResultUI& Result,
+		FSimpleDelegate TitleCallback);
 
 protected:
-	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 private:
-	FReply HandleConfirmClicked();
-	void RefreshSlate();
+	UFUNCTION() void HandleTitleClicked();
+	void BindButtons();
+	void RefreshWidget();
 
 private:
 	ECombatResultOverlayMode mMode = ECombatResultOverlayMode::None;
 	FRewardUI mReward;
-	FSimpleDelegate mConfirmCallback;
+	FCombatResultUI mCombatResult;
+	FSimpleDelegate mTitleCallback;
 
-	TSharedPtr<SBorder> mRewardPanel;
-	TSharedPtr<STextBlock> mTitleText;
-	TSharedPtr<STextBlock> mGoldText;
-	TSharedPtr<STextBlock> mExpText;
-	TSharedPtr<SBorder> mContinuePanel;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> mTitleButton;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mLocationText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mRoundText;
+	UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> mEnemyText;
 };

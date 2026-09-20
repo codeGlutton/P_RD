@@ -43,10 +43,16 @@ void UFrontendMapLineWidget::SetLineColor(const FLinearColor& InColor)
 	}
 }
 
-void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
+void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath, bool bIsTraversed)
 {
-	// 틴트도 시안(WBP 클래스 디폴트)이 정본 — C++ 하드코딩 금지.
-	const FLinearColor Tint = bIsOpenPath ? mOpenTint : mLockedTint;
+	mIsOpenPath = bIsOpenPath;
+	mIsTraversedPath = bIsOpenPath && bIsTraversed;
+
+	// 지나온 길은 가장 밝게, 지금 갈 수 있는 길은 금색, 잠긴 길은 어두운 황동색으로 읽힌다.
+	const FLinearColor Tint = bIsOpenPath
+		? (bIsTraversed ? mTraversedTint : mOpenTint)
+		: mLockedTint;
+	const FLinearColor GlowTint = bIsOpenPath ? mOpenGlowTint : mLockedGlowTint;
 	UTexture2D* PathTexture = bIsOpenPath ? mSolidTexture.Get() : mDashedTexture.Get();
 	if (LineImage != nullptr && PathTexture != nullptr)
 	{
@@ -59,6 +65,20 @@ void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
 		LineImage->SetBrush(LineBrush);
 		LineImage->SetColorAndOpacity(Tint);
 		LineImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (LineGlowImage != nullptr)
+		{
+			if (bIsOpenPath)
+			{
+				LineGlowImage->SetBrush(LineBrush);
+				LineGlowImage->SetColorAndOpacity(GlowTint);
+				LineGlowImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else
+			{
+				// 잠긴 길은 점선만 남긴다. 조회 모드에서 다음 방이 열린 것처럼 보이지 않아야 한다.
+				LineGlowImage->SetVisibility(ESlateVisibility::Collapsed);
+			}
+		}
 		if (LinePanel != nullptr)
 		{
 			LinePanel->SetBrushColor(FLinearColor(0.f, 0.f, 0.f, 0.f));
@@ -70,6 +90,10 @@ void UFrontendMapLineWidget::SetLineStyle(bool bIsOpenPath)
 	if (LineImage != nullptr)
 	{
 		LineImage->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (LineGlowImage != nullptr)
+	{
+		LineGlowImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
 	SetLineColor(Tint);
 }
@@ -129,6 +153,12 @@ UTexture2D* UFrontendMapNodeWidget::GetStateRingTexture(EMapRoomState RoomState,
 	}
 }
 
+float UFrontendMapNodeWidget::GetVisualScale(
+	ERoomType RoomType, EMapRoomState RoomState, bool bIsCurrentRoom) const
+{
+	return 1.f;
+}
+
 void UFrontendMapNodeWidget::SetNodeVisual(
 	int32 InRowIndex,
 	int32 InColumnIndex,
@@ -144,6 +174,12 @@ void UFrontendMapNodeWidget::SetNodeVisual(
 {
 	mRowIndex = InRowIndex;
 	mColumnIndex = InColumnIndex;
+
+	FWidgetTransform VisualTransform = GetRenderTransform();
+	const float VisualScale = GetVisualScale(RoomType, RoomState, bIsCurrentRoom);
+	VisualTransform.Scale = FVector2D(VisualScale, VisualScale);
+	SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	SetRenderTransform(VisualTransform);
 
 	// 아이콘 위주 노드: 타입 아이콘이 주인공. 상태는 링 텍스처(시안)가 1순위, 없으면 상태색 프레임 폴백.
 	bool bHasIcon = false;
@@ -233,8 +269,30 @@ void UFrontendMapNodeWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	// WBP의 구형 사각 NodeFrame은 텍스트형 노드용 배경이다. 현재 노드는
+	// 타입 아이콘과 상태 링이 전체 외형을 담당하므로 이 프레임을 남기면
+	// 투명 아이콘 뒤로 회색 사각형이 비친다.
+	if (UWidget* LegacyNodeFrame = GetWidgetFromName(TEXT("NodeFrame")))
+	{
+		LegacyNodeFrame->SetVisibility(ESlateVisibility::Collapsed);
+	}
+
 	if (NodeButton != nullptr)
 	{
+		// 타입 아이콘과 상태 링 자체가 노드의 전체 외형이다. UButton 기본
+		// 브러시를 남기면 원형 노드 뒤에 회색 사각형이 비치므로 클릭 영역만
+		// 유지하고 상태별 버튼 배경은 그리지 않는다.
+		FSlateBrush TransparentBrush;
+		TransparentBrush.DrawAs = ESlateBrushDrawType::NoDrawType;
+		TransparentBrush.TintColor = FSlateColor(FLinearColor::Transparent);
+
+		FButtonStyle TransparentButtonStyle = NodeButton->GetStyle();
+		TransparentButtonStyle.SetNormal(TransparentBrush);
+		TransparentButtonStyle.SetHovered(TransparentBrush);
+		TransparentButtonStyle.SetPressed(TransparentBrush);
+		TransparentButtonStyle.SetDisabled(TransparentBrush);
+		NodeButton->SetStyle(TransparentButtonStyle);
+
 		NodeButton->OnClicked.AddUniqueDynamic(this, &UFrontendMapNodeWidget::HandleNodeButtonClicked);
 	}
 	else

@@ -37,16 +37,17 @@ public:
 public:
 	bool operator==(const FSRPGAttributeEffectEventLog& Other) const
 	{
-		return mEffectAttribute == Other.mEffectAttribute;
+		return mEffectAttribute == Other.mEffectAttribute
+			&& mIsCritical == Other.mIsCritical;
 	}
 	bool operator!=(const FSRPGAttributeEffectEventLog& Other) const
 	{
-		return mEffectAttribute != Other.mEffectAttribute;
+		return !(*this == Other);
 	}
 
 	friend uint32 GetTypeHash(const FSRPGAttributeEffectEventLog& Log)
 	{
-		return GetTypeHash(Log.mEffectAttribute);
+		return HashCombine(GetTypeHash(Log.mEffectAttribute), GetTypeHash(Log.mIsCritical));
 	}
 
 public:
@@ -57,6 +58,10 @@ public:
 	// @brief 보드 액터의 수치 변화량
 	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Magnitude"))
 	float													mMagnitude = 0.f;
+
+	// @brief 공격 피해가 치명타 판정에서 발생했는지 여부. 피해 숫자 스킨 선택에 사용한다.
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "IsCritical"))
+	bool													mIsCritical = false;
 };
 
 /**
@@ -218,6 +223,26 @@ public:
 };
 
 /**
+ * @brief 적 AI 동작 로그
+ */
+USTRUCT(BlueprintType)
+struct FSRPGAIPlanLog
+{
+	GENERATED_BODY()
+
+public:
+	bool IsValid() const
+	{
+		return true;
+	}
+
+public:
+	// @brief 사용할 스킬 인덱스 (INDEX_NONE일 경우 스킬 사용 불가)
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
+	int32													mSkillIndex = INDEX_NONE;
+};
+
+/**
  * @brief 하나의 턴 내에서 발생한 이벤트 로그
  */
 USTRUCT(BlueprintType)
@@ -232,6 +257,10 @@ public:
 	}
 
 public:
+	// @brief 라운드 인덱스
+	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundIndex"))
+	int32													mRoundIndex = INDEX_NONE;
+
 	// @brief 이벤트를 발생 시킨 소스 유닛 ID
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SourceUnitID"))
 	int32													mSourceUnitID = INDEX_NONE;
@@ -239,6 +268,10 @@ public:
 	// @brief 이벤트를 발생 시킨 액터 모델 클래스
 	UPROPERTY(Category = "Params", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "BoardActorModelClass", MustImplement = "/Script/P_RD.BoardActorModel"))
 	TSubclassOf<UObject>									mUnitActorModelClass = nullptr;
+
+public:
+	UPROPERTY(Category = "Result", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "AIPlanLog"))
+	FSRPGAIPlanLog											mAIPlanLog;
 
 public:
 	// @brief 각 액션마다의 변화 로그

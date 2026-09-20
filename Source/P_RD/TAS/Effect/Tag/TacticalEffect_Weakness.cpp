@@ -1,31 +1,36 @@
-﻿#include "TAS/Effect/Tag/TacticalEffect_Weakness.h"
-#include "AttributeSet/UnitAttributeSet.h"
-#include "Simulation/Logger/EventLogger.h"
+#include "TAS/Effect/Tag/TacticalEffect_Weakness.h"
+#include "GameplayTagType.h"
 
-#include "TAS/Effect/TacticalEffectContext.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
 UTacticalEffect_Weakness::UTacticalEffect_Weakness()
 {
-	// 즉시형
-	mDurationPolicy = ETacticalEffectDurationType::Instant;
-	mStackingType = ETacticalEffectStackingType::None;
+	mCachedAssetTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+	mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
 }
 
-void UTacticalEffect_Weakness::OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const
+UTacticalEffect_AddWeakness::UTacticalEffect_AddWeakness()
 {
-	Super::OnExecuted(ActiveTEContainer, TESpec);
+	mStatusEffect = UTacticalEffect_Weakness::StaticClass();
+}
 
-	const int32 TagCount = FMath::Floor(TESpec.mDynamicMagnitude);
+UTacticalEffect_GetWeakness::UTacticalEffect_GetWeakness()
+{
+	mStatusEffect = UTacticalEffect_Weakness::StaticClass();
+}
+
+bool UTacticalEffect_GetWeakness::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	if (AttributeSetCompModelInstance != nullptr && AttributeSetCompModelInstance->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_WeakeningImmunity) == true)
+	{
+		return false;
+	}
 
-	AttributeSetCompModelInstance->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness, TagCount);
-
-	FSRPGTagEffectEventLog Log;
-	Log.mEffectTag = EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness;
-	Log.mCount = TagCount;
-
-	GetWorldEventLogger(Instigator)->LogTagEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	return true;
 }

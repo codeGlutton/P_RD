@@ -11,9 +11,13 @@ bool IBoardCombatTarget::IsDead() const
 	return GetAttributeComponentModel()->HasMatchingGameplayTag(EffectTags::GameplayEffect_ActorState_Dead);
 }
 
-FBoardCombatTargetSnapshotData IBoardCombatTarget::MakeSnapshotData() const
+void IBoardCombatTarget::OnPostDead()
 {
-	FBoardCombatTargetSnapshotData Snapshot;
+}
+
+UBoardCombatTargetSnapshotData* IBoardCombatTarget::MakeSnapshotData() const
+{
+	UBoardCombatTargetSnapshotData* Snapshot = NewObject<UBoardCombatTargetSnapshotData>(GetAttributeComponentModel());
 	GetAttributeComponentModel()->CaptureAllStates(OUT Snapshot);
 
 	return Snapshot;
@@ -27,5 +31,29 @@ ETeamAttitude::Type IBoardCombatTarget::GetTeamAttitudeTowards(const UObject& Ot
 		return FGenericTeamId::GetAttitude(GetGenericTeamId(), BoardCombatTarget->GetGenericTeamId());
 	}
 	return ETeamAttitude::Neutral;
+}
+
+void IBoardCombatTarget::OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex)
+{
+}
+
+void IBoardCombatTarget::OnEndUsingSkill(int32 SkillIndex)
+{
+}
+
+void IBoardCombatTarget::OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+}
+
+void IBoardCombatTarget::OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+}
+
+void IBoardCombatTarget::OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex)
+{
+}
+
+void IBoardCombatTarget::OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex)
+{
 }
 

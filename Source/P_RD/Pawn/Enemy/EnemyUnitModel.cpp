@@ -1,24 +1,24 @@
-﻿/*****************************************************************//**
- * @file   EnemyUnitModel.cpp
- * @brief  적 베이스 유닛 모델 구현
- * @author 이문환
- * @date   2026-07-01
- *********************************************************************/
-
-#include "Pawn/Enemy/EnemyUnitModel.h"
+﻿#include "Pawn/Enemy/EnemyUnitModel.h"
 #include "Setting/GameTeamType.h"
 #include "AttributeSet/UnitAttributeSet.h"
 
+#include "Singleton/WorldSubsystem/TacticalFrameworkModel.h"
+
 #include "Component/SkillComponent/SkillComponentModel.h"
 #include "DataAsset/UnitSpawnData/StaticEnemyUnitSpawnData.h"
-#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
+
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+
+#include "Component/EquipmentComponent/EquipmentComponentModel.h"
 
 UEnemyUnitModel::UEnemyUnitModel()
 {
-	UUnitModel::SetGenericTeamId(EGameTeamType::Enemy);
+	SetGenericTeamId(EGameTeamType::Enemy);
 
-	// 적 스탯 세트 생성 — 속성 컴포넌트가 자식 AttributeSet을 자동 수집해 스탯 커브 초기화 대상이 된다(플레이어와 동일 패턴).
-	mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+	mUnitAttributeSet = CreateDefaultSubobject<UEnemyUnitAttributeSet>(TEXT("EnemyUnitAttributeSet"));
+
+	mEquipmentCompModel = CreateDefaultSubobject<UEquipmentComponentModel>(TEXT("EquipmentComponentModel"));
 }
 
 void UEnemyUnitModel::PostInitializeComponentModels()
@@ -33,26 +33,42 @@ void UEnemyUnitModel::PostInitializeComponentModels()
 	}
 
 	mMoveTendency = EnemySpawn->mMoveTendency;
-	mMovePoint = EnemySpawn->mMovePoint;
+	mSkillPriorities = EnemySpawn->mSkillPriorities;
+	mTargetPolicyOverrides = EnemySpawn->mTargetPolicyOverrides;
 
 	if (USkillComponentModel* SkillComp = GetSkillComponentModel())
 	{
-		// 스폰 데이터의 스킬을 로드해서 슬롯 0부터 순서대로 장착
-		int32 SkillIndex = 0;
-		for (const TSoftObjectPtr<UStaticSkillData>& SkillSoft : EnemySpawn->mSkillDatas)
-		{
-			// 로드 성공한 스킬만 슬롯에 세팅
-			if (UStaticSkillData* Loaded = SkillSoft.LoadSynchronous())
-			{
-				SkillComp->SetSkill(SkillIndex++, Loaded);
-			}
-		}
+		SkillComp->SetSkillFrom(EnemySpawn->mSkillDatas);
+	}
+	if (UEquipmentComponentModel* EquipComp = GetEquipmentComponentModel())
+	{
+		EquipComp->EquipFrom(EnemySpawn->mEquipmentDatas);
 	}
 }
 
 int32 UEnemyUnitModel::GetBoardActorLevel() const
 {
 	return GetDifficulty();
+}
+
+UEquipmentComponentModel* UEnemyUnitModel::GetEquipmentComponentModel() const
+{
+	return mEquipmentCompModel;
+}
+
+void UEnemyUnitModel::SetDifficulty(int32 Difficulty)
+{
+	mDifficulty = Difficulty;
+
+	UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+	checkf(TacticalFrameworkModel != nullptr, TEXT("전략 프레임워크 모델 nullptr"));
+
+	TacticalFrameworkModel->GetAttributeSetInitter()->InitAttributeSetDefaults(GetAttributeComponentModel(), GetBoardActorKeyName(), GetDifficulty(), true);
+}
+
+EUnitJobType UEnemyUnitModel::GetUnitJobType() const
+{
+	return EUnitJobType::Monster;
 }
 
 int32 UEnemyUnitModel::GetDifficulty() const
@@ -65,7 +81,13 @@ EMoveTendency UEnemyUnitModel::GetMoveTendency() const
 	return mMoveTendency;
 }
 
-int32 UEnemyUnitModel::GetMovePoint() const
+ESkillPriority UEnemyUnitModel::GetSkillPriority(int32 SkillSlot) const
 {
-	return mMovePoint;
+	return mSkillPriorities.IsValidIndex(SkillSlot) ? mSkillPriorities[SkillSlot] : ESkillPriority::Normal;
 }
+
+const FEnemyTargetPolicyOverride& UEnemyUnitModel::GetTargetPolicyOverride(int32 SkillSlot) const
+{
+	return mTargetPolicyOverrides[SkillSlot];
+}
+

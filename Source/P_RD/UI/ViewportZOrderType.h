@@ -22,3 +22,11 @@ enum class EViewportZOrderType : uint8
 	LoadingNotify = 30	UMETA(ToolTip = "페이드 인, 페이드 아웃 위에 뜰 로딩 메세지"),
 };
 
+// Keep the serialized uint8 enum values stable for existing WBPs. Runtime
+// transition layers must cover room rails (10001), details (10020) and movies (12000).
+namespace RDViewportLayers
+{
+	inline constexpr int32 TransitionFade = 20000;
+	inline constexpr int32 TransitionLoading = 20010;
+}
+

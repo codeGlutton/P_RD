@@ -1,0 +1,311 @@
+﻿/*****************************************************************//**
+ * @file   BoardMovementComponentModel.cpp
+ * @brief  보드 액터 공용 이동 컴포넌트 모델 구현 파일
+ * @author 이문환
+ * @date   2026-08-09
+ *********************************************************************/
+
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
+
+#include "Singleton/WorldSubsystem/SRPGCombatModel.h"
+#include "Singleton/WorldSubsystem/PresentationBarrier.h"
+
+#include "Actor/BoardActor/BoardActorModel.h"
+#include "Actor/TileMap/TileMapModel.h"
+
+bool UBoardMovementComponentModel::MoveAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+{
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Normal, OnFinished);
+}
+
+bool UBoardMovementComponentModel::PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+{
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Push, OnFinished);
+}
+
+bool UBoardMovementComponentModel::PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished)
+{
+	return StartPathInternal(PathTileIndexes, EBoardMoveMode::Pull, OnFinished);
+}
+
+bool UBoardMovementComponentModel::TeleportTo(const FTileTransform& NextTransform, FOnBoardMoveFinished OnFinished)
+{
+	// 경로 이동 중이거나 텔레포트 중이면 시작 안 함
+	if (IsMoving() == true)
+	{
+		return false;
+	}
+
+	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
+	UTileMapModel* TileMap = GetTileMap();
+
+	// 도착 타일이 막혀 있으면 시작 안 함
+	if (TileMap->IsBlocked(NextTransform.mIndex, Owner) == true)
+	{
+		return false;
+	}
+
+	// 논리 좌표 변경 -> 출발 타일의 이탈 오버랩 통지
+	TileMap->StartActorMovement(NextTransform, Owner);
+	// 도착 타일 진입 오버랩 통지
+	TileMap->CompleteActorMovement(GetOwnerModel<UBoardActorModel>());
+
+	// 완료 통지
+	OnFinished.ExecuteIfBound();
+
+	// OnTeleport를 구독하고 있던 뷰가 사라짐/나타남 동기 연출 시작
+	Owner->OnTeleport.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform));
+	return true;
+}
+
+bool UBoardMovementComponentModel::TryRegisterPendingPush(const FTileIndex& TrapTileIndex, const TArray<FTileIndex>& PushPathTileIndexes)
+{
+	// 이동 루프 밖에서는 소비 지점이 없으므로 등록 불가 (정지 대상은 PushAlongPath 사용)
+	if (IsMoving() == false)
+	{
+		return false;
+	}
+
+	// 한 연쇄 안에서 같은 함정은 1회만 발동 (무한 연쇄 방지)
+	if (mChainedTrapTiles.Contains(TrapTileIndex) == true)
+	{
+		return false;
+	}
+
+	// 빈 경로만 거부. 밀 곳이 없어 제자리 1칸인 경로도 등록해서 잔여 걷기를 끊음 (막힘 판정은 경로 생성 쪽 책임)
+	if (PushPathTileIndexes.IsEmpty() == true)
+	{
+		return false;
+	}
+
+	// 보류 경로의 시작은 피격자의 현재 타일이어야 함
+	checkf(PushPathTileIndexes[0] == GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex,
+		TEXT("보류 밀치기 경로의 시작 타일 불일치"));
+
+	// 한 타일에 함정이 여러개 있을 경우 마지막 등록이 덮어 씀
+	mChainedTrapTiles.Add(TrapTileIndex);
+	mPendingPushPath = PushPathTileIndexes;
+	return true;
+}
+
+bool UBoardMovementComponentModel::StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished)
+{
+	// 이동 중 재호출이거나 경로가 2칸 미만이면 시작 거부
+	if (IsMoving() == true || PathTileIndexes.Num() < 2)
+	{
+		return false;
+	}
+
+	mPathTileIndexes = PathTileIndexes;
+	mMoveMode = MoveMode;
+	mOnFinished = OnFinished;
+	mCancelRequested = false;
+
+	// 첫 칸이 이미 막혔으면 시작 안 함 (경로 계산 뒤 다른 유닛이 먼저 차지한 경우 등)
+	if (CanEnterStep(1) == false)
+	{
+		ResetMoveState();
+		return false;
+	}
+
+	// 외부 요청 시작 = 새 연쇄 시작 (연쇄 기록/보류 경로/깊이 초기화)
+	mChainedTrapTiles.Empty();
+	mPendingPushPath.Empty();
+	mAdoptedPushCount = 0;
+
+	// 전체 경로를 뷰에 통지
+	BroadcastStartMovePath();
+
+	// 1번 타일로 이동하는 것부터 시작 (0번은 현재 타일).
+	// 해당 타일로 이동이 완료되면, 베리어가 끝나고 다시 다음 스텝으로 가는 걸 마지막 타일까지 반복.
+	// 시뮬레이션모드에서는 베리어가 없으므로 즉각 다음 스텝으로 진행하므로 문제 없음
+	StartStep(1);
+	return true;
+}
+
+void UBoardMovementComponentModel::BroadcastStartMovePath()
+{
+	// 코너링에 진입/진출 타일 정보가 필요하므로 전체 경로를 전달
+	UTileMapModel* TileMap = GetTileMap();
+	TArray<FVector> PathWorldLocations;
+	PathWorldLocations.Reserve(mPathTileIndexes.Num());
+	for (const FTileIndex& TileIndex : mPathTileIndexes)
+	{
+		PathWorldLocations.Add(TileMap->TileToWorldLocation(TileIndex));
+	}
+	GetOwnerModel<UBoardActorModel>()->OnStartMovePath.Broadcast(PathWorldLocations, mMoveMode);
+}
+
+bool UBoardMovementComponentModel::CanEnterStep(int32 StepIndex) const
+{
+	checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+
+	// 다른 유닛이나 장애물이 그 칸을 막고 있지 않으면 진입 가능
+	return GetTileMap()->IsBlocked(mPathTileIndexes[StepIndex], GetOwnerModel<UBoardActorModel>()) == false;
+}
+
+bool UBoardMovementComponentModel::IsMoving() const
+{
+	// 경로 이동 연출 중이면 '이동' 중이라고 판단
+	return mCurrentStepIndex != INDEX_NONE;
+}
+
+EBoardMoveMode UBoardMovementComponentModel::GetMoveMode() const
+{
+	return mMoveMode;
+}
+
+void UBoardMovementComponentModel::CancelMove()
+{
+	// 이동 중일 때만 의미 있음 - 실제 정지는 진행 중인 스텝의 연출 종료 시점
+	if (IsMoving() == true)
+	{
+		mCancelRequested = true;
+	}
+}
+
+void UBoardMovementComponentModel::StartStep(int32 StepIndex)
+{
+	checkf(mPathTileIndexes.IsValidIndex(StepIndex) == true, TEXT("이동 경로 인덱스 오류"));
+	mCurrentStepIndex = StepIndex;
+
+	// 파생 훅 (유닛의 AP 차감 등)
+	OnStartStep(StepIndex, mMoveMode);
+
+	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
+	UTileMapModel* TileMap = GetTileMap();
+
+	// 직전 타일에서 이번 타일을 바라볼때의 방향 계산
+	// 직전->현재와 현재->다음 방향을 보간해서 자연스럽게 코너링 할 계획
+	// 밀치기는 밀려나는 것이므로 바라보는 방향 유지 (뒤로 밀려도 몸은 그대로)
+	const ETileActorDirection Direction = (mMoveMode == EBoardMoveMode::Normal)
+		? UTileMapModel::TileDeltaToDirection(
+			mPathTileIndexes[StepIndex - 1],
+			mPathTileIndexes[StepIndex],
+			Owner->GetTileTransform().mDirection)
+		: Owner->GetTileTransform().mDirection;
+
+	// 다음 타일로 이동 (모델의 논리적 위치 변경)
+	// 점유는 즉시 하고, 도착 오버랩 통지는 CompleteStep가 함
+	const FTileTransform NextTransform(mPathTileIndexes[StepIndex], Direction);
+	TileMap->StartActorMovement(NextTransform, Owner);
+
+	// 이동 후 받을 베리어 생성
+	// 컴포넌트 모델이 먼저 파괴될 수 있으므로 WeakLambda로 보호.
+	TSharedPtr<FPresentationBarrier> Barrier = FPresentationBarrier::Make(
+		FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+			OnStepPresentationFinished();
+			}));
+
+	// 이번 스텝 도착 후 최종 목적지까지 남은 경로 거리 계산
+	// -> 제동거리에 들어가면 감속할 때 사용
+	float RemainingPathDistance = 0.0f;
+	for (int32 i = StepIndex; i < mPathTileIndexes.Num() - 1; ++i)
+	{
+		RemainingPathDistance += FVector::Dist(
+			TileMap->TileToWorldLocation(mPathTileIndexes[i]),
+			TileMap->TileToWorldLocation(mPathTileIndexes[i + 1]));
+	}
+
+	// OnStartMoveStep을 구독하고 있던 뷰가 이동 시작 (뷰의 물리적 위치 변경)
+	Owner->OnStartMoveStep.Broadcast(NextTransform, TileMap->TileToWorldTransform(NextTransform), Barrier, RemainingPathDistance, mMoveMode);
+}
+
+void UBoardMovementComponentModel::CompleteStep()
+{
+	// 현재(도착) 타일의 오버랩 통지 — 함정/장판 등 타일 효과가 여기서 발동
+	GetTileMap()->CompleteActorMovement(GetOwnerModel<UBoardActorModel>());
+}
+
+void UBoardMovementComponentModel::OnStepPresentationFinished()
+{
+	// 취소 요청됐으면 완료 통지 없이 정지 (뷰가 걷기 연출을 멈추도록 경로 종료는 통지)
+	if (mCancelRequested == true)
+	{
+		ResetMoveState();
+		BroadcastEndMovePath();
+		return;
+	}
+
+	// 현재 타일 도착 처리 -> 함정/장판 등 오버랩 관련된 처리
+	CompleteStep();
+
+	// OnEndMoveStep을 구독하고 있던 뷰가 도착 확인 (UI 변경 등)
+	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
+	Owner->OnEndMoveStep.Broadcast(Owner->GetTileTransform(), Owner->GetWorldTransform());
+
+	// 이 스텝 도중 함정이나 스킬에 밀쳐졌으면 남은 경로를 버리고 밀치기 경로로 갈아탐
+	// 완료 통지는 밀치기까지 다 끝난 뒤 한 번만 하므로 mOnFinished는 그대로 둠
+	if (mPendingPushPath.Num() > 0)
+	{
+		// 같은 함정은 한 번만 발동하므로 갈아탄 횟수가 상한을 넘으면 연쇄 기록 버그
+		++mAdoptedPushCount;
+		checkf(mAdoptedPushCount <= MaxPushChainDepth, TEXT("밀치기 연쇄 깊이 상한 초과"));
+
+		mPathTileIndexes = MoveTemp(mPendingPushPath);
+		mPendingPushPath.Empty();
+
+		// 실제로 밀리는 경우에만 밀치기 모드로 전환하고 뷰에 새 경로 통지 (걷기 곡선은 버리고 밀치기 연출로 전환)
+		// 밀 곳이 없는 제자리 1칸 경로는 연출 없이 아래에서 바로 완료
+		if (mPathTileIndexes.Num() >= 2)
+		{
+			mMoveMode = EBoardMoveMode::Push;
+			BroadcastStartMovePath();
+		}
+
+		// 바뀐 새 경로를 시작하도록 인덱스 초기화
+		mCurrentStepIndex = 0;
+	}
+
+	// 스스로 하는 이동 중 상태이상에 걸렸으면 남은 경로를 버리고 여기서 종료
+	// 강제 이동은 상태이상과 무관하게 끝까지 진행
+	const bool IsStoppedByStatus = IsSelfMove(mMoveMode) == true && CanSelfMove() == false;
+
+	// 다음 칸이 남아 있고 들어갈 수 있으면 계속 이동
+	const int32 NextStepIndex = mCurrentStepIndex + 1;
+	if (IsStoppedByStatus == false && mPathTileIndexes.IsValidIndex(NextStepIndex) && CanEnterStep(NextStepIndex))
+	{
+		StartStep(NextStepIndex);
+		return;
+	}
+
+	// 마지막 칸 도착, 다음 칸 막힘, 상태이상 정지 중 하나면 여기서 이동 완료
+	// 통지를 받은 쪽이 바로 새 이동을 시작할 수 있으므로 상태를 먼저 비우고 호출 (비우면 mOnFinished도 지워지니 복사해 둠)
+	// 뷰의 경로 종료 정리가 완료 통지보다 먼저 끝나야 다음 이동 연출과 섞이지 않음
+	FOnBoardMoveFinished Finished = mOnFinished;
+	ResetMoveState();
+	BroadcastEndMovePath();
+	Finished.ExecuteIfBound();
+}
+
+void UBoardMovementComponentModel::BroadcastEndMovePath()
+{
+	// 뷰가 바닥 오프셋을 더하므로 타일 바닥 기준 좌표를 넘김
+	UBoardActorModel* Owner = GetOwnerModel<UBoardActorModel>();
+	const FTileTransform& TileTransform = Owner->GetTileTransform();
+	Owner->OnEndMovePath.Broadcast(TileTransform, GetTileMap()->TileToWorldTransform(TileTransform));
+}
+
+void UBoardMovementComponentModel::ResetMoveState()
+{
+	mPathTileIndexes.Empty();
+	mCurrentStepIndex = INDEX_NONE;
+	mCancelRequested = false;
+	mOnFinished.Unbind();
+
+	// 연쇄 상태 정리 (mMoveMode는 유지해서 GetMoveMode()가 마지막 모드 반환)
+	mChainedTrapTiles.Empty();
+	mPendingPushPath.Empty();
+	mAdoptedPushCount = 0;
+}
+
+UTileMapModel* UBoardMovementComponentModel::GetTileMap() const
+{
+	// 전투 모델을 월드 서브시스템에서 바로 받아 타일 맵을 꺼낸다 (턴 컨텍스트 체인 의존 제거)
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+
+	UTileMapModel* TileMap = CombatModel->GetTileMap();
+	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
+	return TileMap;
+}

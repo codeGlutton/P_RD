@@ -1,4 +1,7 @@
-﻿#include "UI/Combat/CombatUIModel.h"
+#include "UI/Combat/CombatUIModel.h"
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
+
+#include "UI/Combat/SimulationPreviewUIModel.h"
 
 // ───────── UI → gameplay : 의도만 브로드캐스트 (실행은 게임플레이가) ─────────
 
@@ -6,24 +9,6 @@
 void UCombatUIModel::RequestSelectSkill(int32 SkillIndex)
 {
 	OnCombatCommand.Broadcast(ECombatInputType::SelectSkill, SkillIndex);
-}
-
-/** @brief 주사위 슬롯 index 토글 의도를 전달한다. */
-void UCombatUIModel::RequestToggleDice(int32 DiceIndex)
-{
-	OnCombatCommand.Broadcast(ECombatInputType::ToggleDice, DiceIndex);
-}
-
-/** @brief 보유 주사위 전체 굴림 의도를 전달한다. */
-void UCombatUIModel::RequestRollDice()
-{
-	OnCombatCommand.Broadcast(ECombatInputType::RollDice, INDEX_NONE);
-}
-
-/** @brief 입장 물리 굴림 결과면(0-base)을 게임플레이에 반영하라고 알린다. */
-void UCombatUIModel::RequestApplyDiceResults(const TArray<int32>& RolledFaceIndices)
-{
-	OnApplyDiceResults.Broadcast(RolledFaceIndices);
 }
 
 /** @brief 스킬 상세 요청을 SkillIndex payload로 전달한다. */
@@ -36,6 +21,18 @@ void UCombatUIModel::RequestLongPressSkill(int32 SkillIndex)
 void UCombatUIModel::RequestLongPressUnit(int32 UnitId)
 {
 	OnCombatCommand.Broadcast(ECombatInputType::LongPressUnit, UnitId);
+}
+
+/** @brief 상세창에 뜬 유닛의 스킬 상세 요청을 SkillIndex payload로 전달한다. */
+void UCombatUIModel::RequestInspectUnitSkill(int32 SkillIndex)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::InspectUnitSkill, SkillIndex);
+}
+
+/** @brief 그 유닛을 화면 가운데로 데려오라고 청한다. */
+void UCombatUIModel::RequestFocusUnit(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::FocusUnit, UnitId);
 }
 
 /** @brief MOVE 모드 진입 의도를 전달한다. */
@@ -51,9 +48,20 @@ void UCombatUIModel::RequestEndTurn()
 }
 
 /** @brief 현재 선택/빌드 취소 의도를 전달한다. */
+void UCombatUIModel::RequestInspectUnit(int32 UnitId)
+{
+	OnCombatCommand.Broadcast(ECombatInputType::InspectUnit, UnitId);
+}
+
 void UCombatUIModel::RequestCancel()
 {
 	OnCombatCommand.Broadcast(ECombatInputType::Cancel, INDEX_NONE);
+}
+
+/** @brief 겨냥해 둔 칸을 확정한다. */
+void UCombatUIModel::RequestConfirm()
+{
+	OnCombatCommand.Broadcast(ECombatInputType::Confirm, INDEX_NONE);
 }
 
 /** @brief 장비 슬롯 상세 요청을 SlotIndex payload로 전달한다. */
@@ -63,12 +71,60 @@ void UCombatUIModel::RequestLongPressEquip(int32 SlotIndex)
 }
 
 /** @brief 월드 터치 스크린 좌표를 변환하지 않고 그대로 게임플레이 경계로 넘긴다. */
+/**
+ * @brief 겨냥한 자리를 갈아 끼운다.
+ * @param Target 새로 겨냥한 자리. mIsValid 가 false 면 겨냥을 푼다
+ */
+void UCombatUIModel::SetTarget(const FCombatTargetUI& Target)
+{
+	if (mTarget.mIsValid == Target.mIsValid
+		&& mTarget.mTile == Target.mTile
+		&& mTarget.mUnitId == Target.mUnitId)
+	{
+		return;
+	}
+	mTarget = Target;
+	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
+}
+
+void UCombatUIModel::SetFocusScreenAnchor(FVector2D AnchorFraction)
+{
+	mFocusScreenAnchor.X = FMath::Clamp(AnchorFraction.X, 0.0f, 1.0f);
+	mFocusScreenAnchor.Y = FMath::Clamp(AnchorFraction.Y, 0.0f, 1.0f);
+	OnChangeFocusScreenAnchor.Broadcast(mFocusScreenAnchor);
+}
+
 void UCombatUIModel::RequestWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
 	OnCombatWorldTouch.Broadcast(ScreenPosition, bLongPress);
 }
 
+void UCombatUIModel::RequestAbandonRun()
+{
+	OnAbandonRun.Broadcast();
+}
+
+void UCombatUIModel::RequestSaveAndExitRun()
+{
+	OnSaveAndExitRun.Broadcast();
+}
+
+void UCombatUIModel::NotifySaveAndExitCompleted(const bool bSuccess)
+{
+	OnSaveAndExitCompleted.Broadcast(bSuccess);
+}
+
+void UCombatUIModel::NotifyAbandonRunCompleted(const bool bSuccess)
+{
+	OnAbandonRunCompleted.Broadcast(bSuccess);
+}
+
 // ───────── gameplay → UI : 표시값을 캐시에 넣고 도메인 갱신을 알린다 ─────────
+
+void UCombatUIModel::SetCombatResultUI(const FCombatResultUI& Result)
+{
+	mCombatResultUI = Result;
+}
 
 /** @brief 유닛 표시 스냅샷을 교체하고 Unit 도메인 갱신만 알린다. */
 void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
@@ -77,32 +133,30 @@ void UCombatUIModel::SetUnitUIs(const TArray<FUnitUI>& Units)
 	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
 }
 
-/** @brief 유닛 상세 스냅샷을 교체하고 Unit 도메인 갱신을 알린다. */
+/** @brief 유닛 상세 스냅샷을 교체하고 UnitDetail 도메인 갱신을 알린다. */
+// Unit 도메인은 HP 변경마다 오므로, 상세는 전용 도메인으로 알려야 상세 패널이
+// "이번에 새로 요청된 상세"에만 반응할 수 있다.
 void UCombatUIModel::SetUnitDetail(const FUnitDetailUI& Detail)
 {
 	mUnitDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Unit);
-}
-
-/** @brief 주사위 표시 스냅샷을 교체하고 Dice 도메인 갱신을 알린다. */
-void UCombatUIModel::SetDiceUIs(const TArray<FDiceSlotUI>& Dice)
-{
-	mDiceUIs = Dice;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
-}
-
-/** @brief 스킬 빌드에 올린 주사위 index 목록과 합계를 교체한다. */
-void UCombatUIModel::SetSelectedDice(const TArray<int32>& SelectedIndices, int32 SelectedSum)
-{
-	mSelectedDiceIndices = SelectedIndices;
-	mSelectedDiceSum = SelectedSum;
-	OnUIChanged.Broadcast(ECombatUIDomain::Dice);
+	OnUIChanged.Broadcast(ECombatUIDomain::UnitDetail);
 }
 
 /** @brief 스킬 레일 표시 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
 void UCombatUIModel::SetSkillUIs(const TArray<FSkillUI>& Skills)
 {
 	mSkillUIs = Skills;
+	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+}
+
+/** @brief 레일 주인이 차례 유닛인지 교체한다. 이동 카드 잠금이 이 값을 본다. */
+void UCombatUIModel::SetSkillRailOwnTurn(bool bOwnTurn)
+{
+	if (mIsSkillRailOwnTurn == bOwnTurn)
+	{
+		return;
+	}
+	mIsSkillRailOwnTurn = bOwnTurn;
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
@@ -113,11 +167,11 @@ void UCombatUIModel::SetSelectedSkill(int32 SelectedIndex)
 	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
 }
 
-/** @brief 스킬 상세 스냅샷을 교체하고 Skill 도메인을 갱신한다. */
+/** @brief 스킬 상세 스냅샷을 교체하고 SkillDetail 도메인을 갱신한다. */
 void UCombatUIModel::SetSkillDetail(const FSkillDetailUI& Detail)
 {
 	mSkillDetail = Detail;
-	OnUIChanged.Broadcast(ECombatUIDomain::Skill);
+	OnUIChanged.Broadcast(ECombatUIDomain::SkillDetail);
 }
 
 
@@ -133,6 +187,27 @@ void UCombatUIModel::SetBuildPhase(ECombatBuildPhaseUI Phase)
 {
 	mTurnUI.mPhase = Phase;
 	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+}
+
+/** @brief 이동 경로 또는 선택 스킬이 확정 전에 소비할 AP를 캐시한다. */
+void UCombatUIModel::SetPendingAction(const FCombatPendingActionUI& PendingAction)
+{
+	mPendingAction = PendingAction;
+	if (mPendingAction.mType == ECombatPendingActionType::None)
+	{
+		mPendingAction.mActionPointCost = 0;
+	}
+	else
+	{
+		mPendingAction.mActionPointCost = FMath::Max(mPendingAction.mActionPointCost, 0);
+	}
+	OnUIChanged.Broadcast(ECombatUIDomain::Turn);
+}
+
+/** @brief 현재 유닛 스냅샷의 실제 이동 AP를 화면용 정수로 정규화한다. */
+int32 UCombatUIModel::GetDisplayedMovementPoint(const FUnitUI& Unit) const
+{
+	return FMath::Max(FMath::RoundToInt(Unit.mMovementPoint), 0);
 }
 
 /** @brief 장비 슬롯 표시 스냅샷을 교체하고 Equipment 도메인을 갱신한다. */
@@ -223,6 +298,21 @@ void UCombatUIModel::NotifyCombatFloatingLogs(const TArray<FCombatFloatingLogReq
 	}
 }
 
+void UCombatUIModel::SetCombatEventBatch(
+	ECombatEventDataSourceUI Source,
+	const TArray<FCombatFloatingLogRequest>& Requests)
+{
+	mCombatEventBatch.mSource = Source;
+	++mCombatEventBatch.mRevision;
+	mCombatEventBatch.mFloatingLogs = Requests;
+	OnCombatEventBatchChanged.Broadcast(mCombatEventBatch);
+
+	if (Requests.Num() > 0)
+	{
+		NotifyCombatFloatingLogs(Requests);
+	}
+}
+
 /** @brief 특정 모션 인덱스에 묶인 플로팅 로그를 정리하라고 구독 위젯에 알린다. */
 void UCombatUIModel::NotifyCombatFloatingLogMotionFinished(int32 MotionIndex)
 {
@@ -240,8 +330,55 @@ void UCombatUIModel::NotifyCombatFloatingLogsCleared()
 	OnCombatFloatingLogsCleared.Broadcast();
 }
 
-/** @brief 턴 시작 주사위 굴림 오버레이 열기를 구독 위젯에 알린다. */
-void UCombatUIModel::NotifyDiceRollRequested()
+void UCombatUIModel::NotifyCombatResultOpenRequested()
 {
-	OnDiceRollRequested.Broadcast();
+	OnCombatResultOpenRequested.Broadcast();
+}
+
+/** @brief 시뮬레이션 미리보기 뷰모델을 돌려준다. 처음 요청 시 지연 생성한다. */
+USimulationPreviewUIModel* UCombatUIModel::GetSimulationPreviewUIModel()
+{
+	if (mSimulationPreviewUIModel == nullptr)
+	{
+		mSimulationPreviewUIModel =
+			NewObject<USimulationPreviewUIModel>(this, TEXT("SimulationPreviewUIModel"));
+	}
+	return mSimulationPreviewUIModel;
+}
+
+void UCombatUIModel::NotifyPrePlaySkillCutIn(
+	const FCombatSkillCutInRequest& Request,
+	TSharedPtr<FPresentationBarrier> Barrier)
+{
+	// HUD가 보관하지 않으면 이 함수 반환 시 배리어가 자연 해제되어 fail-open한다.
+	OnPrePlaySkillCutIn.Broadcast(Request, MoveTemp(Barrier));
+}
+
+void UCombatUIModel::SetEnemyNextSkillIndices(const TMap<int32, int32>& NextSkillIndices)
+{
+	mEnemyNextSkillIndices = NextSkillIndices;
+}
+
+int32 UCombatUIModel::GetEnemyNextSkillIndex(int32 UnitId) const
+{
+	if (const int32* FoundSkillIndex = mEnemyNextSkillIndices.Find(UnitId))
+	{
+		return *FoundSkillIndex;
+	}
+	return INDEX_NONE;
+}
+
+void UCombatUIModel::ClearEnemyNextSkillIndices()
+{
+	mEnemyNextSkillIndices.Reset();
+}
+
+
+void UCombatUIModel::SetPlaybackSpeed(int32 Speed, bool Available)
+{
+    Speed = CombatPlaybackSpeed::Clamp(Speed);
+    if (Speed == mPlaybackSpeed && Available == mPlaybackSpeedAvailable) return;
+    mPlaybackSpeed = Speed;
+    mPlaybackSpeedAvailable = Available;
+    OnUIChanged.Broadcast(ECombatUIDomain::Meta);
 }

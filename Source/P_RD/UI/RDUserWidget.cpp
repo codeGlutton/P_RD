@@ -1,11 +1,25 @@
 #include "UI/RDUserWidget.h"
+#include "UI/RDUIInputSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "UI/SCenteredSafeZone.h"
 
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/GridPanel.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/ScaleBox.h"
+#include "Components/SafeZone.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/UniformGridPanel.h"
+#include "Components/VerticalBox.h"
+#include "Components/WrapBox.h"
 #include "Blueprint/WidgetTree.h"
 #include "Styling/SlateTypes.h"
 #include "Sound/SoundBase.h"
+#include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
@@ -15,6 +29,16 @@ namespace
 
 	// 눌렀을 때 배경색(멀티플라이어) RGB에 곱하는 값 — 어둡게 해서 눈에 띄게 한다(주 효과).
 	constexpr float ButtonPressColorMul = 0.6f;
+
+	bool IsPassiveLayoutPanel(const UWidget* Widget)
+	{
+		return Widget != nullptr
+			&& (Widget->IsA<UCanvasPanel>() || Widget->IsA<UOverlay>()
+				|| Widget->IsA<UScaleBox>() || Widget->IsA<USizeBox>()
+				|| Widget->IsA<UHorizontalBox>() || Widget->IsA<UVerticalBox>()
+				|| Widget->IsA<UWrapBox>() || Widget->IsA<UGridPanel>()
+				|| Widget->IsA<UUniformGridPanel>());
+	}
 }
 
 /**
@@ -160,6 +184,7 @@ void URDUserWidget::ApplyOpenUI()
 	}
 
 	SetVisibility(ESlateVisibility::Visible);
+	RegisterBackNavigation();
 }
 
 /**
@@ -188,7 +213,7 @@ bool URDUserWidget::ShouldRemoveFromParentOnClose() const
 
 bool URDUserWidget::ShouldApplyButtonFeedback() const
 {
-	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투/주사위엔 걸지 않는다).
+	// 기본은 미적용. 타이틀/클래스 선택 등 프론트엔드 화면만 override로 켠다(전투 HUD에는 걸지 않는다).
 	return false;
 }
 
@@ -196,8 +221,155 @@ void URDUserWidget::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
+	NormalizeCommonInputLayers();
+	NormalizeAutoFitTextClipping();
 	// 클릭 사운드는 모든 화면의 모든 버튼에 공통 적용한다. 시각 피드백(어둡게/축소)만 화면별 opt-in.
 	SetupCommonButtonFeedback();
+}
+
+void URDUserWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	RegisterBackNavigation();
+
+	// WBP에 구워진 버튼은 NativeOnInitialized에서 처리된다. 다만 파생 클래스는
+	// Super::NativeConstruct() 뒤에 ConstructWidget으로 버튼을 만드는 경우가 있다.
+	// 현재 호출과 다음 틱 재검사를 함께 두면 두 종류 모두 같은 소리를 쓴다.
+	NormalizeCommonInputLayers();
+	NormalizeAutoFitTextClipping();
+	SetupCommonButtonFeedback();
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().SetTimerForNextTick(
+			FTimerDelegate::CreateWeakLambda(this, [this]()
+				{
+					NormalizeCommonInputLayers();
+					NormalizeAutoFitTextClipping();
+					SetupCommonButtonFeedback();
+				}));
+	}
+}
+
+TSharedRef<SWidget> URDUserWidget::RebuildWidget()
+{
+	TSharedRef<SWidget> Content = Super::RebuildWidget();
+	if (!ShouldWrapMobileSafeArea()) return Content;
+	// Wrap Slate content, leaving the asset's WidgetTree/root and bindings intact.
+	return SNew(SCenteredSafeZone).IsTitleSafe(true).Visibility(EVisibility::SelfHitTestInvisible)[Content];
+}
+
+bool URDUserWidget::ShouldWrapMobileSafeArea() const
+{
+	return UsesMobileSafeArea() && GetParent() == nullptr
+		&& !(WidgetTree && WidgetTree->RootWidget && WidgetTree->RootWidget->IsA<USafeZone>());
+}
+
+FGeometry URDUserWidget::GetContentGeometry() const
+{
+	return WidgetTree && WidgetTree->RootWidget ? WidgetTree->RootWidget->GetCachedGeometry() : GetCachedGeometry();
+}
+
+UUserWidget* URDUserWidget::GetBackNavigationLayer() const
+{
+	return const_cast<URDUserWidget*>(this);
+}
+
+void URDUserWidget::RegisterBackNavigation()
+{
+	if (UGameInstance* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>())
+		{
+			TWeakObjectPtr<URDUserWidget> WeakThis(this);
+			InputRouter->Register(this,
+				[WeakThis]() -> UUserWidget* { return WeakThis.IsValid() ? WeakThis->GetBackNavigationLayer() : nullptr; },
+				[WeakThis]() { return WeakThis.IsValid() && WeakThis->HandleBackNavigation(); });
+		}
+}
+
+void URDUserWidget::NativeDestruct()
+{
+	if (UGameInstance* Instance = GetGameInstance())
+		if (auto* InputRouter = Instance->GetSubsystem<URDUIInputSubsystem>()) InputRouter->Unregister(this);
+	Super::NativeDestruct();
+}
+
+void URDUserWidget::NormalizeCommonInputLayers()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	// 그림과 글자는 시각 요소다. Visible 상태로 버튼 위에 놓이면 Slate 히트
+	// 경로의 앞쪽을 차지할 수 있으므로 자신과 자식 모두 입력 대상에서 뺀다.
+	// 순수 배치 패널은 자신만 빼고 자식 버튼은 계속 입력을 받게 한다.
+	WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			if (Widget == nullptr)
+			{
+				return;
+			}
+			if ((Widget->IsA<UImage>() || Widget->IsA<UTextBlock>())
+				&& (Widget->GetVisibility() == ESlateVisibility::Visible
+					|| Widget->GetVisibility() == ESlateVisibility::SelfHitTestInvisible))
+			{
+				Widget->SetVisibility(ESlateVisibility::HitTestInvisible);
+			}
+			else if (IsPassiveLayoutPanel(Widget)
+				&& Widget->GetVisibility() == ESlateVisibility::Visible)
+			{
+				Widget->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+		});
+}
+
+void URDUserWidget::NormalizeAutoFitTextClipping()
+{
+	if (WidgetTree == nullptr)
+	{
+		return;
+	}
+
+	WidgetTree->ForEachWidget([](UWidget* Widget)
+		{
+			// 글자 배율 상자의 이름 규칙은 둘이다 -- 전투/공용 화면은 _AutoFit,
+			// 고용판은 _Fit 을 쓴다. 둘 다 같은 계약으로 다룬다.
+			UScaleBox* AutoFit = Cast<UScaleBox>(Widget);
+			if (AutoFit == nullptr)
+			{
+				return;
+			}
+			const FString ScaleName = AutoFit->GetName();
+			if (ScaleName.EndsWith(TEXT("_AutoFit")) == false
+				&& ScaleName.EndsWith(TEXT("_Fit")) == false)
+			{
+				return;
+			}
+			AutoFit->SetClipping(EWidgetClipping::Inherit);
+			// 글자를 감싼 가운데맞춤 판이 대신 자르면 같은 증상이 남는다.
+			if (UWidget* Center = AutoFit->GetParent();
+				Center != nullptr && Center->GetName().EndsWith(TEXT("_Center")))
+			{
+				Center->SetClipping(EWidgetClipping::Inherit);
+			}
+			if (UWidget* Content = AutoFit->GetContent())
+			{
+				Content->SetClipping(EWidgetClipping::Inherit);
+			}
+		});
+}
+
+void URDUserWidget::ApplyCommonButtonPressSound(UButton* Button) const
+{
+	if (Button == nullptr || mCommonButtonPressSound == nullptr
+		|| Button->GetName().Contains(TEXT("InputBlocker")))
+	{
+		return;
+	}
+
+	FButtonStyle Style = Button->GetStyle();
+	Style.PressedSlateSound.SetResourceObject(mCommonButtonPressSound);
+	Button->SetStyle(Style);
 }
 
 void URDUserWidget::SetupCommonButtonFeedback()
@@ -210,11 +382,10 @@ void URDUserWidget::SetupCommonButtonFeedback()
 		return;
 	}
 
-	USoundBase* PressSound = mCommonButtonPressSound;
 	const bool bApplyPressVisual = ShouldApplyButtonFeedback();
 
 	// 이 위젯 트리 안의 모든 UButton을 순회한다(자식 UserWidget은 각자 이 베이스를 상속하므로 스스로 처리).
-	WidgetTree->ForEachWidget([this, PressSound, bApplyPressVisual](UWidget* Widget)
+	WidgetTree->ForEachWidget([this, bApplyPressVisual](UWidget* Widget)
 		{
 			UButton* Button = Cast<UButton>(Widget);
 			if (Button == nullptr)
@@ -223,14 +394,32 @@ void URDUserWidget::SetupCommonButtonFeedback()
 			}
 
 			// 클릭 사운드: 스타일의 PressedSlateSound에만 주입한다. 브러시/색은 그대로 둬 디자이너 스킨을 보존한다.
-			if (PressSound != nullptr)
 			{
+				ApplyCommonButtonPressSound(Button);
 				FButtonStyle Style = Button->GetStyle();
-				Style.PressedSlateSound.SetResourceObject(PressSound);
+
+				/*
+				 * 호버 피드백(0811 점검). 마우스를 올려도 아무 변화가 없어
+				 * "반응이 없다" 로 읽혔다 -- 모든 화면 공통으로, 호버 브러시가
+				 * 비어 있는(투명) 버튼에만 옅은 밝김을 얹는다. 디자이너가 호버
+				 * 그림을 그려 둔 버튼은 그대로 두고, 터치(모바일)에는 호버가
+				 * 없으므로 자연히 무효과다.
+				 */
+				const FSlateBrush& Hovered = Style.Hovered;
+				const bool bHoverInvisible =
+					Hovered.DrawAs == ESlateBrushDrawType::NoDrawType
+					|| (Hovered.GetResourceObject() == nullptr
+						&& Hovered.TintColor.GetSpecifiedColor().A <= 0.01f);
+				if (bHoverInvisible)
+				{
+					FSlateBrush HoverBrush;
+					HoverBrush.TintColor = FSlateColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.12f));
+					Style.SetHovered(HoverBrush);
+				}
 				Button->SetStyle(Style);
 			}
 
-			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투/주사위엔 걸지 않는다.
+			// 누름 시각 피드백은 opt-in 화면(타이틀/클래스 선택 등)만 — 전투 HUD에는 걸지 않는다.
 			if (bApplyPressVisual == false)
 			{
 				return;

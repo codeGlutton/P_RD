@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   PassiveTestsHelper.h
  * @brief  패시브 발동/해제 경로 테스트용 공통 목업
  * @author 이문환
@@ -19,8 +19,9 @@
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "AttributeSet/UnitAttributeSet.h"
-#include "TAS/Passive/TacticalPassive_AddStat.h"
 #include "TAS/Effect/TacticalEffect.h"
 #include "GameplayTagType.h"
 #include "PassiveTestsHelper.generated.h"
@@ -41,7 +42,9 @@ public:
 	{
 		// 실제 속성 컴포넌트 + 유닛 속성셋을 기본 서브오브젝트로 생성
 		mAttributeComponentModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-		mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+		mSkillComponentModel = CreateDefaultSubobject<USkillComponentModel>(TEXT("SkillComponentModel"));
+		mBoardMovementComponentModel = CreateDefaultSubobject<UBoardMovementComponentModel>(TEXT("BoardMovementComponentModel"));
+		mUnitAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("UnitAttributeSet"));
 	}
 
 	// 테스트 목이므로 컴포넌트 모델 초기화 단계는 비움
@@ -50,6 +53,8 @@ public:
 
 	// IBoardCombatTarget 구현
 	virtual UAttributeSetComponentModel* GetAttributeComponentModel() const override { return mAttributeComponentModel; }
+	virtual USkillComponentModel* GetSkillComponentModel() const override { return mSkillComponentModel; }
+	virtual UBoardMovementComponentModel* GetBoardMovementComponentModel() const override { return mBoardMovementComponentModel; }
 	virtual void SetGenericTeamId(const FGenericTeamId& TeamID) override {}
 	virtual FGenericTeamId GetGenericTeamId() const override { return FGenericTeamId::NoTeam; }
 
@@ -58,7 +63,13 @@ private:
 	TObjectPtr<UAttributeSetComponentModel> mAttributeComponentModel;
 
 	UPROPERTY()
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+	TObjectPtr<USkillComponentModel> mSkillComponentModel;
+
+	UPROPERTY()
+	TObjectPtr<UBoardMovementComponentModel> mBoardMovementComponentModel;
+
+	UPROPERTY()
+	TObjectPtr<UCombatTargetAttributeSet> mUnitAttributeSet;
 };
 
 /**
@@ -82,33 +93,6 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		// 활성 중 부여 태그: 취약 (모디파이어 없음 = 순수 태그형)
-		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
-	}
-};
-
-/**
- * @brief 수량 조건 테스트용 목 패시브 (AddStat + HP 자격 조건)
- *
- * @details
- *  자격 조건에 체력 조건 판정을 구현한 목 패시브
- */
-UCLASS()
-class UMockConditionAddStatPassive : public UTacticalPassive_AddStat
-{
-	GENERATED_BODY()
-
-public:
-	// 이 값 미만 HP면 자격 있음!
-	float mQualifyHPBelow = 50.f;
-
-protected:
-	virtual bool IsTargetQualified(const FBoardCombatTargetSnapshotData* Snapshot) const override
-	{
-		if (Snapshot == nullptr)
-		{
-			return false;
-		}
-		const float* HP = Snapshot->mAttributes.Find(UUnitAttributeSet::GetHPAttribute());
-		return (HP != nullptr) && (*HP < mQualifyHPBelow);
+		mCachedGrantedTags.AddTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
 	}
 };

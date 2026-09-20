@@ -45,9 +45,11 @@ bool FTacticalTagCountContainer::HasAnyMatchingGameplayTags(const FGameplayTagCo
 	return AnyMatch;
 }
 
-void FTacticalTagCountContainer::CaptureAllTags(FBoardCombatTargetSnapshotData& Snapshot) const
+void FTacticalTagCountContainer::CaptureAllTags(UBoardCombatTargetSnapshotData* Snapshot) const
 {
-	Snapshot.mTags = mTagCountMap;
+	Snapshot->mGrantedTags = mTagCountMap.FilterByPredicate([](const auto& Pair) {
+			return Pair.Value != 0;
+		});
 }
 
 void FTacticalTagCountContainer::UpdateTagCount(const FGameplayTagContainer& Container, int32 CountDelta)
@@ -172,10 +174,10 @@ void FTacticalTagCountContainer::Notify_StackCountChange(const FGameplayTag& Tag
 	}
 }
 
-FOnTacticalEffectTagCountChanged& FTacticalTagCountContainer::RegisterGameplayTagEvent(const FGameplayTag& Tag, EGameplayTagEventType::Type EventType)
+FOnTacticalEffectTagCountChanged& FTacticalTagCountContainer::RegisterGameplayTagEvent(const FGameplayTag& Tag, ETacticalTagEventType::Type EventType)
 {
 	FDelegateInfo& Info = mTagEventMap.FindOrAdd(Tag);
-	if (EventType == EGameplayTagEventType::NewOrRemoved)
+	if (EventType == ETacticalTagEventType::NewOrRemoved)
 	{
 		return Info.OnNewOrRemove;
 	}

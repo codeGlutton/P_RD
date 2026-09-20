@@ -1,15 +1,11 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_HP.cpp
- * @brief  체력(HP) 가감 이펙트 구현
- * @author 이문환
- * @date   2026-06-30
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_HP.h"
-#include "AttributeSet/UnitAttributeSet.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_HP.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
+
+#include "Setting/GameBalanceSettings.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 /**
  * @brief 체력(HP) 이펙트의 기본 생성자
@@ -23,7 +19,7 @@ UTacticalEffect_HP::UTacticalEffect_HP()
 
 	FTacticalModifierInfo Info;
 	// 사용할 속성: HP
-	Info.mAttribute = UUnitAttributeSet::GetHPAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetHPAttribute();
 	// 연산 종류: 기존값에 합산할 거니까 Additive
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	// 크기: 1.f로 고정 (패시브가 mDynamicMagnitude 설정한 값이 실제 크기가 됨)
@@ -37,11 +33,275 @@ void UTacticalEffect_HP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTECon
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetHPAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetHPAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
 	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
 
 	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
 }
+
+void UTacticalEffectExecutionCalculation_SystemHeal::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+	checkf(TargetAttributeSetCompModel != nullptr, TEXT("소스 컴포넌트 모델 nullptr"));
+
+	const float MaxHP = TargetAttributeSetCompModel->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetMaxHPAttribute());
+	const float BaseHeal = MaxHP * FMath::Max(0.f, GetHealRatio());
+
+	// 최종 힐
+	const int32 TotalHeal =
+		FMath::Floor(
+			ExecutionParams.GetOwningSpec().GetStackCount() *
+			ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+			BaseHeal
+		);
+
+	/* 체력 힐 */
+	{
+		const float HPDiff = TotalHeal;
+		if (HPDiff > 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::AddBase, HPDiff));
+		}
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+float UTacticalEffectExecutionCalculation_SystemHeal::GetHealRatio() const
+{
+	return 0.f;
+}
+
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetStaticHealRatio()
+{
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	return GameBalanceSettings->mBreakTimeHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_BreakTimeHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
+}
+
+UTacticalEffect_BreakTimeHeal::UTacticalEffect_BreakTimeHeal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_BreakTimeHeal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetStaticHealRatio()
+{
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	return GameBalanceSettings->mStageClearHealRatio;
+}
+
+float UTacticalEffectExecutionCalculation_StageClearHeal::GetHealRatio() const
+{
+	return GetStaticHealRatio();
+}
+
+UTacticalEffect_StageClearHeal::UTacticalEffect_StageClearHeal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_StageClearHeal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+void UTacticalEffectExecutionCalculation_Heal::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
+	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
+
+	// 최종 힐
+	const int32 TotalHeal =
+		FMath::Floor(
+			ExecutionParams.GetOwningSpec().GetStackCount() *
+			ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+			SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetHealFactorAttribute()]
+		);
+
+	/* 체력 힐 */
+	{
+		const float HPDiff = TotalHeal;
+		if (HPDiff > 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::AddBase, HPDiff));
+
+			/* 로그 적용 */
+			FSRPGAttributeEffectEventLog Log;
+			Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+			Log.mMagnitude = HPDiff;
+
+			UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+			const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();
+			GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+UTacticalEffect_Heal::UTacticalEffect_Heal()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_Heal::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+bool UTacticalEffect_Heal::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetHealFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void UTacticalEffectExecutionCalculation_Attack::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
+	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
+
+	UBoardCombatTargetSnapshotData* TargetSnapshotData = ExecutionParams.GetOwningSpec().GetTargetSnapshotData();
+	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
+
+	// 약화
+	const bool IsOwnerWeakness = SourceSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness);
+	const float OwnerWeaknessRatio = IsOwnerWeakness == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness] : 1.f;
+
+	// 취약
+	const bool IsTargetVulnerability = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability);
+	const float TargetVulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability] : 1.f;
+
+	// 최종 공격력과 방어력
+	const int32 TotalAttack =
+		FMath::Floor(
+			ExecutionParams.GetOwningSpec().GetStackCount() *
+			ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+			TargetVulnerabilityRatio *
+			OwnerWeaknessRatio *
+			SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetAttackFactorAttribute()]
+		);
+	const int32 TotalDefense =
+		FMath::Floor(
+			TargetSnapshotData->mAttributes[UCombatTargetAttributeSet::GetDefenseAttribute()]
+		);
+
+	/* 방어력 까기 */
+	{
+		const float DefenseDiff = -FMath::Min(TotalAttack, TotalDefense);
+		if (DefenseDiff < 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::AddBase, DefenseDiff));
+
+			/* 로그 적용 */
+			FSRPGAttributeEffectEventLog Log;
+			Log.mEffectAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+			Log.mMagnitude = DefenseDiff;
+
+			UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+			const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();
+			GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
+	/* 체력 까기 */
+	{
+		const float HPDiff = TotalDefense - TotalAttack;
+		if (HPDiff < 0)
+		{
+			OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetHPAttribute(), ETacticalModOp::AddBase, HPDiff));
+
+			/* 로그 적용 */
+			FSRPGAttributeEffectEventLog Log;
+			Log.mEffectAttribute = UCombatTargetAttributeSet::GetHPAttribute();
+			Log.mMagnitude = HPDiff;
+			Log.mIsCritical = ExecutionParams.GetOwningSpec().mIsCritical;
+
+			UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+			const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();
+			GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+		}
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+UTacticalEffect_Attack::UTacticalEffect_Attack()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_Attack::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+bool UTacticalEffect_Attack::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetAttackFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+

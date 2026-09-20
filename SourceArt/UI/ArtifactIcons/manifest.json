@@ -1,0 +1,13 @@
+[
+  {"id":"Common_BrokenBow","icon":"BrokenBow"},
+  {"id":"Common_Dagger","icon":"Dagger"},
+  {"id":"Common_Shoes","icon":"RunningShoes"},
+  {"id":"Common_Sword","icon":"Sword"},
+  {"id":"Epic_LeftOver","icon":"Leftovers"},
+  {"id":"Epic_ObsidianDagger","icon":"ObsidianDagger"},
+  {"id":"Epic_SpringShoes","icon":"SpringShoes"},
+  {"id":"Rare_Byrnie","icon":"Chainmail"},
+  {"id":"Rare_Oobleck","icon":"Oobleck"},
+  {"id":"Rare_Seasoning","icon":"Seasoning"},
+  {"id":"Rare_Supplement","icon":"Shoes"}
+]

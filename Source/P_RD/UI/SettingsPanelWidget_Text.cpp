@@ -1,12 +1,113 @@
-#include "UI/SettingsPanelWidget.h"
+﻿#include "UI/SettingsPanelWidget.h"
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
 
 #define LOCTEXT_NAMESPACE "SettingsPanelWidget_Text"
+
+namespace
+{
+	/** @brief 버튼 등 컨테이너 위젯 아래에서 첫 TextBlock을 찾는다(SyncText의 탐색과 동일 규칙). */
+	UTextBlock* FindFirstTextBlockIn(UWidget* Root)
+	{
+		if (Root == nullptr)
+		{
+			return nullptr;
+		}
+		if (UTextBlock* TextBlock = Cast<UTextBlock>(Root))
+		{
+			return TextBlock;
+		}
+		if (UContentWidget* ContentWidget = Cast<UContentWidget>(Root))
+		{
+			if (UTextBlock* TextBlock = FindFirstTextBlockIn(ContentWidget->GetContent()))
+			{
+				return TextBlock;
+			}
+		}
+		if (UPanelWidget* PanelWidget = Cast<UPanelWidget>(Root))
+		{
+			const int32 ChildCount = PanelWidget->GetChildrenCount();
+			for (int32 ChildIndex = 0; ChildIndex < ChildCount; ++ChildIndex)
+			{
+				if (UTextBlock* TextBlock = FindFirstTextBlockIn(PanelWidget->GetChildAt(ChildIndex)))
+				{
+					return TextBlock;
+				}
+			}
+		}
+		return nullptr;
+	}
+}
+
+void USettingsPanelWidget::UpdateGraphicsSelectionIndicators() const
+{
+	// Keep gold trim intact by switching the whole plate resource. Multiplicative tint
+	// turned brown wood green, while the authored selected texture recolors only its face.
+	const FSlateColor IvoryText(FLinearColor(1.f, .90f, .68f, 1.f));
+	UTexture2D* NormalPlate = LoadObject<UTexture2D>(nullptr,
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+			"T_MB_SettingsLedger_ChoiceButton.T_MB_SettingsLedger_ChoiceButton"));
+	UTexture2D* SelectedPlate = LoadObject<UTexture2D>(nullptr,
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/SettingsLedger/"
+			"T_MB_SettingsLedger_ChoiceButton_Selected."
+			"T_MB_SettingsLedger_ChoiceButton_Selected"));
+
+	const auto SetSegmentState = [this, &IvoryText, NormalPlate, SelectedPlate](
+		UButton* Button, const FName LabelName, const FName PlateName, bool bSelected)
+	{
+		if (Button == nullptr || WidgetTree == nullptr)
+		{
+			return;
+		}
+		UTextBlock* Label = Cast<UTextBlock>(WidgetTree->FindWidget(LabelName));
+		if (Label == nullptr)
+		{
+			Label = FindFirstTextBlockIn(Button);
+		}
+		if (Label != nullptr)
+		{
+			Label->SetColorAndOpacity(IvoryText);
+		}
+		if (UImage* Plate = Cast<UImage>(WidgetTree->FindWidget(PlateName)))
+		{
+			if (UTexture2D* TargetTexture = bSelected ? SelectedPlate : NormalPlate)
+			{
+				FSlateBrush Brush = Plate->GetBrush();
+				Brush.SetResourceObject(TargetTexture);
+				Plate->SetBrush(Brush);
+			}
+			Plate->SetColorAndOpacity(FLinearColor::White);
+		}
+	};
+
+	SetSegmentState(LowQualityButton, FName(TEXT("LowQualityButtonText")),
+		FName(TEXT("LowQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::Low);
+	SetSegmentState(MediumQualityButton, FName(TEXT("MediumQualityButtonText")),
+		FName(TEXT("MediumQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::Medium);
+	SetSegmentState(HighQualityButton, FName(TEXT("HighQualityButtonText")),
+		FName(TEXT("HighQualityButtonPlate")),
+		mValueModel.mQualityLevel == ESettingsQualityLevel::High);
+	SetSegmentState(FpsThirtyButton, FName(TEXT("FpsThirtyButtonText")),
+		FName(TEXT("FpsThirtyButtonPlate")),
+		mValueModel.mFpsLimit == 30);
+	SetSegmentState(FpsSixtyButton, FName(TEXT("FpsSixtyButtonText")),
+		FName(TEXT("FpsSixtyButtonPlate")),
+		mValueModel.mFpsLimit == 60);
+	SetSegmentState(LanguageKoreanButton, FName(TEXT("LanguageKoreanButtonText")),
+		FName(TEXT("LanguageKoreanButtonPlate")),
+		mValueModel.mUseKoreanLanguage);
+	SetSegmentState(LanguageEnglishButton, FName(TEXT("LanguageEnglishButtonText")),
+		FName(TEXT("LanguageEnglishButtonPlate")),
+		mValueModel.mUseKoreanLanguage == false);
+}
 
 /**
  * @brief 외부 처리 흐름이 결정한 상태 문구를 표시한다.
@@ -34,6 +135,23 @@ void USettingsPanelWidget::SetStatusText(const FText& Text) const
  */
 void USettingsPanelWidget::SyncText() const
 {
+	if (mCreditsButton)
+	{
+		if (UTextBlock* Label = Cast<UTextBlock>(mCreditsButton->GetContent()))
+		{
+			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("크레딧") : TEXT("Credits")));
+		}
+	}
+	if (mLicensesButton)
+	{
+		if (UTextBlock* Label = Cast<UTextBlock>(mLicensesButton->GetContent()))
+		{
+			FSlateFontInfo Font = Label->GetFont();
+			Font.Size = 19;
+			Label->SetFont(Font);
+			Label->SetText(FText::FromString(mValueModel.mUseKoreanLanguage ? TEXT("개인정보 · 라이선스") : TEXT("Privacy & Licenses")));
+		}
+	}
 	const TFunction<UTextBlock*(UWidget*)> FindFirstTextBlock = [&FindFirstTextBlock](UWidget* Root) -> UTextBlock*
 	{
 		if (Root == nullptr)
@@ -76,27 +194,39 @@ void USettingsPanelWidget::SyncText() const
 		}
 	};
 
+	const FText SettingsLedgerTitle = LOCTEXT("SettingsLedger", "SETTINGS LEDGER");
+	const FText BackLabel = LOCTEXT("Back", "Back");
+	const FText SaveAndExitLabel = LOCTEXT("SaveAndExit", "Save and Exit");
+	const FText AbandonRunLabel = LOCTEXT("AbandonRun", "Abandon Run");
+	const FText ResetLabel = LOCTEXT("Reset", "Reset");
 	if (SettingsTitleText != nullptr)
 	{
-		SettingsTitleText->SetText(LOCTEXT("Settings", "Settings"));
+		SettingsTitleText->SetText(SettingsLedgerTitle);
 	}
-	SetNamedText(TEXT("SettingsTitleText"), LOCTEXT("Settings", "Settings"));
+	SetNamedText(TEXT("SettingsTitleText"), SettingsLedgerTitle);
 	SetNamedText(TEXT("Set_sec_graphics_text"), LOCTEXT("Graphics", "Graphics"));
 	SetNamedText(TEXT("Set_sec_display_text"), LOCTEXT("Graphics", "Graphics"));
 	SetNamedText(TEXT("Set_sec_audio_text"), LOCTEXT("Volume", "Volume"));
 	SetNamedText(TEXT("Set_sec_volume_text"), LOCTEXT("Volume", "Volume"));
 	SetNamedText(TEXT("Set_sec_gameplay_text"), LOCTEXT("Gameplay", "Gameplay"));
 	SetNamedText(TEXT("Set_row_fps_label"), LOCTEXT("FPS", "FPS"));
+	SetNamedText(TEXT("FpsRow_Label"), LOCTEXT("FPS", "FPS"));
 	SetNamedText(TEXT("FpsThirtyButton"), LOCTEXT("30", "30"));
 	SetNamedText(TEXT("FpsSixtyButton"), LOCTEXT("60", "60"));
 	SetNamedText(TEXT("Set_row_quality_label"), LOCTEXT("Quality", "Quality"));
 	SetNamedText(TEXT("QualityRow_Label"), LOCTEXT("Quality", "Quality"));
-	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "High"));
-	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "Low"));
-	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "Mid"));
-	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "High"));
+	SetNamedText(TEXT("QualityLowButton"), LOCTEXT("Low", "LOW"));
+	SetNamedText(TEXT("QualityMidButton"), LOCTEXT("Mid", "MID"));
+	SetNamedText(TEXT("QualityHighButton"), LOCTEXT("High", "HIGH"));
+	SetNamedText(TEXT("LowQualityButton"), LOCTEXT("Low", "LOW"));
+	SetNamedText(TEXT("MediumQualityButton"), LOCTEXT("Mid", "MID"));
+	SetNamedText(TEXT("HighQualityButton"), LOCTEXT("High", "HIGH"));
+	SetNamedText(TEXT("LowQualityButtonText"),
+		LOCTEXT("Low", "LOW"));
+	SetNamedText(TEXT("MediumQualityButtonText"),
+		LOCTEXT("Mid", "MID"));
+	SetNamedText(TEXT("HighQualityButtonText"),
+		LOCTEXT("High", "HIGH"));
 	SetNamedText(TEXT("Set_row_screen_shake_label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("ScreenShakeRow_Label"), LOCTEXT("Screen Shake", "Screen Shake"));
 	SetNamedText(TEXT("Set_row_effects_label"), LOCTEXT("Effects", "Effects"));
@@ -107,6 +237,8 @@ void USettingsPanelWidget::SyncText() const
 	// 언어 이름은 번역하지 않는다 — 각 언어를 그 언어 자체 이름으로 보여줘야 사용자가 자기 언어를 알아본다.
 	SetNamedText(TEXT("LanguageKoreanButton"), FText::FromString(TEXT("한국어")));
 	SetNamedText(TEXT("LanguageEnglishButton"), FText::FromString(TEXT("English")));
+	SetNamedText(TEXT("LanguageKoreanButtonText"), FText::FromString(TEXT("한국어")));
+	SetNamedText(TEXT("LanguageEnglishButtonText"), FText::FromString(TEXT("English")));
 	SetNamedText(TEXT("Set_row_master_label"), LOCTEXT("Master", "Master"));
 	SetNamedText(TEXT("MasterVolumeRow_Label"), LOCTEXT("Master", "Master"));
 	SetNamedText(TEXT("Set_row_bgm_label"), LOCTEXT("BGM", "BGM"));
@@ -115,25 +247,27 @@ void USettingsPanelWidget::SyncText() const
 	SetNamedText(TEXT("SFXVolumeRow_Label"), LOCTEXT("SFX", "SFX"));
 	SetNamedText(TEXT("Set_row_ui_label"), LOCTEXT("UI", "UI"));
 	SetNamedText(TEXT("UIVolumeRow_Label"), LOCTEXT("UI", "UI"));
-	SetNamedText(TEXT("BackButton"), LOCTEXT("Back", "Back"));
-	SetNamedText(TEXT("SaveAndExitButton"), LOCTEXT("Save and Exit", "Save and Exit"));
-	SetNamedText(TEXT("AbandonRunButton"), LOCTEXT("Abandon Run", "Abandon Run"));
-	SetNamedText(TEXT("ResetButton"), LOCTEXT("Reset", "Reset"));
+	SetNamedText(TEXT("FpsThirtyButtonText"), FText::AsNumber(30));
+	SetNamedText(TEXT("FpsSixtyButtonText"), FText::AsNumber(60));
+	SetNamedText(TEXT("BackButton"), BackLabel);
+	SetNamedText(TEXT("SaveAndExitButton"), SaveAndExitLabel);
+	SetNamedText(TEXT("AbandonRunButton"), AbandonRunLabel);
+	SetNamedText(TEXT("ResetButton"), ResetLabel);
 	if (BackButtonText != nullptr)
 	{
-		BackButtonText->SetText(LOCTEXT("Back", "Back"));
+		BackButtonText->SetText(BackLabel);
 	}
 	if (SaveAndExitButtonText != nullptr)
 	{
-		SaveAndExitButtonText->SetText(LOCTEXT("Save and Exit", "Save and Exit"));
+		SaveAndExitButtonText->SetText(SaveAndExitLabel);
 	}
 	if (AbandonRunButtonText != nullptr)
 	{
-		AbandonRunButtonText->SetText(LOCTEXT("Abandon Run", "Abandon Run"));
+		AbandonRunButtonText->SetText(AbandonRunLabel);
 	}
 	if (ResetButtonText != nullptr)
 	{
-		ResetButtonText->SetText(LOCTEXT("Reset", "Reset"));
+		ResetButtonText->SetText(ResetLabel);
 	}
 	if (AudioSectionHeader != nullptr)
 	{
@@ -213,23 +347,23 @@ void USettingsPanelWidget::SyncText() const
 	}
 	if (LowQualityButtonText != nullptr)
 	{
-		LowQualityButtonText->SetText(LOCTEXT("LOW", "LOW"));
+		LowQualityButtonText->SetText(LOCTEXT("Low", "LOW"));
 	}
 	if (MediumQualityButtonText != nullptr)
 	{
-		MediumQualityButtonText->SetText(LOCTEXT("MID", "MID"));
+		MediumQualityButtonText->SetText(LOCTEXT("Mid", "MID"));
 	}
 	if (HighQualityButtonText != nullptr)
 	{
-		HighQualityButtonText->SetText(LOCTEXT("HIGH", "HIGH"));
+		HighQualityButtonText->SetText(LOCTEXT("High", "HIGH"));
 	}
 	if (AbandonConfirmTitleText != nullptr)
 	{
-		AbandonConfirmTitleText->SetText(LOCTEXT("Abandon this run?", "Abandon this run?"));
+		AbandonConfirmTitleText->SetText(LOCTEXT("AbandonConfirmTitle", "Abandon this run?"));
 	}
 	if (AbandonConfirmBodyText != nullptr)
 	{
-		AbandonConfirmBodyText->SetText(LOCTEXT("Abandoning resets the current run and returns to the title.", "Abandoning resets the current run and returns to the title."));
+		AbandonConfirmBodyText->SetText(LOCTEXT("AbandonConfirmBody", "Current progress will be deleted and you will return to the title."));
 	}
 	if (ConfirmAbandonButtonText != nullptr)
 	{
@@ -238,6 +372,10 @@ void USettingsPanelWidget::SyncText() const
 	if (CancelAbandonButtonText != nullptr)
 	{
 		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
+	}
+	if (mRunConfirmAction != ERunConfirmAction::None)
+	{
+		SyncRunConfirmText();
 	}
 }
 

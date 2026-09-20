@@ -1,50 +1,70 @@
-﻿#pragma once
+#pragma once
 
 /** @brief 전투 UI와 게임플레이 사이에서 주고받는 표시용 뷰 데이터입니다. */
-// UI는 게임플레이 객체(UUnitData/UDiceData 등)를 직접 알지 않고 이 struct들만 읽는다.
+// UI는 게임플레이 객체(UUnitData 등)를 직접 알지 않고 이 struct들만 읽는다.
 // FCombatQueueNode는 스킬/행동 결과를 애니메이션 한 단위씩 전달하기 위한 큐 노드다.
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"   // FTileIndex
 #include "GameplayTagContainer.h"
+#include "Pawn/UnitCombatCondition.h"
 
 #include "CombatUITypes.generated.h"
 
 class UTexture2D;
-class UTexture;
 class AActor;   // FUnitUI.mViewActor(HP바 라이브 투영, 약참조)
 
 /** @brief 무엇이 바뀌어 UI를 갱신해야 하는지 도메인 구분(부분 갱신용). */
 // UI 필요값: Set*() 호출 뒤 어떤 패널만 다시 그릴지 알려주는 최소 단위다.
-// 예: SetDiceUIs -> Dice, SetUnitUIs -> Unit, SetActionQueue -> Queue.
+// 예: SetUnitUIs -> Unit, SetActionQueue -> Queue.
 UENUM(BlueprintType)
 enum class ECombatUIDomain : uint8
 {
 	All,
-	Dice,
 	Skill,
 	Unit,
 	Turn,
 	Queue,
 	Equipment,
-	Meta       // 돈/경험치 등 플레이어 메타
+	Meta,       // 돈/경험치 등 플레이어 메타
+	// 상세 스냅샷은 목록 갱신(Unit/Skill)과 분리해 알린다. Unit은 HP 변경마다
+	// 오므로, 같은 도메인에 실으면 롱프레스 상세 패널이 HP 갱신마다 열린다.
+	UnitDetail,
+	SkillDetail
 };
 
 /** @brief 전투 조작 UI의 단계. UI 버튼/하이라이트 레이어 전환에 쓰는 UI 전용 상태다(게임플레이 enum의 1:1 거울이 아님). */
-// UI 필요값: 스킬 선택/주사위 선택/조준/미리보기 중 어느 조작 레이어를 열지 결정한다.
+// UI 필요값: 스킬 선택/조준/미리보기 중 어느 조작 레이어를 열지 결정한다.
 // 구성: 게임플레이 develop의 ESRPGSkillBuildPhase는 None/AimSelection/Preview 3개뿐이다.
 //   - AimSelection/Preview = 그 enum과 직접 대응.
-//   - SkillSelected/DiceSelect = 게임플레이엔 페이즈로 없고 SRPGSkillBuildAction 상태(mSelectedSkillIndex 채워짐 / mSelectedDices 진행 중)에서
-//     어댑터가 파생해 채우는 UI 하위상태다. 따라서 이 enum을 "develop enum의 거울"로 취급하지 말 것.
-// [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑하는 값만 게임플레이와 맞춘다(나머지 2개는 UI 파생).
+//   - SkillSelected = 게임플레이엔 페이즈로 없고 SRPGSkillBuildAction 상태에서 어댑터가 파생해 채우는 UI 하위상태다.
+// [합의필요] AimSelection/Preview를 ESRPGSkillBuildPhase와 매핑하는 값만 게임플레이와 맞춘다.
 UENUM(BlueprintType)
 enum class ECombatBuildPhaseUI : uint8
 {
 	None,
 	SkillSelected,   // [UI 파생] 스킬을 골랐음(mSelectedSkillIndex != NONE)
-	DiceSelect,      // [UI 파생] 주사위를 올리는 중(스킬 빌드 진행)
 	AimSelection,    // [거울] ESRPGSkillBuildPhase::AimSelection
 	Preview          // [거울] ESRPGSkillBuildPhase::Preview
+};
+
+/** @brief 확정 전 AP 소모 표시가 어떤 행동을 가리키는지 구분한다. */
+UENUM(BlueprintType)
+enum class ECombatPendingActionType : uint8
+{
+	None,
+	Move,
+	Skill
+};
+
+/** @brief 현재 프리뷰 중인 행동의 AP 예정 소모 데이터. */
+USTRUCT(BlueprintType)
+struct FCombatPendingActionUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) ECombatPendingActionType mType = ECombatPendingActionType::None;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
 };
 
 /**
@@ -58,17 +78,31 @@ enum class EFloatingLogIconType : uint8
 	None,				// 아이콘 없음(텍스트만)
 	HP,					// 체력
 
-	GetMove,			// 이동력 획득
+	GetActionPoint,		// 행동력 획득
+	GetSpeedPoint,		// 속도 획득
 	GetDefense,			// 방어력 획득
 
 	Weakness,			// 약화 (디버프)
 	Vulnerability,		// 취약 (디버프)
 	Fortification,		// 요새화 (버프)
-	Agility,			// 신속 (버프)
+	Vigor,				// 활력 (버프)
 
+	Status,				// 전용 그림이 없는 범용 상태(문구와 버프/디버프 색을 함께 표시)
 	Poison,				// 독
+	Stun,				// 기절
 	Fire,				// 화염
-	Move				// 이동
+	Move,				// 이동
+	Strength,
+	Dexterity,
+	Acumeny,
+	Haste,
+	Exhaustion,
+	Slow,
+	Frail,
+	Root,
+	ControlImmunity,
+	WeakeningImmunity,
+	ForcedMovementImmunity
 };
 
 /**
@@ -88,12 +122,39 @@ enum class EFloatingLogColorType : uint8
 	Move     // 이동
 };
 
+USTRUCT(BlueprintType)
+struct FCombatResultUI
+{
+	GENERATED_BODY()
+
+public:
+	/** @brief 마지막 스테이지 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsLastStage = false;
+	/** @brief 스테이지 클리어 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsClearStage = false;
+	/** @brief 승리 여부 */
+	UPROPERTY(BlueprintReadWrite) bool mIsWin = false;
+	/** @brief 결과 화면에 표시할 현재 전투 지역 이름. */
+	UPROPERTY(BlueprintReadWrite) FText mLocationName;
+	/** @brief 패배가 확정된 라운드. */
+	UPROPERTY(BlueprintReadWrite) int32 mRound = 0;
+	/** @brief 이번 전투에서 처치한 몬스터 수. */
+	UPROPERTY(BlueprintReadWrite) int32 mDefeatedMonsterCount = 0;
+	/** @brief 패배 결과에서 확정된 골드 획득량. */
+	UPROPERTY(BlueprintReadWrite) int32 mGoldGained = 0;
+	/** @brief 패배 결과에서 확정된 경험치 획득량. */
+	UPROPERTY(BlueprintReadWrite) int32 mExpGained = 0;
+	/** @brief 패배 카드에 표시할 파티 초상화(최대 3명). */
+	UPROPERTY(BlueprintReadWrite) TArray<TObjectPtr<UTexture2D>> mPartyPortraits;
+};
+
 /**
  * @brief 플로팅 로그 한 건을 "어디에 / 무엇을 / 어떻게 다룰지" 담아 게임플레이가 UI로 넘기는 요청.
  * @details 게임플레이가 채워 CombatUIModel::NotifyCombatFloatingLog(s)로 보내면 HUD가 그린다.
  *          - 위치는 호출자가 정한다(유닛 위/타일 위 판별을 UI가 하지 않는다) → mWorldLocation.
  *          - 아이콘/색은 "의미(enum)"로만 준다 → 실제 텍스처·색은 HUD가 매핑.
- *          - mIsPreview + mMotionIndex 조합으로 "조준 미리보기 → 모션 종료 시 쳐내기"가 굴러간다.
+ *          - (mTurnIndex, mActionIndex, mMotionIndex)는 UI까지 그대로 전달해
+ *            후속 표시 그룹화나 재생 상관관계에 사용할 수 있도록 보존한다.
  */
 USTRUCT(BlueprintType)
 struct FCombatFloatingLogRequest
@@ -112,8 +173,17 @@ struct FCombatFloatingLogRequest
 	/** @brief HUD가 실제 색상으로 변환할 색상 의미값. */
 	UPROPERTY(BlueprintReadWrite) EFloatingLogColorType mColorType = EFloatingLogColorType::Neutral;
 
+	/** @brief true면 치명타 전용 숫자 스킨과 펀치 연출을 사용한다. */
+	UPROPERTY(BlueprintReadWrite) bool mIsCritical = false;
+
 	/** @brief 낮은 값부터 순차 표시한다. 같은 값이면 수신 순서를 따른다. */
 	UPROPERTY(BlueprintReadWrite) int32 mSequence = 0;
+
+	/** @brief TurnEventLogs 배열 기준 턴 인덱스. INDEX_NONE이면 특정 턴에 묶이지 않은 로그다. */
+	UPROPERTY(BlueprintReadWrite) int32 mTurnIndex = INDEX_NONE;
+
+	/** @brief 해당 턴의 ActionEventLogs 배열 기준 액션 인덱스. INDEX_NONE이면 특정 액션에 묶이지 않은 로그다. */
+	UPROPERTY(BlueprintReadWrite) int32 mActionIndex = INDEX_NONE;
 
 	/** @brief 같은 액션의 MotionEventLogs 배열 기준 인덱스. INDEX_NONE이면 수명 시간으로만 자동 제거한다. */
 	UPROPERTY(BlueprintReadWrite) int32 mMotionIndex = INDEX_NONE;
@@ -122,37 +192,41 @@ struct FCombatFloatingLogRequest
 	UPROPERTY(BlueprintReadWrite) bool mIsPreview = false;
 };
 
-/** @brief 주사위 한 칸을 그릴 때 필요한 표시값입니다. */
-// 어댑터가 UDiceData를 이 struct로 변환한다. 희귀도는 UI가 바로 쓸 수 있게 색/문구로 변환해 담는다.
-// UI 필요값:
-// - mDiceId: 슬롯이 어떤 런 보유 주사위인지 추적한다.
-// - mResultValue/mIsRolled/mRolledFaceIndex: 굴림 전/후 표시, 선택 가능 여부, 3D 면 프리뷰 매칭에 필요하다.
-// - mIsSelected: 스킬 빌드에 올린 주사위 강조 표시.
-// - mIsUsed: 이번 턴 이미 소비된 주사위 잠금/비활성 표시.
-// - mFaceCount/mFaceValues/mFaceTextures: d2/d4/d6/d8/d12/d20 종류와 면별 값/텍스처 표시.
-// - mRarityColor/mRarityText: 희귀도 테두리/라벨 표시. UI가 희귀도 enum을 직접 알지 않게 어댑터가 변환한다.
-// - mPreviewTexture: 후속 3D 캡처 계층이 붙으면 굴림면 렌더타깃을 표시한다. 현재는 비워질 수 있다.
+/** @brief UI에 전달된 전투 이벤트가 예측 결과인지 실제 전투 결과인지 구분한다. */
+// 라우팅은 모델이 나눠 든다(예측=USimulationPreviewUIModel, 실전=UCombatUIModel) —
+// 이 태그는 어느 경로에서 온 배치인지 기록만 한다(로그/디버그용).
+UENUM(BlueprintType)
+enum class ECombatEventDataSourceUI : uint8
+{
+	None,
+	SimulationPreview,
+	LiveCombat
+};
+
+/**
+ * @brief 시뮬레이션과 실제 전투가 공통으로 사용하는 UI 이벤트 모델 스냅샷.
+ * @details UI는 원본 전투 객체를 읽지 않고 이 데이터만 구독하므로 두 실행 경로를 같은 방식으로 표시할 수 있다.
+ */
 USTRUCT(BlueprintType)
-struct FDiceSlotUI
+struct FCombatEventBatchUI
 {
 	GENERATED_BODY()
 
-	// 런 보유 주사위 식별자. UI가 에셋을 직접 로드하기 위한 값이 아니라 추적/프리뷰 매칭용이다.
-	UPROPERTY(BlueprintReadOnly) FPrimaryAssetId mDiceId;
-	// 0은 미굴림 sentinel이다. 실제 주사위 면 값으로 0을 쓰면 ToggleDice 검증과 충돌한다.
-	UPROPERTY(BlueprintReadOnly) int32 mResultValue = 0;     // 굴림 결과. 0 = 아직 안 굴림
-	UPROPERTY(BlueprintReadOnly) int32 mRolledFaceIndex = INDEX_NONE;   // 실제 굴러진 물리 면 index(0-base)
-	UPROPERTY(BlueprintReadOnly) bool mIsRolled = false;
-	UPROPERTY(BlueprintReadOnly) bool mIsSelected = false;   // 스킬 빌드에 선택됨
-	UPROPERTY(BlueprintReadOnly) bool mIsUsed = false;       // 이번 턴에 이미 쓴 주사위(턴 종료/다음 턴 시작까지 잠금)
-	UPROPERTY(BlueprintReadOnly) int32 mFaceCount = 6;       // 면 수(종류 표시용: 2=동전 … 20=d20)
-	UPROPERTY(BlueprintReadOnly) TArray<int32> mFaceValues;  // 각 물리 면에 적힌 실제 값
-	UPROPERTY(BlueprintReadOnly) TArray<TObjectPtr<UTexture>> mFaceTextures;  // 각 물리 면 텍스처(nullptr이면 기본)
-	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
-	UPROPERTY(BlueprintReadOnly) FText mRarityText;
+	UPROPERTY(BlueprintReadOnly) ECombatEventDataSourceUI mSource = ECombatEventDataSourceUI::None;
+	UPROPERTY(BlueprintReadOnly) int32 mRevision = 0;
+	UPROPERTY(BlueprintReadOnly) TArray<FCombatFloatingLogRequest> mFloatingLogs;
+};
 
-	// 주사위 굴림 면의 3D 프리뷰 슬롯. 별도 캡처 계층이 생기면 렌더타깃 텍스처를 넣고, UI는 표시만 한다.
-	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture> mPreviewTexture = nullptr;
+/** @brief 시뮬레이션 미리보기 뷰모델에서 무엇이 바뀌었는지 도메인 구분(부분 갱신용). */
+// ECombatUIDomain의 미리보기판이다. 실전 도메인과 섞지 않는다 — 미리보기 위젯은
+// 이 값만 보고 자기 표시를 갱신하고, 실전 위젯은 이 알림을 아예 듣지 않는다.
+UENUM(BlueprintType)
+enum class ESimulationPreviewDomainUI : uint8
+{
+	All,
+	Events,
+	Units,
+	PendingAction
 };
 
 /** @brief 유닛 머리 위 HP바에 표시할 상태이상 한 칸(버프/디버프 아이콘 + 스택 수). */
@@ -167,6 +241,28 @@ struct FStatusEffectUI
 
 	UPROPERTY(BlueprintReadOnly) FGameplayTag mTag;
 	UPROPERTY(BlueprintReadOnly) int32 mStackCount = 0;
+};
+
+/** @brief 시뮬레이션 미리보기가 예고하는 유닛 한 기의 결과 요약(HP 증감·사망·도착 타일). */
+// 소스 = FSRPGTurnEventLog 집계(ACombatGameMode::BuildUnitPredictions). 실전 스냅샷
+// (FUnitUI)과 저장 자리를 나눈다 — 예측은 실제와 다를 수 있고, 무르면 실전을 건드리지
+// 않고 통째로 버려져야 한다. mPredictedHP(절대값)는 1차 구현에서 보류 — 델타만 나른다.
+// (FStatusEffectUI 정의 뒤에 두어야 해서 ESimulationPreviewDomainUI와 자리가 떨어져 있다.)
+USTRUCT(BlueprintType)
+struct FUnitPredictionUI
+{
+	GENERATED_BODY()
+
+	/** @brief FUnitUI.mUnitId와 같은 id 공간. */
+	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
+	/** @brief 예측 구간 동안의 HP 증감 합. 음수면 피해. */
+	UPROPERTY(BlueprintReadOnly) float mHPDelta = 0.f;
+	/** @brief 예측 구간 안에서 판을 떠나는가(사망/제거 Exit 로그 기준). */
+	UPROPERTY(BlueprintReadOnly) bool mWillDie = false;
+	/** @brief 예측 구간이 끝났을 때 서 있을 타일. 이동 로그가 없으면 Invalid. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mPredictedTile = FTileIndex::Invalid;
+	/** @brief 예측 상태이상. 이벤트 로그의 태그 값은 증감(델타)뿐이라 절대 스택을 지어낼 수 없어 1차에서는 비워 둔다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mPredictedStatuses;
 };
 
 /** @brief 유닛 한 기를 HUD에 그릴 때 필요한 표시값(HP바·스탯·위치). */
@@ -188,16 +284,46 @@ struct FUnitUI
 
 	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) bool mIsPlayer = false;
-	/** @brief 유닛 초상화(DA mPortrait). 턴 순서 칩 등 상시 UI 표시용 — 없으면 텍스트 폴백. */
+	/** Actual turn condition; independent of HP and status-effect icons. */
+	UPROPERTY(BlueprintReadOnly) EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
+	/** @brief 유닛 세로 초상화(DA mPortrait). 파티·적·상세 카드용. */
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait;
+	/**
+	 * @brief 턴바 얼굴 초상화(DA mIcon).
+	 *
+	 * @details 256x256 HeadV2를 우선 사용한다. 어댑터가 아이콘 없는 신규
+	 *          유닛에는 mPortrait를 넣으므로 턴바가 빈칸이 되지 않는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mTurnPortrait;
+	// 파티 카드가 3명의 이름을 동시에 보여줘야 해서 유닛 목록 쪽에도 필요하다.
+	// mName은 FUnitDetailUI에도 있지만 그쪽은 한 번에 한 유닛(롱프레스 상세)이다.
+	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) float mHP = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxHP = 0.f;
+	// 행동력. 이동과 스킬이 함께 쓰는 단일 자원이라 유닛 단위로 표시해야 한다.
+	// 원본은 SkillComponentModel의 mActionPoints / mMaxActionPoints.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPoints = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mMaxActionPoints = 0;
+	/** @brief 턴 순서 칩 아래에 표시할 현재 속도. */
+	UPROPERTY(BlueprintReadOnly) float mSpeedPoint = 0.f;
+	UPROPERTY(BlueprintReadOnly) float mCriticalPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDamagePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mDefensePoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMovementPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxMovementPoint = 0.f;   // STEP으로 확보한 이동 가능 총량(현재/최대 표시용)
+	/** @brief 속박/기절 등 실제 이동 컴포넌트 규칙까지 반영한 이동 가능 여부. */
+	UPROPERTY(BlueprintReadOnly) bool mCanMove = true;
 	UPROPERTY(BlueprintReadOnly) float mSkillPoint = 0.f;
 	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	// 적 요약판의 "다음 스킬" 소켓용 아이콘. 장착 스킬 중 첫 유효 슬롯을 대표로 건다
+	// (플래너의 실제 계획은 적 턴에야 나오므로, 상시 표시는 대표 스킬로 한다).
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mNextSkillIcon;
+	// 위 아이콘이 스킬 배열 몇 번째인지 -- 소켓 클릭 시 상세 요청에 쓴다.
+	UPROPERTY(BlueprintReadOnly) int32 mNextSkillIndex = INDEX_NONE;
+
+	// 몬스터 탭 목록 줄의 "Lv N" 배지용. 상세 응답을 기다리지 않고 목록에서 바로 쓴다.
+	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 
 	// 머리 위 HP바를 월드→스크린 투영으로 띄우기 위한 유닛 월드 위치. 어댑터가 채우고 UI는 투영만 한다.
 	// (스냅샷 — 뷰 액터가 없을 때의 폴백. 이동 중 갱신 안 됨)
@@ -207,12 +333,30 @@ struct FUnitUI
 	// 어댑터가 유닛 뷰 액터를 채우고, UI는 유효하면 이 액터의 현재 GetActorLocation()을 투영한다(스냅샷보다 우선).
 	UPROPERTY() TWeakObjectPtr<AActor> mViewActor;
 
-	// 머리 위 버프/디버프 아이콘용. enum 대신 태그로 받아 UI가 게임플레이 상태 enum에 의존하지 않게 한다.
-	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mStatusTags;
+	// 머리 위 버프/디버프 아이콘용. 정확한 태그와 수가 아닌 대략적인 정보를 담고 있다.
+	UPROPERTY(BlueprintReadOnly) FGameplayTagContainer mOwnedTags;
 
 	// 머리 위 HP바 상태이상 칸(태그 + 스택 수). HP바가 GetUnitUIs()로 매 프레임 읽어 아이콘/개수를 채운다.
 	// (mStatusTags는 집합만이라 스택 수가 없어서, 개수까지 표시하려면 이 배열을 쓴다.)
 	UPROPERTY(BlueprintReadOnly) TArray<FStatusEffectUI> mStatusEffects;
+};
+
+/** @brief 유닛 상세창에 늘어놓는 스킬 한 칸. 탭하면 그 스킬의 상세로 넘어간다. */
+// UI 필요값:
+// - mSkillIndex: 탭했을 때 되돌려 보낼 왕복 식별자. **그 상세창에 뜬 유닛의** 스킬 배열 기준이다
+//                (카드 레일의 FSkillUI.mSkillIndex와 같은 배열이 아니다 — 적 스킬일 수도 있다).
+// - mName: 그림이 없을 때 대신 적을 글자. 손가락을 올려 둘 때의 안내에도 쓴다.
+// - mIcon: 칸에 그릴 그림.
+USTRUCT(BlueprintType)
+struct FUnitDetailSkillUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	/** 상세 로스터에서 즉시 비용까지 교체할 수 있도록 유닛 스킬의 AP 비용을 함께 보낸다. */
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = INDEX_NONE;
 };
 
 /** @brief 적/유닛을 길게 눌렀을 때 띄우는 상세 정보(초상화·이름·레벨·패시브 등). */
@@ -225,6 +369,15 @@ struct FUnitUI
 // - mPassiveDescriptions: 적 패시브/특수 규칙을 텍스트 리스트로 표시.
 // [합의필요] 이름/초상화/패시브 최종 소스는 UUnitData 연결 필요.
 USTRUCT(BlueprintType)
+struct FUnitDetailEquipmentUI
+{
+	GENERATED_BODY()
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) FText mDescription;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+};
+
+USTRUCT(BlueprintType)
 struct FUnitDetailUI
 {
 	GENERATED_BODY()
@@ -234,6 +387,10 @@ struct FUnitDetailUI
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mPortrait = nullptr;
 	UPROPERTY(BlueprintReadOnly) TArray<FText> mPassiveDescriptions;
+	/** @brief 이 유닛이 들고 있는 스킬 칸들. 탭하면 RequestInspectUnitSkill로 상세를 청한다. */
+	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailSkillUI> mSkills;
+	/** Actual equipped items of the inspected unit, not its spawn candidates. */
+	UPROPERTY(BlueprintReadOnly) TArray<FUnitDetailEquipmentUI> mEquipment;
 };
 
 /** @brief 스킬 시전(선택) 범위 형태. UI 조준 가이드용. 스킬데이터 SelectType의 UI 거울. */
@@ -257,14 +414,31 @@ enum class ECombatSkillHitShapeUI : uint8
 	None,
 	Single,     // 단일 타일
 	Cross,      // 십자형 폭발
-	Circle      // 원형
+	Circle,     // 원형
+	// 8방향(직교+대각). 게임플레이 진실은 TileMapModel::GetEffectTiles의
+	// EEffectPattern::Star -- 예전에는 Cross로 뭉개져 대각 줄이 안 그려졌다.
+	Star
+};
+
+/**
+ * @brief 영향 시점 타일을 정하는 타겟 패턴. 스킬데이터 ETargetPattern의 UI 거울.
+ *
+ * @details LineToTarget은 시전자→조준 타일 경로 전체가 영향 시점이 된다
+ * (PR #466). 모식도는 이 값으로 시전자→조준 방향의 경로 점선을 그린다.
+ */
+UENUM(BlueprintType)
+enum class ECombatSkillTargetPatternUI : uint8
+{
+	Default,        // 조준 타일 한 칸 (ETargetPattern::TargetOnly)
+	LineToTarget    // 시전자에서 조준 타일까지의 경로 전체
 };
 
 /** @brief 스킬 조준/타격 가이드 표시값(스킬데이터가 "UI 가이드라인 출력용"이라 명시한 메타). */
-// 조준 단계에서 "사거리 N / 십자 범위" 같은 안내와 가이드 형태를 그리기 위한 값이다.
-// 주의: 실제 조준 가능 타일의 색칠은 여기서 하지 않는다 — 그건 ATileMap 쿼리 결과(타일맵 파트(ATileMap) 하이라이트)다.
-//       이 struct는 "스킬 스펙 안내/예비 형태"만 담고, 확정 조준 타일은 게임플레이가 계산해 타일 하이라이트로 내려준다.
-// [합의필요] 최종 소스 = StaticSkillData(SelectType/SelectRange/HitType/HitRange/Ratio/IsIndirect/IsPenetration).
+// 이 struct가 먹이는 것은 판 밖의 개략 모식도(무장애물 가정 개략도)다 — 상세창의
+// 9x9 전술판처럼 "모양과 거리"만 설명하고, 장애물/점유에 따른 실제 차단은 흉내내지 않는다.
+// 권위 있는 판 위 색칠은 여전히 타일맵 하이라이트다: 게임플레이가 ATileMap 쿼리로
+// 확정 조준/영향 타일을 계산해 내려주고, 이 값으로 판을 다시 칠하면 안 된다.
+// 소스 = StaticSkillData(AimPattern/AimRange/EffectPattern/EffectArea/AimBlockerMask/EffectBlockerMask/TargetPattern).
 USTRUCT(BlueprintType)
 struct FSkillTargetingUI
 {
@@ -272,19 +446,62 @@ struct FSkillTargetingUI
 
 	UPROPERTY(BlueprintReadOnly) ECombatSkillSelectShapeUI mSelectShape = ECombatSkillSelectShapeUI::None;
 	UPROPERTY(BlueprintReadOnly) float mSelectRange = 0.f;        // 기본 사정거리
-	UPROPERTY(BlueprintReadOnly) float mSelectRangeRatio = 0.f;   // 사거리에 주사위값 반영 계수
 	UPROPERTY(BlueprintReadOnly) ECombatSkillHitShapeUI mHitShape = ECombatSkillHitShapeUI::None;
 	UPROPERTY(BlueprintReadOnly) float mHitRange = 0.f;           // 기본 타격 범위
-	UPROPERTY(BlueprintReadOnly) float mHitRangeRatio = 0.f;      // 타격 범위에 주사위값 반영 계수
-	UPROPERTY(BlueprintReadOnly) bool mIsIndirect = false;        // 곡사(장애물/유닛 너머 타겟 가능)
-	UPROPERTY(BlueprintReadOnly) bool mIsPenetration = false;     // 관통(막히지 않고 투사체가 뚫음)
+	/**
+	 * @brief 조준/영향을 막는 레이어. ETileLayerFlag 비트마스크 그대로다.
+	 *
+	 * @details
+	 * 곡사(mIsIndirect)/관통(mIsPenetration) bool 두 개를 대신한다. 그 둘로는
+	 * "장애물만 막힘" 과 "유닛만 막힘" 을 구분할 수 없어서, 세 경우가 전부
+	 * 같은 값으로 뭉개졌다.
+	 *
+	 * 0 이면 아무것도 막지 않는다(= 옛 곡사/관통). INDEX_NONE 은 "게임플레이가
+	 * 아직 안 채웠다" 는 뜻이라 화면은 값을 지어내지 말고 비워 둬야 한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mAimBlockerMask = INDEX_NONE;
+	UPROPERTY(BlueprintReadOnly) int32 mEffectBlockerMask = INDEX_NONE;
+	/** @brief 영향 시점 패턴. LineToTarget이면 모식도가 시전자→조준 경로를 그린다. */
+	UPROPERTY(BlueprintReadOnly) ECombatSkillTargetPatternUI mTargetPattern = ECombatSkillTargetPatternUI::Default;
+};
+
+/**
+ * @brief 지금 겨냥한 자리.
+ *
+ * @details
+ * 판을 톡 치면 그 칸이 겨냥한 자리가 된다. **타일 하나**이고, 그 위에 유닛이
+ * 있으면 유닛 id 도 같이 온다. 빈 칸도 겨냥할 수 있다 -- 이동 목적지가 그렇다.
+ *
+ * 왜 유닛 id 만으로 안 되나: "여기로 이동" 은 유닛이 없는 칸을 가리킨다.
+ * 유닛만 겨냥할 수 있게 하면 이동이 이 흐름 밖으로 밀려난다.
+ *
+ * UI 는 이 값을 만들지 않는다. 화면 좌표를 RequestWorldTouch 로 넘기면
+ * 게임플레이가 어느 타일인지 풀어서 SetTarget 으로 내린다 -- 화면은 타일맵
+ * 좌표계를 모른다.
+ *
+ * 이 값이 바뀌면 게임플레이가 FSkillUI.mIsUsable 을 다시 계산해 내려준다.
+ * 그래서 "사거리에 따라 카드가 켜지고 꺼진다" 는 UI 가 판정하는 것이 아니라
+ * 받아 그리는 것이다.
+ */
+USTRUCT(BlueprintType)
+struct FCombatTargetUI
+{
+	GENERATED_BODY()
+
+	/** @brief 겨냥한 것이 있나. 없으면 아래 값은 뜻이 없다. */
+	UPROPERTY(BlueprintReadOnly) bool mIsValid = false;
+
+	/** @brief 겨냥한 타일. */
+	UPROPERTY(BlueprintReadOnly) FTileIndex mTile;
+
+	/** @brief 그 타일에 선 유닛. 빈 칸이면 INDEX_NONE. */
+	UPROPERTY(BlueprintReadOnly) int32 mUnitId = INDEX_NONE;
 };
 
 /** @brief 스킬 레일에 그릴 스킬 한 칸. */
 // UI 필요값:
 // - mSkillIndex: 클릭/롱프레스 시 RequestSelectSkill/RequestLongPressSkill payload.
 // - mName/mIcon: 스킬 버튼의 기본 표시.
-// - mDiceCost: 필요한 주사위 개수/조건 표시.
 // - mIsUsable: 현재 페이즈/자원에서 누를 수 있는지 비활성 표시.
 // - mTargeting: 스킬 선택 시 조준 가이드(사거리/형태)를 즉시 그리기 위한 시전/타격 범위 메타.
 // [합의필요] 최종 소스는 USkillComponent 또는 스킬 빌드 액션 쪽과 매핑 필요.
@@ -297,7 +514,16 @@ struct FSkillUI
 	UPROPERTY(BlueprintReadOnly) int32 mSkillIndex = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
-	UPROPERTY(BlueprintReadOnly) int32 mDiceCost = 0;
+	// 새 전투 규칙: 이동과 스킬이 행동력 하나를 나눠 쓰고, 스킬은 턴 쿨타임을
+	// 가지며, 피해는 min~max에 크리티컬이 max의 1.5배다. 스킬 카드가 이 넷을
+	// 모두 보여줘야 플레이어가 무엇을 고를지 판단할 수 있다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mRemainingCooldown = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCriticalDamage = 0;
 	UPROPERTY(BlueprintReadOnly) bool mIsUsable = false;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
@@ -306,7 +532,6 @@ struct FSkillUI
 // UI 필요값:
 // - mSkillIndex: 현재 상세창이 어떤 스킬을 설명하는지 식별.
 // - mName/mDescription/mIcon: 롱프레스 상세 패널의 제목/본문/아이콘.
-// - mDiceCost: 상세 패널에서도 요구 주사위 조건을 보여준다.
 // - mTargeting: 상세 패널에서 사거리/타격범위/곡사·관통 등 풀스펙 안내.
 // [합의필요] 스킬 설명/아이콘 최종 데이터 연결 필요.
 USTRUCT(BlueprintType)
@@ -318,7 +543,14 @@ struct FSkillDetailUI
 	UPROPERTY(BlueprintReadOnly) FText mName;
 	UPROPERTY(BlueprintReadOnly) FText mDescription;
 	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
-	UPROPERTY(BlueprintReadOnly) int32 mDiceCost = 0;
+	// 상세 응답을 요청한 유닛의 정적 스킬 수치다. 스킬 index는 유닛별
+	// 슬롯이라 플레이어 카드 레일의 같은 index를 다시 조회하면 안 된다.
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointCost = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mActionPointGain = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCooldownTurns = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMin = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mDamageMax = 0;
+	UPROPERTY(BlueprintReadOnly) int32 mCriticalDamage = 0;
 	UPROPERTY(BlueprintReadOnly) FSkillTargetingUI mTargeting;
 };
 
@@ -388,11 +620,31 @@ struct FEquipmentDetailUI
 	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
 };
 
+/** @brief 전투 HUD에 늘 꺼내 놓는 파티 공용 아티팩트 한 칸. */
+USTRUCT(BlueprintType)
+struct FCombatArtifactUI
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FText mName;
+	UPROPERTY(BlueprintReadOnly) TObjectPtr<UTexture2D> mIcon = nullptr;
+	UPROPERTY(BlueprintReadOnly) FLinearColor mRarityColor = FLinearColor::White;
+
+	/** Authored artifact description, including passive and stat effects. */
+	UPROPERTY(BlueprintReadOnly) TArray<FText> mEffectDescriptions;
+	UPROPERTY(BlueprintReadOnly) FText mRarityName;
+	UPROPERTY(BlueprintReadOnly) int32 mPrice = 0;
+
+	/** @brief 희귀도 등급(0=일반, 1=희귀, 2=영웅). 상세창 보석 줄이 이 값을 켠다. */
+	UPROPERTY(BlueprintReadOnly) int32 mRarityLevel = 0;
+};
+
 /** @brief 플레이어 메타 정보(전투 HUD 상단/보상에 쓰는 돈·경험치·레벨). */
 // UI 필요값:
 // - mGold: 상단 HUD의 현재 골드.
 // - mLevel: 플레이어/런 레벨 표시.
 // - mExp/mMaxExp: 경험치 바와 레벨업 진행도 표시.
+// - mArtifacts: 좌하단 AP 위에 늘 보이는 파티 공용 아티팩트.
 // [합의필요] Gold/Exp 최종 소스는 UUnitData/URunPersistData 쪽에서 정리 필요.
 USTRUCT(BlueprintType)
 struct FPlayerMetaUI
@@ -403,15 +655,28 @@ struct FPlayerMetaUI
 	UPROPERTY(BlueprintReadOnly) int32 mLevel = 0;
 	UPROPERTY(BlueprintReadOnly) float mExp = 0.f;
 	UPROPERTY(BlueprintReadOnly) float mMaxExp = 0.f;
+	UPROPERTY(BlueprintReadOnly) TArray<FCombatArtifactUI> mArtifacts;
+};
+
+/** @brief 턴바에 표시할 한 개 미래 라운드의 순서. */
+USTRUCT(BlueprintType)
+struct FTurnRoundForecastUI
+{
+	GENERATED_BODY()
+
+	/** @brief 현재 라운드 다음을 1로 세는 유효 라운드 거리. */
+	UPROPERTY(BlueprintReadOnly) int32 mRoundOffset = 1;
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
 };
 
 /** @brief 현재 턴/라운드/페이즈 상태. */
 // UI 필요값:
 // - mCurrentUnitId: 현재 조작/행동 주체 표시.
 // - mRound: 라운드 카운터.
-// - mPhase: 스킬 선택/주사위 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
+// - mPhase: 스킬 선택/조준/미리보기 등 UI 레이어 전환(ECombatBuildPhaseUI — UI 전용 상태).
 // - mTurnOrderUnitIds: 턴 순서 바/다음 행동자 표시.
-// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected/DiceSelect는 어댑터 파생).
+// - mCurrentRoundRemainingTurnCount: 위 배열에서 이번 라운드에 속하는 앞쪽 원소 수.
+// [합의필요] mPhase의 AimSelection/Preview만 develop ESRPGSkillBuildPhase와 매핑(SkillSelected는 어댑터 파생).
 USTRUCT(BlueprintType)
 struct FTurnUI
 {
@@ -421,5 +686,32 @@ struct FTurnUI
 	UPROPERTY(BlueprintReadOnly) int32 mCurrentUnitId = INDEX_NONE;
 	UPROPERTY(BlueprintReadOnly) int32 mRound = 0;
 	UPROPERTY(BlueprintReadOnly) ECombatBuildPhaseUI mPhase = ECombatBuildPhaseUI::None;
+	/**
+	 * @brief 이번 라운드에 **남은** 턴 순서(현재 턴이 [0]).
+	 *
+	 * @details 턴 개편(속도제) 후 모델의 턴 목록은 소비형이다 -- 지나간 턴은
+	 *          빠진다. 그래서 이 배열은 한 바퀴 전체가 아니라 잔여분이다.
+	 *          지나간 순서를 다시 그리려고 감아 돌리면 안 된다.
+	 */
 	UPROPERTY(BlueprintReadOnly) TArray<int32> mTurnOrderUnitIds;
+	/**
+	 * @brief 현재 라운드 뒤로 이어지는 미래 유효 라운드 순서.
+	 *
+	 * @details 전투 모델이 계산을 끝낸 결과다. 위젯은 이 배열을 평탄화해
+	 *          페이지/스와이프로 보여 줄 뿐 속도나 턴을 다시 계산하지 않는다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<FTurnRoundForecastUI> mPredictedRounds;
+	/**
+	 * @brief 구형 위젯 호환용 첫 미래 라운드 순서.
+	 *
+	 * @details 새 코드는 mPredictedRounds를 사용한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) TArray<int32> mNextRoundUnitIds;
+	/** @brief mTurnOrderUnitIds 원소 수와 같다(전부 이번 라운드 잔여분). */
+	UPROPERTY(BlueprintReadOnly) int32 mCurrentRoundRemainingTurnCount = 0;
+	/**
+	 * @brief 구형 위젯 호환용 첫 미래 라운드 거리.
+	 * @details 새 코드는 mPredictedRounds 각 원소의 mRoundOffset을 사용한다.
+	 */
+	UPROPERTY(BlueprintReadOnly) int32 mNextRoundOffset = 1;
 };

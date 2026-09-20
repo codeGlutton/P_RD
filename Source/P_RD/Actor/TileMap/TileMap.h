@@ -18,9 +18,164 @@
 #include "TileMap.generated.h"
 
 class UInstancedStaticMeshComponent;
+class UBoxComponent;
 class UStaticMesh;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+
+/**
+ * @brief 경로 화살표 인스턴스의 종류 (직진, 좌회전, 우회전, 도착지)
+ */
+enum class EPathArrowKind : uint8
+{
+	Straight,	// 직진 화살표
+	TurnLeft,	// 좌회전 화살표
+	TurnRight,	// 우회전 화살표
+	End,		// 도착(끝) 타일 마커
+};
+
+/**
+ * @brief 경로 화살표 표시 세트 — 경로 한 종류(이동/밀치기)를 그리는 데 필요한 재료 묶음
+ * @details 컴포넌트는 소유 액터가 생성자에서 만들어 주입하고, 세트는 그 참조와 표시 상태를 가짐
+ */
+USTRUCT()
+struct FPathArrowSet
+{
+	GENERATED_BODY()
+
+	/**
+	 * @brief 직진 화살표 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Straight Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mStraightComponent;
+
+	/**
+	 * @brief 좌회전 화살표 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Left Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mTurnLeftComponent;
+
+	/**
+	 * @brief 우회전 화살표 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "Turn Right Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mTurnRightComponent;
+
+	/**
+	 * @brief 도착(끝) 타일 마커 컴포넌트
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, meta = (DisplayName = "End Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mEndComponent;
+
+	/**
+	 * @brief 직진 화살표 메시 (+X를 가리키는 형상 기준)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Straight Mesh"))
+	TObjectPtr<UStaticMesh> mStraightMesh;
+
+	/**
+	 * @brief 좌회전 화살표 메시 (+X 진입 기준, null이면 직진 화살표로 폴백)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Turn Left Mesh"))
+	TObjectPtr<UStaticMesh> mTurnLeftMesh;
+
+	/**
+	 * @brief 우회전 화살표 메시 (+X 진입 기준, null이면 직진 화살표로 폴백)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Turn Right Mesh"))
+	TObjectPtr<UStaticMesh> mTurnRightMesh;
+
+	/**
+	 * @brief 도착(끝) 타일 마커 메시
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "End Mesh"))
+	TObjectPtr<UStaticMesh> mEndMesh;
+
+	/**
+	 * @brief 화살표/마커에 덮어쓸 머티리얼 (custom data RGBA 색을 읽는 발광 머티리얼 권장, null이면 메시 기본)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Material"))
+	TObjectPtr<UMaterialInterface> mMaterial;
+
+	/**
+	 * @brief 화살표 색 (불투명이라 알파값은 사용하지 않음)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Arrow Style"))
+	FTileHighlightStyle mArrowStyle;
+
+	/**
+	 * @brief 도착지 마커 색 (불투명이라 알파값은 사용하지 않음)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "End Style"))
+	FTileHighlightStyle mEndStyle;
+
+	/**
+	 * @brief 펄스 주기 (초)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
+	float mPulsePeriod = 1.0f;
+
+	/**
+	 * @brief 경로 전체에 동시에 흐르는 펄스 고점 개수 (1=한 줄기, 경로 길이에 무관하게 일정한 흐름. 0=전체 동시 펄스)
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Flow Cycles", ClampMin = "0.0"))
+	float mFlowCycles = 1.0f;
+
+	/**
+	 * @brief 펄스 밝기 하한
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Pulse Min Brightness", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPulseMinBrightness = 0.1f;
+
+	/**
+	 * @brief 펄스 밝기 상한
+	 */
+	UPROPERTY(EditAnywhere, meta = (DisplayName = "Pulse Max Brightness", ClampMin = "0.0", ClampMax = "1.0"))
+	float mPulseMaxBrightness = 1.0f;
+
+	/**
+	 * @brief 현재 표시 중인 경로 개수 (틱 펄스 갱신 대상 판단용)
+	 */
+	UPROPERTY(Transient)
+	int32 mPathCount = 0;
+
+	/**
+	 * @brief 인스턴스별 위상 오프셋(라디안 단위)
+	 * @details
+	 * - 경로를 구성하는 인스턴스들에 대해서 순서대로 위상차를 설정
+	 * - 예를 들어, 경로에 4개의 인스턴스가 있으면 각각 0, 0.5파이, 1파이, 1.5파이 위상차를 설정
+	 * - Tick에서는 시간과 위상차를 사용해서 밝기 결정
+	 * - 시간에 따라 밝기가 변하는데 어두움<->밝음 사이를 위상차를 두고 진동하니까 마치 흐르는 것 같은 느낌을 줌
+	 * - 파도타기 응원을 생각하면 쉬움
+	 */
+
+	/**
+	 * @brief 직진 화살표 인스턴스별 위상 오프셋
+	 */
+	TArray<float> mStraightPhaseOffsets;
+
+	/**
+	 * @brief 좌회전 화살표 인스턴스별 위상 오프셋
+	 */
+	TArray<float> mTurnLeftPhaseOffsets;
+
+	/**
+	 * @brief 우회전 화살표 인스턴스별 위상 오프셋
+	 */
+	TArray<float> mTurnRightPhaseOffsets;
+
+	/**
+	 * @brief 도착 마커 인스턴스별 위상 오프셋 (경로마다 마커 1개, 자기 경로 끝 칸의 위상)
+	 */
+	TArray<float> mEndPhaseOffsets;
+
+	/**
+	 * @brief 타일→(화살표 종류, 인스턴스 번호) 역방향 조회
+	 * @details
+	 * - 같은 타일에 나중 경로가 오면 기존 표시를 덮어쓰기 하는 용도
+	 */
+	TMap<FTileIndex, TPair<EPathArrowKind, int32>> mTileInstances;
+};
 
 /**
  * @brief  타일맵 액터
@@ -52,6 +207,9 @@ public:
 	virtual void UnbindModel(UObjectModel* Model) override;
 
 protected:
+	// @brief Blueprint/native 기본 서브오브젝트 인스턴싱 완료 후 경로 컴포넌트 참조를 복구
+	virtual void PostInitializeComponents() override;
+
     // @brief 게임 시작 처리 (에디터 전용 디버그 경로 표시 토글 포함)
     virtual void BeginPlay() override;
 
@@ -117,21 +275,53 @@ public:
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
-	/* 이동 경로 */
+	/* 위협 범위 표시 */
 	/**
-	 * @brief 이동경로를 화살표로 표시 (경로 타일 배열을 방향 화살표 + 도착 마커로 시각화)
+	 * @brief 적 위협 범위 표시
 	 * @details
-	 * UTileMapModel::FindPath가 돌려준 타일 배열(시작→목표 순서)을 받는다.
-	 * 마지막을 제외한 각 타일에 '다음 타일을 향하는' 화살표를, 마지막 타일엔 도착 마커를 배치한다.
-	 * 기존 경로 표시는 먼저 지운다. 빈 배열이면 표시를 모두 해제하는 것과 같다.
-	 * @param[in] PathTiles : 경로 타일 목록 (FindPath 결과, 양 끝 포함)
+	 * 최대이동범위는 타일 테두리 안쪽 밴드 영역, 최대공격범위는 밴드를 제외한 내부 전체
+	 * 기존 위협범위는 삭제되며 빈 배열일 경우 그리지 않음
+	 * @param[in] MoveTiles : 최대 이동 범위 타일 목록 (맵 밖 좌표는 무시)
+	 * @param[in] AttackTiles : 최대 공격 범위 타일 목록 (맵 밖 좌표는 무시)
 	 */
-	void SetMovePath(const TArray<FTileIndex>& PathTiles);
+	void SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles);
 
 	/**
-	 * @brief 이동경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)
+	 * @brief 적 위협 범위 표시 해제 (최대이동범위, 최대공격범위 모두 제거)
+	 */
+	void ClearThreatRange();
+
+	/* 이동 경로 */
+	/**
+	 * @brief 이동경로를 화살표와 경유지마커로 표시
+	 * @details
+	 * 경로를 구성하는 타일배열을 받아 각 타일에 '다음 타일로 향하는' 화살표 배치
+	 * 경유지 타일에는 화살표 대신 경유지 표시(사각형 테두리 안에 경유지 순번), 도착지에는 도착지 마커와 원역뿔을 배치
+	 * 같은 타일이 여러 번 경유지면 마지막 순번 마커만 남고(덮어쓰기), 도착 타일과 겹친 경유지 마커는 생략
+	 * 기존 경로 표시는 먼저 지운다. 빈 배열이면 표시를 모두 해제하는 것과 같다.
+	 * @param[in] PathTiles : 경로 타일 목록 (양 끝 포함)
+	 */
+	void SetMovePath(const TArray<FMovePathTile>& PathTiles);
+
+	/**
+	 * @brief 이동경로 표시 해제 (화살표, 마커, 원뿔 모두 제거)
 	 */
 	void ClearMovePath();
+
+	/**
+	 * @brief 밀치기 경로를 기존 표시에 추가
+	 * @details
+	 * 광역 밀치기처럼 여러 몹이 밀릴 때 몹마다 GetPushPath 결과를 쌓는 용도.
+	 * 밀리지 못하는 경로(타일 1개 이하)는 무시
+	 * 같은 타일에 여러 표시가 중복되면 나중 표시가 덮어씀
+	 * @param[in] PathTiles 경로 타일 목록 (밀리는 몹의 타일부터 도착까지)
+	 */
+	void AddPushPath(const TArray<FTileIndex>& PathTiles);
+
+	/**
+	 * @brief 밀치기 경로 표시 해제 (화살표·도착 마커 인스턴스 모두 제거)
+	 */
+	void ClearPushPath();
 
 #if WITH_EDITOR
 	/**
@@ -143,31 +333,33 @@ public:
 	void DebugPaintTest();
 
 	/**
-	 * @brief [에디터 전용] 이동경로를 칠해 화살표/도착 마커 시각 확인
-	 * @details 디테일 패널 버튼으로 호출. 모델 경유(FindPath→델리깃→SetMovePath). 펄스는 틱이 도는 PIE에서 보인다.
+	 * @brief [에디터 전용] 이동경로 표시 시각 확인 (화살표, 경유지 마커, 도착 마커, 원뿔)
+	 * @details 디테일 패널 버튼으로 호출. 경유지 2개를 지나는 경로를 그린다. 진동과 펄스는 틱이 도는 PIE에서 보인다.
 	 */
 	UFUNCTION(CallInEditor, Category = "SRPG")
-	void DebugPathTest();
+	void DebugWaypointTest();
+
+	/**
+	 * @brief [에디터 전용] 밀치기 다중 경로를 칠해 rounded 화살표/도착 마커/덮어쓰기 시각 확인
+	 * @details 디테일 패널 버튼으로 호출. 일렬 연쇄(먼 몹 먼저) + 길이 다른 경로 + 안 밀리는 몹(표시 없음)을 고정 경로로 확인.
+	 */
+	UFUNCTION(CallInEditor, Category = "SRPG")
+	void DebugPushTest();
+
+	/**
+	 * @brief [에디터 전용] 위협 범위 표시 시각 확인 (이동 단독/겹침/공격 단독)
+	 * @details 디테일 패널 버튼으로 호출. 이동범위 밴드만, 밴드+내부 채움, 내부 채움만 세 경우를 한 번에 그린다.
+	 */
+	UFUNCTION(CallInEditor, Category = "SRPG")
+	void DebugThreatTest();
 #endif
 
 #if WITH_EDITORONLY_DATA
 	/**
-	 * @brief [에디터 전용] PIE 시작 시 디버그 경로를 그릴지 여부 (펄스 검증용, 인스턴스별 토글)
+	 * @brief [에디터 전용] 에디터 뷰포트와 PIE 시작 시 경유지 디버그 경로를 그릴지 여부 (인스턴스별 토글)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Draw Path On Begin Play"))
-	bool mDebugDrawPathOnBeginPlay = false;
-
-	/**
-	 * @brief [에디터 전용] 디버그 경로 시작 타일
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Start", EditCondition = "mDebugDrawPathOnBeginPlay"))
-	FTileIndex mDebugPathStart = FTileIndex(1, 3);
-
-	/**
-	 * @brief [에디터 전용] 디버그 경로 목표 타일
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Path Goal", EditCondition = "mDebugDrawPathOnBeginPlay"))
-	FTileIndex mDebugPathGoal = FTileIndex(4, 5);
+	UPROPERTY(EditAnywhere, Category = "SRPG|Debug", meta = (DisplayName = "Debug Draw Waypoint Path"))
+	bool mDebugDrawWaypointPath = false;
 #endif
 
 	/* 타일맵 정보 */
@@ -201,8 +393,14 @@ protected:
 	/**
 	 * @brief 타일 그리드를 그리는 인스턴스드 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Tile Mesh Component"))
 	TObjectPtr<UInstancedStaticMeshComponent> mTileMeshComponent;
+
+	/**
+	 * @brief 타일 사이 틈 터치를 받기 위한 콜리전 전용 박스 (렌더링 없음, 타일맵 전체 크기)
+	 */
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Picking Box Component"))
+	TObjectPtr<UBoxComponent> mPickingBoxComponent;
 
 	/**
 	 * @brief 타일 한 칸에 사용할 메시 (기본: 엔진 Plane)
@@ -241,16 +439,16 @@ protected:
 	float mTileBorderWidth = 3.0f;
 
 	/**
-	 * @brief 경로 중간 화살표를 그리는 인스턴스드 메시 컴포넌트
+	 * @brief 경유지 마커 메시 컴포넌트
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path Arrow Component"))
-	TObjectPtr<UInstancedStaticMeshComponent> mPathArrowComponent;
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Waypoint Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mWaypointComponent;
 
 	/**
-	 * @brief 도착(끝) 타일 마커를 그리는 인스턴스드 메시 컴포넌트
+	 * @brief 도착지 원뿔 메시 컴포넌트 (기존 바닥 메시와 별개로 머리 위에서 위아래로 진동)
 	 */
-	UPROPERTY(VisibleAnywhere, Category = "SRPG|Visual", meta = (DisplayName = "Path End Component"))
-	TObjectPtr<UInstancedStaticMeshComponent> mPathEndComponent;
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Visual", meta = (DisplayName = "Dest Cone Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mDestConeComponent;
 
 	/* 강조 표시 */
 
@@ -278,67 +476,63 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "SRPG|Highlight", meta = (DisplayName = "Pulse Period", ClampMin = "0.01"))
 	float mPulsePeriod = 1.0f;
 
-	/* 이동 경로 표시 */
+	/* 위협 범위 표시 */
 
 	/**
-	 * @brief 경로 중간 화살표 메시 (기본: Kenney SM_Kenney_FactoryKit_Arrow, +X를 가리키는 형상이어야 방향이 맞음)
+	 * @brief 최대이동범위 메시 컴포넌트
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Mesh"))
-	TObjectPtr<UStaticMesh> mPathArrowMesh;
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatMoveComponent;
 
 	/**
-	 * @brief 화살표에 덮어쓸 머티리얼 (custom data RGBA 색을 읽는 하이라이트 머티리얼 권장, null이면 메시 기본)
+	 * @brief 최대공격범위 메시 컴포넌트
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Material"))
-	TObjectPtr<UMaterialInterface> mPathArrowMaterial;
+	UPROPERTY(VisibleAnywhere, Transient, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Component"))
+	TObjectPtr<UInstancedStaticMeshComponent> mThreatAttackComponent;
 
 	/**
-	 * @brief 도착(끝) 타일 마커 메시 (기본: Kenney SM_Kenney_FactoryKit_IndicatorSpecialArrow)
+	 * @brief 최대이동범위 색
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path End Mesh"))
-	TObjectPtr<UStaticMesh> mPathEndMesh;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Move Style"))
+	FTileHighlightStyle mThreatMoveStyle;
 
 	/**
-	 * @brief 도착 마커에 덮어쓸 머티리얼 (null이면 메시 기본)
+	 * @brief 최대공격범위 색
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path End Material"))
-	TObjectPtr<UMaterialInterface> mPathEndMaterial;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Attack Style"))
+	FTileHighlightStyle mThreatAttackStyle;
 
 	/**
-	 * @brief 경로 화살표 색 (불투명이라 알파값은 사용하지 않음)
+	 * @brief 밴드 폭 비율 (타일 시각 크기 기준)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Style"))
-	FTileHighlightStyle mPathArrowStyle;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Band Width Ratio", ClampMin = "0.01", ClampMax = "0.5"))
+	float mThreatBandWidthRatio = 0.12f;
 
 	/**
-	 * @brief 도착지 마커 색 (불투명이라 알파값은 사용하지 않음)
+	 * @brief 표시 높이 오프셋 (cm, 타일 면과의 z-파이팅 방지)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path End Style"))
-	FTileHighlightStyle mPathEndStyle;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Height Offset", ClampMin = "0.0"))
+	float mThreatHeightOffset = 0.5f;
 
 	/**
-	 * @brief 경로 펄스 주기 (초)
+	 * @brief 위협 표시 전용 머티리얼 (없으면 타일 머티리얼 재사용)
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Pulse Period", ClampMin = "0.01"))
-	float mPathPulsePeriod = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Threat", meta = (DisplayName = "Threat Material"))
+	TObjectPtr<UMaterialInterface> mThreatMaterial;
+
+	/* 경로 표시 */
 
 	/**
-	 * @brief 경로 전체에 동시에 흐르는 펄스 고점 개수 (1=한 줄기, 경로 길이에 무관하게 일정한 흐름. 0=전체 동시 펄스)
+	 * @brief 이동 경로 표시 세트
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Flow Cycles", ClampMin = "0.0"))
-	float mPathFlowCycles = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Move Path Set"))
+	FPathArrowSet mMovePathSet;
 
 	/**
-	 * @brief 펄스 밝기 하한
+	 * @brief 밀치기 경로 표시 세트
 	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Pulse Min Brightness", ClampMin = "0.0", ClampMax = "1.0"))
-	float mPathPulseMinBrightness = 0.1f;
-
-	/**
-	 * @brief 펄스 밝기 상한
-	 */
-	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Pulse Max Brightness", ClampMin = "0.0", ClampMax = "1.0"))
-	float mPathPulseMaxBrightness = 1.0f;
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Push Path Set"))
+	FPathArrowSet mPushPathSet;
 
 	/**
 	 * @brief 화살표/마커 시각 크기 비율 (타일 크기 기준)
@@ -347,10 +541,90 @@ protected:
 	float mPathArrowScale = 0.5f;
 
 	/**
+	 * @brief 화살표 Z축(두께) 스케일 비율 (1이면 원본 두께, 도착 마커에는 적용 안 함)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Arrow Z Scale", ClampMin = "0.05", ClampMax = "1.0"))
+	float mPathArrowZScale = 0.5f;
+
+	/**
 	 * @brief 화살표/마커를 타일 위로 띄우는 Z 오프셋 (cm, z-fighting 방지)
 	 */
 	UPROPERTY(EditAnywhere, Category = "SRPG|Path", meta = (DisplayName = "Path Height Offset"))
 	float mPathHeightOffset = 1.0f;
+
+	/* 경유지/도착지 원뿔 표시 */
+
+	/**
+	 * @brief 경유지 마커 막대 메시 (기본: 엔진 Cube)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Mesh"))
+	TObjectPtr<UStaticMesh> mWaypointBarMesh;
+
+	/**
+	 * @brief 경유지 마커 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Style"))
+	FTileHighlightStyle mWaypointStyle;
+
+	/**
+	 * @brief 경유지 테두리 크기 비율 (타일 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Frame Scale", ClampMin = "0.1", ClampMax = "1.0"))
+	float mWaypointFrameScale = 0.6f;
+
+	/**
+	 * @brief 마커 막대 굵기 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Thickness", ClampMin = "0.5"))
+	float mWaypointBarThickness = 8.0f;
+
+	/**
+	 * @brief 마커 막대 높이 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Bar Height", ClampMin = "0.5"))
+	float mWaypointBarHeight = 8.0f;
+
+	/**
+	 * @brief 숫자 방향 (도, 0이면 숫자 위쪽이 +X — 카메라에 맞춰 조정)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Waypoint Yaw"))
+	float mWaypointYaw = 0.0f;
+
+	/**
+	 * @brief 도착지 원뿔 메시 (기본: 엔진 Cone, 뒤집어서 배치)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Mesh"))
+	TObjectPtr<UStaticMesh> mDestConeMesh;
+
+	/**
+	 * @brief 도착지 원뿔 색
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Style"))
+	FTileHighlightStyle mDestConeStyle;
+
+	/**
+	 * @brief 원뿔 크기 비율 (타일 크기 기준)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Scale", ClampMin = "0.01"))
+	float mDestConeScale = 0.25f;
+
+	/**
+	 * @brief 원뿔 기준 높이 (cm, 타일 바닥에서 원뿔 꼭짓점까지)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Base Height", ClampMin = "0.0"))
+	float mDestConeBaseHeight = 80.0f;
+
+	/**
+	 * @brief 원뿔 진동 폭 (cm)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Bob Amplitude", ClampMin = "0.0"))
+	float mDestConeBobAmplitude = 30.0f;
+
+	/**
+	 * @brief 원뿔 진동 주기 (초)
+	 */
+	UPROPERTY(EditAnywhere, Category = "SRPG|Waypoint", meta = (DisplayName = "Dest Cone Bob Period", ClampMin = "0.01"))
+	float mDestConeBobPeriod = 1.0f;
 
 private:
 	/**
@@ -383,27 +657,107 @@ private:
 	 * 모든 색은 타일 위에 자기 알파로 Mix(프리멀티). 슬롯 0~2=알파 곱해진 RGB, 3=커버리지 알파.
 	 * @param[in] LinearIndex 타일/인스턴스 1차원 인덱스
 	 */
-	void RefreshTileCustomData(int32 LinearIndex);
+	void RefreshTileCustomData(int32 LinearIndex, bool bUpdatePulseMembership = true);
 
 	/**
 	 * @brief 타일별 강조 표시 상태 (시각 전용 — 전투/시뮬레이션과 무관, FTile과 분리)
 	 * @details mTiles와 같은 1차원 인덱싱(y*Width+x), 크기 Width*Height. ISM custom data로 화면에 반영된다.
+	 *          런타임 전용이라 저장하지 않음 (단, 배열 크기는 보장해야해서 RefreshTileVisuals에서 Init 필수)
 	 */
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<ETileHighlightFlag> mHighlights;
 
-	/**
-	 * @brief 현재 표시 중인 경로 타일 수 (틱 펄스 갱신 대상 판단 + 도착 마커 위상 인덱스용)
-	 * @note PIE에 복제해서 볼 수 있도록 UPROPERTY 추가. 단, 저장할 필요는 없으므로 Transient 속성 부여
-	 */
-    UPROPERTY(Transient)
-	int32 mPathLength = 0;
+	// Only visible, animated effects participate in per-frame updates.
+	TSet<int32> mPulsingHighlights;
+	friend class FTileHighlightPulseMembershipTest;
 
 	/**
-	 * @brief 경로 화살표/도착 마커의 펄스 알파를 매 프레임 재계산해 custom data에 기록
-	 * @details 화살표는 인스턴스 순서(=경로 순서)에 위상차를 줘 경로를 따라 흐르게 한다.
+	 * @brief 경로 하나를 세트의 메시/색으로 기존 표시에 추가
+	 * @details
+	 *   기존 표시는 유지 (전체 제거는 ClearPath 별도 호출)
+	 *   인스턴스별 위상 오프셋을 이 경로의 간격 수로 확정해 저장
+	 *   같은 타일에 기존 인스턴스가 있으면 제거 후 배치 (나중 경로가 이김)
+	 *   경유지 타일에는 화살표 대신 순번 마커 배치 (밀치기 경로는 경유지 없음)
+	 *   SetMovePath/AddPushPath 공통 구현
+	 * @param[in] Set : 사용할 표시 세트
+	 * @param[in] PathTiles : 경로 타일 목록 (양 끝 포함, 경유지 여부 포함)
 	 */
-	void RefreshPathPulse();
+	void AppendPath(FPathArrowSet& Set, const TArray<FMovePathTile>& PathTiles);
+
+	/**
+	 * @brief 세트의 경로 표시 관련된 데이터 모두 초기화
+	 */
+	void ClearPath(FPathArrowSet& Set);
+
+	/**
+	 * @brief 세트에서 화살표 종류에 해당하는 컴포넌트 반환
+	 */
+	static UInstancedStaticMeshComponent* GetComponent(FPathArrowSet& Set, EPathArrowKind Kind);
+
+	/**
+	 * @brief 세트에서 화살표 종류에 해당하는 위상 오프셋 배열 반환
+	 */
+	static TArray<float>& GetPhaseOffsets(FPathArrowSet& Set, EPathArrowKind Kind);
+
+	/**
+	 * @brief 세트의 컴포넌트에 인스턴스 추가
+	 * @note 같은 타일에 기존 표시가 있었다면 나중 표시로 덮어써짐
+	 */
+	static void AddTileInstance(FPathArrowSet& Set, EPathArrowKind Kind,
+		const FTileIndex& Tile, const FTransform& InstanceTransform, float PhaseOffset);
+
+	/**
+	 * @brief 세트에서 타일 하나의 표시를 제거
+	 */
+	static void RemoveTileInstance(FPathArrowSet& Set, const FTileIndex& Tile);
+
+	/**
+	 * @brief 세트의 화살표와 도착 마커의 펄스값을 계산해서 내부에 저장
+	 * @details 화살표들이 위상차를 갖게 해서 흐르는 느낌을 줌
+	 */
+	void RefreshPathPulse(FPathArrowSet& Set);
+
+	/**
+	 * @brief 도착지 원뿔의 기준 높이 계산
+	 */
+	float GetDestConeBaseZ() const;
+
+	/**
+	 * @brief 도착지 원뿔을 기준 높이 위로 위아래 진동 (틱에서 호출, 색은 고정)
+	 */
+	void RefreshDestConeBob();
+
+	/**
+	 * @brief 마커를 구성하는 막대 종류 (테두리 4변 + 숫자 7세그먼트)
+	 */
+	enum class EMarkerBar : uint8
+	{
+		FrameTop,			// 테두리 상단
+		FrameBottom,		// 테두리 하단
+		FrameLeft,			// 테두리 왼쪽
+		FrameRight,			// 테두리 오른쪽
+		DigitTop,			// 숫자 상단 가로
+		DigitMiddle,		// 숫자 중앙 가로
+		DigitBottom,		// 숫자 하단 가로
+		DigitTopLeft,		// 숫자 좌상 세로
+		DigitTopRight,		// 숫자 우상 세로
+		DigitBottomLeft,	// 숫자 좌하 세로
+		DigitBottomRight,	// 숫자 우하 세로
+	};
+
+	/**
+	 * @brief 경유지 마커를 디지털 숫자 형식으로 조립
+	 * @param[in] Tile   : 경유지 타일
+	 * @param[in] Number : 경유지 순번 (1~9, 초과 시 '-' 표시)
+	 */
+	void AppendWaypointMarker(const FTileIndex& Tile, int32 Number);
+
+	/**
+	 * @brief 마커 막대 1개 추가 (종류별 위치와 크기는 함수 내부에서 결정)
+	 * @param[in] TileCenter : 타일 중심 로컬 위치
+	 * @param[in] Bar        : 막대 종류
+	 */
+	void AppendMarkerBar(const FVector& TileCenter, EMarkerBar Bar);
 
 	/**
 	 * @brief 방향 스텝(dx,dy)을 +X 기준 yaw(도)로 변환 (메시가 +X를 향한다고 가정)

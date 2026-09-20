@@ -1,27 +1,27 @@
 ﻿#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
-#include "Singleton/WorldSubsystem/WorldCameraModel.h"
 
 #include "Engine/AssetManager.h"
 #include "DataAsset/SkillData/StaticSkillData.h"
 
-#include "Pawn/UnitModel.h"
 #include "Actor/BoardActor/BoardCombatTarget.h"
 
 #include "Actor/TileMap/TileMapModel.h"
 
-#include "Component/PassiveComponent/PassiveComponentModel.h"
-#include "TAS/Passive/TacticalPassive.h"
-#include "TAS/Passive/PassiveActivateContext.h"
-#include "TAS/Passive/DynamicPassiveData.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "TAS/Effect/TacticalEffectContext.h"
+#include "TAS/Effect/Cooldown/TacticalEffect_Cooldown.h"
+#include "TAS/Effect/Stat/TacticalEffect_ActionPoint.h"
 
 #include "Simulation/Logger/EventLog.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "Animation/Notify/EventTriggerPayload.h"
+#include "Animation/SkillAnimationMetaData.h"
 
-#include "Setting/GamePlaySettings.h"
+#include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
 namespace
 {
@@ -48,25 +48,35 @@ namespace
 	}
 }
 
+FSkillEntry::FSkillEntry(UStaticSkillData* Data) : mData(Data)
+{
+}
+
+bool FSkillEntry::IsValid() const
+{
+	return mData != nullptr && mData->mSkillPhaseLayers.IsEmpty() == false;
+}
+
 void FActiveSkillContext::Clear()
 {
+	mInstigator = nullptr;
 	mMapModel = nullptr;
-	mDiceSum = 0;
 	mSelfTileIndex = FTileIndex::Invalid;
-	mTargetTileIndex = FTileIndex::Invalid;
+	mAimedTileIndex = FTileIndex::Invalid;
+	mTargetTileIndexes.Reset();
 	mEffectTileIndexes.Reset();
 
+	mMotionLocalDir = ETileActorDirection::Forward;
+	mSkillEndBarrier = nullptr;
+
 	mSkillIndex = INDEX_NONE;
-	mMotionIndex = INDEX_NONE;
+	mAnimationIndex = INDEX_NONE;
+	mPhaseIndex = INDEX_NONE;
 
 	mEndCallback.Clear();
 
-	mTargetTileIndexes.Reset();
-	mOtherCombatTargets.Reset();
-
-	mMotionTileMapDir = ETileActorDirection::Forward;
-	mMotionEndBarrier = nullptr;
-	mIsMotionTriggered = false;
+	mFinalTileIndexes.Reset();
+	mFinalCombatTargets.Reset();
 }
 
 bool FActiveSkillContext::IsValid() const
@@ -74,34 +84,32 @@ bool FActiveSkillContext::IsValid() const
 	return mMapModel != nullptr;
 }
 
-FSkillEntry::FSkillEntry(UStaticSkillData* Data) : mData(Data)
-{
-}
-
-bool FSkillEntry::IsValid() const
-{
-	return mData != nullptr;
-}
-
 USkillComponentModel::USkillComponentModel()
 {
-	mSkillEntries.Init(FSkillEntry(), 4 /*추가 스킬*/ + 2 /*기본 스킬*/);
 }
 
 void USkillComponentModel::SetSkillFrom(const TArray<TSoftObjectPtr<UStaticSkillData>>& SkillList)
 {
-	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+	// 초기화 로직 (몬스터는 5개 이상의 스킬도 소유할 수 있음)
+
+	mSkillEntries.Init(FSkillEntry(), FMath::Max(DEFAULT_SKILL_POOL_SIZE, SkillList.Num()));
 
 	int32 NextSkillIndex = 0;
 	for (const TSoftObjectPtr<UStaticSkillData>& Skill : SkillList)
 	{
-		SetSkill(NextSkillIndex++, Skill.Get());
+		UStaticSkillData* SkillData = Skill.LoadSynchronous();
+		const bool IsSettingSkill = SetSkill(NextSkillIndex++, SkillData);
+		checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당: %s (owner=%s, slot=%d, loaded=%s)"),
+			*Skill.ToSoftObjectPath().ToString(), *GetNameSafe(GetOwnerModel()), NextSkillIndex - 1,
+			*GetNameSafe(SkillData));
 	}
 }
 
 void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList)
 {
-	// 초기화 로직 (몬스터는 6개 이상의 스킬도 소유할 수 있음)
+	// 초기화 로직 (몬스터는 5개 이상의 스킬도 소유할 수 있음)
+
+	mSkillEntries.Init(FSkillEntry(), FMath::Max(DEFAULT_SKILL_POOL_SIZE, SkillList.Num()));
 
 	int32 NextSkillIndex = 0;
 	for (const FPrimaryAssetId& AssetId : SkillList)
@@ -109,9 +117,15 @@ void USkillComponentModel::SetSkillFrom(const TArray<FPrimaryAssetId>& SkillList
 		UStaticSkillData* StaticSkillData = LoadStaticSkillData(AssetId);
 		if (StaticSkillData != nullptr)
 		{
-			SetSkill(NextSkillIndex++, StaticSkillData);
+			const bool IsSettingSkill = SetSkill(NextSkillIndex++, StaticSkillData);
+			checkf(IsSettingSkill == true, TEXT("적합하지 않은 스킬 할당"));
 		}
 	}
+}
+
+bool USkillComponentModel::IsAcquirableSkill(UStaticSkillData* SkillData) const
+{
+	return IsAcquirableSkill_Internal(SkillData);
 }
 
 const TArray<FSkillEntry>& USkillComponentModel::GetSkills() const
@@ -125,469 +139,455 @@ const FSkillEntry* USkillComponentModel::GetSkill(int32 SkillIndex) const
 	return &mSkillEntries[SkillIndex];
 }
 
-void USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillData)
+bool USkillComponentModel::SetSkill(int32 SkillIndex, UStaticSkillData* SkillData)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 
+	if (IsAcquirableSkill(SkillData) == false)
+	{
+		return false;
+	}
+
 	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
 	mSkillEntries[SkillIndex] = FSkillEntry(SkillData);
+	if (SkillData->mStartsOnCooldown == true)
+	{
+		/* 쿨다운 처리 */
 
-	OnChangeSkillUI.Broadcast(SkillIndex, SkillData, PreSkillData);
+		IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+		checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+		UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+		checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+		UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(SkillData->mCooldownEffectClass.LoadSynchronous(), EffectContext);
+		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
+		mSkillEntries[SkillIndex].mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
+	}
+
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, SkillData);
+	return true;
 }
 
-void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum, FOnEndSkillUI Callback)
+void USkillComponentModel::RemoveSkill(int32 SkillIndex)
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+
+	// 비우기는 장착이 아니므로 습득 가능 검사를 거치지 않는다
+	const UStaticSkillData* PreSkillData = mSkillEntries[SkillIndex].mData;
+	mSkillEntries[SkillIndex] = FSkillEntry();
+
+	// 세이브 추적(OnChangeSkillUI)이 장착 해제로 인지하도록 동일 계약으로 통지
+	OnChangeSkillUI.Broadcast(SkillIndex, PreSkillData, nullptr);
+}
+
+bool USkillComponentModel::CanActiveSkill(int32 SkillIndex) const
+{
+	return CanActiveSkill_Internal(SkillIndex);
+}
+
+bool USkillComponentModel::TryToActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
+{
+	if (CanActiveSkill_Internal(SkillIndex) == false)
+	{
+		return false;
+	}
+
+	ConsumeResources_Internal(SkillIndex);
+	ActivateSkill(MapModel, SkillIndex, AimedTileIndex, Callback);
+	return true;
+}
+
+void USkillComponentModel::ForcedActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
+{
+	ConsumeResources_Internal(SkillIndex);
+	ActivateSkill(MapModel, SkillIndex, AimedTileIndex, Callback);
+}
+
+bool USkillComponentModel::IsAcquirableSkill_Internal(UStaticSkillData* SkillData) const
+{
+	return true;
+}
+
+bool USkillComponentModel::CanActiveSkill_Internal(int32 SkillIndex) const
+{
+	const bool IsWaitingCooldown = IsCooldown(SkillIndex);
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	const bool IsNotStun = AttributeSetCompModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun) == false;
+
+	return IsWaitingCooldown == false && IsNotStun == true;
+}
+
+void USkillComponentModel::ConsumeResources_Internal(int32 SkillIndex)
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
 
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
-	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
-	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-	/* 활성화 스킬 데이터 채우기 */
+	/* 쿨다운 처리 */
 
-	mActiveSkillContext.mDiceSum = DiceSum;
-	mActiveSkillContext.mMapModel = MapModel;
-	mActiveSkillContext.mSelfTileIndex = OwnerUnitModel->GetTileTransform().mIndex;
-	mActiveSkillContext.mTargetTileIndex = TargetIndex;
-	mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, TargetIndex, DiceSum);
-	mActiveSkillContext.mSkillIndex = SkillIndex;
-	mActiveSkillContext.mMotionIndex = 0;
-	mActiveSkillContext.mEndCallback = MoveTemp(Callback);
-
-	/* 스킬 실행 콜백 */
-
-	OnPlaySkillUI.Broadcast(mActiveSkillContext, SkillData);
-
-	/* 카메라 줌인 */
-
-	FVector MinTileLocation;
-	FVector MaxTileLocation;
-	FVector ZoomInLocation = MapModel->TileToWorldLocation(mActiveSkillContext.mSelfTileIndex);
-	MinTileLocation = MaxTileLocation = ZoomInLocation;
-
-	for (const FTileIndex& EffectTileIndex : mActiveSkillContext.mEffectTileIndexes)
 	{
-		const FVector TileLocation = MapModel->TileToWorldLocation(EffectTileIndex);
-		ZoomInLocation += TileLocation;
-
-		MinTileLocation.X = FMath::Min(MinTileLocation.X, TileLocation.X);
-		MinTileLocation.Y = FMath::Min(MinTileLocation.Y, TileLocation.Y);
-		MaxTileLocation.X = FMath::Max(MaxTileLocation.X, TileLocation.X);
-		MaxTileLocation.Y = FMath::Max(MaxTileLocation.Y, TileLocation.Y);
+		UTacticalEffectContext* EffectContext = AttributeSetCompModel->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetCompModel->MakeOutgoingSpec(SkillData->mCooldownEffectClass.LoadSynchronous(), EffectContext);
+		EffectSpec->mDynamicDurationMagnitude = GetStaticCooldownDuration(SkillIndex);
+		SkillEntry.mCooldownHandle = AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
 	}
-	ZoomInLocation /= (1 + mActiveSkillContext.mEffectTileIndexes.Num());
-	ZoomInLocation.Z = OwnerUnitModel->GetWorldTransform().GetLocation().Z;
-
-	const float ZoomInSize = FMath::Max(MaxTileLocation.X - MinTileLocation.X, MaxTileLocation.Y - MinTileLocation.Y);
-
-	UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
-	checkf(WorldCameraModel != nullptr, TEXT("월드 카메라 모델 nullptr"));
-
-	const UGamePlaySettings* GamePlaySettings = GetDefault<UGamePlaySettings>();
-	checkf(GamePlaySettings != nullptr, TEXT("게임 플레이 세팅 nullptr"));
-
-	const float FinalZoomInSize = FMath::Clamp(GamePlaySettings->mSkillZoomDefaultSize + ZoomInSize * GamePlaySettings->mSkillZoomSizeRatio, GamePlaySettings->mSkillMinZoomSize, GamePlaySettings->mSkillMaxZoomSize);
-	WorldCameraModel->RequestZoomInMainCamera(ZoomInLocation, FinalZoomInSize);
-
-	/* 스킬 사용 시 패시브 발동 */
-
-	TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill);
-
-	FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
-
-	FPassiveActivateContext PassiveContext;
-	PassiveContext.mOwner = OwnerUnitModel;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-	PassiveContext.mTargets.Add(OwnerUnitModel);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
-
-	for (UTacticalPassive*& Passive : Passives)
-	{
-		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartUsingSkill, PassiveContext, OUT DynamicPassiveData);
-		Passive->CommitPassive(DynamicPassiveData);
-	}
-
-	
-	// 모션 레이어가 하나도 없는(미저작) 스킬은 시전을 무동작으로 즉시 종료
-	if (SkillData->mSkillMotionLayers.Num() == 0)
-	{
-		UE_LOG(LogRD, Warning, TEXT("스킬(index %d)에 모션 레이어가 없어 시전을 건너뜁니다 — DA에 mSkillMotionLayers 미설정"), SkillIndex);
-		DeactivateSkill();
-		return;
-	}
-
-	PlayMotionLayer();
 }
 
-void USkillComponentModel::PlayMotionLayer()
+void USkillComponentModel::PlaySkillAnimation()
 {
 	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
 
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
 	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
+	UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+	checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	const FSkillAnimationSet& SkillAnimationSet = SkillData->mSkillAnimationSet;
+	checkf(SkillAnimationSet.mApplyMotionTags.IsValidIndex(mActiveSkillContext.mAnimationIndex) == true, TEXT("잘못된 실행 애님 인덱스"));
+
+	/* 애니메이션 도중 실 타격 이벤트 콜백 등록 */
+
+	FBoardActorAnimationEvent ApplyEvent;
+	ApplyEvent.mIsOneTimeEvent = false;
+	ApplyEvent.OnTriggerAnimationEvent.AddWeakLambda(this, [this](const FBoardActorAnimationContext& Context, UObject* EndAnim, const FEventTriggerPayloadBase* Payload) {
+		TriggerPhaseLayer(Payload);
+		});
+	const FGameplayTag& ApplyMotionTag = SkillAnimationSet.mApplyMotionTags[mActiveSkillContext.mAnimationIndex];
+	FBoardActorAnimationContext Context(ApplyMotionTag, mActiveSkillContext.mMotionLocalDir);
+	Context.mMetaData.InitializeAs<FSkillAnimationMetaData>();
+	Context.mMetaData.GetMutable<FSkillAnimationMetaData>().mInstigator = this;
+	Context.mMontageEvents.Add(AnimationTags::Animation_Event_Skill_HitLogic, ApplyEvent);
+
+	/* 애니메이션 순차 재생 예약 */
+
+	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		EndSkillAnimation();
+		}));
+
+	/* 애니메이션 실행 */
+
+	OwnerBoardActorModel->OnPlayAnimationUI.Broadcast(MotionEndBarrier, Context);
+}
+
+void USkillComponentModel::EndSkillAnimation()
+{
+	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
 	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+	const FSkillAnimationSet& SkillAnimationSet = SkillData->mSkillAnimationSet;
+	checkf(SkillAnimationSet.mApplyMotionTags.IsValidIndex(mActiveSkillContext.mAnimationIndex) == true, TEXT("잘못된 실행 애님 인덱스"));
 
-	IBoardCombatTarget* OwnerCombatTarget = Cast<IBoardCombatTarget>(OwnerUnitModel);
+	++mActiveSkillContext.mAnimationIndex;
+	if (mActiveSkillContext.mAnimationIndex == SkillAnimationSet.mApplyMotionTags.Num())
+	{
+		/* 애니메이션에 의한 로직 대기 종료 */
+
+		mActiveSkillContext.mSkillEndBarrier.Reset();
+	}
+	else
+	{
+		/* 다음 애니메이션 실행 */
+
+		PlaySkillAnimation();
+	}
+}
+
+void USkillComponentModel::ActivateSkill(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex, FOnEndSkillUI Callback)
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[SkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+
+	UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+	checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
 	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
-	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
-	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	checkf(AttributeSetCompModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+	/* 활성화 스킬 데이터 채우기 */
+
+	auto SkillEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		DeactivateSkill();
+		}));
+	{
+		mActiveSkillContext.mInstigator = OwnerBoardActorModel;
+		mActiveSkillContext.mMapModel = MapModel;
+		mActiveSkillContext.mSelfTileIndex = OwnerBoardActorModel->GetTileTransform().mIndex;
+		mActiveSkillContext.mAimedTileIndex = AimedTileIndex;
+		mActiveSkillContext.mTargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+		mActiveSkillContext.mEffectTileIndexes = GetEffectTiles(MapModel, SkillIndex, mActiveSkillContext.mTargetTileIndexes);
+		mActiveSkillContext.mSkillEndBarrier = SkillEndBarrier;
+		mActiveSkillContext.mSkillIndex = SkillIndex;
+		mActiveSkillContext.mAnimationIndex = 0;
+		mActiveSkillContext.mPhaseIndex = 0;
+		mActiveSkillContext.mEndCallback = MoveTemp(Callback);
+	}
+
+	auto SkillPlayerBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+
+		checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+		FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+		const UStaticSkillData* SkillData = SkillEntry.mData;
+		checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+		UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+		checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+		IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+		checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+		/* 스킬 실행 콜백 */
+
+		OnPlaySkillUI.Broadcast(mActiveSkillContext, SkillData, mActiveSkillContext.mSkillEndBarrier);
+		OwnerCombatTarget->OnStartUsingSkill(mActiveSkillContext, mActiveSkillContext.mSkillIndex);
+
+		/* 스킬 페이즈 시작 */
+
+		PreparePhaseLayer();
+
+		/* 애니메이션 시작 */
+
+		const ETileActorDirection MotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
+			mActiveSkillContext.mSelfTileIndex,
+			mActiveSkillContext.mAimedTileIndex,
+			OwnerBoardActorModel->GetTileTransform().mDirection
+		);
+
+		if (SkillData->mSkillAnimationSet.mAutoRotateTowardTarget == true)
+		{
+			// 자동 회전
+
+			TSharedPtr<FPresentationBarrier> RotateBarrier = FPresentationBarrier::Make(
+				FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+					// 회전 완료 후 로컬 정면방향으로 실행
+					mActiveSkillContext.mMotionLocalDir = ETileActorDirection::Forward;
+					PlaySkillAnimation();
+					}));
+
+			// 타일맵의 절대적 방향으로 회전
+			mActiveSkillContext.mMapModel->RotateActor(MotionTileMapDir, OwnerBoardActorModel, RotateBarrier);
+		}
+		else
+		{
+			// 자동 회전 안 함
+
+			mActiveSkillContext.mMotionLocalDir = TileMapToLocalDirection(MotionTileMapDir, OwnerBoardActorModel->GetTileTransform().mDirection);
+			PlaySkillAnimation();
+		}
+		}));
+	OnPrePlaySkillUI.Broadcast(mActiveSkillContext, SkillData, SkillPlayerBarrier);
+}
+
+void USkillComponentModel::PreparePhaseLayer()
+{
+	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	const FSkillPhaseLayer& MotionLayer = SkillData->mSkillPhaseLayers[mActiveSkillContext.mPhaseIndex];
+
+	/* 활성화 페이즈 데이터 채우기 */
+
+	mActiveSkillContext.mFinalTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
+	mActiveSkillContext.mFinalCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mFinalTileIndexes);
+
+	/* 페이즈 시작 시 대리자 호출 */
+
+	OnPlayPhaseLayerUI.Broadcast(mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
+}
+
+void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Payload)
+{
+	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	UBoardActorModel* OwnerBoardActorModel = GetOwnerModel<UBoardActorModel>();
+	checkf(OwnerBoardActorModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+
+	const FSkillPhaseLayer& PhaseLayer = SkillData->mSkillPhaseLayers[mActiveSkillContext.mPhaseIndex];
 
 	/* 모션 로그 시작 */
 
 	GetWorldEventLogger(this)->BeginMotionLog();
-	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
 
-	/* 활성화 모션 데이터 채우기 */
+	/* Effect 헬퍼 */
 
-	mActiveSkillContext.mTargetTileIndexes = MotionLayer.FilterTileIndexes(mActiveSkillContext.mSelfTileIndex, mActiveSkillContext.mEffectTileIndexes);
-	mActiveSkillContext.mOtherCombatTargets = MotionLayer.FilterCombatTargets(mActiveSkillContext.mMapModel.Get(), OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes);
-	mActiveSkillContext.mMotionTileMapDir = mActiveSkillContext.mMapModel->TileDeltaToDirection(
-		mActiveSkillContext.mSelfTileIndex,
-		mActiveSkillContext.mTargetTileIndex,
-		OwnerUnitModel->GetTileTransform().mDirection
-	);
-	mActiveSkillContext.mIsMotionTriggered = false;
-
-	/* Effect 기본 값부터 참고용으로 적용 */
-
-	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+	struct FFactorEffectHandleContainer
 	{
-		EffectLayer.Get().ApplyPointEffect(OwnerCombatTarget, mActiveSkillContext.mDiceSum);
-	}
-
-	/* 이펙트 가격 전 패시브 적용 */
-
-	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
-
-		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartApplyingEffect);
-
-		FPassiveActivateContext PassiveContext;
-		PassiveContext.mOwner = OwnerUnitModel;
-		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-
-		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
-		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+	public:
+		FFactorEffectHandleContainer(TArray<FActiveTacticalEffectHandle> Handle) : mHandles(Handle)
 		{
-			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
-			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
-
-			PassiveContext.mTargets.Add(OtherActorModel);
-			PassiveContext.mTargetSnapshots.Add(&OtherSnapshots.Last());
 		}
 
-		for (UTacticalPassive* Passive : Passives)
-		{
-			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
+	public:
+		TArray<FActiveTacticalEffectHandle> mHandles;
+	};
 
-			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartApplyingEffect, PassiveContext, OUT DynamicPassiveData);
-			Passive->CommitPassive(DynamicPassiveData);
+	const int32 EffectLayerNum = PhaseLayer.mSkillEffectLayers.Num();
+	TArray<FFactorEffectHandleContainer> FactorEffectHandleContainers;
+	FactorEffectHandleContainers.Reserve(PhaseLayer.mSkillEffectLayers.Num());
+
+	/* Effect 기본 값부터 적용 */
+
+	{
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			FactorEffectHandleContainers.Add(EffectLayer.Get().ApplyFactorEffect(OwnerCombatTarget, OwnerSnapshot));
 		}
 	}
 
-	/* 이펙트 피격 전 패시브 적용(선택적) */
+	/* 이펙트 전 이벤트들 */
+
+	OwnerCombatTarget->OnStartApplyingEffects(mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
 		{
-			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
-
-			UPassiveComponentModel* OtherPassiveComponentModel = OtherActorModel->FindComponentModelByClass<UPassiveComponentModel>();
-			if (OtherPassiveComponentModel == nullptr)
-			{
-				continue;
-			}
-
-			TArray<UTacticalPassive*> OtherPassives = OtherPassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnStartReceivingEffect);
-
-			FBoardCombatTargetSnapshotData OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
-
-			FPassiveActivateContext PassiveContext;
-			PassiveContext.mOwner = OtherActorModel;
-			PassiveContext.mOwnerSnapshot = &OtherSnapshot;
-			PassiveContext.mTargets.Add(OwnerUnitModel);
-			PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
-
-			for (UTacticalPassive* OtherPassive : OtherPassives)
-			{
-				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-
-				OtherPassive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnStartReceivingEffect, PassiveContext, OUT DynamicPassiveData);
-				OtherPassive->CommitPassive(DynamicPassiveData);
-			}
+			OtherCombatTarget->OnStartReceivingEffects(OwnerSnapshot, mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 		}
 	}
-
-	/* 애니메이션 시작 */
-
-	// 자동 회전
-	if (MotionLayer.mAutoRotateTowardTarget == true)
-	{
-		// 회전이 끝나면 베리어가 소멸하면서 PlayMotionLayerAnimation() 함수 호출.
-		// 이때 방향은 로컬방향이라서 Forward는 정면을 향하고 있음
-		TSharedPtr<FPresentationBarrier> RotateBarrier = FPresentationBarrier::Make(
-			FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-				PlayMotionLayerAnimation(ETileActorDirection::Forward);
-				}));
-		
-		// 타일맵의 절대적 방향으로 회전
-		mActiveSkillContext.mMapModel->RotateActor(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel, RotateBarrier);
-	}
-	// 자동 회전 안 함
-	else
-	{
-		// 회전하지 않으므로 즉시 모션 시작
-		PlayMotionLayerAnimation(TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OwnerUnitModel->GetTileTransform().mDirection));
-	}
-}
-
-void USkillComponentModel::PlayMotionLayerAnimation(ETileActorDirection LocalDirectionToTarget)
-{
-	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
-
-	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
-	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
-
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
-
-	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
-
-	auto MotionEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
-		TriggerMotionLayer(nullptr);
-		EndMotionLayer();
-		}));
-
-	FOnRequestReceiveAnimation TriggerCallback;
-	TriggerCallback.BindWeakLambda(this, [this](const FApplyEventTriggerPayload* Payload) {
-		TriggerMotionLayer(Payload);
-		});
-
-	mActiveSkillContext.mMotionEndBarrier = MotionEndBarrier;
-
-	OwnerUnitModel->OnPlayApplyAnimationUI.Broadcast(MotionEndBarrier, MoveTemp(TriggerCallback), MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
-	OnPlayMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex, MotionEndBarrier, MotionLayer.mApplyMotionTag, LocalDirectionToTarget);
-}
-
-void USkillComponentModel::TriggerMotionLayer(const FApplyEventTriggerPayload* Payload)
-{
-	if (mActiveSkillContext.mIsMotionTriggered == true)
-	{
-		return;
-	}
-	mActiveSkillContext.mIsMotionTriggered = true;
-
-	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
-
-	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
-
-	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
-
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
-
-	IBoardCombatTarget* OwnerCombatTarget = Cast<IBoardCombatTarget>(OwnerUnitModel);
-	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
-
-	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
-	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
 
 	/* 실제 Effect 적용 */
 
-	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
 	{
-		EffectLayer.Get().CommitEffect(OwnerCombatTarget, mActiveSkillContext.mTargetTileIndexes, mActiveSkillContext.mOtherCombatTargets, mActiveSkillContext.mDiceSum);
-	}
-
-	/* 피격 애니메이션 적용 */
-
-	for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
-	{
-		UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-		checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
-
-		ETileActorDirection LocalDirectionToTarget = TileMapToLocalDirection(mActiveSkillContext.mMotionTileMapDir, OtherActorModel->GetTileTransform().mDirection);
-		OtherActorModel->OnPlayReceiveAnimationUI.Broadcast(mActiveSkillContext.mMotionEndBarrier.Pin(), Payload, MotionLayer.mReceiveMotionTag, LocalDirectionToTarget);
-	}
-
-	/* 이펙트 피격 후 패시브 적용 (선택적) */
-
-	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
-
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
-		{
-			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
-			checkf(OtherActorModel != nullptr, TEXT("스킬을 받은 타겟이 유효하지 않음"));
-
-			UPassiveComponentModel* OtherPassiveComponentModel = OtherActorModel->FindComponentModelByClass<UPassiveComponentModel>();
-			if (OtherPassiveComponentModel == nullptr)
-			{
-				continue;
-			}
-
-			TArray<UTacticalPassive*> OtherPassives = OtherPassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndReceivingEffect);
-
-			FBoardCombatTargetSnapshotData OtherSnapshot = OtherCombatTarget->MakeSnapshotData();
-
-			FPassiveActivateContext PassiveContext;
-			PassiveContext.mOwner = OtherActorModel;
-			PassiveContext.mOwnerSnapshot = &OtherSnapshot;
-			PassiveContext.mTargets.Add(OwnerUnitModel);
-			PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
-
-			for (UTacticalPassive* OtherPassive : OtherPassives)
-			{
-				TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-
-				OtherPassive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndReceivingEffect, PassiveContext, OUT DynamicPassiveData);
-				OtherPassive->CommitPassive(DynamicPassiveData);
-			}
-		}
-	}
-
-	/* 이펙트 가격 후 패시브 적용 */
-	{
-		FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
-
-		TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect);
-
-		FPassiveActivateContext PassiveContext;
-		PassiveContext.mOwner = OwnerUnitModel;
-		PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-
-		TArray<FBoardCombatTargetSnapshotData> OtherSnapshots;
-		OtherSnapshots.Reserve(mActiveSkillContext.mOtherCombatTargets.Num());
-		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mOtherCombatTargets)
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
+		TArray<TScriptInterface<IBoardCombatTarget>> OtherCombatTargets;
+		OtherCombatTargets.Reserve(mActiveSkillContext.mFinalCombatTargets.Num());
+		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>> OtherSnapshots;
+		OtherSnapshots.Reserve(mActiveSkillContext.mFinalCombatTargets.Num());
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
 		{
 			UBoardActorModel* OtherActorModel = Cast<UBoardActorModel>(OtherCombatTarget);
 			checkf(OtherActorModel != nullptr, TEXT("스킬을 받는 타겟이 유효하지 않음"));
-			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 
-			PassiveContext.mTargets.Add(OtherActorModel);
-			PassiveContext.mTargetSnapshots.Add(&OtherSnapshots.Last());
+			OtherCombatTargets.Add(OtherActorModel);
+			OtherSnapshots.Add(OtherCombatTarget->MakeSnapshotData());
 		}
 
-		for (UTacticalPassive* Passive : Passives)
+		FSkillEffectCommitParams Params(
+			OwnerBoardActorModel,
+			OwnerSnapshot, 
+			OtherCombatTargets, 
+			OtherSnapshots, 
+			mActiveSkillContext.mFinalTileIndexes,
+			mActiveSkillContext.mAimedTileIndex
+		);
+		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
-			TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-
-			Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect, PassiveContext, OUT DynamicPassiveData);
-			Passive->CommitPassive(DynamicPassiveData);
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().CommitEffect(Params);
 		}
 	}
-}
 
-void USkillComponentModel::EndMotionLayer()
-{
-	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+	/* 이펙트 후 이벤트들 */
 
-	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
-	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+	{
+		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
 
-	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
-
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전한 Owner가 유효하지 않음"));
-
-	IBoardCombatTarget* OwnerCombatTarget = Cast<IBoardCombatTarget>(OwnerUnitModel);
-	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전한 Owner가 유효하지 않음"));
-
-	const FSkillMotionLayer& MotionLayer = SkillData->mSkillMotionLayers[mActiveSkillContext.mMotionIndex];
+		for (IBoardCombatTarget* OtherCombatTarget : mActiveSkillContext.mFinalCombatTargets)
+		{
+			OtherCombatTarget->OnEndReceivingEffects(OwnerSnapshot, mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
+		}
+	}
+	OwnerCombatTarget->OnEndApplyingEffects(mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 
 	/* Effect 포인트 수치 비우기 */
-	for (const TInstancedStruct<FSkillEffectLayer>& EffectLayer : MotionLayer.mSkillEffectLayers)
+
 	{
-		EffectLayer.Get().ClearPointEffect(OwnerCombatTarget);
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandleContainers[i].mHandles);
+		}
 	}
 
 	/* 모션 로그 종료 */
-	
+
 	GetWorldEventLogger(this)->EndMotionLog();
-	OnEndMotionLayerUI.Broadcast(mActiveSkillContext.mMotionIndex);
+
+	/* 페이즈 시작 시 대리자 호출 */
+
+	OnEndPhaseLayerUI.Broadcast(mActiveSkillContext.mPhaseIndex);
 
 	/* 종료 판정 */
 
-	++mActiveSkillContext.mMotionIndex;
-	if (SkillData->mSkillMotionLayers.Num() == mActiveSkillContext.mMotionIndex)
+	++mActiveSkillContext.mPhaseIndex;
+	if (mActiveSkillContext.mPhaseIndex < SkillData->mSkillPhaseLayers.Num())
 	{
-		DeactivateSkill();
+		/* 다음 스킬 준비 */
+
+		PreparePhaseLayer();
 	}
-	else
+}
+
+void USkillComponentModel::FlushRemainingPhaseLayers()
+{
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	/* 남은 스킬 페이즈 털어내기 */
+
+	while (mActiveSkillContext.mPhaseIndex < SkillData->mSkillPhaseLayers.Num())
 	{
-		PlayMotionLayer();
+		TriggerPhaseLayer(nullptr);
 	}
 }
 
 void USkillComponentModel::DeactivateSkill()
 {
 	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
 	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
 
-	const UStaticSkillData* SkillData = SkillEntry.mData;
-	checkf(SkillData != nullptr, TEXT("빈 스킬 시전 오류"));
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
-	UUnitModel* OwnerUnitModel = GetOwnerModel<UUnitModel>();
-	checkf(OwnerUnitModel != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
+	/* 미호출한 Phase 단계들 처리 */
 
-	UPassiveComponentModel* PassiveComponentModel = OwnerUnitModel->GetPassiveComponentModel();
-	checkf(PassiveComponentModel != nullptr, TEXT("패시브 컴포넌트 nullptr"));
-
-	/* 스킬 종료 시 패시브 발동 */
-
-	TArray<UTacticalPassive*> Passives = PassiveComponentModel->GetPassivesByTiming(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill);
-
-	FBoardCombatTargetSnapshotData OwnerSnapshot = OwnerUnitModel->MakeSnapshotData();
-
-	FPassiveActivateContext PassiveContext;
-	PassiveContext.mOwner = OwnerUnitModel;
-	PassiveContext.mOwnerSnapshot = &OwnerSnapshot;
-	PassiveContext.mTargets.Add(OwnerUnitModel);
-	PassiveContext.mTargetSnapshots.Add(&OwnerSnapshot);
-
-	for (UTacticalPassive*& Passive : Passives)
-	{
-		TInstancedStruct<FDynamicPassiveData> DynamicPassiveData;
-		Passive->ActivatePassive(AbilityTags::GameplayAbility_Passive_OnEndUsingSkill, PassiveContext, OUT DynamicPassiveData);
-		Passive->CommitPassive(DynamicPassiveData);
-	}
-
-	/* 카메라 줌아웃 */
-
-	UWorldCameraModel* WorldCameraModel = GetWorldSubsystemModel<UWorldCameraModel>(this);
-	checkf(WorldCameraModel != nullptr, TEXT("월드 카메라 모델 nullptr"));
-
-	WorldCameraModel->RequestZoomOutMainCamera();
+	FlushRemainingPhaseLayers();
 
 	/* 스킬 종료 콜백 */
 
+	OwnerCombatTarget->OnEndUsingSkill(mActiveSkillContext.mSkillIndex);
 	mActiveSkillContext.mEndCallback.Broadcast(mActiveSkillContext, SkillData);
 	OnEndSkillUI.Broadcast(mActiveSkillContext, SkillData);
 
@@ -596,36 +596,175 @@ void USkillComponentModel::DeactivateSkill()
 	mActiveSkillContext.Clear();
 }
 
+bool USkillComponentModel::CanPreview(int32 SkillIndex) const
+{
+	return true;
+}
+
+int32 USkillComponentModel::GetRandomDamage(int32 Min, int32 Max) const
+{
+	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
+	return RandomStream.RandRange(Min, Max);
+}
+
+bool USkillComponentModel::IsCritical(int32 Threshold) const
+{
+	const FRandomStream& RandomStream = URandomStreamFunctionLibrary::GetEventStream(this);
+	const float CriticalPercent = RandomStream.FRand() * 100.f;
+	return CriticalPercent < Threshold;
+}
+
 bool USkillComponentModel::IsAnySkillActivated() const
 {
 	return mActiveSkillContext.IsValid() == true;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex, int32 DiceSum) const
+const FActiveSkillContext& USkillComponentModel::GetActiveSkillContext() const
 {
-	TArray<FTileIndex> AimableTiles;
+	return mActiveSkillContext;
+}
+
+TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const
+{
+	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
+	
+	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
+	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
+
+	const float AimRange = StaticSkillData->mAimRange;
+	const EAimPattern Pattern = StaticSkillData->mAimPattern;
+	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mAimBlockerMask);
+
+	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, BlockerLayers);
+}
+
+TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+{
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
-	const float AimRange = StaticSkillData->mAimRangeDefaultValue + DiceSum * StaticSkillData->mAimRangeRatio;
-	const EAimPattern Pattern = StaticSkillData->mAimPattern;
-	const bool CanAimObstacle = StaticSkillData->mCanAimBoardActor;
-	const bool IsIndirect = StaticSkillData->mIsIndirect;
-
-	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, IsIndirect);
+	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& TargetIndex, int32 DiceSum) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
-	TArray<FTileIndex> AimableTiles;
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
 	checkf(StaticSkillData != nullptr, TEXT("잘못된 스킬 데이터"));
 
 	const EEffectPattern Pattern = StaticSkillData->mEffectPattern;
-	const int32 EffectRange = StaticSkillData->mEffectAreaDefaultValue + DiceSum * StaticSkillData->mEffectAreaRatio;
-	const bool IsPenetration = StaticSkillData->mIsPenetration;
+	const int32 EffectRange = StaticSkillData->mEffectArea;
+	const ETileLayerFlag BlockerLayers = static_cast<ETileLayerFlag>(StaticSkillData->mEffectBlockerMask);
 
-	return MapModel->GetEffectTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, TargetIndex, Pattern, EffectRange, IsPenetration);
+	// 각 타겟 타일에서 영향 범위로 확산, 겹치는 타일은 한 번만 포함
+	TArray<FTileIndex> AllEffectTiles;
+	for (const FTileIndex& TargetTileIndex : TargetTileIndexes)
+	{
+		const TArray<FTileIndex> EffectTileIndexes = MapModel->GetEffectTiles(TargetTileIndex, Pattern, EffectRange, BlockerLayers);
+		for (const FTileIndex& EffectTileIndex : EffectTileIndexes)
+		{
+			AllEffectTiles.AddUnique(EffectTileIndex);
+		}
+	}
+	return AllEffectTiles;
 }
+
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+{
+	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
+	const TArray<FTileIndex> TargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);
+
+	// 타겟 범위로 영향 범위의 타일들을 수집
+	return GetEffectTiles(MapModel, SkillIndex, TargetTileIndexes);
+}
+
+bool USkillComponentModel::IsCooldown(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	return SkillEntry->mCooldownHandle.IsValid() == true && SkillEntry->mCooldownHandle.GetOwningAttributeSetComponentModel() != nullptr;
+}
+
+ETacticalEffectDurationUnitType USkillComponentModel::GetCooldownUnit(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return ETacticalEffectDurationUnitType::EveryTurn;
+	}
+
+	UClass* CooldownEffectClass = SkillEntry->mData->mCooldownEffectClass.Get();
+	if (CooldownEffectClass == nullptr)
+	{
+		CooldownEffectClass = SkillEntry->mData->mCooldownEffectClass.LoadSynchronous();
+	}
+	if (CooldownEffectClass == nullptr)
+	{
+		return ETacticalEffectDurationUnitType::EveryTurn;
+	}
+
+	return GetDefault<UTacticalEffect>(CooldownEffectClass)->mDurationUnitPolicy;
+}
+
+int32 USkillComponentModel::GetStaticCooldownDuration(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	return SkillEntry->mData->mCooldownDuration;
+}
+
+int32 USkillComponentModel::GetCooldownDuration(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	const IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	if (OwnerCombatTarget == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	if (AttributeSetCompModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	return AttributeSetCompModel->GetActiveEffectsDuration(SkillEntry->mCooldownHandle);
+}
+
+int32 USkillComponentModel::GetRemainingCooldownTime(int32 SkillIndex) const
+{
+	const FSkillEntry* SkillEntry = GetSkill(SkillIndex);
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return INDEX_NONE;
+	}
+
+	const IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	if (OwnerCombatTarget == nullptr)
+	{
+		return INDEX_NONE;
+	}
+
+	UAttributeSetComponentModel* AttributeSetCompModel = OwnerCombatTarget->GetAttributeComponentModel();
+	if (AttributeSetCompModel == nullptr)
+	{
+		return INDEX_NONE;
+	}
+	return AttributeSetCompModel->GetActiveEffectTimeRemaining(SkillEntry->mCooldownHandle);
+}
+
+

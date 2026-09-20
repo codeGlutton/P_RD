@@ -25,16 +25,22 @@ public:
 
 	/* UAnimNotify 상속 */
 public:
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+	FString GetNotifyName_Implementation() const override;
+	FLinearColor GetEditorColor() override;
+
+	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 
 #if WITH_EDITOR
-	virtual void ValidateAssociatedAssets() override;
+	void ValidateAssociatedAssets() override;
 #endif
+
+protected:
+	virtual void TriggerEvent(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation);
 
 protected:
 	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "TargetEventTag", ToolTip = "호출할 이벤트 태그"))
 	FGameplayTag mTargetEventTag;
 
-	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "EventPayload", ToolTip = "같이 전달할 페이로드"))
+	UPROPERTY(Category = "Event", EditAnywhere, meta = (DisplayName = "EventPayload", ToolTip = "같이 전달할 페이로드", ExcludeBaseStruct))
 	TInstancedStruct<FEventTriggerPayload> mEventPayload;
 };

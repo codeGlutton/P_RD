@@ -14,6 +14,22 @@ void UObjectModelFactory::SetContext(FRoomContext& RoomContext)
 	mRoomContext = &RoomContext;
 }
 
+UObjectModel* UObjectModelFactory::FindModel_Internal(int32 ModelId) const
+{
+	if (mRoomContext == nullptr || mRoomContext->mRoomInstance == nullptr)
+	{
+		return nullptr;
+	}
+
+	TObjectPtr<UObjectModel>* FoundModel = mRoomContext->mRoomInstance->mAliveWorldModels.Find(ModelId);
+	if (FoundModel == nullptr)
+	{
+		return nullptr;
+	}
+
+	return *FoundModel;
+}
+
 UObjectModel* UObjectModelFactory::NewModel_Internal(const UClass* Class, const FTransform& ViewTransform, FName Name, EObjectFlags Flags, UObject* Template, bool CopyTransientsFromClassDefaults, FObjectInstancingGraph* InInstanceGraph, UPackage* InExternalPackage)
 {
 	UObjectModel* Model = NewModelDeferred_Internal(Class, Name, Flags, Template, CopyTransientsFromClassDefaults, InInstanceGraph, InExternalPackage);
@@ -195,7 +211,7 @@ void UGameObjectModelFactory::OnPostCreateNewModel(UObjectModel* Model, const FT
 		if (ViewClass != nullptr)
 		{
 			// 스폰 위치에 지형지물이 있어도 무시하고 스폰하기 위해서 AlwaysSpawn 파라미터 추가
-			// -> 어차피 타일맵 위치로 이동할 것이므로 스폰 안 할 이유가 없음
+
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			TScriptInterface<IActorView> View = GetWorld()->SpawnActor(ViewClass.LoadSynchronous(), &ViewTransform, SpawnParameters);

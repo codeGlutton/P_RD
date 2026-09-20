@@ -32,6 +32,11 @@
 	],
 	"Plugins": [
 		{
+			"Name": "CascadeToNiagaraConverter",
+			"Enabled": true,
+			"TargetAllowList": [ "Editor" ]
+		},
+		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
 			"TargetAllowList": [
@@ -52,6 +57,10 @@
 		},
 		{
 			"Name": "StateTree",
+			"Enabled": true
+		},
+		{
+			"Name": "RelativeIKOp",
 			"Enabled": true
 		},
 		{

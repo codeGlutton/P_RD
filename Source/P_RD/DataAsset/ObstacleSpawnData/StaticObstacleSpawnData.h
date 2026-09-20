@@ -10,6 +10,7 @@
 #include "RDMinimal.h"
 #include "DataAsset/PrimaryAssetType.h"
 #include "DataAsset/BundleType.h"
+#include "SRPGFramework/SRPGFrameworkType.h"
 #include "StaticObstacleSpawnData.generated.h"
 
 class UBoardActorModel;
@@ -41,13 +42,20 @@ public:
 
 public:
     FName GetKeyName() const;
-    float GetDefaultAttributeValue(UWorld* World, TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attrubute, int32 Level) const;
+    float GetDefaultAttributeValue(UWorld* World, TSubclassOf<UTacticalAttributeSet> AttributeSetClass, const FTacticalAttribute& Attribute, int32 Level) const;
 
 public:
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
     TSoftClassPtr<UBoardActorModel> mModelClass;
     UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", MustImplement = "/Script/P_RD.ActorView",  AssetBundles = "Actor"))
     TSoftClassPtr<AActor> mViewClass;
+
+public:
+    /**
+     * @brief 빈칸을 요구하는 추가적 상대 좌표들 (0, 0 제외)
+     */
+    UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RequiredEmptyTiles"))
+    TSet<FTileIndex> mRequiredEmptyTiles;
 
 public:
     UPROPERTY(Category = "UI", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Portrait", AssetBundles = "UI"))

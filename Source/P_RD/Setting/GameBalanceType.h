@@ -49,7 +49,7 @@ public:
  * @brief 전역 상태 이상 설정 값 객체
  */
 USTRUCT(BlueprintType)
-struct FGlobalStatusEffectSetting
+struct FGlobalStatusEffectBalanceSetting
 {
 	GENERATED_BODY()
 

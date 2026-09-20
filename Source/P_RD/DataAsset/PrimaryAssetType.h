@@ -17,17 +17,6 @@ inline static FPrimaryAssetType Get##TypeName##Type()											\
 	return FPrimaryAssetType(TEXT(#TypeName));													\
 }
 
-#define DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(TypeName, SuffixEnumType, SuffixName)			\
-DECLARE_PRIMARY_ASSET_TYPE(TypeName)															\
-inline static FPrimaryAssetType Get##TypeName##Type(const FString& SuffixName)					\
-{																								\
-	return FPrimaryAssetType(*FString::Printf(TEXT("%s_%s"), TEXT(#TypeName), *SuffixName));	\
-}																								\
-inline static FPrimaryAssetType Get##TypeName##Type(SuffixEnumType SuffixName)					\
-{																								\
-	return Get##TypeName##Type(EnumToString(SuffixName));										\
-}
-
  /**
   * @brief 스테이지 Primary Asset Type들을 정의한 namespace 영역
   */
@@ -38,28 +27,25 @@ namespace StagePrimaryAssetTypes
 
 /**
  * @brief 방 Primary Asset Type들을 정의한 namespace 영역
- * @details
- * 방 타입과 스테이지 별로 등장하는 방을 나누어 설계
  */
 namespace RoomPrimaryAssetTypes
 {
 	DECLARE_PRIMARY_ASSET_TYPE(FrontendRoom);
 
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(MonsterRoom, EStageLevelType, StageLevel);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(EliteMonsterRoom, EStageLevelType, StageLevel);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(BossMonsterRoom, EStageLevelType, StageLevel);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(ShopRoom, EStageLevelType, StageLevel);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(TreasureRoom, EStageLevelType, StageLevel);
+	DECLARE_PRIMARY_ASSET_TYPE(MonsterRoom);
+	DECLARE_PRIMARY_ASSET_TYPE(EliteMonsterRoom);
+	DECLARE_PRIMARY_ASSET_TYPE(BossMonsterRoom);
+	DECLARE_PRIMARY_ASSET_TYPE(ShopRoom);
+	DECLARE_PRIMARY_ASSET_TYPE(TreasureRoom);
 }
 
 /**
  * @brief 장애물 Primary Asset Type들을 정의한 namespace 영역
- * @details
- * 유닛 타입별로 등장하는 방을 나누어 설계
  */
 namespace ObstaclePrimaryAssetTypes
 {
 	DECLARE_PRIMARY_ASSET_TYPE(Obstacle);
+	DECLARE_PRIMARY_ASSET_TYPE(CombatTargetObstacle);
 }
 
 /**
@@ -73,14 +59,18 @@ namespace UnitPrimaryAssetTypes
 
 /**
  * @brief 장비 Primary Asset Type들을 정의한 namespace 영역
- * @details
- * 장비 타입과 희귀도 별로 등장하는 방을 나누어 설계
  */
 namespace EquipmentPrimaryAssetTypes
 {
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Weapon, ERarityType, Rarity);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Gloves, ERarityType, Rarity);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Boots, ERarityType, Rarity);
+	DECLARE_PRIMARY_ASSET_TYPE(Equipment);
+}
+
+/**
+ * @brief 아티펙트 Primary Asset Type들을 정의한 namespace 영역
+ */
+namespace ArtifactPrimaryAssetTypes
+{
+	DECLARE_PRIMARY_ASSET_TYPE(Artifact);
 }
 
 /**
@@ -91,17 +81,7 @@ namespace EquipmentPrimaryAssetTypes
 namespace SkillPrimaryAssetTypes
 {
 	DECLARE_PRIMARY_ASSET_TYPE(Passive);
-
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Attack, ERarityType, Rarity);
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Spell, ERarityType, Rarity);
+	DECLARE_PRIMARY_ASSET_TYPE(Active);
+	DECLARE_PRIMARY_ASSET_TYPE(ObstacleActive);
 }
 
-/**
- * @brief 주사위 Primary Asset Type들을 정의한 namespace 영역
- * @details
- * 희귀도 별로 등장하는 방을 나누어 설계
- */
-namespace DicePrimaryAssetTypes
-{
-	DECLARE_PRIMARY_ASSET_TYPE_WITH_SUFFIX(Dice, ERarityType, Rarity);
-}

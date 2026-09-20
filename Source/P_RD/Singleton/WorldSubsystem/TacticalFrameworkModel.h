@@ -22,6 +22,10 @@ struct FTacticalAggregator;
 // Tactical Framework 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogTacticalFramework, Log, All)
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPreTacticalEffectSpecApplyUI, const FTacticalEffectSpec& /*Spec*/, const UAttributeSetComponentModel* /*Model*/)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPostTacticalEffectSpecAddedUI, const FTacticalEffectSpec& /*Spec*/, FActiveTacticalEffectHandle /*ActiveHandle*/, const UAttributeSetComponentModel* /*Model*/)
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnPreTacticalEffectSpecRemovedUI, const FTacticalEffectSpec& /*Spec*/, FActiveTacticalEffectHandle /*ActiveHandle*/, const UAttributeSetComponentModel* /*Model*/)
+
 struct FScopeCurrentTacticalEffectBeingApplied
 {
 public:
@@ -64,7 +68,9 @@ public:
 
 	/* 특정 시기 호출 */
 public:
-	void GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model);
+	void GlobalPreTacticalEffectSpecApply(const FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model);
+	void GlobalPostTacticalEffectSpecAdded(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, UAttributeSetComponentModel* Model);
+	void GlobalPreTacticalEffectSpecRemoved(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, UAttributeSetComponentModel* Model);
 
 	/* Effect 적용 시 최상위 객체 추적 */
 public:
@@ -82,17 +88,41 @@ public:
 
 	int32 GetGlobalBatchCount() const;
 
+	/* Duration 진행 */
+public:
+	void AdvanceRoundDuration(const int32 RoundCount);
+	void AdvanceTurnDuration(const int32 TurnCount);
+	void CheckEffectDurations(ETacticalEffectDurationUnitType UnitType);
+	int32 GetWorldTime(ETacticalEffectDurationUnitType UnitType) const;
+
+private:
+	void AdvanceEffectDuration_Internal(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+	void CheckEffectDurations_Internal(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+
+	/* 대리자 */
+public:
+	FOnPreTacticalEffectSpecApplyUI OnPreTacticalEffectSpecApplyUI;
+	FOnPostTacticalEffectSpecAddedUI OnPostTacticalEffectSpecAddedUI;
+	FOnPreTacticalEffectSpecRemovedUI OnPreTacticalEffectSpecRemovedUI;
+
 	/* 초기 구성 데이터 */
 protected:
 	UPROPERTY(Category = "Attribute", DuplicateTransient, VisibleAnywhere, meta = (DisplayName = "GlobalInitCurveTable"))
 	TObjectPtr<UCurveTable> mGlobalInitCurveTable;
 
-	TSharedPtr<FTacticalAttributeSetInitter> mGlobalAttributeSetInitter;
+	static TSharedPtr<FTacticalAttributeSetInitter> GlobalAttributeSetInitter;
 
 	/* Effect 매핑 데이터 */
 protected:
 	UPROPERTY(Category = "Effect", VisibleAnywhere, meta = (DisplayName = "EffectOwningModelMap"))
 	TMap<FActiveTacticalEffectHandle, TWeakObjectPtr<UAttributeSetComponentModel>> mEffectOwningModelMap;
+
+	/* Duration 데이터 */
+protected:
+	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "RoundCount"))
+	int32 mRoundCount = 1;
+	UPROPERTY(Category = "Time", VisibleAnywhere, meta = (DisplayName = "TurnCount"))
+	int32 mTurnCount = 1;
 
 	/* 임시 데이터 */
 protected:

@@ -343,14 +343,14 @@ void UTacticalAttributeSet::InitFromMetaDataTable(const UDataTable* DataTable)
 		if (FTacticalAttribute::IsSupportedProperty(Property) == true)
 		{
 			FString RowNameStr = FString::Printf(TEXT("%s.%s"), *Property->GetOwnerVariant().GetName(), *Property->GetName());
-			if (FAttributeMetaData* MetaData = DataTable->FindRow<FAttributeMetaData>(FName(*RowNameStr), Context, false))
+			if (FTacticalAttributeMetaData* MetaData = DataTable->FindRow<FTacticalAttributeMetaData>(FName(*RowNameStr), Context, false))
 			{
 				FNumericProperty* NumericProperty = CastField<FNumericProperty>(Property);
 				if (NumericProperty != nullptr)
 				{
 					check(NumericProperty->IsFloatingPoint() == true);
 					void* Data = NumericProperty->ContainerPtrToValuePtr<void>(this);
-					NumericProperty->SetFloatingPointPropertyValue(Data, MetaData->BaseValue);
+					NumericProperty->SetFloatingPointPropertyValue(Data, MetaData->mBaseValue);
 				}
 				else if (FTacticalAttribute::IsTacticalAttributeDataProperty(Property) == true)
 				{
@@ -358,8 +358,8 @@ void UTacticalAttributeSet::InitFromMetaDataTable(const UDataTable* DataTable)
 					check(StructProperty != nullptr);
 					FTacticalAttributeData* DataPtr = StructProperty->ContainerPtrToValuePtr<FTacticalAttributeData>(this);
 					check(DataPtr != nullptr);
-					DataPtr->SetBaseValue(MetaData->BaseValue);
-					DataPtr->SetCurrentValue(MetaData->BaseValue);
+					DataPtr->SetBaseValue(MetaData->mBaseValue);
+					DataPtr->SetCurrentValue(MetaData->mBaseValue);
 				}
 			}
 		}
@@ -391,7 +391,7 @@ UAttributeSetComponentModel* UTacticalAttributeSet::GetOwningAttributeSetCompone
 	return Result;
 }
 
-void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData& Snapshot) const
+void UTacticalAttributeSet::CaptureAllAttributes(UBoardCombatTargetSnapshotData* Snapshot) const
 {
 	for (TFieldIterator<FProperty> It(GetClass()); It; ++It)
 	{
@@ -406,7 +406,7 @@ void UTacticalAttributeSet::CaptureAllAttributes(FBoardCombatTargetSnapshotData&
 
 			FTacticalAttribute Attribute(Property);
 			// 스냅샷 맵은 빈 상태로 진입하므로 operator[](FindChecked) 대신 Add로 삽입
-			Snapshot.mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
+			Snapshot->mAttributes.Add(Attribute, DataPtr->GetCurrentValue());
 		}
 	}
 }
@@ -419,6 +419,14 @@ bool FTacticalAttribute::operator==(const FTacticalAttribute& Other) const
 bool FTacticalAttribute::operator!=(const FTacticalAttribute& Other) const
 {
 	return ((Other.mAttribute != mAttribute));
+}
+
+FTacticalAttributeMetaData::FTacticalAttributeMetaData() :
+	mBaseValue(0.0f),
+	mMinValue(0.f),
+	mMaxValue(1.f),
+	mCanStack(false)
+{
 }
 
 TSubclassOf<UTacticalAttributeSet> FindBestAttributeClass(TArray<TSubclassOf<UTacticalAttributeSet> >& ClassList, FString PartialName)
@@ -564,8 +572,9 @@ void FTacticalAttributeSetInitterDiscreteLevels::InitAttributeSetDefaults(UAttri
 		{
 			continue;
 		}
+
 		// 커브의 기본값 목록은 속성을 "선언한" 클래스 단위로 키가 잡힌다.
-		// 파생 AttributeSet(예: UPlayerUnitAttributeSet)은 베이스(UUnitAttributeSet)에서 상속한 속성도 가지므로,
+		// 파생 AttributeSet은 베이스에서 상속한 속성도 가지므로,
 		// 스폰된 셋의 클래스부터 UTacticalAttributeSet까지 거슬러 올라가며 각 단계의 기본값을 모두 적용한다.
 		for (UClass* SetClass = Set->GetClass();
 			SetClass != nullptr && SetClass->IsChildOf(UTacticalAttributeSet::StaticClass());
@@ -645,7 +654,10 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 {
 	TArray<float> AttributeSetValues;
 	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
-	checkf(Collection != nullptr, TEXT("해당 속성 기본 값을 찾을 수 없음"));
+	if (Collection == nullptr)
+	{
+		return AttributeSetValues;
+	}
 
 	for (const FAttributeSetDefaults& SetDefaults : Collection->mLevelData)
 	{
@@ -664,3 +676,32 @@ TArray<float> FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValues(
 	}
 	return AttributeSetValues;
 }
+
+float FTacticalAttributeSetInitterDiscreteLevels::GetAttributeSetValue(UClass* AttributeSetClass, FProperty* AttributeProperty, FName GroupName, int32 Level) const
+{
+	const FAttributeSetDefaultsCollection* Collection = mDefaults.Find(GroupName);
+	if (Collection == nullptr)
+	{
+		return 0.f;
+	}
+
+	if (Collection->mLevelData.IsValidIndex(Level - 1) == false)
+	{
+		return 0.f;
+	}
+
+	const FAttributeDefaultValueList* DefaultDataList = Collection->mLevelData[Level - 1].mDataMap.Find(AttributeSetClass);
+	if (DefaultDataList != nullptr)
+	{
+		for (auto& DataPair : DefaultDataList->mList)
+		{
+			check(DataPair.mProperty);
+			if (DataPair.mProperty == AttributeProperty)
+			{
+				return DataPair.mValue;
+			}
+		}
+	}
+	return 0.f;
+}
+

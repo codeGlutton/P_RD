@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   StageBuilder.h
  * @brief  스테이지 내 방들을 생성해주는 빌더 객체 구현 헤더
  * @author 모호재
@@ -12,7 +12,9 @@
 #include "Setting/GameBalanceType.h"
 #include "DataAsset/EquipmentData/EquipmentType.h"
 #include "DataAsset/SkillData/SkillType.h"
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
 #include "DataTable/StageBuilderParams.h"
+#include "AttributeSet/LevelAttributeCache.h"
 
 // Stage Builder 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogStageBuilder, Log, All)
@@ -25,15 +27,17 @@ struct FRoomEdge
 /**
  * @brief  스테이지 내 방들을 생성해주는 빌더 객체
  */
-struct FStageBuilder
+struct P_RD_API FStageBuilder
 {
 private:
-	FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting);
+	FStageBuilder(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache);
 
 public:
-	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting);
-	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FStageBuilderParams& Params);
+	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache);
+	static FStageBuilder Make(const FRandomStream& BuildStream, const FGlobalStageBuildSetting& GlobalSetting, const FLevelAttributeCache& LevelCache, const FStageBuilderParams& Params);
 	FStageBuilder& SetParams(const FStageBuilderParams& Params);
+	// Applied only to the start room after normal generation, preserving random stream consumption.
+	FStageBuilder& SetFirstRoomOverride(const FPrimaryAssetId& RoomId);
 	FStage Build() const;
 	void Build(OUT FStage& NewStage) const;
 
@@ -56,11 +60,10 @@ protected:
 	FRoom& CreateRoom(ERoomType Type, int32 Row, int32 Column, TInstancedStruct<FRoom>& Room) const;
 
 protected:
-	uint8 GetRandomEquipmentIndex() const;
-	EEquipmentType GetRandomEquipment() const;
-
-	uint8 GetRandomSkillIndex() const;
-	ESkillType GetRandomSkill() const;
+	TArray<FPrimaryAssetId> GetFilteredPrimaryAssets(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const;
+	TArray<FPrimaryAssetId> GetFilteredPrimaryAssets(const TArray<FAssetData>& AssetDataList, TFunctionRef<bool(const FAssetData&)> Filter) const;
+	TArray<FAssetData> GetFilteredPrimaryAssetDatas(const FPrimaryAssetType& AssetType, TFunctionRef<bool(const FAssetData&)> Filter) const;
+	FString GetPropertyAssetData(const FPrimaryAssetId& AssetId, const FName& PropertyName) const;
 
 	uint8 GetRandomRarityIndex(const FRarityRate& RarityRate) const;
 	ERarityType GetRandomRarity(const FRarityRate& RarityRate) const;
@@ -69,11 +72,14 @@ protected:
 	const FRandomStream& mBuildStream;
 	const FGlobalStageBuildSetting& mGlobalSetting;
 	FStageBuilderParams mParams;
+	FPrimaryAssetId mFirstRoomOverride;
+	FLevelAttributeCache mLevelCache;
 
 protected:
 	bool mIsLoadedIds = false;
 	TArray<FPrimaryAssetId> mRoomAssetIds[static_cast<uint8>(ERoomType::Count)];
-	TArray<FPrimaryAssetId> mEquipmentAssetIds[static_cast<uint8>(EEquipmentType::Count)][static_cast<uint8>(ERarityType::Count)];
-	TArray<FPrimaryAssetId> mSkillAssetIds[static_cast<uint8>(ESkillType::Count)][static_cast<uint8>(ERarityType::Count)];
-	TArray<FPrimaryAssetId> mDiceAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mArtifactAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mJobSkillAssetIds[static_cast<uint8>(EUnitJobType::PlayerJobCount)][static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mCommonSkillAssetIds[static_cast<uint8>(ERarityType::Count)];
+	TArray<FPrimaryAssetId> mMercenaryAssetIds;
 };

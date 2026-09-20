@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   PersistentData.h
  * @brief  영구적 플레이 데이터 구현 헤더
  * @author 모호재
@@ -6,15 +6,22 @@
  *********************************************************************/
 
 #pragma once
+#include "Component/TimeScaleComponent/CombatPlaybackSpeed.h"
 
 #include "RDMinimal.h"
 
 #include "PCGStage/Stage.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
+#include "Tutorial/FirstPlayProgress.h"
+#include "Tutorial/GuidedTutorial.h"
 #include "PersistentData.generated.h"
 
+class UPartyModel;
 class UPlayerUnitModel;
+class FViewport;
+class UStaticSkillData;
+class UNiagaraSystem;
 
 DECLARE_DELEGATE_OneParam(FOnCreateStage, const FStage& /*NewStage*/)
 
@@ -28,6 +35,10 @@ struct FRunLog
 
 public:
 	void Clear();
+
+public:
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KilledEnemyUnits"))
@@ -56,8 +67,8 @@ public:
 	int32 mRunCount = 0;
 
 public:
-	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunCountPerUnit"))
-	TMap<FPrimaryAssetId, int32> mRunCountPerUnit;
+	UPROPERTY(Category = Record, SaveGame, VisibleAnywhere, meta = (DisplayName = "UseCountPerUnit"))
+	TMap<FPrimaryAssetId, int32> mUseCountPerUnit;
 
 public:
 	UPROPERTY(Category = Discovery, SaveGame, VisibleAnywhere, meta = (DisplayName = "KnownEnemyUnitIds"))
@@ -79,33 +90,35 @@ class P_RD_API UPlayerUnitPersistData : public UObject
 	GENERATED_BODY()
 
 public:
+	void MakeUnit(const FPrimaryAssetId& PlayerUnitId);
+	void MakeUnit(UPlayerUnitModel* PlayerUnit);
+	void ClearUnit();
+
+public:
 	void RegisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
+	void UnregisterPlayerUnit(UPlayerUnitModel* PlayerUnit);
 
 public:
 	const FPrimaryAssetId& GetPlayerUnitId() const;
 	int32 GetPlayerLevel() const;
-	int32 GetDifficulty() const;
+	float GetExperience() const;
 
 public:
 	const TArray<FPrimaryAssetId>& GetSkillIds() const;
-	const TArray<FPrimaryAssetId>& GetEquipmentIds() const;
-	const TArray<FPrimaryAssetId>& GetDiceIds() const;
+
+public:
+	virtual void Serialize(FArchive& Ar) override;
 
 protected:
-	void SyncPlayerPersistData(UPlayerUnitModel* PlayerUnit);
+	void SyncPlayerPersistData( UPlayerUnitModel* PlayerUnit);
 	void BindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
-
-protected:
-	UPROPERTY(SaveGame)
-	bool mIsNewData = true;
+	void UnbindPlayerUnitEvent(UPlayerUnitModel* PlayerUnit);
 
 protected:
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerUnitId"))
 	FPrimaryAssetId mPlayerUnitId;
 	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "PlayerLevel"))
 	int32 mPlayerLevel = 1;
-	UPROPERTY(Category = Player, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
-	int32 mDifficulty = 1;
 
 protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "MaxHP"))
@@ -116,39 +129,133 @@ protected:
 	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Exp"))
 	float mExp = 0.f;
 
-	UPROPERTY(Category = Attribute, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
-	float mMoney = 0.f;
-
 protected:
 	UPROPERTY(Category = Tag, SaveGame, VisibleAnywhere, meta = (DisplayName = "TagCountMap"))
 	TMap<FGameplayTag, int32> mTagCountMap;
 
-protected:
 	UPROPERTY(Category = Skill, SaveGame, VisibleAnywhere, meta = (DisplayName = "SkillIds"))
 	TArray<FPrimaryAssetId> mSkillIds;
+};
 
-	UPROPERTY(Category = Equipment, SaveGame, VisibleAnywhere, meta = (DisplayName = "EquipmentIds"))
-	TArray<FPrimaryAssetId> mEquipmentIds;
+/**
+ * @brief 파티의 영구적 데이터
+ */
+UCLASS()
+class P_RD_API UPartyPersistData : public UObject
+{
+	GENERATED_BODY()
 
-	UPROPERTY(Category = Dice, SaveGame, VisibleAnywhere, meta = (DisplayName = "DiceIds"))
-	TArray<FPrimaryAssetId> mDiceIds;
+public:
+	UPartyPersistData();
+
+	/* UObject 상속 */
+public:
+	void Serialize(FArchive& Ar) override;
+
+public:
+	void RegisterParty(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+
+public:
+	TArray<FPrimaryAssetId> GetPlayerUnitIds() const;
+	int32 GetDifficulty() const;
+	const TArray<FPrimaryAssetId>& GetArtifactIds() const;
+
+protected:
+	void SyncPartyPersistData(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+	void BindPartyEvent(UPartyModel* Party, TArray<TObjectPtr<UPlayerUnitModel>>& Players);
+
+protected:
+	UPROPERTY(Category = Party, VisibleAnywhere, meta = (DisplayName = "PartyPlayers"))
+	TArray<TObjectPtr<UPlayerUnitPersistData>> mPartyPlayers;
+
+	UPROPERTY(Category = Artifact, SaveGame, VisibleAnywhere, meta = (DisplayName = "ArtifactIds"))
+	TArray<FPrimaryAssetId> mArtifactIds;
+
+protected:
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Difficulty"))
+	int32 mDifficulty = 1;
+
+	UPROPERTY(Category = Party, SaveGame, VisibleAnywhere, meta = (DisplayName = "Money"))
+	float mMoney = 0.f;
+};
+
+USTRUCT()
+struct FRunPersistDataCache
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	TArray<TObjectPtr<UNiagaraSystem>> mEffectVFXs;
+	UPROPERTY()
+	TArray<TObjectPtr<UCurveBase>> mEffectCurves;
+};
+
+/** One choice per gained level. Candidates and completion survive a reward-screen restart. */
+USTRUCT()
+struct FLevelUpSkillReward
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) int32 UnitIndex = INDEX_NONE;
+	UPROPERTY(SaveGame) int32 Level = 1;
+	UPROPERTY(SaveGame) bool Offered = false;
+	UPROPERTY(SaveGame) bool Completed = false;
+	UPROPERTY(SaveGame) TArray<FPrimaryAssetId> Candidates;
+};
+
+/** Claim and purchase state travels in the same payload as the granted items and money. */
+USTRUCT()
+struct FRoomTransactionState
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) bool GoldClaimed = false;
+	UPROPERTY(SaveGame) bool ExpClaimed = false;
+	UPROPERTY(SaveGame) bool TreasureOpened = false;
+	UPROPERTY(SaveGame) bool RestUsed = false;
+	UPROPERTY(SaveGame) FPrimaryAssetId SelectedArtifact;
+	UPROPERTY(SaveGame) TSet<int32> ClaimedChoices;
+	UPROPERTY(SaveGame) TSet<int32> SoldShopSlots;
+	UPROPERTY(SaveGame) TArray<FLevelUpSkillReward> LevelUpSkills;
+};
+
+USTRUCT()
+struct FPendingCompletedRun
+{
+	GENERATED_BODY()
+	UPROPERTY(SaveGame) FGuid TransactionId;
+	UPROPERTY(SaveGame) FRunLog Log;
 };
 
 /**
  * @brief 이번 런의 영구적 데이터
  */
 UCLASS()
-class P_RD_API URunPersistData : public UPlayerUnitPersistData
+class P_RD_API URunPersistData : public UPartyPersistData
 {
 	GENERATED_BODY()
 
+	/* UObject 상속 */
 public:
-	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty);
+	void Serialize(FArchive& Ar) override;
+
+public:
+	void MakeCaches();
+
+public:
+	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty);
 	void ClearRun();
+	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
+	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
+	const FRoomTransactionState& GetRoomTransactions() const { return mRoomTransactions; }
+	FRoomTransactionState& GetRoomTransactionsMutable() { return mRoomTransactions; }
+	void QueueCompletedRunLog(const FRunLog& Log);
+	const TArray<FPendingCompletedRun>& GetPendingCompletedRuns() const { return mPendingCompletedRuns; }
+	void ClearCompletedRunLogs() { mPendingCompletedRuns.Reset(); }
 
 public:
 	void MakeStageAsync(EStageLevelType Type, FOnCreateStage OnCreateStage);
 	void SetCurrentRoomIndex(int32 RowIndex, int32 ColumnIndex);
+	void SetRoomClearData(const FRoomClearData& ClearData);
 
 public:
 	void CollectAssetIds(int32 RowIndex, int32 ColumnIndex, OUT TArray<FPrimaryAssetId>& PlayerIds, OUT FPrimaryAssetId& StageId, OUT FPrimaryAssetId& RoomId, OUT TArray<FPrimaryAssetId>& AdditionalAssetIds) const;
@@ -163,11 +270,8 @@ public:
 	const FRoom& GetStartRoom() const;
 	const FRoom& GetCurrentRoom() const;
 	void GetCurrentRoomIndex(OUT int32& RowIndex, OUT int32& ColumnIndex) const;
-
-public:
-	bool AddRewardSkill(const FPrimaryAssetId& SkillId);
-	bool AddRewardEquipment(const FPrimaryAssetId& EquipmentId);
-	bool AddRewardDice(const FPrimaryAssetId& DiceId);
+	const TArray<FPrimaryAssetId>& GetRewardSkillIds() const;
+	const TArray<FPrimaryAssetId>& GetRewardEquipmentIds() const;
 
 public:
 	const FRunLog& GetRunLog() const;
@@ -185,9 +289,29 @@ protected:
 	UPROPERTY(Category = Stage, SaveGame, VisibleAnywhere, meta = (DisplayName = "Stage"))
 	TInstancedStruct<FStage> mStage;
 
+	/**
+	 * @brief 런 동안 획득했지만 아직 특정 용병 슬롯에 장착하지 않은 공용 보관함.
+	 * @details 동일 스킬 소유를 허용하므로 배열에서 중복을 제거하지 않는다.
+	 */
+	UPROPERTY(Category = Reward, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardSkillIds"))
+	TArray<FPrimaryAssetId> mRewardSkillIds;
+	UPROPERTY(Category = Reward, SaveGame, VisibleAnywhere, meta = (DisplayName = "RewardEquipmentIds"))
+	TArray<FPrimaryAssetId> mRewardEquipmentIds;
+
 protected:
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "RunLog"))
 	FRunLog mRunLog;
+
+	UPROPERTY(SaveGame)
+	FRoomTransactionState mRoomTransactions;
+	// Intentionally retained by ClearRun/StartRun until the User slot confirms a durable commit.
+	UPROPERTY(SaveGame)
+	TArray<FPendingCompletedRun> mPendingCompletedRuns;
+
+	/* 캐싱 */
+private:
+	UPROPERTY()
+	FRunPersistDataCache mRunPersistDataCache;
 };
 
 /**
@@ -199,9 +323,18 @@ class P_RD_API UUserPersistData : public UObject
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(SaveGame)
+	FFirstPlayProgress TutorialProgress;
+	UPROPERTY(SaveGame) FGuidedTutorialProgress GuidedTutorial;
+	// Acknowledged per authored trap type, independent of runs and basic tutorial enrollment.
+	UPROPERTY(SaveGame) TSet<FPrimaryAssetId> SeenTrapHints;
+	UPROPERTY(SaveGame) bool SeenShopWalkthrough = false;
+	UPROPERTY(SaveGame) bool SeenLevelUpWalkthrough = false;
+
 	void MakeUser(const FText& Name);
 	void ClearUser();
-	void UpdateLog(const FPrimaryAssetId& PlayerUnitId, const FRunLog& RunLog);
+	void UpdateLog(const FRunLog& RunLog);
+	bool ApplyRunLogOnce(const FGuid& TransactionId, const FRunLog& RunLog);
 
 public:
 	const FText& GetUserName() const;
@@ -218,6 +351,8 @@ protected:
 
 	UPROPERTY(Category = Log, SaveGame, VisibleAnywhere, meta = (DisplayName = "UserLog"))
 	FUserLog mUserLog;
+	UPROPERTY(SaveGame)
+	TSet<FGuid> mAppliedRunTransactions;
 };
 
 USTRUCT()
@@ -242,6 +377,7 @@ class P_RD_API UOptionPersistData : public UObject
 
 public:
 	UOptionPersistData();
+	void BeginDestroy() override;
 
 public:
 	void MakeCaches();
@@ -251,40 +387,66 @@ public:
 	void ClearOption();
 
 public:
+	void SetCombatPlaybackSpeed(int32 Speed) { mCombatPlaybackSpeed = CombatPlaybackSpeed::Clamp(Speed); }
+	int32 GetCombatPlaybackSpeed() const { return CombatPlaybackSpeed::Clamp(mCombatPlaybackSpeed); }
 	void SetVolume(EGameVolumeType VolumeType, float Volume);
 	void SetLanguage(ELanguageType LanguageType);
-	void SetResolution(const FIntPoint& Resolution);
+	void SetOverallQuality(EOverallQualityType QualityType);
 	void SetFpsLimit(int32 FpsLimit);
+	void SetCameraShakeEnabled(bool IsEnabled);
+	void SetEffectVFXEnabled(bool IsEnabled);
 
 	void ApplyCurrentOptions();
+	void ApplyAudioOptions();
+	void SetVibrationEnabled(bool IsEnabled);
+	bool IsVibrationEnabled() const { return mVibrationEnabled; }
 
 public:
 	float GetVolume(EGameVolumeType VolumeType) const;
 	ELanguageType GetLanguage() const;
-	const FIntPoint& GetResolution() const;
+	EOverallQualityType GetOverallQuality() const;
 	int32 GetFpsLimit() const;
+	bool IsCameraShakeEnabled() const;
+	bool IsEffectVFXEnabled() const;
 
 public:
 	bool IsActive() const;
 
+private:
+	void ApplyScreenPercentage() const;
+	void OnResizeViewport(FViewport* Viewport, uint32 Unused);
+
+	/* 사운드 옵션 */
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Volumes"))
 	TArray<float> mVolumes;
 
+	/* 언어 옵션 */
 protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "LanguageType"))
 	ELanguageType mLanguageType = ELanguageType::ENGLISH;
 
+	/* 그래픽 옵션 */
 protected:
-	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "Resolution"))
-	FIntPoint mResolution = FIntPoint::ZeroValue;
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "OverallQuality"))
+	EOverallQualityType mOverallQuality = EOverallQualityType::Medium;
 
-protected:
 	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "FpsLimit"))
 	int32 mFpsLimit = 60;
+
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "CameraShakeEnabled"))
+	bool mCameraShakeEnabled = true;
+
+	UPROPERTY(Category = Option, SaveGame, VisibleAnywhere, meta = (DisplayName = "EffectVFXEnabled"))
+	bool mEffectVFXEnabled = true;
+	UPROPERTY(SaveGame)
+	bool mVibrationEnabled = true;
+	UPROPERTY(SaveGame)
+	int32 mCombatPlaybackSpeed = 1;
 
 	/* 캐싱 */
 private:
 	UPROPERTY()
 	FOptionPersistDataCache mOptionPersistDataCache;
+	void RouteLoadedSound(UObject* Asset);
 };

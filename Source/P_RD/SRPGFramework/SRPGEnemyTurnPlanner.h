@@ -12,18 +12,33 @@
 #include "SRPGFramework/SRPGCommand.h"
 #include "SRPGEnemyTurnPlanner.generated.h"
 
+// 적 플래너의 판단근거 로그 카테고리
+DECLARE_LOG_CATEGORY_EXTERN(LogSRPGEnemyPlanner, Log, All);
+
 class UEnemyUnitModel;
 class UUnitModel;
 class UTileMapModel;
-class UStaticSkillData;
 class UBoardActorModel;
+class USkillComponentModel;
+class FTacticalTileTable;
+struct FTacticalTileInfo;
 enum class EMoveTendency : uint8; // StaticEnemyUnitSpawnData.h
+struct FEnemyTargetPolicy;
 
 /**
  * @brief 적 한 턴의 행동을 계산하는 플래너
  *
  * @details
  * 플레이어가 쓰는 것과 동일한 최종 커맨드(이동/스킬시전/턴종료)를 순서대로 만들어 반환
+ *
+ * 전제: 턴당 스킬 시전은 1회
+ *   - 스킬은 배치와 무관하게 우선순위와 사용 가능 여부(쿨다운/행동력)만으로 먼저 확정 (동순위는 랜덤)
+ *     -> 플레이어 턴에 보여주는 예상 스킬과 실제 시전 스킬이 항상 일치
+ *   - Attack: 확정 스킬로 시전 가능한 타겟이 있으면 시전, 없으면 다른 스킬로 바꾸지 않고 이동만
+ *   - Spell: 시전 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡은 뒤 시전
+ * @note
+ * 턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로
+ * 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함
  */
 UCLASS()
 class P_RD_API USRPGEnemyTurnPlanner : public UObject
@@ -35,80 +50,84 @@ public:
 	 * @brief 적 한 턴의 행동 커맨드 목록을 계산
 	 * @details 반환 목록은 FSRPGTurnEndCommand로 끝나서 턴이 끝나도록 보장
 	 * @param Enemy 행동할 적 유닛
-	 * @param Player 표적이 될 플레이어 유닛
+	 * @param Players 표적 후보가 될 플레이어 유닛들 (배열 순서가 곧 타겟 인덱스, null 원소는 제외됨)
 	 * @param TileMap 타일맵 모델 (도달/조준/효과 범위 계산)
-	 * @param EventStream 스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
+	 * @param EventStream 타겟 동률/스킬 랜덤 선택용 스트림 (시뮬/라이브 동일 결과 보장을 위해 룸의 이벤트 스트림 사용)
+	 * @param LogTag 판단근거 로그의 줄마다 붙는 식별 태그 (예: "R3/T12", 비어있으면 생략)
 	 * @return 커맨드 목록
 	 */
 	static TArray<TInstancedStruct<FSRPGCommand>> PlanTurn(
 		UEnemyUnitModel* Enemy,
-		UUnitModel* Player,
+		const TArray<UUnitModel*>& Players,
 		const UTileMapModel* TileMap,
-		const FRandomStream& EventStream);
+		const FRandomStream& EventStream,
+		const FString& LogTag = FString());
 
 private:
+	// Rank only the supplied legal candidates; equal stats fall back to path distance.
+	static int32 ChooseTargetByPriority(
+		const FEnemyTargetPolicy& Policy,
+		const FTacticalTileTable& Table,
+		const TArray<const UUnitModel*>& Targets,
+		const TArray<int32>& Candidates,
+		const FRandomStream& EventStream);
+
 	/**
-	 * @brief 이동 성향에 따라 목적지 타일을 선택
+	 * @brief 이번 턴에 시전할 스킬 슬롯 확정
 	 * @details
-	 * 이동가능한 타일들 중에서 플레이어를 조준 가능한 타일을 탐색. (이 타일들을 Feasible이라고 가정)
-	 * Feasible 타일들 중에서 이동성향에 따라 최선의 타일 선택.
-	 * Feasible 타일이 없으면 이동성향에 맞춰서 플레이어에 접근하고. 스킬 사용은 생략
-	 * @note Self는 이동 후 위치를 평가할 때 자기 자신이 시야를 막지 않도록 차폐 예외로 전달
+	 * 장착돼 있고 사용 가능한(쿨다운/기절/행동력) 슬롯 중 우선순위가 가장 높은 것.
+	 * 동순위가 여럿이면 EventStream 랜덤 (시뮬/라이브 동일 결과 보장)
+	 * @param Enemy 슬롯별 우선순위를 가진 적 유닛
+	 * @param SkillComp 슬롯 상태 조회용 스킬 컴포넌트
+	 * @param EventStream 동순위 추첨용 스트림
+	 * @return 확정된 슬롯 인덱스 (사용 가능한 슬롯이 없으면 INDEX_NONE)
 	 */
-	static FTileIndex ChooseDestination(
-		const FTileIndex& Origin,
-		const FTileIndex& PlayerTile,
-		int32 MoveRange,
-		int32 AimRange,
-		const UStaticSkillData* Skill,
-		const UTileMapModel* TileMap,
+	static int32 ChooseSkillByPriority(
+		const UEnemyUnitModel* Enemy,
+		const USkillComponentModel* SkillComp,
+		const FRandomStream& EventStream);
+
+	/**
+	 * @brief 후보 타겟 중 최근접 타겟 선택
+	 * @details 경로 거리가 가장 짧은 타겟, 동률이면 EventStream 랜덤 (시뮬/라이브 동일 결과 보장)
+	 * @param Table 전술 타일 테이블
+	 * @param CandidateTargets 후보 타겟 인덱스 목록
+	 * @param EventStream 동률 추첨용 스트림
+	 * @return 선택된 타겟 인덱스 (후보가 비어있으면 INDEX_NONE)
+	 */
+	static int32 ChooseNearestTarget(
+		const FTacticalTileTable& Table,
+		const TArray<int32>& CandidateTargets,
+		const FRandomStream& EventStream);
+
+	/**
+	 * @brief 필터를 통과한 타일 중 이동성향에 맞는 목적지 선택
+	 * @details
+	 * MoveClose: 기준 타겟과의 거리 최소 -> 이동비용 최소
+	 * MoveAway: 최근접 타겟과의 거리 최대 -> 이동비용 최소
+	 * HoldRange: 이동비용 최소 -> 최근접 타겟과의 거리 최대
+	 * @param Table 전술 타일 테이블
+	 * @param Tendency 이동 성향
+	 * @param ReferenceTarget 기준 타겟 인덱스 (MoveClose의 거리 기준)
+	 * @param Origin 적 타일 (후보가 없을 때 제자리 유지)
+	 * @param Filter 후보 타일 자격 판정 (시전가능/조준가능 등 호출부가 결정)
+	 */
+	static FTileIndex ChooseDestinationByTendency(
+		const FTacticalTileTable& Table,
 		EMoveTendency Tendency,
-		const UBoardActorModel* Self,
-		OUT bool& OutCanCast);
+		int32 ReferenceTarget,
+		const FTileIndex& Origin,
+		TFunctionRef<bool(const FTacticalTileInfo&)> Filter);
 
 	/**
-	 * @brief 타일 목록 중 플레이어와의 거리가 이동성향에 맞는 타일 선택
-	 * @details
-	 * 1순위: 플레이어와의 거리(Closest면 최소, 아니면 최대)
-	 * 2순위: 이동거리 최소
-	 * @param Tiles 도달 가능한 타일 목록
-	 * @param Origin 적 타일
-	 * @param PlayerTile 플레이어 타일
-	 * @param Closest true면 플레이어에 가까운 쪽, false면 먼 쪽을 선호
+	 * @brief 기준 타겟에게 접근하는 목적지 선택 (조준 가능한 타일이 하나도 없을 때의 폴백)
+	 * @details 1순위: 기준 타겟과의 거리 최소, 2순위: 이동비용 최소 (동률이면 제자리 우선 -> 의미 없는 이동 방지)
+	 * @param Table 전술 타일 테이블
+	 * @param ReferenceTarget 기준 타겟 인덱스
+	 * @param Origin 적 타일 (후보가 없을 때 제자리 유지)
 	 */
-	static FTileIndex PickByPlayerDistance(
-		const TArray<FTileIndex>& Tiles,
-		const FTileIndex& Origin,
-		const FTileIndex& PlayerTile,
-		bool Closest);
-
-	// @brief 타일 목록 중 Origin에서 이동거리(맨해튼)가 가장 작은 타일 선택
-	static FTileIndex PickByMoveCost(
-		const TArray<FTileIndex>& Tiles,
+	static FTileIndex ChooseApproachDestination(
+		const FTacticalTileTable& Table,
+		int32 ReferenceTarget,
 		const FTileIndex& Origin);
-
-	/**
-	 * @brief 조준 가능한 타일이 없을 때 플레이어에게 실제로 가까워지는 타일 선택
-	 * @details
-	 * 기존 거리 계산 방식은 다른 유닛을 우회하는 비용이 안 잡혀서,
-	 * 앞이 막히면 제자리가 비용이 가장 작으니까 이동을 안 하는 문제가 있음.
-	 * 
-	 * 플레이어 기준으로 거리표(GetDistanceField)를 작성해서 다음과 같이 판단.
-	 * 1순위: 경로 거리 최소
-	 * 2순위: 이동 거리 최소
-	 * @param Tiles 도달 가능한 타일 목록 (Origin 포함)
-	 * @param Origin 적 타일
-	 * @param PlayerTile 플레이어 타일
-	 * @param TileMap 타일맵 모델
-	 * @param Self 거리장 통과 판정에서 제외할 자기 자신 (자리를 비울 예정이므로)
-	 */
-	static FTileIndex PickApproachTile(
-		const TArray<FTileIndex>& Tiles,
-		const FTileIndex& Origin,
-		const FTileIndex& PlayerTile,
-		const UTileMapModel* TileMap,
-		const UBoardActorModel* Self);
-
-	// @brief 타일 사이의 거리를 맨해튼 방식으로 계산 (이동은 맨해튼식으로 하니까)
-	static int32 TileDistance(const FTileIndex& A, const FTileIndex& B);
 };

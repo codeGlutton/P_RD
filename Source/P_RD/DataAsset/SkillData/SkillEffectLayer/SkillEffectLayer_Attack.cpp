@@ -1,6 +1,5 @@
 ﻿#include "DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Attack.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackPoint.h"
-#include "TAS/Effect/Stat/TacticalEffect_AttackFactor_AddBase.h"
+#include "TAS/Effect/Stat/TacticalEffect_AttackFactor.h"
 #include "TAS/Effect/Stat/TacticalEffect_HP.h"
 #include "TAS/Effect/Stat/TacticalEffect_Defense.h"
 
@@ -8,96 +7,110 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
 
+#include "Component/SkillComponent/SkillComponentModel.h"
+
 #include "TAS/Effect/TacticalEffectContext.h"
-#include "AttributeSet/UnitAttributeSet.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 
 #include "Setting/GameBalanceSettings.h"
 
-void FSkillEffectLayer_Attack::ClearPointEffect(IBoardCombatTarget* ActorModel) const
-{
-    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
-    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-    AttributeSetComponentModel->ApplyModToAttribute(UUnitAttributeSet::GetAttackPointAttribute(), ETacticalModOp::Override, 0.f);
-}
-
-void FSkillEffectLayer_Attack::ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const
-{
-    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
-    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
-
-    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(ActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
-
-    TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackPoint::StaticClass(), EffectContext);
-    EffectSpec->mDynamicMagnitude = mDefaultDamage + DiceSum * mDiceRatio;
-    AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-}
-
-void FSkillEffectLayer_Attack::CommitEffect(IBoardCombatTarget* OwnerActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const
+TArray<FActiveTacticalEffectHandle> FSkillEffectLayer_Attack::ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
 {
     const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
     checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
 
-    UAttributeSetComponentModel* AttributeSetComponentModel = OwnerActorModel->GetAttributeComponentModel();
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    USkillComponentModel* SkillComponentModel = ActorModel->GetSkillComponentModel();
+    checkf(SkillComponentModel != nullptr, TEXT("스킬 컴포넌트 nullptr"));
+
+    UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
+    TArray<FActiveTacticalEffectHandle> EffectHandles;
+
+    /* 기본 데미지를 Factor에 임시 추가 */
+    {
+        const float StatusDamageUpRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength];
+        const float StatusDamageDownRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength];
+
+        int32 StatusDamage = (
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength, 0) * StatusDamageUpRatio -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Strength, 0) * StatusDamageDownRatio
+            );
+        int32 SkillDamage = SkillComponentModel->GetRandomDamage(mMinDamage, mMaxDamage);
+
+        const float StatusCriticalUpRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny];
+        const float StatusCriticalDownRatio = GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny];
+
+        int32 StatusCriticalThreshold = (
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Acumeny, 0) * StatusCriticalUpRatio -
+            Snapshot->mEffectCounts.FindRef(EffectTags::GameplayEffect_StatusEffect_Infinite_Debuff_Acumeny, 0) * StatusCriticalDownRatio
+            );
+        int32 AttributeCriticalThreshold = FMath::Floor<int32>(Snapshot->mAttributes[UCombatTargetAttributeSet::GetCriticalFactorAttribute()]);
+
+        const bool IsCritical = SkillComponentModel->IsCritical(StatusCriticalThreshold + AttributeCriticalThreshold);
+        if (IsCritical == true)
+        {
+            SkillDamage = mMaxDamage;
+
+            TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_MultiplyCompound::StaticClass(), EffectContext);
+            EffectSpec->mDynamicMagnitude = 1.5;
+            EffectHandles.Add(AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec));
+        }
+
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_AddBase::StaticClass(), EffectContext);
+        EffectSpec->mDynamicMagnitude = SkillDamage + StatusDamage;
+        EffectHandles.Add(AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec));
+    }
+
+    return EffectHandles;
+}
+
+void FSkillEffectLayer_Attack::ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const
+{
+    UAttributeSetComponentModel* AttributeSetComponentModel = ActorModel->GetAttributeComponentModel();
+    checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
+
+    /* 포인트를 Factor에서 제거 */
+    for (FActiveTacticalEffectHandle& Handle : Handles)
+    {
+        AttributeSetComponentModel->RemoveActiveTacticalEffect(Handle);
+    }
+}
+
+void FSkillEffectLayer_Attack::CommitEffect(const FSkillEffectCommitParams& Params) const
+{
+    UAttributeSetComponentModel* AttributeSetComponentModel = Params.mInstigator->GetAttributeComponentModel();
     checkf(AttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
     UTacticalEffectContext* EffectContext = AttributeSetComponentModel->MakeEffectContext();
-    EffectContext->SetInstigator(Cast<UActorModel>(OwnerActorModel));
-    EffectContext->SetAttributeSetComponentModel(AttributeSetComponentModel);
-
-    FActiveTacticalEffectHandle EffectHandle;
-
-    /* 포인트를 Factor에 임시 추가 */
-    {
-        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_AttackFactor_AddBase::StaticClass(), EffectContext);
-        EffectSpec->mDynamicMagnitude = AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackPointAttribute());
-        EffectHandle = AttributeSetComponentModel->ApplyTacticalEffectSpecToSelf(*EffectSpec);
-    }
-
-    // 약화
-    const bool IsOwnerWeakness = AttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness);
-    const float WeaknessRatio = IsOwnerWeakness == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Weakness] : 1.f;
 
     /* 데미지 적용 */
-    for (const IBoardCombatTarget* OtherCombatTarget : OtherCombatTargets)
+    const int32 TargetNum = Params.mTargets.Num();
+    for (int32 i = 0; i < TargetNum; ++i)
     {
+        const TScriptInterface<IBoardCombatTarget>& OtherCombatTarget = Params.mTargets[i];
         UAttributeSetComponentModel* OtherAttributeSetComponentModel = OtherCombatTarget->GetAttributeComponentModel();
         checkf(OtherAttributeSetComponentModel != nullptr, TEXT("속성 컴포넌트 nullptr"));
 
-        // 취약
-        const bool IsTargetVulnerability = OtherAttributeSetComponentModel->HasMatchingGameplayTag(EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability);
-        const float VulnerabilityRatio = IsTargetVulnerability == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_TurnDuration_Debuff_Vulnerability] : 1.f;
-        
-        // 최종 공격력과 방어력
-        const int32 TotalAttack = FMath::Floor(VulnerabilityRatio * WeaknessRatio * AttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetAttackFactorAttribute()));
-        const int32 TotalDefense = FMath::Floor(OtherAttributeSetComponentModel->GetAttributeCurrentValue(UUnitAttributeSet::GetDefenseAttribute()));
-
-        /* 방어력 까기 */
-        {
-            const float DefenseDiff = -FMath::Min(TotalAttack, TotalDefense);
-            if (DefenseDiff < 0)
-            {
-                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Defense::StaticClass(), EffectContext);
-                EffectSpec->mDynamicMagnitude = DefenseDiff;
-                AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
-            }
-        }
-        /* 체력 까기 */
-        {
-            const float HPDiff = TotalDefense - TotalAttack;
-            if (HPDiff < 0)
-            {
-                TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_HP::StaticClass(), EffectContext);
-                EffectSpec->mDynamicMagnitude = HPDiff;
-                AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
-            }
-        }
-    }
-
-    /* 포인트를 Factor에서 제거 */
-    {
-        AttributeSetComponentModel->RemoveActiveTacticalEffect(EffectHandle);
+        TSharedPtr<FTacticalEffectSpec> EffectSpec = AttributeSetComponentModel->MakeOutgoingSpec(UTacticalEffect_Attack::StaticClass(), EffectContext);
+        EffectSpec->SetInstigatorSnapshotData(Params.mInstigatorSnapshot);
+        EffectSpec->SetTargetSnapshotData(Params.mTargetSnapshots[i]);
+		EffectSpec->mIsCritical = Params.mInstigatorSnapshot != nullptr
+			&& Params.mInstigatorSnapshot->mIsCriticalAttack;
+        AttributeSetComponentModel->ApplyTacticalEffectSpecToTarget(*EffectSpec, OtherAttributeSetComponentModel);
     }
 }
+
+#define LOCTEXT_NAMESPACE "SkillEffectLayer_Attack"
+
+FText FSkillEffectLayer_Attack::MakeDescription() const
+{
+	return FText::Format(
+		LOCTEXT("AttackDesc", "대상에게 {0}~{1}의 데미지를 입힙니다."),
+		FText::AsNumber(mMinDamage),
+		FText::AsNumber(mMaxDamage)
+	);
+}
+
+#undef LOCTEXT_NAMESPACE

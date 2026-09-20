@@ -14,10 +14,14 @@
 
 #include "Setting/GameTeamType.h"
 #include "Setting/ModelViewMapping.h"
+#include "Setting/GamePlayType.h"
 #include "Singleton/WorldSubsystem/WorldWidgetType.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 #include "GamePlaySettings.generated.h"
+
+class UTexture2D;
+class UStaticObstacleSpawnData;
 
 /**
  * @brief  게임 플레이 연관 설정
@@ -50,16 +54,19 @@ public:
     UFUNCTION(Category = Team, BlueprintPure)
     static ETeamAttitude::Type GetAttitude(FGenericTeamId OwnId, FGenericTeamId OtherId);
 
+    /* 월드 위젯 세팅 */
 public:
     UPROPERTY(Config, Category = UI, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EWorldWidgetType"))
     TSubclassOf<UUserWidget> mWorldWidgetClasses[static_cast<uint8>(EWorldWidgetType::Count)];
 
+    /* 모델-뷰 맵핑 세팅 */
 public:
     UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SubsystemModelViewMappings", ConfigRestartRequired = true))
     TSet<FSubsystemModelViewMapping> mSubsystemModelViewMappings;
     UPROPERTY(Config, Category = Model, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "WorldModelViewMappings", ConfigRestartRequired = true))
     TSet<FWorldModelViewMapping> mWorldModelViewMappings;
 
+    /* 기본 룸 세팅 */
 public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendRoomId"))
     FPrimaryAssetId mFrontendRoomId;
@@ -67,12 +74,30 @@ public:
     UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "DefaultBackgroundMap"))
     TSoftObjectPtr<UWorld> mDefaultBackgroundMap;
 
+    UPROPERTY(Config, Category = Room, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EmptyObstacleData"))
+    TSoftObjectPtr<UStaticObstacleSpawnData> mEmptyObstacleData;
+
+    /* 비디오 세팅 */
 public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicVideoPath"))
-    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+    FString mIntroCinematicVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s.mp4");
+
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "IntroCinematicAcceleratedVideoPath"))
+    FString mIntroCinematicAcceleratedVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s_3x.mp4");
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPath"))
-    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
+    FString mTitleBackgroundVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_Right16x9/Title_All6_Right_16x9_combo01_5s_mobile.mp4");
+
+    /** @brief 타이틀에서 셔플 재생할 전체 화면 영상 목록. 비어 있으면 단일 TitleBackgroundVideoPath를 사용한다. */
+    UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleBackgroundVideoPaths"))
+    TArray<FString> mTitleBackgroundVideoPaths;
+
+    /** @brief 타이틀 WBP의 TitleLogoImage에 런타임으로 적용할 SVN 텍스처. */
+    UPROPERTY(Config, Category = UI, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TitleLogoTexture"))
+    TSoftObjectPtr<UTexture2D> mTitleLogoTexture;
+
+	UPROPERTY(Config, Category=UI, EditAnywhere, BlueprintReadOnly)
+	TSoftObjectPtr<class UMaterialInterface> mTitleLogoEnglishMaterial;
 
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatVictoryVideoPath"))
     FString mCombatVictoryVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
@@ -80,6 +105,7 @@ public:
     UPROPERTY(Config, Category = Media, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatDefeatVideoPath"))
     FString mCombatDefeatVideoPath = TEXT("SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
 
+    /* 룸 별 게임모드 세팅 */
 public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrontendGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mFrontendGameMode;
@@ -90,22 +116,26 @@ public:
     UPROPERTY(Config, Category = GameMode, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TreasureGameMode", ConfigRestartRequired = true))
     TSoftClassPtr<AGameModeBase> mTreasureGameMode;
 
+    /* 팀 세팅 */
 public:
     UPROPERTY(Config, Category = Team, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "TeamRelations"))
     TMap<TEnumAsByte<EGameTeamType::Type>, FGameTeamRelation> mTeamRelations;
 
+    /* 사운드 세팅 */
 public:
     UPROPERTY(Config, Category = Sound, EditAnywhere, meta = (DisplayName = "WorldWidgetClasses", ArraySizeEnum = "EGameVolumeType"))
     TSoftObjectPtr<USoundClass> mSoundClasses[static_cast<uint8>(EGameVolumeType::Count)];
 
+    /* VFX 세팅 */
 public:
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomDefaultSize"))
-    float mSkillZoomDefaultSize = 1250.f;
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillZoomSizeRatio"))
-    float mSkillZoomSizeRatio = 0.5f;
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "GlobalStatusEffectVFXSetting", ToolTip = "상태이상 연출 시 사용되는 전역 VFX 설정 값"))
+    FGlobalStatusEffectVFXSetting mGlobalStatusEffectVFXSetting;
 
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMinZoomSize"))
-    float mSkillMinZoomSize = 1250.f;
-    UPROPERTY(Config, Category = Camera, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "SkillMaxZoomSize"))
-    float mSkillMaxZoomSize = 2000.f;
+public:
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetRemoveVFX", ToolTip = "전투 대상에서 타일 맵에서 제거될 때 호출되는 VFX 설정 값"))
+    FSoftVFXSpawnData mCombatTargetRemoveVFX;
+
+    UPROPERTY(Config, Category = VFX, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatTargetVFXTimelineSettings", ToolTip = "전투 대상에서 활용되는 타임 라인 설정 값들"))
+    TArray<FCombatTargetVFXTimelineSetting> mCombatTargetVFXTimelineSettings;
 };
+

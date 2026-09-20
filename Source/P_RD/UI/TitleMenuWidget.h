@@ -49,6 +49,13 @@ public:
 
 	/** @brief 화면에 올라오기 전 타이틀 배경 영상을 미리 열어 둔다. */
 	void PrimeTitleBackgroundVideo();
+	void RefreshLocalizedTitleLogo();
+	void OpenUI(FOnEndUIOpenAnimation Callback = FOnEndUIOpenAnimation()) override;
+	void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
+
+#if WITH_DEV_AUTOMATION_TESTS
+	void ApplyResponsiveLayoutForTest(const FVector2D& Size, bool bCanContinue);
+#endif
 
 protected:
 	/** @brief 타이틀 화면 — 공용 버튼 누름 효과를 켠다(프론트엔드 한정). */
@@ -80,14 +87,8 @@ private:
 	// 텍스트 적용을 한 곳에 모아 두면 나중에 로컬라이징이나 옵션 설정을 붙일 때 바꾸는 위치가 줄어든다.
 	void SyncMainText();
 
-	/** @brief 현재 화면비에 맞는 타이틀 레이아웃 프로필을 WidgetSwitcher에서 선택한다. */
-	void RefreshResponsiveTitleLayout(const FVector2D& ViewportSize);
 
-	/** @brief 타이틀 레이아웃 프로필 선택/스케일/주요 위젯 위치를 로그로 남긴다. */
-	void LogResponsiveTitleLayoutMetrics(const FVector2D& ViewportSize, FName ProfileName, const UWidget* ActiveLayoutWidget, int32 ActiveWidgetIndex) const;
 
-	/** @brief 화면비를 타이틀 레이아웃 프로필 이름으로 변환한다. */
-	FName SelectTitleLayoutProfile(const FVector2D& ViewportSize) const;
 
 	/** @brief WBP에 있는 모든 타이틀 메뉴 버튼을 같은 입력 핸들러에 연결한다. */
 	void BindMainMenuButtons();
@@ -98,6 +99,9 @@ private:
 	/** @brief WBP에서 넘어온 메뉴 TextBlock을 버튼 내부 중앙에 맞춘다. */
 	// RectEditor의 textAlignH/textAlignV가 WBP 생성 때 누락될 수 있어 런타임에서 보정한다.
 	void AlignMainMenuTextBlocks();
+
+	/** @brief 현재 문자열의 실제 글리프 잉크 경계를 측정해 메뉴 글자를 광학 중앙에 맞춘다. */
+	void ApplyMainMenuTextOpticalAlignment();
 
 	/** @brief TextBlock 하나를 원래 Canvas 위치를 유지한 채 Overlay로 감싸 세로 중앙 정렬한다. */
 	void AlignMenuTextBlock(UTextBlock* TextBlock);
@@ -153,7 +157,7 @@ private:
 	/** @brief 타이틀 배경 영상 Image를 원본 비율 유지 cover-crop으로 배치한다. */
 	// 좌우는 뷰포트 너비에 맞추고(letterbox 없이 가득 채움), 비율 초과분은 상하를 잘라낸다(crop).
 	// 영상 원본 비율과 화면 비율이 다를 때 검은 띠 없이 화면을 가득 덮기 위한 cover 방식 배치다.
-	void FitTitleBackgroundVideoToViewport() const;
+	void FitTitleBackgroundVideoToViewport();
 
 	/** @brief 타이틀 배경 영상 재생을 정리한다. */
 	void StopTitleBackgroundVideo();
@@ -198,6 +202,18 @@ private:
 	UFUNCTION()
 	void HandleSettingsButtonClicked();
 
+	/** @brief EXIT 버튼 클릭을 게임 종료로 연결한다. */
+	UFUNCTION()
+	void HandleExitButtonClicked();
+
+	/**
+	 * @brief EXIT 줄에 실제로 누를 수 있는 버튼이 있게 만든다.
+	 *
+	 * @details 저작된 WBP의 EXIT 줄에 프레임과 글자만 있고 버튼이 없는 경우,
+	 * 같은 위치에 투명 입력 영역을 추가한다. 이미 버튼이 있으면 재사용한다.
+	 */
+	void EnsureExitButton();
+
 	/** @brief 설정 패널의 Back 요청을 타이틀 메인 화면 복귀로 처리한다. */
 	UFUNCTION()
 	void HandleSettingsPanelBackRequested();
@@ -214,6 +230,10 @@ private:
 	/** @brief 설정 화면으로 넘어가는 SETTING 버튼 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UButton> SettingsButton;
+
+	/** @brief 게임을 끝내는 EXIT 버튼 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UButton> ExitButton;
 
 	/** @brief (레거시) 게임 타이틀명 TextBlock. 이제 WBP의 TitleLogoImage가 타이틀을 대체하므로 Optional. */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -267,9 +287,6 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UImage> TitleBackgroundImage;
 
-	/** @brief 화면비별 타이틀 레이아웃 캔버스를 고르는 WidgetSwitcher */
-	UPROPERTY(meta = (BindWidgetOptional))
-	TObjectPtr<UWidgetSwitcher> TitleLayoutSwitcher;
 
 	/** @brief 배경 영상 재생용 런타임 객체(MediaPlayer/Texture/Source/브러시). 정적 비주얼은 WBP. */
 	// Transient: 세이브/직렬화 대상이 아닌 순수 런타임 핸들 묶음이라 저장하지 않는다.
@@ -277,16 +294,7 @@ private:
 	UPROPERTY(Transient)
 	FTitleMenuBackgroundRuntimeAssets mBackgroundRuntime;
 
-	/** @brief 마지막으로 활성화한 타이틀 레이아웃 프로필 */
-	UPROPERTY(Transient)
-	FName mActiveTitleLayoutProfileName;
 
-	/** @brief 마지막으로 타이틀 반응형 레이아웃 수치를 로그에 남긴 프로필 */
-	UPROPERTY(Transient)
-	FName mLastLoggedTitleLayoutProfileName;
 
-	/** @brief 마지막으로 타이틀 반응형 레이아웃 수치를 로그에 남긴 뷰포트 크기 */
-	UPROPERTY(Transient)
-	FVector2D mLastLoggedTitleLayoutViewportSize;
 
 };

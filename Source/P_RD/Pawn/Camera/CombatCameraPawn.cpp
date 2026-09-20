@@ -4,9 +4,13 @@
 #include "Pawn/Camera/CombatCameraPawn.h"
 #include "Camera/CameraComponent.h"
 #include "Component/CameraMovementComponent/CameraMovementComponent.h"
+#include "Component/TimeScaleComponent/TimeScaleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/SceneComponent.h"
 #include "Input/InputData.h"
+#include "InputCoreTypes.h"
+#include "Input/RDPointerGesturePolicy.h"
+#include "EnhancedInputComponent.h"
 
 #if !UE_BUILD_SHIPPING
 #include "Singleton/WorldSubsystem/SRPGCombatModel.h"
@@ -28,15 +32,26 @@ ACombatCameraPawn::ACombatCameraPawn()
 	//mSpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	//mSpringArmComponent->SetRelativeRotation(FRotator(-30, 0, 0));
 
-	mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
-	mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
-	mCameraComponent->OrthoWidth = 2000.0f;
-	//mCameraComponent->bCameraMeshHiddenInGame = false;
-	mCameraComponent->SetupAttachment(mSceneComponent);
+	{
+		mCameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+		mCameraComponent->ProjectionMode = ECameraProjectionMode::Orthographic;
+		mCameraComponent->OrthoWidth = 2000.0f;
+		mCameraComponent->bAutoCalculateOrthoPlanes = false;
+		mCameraComponent->OrthoNearClipPlane = -2000.f;
+		mCameraComponent->OrthoFarClipPlane = 20000.f;
+		//mCameraComponent->bCameraMeshHiddenInGame = false;
+		mCameraComponent->SetupAttachment(mSceneComponent);
+	}
 
-	mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
-	mCameraMovementComponent->SetCameraComponent(mCameraComponent);
-	//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
+	{
+		mCameraMovementComponent = CreateDefaultSubobject<UCameraMovementComponent>("CameraMovementComponent");
+		mCameraMovementComponent->SetCameraComponent(mCameraComponent);
+		//mCameraMovementComponent->SetSpringArmComponent(mSpringArmComponent);
+	}
+
+	{
+		mTimeScaleComponent = CreateDefaultSubobject<UTimeScaleComponent>("TimeScaleComponent");
+	}
 
 	// 카메라 회전은 컨트롤러 회전을 그대로 따라감
 	bUseControllerRotationPitch = true;
@@ -61,6 +76,18 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 카메라는 UMG 이벤트가 아니라 raw touch를 직접 폴링한다. 모달 UI가 잠근
+	// 동안에는 이전 프레임 좌표도 지워서, 팝업을 닫은 손이 곧바로 드래그로
+	// 이어지지 않게 한다.
+	if (mTouchGestureInputEnabled == false)
+	{
+		for (FTouchState& TouchState : mTouchStates)
+		{
+			TouchState = FTouchState();
+		}
+		return;
+	}
+
 	AController* DefaultController = GetController();
 	// DefaultController가 존재하지 않으면 함수를 종료합니다.
 	if (!ensureMsgf(IsValid(DefaultController), TEXT("컨트롤러가 없습니다")))
@@ -75,20 +102,76 @@ void ACombatCameraPawn::Tick(float DeltaTime)
 		return;
 	}
 
-	// 터치 상태를 보고 제스처를 판단한다.
+	FTouchState Touches[2];
+	for (int32 Index = 0; Index < 2; ++Index)
+	{
+		PlayerController->GetInputTouchState(static_cast<ETouchIndex::Type>(Index),
+			Touches[Index].CurTouchPos.X, Touches[Index].CurTouchPos.Y,
+			Touches[Index].bIsCurrentlyPressed);
+	}
+	FVector2D MousePosition = FVector2D::ZeroVector;
+	const bool bMousePressed = PlayerController->GetMousePosition(MousePosition.X, MousePosition.Y)
+		&& PlayerController->IsInputKeyDown(EKeys::LeftMouseButton);
+	UpdatePointerGestures(Touches[0], Touches[1], bMousePressed, MousePosition);
+}
+
+void ACombatCameraPawn::UpdatePointerGestures(const FTouchState& FirstTouch,
+	const FTouchState& SecondTouch, bool bMousePressed, const FVector2D& MousePosition)
+{
+	mTouchStates.SetNum(2);
+	if (!mTouchGestureInputEnabled)
+	{
+		for (FTouchState& State : mTouchStates) State = FTouchState();
+		return;
+	}
+	// Real/emulated touch wins, so mouse-for-touch never produces two gestures.
+	const bool bUseMouse = !FirstTouch.bIsCurrentlyPressed && !SecondTouch.bIsCurrentlyPressed
+		&& bMousePressed;
+	if (bUseMouse != mUsingMouseGesture)
+	{
+		for (FTouchState& State : mTouchStates) State = FTouchState();
+		mPinchActive = false;
+		mHadTwoTouches = false;
+		mPanActive = false;
+	}
+	mUsingMouseGesture = bUseMouse;
+	FTouchState Samples[2] = { FirstTouch, SecondTouch };
+	const bool HadTwoTouches = mTouchStates[0].bIsCurrentlyPressed && mTouchStates[1].bIsCurrentlyPressed;
+	if (bUseMouse)
+	{
+		Samples[0].bIsCurrentlyPressed = true;
+		Samples[0].CurTouchPos = MousePosition;
+	}
+	// Mouse and touch share the same camera projection, bounds and modal gate.
 	for (int i = 0; i < 2; ++i)
 	{
 		mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
 		bool bPreTickTouch = mTouchStates[i].bIsCurrentlyPressed;
-		PlayerController->GetInputTouchState((ETouchIndex::Type)i, mTouchStates[i].CurTouchPos.X, mTouchStates[i].CurTouchPos.Y, mTouchStates[i].bIsCurrentlyPressed);
+		mTouchStates[i].CurTouchPos = Samples[i].CurTouchPos;
+		mTouchStates[i].bIsCurrentlyPressed = Samples[i].bIsCurrentlyPressed;
 
 		if (bPreTickTouch == 0 && mTouchStates[i].bIsCurrentlyPressed)
 		{
+			if (i == 0) mPanActive = false;
 			mTouchStates[i].StartTouchPos = mTouchStates[i].CurTouchPos;
 			mTouchStates[i].PreTouchPos = mTouchStates[i].CurTouchPos;
 		}
 	}
 
+
+	const bool HasTwoTouches = mTouchStates[0].bIsCurrentlyPressed && mTouchStates[1].bIsCurrentlyPressed;
+	if (HasTwoTouches && !HadTwoTouches)
+	{
+		mPinchStartDistance = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
+		mPinchActive = false;
+		mHadTwoTouches = true;
+	}
+	if (!mTouchStates[0].bIsCurrentlyPressed && !mTouchStates[1].bIsCurrentlyPressed)
+	{
+		mPinchActive = false;
+		mHadTwoTouches = false;
+		mPanActive = false;
+	}
 
 	// Pinch 중
 	if (IsPinch())
@@ -130,10 +213,36 @@ UCameraMovementComponent* ACombatCameraPawn::GetCameraMovementComponent()
 	return mCameraMovementComponent.Get();
 }
 
+UTimeScaleComponent* ACombatCameraPawn::GetTimeScaleComponent()
+{
+	return mTimeScaleComponent.Get();
+}
+
+void ACombatCameraPawn::SetTouchGestureInputEnabled(const bool bEnabled)
+{
+	if (mTouchGestureInputEnabled == bEnabled)
+	{
+		return;
+	}
+	mTouchGestureInputEnabled = bEnabled;
+	mPinchActive = false;
+	mHadTwoTouches = false;
+	mPanActive = false;
+	for (FTouchState& TouchState : mTouchStates)
+	{
+		TouchState = FTouchState();
+	}
+}
+
 bool ACombatCameraPawn::IsDrag()
 {
+	if (!mTouchStates[0].bIsCurrentlyPressed || mTouchStates[1].bIsCurrentlyPressed || mHadTwoTouches) return false;
+	mPanActive |= RDPointerGesture::HasMoved(mTouchStates[0].StartTouchPos, mTouchStates[0].CurTouchPos, !mUsingMouseGesture);
 	return mTouchStates[0].bIsCurrentlyPressed &&
-		mImageStabilization < FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[0].CurTouchPos);
+		!mTouchStates[1].bIsCurrentlyPressed &&
+		!mHadTwoTouches &&
+		mPanActive &&
+		!mTouchStates[0].PreTouchPos.Equals(mTouchStates[0].CurTouchPos, 0.01f);
 }
 
 bool ACombatCameraPawn::IsPinch()
@@ -141,9 +250,10 @@ bool ACombatCameraPawn::IsPinch()
 	float PrePinchDis = FVector2D::Distance(mTouchStates[0].PreTouchPos, mTouchStates[1].PreTouchPos);
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
-	return mTouchStates[0].bIsCurrentlyPressed &&
-		mTouchStates[1].bIsCurrentlyPressed &&
-		mImageStabilization < FMath::Abs(PrePinchDis - CurPinchDis);
+	if (!mTouchStates[0].bIsCurrentlyPressed || !mTouchStates[1].bIsCurrentlyPressed)
+		return false;
+	mPinchActive |= FMath::Abs(CurPinchDis - mPinchStartDistance) > RDPointerGesture::PinchSlop;
+	return mPinchActive && !FMath::IsNearlyEqual(PrePinchDis, CurPinchDis);
 }
 
 void ACombatCameraPawn::Dragging(const TArray<FTouchState>& Touch1State)
@@ -167,68 +277,6 @@ void ACombatCameraPawn::Pinching(const TArray<FTouchState>& TouchState)
 	float CurPinchDis = FVector2D::Distance(mTouchStates[0].CurTouchPos, mTouchStates[1].CurTouchPos);
 
 	//mCameraMovementComponent.Get()->ZoomCamera_Instant(PrePinchDis - CurPinchDis);
-	mCameraMovementComponent.Get()->ZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
-}
-
-void ACombatCameraPawn::RDMoveTo(int32 X, int32 Y)
-{
-	// 치트는 출시 빌드에서 본문만 비움 (UFUNCTION 선언은 전처리 제외 불가)
-#if !UE_BUILD_SHIPPING
-	// 전투 모델·타일맵·플레이어 유닛 확보 (전투 중이 아니면 무시)
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
-	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
-	if (TileMap == nullptr || PlayerUnit == nullptr)
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("RDMoveTo: 전투 진행 중이 아니라 무시"));
-		return;
-	}
-
-	// 현재 칸 → 목표 칸 최단 경로 계산 (막히거나 맵 밖이면 빈 경로)
-	const TArray<FTileIndex> Path = TileMap->FindPath(PlayerUnit->GetTileTransform().mIndex, FTileIndex(X, Y));
-	if (Path.Num() < 2)
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("RDMoveTo: (%d,%d)까지 경로 없음"), X, Y);
-		return;
-	}
-
-	// 확정 경로를 실은 이동 커맨드 발행 — 빌드 액션 없이 MoveAction 직행 (BuildMove와 동일 형식)
-	USRPGCommandRouterModel* CommandRouter = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouter != nullptr, TEXT("명령 라우터 모델 nullptr"));
-
-	TInstancedStruct<FSRPGCommand> MoveCommand;
-	MoveCommand.InitializeAs<FSRPGMoveCommand>();
-	MoveCommand.GetMutable<FSRPGMoveCommand>().mPathTileIndexes = Path;
-	const bool Submitted = CommandRouter->SummitCommand(MoveCommand);
-
-	UE_LOG(LogSRPGCombat, Log, TEXT("RDMoveTo: (%d,%d) 경로 %d칸, 커맨드 %s"), X, Y, Path.Num(), Submitted ? TEXT("제출됨") : TEXT("거부됨"));
-#endif
-}
-
-void ACombatCameraPawn::RDRotate(int32 Direction)
-{
-	// 치트는 출시 빌드에서 본문만 비움 (UFUNCTION 선언은 전처리 제외 불가)
-#if !UE_BUILD_SHIPPING
-	// 전투 모델·타일맵·플레이어 유닛 확보 (전투 중이 아니면 무시)
-	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
-	UTileMapModel* TileMap = CombatModel != nullptr ? CombatModel->GetTileMap() : nullptr;
-	UUnitModel* PlayerUnit = CombatModel != nullptr ? CombatModel->GetPlayerUnit() : nullptr;
-	if (TileMap == nullptr || PlayerUnit == nullptr)
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("RDRotate: 전투 진행 중이 아니라 무시"));
-		return;
-	}
-
-	// 방향 인덱스 검증 (0=Forward 1=Right 2=Backward 3=Left)
-	if (Direction < 0 || Direction >= static_cast<int32>(ETileActorDirection::Count))
-	{
-		UE_LOG(LogSRPGCombat, Warning, TEXT("RDRotate: 잘못된 방향 %d (0~3)"), Direction);
-		return;
-	}
-
-	// 배리어 없이 즉발 요청 — 뷰는 내부 무통지 배리어로 회전을 완주
-	TileMap->RotateActor(static_cast<ETileActorDirection>(Direction), PlayerUnit);
-	UE_LOG(LogSRPGCombat, Log, TEXT("RDRotate: 방향 %d로 전환 요청"), Direction);
-#endif
+	mCameraMovementComponent.Get()->PinchZoomCamera_InstantAndMoveToViewportPosition_Instant(PrePinchDis - CurPinchDis, (mTouchStates[0].CurTouchPos + mTouchStates[1].CurTouchPos)/2);
 }
 

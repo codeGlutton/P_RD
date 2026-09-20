@@ -99,6 +99,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "UI|Toggleable")
 	virtual bool IsOpened() const;
 
+	/** Handle one navigation step. Modal owners close their innermost layer first. */
+	virtual bool HandleBackNavigation() { return false; }
+	virtual UUserWidget* GetBackNavigationLayer() const;
+	virtual bool UsesMobileSafeArea() const { return false; }
+	bool ShouldWrapMobileSafeArea() const;
+
 	/**
 	 * @brief 열기 애니메이션 완료를 C++ 생명주기에 알린다.
 	 *
@@ -119,7 +125,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Toggleable")
 	void FinishCloseUI();
 
+#if WITH_DEV_AUTOMATION_TESTS
+	/** @brief 파생 위젯의 후순위 Refresh 뒤 최종 공통 UI 계약을 즉시 재검증한다. */
+	void NormalizeCommonUIContractForTest()
+	{
+		NormalizeCommonInputLayers();
+		NormalizeAutoFitTextClipping();
+	}
+#endif
+
 protected:
+	virtual TSharedRef<SWidget> RebuildWidget() override;
+	virtual void NativeDestruct() override;
+	/** Geometry inside the safe area; authored responsive layouts should use this. */
+	FGeometry GetContentGeometry() const;
 	/**
 	 * @brief 열기 애니메이션을 재생한다.
 	 *
@@ -168,8 +187,8 @@ protected:
 
 	/**
 	 * @brief 이 위젯의 버튼에 공용 누름 효과(어둡게+축소)를 적용할지 여부. 기본 false.
-	 * @details 전역으로 켜면 전투 HUD·주사위 캐러셀처럼 버튼의 렌더 스케일/배경색을 스스로 애니메이션하는
-	 *          화면과 충돌한다(주사위 굴림 깨짐). 그래서 기본 off로 두고, 타이틀/클래스 선택 같은
+	 * @details 전역으로 켜면 전투 HUD처럼 버튼의 렌더 스케일/배경색을 스스로 애니메이션하는
+	 *          화면과 충돌한다. 그래서 기본 off로 두고, 타이틀/클래스 선택 같은
 	 *          프론트엔드 화면만 override로 켠다.
 	 */
 	virtual bool ShouldApplyButtonFeedback() const;
@@ -179,7 +198,37 @@ protected:
 	 */
 	virtual void NativeOnInitialized() override;
 
+	/**
+	 * @brief 파생 위젯이 NativeConstruct에서 런타임 버튼을 만든 뒤 공용 사운드를 다시 배선한다.
+	 */
+	virtual void NativeConstruct() override;
+
+	/** @brief 런타임에 늦게 생성된 버튼 하나에 공용 클릭 사운드를 즉시 적용한다. */
+	void ApplyCommonButtonPressSound(UButton* Button) const;
+
 private:
+	void RegisterBackNavigation();
+	/**
+	 * @brief 장식 위젯이 버튼 입력을 가로막지 않도록 입력 레이어를 정규화한다.
+	 * @details Image/Text는 입력 대상이 아니므로 HitTestInvisible로, 순수 배치 패널은
+	 *          SelfHitTestInvisible로 정규화한다.
+	 */
+	void NormalizeCommonInputLayers();
+
+	/**
+	 * @brief AutoFit 글자 상자가 글리프를 세로로 자르지 않게 한다.
+	 *
+	 * @details 글자는 ``Xxx_AutoFit`` ScaleBox 안에 들어간다. 그 상자는
+	 * ``ScaleToFitX`` + ``DownOnly`` 라 **가로는 이미 넘칠 수 없다**. 그런데
+	 * 상자에 ClipToBoundsAlways가 걸려 있어, 저작된 칸 높이가 글꼴 줄 높이와
+	 * 비슷하면 아래꼬리(y·g·받침)와 외곽선이 1~2px 잘렸다. 가로 보호는 배율이
+	 * 이미 하고 있으므로 세로 자르기는 해제한다.
+	 *
+	 * 이미 구워진 자산까지 고치려고 런타임에서 정규화한다. 새로 굽는 쪽
+	 * (WidgetFontAudit / 각 빌더)도 같은 값으로 맞춰 둔다.
+	 */
+	void NormalizeAutoFitTextClipping();
+
 	/** @brief 이 위젯 트리의 버튼들을 찾아 누름 효과를 설정하고 눌림/뗌 이벤트를 연결한다. */
 	void SetupCommonButtonFeedback();
 

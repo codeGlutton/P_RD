@@ -21,8 +21,6 @@ struct FSRPGCommand;
 
 class UUnitModel;
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowDicePanelAtTurnStartUI, const USRPGTurnContext* /*TurnContext*/);
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnBeginTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnEndTurnUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, ESRPGTurnResult /*Result*/);
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnBeginAnyActionUI, TSharedPtr<FPresentationBarrier> /*Barrier*/, const USRPGTurnContext* /*TurnContext*/, const USRPGAction* /*Action*/);
@@ -76,7 +74,7 @@ class USRPGTurnContext : public UObject
 
 	/* 생명 주기 함수 */
 protected:
-	void InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId, int32 LifeCount);
+	void InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int32 TurnId);
 	void BeginTurn();
 	void TickTurn(float DeltaTime);
 	void EndTurn();
@@ -89,6 +87,9 @@ protected:
 	void EvaluateTurnEndState(bool ForceAbort);
 
 	/* 액션 처리 함수 */
+public:
+	bool IsPlayingAction() const;
+
 protected:
 	void EnqueueAction(USRPGAction* NewAction);
 	void DequeueAction();
@@ -104,17 +105,14 @@ public:
 
 	int32 GetTurnId() const;
 
-	bool IsPermanent() const;
-	int32 GetLifeCount() const;
-
 	/* 시뮬 함수 */
 protected:
+	void ForcedSkipPlayerTurn();
+	void ForcedSkipAIActions();
 	void ForcedClearActions();
-	void ForcedAdvanceUntilNextAction(TInstancedStruct<FSRPGCommand> NextCommand);
+	void ForcedAdvanceUntilNextAction();
 
 public:
-	FOnShowDicePanelAtTurnStartUI OnShowDicePanelAtTurnStartUI;
-
 	FOnBeginTurnUI OnBeginTurnUI;
 	FOnEndTurnUI OnEndTurnUI;
 	FOnBeginAnyActionUI OnBeginAnyActionUI;
@@ -138,13 +136,6 @@ protected:
 	ESRPGTurnResult mTurnResult = ESRPGTurnResult::Succeeded;
 
 protected:
-	static constexpr int32 PERMENENT_TURN = -1;
-
-	// @brief 남은 턴 수명
-	UPROPERTY(Category = Turn, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "LifeCount"))
-	int32 mLifeCount = 0;
-
-protected:
 	// @brief 예약된 액션들
 	UPROPERTY(Category = Action, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "ReservedActions"))
 	TArray<TObjectPtr<USRPGAction>> mReservedActions;
@@ -160,4 +151,7 @@ protected:
 protected:
 	// @brief 액션 종료 시, 중단해야될 필요가 있는지
 	bool mShouldTerminateAfterAction = false;
+
+	bool mShouldSkipPlayerTurn = false;
+	bool mShouldSkipAIActions = false;
 };

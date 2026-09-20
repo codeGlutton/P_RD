@@ -11,24 +11,29 @@
 #include "Actor/ActorModel.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
 #include "Actor/TileMap/TileLayer.h"
+#include "Component/BoardMovementComponent/BoardMovementType.h"
 #include "BoardActorModel.generated.h"
 
 struct FTile;
 class UStaticObstacleSpawnData;
 struct FPresentationBarrier;
-struct FApplyEventTriggerPayload;
+struct FBoardActorAnimationContext;
 
 DECLARE_DELEGATE_RetVal(const FTransform&, FOnGetBoardActorWorldTransform);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlaceTileTransform, const FTileTransform& /* TileTransform */, const FTransform& /* Transform */);
+DECLARE_MULTICAST_DELEGATE(FOnRemoveTileTransform);
 
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnStartMovePath, const TArray<FVector>& /* PathWorldLocations */, EBoardMoveMode /* MoveMode */);
+DECLARE_MULTICAST_DELEGATE_FiveParams(FOnStartMoveStep, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */, TSharedPtr<FPresentationBarrier> /* Barrier */, float /* RemainingPathDistance */, EBoardMoveMode /* MoveMode */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMoveStep, const FTileTransform& /* TileTransform */, const FTransform& /* WorldTransform */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndMovePath, const FTileTransform& /* TileTransform */, const FTransform& /* TileWorldTransform */);
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRotate, const FRotator& /* TargetWorldRotation */, TSharedPtr<FPresentationBarrier> /* Barrier */);
 
-DECLARE_DELEGATE_OneParam(FOnRequestReceiveAnimation, const FApplyEventTriggerPayload* /*Payload*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayApplyAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, FOnRequestReceiveAnimation /*TriggerCallback*/, FGameplayTag /*ApplyMotionTag*/, ETileActorDirection /*LocalDirection*/);
-DECLARE_MULTICAST_DELEGATE_FourParams(FOnPlayReceiveAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FApplyEventTriggerPayload* /*Payload*/, FGameplayTag /*ReceiveMotionTag*/, ETileActorDirection /*LocalDirection*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnTeleport, const FTileTransform& /* NextTileTransform */, const FTransform& /* TargetWorldTransform */);
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayAnimationUI, TSharedPtr<FPresentationBarrier> /*MotionEndBarrier*/, const FBoardActorAnimationContext& /*Context*/);
 
 
 /**
@@ -52,7 +57,18 @@ public:
 	 */
 	void SetStaticSpawnData(UStaticObstacleSpawnData* StaticSpawnData);
 
+public:
+	FPrimaryAssetId GetStaticSpawnDataId() const;
+	const UStaticObstacleSpawnData* GetStaticSpawnData() const { return mStaticSpawnData; }
 	FName GetBoardActorKeyName() const;
+	/**
+	 * @brief 이 액터가 어느 스폰 데이터에서 나왔는지.
+	 *
+	 * 저장본이 파티 칸을 이 값으로 찾는다. 표시 이름은 사람이 읽는 것이라
+	 * 바뀔 수 있어 짝을 맞추는 열쇠로 쓰기에 위태롭다.
+	 * @return 스폰 데이터의 PrimaryAssetId. 데이터가 없으면 빈 값
+	 */
+	FPrimaryAssetId GetBoardActorAssetId() const;
 	const FText& GetBoardActorDisplayName() const;
 	virtual int32 GetBoardActorLevel() const;
 	UTexture2D* GetBoardActorIcon() const;
@@ -124,10 +140,15 @@ public:
 	virtual void OnEndRoom();
 
 	/**
+	 * @brief 새로운 라운드 평가마다 실행될 함수
+	 */
+	virtual void OnPreEvaluateRound();
+
+	/**
 	 * @brief 라운드 시작마다 실행될 함수 (라운드 : 고정된 턴 기준으로 한바퀴)
 	 */
-	virtual void OnBeginRound();
-	virtual void OnEndRound();
+	virtual void OnBeginRound(int32 RoundCount);
+	virtual void OnEndRound(int32 RoundCount);
 
 private:
 	/**
@@ -143,16 +164,36 @@ public:
 	FOnGetBoardActorWorldTransform OnGetBoardActorWorldTransform;
 
 	/**
-	 * @brief 타일 트랜스폼이 즉시 변경되었을 때, 뷰에게 전달하는 대리자
+	 * @brief 타일에 배치되었을 때, 뷰에게 전달하는 대리자
 	 */
 	FOnPlaceTileTransform OnPlaceTileTransform;
+	/**
+	 * @brief 타일에서 떨어졌을 때, 뷰에게 전달하는 대리자
+	 */
+	FOnRemoveTileTransform OnRemoveTileTransform;
 
+	/**
+	 * @brief 이동 시작 시 전체 경로 전달
+	 * @details 코너링에 베지어곡선을 사용하려면 진입/진출 타일의 정보가 필요하므로 미리 전체 경로 정보 전달
+	 */
+	FOnStartMovePath OnStartMovePath;
 	/**
 	 * @brief 이동 스텝 시작 시 뷰에게 한 칸 이동 연출을 요청하는 대리자
 	 * @details 뷰는 배리어를 잡고 애니메이션 연출, 끝나면 다음 스텝 진행을 알림.
 	 *          시뮬레이션모드에서는 구독자가 없어서 배리어가 즉시 소멸하므로 로직만 동작.
 	 */
 	FOnStartMoveStep OnStartMoveStep;
+	/**
+	 * @brief 물리 이동 연출이 타일 하나에 도착했을 때의 진행 알림 대리자
+	 * @details 도착한 타일과 월드 변환만 전달하며 AP 정산은 유닛 이동 컴포넌트 모델이 담당한다.
+	 */
+	FOnEndMoveStep OnEndMoveStep;
+	/**
+	 * @brief 이동 요청 전체(밀치기 연쇄 포함)가 끝났을 때의 알림 대리자
+	 * @details 경로 중간에서 끝나도(다음 칸 막힘, 함정 정지, 취소) 반드시 한 번 통지.
+	 *          뷰는 이걸 받아 걷기 연출을 멈추고 마지막 타일 중심으로 정렬
+	 */
+	FOnEndMovePath OnEndMovePath;
 
 	/**
 	 * @brief 방향 전환 시 뷰에게 제자리 회전 연출을 요청하는 대리자
@@ -162,13 +203,16 @@ public:
 	FOnRotate OnRotate;
 
 	/**
-	 * @brief 능동적 행동을 전달하는 대리자
+	 * @brief 텔레포트 시 위치 변경 연출을 요청하는 대리자
+	 * @details 텔레포트는 스킬 연출과 동시에 진행되기 때문에 로직이 연출을 기다리면 안됨.
+	 *			따라서 배리어는 전달하지 않음
 	 */
-	FOnPlayApplyAnimationUI OnPlayApplyAnimationUI;
+	FOnTeleport OnTeleport;
+
 	/**
-	 * @brief 피동적 행동을 전달하는 대리자
+	 * @brief 애니메이션 실행 대리자
 	 */
-	FOnPlayReceiveAnimationUI OnPlayReceiveAnimationUI;
+	FOnPlayAnimationUI OnPlayAnimationUI;
 
 protected:
 	// @brief 액터가 속한 레이어 타입

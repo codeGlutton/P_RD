@@ -14,6 +14,9 @@
 
 #include "GameProfileSubsystem.generated.h"
 
+struct FTileTransform;
+struct FRoomClearData;
+
  // Profile 신규 로그 카테고리 등록
 DECLARE_LOG_CATEGORY_EXTERN(LogGameProfile, Log, All)
 
@@ -27,13 +30,18 @@ class P_RD_API UGameProfileSubsystem : public UGameInstanceSubsystem, public IUs
 
 public:
 	void MakeUser(const FText& Name) const;
-	void StartRun(const FPrimaryAssetId& PlayerUnitId, int32 Difficulty) const;
-	void EndRun() const;
+	void StartRun(const TArray<FPrimaryAssetId>& PlayerUnitIds, int32 Difficulty) const;
+	bool EndRun() const;
+
+public:
+	void SetRoomClearData(const FRoomClearData& ClearData) const;
 
 public:
 	void SetVolume(EGameVolumeType VolumeType, float Volume) const;
 	void SetLanguage(ELanguageType LanguageType) const;
-	void SetResolution(const FIntPoint& Resolution) const;
+	void SetOverallQuality(EOverallQualityType QualityType) const;
 	void SetFpsLimit(int32 FpsLimit) const;
+	void SetCameraShakeEnabled(bool IsEnabled) const;
+	void SetEffectVFXEnabled(bool IsEnabled) const;
 	void ResetOptions() const;
 };

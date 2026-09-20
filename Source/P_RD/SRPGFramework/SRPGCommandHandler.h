@@ -13,6 +13,7 @@
 #include "SRPGCommandHandler.generated.h"
 
 struct FSRPGCommand;
+struct FSRPGWorldTraceCommand;
 
 UINTERFACE(MinimalAPI)
 class USRPGCommandHandler : public UInterface
@@ -54,6 +55,11 @@ protected:
 	 */
 	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, const FVector2D& ScreenPosition, OUT AActor*& Actor, OUT FTileIndex& TileIndex);
 	static void GetTileActorUnderCursor(UWorld* World, ECollisionChannel Channel, OUT AActor*& Actor, OUT FTileIndex& TileIndex);
+
+	/** 명령에 확정 타일이 있으면 그대로 사용하고, 없을 때만 화면 좌표를 트레이스한다. */
+	static void GetTileActorForCommand(UWorld* World, ECollisionChannel Channel,
+		const FSRPGWorldTraceCommand& Command, OUT AActor*& Actor,
+		OUT FTileIndex& TileIndex);
 
 public:
 	static constexpr int8 HIGHEST_PRIORITY = INT8_MAX;

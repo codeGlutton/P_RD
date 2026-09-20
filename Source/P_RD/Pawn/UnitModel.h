@@ -13,14 +13,15 @@
 #include "Actor/BoardActor/BoardCombatTarget.h"
 #include "GenericTeamAgentInterface.h"
 
+#include "DataAsset/UnitSpawnData/UnitJobType.h"
+#include "Pawn/UnitCombatCondition.h"
+
 #include "UnitModel.generated.h"
 
-class UUnitModel;
-
 class UAttributeSetComponentModel;
-class USkillComponentModel;
+class UUnitSkillComponentModel;
+class UUnitMovementComponentModel;
 class UPassiveComponentModel;
-class UEquipmentComponentModel;
 
 /**
  * @brief  턴을 소유할 수 있는 베이스 폰 클래스 모델
@@ -34,52 +35,72 @@ public:
 	UUnitModel();
 
 	/* UBoardActorModel 상속 */
-public:	
-	void PostInitializeComponentModels() override;
-
 public:
 	void OnBeginRoom() override;
 	void OnEndRoom() override;
+
+	void OnPreEvaluateRound() override;
+	void OnBeginRound(int32 RoundCount) override;
 
 public:
 	/**
 	 * @brief 자신의 턴 시작마다 실행될 함수
 	 */
-	virtual void OnBeginTurn();
-	virtual void OnEndTurn();
-
-	/* IGenericTeamAgentInterface 상속 */
-public:
-	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
-	FGenericTeamId GetGenericTeamId() const override;
+	virtual void OnBeginTurn(int32 TurnCount);
+	virtual void OnEndTurn(int32 TurnCount);
 
 	/* IBoardCombatTarget 상속 */
 public:
 	UAttributeSetComponentModel* GetAttributeComponentModel() const override;
+	USkillComponentModel* GetSkillComponentModel() const override;
+	UBoardMovementComponentModel* GetBoardMovementComponentModel() const override;
 
 public:
-	USkillComponentModel* GetSkillComponentModel() const;
+	void SetGenericTeamId(const FGenericTeamId& TeamID) override;
+	FGenericTeamId GetGenericTeamId() const override;
+
+public:
+	void OnStartUsingSkill(const FActiveSkillContext& Context, int32 SkillIndex) override;
+	void OnEndUsingSkill(int32 SkillIndex) override;
+
+public:
+	void OnStartApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnEndApplyingEffects(const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnStartReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex) override;
+	void OnEndReceivingEffects(UBoardCombatTargetSnapshotData* InstigatorSnapshot, const FActiveSkillContext& Context, int32 PhaseIndex) override;
+
+	/* 자체 함수 */
+public:
+	UTexture2D* GetUnitShortCut() const;
+
+public:
 	UPassiveComponentModel* GetPassiveComponentModel() const;
-	UEquipmentComponentModel* GetEquipmentComponentModel() const;
+	EUnitCombatCondition GetCombatCondition() const;
 
 public:
+	virtual EUnitJobType GetUnitJobType() const PURE_VIRTUAL(UUnitModel::GetUnitJobType, return EUnitJobType::None;)
 	virtual int32 GetDifficulty() const PURE_VIRTUAL(UUnitModel::GetDifficulty, return 0;)
 	virtual bool IsPlayerUnitModel() const PURE_VIRTUAL(UUnitModel::IsPlayerUnit, return false;)
+
+private:
+	void RefreshCombatCondition();
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
 
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "SkillCompModel"))
-	TObjectPtr<USkillComponentModel> mSkillCompModel;
+	TObjectPtr<UUnitSkillComponentModel> mSkillCompModel;
 
+	UPROPERTY(Category = Movement, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "MovementCompModel"))
+	TObjectPtr<UUnitMovementComponentModel> mMovementCompModel;
 	UPROPERTY(Category = Skill, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "PassiveCompModel"))
 	TObjectPtr<UPassiveComponentModel> mPassiveCompModel;
-
-	UPROPERTY(Category = Equipment, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "EquipmentCompModel"))
-	TObjectPtr<UEquipmentComponentModel> mEquipmentCompModel;
 
 private:
 	// @brief 팀 ID
 	FGenericTeamId mTeamId;
+	// @brief 전투 컨디션
+	UPROPERTY(Category = "Combat", VisibleAnywhere, meta = (DisplayName = "CombatCondition"))
+	EUnitCombatCondition mCombatCondition = EUnitCombatCondition::Normal;
 };

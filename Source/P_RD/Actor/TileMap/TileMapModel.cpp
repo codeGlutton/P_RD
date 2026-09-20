@@ -1,6 +1,7 @@
 ﻿#include "Actor/TileMap/TileMapModel.h"
 #include "Actor/BoardActor/BoardActorModel.h"
 #include "Singleton/WorldSubsystem/PresentationBarrier.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "Algo/Reverse.h"
 
 namespace
@@ -156,6 +157,61 @@ ETileActorDirection UTileMapModel::TileDeltaToDirection(const FTileIndex& From, 
 	return DeltaY > 0 ? ETileActorDirection::Right : ETileActorDirection::Left;
 }
 
+FTileIndex UTileMapModel::TileDeltaToStep(const FTileIndex& From, const FTileIndex& To)
+{
+	// From→To 벡터
+	const FTileIndex Delta = To - From;
+
+	// 제자리면 방향 없음
+	if (Delta == FTileIndex::Zero)
+	{
+		return FTileIndex::Zero;
+	}
+
+	// 벡터를 각도로 변경. 음수 각도(아래쪽 방향)는 한 바퀴를 더해 0°~360°로 통일
+	float Angle = FMath::Atan2(static_cast<float>(Delta.mY), static_cast<float>(Delta.mX));
+	if (Angle < 0.0f)
+	{
+		Angle += 2.0f * PI;
+	}
+
+	// 45° 단위로 반올림 = 가장 가까운 방향 번호 (360°로 반올림된 경우만 0°와 같은 방향이므로 %8)
+	const int32 Octant = FMath::RoundToInt(Angle / (PI / 4.0f)) % 8;
+
+	// 8방향 단위 스텝 (0번=+X에서 시작해 +Y쪽으로 45°씩)
+	static const FTileIndex Steps[8] =
+	{
+		FTileIndex(1, 0),
+		FTileIndex(1, 1),
+		FTileIndex(0, 1),
+		FTileIndex(-1, 1),
+		FTileIndex(-1, 0),
+		FTileIndex(-1, -1),
+		FTileIndex(0, -1),
+		FTileIndex(1, -1)
+	};
+	return Steps[Octant];
+}
+
+FTileIndex UTileMapModel::DirectionToTileStep(ETileActorDirection Direction)
+{
+	// TileDeltaToDirection의 방향 결정과 짝을 맞춘 매핑
+	switch (Direction)
+	{
+	case ETileActorDirection::Forward:
+		return FTileIndex(1, 0);
+	case ETileActorDirection::Backward:
+		return FTileIndex(-1, 0);
+	case ETileActorDirection::Right:
+		return FTileIndex(0, 1);
+	case ETileActorDirection::Left:
+		return FTileIndex(0, -1);
+	default:
+		checkNoEntry();
+		return FTileIndex::Zero;
+	}
+}
+
 FTransform UTileMapModel::TileToWorldTransform(const FTileTransform& TileTransform) const
 {
 	// 뷰가 바인딩돼 있으면 뷰에 질의, 아니면(심 등) 항등 변환 (Invalid 값이 따로 없으니까)
@@ -261,7 +317,7 @@ void UTileMapModel::AppendRayTiles(const FTileIndex& Origin, const FTileIndex& S
 	}
 }
 
-void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const
+void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out, const UBoardActorModel* IgnoreBlocker) const
 {
 	// 원점에서 Step 방향으로 한 칸씩 전진하며 수집 (원점 자신은 제외)
 	FTileIndex Current = Origin;
@@ -278,8 +334,17 @@ void UTileMapModel::AppendBlockableRay(const FTileIndex& Origin, const FTileInde
 		// 이 칸은 영향에 포함 (점유 칸이면 "맞고 멈춤"이라 포함 후 종료)
 		Out.Add(Current);
 
-		// 관통하지 않는데 점유 칸이면 그 너머로는 진행하지 않음
-		if (!bPenetrate && IsOccupied(Current))
+		// 차단 레이어의 액터가 있는 칸이면 그 너머로는 진행하지 않음 (무시 대상만 있는 칸은 차단으로 치지 않음)
+		bool bBlocked = false;
+		for (const UBoardActorModel* Actor : GetActorsOnTile(Current, BlockerLayers))
+		{
+			if (Actor != IgnoreBlocker)
+			{
+				bBlocked = true;
+				break;
+			}
+		}
+		if (bBlocked)
 			break;
 	}
 }
@@ -388,7 +453,7 @@ void UTileMapModel::RasterizeLine(const FTileIndex& From, const FTileIndex& To, 
 	BresenhamLine(From, To, Out);
 }
 
-bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker) const
+bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker, ETileLayerFlag BlockerLayers) const
 {
 	// From→To 직선이 지나는 칸들을 래스터화 (첫 원소=From, 마지막 원소=To 보장)
 	TArray<FTileIndex> LineTiles;
@@ -397,8 +462,8 @@ bool UTileMapModel::HasLineOfSight(const FTileIndex& From, const FTileIndex& To,
 	// 양 끝(From, To)을 제외한 중간 칸만 검사
 	for (int32 Index = 1; Index < LineTiles.Num() - 1; ++Index)
 	{
-		// 중간 칸에 시야를 막는 액터(Obstacle 또는 Unit)가 있으면 시야가 막힘(=LoS:false)
-		for (const UBoardActorModel* Actor : GetActorsOnTile(LineTiles[Index], ETileLayerFlag::Obstacle | ETileLayerFlag::Unit))
+		// 중간 칸에 시야를 막는 액터(BlockerLayers 레이어)가 있으면 시야가 막힘(=LoS:false)
+		for (const UBoardActorModel* Actor : GetActorsOnTile(LineTiles[Index], BlockerLayers))
 		{
 			// 무시 대상(자리를 비울 예정인 유닛 등)은 차폐로 치지 않음
 			if (Actor != IgnoreBlocker)
@@ -427,9 +492,11 @@ void UTileMapModel::UnregisterActorFromTile(FTile* Tile, UBoardActorModel* Actor
 void UTileMapModel::NotifyBeginOverlap(FTile* Tile, UBoardActorModel* Actor)
 {
 	// 같은 타일의 다른 액터들과 양방향 OnBegin 통지 (자기 제외)
-	for (const TWeakObjectPtr<UBoardActorModel>& Other : Tile->mBoardActors)
+	// 통지 중 기믹 발동으로 액터가 이동/제거되며 타일 목록이 바뀔 수 있으므로 복사본 순회
+	TArray<TWeakObjectPtr<UBoardActorModel>> BoardActors = Tile->mBoardActors;
+	for (const TWeakObjectPtr<UBoardActorModel>& Other : BoardActors)
 	{
-		if (Other.Get() == Actor)
+		if (Other.IsValid() == false || Other.Get() == Actor)
 		{
 			continue;
 		}
@@ -441,9 +508,11 @@ void UTileMapModel::NotifyBeginOverlap(FTile* Tile, UBoardActorModel* Actor)
 void UTileMapModel::NotifyEndOverlap(FTile* Tile, UBoardActorModel* Actor)
 {
 	// 같은 타일의 다른 액터들과 양방향 OnEnd 통지 (자기 제외)
-	for (const TWeakObjectPtr<UBoardActorModel>& Other : Tile->mBoardActors)
+	// 통지 중 기믹 발동으로 액터가 이동/제거되며 타일 목록이 바뀔 수 있으므로 복사본 순회
+	TArray<TWeakObjectPtr<UBoardActorModel>> BoardActors = Tile->mBoardActors;
+	for (const TWeakObjectPtr<UBoardActorModel>& Other : BoardActors)
 	{
-		if (Other.Get() == Actor)
+		if (Other.IsValid() == false || Other.Get() == Actor)
 		{
 			continue;
 		}
@@ -460,7 +529,7 @@ void UTileMapModel::NotifyEndOverlap(FTile* Tile, UBoardActorModel* Actor)
  * - 이미 선택된 타일의 인덱스를 Distance[] 배열에서 관리해서 중복 선택 방지
  * - 최대이동거리만큼 반복
  */
-TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const
+TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -500,9 +569,9 @@ TArray<FTileIndex> UTileMapModel::GetReachableTiles(const FTileIndex& Origin, in
 			if (Distance[LinearIndex] != -1)
 				continue;
 
-			// 장애물·유닛이 점유한 칸은 통과·도착 불가
+			// 장애물이나 유닛이 있는 타일은 통과나 도착 불가 (무시 대상인 경우는 가능)
 			// (확장 지점: 투명화 등 통과 규칙이 생기면 이 한 줄만 교체)
-			if (IsOccupied(Next))
+			if (IsOccupied(Next, IgnoreBlocker))
 				continue;
 
 			// 거리 확정 후 결과·큐에 추가
@@ -568,11 +637,11 @@ TArray<int32> UTileMapModel::GetDistanceField(const FTileIndex& Target, const UB
 
 /**
  * @details
- * - GetReachableTiles와 같은 4방향 BFS지만, 칸별 직전 칸(부모)을 기록해 목표 도달 후 경로를 거슬러 복원한다.
+ * - 도달 범위 계산과 같은 4방향 BFS지만, 칸별 직전 칸(부모)을 기록해 목표 도달 후 경로를 거슬러 복원한다.
  * - BFS라 처음 닿은 경로가 곧 최단경로이므로, 목표를 만나면 즉시 탐색을 끝낸다.
  * - 이웃 탐색은 BuildGoalOrderedSteps로 목표 방향(먼 축 먼저)을 우선해, 빈 지형에선 직선에 붙는 계단식 경로가 나온다.
  */
-TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileIndex& Goal) const
+TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker, bool bAllowOccupiedGoal) const
 {
 	TArray<FTileIndex> Result;
 
@@ -587,8 +656,8 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 		return Result;
 	}
 
-	// 목표 칸이 점유돼 있으면 도착 불가 (GetReachableTiles와 동일 규칙)
-	if (IsOccupied(Goal))
+	// 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상이거나 점유 도착 허용이면 가능)
+	if (!bAllowOccupiedGoal && IsOccupied(Goal, IgnoreBlocker))
 		return Result;
 
 	// 칸별 직전 칸(부모)을 1차원 인덱스로 기록 — 방문표시(INDEX_NONE=미방문) + 경로 복원을 겸함
@@ -629,8 +698,8 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 			if (Parent[NextLinear] != INDEX_NONE)
 				continue;
 
-			// 장애물·유닛이 점유한 칸은 통과·도착 불가
-			if (IsOccupied(Next))
+			// 이미 점유하는 게 있으면 통과나 도착 불가 (무시 대상이거나 점유 도착 허용된 목표면 가능)
+			if (IsOccupied(Next, IgnoreBlocker) && !(bAllowOccupiedGoal && Next == Goal))
 				continue;
 
 			// 직전 칸을 부모로 기록
@@ -670,16 +739,31 @@ TArray<FTileIndex> UTileMapModel::FindPath(const FTileIndex& Start, const FTileI
 
 void UTileMapModel::SetMovePath(const FTileIndex& Start, const FTileIndex& Goal)
 {
-	// 경로를 계산해 뷰에 표시 요청 (미바인딩=심 복제본이면 표시 없음)
+	// 뷰에 바인딩됐을때만 처리 (시뮬레이션모드에서는 무시)
 	if (mSetMovePathDelegate.IsBound())
-		mSetMovePathDelegate.Execute(FindPath(Start, Goal));
+	{
+		// FindPath 결과는 경유지 정보가 없으므로 표시용 타일정보로 변환해서 델리깃 호출
+		const TArray<FTileIndex> Path = FindPath(Start, Goal);
+		TArray<FMovePathTile> PathTiles;
+		PathTiles.Reserve(Path.Num());
+		for (const FTileIndex& Tile : Path)
+			PathTiles.Emplace(Tile);
+		mSetMovePathDelegate.Execute(PathTiles);
+	}
+}
+
+void UTileMapModel::SetMovePath(const TArray<FMovePathTile>& PathTiles)
+{
+	// 뷰에 바인딩됐을때만 처리 (시뮬레이션모드에서는 무시)
+	if (mSetMovePathDelegate.IsBound())
+		mSetMovePathDelegate.Execute(PathTiles);
 }
 
 void UTileMapModel::ClearMovePath()
 {
-	// 빈 경로를 넘겨 표시 해제 (뷰의 SetMovePath가 빈 배열을 해제로 처리)
+	// 빈 경로를 뷰에 넘기면 해제 처리
 	if (mSetMovePathDelegate.IsBound())
-		mSetMovePathDelegate.Execute(TArray<FTileIndex>());
+		mSetMovePathDelegate.Execute(TArray<FMovePathTile>());
 }
 
 void UTileMapModel::SetTileHighlight(const TArray<FTileIndex>& Tiles, ETileHighlightFlag Flag)
@@ -696,12 +780,26 @@ void UTileMapModel::ClearTileHighlight(ETileHighlightFlag Flag)
 		mClearTileHighlightDelegate.Execute(Flag);
 }
 
+void UTileMapModel::SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles)
+{
+	// 위협 범위 표시를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mSetThreatRangeDelegate.IsBound())
+		mSetThreatRangeDelegate.Execute(MoveTiles, AttackTiles);
+}
+
+void UTileMapModel::ClearThreatRange()
+{
+	// 위협 범위 해제를 뷰에 요청 (미바인딩=심 복제본이면 표시 없음)
+	if (mClearThreatRangeDelegate.IsBound())
+		mClearThreatRangeDelegate.Execute();
+}
+
 /**
  * @brief
  * - 1단계에서는 패턴에 따라 후보타일을 수집하고
  * - 2단계에서는 각각의 후보타일에 대해서 장애물 막힘, 타겟 가능, 교체 가능 여부 검사해서 최종 판단
  */
-TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, bool bIndirect, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
+TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, ETileLayerFlag BlockerLayers, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -752,36 +850,136 @@ TArray<FTileIndex> UTileMapModel::GetAimableTiles(const FTileIndex& Origin, int3
 	}
 
     /**
-     * 페이즈2: 각각의 타이레 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
+     * 페이즈2: 각각의 타일에 대해서 장애물 막힘, 포함 여부, 교체 여부 판단해서 필터링
      */
 
-	// 장애물 막힘 검사 여부: 직선패턴 AND 직사공격 (Square 공격은 하늘에서 내리는 공격이니까 장애물 무시)
-	const bool bApplyLineOfSight = !bIndirect && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
-
-	// 후보를 시야/점유 조건으로 거름
-    // @note 인덱스를 뒤에서 앞으로 오면서 제거하면 배열 재할당 이슈 없음
-	for (int32 Index = Result.Num() - 1; Index >= 0; --Index)
+	// 시야/점유로 막힌 타일들은 후보에서 삭제
+	Result.RemoveAll([&](const FTileIndex& Candidate)
 	{
-		const FTileIndex& Candidate = Result[Index];
+		return IsAimBlocked(Origin, Candidate, Pattern, bIncludeOccupied, BlockerLayers, Incoming, IgnoreBlocker);
+	});
 
-		// 직사인데 시야가 막히면 조준 불가
-		if (bApplyLineOfSight && !HasLineOfSight(Origin, Candidate, IgnoreBlocker))
+	return Result;
+}
+
+bool UTileMapModel::CanAim(const FTileIndex& Origin, const FTileIndex& Target, int32 Range, EAimPattern Pattern, bool bIncludeOccupied, ETileLayerFlag BlockerLayers, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
+{
+	// 맵 밖 좌표는 조준 불가
+	if (!IsValidIndex(Origin) || !IsValidIndex(Target))
+		return false;
+
+	// 패턴 기하 범위 밖이면 조준 불가
+	if (!IsInAimPattern(Origin, Target, Range, Pattern))
+		return false;
+
+	// 시야/점유로 막히지 않았으면 조준 가능
+	return IsAimBlocked(Origin, Target, Pattern, bIncludeOccupied, BlockerLayers, Incoming, IgnoreBlocker) == false;
+}
+
+bool UTileMapModel::IsInAimPattern(const FTileIndex& Origin, const FTileIndex& Target, int32 Range, EAimPattern Pattern) const
+{
+	// 기준 좌표에서 검사 좌표까지의 축별 변위
+	const int32 DeltaX = Target.mX - Origin.mX;
+	const int32 DeltaY = Target.mY - Origin.mY;
+
+	switch (Pattern)
+	{
+	case EAimPattern::Single:
+		// 기준 타일 한 칸만 (Range 무시)
+		return DeltaX == 0 && DeltaY == 0;
+
+	case EAimPattern::Cross:
+		// 직교 4방향 직선: 같은 행 또는 같은 열이면서 사거리 이내 (기준 타일 제외)
+		if (DeltaX == 0 && DeltaY == 0)
+			return false;
+		return (DeltaX == 0 && FMath::Abs(DeltaY) <= Range)
+			|| (DeltaY == 0 && FMath::Abs(DeltaX) <= Range);
+
+	case EAimPattern::Star:
+		// 직교 4방향 + 정대각 4방향 직선, 사거리 이내 (기준 타일 제외)
+		if (DeltaX == 0 && DeltaY == 0)
+			return false;
+		if ((DeltaX == 0 && FMath::Abs(DeltaY) <= Range)
+			|| (DeltaY == 0 && FMath::Abs(DeltaX) <= Range))
+			return true;
+		return FMath::Abs(DeltaX) == FMath::Abs(DeltaY) && FMath::Abs(DeltaX) <= Range;
+
+	case EAimPattern::Square:
+	{
+		// 중심 기준 사각형 범위: 체비셰프 거리가 사거리 이내 (기준 타일 제외)
+		const int32 Chebyshev = FMath::Max(FMath::Abs(DeltaX), FMath::Abs(DeltaY));
+		return Chebyshev != 0 && Chebyshev <= Range;
+	}
+
+	default:
+		return false;
+	}
+}
+
+bool UTileMapModel::IsAimBlocked(const FTileIndex& Origin, const FTileIndex& Target, EAimPattern Pattern, bool bIncludeOccupied, ETileLayerFlag BlockerLayers, const UBoardActorModel* Incoming, const UBoardActorModel* IgnoreBlocker) const
+{
+	// 차폐 검사 여부: 직선패턴 AND 차폐 레이어 지정 (Square 공격은 하늘에서 내리는 공격이니까 차폐 무시)
+	const bool bApplyLineOfSight = (BlockerLayers != ETileLayerFlag::None) && (Pattern == EAimPattern::Cross || Pattern == EAimPattern::Star);
+
+	// 직사인데 시야가 막히면 조준 불가
+	if (bApplyLineOfSight && !HasLineOfSight(Origin, Target, IgnoreBlocker, BlockerLayers))
+		return true;
+
+	// Single은 시전자 자기 칸을 조준하므로 점유 검사 의미 없음 (자기 칸은 항상 점유 상태)
+	if (Pattern == EAimPattern::Single)
+		return false;
+
+	// 점유 타일을 포함하지 않으면 조준 불가
+	if (!bIncludeOccupied && IsOccupied(Target))
+		// Incoming으로 교체 불가능하면 조준 불가
+		if (!((Incoming != nullptr) && GetReplaceableActors(Target, Incoming).Num() > 0))
+			return true;
+
+	return false;
+}
+
+TArray<FTileIndex> UTileMapModel::GetTargetTiles(const FTileIndex& Caster, const FTileIndex& Target, ETargetPattern Pattern) const
+{
+	TArray<FTileIndex> Result;
+
+	// 조준 타일이 맵 밖이면 타겟 없음
+	if (!IsValidIndex(Target))
+		return Result;
+
+	switch (Pattern)
+	{
+	case ETargetPattern::TargetOnly:
+		// 조준 타일 한 칸만 타겟
+		Result.Add(Target);
+		break;
+
+	case ETargetPattern::LineToTarget:
 		{
-			Result.RemoveAt(Index);
-			continue;
-		}
+			// 시전자가 맵 밖이거나 조준 타일과 같으면 조준 타일만 타겟
+			if (!IsValidIndex(Caster) || Caster == Target)
+			{
+				Result.Add(Target);
+				break;
+			}
 
-		// 점유 타일을 포함하지 않으면 조준 불가
-		if (!bIncludeOccupied && IsOccupied(Candidate))
-		    // Incoming으로 교체 불가능하면 조준 불가
-			if (!((Incoming != nullptr) && GetReplaceableActors(Candidate, Incoming).Num() > 0))
-				Result.RemoveAt(Index);
+			// 시전자→조준 타일 직선이 지나는 칸들을 래스터화 (첫 원소=시전자, 마지막 원소=조준 타일 보장)
+			TArray<FTileIndex> LineTiles;
+			RasterizeLine(Caster, Target, LineTiles);
+
+			// 시전자 칸을 제외하고 가까운 순으로 타겟에 추가
+			for (int32 Index = 1; Index < LineTiles.Num(); ++Index)
+				Result.Add(LineTiles[Index]);
+		}
+		break;
+
+	default:
+		break;
 	}
 
 	return Result;
 }
 
-TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const FTileIndex& Target, EEffectPattern Pattern, int32 Size, bool bPenetrate) const
+TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Target, EEffectPattern Pattern, int32 Size, ETileLayerFlag BlockerLayers, const UBoardActorModel* IgnoreBlocker) const
 {
 	TArray<FTileIndex> Result;
 
@@ -796,42 +994,26 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	if (Pattern == EEffectPattern::Single || Size <= 0)
 		return Result;
 
-	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 관통 아니면 점유 칸에서 멈춤)
+	// 패턴별 영향 타일을 중심 둘레에 덧붙임 (직선은 차단 레이어 칸에서 멈춤)
 	switch (Pattern)
 	{
 	case EEffectPattern::Cross:
 		// 중심에서 직교 4방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		break;
 
 	case EEffectPattern::Star:
 		// 중심에서 직교 + 대각 8방향
 		for (const FTileIndex& Step : Orthogonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		for (const FTileIndex& Step : Diagonal4)
-			AppendBlockableRay(Target, Step, Size, bPenetrate, Result);
+			AppendBlockableRay(Target, Step, Size, BlockerLayers, Result, IgnoreBlocker);
 		break;
 
 	case EEffectPattern::Square:
 		// 중심 기준 사각형 범위 (하늘 낙하 개념 — 관통 무관)
 		AppendSquareTiles(Target, Size, Result);
-		break;
-
-	case EEffectPattern::Beam:
-		{
-			// 시전자→타겟 방향을 부호로 단위 스텝화 (8방향 중에 하나로 강제 매핑)
-			const FTileIndex Step(
-				FMath::Sign(Target.mX - Caster.mX),
-				FMath::Sign(Target.mY - Caster.mY)
-			);
-
-			// Target(클릭 지점)을 시작으로 그 방향으로 뻗음 — 빔 길이는 Target 포함 총 Size칸
-			// (Target은 상단에서 이미 추가했으므로 너머로 Size-1칸만 더 뻗음)
-			// 비관통 빔이 점유 칸을 직접 조준한 경우 거기서 맞고 멈춤 — 너머로 뻗지 않음
-			if ((Step.mX != 0 || Step.mY != 0) && (bPenetrate || !IsOccupied(Target)))
-				AppendBlockableRay(Target, Step, Size - 1, bPenetrate, Result);
-		}
 		break;
 
 	default:
@@ -841,27 +1023,163 @@ TArray<FTileIndex> UTileMapModel::GetEffectTiles(const FTileIndex& Caster, const
 	return Result;
 }
 
-FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const
+void UTileMapModel::GetThreatRanges(
+	const FTileIndex& Origin,
+	int32 ActionPoint,
+	const TArray<const UStaticUnitSkillData*>& Skills,
+	const UBoardActorModel* Self,
+	OUT TArray<FTileIndex>& MoveTiles,
+	OUT TArray<FTileIndex>& AttackTiles) const
 {
+	MoveTiles.Reset();
+	AttackTiles.Reset();
+
+	// 원점이 맵 밖이거나 행동력이 음수면 계산 불가 (행동력 0은 제자리 시전이 가능하므로 유효)
+	if (IsValidIndex(Origin) == false || ActionPoint < 0)
+		return;
+
+	// 최대이동범위: 행동력 전부를 이동에 쓸 때 도달 가능한 타일 + 원점(제자리)
+	MoveTiles = GetReachableTiles(Origin, ActionPoint, Self);
+	MoveTiles.Add(Origin);
+
+	// 이동거리장: 각 도달 타일까지의 이동비용 (시전 예산 판정용)
+	const TArray<int32> MoveCostField = GetDistanceField(Origin, Self);
+
+	// 최대공격범위: 예산이 되는 타일에서 각 스킬로 조준 가능한 타일 합집합
+	TSet<FTileIndex> AttackSet;
+	for (const FTileIndex& Tile : MoveTiles)
+	{
+		const int32 MoveCost = MoveCostField[TileIndexToLinearIndex(Tile)];
+		for (const UStaticUnitSkillData* Skill : Skills)
+		{
+			// 빈 슬롯 무시
+			if (Skill == nullptr)
+				continue;
+
+			// 예산 판정: 이 타일까지 이동한 뒤 남는 행동력으로 시전비용을 감당할 수 있는가
+			if (MoveCost + Skill->mRequiredActionPoint > ActionPoint)
+				continue;
+
+			if (Skill->mAimPattern == EAimPattern::Single)
+			{
+				AttackSet.Append(GetEffectTiles(Tile, Skill->mEffectPattern, Skill->mEffectArea, static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), /*IgnoreBlocker*/Self));
+			}
+			else
+			{
+				// 조준 판정: 자기 자신은 이동으로 자리를 비울 예정이므로 시야 차폐에서 제외
+				AttackSet.Append(GetAimableTiles(Tile, Skill->mAimRange, Skill->mAimPattern, Skill->mCanAimBoardActor, static_cast<ETileLayerFlag>(Skill->mAimBlockerMask), /*Incoming*/nullptr, /*IgnoreBlocker*/Self));
+			}
+		}
+	}
+	AttackTiles = AttackSet.Array();
+}
+
+TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const
+{
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
+
 	// 밀리는 칸이 맵 밖이거나 밀칠 거리가 없으면 그대로 둔다
 	if (!IsValidIndex(Pushed) || MaxDistance <= 0)
-		return Pushed;
+		return Path;
 
-	// 미는 쪽→밀리는 쪽 방향을 각 축 부호로 8방향 단위 스텝화 (대각 포함)
-	const FTileIndex Step(
-		FMath::Sign(Pushed.mX - Pusher.mX),
-		FMath::Sign(Pushed.mY - Pusher.mY)
-	);
+	// 미는 쪽과 밀리는 쪽 사이에 장애물이 있으면 밀 수 없음 (유닛은 관통 — 기획 규칙)
+	if (HasLineOfSight(Pusher, Pushed, nullptr, ETileLayerFlag::Obstacle) == false)
+		return Path;
+
+	// 미는 쪽→밀리는 쪽 방향을 가장 가까운 8방향 단위 스텝으로 양자화
+	const FTileIndex Step = TileDeltaToStep(Pusher, Pushed);
 
 	// 같은 칸이라 방향이 없으면 밀 수 없음
-	if (Step.mX == 0 && Step.mY == 0)
-		return Pushed;
+	if (Step == FTileIndex::Zero)
+		return Path;
 
-	// 밀리는 칸에서부터 한 칸씩 전진하며 멈출 지점을 찾음
+	// 밀리는 칸에서부터 한 칸씩 전진 (공용 루프)
+	return BuildPushPath(Pushed, Step, MaxDistance);
+}
+
+TArray<FTileIndex> UTileMapModel::GetPushPath(const FTileIndex& Pushed, ETileActorDirection Direction, int32 MaxDistance) const
+{
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
+
+	// 밀리는 칸이 맵 밖이거나 밀칠 거리가 없으면 그대로 둔다
+	if (!IsValidIndex(Pushed) || MaxDistance <= 0)
+		return Path;
+
+	// 함정은 밀리는 유닛과 같은 타일이므로 시야 검사 없이 고정 방향으로 민다
+	return BuildPushPath(Pushed, DirectionToTileStep(Direction), MaxDistance);
+}
+
+bool UTileMapModel::IsPullAdjacent(const FTileIndex& Tile, const FTileIndex& Puller)
+{
+	// 4방향 면 접촉 = 한 축으로만 정확히 한 칸 차이
+	const FTileIndex Delta = Puller - Tile;
+	return FMath::Abs(Delta.mX) + FMath::Abs(Delta.mY) == 1;
+}
+
+TArray<FTileIndex> UTileMapModel::GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const
+{
+	// 경로는 최소한 당겨지는 칸 자신을 포함 (못 당기면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pulled);
+
+	// 당겨지는 칸이 맵 밖이거나 당길 거리가 없으면 그대로 둔다
+	if (!IsValidIndex(Pulled) || MaxDistance <= 0)
+		return Path;
+
+	// 당기는 쪽과 당겨지는 쪽 사이에 장애물이 있으면 당길 수 없음 (유닛은 관통, 밀치기와 같은 규칙)
+	if (HasLineOfSight(Puller, Pulled, nullptr, ETileLayerFlag::Obstacle) == false)
+		return Path;
+
+	// 당겨지는 쪽→당기는 쪽 방향을 가장 가까운 8방향 단위 스텝으로 양자화
+	const FTileIndex Step = TileDeltaToStep(Pulled, Puller);
+
+	// 같은 칸이라 방향이 없으면 당길 수 없음
+	if (Step == FTileIndex::Zero)
+		return Path;
+
+	// 거리가 남고 붙지 않은 동안 한 칸씩 전진하며 지나가는 칸을 기록
+	FTileIndex Current = Pulled;
+	while (Path.Num() <= MaxDistance && IsPullAdjacent(Current, Puller) == false)
+	{
+		const FTileIndex Next = Current + Step;
+
+		// 맵 밖으로는 당겨지지 않음
+		if (!IsValidIndex(Next))
+			break;
+
+		// 장애물/유닛에 걸리면 더 당겨지지 않고 직전 칸에서 멈춤
+		if (IsOccupied(Next))
+			break;
+
+		// 다음 칸이 시전자를 지나치면 멈춤 (남은 벡터와 진행 방향의 내적이 음수 = 시전자 옆을 지나 멀어지는 중)
+		// 비스듬한 위치라 직선으로는 면에 못 붙는 경우 여기서 대각선 옆이 최종
+		const FTileIndex Remaining = Puller - Next;
+		if (Remaining.mX * Step.mX + Remaining.mY * Step.mY < 0)
+			break;
+
+		// 빈 칸이면 거기까지 당겨짐
+		Current = Next;
+		Path.Add(Current);
+	}
+
+	return Path;
+}
+
+TArray<FTileIndex> UTileMapModel::BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const
+{
+	// 경로는 최소한 밀리는 칸 자신을 포함 (못 밀리면 제자리 한 칸)
+	TArray<FTileIndex> Path;
+	Path.Add(Pushed);
+
+	// 밀리는 칸에서부터 한 칸씩 전진하며 지나가는 칸을 기록
 	FTileIndex Current = Pushed;
 	for (int32 Distance = 0; Distance < MaxDistance; ++Distance)
 	{
-		const FTileIndex Next(Current.mX + Step.mX, Current.mY + Step.mY);
+		const FTileIndex Next = Current + Step;
 
 		// 맵 밖으로는 밀리지 않음
 		if (!IsValidIndex(Next))
@@ -873,9 +1191,10 @@ FTileIndex UTileMapModel::GetPushDestination(const FTileIndex& Pusher, const FTi
 
 		// 빈 칸이면 거기까지 밀려남
 		Current = Next;
+		Path.Add(Current);
 	}
 
-	return Current;
+	return Path;
 }
 
 TArray<UBoardActorModel*> UTileMapModel::GetActorsOnTile(const FTileIndex& TileIndex, ETileLayerFlag LayerFilter) const
@@ -996,6 +1315,7 @@ void UTileMapModel::RemoveActor(UBoardActorModel* Actor)
 
 	// 논리 좌표 무효화
 	Actor->SetTileTransform(FTileTransform::Invalid);
+	Actor->OnRemoveTileTransform.Broadcast();
 }
 
 void UTileMapModel::RefreshActorPlacements()

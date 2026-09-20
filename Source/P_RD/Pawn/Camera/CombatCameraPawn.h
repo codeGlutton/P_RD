@@ -4,23 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "InputAction.h"
-#include "InputMappingContext.h"
-#include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
 #include "CombatCameraPawn.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UCameraMovementComponent;
+class UTimeScaleComponent;
 class USceneComponent;
 
 struct FTouchState
 {
 	bool bIsCurrentlyPressed = false;
-	FVector2D StartTouchPos;
-	FVector2D PreTouchPos;
-	FVector2D CurTouchPos;
+	FVector2D StartTouchPos = FVector2D::ZeroVector;
+	FVector2D PreTouchPos = FVector2D::ZeroVector;
+	FVector2D CurTouchPos = FVector2D::ZeroVector;
 
 };
 
@@ -47,7 +44,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:
+private:
 	UPROPERTY(Category = Default, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "SceneComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> mSceneComponent;
 
@@ -60,6 +57,10 @@ public:
 	UPROPERTY(Category = CameraMovement, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CameraMovementComponent", AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraMovementComponent> mCameraMovementComponent;
 
+	UPROPERTY(Category = TimeScale, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "TimeScaleComponent", AllowPrivateAccess = "true"))
+	TObjectPtr<UTimeScaleComponent> mTimeScaleComponent;
+
+public:
 	// ========================================
 	// Touch 상태 관련 변수
 
@@ -92,34 +93,33 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UCameraMovementComponent* GetCameraMovementComponent();
 
-	/* 콘솔 치트 (개발 전용) */
-public:
-	/**
-	 * @brief 플레이어 유닛을 지정 타일까지 경로 이동 — 콘솔에서 "RDMoveTo X Y"
-	 * @details
-	 * 이동 빌드 UI(MOVE 버튼·이동 포인트)를 건너뛰고,
-	 * 확정 경로를 실은 이동 커맨드를 직접 발행해
-	 * MoveAction부터 뷰 연출까지 실제 파이프라인으로 검증.
-	 * 전투에서 빙의되는 폰이라 exec 라우팅이 보장되어 여기 둠.
-	 * @note
-	 * UFUNCTION(Exec) 때문에 전처리기에 못 넣고, cpp에서 전처리
-	 * -> 릴리즈에서는 빈 함수로 동작
-	 */
-	UFUNCTION(Exec)
-	void RDMoveTo(int32 X, int32 Y);
+	UFUNCTION(BlueprintCallable)
+	UTimeScaleComponent* GetTimeScaleComponent();
 
 	/**
-	 * @brief 플레이어 유닛의 방향 전환 — 콘솔에서 "RDRotate D" (0=Forward 1=Right 2=Backward 3=Left)
-	 * @details
-	 * RotateActor 논리 갱신부터 뷰 회전 연출까지 실제 파이프라인으로 검증.
-	 * @note
-	 * UFUNCTION(Exec) 때문에 전처리기에 못 넣고, cpp에서 전처리
-	 * -> 릴리즈에서는 빈 함수로 동작
+	 * @brief 전투 모달 UI가 떠 있는 동안 raw touch 기반 카메라 제스처를 막는다.
+	 *
+	 * @details 이 Pawn은 UMG의 Handled 여부와 무관하게 GetInputTouchState를 직접
+	 * 폴링한다. 따라서 용병/인벤토리/몬스터/상세 팝업이 입력을 소비해도 여기서
+	 * 별도로 잠그지 않으면 손가락 움직임이 카메라 드래그로 새어 들어온다.
 	 */
-	UFUNCTION(Exec)
-	void RDRotate(int32 Direction);
+	UFUNCTION(BlueprintCallable)
+	void SetTouchGestureInputEnabled(bool bEnabled);
+
+	UFUNCTION(BlueprintPure)
+	bool IsTouchGestureInputEnabled() const { return mTouchGestureInputEnabled; }
 
 private:
+	friend class FCombatCameraPointerInputTest;
+	friend class FCombatCameraSlowPinchTest;
+	void UpdatePointerGestures(const FTouchState& FirstTouch, const FTouchState& SecondTouch,
+		bool bMousePressed, const FVector2D& MousePosition);
+	bool mUsingMouseGesture = false;
+	bool mPinchActive = false;
+	bool mPanActive = false;
+	bool mHadTwoTouches = false;
+	float mPinchStartDistance = 0.f;
+
 	/*
 	* @brief Drag 중인지 나타내는 함수
 	* @return true 시 드래그 중, false 시 드래그 아님
@@ -133,6 +133,8 @@ private:
 	bool IsPinch();
 
 private:
+	/** UMG 모달이 켜지면 false. raw touch 폴링 자체를 멈춘다. */
+	bool mTouchGestureInputEnabled = true;
 
 	/*
 	* @brief Drag 중 카메라가 시행할 행동 

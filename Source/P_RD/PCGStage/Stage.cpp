@@ -6,7 +6,20 @@ void FStage::SetCurrentRoom(int32 RowIndex, int32 ColumnIndex)
 
 	mCurRow = RowIndex;
 	mCurColumn = ColumnIndex;
+
+	const bool IsEnteredRoom = mRoomRows[RowIndex].mRooms[ColumnIndex].GetMutable<FRoom>().mWasSelected;
 	mRoomRows[RowIndex].mRooms[ColumnIndex].GetMutable<FRoom>().mWasSelected = true;
+
+	if (IsEnteredRoom == false)
+	{
+		// 방 클리어 데이터 초기화
+		SetRoomClearData(FRoomClearData());
+	}
+}
+
+void FStage::SetRoomClearData(const FRoomClearData& ClearData)
+{
+	mClearData = ClearData;
 }
 
 FRoom& FStage::GetRoom(int32 RowIndex, int32 ColumnIndex)

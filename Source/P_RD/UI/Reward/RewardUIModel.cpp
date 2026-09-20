@@ -10,7 +10,7 @@ void URewardUIModel::RequestClaim()
 /** @brief 확정 보상 스냅샷을 저장하고 모든 바인딩 위젯에 다시 그리라고 알린다. */
 void URewardUIModel::SetReward(const FRewardUI& Reward)
 {
-	// 전/후 값이 들어 있는 스냅샷을 보관해 WBP가 같은 데이터로 카운트업/막대 연출을 반복 재생할 수 있게 한다.
+	// 전/후 값이 들어 있는 스냅샷을 보관해 WBP가 완성된 결과 문구를 즉시 다시 그릴 수 있게 한다.
 	mReward = Reward;
 	OnUIChanged.Broadcast();
 }
@@ -32,9 +32,81 @@ void URewardUIModel::RequestClaimReward(ERewardClaimKind ClaimKind, int32 Choice
 	}
 }
 
+bool URewardUIModel::RequestSelectReward(const FPrimaryAssetId RewardId)
+{
+	if (mAcquisitionPolicy != ERewardAcquisitionPolicy::SelectOne
+		|| RewardId.IsValid() == false
+		|| mSelectionOffer.mOptions.ContainsByPredicate(
+			[&RewardId](const FRewardChoiceUI& Choice)
+			{
+				return Choice.mSourceAssetId == RewardId;
+			}) == false)
+	{
+		return false;
+	}
+
+	OnRewardSelectionRequested.Broadcast(RewardId);
+	return true;
+}
+
+bool URewardUIModel::RequestGrantBundle()
+{
+	if (mAcquisitionPolicy != ERewardAcquisitionPolicy::GrantAll)
+	{
+		return false;
+	}
+
+	OnRewardGrantBundleRequested.Broadcast();
+	return true;
+}
+
+void URewardUIModel::ConfirmRewardClaim(ERewardClaimKind ClaimKind, int32 ChoiceIndex)
+{
+	OnRewardClaimConfirmed.Broadcast(ClaimKind, ChoiceIndex);
+}
+
+void URewardUIModel::ConfirmSelectedReward(const FPrimaryAssetId RewardId)
+{
+	if (RewardId.IsValid())
+	{
+		OnRewardSelectionConfirmed.Broadcast(RewardId);
+	}
+}
+
+void URewardUIModel::ConfirmGrantBundle(const FRewardGrantBundleResultUI& Result)
+{
+	OnRewardGrantBundleConfirmed.Broadcast(Result);
+}
+
 /** @brief 룸 보상 항목 목록을 저장하고 보상 갱신 알림을 보낸다. */
 void URewardUIModel::SetRewardChoices(const TArray<FRewardChoiceUI>& Choices)
 {
 	mChoices = Choices;
+	mSelectionOffer.mOptions = Choices;
+	mSelectionOffer.mSelectionCount = 1;
+	mGrantBundle.mItems.Reset();
+	mAcquisitionPolicy = Choices.IsEmpty()
+		? ERewardAcquisitionPolicy::None : ERewardAcquisitionPolicy::SelectOne;
+	OnChoicesChanged.Broadcast();
+}
+
+void URewardUIModel::SetSelectionOffer(const FRewardSelectionOfferUI& Offer)
+{
+	mSelectionOffer = Offer;
+	mSelectionOffer.mSelectionCount = FMath::Max(1, mSelectionOffer.mSelectionCount);
+	mGrantBundle.mItems.Reset();
+	mChoices = mSelectionOffer.mOptions;
+	mAcquisitionPolicy = mChoices.IsEmpty()
+		? ERewardAcquisitionPolicy::None : ERewardAcquisitionPolicy::SelectOne;
+	OnChoicesChanged.Broadcast();
+}
+
+void URewardUIModel::SetGrantBundle(const FRewardGrantBundleUI& Bundle)
+{
+	mGrantBundle = Bundle;
+	mSelectionOffer.mOptions.Reset();
+	mSelectionOffer.mSelectionCount = 1;
+	mChoices = mGrantBundle.mItems;
+	mAcquisitionPolicy = ERewardAcquisitionPolicy::GrantAll;
 	OnChoicesChanged.Broadcast();
 }

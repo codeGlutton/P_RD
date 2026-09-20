@@ -1,4 +1,5 @@
 ﻿#include "Singleton/InstanceSubsystem/PersistentDataWriter.h"
+#include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 

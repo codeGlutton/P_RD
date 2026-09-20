@@ -1,9 +1,11 @@
-﻿#include "GameMode/RoomGameModeBase.h"
+#include "GameMode/RoomGameModeBase.h"
+#include "Engine/GameInstance.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "Singleton/InstanceSubsystem/GameProfileSubsystem.h"
 #include "Singleton/InstanceSubsystem/RoomTransitionSubsystem.h"
-#include "Singleton/InstanceSubsystem/PlayerUnitRestorationSubsystem.h"
+#include "Singleton/InstanceSubsystem/PartyRestorationSubsystem.h"
+#include "Actor/Party/PartyModel.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
@@ -13,7 +15,20 @@
 #include "Setting/RDWorldSettings.h"
 
 #include "Engine/AssetManager.h"
+#include "Engine/Texture2D.h"
 #include "DataAsset/RoomSpawnData/StaticRoomSpawnData.h"
+#include "DataAsset/ArtifactData/StaticArtifactData.h"
+#include "DataAsset/SkillData/StaticSkillData.h"
+#include "DataAsset/SkillData/StaticUnitSkillData.h"
+#include "AttributeSet/PartyAttributeSet.h"
+#include "AttributeSet/UnitAttributeSet.h"
+#include "Component/ArtifactComponent/PartyArtifactComponentModel.h"
+#include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
+#include "UI/Combat/CombatUITypes.h"
+#include "UI/Combat/SkillDetailUIBuilder.h"
+
+#include "TAS/Effect/Stat/TacticalEffect_HP.h"
 
 DEFINE_LOG_CATEGORY(LogRoomGameMode);
 
@@ -23,29 +38,28 @@ DEFINE_LOG_CATEGORY(LogRoomGameMode);
  * @details
  * ARoomGameModeBase는 "현재 방 UI -> WorldMap -> 다음 방 선택 -> 저장/전환" 흐름을 담당한다.
  * 타이틀 START, 캐릭터 선택, 새 Run 생성, Continue 시작은 AFrontendGameMode 쪽 책임이다.
- *
- * 주요 흐름:
- * - InitializeCommonRoom(): 실제 방에 들어올 때 플레이어 유닛을 복원한다.
- * - RestorePlayerUnit(): PlayerUnitRestorationSubsystem으로 플레이어 유닛을 스폰/등록한다.
- * - BeginRoom(): 방에 들어오면 현재 Run 저장을 시작한다.
- * - SaveRunWithUIAsync(): 방 전환 직후 현재 Run을 저장한다. SaveNotify는 아직 보조 UI 연결 지점으로만 남아 있다.
- * - GetRunControlView(): WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
- * - GetRunControlState(): 구조체 대신 개별 값으로 Run 상태를 받아야 하는 호출부용 호환 API다.
- * - GetMapRoomViews(): 현재 Run의 Stage/Room 데이터를 월드맵 노드 표시용 FMapRoomView 배열로 변환한다.
- * - ResolveRoomState(): 각 방의 Locked/Ready/Selected/Cleared UI 상태를 계산한다.
- * - IsNextRoomFromCurrentPath(): 현재 방에서 지정 방으로 이동 가능한지 row와 column을 모두 검사한다.
- * - IsStageStartPoint(): 지정 좌표가 Stage 시작 지점인지 계산한다.
- * - SelectNextRoom(): 월드맵에서 클릭한 다음 방 후보를 검증하고 선택 좌표로 저장한다.
- * - IsRoomSelectable(): 선택하려는 방이 실제 현재 방의 다음 경로인지 검증한다.
- * - HasSelectedRoom(): 현재 저장된 다음 방 선택 좌표가 있는지 확인한다.
- * - ClearSelectedRoom(): 저장된 다음 방 선택 좌표를 초기화한다.
- * - EnterSelectedRoom(): 이미 선택된 다음 방으로 입장 요청을 시작한다.
- * - PreloadAndTransitionSelectedRoomAsync(): 선택된 방 좌표를 최종 검증하고 프리로드/전환을 요청한다.
- * - AbandonRunFromRoom(): 방 안에서 Run을 포기하고 프론트엔드 방으로 돌아간다.
- * - GetPlayerUnitModel(): 방 안에서 복원된 플레이어 유닛 포인터를 제공한다.
  */
 namespace
 {
+	constexpr const TCHAR* RoomArtifactFallbackIconPath =
+		TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Artifacts/T_Artifact_BloodChalice.T_Artifact_BloodChalice");
+
+	UTexture2D* ResolveRoomArtifactInventoryIcon(
+		const UStaticArtifactData* Artifact)
+	{
+		if (Artifact != nullptr)
+		{
+			if (UTexture2D* Icon = Artifact->mIcon.LoadSynchronous())
+			{
+				return Icon;
+			}
+			UE_LOG(LogRoomGameMode, Verbose,
+				TEXT("아티팩트 아이콘 미설정, 기본 아이콘 사용: %s"),
+				*Artifact->GetPathName());
+		}
+		return LoadObject<UTexture2D>(nullptr, RoomArtifactFallbackIconPath);
+	}
+
 	/**
 	 * @brief 지정 좌표가 현재 Stage의 시작 지점인지 계산한다.
 	 *
@@ -163,63 +177,106 @@ namespace
 			FText::AsNumber(Room.mNextRoomColumns.Num())
 		);
 	}
+
+	FLinearColor GetInventoryRarityColor(ERarityType RarityType)
+	{
+		switch (RarityType)
+		{
+		case ERarityType::Rare:
+			return FLinearColor(0.42f, 0.66f, 0.95f, 1.f);
+		case ERarityType::Epic:
+			return FLinearColor(0.72f, 0.46f, 0.92f, 1.f);
+		case ERarityType::Common:
+		default:
+			return FLinearColor(0.72f, 0.78f, 0.75f, 1.f);
+		}
+	}
+
+	/**
+	 * @brief 용병 패널의 직업 표시명. RunOptionsRail 위젯에 있던 표를 생산자로 옮겼다.
+	 * @details 위젯이 직업 enum 을 해석하면 표시 규칙이 화면마다 갈라진다 (PR #426 규칙).
+	 */
+	FText GetRosterJobName(const UPlayerUnitModel* Unit)
+	{
+		if (Unit == nullptr)
+		{
+			return FText::GetEmpty();
+		}
+		switch (Unit->GetUnitJobType())
+		{
+		case EUnitJobType::Knight: return NSLOCTEXT("RoomGameModeBase", "RosterJobKnight", "기사");
+		case EUnitJobType::Mage: return NSLOCTEXT("RoomGameModeBase", "RosterJobMage", "마법사");
+		case EUnitJobType::Ranger: return NSLOCTEXT("RoomGameModeBase", "RosterJobRanger", "궁수");
+		case EUnitJobType::Rogue: return NSLOCTEXT("RoomGameModeBase", "RosterJobRogue", "도적");
+		case EUnitJobType::Barbarian: return NSLOCTEXT("RoomGameModeBase", "RosterJobBarbarian", "야만전사");
+		case EUnitJobType::Druid: return NSLOCTEXT("RoomGameModeBase", "RosterJobDruid", "드루이드");
+		default: return Unit->GetBoardActorDisplayName();
+		}
+	}
+
+	/**
+	 * @brief 용병 패널 초상 해석. 직업별 T_MB_HireIcon_* 우선, 없으면 보드 아이콘/초상화.
+	 * @details RunOptionsRail 위젯의 해석 규칙을 그대로 생산자로 옮긴 것 -- 화면은 결과만 받는다.
+	 */
+	UTexture2D* GetRosterHeadPortrait(const UPlayerUnitModel* Unit)
+	{
+		if (Unit == nullptr)
+		{
+			return nullptr;
+		}
+		const TCHAR* Stem = nullptr;
+		switch (Unit->GetUnitJobType())
+		{
+		case EUnitJobType::Knight: Stem = TEXT("Knight"); break;
+		case EUnitJobType::Mage: Stem = TEXT("Mage"); break;
+		case EUnitJobType::Ranger: Stem = TEXT("Ranger"); break;
+		case EUnitJobType::Rogue: Stem = TEXT("Rogue"); break;
+		case EUnitJobType::Barbarian: Stem = TEXT("Barbarian"); break;
+		case EUnitJobType::Druid: Stem = TEXT("Druid"); break;
+		default: break;
+		}
+		if (Stem != nullptr)
+		{
+			const FString AssetName = FString::Printf(TEXT("T_MB_HireIcon_%s"), Stem);
+			const FString AssetPath = FString::Printf(
+				TEXT("/Game/SVN/OutSideAsset/AICreation/UI/Marchbound/Mercenaries/%s.%s"),
+				*AssetName, *AssetName);
+			if (UTexture2D* Portrait = LoadObject<UTexture2D>(nullptr, *AssetPath))
+			{
+				return Portrait;
+			}
+		}
+		return Unit->GetBoardActorIcon() != nullptr
+			? Unit->GetBoardActorIcon() : Unit->GetBoardActorPortrait();
+	}
+
 }
 
 ARoomGameModeBase::ARoomGameModeBase()
 {
 	/*
-	 * 월드맵/설정/주사위/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
+	 * 월드맵/설정/스킬 패널은 방 공통 팝업이다. 각 방 HUD에 팝업을 직접 넣지 않고
 	 * WorldWidgetSubsystem에 등록해두면 전투/상점/보물 방이 모두 같은 OpenUI/CloseUI 규칙을 공유한다.
-	 * (패널을 여는 진입점은 전투 HUD의 내비 버튼 — CombatTileMapHUDWidget_Nav.cpp)
+	 * (전투 HUD의 내비 버튼이 진입점이었는데, 전투 중에 무엇을 여는지가 안 정해져
+	 *  옛 HUD와 함께 지웠다. 정해지면 새 HUD에 붙인다.)
 	 */
-	mWorldWidgets = { 
-		EWorldWidgetType::MsgNotify, 
-		EWorldWidgetType::SaveNotify,  
-		EWorldWidgetType::FadeInOut,  
-		EWorldWidgetType::LoadingNotify,  
+	mWorldWidgets = {
+		EWorldWidgetType::FadeInOut,
+		EWorldWidgetType::LoadingNotify,
 		EWorldWidgetType::WorldMap,
 		EWorldWidgetType::InGameSettings,
-		EWorldWidgetType::DicePanel,
-		EWorldWidgetType::SkillPanel,
 	};
 
-	/* 월드맵/설정/주사위/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
+	/* 월드맵/설정/스킬 패널은 모든 방에서 같은 팝업으로 쓰이므로 HUD 자식이 아니라 WorldWidgetSubsystem이 준비한다. */
 	mShowFadeInUIOnTransition = true;
 	mShowFadeOutUIOnTransition = true;
 	mShowLoadingNotifyUIOnTransition = true;
 	mWaitExternalWorkOnTransition = false;
 }
 
-AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+void ARoomGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
-	AActor* PlayerStartActor = Super::ChoosePlayerStart_Implementation(Player);
-
-	ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
-	if (WorldSettings != nullptr)
-	{
-		AActor* SettingPointActor = WorldSettings->GetMainCameraPoint();
-		if (SettingPointActor != nullptr)
-		{
-			PlayerStartActor = SettingPointActor;
-		}
-	}
-
-	return PlayerStartActor;
-}
-
-/**
- * @brief 실제 방 공통 초기화에서 플레이어 유닛을 복원한다.
- *
- * @details
- * RoomGameModeBase 계열 방은 이미 생성된 RunPersistData를 기준으로 실제 플레이 방을 구성한다.
- * 따라서 공통 방 초기화가 끝난 뒤 PlayerUnitRestorationSubsystem을 통해 플레이어 유닛을 스폰/등록한다.
- */
-void ARoomGameModeBase::InitializeCommonRoom()
-{
-	Super::InitializeCommonRoom();
-
-	// 플레이어 복원
-	RestorePlayerUnit();
+	Super::InitGame(MapName, Options, ErrorMessage);
 
 	const FRoom& CurRoom = GetRunPersistData()->GetCurrentRoom();
 
@@ -227,23 +284,77 @@ void ARoomGameModeBase::InitializeCommonRoom()
 	checkf(AssetManager != nullptr, TEXT("에셋 매니저 nullptr"));
 	UStaticRoomSpawnData* StaticRoomData = AssetManager->GetPrimaryAssetObject<UStaticRoomSpawnData>(CurRoom.mStaticRoomSpawnDataId);
 	checkf(StaticRoomData != nullptr, TEXT("해당하는 룸 정보 탐색 실패"));
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RD 월드 세팅 nullptr"));
+
+	/* BGM 세팅 */
 
 	TSoftObjectPtr<USoundBase> MainBGMSoftPtr = StaticRoomData->mOverrideBGM;
 	SetMainBGM(MainBGMSoftPtr.LoadSynchronous());
+
+	/* 방 세팅 */
+
+	if (StaticRoomData->mUseRandomSpawnSetting == true)
+	{
+		FName SelectedRoomSpawnName = WorldSettings->GetRandomRoomSpawnSettingName(GetRunPersistData()->GetStageBuildStream());
+		SetRoomSpawnSettingName(SelectedRoomSpawnName);
+	}
+	else
+	{
+		SetRoomSpawnSettingName(StaticRoomData->mDefaultSpawnSettingName);
+	}
 }
 
-/**
- * @brief 실제 방에 들어오면 현재 Run 저장을 시작한다.
- *
- * @details
- * 방 공통 팝업(WorldMap/Settings/Dice/Skill)은 WorldWidgetSubsystem이 준비하고, 여는 것은 HUD 내비 버튼이 담당한다.
- */
+AActor* ARoomGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+{
+	AActor* PlayerStartActor = Super::ChoosePlayerStart_Implementation(Player);
+
+	const ARDWorldSettings* WorldSettings = Cast<ARDWorldSettings>(GetWorld()->GetWorldSettings());
+	checkf(WorldSettings != nullptr, TEXT("RD 월드 세팅 nullptr"));
+
+	AActor* SettingPointActor = WorldSettings->GetMainCameraPoint(mSelectedRoomSpawnSettingName);
+	if (SettingPointActor != nullptr)
+	{
+		PlayerStartActor = SettingPointActor;
+	}
+
+	return PlayerStartActor;
+}
+
+APawn* ARoomGameModeBase::SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot)
+{
+	FRotator StartRotation = StartSpot->GetActorRotation();
+	FVector StartLocation = StartSpot->GetActorLocation();
+
+	FTransform Transform = FTransform(StartRotation, StartLocation);
+	return SpawnDefaultPawnAtTransform(NewPlayer, Transform);
+}
+
+void ARoomGameModeBase::InitializeCommonRoom()
+{
+	Super::InitializeCommonRoom();
+
+	const URunPersistData* Run = GetRunPersistData();
+	const bool bHasRoom = Run && Run->IsActive()
+		&& Run->GetStage().HasRoom(Run->GetStage().mCurRow, Run->GetStage().mCurColumn);
+	const ERoomType RoomType = bHasRoom ? Run->GetCurrentRoom().mType : ERoomType::None;
+	const bool bCombatRoom = RoomType == ERoomType::Monster
+		|| RoomType == ERoomType::EliteMonster || RoomType == ERoomType::BossMonster;
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->BeginRoomCheckpoint(
+		bCombatRoom && bHasRoom && !Run->GetStage().mClearData.mIsCleared);
+
+	// 플레이어 복원
+	RestorePlayerUnit();
+	// 방 전환 즉시 저장
+	SaveRunWithUIAsync();
+
+	// 카메라를 갱신하여 ProjMat을 갱신해줍니다.
+	GetWorld()->GetFirstPlayerController()->PlayerCameraManager->UpdateCamera(0.0f);
+}
+
 void ARoomGameModeBase::BeginRoom()
 {
 	Super::BeginRoom();
-
-	// 방 전환 즉시 저장
-	SaveRunWithUIAsync();
 
 	/* 터치 세팅 */
 
@@ -261,16 +372,6 @@ void ARoomGameModeBase::BeginRoom()
 	PlayerController->SetInputMode(InputMode);
 }
 
-/**
- * @brief 월드맵에서 다음 방 후보를 선택한다.
- *
- * @details
- * 선택 가능한 방인지 GameMode 기준으로 다시 검사한 뒤, ENTER 버튼이 사용할 선택 좌표만 저장한다.
- *
- * 왜 UI 클릭만 믿지 않는가:
- * 지도 UI가 버튼 비활성화를 해도 런 상태는 전환 중이거나 이미 다른 방을 선택한 뒤일 수 있다.
- * GameMode가 최종 선택 가능 여부를 확인해야 런 데이터와 화면 입력이 어긋나도 잘못된 전환을 막을 수 있다.
- */
 bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
 {
 	if (mWasNextRoomPreloadRequested == true)
@@ -290,16 +391,6 @@ bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
 	return true;
 }
 
-/**
- * @brief 현재 선택된 다음 방으로 입장을 요청한다.
- *
- * @details
- * 선택 자체는 SelectNextRoom()에서 처리하고, 이 함수는 이미 선택된 방에 대한 프리로드/전환만 시작한다.
- *
- * 왜 선택과 입장을 나누는가:
- * 지도에서 노드를 눌러 미리 선택해보고, ENTER 버튼으로 확정하는 UX를 만들기 위해서다.
- * 두 단계를 나누면 잘못 눌렀을 때 바로 전환되지 않고, UI가 선택 상태를 먼저 보여줄 수 있다.
- */
 bool ARoomGameModeBase::EnterSelectedRoom()
 {
 	if (mWasNextRoomPreloadRequested == true)
@@ -308,18 +399,12 @@ bool ARoomGameModeBase::EnterSelectedRoom()
 		return false;
 	}
 
-	checkf(PreloadAndTransitionSelectedRoomAsync() == true, TEXT("다음 방으로 전환 실패"));
-	return true;
+	const bool IsTransitionStarted = PreloadAndTransitionSelectedRoomAsync();
+	checkf(IsTransitionStarted == true, TEXT("다음 방으로 전환 실패"));
+	return IsTransitionStarted;
 }
 
-/**
- * @brief 방 안에서 활성 Run을 포기하고 프론트엔드 방으로 돌아간다.
- *
- * @details
- * RoomGameModeBase는 실제 방 안에 있는 상태이므로, 런 포기 후에는 RunPersistData를 비우고
- * PreloadAndTransitionFrontendRoomAsync()를 통해 타이틀/캐릭터 선택 흐름이 있는 프론트엔드 방으로 전환한다.
- */
-bool ARoomGameModeBase::AbandonRunFromRoom()
+bool ARoomGameModeBase::EnterNextStage()
 {
 	if (mWasNextRoomPreloadRequested == true)
 	{
@@ -327,22 +412,101 @@ bool ARoomGameModeBase::AbandonRunFromRoom()
 		return false;
 	}
 
-	ClearRunPersistData();
-	checkf(PreloadAndTransitionFrontendRoomAsync() == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
+	ApplyStageClearHeal();
 
-	return true;
+	const URunPersistData* RunPersistData = GetRunPersistData();
+	const FStage& Stage = RunPersistData->GetStage();
+
+	EStageLevelType CurStageLevel = Stage.mStageLevel;
+	EStageLevelType NextStageLevel = StaticCast<EStageLevelType>(StaticCast<uint8>(CurStageLevel) + 1);
+	if (CurStageLevel == EStageLevelType::Stage3)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("게임 클리어로 다음 스테이지 접근 불가"));
+		return false;
+	}
+
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(NextStageLevel);
+	checkf(IsTransitionStarted == true, TEXT("스테이지 처음 방으로 전환 실패"));
+	return IsTransitionStarted;
 }
 
-/**
- * @brief 현재 런의 스테이지 정보를 월드맵 표시용 View 배열로 변환한다.
- *
- * @details
- * FStage/FRoom의 진행 상태를 UI가 바로 읽지 않도록, 화면에 필요한 좌표/상태/설명만 FMapRoomView로 내려준다.
- *
- * 왜 View DTO로 내보내는가:
- * UI가 런 데이터 구조를 직접 알면 Stage 생성 규칙이 바뀔 때마다 위젯 코드도 같이 흔들린다.
- * GameMode가 표시용 데이터로 변환하면 월드맵은 그래프를 그리는 역할에 집중할 수 있다.
- */
+bool ARoomGameModeBase::AbandonRunFromRoom()
+{
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested == true)
+	{
+		UE_LOG(LogRDGameMode, Log, TEXT("방 전환 시 추가 로직 요청 불가"));
+		return false;
+	}
+
+	if (!GetGameInstance()->GetSubsystem<UGameProfileSubsystem>()->EndRun()) return false;
+	const bool IsTransitionStarted = PreloadAndTransitionFrontendRoomAsync();
+	checkf(IsTransitionStarted == true, TEXT("게임 포기 이후, Frontend로 전환 실패"));
+
+	return IsTransitionStarted;
+}
+
+bool ARoomGameModeBase::CompleteRunFromRoom()
+{
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested) return false;
+	if (!mFinalRunClosed)
+	{
+		if (!HasActiveRun()) return false;
+		const FStage& Stage = GetRunPersistData()->GetStage();
+		if (Stage.mStageLevel != EStageLevelType::Stage3 || !Stage.mClearData.mIsCleared
+			|| Stage.GetCurrentRoom().mType != ERoomType::BossMonster) return false;
+	}
+	auto* Saves = GetGameInstance()->GetSubsystem<USaveGameSubsystem>();
+	if (!Saves) return false;
+	if (!mFinalRunClosed)
+	{
+		ClearRunPersistData();
+		mFinalRunClosed = true;
+	}
+	// Retry saving without counting the run twice or leaving for the title on failure.
+	if (!Saves->SaveUser() || !Saves->SaveRun())
+	{
+		UE_LOG(LogRDGameMode, Error, TEXT("Final run save failed; waiting for retry"));
+		return false;
+	}
+	UE_LOG(LogRDGameMode, Display, TEXT("RD_STAGE_VICTORY final run saved and closed"));
+	return PreloadAndTransitionFrontendRoomAsync();
+}
+
+void ARoomGameModeBase::SaveAndExitRunFromRoomAsync(
+	FOnRoomSaveAndExitComplete Completion)
+{
+	if (mSaveAndExitPending || mWasNextRoomPreloadRequested || !HasActiveRun())
+	{
+		Completion.ExecuteIfBound(false);
+		return;
+	}
+
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (SaveGameSubsystem == nullptr)
+	{
+		Completion.ExecuteIfBound(false);
+		return;
+	}
+
+	mSaveAndExitPending = true;
+	SaveGameSubsystem->RestoreCheckpointOnNextFrontend();
+	SaveGameSubsystem->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
+		this,
+		[this, MovedCompletion = MoveTemp(Completion)](
+			const FString& SlotName, int32 UserIndex, bool bSaveSucceeded) mutable
+		{
+			const bool bTransitionStarted = bSaveSucceeded
+				&& PreloadAndTransitionFrontendRoomAsync();
+			if (!bTransitionStarted)
+			{
+				mSaveAndExitPending = false;
+				GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->CancelCheckpointFrontendRestore();
+			}
+			MovedCompletion.ExecuteIfBound(bTransitionStarted);
+		}));
+}
+
 bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 {
 	OutRooms.Reset();
@@ -403,14 +567,6 @@ bool ARoomGameModeBase::GetMapRoomViews(TArray<FMapRoomView>& OutRooms) const
 	return OutRooms.IsEmpty() == false;
 }
 
-/**
- * @brief WorldMap이 표시할 현재 Run 상태 DTO를 만든다.
- *
- * @details
- * 위젯이 URunPersistData를 직접 읽지 않도록,
- * 현재 row/column, 플레이어 레벨, 난이도, Stage 시작 지점 여부, 포기 가능 여부를 FRunControlView로 모아 내려준다.
- * 즉 UI는 이 값만 보고 제목/요약/버튼 상태를 표시하고, 실제 Run 규칙 해석은 GameMode에 남긴다.
- */
 bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 {
 	/*
@@ -430,18 +586,11 @@ bool ARoomGameModeBase::GetRunControlView(FRunControlView& OutView) const
 	const URunPersistData* RunPersistData = GetRunPersistData();
 	RunPersistData->GetCurrentRoomIndex(OUT OutView.mRow, OUT OutView.mColumn);
 	OutView.mIsAtStageStart = IsStageStartPoint(RunPersistData->GetStage(), OutView.mRow, OutView.mColumn);
-	OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
+	// OutView.mPlayerLevel = RunPersistData->GetPlayerLevel();
 	OutView.mDifficulty = RunPersistData->GetDifficulty();
 	return true;
 }
 
-/**
- * @brief 구조체 대신 개별 값으로 현재 Run 상태를 받아야 하는 호출부용 호환 API다.
- *
- * @details
- * 표시 데이터 계산 기준은 GetRunControlView() 하나로 유지한다.
- * 오래된 BP/WBP 또는 구조체를 바로 쓰기 어려운 호출부가 있으면 이 함수가 FRunControlView를 풀어서 전달한다.
- */
 bool ARoomGameModeBase::GetRunControlState(OUT int32& RowIndex, OUT int32& ColumnIndex, OUT int32& PlayerLevel, OUT int32& Difficulty) const
 {
 	/*
@@ -471,14 +620,6 @@ FText ARoomGameModeBase::GetCurrentRoomDisplayName() const
 	return RunPersistData != nullptr ? RunPersistData->GetCurrentRoom().GetDisplayName() : FText::GetEmpty();
 }
 
-/**
- * @brief 선택된 다음 방 좌표를 실제 프리로드/전환 요청으로 확정한다.
- *
- * @details
- * 월드맵에서 저장된 선택 좌표가 아직 유효한지 다시 확인한 뒤,
- * 기존 방 전환 공통 흐름인 PreloadAndTransitionRoomAsync(row, column)으로 넘긴다.
- * 선택 시점과 입장 확정 시점 사이에 Run 상태가 바뀔 수 있으므로 여기서 최종 검증을 한 번 더 수행한다.
- */
 bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 {
 	/*
@@ -504,89 +645,73 @@ bool ARoomGameModeBase::PreloadAndTransitionSelectedRoomAsync()
 		return false;
 	}
 
-	checkf(PreloadAndTransitionRoomAsync(mSelectedRoomRow, mSelectedRoomColumn) == true, TEXT("선택된 방에 대한 Preload 및 Auto Transition 실패"));
-	return true;
+	const bool IsTransitionStarted = PreloadAndTransitionRoomAsync(mSelectedRoomRow, mSelectedRoomColumn);
+	checkf(IsTransitionStarted == true, TEXT("선택된 방에 대한 Preload 및 Auto Transition 실패"));
+	return IsTransitionStarted;
 }
 
-/**
- * @brief 방 진입 직후 현재 Run을 저장하고, 추후 SaveNotify UI와 연결될 저장 흐름을 담당한다.
- *
- * @details
- * 저장 자체는 SaveGameSubsystem->SaveRunAsync()가 수행한다.
- * SaveNotify는 저장 진행/완료를 보여주기 위한 보조 UI라 현재 OpenUI()/CloseUI() 호출은 비활성화되어 있고,
- * 저장 성공 여부 검증은 비동기 저장 완료 콜백에서 처리한다.
- */
 void ARoomGameModeBase::SaveRunWithUIAsync() const
 {
-	UWorldWidgetSubsystem* WorldWidgetSubsystem = GetWorld()->GetSubsystem<UWorldWidgetSubsystem>();
-	checkf(WorldWidgetSubsystem != nullptr, TEXT("월드 위젯 서브시스템 nullptr 오류"));
-
-	UUserWidget* SaveNotifyWidget = WorldWidgetSubsystem->GetWorldWidget(EWorldWidgetType::SaveNotify);
-
-	/*
-	 * SaveNotify는 저장 성공/실패 자체의 필수 조건이 아니라, 저장 진행을 보여주는 보조 UI다.
-	 * 현재 알림 표시 애니메이션 호출이 비활성화되어 있으므로 위젯 설정이 빠져도 방 전환 저장은 계속 진행한다.
-	 * 알림 UI를 실제로 다시 열고 닫는 시점에는 OpenUI()/CloseUI() 흐름과 함께 필수 바인딩 검사를 되살린다.
-	 */
-    // TODO: 구현되면 주석 풀기
-	// if (SaveNotifyWidget) SaveNotifyWidget->OpenUI();
-	// 시작 애니메이션
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->SaveRunAsync(FAsyncSaveGameToSlotDelegate::CreateLambda([SaveNotifyWidget](const FString& SlotName, int32 UserIndex, bool IsSuccussed) {
-		checkf(IsSuccussed == true, TEXT("방 전환 시점 저장 실패"));
-		// TODO: 구현되면 주석 풀기
-		// if (SaveNotifyWidget) SaveNotifyWidget->CloseUI();
-		// 종료 애니메이션
-		}));
+	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 }
 
-/**
- * @brief RunPersistData 기준으로 방 안에서 사용할 플레이어 유닛을 스폰/등록한다.
- *
- * @details
- * 실제 스폰과 데이터 복원은 PlayerUnitRestorationSubsystem이 담당한다.
- * RoomGameModeBase는 복원된 유닛 포인터를 mPlayerUnit에 보관해 방 내부 시스템이 현재 플레이어 유닛을 조회할 수 있게 한다.
- */
+void ARoomGameModeBase::ApplyStageClearHeal() const
+{
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return;
+	}
+
+	TArray<UAttributeSetComponentModel*> AttributeSetCompModels;
+	for (const TObjectPtr<UPlayerUnitModel>& PlayerUnitModel : PartyModel->GetPlayerUnitModels())
+	{
+		UPlayerUnitModel* UnitModel = PlayerUnitModel.Get();
+		if (UnitModel == nullptr)
+		{
+			continue;
+		}
+
+		UAttributeSetComponentModel* Attributes = UnitModel->GetAttributeComponentModel();
+		if (Attributes == nullptr)
+		{
+			return;
+		}
+
+		AttributeSetCompModels.Add(Attributes);
+	}
+
+	for (UAttributeSetComponentModel* AttributeSetCompModel : AttributeSetCompModels)
+	{
+		UTacticalEffectContext* Context = AttributeSetCompModel->MakeEffectContext();
+		TSharedPtr<FTacticalEffectSpec> Spec = AttributeSetCompModel->MakeOutgoingSpec(UTacticalEffect_StageClearHeal::StaticClass(), Context);
+
+		AttributeSetCompModel->ApplyTacticalEffectSpecToSelf(*Spec);
+	}
+}
+
 void ARoomGameModeBase::RestorePlayerUnit()
 {
-	UPlayerUnitRestorationSubsystem* PlayerUnitRestorationSubsystem = GetGameInstance()->GetSubsystem<UPlayerUnitRestorationSubsystem>();
-	checkf(PlayerUnitRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
+	UPartyRestorationSubsystem* PartyRestorationSubsystem = GetGameInstance()->GetSubsystem<UPartyRestorationSubsystem>();
+	checkf(PartyRestorationSubsystem != nullptr, TEXT("플레이어 유닛 복원 서브시스템 nullptr 오류"));
 
-	UPlayerUnitModel* PlayerUnit = PlayerUnitRestorationSubsystem->SpawnPlayerUnit(GetWorld());
-	checkf(PlayerUnit != nullptr, TEXT("플레이어 유닛 스폰 오류"));
+	UPartyModel* PartyModel = PartyRestorationSubsystem->RestorePartyFromPersistData(GetWorld());
+	checkf(PartyModel != nullptr, TEXT("파티 모델 복원 오류"));
 
-	PlayerUnitRestorationSubsystem->RegisterPlayerUnit(PlayerUnit);
-	mPlayerUnit = PlayerUnit;
+	mPartyModel = PartyModel;
 }
 
-/**
- * @brief 월드맵에서 저장해둔 다음 방 선택 좌표를 초기화한다.
- *
- * @details
- * 선택 좌표는 "노드를 눌러 임시 선택한 값"이므로,
- * 선택 취소나 지도 상태 재계산이 필요한 시점에는 INDEX_NONE으로 되돌려 선택된 방이 없음을 명확히 한다.
- */
 void ARoomGameModeBase::ClearSelectedRoom()
 {
 	mSelectedRoomRow = INDEX_NONE;
 	mSelectedRoomColumn = INDEX_NONE;
 }
 
-/**
- * @brief 월드맵에서 확정 대기 중인 다음 방 선택 좌표가 있는지 확인한다.
- */
 bool ARoomGameModeBase::HasSelectedRoom() const
 {
 	return mSelectedRoomRow != INDEX_NONE && mSelectedRoomColumn != INDEX_NONE;
 }
 
-/**
- * @brief 지정 방이 현재 방에서 실제로 이동 가능한 다음 방인지 검증한다.
- *
- * @details
- * 방 좌표가 Stage 안에 존재하는지 먼저 확인하고,
- * 현재 방의 mNextRoomColumns 기준으로 바로 다음 행에 연결된 방인지 검사한다.
- * UI에서 Ready 상태로 보이는 방이라도 전환 직전 GameMode가 다시 확인해 잘못된 방 입장을 막는다.
- */
 bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 {
 	const URunPersistData* RunPersistData = GetRunPersistData();
@@ -609,14 +734,203 @@ bool ARoomGameModeBase::IsRoomSelectable(int32 RoomRow, int32 RoomColumn) const
 	return true;
 }
 
-/**
- * @brief 방 안에서 복원된 현재 플레이어 유닛 포인터를 제공한다.
- *
- * @details
- * InitializeCommonRoom()에서 RestorePlayerUnit()이 성공하면 mPlayerUnit에 등록된다.
- * 전투/상점/보상 처리처럼 현재 플레이어 유닛이 필요한 시스템은 이 접근자를 통해 GameMode가 보관한 유닛을 조회한다.
- */
-UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel() const
+UPartyModel* ARoomGameModeBase::GetPartyModel() const
 {
-	return mPlayerUnit.Get();
+	return mPartyModel.Get();
+}
+
+UPlayerUnitModel* ARoomGameModeBase::GetPlayerUnitModel(int32 PlayerIndex) const
+{
+	if (mPartyModel.IsValid() == false)
+	{
+		return nullptr;
+	}
+
+	return mPartyModel->GetPlayerUnitModel(PlayerIndex);
+}
+
+TArray<TObjectPtr<UPlayerUnitModel>>& ARoomGameModeBase::GetPlayerUnitModels() const
+{
+	return mPartyModel->GetPlayerUnitModels();
+}
+
+const FName& ARoomGameModeBase::GetRoomSpawnSettingName() const
+{
+	return mSelectedRoomSpawnSettingName;
+}
+
+void ARoomGameModeBase::SetRoomSpawnSettingName(const FName& Name)
+{
+	mSelectedRoomSpawnSettingName = Name;
+}
+
+bool ARoomGameModeBase::BuildPartyUnitSkillDetailUI(int32 MemberIndex, int32 SkillIndex,
+	FSkillDetailUI& OutDetail) const
+{
+	OutDetail = FSkillDetailUI();
+	OutDetail.mSkillIndex = SkillIndex;
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return false;
+	}
+	const TArray<TObjectPtr<UPlayerUnitModel>>& Members = PartyModel->GetPlayerUnitModels();
+	UPlayerUnitModel* Member = Members.IsValidIndex(MemberIndex)
+		? Members[MemberIndex].Get() : nullptr;
+	USkillComponentModel* SkillComponent = Member != nullptr
+		? Member->GetSkillComponentModel() : nullptr;
+	const FSkillEntry* SkillEntry = SkillComponent != nullptr
+		? SkillComponent->GetSkill(SkillIndex) : nullptr;
+	if (SkillEntry == nullptr || SkillEntry->IsValid() == false)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromSkillData(SkillEntry->mData.Get(), OutDetail);
+	/* 쿨다운은 컴포넌트가 진짜다 -- 전투의 FillSkillDetailUIData와 같은 규칙. */
+	OutDetail.mCooldownTurns = FMath::Max(
+		SkillComponent->GetStaticCooldownDuration(SkillIndex), 0);
+	return true;
+}
+
+bool ARoomGameModeBase::BuildPartyArtifactDetailUI(int32 ArtifactIndex,
+	FCombatArtifactUI& OutDetail) const
+{
+	OutDetail = FCombatArtifactUI();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	const UPartyArtifactComponentModel* PartyArtifacts = PartyModel != nullptr
+		? PartyModel->GetPartyArtifactComponentModel() : nullptr;
+	if (PartyArtifacts == nullptr)
+	{
+		return false;
+	}
+	const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+		PartyArtifacts->GetPartyArtifacts();
+	if (Artifacts.IsValidIndex(ArtifactIndex) == false
+		|| Artifacts[ArtifactIndex] == nullptr)
+	{
+		return false;
+	}
+
+	SkillDetailUIBuilder::FillFromArtifactData(Artifacts[ArtifactIndex], OutDetail);
+	return true;
+}
+
+bool ARoomGameModeBase::GetPartyRosterView(FPartyRosterView& OutView) const
+{
+	/*
+	 * 인벤토리(GetInventoryView)와 같은 규칙 -- 밀지 않고 물어보게 둔다.
+	 * 직업명/초상/스킬 아이콘 해석까지 여기서 끝내고, 위젯은 받은 값만 그린다.
+	 */
+	OutView = FPartyRosterView();
+
+	UPartyModel* PartyModel = GetPartyModel();
+	if (PartyModel == nullptr)
+	{
+		return false;
+	}
+
+	const TArray<TObjectPtr<UPlayerUnitModel>>& Members = PartyModel->GetPlayerUnitModels();
+	for (int32 MemberIndex = 0; MemberIndex < Members.Num(); ++MemberIndex)
+	{
+		const UPlayerUnitModel* Member = Members[MemberIndex].Get();
+		if (Member == nullptr)
+		{
+			// 빈 파티 슬롯은 명단에 싣지 않는다. 상세 왕복은 mMemberIndex 로 한다.
+			continue;
+		}
+
+		FPartyRosterMemberView& Row = OutView.mMembers.AddDefaulted_GetRef();
+		Row.mMemberIndex = MemberIndex;
+		Row.mJobName = GetRosterJobName(Member);
+		Row.mLevel = Member->GetPlayerLevel();
+		Row.mPortrait = GetRosterHeadPortrait(Member);
+
+		if (const UAttributeSetComponentModel* Attributes = Member->GetAttributeComponentModel())
+		{
+			Row.mHP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetHPAttribute()));
+			Row.mMaxHP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UPlayerUnitAttributeSet::GetMaxHPAttribute()));
+			Row.mAP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetActionPointAttribute()));
+			Row.mMaxAP = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetRechargeActionPointAttribute()));
+			Row.mSpeed = FMath::RoundToInt(Attributes->GetAttributeCurrentValue(
+				UUnitAttributeSet::GetRechargeSpeedPointAttribute()));
+		}
+
+		if (const USkillComponentModel* SkillComponent = Member->GetSkillComponentModel())
+		{
+			const TArray<FSkillEntry>& Entries = SkillComponent->GetSkills();
+			for (int32 EntryIndex = 0; EntryIndex < Entries.Num(); ++EntryIndex)
+			{
+				const UStaticSkillData* Skill = Entries[EntryIndex].mData;
+				if (Skill == nullptr)
+				{
+					continue;
+				}
+				FPartyRosterSkillView& SkillRow = Row.mSkills.AddDefaulted_GetRef();
+				SkillRow.mName = Skill->mName;
+				SkillRow.mIcon = Skill->mIcon.LoadSynchronous();
+				/* 상세 조회는 컴포넌트 원본 슬롯 index 로 해야 한다. */
+				SkillRow.mSlotIndex = EntryIndex;
+				if (const UStaticUnitSkillData* UnitSkill = Cast<UStaticUnitSkillData>(Skill))
+				{
+					SkillRow.mActionPointCost = FMath::Max(UnitSkill->mRequiredActionPoint, 0);
+				}
+				if (SkillRow.mIcon == nullptr)
+				{
+					// 아이콘 미설정 DA 는 화면이 이름 글자로 폴백한다. 데이터 소유자가
+					// 알아챌 수 있게 생산자에서 한 번씩 흔적을 남긴다.
+					UE_LOG(LogTemp, Verbose,
+						TEXT("파티 명단 스킬 아이콘 미설정: %s (Member=%d, Slot=%d)"),
+						*Skill->GetName(), MemberIndex, EntryIndex);
+				}
+			}
+		}
+	}
+
+	/*
+	 * 파티 공용 골드/아티팩트도 같은 판에 싣는다. 레일 인벤토리 페이지가
+	 * 이 값만 보고 그린다 -- 조립 규칙(희귀도 색·이름 폴백)은 인벤토리와 같다.
+	 */
+	if (const UAttributeSetComponentModel* PartyAttributes =
+		PartyModel->GetAttributeComponentModel())
+	{
+		OutView.mGold = FMath::RoundToInt(PartyAttributes->GetAttributeCurrentValue(
+			UPartyAttributeSet::GetMoneyAttribute()));
+	}
+	if (const UPartyArtifactComponentModel* PartyArtifacts =
+		PartyModel->GetPartyArtifactComponentModel())
+	{
+		const TArray<TObjectPtr<UStaticArtifactData>>& Artifacts =
+			PartyArtifacts->GetPartyArtifacts();
+		OutView.mArtifacts.Reserve(Artifacts.Num());
+		for (int32 ArtifactIndex = 0; ArtifactIndex < Artifacts.Num(); ++ArtifactIndex)
+		{
+			const UStaticArtifactData* Artifact = Artifacts[ArtifactIndex];
+			if (Artifact == nullptr)
+			{
+				continue;
+			}
+
+			FPartyRosterArtifactView& ArtifactRow = OutView.mArtifacts.AddDefaulted_GetRef();
+			ArtifactRow.mArtifactIndex = ArtifactIndex;
+			ArtifactRow.mName = Artifact->mName.IsEmpty() == false
+				? Artifact->mName
+				: FText::Format(
+					NSLOCTEXT("RoomGameModeBase", "ArtifactFallbackName", "Artifact {0}"),
+					FText::AsNumber(ArtifactIndex + 1));
+			ArtifactRow.mIcon = ResolveRoomArtifactInventoryIcon(Artifact);
+			ArtifactRow.mRarityColor = GetInventoryRarityColor(Artifact->mRarityType);
+			ArtifactRow.mDetail = NSLOCTEXT(
+				"RoomGameModeBase", "PartyArtifact", "Party-wide effect");
+		}
+	}
+
+	// 빈 파티(전원 공석)도 판 자체는 유효하다 -- 거짓은 파티 모델 부재뿐.
+	return true;
 }

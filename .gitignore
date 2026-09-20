@@ -67,6 +67,9 @@ Build/*/**
 
 # Don't ignore icon files in Build
 !Build/**/*.ico
+!Build/Android/res/
+!Build/Android/res/drawable*/
+!Build/Android/res/drawable*/icon.png
 
 # Built data for maps
 *_BuiltData.uasset
@@ -88,6 +91,16 @@ DerivedDataCache/*
 /Content/Audio/
 /Content/**/T_*.uasset
 /Content/**/S_*.uasset
+# 이번 런 화면 배경은 외부 SVN이 아니라 Git PR로 함께 배포한다.
+!/Content/UI/Art/RunFlow/T_*.uasset
+# 승리/패배 결과판은 이 프로젝트 전용 생성 파츠이므로 WBP와 함께 배포한다.
+!/Content/UI/ResultBoards/Art/T_*.uasset
+# 외부 SVN 자산이 아닌, 이 프로젝트에서 생성한 직업별 용병 선택 배경.
+!/Content/UI/MercenaryHire/GeneratedBackgrounds/T_HireGeneratedBG_*.uasset
+# 외부 SVN 원화에서 배경을 분리한 프로젝트 전용 전경 컷아웃.
+!/Content/UI/MercenaryHire/HeroCutouts/T_HireHeroCutout_*_v1.uasset
+# 전투 HUD에서 생성해 WBP가 직접 참조하는 속도 제거/하단 제거 프레임.
+!/Content/UI/Generated/CombatHUD/T_MB_*_v1.uasset
 
 # Doxygen Preiview Output
 /Doxygen/Preview/Output
@@ -102,3 +115,36 @@ __pycache__/
 
 # 이전에 사용하던 파일
 .svnrev
+
+# 굽는 도구가 만든 것과 그 재료. 저장소에 안 둔다.
+#
+# 결과(uasset)는 SVN 에 있고 그림 재료(PNG)와 도구는 각자 손에만 둔다.
+# 여기 두면 같은 그림이 두 벌 들어가고, 도구가 만든 보고서까지 따라 들어온다.
+/Docs/
+/Tools/UI/_*
+/Tools/UI/KayKitUIKit/
+/Tools/UI/*.html
+/Tools/UI/*.json
+__MACOSX/
+
+# 도구가 옆에 흘려 놓는 것들. 전체를 담을 때 딸려 들어온다.
+/work/
+/outputs/
+Packaged/
+.gdep/
+
+# UI 작업용 로컬 도구(목업 편집기·반영 스크립트·메모) -- git 에는 안 올린다 (0808)
+Tools/UI/
+
+# 로컬 확인용 설정 (개인 스위치)
+Config/UserEngine.ini
+
+# Status texture assets are managed in SVN; preserve the import sources in Git.
+!SourceArt/UI/StatusIcons/*_v1.png
+!SourceArt/UI/ArtifactIcons/*_v1.png
+# Project-owned reward mask; the original color atlas remains in SVN.
+!SourceArt/UI/RewardChest/chest_silhouette_v1.png
+!/Content/UI/Reward/Separated/T_RewardChestSilhouette.uasset
+
+# Reviewed monster portrait originals and prompts are stored in SVN SourceArt/UI.
+/SourceArt/UI/MonsterPortraits_20260916/

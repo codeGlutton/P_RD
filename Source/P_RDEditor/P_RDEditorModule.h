@@ -17,5 +17,8 @@ class FP_RDEditorModule : public IModuleInterface
 public:
     void StartupModule() override;
     void ShutdownModule() override;
+
+private:
+    FDelegateHandle mBoardEventTrackEditorHandle;
 };
 

@@ -2,10 +2,10 @@
 
 #include "Components/CheckBox.h"
 #include "Components/Slider.h"
+#include "Engine/GameInstance.h"
 #include "GameMode/RDGameModeBase.h"
 
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Singleton/InstanceSubsystem/PersistentDataSubsystem.h"
 #include "Singleton/InstanceSubsystem/PersistentDataType.h"
 
 void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& ValueModel)
@@ -43,24 +43,26 @@ void USettingsPanelWidget::ApplyValueModel(const FSettingsPanelValueModel& Value
 	}
 	mIsApplyingValueModel = false;
 	SyncText();
+	UpdateGraphicsSelectionIndicators();
 }
 
 void USettingsPanelWidget::RefreshValueModelFromCurrentOptions()
 {
 	FSettingsPanelValueModel CurrentValueModel = mValueModel;
-	if (const UGameInstance* GameInstance = GetGameInstance())
+	if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
 	{
-		if (const UPersistentDataSubsystem* PersistentDataSubsystem = GameInstance->GetSubsystem<UPersistentDataSubsystem>())
+		if (const UOptionPersistData* OptionData = GameModeBase->GetOptionPersistData())
 		{
-			if (const UOptionPersistData* OptionData = PersistentDataSubsystem->GetOptionPersistData())
-			{
-				CurrentValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
-				CurrentValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
-				CurrentValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
-				CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
-				CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
-				CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
-			}
+			CurrentValueModel.mMasterVolume = OptionData->GetVolume(EGameVolumeType::Master);
+			CurrentValueModel.mBgmVolume = OptionData->GetVolume(EGameVolumeType::BGM);
+			CurrentValueModel.mSfxVolume = OptionData->GetVolume(EGameVolumeType::SFX);
+			CurrentValueModel.mUiVolume = OptionData->GetVolume(EGameVolumeType::UI);
+			CurrentValueModel.mUseKoreanLanguage = OptionData->GetLanguage() == ELanguageType::KOREAN;
+			CurrentValueModel.mFpsLimit = OptionData->GetFpsLimit();
+			CurrentValueModel.mQualityLevel = RDSettingsPanel::FromOverallQuality(StaticCast<int32>(OptionData->GetOverallQuality()));
+			CurrentValueModel.mScreenShakeEnabled = OptionData->IsCameraShakeEnabled();
+			CurrentValueModel.mEffectsEnabled = OptionData->IsEffectVFXEnabled();
+			CurrentValueModel.mVibrationEnabled = OptionData->IsVibrationEnabled();
 		}
 	}
 	ApplyValueModel(CurrentValueModel);
@@ -102,9 +104,15 @@ void USettingsPanelWidget::HandleResetButtonClicked()
 void USettingsPanelWidget::HandleLowQualityButtonClicked()
 {
 	mValueModel.mQualityLevel = ESettingsQualityLevel::Low;
+	UpdateGraphicsSelectionIndicators();
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(360p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
+		}
 	}
 }
 
@@ -118,9 +126,15 @@ void USettingsPanelWidget::HandleLowQualityButtonClicked()
 void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 {
 	mValueModel.mQualityLevel = ESettingsQualityLevel::Medium;
+	UpdateGraphicsSelectionIndicators();
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(720p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
+		}
 	}
 }
 
@@ -134,9 +148,15 @@ void USettingsPanelWidget::HandleMediumQualityButtonClicked()
 void USettingsPanelWidget::HandleHighQualityButtonClicked()
 {
 	mValueModel.mQualityLevel = ESettingsQualityLevel::High;
+	UpdateGraphicsSelectionIndicators();
 	if (mIsApplyingValueModel == false)
 	{
 		OnQualityRequested.Broadcast(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel));
+		// 전용 수신자가 생기기 전까지의 기본 적용: 품질 단계를 목표 렌더 해상도(1080p)로 바꿔 프로필에 반영한다(FPS와 동일 패턴).
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetOverallQuality(StaticCast<EOverallQualityType>(RDSettingsPanel::ToQualityRequestValue(mValueModel.mQualityLevel)));
+		}
 	}
 }
 
@@ -215,6 +235,10 @@ void USettingsPanelWidget::HandleScreenShakeChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnScreenShakeChanged.Broadcast(mValueModel.mScreenShakeEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetCameraShakeEnabled(mValueModel.mScreenShakeEnabled);
+		}
 	}
 }
 
@@ -231,6 +255,10 @@ void USettingsPanelWidget::HandleVibrationChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnVibrationChanged.Broadcast(mValueModel.mVibrationEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->GetOptionPersistData()->SetVibrationEnabled(mValueModel.mVibrationEnabled);
+		}
 	}
 }
 
@@ -260,6 +288,7 @@ void USettingsPanelWidget::HandleMasterVolumeChanged(float Value)
 void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 {
 	mValueModel.mFpsLimit = 30;
+	UpdateGraphicsSelectionIndicators();
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
@@ -274,6 +303,7 @@ void USettingsPanelWidget::HandleFpsThirtyButtonClicked()
 void USettingsPanelWidget::HandleFpsSixtyButtonClicked()
 {
 	mValueModel.mFpsLimit = 60;
+	UpdateGraphicsSelectionIndicators();
 	if (mIsApplyingValueModel == false)
 	{
 		OnFpsLimitRequested.Broadcast(mValueModel.mFpsLimit);
@@ -303,6 +333,7 @@ void USettingsPanelWidget::HandleLanguageKoreanButtonClicked()
 		}
 		SyncText();
 	}
+	UpdateGraphicsSelectionIndicators();
 }
 
 /** @brief English 선택을 이벤트로 올리고 로컬라이제이션에 기본 적용한다. */
@@ -318,6 +349,7 @@ void USettingsPanelWidget::HandleLanguageEnglishButtonClicked()
 		}
 		SyncText();
 	}
+	UpdateGraphicsSelectionIndicators();
 }
 
 /** @brief 전투 이펙트 표시 체크 상태를 이벤트로 올린다(수신 VFX 시스템 미구현 - 값 전달만). */
@@ -327,5 +359,9 @@ void USettingsPanelWidget::HandleEffectsChanged(bool bChecked)
 	if (mIsApplyingValueModel == false)
 	{
 		OnEffectsChanged.Broadcast(mValueModel.mEffectsEnabled);
+		if (ARDGameModeBase* GameModeBase = GetWorld()->GetAuthGameMode<ARDGameModeBase>())
+		{
+			GameModeBase->SetEffectVFXEnabled(mValueModel.mEffectsEnabled);
+		}
 	}
 }

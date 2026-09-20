@@ -152,6 +152,17 @@ void UCinematicWidget::SetCinematicViewportZOrder(int32 InViewportZOrder)
 	mViewportZOrder = InViewportZOrder;
 }
 
+bool UCinematicWidget::SetCinematicPlaybackRate(float InPlaybackRate)
+{
+	if (InPlaybackRate <= 0.0f || (mIgnoreCombatPlayback && !FMath::IsNearlyEqual(InPlaybackRate, 1.f)))
+	{
+		return false;
+	}
+
+	mRequestedPlaybackRate = InPlaybackRate;
+	return ApplyRequestedCinematicPlaybackRate();
+}
+
 /**
  * @brief Slate 위젯 트리를 구성한다(검은 배경 + cover 영상 이미지 + 로딩 대기 레이어).
  * @details 미디어 오브젝트를 확보하고 영상 원본 해상도를 읽어 브러시를 세팅한 뒤,
@@ -234,8 +245,19 @@ TSharedRef<SWidget> UCinematicWidget::RebuildWidget()
  * @brief 위젯 소멸 시 타이머와 미디어 재생을 정리한다.
  * @details 기본 시네마틱 타이머와 페이드 타이머를 모두 해제하고 미디어를 정지해 누수를 방지한다.
  */
+void UCinematicWidget::CancelCinematic()
+{
+	OnEndCinematicAnimation.Unbind();
+	mCinematicFinished = true;
+	ClearDefaultCinematicTimer();
+	ClearCinematicFadeTimer();
+	StopCinematicMedia();
+	RemoveFromParent();
+}
+
 void UCinematicWidget::NativeDestruct()
 {
+	OnEndCinematicAnimation.Unbind();
 	ClearDefaultCinematicTimer();   // 영상 없을 때 쓰는 고정 길이 타이머 해제
 	ClearCinematicFadeTimer();      // 진행 중인 페이드 타이머 해제
 
@@ -258,6 +280,9 @@ void UCinematicWidget::PlayCinematic(FOnEndCinematicAnimation Callback)
 
 	OnEndCinematicAnimation = MoveTemp(Callback);  // 종료 콜백 등록(불필요 복사 방지 위해 이동)
 	mCinematicFinished = false;                    // 종료 플래그 리셋
+	mRequestedPlaybackRate = 1.0f;                 // 매 재생은 정상 속도에서 시작하고, 로딩 완료 시 GameMode가 가속한다.
+	mUsingAcceleratedCinematicSource = false;
+	mAcceleratedCinematicStartTime = FTimespan::Zero();
 	ClearDefaultCinematicTimer();
 	ClearCinematicFadeTimer();
 	HideLoadingWaitScreen();                       // 이전 재생에서 남은 로딩막 제거
@@ -280,8 +305,9 @@ void UCinematicWidget::FinishCinematic()
 
 	if (OnEndCinematicAnimation.IsBound())
 	{
-		OnEndCinematicAnimation.Execute(this);
-		OnEndCinematicAnimation.Unbind();   // 1회성 콜백이므로 실행 후 즉시 해제
+		FOnEndCinematicAnimation Callback = MoveTemp(OnEndCinematicAnimation);
+		OnEndCinematicAnimation.Unbind();
+		Callback.Execute(this);   // 1회성 콜백이므로 실행 후 즉시 해제
 	}
 }
 

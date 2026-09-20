@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   SkillEffectLayer.h
  * @brief  하나의 스킬 모션 내에서 적용하는 단일 효과 단위 구현 헤더
  * @author 모호재
@@ -9,9 +9,35 @@
 
 #include "RDMinimal.h"
 #include "SRPGFramework/SRPGFrameworkType.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
 #include "SkillEffectLayer.generated.h"
 
 class IBoardCombatTarget;
+class UBoardCombatTargetSnapshotData;
+
+struct FSkillEffectCommitParams
+{
+public:
+	FSkillEffectCommitParams(
+		TScriptInterface<IBoardCombatTarget> Instigator,
+		TObjectPtr<UBoardCombatTargetSnapshotData> InstigatorSnapshot,
+		TArray<TScriptInterface<IBoardCombatTarget>>& Targets,
+		TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& TargetSnapshots,
+		TArray<FTileIndex>& FinalTileIndexes,
+		FTileIndex& AimedTileIndex
+	);
+
+public:
+	TScriptInterface<IBoardCombatTarget> mInstigator = nullptr;
+	TObjectPtr<UBoardCombatTargetSnapshotData> mInstigatorSnapshot = nullptr;
+
+	TArray<TScriptInterface<IBoardCombatTarget>>& mTargets;
+	TArray<TObjectPtr<UBoardCombatTargetSnapshotData>>& mTargetSnapshots;
+
+public:
+	const TArray<FTileIndex>& mFinalTileIndexes;
+	FTileIndex mAimedTileIndex = FTileIndex::Invalid;
+};
 
 USTRUCT(BlueprintType)
 struct P_RD_API FSkillEffectLayer
@@ -22,9 +48,52 @@ public:
 	virtual ~FSkillEffectLayer() = default;
 
 public:
-	virtual void ClearPointEffect(IBoardCombatTarget* ActorModel) const {}
+	virtual TArray<FActiveTacticalEffectHandle> ApplyFactorEffect(IBoardCombatTarget* ActorModel, const UBoardCombatTargetSnapshotData* Snapshot) const
+	{ 
+		return TArray<FActiveTacticalEffectHandle>();
+	}
+	virtual void ClearFactorEffect(IBoardCombatTarget* ActorModel, TArray<FActiveTacticalEffectHandle>& Handles) const {}
 
 public:
-	virtual void ApplyPointEffect(IBoardCombatTarget* ActorModel, float DiceSum) const {}
-	virtual void CommitEffect(IBoardCombatTarget* ActorModel, const TArray<FTileIndex>& TargetTileIndexes, const TArray<IBoardCombatTarget*>& OtherCombatTargets, float DiceSum) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
+	virtual void CommitEffect(const FSkillEffectCommitParams& Params) const PURE_VIRTUAL(FSkillEffectLayer::CommitEffect, return; );
+
+public:
+	virtual FText MakeDescription() const PURE_VIRTUAL(FSkillEffectLayer::MakeDescription, return FText::GetEmpty(); );
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_UniqueTagBase : public FSkillEffectLayer
+{
+	GENERATED_BODY()
+
+public:
+	virtual TSubclassOf<UTacticalEffect> GetTagEffectClass() const;
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+
+public:
+	virtual FText GetTagDisplayName() const { return FText::GetEmpty(); }
+	FText MakeDescription() const override;
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_TagBase : public FSkillEffectLayer_UniqueTagBase
+{
+	GENERATED_BODY()
+
+public:
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
+	FText MakeDescription() const override;
+
+public:
+	UPROPERTY(Category = "Tag", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TagGain"))
+	int32 mTagGain = 0;
+};
+
+USTRUCT(BlueprintType)
+struct P_RD_API FSkillEffectLayer_AttributeTagBase : public FSkillEffectLayer_TagBase
+{
+	GENERATED_BODY()
+
+public:
+	void CommitEffect(const FSkillEffectCommitParams& Params) const override;
 };

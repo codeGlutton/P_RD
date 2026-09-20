@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   TacticalEffect_Weakness.h
  * @brief  Weakness 이펙트 정의 헤더
  * @author 모호재
@@ -7,21 +7,45 @@
 
 #pragma once
 
-#include "TAS/Effect/TacticalEffect.h"
+#include "TAS/Effect/Tag/TacticalEffect_StatusTag.h"
 #include "TacticalEffect_Weakness.generated.h"
 
-/**
- * @brief  Weakness 이펙트
- */
+ /**
+  * @brief  Weakness 이펙트
+  */
 UCLASS()
-class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect
+class P_RD_API UTacticalEffect_Weakness : public UTacticalEffect_DurationStatus
 {
 	GENERATED_BODY()
 
 public:
 	UTacticalEffect_Weakness();
+};
 
-	/* UTacticalEffect 상속 */
+/**
+ * @brief  Weakness 변화 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_AddWeakness : public UTacticalEffect_AddStatus
+{
+	GENERATED_BODY()
+
 public:
-	void OnExecuted(FActiveTacticalEffectsContainer& ActiveTEContainer, FTacticalEffectSpec& TESpec) const override;
+	UTacticalEffect_AddWeakness();
+};
+
+/**
+ * @brief  Weakness 부여 이펙트
+ */
+UCLASS()
+class P_RD_API UTacticalEffect_GetWeakness : public UTacticalEffect_GetStatus
+{
+	GENERATED_BODY()
+
+public:
+	UTacticalEffect_GetWeakness();
+
+	/* UTacticalEffect_GetStatus 상속 */
+public:
+	bool CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const override;
 };

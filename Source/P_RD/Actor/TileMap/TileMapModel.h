@@ -15,6 +15,7 @@
 #include "TileMapModel.generated.h"
 
 class UBoardActorModel;
+class UStaticUnitSkillData;
 struct FPresentationBarrier;
 
 /**
@@ -40,6 +41,28 @@ protected:
 };
 
 /**
+ * @brief 이동경로 표시용 타일정보
+ * @details 타일좌표와 경유지 여부로 구성
+ */
+USTRUCT(BlueprintType)
+struct FMovePathTile
+{
+	GENERATED_BODY()
+
+public:
+	FMovePathTile() = default;
+	FMovePathTile(const FTileIndex& InIndex, bool bInWaypoint = false)
+		: mIndex(InIndex), mIsWaypoint(bInWaypoint) {}
+
+	// @brief 타일 인덱스
+	UPROPERTY(Category = "MovePathTile", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Index"))
+	FTileIndex mIndex;
+	// @brief 경유지 여부
+	UPROPERTY(Category = "MovePathTile", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "Is Waypoint"))
+	bool mIsWaypoint = false;
+};
+
+/**
  * @brief 모델이 뷰(ATileMap)의 시각/컴포넌트 정보가 필요한 좌표 변환을 질의하기 위한 델리깃들
  * @details single-cast RetVal — 반환값을 받아야 하므로 멀티캐스트 불가.
  *          non-dynamic이라 UPROPERTY가 아니며 직렬화/네트워크 복제 안 됨(런타임 바인딩 전용).
@@ -53,7 +76,7 @@ DECLARE_DELEGATE_RetVal_OneParam(FTileIndex, FWorldToTileIndexDelegate, const FV
  * @details 좌표 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetMovePath로 바인딩하고, 미바인딩(심)이면 표시되지 않는다.
  *          빈 배열을 넘기면 표시 해제(SetMovePath의 빈 배열 처리)와 같다.
  */
-DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
+DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FMovePathTile>&);
 
 /**
  * @brief 모델이 뷰(ATileMap)에 타일 강조(하이라이트) 표시/해제를 요청하는 델리깃
@@ -62,6 +85,14 @@ DECLARE_DELEGATE_OneParam(FSetMovePathDelegate, const TArray<FTileIndex>&);
  */
 DECLARE_DELEGATE_TwoParams(FSetTileHighlightDelegate, const TArray<FTileIndex>&, ETileHighlightFlag);
 DECLARE_DELEGATE_OneParam(FClearTileHighlightDelegate, ETileHighlightFlag);
+
+/**
+ * @brief 모델이 뷰(ATileMap)에 위협 범위 표시/해제를 요청하는 델리깃
+ * @details 강조 델리깃과 동일하게 non-dynamic — 라이브에서 뷰가 SetThreatRange/ClearThreatRange로
+ *          바인딩하고, 미바인딩(심 복제본)이면 표시되지 않는다.
+ */
+DECLARE_DELEGATE_TwoParams(FSetThreatRangeDelegate, const TArray<FTileIndex>&, const TArray<FTileIndex>&);
+DECLARE_DELEGATE(FClearThreatRangeDelegate);
 
 /**
  * @brief  타일맵 데이터 모델 클래스
@@ -141,6 +172,26 @@ public:
 	 */
 	static ETileActorDirection TileDeltaToDirection(const FTileIndex& From, const FTileIndex& To, ETileActorDirection Fallback);
 
+	/**
+	 * @brief From->To 벡터 방향으로 하나 더 나아갈 때 8방향(직각/대각)에 가까운 방향으로 양자화 해서 전진
+	 * @details
+	 * 벡터가 직각/대각이 아닌 타일에서 한 개 더 나아갈 때 어떤 타일이 되는 지 계산
+	 * 미는 방향이 8방향이 아니므로 가까운 직각/대각 선분 방향으로 미는 걸로 처리
+	 * 예) (0,0)->(3,1) 타일에서 한 단계 더 나가면 (4,1)인가? (4,2)인가?
+	 *   고민하지 말고, 벡터((0,0)->(3.1))은 약 18도니까 직각 선분과 가까움
+	 *   따라서 직각의 진행방향을 따라해서 다음 타일은 (4,1)이 됨
+	 * @return FTileIndex 단위 스텝. 최종 위치가 아님
+	 *   양자화 된 단위니까 이걸 기존 타일인덱스에 더해주면 다음 스텝의 위치가 됨
+	 */
+	static FTileIndex TileDeltaToStep(const FTileIndex& From, const FTileIndex& To);
+
+	/**
+	 * @brief 방향 enum을 타일 한 칸 스텝으로 변환
+	 * @details 함정처럼 미는 쪽과 밀리는 쪽이 같은 타일이면 델타 벡터로 방향을 계산할 수 없으므로,
+	 *          고정 방향 enum에서 스텝을 얻을 때 사용
+	 */
+	static FTileIndex DirectionToTileStep(ETileActorDirection Direction);
+
 	/* 좌표 변환 (뷰 질의) */
 	/**
 	 * @brief 타일 트랜스폼(인덱스+방향)을 월드 트랜스폼으로 변환 — 뷰에 질의
@@ -178,6 +229,12 @@ public:
 	FSetTileHighlightDelegate mSetTileHighlightDelegate;
 	FClearTileHighlightDelegate mClearTileHighlightDelegate;
 
+	/**
+	 * @brief 위협 범위 표시/해제 요청 델리깃 (라이브에서 ATileMap이 SetThreatRange/ClearThreatRange로 바인딩, 미바인딩=심이면 표시 없음)
+	 */
+	FSetThreatRangeDelegate mSetThreatRangeDelegate;
+	FClearThreatRangeDelegate mClearThreatRangeDelegate;
+
 	/* 이동 / 범위 조회 */
 	/**
 	 * @brief 기준 좌표에서 이동 가능한 타일 목록 반환
@@ -187,28 +244,30 @@ public:
 	 *
 	 * @param[in] Origin : 기준 좌표
 	 * @param[in] MoveDistance : 이동 거리 (1=인접 칸)
+	 * @param[in] IgnoreBlocker : 점유 판정에서 제외할 액터 (이동 빌드 중 자기 출발 타일 복귀 허용 등). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 도달 가능한 타일 좌표 목록 (Origin 제외, 맵 밖 제외)
 	 */
-	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance) const;
+	TArray<FTileIndex> GetReachableTiles(const FTileIndex& Origin, int32 MoveDistance, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 시작→목표 최단 이동경로 계산 (장애물/유닛 회피)
 	 * @details
-	 * GetReachableTiles와 동일한 4방향(직교) BFS 규칙을 쓴다 — 도달 가능성과 경로 존재가 일치하도록.
-	 * 장애물·유닛(IsOccupied) 칸은 통과·도착 불가. 여러 최단경로 중 이웃 탐색 순서(직교 4방향)로 하나를 고른다.
-	 * 시작 칸은 점유돼 있어도(자기 유닛이 선 칸) 출발점으로 허용한다.
-	 *
+	 * 도달 범위 계산과 동일한 4방향(직교) BFS 규칙 사용
+	 * 도착지에 점유하는 게 있으면 도착 불가하지만 파라미터로 무시할 수 있음
+	 * 시작 칸은 유닛 존재 허용
 	 * @param[in] Start : 시작 좌표
 	 * @param[in] Goal  : 목표 좌표
+	 * @param[in] IgnoreBlocker : 점유 판정에서 제외할 액터 (이동 빌드 중 자기 출발 타일 복귀 허용 등). 없으면 nullptr
+	 * @param[in] bAllowOccupiedGoal : 도착지에 점유하는 게 있어도 도착 허용할지 여부
 	 * @return TArray<FTileIndex> : Start부터 Goal까지 순서대로의 타일 목록(양 끝 포함). 경로가 없으면 빈 배열
 	 */
-	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal) const;
+	TArray<FTileIndex> FindPath(const FTileIndex& Start, const FTileIndex& Goal, const UBoardActorModel* IgnoreBlocker = nullptr, bool bAllowOccupiedGoal = false) const;
 
 	/**
 	 * @brief 목표지점을 기준으로 모든 타일의 경로거리를 계산
 	 * @details
 	 * 장애물이나 유닛 등으로 인해 스킬 사용이 안될 시 플레이어에게 접근해야 하는데,
-	 * GetReachableTiles()로는 잡히지 않는 우회하는 비용도 계산해서 표를 작성한 후,
+	 * 단순 도달 범위로는 잡히지 않는 우회하는 비용도 계산해서 표를 작성한 후,
 	 * 가장 비용이 적은 타일로 이동
 	 * @param[in] Target : 거리 기준이 되는 목표 좌표
 	 * @param[in] IgnoreBlocker : 통과 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
@@ -223,6 +282,13 @@ public:
 	 * @param[in] Goal  : 목표 좌표
 	 */
 	void SetMovePath(const FTileIndex& Start, const FTileIndex& Goal);
+
+	/**
+	 * @brief 경유지 여부가 포함된 표시용 경로를 뷰에 그대로 전달
+	 * @details 호출자가 경로와 경유지 플래그를 직접 구성하는 경우 사용 (경유지 이동 빌드)
+	 * @param[in] PathTiles : 표시용 경로 타일 목록
+	 */
+	void SetMovePath(const TArray<FMovePathTile>& PathTiles);
 
 	/**
 	 * @brief 이동경로 표시 해제 요청 (빈 경로를 뷰에 전달)
@@ -244,6 +310,20 @@ public:
 	 */
 	void ClearTileHighlight(ETileHighlightFlag Flag);
 
+	/* 위협 범위 표시 */
+	/**
+	 * @brief 적 위협 범위 표시 요청 (뷰의 SetThreatRange로 위임)
+	 * @details 미바인딩(심 복제본)이면 아무 일도 하지 않는다. 빈 배열일 경우 그리지 않음
+	 * @param[in] MoveTiles : 최대 이동 범위 타일 목록
+	 * @param[in] AttackTiles : 최대 공격 범위 타일 목록
+	 */
+	void SetThreatRange(const TArray<FTileIndex>& MoveTiles, const TArray<FTileIndex>& AttackTiles);
+
+	/**
+	 * @brief 적 위협 범위 표시 해제 요청 (뷰의 ClearThreatRange로 위임)
+	 */
+	void ClearThreatRange();
+
 	/**
 	 * @brief 기준 좌표에서 조준 가능한 타일 목록 반환
 	 * @details
@@ -254,7 +334,7 @@ public:
 	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
 	 * @param[in] Pattern : 조준 패턴
 	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
-	 * @param[in] bIndirect : 곡사 여부 (장애물/유닛 너머 조준 가능한지)
+	 * @param[in] BlockerLayers : 조준 시야를 막는 레이어 (None이면 아무것도 조준을 막지 않음)
 	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
 	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 조준 가능한 타일 좌표 목록 (맵 밖 좌표 제외)
@@ -264,46 +344,155 @@ public:
 		int32 Range,
 		EAimPattern Pattern,
 		bool bIncludeOccupied,
-		bool bIndirect,
+		ETileLayerFlag BlockerLayers,
 		const UBoardActorModel* Incoming = nullptr,
 		const UBoardActorModel* IgnoreBlocker = nullptr
+	) const;
+
+	/**
+	 * @brief Origin 타일에서 Target 타일을 조준 가능한 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 조준 대상 좌표
+	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
+	 * @param[in] Pattern : 조준 패턴
+	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
+	 * @param[in] BlockerLayers : 조준 시야를 막는 레이어 (None이면 아무것도 조준을 막지 않음)
+	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
+	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
+	 * @return bool : 조준 가능하면 true
+	 */
+	bool CanAim(
+		const FTileIndex& Origin,
+		const FTileIndex& Target,
+		int32 Range,
+		EAimPattern Pattern,
+		bool bIncludeOccupied,
+		ETileLayerFlag BlockerLayers,
+		const UBoardActorModel* Incoming = nullptr,
+		const UBoardActorModel* IgnoreBlocker = nullptr
+	) const;
+
+	/**
+	 * @brief 시전 타일에서부터 조준 타일로 가면서 타겟 패턴을 사용해서 타겟이 되는 타일들을 수집
+	 * @details
+	 * 수집된 타일들은 각각 영향 범위의 중심 타일이 됨. 전체 영향 범위를 계산할 때 중복은 호출하는 쪽에서 처리.
+	 * TargetOnly 패턴은 조준 타일 한 칸만 포함.
+	 * LineToTarget 패턴은 시전자→조준 타일 직선이 지나는 칸들을 시전자 제외,
+	 * 가까운 순으로 포함. 조준 타일은 어떤 패턴에서든 항상 포함.
+	 *
+	 * @param[in] Caster : 시전자 좌표
+	 * @param[in] Target : 조준 타일 좌표
+	 * @param[in] Pattern : 타겟 범위 패턴
+	 * @return TArray<FTileIndex> : 타겟 타일 좌표 목록 (시전자에서 가까운 순)
+	 */
+	TArray<FTileIndex> GetTargetTiles(
+		const FTileIndex& Caster,
+		const FTileIndex& Target,
+		ETargetPattern Pattern
 	) const;
 
 	/**
 	 * @brief 스킬 발동 시 영향받는 타일 목록 반환
 	 * @details
 	 * Target을 중심으로 패턴에 따라 영향 타일을 계산한다.
-	 * Beam 패턴은 Caster→Target 벡터로 방향을 결정한다.
 	 * Size가 0이면 Target 한 칸만 반환. Single 패턴은 Size 무시.
 	 *
-	 * @param[in] Caster : 시전자 좌표 (Beam 패턴의 방향 계산용)
 	 * @param[in] Target : 영향 범위 중심 좌표
 	 * @param[in] Pattern : 영향 범위 패턴
 	 * @param[in] Size : 범위 크기 (0=점, 이후 확장)
-	 * @param[in] bPenetrate : 관통 여부 (장애물 너머 타일도 포함)
+	 * @param[in] BlockerLayers : 영향 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
+	 * @param[in] IgnoreBlocker : 확산 차단에서 제외할 액터 (이동 후 위치 평가처럼 자리를 비울 예정인 유닛). 없으면 nullptr
 	 * @return TArray<FTileIndex> : 영향받는 타일 좌표 목록 (맵 밖 좌표 제외)
 	 */
 	TArray<FTileIndex> GetEffectTiles(
-		const FTileIndex& Caster,
 		const FTileIndex& Target,
 		EEffectPattern Pattern,
 		int32 Size,
-		bool bPenetrate
+		ETileLayerFlag BlockerLayers,
+		const UBoardActorModel* IgnoreBlocker = nullptr
 	) const;
 
 	/**
-	 * @brief 밀치기 시 밀려나는 액터의 최종 도착 좌표 계산 (순수 계산, 뷰 비의존)
+	 * @brief 적 위협 범위(최대이동범위/최대공격범위) 계산
 	 * @details
-	 * Pusher→Pushed 방향을 각 축 부호로 8방향 단위 스텝화해(대각 포함) Pushed에서부터 한 칸씩 전진시킨다.
-	 * 다음 칸이 맵 밖이거나 장애물/유닛(IsOccupied)이면 더 밀리지 않고 직전 칸에서 멈춘다.
-	 * 코너 컷(대각 틈새 통과)은 시야 판정과 동일하게 허용한다 — 목적지 칸만 검사한다.
-	 * 첫 칸부터 막히면(또는 Pusher==Pushed로 방향이 없으면) Pushed 그대로 반환한다.
-	 * @param[in] Pusher : 미는 쪽 좌표 (방향 계산용)
-	 * @param[in] Pushed : 밀리는 쪽 좌표 (전진 시작점)
-	 * @param[in] MaxDistance : 최대 밀치기 칸 수 (0 이하이면 Pushed 그대로)
-	 * @return FTileIndex : 밀려난 최종 좌표 (못 밀리면 Pushed)
+	 * 최대이동범위: 행동력 전부를 이동에 쓸 때 도달 가능한 타일 + 원점
+	 * 최대공격범위: "이동비용 + 스킬 시전비용 ≤ 행동력"인 타일에서 각 스킬로 조준 가능한 타일의 합집합
+	 * 조준 가능한 타일만 포함하며 이펙트 확산은 포함하지 않음
+	 * @param[in] Origin : 적의 현재 타일
+	 * @param[in] ActionPoint : 이동과 스킬 시전이 나눠 쓰는 행동력
+	 * @param[in] Skills : 스킬 데이터 목록 (빈 슬롯 nullptr 허용, 쿨다운 제외는 호출부 책임)
+	 * @param[in] Self : 계획 주체 (이동으로 자리를 비울 예정이므로 통과/차폐 판정에서 제외)
+	 * @param[out] MoveTiles : 최대 이동 범위 타일 목록
+	 * @param[out] AttackTiles : 최대 공격 범위 타일 목록
 	 */
-	FTileIndex GetPushDestination(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
+	void GetThreatRanges(
+		const FTileIndex& Origin,
+		int32 ActionPoint,
+		const TArray<const UStaticUnitSkillData*>& Skills,
+		const UBoardActorModel* Self,
+		OUT TArray<FTileIndex>& MoveTiles,
+		OUT TArray<FTileIndex>& AttackTiles
+	) const;
+
+	/**
+	 * @brief 밀치기 시 밀려나는 경로 계산
+	 * @details
+	 * - Pusher와 Pushed를 밀었을 때 밀려나는 경로를 가까운곳부터 먼곳 순서로 배열로 저장
+	 * @note
+	 * - Pusher->Pushed 벡터 방향으로 미는 게 원칙
+	 * - 만약, 직각/대각 방향이 아닌 경우 가까운 직각/대각 방향을 사용해서 민다.
+	 * - Pusher->Pushed 사이에 장애물이 시야를 가리면 밀지 못함 (유닛은 관통)
+	 * - Pushed 뒤에 장애물/유닛이 있으면 밀리지 않음
+	 * @param[in] Pusher 미는 쪽 좌표 (방향 계산용)
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
+	 */
+	TArray<FTileIndex> GetPushPath(const FTileIndex& Pusher, const FTileIndex& Pushed, int32 MaxDistance) const;
+
+	/**
+	 * @brief 고정 방향 밀치기 경로 계산 (함정/기믹처럼 미는 유닛 없이 방향만 있는 경우)
+	 * @details
+	 * - 함정은 밀리는 유닛과 같은 타일이라 시야(LOS) 검사 없음
+	 * - 막히는 규칙은 기존 GetPushPath와 동일 (뒤가 막히면 직전까지, 맵 밖으로는 안 밀림)
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] Direction 밀치는 방향 (함정 데이터의 고정 방향)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
+	 */
+	TArray<FTileIndex> GetPushPath(const FTileIndex& Pushed, ETileActorDirection Direction, int32 MaxDistance) const;
+
+	/**
+	 * @brief 당기기 경로 계산 (대상을 시전자 쪽으로 최대 MaxDistance칸 끌어옴)
+	 * @details
+	 * - 경로는 밀치기와 같은 8방향 직선 (Pulled->Puller 방향을 가까운 직각/대각으로 양자화)
+	 * - Puller와 Pulled 사이에 장애물이 시야를 가리면 당기지 못함 (유닛은 관통)
+	 * - 정지 조건: MaxDistance 소진 / 다음 칸이 막힘 / 현재 칸이 Puller와 붙음 / 다음 칸이 Puller를 지나침
+	 *   (비스듬한 위치라 직선으로는 면에 못 붙는 경우 대각선 옆에서 멈춤)
+	 * - 붙음 판정은 IsPullAdjacent가 결정
+	 * @param[in] Puller 당기는 쪽 좌표 (방향 계산 및 정지 기준)
+	 * @param[in] Pulled 당겨지는 쪽 좌표 (전진 시작점)
+	 * @param[in] MaxDistance 최대 당기기 칸 수
+	 * @return TArray<FTileIndex> 당겨지는 위치부터 도착까지의 경로. 당겨지지 않으면 Pulled 위치 한 개
+	 */
+	TArray<FTileIndex> GetPullPath(const FTileIndex& Puller, const FTileIndex& Pulled, int32 MaxDistance) const;
+
+	/**
+	 * @brief 당기기 정지 판정 - 대상 칸이 당기는 쪽과 붙었는지
+	 * @details 현재 규칙은 4방향 면 접촉 (대각선은 붙은 것으로 보지 않음). 규칙이 바뀌면 이 함수만 수정
+	 * @param[in] Tile 검사할 칸 (당겨지는 쪽의 현재 위치)
+	 * @param[in] Puller 당기는 쪽 좌표
+	 * @return 붙었으면 true
+	 */
+	static bool IsPullAdjacent(const FTileIndex& Tile, const FTileIndex& Puller);
+
+	/**
+	 * 진입하려는 액터가 해당 타일에 막히는지 검사
+	 * @param TileIndex 검사할 타일 인덱스
+	 * @param Incoming 진입하려는 액터
+	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
+	 */
+	bool IsBlocked(const FTileIndex& TileIndex, const UBoardActorModel* Incoming) const;
 
 	/**
 	 * 진입 액터를 해당 타일에 배치할 수 있는지 검사하는 함수
@@ -429,12 +618,15 @@ protected:
 
 private:
 	/**
-	 * 진입 액터가 해당 타일에 막히는지 검사하는 함수
-	 * @param TileIndex 검사할 타일 인덱스
-	 * @param Incoming 진입하려는 액터
-	 * @return 막힘 여부 (맵 범위 밖은 막힘으로 간주)
+	 * @brief 밀치기 전진 루프 공용부 (두 GetPushPath가 공유)
+	 * @details Pushed에서 Step 방향으로 막힐 때까지 전진하며 지나간 칸을 기록.
+	 *          방향 결정과 시야(LOS) 검사는 각 GetPushPath 책임
+	 * @param[in] Pushed 밀리는 쪽 좌표 (전진 시작점)
+	 * @param[in] Step 한 칸 전진 스텝 (8방향 양자화 또는 방향 enum 변환 결과)
+	 * @param[in] MaxDistance 최대 밀치기 칸 수
+	 * @return TArray<FTileIndex> 밀리는 위치부터 도착까지의 경로. 밀리지 않으면 Pushed 위치 한 개
 	 */
-	bool IsBlocked(const FTileIndex& TileIndex, const UBoardActorModel* Incoming) const;
+	TArray<FTileIndex> BuildPushPath(const FTileIndex& Pushed, const FTileIndex& Step, int32 MaxDistance) const;
 
 	/**
 	 * 진입 액터가 덮어쓸(교체할) 기존 액터들을 반환하는 함수
@@ -469,6 +661,37 @@ private:
 
 	/* 범위 계산 헬퍼 */
 	/**
+	 * @brief Target 타일이 조준 패턴의 기하 범위 안에 있는 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 검사할 좌표
+	 * @param[in] Range : 사거리 (1=인접 칸, Single은 무시)
+	 * @param[in] Pattern : 조준 패턴
+	 * @return bool : 패턴 범위 안이면 true
+	 */
+	bool IsInAimPattern(const FTileIndex& Origin, const FTileIndex& Target, int32 Range, EAimPattern Pattern) const;
+
+	/**
+	 * @brief 시야 차폐 또는 도착 타일 점유로 조준이 막혔는 지 판정
+	 * @param[in] Origin : 기준 좌표
+	 * @param[in] Target : 조준 대상 좌표
+	 * @param[in] Pattern : 조준 패턴 (직선 패턴이면서 직사일 때만 시야 검사)
+	 * @param[in] bIncludeOccupied : 점유된 타일(장애물/유닛)을 조준 가능으로 포함할지
+	 * @param[in] BlockerLayers : 조준 시야를 막는 레이어 (None이면 아무것도 조준을 막지 않음)
+	 * @param[in] Incoming : 교체할 액터. 교체가 없을 경우는 nullptr
+	 * @param[in] IgnoreBlocker : 시야 차폐에서 제외할 액터. 없으면 nullptr
+	 * @return bool : 막혔으면 true
+	 */
+	bool IsAimBlocked(
+		const FTileIndex& Origin,
+		const FTileIndex& Target,
+		EAimPattern Pattern,
+		bool bIncludeOccupied,
+		ETileLayerFlag BlockerLayers,
+		const UBoardActorModel* Incoming,
+		const UBoardActorModel* IgnoreBlocker
+	) const;
+
+	/**
 	 * @brief 원점에서 특정 방향으로 Range만큼 뻗는 직선에 포함되는 타일을 수집
 	 * @details
 	 * 한 칸씩 전진하며 Out에 누적하고, 맵 밖으로 나가면 그 방향을 종료한다. 원점 자신은 포함하지 않는다.
@@ -481,18 +704,19 @@ private:
 	void AppendRayTiles(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, TArray<FTileIndex>& Out) const;
 
 	/**
-	 * @brief 원점에서 특정 방향으로 Range만큼 뻗되, 관통하지 않으면 점유 칸에서 멈추는 직선을 수집
+	 * @brief 원점에서 특정 방향으로 Range만큼 뻗되, 차단 레이어의 액터가 있는 칸에서 멈추는 직선을 수집
 	 * @details
-	 * AppendRayTiles와 달리, bPenetrate가 false면 장애물/유닛(IsOccupied) 칸을 만났을 때
-	 * 그 칸까지 포함한 뒤 더 진행하지 않는다(맞고 멈춤). true면 점유와 무관하게 Range 한도까지 진행한다.
-	 * 영향범위 Cross/Star/Beam 패턴용. 원점 자신은 포함하지 않는다.
+	 * AppendRayTiles와 달리, 차단 레이어의 액터가 있는 칸을 만났을 때
+	 * 그 칸까지 포함한 뒤 더 진행하지 않는다(맞고 멈춤). None이면 점유와 무관하게 Range 한도까지 진행한다.
+	 * 영향범위 Cross/Star 패턴용. 원점 자신은 포함하지 않는다.
 	 * @param[in] Origin 시작 좌표
 	 * @param[in] Step   한 칸 전진 방향 (예: (1,0)=오른쪽, (-1,1)=좌하단 대각)
 	 * @param[in] Range  뻗을 칸 수 (0 이하이면 아무것도 추가하지 않음)
-	 * @param[in] bPenetrate 관통 여부 (false면 점유 칸에서 멈춤)
+	 * @param[in] BlockerLayers 확산을 막는 레이어 (None이면 아무것도 확산을 막지 않음)
 	 * @param[in,out] Out 결과를 누적할 배열
+	 * @param[in] IgnoreBlocker 차단 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
 	 */
-	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, bool bPenetrate, TArray<FTileIndex>& Out) const;
+	void AppendBlockableRay(const FTileIndex& Origin, const FTileIndex& Step, int32 Range, ETileLayerFlag BlockerLayers, TArray<FTileIndex>& Out, const UBoardActorModel* IgnoreBlocker = nullptr) const;
 
 	/**
 	 * @brief 타일에 장애물 또는 유닛이 있는 지 검사
@@ -542,13 +766,15 @@ private:
 	 * @brief From에서 To까지 시야(직선)가 막히지 않는지 판정
 	 * @details
 	 * RasterizeLine으로 경로 칸을 구한 뒤, 양 끝(From, To)을 제외한 중간 칸에
-	 * 시야를 막는 액터(Obstacle 또는 Unit)가 하나라도 있으면 막힌 것으로 본다.
+	 * 시야를 막는 액터(BlockerLayers 레이어)가 하나라도 있으면 막힌 것으로 본다.
 	 * @param[in] From 시작 좌표
 	 * @param[in] To   목표 좌표
 	 * @param[in] IgnoreBlocker 차폐 판정에서 제외할 액터 (자리를 비울 예정인 유닛 등). 없으면 nullptr
+	 * @param[in] BlockerLayers 차폐물로 볼 레이어 (기본: 장애물+유닛. 밀치기는 장애물만 차폐)
 	 * @return 시야가 확보되면 true, 중간이 막히면 false
 	 */
-	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker = nullptr) const;
+	bool HasLineOfSight(const FTileIndex& From, const FTileIndex& To, const UBoardActorModel* IgnoreBlocker = nullptr,
+		ETileLayerFlag BlockerLayers = ETileLayerFlag::Obstacle | ETileLayerFlag::Unit) const;
 
 	/**
 	 * @brief 타일에 액터 등록 (mBoardActors에 추가)

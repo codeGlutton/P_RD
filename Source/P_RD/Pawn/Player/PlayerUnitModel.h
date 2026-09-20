@@ -10,17 +10,54 @@
 #include "RDMinimal.h"
 
 #include "Pawn/UnitModel.h"
-#include "DataAsset/UnitSpawnData/PlayerJobType.h"
+#include "DataAsset/RarityRate.h"
 
 #include "PlayerUnitModel.generated.h"
 
 class UPlayerUnitModel;
-class UDicePoolModel;
+class UPartyModel;
+class UArtifactComponentModel;
 
 class UPlayerUnitAttributeSet;
-class ULevelAttributeSet;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*PlayerLevel*/);
+struct FPlayerLevelUpEvent;
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangePlayerLevel, UPlayerUnitModel* /*Model*/, int32 /*NewPlayerLevel*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayerLevelUp, UPlayerUnitModel* /*Model*/, const FPlayerLevelUpEvent& /*Event*/);
+
+/**
+ * @brief 한 번의 레벨 증가에 대한 데이터
+ */
+USTRUCT()
+struct P_RD_API FPlayerLevelUpData
+{
+	GENERATED_BODY()
+
+public:
+	int32 mPreLevel = 1;
+	int32 mCurLevel = 1;
+	float mMaxExp = 0.f;
+	float mPreExp = 0.f;
+	float mCurExp = 0.f;
+	float mCarryExp = 0.f;
+};
+
+/**
+ * @brief 한 번의 레벨 증가 알림에 필요한 완결된 데이터
+ * @details 희귀도 커브가 없거나 유효하지 않으면 mHasRarityRate가 false
+ */
+USTRUCT()
+struct P_RD_API FPlayerLevelUpEvent
+{
+	GENERATED_BODY()
+
+public:
+	FPlayerLevelUpData mData;
+
+public:
+	bool mHasRarityRate = false;
+	FRarityRate mSkillRarityRate;
+};
 
 /**
  * @brief 플레이어 베이스 유닛 모델 입니다.
@@ -37,36 +74,47 @@ public:
 
 	/* UUnitModel 상속 */
 public:
-	void PostInitializeComponentModels() override;
-
-public:
 	int32 GetBoardActorLevel() const override;
-
-public:
-	EPlayerJobType GetPlayerJobType() const;
-	int32 GetPlayerLevel() const;
+	EUnitJobType GetUnitJobType() const override;
 	int32 GetDifficulty() const override;
 	bool IsPlayerUnitModel() const override;
 
+	/* 파티 함수 */
 public:
-	/** @brief 플레이어 보유 주사위 컴포넌트입니다. 적은 주사위가 없어 AUnit이 아닌 APlayerUnit에 둡니다. */
-	UDicePoolModel* GetDicePoolModel() const;
+	void SetOwnerParty(UPartyModel* PartyModel);
+	void SetPlayerLevel(int32 PlayerLevel);
+
+public:
+	UPartyModel* GetOwnerParty() const;
+	int32 GetPlayerLevel() const;
+
+public:
+	UArtifactComponentModel* GetArtifactComponentModel() const;
+
+public:
+	TArray<FPlayerLevelUpData> PredictLevelChange(float ExpGain) const;
+	void PostChangeExperience(float OldExp, float NewExp);
+
+protected:
+	TArray<FPlayerLevelUpData> CalculateLevelChange(int32 StartLevel, float StartExp, float ExpGain) const;
+	void LevelUp(const FPlayerLevelUpData& LevelUpData);
 
 public:
 	FOnChangePlayerLevel OnChangePlayerLevel;
+	FOnPlayerLevelUp OnPlayerLevelUp;
 
 private:
 	/** @brief 난이도 스케일 AttributeSet */
 	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "UnitAttributeSet"))
 	TObjectPtr<UPlayerUnitAttributeSet> mUnitAttributeSet;
 
-	/** @brief 레벨 스케일 AttributeSet */
-	UPROPERTY(Category = AttributeSet, VisibleAnywhere, meta = (DisplayName = "LevelAttributeSet"))
-	TObjectPtr<ULevelAttributeSet> mLevelAttributeSet;
+	/** @brief 아티펙트 컴포넌트 모델 */
+	UPROPERTY(Category = Artifact, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "ArtifactCompModel"))
+	TObjectPtr<UArtifactComponentModel> mArtifactCompModel;
 
-	/** @brief 런타임 보유 주사위 묶음. 전투 HUD는 이 객체를 직접 소유하지 않고 어댑터를 통해 읽는다. */
-	UPROPERTY(Category = Dice, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "DiceComp"))
-	TObjectPtr<UDicePoolModel> mDicePool;
+protected:
+	UPROPERTY(Category = Party, VisibleAnywhere, meta = (DisplayName = "OwnerParty"))
+	TWeakObjectPtr<UPartyModel> mOwnerParty;
 
 protected:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "PlayerLevel"))

@@ -96,7 +96,7 @@ public:
 	{
 		// 어트리뷰트 컴포넌트 모델과 유닛 어트리뷰트 세트를 기본 서브오브젝트로 생성
 		mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
-		mUnitAttributeSet = CreateDefaultSubobject<UUnitAttributeSet>(TEXT("UnitAttributeSet"));
+		mUnitAttributeSet = CreateDefaultSubobject<UCombatTargetAttributeSet>(TEXT("UnitAttributeSet"));
 	}
 
 public:
@@ -116,7 +116,7 @@ public:
 
 private:
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "UnitAttributeSet"))
-	TObjectPtr<UUnitAttributeSet> mUnitAttributeSet;
+	TObjectPtr<UCombatTargetAttributeSet> mUnitAttributeSet;
 
 	UPROPERTY(Category = Attribute, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true", DisplayName = "AttributeCompModel"))
 	TObjectPtr<UAttributeSetComponentModel> mAttributeCompModel;
@@ -141,10 +141,8 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
-		// [PR #191] 구 EGameplayModOp::Additive -> ETacticalModOp::Additive 치환.
-		// Additive(=AddBase, 정수값 0)는 합산 연산. 정수값은 구 enum과 동일하게 유지된다.
-		Info.mModifierOp = ETacticalModOp::Additive;
+		Info.mAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
+		Info.mModifierOp = ETacticalModOp::AddBase;
 		Info.mModifierMagnitude = 1.f;
 
 		mModifiers.Add(Info);
@@ -170,9 +168,8 @@ public:
 		mStackingType = ETacticalEffectStackingType::None;
 
 		FTacticalModifierInfo Info;
-		Info.mAttribute = UUnitAttributeSet::GetDefensePointAttribute();
-		// [PR #191] 구 EGameplayModOp::Additive -> ETacticalModOp::Additive 치환(합산, 정수값 0).
-		Info.mModifierOp = ETacticalModOp::Additive;
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+		Info.mModifierOp = ETacticalModOp::AddBase;
 		Info.mModifierMagnitude = 1.f;
 
 		mModifiers.Add(Info);
@@ -199,5 +196,57 @@ public:
 
 		// 모디파이어가 아닌 부여 태그만 설정: 이펙트 적용 시 대상에 붙는 태그 검증용
 		mCachedGrantedTags.AddTag(AbilityTags::GameplayAbility_Passive_OnEndApplyingEffect);
+	}
+};
+
+/**
+ * @brief 턴 기반 Duration 이펙트 Mock (2턴 지속)
+ */
+UCLASS()
+class UTestTurnDurationTacticalEffect : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UTestTurnDurationTacticalEffect()
+	{
+		mDurationPolicy = ETacticalEffectDurationType::Duration;
+		mDurationUnitPolicy = ETacticalEffectDurationUnitType::EveryTurn;
+
+		mDurationMagnitude = 2;
+
+		FTacticalModifierInfo Info;
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+		Info.mModifierOp = ETacticalModOp::AddBase;
+		Info.mModifierMagnitude = 5.f;
+
+		mModifiers.Add(Info);
+	}
+};
+
+/**
+ * @brief 스택 단일 제거 및 Duration 재시작 이펙트 Mock (2턴 지속, 스택형)
+ */
+UCLASS()
+class UTestStackRemoveSingleDurationTacticalEffect : public UTacticalEffect
+{
+	GENERATED_BODY()
+
+public:
+	UTestStackRemoveSingleDurationTacticalEffect()
+	{
+		mDurationPolicy = ETacticalEffectDurationType::Duration;
+		mDurationUnitPolicy = ETacticalEffectDurationUnitType::EveryTurn;
+		mDurationMagnitude = 2;
+
+		mStackingType = ETacticalEffectStackingType::AggregateByTarget;
+		mStackExpirationPolicy = ETacticalEffectStackingExpirationPolicy::RemoveSingleStackAndRefreshDuration;
+
+		FTacticalModifierInfo Info;
+		Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+		Info.mModifierOp = ETacticalModOp::AddBase;
+		Info.mModifierMagnitude = 3.f;
+
+		mModifiers.Add(Info);
 	}
 };

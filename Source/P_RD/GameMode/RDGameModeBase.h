@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   RDGameModeBase.h
  * @brief  RD 프로젝트 게임 모드 베이스 정의 헤더
  * @author 모호재, 박용수
@@ -19,6 +19,7 @@
 
 class UUserPersistData;
 class URunPersistData;
+class UOptionPersistData;
 
 struct FRoomTransitionExecuteParams;
 
@@ -101,7 +102,16 @@ public:
 	bool SetFpsLimit(int32 FpsLimit) const;
 
 	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetOverallQuality(EOverallQualityType QualityType) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
 	bool SetLanguage(ELanguageType Language) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetCameraShakeEnabled(bool IsEnabled) const;
+
+	UFUNCTION(Category = UI, BlueprintPure)
+	bool SetEffectVFXEnabled(bool IsEnabled) const;
 
 protected:
 	/**
@@ -193,14 +203,27 @@ private:
 public:
 	UUserPersistData* GetUserPersistData();
 	URunPersistData* GetRunPersistData();
+	UOptionPersistData* GetOptionPersistData();
 	const UUserPersistData* GetUserPersistData() const;
 	const URunPersistData* GetRunPersistData() const;
+	const UOptionPersistData* GetOptionPersistData() const;
 
 protected:
 	void ClearRunPersistData();
 
+public:
+	USoundBase* GetMainBGM() const;
+
 protected:
 	void SetMainBGM(USoundBase* BGM, bool IsOverride = true);
+	/**
+	 * @brief 화면 전환 없이 현재 방 BGM만 조용히 끝낸다.
+	 *
+	 * 전투 결과처럼 같은 맵 위에 별도 화면을 띄울 때 결과 음향과 방 BGM이
+	 * 겹치지 않도록 쓰는 작은 명시 API다. 0 이하이면 즉시 정지한다.
+	 */
+	void FadeOutMainBGM(float FadeOutDurationSeconds) const;
+	void SetMainBGMPaused(bool bPaused) const;
 
 protected:
 	UPROPERTY(Category = "UI", EditDefaultsOnly, BlueprintReadOnly, meta = (DisplayName = "HUDClass"))

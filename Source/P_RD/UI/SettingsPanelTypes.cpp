@@ -1,4 +1,4 @@
-// 설정 값 검증/변환 헬퍼 구현. 위젯이 값 정리를 직접 하지 않고 여기 한곳에 모아 재사용.
+﻿// 설정 값 검증/변환 헬퍼 구현. 위젯이 값 정리를 직접 하지 않고 여기 한곳에 모아 재사용.
 #include "UI/SettingsPanelTypes.h"
 
 // 슬라이더가 0~1 밖의 값을 줘도 안전하게 자른다.
@@ -11,6 +11,12 @@ float RDSettingsPanel::NormalizeVolumeValue(float Value)
 int32 RDSettingsPanel::ToQualityRequestValue(ESettingsQualityLevel QualityLevel)
 {
 	return StaticCast<int32>(QualityLevel);
+}
+
+// 오버롤 퀄리티 → 가장 가까운 품질 단계
+ESettingsQualityLevel RDSettingsPanel::FromOverallQuality(int32 OverallQuality)
+{
+	return StaticCast<ESettingsQualityLevel>(OverallQuality);
 }
 
 // 값 모델 전체를 안전 범위로 정리(모든 볼륨 0~1). 저장/적용 전에 한 번 거치는 용도.

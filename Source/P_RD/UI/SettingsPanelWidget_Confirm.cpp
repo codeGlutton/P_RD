@@ -1,6 +1,50 @@
 #include "UI/SettingsPanelWidget.h"
 
+#include "Components/TextBlock.h"
 #include "Components/Widget.h"
+#include "Engine/GameInstance.h"
+#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
+
+#define LOCTEXT_NAMESPACE "SettingsPanelWidget"
+
+void USettingsPanelWidget::SyncRunConfirmText() const
+{
+	// 0823 확정: 언어 삼항 하드코딩을 걷고 로컬라이제이션(locres) 한 길로
+	// 통일한다. 한국어는 ko archive 번역이 맡는다.
+	const bool bSaveAndExit = mRunConfirmAction == ERunConfirmAction::SaveAndExit;
+	if (RunConfirmHeaderText != nullptr)
+	{
+		RunConfirmHeaderText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExitHeader", "SAVE & EXIT")
+			: LOCTEXT("AbandonRunHeader", "ABANDON RUN"));
+	}
+	if (AbandonConfirmTitleText != nullptr)
+	{
+		AbandonConfirmTitleText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExitConfirmTitle", "Save and exit this run?")
+			: LOCTEXT("AbandonConfirmTitle", "Abandon this run?"));
+	}
+	if (AbandonConfirmBodyText != nullptr)
+	{
+		const auto* Instance = GetGameInstance();
+		const auto* Saver = Instance ? Instance->GetSubsystem<USaveGameSubsystem>() : nullptr;
+		AbandonConfirmBodyText->SetText(bSaveAndExit
+			? (Saver ? Saver->GetRunResumeDescription() : LOCTEXT("SaveAndExitConfirmBody",
+				"Current progress will be saved before returning to the title."))
+			: LOCTEXT("AbandonConfirmBody",
+				"Current progress will be deleted and you will return to the title."));
+	}
+	if (ConfirmAbandonButtonText != nullptr)
+	{
+		ConfirmAbandonButtonText->SetText(bSaveAndExit
+			? LOCTEXT("SaveAndExit", "Save and Exit")
+			: LOCTEXT("Abandon", "Abandon"));
+	}
+	if (CancelAbandonButtonText != nullptr)
+	{
+		CancelAbandonButtonText->SetText(LOCTEXT("Cancel", "Cancel"));
+	}
+}
 
 /**
  * @brief 런 포기 확정 패널을 표시한다.
@@ -11,6 +55,26 @@
  */
 void USettingsPanelWidget::ShowAbandonConfirm() const
 {
+	mRunConfirmAction = ERunConfirmAction::Abandon;
+	SyncRunConfirmText();
+	if (RunConfirmViewportLayer != nullptr)
+	{
+		RunConfirmViewportLayer->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (AbandonConfirmPanel != nullptr)
+	{
+		AbandonConfirmPanel->SetVisibility(ESlateVisibility::Visible);
+	}
+}
+
+void USettingsPanelWidget::ShowSaveAndExitConfirm() const
+{
+	mRunConfirmAction = ERunConfirmAction::SaveAndExit;
+	SyncRunConfirmText();
+	if (RunConfirmViewportLayer != nullptr)
+	{
+		RunConfirmViewportLayer->SetVisibility(ESlateVisibility::Visible);
+	}
 	if (AbandonConfirmPanel != nullptr)
 	{
 		AbandonConfirmPanel->SetVisibility(ESlateVisibility::Visible);
@@ -26,10 +90,15 @@ void USettingsPanelWidget::ShowAbandonConfirm() const
  */
 void USettingsPanelWidget::HideAbandonConfirm() const
 {
+	if (RunConfirmViewportLayer != nullptr)
+	{
+		RunConfirmViewportLayer->SetVisibility(ESlateVisibility::Collapsed);
+	}
 	if (AbandonConfirmPanel != nullptr)
 	{
 		AbandonConfirmPanel->SetVisibility(ESlateVisibility::Collapsed);
 	}
+	mRunConfirmAction = ERunConfirmAction::None;
 }
 
 /**
@@ -41,7 +110,16 @@ void USettingsPanelWidget::HideAbandonConfirm() const
  */
 void USettingsPanelWidget::HandleConfirmAbandonButtonClicked()
 {
-	OnAbandonRunConfirmed.Broadcast();
+	if (mRunConfirmAction == ERunConfirmAction::SaveAndExit)
+	{
+		HideAbandonConfirm();
+		OnSaveAndExitRequested.Broadcast();
+	}
+	else if (mRunConfirmAction == ERunConfirmAction::Abandon)
+	{
+		HideAbandonConfirm();
+		OnAbandonRunConfirmed.Broadcast();
+	}
 }
 
 /**
@@ -54,3 +132,5 @@ void USettingsPanelWidget::HandleCancelAbandonButtonClicked()
 {
 	HideAbandonConfirm();
 }
+
+#undef LOCTEXT_NAMESPACE

@@ -16,11 +16,11 @@
 class USRPGSkillBuildAction;
 class UStaticSkillData;
 class UTileMapModel;
-class UDiceModel;
+struct FSimulationOption;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSelectSkill, int32 /*SkillIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnChangeSkillBuildPhase, const USRPGSkillBuildAction* /*Action*/, ESRPGSkillBuildPhase /*Phase*/);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnPostSimulateSkillAction, const TArray<FSRPGTurnEventLog>& /*EventLogs*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnSimulateSkillAction, const FSimulationOption& /*Option*/);
 DECLARE_MULTICAST_DELEGATE(FOnCancelSimulateSkillAction);
 
 USTRUCT(BlueprintType)
@@ -34,25 +34,12 @@ public:
 public:
 	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
-	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnSimulateSkillAction OnSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 public:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SkillIndex"))
 	int32 mSkillIndex = 0;
-};
-
-USTRUCT(BlueprintType)
-struct FSRPGDiceSelectCommand : public FSRPGCommand
-{
-	GENERATED_BODY()
-
-public:
-	FSRPGDiceSelectCommand();
-
-public:
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
-	int32 mDiceIndex = 0;
 };
 
 /**
@@ -80,13 +67,11 @@ protected:
 	/* 빌드 로직 처리 */
 private:
 	void SetSkill(int32 SkillIndex);
-	void ChangeDices(int32 RequestedDiceIndex);
 	void SetTargetTile(const FTileIndex& TargetIndex);
 	void BuildSkill();
 
 private:
 	void ResetSkill();
-	void ResetDice();
 	void ResetTargetTile();
 
 private:
@@ -96,9 +81,14 @@ private:
 
 private:
 	bool CanSelectTargetTile(const FTileIndex& Index) const;
+	bool CanConfirmTargetTile(const FTileIndex& Index) const;
+	bool CanBuildSkill() const;
 
 private:
 	void SetBuildPhase(ESRPGSkillBuildPhase BuildPhase);
+
+public:
+	const FTileIndex& GetSelectedTileIndex() const;
 
 	/* 헬퍼 */
 private:
@@ -108,24 +98,24 @@ private:
 protected:
 	FOnSelectSkill OnSelectSkill;
 	FOnChangeSkillBuildPhase OnChangeSkillBuildPhase;
-	FOnPostSimulateSkillAction OnPostSimulateSkillAction;
+	FOnSimulateSkillAction OnSimulateSkillAction;
 	FOnCancelSimulateSkillAction OnCancelSimulateSkillAction;
 
 protected:
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "DiceIndex"))
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite)
 	ESRPGSkillBuildPhase mSkillBuildPhase = ESRPGSkillBuildPhase::None;
 
 protected:
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ReachableTileIndexes"))
 	TArray<FTileIndex> mReachableTileIndexes;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkill"))
-	TObjectPtr<UStaticSkillData> mSelectedSkill;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedSkillIndex"))
 	int32 mSelectedSkillIndex = INDEX_NONE;
 
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetTileIndexes"))
+	TArray<FTileIndex> mTargetTileIndexes;
 	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "EffectTileIndexes"))
 	TArray<FTileIndex> mEffectTileIndexes;
-	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetIndex"))
-	FTileIndex mTargetIndex = FTileIndex::Invalid;
+	UPROPERTY(Category = Build, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "SelectedTileIndex"))
+	FTileIndex mSelectedTileIndex = FTileIndex::Invalid;
 };
 

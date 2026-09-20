@@ -1,15 +1,11 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_Defense.cpp
- * @brief  Defense 이펙트 구현
- * @author 이문환
- * @date   2026-07-01
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_Defense.h"
-#include "AttributeSet/UnitAttributeSet.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_Defense.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
+
+#include "Setting/GameBalanceSettings.h"
+#include "Actor/BoardActor/BoardCombatTarget.h"
 
 UTacticalEffect_Defense::UTacticalEffect_Defense()
 {
@@ -18,7 +14,7 @@ UTacticalEffect_Defense::UTacticalEffect_Defense()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetDefenseAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
@@ -30,11 +26,93 @@ void UTacticalEffect_Defense::OnExecuted(FActiveTacticalEffectsContainer& Active
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetDefenseAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetDefenseAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
 
-	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
 }
+
+void UTacticalEffectExecutionCalculation_GetDefense::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
+{
+	Super::Execute(ExecutionParams, OutExecutionOutput);
+
+	const UGameBalanceSettings* GameBalanceSettings = GetDefault<UGameBalanceSettings>();
+	checkf(GameBalanceSettings != nullptr, TEXT("게임 밸런스 세팅 nullptr"));
+
+	UBoardCombatTargetSnapshotData* SourceSnapshotData = ExecutionParams.GetOwningSpec().GetInstigatorSnapshotData();
+	checkf(SourceSnapshotData != nullptr, TEXT("소스 스냅샷 nullptr"));
+
+	UBoardCombatTargetSnapshotData* TargetSnapshotData = ExecutionParams.GetOwningSpec().GetTargetSnapshotData();
+	checkf(TargetSnapshotData != nullptr, TEXT("타겟 스냅샷 nullptr"));
+
+	// 요새화
+	const bool IsTargetFortification = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification);
+	const float TargetFortificationRatio = IsTargetFortification == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Fortification] : 1.f;
+
+	// 손상
+	const bool IsTargetFrail = TargetSnapshotData->mEffectCounts.Contains(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail);
+	const float TargetFrailRatio = IsTargetFrail == true ? GameBalanceSettings->mGlobalStatusEffectSetting.mEffectRatios[EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Frail] : 1.f;
+
+	const float TotalDefense =
+		ExecutionParams.GetOwningSpec().GetStackCount() *
+		ExecutionParams.GetOwningSpec().mDynamicMagnitude *
+		TargetFortificationRatio *
+		TargetFrailRatio *
+		SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetDefenseFactorAttribute()];
+	const float DefenseDiff = FMath::Floor(TotalDefense);
+
+	if (DefenseDiff > 0.f)
+	{
+		/* 이동 증가 적용 */
+		OutExecutionOutput.AddOutputModifier(FTacticalModifierEvaluatedData(UCombatTargetAttributeSet::GetDefenseAttribute(), ETacticalModOp::AddBase, DefenseDiff));
+
+		/* 로그 적용 */
+		FSRPGAttributeEffectEventLog Log;
+		Log.mEffectAttribute = UCombatTargetAttributeSet::GetDefenseAttribute();
+		Log.mMagnitude = DefenseDiff;
+
+		UAttributeSetComponentModel* TargetAttributeSetCompModel = ExecutionParams.GetTargetAttributeSetComponentModel();
+		const UActorModel* Target = TargetAttributeSetCompModel->GetOwnerModel();
+		GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
+	}
+
+	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
+	OutExecutionOutput.MarkStackCountHandledManually();
+}
+
+UTacticalEffect_GetDefense::UTacticalEffect_GetDefense()
+{
+	// 즉시형
+	mDurationPolicy = ETacticalEffectDurationType::Instant;
+	mStackingType = ETacticalEffectStackingType::None;
+
+	FTacticalEffectExecutionDefinition Definition;
+	Definition.mCalculationClass = UTacticalEffectExecutionCalculation_GetDefense::StaticClass();
+	mExecutions.Add(Definition);
+}
+
+bool UTacticalEffect_GetDefense::CanApply(const FActiveTacticalEffectsContainer& ActiveTEContainer, const FTacticalEffectSpec& TESpec) const
+{
+	if (Super::CanApply(ActiveTEContainer, TESpec) == false)
+	{
+		return false;
+	}
+
+	const UBoardCombatTargetSnapshotData* SourceSnapshotData = TESpec.GetInstigatorSnapshotData();
+	const UBoardCombatTargetSnapshotData* TargetSnapshotData = TESpec.GetTargetSnapshotData();
+	if (SourceSnapshotData == nullptr || TargetSnapshotData == nullptr)
+	{
+		return false;
+	}
+
+	if (SourceSnapshotData->mAttributes[UCombatTargetAttributeSet::GetDefenseFactorAttribute()] * TESpec.mDynamicMagnitude <= 0)
+	{
+		return false;
+	}
+
+	return true;
+}
+

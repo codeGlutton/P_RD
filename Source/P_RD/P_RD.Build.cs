@@ -1,4 +1,4 @@
-﻿using UnrealBuildTool;
+using UnrealBuildTool;
 
 using System.IO;
 
@@ -15,6 +15,9 @@ public class P_RD : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+        // 공개 헤더(GamePlayType.h)가 NiagaraSystem.h를 노출하므로 소비 모듈에 전파한다.
+        PublicDependencyModuleNames.Add("Niagara");
+
         PrivateDependencyModuleNames.AddRange(new string[] {
             /* Engine Core Modules */
             "Core",
@@ -24,7 +27,11 @@ public class P_RD : ModuleRules
             "EnhancedInput",
 
             /* Media Modules */
-            "MediaAssets",              // 인트로 시네마틱 MP4 재생(MediaPlayer/MediaSource)에 필요
+            "MediaAssets",
+            "AudioMixer",
+            "LevelSequence",
+            "MovieScene",
+            "MovieSceneTracks",
 
             /* Native SWidget Modules */
             "UMG",
@@ -32,20 +39,16 @@ public class P_RD : ModuleRules
             "SlateCore",
 
             /* VFX */
-            "Niagara",
+            "NiagaraAnimNotifies",
 
             /* Gameplay Tag Modules */
-            "GameplayTags",				// 게임플레이 태그 시스템
-
-            /* GAS Plugin Modules */
-			"GameplayTasks",			// GAS에서 비동기적인 작업을 생성하고 관리하는 모듈
-			"GameplayAbilities",		// GAS 프레임워크
+            "GameplayTags",
 
             /* AI Plugin Modules */
-            "AIModule",                 // 기본 AI 연관 도구 사용
+            "AIModule",
 
-            /* Procedural Mesh */
-            "ProceduralMeshComponent",  // 전투 3D 주사위 프리뷰 액터(CombatDicePreviewActor) 면 텍스처 쿼드에 필요
+            /* Camera Shaeks Modules*/
+            "EngineCameras"
         });
 
         PrivateIncludePaths.AddRange(new string[] {
@@ -54,10 +57,24 @@ public class P_RD : ModuleRules
 
         // MediaPlayer가 OS 파일 경로로 직접 여는 mp4는 pak/ucas 안이 아니라 loose 파일로 스테이징한다.
         // Content/SVN 전체를 패키징하면 SVN 원본/시안/.svn 메타데이터까지 들어가 APK가 크게 불어난다.
-        StageContentMedia(Target, "mTitleBackgroundVideoPath", "SVN/OutSideAsset/AICreation/campfire_titleloop_idle_x3preview.mp4");
-        StageContentMedia(Target, "mIntroCinematicVideoPath", "SVN/OutSideAsset/AICreation/hero_loading_intro4_1280_3s.mp4");
+        StageContentMedia(Target, "mTitleBackgroundVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Random30_Right16x9/Title_All6_Right_16x9_combo01_5s_mobile.mp4");
+        StageContentMediaArray(Target, "mTitleBackgroundVideoPaths");
+        StageContentMedia(Target, "mIntroCinematicVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s.mp4");
+        StageContentMedia(Target, "mIntroCinematicAcceleratedVideoPath", "SVN/OutSideAsset/AICreation/UI/Title/Video/Intro/H3_Intro_V87_Concept04_CastleEntry_16x9_15s_3x.mp4");
         StageContentMedia(Target, "mCombatVictoryVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Victory_01.mp4");
         StageContentMedia(Target, "mCombatDefeatVideoPath", "SVN/OutSideAsset/AICreation/UI/CombatHUD/CombatResult/MS_CombatResult_Defeat_01.mp4");
+
+        // The reader uses FileHelper (UFS), including on Android. Ship the actual
+        // notices with the product; external audit documents are not runtime data.
+        if (Target.ProjectFile != null)
+        {
+            string LegalRoot = Path.Combine(Target.ProjectFile.Directory.FullName, "Content", "Legal");
+            foreach (string LegalFile in Directory.GetFiles(LegalRoot, "*.txt", SearchOption.AllDirectories))
+            {
+                string RelativePath = Path.GetRelativePath(LegalRoot, LegalFile).Replace("\\", "/");
+                RuntimeDependencies.Add("$(ProjectDir)/Content/Legal/" + RelativePath, StagedFileType.UFS);
+            }
+        }
 
         if (Target.bBuildEditor == true)
         {
@@ -66,6 +83,9 @@ public class P_RD : ModuleRules
                 "UnrealEd",
             });
         }
+
+        for (int Stage = 1; Stage <= 3; ++Stage)
+            RuntimeDependencies.Add("$(ProjectDir)/Content/SVN/OutSideAsset/AICreation/UI/StageVictory/BossEntrance/BossEntrance" + Stage + ".mp4", StagedFileType.NonUFS);
 
         // 온라인 기능을 사용할 때만 OnlineSubsystem을 추가한다.
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
@@ -85,6 +105,17 @@ public class P_RD : ModuleRules
             ? MediaPath
             : "$(ProjectDir)/Content/" + MediaPath.Replace("\\", "/");
         RuntimeDependencies.Add(DependencyPath, StagedFileType.NonUFS);
+    }
+
+    private void StageContentMediaArray(ReadOnlyTargetRules Target, string ConfigKey)
+    {
+        foreach (string MediaPath in ReadDefaultGameConfigValues(Target, ConfigKey))
+        {
+            string DependencyPath = Path.IsPathRooted(MediaPath)
+                ? MediaPath
+                : "$(ProjectDir)/Content/" + MediaPath.Replace("\\", "/");
+            RuntimeDependencies.Add(DependencyPath, StagedFileType.NonUFS);
+        }
     }
 
     private static string ReadDefaultGameConfigValue(ReadOnlyTargetRules Target, string ConfigKey, string FallbackValue)
@@ -110,5 +141,37 @@ public class P_RD : ModuleRules
         }
 
         return FallbackValue;
+    }
+
+    private static string[] ReadDefaultGameConfigValues(ReadOnlyTargetRules Target, string ConfigKey)
+    {
+        if (Target.ProjectFile == null)
+        {
+            return new string[0];
+        }
+
+        string IniPath = Path.Combine(Target.ProjectFile.Directory.FullName, "Config", "DefaultGame.ini");
+        if (!File.Exists(IniPath))
+        {
+            return new string[0];
+        }
+
+        var Values = new System.Collections.Generic.List<string>();
+        string PlainPrefix = ConfigKey + "=";
+        string AddPrefix = "+" + ConfigKey + "=";
+        foreach (string RawLine in File.ReadLines(IniPath))
+        {
+            string Line = RawLine.Trim();
+            if (Line.StartsWith(PlainPrefix) || Line.StartsWith(AddPrefix))
+            {
+                int EqualsIndex = Line.IndexOf('=');
+                string Value = Line.Substring(EqualsIndex + 1).Trim().Trim('"');
+                if (!string.IsNullOrWhiteSpace(Value))
+                {
+                    Values.Add(Value);
+                }
+            }
+        }
+        return Values.ToArray();
     }
 }

@@ -21,6 +21,10 @@ class USRPGCombatModel;
 class IObjectModel;
 class UCombatUIModel;
 
+class USRPGTurnContext;
+class USRPGAction;
+struct FPresentationBarrier;
+
 /**
  * @brief  SRPG 턴제 전투를 제어하기 위한 서브 시스템
  */
@@ -38,8 +42,17 @@ public:
 public:
 	void BindModel(UObjectModel* Model) override;
 	void UnbindModel(UObjectModel* Model) override;
+
 protected:
 	UObjectModel* GetModel_Internal() const override;
+
+protected:
+	void MoveCameraOnBeginTurn(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext);
+	void FixCameraOnBeginMoveAction(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action);
+	void ReleaseCameraOnEndMoveAction(TSharedPtr<FPresentationBarrier> Barrier, const USRPGTurnContext* TurnContext, const USRPGAction* Action, ESRPGActionResult Result);
+
+private:
+	AActor* GetTurnOwnerView(const USRPGTurnContext* TurnContext) const;
 
 protected:
 	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "CombatModel"))

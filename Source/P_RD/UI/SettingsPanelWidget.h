@@ -24,6 +24,7 @@ class UCheckBox;
 class USlider;
 class UTextBlock;
 class UWidget;
+class UCreditsPanelWidget;
 
 /**
  * @brief 공통 설정 UI의 표시 상태를 관리하고 버튼/슬라이더 입력을 이벤트로 전달한다.
@@ -54,6 +55,10 @@ public:
 	 * @param ObjectInitializer Unreal 객체 생성에 사용하는 기본 초기화 값
 	 */
 	USettingsPanelWidget(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual bool UsesMobileSafeArea() const override { return true; }
+	virtual bool HandleBackNavigation() override;
+	virtual void ApplyOpenUI() override;
+	void RefreshSaveStatus();
 
 	/** @brief 설정창도 프론트엔드 UI라 공용 버튼 클릭 사운드/누름 효과를 적용한다(타이틀/클래스선택과 동일). */
 	virtual bool ShouldApplyButtonFeedback() const override { return true; }
@@ -78,6 +83,11 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "UI|Settings")
 	ESettingsPanelMode GetPanelMode() const;
+
+	/** Open the offline credits or license reader from either settings mode. */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ShowCreditsPage(bool bLicenses = false);
+	virtual void CloseUI(FOnEndUICloseAnimation Callback = FOnEndUICloseAnimation()) override;
 
 	/**
 	 * @brief 런 상태에 따라 저장 후 종료/포기하기 버튼 활성 상태를 갱신한다.
@@ -158,6 +168,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
 	void ShowAbandonConfirm() const;
 
+	/** @brief 저장 후 종료 전에 같은 확인 패널을 저장 안내 문구로 연다. */
+	UFUNCTION(BlueprintCallable, Category = "UI|Settings")
+	void ShowSaveAndExitConfirm() const;
+
 	/**
 	 * @brief 런 포기 확인 패널을 숨긴다.
 	 *
@@ -173,7 +187,8 @@ public:
 	 *
 	 * @details
 	 * 타이틀에서는 타이틀 메뉴로, 인게임에서는 상단 메뉴나 이전 팝업 상태로 돌아갈 수 있다.
-	 * 이 위젯은 자신이 어느 화면 스택에 올라와 있는지 모르므로 복귀 처리를 직접 하지 않는다.
+	 * 이 위젯은 자신의 팝업만 닫고, 어느 상위 화면으로 복귀할지는 외부 수신자에게 맡긴다.
+	 * 수신자가 없는 RD.SettingsPreview에서도 팝업은 정상적으로 닫힌다.
 	 */
 	UPROPERTY(Category = "UI|Settings", BlueprintAssignable)
 	FSettingsPanelEvent OnBackRequested;
@@ -282,6 +297,23 @@ protected:
 	void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:
+	friend class FRDMobileBackNavigationTest;
+	void EnsureCreditsButtons();
+	void CloseCreditsReader();
+	void HandleCreditsReaderClosed();
+	UFUNCTION()
+	void HandleCreditsClicked();
+	UFUNCTION()
+	void HandleLicensesClicked();
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mCreditsButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mLicensesButton;
+	UPROPERTY(Transient)
+	TObjectPtr<UCreditsPanelWidget> mCreditsReader;
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> mCreditsReturnFocus;
+
 	/** @brief 폴드 모달 스케일 변형이 현재 적용 중인지. */
 	bool mFoldScaleActive = false;
 
@@ -289,6 +321,7 @@ private:
 	TWeakObjectPtr<class UProgressBar> mMasterFillBar;
 	TWeakObjectPtr<class UProgressBar> mBgmFillBar;
 	TWeakObjectPtr<class UProgressBar> mSfxFillBar;
+	TWeakObjectPtr<class UProgressBar> mUiFillBar;
 	bool mFillBarsResolved = false;
 
 	/** @brief 채움 바를 각 슬라이더 값과 동기한다(매 틱, 위젯 없으면 no-op). */
@@ -314,6 +347,15 @@ private:
 	 * 실제 언어 설정/로컬라이징 정책이 붙어도 이 함수는 기본 키를 제공하는 역할로 남길 수 있다.
 	 */
 	void SyncText() const;
+
+	/**
+	 * @brief 품질(360p/720p/1080p)·FPS(30/60) 버튼 라벨 색으로 현재 선택 상태를 표시한다.
+	 *
+	 * @details
+	 * WBP에 선택 상태 전용 위젯이 없어 라벨 색(선택=골드, 비선택=버튼 크림)으로 표시한다.
+	 * 값 모델이 바뀌는 모든 경로(버튼 클릭, 패널 열 때 저장값 복원)에서 호출해 표시를 값과 일치시킨다.
+	 */
+	void UpdateGraphicsSelectionIndicators() const;
 
 	/**
 	 * @brief 타이틀/인게임 모드에 따라 런 액션 영역 표시를 전환한다.
@@ -343,7 +385,7 @@ private:
 	 */
 	void SetButtonEnabled(UButton* Button, bool bEnabled) const;
 
-	/** @brief BackButton 클릭을 OnBackRequested 이벤트로 변환한다. */
+	/** @brief BackButton 클릭 시 이 팝업을 닫고 OnBackRequested 이벤트를 알린다. */
 	UFUNCTION()
 	void HandleBackButtonClicked();
 
@@ -362,6 +404,17 @@ private:
 	/** @brief CancelAbandonButton 클릭 시 확인 패널만 닫는다. */
 	UFUNCTION()
 	void HandleCancelAbandonButtonClicked();
+
+	/** @brief 공용 확인 패널이 현재 확정할 런 액션. */
+	enum class ERunConfirmAction : uint8
+	{
+		None,
+		SaveAndExit,
+		Abandon
+	};
+
+	/** @brief 확인창의 제목/본문/확정 버튼 문구를 현재 액션과 언어에 맞춘다. */
+	void SyncRunConfirmText() const;
 
 	/** @brief ResetButton 클릭을 설정 초기화 요청 이벤트로 변환한다. */
 	UFUNCTION()
@@ -616,9 +669,17 @@ private:
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UWidget> AbandonConfirmPanel;
 
+	/** @brief 화면 종횡비와 무관하게 전체 뷰포트를 덮는 런 액션 확인 레이어 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UWidget> RunConfirmViewportLayer;
+
 	/** @brief 런 포기 확인 패널 제목 */
 	UPROPERTY(meta = (BindWidgetOptional))
 	TObjectPtr<UTextBlock> AbandonConfirmTitleText;
+
+	/** @brief 공용 런 액션 확인창 상단 명패의 짧은 액션명 */
+	UPROPERTY(meta = (BindWidgetOptional))
+	TObjectPtr<UTextBlock> RunConfirmHeaderText;
 
 	/** @brief 런 포기 확인 설명 문구 */
 	UPROPERTY(meta = (BindWidgetOptional))
@@ -654,6 +715,9 @@ private:
 	 */
 	UPROPERTY(Category = "Settings", EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	FSettingsPanelValueModel mValueModel;
+
+	/** @brief 저장 후 종료/포기하기가 공유하는 확인창의 현재 액션. */
+	mutable ERunConfirmAction mRunConfirmAction = ERunConfirmAction::None;
 
 	/** @brief 외부 값 적용 중 위젯 콜백이 다시 외부 이벤트로 나가지 않게 막는 플래그 */
 	bool mIsApplyingValueModel = false;

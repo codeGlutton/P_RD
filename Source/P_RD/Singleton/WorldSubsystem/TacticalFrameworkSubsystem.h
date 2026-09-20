@@ -10,9 +10,25 @@
 #include "RDMinimal.h"
 #include "ObjectView.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "TAS/Effect/ActiveTacticalEffect.h"
 #include "TacticalFrameworkSubsystem.generated.h"
 
 class UTacticalFrameworkModel;
+
+struct FTacticalEffectSpec;
+class UAttributeSetComponentModel;
+
+class UNiagaraComponent;
+
+USTRUCT()
+struct FSpawnedNiagaraComponentList
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(Category = Niagara, VisibleAnywhere, meta = (DisplayName = "Components"))
+	TArray<TWeakObjectPtr<UNiagaraComponent>> mComponents;
+};
 
 /**
  * @brief  TAS의 글로벌 서브시스템
@@ -29,6 +45,15 @@ public:
 
 protected:
 	UObjectModel* GetModel_Internal() const override;
+
+protected:
+	void ApplyGlobalVFXEffect(const FTacticalEffectSpec& Spec, const UAttributeSetComponentModel* Model) const;
+	void SpawnGlobalInfiniteVFXEffect(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, const UAttributeSetComponentModel* Model);
+	void DestroyGlobalInfiniteVFXEffect(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, const UAttributeSetComponentModel* Model);
+
+protected:
+	UPROPERTY(Category = VFX, VisibleAnywhere, meta = (DisplayName = "SpawnedVFXComponents"))
+	TMap<FActiveTacticalEffectHandle, FSpawnedNiagaraComponentList> mSpawnedVFXComponents;
 
 protected:
 	UPROPERTY(Category = Model, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "FrameworkModel"))

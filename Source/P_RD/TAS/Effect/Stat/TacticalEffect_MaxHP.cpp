@@ -1,12 +1,5 @@
-﻿/*****************************************************************//**
- * @file   TacticalEffect_MaxHP.cpp
- * @brief  MaxHP 이펙트 구현
- * @author 이문환
- * @date   2026-07-01
- *********************************************************************/
-
-#include "TAS/Effect/Stat/TacticalEffect_MaxHP.h"
-#include "AttributeSet/UnitAttributeSet.h"
+﻿#include "TAS/Effect/Stat/TacticalEffect_MaxHP.h"
+#include "AttributeSet/CombatTargetAttributeSet.h"
 #include "Simulation/Logger/EventLogger.h"
 
 #include "TAS/Effect/TacticalEffectContext.h"
@@ -18,7 +11,7 @@ UTacticalEffect_MaxHP::UTacticalEffect_MaxHP()
 	mStackingType = ETacticalEffectStackingType::None;
 
 	FTacticalModifierInfo Info;
-	Info.mAttribute = UUnitAttributeSet::GetMaxHPAttribute();
+	Info.mAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
 	Info.mModifierOp = ETacticalModOp::AddBase;
 	Info.mModifierMagnitude = 1.f;
 
@@ -30,11 +23,11 @@ void UTacticalEffect_MaxHP::OnExecuted(FActiveTacticalEffectsContainer& ActiveTE
 	Super::OnExecuted(ActiveTEContainer, TESpec);
 
 	FSRPGAttributeEffectEventLog Log;
-	Log.mEffectAttribute = UUnitAttributeSet::GetMaxHPAttribute();
-	Log.mMagnitude = TESpec.mModifierValues[0];
+	Log.mEffectAttribute = UCombatTargetAttributeSet::GetMaxHPAttribute();
+	Log.mMagnitude = TESpec.GetModifiedAttribute(UCombatTargetAttributeSet::GetMaxHPAttribute())->mTotalMagnitude;
 
 	UAttributeSetComponentModel* AttributeSetCompModelInstance = ActiveTEContainer.mOwner.Get();
-	const UActorModel* Instigator = AttributeSetCompModelInstance->GetOwnerModel();
+	const UActorModel* Target = AttributeSetCompModelInstance->GetOwnerModel();
 
-	GetWorldEventLogger(Instigator)->LogAttributeEffect(Instigator->GetModelId(), Instigator->GetClass(), Log);
+	GetWorldEventLogger(Target)->LogAttributeEffect(Target->GetModelId(), Target->GetClass(), Log);
 }
