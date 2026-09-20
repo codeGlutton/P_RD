@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-20 07:43\n"
-"PO-Revision-Date: 2026-09-20 07:43\n"
+"POT-Creation-Date: 2026-09-20 19:15\n"
+"PO-Revision-Date: 2026-09-20 19:15\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -6271,6 +6271,13 @@ msgctxt "SkillEffectLayer_Push,PushFormat"
 msgid "시전자가 바라보는 방향으로 {0}칸 밀어냅니다."
 msgstr "Pushes the target {0} tiles in the direction the caster is facing."
 
+#. Key:	ReduceCooldownDesc
+#. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ReduceCooldown.cpp(36)
+#: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ReduceCooldown.cpp(36)
+msgctxt "SkillEffectLayer_ReduceCooldown,ReduceCooldownDesc"
+msgid "쿨다운을 {0} 감소시킵니다."
+msgstr "Reduces cooldown by {0}."
+
 #. Key:	RootName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Root.cpp(20)
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Root.cpp(20)
@@ -6426,8 +6433,8 @@ msgid "{0}\n{1}"
 msgstr "{0}\n{1}"
 
 #. Key:	CurrentCombatArea
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1380)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(1380)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1393)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(1393)
 msgctxt "CombatGameMode,CurrentCombatArea"
 msgid "현재 전투 지역"
 msgstr "Current Combat Area"
@@ -6461,43 +6468,43 @@ msgid "EMPTY"
 msgstr "EMPTY"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2281)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2281)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2294)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2294)
 msgctxt "CombatGameMode,ArtifactFallbackName"
 msgid "Artifact {0}"
 msgstr "Artifact {0}"
 
 #. Key:	MovedTiles
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2483)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2483)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2496)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2496)
 msgctxt "CombatFloatingLog,MovedTiles"
 msgid "이동 {0}칸"
 msgstr "Move {0} tiles"
 
 #. Key:	EnteredBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2490)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2490)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2503)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2503)
 msgctxt "CombatFloatingLog,EnteredBoard"
 msgid "등장"
 msgstr "Entrance"
 
 #. Key:	ExitedBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2497)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2497)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2510)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2510)
 msgctxt "CombatFloatingLog,ExitedBoard"
 msgid "전투불능"
 msgstr "Defeated"
 
 #. Key:	VictoryRewardTitle
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2764)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2764)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2777)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2777)
 msgctxt "CombatGameMode,VictoryRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	UnknownRewardMercenary
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2807)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2807)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2820)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2820)
 msgctxt "CombatGameMode,UnknownRewardMercenary"
 msgid "Mercenary"
 msgstr "Mercenary"
@@ -8484,8 +8491,8 @@ msgid "Complete"
 msgstr "Complete"
 
 #. Key:	Target
-#. SourceLocation:	Source/P_RD/UI/Reward/LevelUpSkillRewardFlow.cpp(205)
-#: Source/P_RD/UI/Reward/LevelUpSkillRewardFlow.cpp(205)
+#. SourceLocation:	Source/P_RD/UI/Reward/LevelUpSkillRewardFlow.cpp(213)
+#: Source/P_RD/UI/Reward/LevelUpSkillRewardFlow.cpp(213)
 msgctxt "LevelUpReward,Target"
 msgid "{0} · Lv.{1}"
 msgstr "{0} · Lv.{1}"
