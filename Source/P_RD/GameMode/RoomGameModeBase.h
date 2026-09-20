@@ -106,6 +106,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	bool CompleteRunFromRoom();
 
+	/** @brief 현재 런 저장 성공 뒤에만 Frontend 전환을 시작한다. */
+	void SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete Completion);
+	bool IsSaveAndExitPending() const { return mSaveAndExitPending; }
+
 public:
 	/**
 	 * @brief 지도 UI가 그릴 방 노드 View 데이터를 가져온다.
@@ -190,5 +194,6 @@ protected:
 
 private:
 	FName mSelectedRoomSpawnSettingName = NAME_None;
+	bool mSaveAndExitPending = false;
 	bool mFinalRunClosed = false;
 };
