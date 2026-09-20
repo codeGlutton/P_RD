@@ -1,4 +1,4 @@
-﻿#include "Misc/AutomationTest.h"
+#include "Misc/AutomationTest.h"
 #include "UI/Reward/LevelUpSkillRewardFlow.h"
 #include "DataAsset/SkillData/StaticUnitSkillData.h"
 #include "DataAsset/RarityRate.h"
@@ -85,6 +85,36 @@ bool FLevelUpSkillEquipTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("Next reward cannot duplicate an owned skill"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 2));
 	TestTrue(TEXT("Full slot can be explicitly replaced"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[1], 1));
 	TestTrue(TEXT("Basic attack preserved"), Skills->GetSkill(0)->mData == Eligible[0]);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLevelUpSkillSaveTest,
+	"P_RD.Reward.LevelUp.Restart", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+bool FLevelUpSkillSaveTest::RunTest(const FString& Parameters)
+{
+	TStrongObjectPtr<URunPersistData> Run(NewObject<URunPersistData>());
+	Run->GetRoomTransactionsMutable().ExpClaimed = true;
+	for (int32 Index = 0; Index < 3; ++Index)
+	{
+		auto& Reward = Run->GetRoomTransactionsMutable().LevelUpSkills.AddDefaulted_GetRef();
+		Reward.UnitIndex = Index == 2 ? 1 : 0;
+		Reward.Level = Index == 1 ? 3 : 2;
+		Reward.Completed = Index == 0;
+		Reward.Offered = Index < 2;
+		if (Reward.Offered) Reward.Candidates.Add(FPrimaryAssetId(TEXT("Skill"), TEXT("FixedOffer")));
+	}
+	TArray<uint8> Bytes;
+	TStrongObjectPtr<URunPersistData> Restored(NewObject<URunPersistData>());
+	TestTrue(TEXT("Save after first choice"), RDCheckpoint::Serialize(Run.Get(), Bytes));
+	TestTrue(TEXT("Load pending choices"), RDCheckpoint::Deserialize(Bytes, Restored.Get()));
+	const auto& State = Restored->GetRoomTransactions();
+	TestTrue(TEXT("EXP is not awarded twice"), State.ExpClaimed);
+	if (!TestEqual(TEXT("Multi-level and multi-unit queue retained"), State.LevelUpSkills.Num(), 3)) return false;
+	TestTrue(TEXT("Granted choice stays completed"), State.LevelUpSkills[0].Completed);
+	TestFalse(TEXT("Second level still pending"), State.LevelUpSkills[1].Completed);
+	TestTrue(TEXT("Visible offer is retained without reroll"), State.LevelUpSkills[1].Candidates == Run->GetRoomTransactions().LevelUpSkills[1].Candidates);
+	TestEqual(TEXT("Next mercenary preserved"), State.LevelUpSkills[2].UnitIndex, 1);
+	TestFalse(TEXT("Next offer waits until earlier equipment is applied"), State.LevelUpSkills[2].Offered);
 	return true;
 }
 
