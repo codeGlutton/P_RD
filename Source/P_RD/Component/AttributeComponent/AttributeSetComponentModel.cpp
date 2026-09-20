@@ -218,6 +218,20 @@ void UAttributeSetComponentModel::OnTacticalEffectAppliedToSelf(UAttributeSetCom
     OnTacticalEffectAppliedDelegateToSelf.Broadcast(Model, SpecApplied, ActiveHandle);
 }
 
+void UAttributeSetComponentModel::OnActiveTacticalEffectAdded(const FTacticalEffectSpec& SpecAdded, FActiveTacticalEffectHandle ActiveHandle)
+{
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    check(TacticalFrameworkModel != nullptr);
+    TacticalFrameworkModel->GlobalPostTacticalEffectSpecAdded(SpecAdded, ActiveHandle, this);
+}
+
+void UAttributeSetComponentModel::OnActiveTacticalEffectRemoved(const FTacticalEffectSpec& SpecRemoved, FActiveTacticalEffectHandle ActiveHandle)
+{
+    UTacticalFrameworkModel* TacticalFrameworkModel = GetWorldSubsystemModel<UTacticalFrameworkModel>(this);
+    check(TacticalFrameworkModel != nullptr);
+    TacticalFrameworkModel->GlobalPreTacticalEffectSpecRemoved(SpecRemoved, ActiveHandle, this);
+}
+
 void UAttributeSetComponentModel::ApplyModToAttribute(const FTacticalAttribute& Attribute, TEnumAsByte<ETacticalModOp::Type> ModifierOp, float ModifierMagnitude)
 {
     mActiveAttributeEffects.ApplyModToAttribute(Attribute, ModifierOp, ModifierMagnitude);
@@ -483,6 +497,12 @@ int32 UAttributeSetComponentModel::GetAggregatedStackCountWithAllTags(FGameplayT
     return mActiveAttributeEffects.GetActiveEffectCount(FTacticalEffectQuery::MakeQuery_MatchAllEffectTags(Tags));
 }
 
+void UAttributeSetComponentModel::AdvanceEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType)
+{
+    mActiveAttributeEffects.AdvanceEffectDurations(Time, UnitType);
+    mActiveAttributeEffects.CheckDurationExpired(Time, UnitType);
+}
+
 void UAttributeSetComponentModel::CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType)
 {
     mActiveAttributeEffects.CheckDurationExpired(Time, UnitType);
@@ -492,19 +512,17 @@ void UAttributeSetComponentModel::OnTacticalEffectDurationChange(FActiveTactical
 {
 }
 
-int32 UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FActiveTacticalEffectHandle Handle) const
+bool UAttributeSetComponentModel::SetActiveEffectTimeRemaining(int32 NewTime, FActiveTacticalEffectHandle Handle)
 {
-    const FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
-    if (ActiveEffect == nullptr)
-    {
-        return 0;
-    }
-
-    const int32 WorldTime = mActiveAttributeEffects.GetWorldTime(ActiveEffect->GetDurationUnit());
-    return ActiveEffect->GetTimeRemaining(WorldTime);
+    return mActiveAttributeEffects.SetActiveEffectTimeRemaining(NewTime, Handle);
 }
 
-TArray<float> UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+int32 UAttributeSetComponentModel::GetActiveEffectTimeRemaining(const FActiveTacticalEffectHandle Handle) const
+{
+    return mActiveAttributeEffects.GetActiveEffectTimeRemaining(Handle);
+}
+
+TArray<int32> UAttributeSetComponentModel::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
 {
     return mActiveAttributeEffects.GetActiveEffectsTimeRemaining(Query, UnitType);
 }
@@ -515,12 +533,12 @@ int32 UAttributeSetComponentModel::GetActiveEffectsDuration(const FActiveTactica
     return ActiveEffect->GetDuration();
 }
 
-TArray<float> UAttributeSetComponentModel::GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+TArray<int32> UAttributeSetComponentModel::GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
 {
     return mActiveAttributeEffects.GetActiveEffectsTimeRemaining(Query, UnitType);
 }
 
-TArray<TPair<float, float>> UAttributeSetComponentModel::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+TArray<TPair<int32, int32>> UAttributeSetComponentModel::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
 {
     return mActiveAttributeEffects.GetActiveEffectsTimeRemainingAndDuration(Query, UnitType);
 }

@@ -134,6 +134,10 @@ public:
 	// @brief 상태이상에 따른 VFX 매핑 정보
 	UPROPERTY(Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "EffectVFXs"))
 	TMap<TSoftClassPtr<UTacticalEffect>, FSoftVFXSpawnData> mEffectVFXs;
+
+	// @brief 상태이상에 따른 VFX 매핑 정보
+	UPROPERTY(Category = StatusEffect, EditAnywhere, BlueprintReadOnly, meta = (DisplayName = "InfiniteEffectVFXs"))
+	TMap<TSoftClassPtr<UTacticalEffect>, FSoftVFXSpawnData> mInfiniteEffectVFXs;
 };
 
 /**

@@ -329,7 +329,13 @@ public:
 
 public:
     /**
-     * @brief 라운드 만기 체크
+    * @brief Effect 시간 진행
+    * @param Time 현재 단위 시간
+    * @param UnitType 시간 단위
+    */
+    void AdvanceEffectDurations(const int32 Time, const ETacticalEffectDurationUnitType UnitType);
+    /**
+     * @brief Effect 만기 체크
      * @param Time 현재 단위 시간
      * @param UnitType 시간 단위
      */
@@ -373,9 +379,12 @@ public:
 
     TArray<FActiveTacticalEffectHandle> GetActiveEffects(const FTacticalEffectQuery& Query) const;
 
-    TArray<float> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
-    TArray<float> GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const;
-    TArray<TPair<float, float>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    bool SetActiveEffectTimeRemaining(int32 NewTime, const FActiveTacticalEffectHandle Handle);
+    int32 GetActiveEffectTimeRemaining(const FActiveTacticalEffectHandle Handle) const;
+
+    TArray<int32> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    TArray<int32> GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const;
+    TArray<TPair<int32, int32>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
 
     float GetTacticalEffectMagnitude(FActiveTacticalEffectHandle Handle, const FTacticalAttribute& Attribute) const;
     int32 GetActiveEffectCount(const FTacticalEffectQuery& Query) const;

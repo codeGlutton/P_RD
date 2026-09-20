@@ -468,6 +468,32 @@ FOnChangeAttributeValue& FActiveTacticalEffectsContainer::GetTacticalAttributeVa
     return mAttributeValueChangeDelegates.FindOrAdd(Attribute);
 }
 
+void FActiveTacticalEffectsContainer::AdvanceEffectDurations(const int32 Time, const ETacticalEffectDurationUnitType UnitType)
+{
+    TACTICAL_EFFECT_SCOPE_LOCK();
+
+    for (int32 ActiveGEIdx = 0; ActiveGEIdx < mTacticalEffects.Num(); ++ActiveGEIdx)
+    {
+        FActiveTacticalEffect& Effect = mTacticalEffects[ActiveGEIdx];
+
+        if (Effect.mIsPendingRemove == true)
+        {
+            continue;
+        }
+        const int32 Duration = Effect.GetDuration();
+        if (Duration <= 0)
+        {
+            continue;
+        }
+        if (Effect.GetDurationUnit() != UnitType)
+        {
+            continue;
+        }
+
+        Effect.mSpec.mEffectClass->OnReduceTimeRemaining(*this, Effect.mSpec);
+    }
+}
+
 void FActiveTacticalEffectsContainer::CheckDurationExpired(const int32 Time, const ETacticalEffectDurationUnitType UnitType)
 {
     TACTICAL_EFFECT_SCOPE_LOCK();
@@ -489,8 +515,6 @@ void FActiveTacticalEffectsContainer::CheckDurationExpired(const int32 Time, con
         {
             continue;
         }
-
-        Effect.mSpec.mEffectClass->OnReduceTimeRemaining(*this, Effect.mSpec);
 
         int32 StacksToRemove = -2;
         bool NeedToRefreshStartTime = false;
@@ -541,12 +565,19 @@ void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectAdded(FActiv
     if (mOwner.IsValid() == true)
     {
         mOwner->SetActiveTacticalEffect(MoveTemp(EffectHandle));
+        mOwner->OnActiveTacticalEffectAdded(Effect.mSpec, EffectHandle);
     }
 }
 
 void FActiveTacticalEffectsContainer::InternalOnActiveTacticalEffectRemoved(FActiveTacticalEffect& Effect, const FTacticalEffectRemovalInfo& TacticalEffectRemovalInfo)
 {
     Effect.mIsPendingRemove = true;
+
+    FActiveTacticalEffectHandle EffectHandle = Effect.mHandle;
+    if (mOwner.IsValid() == true)
+    {
+        mOwner->OnActiveTacticalEffectRemoved(Effect.mSpec, EffectHandle);
+    }
 
     if (Effect.mSpec.mEffectClass)
     {
@@ -892,11 +923,42 @@ TArray<FActiveTacticalEffectHandle> FActiveTacticalEffectsContainer::GetActiveEf
     return ReturnList;
 }
 
-TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+bool FActiveTacticalEffectsContainer::SetActiveEffectTimeRemaining(int32 NewTime, const FActiveTacticalEffectHandle Handle)
 {
-    float CurrentTime = GetWorldTime(UnitType);
+    FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
+    if (ActiveEffect == nullptr)
+    {
+        return false;
+    }
 
-    TArray<float> ReturnList;
+    const ETacticalEffectDurationUnitType DurationUnit = ActiveEffect->GetDurationUnit();
+    const int32 CurrentTime = GetWorldTime(DurationUnit);
+    const int32 EffectDuration = ActiveEffect->GetDuration();
+
+    NewTime = FMath::Clamp(NewTime, 0, EffectDuration);
+    ActiveEffect->mStartTime = NewTime + CurrentTime - EffectDuration;
+
+    CheckDurationExpired(CurrentTime, DurationUnit);
+    return true;
+}
+
+int32 FActiveTacticalEffectsContainer::GetActiveEffectTimeRemaining(const FActiveTacticalEffectHandle Handle) const
+{
+    const FActiveTacticalEffect* ActiveEffect = GetActiveTacticalEffect(Handle);
+    if (ActiveEffect == nullptr)
+    {
+        return 0;
+    }
+
+    const int32 WorldTime = GetWorldTime(ActiveEffect->GetDurationUnit());
+    return ActiveEffect->GetTimeRemaining(WorldTime);
+}
+
+TArray<int32> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+{
+    const int32 CurrentTime = GetWorldTime(UnitType);
+
+    TArray<int32> ReturnList;
     for (const FActiveTacticalEffect& Effect : this)
     {
         if (Query.Matches(Effect) == false)
@@ -904,8 +966,8 @@ TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining(con
             continue;
         }
 
-        float Elapsed = CurrentTime - Effect.mStartTime;
-        float Duration = Effect.GetDuration();
+        const int32 Elapsed = CurrentTime - Effect.mStartTime;
+        const int32 Duration = Effect.GetDuration();
 
         ReturnList.Add(Duration - Elapsed);
     }
@@ -913,9 +975,9 @@ TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemaining(con
     return ReturnList;
 }
 
-TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const
+TArray<int32> FActiveTacticalEffectsContainer::GetActiveEffectsDuration(const FTacticalEffectQuery& Query) const
 {
-    TArray<float> ReturnList;
+    TArray<int32> ReturnList;
     for (const FActiveTacticalEffect& Effect : this)
     {
         if (Query.Matches(Effect) == false)
@@ -929,11 +991,11 @@ TArray<float> FActiveTacticalEffectsContainer::GetActiveEffectsDuration(const FT
     return ReturnList;
 }
 
-TArray<TPair<float, float>> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
+TArray<TPair<int32, int32>> FActiveTacticalEffectsContainer::GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const
 {
-    float CurrentTime = GetWorldTime(UnitType);
+    const int32 CurrentTime = GetWorldTime(UnitType);
 
-    TArray<TPair<float, float>> ReturnList;
+    TArray<TPair<int32, int32>> ReturnList;
     for (const FActiveTacticalEffect& Effect : this)
     {
         if (Query.Matches(Effect) == false)
@@ -941,8 +1003,8 @@ TArray<TPair<float, float>> FActiveTacticalEffectsContainer::GetActiveEffectsTim
             continue;
         }
 
-        float Elapsed = CurrentTime - Effect.mStartTime;
-        float Duration = Effect.GetDuration();
+        const int32 Elapsed = CurrentTime - Effect.mStartTime;
+        const int32 Duration = Effect.GetDuration();
 
         ReturnList.Emplace(Duration - Elapsed, Duration);
     }
