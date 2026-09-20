@@ -102,11 +102,9 @@ public:
 	UFUNCTION(Category = Room, BlueprintCallable)
 	bool AbandonRunFromRoom();
 
-	UFUNCTION(Category = Room, BlueprintCallable)
+	/** Finish a cleared final boss room and persist the closed run before returning to title. */
+	UFUNCTION(BlueprintCallable, Category = "UI")
 	bool CompleteRunFromRoom();
-
-	UFUNCTION(Category = Room, BlueprintCallable)
-	bool SaveAndExitRunFromRoomAsync();
 
 public:
 	/**
