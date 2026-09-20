@@ -51,7 +51,6 @@ DECLARE_MULTICAST_DELEGATE_FourParams(FOnEndAnyTurnActionUI, TSharedPtr<FPresent
 
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnSaveCombatPlay, const TArray<TObjectPtr<UUnitModel>>& /*PlayerModels*/, int32 /*RoundCount*/, int32 /*TurnCount*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnShowCombatResultUI, ESRPGCombatResult /*Result*/);
-DECLARE_MULTICAST_DELEGATE(FOnCombatProgressBlocked);
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSimulateAllPlayerTurn, const FSimulationOption& /*Option*/);
 
@@ -294,7 +293,6 @@ public:
 	 * @brief 전투 결과 확인 타이밍 대리자
 	 */
 	FOnShowCombatResultUI OnShowCombatResultUI;
-	FOnCombatProgressBlocked OnCombatProgressBlocked;
 	/**
 	 * @brief 모든 플레이어 턴 시뮬 요청 대리자
 	 */

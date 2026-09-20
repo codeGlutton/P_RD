@@ -349,13 +349,6 @@ void ACombatGameMode::InitializeCombat()
 
 	CombatModel->OnRegisterUnitUI.AddUObject(this, &ACombatGameMode::OnRegisterUnit);
 	CombatModel->OnUnregisterUnitUI.AddUObject(this, &ACombatGameMode::OnUnregisterUnit);
-	CombatModel->OnCombatProgressBlocked.AddWeakLambda(this, [this]()
-	{
-		const USimulationSubsystem* Simulation = GetWorld()->GetSubsystem<USimulationSubsystem>();
-		if (!Simulation || Simulation->GetSimulationState() != ESRPGSimulationState::RunningGame) return;
-		// Recover without awarding a win or recording a defeat for an invalid speed state.
-		SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete());
-	});
 
 	CombatModel->OnSaveCombatPlay.AddWeakLambda(this, [this](const TArray<TObjectPtr<UUnitModel>>& PlayerModels, int32 RoundCount, int32 TurnCount) {
 		UGameProfileSubsystem* GameProfileSubsystem = GetGameInstance()->GetSubsystem<UGameProfileSubsystem>();
@@ -683,7 +676,7 @@ bool ACombatGameMode::EndTurn()
 
 void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayload)
 {
-	if (mSettingsRunActionPending || IsSaveAndExitPending()) return;
+	if (mSettingsRunActionPending) return;
 	if (!GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>()->IsScenarioCommandAllowed(Type, IntPayload)) return;
 	switch (Type)
 	{
@@ -785,7 +778,7 @@ void ACombatGameMode::HandleCombatCommand(ECombatInputType Type, int32 IntPayloa
 
 void ACombatGameMode::HandleCombatWorldTouch(FVector2D ScreenPosition, bool bLongPress)
 {
-	if (mSettingsRunActionPending || IsSaveAndExitPending()) return;
+	if (mSettingsRunActionPending) return;
 	auto* Tutorial = GetGameInstance()->GetSubsystem<UFirstPlayTutorialSubsystem>();
 	if (Tutorial->IsEncounterHintVisible()) return;
 	if (Tutorial->IsScenarioGuiding())
@@ -1056,8 +1049,6 @@ void ACombatGameMode::HandleAbandonRun()
 {
 	if (mSettingsRunActionPending)
 	{
-		// A second click does not represent a failed operation. Keep the first
-		// asynchronous request authoritative and leave the UI locked until it ends.
 		return;
 	}
 
@@ -1093,50 +1084,24 @@ void ACombatGameMode::HandleSaveAndExitRun()
 {
 	if (mSettingsRunActionPending)
 	{
-		// Do not publish a false completion for a duplicate click: that would unlock
-		// the settings buttons while the original save/transition is still running.
 		return;
 	}
 
-	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr
-		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	USaveGameSubsystem* SaveGameSubsystem = GetGameInstance() != nullptr ? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
 	if (SaveGameSubsystem == nullptr)
 	{
 		if (mCombatUIModel != nullptr)
 		{
-			mCombatUIModel->NotifySaveAndExitCompleted(false);
+			mCombatUIModel->NotifyAbandonRunCompleted(false);
 		}
 		return;
 	}
 
-	mSettingsRunActionPending = true;
-	SaveGameSubsystem->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(
-		this,
-		[this](const FString& SlotName, const int32 UserIndex, const bool bSaveSucceeded)
-		{
-			if (!bSaveSucceeded)
-			{
-				mSettingsRunActionPending = false;
-				if (mCombatUIModel != nullptr)
-				{
-					mCombatUIModel->NotifySaveAndExitCompleted(false);
-				}
-				return;
-			}
-
-			SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete::CreateWeakLambda(
-				this, [this](const bool bSuccess)
-				{
-					if (!bSuccess)
-					{
-						mSettingsRunActionPending = false;
-					}
-					if (mCombatUIModel != nullptr)
-					{
-						mCombatUIModel->NotifySaveAndExitCompleted(bSuccess);
-					}
-				}));
-		}));
+	const bool bSaveAndExitRun = PreloadAndTransitionFrontendRoomAsync();
+	if (mCombatUIModel != nullptr)
+	{
+		mCombatUIModel->NotifySaveAndExitCompleted(bSaveAndExitRun);
+	}
 }
 
 void ACombatGameMode::HandleChangeFocusScreenAnchor(const FVector2D& ScreenRatio)
