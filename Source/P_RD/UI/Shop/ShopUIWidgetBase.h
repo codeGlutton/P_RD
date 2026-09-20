@@ -1,4 +1,4 @@
-// @file ShopUIWidgetBase.h
+﻿// @file ShopUIWidgetBase.h
 // @brief 상점(런 중 상점방) 화면 WBP가 상속하는 베이스입니다. 뷰모델에 묶여 표시·입력만 담당합니다.
 // @date 2026-06-18
 
@@ -146,14 +146,17 @@ private:
 	UFUNCTION() void HandleSkillSlotClicked1();
 	UFUNCTION() void HandleSkillSlotClicked2();
 	UFUNCTION() void HandleSkillSlotClicked3();
+	UFUNCTION() void HandleSkillSlotClicked4();
 	UFUNCTION() void HandleSkillSlotPressed0();
 	UFUNCTION() void HandleSkillSlotPressed1();
 	UFUNCTION() void HandleSkillSlotPressed2();
 	UFUNCTION() void HandleSkillSlotPressed3();
+	UFUNCTION() void HandleSkillSlotPressed4();
 	UFUNCTION() void HandleSkillSlotReleased0();
 	UFUNCTION() void HandleSkillSlotReleased1();
 	UFUNCTION() void HandleSkillSlotReleased2();
 	UFUNCTION() void HandleSkillSlotReleased3();
+	UFUNCTION() void HandleSkillSlotReleased4();
 	UFUNCTION() void HandleShopDetailCloseClicked();
 	void HandleMercenaryHireRequested(int32 CandidateSlotIndex, int32 PartySlotIndex);
 	void HandleMercenaryHireBackRequested();

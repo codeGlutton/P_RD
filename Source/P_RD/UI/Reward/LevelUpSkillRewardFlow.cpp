@@ -13,7 +13,6 @@
 #include "TimerManager.h"
 #include "Pawn/Player/PlayerUnitModel.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
-#include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
 #include "UI/Combat/SkillDetailUIBuilder.h"
 #include "UI/Shop/ShopUIModel.h"
 #include "UI/Shop/ShopUIWidgetBase.h"
@@ -113,7 +112,7 @@ bool LevelUpSkillReward::TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel*
 	const FPrimaryAssetId& SkillId, int32 SkillSlot)
 {
 	if (Reward.Completed || !Reward.Offered || !GameplayAssetPolicy::IsPlayerFacing(SkillId) || !Reward.Candidates.Contains(SkillId)
-		|| !Unit || SkillSlot < 1 || SkillSlot > 4) return false;
+		|| !Unit || SkillSlot > 4) return false;
 	USkillComponentModel* Skills = Unit->GetSkillComponentModel();
 	UStaticUnitSkillData* Skill = LoadSkill(SkillId);
 	if (!Skills || !IsEligibleForUnit(Unit, Skill) || !Skills->GetSkills().IsValidIndex(SkillSlot)
@@ -144,12 +143,6 @@ void ULevelUpSkillRewardFlow::Open(URunPersistData* Run, UPartyModel* Party, APl
 		mUIModel->OnOwnedSkillDetailRequested.AddDynamic(this, &ULevelUpSkillRewardFlow::ShowOwnedDetail);
 	}
 	ShowNext();
-}
-
-void ULevelUpSkillRewardFlow::Save()
-{
-	if (mController && mController->GetGameInstance())
-		mController->GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 }
 
 void ULevelUpSkillRewardFlow::Close()
@@ -204,8 +197,7 @@ void ULevelUpSkillRewardFlow::ShowNext(int32 PreferredUnit)
 			UStaticUnitSkillData* Skill = LoadSkill(Id);
 			if (Skill) Pool.Add(Skill);
 		}
-		if (LevelUpSkillReward::RefreshOffer(Reward, Unit, Pool,
-			ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream())) Save();
+		LevelUpSkillReward::RefreshOffer(Reward, Unit, Pool, ULevelAttributeSet::GetRarityRate(mController, Reward.Level), mRun->GetEventStream());
 	}
 
 	FShopUI View;
@@ -276,7 +268,6 @@ void ULevelUpSkillRewardFlow::Select(int32 Choice, int32 UnitIndex, int32 SkillS
 void ULevelUpSkillRewardFlow::FinishActiveReward()
 {
 	const int32 UnitIndex = mRun->GetRoomTransactions().LevelUpSkills[mActiveReward].UnitIndex;
-	Save();
 	// Retire this offer immediately, including skip, before accepting another tap.
 	mActiveReward = INDEX_NONE;
 	mWidget->SetIsEnabled(false);

@@ -1,4 +1,4 @@
-#include "GameMode/TreasureGameMode.h"
+﻿#include "GameMode/TreasureGameMode.h"
 
 #include "Engine/AssetManager.h"
 #include "Singleton/InstanceSubsystem/SaveGameSubsystem.h"
@@ -357,7 +357,6 @@ bool ATreasureGameMode::GrantTreasureGold()
 	GivePartyGold(TreasureRoom.mRewardMoney);
 	mGoldRewardGranted = true;
 	GetRunPersistData()->GetRoomTransactionsMutable().GoldClaimed = true;
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	return true;
 }
 
@@ -407,7 +406,6 @@ void ATreasureGameMode::HandleRewardSelectionRequested(FPrimaryAssetId RewardId)
 	FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactionsMutable();
 	Transactions.TreasureOpened = true;
 	Transactions.SelectedArtifact = SelectedId;
-	GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 	PushTreasureUIData();
 	if (mRewardUIModel) mRewardUIModel->ConfirmSelectedReward(SelectedId);
 }
@@ -482,7 +480,6 @@ void ATreasureGameMode::HandleRewardPresentationCompleted(int32 ArtifactIndex)
 			|| !GrantTreasureGold()) return;
 		mOpened = true;
 		GetRunPersistData()->GetRoomTransactionsMutable().TreasureOpened = true;
-		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
 		PushTreasureUIData();
 	}
 	if (mRewardWidget != nullptr)

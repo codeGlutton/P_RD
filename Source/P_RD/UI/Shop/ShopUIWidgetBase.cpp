@@ -1,4 +1,4 @@
-#include "UI/Shop/ShopUIWidgetBase.h"
+﻿#include "UI/Shop/ShopUIWidgetBase.h"
 #include "UI/DetailOverlayInputShield.h"
 #include "UI/Tutorial/ShopGuideWidget.h"
 #include "Tutorial/FirstPlayTutorialSubsystem.h"
@@ -20,6 +20,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/WrapBox.h"
 #include "Components/WrapBoxSlot.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 #include "Engine/Texture2D.h"
 #include "UI/RunOptionsRailWidget.h"
 #include "UI/Hire/MercenaryHireWidget.h"
@@ -35,11 +36,10 @@
 
 namespace
 {
-	/** 이동은 SkillModel 밖에 있고, 상점에서 교체 가능한 네 칸은 기본 공격 다음 실제 스킬 슬롯 1..4다. */
-	// 이동은 SkillModel 바깥의 전투 공용 명령이고, 모델 안에서는 0번 기본
-	// 공격만 고정이다. 따라서 상점의 네 칸은 실제 스킬 1..4와 대응한다.
-	constexpr int32 ReplaceableSkillStartIndex = 1;
-	constexpr int32 ReplaceableSkillSlotCount = 4;
+	/** 이동은 SkillModel 밖에 있고, 상점에서 교체 가능한 네 칸은 기본 공격 다음 실제 스킬 슬롯 1..5다. */
+	// 이동은 SkillModel 바깥의 전투 공용 명령
+	constexpr int32 ReplaceableSkillStartIndex = 0;
+	constexpr int32 ReplaceableSkillSlotCount = USkillComponentModel::DEFAULT_SKILL_POOL_SIZE;
 	constexpr float SkillDetailLongPressSeconds = 0.45f;
 
 	/** @brief 상점 항목 종류별 기본 아이콘 텍스처 경로(SVN 임포트). */
@@ -367,7 +367,7 @@ void UShopUIWidgetBase::CacheFinalShopWidgets()
 			FName(*FString::Printf(TEXT("RestUnitHPAfterFill_%d"), Index)))));
 	}
 
-	for (int32 Index = 0; Index < 4; ++Index)
+	for (int32 Index = 0; Index < 5; ++Index)
 	{
 		mSkillSlotButtons.Add(Cast<UButton>(WidgetTree->FindWidget(
 			FName(*FString::Printf(TEXT("mSkillSlotButton_%d"), Index)))));
@@ -556,6 +556,9 @@ void UShopUIWidgetBase::BindFinalShopInputs()
 	BindSkillHold(mSkillSlotButtons.IsValidIndex(3) ? mSkillSlotButtons[3].Get() : nullptr,
 		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotPressed3),
 		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotReleased3));
+	BindSkillHold(mSkillSlotButtons.IsValidIndex(3) ? mSkillSlotButtons[4].Get() : nullptr,
+		this, GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotPressed4),
+		GET_FUNCTION_NAME_CHECKED(UShopUIWidgetBase, HandleSkillSlotReleased4));
 }
 
 void UShopUIWidgetBase::HandleArtifactTabClicked()
@@ -756,14 +759,17 @@ void UShopUIWidgetBase::HandleSkillSlotClicked0() { SelectSkillSlot(0); }
 void UShopUIWidgetBase::HandleSkillSlotClicked1() { SelectSkillSlot(1); }
 void UShopUIWidgetBase::HandleSkillSlotClicked2() { SelectSkillSlot(2); }
 void UShopUIWidgetBase::HandleSkillSlotClicked3() { SelectSkillSlot(3); }
+void UShopUIWidgetBase::HandleSkillSlotClicked4() { SelectSkillSlot(4); }
 void UShopUIWidgetBase::HandleSkillSlotPressed0() { BeginSkillSlotPress(0); }
 void UShopUIWidgetBase::HandleSkillSlotPressed1() { BeginSkillSlotPress(1); }
 void UShopUIWidgetBase::HandleSkillSlotPressed2() { BeginSkillSlotPress(2); }
 void UShopUIWidgetBase::HandleSkillSlotPressed3() { BeginSkillSlotPress(3); }
+void UShopUIWidgetBase::HandleSkillSlotPressed4() { BeginSkillSlotPress(4); }
 void UShopUIWidgetBase::HandleSkillSlotReleased0() { EndSkillSlotPress(0); }
 void UShopUIWidgetBase::HandleSkillSlotReleased1() { EndSkillSlotPress(1); }
 void UShopUIWidgetBase::HandleSkillSlotReleased2() { EndSkillSlotPress(2); }
 void UShopUIWidgetBase::HandleSkillSlotReleased3() { EndSkillSlotPress(3); }
+void UShopUIWidgetBase::HandleSkillSlotReleased4() { EndSkillSlotPress(4); }
 
 void UShopUIWidgetBase::BeginSkillSlotPress(const int32 SkillSlotIndex)
 {
