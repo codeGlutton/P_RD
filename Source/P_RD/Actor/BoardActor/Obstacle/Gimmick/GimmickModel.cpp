@@ -1,4 +1,4 @@
-﻿/*****************************************************************//**
+/*****************************************************************//**
  * @file   GimmickModel.cpp
  * @brief  기믹 공통 모델 구현 파일
  * @author 이문환
@@ -29,10 +29,15 @@ void UGimmickModel::PostInitializeComponentModels()
 	mTriggerSkillIndex = GimmickSpawn->mTriggerSkillIndex;
 }
 
+bool UGimmickModel::CanTriggerGimmick() const
+{
+	return mRemainingTriggerCount != 0 && IsDead() == false;
+}
+
 bool UGimmickModel::TryTriggerGimmick(const FTileIndex& AimedTileIndex, TSharedPtr<FPresentationBarrier> PresentationBarrier)
 {
-	// 수명을 다 썼거나 죽은 기믹은 발동 불가
-	if (mRemainingTriggerCount == 0 || IsDead() == true)
+	// 수명을 다 썼거나 죽은 기믹 등 발동 조건에 맞지 않으면 불가
+	if (CanTriggerGimmick() == false)
 	{
 		return false;
 	}
