@@ -37,8 +37,8 @@ EDataValidationResult UStaticUnitSkillData::IsDataValid(FDataValidationContext& 
 	}
 
 	if (
-		mSkillType == ESkillType::Attack && 
-		mTargetPolicy.IsStatusPolicy() == true && 
+		(mSkillType == ESkillType::Attack || mSkillType == ESkillType::Move) &&
+		mTargetPolicy.IsStatusPolicy() == true &&
 		mTargetPolicy.mStatusTag.IsValid() == false
 		)
 	{
