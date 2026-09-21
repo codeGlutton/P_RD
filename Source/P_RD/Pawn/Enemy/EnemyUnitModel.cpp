@@ -88,6 +88,8 @@ ESkillPriority UEnemyUnitModel::GetSkillPriority(int32 SkillSlot) const
 
 const FEnemyTargetPolicyOverride& UEnemyUnitModel::GetTargetPolicyOverride(int32 SkillSlot) const
 {
-	return mTargetPolicyOverrides[SkillSlot];
+	// 스폰 데이터 없이 만든 모델(테스트 Mock 등)은 배열이 비어 있으므로, 범위 밖이면 오버라이드 없음으로 취급
+	static const FEnemyTargetPolicyOverride NoOverride;
+	return mTargetPolicyOverrides.IsValidIndex(SkillSlot) ? mTargetPolicyOverrides[SkillSlot] : NoOverride;
 }
 
