@@ -84,6 +84,61 @@ namespace
 		return BestCount > 0;
 	}
 
+	/**
+	 * @brief 이동 스킬의 착지 타일 선택 결과
+	 */
+	struct FMoveAimChoice
+	{
+		// @brief 착지 타일 (후보가 없으면 Invalid)
+		FTileIndex mTile = FTileIndex::Invalid;
+		// @brief 착지 타일에서 기준 타겟 타일까지 경로 거리 (경로 없음은 MAX_int32)
+		int32 mPathDistance = MAX_int32;
+		// @brief 착지 타일에서 기준 타겟 타일까지 맨해튼 거리
+		int32 mManhattanDistance = MAX_int32;
+		// @brief 조준 가능한 빈 타일 수
+		int32 mCandidateCount = 0;
+	};
+
+	/**
+	 * @brief 이동 스킬의 착지 타일 선택
+	 * @details
+	 * 현재 타일에서 조준 가능한 타일 중 기준 타겟 타일에 가장 가까운 타일 선택.
+	 * 1순위 경로 거리, 2순위 맨해튼 거리, 완전 동률은 먼저 나온 타일 (난수 소모 없음).
+	 * 조준 집합은 실행 직전 검증(SRPGSkillAction)과 같은 스킬 컴포넌트 함수로 구해서 결과 일치 보장.
+	 */
+	FMoveAimChoice ChooseMoveAimTile(const UTileMapModel* Map, const UEnemyUnitModel* Enemy,
+		const USkillComponentModel* SkillComp, int32 SkillSlot, const FTileIndex& ReferenceTile)
+	{
+		FMoveAimChoice Choice;
+
+		// 현재 타일 기준 조준 가능 타일 (DA의 사거리/패턴/빈 타일 조건/차폐 적용)
+		const TArray<FTileIndex> AimTiles = SkillComp->GetAimableTiles(Map, SkillSlot);
+		Choice.mCandidateCount = AimTiles.Num();
+
+		// 기준 타겟 타일에서 각 타일까지의 경로 거리장 (자기 자신은 자리를 비울 예정이므로 차단에서 제외)
+		const TArray<int32> DistanceField = Map->GetDistanceField(ReferenceTile, Enemy);
+
+		for (const FTileIndex& Tile : AimTiles)
+		{
+			// 경로 없음(-1)은 MAX_int32로 통일 (전술 타일 테이블과 같은 규칙)
+			const int32 RawDistance = DistanceField[Map->TileIndexToLinearIndex(Tile)];
+			const int32 PathDistance = (RawDistance >= 0) ? RawDistance : MAX_int32;
+			const int32 ManhattanDistance = FTileIndex::ManhattanDistance(Tile, ReferenceTile);
+
+			// 1순위 경로 거리, 2순위 맨해튼 거리. 완전 동률이면 먼저 나온 타일 유지
+			const bool bBetter = (PathDistance != Choice.mPathDistance)
+				? (PathDistance < Choice.mPathDistance)
+				: (ManhattanDistance < Choice.mManhattanDistance);
+			if (bBetter == true)
+			{
+				Choice.mTile = Tile;
+				Choice.mPathDistance = PathDistance;
+				Choice.mManhattanDistance = ManhattanDistance;
+			}
+		}
+		return Choice;
+	}
+
 	// @brief 유닛 로그 라벨 (키이름#모델ID)
 	FString MakeUnitLabel(const UBoardActorModel* Model)
 	{
@@ -323,10 +378,12 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	// 전술 타일 테이블 구성: 이후 판단은 전부 테이블 조회로 처리
 	// 확정 스킬 하나만 올리되, 슬롯 인덱스를 그대로 쓰기 위해 배열 크기는 슬롯 수 유지
 	// 자기 버프는 조준 판단이 없으므로 비워 두고, 시전 비용을 먼저 뗀 예산으로만 이동
+	// 이동 스킬은 빈 타일을 조준하므로 타겟 타일 기준인 테이블 조준 판정에서 제외 (제자리 시전이라 이동 예산은 그대로)
 	const bool bSpell = (ChosenSkill->mSkillType == ESkillType::Spell);
+	const bool bMove = (ChosenSkill->mSkillType == ESkillType::Move);
 	TArray<const UStaticUnitSkillData*> SkillDatas;
 	SkillDatas.Init(nullptr, Skills.Num());
-	if (bSpell == false)
+	if (bSpell == false && bMove == false)
 	{
 		SkillDatas[ChosenSkillSlot] = ChosenSkill;
 	}
@@ -373,7 +430,7 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		bSpell ? FEnemyTargetPolicy() : ChosenTargetPolicy,
 		Table, TargetModels, AllTargets, EventStream);
 
-	// 확정 스킬로 시전 가능한 타겟 후보 수집 (버프는 테이블에 스킬이 없으므로 항상 비어 있음)
+	// 확정 스킬로 시전 가능한 타겟 후보 수집 (버프와 이동 스킬은 테이블에 스킬이 없으므로 항상 비어 있음)
 	TArray<int32> CastableTargets;
 	for (int32 TargetIndex = 0; TargetIndex < TargetTiles.Num(); ++TargetIndex)
 	{
@@ -392,7 +449,31 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		CastableTargets.RemoveAll([ReferenceTarget](int32 Index) { return Index != ReferenceTarget; });
 	}
 
-	if (bSpell == true)
+	// 이동 스킬: 기준 타겟 타일에 가장 가까운 빈 타일을 착지 타일로 선택 (후보가 없으면 Invalid)
+	const FMoveAimChoice MoveAim = bMove
+		? ChooseMoveAimTile(TileMap, Enemy, SkillComp, ChosenSkillSlot, TargetTiles[ReferenceTarget])
+		: FMoveAimChoice();
+
+	if (bMove == true && MoveAim.mTile != FTileIndex::Invalid)
+	{
+		//
+		// 이동 스킬: 걷지 않고 현재 타일에서 착지 타일을 조준해 시전 (후보가 없으면 아래 시전 불가 분기로)
+		//
+		AreaAim = MoveAim.mTile;
+		CanCast = true;
+
+		// 판단근거 로그: 누구를 기준으로 어느 타일을 골랐는지
+		const FString PathDistanceText = (MoveAim.mPathDistance == MAX_int32) ? FString(TEXT("도달불가")) : FString::FromInt(MoveAim.mPathDistance);
+		UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 이동스킬: 기준타겟[%d]=%s@(%d,%d) 대상우선순위=%s, 스킬[%d]=%s (%d,%d)→(%d,%d) 경로거리=%s 맨해튼=%d 후보=%d, 시전%d ≤ AP%d"),
+			*LogPrefix, ReferenceTarget, *MakeUnitLabel(TargetModels[ReferenceTarget]),
+			TargetTiles[ReferenceTarget].mX, TargetTiles[ReferenceTarget].mY,
+			*StaticEnum<EEnemyTargetPriority>()->GetNameStringByValue(static_cast<int64>(ChosenTargetPolicy.mPriority)),
+			ChosenSkillSlot, *ChosenSkill->GetName(),
+			EnemyTile.mX, EnemyTile.mY, MoveAim.mTile.mX, MoveAim.mTile.mY,
+			*PathDistanceText, MoveAim.mManhattanDistance, MoveAim.mCandidateCount,
+			ChosenSkill->mRequiredActionPoint, ActionPoint);
+	}
+	else if (bSpell == true)
 	{
 		//
 		// 자기 버프: 남는 예산으로 이동 성향대로 자리를 잡고 거기서 시전 (도달 가능한 모든 타일이 후보)
@@ -472,7 +553,17 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 		// 공격 불가: 다른 스킬로 바꾸지 않고 이동만 (예상 스킬과 실제 스킬 일치 보장)
 		//
 		// 판단근거 로그: 시전하지 못한 턴은 근거를 상세히 남김
-		LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), ChosenSkillSlot, ChosenSkill, TargetModels, TargetTiles, Table);
+		if (bMove == true)
+		{
+			// 이동 스킬은 타겟 타일을 조준하지 않으므로 타겟별 조준 사유 대신 빈 타일 후보가 없었다는 사실만 남김
+			UE_LOG(LogSRPGEnemyPlanner, Log, TEXT("%s 이동스킬 시전불가: 스킬[%d]=%s @(%d,%d) AP=%d 사거리=%d 패턴=%s → 조준 범위 안에 빈 타일 없음"),
+				*LogPrefix, ChosenSkillSlot, *ChosenSkill->GetName(), EnemyTile.mX, EnemyTile.mY, ActionPoint, ChosenSkill->mAimRange,
+				*StaticEnum<EAimPattern>()->GetNameStringByValue(static_cast<int64>(ChosenSkill->mAimPattern)));
+		}
+		else
+		{
+			LogNoCastDetails(LogPrefix, EnemyTile, ActionPoint, Enemy->GetMoveTendency(), ChosenSkillSlot, ChosenSkill, TargetModels, TargetTiles, Table);
+		}
 
 		// Keep legacy Nearest/AttackAvailable movement and RNG behaviour exactly intact.
 		const bool bLegacyMovement = ChosenTargetPolicy.mPriority == EEnemyTargetPriority::Nearest && !bChasePreferred;

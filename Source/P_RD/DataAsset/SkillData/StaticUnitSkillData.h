@@ -64,8 +64,8 @@ public:
     bool mIgnoreCondition = false;
 
 public:
-    // @brief 타겟 선정 기준
-    UPROPERTY(Category = "AILogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetPolicy", EditCondition = "mSkillType == ESkillType::Attack", EditConditionHides))
+    // @brief 타겟 선정 기준 (Move는 착지 타일을 고를 때의 기준 타겟 선정에 사용)
+    UPROPERTY(Category = "AILogic", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "TargetPolicy", EditCondition = "mSkillType == ESkillType::Attack || mSkillType == ESkillType::Move", EditConditionHides))
     FEnemyTargetPolicy mTargetPolicy;
 };
 

@@ -14,6 +14,8 @@
  * 자기 버프: 버프 우선순위 낮으면 공격 확정(Case8-1), 버프 우선순위 높으면 비용 떼고 성향 이동 후 버프(Case8-2),
  *           버프만 보유 시 성향 이동(Case8-3), 공격 확정 후 사거리 밖이면 버프로 안 바꾸고 접근(Case8-4),
  *           공격 확정 후 비용 부족이면 버프 없이 선점이동(Case8-5).
+ * 이동 스킬: 걷지 않고 빈 타일 조준(Case9-1), 점유 타일 제외(Case9-2), 경로 없으면 맨해튼 거리로 비교(Case9-3),
+ *           대상우선순위로 기준 타겟 선정(Case9-4), 빈 타일 없으면 시전 없이 접근(Case9-5).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -220,6 +222,73 @@ namespace
 		const FRandomStream Stream(20260710);
 
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, Stream);
+	}
+
+	// @brief 이동 스킬 하나만 가진 적 유닛의 한 턴을 계획해 커맨드 목록 반환
+	// @param KeepAlive SkillComponent가 약참조라 GC 안당하도록 붙잡아두는 장치
+	// @param ActionPoint 적 유닛의 행동력
+	// @param AimRange 이동 스킬의 조준 사거리 (Square 패턴, 빈 타일만 조준)
+	// @param SkillCost 이동 스킬의 시전 비용
+	// @param PlayerIndexes 플레이어 배치 좌표들 (배열 순서가 곧 타겟 인덱스)
+	// @param BlockerIndexes 타일을 점유하는 제3의 유닛 배치 좌표들 (타겟 아님. 점유 제외와 경로 차단 검증용)
+	// @param Priority 이동 스킬의 대상우선순위 (기준 타겟 선정 검증용)
+	TArray<TInstancedStruct<FSRPGCommand>> PlanMoveSkill(
+		UWorld* World,
+		TArray<UObject*>& KeepAlive,
+		int32 ActionPoint,
+		int32 AimRange,
+		int32 SkillCost,
+		int32 TileMapWidth,
+		int32 TileMapHeight,
+		FTileIndex EnemyIndex,
+		const TArray<FTileIndex>& PlayerIndexes,
+		const TArray<FTileIndex>& BlockerIndexes = TArray<FTileIndex>(),
+		EEnemyTargetPriority Priority = EEnemyTargetPriority::Nearest)
+	{
+		// 타일맵 생성
+		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		TileMap->SetDimensions(TileMapWidth, TileMapHeight);
+
+		// 적유닛 생성 (시전 불가 시 접근 이동 검증을 위해 근거리 성향)
+		UMockEnemyUnitModel* Enemy = NewObject<UMockEnemyUnitModel>(World);
+		Enemy->Initialize();
+		Enemy->BeginPlay();
+		Enemy->SetMoveTendency(EMoveTendency::MoveClose);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, ActionPoint);
+
+		// 이동 스킬 생성: 점유 타일은 조준 불가, 대상우선순위는 스킬 DA 값으로 지정
+		UStaticUnitSkillData* MoveSkill = CastChecked<UStaticUnitSkillData>(MakeSkill(World, KeepAlive, EAimPattern::Square, AimRange,
+			EEffectPattern::Single, 0, SkillCost, ESkillType::Move));
+		MoveSkill->mCanAimBoardActor = false;
+		MoveSkill->mTargetPolicy.mPriority = Priority;
+
+		// 스킬 슬롯 풀 할당 후 슬롯 0에 장착
+		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
+		Enemy->GetSkillComponentModel()->SetSkill(0, MoveSkill);
+
+		// 적유닛 배치
+		TileMap->PlaceActor(FTileTransform(EnemyIndex), Enemy);
+
+		// 플레이어유닛 생성 및 배치 (배열 순서가 곧 타겟 인덱스)
+		TArray<UUnitModel*> Players;
+		for (const FTileIndex& PlayerIndex : PlayerIndexes)
+		{
+			UMockPlayerUnitModel* Player = NewObject<UMockPlayerUnitModel>(World);
+			Players.Add(Player);
+			TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);
+		}
+
+		// 차단 유닛 배치 (Unit 레이어 점유만 필요하니 플레이어 Mock 재사용, 타겟 목록에는 넣지 않음)
+		for (const FTileIndex& BlockerIndex : BlockerIndexes)
+		{
+			UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+			TileMap->PlaceActor(FTileTransform(BlockerIndex), Blocker);
+		}
+
+		// 고정 시드 스트림 (테스트 결정성 보장)
+		const FRandomStream Stream(20260710);
+
 		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, Stream);
 	}
 
@@ -988,6 +1057,127 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 			TestEqual(TEXT("[Case8-3] 버프 슬롯 2 선택"), Cast->mSkillIndex, 2);
 			TestTrue(TEXT("[Case8-3] 조준 타일은 목적지(5,0)"), Cast->mTargetIndex == FTileIndex(5, 0));
 		}
+	}
+
+	/**
+	 * 케이스 레이블: Case9-Y (이동 스킬. 빈 타일만 조준하는 Square 패턴)
+	 * 이동 스킬은 걷지 않고 현재 타일에서 시전하므로 이동커맨드가 없어야 함.
+	 * 착지 타일은 기준 타겟 타일까지 1순위 경로 거리, 2순위 맨해튼 거리가 가장 작은 타일.
+	 */
+
+	/**
+	 * Case9-1: 이동 스킬 / 빈 타일 조준
+	 *   -> 걷지 않고 기준 타겟에 가장 가까운 빈 타일을 조준해 시전
+	 * 맵 (8x1): E(0,0) P(6,0), 사거리 3
+	 *   -> 후보 (1,0)(2,0)(3,0) 중 경로 거리 3으로 가장 가까운 (3,0)
+	 */
+	AddInfo(TEXT("=== Case9-1: 이동 스킬 / 빈 타일 조준 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, KeepAlive,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(6, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-1"));
+		TestTrue(TEXT("[Case9-1] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case9-1] 이동 스킬 슬롯 0 선택"), Cast->mSkillIndex, 0);
+			TestTrue(TEXT("[Case9-1] 조준 타일=(3,0)"), Cast->mTargetIndex == FTileIndex(3, 0));
+		}
+	}
+
+	/**
+	 * Case9-2: 이동 스킬 / 점유 타일 제외
+	 *   -> 기준 타겟에 가장 가까운 타일이 다른 유닛에게 점유되어 있으면 그 다음으로 가까운 빈 타일 선택
+	 * 맵 (8x2): E(0,0) P(4,0) B(3,0), 사거리 3
+	 *   -> (3,0)은 점유라 제외, 우회 경로 거리 2인 (3,1)
+	 */
+	AddInfo(TEXT("=== Case9-2: 이동 스킬 / 점유 타일 제외 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, KeepAlive,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 2,
+			FTileIndex(0, 0),
+			{ FTileIndex(4, 0) },
+			{ FTileIndex(3, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-2"));
+		TestTrue(TEXT("[Case9-2] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-2] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-2] 점유 타일 (3,0)은 조준하지 않음"), Cast->mTargetIndex != FTileIndex(3, 0));
+			TestTrue(TEXT("[Case9-2] 조준 타일=(3,1)"), Cast->mTargetIndex == FTileIndex(3, 1));
+		}
+	}
+
+	/**
+	 * Case9-3: 이동 스킬 / 기준 타겟까지 경로 없음
+	 *   -> 후보 전부 경로 거리가 같으므로(도달 불가) 맨해튼 거리가 가장 작은 타일 선택
+	 * 맵 (8x1): E(0,0) B(4,0) P(5,0), 사거리 3
+	 *   -> 후보 (1,0)(2,0)(3,0) 중 맨해튼 거리 2인 (3,0). 먼저 나오는 (1,0)이 뽑히면 2순위 비교 누락
+	 */
+	AddInfo(TEXT("=== Case9-3: 이동 스킬 / 경로 없음 / 맨해튼 거리 비교 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, KeepAlive,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(5, 0) },
+			{ FTileIndex(4, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-3"));
+		TestTrue(TEXT("[Case9-3] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-3] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-3] 조준 타일=(3,0)"), Cast->mTargetIndex == FTileIndex(3, 0));
+		}
+	}
+
+	/**
+	 * Case9-4: 이동 스킬 / 대상우선순위 Farthest
+	 *   -> 가장 먼 플레이어를 기준 타겟으로 삼아 그 옆에 착지 (후방 침투)
+	 * 맵 (9x1): P0(2,0) E(4,0) P1(8,0), 사거리 3
+	 *   -> 기준 타겟은 경로 거리 4인 P1, 착지 타일은 P1 옆 (7,0). Nearest였다면 P0 옆
+	 */
+	AddInfo(TEXT("=== Case9-4: 이동 스킬 / 대상우선순위 Farthest ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, KeepAlive,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			9, 1,
+			FTileIndex(4, 0),
+			{ FTileIndex(2, 0), FTileIndex(8, 0) },
+			TArray<FTileIndex>(),
+			EEnemyTargetPriority::Farthest);
+		CheckTail(*this, Commands, TEXT("Case9-4"));
+		TestTrue(TEXT("[Case9-4] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-4] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-4] 조준 타일=(7,0)"), Cast->mTargetIndex == FTileIndex(7, 0));
+		}
+	}
+
+	/**
+	 * Case9-5: 이동 스킬 / 조준 가능한 빈 타일 없음
+	 *   -> 다른 스킬로 바꾸지 않고 시전 없이 기준 타겟에게 접근 (시전 비용은 이동 예산에서 떼지 않음)
+	 * 맵 (6x1): E(0,0) P(5,0), 사거리 0 (후보 없음), 행동력 3
+	 *   -> 행동력 3을 전부 써서 (3,0)으로 접근
+	 */
+	AddInfo(TEXT("=== Case9-5: 이동 스킬 / 빈 타일 없음 / 접근 폴백 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, KeepAlive,
+			/*ActionPoint*/3, /*AimRange*/0, /*SkillCost*/1,
+			6, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(5, 0) });
+		CheckApproachNoCast(*this, Commands, TEXT("Case9-5"), FTileIndex(3, 0));
 	}
 
 	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상
