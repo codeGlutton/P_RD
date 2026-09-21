@@ -32,6 +32,8 @@ namespace
 		{TEXT("ForcedMovementImmunity"), EFloatingLogIconType::ForcedMovementImmunity, TEXT("ForcedMovementImmunity")},
 		{TEXT("Bleed"), EFloatingLogIconType::Status, TEXT("Bleed")},
 		{TEXT("Stealth"), EFloatingLogIconType::Status, TEXT("Stealth")},
+		{TEXT("Pull"), EFloatingLogIconType::Status, TEXT("GetMove")},
+		{TEXT("Push"), EFloatingLogIconType::Status, TEXT("GetMove")},
 	};
 
 	UTexture2D* LoadStatusArt(const FStatusArt& Art)
@@ -77,10 +79,7 @@ namespace
 			{ TEXT("Poison"),        			NSLOCTEXT("CombatStatusUI", "Poison", "중독") },
 			{ TEXT("Bleed"),         			NSLOCTEXT("CombatStatusUI", "Bleed", "출혈") },
 			{ TEXT("Stun"),          			NSLOCTEXT("CombatStatusUI", "Stun", "기절") },
-	        { TEXT("ControlImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescControlImmunity", "기절과 속박에 걸리는 것을 막아줍니다.") },
-        { TEXT("WeakeningImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescWeakeningImmunity", "탈진, 둔화, 약화 같은 능력 저하 효과에 걸리는 것을 막아줍니다.") },
-        { TEXT("ForcedMovementImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescForcedMovementImmunity", "밀치기나 끌어당기기로 위치가 바뀌는 것을 막아줍니다.") },
-		{ TEXT("Stealth"),       			NSLOCTEXT("CombatStatusUI", "Stealth", "은신") },
+			{ TEXT("Stealth"),       			NSLOCTEXT("CombatStatusUI", "Stealth", "은신") },
 			{ TEXT("Strength"),      			NSLOCTEXT("CombatStatusUI", "Strength", "완력") },
 			{ TEXT("Dexterity"),     			NSLOCTEXT("CombatStatusUI", "Dexterity", "재치") },
 			{ TEXT("Acumeny"),       			NSLOCTEXT("CombatStatusUI", "Acumeny", "예리함") },
@@ -242,8 +241,13 @@ const TMap<FString, FText>& StatusDescriptions()
 		{ TEXT("Root"),          NSLOCTEXT("CombatLayoutHUD", "StatusDescRoot", "이동할 수 없다.") },
 		{ TEXT("Poison"),        NSLOCTEXT("CombatLayoutHUD", "StatusDescPoison", "라운드가 지날 때 피해를 입습니다.") },
 		{ TEXT("Bleed"),         NSLOCTEXT("CombatLayoutHUD", "StatusDescBleed", "라운드가 지날 때 피해를 입습니다.") },
-		{ TEXT("Stun"),          NSLOCTEXT("CombatLayoutHUD", "StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
-		{ TEXT("Stealth"),       NSLOCTEXT("CombatLayoutHUD", "StatusDescStealth", "적의 대상이 되지 않는다.") },
+		{ TEXT("Stun"),                   NSLOCTEXT("CombatLayoutHUD", "StatusDescStun", "이동과 스킬을 사용할 수 없다.") },
+		{ TEXT("Stealth"),                NSLOCTEXT("CombatLayoutHUD", "StatusDescStealth", "적의 대상이 되지 않는다.") },
+		{ TEXT("ControlImmunity"),        NSLOCTEXT("CombatLayoutHUD", "StatusDescControlImmunity", "기절과 속박에 걸리는 것을 막아줍니다.") },
+		{ TEXT("WeakeningImmunity"),      NSLOCTEXT("CombatLayoutHUD", "StatusDescWeakeningImmunity", "탈진, 둔화, 약화 같은 능력 저하 효과에 걸리는 것을 막아줍니다.") },
+		{ TEXT("ForcedMovementImmunity"), NSLOCTEXT("CombatLayoutHUD", "StatusDescForcedMovementImmunity", "밀치기나 끌어당기기로 위치가 바뀌는 것을 막아줍니다.") },
+		{ TEXT("Pull"),                   NSLOCTEXT("CombatLayoutHUD", "StatusDescPull", "대상을 시전자 쪽으로 끌어당깁니다.") },
+		{ TEXT("Push"),                   NSLOCTEXT("CombatLayoutHUD", "StatusDescPush", "대상을 반대 방향으로 밀어냅니다.") },
 	};
     return Descriptions;
 }

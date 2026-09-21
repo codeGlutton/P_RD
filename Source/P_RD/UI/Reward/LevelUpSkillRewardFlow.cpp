@@ -1,4 +1,4 @@
-#include "UI/Reward/LevelUpSkillRewardFlow.h"
+﻿#include "UI/Reward/LevelUpSkillRewardFlow.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/RunOptionsRailWidget.h"
@@ -113,7 +113,7 @@ bool LevelUpSkillReward::TryEquip(FLevelUpSkillReward& Reward, UPlayerUnitModel*
 	const FPrimaryAssetId& SkillId, int32 SkillSlot)
 {
 	if (Reward.Completed || !Reward.Offered || !GameplayAssetPolicy::IsPlayerFacing(SkillId) || !Reward.Candidates.Contains(SkillId)
-		|| !Unit || SkillSlot < 1 || SkillSlot > 4) return false;
+		|| !Unit || SkillSlot > 4) return false;
 	USkillComponentModel* Skills = Unit->GetSkillComponentModel();
 	UStaticUnitSkillData* Skill = LoadSkill(SkillId);
 	if (!Skills || !IsEligibleForUnit(Unit, Skill) || !Skills->GetSkills().IsValidIndex(SkillSlot)

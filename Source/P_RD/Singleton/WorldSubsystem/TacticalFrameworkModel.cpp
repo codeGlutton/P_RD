@@ -111,9 +111,19 @@ UTacticalEffectContext* UTacticalFrameworkModel::AllocTacticalEffectContext() co
 	return NewObject<UTacticalEffectContext>(const_cast<UTacticalFrameworkModel*>(this));
 }
 
-void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model)
+void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecApply(const FTacticalEffectSpec& Spec, UAttributeSetComponentModel* Model)
 {
 	OnPreTacticalEffectSpecApplyUI.Broadcast(Spec, Model);
+}
+
+void UTacticalFrameworkModel::GlobalPostTacticalEffectSpecAdded(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, UAttributeSetComponentModel* Model)
+{
+	OnPostTacticalEffectSpecAddedUI.Broadcast(Spec, ActiveHandle, Model);
+}
+
+void UTacticalFrameworkModel::GlobalPreTacticalEffectSpecRemoved(const FTacticalEffectSpec& Spec, FActiveTacticalEffectHandle ActiveHandle, UAttributeSetComponentModel* Model)
+{
+	OnPreTacticalEffectSpecRemovedUI.Broadcast(Spec, ActiveHandle, Model);
 }
 
 void UTacticalFrameworkModel::PushCurrentAppliedTE(const FTacticalEffectSpec* Spec, UAttributeSetComponentModel* Model)
@@ -165,13 +175,25 @@ int32 UTacticalFrameworkModel::GetGlobalBatchCount() const
 void UTacticalFrameworkModel::AdvanceRoundDuration(const int32 RoundCount)
 {
 	mRoundCount = RoundCount;
-	CheckEffectDurations(RoundCount, ETacticalEffectDurationUnitType::EveryRound);
+	AdvanceEffectDuration_Internal(RoundCount, ETacticalEffectDurationUnitType::EveryRound);
 }
 
 void UTacticalFrameworkModel::AdvanceTurnDuration(const int32 TurnCount)
 {
 	mTurnCount = TurnCount;
-	CheckEffectDurations(TurnCount, ETacticalEffectDurationUnitType::EveryTurn);
+	AdvanceEffectDuration_Internal(TurnCount, ETacticalEffectDurationUnitType::EveryTurn);
+}
+
+void UTacticalFrameworkModel::CheckEffectDurations(ETacticalEffectDurationUnitType UnitType)
+{
+	if (UnitType == ETacticalEffectDurationUnitType::EveryRound)
+	{
+		CheckEffectDurations_Internal(mRoundCount, ETacticalEffectDurationUnitType::EveryRound);
+	}
+	else
+	{
+		CheckEffectDurations_Internal(mTurnCount, ETacticalEffectDurationUnitType::EveryTurn);
+	}
 }
 
 int32 UTacticalFrameworkModel::GetWorldTime(ETacticalEffectDurationUnitType UnitType) const
@@ -186,7 +208,7 @@ int32 UTacticalFrameworkModel::GetWorldTime(ETacticalEffectDurationUnitType Unit
 	return INDEX_NONE;
 }
 
-void UTacticalFrameworkModel::CheckEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType)
+void UTacticalFrameworkModel::AdvanceEffectDuration_Internal(const int32 Time, ETacticalEffectDurationUnitType UnitType)
 {
 	TSet<TWeakObjectPtr<UAttributeSetComponentModel>> Models;
 	for (auto& Pair : mEffectOwningModelMap)
@@ -198,7 +220,24 @@ void UTacticalFrameworkModel::CheckEffectDurations(const int32 Time, ETacticalEf
 	{
 		if (Model.Get() != nullptr)
 		{
-			Model->CheckDurationExpired(GetWorldTime(UnitType), UnitType);
+			Model->AdvanceEffectDurations(Time, UnitType);
+		}
+	}
+}
+
+void UTacticalFrameworkModel::CheckEffectDurations_Internal(const int32 Time, ETacticalEffectDurationUnitType UnitType)
+{
+	TSet<TWeakObjectPtr<UAttributeSetComponentModel>> Models;
+	for (auto& Pair : mEffectOwningModelMap)
+	{
+		Models.Add(Pair.Value);
+	}
+
+	for (TWeakObjectPtr<UAttributeSetComponentModel>& Model : Models)
+	{
+		if (Model.Get() != nullptr)
+		{
+			Model->CheckDurationExpired(Time, UnitType);
 		}
 	}
 }

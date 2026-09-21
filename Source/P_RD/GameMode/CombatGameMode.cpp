@@ -1017,8 +1017,6 @@ bool ACombatGameMode::ClaimCombatReward(ERewardClaimKind ClaimKind, int32 Choice
 		mExpRewardClaimed = true;
 		RunPersistData->GetRoomTransactionsMutable().ExpClaimed = true;
 		GetGameInstance()->GetSubsystem<USaveGameSubsystem>()->RequestRunAutosave();
-		// 보상창을 열 때 만든 예측 단계는 유지하되, 지급 직후 최종 레벨/EXP를
-		// 실제 모델 값으로 다시 밀어 예측과 claim 결과의 불일치를 남기지 않는다.
 		PushCombatRewardUIData();
 		PushPlayerMetaUIData();
 		return true;

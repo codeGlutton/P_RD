@@ -149,6 +149,14 @@ public:
      * @brief 이 모델이 "자기 자신에게" Effect를 적용했을 때 호출되는 콜백.
      */
     void OnTacticalEffectAppliedToSelf(UAttributeSetComponentModel* Model, const FTacticalEffectSpec& SpecApplied, FActiveTacticalEffectHandle ActiveHandle);
+    /**
+     * @brief 이 모델에 새로운 Effect가 추가되었을 때 호출되는 콜백.
+     */
+    void OnActiveTacticalEffectAdded(const FTacticalEffectSpec& SpecAdded, FActiveTacticalEffectHandle ActiveHandle);
+    /**
+     * @brief 이 모델에 Effect가 제거되었을 때 호출되는 콜백.
+     */
+    void OnActiveTacticalEffectRemoved(const FTacticalEffectSpec& SpecRemoved, FActiveTacticalEffectHandle ActiveHandle);
 
     /* 수정자 적용 */
 public:
@@ -240,6 +248,10 @@ public:
 
 public:
     /**
+     * @brief Duration 진행
+     */
+    void AdvanceEffectDurations(const int32 Time, ETacticalEffectDurationUnitType UnitType);
+    /**
      * @brief Duration 만기 체크
      */
     void CheckDurationExpired(const int32 Time, ETacticalEffectDurationUnitType UnitType);
@@ -252,17 +264,22 @@ public:
 
 public:
     /**
+     * @brief 특정 Effect의 남은 시간 변경하기
+     */
+    bool SetActiveEffectTimeRemaining(int32 NewTime, FActiveTacticalEffectHandle Handle);
+
+    /**
      * @brief 특정 Effect의 남은 시간 가져오기
      */
-    int32 GetActiveEffectsTimeRemaining(const FActiveTacticalEffectHandle Handle) const;
-    TArray<float> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    int32 GetActiveEffectTimeRemaining(const FActiveTacticalEffectHandle Handle) const;
+    TArray<int32> GetActiveEffectsTimeRemaining(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
     /**
      * @brief 특정 Effect의 Duration 가져오기
      */
     int32 GetActiveEffectsDuration(const FActiveTacticalEffectHandle Handle) const;
-    TArray<float> GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    TArray<int32> GetActiveEffectsDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
 
-    TArray<TPair<float, float>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
+    TArray<TPair<int32, int32>> GetActiveEffectsTimeRemainingAndDuration(const FTacticalEffectQuery& Query, ETacticalEffectDurationUnitType UnitType) const;
     
     /* Tag 연관 */
 public:

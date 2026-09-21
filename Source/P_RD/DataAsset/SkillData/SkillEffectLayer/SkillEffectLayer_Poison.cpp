@@ -6,7 +6,6 @@ TSubclassOf<UTacticalEffect> FSkillEffectLayer_Poison::GetTagEffectClass() const
 	return UTacticalEffect_GetPoison::StaticClass();
 }
 
-#if WITH_EDITOR
 #define LOCTEXT_NAMESPACE "SkillEffectLayer_Poison"
 
 FText FSkillEffectLayer_Poison::GetTagDisplayName() const
@@ -15,4 +14,3 @@ FText FSkillEffectLayer_Poison::GetTagDisplayName() const
 }
 
 #undef LOCTEXT_NAMESPACE
-#endif

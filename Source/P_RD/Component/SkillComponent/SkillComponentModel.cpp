@@ -764,7 +764,7 @@ int32 USkillComponentModel::GetRemainingCooldownTime(int32 SkillIndex) const
 	{
 		return INDEX_NONE;
 	}
-	return AttributeSetCompModel->GetActiveEffectsTimeRemaining(SkillEntry->mCooldownHandle);
+	return AttributeSetCompModel->GetActiveEffectTimeRemaining(SkillEntry->mCooldownHandle);
 }
 
 
