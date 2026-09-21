@@ -59,6 +59,10 @@ public:
 
 public:
 	virtual FText MakeDescription() const PURE_VIRTUAL(FSkillEffectLayer::MakeDescription, return FText::GetEmpty(); );
+
+public:
+	// @brief 대상을 강제 이동시키는 이펙트(밀치기/당기기) 보유 여부
+	virtual bool HasForcedMovement() const { return false; }
 };
 
 USTRUCT(BlueprintType)

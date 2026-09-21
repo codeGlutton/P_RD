@@ -7,8 +7,40 @@
 
 #include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Simulation/Logger/EventLogger.h"
+
+namespace
+{
+	// @brief 당기기 출발 (경로 계산 + 이동 시작 + 로그)
+	// 광역 당기기는 앞 대상이 당겨진 뒤의 배치로 경로를 계산해야 하므로, 이펙트 적용 시점이 아니라 출발 차례가 왔을 때 실행
+	void StartPull(TSharedPtr<FPresentationBarrier> MoveEndBarrier, UBoardActorModel* SourceModel, UBoardActorModel* TargetModel, UBoardMovementComponentModel* TargetMoveCompModel, UTileMapModel* TileMap, int32 PullDistance)
+	{
+		// 당겨지는 경로 계산 (거리 소진, 시전자에 붙음, 중간 막힘 중 먼저 오는 곳까지로 짧아짐)
+		const TArray<FTileIndex> PullPath = TileMap->GetPullPath(SourceModel->GetTileTransform().mIndex, TargetModel->GetTileTransform().mIndex, PullDistance);
+
+		// 한 칸도 당기지 못하거나 대상이 이동 중이면 아무것도 안 함 (이동 중 당기기는 지원하지 않음)
+		const int32 PathNum = PullPath.Num();
+		if (PathNum >= 2 && TargetMoveCompModel->IsMoving() == false)
+		{
+			// 정지 상태 대상: 즉시 당기기 시작
+			TargetMoveCompModel->PullAlongPath(PullPath, FOnBoardMoveFinished(), MoveEndBarrier);
+
+			/* 로그 작성 */
+
+			for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
+			{
+				FSRPGTileEffectEventLog Log;
+				Log.mOccupancyState = ESRPGTileOccupancyState::Move;
+				Log.mPreTileIndex = PullPath[PathIndex - 1];
+				Log.mNextTileIndex = PullPath[PathIndex];
+
+				GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
+			}
+		}
+	}
+}
 
 void UTacticalEffectExecutionCalculation_Pull::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
 {
@@ -36,27 +68,14 @@ void UTacticalEffectExecutionCalculation_Pull::Execute(const FTacticalEffectCust
 	UTileMapModel* TileMap = TargetMoveCompModel->GetTileMap();
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
-	// 당겨지는 경로 계산 (거리 소진, 시전자에 붙음, 중간 막힘 중 먼저 오는 곳까지로 짧아짐)
-	const TArray<FTileIndex> PullPath = TileMap->GetPullPath(SourceModel->GetTileTransform().mIndex, TargetModel->GetTileTransform().mIndex, ExecutionParams.GetOwningSpec().GetStackCount());
+	const int32 PullDistance = ExecutionParams.GetOwningSpec().GetStackCount();
 
-	// 한 칸도 당기지 못하거나 대상이 이동 중이면 아무것도 안 함 (이동 중 당기기는 지원하지 않음)
-	const int32 PathNum = PullPath.Num();
-	if (PathNum >= 2 && TargetMoveCompModel->IsMoving() == false)
+	// 시전자 스킬이 페이즈 이펙트 적용 중이면 큐에 넣어 순차 출발, 아니면 그 자리에서 바로 출발
+	IBoardCombatTarget* SourceCombatTarget = Cast<IBoardCombatTarget>(SourceModel);
+	USkillComponentModel* SourceSkillComp = (SourceCombatTarget != nullptr) ? SourceCombatTarget->GetSkillComponentModel() : nullptr;
+	if (SourceSkillComp == nullptr || SourceSkillComp->EnqueueForcedMove(FOnStartForcedMove::CreateStatic(&StartPull, SourceModel, TargetModel, TargetMoveCompModel, TileMap, PullDistance)) == false)
 	{
-		// 정지 상태 대상: 즉시 당기기 시작
-		TargetMoveCompModel->PullAlongPath(PullPath);
-
-		/* 로그 작성 */
-
-		for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
-		{
-			FSRPGTileEffectEventLog Log;
-			Log.mOccupancyState = ESRPGTileOccupancyState::Move;
-			Log.mPreTileIndex = PullPath[PathIndex - 1];
-			Log.mNextTileIndex = PullPath[PathIndex];
-
-			GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
-		}
+		StartPull(nullptr, SourceModel, TargetModel, TargetMoveCompModel, TileMap, PullDistance);
 	}
 
 	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();
