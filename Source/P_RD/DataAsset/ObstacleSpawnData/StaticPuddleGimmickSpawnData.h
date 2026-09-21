@@ -29,5 +29,5 @@ public:
 public:
 	// @brief 유지되는 라운드 수 (음수 = 무제한, 0 입력 금지)
 	UPROPERTY(Category = "Gimmick", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "RoundLifetime"))
-	int32 mRoundLifetime = 3;
+	int32 mRoundLifetime = -1;
 };
