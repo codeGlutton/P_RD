@@ -45,6 +45,8 @@ svnversion .\Content\SVN
 
 ## 에셋 이름 변경
 
+특정 스킬에 예전 FText 원문이 저장된 경우에는 `-run=RefreshPullDescriptions -Asset=<전체 오브젝트 경로> -Apply`로 해당 스킬의 설명만 재생성할 수 있습니다. 예: `-Asset=/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Attack_Rare_SharpenBlade.DA_Rogue_Attack_Rare_SharpenBlade`. 대상이 없으면 실패하며, `-Apply`를 생략하면 미리보기만 수행합니다.
+
 파일 탐색기에서 `.uasset` 이름만 바꾸지 말고 Unreal Editor의 이름 변경 기능을 사용합니다. 저장된 참조를 갱신하고 이전 redirector의 참조가 남지 않았는지 확인한 다음 번역을 재수집합니다.
 
 이미 배포한 스킬의 에셋 이름을 바꾼 경우에는 저장된 `FPrimaryAssetId`도 고려해야 합니다. 골렘의 `DA_Goelm_*` → `DA_Golem_*` 변경은 `DefaultGame.ini`의 `PrimaryAssetIdRedirects`로 이전 ID를 유지하며, `GolemSkillReferences` 테스트가 실제 에셋 및 유닛 참조와 함께 검사합니다.

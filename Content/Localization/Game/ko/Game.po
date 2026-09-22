@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-20 19:15\n"
-"PO-Revision-Date: 2026-09-20 19:15\n"
+"POT-Creation-Date: 2026-09-22 11:01\n"
+"PO-Revision-Date: 2026-09-22 11:01\n"
 "Language-Team: \n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
@@ -577,50 +577,50 @@ msgstr "작은 마법석"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A043_SmelingSalts.DA_Artifact_A043_SmelingSalts.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A043_SmelingSalts.DA_Artifact_A043_SmelingSalts.mDescription
 msgctxt ",A49118234BDFD14414CA899AC9101F44"
-msgid "전투 시작 시, 자신에게 제어 면역을 3 부여합니다."
+msgid "At the start of combat, grants yourself 3 stacks of Control Immunity."
 msgstr "전투 시작 시, 자신에게 제어 면역을 3 부여합니다."
 
 #. Key:	9D84487840C81B5E8E421AB52FDCB802
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A043_SmelingSalts.DA_Artifact_A043_SmelingSalts.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A043_SmelingSalts.DA_Artifact_A043_SmelingSalts.mName
 msgctxt ",9D84487840C81B5E8E421AB52FDCB802"
-msgid "각성 소금"
+msgid "Smelling Salts"
 msgstr "각성 소금"
 
 #. Key:	23527D6E4FBB2651103240BFABAB46B2
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A044_VineRoot.DA_Artifact_A044_VineRoot.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A044_VineRoot.DA_Artifact_A044_VineRoot.mDescription
 msgctxt ",23527D6E4FBB2651103240BFABAB46B2"
-msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 강제 이동 면역을 2 부여합니다."
+msgid "At the end of your turn, if you did not move during that turn, grants yourself 2 stacks of Forced Movement Immunity."
 msgstr "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 강제 이동 면역을 2 부여합니다."
 
 #. Key:	3CD32F654A03B4250F12C3AE59417F4F
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A044_VineRoot.DA_Artifact_A044_VineRoot.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A044_VineRoot.DA_Artifact_A044_VineRoot.mName
 msgctxt ",3CD32F654A03B4250F12C3AE59417F4F"
-msgid "넝쿨 뿌리"
+msgid "Vine Root"
 msgstr "넝쿨 뿌리"
 
 #. Key:	864CA6C7435AD98CC59B6DA260478C49
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mDescription
 msgctxt ",864CA6C7435AD98CC59B6DA260478C49"
-msgid "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
+msgid "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
 msgstr "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
 
 #. Key:	0930ED7244258EE0992F9A9E38282B80
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mName
 msgctxt ",0930ED7244258EE0992F9A9E38282B80"
-msgid "진통제"
+msgid "Painkiller"
 msgstr "진통제"
 
 #. Key:	79458D0F4B162D84BC01A59F3BA287F6
 #. SourceLocation:	/Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
 #: /Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
 msgctxt ",79458D0F4B162D84BC01A59F3BA287F6"
-msgid "Explosive Barrel"
-msgstr "화약통"
+msgid "Explosion Barrel"
+msgstr "폭발통"
 
 #. Key:	54613FF7435635437189C0ACB78087F7
 #. SourceLocation:	/Game/BP/DataAsset/CombatTargetObstacle/DA_BlackHoleTotemGimmick.DA_BlackHoleTotemGimmick.mDisplayName
@@ -703,7 +703,7 @@ msgstr "구울의 분노"
 #. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mDescription
 #: /Game/BP/DataAsset/Equipment/DA_Equipment_A002_RottenRegeneration.DA_Equipment_A002_RottenRegeneration.mDescription
 msgctxt ",7F3E1DDD40324EABB4ED4FB8637EEC5D"
-msgid "스킬 사용 시, 체력을 10 회복합니다.\r\n기절, 속박에 걸리지 않습니다."
+msgid "Restores 10 HP when using a skill.\r\nImmune to Stun and Root."
 msgstr "스킬 사용 시, 체력을 10 회복합니다.\r\n기절, 속박에 걸리지 않습니다."
 
 #. Key:	7D8B51E24AF8D178D285F588B53429E1
@@ -759,15 +759,29 @@ msgstr "잭의 낫"
 #. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A006_Chunk.DA_Equipment_A006_Chunk.mDescription
 #: /Game/BP/DataAsset/Equipment/DA_Equipment_A006_Chunk.DA_Equipment_A006_Chunk.mDescription
 msgctxt ",340563DF4DE492C006C25F90B9747773"
-msgid "강제로 이동시킬 수 없습니다."
+msgid "Cannot be forcibly moved."
 msgstr "강제로 이동시킬 수 없습니다."
 
 #. Key:	CC4CBD8B43E0D4117D16FD89293B1F0C
 #. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A006_Chunk.DA_Equipment_A006_Chunk.mName
 #: /Game/BP/DataAsset/Equipment/DA_Equipment_A006_Chunk.DA_Equipment_A006_Chunk.mName
 msgctxt ",CC4CBD8B43E0D4117D16FD89293B1F0C"
-msgid "무거움"
+msgid "Heavy"
 msgstr "무거움"
+
+#. Key:	52AC6B4E426F409940C0F3AE4F1A802E
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A007_Ghost.DA_Equipment_A007_Ghost.mDescription
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A007_Ghost.DA_Equipment_A007_Ghost.mDescription
+msgctxt ",52AC6B4E426F409940C0F3AE4F1A802E"
+msgid "Immune to status ailments."
+msgstr "상태이상에 걸리지 않습니다."
+
+#. Key:	BEEEFCF9486186C7F17380981CFFA37C
+#. SourceLocation:	/Game/BP/DataAsset/Equipment/DA_Equipment_A007_Ghost.DA_Equipment_A007_Ghost.mName
+#: /Game/BP/DataAsset/Equipment/DA_Equipment_A007_Ghost.DA_Equipment_A007_Ghost.mName
+msgctxt ",BEEEFCF9486186C7F17380981CFFA37C"
+msgid "Ghost"
+msgstr "유령"
 
 #. Key:	65D880F245C83280B41946BD97A388DF
 #. SourceLocation:	/Game/BP/DataAsset/Obstacle/Common/DA_EmptyObstacle.DA_EmptyObstacle.mDisplayName
@@ -1445,21 +1459,21 @@ msgstr "전투 시작 시, 자신에게 탈진 2를 부여합니다."
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P043.DA_Passive_P043.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P043.DA_Passive_P043.mDescription
 msgctxt ",E232C1A94E258B745579FBBB4A2098D3"
-msgid "전투 시작 시, 자신에게 제어 면역을 3 부여합니다."
+msgid "At the start of combat, grants yourself 3 stacks of Control Immunity."
 msgstr "전투 시작 시, 자신에게 제어 면역을 3 부여합니다."
 
 #. Key:	DF6CCA7B40EA815885DA61943F9EDE6C
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P044.DA_Passive_P044.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P044.DA_Passive_P044.mDescription
 msgctxt ",DF6CCA7B40EA815885DA61943F9EDE6C"
-msgid "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 강제 이동 면역을 2 부여합니다."
+msgid "At the end of your turn, if you did not move during that turn, grants yourself 2 stacks of Forced Movement Immunity."
 msgstr "턴 종료 시, 자신의 턴 동안 이동 하지 않았다면, 자신에게 강제 이동 면역을 2 부여합니다."
 
 #. Key:	12CE6CE647BC9466B93D21A554AE7A15
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P045.DA_Passive_P045.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_P045.DA_Passive_P045.mDescription
 msgctxt ",12CE6CE647BC9466B93D21A554AE7A15"
-msgid "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
+msgid "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
 msgstr "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
 
 #. Key:	2DC3489240D5807EBE56018D55C41684
@@ -1571,15 +1585,22 @@ msgstr "피격 시, 자신에게 방어도 5을 부여합니다."
 #. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P005_Heavy.DA_MonsterPassive_P005_Heavy.mDescription
 #: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P005_Heavy.DA_MonsterPassive_P005_Heavy.mDescription
 msgctxt ",A8C71BE242679B3126E09CBCA88CDBBB"
-msgid "강제로 이동시킬 수 없습니다."
+msgid "Cannot be forcibly moved."
 msgstr "강제로 이동시킬 수 없습니다."
 
 #. Key:	65A95708457ABC11C2B96E981982B092
 #. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P006_NoBrain.DA_MonsterPassive_P006_NoBrain.mDescription
 #: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P006_NoBrain.DA_MonsterPassive_P006_NoBrain.mDescription
 msgctxt ",65A95708457ABC11C2B96E981982B092"
-msgid "기절, 속박에 걸리지 않습니다."
+msgid "Immune to Stun and Root."
 msgstr "기절, 속박에 걸리지 않습니다."
+
+#. Key:	E777B96E4C7ABDE94B11C9A6EC22A628
+#. SourceLocation:	/Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P007_Ghost.DA_MonsterPassive_P007_Ghost.mDescription
+#: /Game/BP/DataAsset/Passive/Monster/DA_MonsterPassive_P007_Ghost.DA_MonsterPassive_P007_Ghost.mDescription
+msgctxt ",E777B96E4C7ABDE94B11C9A6EC22A628"
+msgid "Immune to status ailments."
+msgstr "상태이상에 걸리지 않습니다."
 
 #. Key:	DAF8C7E3429395E9A134439F0A52ADA9
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Attack_Common_CoveringFire.DA_Common_Attack_Common_CoveringFire.mName
@@ -1644,6 +1665,13 @@ msgctxt ",4A6D37CC418F089541EBF19E45A336C8"
 msgid "White Hole"
 msgstr "화이트홀"
 
+#. Key:	8B8C71E047C12CB42A991DA6C6570E46
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Move_Rare_Leap.DA_Common_Move_Rare_Leap.mName
+#: /Game/BP/DataAsset/Skill/Common/DA_Common_Move_Rare_Leap.DA_Common_Move_Rare_Leap.mName
+msgctxt ",8B8C71E047C12CB42A991DA6C6570E46"
+msgid "Leap"
+msgstr "도약"
+
 #. Key:	F742548B49BE186CCE49D18FA518B68E
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Common_FancyFootwork.DA_Common_Spell_Common_FancyFootwork.mName
 #: /Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Common_FancyFootwork.DA_Common_Spell_Common_FancyFootwork.mName
@@ -1690,7 +1718,7 @@ msgstr "이동"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Rare_Passion.DA_Common_Spell_Rare_Passion.mName
 #: /Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Rare_Passion.DA_Common_Spell_Rare_Passion.mName
 msgctxt ",60A454584E4B3F31292ADBA2C8D730C5"
-msgid "열정"
+msgid "Passion"
 msgstr "열정"
 
 #. Key:	BB9E52CD456ECEDC18C1D895C1230BA7
@@ -1711,7 +1739,7 @@ msgstr "눈 쪼기"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage1/Eagle/DA_Eagle_Fly.DA_Eagle_Fly.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage1/Eagle/DA_Eagle_Fly.DA_Eagle_Fly.mName
 msgctxt ",942E244C4432DDB5B182CC8D21CCA9B1"
-msgid "날기"
+msgid "Fly"
 msgstr "날기"
 
 #. Key:	8429CE8B42B9BDED4B645B89BF083AE3
@@ -1914,7 +1942,7 @@ msgstr "칼날 바람"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/HatchetBird/DA_HatchetBird_Move_Fly.DA_HatchetBird_Move_Fly.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage2/HatchetBird/DA_HatchetBird_Move_Fly.DA_HatchetBird_Move_Fly.mName
 msgctxt ",F2D2DBB74B5C38278EE7C784C2EB8B6B"
-msgid "날기"
+msgid "Fly"
 msgstr "날기"
 
 #. Key:	78242B044347011D203F1AAC7A9A411E
@@ -2000,6 +2028,13 @@ msgstr "거미줄 폭파"
 msgctxt ",B40FAB4B4B345D7656487E93BF60A75B"
 msgid "Howl"
 msgstr "포효"
+
+#. Key:	17ED0AA54BFC96200BC847942A70A1A3
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_ImpactLeap.DA_Skeleton_Golem_ImpactLeap.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_ImpactLeap.DA_Skeleton_Golem_ImpactLeap.mName
+msgctxt ",17ED0AA54BFC96200BC847942A70A1A3"
+msgid "Impact Leap"
+msgstr "충격 도약"
 
 #. Key:	0936ABD04F5E80223644A0834B9E8244
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage2/Skeleton_Golem/DA_Skeleton_Golem_Kick.DA_Skeleton_Golem_Kick.mName
@@ -2103,21 +2138,21 @@ msgstr "제물"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Boo.DA_Ghost_Boo.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Boo.DA_Ghost_Boo.mName
 msgctxt ",965DED1D41B83DA585D40382393D29C5"
-msgid "우우"
+msgid "Boo"
 msgstr "우우"
 
 #. Key:	75BDB9DD45EE48005EE6719FF551D909
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Sob.DA_Ghost_Sob.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Sob.DA_Ghost_Sob.mName
 msgctxt ",75BDB9DD45EE48005EE6719FF551D909"
-msgid "흐느낌"
+msgid "Sob"
 msgstr "흐느낌"
 
 #. Key:	D5DBCB8A481C46576E6D2EA44244CA22
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Teleport.DA_Ghost_Teleport.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage3/Ghost/DA_Ghost_Teleport.DA_Ghost_Teleport.mName
 msgctxt ",D5DBCB8A481C46576E6D2EA44244CA22"
-msgid "텔레포트"
+msgid "Teleport"
 msgstr "텔레포트"
 
 #. Key:	58B9886F4D5F9300A1EAD1B45B59F4E8
@@ -2253,6 +2288,13 @@ msgctxt ",976B1CA94EF59B2D0BC609B088490B5A"
 msgid "Sand Toss"
 msgstr "모래 뿌리기"
 
+#. Key:	1E6BDAB44BCFA585540C538EFD1837C5
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Rogue/DA_Skeleton_Rogue_Move_FlashStep.DA_Skeleton_Rogue_Move_FlashStep.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Rogue/DA_Skeleton_Rogue_Move_FlashStep.DA_Skeleton_Rogue_Move_FlashStep.mName
+msgctxt ",1E6BDAB44BCFA585540C538EFD1837C5"
+msgid "Flash Step"
+msgstr "순보"
+
 #. Key:	3272345B4A1DDFAB9999618F1B40E8E4
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Warrior/DA_Skeleton_Warrior_Attack_PushAttack.DA_Skeleton_Warrior_Attack_PushAttack.mName
 #: /Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Warrior/DA_Skeleton_Warrior_Attack_PushAttack.DA_Skeleton_Warrior_Attack_PushAttack.mName
@@ -2273,6 +2315,13 @@ msgstr "훨윈드"
 msgctxt ",230DAABE477BCCFB6C59D78908AF7734"
 msgid "Heavy Strike"
 msgstr "강타"
+
+#. Key:	54E9E2A64A3EF00F2D73DFBD3789F9B0
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Warrior/DA_Skeleton_Warrior_ImpactLeap.DA_Skeleton_Warrior_ImpactLeap.mName
+#: /Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Warrior/DA_Skeleton_Warrior_ImpactLeap.DA_Skeleton_Warrior_ImpactLeap.mName
+msgctxt ",54E9E2A64A3EF00F2D73DFBD3789F9B0"
+msgid "Impact Leap"
+msgstr "충격 도약"
 
 #. Key:	109D3ECD4076880A38CFE69DF880E876
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Enemy/Stage3/Skeleton_Warrior/DA_Skeleton_Warrior_Spell_Rage.DA_Skeleton_Warrior_Spell_Rage.mName
@@ -2435,6 +2484,13 @@ msgctxt ",3FC2019A4ACE262F9429DABA566D1FBB"
 msgid "Whirlwind"
 msgstr "훨윈드"
 
+#. Key:	BD8EF739457917EED9FBD0A3BDAAAFAC
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Move_Epic_ImpactLeap.DA_Barbarian_Move_Epic_ImpactLeap.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Move_Epic_ImpactLeap.DA_Barbarian_Move_Epic_ImpactLeap.mName
+msgctxt ",BD8EF739457917EED9FBD0A3BDAAAFAC"
+msgid "Impact Leap"
+msgstr "충격 도약"
+
 #. Key:	0FB44FE6446A80EE3357BDB38EA9BE89
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Spell_Common_Fear.DA_Barbarian_Spell_Common_Fear.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Spell_Common_Fear.DA_Barbarian_Spell_Common_Fear.mName
@@ -2467,7 +2523,7 @@ msgstr "명상"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Spell_Epic_Unstoppable.DA_Barbarian_Spell_Epic_Unstoppable.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Barbarian/DA_Barbarian_Spell_Epic_Unstoppable.DA_Barbarian_Spell_Epic_Unstoppable.mName
 msgctxt ",6AB5F90A406AE9BC57E861ADEA2BE9BB"
-msgid "저지 불가"
+msgid "Unstoppable"
 msgstr "저지 불가"
 
 #. Key:	38B4E17042D9CA31297F11B6B6515059
@@ -2628,7 +2684,7 @@ msgstr "믿음"
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Rare_ImmunityBoost.DA_Druid_Spell_Rare_ImmunityBoost.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Rare_ImmunityBoost.DA_Druid_Spell_Rare_ImmunityBoost.mName
 msgctxt ",4216869C40F1CBC51B3607BECD01C719"
-msgid "면역력 증진"
+msgid "Immunity Boost"
 msgstr "면역력 증진"
 
 #. Key:	1CBF9AB042E43F5FF8B6678C37D00A07
@@ -2742,6 +2798,13 @@ msgstr "밀치기 공격"
 msgctxt ",8CD748794A959830CC1BC28924CD3B40"
 msgid "Spinning Slash"
 msgstr "회전 베기"
+
+#. Key:	FC30220B45CA3F19A4DAA1AED3661E8C
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Knight/DA_Knight_Move_Common_GuardianCharge.DA_Knight_Move_Common_GuardianCharge.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Knight/DA_Knight_Move_Common_GuardianCharge.DA_Knight_Move_Common_GuardianCharge.mName
+msgctxt ",FC30220B45CA3F19A4DAA1AED3661E8C"
+msgid "Guardian Charge"
+msgstr "수호 돌격"
 
 #. Key:	0EE1C53A48F082065A5CD49A20F292F5
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Knight/DA_Knight_Spell_Common_Block.DA_Knight_Spell_Common_Block.mName
@@ -2924,6 +2987,13 @@ msgstr "벼락"
 msgctxt "SkillNames,Mage.ThunderStorm"
 msgid "Thunderstorm"
 msgstr "벼락 폭풍"
+
+#. Key:	1DDE84294BBC3B614AF52291C0A37F44
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Move_Epic_Teleport.DA_Mage_Move_Epic_Teleport.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Move_Epic_Teleport.DA_Mage_Move_Epic_Teleport.mName
+msgctxt ",1DDE84294BBC3B614AF52291C0A37F44"
+msgid "Teleport"
+msgstr "순간이동"
 
 #. Key:	F82A1B16498215B98D0F2597C10FC203
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Common_Gust.DA_Mage_Spell_Common_Gust.mName
@@ -3218,6 +3288,13 @@ msgstr "4연 베기"
 msgctxt ",E56043D14CD1CA4EA669629BB0BF3634"
 msgid "Sharpen Blade"
 msgstr "칼갈기"
+
+#. Key:	A931024340831279EA06E288356EBEB4
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Move_FlashStep.DA_Rogue_Move_FlashStep.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Move_FlashStep.DA_Rogue_Move_FlashStep.mName
+msgctxt ",A931024340831279EA06E288356EBEB4"
+msgid "Flash Step"
+msgstr "순보"
 
 #. Key:	D34E45444D8889195424DFADFE72BEDE
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_Doping.DA_Rogue_Spell_Epic_Doping.mName
@@ -6276,7 +6353,7 @@ msgstr "시전자가 바라보는 방향으로 {0}칸 밀어냅니다."
 #: Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_ReduceCooldown.cpp(36)
 msgctxt "SkillEffectLayer_ReduceCooldown,ReduceCooldownDesc"
 msgid "Reduces cooldown by {0}."
-msgstr ""
+msgstr "쿨다운을 {0} 감소시킵니다."
 
 #. Key:	RootName
 #. SourceLocation:	Source/P_RD/DataAsset/SkillData/SkillEffectLayer/SkillEffectLayer_Root.cpp(20)
