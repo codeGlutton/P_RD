@@ -1,4 +1,4 @@
-#include "P_RDTests.h"
+﻿#include "P_RDTests.h"
 #include "Misc/AutomationTest.h"
 #include "Singleton/RunCheckpointTestsHelper.h"
 #include "SaveGame/SaveCheckpoint.h"
@@ -198,6 +198,10 @@ bool FCheckpointStalledRoundGuardTest::RunTest(const FString& Parameters)
 	AddExpectedError(TEXT("Combat speed cannot produce a turn"), EAutomationExpectedErrorFlags::Contains, 1);
 	TestFalse(TEXT("Empty combat returns instead of spinning in Shipping"), Model->EvaluateEmptyRound());
 	TestEqual(TEXT("Blocked combat reports once"), BlockedCount, 1);
+
+	Model->Destroy();
+	Preview->Destroy();
+
 	return true;
 }
 

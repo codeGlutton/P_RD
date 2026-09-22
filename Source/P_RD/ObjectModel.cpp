@@ -45,3 +45,13 @@ int32 UObjectModel::GetModelId() const
 {
 	return mModelId;
 }
+
+bool UObjectModel::IsInitialized() const
+{
+	return mIsInitialized;
+}
+
+bool UObjectModel::IsPendingDestroy() const
+{
+	return mIsPendingDestroy;
+}

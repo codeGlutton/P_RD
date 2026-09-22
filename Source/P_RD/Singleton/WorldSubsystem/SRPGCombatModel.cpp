@@ -63,15 +63,25 @@ void USRPGCombatModel::Serialize(FArchive& Ar)
 void USRPGCombatModel::Tick(float DeltaTime)
 {
 	USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
-	if (mCombatPhase == ESRPGCombatRoomPhase::CombatPlay && CurTurnContext != nullptr)
+	if (mCombatPhase != ESRPGCombatRoomPhase::CombatEnd && CurTurnContext != nullptr)
 	{
 		CurTurnContext->TickTurn(DeltaTime);
 	}
 }
 
-bool USRPGCombatModel::IsTickable() const
+ETickableTickType USRPGCombatModel::GetTickableTickType() const
 {
-	return true;
+	if (IsTemplate() == true || IsInitialized() == false)
+	{
+		return ETickableTickType::Never;
+	}
+
+	return ETickableTickType::Conditional;
+}
+
+bool USRPGCombatModel::IsAllowedToTick() const
+{
+	return IsInitialized();
 }
 
 TStatId USRPGCombatModel::GetStatId() const
@@ -710,6 +720,16 @@ bool USRPGCombatModel::UnregisterTurn(UUnitModel* Owner, bool IgnoreCurTurn)
 	return true;
 }
 
+int32 USRPGCombatModel::UnregisterAllTurn(UUnitModel* Owner, bool IncludeCurTurn)
+{
+	int32 UnregisterCount = 0;
+	while (UnregisterTurn(Owner, IncludeCurTurn) == true)
+	{
+		++UnregisterCount;
+	}
+	return UnregisterCount;
+}
+
 bool USRPGCombatModel::EvaluateRound()
 {
 	// A corrupted or stalled speed configuration must not block the game thread in Shipping.
@@ -1038,7 +1058,7 @@ void USRPGCombatModel::UnregisterUnitModel(UUnitModel* UnitModel)
 
 	/* 턴 제거 */
 
-	UnregisterTurn(UnitModel);
+	UnregisterAllTurn(UnitModel);
 
 	/* 제거 */
 
@@ -1194,6 +1214,16 @@ void USRPGCombatModel::ForcedBeginTurn()
 	/* 턴 시작 */
 
 	CurTurnContext->BeginTurn();
+}
+
+TSharedPtr<FPresentationBarrier> USRPGCombatModel::GetCurrentActionEndHoldBarrier() const
+{
+	if (HasAnyTurnContext() == true)
+	{
+		USRPGTurnContext* CurTurnContext = GetCurrentTurnContext();
+		return CurTurnContext->GetCurrentActionEndHoldBarrier();
+	}
+	return nullptr;
 }
 
 bool USRPGCombatModel::HasAnyTurnContext() const

@@ -41,6 +41,10 @@ protected:
 	void TickAction(float DeltaTime);
 	void EndAction();
 
+private:
+	void IncrementEndHoldCount();
+	void DecrementEndHoldCount();
+
 protected:
 	/**
 	 * 액션 상태를 확인하여 조건적으로 실행하는 함수
@@ -78,6 +82,9 @@ protected:
 
 	/* 외부 API */
 public:
+	TSharedPtr<FPresentationBarrier> GetEndHoldBarrier();
+
+public:
 	TWeakObjectPtr<USRPGTurnContext> GetParent() const;
 	UUnitModel* GetInstigator() const;
 	ESRPGActionType GetActionType() const;
@@ -86,6 +93,10 @@ public:
 protected:
 	FOnBeginActionUI OnBeginActionUI;
 	FOnEndActionUI OnEndActionUI;
+
+protected:
+	int32 mEndHoldCount = 1;
+	TSharedPtr<FPresentationBarrier> mEndHoldPresentationBarrier = nullptr;
 
 protected:
 	UPROPERTY(Category = Parent, VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "Parent"))
