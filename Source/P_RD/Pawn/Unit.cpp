@@ -42,7 +42,7 @@ AUnit::AUnit()
 		mMeshComp->AlwaysLoadOnClient = true;
 		mMeshComp->AlwaysLoadOnServer = true;
 		mMeshComp->bOwnerNoSee = false;
-		mMeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPose;
+		mMeshComp->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 		mMeshComp->bCastDynamicShadow = true;
 		mMeshComp->bAffectDynamicIndirectLighting = true;
 		mMeshComp->PrimaryComponentTick.TickGroup = TG_PrePhysics;
