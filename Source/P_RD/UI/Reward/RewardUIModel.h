@@ -15,6 +15,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardUIChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardClaimed);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExperiencePresentationCompleted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRewardChoicesChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRewardChosen, int32, ChoiceIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRewardClaimRequested, ERewardClaimKind, ClaimKind, int32, ChoiceIndex);
@@ -42,6 +43,10 @@ public:
 	/** @brief 위젯이 '받기'를 눌렀음(다음 화면으로). */
 	UPROPERTY(BlueprintAssignable, Category = "Reward|Input")
 	FOnRewardClaimed OnRewardClaimed;
+
+	/** Experience screen was advanced, including when its grant was restored from a save. */
+	UPROPERTY(BlueprintAssignable, Category = "Reward|Input")
+	FOnExperiencePresentationCompleted OnExperiencePresentationCompleted;
 
 	/** @brief 룸 보상 항목이 설정/갱신됐음을 알림. 위젯은 보상 행을 다시 그린다. */
 	UPROPERTY(BlueprintAssignable, Category = "Reward|UI")
@@ -106,6 +111,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmSelectedReward(FPrimaryAssetId RewardId);
 	UFUNCTION(BlueprintCallable, Category = "Reward|Push") void ConfirmGrantBundle(const FRewardGrantBundleResultUI& Result);
 	UFUNCTION(BlueprintCallable, Category = "Reward|Input") void RequestFinishPresentation() { RequestClaim(); }
+	UFUNCTION(BlueprintCallable, Category = "Reward|Input") void RequestExperiencePresentationCompleted()
+	{
+		OnExperiencePresentationCompleted.Broadcast();
+	}
 
 	/* ───────── 위젯이 읽는다 ───────── */
 public:

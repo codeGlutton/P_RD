@@ -20,6 +20,7 @@
  */
 
 #include "RDMinimal.h"
+#include "UI/RealTimeLongPressTimer.h"
 #include "UI/Combat/CombatUIWidgetBase.h"
 
 #include "UI/Combat/CombatUITypes.h"
@@ -362,10 +363,6 @@ private:
 	UFUNCTION() void HandleSettingsMenuClicked();
 	/** @brief 설정 패널의 Back 요청을 받아 패널을 닫는다. */
 	UFUNCTION() void HandleSettingsPanelBackRequested();
-	/** @brief 설정 패널의 저장 후 종료 요청을 UIModel로 전달한다. */
-	UFUNCTION() void HandleSettingsPanelSaveAndExitRequested();
-	/** @brief 확인을 마친 런 포기 요청을 기존 전투 UIModel 경로로 전달한다. */
-	UFUNCTION() void HandleSettingsPanelAbandonRunConfirmed();
 	/** @brief 저장 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
 	UFUNCTION() void HandleSaveAndExitCompleted(bool bSuccess);
 	/** @brief 런 포기 또는 프론트엔드 전환 실패 시 설정판 입력과 상태를 복구한다. */
@@ -390,7 +387,7 @@ private:
 	void BeginArtifactPress(int32 SlotIndex);
 
 	UPROPERTY(Transient) TArray<TObjectPtr<UButton>> mArtifactButtons;
-	FTimerHandle mArtifactLongPressTimerHandle;
+	FRealTimeLongPressTimer mArtifactLongPressTimerHandle;
 	int32 mArtifactPressedSlot = INDEX_NONE;
 
 	/**
@@ -521,11 +518,11 @@ private:
 	 * 되돌아오고, 적이면 위협 범위도 판에 같이 칠려 온다.
 	 */
 	void HandleBoardLongPress();
-	FTimerHandle mBoardLongPressTimerHandle;
+	FRealTimeLongPressTimer mBoardLongPressTimerHandle;
 
 	/** @brief 카드를 오래 눌렀다. 그 스킬의 상세를 요청하고 이어질 클릭은 삼킨다. */
 	void HandleCommandLongPress(int32 SlotIndex);
-	FTimerHandle mCommandLongPressTimerHandle;
+	FRealTimeLongPressTimer mCommandLongPressTimerHandle;
 
 	/**
 	 * @brief 긴 누름이 발화했으면 뒤따라 오는 클릭(뗌)을 한 번 무시한다.
@@ -1230,7 +1227,7 @@ private:
 	int32 mMonsterTabInspectedUnitId = INDEX_NONE;
 	/** @brief 보이는 슬롯→FUnitDetailSkillUI::mSkillIndex 왕복 식별자. */
 	TArray<int32> mMonsterTabSkillIndices;
-	FTimerHandle mMonsterSkillLongPressTimerHandle;
+	FRealTimeLongPressTimer mMonsterSkillLongPressTimerHandle;
 	int32 mMonsterSkillPressedSlot = INDEX_NONE;
 	bool mMonsterSkillPressActive = false;
 	// 아래 넷도 프레젠터 캐시의 비친 포인터다. 값 채우기는 HUD 상세 경로가 한다.

@@ -11,6 +11,8 @@
 #include "Singleton/WorldSubsystem/WorldWidgetSubsystem.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/RDUserWidget.h"
+#include "UI/SettingsPanelWidget.h"
+#include "Singleton/WorldSubsystem/WorldWidgetType.h"
 
 #include "Setting/RDWorldSettings.h"
 
@@ -355,6 +357,13 @@ void ARoomGameModeBase::InitializeCommonRoom()
 void ARoomGameModeBase::BeginRoom()
 {
 	Super::BeginRoom();
+	if (USettingsPanelWidget* Settings = GetRunSettingsPanel())
+	{
+		Settings->OnSaveAndExitRequested.AddUniqueDynamic(
+			this, &ARoomGameModeBase::HandleSettingsSaveAndExitRequested);
+		Settings->OnAbandonRunConfirmed.AddUniqueDynamic(
+			this, &ARoomGameModeBase::HandleSettingsAbandonConfirmed);
+	}
 
 	/* 터치 세팅 */
 
@@ -370,6 +379,69 @@ void ARoomGameModeBase::BeginRoom()
 
 	FInputModeGameAndUI InputMode;
 	PlayerController->SetInputMode(InputMode);
+}
+
+USettingsPanelWidget* ARoomGameModeBase::GetRunSettingsPanel() const
+{
+	UWorld* World = GetWorld();
+	UWorldWidgetSubsystem* Widgets = World ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
+	return Widgets ? Widgets->GetWorldWidget<USettingsPanelWidget>(EWorldWidgetType::InGameSettings) : nullptr;
+}
+
+void ARoomGameModeBase::CompleteSettingsRunAction(bool bSuccess, bool bSaveAndExit)
+{
+	if (bSuccess) return; // The room transition owns the successful path.
+	mCommonSettingsRunActionPending = false;
+	if (USettingsPanelWidget* Settings = GetRunSettingsPanel())
+	{
+		Settings->SetRunActionsEnabled(true);
+		Settings->SetStatusText(bSaveAndExit
+			? NSLOCTEXT("RoomGameModeBase", "SaveAndExitFailed", "저장 후 종료에 실패했습니다.")
+			: NSLOCTEXT("RoomGameModeBase", "AbandonRunFailed", "런 포기 요청에 실패했습니다."));
+	}
+}
+
+void ARoomGameModeBase::HandleSettingsSaveAndExitRequested()
+{
+	if (mCommonSettingsRunActionPending || IsSaveAndExitPending()) return;
+	USettingsPanelWidget* Settings = GetRunSettingsPanel();
+	if (Settings)
+	{
+		Settings->SetRunActionsEnabled(false);
+		Settings->SetStatusText(NSLOCTEXT("RoomGameModeBase", "SavingRun", "저장 중..."));
+	}
+	USaveGameSubsystem* Saves = GetGameInstance()
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (!Saves) { CompleteSettingsRunAction(false, true); return; }
+	mCommonSettingsRunActionPending = true;
+	Saves->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this,
+		[this](const FString&, int32, bool bSaved)
+		{
+			if (!bSaved) { CompleteSettingsRunAction(false, true); return; }
+			SaveAndExitRunFromRoomAsync(FOnRoomSaveAndExitComplete::CreateWeakLambda(this,
+				[this](bool bSuccess) { CompleteSettingsRunAction(bSuccess, true); }));
+		}));
+}
+
+void ARoomGameModeBase::HandleSettingsAbandonConfirmed()
+{
+	if (mCommonSettingsRunActionPending || IsSaveAndExitPending()) return;
+	USettingsPanelWidget* Settings = GetRunSettingsPanel();
+	if (Settings)
+	{
+		Settings->HideAbandonConfirm();
+		Settings->SetRunActionsEnabled(false);
+		Settings->SetStatusText(FText::GetEmpty());
+	}
+	USaveGameSubsystem* Saves = GetGameInstance()
+		? GetGameInstance()->GetSubsystem<USaveGameSubsystem>() : nullptr;
+	if (!Saves) { CompleteSettingsRunAction(false, false); return; }
+	mCommonSettingsRunActionPending = true;
+	Saves->SaveOptionAsync(FAsyncSaveGameToSlotDelegate::CreateWeakLambda(this,
+		[this](const FString&, int32, bool bSaved)
+		{
+			CompleteSettingsRunAction(bSaved && AbandonRunFromRoom(), false);
+		}));
 }
 
 bool ARoomGameModeBase::SelectNextRoom(int32 RoomRow, int32 RoomColumn)
