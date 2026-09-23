@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-22 11:01\n"
-"PO-Revision-Date: 2026-09-22 11:01\n"
+"POT-Creation-Date: 2026-09-23 20:58\n"
+"PO-Revision-Date: 2026-09-23 20:58\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -605,7 +605,7 @@ msgstr "Vine Root"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mDescription
 msgctxt ",864CA6C7435AD98CC59B6DA260478C49"
-msgid "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
+msgid "턴 종료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
 msgstr "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
 
 #. Key:	0930ED7244258EE0992F9A9E38282B80
@@ -614,6 +614,48 @@ msgstr "At the end of your turn, if your HP is at or below 50%, grants yourself 
 msgctxt ",0930ED7244258EE0992F9A9E38282B80"
 msgid "진통제"
 msgstr "Painkiller"
+
+#. Key:	73821AC74148829F555B3C819627C769
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mDescription
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mDescription
+msgctxt ",73821AC74148829F555B3C819627C769"
+msgid "턴 시작 시, 3회 째라면 스킬 재사용 대기시간이 1 감소합니다."
+msgstr "At the start of every third turn, reduces skill cooldowns by 1."
+
+#. Key:	DE557EE74760245C2CFE54BBC57D95A1
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mName
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mName
+msgctxt ",DE557EE74760245C2CFE54BBC57D95A1"
+msgid "고장난 시계"
+msgstr "Broken Clock"
+
+#. Key:	4A3030494AD8D63422112FB8F6E9C5CC
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
+msgctxt ",4A3030494AD8D63422112FB8F6E9C5CC"
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 스킬 재사용 대기시간이 3 감소합니다."
+msgstr "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 3."
+
+#. Key:	A62C7D644B3A487D97CB0EBFBFE6A0EF
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mName
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mName
+msgctxt ",A62C7D644B3A487D97CB0EBFBFE6A0EF"
+msgid "마법 모자"
+msgstr "Magic Hat"
+
+#. Key:	F68A888542FCB383C28DE182180747B5
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mDescription
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mDescription
+msgctxt ",F68A888542FCB383C28DE182180747B5"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 스킬 재사용 대기시간이 1 감소합니다."
+msgstr "On every fifth skill use, reduces skill cooldowns by 1."
+
+#. Key:	8DE9EEFB442237936C8C2D865CC0CC1C
+#. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mName
+#: /Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mName
+msgctxt ",8DE9EEFB442237936C8C2D865CC0CC1C"
+msgid "잉크병"
+msgstr "Inkpot"
 
 #. Key:	79458D0F4B162D84BC01A59F3BA287F6
 #. SourceLocation:	/Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
@@ -1476,6 +1518,27 @@ msgctxt ",12CE6CE647BC9466B93D21A554AE7A15"
 msgid "턴 중료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
 msgstr "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
 
+#. Key:	B3F1361A43E557DA273C07A0801BCE1D
+#. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P046.DA_Passive_P046.mDescription
+#: /Game/BP/DataAsset/Passive/DA_Passive_P046.DA_Passive_P046.mDescription
+msgctxt ",B3F1361A43E557DA273C07A0801BCE1D"
+msgid "턴 시작 시, 3회 째라면 스킬 재사용 대기시간이 1 감소합니다."
+msgstr "At the start of every third turn, reduces skill cooldowns by 1."
+
+#. Key:	CC8B771B450D75FB207E569AD04BD5A8
+#. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P047.DA_Passive_P047.mDescription
+#: /Game/BP/DataAsset/Passive/DA_Passive_P047.DA_Passive_P047.mDescription
+msgctxt ",CC8B771B450D75FB207E569AD04BD5A8"
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 스킬 재사용 대기시간이 3 감소합니다."
+msgstr "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 3."
+
+#. Key:	7CB1C2D44F426340E0640CA290DA9F9D
+#. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_P048.DA_Passive_P048.mDescription
+#: /Game/BP/DataAsset/Passive/DA_Passive_P048.DA_Passive_P048.mDescription
+msgctxt ",7CB1C2D44F426340E0640CA290DA9F9D"
+msgid "스킬 사용 시, 5회 째 사용할 때마다 스킬 재사용 대기시간이 1 감소합니다."
+msgstr "On every fifth skill use, reduces skill cooldowns by 1."
+
 #. Key:	2DC3489240D5807EBE56018D55C41684
 #. SourceLocation:	/Game/BP/DataAsset/Passive/DA_Passive_ReceivingEffect_Defense_3.DA_Passive_ReceivingEffect_Defense_3.mDescription
 #: /Game/BP/DataAsset/Passive/DA_Passive_ReceivingEffect_Defense_3.DA_Passive_ReceivingEffect_Defense_3.mDescription
@@ -1706,6 +1769,13 @@ msgstr "Advance Payment"
 msgctxt ",61086B4E48A408A8A7A9D481D487FF9E"
 msgid "강화"
 msgstr "Fortification"
+
+#. Key:	9F7762A64BEC537C13801EB53598C455
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Epic_HourglassTurn.DA_Common_Spell_Epic_HourglassTurn.mName
+#: /Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Epic_HourglassTurn.DA_Common_Spell_Epic_HourglassTurn.mName
+msgctxt ",9F7762A64BEC537C13801EB53598C455"
+msgid "모래 시계 돌리기"
+msgstr "Turn the Hourglass"
 
 #. Key:	0D0C22BF4AF123F5F79971825460A31E
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Common/DA_Common_Spell_Epic_Move.DA_Common_Spell_Epic_Move.mName
@@ -2638,6 +2708,13 @@ msgctxt ",930AA6CD482E22148F40F7A82D524A46"
 msgid "독구름"
 msgstr "Poison Cloud"
 
+#. Key:	4571C9B445366B946B1C8A859D10B206
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Epic_BlessingOfTime.DA_Druid_Spell_Epic_BlessingOfTime.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Epic_BlessingOfTime.DA_Druid_Spell_Epic_BlessingOfTime.mName
+msgctxt ",4571C9B445366B946B1C8A859D10B206"
+msgid "시간의 축복"
+msgstr "Blessing of Time"
+
 #. Key:	79F9D5E448B105C5182AAEB5B231991B
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Epic_FlashFruit.DA_Druid_Spell_Epic_FlashFruit.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Druid/DA_Druid_Spell_Epic_FlashFruit.DA_Druid_Spell_Epic_FlashFruit.mName
@@ -3030,6 +3107,20 @@ msgctxt ",1B782957494A25B0656C77846DD49EDF"
 msgid "마법 장벽"
 msgstr "Magic Barrier"
 
+#. Key:	CA4A0FAD49B332EA55F6B1B0FA1B155E
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Epic_TickTock.DA_Mage_Spell_Epic_TickTock.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Epic_TickTock.DA_Mage_Spell_Epic_TickTock.mName
+msgctxt ",CA4A0FAD49B332EA55F6B1B0FA1B155E"
+msgid "똑딱"
+msgstr "Tick-Tock"
+
+#. Key:	0E9A769446391E0EF05A6688B0F63502
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Rare_TimeAcceleration.DA_Mage_Spell_Rare_TimeAcceleration.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Mage/DA_Mage_Spell_Rare_TimeAcceleration.DA_Mage_Spell_Rare_TimeAcceleration.mName
+msgctxt ",0E9A769446391E0EF05A6688B0F63502"
+msgid "시간 가속"
+msgstr "Time Acceleration"
+
 #. Key:	A482DF92454637EF78C6CD8BD1922F3E
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Ranger/DA_Ranger_Attack_Common_Disarm.DA_Ranger_Attack_Common_Disarm.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Ranger/DA_Ranger_Attack_Common_Disarm.DA_Ranger_Attack_Common_Disarm.mName
@@ -3296,6 +3387,13 @@ msgctxt ",A931024340831279EA06E288356EBEB4"
 msgid "순보"
 msgstr "Flash Step"
 
+#. Key:	5213A4FF4FAF6C3E09821791D50F596C
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_Cheat.DA_Rogue_Spell_Epic_Cheat.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_Cheat.DA_Rogue_Spell_Epic_Cheat.mName
+msgctxt ",5213A4FF4FAF6C3E09821791D50F596C"
+msgid "사기"
+msgstr "Cheat"
+
 #. Key:	D34E45444D8889195424DFADFE72BEDE
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_Doping.DA_Rogue_Spell_Epic_Doping.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_Doping.DA_Rogue_Spell_Epic_Doping.mName
@@ -3310,13 +3408,6 @@ msgctxt ",4E54F0E849151674F8D78D8820C2A244"
 msgid "회피"
 msgstr "Evasion"
 
-#. Key:	60314B094FDC9F7EDB24FEB950738DB9
-#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_SleightOfHand.DA_Rogue_Spell_Epic_SleightOfHand.mName
-#: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Epic_SleightOfHand.DA_Rogue_Spell_Epic_SleightOfHand.mName
-msgctxt ",60314B094FDC9F7EDB24FEB950738DB9"
-msgid "손기술"
-msgstr "Sleight of Hand"
-
 #. Key:	Rogue.LegSweep
 #. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Rare_LegSweep.DA_Rogue_Spell_Rare_LegSweep.mName
 #: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Rare_LegSweep.DA_Rogue_Spell_Rare_LegSweep.mName
@@ -3330,6 +3421,13 @@ msgstr "Leg Sweep"
 msgctxt ",BD3F00D5461E9872A817BC92E6547246"
 msgid "모래 뿌리기"
 msgstr "Sand Toss"
+
+#. Key:	60314B094FDC9F7EDB24FEB950738DB9
+#. SourceLocation:	/Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Rare_SleightOfHand.DA_Rogue_Spell_Rare_SleightOfHand.mName
+#: /Game/BP/DataAsset/Skill/Mercenary/Rogue/DA_Rogue_Spell_Rare_SleightOfHand.DA_Rogue_Spell_Rare_SleightOfHand.mName
+msgctxt ",60314B094FDC9F7EDB24FEB950738DB9"
+msgid "손기술"
+msgstr "Sleight of Hand"
 
 #. Key:	AE209B3847CEC8895AC92884CFC83A76
 #. SourceLocation:	/Game/BP/DataAsset/Unit/EnemyUnit/Stage1/DA_EagleUnit.DA_EagleUnit.mDisplayName
