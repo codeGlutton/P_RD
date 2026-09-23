@@ -8,6 +8,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "GameplayTagContainer.h"
 
@@ -32,11 +33,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveComponentModelTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartApplyingEffect"));
 	const FGameplayTag EndTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndApplyingEffect"));
 	const FGameplayTag UnusedTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 
-	UPassiveComponentModel* Component = NewObject<UPassiveComponentModel>();
+	UPassiveComponentModel* Component = Scope.New<UPassiveComponentModel>();
 	if (!TestNotNull(TEXT("컴포넌트 생성"), Component))
 	{
 		return false;

@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   GimmickModel.cpp
  * @brief  기믹 공통 모델 구현 파일
  * @author 이문환
@@ -58,16 +58,15 @@ bool UGimmickModel::TryTriggerGimmick(const FTileIndex& AimedTileIndex, TSharedP
 		--mRemainingTriggerCount;
 	}
 
+	USRPGCombatModel* CombatModel = GetWorldSubsystemModel<USRPGCombatModel>(this);
+	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+	TSharedPtr<FPresentationBarrier> EndHoldBarrier = CombatModel->GetCurrentActionEndHoldBarrier();
+
 	// 장착된 스킬 강제 시전 (기믹은 행동력 개념이 없으므로 소모 검사 없이 시전)
 	FOnEndSkillUI EndCallback;
-	EndCallback.AddUObject(this, &UGimmickModel::OnGimmickSkillEnd);
-
-	// 배리어를 받았으면, 배리어 포인터를 캡처한 빈 람다를 종료 콜백에 추가
-	// 스킬이 끝나면 콜백이 정리되고, 람다가 사라지면서 캡처된 포인터도 함께 해제됨
-	if (PresentationBarrier.IsValid() == true)
-	{
-		EndCallback.AddLambda([PresentationBarrier](const FActiveSkillContext&, const UStaticSkillData*) {});
-	}
+	EndCallback.AddWeakLambda(this, [this, PresentationBarrier, EndHoldBarrier](const FActiveSkillContext& Context, const UStaticSkillData* SkillData) {
+		OnGimmickSkillEnd(Context, SkillData);
+		});
 
 	SkillComp->ForcedActivateSkill(GetTileMap(), mTriggerSkillIndex, AimedTileIndex, EndCallback);
 	return true;

@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"                // UMockEnemyUnitModel
@@ -49,20 +50,20 @@ namespace
 		UMockUnitMovementComponentModel* Movement = nullptr;
 	};
 
-	// @brief 8x8 타일맵에 유닛을 배치하고 이동 컴포넌트를 연결
-	FPushMovementFixture MakePushMovementFixture(UWorld* World, const FTileTransform& StartTransform)
+	// @brief 8x8 타일맵에 유닛을 배치하고 이동 컴포넌트를 연결 (생성 객체는 스코프에 등록)
+	FPushMovementFixture MakePushMovementFixture(UWorld* World, FTestObjectScope& Scope, const FTileTransform& StartTransform)
 	{
 		FPushMovementFixture Fixture;
 
-		Fixture.TileMap = NewObject<UTileMapModel>(World);
+		Fixture.TileMap = Scope.New<UTileMapModel>(World);
 		Fixture.TileMap->SetDimensions(8, 8);
 
-		Fixture.Unit = NewObject<UMockEnemyUnitModel>(World);
+		Fixture.Unit = Scope.New<UMockEnemyUnitModel>(World);
 		Fixture.Unit->Initialize();
 		Fixture.Unit->BeginPlay();
 
 		// 유닛을 Outer로 만들어서 GetOwnerModel()(Outer 체인 탐색)이 유닛을 찾게 함
-		Fixture.Movement = NewObject<UMockUnitMovementComponentModel>(Fixture.Unit);
+		Fixture.Movement = Scope.New<UMockUnitMovementComponentModel>(Fixture.Unit);
 		Fixture.Movement->SetTileMap(Fixture.TileMap);
 
 		Fixture.TileMap->PlaceActor(StartTransform, Fixture.Unit);
@@ -83,6 +84,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementBasicTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -97,7 +100,7 @@ bool FPushMovementBasicTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case1: PushAlongPath -> 도착, 방향 불변, OnFinished 1회 ==="));
 	{
 		// (2,2)에서 Left를 바라보는 유닛을 +X로 2칸 밀침
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Left));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Left));
 
 		int32 FinishCount = 0;
 		const bool Started = Fixture.Movement->PushAlongPath(
@@ -118,7 +121,7 @@ bool FPushMovementBasicTests::RunTest(const FString& Parameters)
 	/* Case2: AP 정산 (일반 이동 차감 vs 밀치기 불변) */
 	AddInfo(TEXT("=== Case2: 일반 이동 AP 차감 vs 밀치기 AP 불변 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 		UAttributeSetComponentModel* AttrComp = Fixture.Unit->GetAttributeComponentModel();
 		if (TestNotNull(TEXT("[Case2] 속성 컴포넌트"), AttrComp) == false)
@@ -142,7 +145,7 @@ bool FPushMovementBasicTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case3: PullAlongPath -> 도착, 방향 불변, AP 불변, 마지막 모드 Pull ==="));
 	{
 		// (5,2)에서 Left를 바라보는 유닛을 -X로 2칸 당김
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
 
 		UAttributeSetComponentModel* AttrComp = Fixture.Unit->GetAttributeComponentModel();
 		const float BeforePull = AttrComp->GetAttributeCurrentValue(UUnitAttributeSet::GetActionPointAttribute());
@@ -175,6 +178,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementChainTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -188,7 +193,7 @@ bool FPushMovementChainTests::RunTest(const FString& Parameters)
 	/* Case1: 걷기 중 함정 등록 -> 경로 교체 */
 	AddInfo(TEXT("=== Case1: 걷기 중 등록 -> 잔여 걷기 폐기, 밀치기 경로 완주 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 		// (3,2)에 밀치기 함정이 있는 상황: 도착 통지에서 +Y 2칸 밀치기 등록
 		TArray<bool> RegisterResults;
@@ -221,7 +226,7 @@ bool FPushMovementChainTests::RunTest(const FString& Parameters)
 	/* Case2: 같은 함정 1회 제한 + 새 요청에서 기록 초기화 */
 	AddInfo(TEXT("=== Case2: 같은 함정 재등록 거부, 새 요청이면 다시 허용 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 		// 함정 키를 (3,2)로 고정하고 매 도착마다 등록 시도: 첫 발동만 성공해야 함
 		TArray<bool> RegisterResults;
@@ -259,7 +264,7 @@ bool FPushMovementChainTests::RunTest(const FString& Parameters)
 	/* Case3: 밀 곳이 없는 함정 -> 잔여 걷기 폐기, 함정 칸에서 완료 */
 	AddInfo(TEXT("=== Case3: 제자리 1칸 경로 등록 -> 잔여 걷기 폐기, 함정 칸에서 완료 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 		// (3,2)에 밀치기 함정이 있지만 밀릴 곳이 막힌 상황: 도착 통지에서 제자리 1칸 경로 등록
 		TArray<bool> RegisterResults;
@@ -326,6 +331,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementGuardTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -336,7 +343,7 @@ bool FPushMovementGuardTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+	FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 	/* Case1: 정지 상태 등록 거부 (정지 대상은 PushAlongPath를 쓰라는 신호) */
 	AddInfo(TEXT("=== Case1: 정지 상태 TryRegisterPendingPush -> false ==="));
@@ -385,6 +392,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementCancelTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -395,7 +404,7 @@ bool FPushMovementCancelTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+	FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 	// (3,2)로 향하는 스텝이 시작되면 취소 요청 (스텝 연출 종료 시점에 반영됨)
 	FDelegateHandle CancelHandle = Fixture.Unit->OnStartMoveStep.AddLambda(
@@ -462,6 +471,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementBlockedTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -476,10 +487,10 @@ bool FPushMovementBlockedTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case1: 이동 중 다음 칸 점유 -> 직전 칸에서 완료 ==="));
 	{
 		// (5,2)에서 (3,2)까지 당겨지는 유닛
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
 
 		// 다른 유닛: (4,2) 도착 통지 시점에 목적지 (3,2)를 먼저 차지 (동시에 당겨진 유닛이 먼저 도착한 상황)
-		UMockEnemyUnitModel* Blocker = NewObject<UMockEnemyUnitModel>(World);
+		UMockEnemyUnitModel* Blocker = Scope.New<UMockEnemyUnitModel>(World);
 		Blocker->Initialize();
 		Blocker->BeginPlay();
 		FDelegateHandle BlockHandle = Fixture.Unit->OnEndMoveStep.AddLambda(
@@ -511,10 +522,10 @@ bool FPushMovementBlockedTests::RunTest(const FString& Parameters)
 	/* Case2: 시작 전에 첫 칸이 막힘 */
 	AddInfo(TEXT("=== Case2: 첫 칸 점유 -> 시작 거부, 제자리 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(5, 2), ETileActorDirection::Left));
 
 		// 다른 유닛이 첫 이동 칸 (4,2)에 이미 서 있음
-		UMockEnemyUnitModel* Blocker = NewObject<UMockEnemyUnitModel>(World);
+		UMockEnemyUnitModel* Blocker = Scope.New<UMockEnemyUnitModel>(World);
 		Blocker->Initialize();
 		Blocker->BeginPlay();
 		Fixture.TileMap->PlaceActor(FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward), Blocker);
@@ -550,6 +561,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FPushMovementStatusEffectTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForPushTests();
 	if (World == nullptr)
 	{
@@ -576,7 +589,7 @@ bool FPushMovementStatusEffectTests::RunTest(const FString& Parameters)
 	/* Case1: 걷는 중 속박 -> 정지 */
 	AddInfo(TEXT("=== Case1: 걷는 중 속박 -> 그 칸에서 정지, 남은 경로 폐기 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
 
 		int32 FinishCount = 0;
@@ -597,7 +610,7 @@ bool FPushMovementStatusEffectTests::RunTest(const FString& Parameters)
 	/* Case2: 밀리는 중 기절 -> 끝까지 밀림 */
 	AddInfo(TEXT("=== Case2: 밀리는 중 기절 -> 끝까지 밀림 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun);
 
 		Fixture.Movement->PushAlongPath({ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2) });
@@ -611,7 +624,7 @@ bool FPushMovementStatusEffectTests::RunTest(const FString& Parameters)
 	/* Case3: 밀리는 중 속박 -> 끝까지 밀림 */
 	AddInfo(TEXT("=== Case3: 밀리는 중 속박 -> 끝까지 밀림 ==="));
 	{
-		FPushMovementFixture Fixture = MakePushMovementFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FPushMovementFixture Fixture = MakePushMovementFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 		FDelegateHandle StatusHandle = AddStatusOnArrive(Fixture, EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Root);
 
 		Fixture.Movement->PushAlongPath({ FTileIndex(2, 2), FTileIndex(3, 2), FTileIndex(4, 2) });

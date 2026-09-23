@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "GameplayTagContainer.h"
 
@@ -38,18 +39,20 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FArtifactComponentModelTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 
 	// 필요한 컴포넌트만 유닛 없이 생성
-	UArtifactComponentModel* ArtifactComp = NewObject<UArtifactComponentModel>();
-	UPassiveComponentModel* PassiveComp = NewObject<UPassiveComponentModel>();
+	UArtifactComponentModel* ArtifactComp = Scope.New<UArtifactComponentModel>();
+	UPassiveComponentModel* PassiveComp = Scope.New<UPassiveComponentModel>();
 	if (!TestNotNull(TEXT("아티팩트 컴포넌트 생성"), ArtifactComp) || !TestNotNull(TEXT("패시브 컴포넌트 생성"), PassiveComp))
 	{
 		return false;
 	}
 
 	// 패시브 DA (코드 구성): 제네릭 패시브 + AttackFactor 이펙트 + 수치 5 + OnStartTurn 시점
-	UStaticPassiveData* PassiveData = NewObject<UStaticPassiveData>();
+	UStaticPassiveData* PassiveData = Scope.New<UStaticPassiveData>();
 	PassiveData->mPassiveClass = UTacticalPassive_Generic::StaticClass();
 	FPassiveEffectEntry& Effect = PassiveData->mEffects.AddDefaulted_GetRef();
 	Effect.mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
@@ -57,7 +60,7 @@ bool FArtifactComponentModelTests::RunTest(const FString& Parameters)
 	PassiveData->mActivateTimingTag = StartTiming;
 
 	// 아티펙트 DA (코드 구성): 위 패시브를 연관
-	UStaticArtifactData* Artifact = NewObject<UStaticArtifactData>();
+	UStaticArtifactData* Artifact = Scope.New<UStaticArtifactData>();
 	Artifact->mStaticPassiveData.Add(TSoftObjectPtr<UStaticPassiveData>(PassiveData));
 
 	// 장착: 패시브가 설치돼야 함

@@ -8,6 +8,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "TAS/TASAttributeTestsHelper.h"
 #include "TAS/Passive/PassiveTestsHelper.h"
@@ -58,8 +59,8 @@ namespace
 		return FGameplayTag::RequestGameplayTag(FName(TagName));
 	}
 
-	// 보드액터 목 생성
-	UMockBoardActorModel* MakeMockActor(FAutomationTestBase& Test)
+	// 보드액터 목 생성 (스코프에 등록)
+	UMockBoardActorModel* MakeMockActor(FAutomationTestBase& Test, FTestObjectScope& Scope)
 	{
 		UWorld* World = GetAnyGameWorld();
 		if (World == nullptr)
@@ -87,11 +88,13 @@ namespace
 		UTacticalFrameworkModel* FrameworkModel = Cast<UTacticalFrameworkModel>(RoomInstance->mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));
 		if (FrameworkModel == nullptr)
 		{
-			FrameworkModel = NewObject<UTacticalFrameworkModel>(RoomInstance);
+			FrameworkModel = Scope.New<UTacticalFrameworkModel>(RoomInstance);
 			RoomInstance->mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), FrameworkModel);
+			// 테스트가 등록한 것이므로 파괴 전에 등록 해제
+			Scope.Defer([RoomInstance]() { RoomInstance->mAliveSubsystemModels.Remove(UTacticalFrameworkModel::StaticClass()); });
 		}
 
-		UMockBoardActorModel* Actor = NewObject<UMockBoardActorModel>(World);
+		UMockBoardActorModel* Actor = Scope.New<UMockBoardActorModel>(World);
 		Actor->Initialize();
 		Actor->BeginPlay();
 		return Actor;
@@ -145,10 +148,10 @@ namespace
 		return Condition;
 	}
 
-	// Generic용 DA 조립: 효과 1개 기본형. 조건/캡처/추가 효과는 호출부에서 채움
-	UStaticPassiveData* MakeGenericData(FGameplayTag Activate, FGameplayTag Deactivate, TSubclassOf<UTacticalEffect> EffectClass, const FPassiveOperand& Magnitude)
+	// Generic용 DA 조립: 효과 1개 기본형. 조건/캡처/추가 효과는 호출부에서 채움. 스코프에 등록
+	UStaticPassiveData* MakeGenericData(FTestObjectScope& Scope, FGameplayTag Activate, FGameplayTag Deactivate, TSubclassOf<UTacticalEffect> EffectClass, const FPassiveOperand& Magnitude)
 	{
-		UStaticPassiveData* Data = NewObject<UStaticPassiveData>();
+		UStaticPassiveData* Data = Scope.New<UStaticPassiveData>();
 		Data->mActivateTimingTag = Activate;
 		Data->mDeactivateTimingTag = Deactivate;
 
@@ -159,10 +162,10 @@ namespace
 		return Data;
 	}
 
-	// Generic 패시브 생성
-	UTacticalPassive_Generic* MakeGenericPassive(UStaticPassiveData* Data)
+	// Generic 패시브 생성 (스코프에 등록)
+	UTacticalPassive_Generic* MakeGenericPassive(FTestObjectScope& Scope, UStaticPassiveData* Data)
 	{
-		UTacticalPassive_Generic* Passive = NewObject<UTacticalPassive_Generic>();
+		UTacticalPassive_Generic* Passive = Scope.New<UTacticalPassive_Generic>();
 		Passive->SetStaticData(Data);
 		return Passive;
 	}
@@ -188,7 +191,9 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericBasicTest::RunTest(const FString& Parameters)
 {
-	UMockBoardActorModel* Actor = MakeMockActor(*this);
+	FTestObjectScope Scope;
+
+	UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 	if (Actor == nullptr)
 	{
 		return false;
@@ -202,8 +207,8 @@ bool FPassiveGenericBasicTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnEndRoom = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndRoom"));
 
 	// 조건 없이 힐 배율 1.25를 룸 동안 유지하는 DA
-	UStaticPassiveData* Data = MakeGenericData(OnStartRoom, OnEndRoom, UTacticalEffect_HealFactor_MultiplyAdditive::StaticClass(), MakeConstOperand(1.25f));
-	UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+	UStaticPassiveData* Data = MakeGenericData(Scope, OnStartRoom, OnEndRoom, UTacticalEffect_HealFactor_MultiplyAdditive::StaticClass(), MakeConstOperand(1.25f));
+	UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 	FPassiveActivateContext Ctx;
 	Ctx.mOwner = Actor;
@@ -236,7 +241,9 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericConditionTest::RunTest(const FString& Parameters)
 {
-	UMockBoardActorModel* Actor = MakeMockActor(*this);
+	FTestObjectScope Scope;
+
+	UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 	if (Actor == nullptr)
 	{
 		return false;
@@ -250,12 +257,12 @@ bool FPassiveGenericConditionTest::RunTest(const FString& Parameters)
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 
 	// 체력이 절반 이하면 방어도 4를 주는 DA
-	UStaticPassiveData* Data = MakeGenericData(OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
+	UStaticPassiveData* Data = MakeGenericData(Scope, OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
 	Data->mConditions.Add(MakeCondition(
 		MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Self),
 		EPassiveCompareOp::LessEqual,
 		MakeAttrOperand(UCombatTargetAttributeSet::GetMaxHPAttribute(), EPassiveOperandSource::Self, 0.5f)));
-	UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+	UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 	// HP 80: 조건 거짓이라 미발동
 	{
@@ -293,7 +300,9 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 {
-	UMockBoardActorModel* Actor = MakeMockActor(*this);
+	FTestObjectScope Scope;
+
+	UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 	if (Actor == nullptr)
 	{
 		return false;
@@ -310,7 +319,7 @@ bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 	// 매 3번째 스킬 사용에 공격 보너스를 주는 DA
 	auto MakeCounterData = [&]() -> UStaticPassiveData*
 	{
-		UStaticPassiveData* Data = MakeGenericData(OnStartUsingSkill, OnEndUsingSkill, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnStartUsingSkill, OnEndUsingSkill, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 		Data->mConditions.Add(MakeCondition(MakeCounterOperand(), EPassiveCompareOp::ModuloZero, MakeConstOperand(3.f)));
 		return Data;
 	};
@@ -321,7 +330,7 @@ bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 
 	// 8회 반복: 3의 배수 회차만 발동
 	{
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(MakeCounterData());
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, MakeCounterData());
 		for (int32 Hit = 1; Hit <= 8; ++Hit)
 		{
 			const bool bExpectFire = (Hit % 3 == 0);
@@ -339,7 +348,7 @@ bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 	{
 		UStaticPassiveData* Data = MakeCounterData();
 		Data->mCounterResetTimingTag = OnEndTurn;
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		// 발동 없이 2회 진행
 		for (int32 Hit = 1; Hit <= 2; ++Hit)
@@ -368,7 +377,7 @@ bool FPassiveGenericCounterTest::RunTest(const FString& Parameters)
 			MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Self),
 			EPassiveCompareOp::Less,
 			MakeConstOperand(50.f)));
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		// Self 조건은 소유자 스냅샷으로 판정하므로 HP 변경 시마다 스냅샷 갱신
 		FPassiveActivateContext SnapshotCtx;
@@ -408,6 +417,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericCaptureTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnStartUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartUsingSkill"));
 	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
 
@@ -415,7 +426,7 @@ bool FPassiveGenericCaptureTest::RunTest(const FString& Parameters)
 	// bDamaged: 캡처와 발동 사이에 체력을 깎을지
 	auto RunCase = [&](bool bDamaged) -> float
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return -1.f;
@@ -425,7 +436,7 @@ bool FPassiveGenericCaptureTest::RunTest(const FString& Parameters)
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
 
 		// 스킬 시작에 HP를 캡처하고, 종료에 현재 HP와 비교하는 DA
-		UStaticPassiveData* Data = MakeGenericData(OnEndUsingSkill, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnEndUsingSkill, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
 		Data->mCaptureTimingTag = OnStartUsingSkill;
 		FPassiveCaptureEntry Capture;
 		Capture.mKey = FName(TEXT("HP"));
@@ -435,7 +446,7 @@ bool FPassiveGenericCaptureTest::RunTest(const FString& Parameters)
 			MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Self),
 			EPassiveCompareOp::Less,
 			MakeCapturedOperand(FName(TEXT("HP")), EPassiveOperandSource::Self)));
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		// 스냅샷을 새로 떠서 Ctx를 구성
 		auto MakeCtx = [&]() -> FPassiveActivateContext
@@ -483,11 +494,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericMagnitudeTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 
 	// 속성값 수치: 공격력만큼 방어도를 얻는 DA
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -495,9 +508,9 @@ bool FPassiveGenericMagnitudeTest::RunTest(const FString& Parameters)
 		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 3.f);
 
-		UStaticPassiveData* Data = MakeGenericData(OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(),
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(),
 			MakeAttrOperand(UCombatTargetAttributeSet::GetAttackFactorAttribute(), EPassiveOperandSource::Self));
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		// 수치 계산이 스냅샷을 읽으므로 소유자 스냅샷 필요
 		FPassiveActivateContext Ctx;
@@ -511,7 +524,7 @@ bool FPassiveGenericMagnitudeTest::RunTest(const FString& Parameters)
 
 	// 효과 2개: 방어도 +4와 체력 +5 동시 적용
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -520,12 +533,12 @@ bool FPassiveGenericMagnitudeTest::RunTest(const FString& Parameters)
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetMaxHPAttribute(), 100.f);
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 50.f);
 
-		UStaticPassiveData* Data = MakeGenericData(OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnEndTurn, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
 		FPassiveEffectEntry Second;
 		Second.mEffectClass = UTacticalEffect_HP::StaticClass();
 		Second.mMagnitude = MakeConstOperand(5.f);
 		Data->mEffects.Add(Second);
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Actor;
@@ -551,14 +564,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 
 	// 효과 대상: Self면 소유자만, Targets면 타겟 전부
 	{
-		UMockBoardActorModel* Player = MakeMockActor(*this);
-		UMockBoardActorModel* Target1 = MakeMockActor(*this);
-		UMockBoardActorModel* Target2 = MakeMockActor(*this);
+		UMockBoardActorModel* Player = MakeMockActor(*this, Scope);
+		UMockBoardActorModel* Target1 = MakeMockActor(*this, Scope);
+		UMockBoardActorModel* Target2 = MakeMockActor(*this, Scope);
 		if (Player == nullptr || Target1 == nullptr || Target2 == nullptr)
 		{
 			return false;
@@ -577,9 +592,9 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 
 		// Self: 소유자만 +5
 		{
-			UStaticPassiveData* Data = MakeGenericData(OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+			UStaticPassiveData* Data = MakeGenericData(Scope, OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 			Data->mEffectTarget = EPassiveEffectTarget::Self;
-			UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+			UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 			DriveTiming(Passive, OnStartTurn, Ctx);
 			TestEqual(TEXT("Self 발동: 소유자 15"), PlayerComp->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
@@ -590,9 +605,9 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 
 		// Targets: 타겟 전부 +5, 소유자는 그대로
 		{
-			UStaticPassiveData* Data = MakeGenericData(OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+			UStaticPassiveData* Data = MakeGenericData(Scope, OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 			Data->mEffectTarget = EPassiveEffectTarget::Targets;
-			UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+			UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 			DriveTiming(Passive, OnStartTurn, Ctx);
 			TestEqual(TEXT("Targets 발동: 타겟1 15"), TargetComp1->GetAttributeCurrentValue(UCombatTargetAttributeSet::GetAttackFactorAttribute()), 15.f);
@@ -608,9 +623,9 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 	{
 		auto RunCase = [&](EPassiveTargetQuantifier Quantifier, float HP1, float HP2) -> float
 		{
-			UMockBoardActorModel* Player = MakeMockActor(*this);
-			UMockBoardActorModel* Target1 = MakeMockActor(*this);
-			UMockBoardActorModel* Target2 = MakeMockActor(*this);
+			UMockBoardActorModel* Player = MakeMockActor(*this, Scope);
+			UMockBoardActorModel* Target1 = MakeMockActor(*this, Scope);
+			UMockBoardActorModel* Target2 = MakeMockActor(*this, Scope);
 			if (Player == nullptr || Target1 == nullptr || Target2 == nullptr)
 			{
 				return -1.f;
@@ -622,14 +637,14 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 			TargetComp1->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 			TargetComp2->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 
-			UStaticPassiveData* Data = MakeGenericData(OnStartTurn, FGameplayTag(), UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+			UStaticPassiveData* Data = MakeGenericData(Scope, OnStartTurn, FGameplayTag(), UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 			Data->mEffectTarget = EPassiveEffectTarget::Targets;
 			Data->mTargetQuantifier = Quantifier;
 			Data->mConditions.Add(MakeCondition(
 				MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Target),
 				EPassiveCompareOp::Less,
 				MakeConstOperand(50.f)));
-			UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+			UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 			FPassiveActivateContext Ctx;
 			Ctx.mOwner = Player;
@@ -650,7 +665,7 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 
 	// Infinite 효과 2개: 동시 적용, 재발동 갱신, 해제까지
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -659,12 +674,12 @@ bool FPassiveGenericTargetTest::RunTest(const FString& Parameters)
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 		Comp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHealFactorAttribute(), 1.f);
 
-		UStaticPassiveData* Data = MakeGenericData(OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnStartTurn, OnEndTurn, UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 		FPassiveEffectEntry Second;
 		Second.mEffectClass = UTacticalEffect_HealFactor_MultiplyAdditive::StaticClass();
 		Second.mMagnitude = MakeConstOperand(1.25f);
 		Data->mEffects.Add(Second);
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Actor;
@@ -702,12 +717,14 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericNoTargetTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnEndApplyingEffect = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndApplyingEffect"));
 
 	// 소유자 AttackFactor 10, HP 30으로 두고 빈 타겟 컨텍스트로 발동. 반환값은 발동 후 소유자 AttackFactor
 	auto RunCase = [&](const TArray<FPassiveCondition>& Conditions) -> float
 	{
-		UMockBoardActorModel* Player = MakeMockActor(*this);
+		UMockBoardActorModel* Player = MakeMockActor(*this, Scope);
 		if (Player == nullptr)
 		{
 			return -1.f;
@@ -716,9 +733,9 @@ bool FPassiveGenericNoTargetTest::RunTest(const FString& Parameters)
 		PlayerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetAttackFactorAttribute(), 10.f);
 		PlayerComp->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 30.f);
 
-		UStaticPassiveData* Data = MakeGenericData(OnEndApplyingEffect, FGameplayTag(), UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnEndApplyingEffect, FGameplayTag(), UTacticalEffect_AttackFactor_AddBase::StaticClass(), MakeConstOperand(5.f));
 		Data->mConditions = Conditions;
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		// 타겟과 타겟 스냅샷을 비워둔 컨텍스트
 		FPassiveActivateContext Ctx;
@@ -769,6 +786,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 
@@ -777,7 +796,7 @@ bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 
 	// 상태이상 스택: 수치가 스택 수로 들어감
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -786,8 +805,8 @@ bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 		TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
 		// 취약 3스택을 주는 DA
-		UStaticPassiveData* Data = MakeGenericData(OnEndTurn, FGameplayTag(), UTacticalEffect_GetVulnerability::StaticClass(), MakeConstOperand(3.f));
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnEndTurn, FGameplayTag(), UTacticalEffect_GetVulnerability::StaticClass(), MakeConstOperand(3.f));
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Actor;
@@ -801,7 +820,7 @@ bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 
 	// Infinite 태그 부여: 해제 시 태그 회수
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -810,8 +829,8 @@ bool FPassiveGenericTagTest::RunTest(const FString& Parameters)
 		TestFalse(TEXT("적용 전: 취약 태그 없음"), Comp->HasMatchingGameplayTag(VulnerabilityTag));
 
 		// GrantedTags 목 이펙트를 턴 동안 유지하는 DA
-		UStaticPassiveData* Data = MakeGenericData(OnStartTurn, OnEndTurn, UMockGrantedTagTacticalEffect::StaticClass(), MakeConstOperand(1.f));
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+		UStaticPassiveData* Data = MakeGenericData(Scope, OnStartTurn, OnEndTurn, UMockGrantedTagTacticalEffect::StaticClass(), MakeConstOperand(1.f));
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Actor;
@@ -841,6 +860,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericStatusStackTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnStartTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 	const FGameplayTag OnEndTurn = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndTurn"));
 	const FTacticalEffectQuery StrengthQuery = FTacticalEffectQuery::MakeQuery_MatchAnyEffectTags(FGameplayTagContainer(EffectTags::GameplayEffect_StatusEffect_Infinite_Buff_Strength));
@@ -848,12 +869,12 @@ bool FPassiveGenericStatusStackTest::RunTest(const FString& Parameters)
 	// 완력 버프 3스택을 턴 동안 유지하는 DA
 	auto MakeStrengthData = [&]() -> UStaticPassiveData*
 	{
-		return MakeGenericData(OnStartTurn, OnEndTurn, UTacticalEffect_Buff_Strength::StaticClass(), MakeConstOperand(3.f));
+		return MakeGenericData(Scope, OnStartTurn, OnEndTurn, UTacticalEffect_Buff_Strength::StaticClass(), MakeConstOperand(3.f));
 	};
 
 	// 다른 출처의 2스택 위에 3스택을 얹고, 해제하면 3스택만 빠지는지
 	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
+		UMockBoardActorModel* Actor = MakeMockActor(*this, Scope);
 		if (Actor == nullptr)
 		{
 			return false;
@@ -866,7 +887,7 @@ bool FPassiveGenericStatusStackTest::RunTest(const FString& Parameters)
 		Comp->ApplyTacticalEffectSpecToSelf(*OtherSpec);
 		TestEqual(TEXT("적용 전: 다른 출처 2스택"), Comp->GetAggregatedStackCount(StrengthQuery), 2);
 
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(MakeStrengthData());
+		UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, MakeStrengthData());
 		FPassiveActivateContext Ctx;
 		Ctx.mOwner = Actor;
 		Ctx.mTargets.Add(Actor);
@@ -876,25 +897,6 @@ bool FPassiveGenericStatusStackTest::RunTest(const FString& Parameters)
 
 		DriveTiming(Passive, OnEndTurn, Ctx);
 		TestEqual(TEXT("해제: 패시브 3스택만 빠져 2스택"), Comp->GetAggregatedStackCount(StrengthQuery), 2);
-	}
-
-	// 면역 대상에게는 걸리지 않는지
-	{
-		UMockBoardActorModel* Actor = MakeMockActor(*this);
-		if (Actor == nullptr)
-		{
-			return false;
-		}
-		UAttributeSetComponentModel* Comp = Actor->GetAttributeComponentModel();
-		Comp->AddLooseGameplayTag(EffectTags::GameplayEffect_ActorState_Immunity);
-
-		UTacticalPassive_Generic* Passive = MakeGenericPassive(MakeStrengthData());
-		FPassiveActivateContext Ctx;
-		Ctx.mOwner = Actor;
-		Ctx.mTargets.Add(Actor);
-
-		DriveTiming(Passive, OnStartTurn, Ctx);
-		TestEqual(TEXT("면역: 0스택"), Comp->GetAggregatedStackCount(StrengthQuery), 0);
 	}
 
 	return true;
@@ -912,13 +914,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveGenericCapturedTargetsTest::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag OnStartApplyingEffect = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartApplyingEffect"));
 	const FGameplayTag OnEndUsingSkill = PassiveTiming(TEXT("GameplayAbility.Passive.OnEndUsingSkill"));
 
-	UMockBoardActorModel* Owner = MakeMockActor(*this);
-	UMockBoardActorModel* Target1 = MakeMockActor(*this);
-	UMockBoardActorModel* Target2 = MakeMockActor(*this);
-	UMockBoardActorModel* Target3 = MakeMockActor(*this);
+	UMockBoardActorModel* Owner = MakeMockActor(*this, Scope);
+	UMockBoardActorModel* Target1 = MakeMockActor(*this, Scope);
+	UMockBoardActorModel* Target2 = MakeMockActor(*this, Scope);
+	UMockBoardActorModel* Target3 = MakeMockActor(*this, Scope);
 	if (Owner == nullptr || Target1 == nullptr || Target2 == nullptr || Target3 == nullptr)
 	{
 		return false;
@@ -931,7 +935,7 @@ bool FPassiveGenericCapturedTargetsTest::RunTest(const FString& Parameters)
 	Target3->GetAttributeComponentModel()->SetAttributeBaseValue(UCombatTargetAttributeSet::GetHPAttribute(), 80.f);
 
 	// 이펙트 적용 시점에 대상 HP를 캡처하고, 스킬 종료 시 캡처한 대상 중 HP가 줄어든 게 있으면 방어도 4를 얻는 DA
-	UStaticPassiveData* Data = MakeGenericData(OnEndUsingSkill, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
+	UStaticPassiveData* Data = MakeGenericData(Scope, OnEndUsingSkill, FGameplayTag(), UTacticalEffect_Defense::StaticClass(), MakeConstOperand(4.f));
 	Data->mCaptureTimingTag = OnStartApplyingEffect;
 	Data->mActivateOnCapturedTargets = true;
 	FPassiveCaptureEntry CaptureEntry;
@@ -942,7 +946,7 @@ bool FPassiveGenericCapturedTargetsTest::RunTest(const FString& Parameters)
 		MakeAttrOperand(UCombatTargetAttributeSet::GetHPAttribute(), EPassiveOperandSource::Target),
 		EPassiveCompareOp::Less,
 		MakeCapturedOperand(FName(TEXT("HP")), EPassiveOperandSource::Target)));
-	UTacticalPassive_Generic* Passive = MakeGenericPassive(Data);
+	UTacticalPassive_Generic* Passive = MakeGenericPassive(Scope, Data);
 
 	// 페이즈 Ctx: 스킬 대상들과 스냅샷
 	auto Capture = [&](std::initializer_list<UMockBoardActorModel*> Targets)

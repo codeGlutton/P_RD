@@ -11,6 +11,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "TAS/Passive/PassiveCondition.h"
@@ -22,10 +23,10 @@
 
 namespace
 {
-	// HP / MaxHP / 타일 위치를 가진 스냅샷 생성
-	UBoardCombatTargetSnapshotData* MakeSnapshot(float HP, float MaxHP, const FTileIndex& Tile)
+	// HP / MaxHP / 타일 위치를 가진 스냅샷 생성 (스코프에 등록)
+	UBoardCombatTargetSnapshotData* MakeSnapshot(FTestObjectScope& Scope, float HP, float MaxHP, const FTileIndex& Tile)
 	{
-		UBoardCombatTargetSnapshotData* Snapshot = NewObject<UBoardCombatTargetSnapshotData>();
+		UBoardCombatTargetSnapshotData* Snapshot = Scope.New<UBoardCombatTargetSnapshotData>();
 		Snapshot->mAttributes.Add(UCombatTargetAttributeSet::GetHPAttribute(), HP);
 		Snapshot->mAttributes.Add(UCombatTargetAttributeSet::GetMaxHPAttribute(), MaxHP);
 		Snapshot->mTileTransform.mIndex = Tile;
@@ -98,8 +99,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveConditionResolveTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	// 소유자: HP 30 / MaxHP 100, 디버프 약화 1 + 취약 2
-	UBoardCombatTargetSnapshotData* Owner = MakeSnapshot(30.f, 100.f, FTileIndex(0, 0));
+	UBoardCombatTargetSnapshotData* Owner = MakeSnapshot(Scope, 30.f, 100.f, FTileIndex(0, 0));
 	Owner->mEffectCounts.Add(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Weakness, 1);
 	Owner->mEffectCounts.Add(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Vulnerability, 2);
 	Owner->mEffectCounts.Add(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_Vigor, 1);
@@ -158,11 +161,13 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveConditionSpatialTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	// 소유자 (0,0), 타겟 0 (2,3), 타겟 1 (1,0)
 	FPassiveActivateContext Ctx;
-	Ctx.mOwnerSnapshot = MakeSnapshot(100.f, 100.f, FTileIndex(0, 0));
-	Ctx.mTargetSnapshots.Add(MakeSnapshot(100.f, 100.f, FTileIndex(2, 3)));
-	Ctx.mTargetSnapshots.Add(MakeSnapshot(100.f, 100.f, FTileIndex(1, 0)));
+	Ctx.mOwnerSnapshot = MakeSnapshot(Scope, 100.f, 100.f, FTileIndex(0, 0));
+	Ctx.mTargetSnapshots.Add(MakeSnapshot(Scope, 100.f, 100.f, FTileIndex(2, 3)));
+	Ctx.mTargetSnapshots.Add(MakeSnapshot(Scope, 100.f, 100.f, FTileIndex(1, 0)));
 
 	FDynamicPassiveData_Generic State;
 	float Value = 0.f;
@@ -214,9 +219,11 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPassiveConditionEvaluateAllTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	// 소유자 HP 30 / MaxHP 100, 카운터 6
 	FPassiveActivateContext Ctx;
-	Ctx.mOwnerSnapshot = MakeSnapshot(30.f, 100.f, FTileIndex(0, 0));
+	Ctx.mOwnerSnapshot = MakeSnapshot(Scope, 30.f, 100.f, FTileIndex(0, 0));
 	FDynamicPassiveData_Generic State;
 	State.mCounter = 6;
 
