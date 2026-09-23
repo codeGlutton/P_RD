@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "TAS/TASAttributeTestsHelper.h"
@@ -52,6 +53,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	// 라이브 월드 확보 (TAS 속성 테스트와 동일 환경)
 	UWorld* World = FindAnyGameWorld();
 	if (World == nullptr)
@@ -79,12 +82,14 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	UTacticalFrameworkModel* FrameworkModel = Cast<UTacticalFrameworkModel>(RoomInstance->mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));
 	if (FrameworkModel == nullptr)
 	{
-		FrameworkModel = NewObject<UTacticalFrameworkModel>(RoomInstance);
+		FrameworkModel = Scope.New<UTacticalFrameworkModel>(RoomInstance);
 		RoomInstance->mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), FrameworkModel);
+		// 테스트가 등록한 것이므로 파괴 전에 등록 해제
+		Scope.Defer([RoomInstance]() { RoomInstance->mAliveSubsystemModels.Remove(UTacticalFrameworkModel::StaticClass()); });
 	}
 
 	// 속성 컴포넌트 모크 (UUnitAttributeSet 부착)
-	UTASActorModelMock* MockActorModel = NewObject<UTASActorModelMock>(World);
+	UTASActorModelMock* MockActorModel = Scope.New<UTASActorModelMock>(World);
 	MockActorModel->Initialize();
 	MockActorModel->BeginPlay();
 	UAttributeSetComponentModel* AttrComp = MockActorModel->GetAttributeComponent();
@@ -99,7 +104,7 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	TestEqual(TEXT("기본 공격력 10"), AttrComp->GetAttributeCurrentValue(AttackPoint), 10.f);
 
 	// 무기 DA (코드 구성): 공격력 +5 고유 스탯
-	UStaticEquipmentData* Weapon = NewObject<UStaticEquipmentData>();
+	UStaticEquipmentData* Weapon = Scope.New<UStaticEquipmentData>();
 	FTacticalModifierInfo Mod;
 	Mod.mAttribute = AttackPoint;
 	Mod.mModifierOp = ETacticalModOp::AddBase;
@@ -107,7 +112,7 @@ bool FEquipmentStatModifierTests::RunTest(const FString& Parameters)
 	Weapon->mStatModifiers.Add(Mod);
 
 	// 장착: 스탯 이펙트가 자신에게 적용 (패시브 컴포넌트는 불필요 → nullptr)
-	UEquipmentComponentModel* EquipComp = NewObject<UEquipmentComponentModel>();
+	UEquipmentComponentModel* EquipComp = Scope.New<UEquipmentComponentModel>();
 	const bool bEquipped = EquipComp->EquipInternal(Weapon, nullptr, AttrComp);
 	TestTrue(TEXT("장착 성공"), bEquipped);
 	TestEqual(TEXT("장착 후 공격력 15 (기본 10 + 스탯 5)"), AttrComp->GetAttributeCurrentValue(AttackPoint), 15.f);

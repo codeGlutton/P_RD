@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"                // UMockEnemyUnitModel
@@ -49,30 +50,30 @@ namespace
 		UMockUnitMovementComponentModel* Movement = nullptr;
 	};
 
-	// @brief 8x8 타일맵에 유닛을 배치하고 이동 컴포넌트를 연결
-	FTeleportFixture MakeTeleportFixture(UWorld* World, const FTileTransform& StartTransform)
+	// @brief 8x8 타일맵에 유닛을 배치하고 이동 컴포넌트를 연결 (생성 객체는 스코프에 등록)
+	FTeleportFixture MakeTeleportFixture(UWorld* World, FTestObjectScope& Scope, const FTileTransform& StartTransform)
 	{
 		FTeleportFixture Fixture;
 
-		Fixture.TileMap = NewObject<UTileMapModel>(World);
+		Fixture.TileMap = Scope.New<UTileMapModel>(World);
 		Fixture.TileMap->SetDimensions(8, 8);
 
-		Fixture.Unit = NewObject<UMockEnemyUnitModel>(World);
+		Fixture.Unit = Scope.New<UMockEnemyUnitModel>(World);
 		Fixture.Unit->Initialize();
 		Fixture.Unit->BeginPlay();
 
 		// 유닛을 Outer로 만들어서 GetOwnerModel()(Outer 체인 탐색)이 유닛을 찾게 함
-		Fixture.Movement = NewObject<UMockUnitMovementComponentModel>(Fixture.Unit);
+		Fixture.Movement = Scope.New<UMockUnitMovementComponentModel>(Fixture.Unit);
 		Fixture.Movement->SetTileMap(Fixture.TileMap);
 
 		Fixture.TileMap->PlaceActor(StartTransform, Fixture.Unit);
 		return Fixture;
 	}
 
-	// @brief 오버랩 관측 Mock을 타일에 배치
-	UMockOverlapSensorModel* PlaceSensor(const FTeleportFixture& Fixture, const FTileIndex& TileIndex)
+	// @brief 오버랩 관측 Mock을 타일에 배치 (스코프에 등록)
+	UMockOverlapSensorModel* PlaceSensor(const FTeleportFixture& Fixture, FTestObjectScope& Scope, const FTileIndex& TileIndex)
 	{
-		UMockOverlapSensorModel* Sensor = NewObject<UMockOverlapSensorModel>(Fixture.TileMap);
+		UMockOverlapSensorModel* Sensor = Scope.New<UMockOverlapSensorModel>(Fixture.TileMap);
 		Fixture.TileMap->PlaceActor(FTileTransform(TileIndex, ETileActorDirection::Forward), Sensor);
 		return Sensor;
 	}
@@ -92,6 +93,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FTeleportMovementBasicTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTeleportTests();
 	if (World == nullptr)
 	{
@@ -102,9 +105,9 @@ bool FTeleportMovementBasicTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	FTeleportFixture Fixture = MakeTeleportFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Left));
-	UMockOverlapSensorModel* StartSensor = PlaceSensor(Fixture, FTileIndex(2, 2));
-	UMockOverlapSensorModel* EndSensor = PlaceSensor(Fixture, FTileIndex(5, 5));
+	FTeleportFixture Fixture = MakeTeleportFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Left));
+	UMockOverlapSensorModel* StartSensor = PlaceSensor(Fixture, Scope, FTileIndex(2, 2));
+	UMockOverlapSensorModel* EndSensor = PlaceSensor(Fixture, Scope, FTileIndex(5, 5));
 
 	UAttributeSetComponentModel* AttrComp = Fixture.Unit->GetAttributeComponentModel();
 	if (TestNotNull(TEXT("속성 컴포넌트"), AttrComp) == false)
@@ -154,6 +157,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FTeleportMovementTrapTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTeleportTests();
 	if (World == nullptr)
 	{
@@ -164,10 +169,10 @@ bool FTeleportMovementTrapTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	FTeleportFixture Fixture = MakeTeleportFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+	FTeleportFixture Fixture = MakeTeleportFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 	// (5,5) 함정: 진입 통지에서 +Y로 2칸 밀치기 시도 (밀치기 이펙트의 정지 대상 경로 흉내)
-	UMockOverlapSensorModel* TrapSensor = PlaceSensor(Fixture, FTileIndex(5, 5));
+	UMockOverlapSensorModel* TrapSensor = PlaceSensor(Fixture, Scope, FTileIndex(5, 5));
 	bool MovingAtOverlap = true;
 	bool PushStarted = false;
 	TrapSensor->mOnBeginOverlap.BindLambda([&]()
@@ -206,6 +211,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FTeleportMovementGuardTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTeleportTests();
 	if (World == nullptr)
 	{
@@ -219,9 +226,9 @@ bool FTeleportMovementGuardTests::RunTest(const FString& Parameters)
 	/* Case1: 막힌 타일 */
 	AddInfo(TEXT("=== Case1: 도착 타일 점유 -> 시작 거부, 제자리 ==="));
 	{
-		FTeleportFixture Fixture = MakeTeleportFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FTeleportFixture Fixture = MakeTeleportFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
-		UMockEnemyUnitModel* Blocker = NewObject<UMockEnemyUnitModel>(World);
+		UMockEnemyUnitModel* Blocker = Scope.New<UMockEnemyUnitModel>(World);
 		Blocker->Initialize();
 		Blocker->BeginPlay();
 		Fixture.TileMap->PlaceActor(FTileTransform(FTileIndex(5, 5), ETileActorDirection::Forward), Blocker);
@@ -244,7 +251,7 @@ bool FTeleportMovementGuardTests::RunTest(const FString& Parameters)
 	/* Case2: 걷는 중 */
 	AddInfo(TEXT("=== Case2: 걷는 중 텔레포트 거부, 걷기 종료 후 허용 ==="));
 	{
-		FTeleportFixture Fixture = MakeTeleportFixture(World, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
+		FTeleportFixture Fixture = MakeTeleportFixture(World, Scope, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward));
 
 		// 뷰 흉내: 걷기 스텝 배리어를 잡아 걷는 중 상태를 유지
 		TSharedPtr<FPresentationBarrier> HeldStepBarrier;

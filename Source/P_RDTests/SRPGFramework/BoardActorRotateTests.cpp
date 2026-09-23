@@ -12,6 +12,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"   // UMockPlayerUnitModel
@@ -55,6 +56,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FBoardActorRotateTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorld();
 	if (World == nullptr)
 	{
@@ -66,10 +69,10 @@ bool FBoardActorRotateTests::RunTest(const FString& Parameters)
 	}
 
 	// 타일맵과 유닛 준비
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(5, 5);
 
-	UMockPlayerUnitModel* Unit = NewObject<UMockPlayerUnitModel>(World);
+	UMockPlayerUnitModel* Unit = Scope.New<UMockPlayerUnitModel>(World);
 	TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward), Unit);
 
 	// 뷰 역할의 구독자 (발행 횟수와 배리어 수신 기록)

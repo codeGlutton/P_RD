@@ -20,6 +20,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "TASAttributeTestsHelper.h"
 #include "GameplayTagType.h"
@@ -75,6 +76,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FStatusEffectRoundDurationTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	/* 1. 월드 및 FrameworkModel 환경 준비 */
 
 	UWorld* World = FindAnyGameWorld();
@@ -102,15 +105,17 @@ bool FStatusEffectRoundDurationTests::RunTest(const FString& Parameters)
 	UTacticalFrameworkModel* FrameworkModel = Cast<UTacticalFrameworkModel>(RoomInstance->mAliveSubsystemModels.FindRef(UTacticalFrameworkModel::StaticClass()));
 	if (FrameworkModel == nullptr)
 	{
-		FrameworkModel = NewObject<UTacticalFrameworkModel>(RoomInstance);
+		FrameworkModel = Scope.New<UTacticalFrameworkModel>(RoomInstance);
 		RoomInstance->mAliveSubsystemModels.Add(UTacticalFrameworkModel::StaticClass(), FrameworkModel);
+		// 테스트가 등록한 것이므로 파괴 전에 등록 해제
+		Scope.Defer([RoomInstance]() { RoomInstance->mAliveSubsystemModels.Remove(UTacticalFrameworkModel::StaticClass()); });
 	}
 
 	const FGameplayTag StunTag = EffectTags::GameplayEffect_StatusEffect_RoundDuration_Debuff_Stun;
 
 	/* 테스트 1: 다른 유닛만 턴을 받은 라운드에서도 기절 스택이 라운드당 1씩 감소 */
 	{
-		UTASActorModelMock* MockActorModel = NewObject<UTASActorModelMock>(World);
+		UTASActorModelMock* MockActorModel = Scope.New<UTASActorModelMock>(World);
 		MockActorModel->Initialize();
 		MockActorModel->BeginPlay();
 
@@ -174,7 +179,7 @@ bool FStatusEffectRoundDurationTests::RunTest(const FString& Parameters)
 
 	/* 테스트 2: 라운드가 진행되지 않으면 기절 스택이 줄지 않음 */
 	{
-		UTASActorModelMock* MockActorModel = NewObject<UTASActorModelMock>(World);
+		UTASActorModelMock* MockActorModel = Scope.New<UTASActorModelMock>(World);
 		MockActorModel->Initialize();
 		MockActorModel->BeginPlay();
 
