@@ -11,6 +11,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"   // UMockPlayerUnitModel
@@ -84,6 +85,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorld();
 	if (World == nullptr)
 	{
@@ -97,7 +100,7 @@ bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 	// OnStartMoveStep() 구독자를 없게 해서 시뮬레이션모드 테스트
 	AddInfo(TEXT("=== Case1: 구독자 없음 -> 시뮬레이션모드 -> 즉시 완료 ==="));
 	{
-		UMockPlayerUnitModel* Unit = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Unit = Scope.New<UMockPlayerUnitModel>(World);
 
 		bool bFinished = false;
 		{
@@ -116,7 +119,7 @@ bool FBoardActorMoveStepBarrierTests::RunTest(const FString& Parameters)
 	// OnStartMoveStep 구독자를 만들어서 라이브모드 테스트
 	AddInfo(TEXT("=== Case2: 구독자 있음 -> 라이브모드 -> 구독자가 놓으면 완료 ==="));
 	{
-		UMockPlayerUnitModel* Unit = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Unit = Scope.New<UMockPlayerUnitModel>(World);
 
 		// 뷰 역할의 구독자 (Barrier를 보관하고 있어서 참조가 0이 안 되게 유지)
 		TSharedPtr<FPresentationBarrier> HeldBarrier;

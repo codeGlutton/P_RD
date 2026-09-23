@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "Actor/BoardActor/GimmickTestsHelper.h"                        // UMockOverlapGimmickModel, UMockGimmickVictimUnitModel
@@ -53,10 +54,10 @@ namespace
 
 	/* 스킬 데이터 */
 
-	// @brief 스킬 공통 골격 (단타, 자기 타일 조준, 전 팀 타격). 영향 범위는 호출자가 지정
-	UStaticSkillData* MakeSkillDataBase(UObject* Outer, EEffectPattern EffectPattern, int32 EffectArea)
+	// @brief 스킬 공통 골격 (단타, 자기 타일 조준, 전 팀 타격). 영향 범위는 호출자가 지정. 스코프에 등록
+	UStaticSkillData* MakeSkillDataBase(UObject* Outer, FTestObjectScope& Scope, EEffectPattern EffectPattern, int32 EffectArea)
 	{
-		UStaticSkillData* SkillData = NewObject<UStaticSkillData>(Outer);
+		UStaticSkillData* SkillData = Scope.New<UStaticSkillData>(Outer);
 		// 스킬 시전 시 쿨다운 스펙을 만들므로 라운드 쿨다운 지정 (미지정 시 스펙이 무효)
 		SkillData->mCooldownEffectClass = UTacticalEffect_RoundCooldown::StaticClass();
 		SkillData->mSkillAnimationSet.mApplyMotionTags.Add(AnimationTags::Animation_Montage_Skill_Melee_Punch);
@@ -90,27 +91,27 @@ namespace
 	}
 
 	// @brief 시전자 스킬: 자기 타일 기준 사각형 2칸 범위 밀치기 (사각형은 차단 레이어와 무관하게 범위 안을 전부 포함하므로 일직선 두 명도 같이 맞음)
-	UStaticSkillData* MakeAreaPushSkillData(UObject* Outer, int32 PushDistance)
+	UStaticSkillData* MakeAreaPushSkillData(UObject* Outer, FTestObjectScope& Scope, int32 PushDistance)
 	{
-		UStaticSkillData* SkillData = MakeSkillDataBase(Outer, EEffectPattern::Square, 2);
+		UStaticSkillData* SkillData = MakeSkillDataBase(Outer, Scope, EEffectPattern::Square, 2);
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakePushLayer(PushDistance));
 		return SkillData;
 	}
 
 	// @brief 발판 스킬: 밟은 자리 한 칸, 발판 방향으로 밀치기
-	UStaticSkillData* MakeTrapPushSkillData(UObject* Outer, int32 PushDistance)
+	UStaticSkillData* MakeTrapPushSkillData(UObject* Outer, FTestObjectScope& Scope, int32 PushDistance)
 	{
-		UStaticSkillData* SkillData = MakeSkillDataBase(Outer, EEffectPattern::Single, 0);
+		UStaticSkillData* SkillData = MakeSkillDataBase(Outer, Scope, EEffectPattern::Single, 0);
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakePushLayer(PushDistance));
 		return SkillData;
 	}
 
 	/* 픽스처 */
 
-	// @brief 타일맵 주입 기믹 생성/배치. 시전자 또는 발판으로 사용
-	UMockOverlapGimmickModel* MakeGimmick(UWorld* World, UTileMapModel* TileMap, const FTileTransform& Transform, UStaticSkillData* SkillData, int32 TriggerCount)
+	// @brief 타일맵 주입 기믹 생성/배치. 시전자 또는 발판으로 사용. 스코프에 등록
+	UMockOverlapGimmickModel* MakeGimmick(UWorld* World, FTestObjectScope& Scope, UTileMapModel* TileMap, const FTileTransform& Transform, UStaticSkillData* SkillData, int32 TriggerCount)
 	{
-		UMockOverlapGimmickModel* Gimmick = NewObject<UMockOverlapGimmickModel>(World);
+		UMockOverlapGimmickModel* Gimmick = Scope.New<UMockOverlapGimmickModel>(World);
 		Gimmick->Initialize();
 		Gimmick->BeginPlay();
 		Gimmick->SetTileMap(TileMap);
@@ -120,13 +121,13 @@ namespace
 		return Gimmick;
 	}
 
-	// @brief 피격 유닛 생성/배치 (타일맵 주입 이동 컴포넌트 연결)
-	UMockGimmickVictimUnitModel* MakeVictim(UWorld* World, UTileMapModel* TileMap, const FTileTransform& Transform)
+	// @brief 피격 유닛 생성/배치 (타일맵 주입 이동 컴포넌트 연결). 스코프에 등록
+	UMockGimmickVictimUnitModel* MakeVictim(UWorld* World, FTestObjectScope& Scope, UTileMapModel* TileMap, const FTileTransform& Transform)
 	{
-		UMockGimmickVictimUnitModel* Unit = NewObject<UMockGimmickVictimUnitModel>(World);
+		UMockGimmickVictimUnitModel* Unit = Scope.New<UMockGimmickVictimUnitModel>(World);
 		Unit->Initialize();
 		Unit->BeginPlay();
-		UMockUnitMovementComponentModel* Movement = NewObject<UMockUnitMovementComponentModel>(Unit);
+		UMockUnitMovementComponentModel* Movement = Scope.New<UMockUnitMovementComponentModel>(Unit);
 		Movement->SetTileMap(TileMap);
 		Unit->SetBoardMovementComponentModel(Movement);
 		TileMap->PlaceActor(Transform, Unit);
@@ -147,13 +148,13 @@ namespace
 		}
 	};
 
-	FSyncFixture MakeSyncFixture(UWorld* World, UStaticSkillData* SkillData)
+	FSyncFixture MakeSyncFixture(UWorld* World, FTestObjectScope& Scope, UStaticSkillData* SkillData)
 	{
 		FSyncFixture Fixture;
-		Fixture.TileMap = NewObject<UTileMapModel>(World);
+		Fixture.TileMap = Scope.New<UTileMapModel>(World);
 		Fixture.TileMap->SetDimensions(8, 8);
 		// 시전자는 오버랩으로 발동하지 않도록 수명 0
-		Fixture.Caster = MakeGimmick(World, Fixture.TileMap, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward), SkillData, 0);
+		Fixture.Caster = MakeGimmick(World, Scope, Fixture.TileMap, FTileTransform(FTileIndex(2, 2), ETileActorDirection::Forward), SkillData, 0);
 		Fixture.SkillComp = Fixture.Caster->GetSkillComponentModel();
 		return Fixture;
 	}
@@ -275,6 +276,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FSkillForcedMoveSyncSimTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForForcedMoveTests();
 	if (World == nullptr)
 	{
@@ -288,8 +291,8 @@ bool FSkillForcedMoveSyncSimTests::RunTest(const FString& Parameters)
 	/* Case1: 기본 */
 	AddInfo(TEXT("=== Case1: (3,2) 대상 +x로 2칸 밀림 -> (5,2). 순서 이동끝 > 페이즈끝 > 스킬끝 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -305,10 +308,10 @@ bool FSkillForcedMoveSyncSimTests::RunTest(const FString& Parameters)
 	/* Case2: 함정 연쇄 */
 	AddInfo(TEXT("=== Case2: 경로 위 (4,2) 발판(+y 1칸) -> (4,3) 도착. 페이즈 끝 시점 위치 == 최종 위치 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 		// 발판이 Right(+y)를 바라봄. 밀리던 A가 (4,2)를 밟으면 +y로 1칸 재밀림
-		UMockOverlapGimmickModel* Trap = MakeGimmick(World, Fixture.TileMap, FTileTransform(FTileIndex(4, 2), ETileActorDirection::Right), MakeTrapPushSkillData(World, 1), 1);
+		UMockOverlapGimmickModel* Trap = MakeGimmick(World, Scope, Fixture.TileMap, FTileTransform(FTileIndex(4, 2), ETileActorDirection::Right), MakeTrapPushSkillData(World, Scope, 1), 1);
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -331,8 +334,8 @@ bool FSkillForcedMoveSyncSimTests::RunTest(const FString& Parameters)
 	/* Case3: 면역 */
 	AddInfo(TEXT("=== Case3: 강제이동 면역 대상 -> 제자리, 페이즈/스킬 정상 종료 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 		UnitA->GetAttributeComponentModel()->AddLooseGameplayTag(EffectTags::GameplayEffect_StatusEffect_RoundDuration_Buff_ForcedMovementImmunity);
 
 		FEventRecorder Recorder;
@@ -363,6 +366,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FSkillForcedMoveSyncLiveTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForForcedMoveTests();
 	if (World == nullptr)
 	{
@@ -376,8 +381,8 @@ bool FSkillForcedMoveSyncLiveTests::RunTest(const FString& Parameters)
 	/* Case1: 페이즈가 밀림을 기다림 */
 	AddInfo(TEXT("=== Case1: 스텝 1 -> (4,2), 스텝 2 -> (5,2) 페이즈 종료, 모션 해제 -> 스킬 종료 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -410,8 +415,8 @@ bool FSkillForcedMoveSyncLiveTests::RunTest(const FString& Parameters)
 	/* Case2: 연출이 먼저 끝남 */
 	AddInfo(TEXT("=== Case2: 노티파이 후 모션 먼저 해제 -> 스킬 종료 0. 스텝 다 풀면 페이즈 종료 > 스킬 종료 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -437,8 +442,8 @@ bool FSkillForcedMoveSyncLiveTests::RunTest(const FString& Parameters)
 	/* Case3: 대기 중 노티파이 무시 */
 	AddInfo(TEXT("=== Case3: 스텝 보유 중 노티파이 2회 -> 두 번째 무시, 페이즈 종료 1회, 스킬 정상 종료 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -477,6 +482,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FSkillForcedMoveSyncSequentialTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForForcedMoveTests();
 	if (World == nullptr)
 	{
@@ -490,9 +497,9 @@ bool FSkillForcedMoveSyncSequentialTests::RunTest(const FString& Parameters)
 	/* Case1: 순차 출발 */
 	AddInfo(TEXT("=== Case1: A (3,2), C (2,3) -> 한 명씩 출발, 둘 다 끝나야 페이즈 종료 ==="));
 	{
-		FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
-		UMockGimmickVictimUnitModel* UnitC = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(2, 3), ETileActorDirection::Forward));
+		FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+		UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+		UMockGimmickVictimUnitModel* UnitC = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(2, 3), ETileActorDirection::Forward));
 
 		FEventRecorder Recorder;
 		Recorder.BindSkill(Fixture.SkillComp);
@@ -533,9 +540,9 @@ bool FSkillForcedMoveSyncSequentialTests::RunTest(const FString& Parameters)
 		FTileIndex SimA;
 		FTileIndex SimB;
 		{
-			FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-			UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
-			UMockGimmickVictimUnitModel* UnitB = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward));
+			FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+			UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+			UMockGimmickVictimUnitModel* UnitB = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward));
 
 			Fixture.Cast();
 
@@ -548,9 +555,9 @@ bool FSkillForcedMoveSyncSequentialTests::RunTest(const FString& Parameters)
 		FTileIndex LiveA;
 		FTileIndex LiveB;
 		{
-			FSyncFixture Fixture = MakeSyncFixture(World, MakeAreaPushSkillData(World, 2));
-			UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
-			UMockGimmickVictimUnitModel* UnitB = MakeVictim(World, Fixture.TileMap, FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward));
+			FSyncFixture Fixture = MakeSyncFixture(World, Scope, MakeAreaPushSkillData(World, Scope, 2));
+			UMockGimmickVictimUnitModel* UnitA = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(3, 2), ETileActorDirection::Forward));
+			UMockGimmickVictimUnitModel* UnitB = MakeVictim(World, Scope, Fixture.TileMap,FTileTransform(FTileIndex(4, 2), ETileActorDirection::Forward));
 
 			FStepHolder StepsA;
 			StepsA.Bind(UnitA);
@@ -597,6 +604,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FSkillForcedMoveSyncDataValidationTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForForcedMoveTests();
 	if (World == nullptr)
 	{
@@ -618,7 +627,7 @@ bool FSkillForcedMoveSyncDataValidationTests::RunTest(const FString& Parameters)
 	/* Case1: 마지막 페이즈 아닌 곳 */
 	AddInfo(TEXT("=== Case1: 페이즈 2개, Push가 0번 페이즈 -> 경고 ==="));
 	{
-		UStaticSkillData* SkillData = MakeSkillDataBase(World, EEffectPattern::Single, 0);
+		UStaticSkillData* SkillData = MakeSkillDataBase(World, Scope, EEffectPattern::Single, 0);
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakePushLayer(1));
 		SkillData->mSkillPhaseLayers.AddDefaulted();
 		SkillData->mSkillPhaseLayers[1].mSkillEffectLayers.Add(MakeStunLayer());
@@ -629,7 +638,7 @@ bool FSkillForcedMoveSyncDataValidationTests::RunTest(const FString& Parameters)
 	/* Case2: Push 뒤에 다른 이펙트 */
 	AddInfo(TEXT("=== Case2: 페이즈 1개, Push 뒤에 Stun -> 경고 ==="));
 	{
-		UStaticSkillData* SkillData = MakeSkillDataBase(World, EEffectPattern::Single, 0);
+		UStaticSkillData* SkillData = MakeSkillDataBase(World, Scope, EEffectPattern::Single, 0);
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakePushLayer(1));
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakeStunLayer());
 
@@ -639,7 +648,7 @@ bool FSkillForcedMoveSyncDataValidationTests::RunTest(const FString& Parameters)
 	/* Case3: 규칙 준수 */
 	AddInfo(TEXT("=== Case3: 페이즈 2개, 마지막 페이즈의 마지막이 Push -> 경고 없음 ==="));
 	{
-		UStaticSkillData* SkillData = MakeSkillDataBase(World, EEffectPattern::Single, 0);
+		UStaticSkillData* SkillData = MakeSkillDataBase(World, Scope, EEffectPattern::Single, 0);
 		SkillData->mSkillPhaseLayers[0].mSkillEffectLayers.Add(MakeStunLayer());
 		SkillData->mSkillPhaseLayers.AddDefaulted();
 		SkillData->mSkillPhaseLayers[1].mSkillEffectLayers.Add(MakeStunLayer());
