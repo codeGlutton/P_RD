@@ -722,5 +722,7 @@ bool FPuddleRoundEndEventTests::RunTest(const FString& Parameters)
 	TestEqual(TEXT("[Case3] 유닛A 기절 3"), GetStunCount(UnitA), 3);
 	TestEqual(TEXT("[Case3] 장판C 수명 2 -> 1"), PuddleC->GetRemainingRoundCount(), 1);
 
+	CombatModel->Destroy();
+
 	return true;
 }

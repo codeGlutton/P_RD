@@ -105,11 +105,12 @@ class P_RD_API USRPGCombatModel : public UObjectModel, public FTickableGameObjec
 	/* UObjectModel 상속 */
 public:
 	void Serialize(FArchive& Ar) override;
-
+	
 	/* FTickableGameObject 상속 */
 public:
 	void Tick(float DeltaTime) override;
-	bool IsTickable() const override;
+	ETickableTickType GetTickableTickType() const override;
+	bool IsAllowedToTick() const override final;
 	TStatId GetStatId() const override;
 
 	/* 생명 주기 함수 */
@@ -186,6 +187,7 @@ protected:
 	 */
 	bool UnregisterTurn(USRPGTurnContext* TurnContext, bool IgnoreCurTurn = true);
 	bool UnregisterTurn(UUnitModel* Owner, bool IncludeCurTurn = true);
+	int32 UnregisterAllTurn(UUnitModel* Owner, bool IncludeCurTurn = true);
 
 protected:
 	bool EvaluateRound();
@@ -231,6 +233,10 @@ public:
 	void ForcedBeginTurn();
 
 	/* 외부 API 함수 */
+		/* 외부 API */
+public:
+	TSharedPtr<FPresentationBarrier> GetCurrentActionEndHoldBarrier() const;
+
 public:
 	bool HasAnyTurnContext() const;
 	int32 GetTurnContextCount() const;

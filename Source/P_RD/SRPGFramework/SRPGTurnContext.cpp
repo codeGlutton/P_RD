@@ -384,7 +384,7 @@ void USRPGTurnContext::OnHandleCommand(ESRPGCommandResult Result)
 {
 	if (mTurnPhase == ESRPGTurnPhase::TurnPlay && mReservedActions.Num() > mHeadActionIndex)
 	{
-		USRPGAction* const CurrentAction = mReservedActions[mHeadActionIndex];
+		USRPGAction* CurrentAction = mReservedActions[mHeadActionIndex];
 		CurrentAction->TryBeginAction();
 
 		// TryBeginAction의 델리게이트가 새 커맨드를 동기 제출하면 현재 액션이 끝나 head가 이동할 수 있다.
@@ -396,6 +396,16 @@ void USRPGTurnContext::OnHandleCommand(ESRPGCommandResult Result)
 			CurrentAction->TryEndAction();
 		}
 	}
+}
+
+TSharedPtr<FPresentationBarrier> USRPGTurnContext::GetCurrentActionEndHoldBarrier() const
+{
+	if (mReservedActions.Num() > mHeadActionIndex)
+	{
+		USRPGAction* CurrentAction = mReservedActions[mHeadActionIndex];
+		return CurrentAction->GetEndHoldBarrier();
+	}
+	return nullptr;
 }
 
 USRPGCombatModel* USRPGTurnContext::GetParent() const

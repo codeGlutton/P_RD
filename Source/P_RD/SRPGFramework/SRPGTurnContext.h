@@ -100,6 +100,9 @@ protected:
 
 	/* 외부 API */
 public:
+	TSharedPtr<FPresentationBarrier> GetCurrentActionEndHoldBarrier() const;
+
+public:
 	USRPGCombatModel* GetParent() const;
 	UUnitModel* GetOwner() const;
 
