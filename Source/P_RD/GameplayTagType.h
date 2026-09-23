@@ -141,6 +141,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_ThunderStorm);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_Teleport);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_TimeAcceleration);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_TickTock);
 
 #pragma endregion
 

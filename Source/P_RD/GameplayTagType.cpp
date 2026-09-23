@@ -111,6 +111,7 @@ namespace AnimationTags
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_ThunderStorm,						"Animation.Montage.Skill.Mercenary.Mage.ThunderStorm");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_Teleport,							"Animation.Montage.Skill.Mercenary.Mage.Teleport");
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_TimeAcceleration,					"Animation.Montage.Skill.Mercenary.Mage.TimeAcceleration");
+	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Mage_TickTock,							"Animation.Montage.Skill.Mercenary.Mage.TickTock");
 
 
 	UE_DEFINE_GAMEPLAY_TAG(Animation_Montage_Skill_Mercenary_Barbarian_NormalSlash,					"Animation.Montage.Skill.Mercenary.Barbarian.NormalSlash");
