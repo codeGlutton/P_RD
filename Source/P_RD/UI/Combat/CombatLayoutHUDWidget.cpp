@@ -470,10 +470,10 @@ void UCombatLayoutHUDWidget::NativeDestruct()
 	// 화면이 바뀐 뒤 0.5초 타이머가 살아서 닫힌 HUD 위에 상세를 여는 일을 막는다.
 	CancelStatusPress();
 	CancelMonsterSkillPress();
+	mCommandLongPressTimerHandle.Cancel();
+	mArtifactLongPressTimerHandle.Cancel();
 	if (UWorld* World = GetWorld())
 	{
-		World->GetTimerManager().ClearTimer(mCommandLongPressTimerHandle);
-		World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
 		World->GetTimerManager().ClearTimer(mCombatAnnouncementTimerHandle);
 		World->GetTimerManager().ClearTimer(mCombatResultStartDelayTimerHandle);
 	}
@@ -1445,15 +1445,11 @@ void UCombatLayoutHUDWidget::HandleAnyPressed()
 		{
 			continue;
 		}
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().SetTimer(mCommandLongPressTimerHandle,
-				FTimerDelegate::CreateWeakLambda(this, [this, SlotIndex]()
-				{
-					HandleCommandLongPress(SlotIndex);
-				}),
-				LongPressSeconds, false);
-		}
+		mCommandLongPressTimerHandle.Start(this, LongPressSeconds,
+			FSimpleDelegate::CreateWeakLambda(this, [this, SlotIndex]()
+			{
+				HandleCommandLongPress(SlotIndex);
+			}));
 		break;
 	}
 
@@ -1683,10 +1679,7 @@ void UCombatLayoutHUDWidget::HandleTurnPageRightClicked()
 void UCombatLayoutHUDWidget::HandleAnyReleased()
 {
 	// 놓았으니 카드 긴 누름 판정은 끝났다.
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mCommandLongPressTimerHandle);
-	}
+	mCommandLongPressTimerHandle.Cancel();
 
 	if (mPressedTarget != nullptr)
 	{
@@ -3734,7 +3727,7 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseMove(const FGeometry& InGeometry,
 		&& RDPointerGesture::HasMoved(mPressOrigin, InMouseEvent.GetScreenSpacePosition(), false))
 	{
 		mPressMoved = true;
-		if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+		mBoardLongPressTimerHandle.Cancel();
 	}
 	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }
@@ -4236,11 +4229,8 @@ FReply UCombatLayoutHUDWidget::NativeOnMouseButtonDown(const FGeometry& InGeomet
 	mBoardPressIsTouch = false;
 	mPressMoved = false;
 	mPressActive = true;
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(mBoardLongPressTimerHandle, this,
-			&UCombatLayoutHUDWidget::HandleBoardLongPress, LongPressSeconds, false);
-	}
+	mBoardLongPressTimerHandle.Start(this, LongPressSeconds,
+		FSimpleDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::HandleBoardLongPress));
 	return FReply::Handled();
 }
 
@@ -4257,11 +4247,8 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchStarted(const FGeometry& InGeometry,
 	mBoardPressIsTouch = true;
 	mPressMoved = false;
 	mPressActive = true;
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(mBoardLongPressTimerHandle, this,
-			&UCombatLayoutHUDWidget::HandleBoardLongPress, LongPressSeconds, false);
-	}
+	mBoardLongPressTimerHandle.Start(this, LongPressSeconds,
+		FSimpleDelegate::CreateUObject(this, &UCombatLayoutHUDWidget::HandleBoardLongPress));
 	return FReply::Handled();
 }
 
@@ -4322,7 +4309,7 @@ void UCombatLayoutHUDWidget::CancelBoardPress()
 {
 	mPressActive = false;
 	mPressMoved = true;
-	if (UWorld* World = GetWorld()) World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
+	mBoardLongPressTimerHandle.Cancel();
 }
 
 void UCombatLayoutHUDWidget::ObserveBoardTouchDown(uint32 Pointer)
@@ -4425,10 +4412,7 @@ FReply UCombatLayoutHUDWidget::NativeOnTouchMoved(const FGeometry& InGeometry,
 		const bool bDragJustStarted = mPressActive && mPressMoved == false;
 		mPressMoved = true;
 		// 끌기 시작했다. 지도를 미는 손을 긴 누름으로 오인하지 않는다.
-		if (UWorld* World = GetWorld())
-		{
-			World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
-		}
+		mBoardLongPressTimerHandle.Cancel();
 		// 0823 확정: 카드는 손을 뗄 때가 아니라 **끌기 시작하는 순간** 접는다.
 		// 손을 뗀 뒤에 접히면 화면을 미는 내내 카드가 시야를 가린다.
 		if (bDragJustStarted && IsAiming() == false && mIsActionPlaying == false
@@ -4467,10 +4451,7 @@ void UCombatLayoutHUDWidget::FinishBoardPress(const FVector2D& ScreenPosition)
 	 * 확정이 같이 되어 그 자리에서 발동했다.
 	 */
 	// 놓았으니 긴 누름 판정은 끝났다. 발화 전에 놓았으면 탭이다.
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mBoardLongPressTimerHandle);
-	}
+	mBoardLongPressTimerHandle.Cancel();
 	if (mTurnSwipeConsumed)
 	{
 		mPressActive = false;
@@ -4841,10 +4822,6 @@ void UCombatLayoutHUDWidget::HandleSettingsMenuClicked()
 	// OnBackRequested만 보내더라도 사용자가 설정 화면에 갇히지 않게 한다.
 	Settings->OnBackRequested.AddUniqueDynamic(
 		this, &UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested);
-	Settings->OnSaveAndExitRequested.AddUniqueDynamic(
-		this, &UCombatLayoutHUDWidget::HandleSettingsPanelSaveAndExitRequested);
-	Settings->OnAbandonRunConfirmed.AddUniqueDynamic(
-		this, &UCombatLayoutHUDWidget::HandleSettingsPanelAbandonRunConfirmed);
 	Settings->SetPanelMode(ESettingsPanelMode::InGame);
 	// 전투 중에는 런을 저장하거나 포기할 수 있다. 타이틀에서 열 때와 다른 점이다.
 	Settings->RefreshPanelState(true, true);
@@ -4872,58 +4849,6 @@ void UCombatLayoutHUDWidget::HandleSettingsPanelBackRequested()
 		Settings->CloseUI();
 	}
 	RefreshWorldGestureInputBlock();
-}
-
-/** @brief 런 액션을 잠그고 저장 후 종료 의도를 게임플레이에 전달한다. */
-void UCombatLayoutHUDWidget::HandleSettingsPanelSaveAndExitRequested()
-{
-	UWorld* World = GetWorld();
-	UWorldWidgetSubsystem* WorldWidgetSubsystem =
-		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	USettingsPanelWidget* Settings = WorldWidgetSubsystem != nullptr
-		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
-			EWorldWidgetType::InGameSettings)
-		: nullptr;
-	if (Settings != nullptr)
-	{
-		Settings->SetRunActionsEnabled(false);
-		Settings->SetStatusText(LOCTEXT("SavingRun", "저장 중..."));
-	}
-
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestSaveAndExitRun();
-		return;
-	}
-	HandleSaveAndExitCompleted(false);
-}
-
-/** @brief 확인이 끝난 런 포기 요청을 기존 UIModel -> CombatGameMode 경로로 보낸다. */
-void UCombatLayoutHUDWidget::HandleSettingsPanelAbandonRunConfirmed()
-{
-	UWorld* World = GetWorld();
-	UWorldWidgetSubsystem* WorldWidgetSubsystem =
-		World != nullptr ? World->GetSubsystem<UWorldWidgetSubsystem>() : nullptr;
-	USettingsPanelWidget* Settings = WorldWidgetSubsystem != nullptr
-		? WorldWidgetSubsystem->GetWorldWidget<USettingsPanelWidget>(
-			EWorldWidgetType::InGameSettings)
-		: nullptr;
-	if (Settings != nullptr)
-	{
-		Settings->HideAbandonConfirm();
-		Settings->SetRunActionsEnabled(false);
-		Settings->SetStatusText(FText::GetEmpty());
-	}
-
-	if (mUIModel != nullptr)
-	{
-		mUIModel->RequestAbandonRun();
-		return;
-	}
-	if (Settings != nullptr)
-	{
-		HandleAbandonRunCompleted(false);
-	}
 }
 
 /** @brief 저장/전환 실패만 현재 화면에서 복구한다. 성공 시 방 전환이 이어진다. */
@@ -4989,21 +4914,17 @@ void UCombatLayoutHUDWidget::BeginArtifactPress(const int32 SlotIndex)
 	{
 		return;
 	}
-	World->GetTimerManager().SetTimer(mArtifactLongPressTimerHandle,
-		FTimerDelegate::CreateWeakLambda(this, [this, SlotIndex]()
-			{
-				HandleArtifactLongPress(SlotIndex);
-			}),
-		LongPressSeconds, false);
+	mArtifactLongPressTimerHandle.Start(this, LongPressSeconds,
+		FSimpleDelegate::CreateWeakLambda(this, [this, SlotIndex]()
+		{
+			HandleArtifactLongPress(SlotIndex);
+		}));
 }
 
 void UCombatLayoutHUDWidget::HandleArtifactReleased()
 {
 	// 꾹 누르기 전에 떼면 아무 일도 없다.
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mArtifactLongPressTimerHandle);
-	}
+	mArtifactLongPressTimerHandle.Cancel();
 	mArtifactPressedSlot = INDEX_NONE;
 }
 
@@ -5268,14 +5189,11 @@ void UCombatLayoutHUDWidget::BeginMonsterSkillPress(const int32 SlotIndex)
 	}
 	mMonsterSkillPressActive = true;
 	mMonsterSkillPressedSlot = SlotIndex;
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimer(mMonsterSkillLongPressTimerHandle,
-			FTimerDelegate::CreateWeakLambda(this, [this, SlotIndex]()
-			{
-				HandleMonsterSkillLongPress(SlotIndex);
-			}), LongPressSeconds, false);
-	}
+	mMonsterSkillLongPressTimerHandle.Start(this, LongPressSeconds,
+		FSimpleDelegate::CreateWeakLambda(this, [this, SlotIndex]()
+		{
+			HandleMonsterSkillLongPress(SlotIndex);
+		}));
 }
 
 /** @brief 짧게 뗀 손은 상세를 열지 않고 후보만 무른다. */
@@ -5307,11 +5225,7 @@ void UCombatLayoutHUDWidget::HandleMonsterSkillLongPress(const int32 SlotIndex)
 
 void UCombatLayoutHUDWidget::CancelMonsterSkillPress()
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(mMonsterSkillLongPressTimerHandle);
-	}
-	mMonsterSkillLongPressTimerHandle.Invalidate();
+	mMonsterSkillLongPressTimerHandle.Cancel();
 	mMonsterSkillPressedSlot = INDEX_NONE;
 	mMonsterSkillPressActive = false;
 }
@@ -6384,9 +6298,7 @@ void UCombatLayoutHUDWidget::TriggerMonsterSkillLongPressForTest(const int32 Slo
 
 bool UCombatLayoutHUDWidget::IsMonsterSkillLongPressPendingForTest() const
 {
-	const UWorld* World = GetWorld();
-	return mMonsterSkillPressActive == true && World != nullptr
-		&& World->GetTimerManager().IsTimerActive(mMonsterSkillLongPressTimerHandle);
+	return mMonsterSkillPressActive && mMonsterSkillLongPressTimerHandle.IsPending();
 }
 
 bool UCombatLayoutHUDWidget::IsMonsterSkillPressActiveForTest(const int32 SlotIndex) const

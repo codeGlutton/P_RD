@@ -17,6 +17,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogRoomGameMode, Log, All)
 
 class UPartyModel;
 class UPlayerUnitModel;
+class USettingsPanelWidget;
 struct FCombatArtifactUI;
 struct FSkillDetailUI;
 
@@ -193,6 +194,12 @@ protected:
 	int32 mSelectedRoomColumn = INDEX_NONE;
 
 private:
+	USettingsPanelWidget* GetRunSettingsPanel() const;
+	UFUNCTION() void HandleSettingsSaveAndExitRequested();
+	UFUNCTION() void HandleSettingsAbandonConfirmed();
+	void CompleteSettingsRunAction(bool bSuccess, bool bSaveAndExit);
+
+	bool mCommonSettingsRunActionPending = false;
 	FName mSelectedRoomSpawnSettingName = NAME_None;
 	bool mSaveAndExitPending = false;
 	bool mFinalRunClosed = false;

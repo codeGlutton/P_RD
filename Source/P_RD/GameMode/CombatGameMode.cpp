@@ -319,6 +319,9 @@ void ACombatGameMode::InitializeCombat()
 	const FRoomTransactionState& Transactions = GetRunPersistData()->GetRoomTransactions();
 	mGoldRewardClaimed = Transactions.GoldClaimed;
 	mExpRewardClaimed = Transactions.ExpClaimed;
+	mResumePendingLevelUpAfterExp = Transactions.ExpClaimed
+		&& Transactions.LevelUpSkills.ContainsByPredicate(
+			[](const FLevelUpSkillReward& Reward) { return !Reward.Completed; });
 	mClaimedRewardChoiceIndices = Transactions.ClaimedChoices;
 	mRewardSelectionClaimed = Transactions.SelectedArtifact.IsValid();
 	mSelectedRewardArtifactId = Transactions.SelectedArtifact;
@@ -495,6 +498,8 @@ void ACombatGameMode::InitializeCombat()
 	// HUD가 먼저 만들어져 앵커를 등록한 경우에도 구독 직후 같은 값을 카메라에 적용한다.
 	HandleChangeFocusScreenAnchor(mCombatUIModel->GetFocusScreenAnchor());
 	mRewardUIModel->OnRewardClaimRequested.AddUniqueDynamic(this, &ACombatGameMode::HandleRewardClaimed);
+	mRewardUIModel->OnExperiencePresentationCompleted.AddUniqueDynamic(
+		this, &ACombatGameMode::HandleExperiencePresentationCompleted);
 	mRewardUIModel->OnRewardSelectionRequested.AddUniqueDynamic(
 		this, &ACombatGameMode::HandleRewardSelectionRequested);
 
@@ -594,8 +599,7 @@ void ACombatGameMode::BeginCombatAfterEntrance()
 	}
 	UE_LOG(LogCombatGameMode, Display, TEXT("RD_BOSS_ENTRANCE combat begins after entrance=%d"), bHadEntrance);
 	if (auto* Combat = GetWorldSubsystemModel<USRPGCombatModel>(this)) Combat->BeginCombat();
-	// Pending reward choices belong to the completed-room checkpoint, not a new EXP grant.
-	mLevelUpSkillRewardFlow->Open(GetRunPersistData(), GetPartyModel(), GetWorld()->GetFirstPlayerController());
+	// A restored skill choice resumes only after the experience page is advanced.
 }
 
 UCombatUIModel* ACombatGameMode::GetCombatUIModel() const
@@ -862,6 +866,14 @@ void ACombatGameMode::HandleRewardClaimed(ERewardClaimKind ClaimKind, int32 Choi
 		if (ClaimKind == ERewardClaimKind::Exp)
 			mLevelUpSkillRewardFlow->Open(GetRunPersistData(), GetPartyModel(), GetWorld()->GetFirstPlayerController());
 	}
+}
+
+void ACombatGameMode::HandleExperiencePresentationCompleted()
+{
+	if (!mResumePendingLevelUpAfterExp || !mLevelUpSkillRewardFlow) return;
+	mResumePendingLevelUpAfterExp = false;
+	mLevelUpSkillRewardFlow->Open(GetRunPersistData(), GetPartyModel(),
+		GetWorld()->GetFirstPlayerController());
 }
 
 void ACombatGameMode::HandleRewardSelectionRequested(

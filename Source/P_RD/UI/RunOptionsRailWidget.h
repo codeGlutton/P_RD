@@ -2,6 +2,7 @@
 // @brief 전투 HUD의 지도·용병·몬스터·설정 레일을 방 공용 화면에서 재사용합니다.
 
 #pragma once
+#include "UI/RealTimeLongPressTimer.h"
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
@@ -192,7 +193,7 @@ private:
 	bool bMapContext = false;
 	bool bInventoryPageShown = false;
 	int32 SelectedPartyMember = 0;
-	FTimerHandle DetailLongPressTimer;
+	FRealTimeLongPressTimer DetailLongPressTimer;
 	int32 PressedDetailSlot = INDEX_NONE;
 	bool bPressedDetailIsArtifact = false;
 	bool bDetailLongPressTriggered = false;

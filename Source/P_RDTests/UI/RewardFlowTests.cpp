@@ -1,7 +1,9 @@
 #include "UI/RewardFlowTests.h"
 
 #include "Misc/AutomationTest.h"
+#include "Editor.h"
 #include "Singleton/InstanceSubsystem/PersistentData.h"
+#include "UI/Reward/RewardConcept03Widget.h"
 #include "UI/Reward/RewardUIModel.h"
 #include "UObject/StrongObjectPtr.h"
 
@@ -19,7 +21,44 @@ void URewardFlowTestListener::HandleClaimConfirmed(ERewardClaimKind ClaimKind, i
 	mLastConfirmationChoiceIndex = ChoiceIndex;
 }
 
+void URewardFlowTestListener::HandleExperiencePresentationCompleted()
+{
+	++mExperiencePresentationCount;
+}
+
 #if WITH_DEV_AUTOMATION_TESTS
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRestoredExperiencePresentationOrderTest,
+	"P_RD.UI.Reward.RestoredExperiencePresentationOrder",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FRestoredExperiencePresentationOrderTest::RunTest(const FString& Parameters)
+{
+	UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
+	if (!TestNotNull(TEXT("Editor world"), World)) return false;
+	UClass* Class = LoadClass<URewardConcept03Widget>(nullptr,
+		TEXT("/Game/UI/RewardConcept03New/WBP_RewardConcept03_Frameless_NoArtifact.WBP_RewardConcept03_Frameless_NoArtifact_C"));
+	if (!TestNotNull(TEXT("Reward screen"), Class)) return false;
+	URewardConcept03Widget* Widget = CreateWidget<URewardConcept03Widget>(World, Class);
+	if (!TestNotNull(TEXT("Reward widget"), Widget)) return false;
+	TStrongObjectPtr<URewardUIModel> Model(NewObject<URewardUIModel>());
+	TStrongObjectPtr<URewardFlowTestListener> Listener(NewObject<URewardFlowTestListener>());
+	FRewardUI RestoredReward;
+	RestoredReward.mExpGained = 0;
+	Model->SetReward(RestoredReward);
+	Model->OnExperiencePresentationCompleted.AddDynamic(Listener.Get(),
+		&URewardFlowTestListener::HandleExperiencePresentationCompleted);
+	Widget->BindUIModel(Model.Get());
+	Widget->ResetRewardFlow();
+	TestEqual(TEXT("Restored reward starts at experience"), Widget->GetCurrentStepIndex(), 0);
+	TestEqual(TEXT("Level-up is not requested before experience continues"),
+		Listener->mExperiencePresentationCount, 0);
+	Widget->AdvanceRewardFlow();
+	TestEqual(TEXT("Experience page advances once"), Listener->mExperiencePresentationCount, 1);
+	TestEqual(TEXT("Chest page is ready behind level-up choice"), Widget->GetCurrentStepIndex(), 1);
+	Widget->RemoveFromParent();
+	return true;
+}
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FRewardClaimAcknowledgementTest,
