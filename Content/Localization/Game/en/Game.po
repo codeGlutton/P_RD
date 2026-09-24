@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Game\n"
-"POT-Creation-Date: 2026-09-23 20:58\n"
-"PO-Revision-Date: 2026-09-23 20:58\n"
+"POT-Creation-Date: 2026-09-24 07:56\n"
+"PO-Revision-Date: 2026-09-24 07:56\n"
 "Language-Team: \n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
@@ -6608,8 +6608,8 @@ msgid "{0}\n{1}"
 msgstr "{0}\n{1}"
 
 #. Key:	CurrentCombatArea
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1393)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(1393)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(1405)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(1405)
 msgctxt "CombatGameMode,CurrentCombatArea"
 msgid "현재 전투 지역"
 msgstr "Current Combat Area"
@@ -6643,43 +6643,43 @@ msgid "EMPTY"
 msgstr "EMPTY"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2294)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2294)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2306)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2306)
 msgctxt "CombatGameMode,ArtifactFallbackName"
 msgid "Artifact {0}"
 msgstr "Artifact {0}"
 
 #. Key:	MovedTiles
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2496)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2496)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2508)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2508)
 msgctxt "CombatFloatingLog,MovedTiles"
 msgid "이동 {0}칸"
 msgstr "Move {0} tiles"
 
 #. Key:	EnteredBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2503)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2503)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2515)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2515)
 msgctxt "CombatFloatingLog,EnteredBoard"
 msgid "등장"
 msgstr "Entrance"
 
 #. Key:	ExitedBoard
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2510)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2510)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2522)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2522)
 msgctxt "CombatFloatingLog,ExitedBoard"
 msgid "전투불능"
 msgstr "Defeated"
 
 #. Key:	VictoryRewardTitle
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2777)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2777)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2789)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2789)
 msgctxt "CombatGameMode,VictoryRewardTitle"
 msgid "전투 보상"
 msgstr "Battle Rewards"
 
 #. Key:	UnknownRewardMercenary
-#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2820)
-#: Source/P_RD/GameMode/CombatGameMode.cpp(2820)
+#. SourceLocation:	Source/P_RD/GameMode/CombatGameMode.cpp(2832)
+#: Source/P_RD/GameMode/CombatGameMode.cpp(2832)
 msgctxt "CombatGameMode,UnknownRewardMercenary"
 msgid "Mercenary"
 msgstr "Mercenary"
@@ -6824,124 +6824,145 @@ msgctxt "FrontendGameMode,RangerDesc"
 msgid "먼 거리에서 활로 적을 솎아내는 명사수.\n가까이 붙기 전에 승부를 낸다."
 msgstr "A sharpshooter who picks off enemies from afar with a bow.\nSettles the fight before they can close in."
 
+#. Key:	PartyArtifact
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(1001)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(1001)
+msgctxt "RoomGameModeBase,PartyArtifact"
+msgid "Party-wide effect"
+msgstr "Party-wide effect"
+
 #. Key:	MonsterRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(142)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(142)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(144)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(144)
 msgctxt "RoomGameModeBase,MonsterRoomTitle"
 msgid "Monster"
 msgstr "Monster"
 
 #. Key:	EliteRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(144)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(144)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(146)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(146)
 msgctxt "RoomGameModeBase,EliteRoomTitle"
 msgid "Elite"
 msgstr "Elite"
 
 #. Key:	BossRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(146)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(146)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
 msgctxt "RoomGameModeBase,BossRoomTitle"
 msgid "Boss"
 msgstr "Boss"
 
 #. Key:	ShopRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(148)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(150)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(150)
 msgctxt "RoomGameModeBase,ShopRoomTitle"
 msgid "Shop"
 msgstr "Shop"
 
 #. Key:	TreasureRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(150)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(150)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(152)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(152)
 msgctxt "RoomGameModeBase,TreasureRoomTitle"
 msgid "Treasure"
 msgstr "Treasure"
 
 #. Key:	UnknownRoomTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(152)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(152)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(154)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(154)
 msgctxt "RoomGameModeBase,UnknownRoomTitle"
 msgid "Unknown"
 msgstr "Unknown"
 
 #. Key:	MapRoomDescription
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(163)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(163)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(165)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(165)
 msgctxt "RoomGameModeBase,MapRoomDescription"
 msgid "Row {0}, Column {1}. Next routes: {2}"
 msgstr "Row {0}, Column {1}. Next routes: {2}"
 
 #. Key:	StartPointDescription
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(176)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(176)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(178)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(178)
 msgctxt "RoomGameModeBase,StartPointDescription"
 msgid "Routes: {0}"
 msgstr "Routes: {0}"
 
 #. Key:	RosterJobKnight
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(207)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(207)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(209)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(209)
 msgctxt "RoomGameModeBase,RosterJobKnight"
 msgid "기사"
 msgstr "Knight"
 
 #. Key:	RosterJobMage
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(208)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(208)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(210)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(210)
 msgctxt "RoomGameModeBase,RosterJobMage"
 msgid "마법사"
 msgstr "Mage"
 
 #. Key:	RosterJobRanger
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(209)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(209)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(211)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(211)
 msgctxt "RoomGameModeBase,RosterJobRanger"
 msgid "궁수"
 msgstr "Ranger"
 
 #. Key:	RosterJobRogue
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(210)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(210)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(212)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(212)
 msgctxt "RoomGameModeBase,RosterJobRogue"
 msgid "도적"
 msgstr "Rogue"
 
 #. Key:	RosterJobBarbarian
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(211)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(211)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(213)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(213)
 msgctxt "RoomGameModeBase,RosterJobBarbarian"
 msgid "야만전사"
 msgstr "Barbarian"
 
 #. Key:	RosterJobDruid
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(212)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(212)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(214)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(214)
 msgctxt "RoomGameModeBase,RosterJobDruid"
 msgid "드루이드"
 msgstr "Druid"
 
+#. Key:	SaveAndExitFailed
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(399)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(399)
+msgctxt "RoomGameModeBase,SaveAndExitFailed"
+msgid "저장 후 종료에 실패했습니다."
+msgstr "Failed to save and exit."
+
+#. Key:	AbandonRunFailed
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(400)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(400)
+msgctxt "RoomGameModeBase,AbandonRunFailed"
+msgid "런 포기 요청에 실패했습니다."
+msgstr "Failed to abandon the run."
+
+#. Key:	SavingRun
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(411)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(411)
+msgctxt "RoomGameModeBase,SavingRun"
+msgid "저장 중..."
+msgstr "Saving..."
+
 #. Key:	StartPointTitle
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(554)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(554)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(626)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(626)
 msgctxt "RoomGameModeBase,StartPointTitle"
 msgid "Start"
 msgstr "Start"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(925)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(925)
+#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(997)
+#: Source/P_RD/GameMode/RoomGameModeBase.cpp(997)
 msgctxt "RoomGameModeBase,ArtifactFallbackName"
 msgid "Artifact {0}"
 msgstr "Artifact {0}"
-
-#. Key:	PartyArtifact
-#. SourceLocation:	Source/P_RD/GameMode/RoomGameModeBase.cpp(929)
-#: Source/P_RD/GameMode/RoomGameModeBase.cpp(929)
-msgctxt "RoomGameModeBase,PartyArtifact"
-msgid "Party-wide effect"
-msgstr "Party-wide effect"
 
 #. Key:	MercenaryLevel
 #. SourceLocation:	Source/P_RD/GameMode/ShopGameMode.cpp(325)
@@ -7245,281 +7266,274 @@ msgid "잊힌 성채"
 msgstr "Forgotten Citadel"
 
 #. Key:	MercenaryMoveSummary
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2051)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2051)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2044)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2044)
 msgctxt "CombatLayoutHUD,MercenaryMoveSummary"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	PartySlotEmpty
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2120)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2120)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2113)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2113)
 msgctxt "CombatLayoutHUD,PartySlotEmpty"
 msgid "빈 자리"
 msgstr "Empty Slot"
 
 #. Key:	PreviousTurns
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2567)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2567)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2560)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2560)
 msgctxt "CombatLayoutHUD,PreviousTurns"
 msgid "이전 차례 보기"
 msgstr "View previous turns"
 
 #. Key:	NextTurns
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2569)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2569)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2562)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2562)
 msgctxt "CombatLayoutHUD,NextTurns"
 msgid "다음 차례 보기"
 msgstr "View upcoming turns"
 
 #. Key:	Move
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2682)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2682)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2675)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2675)
 msgctxt "CombatLayoutHUD,Move"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	MoveCostPerTileShort
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2683)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2683)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2676)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2676)
 msgctxt "CombatLayoutHUD,MoveCostPerTileShort"
 msgid "1/칸"
 msgstr "1/tile"
 
 #. Key:	MoveCost
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2684)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2684)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2677)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2677)
 msgctxt "CombatLayoutHUD,MoveCost"
 msgid "AP 1/칸"
 msgstr "AP 1/tile"
 
 #. Key:	SkillCost
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2728)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2728)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2721)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2721)
 msgctxt "CombatLayoutHUD,SkillCost"
 msgid "AP {0}"
 msgstr "AP {0}"
 
 #. Key:	SkillCardDamage
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2780)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2780)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2773)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2773)
 msgctxt "CombatLayoutHUD,SkillCardDamage"
 msgid "피해 {0}~{1}"
 msgstr "DMG {0}~{1}"
 
 #. Key:	CombatObjectiveRemaining
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2946)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2946)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2939)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2939)
 msgctxt "CombatLayoutHUD,CombatObjectiveRemaining"
 msgid "모든 적 처치 — 남은 적 {0}"
 msgstr "Defeat all enemies — {0} remaining"
 
 #. Key:	MercenaryInventoryPageTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2972)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2972)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2965)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2965)
 msgctxt "CombatHUD,MercenaryInventoryPageTitle"
 msgid "인벤토리"
 msgstr "Inventory"
 
 #. Key:	MercenaryPageTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2973)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2973)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2966)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2966)
 msgctxt "CombatHUD,MercenaryPageTitle"
 msgid "용병"
 msgstr "Mercenaries"
 
 #. Key:	ArtifactFallbackName
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3004)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3004)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2997)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(2997)
 msgctxt "CombatHUD,ArtifactFallbackName"
 msgid "Artifact"
 msgstr "Artifact"
 
 #. Key:	BattleStart
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3445)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3445)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3438)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3438)
 msgctxt "CombatAnnouncement,BattleStart"
 msgid "BATTLE START"
 msgstr "BATTLE START"
 
 #. Key:	Round
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3512)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3512)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3505)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3505)
 msgctxt "CombatAnnouncement,Round"
 msgid "ROUND {0}"
 msgstr "ROUND {0}"
 
 #. Key:	EndTurn
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3844)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3844)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3837)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3837)
 msgctxt "CombatLayoutHUD,EndTurn"
 msgid "턴 종료"
 msgstr "End Turn"
 
 #. Key:	CancelAim
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3847)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3847)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3840)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(3840)
 msgctxt "CombatLayoutHUD,CancelAim"
 msgid "취소"
 msgstr "Cancel"
 
-#. Key:	SavingRun
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4890)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4890)
-msgctxt "CombatLayoutHUD,SavingRun"
-msgid "저장 중..."
-msgstr "Saving..."
-
 #. Key:	SaveAndExitFailed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4949)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4949)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4874)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4874)
 msgctxt "CombatLayoutHUD,SaveAndExitFailed"
 msgid "저장 후 종료에 실패했습니다."
 msgstr "Failed to save and exit."
 
 #. Key:	AbandonRunFailed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4973)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4973)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4898)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(4898)
 msgctxt "CombatLayoutHUD,AbandonRunFailed"
 msgid "런 포기 요청에 실패했습니다."
 msgstr "Failed to abandon the run."
 
 #. Key:	MonsterTabSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5657)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5657)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5571)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5571)
 msgctxt "CombatLayoutHUD,MonsterTabSkills"
 msgid "스킬"
 msgstr "Skills"
 
 #. Key:	MonsterTabNoSkills
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5658)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5658)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5572)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5572)
 msgctxt "CombatLayoutHUD,MonsterTabNoSkills"
 msgid "스킬  ·  없음"
 msgstr "Skills  ·  None"
 
 #. Key:	MonsterEquipmentHeading
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5736)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5736)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5650)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5650)
 msgctxt "CombatLayoutHUD,MonsterEquipmentHeading"
 msgid "장비 · 눌러서 자세히"
 msgstr "Equipment · Tap for details"
 
 #. Key:	MonsterEquipmentEmpty
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5737)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5737)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5651)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(5651)
 msgctxt "CombatLayoutHUD,MonsterEquipmentEmpty"
 msgid "장비 · 없음"
 msgstr "Equipment · None"
 
 #. Key:	UnitDetailLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6302)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6302)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6216)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6216)
 msgctxt "CombatLayoutHUD,UnitDetailLevel"
 msgid "Lv.{0}"
 msgstr "Lv.{0}"
 
 #. Key:	UnitDetailAlly
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6307)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6307)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6221)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6221)
 msgctxt "CombatLayoutHUD,UnitDetailAlly"
 msgid "아군"
 msgstr "Ally"
 
 #. Key:	UnitDetailEnemy
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6308)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6308)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6222)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6222)
 msgctxt "CombatLayoutHUD,UnitDetailEnemy"
 msgid "적"
 msgstr "Enemy"
 
 #. Key:	UnitDetailIdentityAndHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6310)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6310)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6224)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6224)
 msgctxt "CombatLayoutHUD,UnitDetailIdentityAndHp"
 msgid "{0}  ·  {1}  ·  HP {2}/{3}"
 msgstr "{0}  ·  {1}  ·  HP {2}/{3}"
 
 #. Key:	UnitDetailWithDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6316)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6316)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6230)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6230)
 msgctxt "CombatLayoutHUD,UnitDetailWithDefense"
 msgid "{0}  ·  방어 {1}"
 msgstr "{0}  ·  Defense {1}"
 
 #. Key:	DetailChipLevel
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6338)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6338)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6252)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6252)
 msgctxt "CombatLayoutHUD,DetailChipLevel"
 msgid "레벨"
 msgstr "Level"
 
 #. Key:	DetailChipHp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6341)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6341)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6255)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6255)
 msgctxt "CombatLayoutHUD,DetailChipHp"
 msgid "HP"
 msgstr "HP"
 
 #. Key:	DetailChipDefense
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6343)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6343)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6257)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6257)
 msgctxt "CombatLayoutHUD,DetailChipDefense"
 msgid "방어"
 msgstr "Defense"
 
 #. Key:	DetailChipSpeed
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6345)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6345)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6259)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6259)
 msgctxt "CombatLayoutHUD,DetailChipSpeed"
 msgid "속도"
 msgstr "Speed"
 
 #. Key:	DetailChipAp
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6347)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6347)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6261)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6261)
 msgctxt "CombatLayoutHUD,DetailChipAp"
 msgid "AP"
 msgstr "AP"
 
 #. Key:	UnitDetailChipCritical
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6348)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6348)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6262)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6262)
 msgctxt "CombatLayoutHUD,UnitDetailChipCritical"
 msgid "치명타"
 msgstr "Crit"
 
 #. Key:	UnitDetailPassiveLine
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6355)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6355)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6269)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6269)
 msgctxt "CombatLayoutHUD,UnitDetailPassiveLine"
 msgid "· {0}"
 msgstr "· {0}"
 
 #. Key:	UnitDetailNoPassives
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6358)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6358)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6272)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6272)
 msgctxt "CombatLayoutHUD,UnitDetailNoPassives"
 msgid "패시브 없음"
 msgstr "No passives"
 
 #. Key:	UnitDetailEnemyThreatLegend
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6364)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6364)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6278)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6278)
 msgctxt "CombatLayoutHUD,UnitDetailEnemyThreatLegend"
 msgid "{0}\n\n판의 표시는 이 적이 한 턴에 닿는 곳이다.\n테두리 밴드 = 이동 범위, 채움 = 공격 범위."
 msgstr "{0}\n\nThe board shows every tile this enemy can reach in one turn.\nBorder band = movement range, fill = attack range."
 
 #. Key:	MoveDetailTitle
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6692)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6692)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6604)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6604)
 msgctxt "CombatLayoutHUD,MoveDetailTitle"
 msgid "이동"
 msgstr "Move"
 
 #. Key:	MoveDetailDescription
-#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6693)
-#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6693)
+#. SourceLocation:	Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6605)
+#: Source/P_RD/UI/Combat/CombatLayoutHUDWidget.cpp(6605)
 msgctxt "CombatLayoutHUD,MoveDetailDescription"
 msgid "한 칸 옮길 때마다 행동력을 1 씁니다. (최대 {0}칸 이동 가능)\n\n이동할 칸을 터치하여 고른 후, 마지막 칸을 다시 터치하여 이동을 확정합니다."
 msgstr "Moving one tile costs 1 AP. (Up to {0} tiles)\n\nTap a tile to choose a destination, then tap the final tile again to confirm movement."
@@ -8680,36 +8694,36 @@ msgid "(mock reward)"
 msgstr "(mock reward)"
 
 #. Key:	ChestOpen
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1860)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1860)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1861)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1861)
 msgctxt "RewardConcept03Widget,ChestOpen"
 msgid "상자 열기"
 msgstr "Open Chest"
 
 #. Key:	ChestOpenHint
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1864)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1864)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1865)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1865)
 msgctxt "RewardConcept03Widget,ChestOpenHint"
 msgid "상자를 눌러 여세요"
 msgstr "Tap the chest to open it"
 
 #. Key:	ClaimSelectedOne
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1870)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1870)
 msgctxt "RewardConcept03Widget,ClaimSelectedOne"
 msgid "선택한 1개 받기"
 msgstr "Claim Selected Item"
 
 #. Key:	Confirm
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1869)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1870)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1870)
 msgctxt "RewardConcept03Widget,Confirm"
 msgid "확정"
 msgstr "Confirm"
 
 #. Key:	SelectedArtifact
-#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1920)
-#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1920)
+#. SourceLocation:	Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1921)
+#: Source/P_RD/UI/Reward/RewardConcept03Widget.cpp(1921)
 msgctxt "RewardConcept03Widget,SelectedArtifact"
 msgid "선택됨"
 msgstr "Selected"
@@ -9464,197 +9478,197 @@ msgid "Cancel"
 msgstr "Cancel"
 
 #. Key:	SkillNoteOwned
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1285)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1285)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1277)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1277)
 msgctxt "ShopUIWidgetBase,SkillNoteOwned"
 msgid "{0} 전용 · 이미 보유"
 msgstr "{0} only · Owned"
 
 #. Key:	SkillNoteOtherJob
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1288)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1288)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1280)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1280)
 msgctxt "ShopUIWidgetBase,SkillNoteOtherJob"
 msgid "{0} 전용 · 장착 불가"
 msgstr "{0} only · Cannot equip"
 
 #. Key:	SkillNoteUnowned
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1291)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1291)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1283)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1283)
 msgctxt "ShopUIWidgetBase,SkillNoteUnowned"
 msgid "{0} 전용 · 미보유 용병"
 msgstr "{0} only · No mercenary owned"
 
 #. Key:	SkillNoteCommon
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1297)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1297)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1289)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1289)
 msgctxt "ShopUIWidgetBase,SkillNoteCommon"
 msgid "공용 스킬"
 msgstr "Common skill"
 
 #. Key:	SkillNoteJob
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1298)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1298)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1290)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1290)
 msgctxt "ShopUIWidgetBase,SkillNoteJob"
 msgid "{0} 전용"
 msgstr "{0} only"
 
 #. Key:	SoldOut
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1581)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1581)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1573)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1573)
 msgctxt "ShopUIWidgetBase,SoldOut"
 msgid "품절"
 msgstr "Sold Out"
 
 #. Key:	RailOwned
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1585)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1585)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1577)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1577)
 msgctxt "ShopUIWidgetBase,RailOwned"
 msgid "보유"
 msgstr "Owned"
 
 #. Key:	RailPrice
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1589)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1589)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1581)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1581)
 msgctxt "ShopUIWidgetBase,RailPrice"
 msgid "{0} G"
 msgstr "{0} G"
 
 #. Key:	SelectedJobUnitCount
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1683)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1683)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1675)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1675)
 msgctxt "ShopUIWidgetBase,SelectedJobUnitCount"
 msgid "{0}/{1}"
 msgstr "{0}/{1}"
 
 #. Key:	RestPrice
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1792)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1792)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1784)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1784)
 msgctxt "ShopUIWidgetBase,RestPrice"
 msgid "{0} G"
 msgstr "{0} G"
 
 #. Key:	RestUsed
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1877)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1877)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1869)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1869)
 msgctxt "ShopUIWidgetBase,RestUsed"
 msgid "휴식 완료"
 msgstr "Rest Complete"
 
 #. Key:	RestNotAffordable
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1881)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1881)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1873)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1873)
 msgctxt "ShopUIWidgetBase,RestNotAffordable"
 msgid "골드 부족"
 msgstr "Not enough Gold"
 
 #. Key:	RestNow
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1885)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1885)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1877)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1877)
 msgctxt "ShopUIWidgetBase,RestNow"
 msgid "휴식하기"
 msgstr "Rest"
 
 #. Key:	NoShopItems
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1898)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1898)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1890)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1890)
 msgctxt "ShopUIWidgetBase,NoShopItems"
 msgid "판매 상품이 없습니다"
 msgstr "No items for sale"
 
 #. Key:	NoSelectedPrice
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1906)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1906)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1898)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1898)
 msgctxt "ShopUIWidgetBase,NoSelectedPrice"
 msgid "-"
 msgstr "-"
 
 #. Key:	Unavailable
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1914)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1914)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1906)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1906)
 msgctxt "ShopUIWidgetBase,Unavailable"
 msgid "구매 불가"
 msgstr "Unavailable"
 
 #. Key:	SelectedSoldOut
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1951)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1951)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1943)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1943)
 msgctxt "ShopUIWidgetBase,SelectedSoldOut"
 msgid "품절"
 msgstr "Sold Out"
 
 #. Key:	SelectedPrice
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1952)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1952)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1944)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1944)
 msgctxt "ShopUIWidgetBase,SelectedPrice"
 msgid "{0} G"
 msgstr "{0} G"
 
 #. Key:	BuySoldOut
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1977)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1977)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1969)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1969)
 msgctxt "ShopUIWidgetBase,BuySoldOut"
 msgid "품절"
 msgstr "Sold Out"
 
 #. Key:	BuyNotAffordable
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1981)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1981)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1973)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1973)
 msgctxt "ShopUIWidgetBase,BuyNotAffordable"
 msgid "골드 부족"
 msgstr "Not enough Gold"
 
 #. Key:	BuySelectTarget
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1985)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1985)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1977)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1977)
 msgctxt "ShopUIWidgetBase,BuySelectTarget"
 msgid "대상 선택"
 msgstr "Select Target"
 
 #. Key:	BuyAlreadyOwned
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1989)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1989)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1981)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1981)
 msgctxt "ShopUIWidgetBase,BuyAlreadyOwned"
 msgid "이미 보유"
 msgstr "Owned"
 
 #. Key:	BuyOtherJob
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1993)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1993)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1985)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1985)
 msgctxt "ShopUIWidgetBase,BuyOtherJob"
 msgid "직업 불일치"
 msgstr "Wrong job"
 
 #. Key:	BuyUnownedTarget
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1997)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1997)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1989)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1989)
 msgctxt "ShopUIWidgetBase,BuyUnownedTarget"
 msgid "미보유 용병"
 msgstr "No Mercenary Owned"
 
 #. Key:	EquipSelectedSkill
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2007)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2007)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1999)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(1999)
 msgctxt "ShopUIWidgetBase,EquipSelectedSkill"
 msgid "장착"
 msgstr "Equip"
 
 #. Key:	ReplaceSelectedSkill
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2008)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2008)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2000)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2000)
 msgctxt "ShopUIWidgetBase,ReplaceSelectedSkill"
 msgid "교체"
 msgstr "Replace"
 
 #. Key:	BuySelected
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2012)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2012)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2004)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2004)
 msgctxt "ShopUIWidgetBase,BuySelected"
 msgid "구매"
 msgstr "Buy"
 
 #. Key:	GoldAmount
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2049)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2049)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2041)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2041)
 msgctxt "ShopUIWidgetBase,GoldAmount"
 msgid "{0} G"
 msgstr "{0} G"
@@ -9666,6 +9680,13 @@ msgctxt "ShopUIWidgetBase,Leave"
 msgid "나가기"
 msgstr "Leave"
 
+#. Key:	[{0}]
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2109)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2109)
+msgctxt "ShopUIWidgetBase,[{0}]"
+msgid "[{0}]"
+msgstr "[{0}]"
+
 #. Key:	Shop
 #. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(211)
 #: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(211)
@@ -9673,12 +9694,19 @@ msgctxt "ShopUIWidgetBase,Shop"
 msgid "상점"
 msgstr "Shop"
 
-#. Key:	[{0}]
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2117)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2117)
-msgctxt "ShopUIWidgetBase,[{0}]"
-msgid "[{0}]"
-msgstr "[{0}]"
+#. Key:	Sold Out
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2146)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2146)
+msgctxt "ShopUIWidgetBase,Sold Out"
+msgid "Sold Out"
+msgstr "Sold Out"
+
+#. Key:	{0} G
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2147)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2147)
+msgctxt "ShopUIWidgetBase,{0} G"
+msgid "{0} G"
+msgstr "{0} G"
 
 #. Key:	ArtifactTab
 #. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(215)
@@ -9686,20 +9714,6 @@ msgstr "[{0}]"
 msgctxt "ShopUIWidgetBase,ArtifactTab"
 msgid "아티팩트"
 msgstr "Artifacts"
-
-#. Key:	Sold Out
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2154)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2154)
-msgctxt "ShopUIWidgetBase,Sold Out"
-msgid "Sold Out"
-msgstr "Sold Out"
-
-#. Key:	{0} G
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2155)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2155)
-msgctxt "ShopUIWidgetBase,{0} G"
-msgid "{0} G"
-msgstr "{0} G"
 
 #. Key:	SkillTab
 #. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(219)
@@ -9723,22 +9737,22 @@ msgid "용병 고용"
 msgstr "Hire Mercenaries"
 
 #. Key:	[{0}] {1} Lv.{2}
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2290)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2290)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2282)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2282)
 msgctxt "ShopUIWidgetBase,[{0}] {1} Lv.{2}"
 msgid "[{0}] {1} Lv.{2}"
 msgstr "[{0}] {1} Lv.{2}"
 
 #. Key:	S{0}: {1}
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2304)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2304)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2296)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2296)
 msgctxt "ShopUIWidgetBase,S{0}: {1}"
 msgid "S{0}: {1}"
 msgstr "S{0}: {1}"
 
 #. Key:	-
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2306)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2306)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2298)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2298)
 msgctxt "ShopUIWidgetBase,-"
 msgid "-"
 msgstr "-"
@@ -9765,81 +9779,88 @@ msgid "인벤토리"
 msgstr "Inventory"
 
 #. Key:	ArtifactFallbackDescription
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2468)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2468)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2460)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2460)
 msgctxt "ShopUIWidgetBase,ArtifactFallbackDescription"
 msgid "파티 전체에 적용되는 아티팩트입니다."
 msgstr "This Artifact applies to the entire party."
 
 #. Key:	SkillFallbackDescription
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2469)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2469)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2461)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2461)
 msgctxt "ShopUIWidgetBase,SkillFallbackDescription"
 msgid "선택한 용병의 스킬 슬롯에 장착합니다."
 msgstr "Equips to the selected mercenary's skill slot."
 
 #. Key:	ArtifactDetailType
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2522)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2522)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2514)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2514)
 msgctxt "ShopUIWidgetBase,ArtifactDetailType"
 msgid "아티팩트 · 파티 공용"
 msgstr "Artifact · Party-wide"
 
 #. Key:	SkillDetailType
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2523)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2523)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2515)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2515)
 msgctxt "ShopUIWidgetBase,SkillDetailType"
 msgid "스킬 · {0}"
 msgstr "Skill · {0}"
 
 #. Key:	ArtifactEffectHeading
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2526)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2526)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2518)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2518)
 msgctxt "ShopUIWidgetBase,ArtifactEffectHeading"
 msgid "효과"
 msgstr "Effect"
 
 #. Key:	SkillEffectHeading
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2527)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2527)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2519)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2519)
 msgctxt "ShopUIWidgetBase,SkillEffectHeading"
 msgid "스킬 효과"
 msgstr "Skill Effects"
 
 #. Key:	LevelUpTitle
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2691)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2691)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2680)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2680)
 msgctxt "ShopUIWidgetBase,LevelUpTitle"
 msgid "레벨업"
 msgstr "Level Up"
 
 #. Key:	LevelUpNoCandidates
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2710)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2710)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2699)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2699)
 msgctxt "ShopUIWidgetBase,LevelUpNoCandidates"
 msgid "배울 수 있는 새 스킬이 없습니다"
 msgstr "There are no new skills available to learn"
 
 #. Key:	LevelUpChooseOne
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2711)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2711)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2700)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2700)
 msgctxt "ShopUIWidgetBase,LevelUpChooseOne"
 msgid "1개 선택"
 msgstr "Choose 1"
 
 #. Key:	LevelUpSkip
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2716)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2716)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2705)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2705)
 msgctxt "ShopUIWidgetBase,LevelUpSkip"
 msgid "받지 않기"
 msgstr "Skip Reward"
 
 #. Key:	LevelUpEquip
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2718)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2718)
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2707)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(2707)
 msgctxt "ShopUIWidgetBase,LevelUpEquip"
 msgid "선택하여 장착"
 msgstr "Select and Equip"
+
+#. Key:	OwnedSkillFallbackDescription
+#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(848)
+#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(848)
+msgctxt "ShopUIWidgetBase,OwnedSkillFallbackDescription"
+msgid "현재 장착 중인 스킬입니다."
+msgstr "This skill is currently equipped."
 
 #. Key:	ShopJobKnight
 #. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(85)
@@ -9847,13 +9868,6 @@ msgstr "Select and Equip"
 msgctxt "ShopUIWidgetBase,ShopJobKnight"
 msgid "기사"
 msgstr "Knight"
-
-#. Key:	OwnedSkillFallbackDescription
-#. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(852)
-#: Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(852)
-msgctxt "ShopUIWidgetBase,OwnedSkillFallbackDescription"
-msgid "현재 장착 중인 스킬입니다."
-msgstr "This skill is currently equipped."
 
 #. Key:	ShopJobRanger
 #. SourceLocation:	Source/P_RD/UI/Shop/ShopUIWidgetBase.cpp(86)
