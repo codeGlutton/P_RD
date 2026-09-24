@@ -3,6 +3,7 @@
 // @date 2026-06-18
 
 #pragma once
+#include "UI/RealTimeLongPressTimer.h"
 
 #include "RDMinimal.h"
 #include "TimerManager.h"
@@ -474,12 +475,12 @@ protected:
 	bool mIsArtifactInventoryOpen = false;
 
 	/** 모바일 장착 스킬 길게 누르기 상태. */
-	FTimerHandle mSkillLongPressTimer;
+	FRealTimeLongPressTimer mSkillLongPressTimer;
 	int32 mPressedSkillSlotIndex = INDEX_NONE;
 	bool mSkillLongPressTriggered = false;
 
 	/** 판매 아티팩트/스킬 카드는 손을 떼기 전 임계시간에 상세를 연다. */
-	FTimerHandle mRailLongPressTimer;
+	FRealTimeLongPressTimer mRailLongPressTimer;
 	int32 mPressedRailSlotIndex = INDEX_NONE;
 	bool mRailLongPressTriggered = false;
 

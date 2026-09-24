@@ -928,21 +928,17 @@ void URunOptionsRailWidget::BeginDetailPress(
 	{
 		return;
 	}
-	GetWorld()->GetTimerManager().ClearTimer(DetailLongPressTimer);
+	DetailLongPressTimer.Cancel();
 	PressedDetailSlot = SlotIndex;
 	bPressedDetailIsArtifact = bArtifact;
 	bDetailLongPressTriggered = false;
-	GetWorld()->GetTimerManager().SetTimer(DetailLongPressTimer,
-		this, &URunOptionsRailWidget::FireHeldDetail,
-		DetailLongPressSeconds, false);
+	DetailLongPressTimer.Start(this, DetailLongPressSeconds,
+		FSimpleDelegate::CreateUObject(this, &URunOptionsRailWidget::FireHeldDetail));
 }
 
 void URunOptionsRailWidget::EndDetailPress()
 {
-	if (GetWorld() != nullptr)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(DetailLongPressTimer);
-	}
+	DetailLongPressTimer.Cancel();
 	PressedDetailSlot = INDEX_NONE;
 	bDetailLongPressTriggered = false;
 }
