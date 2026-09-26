@@ -21,6 +21,7 @@ var classACombatGameMode =
     [ "HandleChangeFocusScreenAnchor", "classACombatGameMode.html#aec3ff68044aef3d2ef06bfed97ccf840", null ],
     [ "HandleCombatCommand", "classACombatGameMode.html#a0e3f3294d00d1f279b9fbb80fe45607b", null ],
     [ "HandleCombatWorldTouch", "classACombatGameMode.html#a62b5c0320a40cee485fd30b75e4eea5d", null ],
+    [ "HandleExperiencePresentationCompleted", "classACombatGameMode.html#ad0c417603aed8e702159fb29984be4f9", null ],
     [ "HandleRewardClaimed", "classACombatGameMode.html#af6c2dcfe12e11d1a12cf0513487797f9", null ],
     [ "HandleRewardSelectionRequested", "classACombatGameMode.html#af577b1b57def89b48ec44fde993b722f", null ],
     [ "HandleSaveAndExitRun", "classACombatGameMode.html#acd025fa878cc5117fe8d05313ceb3eea", null ],
@@ -62,6 +63,7 @@ var classACombatGameMode =
     [ "mInspectedUnitId", "classACombatGameMode.html#a699c34898b84446501526ac7ee8b7f4a", null ],
     [ "mLevelUpSkillRewardFlow", "classACombatGameMode.html#a13427a2643311407d9e89e3a0ca14fb7", null ],
     [ "mPendingConfirmTile", "classACombatGameMode.html#a936ddf73e325d067280d44442ca981f8", null ],
+    [ "mResumePendingLevelUpAfterExp", "classACombatGameMode.html#aecde2d07e746a9f1eb28e6a54ffc2239", null ],
     [ "mRewardUIModel", "classACombatGameMode.html#a363ed1990446b746a44c6611537e2e47", null ],
     [ "mSkillDetailPreviewActive", "classACombatGameMode.html#a9dc5e0f59e830a396510a4884dd4f8c8", null ]
 ];

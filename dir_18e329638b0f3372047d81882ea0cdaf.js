@@ -35,6 +35,7 @@ var dir_18e329638b0f3372047d81882ea0cdaf =
     [ "RDUIInputSubsystem.h", "RDUIInputSubsystem_8h.html", "RDUIInputSubsystem_8h" ],
     [ "RDUserWidget.cpp", "RDUserWidget_8cpp.html", null ],
     [ "RDUserWidget.h", "RDUserWidget_8h.html", "RDUserWidget_8h" ],
+    [ "RealTimeLongPressTimer.h", "RealTimeLongPressTimer_8h.html", "RealTimeLongPressTimer_8h" ],
     [ "RoomViewTypes.h", "RoomViewTypes_8h.html", "RoomViewTypes_8h" ],
     [ "RunOptionsRailWidget.cpp", "RunOptionsRailWidget_8cpp.html", "RunOptionsRailWidget_8cpp" ],
     [ "RunOptionsRailWidget.h", "RunOptionsRailWidget_8h.html", "RunOptionsRailWidget_8h" ],

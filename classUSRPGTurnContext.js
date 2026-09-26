@@ -10,6 +10,7 @@ var classUSRPGTurnContext =
     [ "ForcedClearActions", "classUSRPGTurnContext.html#a19845215784a0ec3571f19689d90af97", null ],
     [ "ForcedSkipAIActions", "classUSRPGTurnContext.html#a05d2bc048e16016f7ea5f3d3957a3511", null ],
     [ "ForcedSkipPlayerTurn", "classUSRPGTurnContext.html#a994e8ae69029353d64e5f8f67ebed8cb", null ],
+    [ "GetCurrentActionEndHoldBarrier", "classUSRPGTurnContext.html#a90f42ed66cf3f61561bc68a62a63204e", null ],
     [ "GetOwner", "classUSRPGTurnContext.html#a1b51847931dfc3225a762f7609f96f16", null ],
     [ "GetParent", "classUSRPGTurnContext.html#a576ebb4e1df70fd811eee000cc76cd1b", null ],
     [ "GetTurnId", "classUSRPGTurnContext.html#a994520fe7b64fd62305598164304ceb9", null ],

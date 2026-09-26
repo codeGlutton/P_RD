@@ -117,11 +117,12 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
 <p>전제: 턴당 스킬 시전은 1회</p><ul>
 <li>스킬은 배치와 무관하게 우선순위와 사용 가능 여부(쿨다운/행동력)만으로 먼저 확정 (동순위는 랜덤) -&gt; 플레이어 턴에 보여주는 예상 스킬과 실제 시전 스킬이 항상 일치</li>
 <li>Attack: 확정 스킬로 시전 가능한 타겟이 있으면 시전, 없으면 다른 스킬로 바꾸지 않고 이동만</li>
-<li>Spell: 시전 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡은 뒤 시전 <dl class="section note"><dt>주의</dt><dd>턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함 </dd></dl>
+<li>Spell: 시전 비용을 먼저 떼고 남는 행동력으로 이동 성향대로 자리를 잡은 뒤 시전</li>
+<li>Move: 걷지 않고 현재 타일에서 조준 가능한 빈 타일 중 기준 타겟 타일에 가장 가까운 타일을 조준해 시전, 빈 타일이 없으면 다른 스킬로 바꾸지 않고 이동만 <dl class="section note"><dt>주의</dt><dd>턴당 복수 시전이 허용되면 "멀리 가서 하나" 대 "가까이서 둘" 같은 조합 비교가 필요하므로 플래그 테이블이 아닌 평가 함수 기반으로 재설계해야 함 </dd></dl>
 </li>
 </ul>
 
-<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8h_source.html">SRPGEnemyTurnPlanner.h</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8h_source.html#l00044">44</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8h_source.html">SRPGEnemyTurnPlanner.h</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8h_source.html#l00046">46</a> 번째 라인에서 정의되었습니다.</p>
 </div><h2 class="groupheader">멤버 함수 문서화</h2>
 <a id="af6912db8d5e7d7ec87860c34ebfe4631" name="af6912db8d5e7d7ec87860c34ebfe4631"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af6912db8d5e7d7ec87860c34ebfe4631">&#9670;&#160;</a></span>PlanTurn()</h2>
@@ -190,7 +191,7 @@ USRPGEnemyTurnPlanner에 대한 상속 다이어그램 : </div>
 <p>스킬커맨드 생성 여부 판단 및 생성</p>
 <p>스킬 사용이 가능할 경우에만 생성 목적지 타일에 도착해서 시전한다고 가정</p>
 
-<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html">SRPGEnemyTurnPlanner.cpp</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html#l00171">171</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html">SRPGEnemyTurnPlanner.cpp</a> 파일의 <a class="el" href="SRPGEnemyTurnPlanner_8cpp_source.html#l00226">226</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

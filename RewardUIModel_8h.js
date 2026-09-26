@@ -1,6 +1,7 @@
 var RewardUIModel_8h =
 [
     [ "URewardUIModel", "classURewardUIModel.html", "classURewardUIModel" ],
+    [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE", "RewardUIModel_8h.html#aeb0c4bd199b9cb116962bdb8a3126992", null ],
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE", "RewardUIModel_8h.html#a4a5623adf0b1131799c7ab5c2308813f", null ],
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE", "RewardUIModel_8h.html#a58f02554bc0b01c2c7c2d1bd614175db", null ],
     [ "DECLARE_DYNAMIC_MULTICAST_DELEGATE", "RewardUIModel_8h.html#a3ad6c5bdc9be17b8e6a3625396aba149", null ],

@@ -7,5 +7,6 @@ var dir_bd3f48f8240a8820ccd2a3b254525392 =
     [ "EnemyTargetPriorityTestsHelper.h", "EnemyTargetPriorityTestsHelper_8h.html", "EnemyTargetPriorityTestsHelper_8h" ],
     [ "EnemyTurnPlannerTests.cpp", "EnemyTurnPlannerTests_8cpp.html", "EnemyTurnPlannerTests_8cpp" ],
     [ "EnemyTurnPlannerTestsHelper.h", "EnemyTurnPlannerTestsHelper_8h.html", "EnemyTurnPlannerTestsHelper_8h" ],
-    [ "GolemSkillAssetTests.cpp", "GolemSkillAssetTests_8cpp.html", "GolemSkillAssetTests_8cpp" ]
+    [ "GolemSkillAssetTests.cpp", "GolemSkillAssetTests_8cpp.html", "GolemSkillAssetTests_8cpp" ],
+    [ "TileIndexTests.cpp", "TileIndexTests_8cpp.html", "TileIndexTests_8cpp" ]
 ];

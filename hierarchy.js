@@ -111,6 +111,9 @@ var hierarchy =
     [ "FFrontendMapNodePoolEntry", "structFFrontendMapNodePoolEntry.html", null ],
     [ "FFrontendSkillOption", "structFFrontendSkillOption.html", null ],
     [ "FGameTeamRelation", "structFGameTeamRelation.html", null ],
+    [ "FGCObject", null, [
+      [ "FTestObjectScope", "classFTestObjectScope.html", null ]
+    ] ],
     [ "FGlobalStageBuildSetting", "structFGlobalStageBuildSetting.html", null ],
     [ "FGlobalStatusEffectBalanceSetting", "structFGlobalStatusEffectBalanceSetting.html", null ],
     [ "FGlobalStatusEffectVFXSetting", "structFGlobalStatusEffectVFXSetting.html", null ],
@@ -160,6 +163,7 @@ var hierarchy =
     [ "FPresentationBarrier", "structFPresentationBarrier.html", null ],
     [ "FRarityRate", "structFRarityRate.html", null ],
     [ "FRDBoardTouchSession", "structFRDBoardTouchSession.html", null ],
+    [ "FRealTimeLongPressTimer", "classFRealTimeLongPressTimer.html", null ],
     [ "FRewardChoiceUI", "structFRewardChoiceUI.html", null ],
     [ "FRewardExpProgressStepUI", "structFRewardExpProgressStepUI.html", null ],
     [ "FRewardGrantBundleResultUI", "structFRewardGrantBundleResultUI.html", null ],
@@ -348,6 +352,7 @@ var hierarchy =
     [ "IBoardCombatTarget", "classIBoardCombatTarget.html", [
       [ "UCombatTargetObstacleModel", "classUCombatTargetObstacleModel.html", [
         [ "UGimmickModel", "classUGimmickModel.html", [
+          [ "UDeathGimmickModel", "classUDeathGimmickModel.html", null ],
           [ "UOverlapGimmickModel", "classUOverlapGimmickModel.html", [
             [ "UMockOverlapGimmickModel", "classUMockOverlapGimmickModel.html", null ],
             [ "UPuddleGimmickModel", "classUPuddleGimmickModel.html", [

@@ -9,6 +9,7 @@ var structFActiveSkillContext =
     [ "mFinalCombatTargets", "structFActiveSkillContext.html#a330826981aa47e97e3d924d5720c9653", null ],
     [ "mFinalTileIndexes", "structFActiveSkillContext.html#a81470186f6ae90c972818787b0c96a62", null ],
     [ "mInstigator", "structFActiveSkillContext.html#aff96cfacfd850ea6e1e9e1668362dd7c", null ],
+    [ "mIsDeactivationPending", "structFActiveSkillContext.html#a95b1630ea840410ba2220e58de58c577", null ],
     [ "mMapModel", "structFActiveSkillContext.html#a76b91e6c23df911b313e24f5eef7fa8f", null ],
     [ "mMotionLocalDir", "structFActiveSkillContext.html#a22a3a1d805728eeaf2028e36157472e7", null ],
     [ "mPhaseIndex", "structFActiveSkillContext.html#afe90ef079ebaf0bcab9930b54a8bad25", null ],

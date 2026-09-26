@@ -138,6 +138,8 @@ Public 멤버 함수</h2></td></tr>
 <tr class="separator:a62b5c0320a40cee485fd30b75e4eea5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af6c2dcfe12e11d1a12cf0513487797f9" id="r_af6c2dcfe12e11d1a12cf0513487797f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classACombatGameMode.html#af6c2dcfe12e11d1a12cf0513487797f9">HandleRewardClaimed</a> (<a class="el" href="RewardUITypes_8h.html#abdc22ba12c67d0e130c6eb499d1d5bd7">ERewardClaimKind</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ClaimKind</a>, <a class="el" href="RoomTransitionSubsystem_8h.html#a3aff982d98ac1c2362247321cc2cde0b">int32</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">ChoiceIndex</a>)</td></tr>
 <tr class="separator:af6c2dcfe12e11d1a12cf0513487797f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0c417603aed8e702159fb29984be4f9" id="r_ad0c417603aed8e702159fb29984be4f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classACombatGameMode.html#ad0c417603aed8e702159fb29984be4f9">HandleExperiencePresentationCompleted</a> ()</td></tr>
+<tr class="separator:ad0c417603aed8e702159fb29984be4f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af577b1b57def89b48ec44fde993b722f" id="r_af577b1b57def89b48ec44fde993b722f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classACombatGameMode.html#af577b1b57def89b48ec44fde993b722f">HandleRewardSelectionRequested</a> (<a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">FPrimaryAssetId</a> <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">RewardId</a>)</td></tr>
 <tr class="memdesc:af577b1b57def89b48ec44fde993b722f"><td class="mdescLeft">&#160;</td><td class="mdescRight">엘리트·보스 SelectOne 정책 요청을 실제 아티팩트 지급으로 연결한다.  <br /></td></tr>
 <tr class="separator:af577b1b57def89b48ec44fde993b722f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -262,6 +264,8 @@ Public 속성</h2></td></tr>
 <tr class="separator:a363ed1990446b746a44c6611537e2e47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a13427a2643311407d9e89e3a0ca14fb7" id="r_a13427a2643311407d9e89e3a0ca14fb7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">TObjectPtr</a>&lt; <a class="el" href="classULevelUpSkillRewardFlow.html">ULevelUpSkillRewardFlow</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classACombatGameMode.html#a13427a2643311407d9e89e3a0ca14fb7">mLevelUpSkillRewardFlow</a></td></tr>
 <tr class="separator:a13427a2643311407d9e89e3a0ca14fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aecde2d07e746a9f1eb28e6a54ffc2239" id="r_aecde2d07e746a9f1eb28e6a54ffc2239"><td class="memItemLeft" align="right" valign="top"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classACombatGameMode.html#aecde2d07e746a9f1eb28e6a54ffc2239">mResumePendingLevelUpAfterExp</a> = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td></tr>
+<tr class="separator:aecde2d07e746a9f1eb28e6a54ffc2239"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-methods" name="pro-methods"></a>
 Protected 멤버 함수</h2></td></tr>
@@ -511,7 +515,7 @@ Friends</h2></td></tr>
 
 <p><a class="el" href="classARDGameModeBase.html#a96b3dafa3ed99f23fa798f8ba1c8bd39">ARDGameModeBase</a>(으)로부터 재구현되었습니다.</p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00540">540</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00545">545</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -550,7 +554,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section return"><dt>반환값</dt><dd>지급이 완료되어 UI가 해당 행을 수령 처리해도 되는 경우 true. </dd></dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00927">927</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00939">939</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -578,7 +582,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00876">876</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00888">888</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -607,7 +611,7 @@ Friends</h2></td></tr>
 <p>겨냥을 푼다.</p>
 <p>겨냥이 풀리면 그 자리 기준으로 켜고 끄던 카드도 다시 계산해야 한다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02051">2051</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02063">2063</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -634,7 +638,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02734">2734</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02746">2746</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -661,7 +665,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01264">1264</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01276">1276</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -690,7 +694,7 @@ Friends</h2></td></tr>
 <p>겨냥해 둔 칸을 그대로 다시 누른다.</p>
 <p>판에서 두 번째 탭이 확정이다. 화면 아래 단추로도 되게 하려면 그 탭을 대신 놓아 주면 된다 &ndash; 확정 판정을 UI 나 여기서 흉내 내면 규칙이 두 곳에 생긴다. 다만 확정 순간 커서는 버튼 위에 있으므로 화면을 다시 트레이스하지 않고, 선택 단계가 보관한 칸을 WorldTrace 커맨드에 직접 싣는다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00838">838</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00842">842</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -718,7 +722,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02989">2989</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l03001">3001</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -737,7 +741,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00678">678</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00682">682</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -782,7 +786,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>카드 레일(조종 중인 아군)과 상세창(들여다보는 유닛)이 같은 내용을 쓰므로 채우는 자리를 하나로 둔다. 기준 유닛만 호출부가 정한다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02161">2161</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02173">2173</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -810,7 +814,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01751">1751</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01763">1763</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -838,7 +842,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01730">1730</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01742">1742</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -872,7 +876,7 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01768">1768</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01780">1780</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -891,7 +895,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00601">601</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00605">605</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -910,7 +914,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00606">606</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00610">610</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -948,7 +952,7 @@ Friends</h2></td></tr>
 <dl class="section return"><dt>반환값</dt><dd>없으면 nullptr</dd></dl>
 <p>지금 차례인 아군. </p><dl class="section return"><dt>반환값</dt><dd>적 차례거나 없으면 nullptr </dd></dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01716">1716</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01728">1728</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -967,7 +971,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01069">1069</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01081">1081</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -987,7 +991,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01156">1156</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01168">1168</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1017,7 +1021,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00689">689</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00693">693</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1048,7 +1052,26 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>플레이어 턴이 아닐 때는 입력을 무시한다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00791">791</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00795">795</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="ad0c417603aed8e702159fb29984be4f9" name="ad0c417603aed8e702159fb29984be4f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0c417603aed8e702159fb29984be4f9">&#9670;&#160;</a></span>HandleExperiencePresentationCompleted()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">void</a> ACombatGameMode::HandleExperiencePresentationCompleted </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00871">871</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1078,7 +1101,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00857">857</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00861">861</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1098,7 +1121,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00867">867</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00879">879</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1117,7 +1140,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01106">1106</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01118">1118</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1239,7 +1262,7 @@ Friends</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>카드를 켜도 되면 true </dd></dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01668">1668</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01680">1680</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1267,7 +1290,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01274">1274</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01286">1286</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1295,7 +1318,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01356">1356</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01368">1368</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1324,7 +1347,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>월드 롱프레스는 IBoardSelectionTarget에서 모델을 꺼내고, 용병 탭은 UnitId로 파티 모델을 찾는다. 입력 경로만 다를 뿐 같은 상세창을 쓰므로 스냅샷 조립은 이 한 곳에서 맡는다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02074">2074</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02086">2086</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1352,7 +1375,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01383">1383</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01395">1395</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1379,7 +1402,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02897">2897</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02909">2909</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1406,7 +1429,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02766">2766</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02778">2778</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1435,7 +1458,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>내려 준 유닛을 mDetailUnitModel 에 적어 둔다. 상세창의 스킬 칸을 탭하면 UI 는 SkillIndex 만 보내오므로, 어느 유닛의 스킬인지는 여기서 기억한 것으로 되짚는다 &ndash; 화면이 유닛을 짚으면 기준이 두 곳에 생긴다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02061">2061</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02073">2073</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1481,7 +1504,7 @@ Friends</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01950">1950</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01962">1962</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1509,7 +1532,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01472">1472</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01484">1484</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1547,7 +1570,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01510">1510</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01522">1522</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1574,7 +1597,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02252">2252</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02264">2264</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1602,7 +1625,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01924">1924</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01936">1936</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1623,7 +1646,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>BeginPreview로 새 세대를 열고 로그 배치·유닛 예측을 같은 세대로 넣는다. 실전 뷰모델의 표시 상태는 건드리지 않는다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02659">2659</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02671">2671</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1651,7 +1674,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01490">1490</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01502">1502</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1679,7 +1702,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02229">2229</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02241">2241</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1706,7 +1729,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01796">1796</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01808">1808</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1734,7 +1757,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01410">1410</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01422">1422</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1762,7 +1785,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02145">2145</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02157">2157</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1789,7 +1812,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01542">1542</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01554">1554</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1824,7 +1847,7 @@ Friends</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>이벤트 성공 여부 </dd></dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01197">1197</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01209">1209</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1859,7 +1882,7 @@ Friends</h2></td></tr>
 </dl>
 <dl class="section return"><dt>반환값</dt><dd>이벤트 성공 여부 </dd></dl>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01172">1172</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01184">1184</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1897,7 +1920,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01177">1177</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01189">1189</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1916,7 +1939,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00660">660</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00664">664</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1936,7 +1959,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00627">627</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l00631">631</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -1974,7 +1997,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02682">2682</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l02694">2694</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2005,7 +2028,7 @@ Friends</h2></td></tr>
 어디까지 오나" 라서, 패널만 띄우고 판을 안 칠하면 반쪽이다. 아군이나 유닛이 아닌 것을 고르면 이전 칠을 지우기만 한다.</p>
 <p>예산은 RechargeMovement(턴 시작 충전량)다. 적 자신의 턴 도중 잔량이 아니라 "다음 턴에 받을 행동력" 기준이어야 플레이어 계획에 맞는다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01215">1215</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8cpp_source.html">CombatGameMode.cpp</a> 파일의 <a class="el" href="CombatGameMode_8cpp_source.html#l01227">1227</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2030,7 +2053,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00279">279</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00281">281</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2054,7 +2077,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00280">280</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00282">282</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2079,7 +2102,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00182">182</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00184">184</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2095,7 +2118,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00324">324</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00326">326</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2119,7 +2142,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00175">175</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00177">177</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2143,7 +2166,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00207">207</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00209">209</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2168,7 +2191,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>하단 용병 칸을 눌러 남의 스킬을 들여다보는 동안에만 값이 들어 있다. 차례가 넘어가면 지운다 &ndash; 새 차례가 왔는데 옛 유닛 카드가 떠 있으면 무엇을 조종하는 중인지 알 수 없다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00228">228</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00230">230</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2184,7 +2207,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00327">327</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00329">329</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2209,7 +2232,23 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>UI의 Target(살펴보기 대상)과는 별개다 &ndash; 빈 칸으로 이동 경로를 그으면 Target 은 갱신되지 않아, 확정이 엉뚱한 칸을 재탭해 경로만 물렀다(0810). 빌드 단계 콜백에서 Preview 진입 시 채우고 벗어나면 비운다. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00237">237</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00239">239</a> 번째 라인에서 정의되었습니다.</p>
+
+</div>
+</div>
+<a id="aecde2d07e746a9f1eb28e6a54ffc2239" name="aecde2d07e746a9f1eb28e6a54ffc2239"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecde2d07e746a9f1eb28e6a54ffc2239">&#9670;&#160;</a></span>mResumePendingLevelUpAfterExp</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">bool</a> ACombatGameMode::mResumePendingLevelUpAfterExp = <a class="el" href="RDMinimal_8cpp.html#aa776b55d46c939d166cc1e3413afc625">false</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00330">330</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2225,7 +2264,7 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00326">326</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00328">328</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>
@@ -2250,7 +2289,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 <p>상세용 범위 칠이 켜졌는지. 실제 액션의 칠과 수명주기를 섞지 않기 위한 표식. </p>
 
-<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00209">209</a> 번째 라인에서 정의되었습니다.</p>
+<p class="definition"><a class="el" href="CombatGameMode_8h_source.html">CombatGameMode.h</a> 파일의 <a class="el" href="CombatGameMode_8h_source.html#l00211">211</a> 번째 라인에서 정의되었습니다.</p>
 
 </div>
 </div>

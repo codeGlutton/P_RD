@@ -3,6 +3,7 @@ var SkillComponentModel_8h =
     [ "FSkillEntry", "structFSkillEntry.html", "structFSkillEntry" ],
     [ "FActiveSkillContext", "structFActiveSkillContext.html", "structFActiveSkillContext" ],
     [ "USkillComponentModel", "classUSkillComponentModel.html", "classUSkillComponentModel" ],
+    [ "DECLARE_DELEGATE_OneParam", "SkillComponentModel_8h.html#a9eed1e082cc2a6085f5975dee28deb76", null ],
     [ "DECLARE_MULTICAST_DELEGATE_OneParam", "SkillComponentModel_8h.html#a399e5633c26061681c41ab318dc455d0", null ],
     [ "DECLARE_MULTICAST_DELEGATE_ThreeParams", "SkillComponentModel_8h.html#ab000271c09b5ea41c2713570decfb935", null ],
     [ "DECLARE_MULTICAST_DELEGATE_ThreeParams", "SkillComponentModel_8h.html#a569b79b29ebff5def6c37300d339afef", null ],

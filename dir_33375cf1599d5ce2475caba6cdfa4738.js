@@ -33,6 +33,7 @@ var dir_33375cf1599d5ce2475caba6cdfa4738 =
     [ "MercenaryHireTestsHelper.h", "MercenaryHireTestsHelper_8h.html", "MercenaryHireTestsHelper_8h" ],
     [ "MobileInputTests.cpp", "MobileInputTests_8cpp.html", null ],
     [ "MobileInputTestsHelper.h", "MobileInputTestsHelper_8h.html", "MobileInputTestsHelper_8h" ],
+    [ "RealTimeLongPressTimerTests.cpp", "RealTimeLongPressTimerTests_8cpp.html", null ],
     [ "ReportedIssuesTests.cpp", "ReportedIssuesTests_8cpp.html", null ],
     [ "ResultBoardArtTests.cpp", "ResultBoardArtTests_8cpp.html", null ],
     [ "RewardChestSeparatedTests.cpp", "RewardChestSeparatedTests_8cpp.html", null ],

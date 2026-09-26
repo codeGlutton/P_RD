@@ -13,5 +13,6 @@ var dir_b774e7ec51d4a1271b160947af725bd0 =
     [ "Tools", "dir_60c47241b5dbcc2febca9941b7442004.html", "dir_60c47241b5dbcc2febca9941b7442004" ],
     [ "UI", "dir_33375cf1599d5ce2475caba6cdfa4738.html", "dir_33375cf1599d5ce2475caba6cdfa4738" ],
     [ "P_RDTests.cpp", "P__RDTests_8cpp.html", null ],
-    [ "P_RDTests.h", "P__RDTests_8h.html", null ]
+    [ "P_RDTests.h", "P__RDTests_8h.html", null ],
+    [ "TestObjectScope.h", "TestObjectScope_8h.html", "TestObjectScope_8h" ]
 ];

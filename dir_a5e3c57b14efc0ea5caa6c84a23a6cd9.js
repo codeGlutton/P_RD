@@ -1,5 +1,7 @@
 var dir_a5e3c57b14efc0ea5caa6c84a23a6cd9 =
 [
+    [ "DeathGimmickModel.cpp", "DeathGimmickModel_8cpp.html", null ],
+    [ "DeathGimmickModel.h", "DeathGimmickModel_8h.html", "DeathGimmickModel_8h" ],
     [ "GimmickModel.cpp", "GimmickModel_8cpp.html", null ],
     [ "GimmickModel.h", "GimmickModel_8h.html", "GimmickModel_8h" ],
     [ "OverlapGimmickModel.cpp", "OverlapGimmickModel_8cpp.html", null ],

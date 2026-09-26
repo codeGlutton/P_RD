@@ -6,6 +6,8 @@ var classUObjectModel =
     [ "GetView", "classUObjectModel.html#aa1d4d4a3ea66fd0fd7f4344ae28e328d", null ],
     [ "GetView", "classUObjectModel.html#a85fdd82fe3ecb556f19338b9ecb2abd8", null ],
     [ "Initialize", "classUObjectModel.html#a70d0e1b06e1aef4b0d5193e742b77c4b", null ],
+    [ "IsInitialized", "classUObjectModel.html#ad9f4424ab5fc851e9c9ba746c92bf510", null ],
+    [ "IsPendingDestroy", "classUObjectModel.html#a02e92ae8d59595a3ceac0027f7cbac4c", null ],
     [ "PostBindView", "classUObjectModel.html#ac5c1edc6e647d1029ff2b1ca7e20c877", null ],
     [ "Uninitialize", "classUObjectModel.html#ad0d2f6b590764a1fbb09a1175b9e03d8", null ],
     [ "mModelId", "classUObjectModel.html#a75d4cd2e58251b4d2def69ced0f439e2", null ],
