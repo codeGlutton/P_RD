@@ -778,10 +778,10 @@ void UShopUIWidgetBase::BeginSkillSlotPress(const int32 SkillSlotIndex)
 		return;
 	}
 
-	GetWorld()->GetTimerManager().ClearTimer(mSkillLongPressTimer);
+	mSkillLongPressTimer.Cancel();
 	mPressedSkillSlotIndex = SkillSlotIndex;
 	mSkillLongPressTriggered = false;
-	FTimerDelegate LongPressDelegate = FTimerDelegate::CreateWeakLambda(this,
+	FSimpleDelegate LongPressDelegate = FSimpleDelegate::CreateWeakLambda(this,
 		[this, SkillSlotIndex]()
 		{
 			if (mPressedSkillSlotIndex == SkillSlotIndex)
@@ -789,8 +789,7 @@ void UShopUIWidgetBase::BeginSkillSlotPress(const int32 SkillSlotIndex)
 				ShowHeldSkillDetails(SkillSlotIndex);
 			}
 		});
-	GetWorld()->GetTimerManager().SetTimer(mSkillLongPressTimer,
-		LongPressDelegate, SkillDetailLongPressSeconds, false);
+	mSkillLongPressTimer.Start(this, SkillDetailLongPressSeconds, LongPressDelegate);
 }
 
 void UShopUIWidgetBase::EndSkillSlotPress(const int32 SkillSlotIndex)
@@ -799,10 +798,7 @@ void UShopUIWidgetBase::EndSkillSlotPress(const int32 SkillSlotIndex)
 	{
 		return;
 	}
-	if (GetWorld() != nullptr)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(mSkillLongPressTimer);
-	}
+	mSkillLongPressTimer.Cancel();
 
 	if (mSkillLongPressTriggered)
 	{
@@ -931,10 +927,10 @@ void UShopUIWidgetBase::BeginRailSlotPress(const int32 RailSlotIndex)
 	{
 		return;
 	}
-	GetWorld()->GetTimerManager().ClearTimer(mRailLongPressTimer);
+	mRailLongPressTimer.Cancel();
 	mPressedRailSlotIndex = RailSlotIndex;
 	mRailLongPressTriggered = false;
-	FTimerDelegate LongPressDelegate = FTimerDelegate::CreateWeakLambda(this,
+	FSimpleDelegate LongPressDelegate = FSimpleDelegate::CreateWeakLambda(this,
 		[this, RailSlotIndex]()
 		{
 			if (mPressedRailSlotIndex == RailSlotIndex)
@@ -942,8 +938,7 @@ void UShopUIWidgetBase::BeginRailSlotPress(const int32 RailSlotIndex)
 				ShowHeldRailItemDetails(RailSlotIndex);
 			}
 		});
-	GetWorld()->GetTimerManager().SetTimer(mRailLongPressTimer,
-		LongPressDelegate, SkillDetailLongPressSeconds, false);
+	mRailLongPressTimer.Start(this, SkillDetailLongPressSeconds, LongPressDelegate);
 }
 
 void UShopUIWidgetBase::EndRailSlotPress(const int32 RailSlotIndex)
@@ -952,10 +947,7 @@ void UShopUIWidgetBase::EndRailSlotPress(const int32 RailSlotIndex)
 	{
 		return;
 	}
-	if (GetWorld() != nullptr)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(mRailLongPressTimer);
-	}
+	mRailLongPressTimer.Cancel();
 	mPressedRailSlotIndex = INDEX_NONE;
 	mRailLongPressTriggered = false;
 }
@@ -2567,11 +2559,8 @@ void UShopUIWidgetBase::ShowShopDetail(const FText& Name,
 void UShopUIWidgetBase::NativeDestruct()
 {
 	RemoveFirstVisitGuide();
-	if (GetWorld() != nullptr)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(mSkillLongPressTimer);
-		GetWorld()->GetTimerManager().ClearTimer(mRailLongPressTimer);
-	}
+	mSkillLongPressTimer.Cancel();
+	mRailLongPressTimer.Cancel();
 	mPressedSkillSlotIndex = INDEX_NONE;
 	mSkillLongPressTriggered = false;
 	mPressedRailSlotIndex = INDEX_NONE;

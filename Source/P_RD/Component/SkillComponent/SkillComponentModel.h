@@ -30,6 +30,9 @@ DECLARE_MULTICAST_DELEGATE_TwoParams(FOnPlayPhaseLayerUI, const FActiveSkillCont
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnEndPhaseLayerUI, int32 /*PhaseIndex*/);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnEndSkillUI, const FActiveSkillContext& /*Context*/, const UStaticSkillData* /*SkillData*/);
 
+// @brief 강제이동 출발 대리자. 출발 시점에 경로를 정해 이동을 시작. 이동을 시작했으면 MoveEndBarrier를 이동 종료까지 보유
+DECLARE_DELEGATE_OneParam(FOnStartForcedMove, TSharedPtr<FPresentationBarrier> /*MoveEndBarrier*/);
+
 /**
  * @brief 한 슬롯에 장착된 스킬과 그로 인해 설치된 런타임 객체 추적
  */
@@ -86,6 +89,10 @@ public:
 	int32 mPhaseIndex = INDEX_NONE;
 
 public:
+	// @brief 스킬 종료 보류 여부. 시전자 연출은 끝났지만 피격자 밀당이 남아서 DeactivateSkill이 중단됐으면 true (밀당이 끝나면 다시 호출됨)
+	bool mIsDeactivationPending = false;
+
+public:
 	FOnEndSkillUI mEndCallback;
 
 	/* 페이즈 임시 데이터 */
@@ -96,6 +103,8 @@ public:
 
 /**
  * @brief  액티브 스킬 컴포넌트 모델
+ * @details 페이즈에 밀치기/당기기가 있으면 피격자 이동이 끝날 때까지 페이즈 종료를 미룸.
+ *          시전자 연출과 마지막 페이즈 중 늦게 끝나는 쪽에서 스킬 종료
  */
 UCLASS()
 class P_RD_API USkillComponentModel : public UComponentModel
@@ -162,6 +171,8 @@ protected:
 
 	void PreparePhaseLayer();
 	void TriggerPhaseLayer(const FEventTriggerPayloadBase* Payload);
+	// @brief 페이즈 종료 처리. 페이즈 배리어 소멸 시 호출
+	void EndPhaseLayer();
 	void FlushRemainingPhaseLayers();
 
 	void DeactivateSkill();
@@ -183,16 +194,41 @@ public:
 	 */
 	virtual bool IsCritical(int32 Threshold) const;
 
+	/* 강제이동 대기열 */
+public:
+	/**
+	 * @brief 밀치기/당기기 요청을 대기열에 넣음
+	 * @details 이펙트 적용 중에 들어온 요청은 바로 밀당하지 않고 모아 둠.
+	 *          이펙트 적용이 끝나면 모아놨던 요청을 하나씩 꺼내서 차례로 밀당하고, 모두 끝나면 페이즈 종료
+	 * @param Start 차례가 오면 실행할 출발 대리자 (그때의 배치로 경로를 정해 이동 시작)
+	 * @return 대기열에 넣었으면 true. 이펙트 적용 중이 아니면 false (호출자가 바로 밀면 됨)
+	 */
+	bool EnqueueForcedMove(FOnStartForcedMove Start);
+
+private:
+	// @brief 대기열에서 다음 이동 요청을 꺼내서 출발. 모든 요청을 처리하면 배리어를 풀어서 페이즈 종료
+	void StartNextForcedMove();
+	// @brief 밀당이 끝나기를 기다리는 중인지 여부 (대기열이 페이즈 배리어를 쥐고 있으면 기다리는 중)
+	bool IsWaitingForcedMove() const { return mForcedMovePhaseBarrier.IsValid(); }
+
+private:
+	// @brief 출발 대기 중인 이동 요청 (등록 순서 = 출발 순서)
+	TArray<FOnStartForcedMove> mPendingForcedMoves;
+	// @brief 대기열이 잡고 있는 페이즈 배리어. 마지막 요청까지 끝나면 놓음
+	TSharedPtr<FPresentationBarrier> mForcedMovePhaseBarrier;
+	// @brief 밀당 요청을 대기열에 넣어야 하는지 여부. 페이즈 이펙트 적용 루프 동안만 켜짐 (꺼져 있으면 Push/Pull이 그 자리에서 바로 밈)
+	bool mShouldEnqueueForcedMove = false;
+
 	/* 추가 API */
 public:
 	bool IsAnySkillActivated() const;
 	const FActiveSkillContext& GetActiveSkillContext() const;
 
 public:
-	TArray<FTileIndex> GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const;
-	TArray<FTileIndex> GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
-	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
-	TArray<FTileIndex> GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetAimableTiles(const UTileMapModel* MapModel, int32 SkillIndex) const;
+	TArray<FTileIndex> GetTargetTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
+	TArray<FTileIndex> GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const;
+	TArray<FTileIndex> GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const;
 
 public:
 	bool IsCooldown(int32 SkillIndex) const;

@@ -26,4 +26,7 @@ public:
 
 public:
 	FText MakeDescription() const override;
+
+public:
+	bool HasForcedMovement() const override { return true; }
 };

@@ -34,6 +34,9 @@ public:
 
 	/* 발동 공통부 */
 protected:
+	// @brief 기믹 발동 가능 여부 검사 (기본: 수명이 남아있고 사망하지 않음)
+	virtual bool CanTriggerGimmick() const;
+
 	/**
 	 * @brief 기믹 발동 시도 (트리거를 감지한 파생 클래스가 호출)
 	 * @details 장착된 스킬을 강제 시전하고 수명을 차감.

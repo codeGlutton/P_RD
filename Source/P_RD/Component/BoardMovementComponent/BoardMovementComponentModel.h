@@ -14,6 +14,7 @@
 #include "BoardMovementComponentModel.generated.h"
 
 class UTileMapModel;
+struct FPresentationBarrier;
 
 // @brief 이동 완료 통지 대리자 (MoveAlongPath/PushAlongPath 호출자가 요청 단위로 받음, 취소 시엔 호출되지 않음)
 DECLARE_DELEGATE(FOnBoardMoveFinished);
@@ -47,18 +48,20 @@ public:
 	 * @details 일반 이동과 달리 바라보는 방향 유지, AP 미차감. 그 외 스텝 루프/베리어/오버랩은 공유
 	 * @param PathTileIndexes 시작→목표 경로 (양 끝 포함, 인덱스 0 = 현재 타일). 벽이나 장애물에 막히는 건 미리 계산해서 경로로 줘야한다
 	 * @param OnFinished 이동 완료 통지
+	 * @param MoveEndBarrier 이동 종료(함정 연쇄 포함)까지 보유할 배리어. 밟은 함정 스킬에도 전달되어 그 스킬 종료까지 연장
 	 * @return 시작 성공 여부 (이동 중 재호출이거나 경로가 2칸 미만이면 false)
 	 */
-	bool PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
+	bool PushAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished(), TSharedPtr<FPresentationBarrier> MoveEndBarrier = nullptr);
 
 	/**
 	 * @brief 확정 경로를 따라 당기기(강제 이동) 시작
 	 * @details 밀치기와 같은 규칙 (바라보는 방향 유지, AP 미차감). 이동 모드만 당기기로 구분
 	 * @param PathTileIndexes 시작→목표 경로 (양 끝 포함, 인덱스 0 = 현재 타일). 어디서 멈출지는 미리 계산해서 경로로 줘야한다
 	 * @param OnFinished 이동 완료 통지
+	 * @param MoveEndBarrier 이동 종료(함정 연쇄 포함)까지 보유할 배리어. 밟은 함정 스킬에도 전달되어 그 스킬 종료까지 연장
 	 * @return 시작 성공 여부 (이동 중 재호출이거나 경로가 2칸 미만이면 false)
 	 */
-	bool PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished());
+	bool PullAlongPath(const TArray<FTileIndex>& PathTileIndexes, FOnBoardMoveFinished OnFinished = FOnBoardMoveFinished(), TSharedPtr<FPresentationBarrier> MoveEndBarrier = nullptr);
 
 	/**
 	 * @brief 목표 타일로 즉시 이동(텔레포트) 시작
@@ -87,6 +90,9 @@ public:
 	// @brief 현재 이동 모드 (이동 중이 아니면 마지막 모드)
 	EBoardMoveMode GetMoveMode() const;
 
+	// @brief 요청자가 넘긴 이동 종료 배리어. 이 이동을 기다리는 쪽이 없으면 nullptr (이동 중 여부는 IsMoving)
+	TSharedPtr<FPresentationBarrier> GetMoveEndBarrier() const { return mMoveEndBarrier; }
+
 	/**
 	 * @brief 진행 중인 이동 취소
 	 * @details 진행 중인 스텝의 연출이 끝나는 시점에 정지, 완료 통지 없음
@@ -109,7 +115,7 @@ protected:
 	/* 스텝 처리 */
 private:
 	// @brief 공용 이동 시작 (MoveAlongPath/PushAlongPath/PullAlongPath의 실제 구현)
-	bool StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished);
+	bool StartPathInternal(const TArray<FTileIndex>& PathTileIndexes, EBoardMoveMode MoveMode, FOnBoardMoveFinished OnFinished, TSharedPtr<FPresentationBarrier> MoveEndBarrier);
 	// @brief 전체 경로를 월드 좌표로 변환해서 뷰에 통지 (이동 시작/경로 교체 공용)
 	void BroadcastStartMovePath();
 	// @brief 이동 요청 전체 종료를 뷰에 통지 (완료/취소 공용, 경로 중간 정지 포함)
@@ -156,4 +162,7 @@ private:
 
 	// @brief 이번 이동의 완료 통지 대리자
 	FOnBoardMoveFinished mOnFinished;
+
+	// @brief 요청자가 넘긴 이동 종료 배리어 (종료 통지까지 마친 뒤 해제 됨)
+	TSharedPtr<FPresentationBarrier> mMoveEndBarrier;
 };

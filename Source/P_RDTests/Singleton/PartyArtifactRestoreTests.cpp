@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "GameplayTagContainer.h"
 #include "Engine/Engine.h"
@@ -51,6 +52,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FPartyArtifactRestoreTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	/* 월드와 프레임워크 모델 확보 (파티 연결 시 속성 초기화에 필요) */
 	UWorld* World = GetRestoreTestWorld();
 	if (TestNotNull(TEXT("유효한 월드"), World) == false)
@@ -71,9 +74,9 @@ bool FPartyArtifactRestoreTests::RunTest(const FString& Parameters)
 	const FPrimaryAssetId ArtifactId(TEXT("Artifact"), TEXT("DA_Artifact_A001_ChaliceOfLife"));
 
 	/* 파티와 구성원 2명 생성 (복원 경로처럼 월드 소속으로 초기화) */
-	UPartyModel* PartyModel = NewObject<UPartyModel>(World);
-	UMockPartyMemberModel* MemberA = NewObject<UMockPartyMemberModel>(World);
-	UMockPartyMemberModel* MemberB = NewObject<UMockPartyMemberModel>(World);
+	UPartyModel* PartyModel = Scope.New<UPartyModel>(World);
+	UMockPartyMemberModel* MemberA = Scope.New<UMockPartyMemberModel>(World);
+	UMockPartyMemberModel* MemberB = Scope.New<UMockPartyMemberModel>(World);
 	for (UMockPartyMemberModel* Member : { MemberA, MemberB })
 	{
 		Member->SetStaticSpawnData(KnightData);
@@ -82,7 +85,7 @@ bool FPartyArtifactRestoreTests::RunTest(const FString& Parameters)
 	PartyModel->Initialize();
 
 	/* 영구데이터에 아티팩트 시드 후 동기화 (셋째 슬롯은 빈 자리) */
-	UPartyArtifactRestoreTestData* PersistData = NewObject<UPartyArtifactRestoreTestData>();
+	UPartyArtifactRestoreTestData* PersistData = Scope.New<UPartyArtifactRestoreTestData>();
 	PersistData->SeedArtifact(ArtifactId);
 	TArray<TObjectPtr<UPlayerUnitModel>> Players = { MemberA, MemberB, nullptr };
 	PersistData->Sync(PartyModel, Players);
@@ -101,11 +104,6 @@ bool FPartyArtifactRestoreTests::RunTest(const FString& Parameters)
 
 	/* 빈 슬롯은 그대로 */
 	TestNull(TEXT("셋째 슬롯 비어 있음"), PartyModel->GetPlayerUnitModel(2));
-
-	/* 정리 */
-	PartyModel->Uninitialize();
-	MemberA->Uninitialize();
-	MemberB->Uninitialize();
 
 	return true;
 }

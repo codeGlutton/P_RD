@@ -102,6 +102,24 @@ public:
         return HashCombine(GetTypeHash(Tile.mX), GetTypeHash(Tile.mY));
     }
 
+    /**
+     * @brief 두 타일 사이 맨해튼 거리 (가로 변위 + 세로 변위)
+     * @details 직교 4방향 이동 기준의 칸 수
+     */
+    static int32 ManhattanDistance(const FTileIndex& A, const FTileIndex& B)
+    {
+        return FMath::Abs(A.mX - B.mX) + FMath::Abs(A.mY - B.mY);
+    }
+
+    /**
+     * @brief 두 타일 사이 체비셰프 거리 (가로 변위와 세로 변위 중 큰 값)
+     * @details 대각 1칸을 거리 1로 취급. Square 조준 패턴의 사거리 기준
+     */
+    static int32 ChebyshevDistance(const FTileIndex& A, const FTileIndex& B)
+    {
+        return FMath::Max(FMath::Abs(A.mX - B.mX), FMath::Abs(A.mY - B.mY));
+    }
+
     // @brief 가로(X) 방향 인덱스
     UPROPERTY(Category = "TileIndex", SaveGame, EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "X"))
     int32 mX = 0;

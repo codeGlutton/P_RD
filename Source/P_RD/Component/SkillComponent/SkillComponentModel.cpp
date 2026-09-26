@@ -73,6 +73,8 @@ void FActiveSkillContext::Clear()
 	mAnimationIndex = INDEX_NONE;
 	mPhaseIndex = INDEX_NONE;
 
+	mIsDeactivationPending = false;
+
 	mEndCallback.Clear();
 
 	mFinalTileIndexes.Reset();
@@ -438,7 +440,21 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
 	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
+	// 앞 페이즈가 밀당 종료를 기다리는 중이거나 남은 페이즈가 없으면 노티파이 무시
+	if (IsWaitingForcedMove() == true || mActiveSkillContext.mPhaseIndex >= SkillData->mSkillPhaseLayers.Num())
+	{
+		return;
+	}
+
 	const FSkillPhaseLayer& PhaseLayer = SkillData->mSkillPhaseLayers[mActiveSkillContext.mPhaseIndex];
+
+	/* 페이즈 배리어 */
+
+	// 이 배리어가 풀리면 EndPhaseLayer가 호출되어 페이즈가 끝남
+	// 밀당이 있으면 대기열이 배리어를 잡고 있다가 모든 대상이 다 밀린 뒤에 풀고, 밀당이 없으면 이 함수 끝에서 바로 풀림
+	TSharedPtr<FPresentationBarrier> PhaseBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		EndPhaseLayer();
+		}));
 
 	/* 모션 로그 시작 */
 
@@ -485,7 +501,7 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 		}
 	}
 
-	/* 실제 Effect 적용 */
+	/* 실제 Effect 적용 (밀당은 대기열에 등록만 됨) */
 
 	{
 		UBoardCombatTargetSnapshotData* OwnerSnapshot = OwnerCombatTarget->MakeSnapshotData();
@@ -510,12 +526,53 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 			mActiveSkillContext.mFinalTileIndexes,
 			mActiveSkillContext.mAimedTileIndex
 		);
+
+		// 이펙트를 적용하는 중에 들어온 밀당 요청은 대기열에 모임
+		mShouldEnqueueForcedMove = true;
 		for (int32 i = 0; i < EffectLayerNum; ++i)
 		{
 			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
 			EffectLayer.Get().CommitEffect(Params);
 		}
+		mShouldEnqueueForcedMove = false;
 	}
+
+	/* Effect 포인트 수치 비우기 */
+
+	{
+		for (int32 i = 0; i < EffectLayerNum; ++i)
+		{
+			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
+			EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandleContainers[i].mHandles);
+		}
+	}
+
+	/* 미뤄놨던 밀당 요청 순차 처리 */
+
+	// 이펙트 적용 중에 모아둔 밀당 요청이 있으면 지금부터 하나씩 처리
+	// 대기열이 페이즈 배리어를 들고 있으므로, 마지막 요청까지 다 처리된 뒤에야 배리어가 풀리고 페이즈가 끝난다
+	if (mPendingForcedMoves.IsEmpty() == false)
+	{
+		mForcedMovePhaseBarrier = PhaseBarrier;
+		StartNextForcedMove();
+	}
+
+	// 이 함수가 들고 있던 배리어를 놓는다
+	// 밀당이 없었으면 이게 마지막 참조라서 여기서 바로 EndPhaseLayer가 호출된다
+	// EndPhaseLayer 안에서 mPhaseIndex 등 컨텍스트가 바뀌므로 이 줄 뒤에 다른 코드를 두면 안 된다
+	PhaseBarrier.Reset();
+}
+
+void USkillComponentModel::EndPhaseLayer()
+{
+	checkf(mSkillEntries.IsValidIndex(mActiveSkillContext.mSkillIndex) == true, TEXT("잘못된 사용 스킬 인덱스"));
+
+	FSkillEntry& SkillEntry = mSkillEntries[mActiveSkillContext.mSkillIndex];
+	const UStaticSkillData* SkillData = SkillEntry.mData;
+	checkf(SkillEntry.IsValid() == true, TEXT("빈 스킬 시전 오류"));
+
+	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
+	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
 	/* 이펙트 후 이벤트들 */
 
@@ -529,21 +586,11 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 	}
 	OwnerCombatTarget->OnEndApplyingEffects(mActiveSkillContext, mActiveSkillContext.mPhaseIndex);
 
-	/* Effect 포인트 수치 비우기 */
-
-	{
-		for (int32 i = 0; i < EffectLayerNum; ++i)
-		{
-			const TInstancedStruct<FSkillEffectLayer>& EffectLayer = PhaseLayer.mSkillEffectLayers[i];
-			EffectLayer.Get().ClearFactorEffect(OwnerCombatTarget, FactorEffectHandleContainers[i].mHandles);
-		}
-	}
-
 	/* 모션 로그 종료 */
 
 	GetWorldEventLogger(this)->EndMotionLog();
 
-	/* 페이즈 시작 시 대리자 호출 */
+	/* 페이즈 종료 시 대리자 호출 */
 
 	OnEndPhaseLayerUI.Broadcast(mActiveSkillContext.mPhaseIndex);
 
@@ -555,6 +602,17 @@ void USkillComponentModel::TriggerPhaseLayer(const FEventTriggerPayloadBase* Pay
 		/* 다음 스킬 준비 */
 
 		PreparePhaseLayer();
+	}
+
+	/* 보류했던 스킬 종료 재개 */
+
+	// 밀당을 기다리는 동안 시전자 애니메이션이 먼저 끝났으면 DeactivateSkill이 보류하고 돌아갔으므로 여기서 다시 부른다
+	// 보류된 적 없으면 아무것도 안 함
+	// - 시전자 애니메이션이 아직 진행 중이면, 애니메이션이 끝날 때 DeactivateSkill이 불림
+	// - DeactivateSkill이 이미 실행 중이면, 그쪽이 계속 진행함
+	if (mActiveSkillContext.mIsDeactivationPending == true)
+	{
+		DeactivateSkill();
 	}
 }
 
@@ -568,6 +626,11 @@ void USkillComponentModel::FlushRemainingPhaseLayers()
 
 	while (mActiveSkillContext.mPhaseIndex < SkillData->mSkillPhaseLayers.Num())
 	{
+		// 밀당을 기다리는 페이즈가 생기면 멈춤. 밀당이 끝나면 DeactivateSkill이 다시 불려서 나머지를 이어감
+		if (IsWaitingForcedMove() == true)
+		{
+			break;
+		}
 		TriggerPhaseLayer(nullptr);
 	}
 }
@@ -581,9 +644,26 @@ void USkillComponentModel::DeactivateSkill()
 	IBoardCombatTarget* OwnerCombatTarget = GetOwnerModel<IBoardCombatTarget>();
 	checkf(OwnerCombatTarget != nullptr, TEXT("스킬을 시전할 Owner가 유효하지 않음"));
 
+	/* 밀당 대기 중이면 스킬 종료 보류 */
+
+	// 보류 표시를 켜두고 나가면, 밀당이 끝날 때 EndPhaseLayer가 이 함수를 다시 부름
+	mActiveSkillContext.mIsDeactivationPending = false;
+	if (IsWaitingForcedMove() == true)
+	{
+		mActiveSkillContext.mIsDeactivationPending = true;
+		return;
+	}
+
 	/* 미호출한 Phase 단계들 처리 */
 
 	FlushRemainingPhaseLayers();
+
+	// 털어내던 페이즈에 밀당이 있어서 기다리게 됐으면 여기서도 보류
+	if (IsWaitingForcedMove() == true)
+	{
+		mActiveSkillContext.mIsDeactivationPending = true;
+		return;
+	}
 
 	/* 스킬 종료 콜백 */
 
@@ -594,6 +674,40 @@ void USkillComponentModel::DeactivateSkill()
 	/* 활성화 스킬 데이터 비우기 */
 
 	mActiveSkillContext.Clear();
+}
+
+bool USkillComponentModel::EnqueueForcedMove(FOnStartForcedMove Start)
+{
+	// 강제 밀당이 아니라면 큐에서 꺼내주는 주체가 없으므로 큐에 넣지 않고 바로 처리하게 함
+	if (mShouldEnqueueForcedMove == false)
+	{
+		return false;
+	}
+
+	mPendingForcedMoves.Add(MoveTemp(Start));
+	return true;
+}
+
+void USkillComponentModel::StartNextForcedMove()
+{
+	// 남은 요청이 없으면 페이즈 배리어를 놓음 -> EndPhaseLayer 호출
+	if (mPendingForcedMoves.IsEmpty() == true)
+	{
+		mForcedMovePhaseBarrier.Reset();
+		return;
+	}
+
+	FOnStartForcedMove Start = MoveTemp(mPendingForcedMoves[0]);
+	mPendingForcedMoves.RemoveAt(0);
+
+	// 이 대상의 이동(함정 연쇄 포함)이 끝나면 풀리는 배리어. 풀리면 다음 요청 출발
+	TSharedPtr<FPresentationBarrier> MoveEndBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		StartNextForcedMove();
+		}));
+
+	// 출발. 이동을 시작했으면 이동 컴포넌트가 배리어를 들고 있다가 이동이 끝날 때 놓음
+	// 시작하지 못했으면(면역, 밀 곳 없음, 이미 이동 중) 아무도 안 들고 있으므로 이 함수가 끝날 때 바로 풀려서 다음 요청으로 넘어감
+	Start.ExecuteIfBound(MoveEndBarrier);
 }
 
 bool USkillComponentModel::CanPreview(int32 SkillIndex) const
@@ -624,7 +738,7 @@ const FActiveSkillContext& USkillComponentModel::GetActiveSkillContext() const
 	return mActiveSkillContext;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel, int32 SkillIndex) const
+TArray<FTileIndex> USkillComponentModel::GetAimableTiles(const UTileMapModel* MapModel, int32 SkillIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	
@@ -639,7 +753,7 @@ TArray<FTileIndex> USkillComponentModel::GetAimableTiles(UTileMapModel* MapModel
 	return MapModel->GetAimableTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimRange, Pattern, CanAimObstacle, BlockerLayers);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+TArray<FTileIndex> USkillComponentModel::GetTargetTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
@@ -648,7 +762,7 @@ TArray<FTileIndex> USkillComponentModel::GetTargetTiles(UTileMapModel* MapModel,
 	return MapModel->GetTargetTiles(GetOwnerModel<UBoardActorModel>()->GetTileTransform().mIndex, AimedTileIndex, StaticSkillData->mTargetPattern);
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const TArray<FTileIndex>& TargetTileIndexes) const
 {
 	checkf(mSkillEntries.IsValidIndex(SkillIndex) == true, TEXT("잘못된 스킬 인덱스 범위"));
 	UStaticSkillData* StaticSkillData = mSkillEntries[SkillIndex].mData;
@@ -671,7 +785,7 @@ TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel,
 	return AllEffectTiles;
 }
 
-TArray<FTileIndex> USkillComponentModel::GetEffectTiles(UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
+TArray<FTileIndex> USkillComponentModel::GetEffectTiles(const UTileMapModel* MapModel, int32 SkillIndex, const FTileIndex& AimedTileIndex) const
 {
 	// 타겟 패턴으로 영향 범위의 중심이 될 타일들을 수집
 	const TArray<FTileIndex> TargetTileIndexes = GetTargetTiles(MapModel, SkillIndex, AimedTileIndex);

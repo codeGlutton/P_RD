@@ -8,6 +8,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"
@@ -39,10 +40,10 @@ namespace
 		return nullptr;
 	}
 
-	// @brief 테스트용 더미 스킬 생성. 직업 무관, 시전 비용 0
-	UStaticSkillData* MakeDummySkill(UWorld* World)
+	// @brief 테스트용 더미 스킬 생성. 직업 무관, 시전 비용 0. 스코프에 등록
+	UStaticSkillData* MakeDummySkill(UWorld* World, FTestObjectScope& Scope)
 	{
-		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		UStaticUnitSkillData* Skill = Scope.New<UStaticUnitSkillData>(World);
 		Skill->mJobType = EUnitJobType::Common;
 		Skill->mRequiredActionPoint = 0;
 		// 모션 레이어 없으면 미장착으로 판정하므로 더미 1개 추가
@@ -59,6 +60,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FSkillComponentStatusEffectTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForSkillTests();
 	if (World == nullptr)
 	{
@@ -70,7 +73,7 @@ bool FSkillComponentStatusEffectTests::RunTest(const FString& Parameters)
 	}
 
 	// 유닛 생성 후 슬롯 0에 더미 스킬 장착
-	UMockEnemyUnitModel* Unit = NewObject<UMockEnemyUnitModel>(World);
+	UMockEnemyUnitModel* Unit = Scope.New<UMockEnemyUnitModel>(World);
 	Unit->Initialize();
 	Unit->BeginPlay();
 
@@ -86,7 +89,7 @@ bool FSkillComponentStatusEffectTests::RunTest(const FString& Parameters)
 	}
 
 	SkillComp->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
-	SkillComp->SetSkill(0, MakeDummySkill(World));
+	SkillComp->SetSkill(0, MakeDummySkill(World, Scope));
 
 	/* [1] 기본 상태: 사용 가능 */
 	TestTrue(TEXT("기본: 스킬 사용 가능"), SkillComp->CanActiveSkill(0));

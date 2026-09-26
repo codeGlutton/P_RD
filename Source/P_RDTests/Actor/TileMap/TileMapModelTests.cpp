@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   TileMapModelTests.cpp
  * @brief  UTileMapModel 타겟범위/영향범위/조준가능(CanAim)/위협범위(GetThreatRanges) 유닛테스트
  * @details
@@ -11,6 +11,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h" // UMockPlayerUnitModel (점유 판정용 유닛 Mock)
@@ -41,17 +42,15 @@ namespace
 		return nullptr;
 	}
 
-	// @brief 위협 범위 테스트용 스킬 생성 (KeepAlive에 등록해 GC 방지)
-	UStaticUnitSkillData* MakeThreatSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange, int32 RequiredActionPoint)
+	// @brief 위협 범위 테스트용 스킬 생성 (스코프에 등록해 GC 방지 + 종료 시 파괴)
+	UStaticUnitSkillData* MakeThreatSkill(UWorld* World, FTestObjectScope& Scope, EAimPattern AimPattern, int32 AimRange, int32 RequiredActionPoint)
 	{
-		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		UStaticUnitSkillData* Skill = Scope.New<UStaticUnitSkillData>(World);
 		Skill->mAimPattern = AimPattern;
 		Skill->mAimRange = AimRange;
 		Skill->mCanAimBoardActor = true;
 		Skill->mAimBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		Skill->mRequiredActionPoint = RequiredActionPoint;
-		Skill->AddToRoot();
-		KeepAlive.Add(Skill);
 		return Skill;
 	}
 }
@@ -64,6 +63,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FTileMapModelTargetTilesTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -75,7 +76,7 @@ bool FTileMapModelTargetTilesTests::RunTest(const FString& Parameters)
 	}
 
 	// 맵 (8x8): 시전자 C=(0,0)
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(8, 8);
 
 	const FTileIndex Caster(0, 0);
@@ -116,7 +117,7 @@ bool FTileMapModelTargetTilesTests::RunTest(const FString& Parameters)
 	 */
 	AddInfo(TEXT("=== Case3: LineToTarget / 경로 위 점유 -> 경로 불변 ==="));
 	{
-		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 0)), Blocker);
 
 		const TArray<FTileIndex> Tiles = TileMap->GetTargetTiles(Caster, FTileIndex(3, 0), ETargetPattern::LineToTarget);
@@ -164,6 +165,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -175,11 +178,11 @@ bool FTileMapModelEffectTilesTests::RunTest(const FString& Parameters)
 	}
 
 	// 맵 (8x1): 점유 유닛 U=(3,0)
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(8, 1);
 
 	// 점유 유닛 배치 (Unit 레이어 판정만 필요하니 플레이어 Mock 재사용)
-	UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+	UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 	TileMap->PlaceActor(FTileTransform(FTileIndex(3, 0)), Blocker);
 
 	/**
@@ -232,6 +235,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -249,12 +254,12 @@ bool FTileMapModelCanAimTests::RunTest(const FString& Parameters)
 	 * CanAim(원점, 타일) == GetAimableTiles(원점).Contains(타일)을 전수 확인한다.
 	 */
 	// 맵 (7x5): 원점 O=(1,2), 시야/점유 변화를 만들 유닛 U1=(3,2), U2=(2,1)
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(7, 5);
 
-	UMockPlayerUnitModel* Unit1 = NewObject<UMockPlayerUnitModel>(World);
+	UMockPlayerUnitModel* Unit1 = Scope.New<UMockPlayerUnitModel>(World);
 	TileMap->PlaceActor(FTileTransform(FTileIndex(3, 2)), Unit1);
-	UMockPlayerUnitModel* Unit2 = NewObject<UMockPlayerUnitModel>(World);
+	UMockPlayerUnitModel* Unit2 = Scope.New<UMockPlayerUnitModel>(World);
 	TileMap->PlaceActor(FTileTransform(FTileIndex(2, 1)), Unit2);
 
 	const FTileIndex Origin(1, 2);
@@ -312,6 +317,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -322,9 +329,6 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	// 유닛테스트 동안 스킬 데이터가 GC 당하지 않도록 걸어두는 장치
-	TArray<UObject*> KeepAlive;
-
 	/**
 	 * Case1: 시전비용 = 행동력 (기획안 예시 A)
 	 *   -> 이동은 3칸까지 가능하지만, 이동하면 시전 예산이 남지 않아 공격은 제자리에서만
@@ -334,15 +338,15 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 	 */
 	AddInfo(TEXT("=== Case1: 시전비용 = 행동력 -> 제자리 시전만 ==="));
 	{
-		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 		TileMap->SetDimensions(5, 5);
 
 		// 적 유닛 배치 (점유/차폐 제외 판정용 — 레이어만 필요하니 플레이어 Mock 재사용)
-		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Enemy = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
 
 		// 빈 슬롯(nullptr)이 무시되는지 함께 검증
-		const TArray<const UStaticUnitSkillData*> Skills = { nullptr, MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 1, 3) };
+		const TArray<const UStaticUnitSkillData*> Skills = { nullptr, MakeThreatSkill(World, Scope, EAimPattern::Cross, 1, 3) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;
@@ -366,14 +370,14 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 	 */
 	AddInfo(TEXT("=== Case2: 시전비용 1 -> 이동 후 시전으로 공격범위 확장 ==="));
 	{
-		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 		TileMap->SetDimensions(5, 5);
 
 		// 적 유닛 배치 (점유/차폐 제외 판정용 — 레이어만 필요하니 플레이어 Mock 재사용)
-		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Enemy = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 2)), Enemy);
 
-		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, Scope, EAimPattern::Cross, 2, 1) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;
@@ -393,16 +397,16 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 	 */
 	AddInfo(TEXT("=== Case3: 차단 유닛 -> 통과 불가 + 차폐 ==="));
 	{
-		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 		TileMap->SetDimensions(6, 1);
 
 		// 적 유닛과 차단 유닛 배치 (레이어만 필요하니 플레이어 Mock 재사용)
-		UMockPlayerUnitModel* Enemy = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Enemy = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(0, 0)), Enemy);
-		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 0)), Blocker);
 
-		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, KeepAlive, EAimPattern::Cross, 2, 1) };
+		const TArray<const UStaticUnitSkillData*> Skills = { MakeThreatSkill(World, Scope, EAimPattern::Cross, 2, 1) };
 
 		TArray<FTileIndex> MoveTiles;
 		TArray<FTileIndex> AttackTiles;
@@ -415,11 +419,6 @@ bool FTileMapModelThreatRangesTests::RunTest(const FString& Parameters)
 		TestTrue(TEXT("[Case3] (2,0) 포함 (점유 칸 조준 가능)"), AttackTiles.Contains(FTileIndex(2, 0)));
 		TestFalse(TEXT("[Case3] (3,0) 미포함 (차단 유닛 너머 차폐)"), AttackTiles.Contains(FTileIndex(3, 0)));
 	}
-
-	// GC 안당하려고 KeepAlive에 매달아놨던 스킬 데이터 연결 해제 -> GC 대상
-	for (UObject* Object : KeepAlive)
-		if (IsValid(Object))
-			Object->RemoveFromRoot();
 
 	return true;
 }
@@ -464,6 +463,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FTileMapModelPushPathByDirectionTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -474,7 +475,7 @@ bool FTileMapModelPushPathByDirectionTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(8, 8);
 
 	/* Case1: 빈 맵에서 방향대로 끝까지 밀림 */
@@ -489,7 +490,7 @@ bool FTileMapModelPushPathByDirectionTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case2: 점유 칸에 막힘 ==="));
 	{
 		// (2,4)에 차단 유닛 배치 (레이어만 필요하니 플레이어 Mock 재사용)
-		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 4)), Blocker);
 
 		const TArray<FTileIndex> Path = TileMap->GetPushPath(FTileIndex(2, 2), ETileActorDirection::Right, 3);
@@ -532,6 +533,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
  */
 bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForTileMapTests();
 	if (World == nullptr)
 	{
@@ -542,11 +545,11 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 		return false;
 	}
 
-	UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+	UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 	TileMap->SetDimensions(8, 8);
 
 	// 시전자 자리는 실제처럼 유닛이 점유 (레이어만 필요하니 플레이어 Mock 재사용)
-	UMockPlayerUnitModel* Puller = NewObject<UMockPlayerUnitModel>(World);
+	UMockPlayerUnitModel* Puller = Scope.New<UMockPlayerUnitModel>(World);
 
 	/* Case1: 일직선 -> 시전자 바로 앞(면 접촉)까지 */
 	AddInfo(TEXT("=== Case1: 일직선 (2,1)->(2,5) 시전자 -> (2,4)까지 ==="));
@@ -588,7 +591,7 @@ bool FTileMapModelPullPathTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case4: (2,3) 점유 -> (2,2)까지 ==="));
 	{
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 5)), Puller);
-		UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 		TileMap->PlaceActor(FTileTransform(FTileIndex(2, 3)), Blocker);
 
 		const TArray<FTileIndex> Path = TileMap->GetPullPath(FTileIndex(2, 5), FTileIndex(2, 1), 8);

@@ -41,6 +41,8 @@ void UCombatTargetObstacleModel::PostInitializeComponentModels()
 	{
 		SkillComp->SetSkillFrom(ObstacleSpawn->mSkillDatas);
 	}
+
+	SetDifficulty(1);
 }
 
 void UCombatTargetObstacleModel::OnBeginRoom()

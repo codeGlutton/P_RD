@@ -50,6 +50,9 @@ public:
 	IObjectView* GetView() const;
 	int32 GetModelId() const;
 
+	bool IsInitialized() const;
+	bool IsPendingDestroy() const;
+
 protected:
 	TWeakObjectPtr<UObject> mView;
 

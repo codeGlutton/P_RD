@@ -14,6 +14,8 @@
  * 자기 버프: 버프 우선순위 낮으면 공격 확정(Case8-1), 버프 우선순위 높으면 비용 떼고 성향 이동 후 버프(Case8-2),
  *           버프만 보유 시 성향 이동(Case8-3), 공격 확정 후 사거리 밖이면 버프로 안 바꾸고 접근(Case8-4),
  *           공격 확정 후 비용 부족이면 버프 없이 선점이동(Case8-5).
+ * 이동 스킬: 걷지 않고 빈 타일 조준(Case9-1), 점유 타일 제외(Case9-2), 경로 없으면 맨해튼 거리로 비교(Case9-3),
+ *           대상우선순위로 기준 타겟 선정(Case9-4), 빈 타일 없으면 시전 없이 접근(Case9-5).
  * @note
  * 장애물은 아직 구현체가 없어서 제외. 나중에 구현체가 나오면 유닛테스트에 추가 필요
  * @author 이문환
@@ -21,6 +23,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"
@@ -84,16 +87,16 @@ namespace
 		return nullptr;
 	}
 
-	// @brief 테스트용 일반공격 스킬 생성 (KeepAlive에 등록해 GC 방지)
+	// @brief 테스트용 일반공격 스킬 생성 (스코프에 등록해 GC 방지 + 종료 시 파괴)
 	// @param EffectPattern 영향 범위 패턴 (Single 조준 스킬은 이 범위로 타격 여부가 결정됨)
 	// @param EffectArea 영향 범위 크기
 	// @param SkillCost 시전 비용 (플래너 AP 판정용, 0이면 비용 없음)
 	// @param SkillType 스킬 타입 (Attack은 공격 후보, Spell은 자기 버프)
-	UStaticSkillData* MakeSkill(UWorld* World, TArray<UObject*>& KeepAlive, EAimPattern AimPattern, int32 AimRange,
+	UStaticSkillData* MakeSkill(UWorld* World, FTestObjectScope& Scope, EAimPattern AimPattern, int32 AimRange,
 		EEffectPattern EffectPattern = EEffectPattern::Single, int32 EffectArea = 0, int32 SkillCost = 0,
 		ESkillType SkillType = ESkillType::Attack)
 	{
-		UStaticUnitSkillData* Skill = NewObject<UStaticUnitSkillData>(World);
+		UStaticUnitSkillData* Skill = Scope.New<UStaticUnitSkillData>(World);
 		Skill->mJobType = EUnitJobType::Common;	// 직업 무관 (직업 불일치면 SetSkill이 장착 거부)
 		Skill->mSkillType = SkillType;
 		Skill->mRequiredActionPoint = SkillCost;
@@ -106,13 +109,11 @@ namespace
 		Skill->mEffectBlockerMask = static_cast<int32>(ETileLayerFlag::Obstacle | ETileLayerFlag::Unit);
 		// 모션 레이어 없으면 FSkillEntry::IsValid()가 미장착으로 판정하므로 더미 1개 추가
 		Skill->mSkillPhaseLayers.AddDefaulted();
-		Skill->AddToRoot();
-		KeepAlive.Add(Skill);
 		return Skill;
 	}
 
 	// @brief 적 유닛의 한 턴을 계획해 커맨드 목록 반환
-	// @param KeepAlive SkillComponent가 약참조라 GC 안당하도록 붙잡아두는 장치
+	// @param Scope 생성 객체 등록 (GC 방지 + 종료 시 파괴)
 	// @param AimPattern 스킬 조준 패턴 (Cross/Star 직사는 시야 검사 경로를 태움)
 	// @param Slot1AimRange 슬롯 1에 장착할 Square 스킬의 사거리 (0이면 미장착. 다중 스킬 선택 검증용)
 	// @param BlockerIndex 길/시야를 막는 제3의 유닛 배치 좌표 (Invalid면 미배치. 우회 접근 검증용)
@@ -128,7 +129,7 @@ namespace
 	// @param Slot1Cooldown 슬롯 1을 쿨다운 상태로 둘지 (쿨다운이면 차순위 검증용)
 	TArray<TInstancedStruct<FSRPGCommand>> Plan(
 		UWorld* World,
-		TArray<UObject*>& KeepAlive,
+		FTestObjectScope& Scope,
 		EMoveTendency Tendency,
 		int32 MoveRange,
 		int32 AimRange,
@@ -151,16 +152,16 @@ namespace
 		bool Slot1Cooldown = false)
 	{
 		// 타일맵 생성
-		UTileMapModel* TileMap = NewObject<UTileMapModel>(World);
+		UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
 		TileMap->SetDimensions(TileMapWidth, TileMapHeight);
 
 		// 플레이어유닛 생성 (배열 순서가 곧 타겟 인덱스)
 		TArray<UUnitModel*> Players;
-		UMockPlayerUnitModel* Player = NewObject<UMockPlayerUnitModel>(World);
+		UMockPlayerUnitModel* Player = Scope.New<UMockPlayerUnitModel>(World);
 		Players.Add(Player);
 
 		// 적유닛 생성
-		UMockEnemyUnitModel* Enemy = NewObject<UMockEnemyUnitModel>(World);
+		UMockEnemyUnitModel* Enemy = Scope.New<UMockEnemyUnitModel>(World);
 		Enemy->Initialize();
 		Enemy->BeginPlay();
 		Enemy->SetMoveTendency(Tendency);
@@ -177,12 +178,12 @@ namespace
 		// 스킬 추가: 일반공격 계열 (버프만 가진 적 검증 시 생략)
 		if (HasAttack == true)
 		{
-			Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, KeepAlive, AimPattern, AimRange, EffectPattern, EffectArea, SkillCost));
+			Enemy->GetSkillComponentModel()->SetSkill(0, MakeSkill(World, Scope, AimPattern, AimRange, EffectPattern, EffectArea, SkillCost));
 		}
 		// 슬롯 1 스킬(옵션): 다중 스킬 선택 검증용 (우선순위/쿨다운 지정 가능)
 		if (Slot1AimRange > 0)
 		{
-			Enemy->GetSkillComponentModel()->SetSkill(1, MakeSkill(World, KeepAlive, EAimPattern::Square, Slot1AimRange));
+			Enemy->GetSkillComponentModel()->SetSkill(1, MakeSkill(World, Scope, EAimPattern::Square, Slot1AimRange));
 			Enemy->SetSkillPriority(1, Slot1Priority);
 			if (Slot1Cooldown == true)
 			{
@@ -192,7 +193,7 @@ namespace
 		// 슬롯 2 자기 버프(옵션): Single 조준, 영향 범위 자기 칸
 		if (Slot2SpellCost > 0)
 		{
-			Enemy->GetSkillComponentModel()->SetSkill(2, MakeSkill(World, KeepAlive, EAimPattern::Single, 0,
+			Enemy->GetSkillComponentModel()->SetSkill(2, MakeSkill(World, Scope, EAimPattern::Single, 0,
 				EEffectPattern::Single, 0, Slot2SpellCost, ESkillType::Spell));
 			Enemy->SetSkillPriority(2, Slot2Priority);
 		}
@@ -204,7 +205,7 @@ namespace
 		// 두 번째 플레이어(옵션): 다중 타겟 선택 검증용
 		if (TileMap->IsValidIndex(SecondPlayerIndex))
 		{
-			UMockPlayerUnitModel* SecondPlayer = NewObject<UMockPlayerUnitModel>(World);
+			UMockPlayerUnitModel* SecondPlayer = Scope.New<UMockPlayerUnitModel>(World);
 			Players.Add(SecondPlayer);
 			TileMap->PlaceActor(FTileTransform(SecondPlayerIndex), SecondPlayer);
 		}
@@ -212,7 +213,7 @@ namespace
 		// 차단 유닛(옵션): 길/시야를 막는 제3의 유닛 (Unit 레이어 점유만 필요하니 플레이어 Mock 재사용)
 		if (TileMap->IsValidIndex(BlockerIndex))
 		{
-			UMockPlayerUnitModel* Blocker = NewObject<UMockPlayerUnitModel>(World);
+			UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
 			TileMap->PlaceActor(FTileTransform(BlockerIndex), Blocker);
 		}
 
@@ -220,6 +221,73 @@ namespace
 		const FRandomStream Stream(20260710);
 
 		// AI 돌려서(ㅋㅋ) 적유닛의 예상커맨드 획득
+		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, Stream);
+	}
+
+	// @brief 이동 스킬 하나만 가진 적 유닛의 한 턴을 계획해 커맨드 목록 반환
+	// @param Scope 생성 객체 등록 (GC 방지 + 종료 시 파괴)
+	// @param ActionPoint 적 유닛의 행동력
+	// @param AimRange 이동 스킬의 조준 사거리 (Square 패턴, 빈 타일만 조준)
+	// @param SkillCost 이동 스킬의 시전 비용
+	// @param PlayerIndexes 플레이어 배치 좌표들 (배열 순서가 곧 타겟 인덱스)
+	// @param BlockerIndexes 타일을 점유하는 제3의 유닛 배치 좌표들 (타겟 아님. 점유 제외와 경로 차단 검증용)
+	// @param Priority 이동 스킬의 대상우선순위 (기준 타겟 선정 검증용)
+	TArray<TInstancedStruct<FSRPGCommand>> PlanMoveSkill(
+		UWorld* World,
+		FTestObjectScope& Scope,
+		int32 ActionPoint,
+		int32 AimRange,
+		int32 SkillCost,
+		int32 TileMapWidth,
+		int32 TileMapHeight,
+		FTileIndex EnemyIndex,
+		const TArray<FTileIndex>& PlayerIndexes,
+		const TArray<FTileIndex>& BlockerIndexes = TArray<FTileIndex>(),
+		EEnemyTargetPriority Priority = EEnemyTargetPriority::Nearest)
+	{
+		// 타일맵 생성
+		UTileMapModel* TileMap = Scope.New<UTileMapModel>(World);
+		TileMap->SetDimensions(TileMapWidth, TileMapHeight);
+
+		// 적유닛 생성 (시전 불가 시 접근 이동 검증을 위해 근거리 성향)
+		UMockEnemyUnitModel* Enemy = Scope.New<UMockEnemyUnitModel>(World);
+		Enemy->Initialize();
+		Enemy->BeginPlay();
+		Enemy->SetMoveTendency(EMoveTendency::MoveClose);
+		Enemy->GetAttributeComponentModel()->ApplyModToAttribute(UEnemyUnitAttributeSet::GetActionPointAttribute(), ETacticalModOp::Override, ActionPoint);
+
+		// 이동 스킬 생성: 점유 타일은 조준 불가, 대상우선순위는 스킬 DA 값으로 지정
+		UStaticUnitSkillData* MoveSkill = CastChecked<UStaticUnitSkillData>(MakeSkill(World, Scope, EAimPattern::Square, AimRange,
+			EEffectPattern::Single, 0, SkillCost, ESkillType::Move));
+		MoveSkill->mCanAimBoardActor = false;
+		MoveSkill->mTargetPolicy.mPriority = Priority;
+
+		// 스킬 슬롯 풀 할당 후 슬롯 0에 장착
+		Enemy->GetSkillComponentModel()->SetSkillFrom(TArray<TSoftObjectPtr<UStaticSkillData>>());
+		Enemy->GetSkillComponentModel()->SetSkill(0, MoveSkill);
+
+		// 적유닛 배치
+		TileMap->PlaceActor(FTileTransform(EnemyIndex), Enemy);
+
+		// 플레이어유닛 생성 및 배치 (배열 순서가 곧 타겟 인덱스)
+		TArray<UUnitModel*> Players;
+		for (const FTileIndex& PlayerIndex : PlayerIndexes)
+		{
+			UMockPlayerUnitModel* Player = Scope.New<UMockPlayerUnitModel>(World);
+			Players.Add(Player);
+			TileMap->PlaceActor(FTileTransform(PlayerIndex), Player);
+		}
+
+		// 차단 유닛 배치 (Unit 레이어 점유만 필요하니 플레이어 Mock 재사용, 타겟 목록에는 넣지 않음)
+		for (const FTileIndex& BlockerIndex : BlockerIndexes)
+		{
+			UMockPlayerUnitModel* Blocker = Scope.New<UMockPlayerUnitModel>(World);
+			TileMap->PlaceActor(FTileTransform(BlockerIndex), Blocker);
+		}
+
+		// 고정 시드 스트림 (테스트 결정성 보장)
+		const FRandomStream Stream(20260710);
+
 		return USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, Stream);
 	}
 
@@ -267,6 +335,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorld();
 	if (World == nullptr)
 	{
@@ -276,9 +346,6 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	{
 		return false;
 	}
-
-	// 유닛테스트 동안 SkillComponent가 GC 당하지 않도록 걸어두는 장치
-	TArray<UObject*> KeepAlive;
 
 	/**
 	 * 케이스 레이블: CaseX-Y
@@ -296,7 +363,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case1-1: 원거리(MoveAway), 조준 가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			6, 3, 8, 2,
 			FTileIndex(2, 1),
 			FTileIndex(1, 0));
@@ -322,7 +389,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case1-2: 원거리(MoveAway) / 조준 불가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			4, 3, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
@@ -338,7 +405,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case1-3: 원거리(MoveAway) / 직사 / 일직선 후퇴 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			6, 4, 8, 1,
 			FTileIndex(1, 0),
 			FTileIndex(0, 0),
@@ -365,7 +432,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case2-1: 등거리(HoldRange) / 조준 가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1));
@@ -382,7 +449,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case2-2: 등거리(HoldRange) / 조준 불가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			4, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
@@ -398,7 +465,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case3-1: 근거리(MoveClose) / 조준 가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1));
@@ -420,7 +487,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case3-2: 근거리(MoveClose) / 이동 후에도 조준 불가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			4, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1));
@@ -437,7 +504,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case3-3: 근거리(MoveClose) / 몹에 막힘 / 우회 접근 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			2, 4, 8, 2,
 			FTileIndex(2, 1),
 			FTileIndex(0, 1),
@@ -456,7 +523,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case4-1: 다중 스킬 / 동순위 랜덤 선택 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -479,7 +546,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case4-2: 다중 스킬 / 우선순위 높은 슬롯 선택 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -510,7 +577,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case4-3: 다중 스킬 / 최우선 슬롯 쿨다운이면 차순위 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -544,7 +611,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case4-4: 다중 스킬 / 최우선 슬롯 사거리 밖이면 스킬 유지하고 접근 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			2, 5, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(4, 1),
@@ -570,7 +637,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case5-1: 다중 플레이어 / 최근접 타겟 선택 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -596,7 +663,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case5-2: 다중 플레이어 / 시전 가능한 타겟 우선 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			2, 1, 7, 1,
 			FTileIndex(2, 0),
 			FTileIndex(0, 0),
@@ -628,7 +695,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case5-3: 다중 플레이어 / 균형 후퇴 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			2, 3, 7, 1,
 			FTileIndex(2, 0),
 			FTileIndex(0, 0),
@@ -659,7 +726,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case5-4: 다중 플레이어 / 최근접 접근 폴백 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			2, 1, 10, 3,
 			FTileIndex(4, 1),
 			FTileIndex(9, 1),
@@ -678,7 +745,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case6-1: 속박 / 제자리 조준 가능 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			6, 3, 8, 2,
 			FTileIndex(2, 1),
 			FTileIndex(1, 0),
@@ -700,7 +767,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case6-2: 속박 / 사거리 밖 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			6, 1, 8, 2,
 			FTileIndex(6, 1),
 			FTileIndex(0, 0),
@@ -722,7 +789,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case6-3: 속박 / 비용 있는 스킬 시전 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			6, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -747,7 +814,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case7-1: Single 조준 / 영향 범위로 인접 타격 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 0, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -775,7 +842,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case7-2: Single 조준 / 출발 칸 너머 타격 / 자기 차폐 회귀 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			6, 0, 8, 1,
 			FTileIndex(1, 0),
 			FTileIndex(0, 0),
@@ -807,7 +874,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case7-3: Single 조준 / 영향 범위 밖 / 접근 폴백 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			4, 0, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1),
@@ -828,7 +895,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case8-1: 공격 가능 / 버프 우선순위 낮음 / 공격 확정 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::HoldRange,
+			World, Scope, EMoveTendency::HoldRange,
 			3, 1, 6, 3,
 			FTileIndex(2, 1),
 			FTileIndex(3, 1),
@@ -862,7 +929,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case8-2: 버프 우선순위 높음 / 비용 떼고 성향 이동 후 버프 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			4, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(3, 1),
@@ -901,7 +968,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case8-4: 공격 확정 / 사거리 밖 / 버프로 안 바꾸고 접근 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			3, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(9, 1),
@@ -928,7 +995,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case8-5: 공격 확정 / 시전 비용 부족 / 버프 없이 선점이동 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveClose,
+			World, Scope, EMoveTendency::MoveClose,
 			4, 1, 10, 3,
 			FTileIndex(0, 1),
 			FTileIndex(3, 1),
@@ -962,7 +1029,7 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 	AddInfo(TEXT("=== Case8-3: 버프만 보유 / 성향 이동 후 버프 ==="));
 	{
 		const TArray<TInstancedStruct<FSRPGCommand>> Commands = Plan(
-			World, KeepAlive, EMoveTendency::MoveAway,
+			World, Scope, EMoveTendency::MoveAway,
 			4, 1, 8, 1,
 			FTileIndex(2, 0),
 			FTileIndex(0, 0),
@@ -990,10 +1057,126 @@ bool FEnemyTurnPlannerTests::RunTest(const FString& Parameters)
 		}
 	}
 
-	// GC 안당하려고 KeepAlive에 마달아놨던 SkillComponent 연결 해제 -> GC 대상
-	for (UObject* Object : KeepAlive)
-		if (IsValid(Object))
-			Object->RemoveFromRoot();
+	/**
+	 * 케이스 레이블: Case9-Y (이동 스킬. 빈 타일만 조준하는 Square 패턴)
+	 * 이동 스킬은 걷지 않고 현재 타일에서 시전하므로 이동커맨드가 없어야 함.
+	 * 착지 타일은 기준 타겟 타일까지 1순위 경로 거리, 2순위 맨해튼 거리가 가장 작은 타일.
+	 */
+
+	/**
+	 * Case9-1: 이동 스킬 / 빈 타일 조준
+	 *   -> 걷지 않고 기준 타겟에 가장 가까운 빈 타일을 조준해 시전
+	 * 맵 (8x1): E(0,0) P(6,0), 사거리 3
+	 *   -> 후보 (1,0)(2,0)(3,0) 중 경로 거리 3으로 가장 가까운 (3,0)
+	 */
+	AddInfo(TEXT("=== Case9-1: 이동 스킬 / 빈 타일 조준 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, Scope,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(6, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-1"));
+		TestTrue(TEXT("[Case9-1] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-1] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestEqual(TEXT("[Case9-1] 이동 스킬 슬롯 0 선택"), Cast->mSkillIndex, 0);
+			TestTrue(TEXT("[Case9-1] 조준 타일=(3,0)"), Cast->mTargetIndex == FTileIndex(3, 0));
+		}
+	}
+
+	/**
+	 * Case9-2: 이동 스킬 / 점유 타일 제외
+	 *   -> 기준 타겟에 가장 가까운 타일이 다른 유닛에게 점유되어 있으면 그 다음으로 가까운 빈 타일 선택
+	 * 맵 (8x2): E(0,0) P(4,0) B(3,0), 사거리 3
+	 *   -> (3,0)은 점유라 제외, 우회 경로 거리 2인 (3,1)
+	 */
+	AddInfo(TEXT("=== Case9-2: 이동 스킬 / 점유 타일 제외 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, Scope,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 2,
+			FTileIndex(0, 0),
+			{ FTileIndex(4, 0) },
+			{ FTileIndex(3, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-2"));
+		TestTrue(TEXT("[Case9-2] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-2] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-2] 점유 타일 (3,0)은 조준하지 않음"), Cast->mTargetIndex != FTileIndex(3, 0));
+			TestTrue(TEXT("[Case9-2] 조준 타일=(3,1)"), Cast->mTargetIndex == FTileIndex(3, 1));
+		}
+	}
+
+	/**
+	 * Case9-3: 이동 스킬 / 기준 타겟까지 경로 없음
+	 *   -> 후보 전부 경로 거리가 같으므로(도달 불가) 맨해튼 거리가 가장 작은 타일 선택
+	 * 맵 (8x1): E(0,0) B(4,0) P(5,0), 사거리 3
+	 *   -> 후보 (1,0)(2,0)(3,0) 중 맨해튼 거리 2인 (3,0). 먼저 나오는 (1,0)이 뽑히면 2순위 비교 누락
+	 */
+	AddInfo(TEXT("=== Case9-3: 이동 스킬 / 경로 없음 / 맨해튼 거리 비교 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, Scope,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			8, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(5, 0) },
+			{ FTileIndex(4, 0) });
+		CheckTail(*this, Commands, TEXT("Case9-3"));
+		TestTrue(TEXT("[Case9-3] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-3] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-3] 조준 타일=(3,0)"), Cast->mTargetIndex == FTileIndex(3, 0));
+		}
+	}
+
+	/**
+	 * Case9-4: 이동 스킬 / 대상우선순위 Farthest
+	 *   -> 가장 먼 플레이어를 기준 타겟으로 삼아 그 옆에 착지 (후방 침투)
+	 * 맵 (9x1): P0(2,0) E(4,0) P1(8,0), 사거리 3
+	 *   -> 기준 타겟은 경로 거리 4인 P1, 착지 타일은 P1 옆 (7,0). Nearest였다면 P0 옆
+	 */
+	AddInfo(TEXT("=== Case9-4: 이동 스킬 / 대상우선순위 Farthest ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, Scope,
+			/*ActionPoint*/6, /*AimRange*/3, /*SkillCost*/2,
+			9, 1,
+			FTileIndex(4, 0),
+			{ FTileIndex(2, 0), FTileIndex(8, 0) },
+			TArray<FTileIndex>(),
+			EEnemyTargetPriority::Farthest);
+		CheckTail(*this, Commands, TEXT("Case9-4"));
+		TestTrue(TEXT("[Case9-4] 이동커맨드 없음(제자리 시전)"), FindMoveCommand(Commands) == nullptr);
+		const FSRPGSkillCastCommand* Cast = FindCast(Commands);
+		if (TestTrue(TEXT("[Case9-4] 스킬커맨드 존재"), Cast != nullptr))
+		{
+			TestTrue(TEXT("[Case9-4] 조준 타일=(7,0)"), Cast->mTargetIndex == FTileIndex(7, 0));
+		}
+	}
+
+	/**
+	 * Case9-5: 이동 스킬 / 조준 가능한 빈 타일 없음
+	 *   -> 다른 스킬로 바꾸지 않고 시전 없이 기준 타겟에게 접근 (시전 비용은 이동 예산에서 떼지 않음)
+	 * 맵 (6x1): E(0,0) P(5,0), 사거리 0 (후보 없음), 행동력 3
+	 *   -> 행동력 3을 전부 써서 (3,0)으로 접근
+	 */
+	AddInfo(TEXT("=== Case9-5: 이동 스킬 / 빈 타일 없음 / 접근 폴백 ==="));
+	{
+		const TArray<TInstancedStruct<FSRPGCommand>> Commands = PlanMoveSkill(
+			World, Scope,
+			/*ActionPoint*/3, /*AimRange*/0, /*SkillCost*/1,
+			6, 1,
+			FTileIndex(0, 0),
+			{ FTileIndex(5, 0) });
+		CheckApproachNoCast(*this, Commands, TEXT("Case9-5"), FTileIndex(3, 0));
+	}
 
 	return true;
 }

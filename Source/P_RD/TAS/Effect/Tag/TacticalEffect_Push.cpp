@@ -7,8 +7,52 @@
 
 #include "Component/BoardMovementComponent/BoardMovementComponentModel.h"
 #include "Component/AttributeComponent/AttributeSetComponentModel.h"
+#include "Component/SkillComponent/SkillComponentModel.h"
 
 #include "Simulation/Logger/EventLogger.h"
+
+namespace
+{
+	// @brief 밀치기 출발 (경로 계산 + 이동 시작 + 로그)
+	// 광역 밀치기는 앞 대상이 밀린 뒤의 배치로 경로를 계산해야 하므로, 이펙트 적용 시점이 아니라 출발 차례가 왔을 때 실행
+	void StartPush(TSharedPtr<FPresentationBarrier> MoveEndBarrier, UBoardActorModel* SourceModel, UBoardActorModel* TargetModel, UBoardMovementComponentModel* TargetMoveCompModel, UTileMapModel* TileMap, int32 PushDistance)
+	{
+		const FTileIndex SourceTileIndex = SourceModel->GetTileTransform().mIndex;
+		const FTileIndex TargetTileIndex = TargetModel->GetTileTransform().mIndex;
+
+		// 밀리는 경로 계산 (뒤가 막히면 막히기 직전까지로 짧아짐)
+		// 시전자와 대상이 같은 타일이면 발판이므로 시전자→대상 방향을 구할 수 없어 발판의 고정 방향으로 밀고,
+		// 다르면 유닛 스킬이므로 시전자에서 멀어지는 방향으로 민다
+		const TArray<FTileIndex> PushPath = (SourceTileIndex == TargetTileIndex)
+			? TileMap->GetPushPath(TargetTileIndex, SourceModel->GetTileTransform().mDirection, PushDistance)
+			: TileMap->GetPushPath(SourceTileIndex, TargetTileIndex, PushDistance);
+
+		const int32 PathNum = PushPath.Num();
+		if (TargetMoveCompModel->IsMoving() == true)
+		{
+			// 이동 중인 대상: 등록만 하고, 이동 루프가 현재 스텝을 마무리하며 남은 경로를 밀치기 경로로 교체
+			// 한 칸도 밀리지 못해도 등록해서 잔여 걷기를 끊음 (밀치기 함정을 밟으면 밀린 거리와 무관하게 이동 종료)
+			TargetMoveCompModel->TryRegisterPendingPush(SourceTileIndex, PushPath);
+		}
+		else if (PathNum >= 2)
+		{
+			// 정지 상태 대상: 즉시 밀기 시작 (방 시작 시 발판 위 배치 발동 등). 한 칸도 밀리지 못하면 아무것도 안 함
+			TargetMoveCompModel->PushAlongPath(PushPath, FOnBoardMoveFinished(), MoveEndBarrier);
+
+			/* 로그 작성 */
+
+			for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
+			{
+				FSRPGTileEffectEventLog Log;
+				Log.mOccupancyState = ESRPGTileOccupancyState::Move;
+				Log.mPreTileIndex = PushPath[PathIndex - 1];
+				Log.mNextTileIndex = PushPath[PathIndex];
+
+				GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
+			}
+		}
+	}
+}
 
 void UTacticalEffectExecutionCalculation_Push::Execute(const FTacticalEffectCustomExecutionParameters& ExecutionParams, FTacticalEffectCustomExecutionOutput& OutExecutionOutput) const
 {
@@ -37,40 +81,14 @@ void UTacticalEffectExecutionCalculation_Push::Execute(const FTacticalEffectCust
 	checkf(TileMap != nullptr, TEXT("타일 맵 nullptr"));
 
 
-	const FTileIndex SourceTileIndex = SourceModel->GetTileTransform().mIndex;
-	const FTileIndex TargetTileIndex = TargetModel->GetTileTransform().mIndex;
 	const int32 PushDistance = ExecutionParams.GetOwningSpec().GetStackCount();
 
-	// 밀리는 경로 계산 (뒤가 막히면 막히기 직전까지로 짧아짐)
-	// 시전자와 대상이 같은 타일이면 발판이므로 시전자→대상 방향을 구할 수 없어 발판의 고정 방향으로 밀고,
-	// 다르면 유닛 스킬이므로 시전자에서 멀어지는 방향으로 민다
-	const TArray<FTileIndex> PushPath = (SourceTileIndex == TargetTileIndex)
-		? TileMap->GetPushPath(TargetTileIndex, SourceModel->GetTileTransform().mDirection, PushDistance)
-		: TileMap->GetPushPath(SourceTileIndex, TargetTileIndex, PushDistance);
-
-	const int32 PathNum = PushPath.Num();
-	if (TargetMoveCompModel->IsMoving() == true)
+	// 시전자 스킬이 페이즈 이펙트 적용 중이면 큐에 넣어 순차 출발, 아니면 그 자리에서 바로 출발
+	IBoardCombatTarget* SourceCombatTarget = Cast<IBoardCombatTarget>(SourceModel);
+	USkillComponentModel* SourceSkillComp = (SourceCombatTarget != nullptr) ? SourceCombatTarget->GetSkillComponentModel() : nullptr;
+	if (SourceSkillComp == nullptr || SourceSkillComp->EnqueueForcedMove(FOnStartForcedMove::CreateStatic(&StartPush, SourceModel, TargetModel, TargetMoveCompModel, TileMap, PushDistance)) == false)
 	{
-		// 이동 중인 대상: 등록만 하고, 이동 루프가 현재 스텝을 마무리하며 남은 경로를 밀치기 경로로 교체
-		// 한 칸도 밀리지 못해도 등록해서 잔여 걷기를 끊음 (밀치기 함정을 밟으면 밀린 거리와 무관하게 이동 종료)
-		TargetMoveCompModel->TryRegisterPendingPush(SourceTileIndex, PushPath);
-	}
-	else if (PathNum >= 2)
-	{
-		// 정지 상태 대상: 즉시 밀기 시작 (방 시작 시 발판 위 배치 발동 등). 한 칸도 밀리지 못하면 아무것도 안 함
-		TargetMoveCompModel->PushAlongPath(PushPath);
-
-		/* 로그 작성 */
-
-		for (int32 PathIndex = 1; PathIndex < PathNum; ++PathIndex)
-		{
-			FSRPGTileEffectEventLog Log;
-			Log.mOccupancyState = ESRPGTileOccupancyState::Move;
-			Log.mPreTileIndex = PushPath[PathIndex - 1];
-			Log.mNextTileIndex = PushPath[PathIndex];
-
-			GetWorldEventLogger(TargetModel)->LogTileEffect(TargetModel->GetModelId(), TargetModel->GetClass(), Log);
-		}
+		StartPush(nullptr, SourceModel, TargetModel, TargetMoveCompModel, TileMap, PushDistance);
 	}
 
 	OutExecutionOutput.MarkDynamicMagnitudeHandledManually();

@@ -9,6 +9,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 #include "GameplayTagContainer.h"
 
@@ -38,18 +39,20 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	const FGameplayTag StartTiming = PassiveTiming(TEXT("GameplayAbility.Passive.OnStartTurn"));
 
 	// 컴포넌트 (오너 없이 독립 생성, 내부 시드로 형제 컴포넌트를 직접 주입)
-	UEquipmentComponentModel* EquipComp = NewObject<UEquipmentComponentModel>();
-	UPassiveComponentModel* PassiveComp = NewObject<UPassiveComponentModel>();
+	UEquipmentComponentModel* EquipComp = Scope.New<UEquipmentComponentModel>();
+	UPassiveComponentModel* PassiveComp = Scope.New<UPassiveComponentModel>();
 	if (!TestNotNull(TEXT("장비 컴포넌트 생성"), EquipComp) || !TestNotNull(TEXT("패시브 컴포넌트 생성"), PassiveComp))
 	{
 		return false;
 	}
 
 	// 패시브 DA (코드 구성): 제네릭 패시브 + AttackFactor 이펙트 + 수치 5 + OnStartTurn 시점
-	UStaticPassiveData* PassiveData = NewObject<UStaticPassiveData>();
+	UStaticPassiveData* PassiveData = Scope.New<UStaticPassiveData>();
 	PassiveData->mPassiveClass = UTacticalPassive_Generic::StaticClass();
 	FPassiveEffectEntry& Effect = PassiveData->mEffects.AddDefaulted_GetRef();
 	Effect.mEffectClass = UTacticalEffect_AttackFactor_AddBase::StaticClass();
@@ -57,7 +60,7 @@ bool FEquipmentComponentModelTests::RunTest(const FString& Parameters)
 	PassiveData->mActivateTimingTag = StartTiming;
 
 	// 무기 DA (코드 구성): 위 패시브를 참조
-	UStaticEquipmentData* Weapon = NewObject<UStaticEquipmentData>();
+	UStaticEquipmentData* Weapon = Scope.New<UStaticEquipmentData>();
 	Weapon->mStaticPassiveData.Add(TSoftObjectPtr<UStaticPassiveData>(PassiveData));
 
 	// 장착: 패시브가 설치돼야 함

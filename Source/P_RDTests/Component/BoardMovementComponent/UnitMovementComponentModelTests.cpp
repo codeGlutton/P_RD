@@ -8,6 +8,7 @@
  *********************************************************************/
 
 #include "P_RDTests.h"
+#include "TestObjectScope.h"
 #include "Misc/AutomationTest.h"
 
 #include "SRPGFramework/EnemyTurnPlannerTestsHelper.h"
@@ -47,6 +48,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 
 bool FUnitRootTests::RunTest(const FString& Parameters)
 {
+	FTestObjectScope Scope;
+
 	UWorld* World = GetAnyGameWorldForRootTests();
 	if (World == nullptr)
 	{
@@ -58,7 +61,7 @@ bool FUnitRootTests::RunTest(const FString& Parameters)
 	}
 
 	// 유닛 생성 (스폰 데이터 없이 도는 플래너용 Mock 재사용)
-	UMockEnemyUnitModel* Unit = NewObject<UMockEnemyUnitModel>(World);
+	UMockEnemyUnitModel* Unit = Scope.New<UMockEnemyUnitModel>(World);
 	Unit->Initialize();
 	Unit->BeginPlay();
 

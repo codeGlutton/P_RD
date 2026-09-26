@@ -1005,6 +1005,7 @@ void URewardConcept03Widget::AdvanceRewardFlow()
 		ClaimExperienceReward();
 		PresentationState = EPresentationState::ChestAwaitInput;
 		SetCurrentStep(RewardConcept03::ChestStep);
+		if (UIModel != nullptr) UIModel->RequestExperiencePresentationCompleted();
 		break;
 	case RewardConcept03::GoldStep:
 		if (PresentationState == EPresentationState::AwaitGoldContinue)

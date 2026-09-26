@@ -907,7 +907,7 @@ bool UTileMapModel::IsInAimPattern(const FTileIndex& Origin, const FTileIndex& T
 	case EAimPattern::Square:
 	{
 		// 중심 기준 사각형 범위: 체비셰프 거리가 사거리 이내 (기준 타일 제외)
-		const int32 Chebyshev = FMath::Max(FMath::Abs(DeltaX), FMath::Abs(DeltaY));
+		const int32 Chebyshev = FTileIndex::ChebyshevDistance(Origin, Target);
 		return Chebyshev != 0 && Chebyshev <= Range;
 	}
 

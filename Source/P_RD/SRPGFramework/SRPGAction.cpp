@@ -73,31 +73,50 @@ void USRPGAction::EndAction()
 
 	UE_LOG(LogSRPGCombat, Log, TEXT("액션 종료: %s"), *GetClass()->GetName());
 
-	// 액션 종료 로직
-	OnEndAction();
+	mEndHoldPresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		// 액션 종료 로직
+		OnEndAction();
 
-	// 로그 작성
-	GetWorldEventLogger(this)->EndActionLog();
+		// 로그 작성
+		GetWorldEventLogger(this)->EndActionLog();
 
-	// 핸들러 등록 해제
-	USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
-	checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
-	CommandRouterModel->UnregisterCommandHandler(this);
+		// 핸들러 등록 해제
+		USRPGCommandRouterModel* CommandRouterModel = GetWorldSubsystemModel<USRPGCommandRouterModel>(this);
+		checkf(CommandRouterModel != nullptr, TEXT("명령 라우터 모델 nullptr"));
+		CommandRouterModel->UnregisterCommandHandler(this);
 
-	// 전투 상태 평가
-	USRPGTurnContext* TurnContext = mParent.Get();
-	checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
-	USRPGCombatModel* CombatModel = TurnContext->GetParent();
-	checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
-	CombatModel->EvaluateCombatStates();
-
-	// 종료 연출 시작
-	TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		// 전투 상태 평가
 		USRPGTurnContext* TurnContext = mParent.Get();
-		checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
-		TurnContext->OnEndCurrentAction(this, mActionResult);
+		checkf(TurnContext != nullptr, TEXT("턴 객체 nullptr"));
+		USRPGCombatModel* CombatModel = TurnContext->GetParent();
+		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));
+		CombatModel->EvaluateCombatStates();
+
+		// 종료 연출 시작
+		TSharedPtr<FPresentationBarrier> PresentationBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+
+			USRPGTurnContext* TurnContext = mParent.Get();
+			checkf(TurnContext != nullptr, TEXT("이미 제거된 턴에서 Action 종료 명령 오류"));
+			TurnContext->OnEndCurrentAction(this, mActionResult);
+			}));
+		OnEndActionUI.Broadcast(PresentationBarrier, this, mActionResult);
 		}));
-	OnEndActionUI.Broadcast(PresentationBarrier, this, mActionResult);
+
+	DecrementEndHoldCount();
+}
+
+void USRPGAction::IncrementEndHoldCount()
+{
+	++mEndHoldCount;
+}
+
+void USRPGAction::DecrementEndHoldCount()
+{
+	--mEndHoldCount;
+	if (mEndHoldCount == 0)
+	{
+		mEndHoldPresentationBarrier.Reset();
+	}
 }
 
 void USRPGAction::TryBeginAction()
@@ -177,6 +196,21 @@ ESRPGCommandResult USRPGAction::HandleCommand(const TInstancedStruct<FSRPGComman
 void USRPGAction::ReserveInitializeCommand(TInstancedStruct<FSRPGCommand> Command)
 {
 	mInitializeCommand = MoveTemp(Command);
+}
+
+TSharedPtr<FPresentationBarrier> USRPGAction::GetEndHoldBarrier()
+{
+	if (mEndHoldCount <= 0)
+	{
+		return nullptr;
+	}
+
+	IncrementEndHoldCount();
+	TSharedPtr<FPresentationBarrier> HoldBarrier = FPresentationBarrier::Make(FOnFinishPresentation::CreateWeakLambda(this, [this]() {
+		DecrementEndHoldCount();
+		}));
+
+	return HoldBarrier;
 }
 
 TWeakObjectPtr<USRPGTurnContext> USRPGAction::GetParent() const

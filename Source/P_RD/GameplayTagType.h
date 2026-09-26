@@ -55,6 +55,9 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Common_SupportBlast);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Common_PyrrhicStrike);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Common_Passion);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Common_Leap);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Common_HourglassTurn);
+
 #pragma endregion
 
 
@@ -82,6 +85,8 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Knight_HolyShield);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Knight_Baptism);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Knight_Sanctuary);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Knight_GuardianCharge);
+
 #pragma endregion
 
 #pragma region Ranger
@@ -108,6 +113,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Ranger_BarrageKick);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Ranger_AgileMovement);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Ranger_Shockwave);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Ranger_Smoke);
 
 #pragma endregion
 
@@ -133,6 +139,10 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_Annihilation);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_GodOfDice);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_ThunderStorm);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_Teleport);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_TimeAcceleration);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Mage_TickTock);
+
 #pragma endregion
 
 #pragma region Barbarian
@@ -158,6 +168,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Barbarian_Cleave);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Barbarian_BloodRush);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Barbarian_Unstoppable);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Barbarian_ImpactLeap);
 
 #pragma endregion
 
@@ -183,6 +194,9 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Rogue_Doping);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Rogue_PoisonBomb);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Rogue_Evasion);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Rogue_FlashStep);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Rogue_Cheat);
+
 #pragma endregion
 
 #pragma region Druid
@@ -208,6 +222,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Druid_AcidRain);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Druid_Invincibility);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Druid_ImmunityBoost);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Mercenary_Druid_BlessingOfTime);
 #pragma endregion
 
 
@@ -317,6 +332,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Kick);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_SeismicToss);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_Howl);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Golem_ImpactLeap);
 #pragma endregion
 
 	// 스테이지 3
@@ -325,6 +341,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_PushAttack);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_Rage);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_HeavyStrike);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Warrior_ImpactLeap);
 #pragma endregion
 
 #pragma region Skeleton_Mage
@@ -337,6 +354,7 @@ namespace AnimationTags
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_Assassinate);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_SandToss);
 	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_LegSweep);
+	P_RD_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Animation_Montage_Skill_Enemy_Skeleton_Rogue_FlashStep);
 #pragma endregion
 
 #pragma region Skeleton_Ranger

@@ -4,6 +4,7 @@
 #include "RefreshPullDescriptionsCommandlet.generated.h"
 
 // Preview stale generated pull descriptions; pass -Apply to save replacements.
+// Use -Asset=<full object path> to regenerate one explicitly selected skill.
 UCLASS()
 class URefreshPullDescriptionsCommandlet : public UCommandlet
 {
