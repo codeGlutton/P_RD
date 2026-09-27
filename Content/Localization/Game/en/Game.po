@@ -45,8 +45,8 @@ msgstr "Feather of Gale"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mDescription
 msgctxt ",69DE8DA94490A0D353F9989678CCBDCF"
-msgid "턴 종료 시, 자신의 체력이 50% 이하라면 자신에게 방어도 4를 부여합니다."
-msgstr "At the end of your turn, gain 4 Defense if your HP is at or below 50%."
+msgid "턴 종료 시, 자신의 체력이 50% 이하라면 자신에게 방어도 6를 부여합니다."
+msgstr "At the end of your turn, gain 6 Defense if your HP is at or below 50%."
 
 #. Key:	8AA53C604B2F913322EC958FCFC885A4
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mName
@@ -87,8 +87,8 @@ msgstr "Sigil of Chain"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mDescription
 msgctxt ",96E1B2F24911AF3D9C5690B571EC1448"
-msgid "전투 종료 시, 체력을 5 회복합니다."
-msgstr "Restore 5 HP at the end of combat."
+msgid "전투 종료 시, 체력을 6 회복합니다."
+msgstr "Restore 6 HP at the end of combat."
 
 #. Key:	E9B797F8433152CCFEA773B0492493E3
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mName
@@ -227,8 +227,8 @@ msgstr "Thorn of Plague"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mDescription
 msgctxt ",3ECFF2D14AE47EFC6C4FBF8DE3E09224"
-msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 10 회복합니다."
-msgstr "After applying an effect, restore 10 HP if the target's HP reaches 0 or below."
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 4 회복합니다."
+msgstr "After applying an effect, restore 4 HP if the target's HP reaches 0 or below."
 
 #. Key:	0D75ED694C4BE311FBBB2484E2550EB9
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mName
@@ -339,8 +339,8 @@ msgstr "Battle Cry"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mDescription
 msgctxt ",3F120BB146F64831FEC98EB40AB90D51"
-msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면,  자신에게 방어도 5를 부여합니다."
-msgstr "Gain 5 Defense after using 5 skills in a single turn."
+msgid "스킬 사용 시, 한 턴에 스킬을 5회 사용하면,  자신에게 방어도 10를 부여합니다."
+msgstr "Gain 10 Defense after using 5 skills in a single turn."
 
 #. Key:	91D70AED46FC5DE1F3BE1BB5703A2FB0
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mName
@@ -633,8 +633,8 @@ msgstr "Broken Clock"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
 msgctxt ",4A3030494AD8D63422112FB8F6E9C5CC"
-msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 스킬 재사용 대기시간이 3 감소합니다."
-msgstr "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 3."
+msgid "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 스킬 재사용 대기시간이 1 감소합니다."
+msgstr "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 1."
 
 #. Key:	A62C7D644B3A487D97CB0EBFBFE6A0EF
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mName
