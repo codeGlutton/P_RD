@@ -45,8 +45,8 @@ msgstr "질풍의 깃털"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mDescription
 msgctxt ",69DE8DA94490A0D353F9989678CCBDCF"
-msgid "At the end of your turn, gain 4 Defense if your HP is at or below 50%."
-msgstr "턴 종료 시, 자신의 체력이 50% 이하라면 자신에게 방어도 4를 부여합니다."
+msgid "At the end of your turn, gain 6 Defense if your HP is at or below 50%."
+msgstr "턴 종료 시, 자신의 체력이 50% 이하라면 자신에게 방어도 6를 부여합니다."
 
 #. Key:	8AA53C604B2F913322EC958FCFC885A4
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A003_GuardiansShield.DA_Artifact_A003_GuardiansShield.mName
@@ -87,8 +87,8 @@ msgstr "연쇄의 문장"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mDescription
 msgctxt ",96E1B2F24911AF3D9C5690B571EC1448"
-msgid "Restore 5 HP at the end of combat."
-msgstr "전투 종료 시, 체력을 5 회복합니다."
+msgid "Restore 6 HP at the end of combat."
+msgstr "전투 종료 시, 체력을 6 회복합니다."
 
 #. Key:	E9B797F8433152CCFEA773B0492493E3
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A006_SeedOfRenewal.DA_Artifact_A006_SeedOfRenewal.mName
@@ -227,8 +227,8 @@ msgstr "역병의 가시"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mDescription
 msgctxt ",3ECFF2D14AE47EFC6C4FBF8DE3E09224"
-msgid "After applying an effect, restore 10 HP if the target's HP reaches 0 or below."
-msgstr "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 10 회복합니다."
+msgid "After applying an effect, restore 4 HP if the target's HP reaches 0 or below."
+msgstr "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 체력을 4 회복합니다."
 
 #. Key:	0D75ED694C4BE311FBBB2484E2550EB9
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A018_PredatorsHeart.DA_Artifact_A018_PredatorsHeart.mName
@@ -339,8 +339,8 @@ msgstr "전투의 함성"
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mDescription
 msgctxt ",3F120BB146F64831FEC98EB40AB90D51"
-msgid "Gain 5 Defense after using 5 skills in a single turn."
-msgstr "스킬 사용 시, 한 턴에 스킬을 5회 사용하면,  자신에게 방어도 5를 부여합니다."
+msgid "Gain 10 Defense after using 5 skills in a single turn."
+msgstr "스킬 사용 시, 한 턴에 스킬을 5회 사용하면,  자신에게 방어도 10를 부여합니다."
 
 #. Key:	91D70AED46FC5DE1F3BE1BB5703A2FB0
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A026_WarCry.DA_Artifact_A026_WarCry.mName
@@ -606,7 +606,7 @@ msgstr "넝쿨 뿌리"
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mDescription
 msgctxt ",864CA6C7435AD98CC59B6DA260478C49"
 msgid "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
-msgstr "At the end of your turn, if your HP is at or below 50%, grants yourself 2 stacks of Weakening Immunity."
+msgstr "턴 종료 시, 체력이 50% 이하라면 자신에게 쇠약 면역을 2 부여합니다."
 
 #. Key:	0930ED7244258EE0992F9A9E38282B80
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A045_PainKiller.DA_Artifact_A045_PainKiller.mName
@@ -620,42 +620,42 @@ msgstr "진통제"
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mDescription
 msgctxt ",73821AC74148829F555B3C819627C769"
 msgid "At the start of every third turn, reduces skill cooldowns by 1."
-msgstr ""
+msgstr "턴 시작 시, 3회 째라면 스킬 재사용 대기시간이 1 감소합니다."
 
 #. Key:	DE557EE74760245C2CFE54BBC57D95A1
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A046_BrokenClock.DA_Artifact_A046_BrokenClock.mName
 msgctxt ",DE557EE74760245C2CFE54BBC57D95A1"
 msgid "Broken Clock"
-msgstr ""
+msgstr "고장난 시계"
 
 #. Key:	4A3030494AD8D63422112FB8F6E9C5CC
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mDescription
 msgctxt ",4A3030494AD8D63422112FB8F6E9C5CC"
-msgid "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 3."
-msgstr ""
+msgid "After an effect is applied, if the target has 0 HP or less, reduces skill cooldowns by 1."
+msgstr "효과 적용 종료 시, 대상의 체력이 0이하가 되었다면, 스킬 재사용 대기시간이 1 감소합니다."
 
 #. Key:	A62C7D644B3A487D97CB0EBFBFE6A0EF
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A047_MagicHat.DA_Artifact_A047_MagicHat.mName
 msgctxt ",A62C7D644B3A487D97CB0EBFBFE6A0EF"
 msgid "Magic Hat"
-msgstr ""
+msgstr "마법 모자"
 
 #. Key:	F68A888542FCB383C28DE182180747B5
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mDescription
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mDescription
 msgctxt ",F68A888542FCB383C28DE182180747B5"
 msgid "On every fifth skill use, reduces skill cooldowns by 1."
-msgstr ""
+msgstr "스킬 사용 시, 5회 째 사용할 때마다 스킬 재사용 대기시간이 1 감소합니다."
 
 #. Key:	8DE9EEFB442237936C8C2D865CC0CC1C
 #. SourceLocation:	/Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mName
 #: /Game/BP/DataAsset/Artifact/DA_Artifact_A048_Inkpot.DA_Artifact_A048_Inkpot.mName
 msgctxt ",8DE9EEFB442237936C8C2D865CC0CC1C"
 msgid "Inkpot"
-msgstr ""
+msgstr "잉크병"
 
 #. Key:	79458D0F4B162D84BC01A59F3BA287F6
 #. SourceLocation:	/Game/BP/DataAsset/CombatTargetObstacle/DA_Barrel_ExplosionGimmick.DA_Barrel_ExplosionGimmick.mDisplayName
