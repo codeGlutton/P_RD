@@ -74,7 +74,10 @@ bool FLevelUpSkillEquipTest::RunTest(const FString& Parameters)
 	TestFalse(TEXT("Old common-job offer cannot be equipped"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 1));
 	TestFalse(TEXT("Rejected common skill does not consume reward"), Reward.Completed);
 	Reward.Candidates = { Eligible[1]->GetPrimaryAssetId(), Eligible[2]->GetPrimaryAssetId(), OtherJob->GetPrimaryAssetId() };
-	TestFalse(TEXT("Basic attack cannot be overwritten"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 0));
+	TestTrue(TEXT("First skill slot can be replaced"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 0));
+	TestTrue(TEXT("First slot contains replacement"), Skills->GetSkill(0)->mData == Eligible[1]);
+	Reward.Completed = false;
+	Skills->SetSkill(0, Eligible[0]);
 	TestFalse(TEXT("Out-of-range slot rejected"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[0], 6));
 	TestFalse(TEXT("Other-job candidate rejected by gameplay"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Reward.Candidates[2], 1));
 	TestFalse(TEXT("Unoffered skill rejected"), LevelUpSkillReward::TryEquip(Reward, Unit.Get(), Eligible[0]->GetPrimaryAssetId(), 1));

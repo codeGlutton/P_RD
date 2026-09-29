@@ -2028,9 +2028,10 @@ void UShopUIWidgetBase::RefreshView()
 			mSelectedSkillSlotIndex = 0;
 			mSelectedSkillTargetUnitIndex = INDEX_NONE;
 			if (const FShopOwnedUnitUI* Target = GetSelectedSkillTarget(Shop))
-				for (int32 SkillSlot = 1; SkillSlot <= 4; ++SkillSlot)
+				for (int32 SkillSlot = ReplaceableSkillStartIndex;
+					SkillSlot < ReplaceableSkillStartIndex + ReplaceableSkillSlotCount; ++SkillSlot)
 					if (Target->mSkillSlots.IsValidIndex(SkillSlot) && Target->mSkillSlots[SkillSlot].mIsEmpty)
-					{ mSelectedSkillSlotIndex = SkillSlot - 1; break; }
+					{ mSelectedSkillSlotIndex = SkillSlot - ReplaceableSkillStartIndex; break; }
 		}
 	}
 
