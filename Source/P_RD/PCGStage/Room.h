@@ -80,7 +80,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FShopItemList
+struct P_RD_API FShopItemList
 {
 	GENERATED_BODY()
 
@@ -94,7 +94,7 @@ public:
 
 
 USTRUCT(BlueprintType)
-struct FMercenaryCandidate
+struct P_RD_API FMercenaryCandidate
 {
 	GENERATED_BODY()
 
@@ -113,7 +113,7 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FMercenaryCandidateList
+struct P_RD_API FMercenaryCandidateList
 {
 	GENERATED_BODY()
 
@@ -129,7 +129,7 @@ public:
  * @brief  상점 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FShopRoom : public FRoom
+struct P_RD_API FShopRoom : public FRoom
 {
 	GENERATED_BODY()
 
@@ -155,7 +155,7 @@ public:
  * @brief  일반 몬스터 방 데이터
  */
 USTRUCT(BlueprintType)
-struct FMonsterRoom : public FRoom
+struct P_RD_API FMonsterRoom : public FRoom
 {
 	GENERATED_BODY()
 

@@ -16,6 +16,8 @@
 #include "Pawn/Enemy/EnemyUnitModel.h"
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 int8 USRPGActionCreationCommandHandler::GetCommandPriority() const
 {
 	return ISRPGCommandHandler::LOWEST_PRIORITY;
@@ -131,6 +133,8 @@ void USRPGTurnContext::InitTurn(USRPGCombatModel* Parent, UUnitModel* Owner, int
 
 void USRPGTurnContext::BeginTurn()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSRPGTurn_Begin);
+
 	checkf(mTurnPhase == ESRPGTurnPhase::TurnInit, TEXT("이미 턴 진행 중에 재실행 오류"));
 	mTurnPhase = ESRPGTurnPhase::TurnStart;
 
@@ -168,8 +172,15 @@ void USRPGTurnContext::BeginTurn()
 		// 전투 상태 평가
 		CombatModel->EvaluateCombatStates();
 
+		// 턴 종료 여부 체크
+
+		const bool NeedAIPlan = mOwner->IsPlayerUnitModel() == false && mShouldSkipAIActions == false;
+
+		const bool ShouldEndAITurn = mOwner->IsPlayerUnitModel() == false && mShouldSkipAIActions == true;
+		const bool ShouldEndPlayerTurn = mOwner->IsPlayerUnitModel() == true && mShouldSkipPlayerTurn == true;
+
 		TArray<TInstancedStruct<FSRPGCommand>> TurnStartCommands;
-		if (mOwner->IsPlayerUnitModel() == false)
+		if (NeedAIPlan == true)
 		{
 			/* AI의 경우 움직임 판단 로직 시작 */
 
@@ -187,13 +198,7 @@ void USRPGTurnContext::BeginTurn()
 			TurnStartCommands = USRPGEnemyTurnPlanner::PlanTurn(Enemy, Players, TileMap, URandomStreamFunctionLibrary::GetEventStream(this), PlanLogTag);
 		}
 
-		// 턴 종료 여부 체크
-
-		const bool ShouldEndTurn = (
-			(mOwner->IsPlayerUnitModel() == true && mShouldSkipPlayerTurn == true) ||
-			(mOwner->IsPlayerUnitModel() == false && mShouldSkipAIActions == true)
-			);
-		if (ShouldEndTurn == true)
+		if (ShouldEndAITurn == true || ShouldEndPlayerTurn == true)
 		{
 			mTurnPhase = ESRPGTurnPhase::TurnAbort;
 		}
@@ -258,6 +263,8 @@ void USRPGTurnContext::EndTurn()
 
 		checkf(mTurnPhase == ESRPGTurnPhase::TurnEnd, TEXT("턴 종료 절차 오류"));
 		mTurnPhase = ESRPGTurnPhase::TurnInit;
+
+		TRACE_CPUPROFILER_EVENT_SCOPE(RDSRPGTurn_End);
 
 		USRPGCombatModel* CombatModel = mParent.Get();
 		checkf(CombatModel != nullptr, TEXT("전투 모델 nullptr"));

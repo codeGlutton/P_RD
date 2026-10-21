@@ -1,4 +1,4 @@
-#include "SaveGame/SaveCheckpoint.h"
+﻿#include "SaveGame/SaveCheckpoint.h"
 
 #include "Async/Async.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,7 +13,7 @@ namespace
 {
 	constexpr uint32 SaveMagic = 0x52445356;
 	constexpr uint32 SaveVersion = 1;
-	constexpr int32 HeaderSize = sizeof(uint32) * 4 + sizeof(uint64);
+	constexpr int32 MaxHeaderSize = sizeof(uint32) * 4 + sizeof(uint64);
 	constexpr int32 MaxPayloadSize = 64 * 1024 * 1024;
 	UE::Tasks::FPipe SavePipe(TEXT("RunCheckpointIO"));
 
@@ -22,7 +22,7 @@ namespace
 		if (!UGameplayStatics::DoesSaveGameExist(Slot, 0)) return false;
 		TArray<uint8> Bytes;
 		if (!UGameplayStatics::LoadDataFromSlot(Bytes, Slot, 0)
-			|| Bytes.Num() < HeaderSize || Bytes.Num() > HeaderSize + MaxPayloadSize)
+			|| Bytes.Num() < MaxHeaderSize || Bytes.Num() > MaxHeaderSize + MaxPayloadSize)
 		{
 			return false;
 		}
@@ -31,14 +31,14 @@ namespace
 		uint64 Generation = 0;
 		Reader << Magic << Version << Generation << Size << Checksum;
 		if (Reader.IsError() || Magic != SaveMagic || Version != SaveVersion
-			|| Size == 0 || Size > MaxPayloadSize || Size != Bytes.Num() - HeaderSize
-			|| FCrc::MemCrc32(Bytes.GetData() + HeaderSize, Size,
+			|| Size == 0 || Size > MaxPayloadSize || Size != Bytes.Num() - MaxHeaderSize
+			|| FCrc::MemCrc32(Bytes.GetData() + MaxHeaderSize, Size,
 				FCrc::MemCrc32(&Generation, sizeof(Generation))) != Checksum)
 		{
 			return false;
 		}
 		OutData.Reset(Size);
-		OutData.Append(Bytes.GetData() + HeaderSize, Size);
+		OutData.Append(Bytes.GetData() + MaxHeaderSize, Size);
 		OutGeneration = Generation;
 		return true;
 	}

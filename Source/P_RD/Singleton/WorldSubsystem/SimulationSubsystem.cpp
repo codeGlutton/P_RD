@@ -54,7 +54,12 @@ void USimulationSubsystem::PreDeinitialize()
 
 TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption Option)
 {
-	TRACE_CPUPROFILER_EVENT_SCOPE(RDSimulation);
+	const TCHAR* SimulationScopeName = 
+		(Option.mDuration == ESimulationDurtaion::NextAction) ? 
+		TEXT("RDSimulation_Action") : 
+		TEXT("RDSimulation_Turns");
+
+	TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(SimulationScopeName);
 
 	checkf(mSimulationState == ESRPGSimulationState::RunningGame, TEXT("이미 시뮬레이션 중"));
 	SetSimulationState(ESRPGSimulationState::RunningSimulation);
@@ -65,6 +70,8 @@ TArray<FSRPGTurnEventLog> USimulationSubsystem::PlaySimulation(FSimulationOption
 
 	if (Option.mReservedCommand.IsValid() == true)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(RDSimulation_ClearActions);
+
 		SRPGCombatModel->ForcedClearActions();
 	}
 
@@ -111,7 +118,7 @@ void USimulationSubsystem::SetSimulationState(ESRPGSimulationState State)
 	}
 	else
 	{
-		TRACE_CPUPROFILER_EVENT_SCOPE(RDCombatPreviewDuplicate);
+		TRACE_CPUPROFILER_EVENT_SCOPE(RDSimulation_Duplicate);
 		mSimulationRoomContext.mRoomInstance = Cast<URoomInstance>(StaticDuplicateObject(mGameRoomContext.mRoomInstance, this));
 		mSimulationRoomContext.mRoomInstance->CollectSimulationDatas();
 		mCurrentRoomContext = &mSimulationRoomContext;

@@ -47,7 +47,7 @@ public:
 public:
     UPROPERTY(Category = "Spawn", EditAnywhere, BlueprintReadWrite, meta = (DisplayName = "ModelClass", AssetBundles = "Actor"))
     TSoftClassPtr<UBoardActorModel> mModelClass;
-    UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", MustImplement = "/Script/P_RD.ActorView",  AssetBundles = "Actor"))
+    UPROPERTY(Category = "Spawn", VisibleAnywhere, BlueprintReadOnly, meta = (DisplayName = "UnitClass", MustImplement = "/Script/P_RD.ActorView", AssetBundles = "Actor"))
     TSoftClassPtr<AActor> mViewClass;
 
 public:
