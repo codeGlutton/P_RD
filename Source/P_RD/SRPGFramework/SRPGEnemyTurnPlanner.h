@@ -1,4 +1,4 @@
-/*****************************************************************//**
+﻿/*****************************************************************//**
  * @file   SRPGEnemyTurnPlanner.h
  * @brief  적 한 턴의 행동을 계산하는 모델 레이어 플래너 정의 헤더
  * @author 이문환
@@ -62,7 +62,7 @@ public:
 		UEnemyUnitModel* Enemy,
 		const TArray<UUnitModel*>& Players,
 		const UTileMapModel* TileMap,
-		const FRandomStream& EventStream,
+		const FRandomStream EventStream,
 		const FString& LogTag = FString());
 
 private:

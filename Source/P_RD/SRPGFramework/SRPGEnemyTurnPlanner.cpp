@@ -24,6 +24,8 @@
 
 #include "Simulation/Logger/EventLogger.h"
 
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 DEFINE_LOG_CATEGORY(LogSRPGEnemyPlanner);
 
 namespace
@@ -227,9 +229,11 @@ TArray<TInstancedStruct<FSRPGCommand>> USRPGEnemyTurnPlanner::PlanTurn(
 	UEnemyUnitModel* Enemy,
 	const TArray<UUnitModel*>& Players,
 	const UTileMapModel* TileMap,
-	const FRandomStream& EventStream,
+	const FRandomStream EventStream,
 	const FString& LogTag)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSRPGTurn_AIPlan);
+
 	TArray<TInstancedStruct<FSRPGCommand>> Commands;
 	{
 		// 종료 커맨드는 무조건 필요하므로 일단 추가하고 시작

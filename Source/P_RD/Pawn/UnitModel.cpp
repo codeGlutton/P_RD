@@ -21,6 +21,8 @@
 
 #include "FunctionLibrary/RandomStreamFunctionLibrary.h"
 
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 UUnitModel::UUnitModel() : mTeamId(EGameTeamType::AllNeutral)
 {
 	mAttributeCompModel = CreateDefaultSubobject<UAttributeSetComponentModel>(TEXT("AttributeSetComponentModel"));
@@ -135,6 +137,8 @@ void UUnitModel::OnBeginRound(int32 RoundCount)
 
 void UUnitModel::OnBeginTurn(int32 TurnCount)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSRPGTurn_OnBeginTurn);
+
 	/* 방어도 제거 */
 
 	mAttributeCompModel->ApplyModToAttribute(UUnitAttributeSet::GetDefenseAttribute(), ETacticalModOp::Override, 0.f);
@@ -199,6 +203,8 @@ void UUnitModel::OnBeginTurn(int32 TurnCount)
 
 void UUnitModel::OnEndTurn(int32 TurnCount)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(RDSRPGTurn_OnEndTurn);
+
 	/* 턴 종료 패시브 처리 */
 
 	// 남은 AP를 참조하는 패시브가 있으므로 행동력 제거보다 먼저 처리
